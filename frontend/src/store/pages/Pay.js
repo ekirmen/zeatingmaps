@@ -1,0 +1,111 @@
+import React, { useState } from 'react';
+import { useLocation, Navigate, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import MetodoPago from '../components/MetodoPago';
+import { toast } from 'react-hot-toast';
+
+const Pay = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  
+  if (!location.state?.carrito || !location.state?.funcionId) {
+    return <Navigate to="/store" replace />;
+  }
+
+  const { carrito, funcionId } = location.state;
+  const subtotal = carrito.reduce((sum, item) => sum + item.precio, 0);
+  const impuestos = subtotal * 0.16;
+  const total = subtotal + impuestos;
+
+  const handlePaymentMethodSelect = (method) => {
+    setSelectedPaymentMethod(method);
+  };
+
+  const handleProcessPayment = async () => {
+    if (!selectedPaymentMethod) {
+      toast.error("Por favor selecciona un método de pago");
+      return;
+    }
+
+    try {
+      const response = await fetch('http://localhost:5000/api/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          funcionId,
+          seats: carrito,
+          paymentMethod: selectedPaymentMethod,
+          amount: total
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        navigate(`/payment-success/${data.locator}`);
+      } else {
+        toast.error("Error al procesar el pago");
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error("Error al procesar el pago");
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Finalizar Compra</h1>
+      
+      {/* Cart Summary */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Resumen del Carrito</h2>
+        {carrito.map((item, index) => (
+          <div key={index} className="flex justify-between py-2 border-b">
+            <span>{item.zona} - {item.nombreMesa}</span>
+            <span>${item.precio}</span>
+          </div>
+        ))}
+        <div className="mt-4">
+          <div className="flex justify-between py-2">
+            <span>Subtotal:</span>
+            <span>${subtotal.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between py-2">
+            <span>Impuestos (16%):</span>
+            <span>${impuestos.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between py-2 font-bold">
+            <span>Total:</span>
+            <span>${total.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Methods */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Método de Pago</h2>
+        <MetodoPago 
+          metodosDisponibles={["stripe", "paypal", "transferencia"]}
+          onSelect={handlePaymentMethodSelect}
+          selected={selectedPaymentMethod}
+        />
+      </div>
+
+      {/* Process Payment Button */}
+      <button
+        onClick={handleProcessPayment}
+        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
+        disabled={!selectedPaymentMethod}
+      >
+        Proceder al Pago
+      </button>
+    </div>
+  );
+};
+
+export default Pay;

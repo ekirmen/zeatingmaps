@@ -1,0 +1,336 @@
+import React, { useState, useEffect } from 'react';
+import { useRecinto } from '../contexts/RecintoContext';
+import Modal from 'react-modal';
+import { fetchPlantillasPorRecintoYSala } from '../services/apibackoffice';
+
+const Funciones = () => {
+  const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
+  const [eventos, setEventos] = useState([]);
+  const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
+  const [plantillas, setPlantillas] = useState([]);
+  const [funciones, setFunciones] = useState([]);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+  const [editingFuncion, setEditingFuncion] = useState(null);
+  const [nuevaFuncion, setNuevaFuncion] = useState({
+    fechaCelebracion: '',
+    evento: '',
+    sala: '',
+    plantilla: '',
+    inicioVenta: '',
+    finVenta: '',
+  });
+
+  // Fetch eventos when sala changes
+  useEffect(() => {
+    const fetchEventos = async () => {
+      if (salaSeleccionada && recintoSeleccionado) {
+        try {
+          const response = await fetch(`http://localhost:5000/api/events?recinto=${recintoSeleccionado._id}&sala=${salaSeleccionada._id}`);
+          const data = await response.json();
+          setEventos(data);
+          setEventoSeleccionado(null); // Reset selected event
+        } catch (error) {
+          console.error('Error fetching eventos:', error);
+        }
+      } else {
+        setEventos([]);
+      }
+    };
+    fetchEventos();
+  }, [recintoSeleccionado, salaSeleccionada]);
+
+  // Fetch funciones when evento changes
+  useEffect(() => {
+    const fetchFunciones = async () => {
+      if (eventoSeleccionado) {
+        try {
+          const response = await fetch(`http://localhost:5000/api/funcions?evento=${eventoSeleccionado}`);
+          const data = await response.json();
+          setFunciones(Array.isArray(data) ? data : []);
+        } catch (error) {
+          console.error('Error fetching funciones:', error);
+        }
+      } else {
+        setFunciones([]);
+      }
+    };
+    fetchFunciones();
+  }, [eventoSeleccionado]);
+
+  // Fetch plantillas when sala changes
+  useEffect(() => {
+    if (recintoSeleccionado && salaSeleccionada) {
+      const fetchPlantillas = async () => {
+        try {
+          const data = await fetchPlantillasPorRecintoYSala(recintoSeleccionado._id, salaSeleccionada._id);
+          setPlantillas(data);
+        } catch (error) {
+          console.error('Error fetching plantillas:', error);
+        }
+      };
+      fetchPlantillas();
+    }
+  }, [recintoSeleccionado, salaSeleccionada]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const funcionData = {
+      ...nuevaFuncion,
+      sala: salaSeleccionada._id,
+      evento: eventoSeleccionado
+    };
+
+    const url = editingFuncion 
+      ? `http://localhost:5000/api/funcions/${editingFuncion._id}`
+      : 'http://localhost:5000/api/funcions';
+    const method = editingFuncion ? 'PUT' : 'POST';
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(funcionData),
+      });
+
+      if (response.ok) {
+        alert(editingFuncion ? 'Función actualizada' : 'Función creada');
+        setModalIsOpen(false);
+        setEditingFuncion(null);
+        setNuevaFuncion({
+          fechaCelebracion: '',
+          evento: '',
+          sala: '',
+          plantilla: '',
+          inicioVenta: '',
+          finVenta: '',
+        });
+        // Refresh funciones list
+        const refreshResponse = await fetch(`http://localhost:5000/api/funcions?evento=${eventoSeleccionado}`);
+        const refreshData = await refreshResponse.json();
+        setFunciones(Array.isArray(refreshData) ? refreshData : []);
+      } else {
+        const errorData = await response.json();
+        alert(`Error: ${errorData.message}`);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al procesar la función');
+    }
+  };
+
+  const handleEdit = (funcion) => {
+    setEditingFuncion(funcion);
+    setNuevaFuncion({
+      fechaCelebracion: funcion.fechaCelebracion.split('T')[0],
+      evento: funcion.evento._id,
+      sala: funcion.sala._id,
+      plantilla: funcion.plantilla._id,
+      inicioVenta: funcion.inicioVenta.split('T')[0],
+      finVenta: funcion.finVenta.split('T')[0],
+    });
+    setModalIsOpen(true);
+  };
+
+  const handleDelete = async (funcionId) => {
+    if (window.confirm('¿Seguro que deseas eliminar esta función?')) {
+      try {
+        const response = await fetch(`http://localhost:5000/api/funcions/${funcionId}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          alert('Función eliminada');
+          const refreshResponse = await fetch(`http://localhost:5000/api/funcions?evento=${eventoSeleccionado}`);
+          const refreshData = await refreshResponse.json();
+          setFunciones(Array.isArray(refreshData) ? refreshData : []);
+        } else {
+          const errorData = await response.json();
+          alert(`Error: ${errorData.message}`);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al eliminar la función');
+      }
+    }
+  };
+
+  return (
+    <div className="funciones-container">
+      <h2 className="funciones-header">Gestión de Funciones</h2>
+
+      <div className="controls-container">
+        <div className="select-group">
+          <label>Recinto</label>
+          <select
+            value={recintoSeleccionado ? recintoSeleccionado._id : ''}
+            onChange={(e) => {
+              const recinto = recintos.find(r => r._id === e.target.value);
+              setRecintoSeleccionado(recinto);
+              setSalaSeleccionada(null);
+            }}
+          >
+            <option value="">Seleccionar Recinto</option>
+            {recintos.map(recinto => (
+              <option key={recinto._id} value={recinto._id}>
+                {recinto.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {recintoSeleccionado && (
+          <div className="select-group">
+            <label>Sala</label>
+            <select
+              value={salaSeleccionada ? salaSeleccionada._id : ''}
+              onChange={(e) => {
+                const sala = recintoSeleccionado.salas.find(s => s._id === e.target.value);
+                setSalaSeleccionada(sala);
+              }}
+            >
+              <option value="">Seleccionar Sala</option>
+              {recintoSeleccionado.salas.map(sala => (
+                <option key={sala._id} value={sala._id}>
+                  {sala.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {salaSeleccionada && (
+          <div className="select-group">
+            <label>Evento</label>
+            <select
+              value={eventoSeleccionado || ''}
+              onChange={(e) => setEventoSeleccionado(e.target.value)}
+            >
+              <option value="">Seleccionar Evento</option>
+              {eventos.map(evento => (
+                <option key={evento._id} value={evento._id}>
+                  {evento.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <button className="nueva-funcion-btn" onClick={() => setModalIsOpen(true)}>
+          Nueva Función
+        </button>
+      </div>
+
+      <table className="funciones-table">
+        <thead>
+          <tr>
+            <th>Fecha Celebración</th>
+            <th>Evento</th>
+            <th>Sala</th>
+            <th>Plantilla</th>
+            <th>Inicio Venta</th>
+            <th>Fin Venta</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {funciones.map(funcion => (
+            <tr key={funcion._id}>
+              <td>{new Date(funcion.fechaCelebracion).toLocaleDateString()}</td>
+              <td>{funcion.evento.nombre}</td>
+              <td>{funcion.sala.nombre}</td>
+              <td>{funcion.plantilla.nombre}</td>
+              <td>{new Date(funcion.inicioVenta).toLocaleDateString()}</td>
+              <td>{new Date(funcion.finVenta).toLocaleDateString()}</td>
+              <td className="action-buttons">
+                <button className="edit-btn" onClick={() => handleEdit(funcion)}>
+                  Editar
+                </button>
+                <button className="delete-btn" onClick={() => handleDelete(funcion._id)}>
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={() => {
+          setModalIsOpen(false);
+          setEditingFuncion(null);
+          setNuevaFuncion({
+            fechaCelebracion: '',
+            evento: '',
+            sala: '',
+            plantilla: '',
+            inicioVenta: '',
+            finVenta: '',
+          });
+        }}
+        className="modal-content"
+      >
+        <h2>{editingFuncion ? 'Editar Función' : 'Nueva Función'}</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label>Fecha Celebración</label>
+            <input
+              type="date"
+              value={nuevaFuncion.fechaCelebracion}
+              onChange={(e) => setNuevaFuncion({...nuevaFuncion, fechaCelebracion: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Plantilla</label>
+            <select
+              value={nuevaFuncion.plantilla}
+              onChange={(e) => setNuevaFuncion({...nuevaFuncion, plantilla: e.target.value})}
+              required
+            >
+              <option value="">Seleccionar Plantilla</option>
+              {plantillas.map(plantilla => (
+                <option key={plantilla._id} value={plantilla._id}>
+                  {plantilla.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Inicio Venta</label>
+            <input
+              type="date"
+              value={nuevaFuncion.inicioVenta}
+              onChange={(e) => setNuevaFuncion({...nuevaFuncion, inicioVenta: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Fin Venta</label>
+            <input
+              type="date"
+              value={nuevaFuncion.finVenta}
+              onChange={(e) => setNuevaFuncion({...nuevaFuncion, finVenta: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" className="delete-btn" onClick={() => setModalIsOpen(false)}>
+              Cancelar
+            </button>
+            <button type="submit" className="edit-btn">
+              {editingFuncion ? 'Actualizar' : 'Crear'}
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+};
+
+export default Funciones;
