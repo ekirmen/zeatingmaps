@@ -32,7 +32,7 @@ export const useCrearMapa = () => {
       if (!salaId) return;
       try {
         // Aquí debes tener tu función fetchZonasPorSala que trae las zonas desde backend
-        const response = await fetch(`/api/zonas?salaId=${salaId}`);
+        const response = await fetch(`/api/zonas/sala/${salaId}`);
         const data = await response.json();
         setZones(data);
       } catch (error) {
