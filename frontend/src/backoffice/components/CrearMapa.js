@@ -5,6 +5,7 @@ import { Mesa } from './compMapa/MesaSilla';
 import Grid from './compMapa/Grid';
 import Zonas from './compMapa/Zonas';
 import Menu from './compMapa/MenuMapa';
+import EditPopup from './compMapa/EditPopup';
 import { useCrearMapa } from '../hooks/useCrearMapa';
 import { useMapaZoomStage } from '../hooks/useMapaZoomStage';
 import { fetchZonasPorSala, updateMesa } from '../services/apibackoffice';
@@ -18,6 +19,7 @@ const CrearMapa = () => {
     showZones, setShowZones,
     selectedZone, setSelectedZone,
     selectedElement,
+    setSelectedElement,
     numSillas, setNumSillas,
     zoom, setZoom,
     stageRef,
@@ -276,6 +278,16 @@ const CrearMapa = () => {
             )}
           </Layer>
         </Stage>
+        {selectedElement && (
+          <EditPopup
+            element={selectedElement}
+            zoom={zoom}
+            onNameChange={updateElementProperty}
+            onSizeChange={updateElementSize}
+            onDelete={deleteSelectedElements}
+            onClose={() => setSelectedElement(null)}
+          />
+        )}
       </div>
     </div>
   );
