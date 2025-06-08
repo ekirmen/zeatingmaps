@@ -44,6 +44,7 @@ import Cart from './store/pages/Cart';
 import Pay from './store/pages/Pay';
 import PaymentSuccess from './store/pages/PaymentSuccess';
 import ThankYouPage from './store/pages/ThankYouPage';
+import SeatingDemoPage from './pages/SeatingDemoPage';
 
 const App = () => {
   const location = useLocation();
@@ -126,6 +127,7 @@ const App = () => {
                   <Route path="/payment-success/:locator" element={<PaymentSuccess />} />
                   <Route path="/store/thank-you" element={<ThankYouPage />} />
                   <Route path="/companias" element={<CompaniasPage />} />
+                  <Route path="/store/seating-demo" element={<SeatingDemoPage />} />
                   <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
 
                   <Route path="/dashboard/formato-entrada" element={<FormatoEntrada />} />
