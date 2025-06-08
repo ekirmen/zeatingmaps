@@ -6,6 +6,7 @@ import Grid from './compMapa/Grid';
 import Zonas from './compMapa/Zonas';
 import Menu from './compMapa/MenuMapa';
 import EditPopup from './compMapa/EditPopup';
+import FilaPopup from './compMapa/FilaPopup';
 import { useCrearMapa } from '../hooks/useCrearMapa';
 import { useMapaZoomStage } from '../hooks/useMapaZoomStage';
 import { fetchZonasPorSala, updateMesa } from '../services/apibackoffice';
@@ -51,6 +52,8 @@ const CrearMapa = () => {
   const [sillaShape, setSillaShape] = useState('rect');
   const [loadedZonas, setLoadedZonas] = useState([]);
   const [loadingZonas, setLoadingZonas] = useState(false);
+
+  const [showNumeracion, setShowNumeracion] = useState(false);
 
   const [addingChairRow, setAddingChairRow] = useState(false);
   const [rowStart, setRowStart] = useState(null);
@@ -177,6 +180,7 @@ const CrearMapa = () => {
         addLineElement={addLineElement}
         startChairRowMode={startChairRowMode}
         snapToGrid={snapToGrid}
+        toggleNumeracion={() => setShowNumeracion(true)}
       />
 
       <div className="flex-1 relative">
@@ -314,6 +318,7 @@ const CrearMapa = () => {
                       height={element.height}
                       numero={element.numero}
                       nombre={element.nombre}
+                      fila={element.fila}
                       selected={isSelected}
                       onSelect={selectElement}
                       onDragEnd={onDragEndElement}
@@ -361,6 +366,13 @@ const CrearMapa = () => {
             onSizeChange={updateElementSize}
             onDelete={deleteSelectedElements}
             onClose={() => setSelectedElement(null)}
+          />
+        )}
+        {showNumeracion && selectedElement && (
+          <FilaPopup
+            element={selectedElement}
+            onChange={updateElementProperty}
+            onClose={() => setShowNumeracion(false)}
           />
         )}
       </div>

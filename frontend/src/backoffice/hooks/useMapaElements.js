@@ -15,7 +15,8 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
       numero,
       shape: sillaShape,
       zonaId,
-      rotation: 0
+      rotation: 0,
+      fila: ''
     };
   };
   // Creación de una nueva mesa
@@ -32,6 +33,7 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
       nombre: 'Mesa ' + (elements.filter(e => e.type === 'mesa').length + 1),
       sillas: [], // This 'sillas' array is not used for rendering chairs anymore
       zonaId: selectedZone?._id || null,
+      fila: ''
     };
     setElements(prev => [...prev, nuevaMesa]);
     return nuevaMesa;

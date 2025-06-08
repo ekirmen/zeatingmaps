@@ -134,6 +134,7 @@ export const Silla = ({
   height,
   numero,
   nombre,
+  fila,
   selected,
   onSelect,
   onDragEnd, // This prop now receives onDragEndSilla from Mesa
@@ -182,7 +183,7 @@ export const Silla = ({
         x={x}
         y={y - 20}  // Position text above chair
         width={width}
-        text={nombre || numero?.toString() || ''}
+        text={fila ? `${fila}${numero}` : nombre || numero?.toString() || ''}
         fontSize={12}
         fill="black"
         align="center"

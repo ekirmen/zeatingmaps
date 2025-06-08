@@ -36,6 +36,7 @@ const Menu = ({
   assignZoneToSelected,
   deleteSelectedElements,
   snapToGrid,
+  toggleNumeracion,
   // Accept the new graphical element functions as props
   addTextElement,
   addRectangleElement,
@@ -125,6 +126,12 @@ const Menu = ({
           selectedZoneId={selectedZoneId}
           onChange={setSelectedZoneId}
         />
+        <button
+          onClick={toggleNumeracion}
+          className="w-full p-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition"
+        >
+          🆔 Numeración
+        </button>
         <button
           onClick={assignZoneToSelected}
           className="w-full p-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
