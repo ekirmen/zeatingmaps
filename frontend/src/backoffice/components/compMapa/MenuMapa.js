@@ -25,8 +25,6 @@ const Menu = ({
   selectedElement,
   numSillas,
   setNumSillas,
-  zoomIn,
-  zoomOut,
   handleSave,
   updateElementProperty,
   updateElementSize,
@@ -43,7 +41,7 @@ const Menu = ({
   addRectangleElement,
   addEllipseElement,
   addLineElement,
-  addChairRow,
+  startChairRowMode,
 }) => {
   return (
     <aside className="w-72 h-screen bg-gray-100 p-4 overflow-y-auto flex flex-col space-y-6">
@@ -164,30 +162,18 @@ const Menu = ({
           ➖ Añadir Línea
         </button>
         <button
-          onClick={addChairRow} // Connect to the prop
+          onClick={startChairRowMode}
           className="w-full p-2 bg-cyan-600 text-white rounded hover:bg-cyan-700"
         >
-          ➕ Añadir Fila de Sillas
+          ➕ Fila de Asientos
         </button>
       </Seccion>
 
       {/* Editor propiedades */}
       {/* La edición de elementos se realiza ahora mediante un popup flotante */}
 
-      {/* Zoom y guardar */}
+      {/* Guardar */}
       <Seccion titulo="Herramientas">
-        <button
-          onClick={zoomIn}
-          className="w-full p-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-        >
-          🔍 Acercar
-        </button>
-        <button
-          onClick={zoomOut}
-          className="w-full p-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-        >
-          🔎 Alejar
-        </button>
         <button
           onClick={handleSave}
           className="w-full p-2 bg-gray-800 text-white rounded hover:bg-gray-900"

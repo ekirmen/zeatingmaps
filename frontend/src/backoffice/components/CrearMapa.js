@@ -52,6 +52,9 @@ const CrearMapa = () => {
   const [loadedZonas, setLoadedZonas] = useState([]);
   const [loadingZonas, setLoadingZonas] = useState(false);
 
+  const [addingChairRow, setAddingChairRow] = useState(false);
+  const [rowStart, setRowStart] = useState(null);
+
   useEffect(() => {
     if (!salaId) return;
     const cargarZonas = async () => {
@@ -112,6 +115,40 @@ const CrearMapa = () => {
     // La posición se guardará al presionar el botón de guardar
   };
 
+  const startChairRowMode = () => {
+    setAddingChairRow(true);
+    setRowStart(null);
+  };
+
+  const stageMouseDown = (e) => {
+    if (addingChairRow) {
+      if (!rowStart) {
+        const pos = e.target.getStage().getPointerPosition();
+        setRowStart(pos);
+      }
+      return;
+    }
+    handleMouseDown(e);
+  };
+
+  const stageMouseMove = (e) => {
+    if (addingChairRow && rowStart) {
+      return;
+    }
+    handleMouseMove(e);
+  };
+
+  const stageMouseUp = (e) => {
+    if (addingChairRow && rowStart) {
+      const pos = e.target.getStage().getPointerPosition();
+      addChairRow(rowStart, pos);
+      setAddingChairRow(false);
+      setRowStart(null);
+      return;
+    }
+    handleMouseUp(e);
+  };
+
   return (
     <div className="flex h-screen">
       <Menu
@@ -120,8 +157,6 @@ const CrearMapa = () => {
         selectedElement={selectedElement}
         numSillas={numSillas}
         setNumSillas={setNumSillas}
-        zoomIn={zoomIn}
-        zoomOut={zoomOut}
         handleSave={handleSave}
         updateElementProperty={updateElementProperty}
         updateElementSize={updateElementSize}
@@ -140,7 +175,7 @@ const CrearMapa = () => {
         addRectangleElement={addRectangleElement}
         addEllipseElement={addEllipseElement}
         addLineElement={addLineElement}
-        addChairRow={addChairRow}
+        startChairRowMode={startChairRowMode}
         snapToGrid={snapToGrid}
       />
 
@@ -152,9 +187,9 @@ const CrearMapa = () => {
           scaleX={zoom}
           scaleY={zoom}
           onWheel={handleWheelZoom}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
+          onMouseDown={stageMouseDown}
+          onMouseMove={stageMouseMove}
+          onMouseUp={stageMouseUp}
         >
           <Layer>
             <Grid width={stageSize.width / zoom} height={stageSize.height / zoom} gridSize={20} />
@@ -285,6 +320,20 @@ const CrearMapa = () => {
             )}
           </Layer>
         </Stage>
+        <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+          <button
+            onClick={zoomIn}
+            className="p-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          >
+            🔍
+          </button>
+          <button
+            onClick={zoomOut}
+            className="p-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+          >
+            🔎
+          </button>
+        </div>
         {selectedElement && (
           <EditPopup
             element={selectedElement}
