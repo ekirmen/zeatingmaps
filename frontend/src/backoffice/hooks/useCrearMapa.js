@@ -47,10 +47,25 @@ export const useCrearMapa = () => {
   const {
     addMesa,
     addSillasToMesa,
-    updateElementProperty,
-    updateElementSize,
+    updateElementProperty: baseUpdateElementProperty,
+    updateElementSize: baseUpdateElementSize,
     deleteSelectedElements,
   } = useMapaElements(elements, setElements, selectedIds, selectedZone, numSillas);
+
+  // Wrappers to keep selectedElement in sync when editing properties or size
+  const updatePropertyAndSelection = (id, property, value) => {
+    baseUpdateElementProperty(id, property, value);
+    if (selectedElement && selectedElement._id === id) {
+      setSelectedElement(prev => ({ ...prev, [property]: value }));
+    }
+  };
+
+  const updateSizeAndSelection = (id, width, height) => {
+    baseUpdateElementSize(id, width, height);
+    if (selectedElement && selectedElement._id === id) {
+      setSelectedElement(prev => ({ ...prev, width, height }));
+    }
+  };
 
   // Funciones para agregar mesa cuadrada o circular que llaman a addMesa
   const agregarMesaCuadrada = () => addMesa('rect');
@@ -143,8 +158,8 @@ export const useCrearMapa = () => {
     agregarMesaCuadrada,
     agregarMesaCircular,
     addSillasToMesa,
-    updateElementProperty,
-    updateElementSize,
+    updateElementProperty: updatePropertyAndSelection,
+    updateElementSize: updateSizeAndSelection,
     deleteSelectedElements,
     eliminarElementoSeleccionado,
 
