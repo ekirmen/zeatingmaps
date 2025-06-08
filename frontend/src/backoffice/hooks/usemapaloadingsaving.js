@@ -60,8 +60,10 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
   }, [salaId, setElements, setZones]);
 
   const transformarParaGuardar = (elements) => {
+    const resultado = [];
+
     const mesas = elements.filter(e => e.type === 'mesa');
-    return mesas.map(mesa => {
+    mesas.forEach(mesa => {
       const sillas = elements
         .filter(el => el.type === 'silla' && el.parentId === mesa._id)
         .map(silla => ({
@@ -70,10 +72,10 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
           posicion: silla.posicion,
           width: silla.width || 20,
           height: silla.height || 20,
-          nombre: silla.nombre || silla.numero || '',  // Save the actual name
+          nombre: silla.nombre || silla.numero || '',
           zona: silla.zonaId || silla.zona?._id || null,
           parentId: silla.parentId,
-          mesa_id: mesa._id
+          mesa_id: mesa._id,
         }));
 
       const mesaData = {
@@ -81,29 +83,74 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
         type: 'mesa',
         shape: mesa.shape || 'circle',
         posicion: mesa.posicion || { x: 0, y: 0 },
-        width: mesa.shape === 'circle' ? mesa.radius * 2 : (mesa.width || 100),
-        height: mesa.shape === 'circle' ? mesa.radius * 2 : (mesa.height || 100),
+        width:
+          mesa.shape === 'circle'
+            ? mesa.radius * 2
+            : mesa.width || 100,
+        height:
+          mesa.shape === 'circle'
+            ? mesa.radius * 2
+            : mesa.height || 100,
         radius: mesa.radius || 50,
         nombre: mesa.nombre || '',
         zona: mesa.zonaId || mesa.zona?._id || null,
-        sillas: sillas  // Include sillas array
+        sillas,
       };
 
-      // Clean up any null or undefined values
       Object.entries(mesaData).forEach(([key, value]) => {
         if (value === undefined || value === null) {
           if (key === 'sillas') {
-            mesaData[key] = [];  // Empty array for sillas if null/undefined
+            mesaData[key] = [];
           } else if (key === 'zona') {
-            mesaData[key] = null;  // Explicit null for zona if not set
+            mesaData[key] = null;
           } else {
-            delete mesaData[key];  // Remove other null/undefined properties
+            delete mesaData[key];
           }
         }
       });
 
-      return mesaData;
+      resultado.push(mesaData);
     });
+
+    const sillasSueltas = elements.filter(
+      e => e.type === 'silla' && !e.parentId
+    );
+    sillasSueltas.forEach(silla => {
+      resultado.push({
+        _id: silla._id,
+        type: 'silla',
+        posicion: silla.posicion,
+        width: silla.width || 20,
+        height: silla.height || 20,
+        nombre: silla.nombre || silla.numero || '',
+        zona: silla.zonaId || silla.zona?._id || null,
+        parentId: null,
+      });
+    });
+
+    const otros = elements.filter(
+      el => !['mesa', 'silla'].includes(el.type)
+    );
+    otros.forEach(el => {
+      const obj = {
+        _id: el._id,
+        type: el.type,
+        posicion: el.posicion,
+        zona: el.zonaId || el.zona?._id || null,
+      };
+      if (el.width !== undefined) obj.width = el.width;
+      if (el.height !== undefined) obj.height = el.height;
+      if (el.radius !== undefined) obj.radius = el.radius;
+      if (el.shape) obj.shape = el.shape;
+      if (el.text) obj.text = el.text;
+      if (el.fontSize) obj.fontSize = el.fontSize;
+      if (el.fill) obj.fill = el.fill;
+      if (el.points) obj.points = el.points;
+      if (el.rotation !== undefined) obj.rotation = el.rotation;
+      resultado.push(obj);
+    });
+
+    return resultado;
   };
 
   const handleSave = async () => {
