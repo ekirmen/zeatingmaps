@@ -7,7 +7,7 @@ import Zonas from './compMapa/Zonas';
 import Menu from './compMapa/MenuMapa';
 import { useCrearMapa } from '../hooks/useCrearMapa';
 import { useMapaZoomStage } from '../hooks/useMapaZoomStage';
-import { fetchZonasPorSala } from '../services/apibackoffice';
+import { fetchZonasPorSala, updateMesa } from '../services/apibackoffice';
 
 const CrearMapa = () => {
   const { salaId } = useParams();
@@ -93,6 +93,12 @@ const CrearMapa = () => {
     const deltaY = newY - dragged.posicion.y;
 
     moverElementosSeleccionados(deltaX, deltaY);
+
+    if (dragged.type === 'mesa' && salaId) {
+      updateMesa(salaId, id, { posicion: { x: newX, y: newY } }).catch(err => {
+        console.error('Error updating mesa position:', err);
+      });
+    }
   };
 
   return (

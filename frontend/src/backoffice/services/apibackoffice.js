@@ -168,6 +168,12 @@ export const updateEntrada = (id, data) => fetchApi(`/entradas/${id}`, {
   body: JSON.stringify(data),
 });
 
+export const updateMesa = (salaId, mesaId, data) => fetchApi(`/mesas/sala/${salaId}/${mesaId}`, {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data),
+});
+
 // Eliminar entidades
 export const deleteEvento = (id) => fetchApi(`/events/${id}`, { method: 'DELETE' });
 export const deleteZona = (id) => fetchApi(`/zonas/${id}`, { method: 'DELETE' });
