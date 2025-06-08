@@ -73,6 +73,12 @@ const Menu = ({
         >
           ➕ Mesa Cuadrada
         </button>
+        <button
+          onClick={startChairRowMode}
+          className="w-full p-2 bg-cyan-600 text-white rounded hover:bg-cyan-700 mt-2"
+        >
+          ➕ Fila de Sillas
+        </button>
 
         <div>
           <label className="block mb-1 font-semibold text-gray-700"># de Sillas:</label>
@@ -160,12 +166,6 @@ const Menu = ({
           className="w-full p-2 bg-lime-500 text-white rounded hover:bg-lime-600"
         >
           ➖ Añadir Línea
-        </button>
-        <button
-          onClick={startChairRowMode}
-          className="w-full p-2 bg-cyan-600 text-white rounded hover:bg-cyan-700"
-        >
-          ➕ Fila de Asientos
         </button>
       </Seccion>
 
