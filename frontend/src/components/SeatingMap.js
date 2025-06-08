@@ -58,7 +58,11 @@ const SeatingMap = () => {
   };
 
   const startSeatRow = () => {
-    setRowNameInput(`A${seatRows.length + 1}`);
+    // Preserve previously typed row names when reopening the modal. Only
+    // initialize the input if it is empty to avoid losing the user's value.
+    if (!rowNameInput) {
+      setRowNameInput(`A${seatRows.length + 1}`);
+    }
     setShowRowModal(true);
   };
 
