@@ -5,7 +5,7 @@ import Mapa from '../models/Mapa.js';
 export const createMesa = async (req, res) => {
   try {
     const { salaId, mesa } = req.body;
-    const mapa = await Mapa.findOne({ sala: salaId });
+    const mapa = await Mapa.findOne({ salaId });
 
     if (!mapa) {
       return res.status(404).json({ message: 'Mapa no encontrado' });
@@ -23,7 +23,7 @@ export const createMesa = async (req, res) => {
 export const getMesasBySala = async (req, res) => {
   try {
     const salaId = req.params.salaId;
-    const mapa = await Mapa.findOne({ sala: salaId });
+    const mapa = await Mapa.findOne({ salaId });
 
     if (!mapa) {
       return res.status(404).json({ message: 'Mapa no encontrado' });
@@ -45,7 +45,7 @@ export const updateMesa = async (req, res) => {
       return res.status(400).json({ message: 'ID de mesa inválido' });
     }
 
-    const mapa = await Mapa.findOne({ sala: salaId });
+    const mapa = await Mapa.findOne({ salaId });
 
     if (!mapa) {
       return res.status(404).json({ message: 'Mapa no encontrado' });
@@ -78,7 +78,7 @@ export const deleteMesa = async (req, res) => {
       return res.status(400).json({ message: 'ID de mesa inválido' });
     }
 
-    const mapa = await Mapa.findOne({ sala: salaId });
+    const mapa = await Mapa.findOne({ salaId });
 
     if (!mapa) {
       return res.status(404).json({ message: 'Mapa no encontrado' });
