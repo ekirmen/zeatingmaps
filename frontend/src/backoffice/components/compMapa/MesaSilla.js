@@ -158,7 +158,7 @@ export const Silla = ({
           fill={fillColor}
           stroke={strokeColor}
           strokeWidth={2}
-          draggable={true}
+          draggable={false}
           onClick={() => onSelect({ _id })} // Keep onClick to allow selection
           onTap={() => onSelect({ _id })} // Keep onTap to allow selection
           onDragEnd={(e) => onDragEnd(e, _id)}
@@ -172,7 +172,7 @@ export const Silla = ({
           fill={fillColor}
           stroke={strokeColor}
           strokeWidth={2}
-          draggable={true}
+          draggable={false}
           onClick={() => onSelect({ _id })} // Keep onClick to allow selection
           onTap={() => onSelect({ _id })} // Keep onTap to allow selection
           onDragEnd={(e) => onDragEnd(e, _id)}
