@@ -41,6 +41,7 @@ const CrearMapa = () => {
     addEllipseElement,
     addLineElement,
     addChairRow,
+    snapToGrid,
   } = useCrearMapa();
 
   const { stageSize, handleWheelZoom } = useMapaZoomStage(zoom, setZoom);
@@ -123,6 +124,7 @@ const CrearMapa = () => {
         addEllipseElement={addEllipseElement}
         addLineElement={addLineElement}
         addChairRow={addChairRow}
+        snapToGrid={snapToGrid}
       />
 
       <div className="flex-1 relative">

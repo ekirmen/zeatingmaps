@@ -106,8 +106,18 @@ export const useCrearMapa = () => {
 
   // Función para ajustar elementos a grid (imán)
   const ajustarElementosAGrid = () => {
-    // Si tienes lógica para snap al grid, implementa aquí
-    // Por ejemplo, recorrer elements y redondear x,y a múltiplos de gridSize
+    const gridSize = 20;
+    setElements(prev =>
+      prev.map(el => {
+        const isSelected =
+          selectedIds.includes(el._id) ||
+          (el.type === 'silla' && selectedIds.includes(el.parentId));
+        if (!isSelected) return el;
+        const newX = Math.round(el.posicion.x / gridSize) * gridSize;
+        const newY = Math.round(el.posicion.y / gridSize) * gridSize;
+        return { ...el, posicion: { x: newX, y: newY } };
+      })
+    );
   };
 
   return {
@@ -164,6 +174,6 @@ export const useCrearMapa = () => {
     addChairRow,
 
     // Snap grid
-    ajustarElementosAGrid,
+    snapToGrid: ajustarElementosAGrid,
   };
 };
