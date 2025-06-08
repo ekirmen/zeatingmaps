@@ -24,7 +24,7 @@ const EditPopup = ({ element, zoom = 1, onNameChange, onSizeChange, onDelete, on
         <input
           type="text"
           value={element.nombre || ''}
-          onChange={(e) => onNameChange(element._id, e.target.value)}
+          onChange={(e) => onNameChange(element._id, 'nombre', e.target.value)}
           className="border p-1 rounded"
         />
       </div>
