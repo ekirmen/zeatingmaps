@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Stage, Layer, Rect, Text, Ellipse, Line } from 'react-konva';
-import { Mesa } from './compMapa/MesaSilla';
+import { Mesa, Silla } from './compMapa/MesaSilla';
 import Grid from './compMapa/Grid';
 import Zonas from './compMapa/Zonas';
 import Menu from './compMapa/MenuMapa';
@@ -300,6 +300,25 @@ const CrearMapa = () => {
                         updateElementProperty(element._id, 'posicion', { x: newX, y: newY });
                         updateElementProperty(element._id, 'points', newPoints);
                       }}
+                    />
+                  );
+                case 'silla':
+                  return (
+                    <Silla
+                      key={element._id}
+                      _id={element._id}
+                      shape={element.shape}
+                      x={element.posicion.x}
+                      y={element.posicion.y}
+                      width={element.width}
+                      height={element.height}
+                      numero={element.numero}
+                      nombre={element.nombre}
+                      selected={isSelected}
+                      onSelect={selectElement}
+                      onDragEnd={onDragEndElement}
+                      zonaId={element.zonaId}
+                      zonas={loadedZonas}
                     />
                   );
                 default:
