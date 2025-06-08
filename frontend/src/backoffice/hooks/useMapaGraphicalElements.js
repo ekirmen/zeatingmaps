@@ -90,6 +90,7 @@ export const useMapaGraphicalElements = (
           shape: sillaShape,
           numero: i + 1,
           zonaId: selectedZone?._id || null,
+          fila: ''
         });
       }
       setElements(prev => [...prev, ...nuevasSillas]);
