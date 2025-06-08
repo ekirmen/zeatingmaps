@@ -85,12 +85,12 @@ const CrearMapa = () => {
     );
   };
 
-  const onDragEndElement = (e, id) => {
+  const onDragEndElement = (e, id, newPos, chairUpdates = []) => {
     const dragged = elements.find(el => el._id === id);
     if (!dragged) return;
 
-    const newX = e.target.x();
-    const newY = e.target.y();
+    const newX = newPos?.x ?? e.target.x();
+    const newY = newPos?.y ?? e.target.y();
 
     // Si el elemento forma parte de la selección, mover todos los seleccionados
     if (selectedIds.includes(id)) {
@@ -100,6 +100,13 @@ const CrearMapa = () => {
     } else {
       // Si no está seleccionado, solo actualizamos su posición
       updateElementProperty(id, 'posicion', { x: newX, y: newY });
+    }
+
+    // Actualizar posiciones de sillas si se proporcionaron
+    if (chairUpdates.length > 0) {
+      chairUpdates.forEach(ch =>
+        updateElementProperty(ch._id, 'posicion', ch.posicion)
+      );
     }
 
     // La posición se guardará al presionar el botón de guardar
@@ -166,7 +173,7 @@ const CrearMapa = () => {
                       {...element}
                       selected={isSelected}
                       onSelect={selectElement}
-                      onDragEnd={(e) => onDragEndElement(e, element._id)}
+                      onDragEnd={onDragEndElement}
                       onChairDragEnd={(e, sillaId) => onDragEndElement(e, sillaId)}
                       zonas={loadedZonas}
                       selectedIds={selectedIds}

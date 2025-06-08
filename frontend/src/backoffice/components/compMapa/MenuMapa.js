@@ -172,56 +172,7 @@ const Menu = ({
       </Seccion>
 
       {/* Editor propiedades */}
-      {selectedElement && (
-        <Seccion titulo="Editar Selección">
-          <label className="block text-sm text-gray-700">Nombre:</label>
-          <input
-            type="text"
-            value={selectedElement.nombre || ''}
-            onChange={(e) =>
-              updateElementProperty(selectedElement._id, 'nombre', e.target.value)
-            }
-            className="w-full p-2 border border-gray-300 rounded-md"
-          />
-
-          <label className="block text-sm text-gray-700">Ancho:</label>
-          <input
-            type="range"
-            min="10"
-            max="500"
-            value={selectedElement.width || 50}
-            onChange={(e) =>
-              updateElementSize(
-                selectedElement._id,
-                parseInt(e.target.value),
-                selectedElement.height
-              )
-            }
-          />
-
-          <label className="block text-sm text-gray-700">Alto:</label>
-          <input
-            type="range"
-            min="10"
-            max="500"
-            value={selectedElement.height || 50}
-            onChange={(e) =>
-              updateElementSize(
-                selectedElement._id,
-                selectedElement.width,
-                parseInt(e.target.value)
-              )
-            }
-          />
-
-          <button
-            onClick={deleteSelectedElements}
-            className="w-full p-2 bg-red-600 text-white rounded hover:bg-red-700 mt-2"
-          >
-            🗑 Eliminar
-          </button>
-        </Seccion>
-      )}
+      {/* La edición de elementos se realiza ahora mediante un popup flotante */}
 
       {/* Zoom y guardar */}
       <Seccion titulo="Herramientas">
