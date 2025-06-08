@@ -158,10 +158,9 @@ export const Silla = ({
           fill={fillColor}
           stroke={strokeColor}
           strokeWidth={2}
-          draggable={false} // *** Set draggable to false to prevent individual chair dragging ***
+          draggable={true}
           onClick={() => onSelect({ _id })} // Keep onClick to allow selection
           onTap={() => onSelect({ _id })} // Keep onTap to allow selection
-          // onDragEnd is still passed but won't fire if draggable is false
           onDragEnd={(e) => onDragEnd(e, _id)}
         />
       ) : (
@@ -173,10 +172,9 @@ export const Silla = ({
           fill={fillColor}
           stroke={strokeColor}
           strokeWidth={2}
-          draggable={false} // *** Set draggable to false to prevent individual chair dragging ***
+          draggable={true}
           onClick={() => onSelect({ _id })} // Keep onClick to allow selection
           onTap={() => onSelect({ _id })} // Keep onTap to allow selection
-          // onDragEnd is still passed but won't fire if draggable is false
           onDragEnd={(e) => onDragEnd(e, _id)}
         />
       )}

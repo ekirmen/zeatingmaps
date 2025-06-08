@@ -89,10 +89,16 @@ const CrearMapa = () => {
 
     const newX = e.target.x();
     const newY = e.target.y();
-    const deltaX = newX - dragged.posicion.x;
-    const deltaY = newY - dragged.posicion.y;
 
-    moverElementosSeleccionados(deltaX, deltaY);
+    // Si el elemento forma parte de la selección, mover todos los seleccionados
+    if (selectedIds.includes(id)) {
+      const deltaX = newX - dragged.posicion.x;
+      const deltaY = newY - dragged.posicion.y;
+      moverElementosSeleccionados(deltaX, deltaY);
+    } else {
+      // Si no está seleccionado, solo actualizamos su posición
+      updateElementProperty(id, 'posicion', { x: newX, y: newY });
+    }
 
     // La posición se guardará al presionar el botón de guardar
   };
