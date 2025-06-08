@@ -13,7 +13,7 @@ const fetchApi = async (url, options = {}) => {
 
 // Zonas
 export const fetchZonas = () => fetchApi('/zonas');
-export const fetchZonasPorSala = (salaId) => fetchApi(`/zonas?sala=${salaId}`);
+export const fetchZonasPorSala = (salaId) => fetchApi(`/zonas/sala/${salaId}`);
 export const fetchZonasPorRecinto = (recintoId) => fetchApi(`/zonas?recinto=${recintoId}`);
 
 // Salas
