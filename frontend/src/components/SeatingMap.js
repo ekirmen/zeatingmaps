@@ -22,6 +22,11 @@ const SeatingMap = () => {
   const [seatRows, setSeatRows] = useState([]);
   const [activeRow, setActiveRow] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [showRowModal, setShowRowModal] = useState(false);
+  const [rowNameInput, setRowNameInput] = useState('');
+  const [selectedSeatRow, setSelectedSeatRow] = useState(null);
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [editName, setEditName] = useState('');
   const seatSpacing = 30;
 
   const addTable = (type = 'rect') => {
@@ -53,10 +58,15 @@ const SeatingMap = () => {
   };
 
   const startSeatRow = () => {
-    const zone = prompt('Nombre de la zona', `A${seatRows.length + 1}`);
-    if (!zone) return;
-    setActiveRow({ id: `row-${Date.now()}`, zone, seats: [] });
+    setRowNameInput(`A${seatRows.length + 1}`);
+    setShowRowModal(true);
+  };
+
+  const confirmAddRow = () => {
+    if (!rowNameInput.trim()) return;
+    setActiveRow({ id: `row-${Date.now()}`, zone: rowNameInput.trim(), seats: [] });
     setIsDrawing(false);
+    setShowRowModal(false);
   };
 
   const handleMouseDown = (e) => {
@@ -90,6 +100,43 @@ const SeatingMap = () => {
     }
   };
 
+  const handleSeatSelect = (seatId) => {
+    const row = seatRows.find((r) => r.seats.some((s) => s.id === seatId));
+    if (row) {
+      setSelectedSeatRow(row);
+      setEditName(row.zone);
+    }
+  };
+
+  const handleTableSelect = (tableId) => {
+    const table = tables.find((t) => t.id === tableId);
+    if (table) {
+      setSelectedTable(table);
+      setEditName(table.name);
+    }
+  };
+
+  const saveEdit = () => {
+    if (selectedSeatRow) {
+      setSeatRows(
+        seatRows.map((r) =>
+          r.id === selectedSeatRow.id ? { ...r, zone: editName } : r
+        )
+      );
+      setSelectedSeatRow(null);
+    } else if (selectedTable) {
+      setTables(
+        tables.map((t) => (t.id === selectedTable.id ? { ...t, name: editName } : t))
+      );
+      setSelectedTable(null);
+    }
+  };
+
+  const cancelEdit = () => {
+    setSelectedSeatRow(null);
+    setSelectedTable(null);
+  };
+
   return (
     <div>
       <div style={{ marginBottom: '8px' }}>
@@ -111,15 +158,68 @@ const SeatingMap = () => {
       >
         <Layer>
           {tables.map((t) => (
-            <Table key={t.id} {...t} onDragEnd={moveTable} />
+            <Table
+              key={t.id}
+              {...t}
+              onDragEnd={moveTable}
+              onSelect={handleTableSelect}
+            />
           ))}
           {seatRows.map((row) =>
-            row.seats.map((seat) => <Chair key={seat.id} {...seat} />)
+            row.seats.map((seat) => (
+              <Chair key={seat.id} {...seat} onSelect={handleSeatSelect} />
+            ))
           )}
           {activeRow &&
-            activeRow.seats.map((seat) => <Chair key={seat.id} {...seat} />)}
+            activeRow.seats.map((seat) => (
+              <Chair key={seat.id} {...seat} onSelect={handleSeatSelect} />
+            ))}
         </Layer>
       </Stage>
+
+      {showRowModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded shadow">
+            <h2 className="text-lg font-semibold mb-2">Nombre de fila</h2>
+            <input
+              className="border p-2"
+              value={rowNameInput}
+              onChange={(e) => setRowNameInput(e.target.value)}
+            />
+            <div className="mt-4 flex justify-end space-x-2">
+              <button className="bg-blue-500 text-white px-3 py-1 rounded" onClick={confirmAddRow}>
+                Aceptar
+              </button>
+              <button className="bg-gray-300 px-3 py-1 rounded" onClick={() => setShowRowModal(false)}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {(selectedSeatRow || selectedTable) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-4 rounded shadow">
+            <h2 className="text-lg font-semibold mb-2">
+              Editar nombre {selectedSeatRow ? 'de fila' : 'de mesa'}
+            </h2>
+            <input
+              className="border p-2"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+            />
+            <div className="mt-4 flex justify-end space-x-2">
+              <button className="bg-blue-500 text-white px-3 py-1 rounded" onClick={saveEdit}>
+                Guardar
+              </button>
+              <button className="bg-gray-300 px-3 py-1 rounded" onClick={cancelEdit}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
