@@ -1,7 +1,13 @@
 import { useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid'; // Assuming you use uuid for unique IDs
 
-export const useMapaGraphicalElements = (elements, setElements, selectedZone) => {
+export const useMapaGraphicalElements = (
+  elements,
+  setElements,
+  selectedZone,
+  numSillas = 4,
+  sillaShape = 'rect'
+) => {
 
   // Function to add a generic element
   const addElement = useCallback((type, initialProps) => {
@@ -60,14 +66,35 @@ export const useMapaGraphicalElements = (elements, setElements, selectedZone) =>
     });
   }, [addElement]); // addLineElement depends on addElement
 
-  // You will add the addChairRow function here later if needed
+  // Add a row of chairs independent of a table
+  const addChairRow = useCallback(() => {
+    const CHAIR_SIZE = 20;
+    const SPACING = 10 + CHAIR_SIZE;
+    const startX = 50;
+    const startY = 50;
+
+    const nuevasSillas = [];
+    for (let i = 0; i < numSillas; i++) {
+      nuevasSillas.push({
+        _id: uuidv4(),
+        type: 'silla',
+        parentId: null,
+        posicion: { x: startX + i * SPACING, y: startY },
+        width: CHAIR_SIZE,
+        height: CHAIR_SIZE,
+        shape: sillaShape,
+        numero: i + 1,
+        zonaId: selectedZone?._id || null,
+      });
+    }
+    setElements(prev => [...prev, ...nuevasSillas]);
+  }, [setElements, numSillas, sillaShape, selectedZone]);
 
   return {
     addTextElement,
     addRectangleElement,
-    addEllipseElement, // Return the new function
-    addLineElement,    // Return the new function
-    // Return other functions here as you create them
-    // addChairRow,
+    addEllipseElement,
+    addLineElement,
+    addChairRow,
   };
 };
