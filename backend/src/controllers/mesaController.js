@@ -41,9 +41,6 @@ export const updateMesa = async (req, res) => {
     const { salaId, mesaId } = req.params;
     const updateData = req.body;
 
-    if (!mongoose.Types.ObjectId.isValid(mesaId)) {
-      return res.status(400).json({ message: 'ID de mesa inválido' });
-    }
 
     const mapa = await Mapa.findOne({ salaId });
 
@@ -106,9 +103,6 @@ export const deleteMesa = async (req, res) => {
   try {
     const { salaId, mesaId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(mesaId)) {
-      return res.status(400).json({ message: 'ID de mesa inválido' });
-    }
 
     const mapa = await Mapa.findOne({ salaId });
 
