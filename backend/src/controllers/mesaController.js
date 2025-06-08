@@ -69,6 +69,38 @@ export const updateMesa = async (req, res) => {
   }
 };
 
+// Actualizar solo la posición de una mesa
+export const updateMesaPosition = async (req, res) => {
+  try {
+    const { salaId, mesaId } = req.params;
+    const { posicion } = req.body;
+
+    if (!posicion || typeof posicion.x !== 'number' || typeof posicion.y !== 'number') {
+      return res.status(400).json({ message: 'Posición inválida' });
+    }
+
+    const mapa = await Mapa.findOne({ salaId });
+
+    if (!mapa) {
+      return res.status(404).json({ message: 'Mapa no encontrado' });
+    }
+
+    const mesa = mapa.contenido.find(m => m._id.toString() === mesaId);
+
+    if (!mesa) {
+      return res.status(404).json({ message: 'Mesa no encontrada' });
+    }
+
+    mesa.posicion = posicion;
+
+    await mapa.save();
+
+    res.json(mesa);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al actualizar posición de la mesa', error: error.message });
+  }
+};
+
 // Eliminar una mesa de un mapa
 export const deleteMesa = async (req, res) => {
   try {
