@@ -67,28 +67,35 @@ export const useMapaGraphicalElements = (
   }, [addElement]); // addLineElement depends on addElement
 
   // Add a row of chairs independent of a table
-  const addChairRow = useCallback(() => {
-    const CHAIR_SIZE = 20;
-    const SPACING = 10 + CHAIR_SIZE;
-    const startX = 50;
-    const startY = 50;
+  const addChairRow = useCallback(
+    (startPos = { x: 50, y: 50 }, endPos = null) => {
+      const CHAIR_SIZE = 20;
+      const SPACING = 10 + CHAIR_SIZE;
 
-    const nuevasSillas = [];
-    for (let i = 0; i < numSillas; i++) {
-      nuevasSillas.push({
-        _id: uuidv4(),
-        type: 'silla',
-        parentId: null,
-        posicion: { x: startX + i * SPACING, y: startY },
-        width: CHAIR_SIZE,
-        height: CHAIR_SIZE,
-        shape: sillaShape,
-        numero: i + 1,
-        zonaId: selectedZone?._id || null,
-      });
-    }
-    setElements(prev => [...prev, ...nuevasSillas]);
-  }, [setElements, numSillas, sillaShape, selectedZone]);
+      let cantidad = numSillas;
+      if (endPos) {
+        const distancia = Math.abs(endPos.x - startPos.x);
+        cantidad = Math.max(1, Math.floor(distancia / SPACING) + 1);
+      }
+
+      const nuevasSillas = [];
+      for (let i = 0; i < cantidad; i++) {
+        nuevasSillas.push({
+          _id: uuidv4(),
+          type: 'silla',
+          parentId: null,
+          posicion: { x: startPos.x + i * SPACING, y: startPos.y },
+          width: CHAIR_SIZE,
+          height: CHAIR_SIZE,
+          shape: sillaShape,
+          numero: i + 1,
+          zonaId: selectedZone?._id || null,
+        });
+      }
+      setElements(prev => [...prev, ...nuevasSillas]);
+    },
+    [setElements, numSillas, sillaShape, selectedZone]
+  );
 
   return {
     addTextElement,
