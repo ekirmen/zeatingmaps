@@ -94,11 +94,7 @@ const CrearMapa = () => {
 
     moverElementosSeleccionados(deltaX, deltaY);
 
-    if (dragged.type === 'mesa' && salaId) {
-      updateMesa(salaId, id, { posicion: { x: newX, y: newY } }).catch(err => {
-        console.error('Error updating mesa position:', err);
-      });
-    }
+    // La posición se guardará al presionar el botón de guardar
   };
 
   return (

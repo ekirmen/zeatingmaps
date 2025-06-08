@@ -24,6 +24,10 @@ const ElementoSchema = new mongoose.Schema({
   nombre: String,
   width: Number,
   height: Number,
+  // Forma de la mesa: 'circle' o 'rect'
+  shape: String,
+  // Radio para mesas circulares
+  radius: Number,
   zona: { type: String, default: null }, // <--- Expects 'zona'
   sillas: [SillaSchema],
 });
