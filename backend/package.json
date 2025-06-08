@@ -11,7 +11,8 @@
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",
     "seed": "node src/database/seed.js",
-    "migrate": "node src/database/migrate.js"
+    "migrate": "node src/database/migrate.js",
+    "check-mesas": "node scripts/checkMesaLocations.js"
   },
   "keywords": [],
   "author": "",
