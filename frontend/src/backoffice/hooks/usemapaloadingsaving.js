@@ -18,13 +18,10 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
             ...mesa,
             type: 'mesa',
             shape: mesa.shape || (mesa.radius ? 'circle' : 'rect'),
-            radius: mesa.radius || (mesa.width / 2),
+            radius: mesa.radius || mesa.width / 2,
             width: mesa.width || mesa.radius * 2,
             height: mesa.height || mesa.radius * 2,
-            posicion: {
-              x: 140,  // Fixed position
-              y: 140   // Fixed position
-            },
+            posicion: mesa.posicion || { x: 0, y: 0 },
             zona: typeof mesa.zona === 'string' ? zonasCargadas.find(z => z._id === mesa.zona) : mesa.zona,
           };
 
@@ -81,10 +78,7 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
         _id: mesa._id,
         type: 'mesa',
         shape: mesa.shape || 'circle',
-        posicion: {
-          x: 140,  // Fixed position instead of 200
-          y: 140   // Fixed position instead of 200
-        },
+        posicion: mesa.posicion || { x: 0, y: 0 },
         width: mesa.shape === 'circle' ? mesa.radius * 2 : (mesa.width || 100),
         height: mesa.shape === 'circle' ? mesa.radius * 2 : (mesa.height || 100),
         radius: mesa.radius || 50,
