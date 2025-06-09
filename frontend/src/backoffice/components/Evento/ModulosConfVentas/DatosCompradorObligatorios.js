@@ -48,21 +48,29 @@ const DatosCompradorObligatorios = ({
         <h3>Datos del Comprador Obligatorios</h3>
       </div>
       {mostrarDatos && (
-        <form>
-          {Object.keys(datosComprador).map((key) => (
-            <div key={key} className="form-group">
-              <label>
-                <input
-                  type="checkbox"
-                  name={key}
-                  checked={datosComprador[key]}
-                  onChange={handleCheckboxChange}
-                />
-                {labels[key] || key.replace(/([A-Z])/g, ' $1').trim()}
-              </label>
-            </div>
-          ))}
-        </form>
+        <table className="w-full">
+          <thead>
+            <tr>
+              <th className="text-left">Dato</th>
+              <th className="text-center">Obligatorio</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.keys(datosComprador).map((key) => (
+              <tr key={key} className="border-t">
+                <td>{labels[key] || key.replace(/([A-Z])/g, ' $1').trim()}</td>
+                <td className="text-center">
+                  <input
+                    type="checkbox"
+                    name={key}
+                    checked={datosComprador[key]}
+                    onChange={handleCheckboxChange}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
