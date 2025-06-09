@@ -71,7 +71,9 @@ const App = () => {
     }
   };
 
-  const showHeader = location.pathname.startsWith('/store');
+  const showHeader =
+    location.pathname.startsWith('/store') ||
+    location.pathname.startsWith('/dashboard/evento');
   const showFooter = location.pathname.startsWith('/store');
 
   return (
