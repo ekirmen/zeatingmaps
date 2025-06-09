@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 const BuyEvent = () => {
-  const { id } = useParams(); // Obtiene el ID del evento de la URL
+  const { id } = useParams(); // id puede ser slug o ID
   const [evento, setEvento] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

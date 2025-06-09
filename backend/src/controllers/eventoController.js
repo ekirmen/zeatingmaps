@@ -1,6 +1,7 @@
 import Evento from '../models/Evento.js';
 import path from 'path';
 import fs from 'fs';
+import mongoose from 'mongoose';
 
 const handleImageUpload = (file, fieldName) => {
   if (!file) return null;
@@ -19,6 +20,12 @@ const handleImageUpload = (file, fieldName) => {
 export const createEvento = async (req, res) => {
   try {
     const eventoData = JSON.parse(req.body.data || '{}');
+
+    if (!eventoData.slug && eventoData.nombre) {
+      eventoData.slug = eventoData.nombre.toLowerCase().replace(/\s+/g, '-');
+    }
+
+
     
     // Handle image uploads
     if (req.files) {
@@ -67,7 +74,10 @@ export const updateEvento = async (req, res) => {
     }
 
     const eventoData = JSON.parse(req.body.data || '{}');
-    
+    if (!eventoData.slug && eventoData.nombre) {
+      eventoData.slug = eventoData.nombre.toLowerCase().replace(/\s+/g, '-');
+    }
+
     if (req.files) {
       eventoData.imagenes = eventoData.imagenes || {};
       
@@ -116,12 +126,23 @@ export const getEventos = async (req, res) => {
   }
 };
 
-export const getEventoById = async (req, res) => {
+export const getEvento = async (req, res) => {
   try {
-    const evento = await Evento.findById(req.params.id);
+    const identifier = req.params.identifier;
+    let evento = null;
+
+    if (identifier && mongoose.Types.ObjectId.isValid(identifier)) {
+      evento = await Evento.findById(identifier);
+    }
+
+    if (!evento) {
+      evento = await Evento.findOne({ slug: identifier });
+    }
+
     if (!evento) {
       return res.status(404).json({ message: 'Evento not found' });
     }
+
     res.json(evento);
   } catch (error) {
     res.status(500).json({ message: error.message });

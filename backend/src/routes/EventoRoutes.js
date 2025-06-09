@@ -2,7 +2,7 @@ import express from 'express';
 import {
   createEvento,
   getEventos,
-  getEventoById,
+  getEvento,
   updateEvento,
   deleteEvento
 } from '../controllers/eventoController.js';
@@ -44,7 +44,7 @@ const upload = multer({ storage: storage }).fields([
 
 router.post('/', upload, createEvento);
 router.get('/', getEventos);
-router.get('/:id', getEventoById);
+router.get('/:identifier', getEvento);
 router.put('/:id', upload, updateEvento);  // Added upload middleware here
 router.delete('/:id', deleteEvento);
 
