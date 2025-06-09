@@ -4,8 +4,6 @@ import DisenoEspectaculo from './DisenoEspectaculo';
 import ConfiguracionVenta from './ConfiguracionVenta';
 import ConfiguracionBoletas from './ConfiguracionBoletas';
 import OpcionesAvanzadas from './OpcionesAvanzadas';
-import { useState } from 'react';
-import { uploadFile } from '../../../services/eventoService';
 import './EditForm.css';
 
 const EditForm = ({
@@ -43,33 +41,17 @@ const EditForm = ({
     }
   };
 
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isUploading, setIsUploading] = useState(false);
-
-  const handleFileUpload = async (e, fieldName) => {
+  const handleFileChange = (e, fieldName) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    try {
-      const filePath = await uploadFile(file, (progress) => {
-        setUploadProgress(progress);
-      });
-
-      setEventoData(prev => ({
-        ...prev,
-        imagenes: {
-          ...prev.imagenes,
-          [fieldName]: filePath
-        }
-      }));
-    } catch (error) {
-      alert('Error al subir el archivo');
-    } finally {
-      setIsUploading(false);
-    }
+    setEventoData(prev => ({
+      ...prev,
+      imagenes: {
+        ...prev.imagenes,
+        [fieldName]: file
+      }
+    }));
   };
 
   return (
@@ -120,25 +102,17 @@ const EditForm = ({
                 <label>Imagen Principal</label>
                 <input
                   type="file"
-                  onChange={(e) => handleFileUpload(e, 'espectaculo')}
+                  onChange={(e) => handleFileChange(e, 'espectaculo')}
                   accept="image/*"
-                  disabled={isUploading}
                 />
-                
-                {isUploading && (
-                  <div className="upload-progress">
-                    <div 
-                      className="progress-bar"
-                      style={{ width: `${uploadProgress}%` }}
-                    >
-                      {uploadProgress}%
-                    </div>
-                  </div>
-                )}
-                
+
                 {eventoData?.imagenes?.espectaculo && (
-                  <img 
-                    src={`http://localhost:5000${eventoData.imagenes.espectaculo}`}
+                  <img
+                    src={
+                      eventoData.imagenes.espectaculo instanceof File
+                        ? URL.createObjectURL(eventoData.imagenes.espectaculo)
+                        : `http://localhost:5000${eventoData.imagenes.espectaculo}`
+                    }
                     alt="Vista previa"
                     className="preview-image"
                   />
