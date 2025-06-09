@@ -9,29 +9,29 @@ import DatosPorBoleto from './ModulosConfVentas/DatosPorBoleto';
 const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
   const [mostrarDatosComprador, setMostrarDatosComprador] = useState(false);
   const [datosComprador, setDatosComprador] = useState({
-    nombre: false,
-    email: false,
-    telefono: false,
-    rut: false,
-    numeroIdentificacionFiscal: false,
-    direccion: false,
-    nombreFonetico: false,
-    apellidosFoneticos: false,
-    idioma: false,
-    fechaNacimiento: false,
-    sexo: false,
-    empresa: false,
-    departamento: false,
-    cargoEmpresa: false,
-    matricula: false,
-    twitter: false,
-    facebook: false,
-    youtube: false,
-    tiktok: false,
-    snapchat: false,
-    instagram: false,
-    contactoEmergencia: false,
-    nacionalidad: false
+    nombre: { solicitado: false, obligatorio: false },
+    email: { solicitado: false, obligatorio: false },
+    telefono: { solicitado: false, obligatorio: false },
+    rut: { solicitado: false, obligatorio: false },
+    numeroIdentificacionFiscal: { solicitado: false, obligatorio: false },
+    direccion: { solicitado: false, obligatorio: false },
+    nombreFonetico: { solicitado: false, obligatorio: false },
+    apellidosFoneticos: { solicitado: false, obligatorio: false },
+    idioma: { solicitado: false, obligatorio: false },
+    fechaNacimiento: { solicitado: false, obligatorio: false },
+    sexo: { solicitado: false, obligatorio: false },
+    empresa: { solicitado: false, obligatorio: false },
+    departamento: { solicitado: false, obligatorio: false },
+    cargoEmpresa: { solicitado: false, obligatorio: false },
+    matricula: { solicitado: false, obligatorio: false },
+    twitter: { solicitado: false, obligatorio: false },
+    facebook: { solicitado: false, obligatorio: false },
+    youtube: { solicitado: false, obligatorio: false },
+    tiktok: { solicitado: false, obligatorio: false },
+    snapchat: { solicitado: false, obligatorio: false },
+    instagram: { solicitado: false, obligatorio: false },
+    contactoEmergencia: { solicitado: false, obligatorio: false },
+    nacionalidad: { solicitado: false, obligatorio: false }
   });
 
   const [mostrarDatosBoleto, setMostrarDatosBoleto] = useState(false);
@@ -45,11 +45,17 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
     pregunta2: false
   });
 
-  const updateDatosComprador = (field, value) => {
-    setDatosComprador(prev => ({ ...prev, [field]: value }));
+  const updateDatosComprador = (field, prop, value) => {
+    setDatosComprador(prev => ({
+      ...prev,
+      [field]: { ...prev[field], [prop]: value },
+    }));
     setEventoData(prev => ({
       ...prev,
-      datosComprador: { ...prev.datosComprador, [field]: value }
+      datosComprador: {
+        ...prev.datosComprador,
+        [field]: { ...prev.datosComprador[field], [prop]: value },
+      },
     }));
   };
 
@@ -66,7 +72,7 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
       const nuevo = !prev;
       if (!nuevo) {
         const cleared = Object.keys(datosComprador).reduce((acc, key) => {
-          acc[key] = false;
+          acc[key] = { solicitado: false, obligatorio: false };
           return acc;
         }, {});
         setDatosComprador(cleared);
