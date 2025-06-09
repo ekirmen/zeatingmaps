@@ -93,7 +93,8 @@ const Evento = () => {
         otrasOpciones: {
           observacionesEmail: { mostrar: false, texto: '' },
           observacionesCompra: { mostrar: false, texto: '' },
-          popupAntesAsiento: { mostrar: false, texto: '' }
+          popupAntesAsiento: { mostrar: false, texto: '' },
+          metodosPagoPermitidos: []
         }
       });
       setMenuVisible(true);
