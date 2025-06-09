@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { RecintoProvider } from './backoffice/contexts/RecintoContext';
 import { RecintoSalaProvider } from './backoffice/contexts/RecintoSalaContext';
 import { IvaProvider } from './backoffice/contexts/IvaContext';
+import { TagProvider } from './backoffice/contexts/TagContext';
 import { CartProvider } from './contexts/CartContext';
 import CartTimer from './store/components/CartTimer';
 
@@ -80,10 +81,11 @@ const App = () => {
         <RecintoProvider>
           <RecintoSalaProvider>
             <IvaProvider>
-              {showHeader && (
-                <Header onLogin={handleLogin} onLogout={handleLogout} />
-              )}
-              <div className="flex-grow">
+              <TagProvider>
+                {showHeader && (
+                  <Header onLogin={handleLogin} onLogout={handleLogout} />
+                )}
+                <div className="flex-grow">
                 <Routes>
                   <Route path="/" element={<Login onLogin={handleLogin} />} />
                   <Route path="/backoffice" element={<Navigate to="/dashboard" replace />} />
@@ -136,9 +138,10 @@ const App = () => {
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>
-              {showFooter && <Footer />}
-              <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-              <CartTimer />
+                {showFooter && <Footer />}
+                <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+                <CartTimer />
+              </TagProvider>
             </IvaProvider>
           </RecintoSalaProvider>
         </RecintoProvider>
