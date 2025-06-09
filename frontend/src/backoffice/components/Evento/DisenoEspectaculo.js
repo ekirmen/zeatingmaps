@@ -7,11 +7,23 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   const [showHtmlEditor, setShowHtmlEditor] = useState(false);
   // Update the image preview handling
   // Fix initial state image paths
+  const getPreview = (img) => {
+    if (typeof img === 'string') {
+      return `http://localhost:5000/public/uploads/eventos/espectaculo/${img.split('/').pop()}`;
+    }
+    if (img instanceof File) {
+      return URL.createObjectURL(img);
+    }
+    return null;
+  };
+
   const [imagesPreviews, setImagesPreviews] = useState({
-    banner: eventoData.imagenes?.banner ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.banner.split('/').pop()}` : null,
-    obraImagen: eventoData.imagenes?.obraImagen ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.obraImagen.split('/').pop()}` : null,
-    portada: eventoData.imagenes?.portada ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.portada.split('/').pop()}` : null,
-    espectaculo: eventoData.imagenes?.espectaculo?.map(url => `http://localhost:5000/public/uploads/eventos/espectaculo/${url.split('/').pop()}`) || []
+    banner: getPreview(eventoData.imagenes?.banner),
+    obraImagen: getPreview(eventoData.imagenes?.obraImagen),
+    portada: getPreview(eventoData.imagenes?.portada),
+    espectaculo: Array.isArray(eventoData.imagenes?.espectaculo)
+      ? eventoData.imagenes.espectaculo.map(img => getPreview(img)).filter(Boolean)
+      : []
   });
   
   // Store uploaded images when saving instead of immediately
