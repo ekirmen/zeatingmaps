@@ -8,25 +8,27 @@ const Pay = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Accede de forma segura a los datos de navegación
+  const { carrito, funcionId } = location.state || {};
+
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
   const [availableMethods, setAvailableMethods] = useState(["stripe", "paypal", "transferencia"]);
-  
-  if (!location.state?.carrito || !location.state?.funcionId) {
-    return <Navigate to="/store" replace />;
-  }
 
-  const { carrito, funcionId } = location.state;
-  const subtotal = carrito.reduce((sum, item) => sum + item.precio, 0);
+  const subtotal = carrito?.reduce((sum, item) => sum + item.precio, 0) || 0;
   const impuestos = subtotal * 0.16;
   const total = subtotal + impuestos;
 
   useEffect(() => {
+    if (!funcionId) return;
+
     const fetchOptions = async () => {
       try {
         const funcRes = await fetch(`http://localhost:5000/api/funcions/${funcionId}`);
         const funcData = await funcRes.json();
         const eventId = funcData.evento?._id || funcData.evento;
+
         if (eventId) {
           const eventRes = await fetch(`http://localhost:5000/api/events/${eventId}`);
           const eventData = await eventRes.json();
@@ -39,6 +41,7 @@ const Pay = () => {
         console.error('Error cargando opciones del evento:', error);
       }
     };
+
     fetchOptions();
   }, [funcionId]);
 
@@ -68,7 +71,7 @@ const Pay = () => {
       });
 
       const data = await response.json();
-      
+
       if (data.success) {
         navigate(`/payment-success/${data.locator}`);
       } else {
@@ -80,10 +83,15 @@ const Pay = () => {
     }
   };
 
+  // ✅ Render condicional después de los hooks
+  if (!carrito || !funcionId) {
+    return <Navigate to="/store" replace />;
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-2xl font-bold mb-6">Finalizar Compra</h1>
-      
+
       {/* Cart Summary */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Resumen del Carrito</h2>
@@ -109,6 +117,7 @@ const Pay = () => {
         </div>
       </div>
 
+      {/* Observaciones del evento */}
       {eventOptions.observacionesCompra?.mostrar && (
         <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700">
           {eventOptions.observacionesCompra.texto}

@@ -117,7 +117,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   // Add save button at the end of the images-upload section
   return (
     <div className="tab-codntent">
-      <h3>Configuración de boletas</h3>
       
       <section className="ticket-formats">
         <h4>Formatos de boleta</h4>

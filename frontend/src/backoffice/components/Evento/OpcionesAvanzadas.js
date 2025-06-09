@@ -157,9 +157,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
 
   return (
     <div className="tab-content opciones-avanzadas space-y-4">
-      <h3>Opciones avanzadas</h3>
-
-      <h4>Otras opciones</h4>
+     <h4>Otras opciones</h4>
 
       <div className="form-group space-y-2">
         <label>
