@@ -1,5 +1,31 @@
 import React from 'react';
 
+const labels = {
+  nombre: 'Nombre',
+  email: 'Email',
+  telefono: 'Teléfono',
+  rut: 'RUT',
+  numeroIdentificacionFiscal: 'Número de identificación fiscal',
+  direccion: 'Dirección / C.P.',
+  nombreFonetico: 'Nombre fonético',
+  apellidosFoneticos: 'Apellidos fonéticos',
+  idioma: 'Idioma',
+  fechaNacimiento: 'Fecha de nacimiento',
+  sexo: 'Sexo',
+  empresa: 'Empresa',
+  departamento: 'Departamento',
+  cargoEmpresa: 'Cargo en la empresa',
+  matricula: 'Matrícula',
+  twitter: 'Twitter',
+  facebook: 'Facebook',
+  youtube: 'YouTube',
+  tiktok: 'TikTok',
+  snapchat: 'Snapchat',
+  instagram: 'Instagram',
+  contactoEmergencia: 'Contacto de emergencia',
+  nacionalidad: 'Nacionalidad'
+};
+
 const DatosCompradorObligatorios = ({
   mostrarDatos,
   toggleMostrarDatos,
@@ -32,7 +58,7 @@ const DatosCompradorObligatorios = ({
                   checked={datosComprador[key]}
                   onChange={handleCheckboxChange}
                 />
-                {key.replace(/([A-Z])/g, ' $1').trim()} {/* Formateo de texto */}
+                {labels[key] || key.replace(/([A-Z])/g, ' $1').trim()}
               </label>
             </div>
           ))}
