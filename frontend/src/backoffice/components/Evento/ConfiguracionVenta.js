@@ -107,7 +107,7 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
     <div className="tab-content configuracion-venta space-y-6">
       <ModoDeVenta eventoData={eventoData} setEventoData={setEventoData} />
       <VentaDeZonas />
-      <RegistroObligatorio />
+      <RegistroObligatorio eventoData={eventoData} setEventoData={setEventoData} />
       <EstadoDeVenta />
       <DatosCompradorObligatorios
         mostrarDatos={mostrarDatosComprador}
