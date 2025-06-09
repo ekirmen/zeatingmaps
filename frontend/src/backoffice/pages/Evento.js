@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import { useRecinto } from '../contexts/RecintoContext';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -23,6 +24,8 @@ const Evento = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [activeTab, setActiveTab] = useState('datosBasicos');
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
 
   const filtrarEventos = useCallback(() => {
     if (!recintoSeleccionado || !salaSeleccionada) return;
@@ -191,15 +194,25 @@ const Evento = () => {
       const { imagenes, ...eventDataWithoutImages } = eventoData;
       formData.append('data', JSON.stringify(eventDataWithoutImages));
 
-      const response = await fetch(url, {
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      const response = await axios({
         method,
-        headers: { 'Authorization': `Bearer ${token}` },
-        body: formData,
+        url,
+        headers: { Authorization: `Bearer ${token}` },
+        data: formData,
+        onUploadProgress: (e) => {
+          if (e.total) {
+            const progress = Math.round((e.loaded * 100) / e.total);
+            setUploadProgress(progress);
+          }
+        }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
-        const message = errorData.errors ? errorData.errors.join(', ') : errorData.message;
+      if (response.status < 200 || response.status >= 300) {
+        const data = response.data || {};
+        const message = data.errors ? data.errors.join(', ') : data.message;
         throw new Error(message || 'Error al guardar el evento');
       }
 
@@ -209,6 +222,8 @@ const Evento = () => {
       setTimeout(() => setIsSaved(false), 3000);
     } catch (error) {
       alert(error.message || 'Error al guardar el evento');
+    } finally {
+      setIsUploading(false);
     }
   }, [eventoData, fetchEventos]);
 
@@ -320,9 +335,10 @@ const Evento = () => {
               </button>
               <button
                 onClick={handleSave}
+                disabled={isUploading}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
               >
-                Guardar
+                {isUploading ? `Guardando ${uploadProgress}%` : 'Guardar'}
               </button>
             </div>
           </div>
