@@ -44,11 +44,26 @@ const router = express.Router();
 // 📤 Subida de imagen para evento
 router.post('/upload/:id', upload.single('file'), uploadEventImage);
 
+// Campos de imágenes permitidos
+const uploadFields = upload.fields([
+  { name: 'banner', maxCount: 1 },
+  { name: 'obraImagen', maxCount: 1 },
+  { name: 'portada', maxCount: 1 },
+  { name: 'espectaculo', maxCount: 10 },
+  { name: 'logoHorizontal', maxCount: 1 },
+  { name: 'logoVertical', maxCount: 1 },
+  { name: 'bannerPublicidad', maxCount: 1 },
+  { name: 'logoCuadrado', maxCount: 1 },
+  { name: 'logoPassbook', maxCount: 1 },
+  { name: 'passBookBanner', maxCount: 1 },
+  { name: 'icono', maxCount: 1 }
+]);
+
 // 🔐 Rutas de CRUD
-router.post('/', authMiddleware, createEvento);
+router.post('/', authMiddleware, uploadFields, createEvento);
 router.get('/', getEventos);
 router.get('/:identifier', getEvento);
-router.put('/:id', authMiddleware, updateEvento);
+router.put('/:id', authMiddleware, uploadFields, updateEvento);
 router.delete('/:id', authMiddleware, deleteEvento);
 
 export default router;
