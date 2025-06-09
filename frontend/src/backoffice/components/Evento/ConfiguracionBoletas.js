@@ -16,49 +16,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
     icono: eventoData.imagenes?.icono ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.icono.split('/').pop()}` : null
   });
 
-  const uploadImage = async (formData, imageType) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/events/upload/${eventoData._id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `${token}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Server error details:', errorData);
-        throw new Error(errorData.message || `Error del servidor: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('Upload success:', result);
-      
-      if (result.url) {
-        const filename = result.url.split('/').pop();
-        const fullUrl = `http://localhost:5000/public/uploads/eventos/tickets/${filename}`;
-        
-        setImagesPreviews(prev => ({
-          ...prev,
-          [imageType]: fullUrl
-        }));
-
-        setEventoData(prev => ({
-          ...prev,
-          imagenes: {
-            ...prev.imagenes,
-            [imageType]: filename
-          }
-        }));
-      }
-    } catch (error) {
-      console.error('Error al subir imagen:', error);
-      console.error('Error details:', error.stack);
-      alert(`Error al subir la imagen: ${error.message}`);
-    }
-  };
 
   const handleImageChange = async (e, imageType) => {
     const file = e.target.files[0];
@@ -74,21 +31,23 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('type', imageType);
-
     // Create temporary preview URL
     const tempPreviewUrl = URL.createObjectURL(file);
-    
+
     // Update preview immediately
     setImagesPreviews(prev => ({
       ...prev,
       [imageType]: tempPreviewUrl
     }));
 
-    // Upload image
-    await uploadImage(formData, imageType);
+    // Store file in eventoData for later upload on save
+    setEventoData(prev => ({
+      ...prev,
+      imagenes: {
+        ...prev.imagenes,
+        [imageType]: file
+      }
+    }));
   };
 
   // Remove or comment out the handleSave function since we don't need it
