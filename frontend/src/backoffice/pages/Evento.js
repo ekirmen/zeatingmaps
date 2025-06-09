@@ -94,6 +94,7 @@ const Evento = () => {
           observacionesEmail: { mostrar: false, texto: '' },
           observacionesCompra: { mostrar: false, texto: '' },
           popupAntesAsiento: { mostrar: false, texto: '' },
+          habilitarMetodosPago: false,
           metodosPagoPermitidos: []
         }
       });

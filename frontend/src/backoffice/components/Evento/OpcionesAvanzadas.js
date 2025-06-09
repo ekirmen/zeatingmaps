@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
 /**
- * Advanced options for an event.  Currently exposes fields that are not part of
- * the basic configuration such as the user that created or last updated the
- * event.  The component keeps its own form state and syncs it with the parent
- * via `setEventoData`.
+ * Advanced options for an event.  Handles optional messages and payment
+ * method configuration.  The component keeps its own form state and syncs it
+ * with the parent via `setEventoData`.
  */
 const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   const [metodos, setMetodos] = useState([]);
   const [form, setForm] = useState({
-    creadoPor: eventoData?.creadoPor || '',
-    actualizadoPor: eventoData?.actualizadoPor || '',
     otrasOpciones: {
       observacionesEmail: {
         mostrar: eventoData?.otrasOpciones?.observacionesEmail?.mostrar || false,
@@ -25,6 +22,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         mostrar: eventoData?.otrasOpciones?.popupAntesAsiento?.mostrar || false,
         texto: eventoData?.otrasOpciones?.popupAntesAsiento?.texto || ''
       },
+      habilitarMetodosPago:
+        eventoData?.otrasOpciones?.habilitarMetodosPago || false,
       metodosPagoPermitidos:
         eventoData?.otrasOpciones?.metodosPagoPermitidos || []
     }
@@ -47,8 +46,6 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   // When the selected event changes, update local form state
   useEffect(() => {
     setForm({
-      creadoPor: eventoData?.creadoPor || '',
-      actualizadoPor: eventoData?.actualizadoPor || '',
       otrasOpciones: {
         observacionesEmail: {
           mostrar:
@@ -65,17 +62,14 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
             eventoData?.otrasOpciones?.popupAntesAsiento?.mostrar || false,
           texto: eventoData?.otrasOpciones?.popupAntesAsiento?.texto || ''
         },
+        habilitarMetodosPago:
+          eventoData?.otrasOpciones?.habilitarMetodosPago || false,
         metodosPagoPermitidos:
           eventoData?.otrasOpciones?.metodosPagoPermitidos || []
       }
     });
   }, [eventoData]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-    setEventoData(prev => ({ ...prev, [name]: value }));
-  };
 
   const handleOtherOptionsChange = (option, field) => (e) => {
     const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
@@ -125,31 +119,27 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
     });
   };
 
+  const handleMetodosPagoCheck = (e) => {
+    const checked = e.target.checked;
+    setForm(prev => ({
+      ...prev,
+      otrasOpciones: {
+        ...prev.otrasOpciones,
+        habilitarMetodosPago: checked
+      }
+    }));
+    setEventoData(prev => ({
+      ...prev,
+      otrasOpciones: {
+        ...prev.otrasOpciones,
+        habilitarMetodosPago: checked
+      }
+    }));
+  };
+
   return (
     <div className="tab-content opciones-avanzadas space-y-4">
       <h3>Opciones avanzadas</h3>
-
-      <div className="form-group">
-        <label htmlFor="creadoPor">Creado por</label>
-        <input
-          id="creadoPor"
-          name="creadoPor"
-          type="text"
-          value={form.creadoPor}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="actualizadoPor">Actualizado por</label>
-        <input
-          id="actualizadoPor"
-          name="actualizadoPor"
-          type="text"
-          value={form.actualizadoPor}
-          onChange={handleChange}
-        />
-      </div>
 
       <h4>Otras opciones</h4>
 
@@ -208,19 +198,28 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
       </div>
 
       <div className="form-group space-y-2">
-        <label>Métodos de pago permitidos</label>
-        <div className="flex flex-col gap-1">
-          {metodos.map(m => (
-            <label key={m._id} className="inline-flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={form.otrasOpciones.metodosPagoPermitidos.includes(m.metodo)}
-                onChange={() => handleMetodoToggle(m.metodo)}
-              />
-              {m.metodo}
-            </label>
-          ))}
-        </div>
+        <label>
+          <input
+            type="checkbox"
+            checked={form.otrasOpciones.habilitarMetodosPago}
+            onChange={handleMetodosPagoCheck}
+          />
+          {' '}Métodos de pago permitidos
+        </label>
+        {form.otrasOpciones.habilitarMetodosPago && (
+          <div className="flex flex-col gap-1">
+            {metodos.map(m => (
+              <label key={m._id} className="inline-flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={form.otrasOpciones.metodosPagoPermitidos.includes(m.metodo)}
+                  onChange={() => handleMetodoToggle(m.metodo)}
+                />
+                {m.metodo}
+              </label>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
