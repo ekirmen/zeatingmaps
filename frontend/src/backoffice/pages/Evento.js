@@ -8,6 +8,9 @@ import DisenoEspectaculo from '../components/Evento//DisenoEspectaculo';
 import ConfiguracionVenta from '../components/Evento/ConfiguracionVenta';
 import ConfiguracionBoletas from '../components/Evento/ConfiguracionBoletas';
 import OpcionesAvanzadas from '../components/Evento/OpcionesAvanzadas';
+import EventsList from '../components/Evento/EventsList';
+import SearchBar from '../components/Evento/SearchBar';
+import VenueSelectors from '../components/Evento/VenueSelectors';
 const Evento = () => {
   const [viewMode, setViewMode] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
@@ -224,48 +227,49 @@ const Evento = () => {
     const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.Component || null;
 
   return (
-    <div className="p-6">
-         <div className="flex items-center gap-4 mb-4">
-        <select
-          className="border border-gray-300 rounded px-3 py-2"
-          value={recintoSeleccionado ? recintoSeleccionado._id : ''}
-          onChange={handleRecintoChange}
-        >
-          <option value="">Seleccionar Recinto</option>
-          {recintos.map(recinto => (
-            <option key={recinto._id} value={recinto._id}>
-              {recinto.nombre}
-            </option>
-          ))}
-        </select>
+    <div className="p-6 space-y-4">
+      <VenueSelectors
+        recintos={recintos}
+        recintoSeleccionado={recintoSeleccionado}
+        handleRecintoChange={handleRecintoChange}
+        salaSeleccionada={salaSeleccionada}
+        setSalaSeleccionada={setSalaSeleccionada}
+      />
 
-        {recintoSeleccionado && (
-          <select
-            className="border border-gray-300 rounded px-3 py-2"
-            value={salaSeleccionada ? salaSeleccionada._id : ''}
-            onChange={handleSalaChange}
+      <div className="flex justify-between items-center">
+        <SearchBar
+          searchTerm={searchTerm}
+          handleSearch={handleSearch}
+          searchResults={searchResults}
+          handleEdit={handleEdit}
+        />
+        <div className="flex items-center gap-2">
+          <button onClick={() => toggleView('grid')} className={`${viewMode === 'grid' ? 'text-blue-600' : ''}`}>
+            <FontAwesomeIcon icon={faThLarge} />
+          </button>
+          <button onClick={() => toggleView('list')} className={`${viewMode === 'list' ? 'text-blue-600' : ''}`}>
+            <FontAwesomeIcon icon={faList} />
+          </button>
+          <button
+            onClick={handleCreateEventClick}
+            className="bg-blue-600 text-white px-4 py-2 rounded"
           >
-            <option value="">Seleccionar Sala</option>
-            {recintoSeleccionado.salas.map(sala => (
-              <option key={sala._id} value={sala._id}>
-                {sala.nombre}
-              </option>
-            ))}
-          </select>
-        )}
+            Crear Evento
+          </button>
+        </div>
       </div>
-      <button
-        onClick={() => {
-          setEventoData({});
-          setMenuVisible(true);
-        }}
-        className="bg-blue-600 text-white px-4 py-2 rounded"
-      >
-        Crear Evento
-      </button>
+
+      <EventsList
+        eventosFiltrados={eventosFiltrados}
+        viewMode={viewMode}
+        recintoSeleccionado={recintoSeleccionado}
+        handleEdit={handleEdit}
+        handleDelete={handleDelete}
+        handleDuplicate={handleDuplicate}
+      />
 
       {menuVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
           <div className="bg-white rounded-lg w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col">
             <div className="flex justify-between items-center px-6 py-4 border-b">
               <h2 className="text-xl font-semibold">Configuración de Evento</h2>
