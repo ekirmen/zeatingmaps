@@ -5,15 +5,25 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   const [pdfOption, setPdfOption] = useState('single');
   
   // Update initial state with existing images
+  const getPreview = (img) => {
+    if (typeof img === 'string') {
+      return `http://localhost:5000/public/uploads/eventos/espectaculo/${img.split('/').pop()}`;
+    }
+    if (img instanceof File) {
+      return URL.createObjectURL(img);
+    }
+    return null;
+  };
+
   const [imagesPreviews, setImagesPreviews] = useState({
-    logoHorizontal: eventoData.imagenes?.logoHorizontal ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.logoHorizontal.split('/').pop()}` : null,
-    banner: eventoData.imagenes?.banner ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.banner.split('/').pop()}` : null,
-    logoVertical: eventoData.imagenes?.logoVertical ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.logoVertical.split('/').pop()}` : null,
-    bannerPublicidad: eventoData.imagenes?.bannerPublicidad ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.bannerPublicidad.split('/').pop()}` : null,
-    logoCuadrado: eventoData.imagenes?.logoCuadrado ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.logoCuadrado.split('/').pop()}` : null,
-    logoPassbook: eventoData.imagenes?.logoPassbook ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.logoPassbook.split('/').pop()}` : null,
-    passBookBanner: eventoData.imagenes?.passBookBanner ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.passBookBanner.split('/').pop()}` : null,
-    icono: eventoData.imagenes?.icono ? `http://localhost:5000/public/uploads/eventos/espectaculo/${eventoData.imagenes.icono.split('/').pop()}` : null
+    logoHorizontal: getPreview(eventoData.imagenes?.logoHorizontal),
+    banner: getPreview(eventoData.imagenes?.banner),
+    logoVertical: getPreview(eventoData.imagenes?.logoVertical),
+    bannerPublicidad: getPreview(eventoData.imagenes?.bannerPublicidad),
+    logoCuadrado: getPreview(eventoData.imagenes?.logoCuadrado),
+    logoPassbook: getPreview(eventoData.imagenes?.logoPassbook),
+    passBookBanner: getPreview(eventoData.imagenes?.passBookBanner),
+    icono: getPreview(eventoData.imagenes?.icono)
   });
 
 
