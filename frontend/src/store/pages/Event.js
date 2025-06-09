@@ -6,7 +6,7 @@ import SeatingMap from '../components/SeatingMap'; // al inicio
 import { fetchMapa, fetchPlantillaPrecios, fetchZonas } from '../services/apistore';
 const Event = () => {
   const userId = localStorage.getItem('userId');
-  const { id } = useParams();
+  const { eventId } = useParams(); // eventId puede ser slug o id real
   const navigate = useNavigate();
 
   const [evento, setEvento] = useState(null);
@@ -23,7 +23,7 @@ const Event = () => {
   useEffect(() => {
     const fetchEvento = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/events/${id}`);
+        const response = await fetch(`http://localhost:5000/api/events/${eventId}`);
         const data = await response.json();
         setEvento(data);
         if (data?.otrasOpciones?.popupAntesAsiento?.mostrar) {
@@ -34,7 +34,7 @@ const Event = () => {
       }
     };
     fetchEvento();
-  }, [id]);
+  }, [eventId]);
 
   useEffect(() => {
     const fetchFunciones = async () => {

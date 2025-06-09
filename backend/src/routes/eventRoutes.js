@@ -2,7 +2,7 @@ import express from 'express';
 import {
   createEvento,
   getEventos,
-  getEventoById,
+  getEvento,
   updateEvento,
   deleteEvento,
   uploadEventImage
@@ -47,7 +47,7 @@ router.post('/upload/:id', upload.single('file'), uploadEventImage);
 // 🔐 Rutas de CRUD
 router.post('/', authMiddleware, createEvento);
 router.get('/', getEventos);
-router.get('/:id', getEventoById);
+router.get('/:identifier', getEvento);
 router.put('/:id', authMiddleware, updateEvento);
 router.delete('/:id', authMiddleware, deleteEvento);
 

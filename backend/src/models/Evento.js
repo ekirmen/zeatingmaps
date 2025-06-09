@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 const eventoSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
+  slug: { type: String, unique: true },
   fecha: { type: Date, required: true }, // Add fecha field
   sector: { type: String },
   descripcionHTML: { type: String },
@@ -56,5 +57,13 @@ const eventoSchema = new mongoose.Schema({
   creadoPor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   actualizadoPor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
+
+// Generate slug from nombre if not provided
+eventoSchema.pre('save', function(next) {
+  if (!this.slug && this.nombre) {
+    this.slug = this.nombre.toLowerCase().replace(/\s+/g, '-');
+  }
+  next();
+});
 
 export default mongoose.model('Evento', eventoSchema);

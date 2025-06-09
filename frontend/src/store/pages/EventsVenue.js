@@ -25,8 +25,8 @@ const EventsVenue = () => {
     fetchEventos();
   }, []);
 
-  const handleEventClick = (id) => {
-    navigate(`/store/event/${id}`); // Redirigir a la página de detalles del evento
+  const handleEventClick = (slugOrId) => {
+    navigate(`/store/event/${slugOrId}`); // Redirigir a la página de detalles del evento
   };
 
   if (loading) {
@@ -44,7 +44,7 @@ const EventsVenue = () => {
         {eventos.length > 0 ? (
           <ul>
             {eventos.map((evento) => (
-              <li key={evento._id} onClick={() => handleEventClick(evento._id)}>
+              <li key={evento._id} onClick={() => handleEventClick(evento.slug || evento._id)}>
                 <h2>{evento.nombre}</h2>
                 <p><strong>Sector:</strong> {evento.sector}</p>
                 <p><strong>Recinto:</strong> {evento.recinto}</p>
