@@ -4,7 +4,8 @@ import { slugify } from '../utils/slugify.js';
 const eventoSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
   slug: { type: String, unique: true },
-  fecha: { type: Date, required: true }, // Add fecha field
+  // Fecha del evento. Si no se especifica se asigna la fecha de creación
+  fecha: { type: Date, default: Date.now },
   sector: { type: String },
   descripcion: { type: String },
   descripcionHTML: { type: String },
