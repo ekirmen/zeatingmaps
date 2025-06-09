@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { slugify } from '../utils/slugify.js';
 
 const eventoSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
@@ -61,7 +62,9 @@ const eventoSchema = new mongoose.Schema({
 // Generate slug from nombre if not provided
 eventoSchema.pre('save', function(next) {
   if (!this.slug && this.nombre) {
-    this.slug = this.nombre.toLowerCase().replace(/\s+/g, '-');
+    this.slug = slugify(this.nombre);
+  } else if (this.slug) {
+    this.slug = slugify(this.slug);
   }
   next();
 });

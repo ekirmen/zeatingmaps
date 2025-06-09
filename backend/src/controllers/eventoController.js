@@ -2,6 +2,9 @@ import Evento from '../models/Evento.js';
 import path from 'path';
 import fs from 'fs';
 import mongoose from 'mongoose';
+import { slugify } from '../utils/slugify.js';
+
+const TERMINOS_Y_CONDICIONES = `TÉRMINOS Y CONDICIONES\n1.- Todas las ventas realizadas a través de nuestro sistema o plataforma son definitivas.\n2.-  No se aceptan devoluciones, cambios o reembolsos.\n3.- Si la fecha del evento cambiara por alguna circunstancia, este ticket sera valido para la nueva fecha.\n4.- Los reembolsos únicamente se realizarán para los eventos suspendidos o reprogramados.\n5.- Solo se reembolsa el costo del ticket.\n6.-  Al adquirir este tickets el cliente acepta nuestros terminos y condiciones.`;
 
 const handleImageUpload = (file, fieldName) => {
   if (!file) return null;
@@ -20,12 +23,31 @@ const handleImageUpload = (file, fieldName) => {
 export const createEvento = async (req, res) => {
   try {
     const eventoData = JSON.parse(req.body.data || '{}');
+    const errors = [];
 
-    if (!eventoData.slug && eventoData.nombre) {
-      eventoData.slug = eventoData.nombre.toLowerCase().replace(/\s+/g, '-');
+    if (!eventoData.nombre || !eventoData.nombre.trim()) {
+      errors.push('El nombre es obligatorio');
+    }
+    if (!eventoData.sector || !eventoData.sector.trim()) {
+      errors.push('El sector es obligatorio');
+    }
+    if (!eventoData.tags || !Array.isArray(eventoData.tags) || eventoData.tags.length === 0) {
+      errors.push('Los tags son obligatorios');
     }
 
+    if (!eventoData.slug && eventoData.nombre) {
+      eventoData.slug = slugify(eventoData.nombre);
+    } else if (eventoData.slug) {
+      eventoData.slug = slugify(eventoData.slug);
+    }
 
+    if (eventoData.slug && !/^[a-z0-9-]+$/.test(eventoData.slug)) {
+      errors.push('La URL amigable sólo debe contener letras minúsculas (a-z), números (0-9) y guiones (-). Con formato: categoria_evento. Por ejemplo: concierto-marc-anthony-en-madrid.');
+    }
+
+    if (errors.length) {
+      return res.status(400).json({ errors });
+    }
     
     // Handle image uploads
     if (req.files) {
@@ -48,15 +70,11 @@ export const createEvento = async (req, res) => {
     }
 
     // Initialize configuracionBoletas if not present
-    eventoData.configuracionBoletas = {
-      formatosPDF: {
-        habilitado: false,
-        tipo: 'single'
-      },
-      formatoPassbook: false,
-      impresionTaquilla: false,
-      terminosLegales: ''
-    };
+    eventoData.configuracionBoletas = eventoData.configuracionBoletas || {};
+    eventoData.configuracionBoletas.formatosPDF = eventoData.configuracionBoletas.formatosPDF || { habilitado: false, tipo: 'single' };
+    if (typeof eventoData.configuracionBoletas.formatoPassbook === 'undefined') eventoData.configuracionBoletas.formatoPassbook = false;
+    if (typeof eventoData.configuracionBoletas.impresionTaquilla === 'undefined') eventoData.configuracionBoletas.impresionTaquilla = false;
+    eventoData.configuracionBoletas.terminosLegales = TERMINOS_Y_CONDICIONES;
 
     const evento = new Evento(eventoData);
     await evento.save();
@@ -74,8 +92,31 @@ export const updateEvento = async (req, res) => {
     }
 
     const eventoData = JSON.parse(req.body.data || '{}');
+
+    const errors = [];
+
+    if (!eventoData.nombre || !eventoData.nombre.trim()) {
+      errors.push('El nombre es obligatorio');
+    }
+    if (!eventoData.sector || !eventoData.sector.trim()) {
+      errors.push('El sector es obligatorio');
+    }
+    if (!eventoData.tags || !Array.isArray(eventoData.tags) || eventoData.tags.length === 0) {
+      errors.push('Los tags son obligatorios');
+    }
+
     if (!eventoData.slug && eventoData.nombre) {
-      eventoData.slug = eventoData.nombre.toLowerCase().replace(/\s+/g, '-');
+      eventoData.slug = slugify(eventoData.nombre);
+    } else if (eventoData.slug) {
+      eventoData.slug = slugify(eventoData.slug);
+    }
+
+    if (eventoData.slug && !/^[a-z0-9-]+$/.test(eventoData.slug)) {
+      errors.push('La URL amigable sólo debe contener letras minúsculas (a-z), números (0-9) y guiones (-). Con formato: categoria_evento. Por ejemplo: concierto-marc-anthony-en-madrid.');
+    }
+
+    if (errors.length) {
+      return res.status(400).json({ errors });
     }
 
     if (req.files) {
@@ -94,11 +135,17 @@ export const updateEvento = async (req, res) => {
       });
 
       if (req.files.espectaculo) {
-        eventoData.imagenes.espectaculo = req.files.espectaculo.map(file => 
+        eventoData.imagenes.espectaculo = req.files.espectaculo.map(file =>
           handleImageUpload(file, 'espectaculo')
         );
       }
     }
+
+    eventoData.configuracionBoletas = eventoData.configuracionBoletas || {};
+    eventoData.configuracionBoletas.formatosPDF = eventoData.configuracionBoletas.formatosPDF || { habilitado: false, tipo: 'single' };
+    if (typeof eventoData.configuracionBoletas.formatoPassbook === 'undefined') eventoData.configuracionBoletas.formatoPassbook = false;
+    if (typeof eventoData.configuracionBoletas.impresionTaquilla === 'undefined') eventoData.configuracionBoletas.impresionTaquilla = false;
+    eventoData.configuracionBoletas.terminosLegales = TERMINOS_Y_CONDICIONES;
 
     const evento = await Evento.findByIdAndUpdate(
       req.params.id,
