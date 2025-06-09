@@ -90,6 +90,11 @@ const Evento = () => {
         sector: '',
         recinto: recintoSeleccionado._id,
         sala: salaSeleccionada._id,
+        otrasOpciones: {
+          observacionesEmail: { mostrar: false, texto: '' },
+          observacionesCompra: { mostrar: false, texto: '' },
+          popupAntesAsiento: { mostrar: false, texto: '' }
+        }
       });
       setMenuVisible(true);
     } else {
