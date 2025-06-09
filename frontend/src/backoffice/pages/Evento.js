@@ -199,7 +199,8 @@ const Evento = () => {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
-        throw new Error(errorData.message || 'Error al guardar el evento');
+        const message = errorData.errors ? errorData.errors.join(', ') : errorData.message;
+        throw new Error(message || 'Error al guardar el evento');
       }
 
       setIsSaved(true);

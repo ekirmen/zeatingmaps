@@ -6,6 +6,7 @@ import { useTags } from '../../contexts/TagContext';
 const DatosBasicos = ({ eventoData, setEventoData }) => {
   const [form, setForm] = useState({
     nombre: eventoData?.nombre || '',
+    slug: eventoData?.slug || '',
     sector: eventoData?.sector || '',
     descripcion: eventoData?.descripcion || '',
     activo: eventoData?.activo ?? true,
@@ -55,6 +56,17 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
             id="nombre"
             name="nombre"
             value={form.nombre}
+            onChange={handleChange}
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="slug">URL amigable:</label>
+          <input
+            type="text"
+            id="slug"
+            name="slug"
+            value={form.slug}
             onChange={handleChange}
           />
         </div>
