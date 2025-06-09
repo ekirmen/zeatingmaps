@@ -1,14 +1,13 @@
 // src/pages/Event.jsx
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
 import { fetchMapa, fetchPlantillaPrecios, fetchZonas } from '../services/apistore';
-import Header from '../../components/Header';
-
-const Event = ({ onShowLoginModal, onLogin, onLogout }) => {
+const Event = () => {
   const userId = localStorage.getItem('userId');
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
@@ -170,13 +169,13 @@ const Event = ({ onShowLoginModal, onLogin, onLogout }) => {
 
   const handlePayment = async () => {
     if (!userId) {
-      onShowLoginModal();
+      navigate('/store/login-register');
       return;
     }
 
     const token = localStorage.getItem('token');
     if (!token) {
-      onShowLoginModal();
+      navigate('/store/login-register');
       return;
     }
 
@@ -214,7 +213,6 @@ const Event = ({ onShowLoginModal, onLogin, onLogout }) => {
 
   return (
     <div className="p-4">
-      <Header onShowLoginModal={onShowLoginModal} onLogin={onLogin} onLogout={onLogout} />
 
       <h1 className="text-2xl font-bold text-center my-4">{evento?.nombre}</h1>
 

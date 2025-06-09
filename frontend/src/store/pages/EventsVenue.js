@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '../../components/Header';
-
-const EventsVenue = ({ onShowLoginModal, onLogin, onLogout }) => {
+const EventsVenue = () => {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,11 +39,6 @@ const EventsVenue = ({ onShowLoginModal, onLogin, onLogout }) => {
 
   return (
     <div className="event-container">
-      <Header 
-        onShowLoginModal={onShowLoginModal}
-        onLogin={onLogin}
-        onLogout={onLogout}
-      />
       <div className="events-venue">
         <h1>Eventos Disponibles</h1>
         {eventos.length > 0 ? (
