@@ -225,6 +225,35 @@ const Evento = () => {
 
   return (
     <div className="p-6">
+         <div className="flex items-center gap-4 mb-4">
+        <select
+          className="border border-gray-300 rounded px-3 py-2"
+          value={recintoSeleccionado ? recintoSeleccionado._id : ''}
+          onChange={handleRecintoChange}
+        >
+          <option value="">Seleccionar Recinto</option>
+          {recintos.map(recinto => (
+            <option key={recinto._id} value={recinto._id}>
+              {recinto.nombre}
+            </option>
+          ))}
+        </select>
+
+        {recintoSeleccionado && (
+          <select
+            className="border border-gray-300 rounded px-3 py-2"
+            value={salaSeleccionada ? salaSeleccionada._id : ''}
+            onChange={handleSalaChange}
+          >
+            <option value="">Seleccionar Sala</option>
+            {recintoSeleccionado.salas.map(sala => (
+              <option key={sala._id} value={sala._id}>
+                {sala.nombre}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
       <button
         onClick={() => {
           setEventoData({});
