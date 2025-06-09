@@ -38,6 +38,7 @@ import mesaRoutes from './routes/mesaRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import seatRoutes from './routes/seatRoutes.js';
+import metodoPagoRoutes from './routes/metodoPagoRoutes.js';
 
 import { errorHandler } from './middleware/errorMiddleware.js';
 
@@ -169,6 +170,7 @@ app.use('/api', entradaRoutes);
 app.use('/api/plantillas', plantillaRoutes);
 app.use('/api/funcions', funcionsRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/metodos_pago', metodoPagoRoutes);
 app.use('/api/salas', salaRoutes);
 app.use('/api/mesas', mesaRoutes);
 app.use('/api/upload', uploadRoutes);
