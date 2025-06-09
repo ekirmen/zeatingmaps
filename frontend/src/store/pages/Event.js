@@ -18,6 +18,7 @@ const Event = () => {
   const [zonas, setZonas] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
+  const [showSeatPopup, setShowSeatPopup] = useState(false);
 
   useEffect(() => {
     const fetchEvento = async () => {
@@ -25,6 +26,9 @@ const Event = () => {
         const response = await fetch(`http://localhost:5000/api/events/${id}`);
         const data = await response.json();
         setEvento(data);
+        if (data?.otrasOpciones?.popupAntesAsiento?.mostrar) {
+          setShowSeatPopup(true);
+        }
       } catch (error) {
         console.error('Error fetching event:', error);
       }
@@ -265,6 +269,16 @@ const Event = () => {
         onOk={handlePayment}
       >
         <p>¿Deseas reservar estos asientos?</p>
+      </Modal>
+
+      <Modal
+        open={showSeatPopup}
+        closable={false}
+        maskClosable={false}
+        onOk={() => setShowSeatPopup(false)}
+        cancelButtonProps={{ style: { display: 'none' } }}
+      >
+        <p>{evento?.otrasOpciones?.popupAntesAsiento?.texto}</p>
       </Modal>
     </div>
   );

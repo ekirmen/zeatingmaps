@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import MetodoPago from '../components/MetodoPago';
@@ -9,6 +9,8 @@ const Pay = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+  const [eventOptions, setEventOptions] = useState({});
+  const [availableMethods, setAvailableMethods] = useState(["stripe", "paypal", "transferencia"]);
   
   if (!location.state?.carrito || !location.state?.funcionId) {
     return <Navigate to="/store" replace />;
@@ -18,6 +20,27 @@ const Pay = () => {
   const subtotal = carrito.reduce((sum, item) => sum + item.precio, 0);
   const impuestos = subtotal * 0.16;
   const total = subtotal + impuestos;
+
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        const funcRes = await fetch(`http://localhost:5000/api/funcions/${funcionId}`);
+        const funcData = await funcRes.json();
+        const eventId = funcData.evento?._id || funcData.evento;
+        if (eventId) {
+          const eventRes = await fetch(`http://localhost:5000/api/events/${eventId}`);
+          const eventData = await eventRes.json();
+          setEventOptions(eventData.otrasOpciones || {});
+          if (eventData.otrasOpciones?.metodosPagoPermitidos?.length) {
+            setAvailableMethods(eventData.otrasOpciones.metodosPagoPermitidos);
+          }
+        }
+      } catch (error) {
+        console.error('Error cargando opciones del evento:', error);
+      }
+    };
+    fetchOptions();
+  }, [funcionId]);
 
   const handlePaymentMethodSelect = (method) => {
     setSelectedPaymentMethod(method);
@@ -86,11 +109,17 @@ const Pay = () => {
         </div>
       </div>
 
+      {eventOptions.observacionesCompra?.mostrar && (
+        <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700">
+          {eventOptions.observacionesCompra.texto}
+        </div>
+      )}
+
       {/* Payment Methods */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Método de Pago</h2>
-        <MetodoPago 
-          metodosDisponibles={["stripe", "paypal", "transferencia"]}
+        <MetodoPago
+          metodosDisponibles={availableMethods}
           onSelect={handlePaymentMethodSelect}
           selected={selectedPaymentMethod}
         />
