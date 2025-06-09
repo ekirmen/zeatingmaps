@@ -72,13 +72,17 @@ export const crearEvento = async (req, res) => {
       return res.status(404).json({ message: 'Compañía no encontrada' });
     }
 
-    // Crear el evento
-    const nuevoEvento = new Evento({
+    // Crear el evento. Si no se proporciona una fecha, se utilizará la de creación
+    const eventoData = {
       nombre,
       descripcion,
-      fecha,
       empresaId,
-    });
+    };
+    if (fecha) {
+      eventoData.fecha = fecha;
+    }
+
+    const nuevoEvento = new Evento(eventoData);
 
     await nuevoEvento.save();
 
