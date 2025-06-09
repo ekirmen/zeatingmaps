@@ -4,6 +4,8 @@ const RecintoContext = createContext();
 
 export const RecintoProvider = ({ children }) => {
   const [recintos, setRecintos] = useState([]);
+  const [recintoSeleccionado, setRecintoSeleccionado] = useState(null);
+  const [salaSeleccionada, setSalaSeleccionada] = useState(null);
 
   useEffect(() => {
     const fetchRecintos = async () => {
@@ -19,7 +21,16 @@ export const RecintoProvider = ({ children }) => {
   }, []);
 
   return (
-    <RecintoContext.Provider value={{ recintos, setRecintos }}>
+    <RecintoContext.Provider
+      value={{
+        recintos,
+        setRecintos,
+        recintoSeleccionado,
+        setRecintoSeleccionado,
+        salaSeleccionada,
+        setSalaSeleccionada,
+      }}
+    >
       {children}
     </RecintoContext.Provider>
   );
