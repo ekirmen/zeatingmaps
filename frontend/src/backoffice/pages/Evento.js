@@ -318,7 +318,7 @@ const Evento = () => {
                 Cancelar
               </button>
               <button
-                onClick={() => console.log('Guardar evento', eventoData)}
+                onClick={handleSave}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
               >
                 Guardar
