@@ -36,6 +36,24 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         const res = await fetch('http://localhost:5000/api/metodos_pago');
         const data = await res.json();
         setMetodos(data);
+
+        const activos = data.filter(m => m.activo).map(m => m.metodo);
+        if (activos.length) {
+          setForm(prev => ({
+            ...prev,
+            otrasOpciones: {
+              ...prev.otrasOpciones,
+              metodosPagoPermitidos: activos
+            }
+          }));
+          setEventoData(prev => ({
+            ...prev,
+            otrasOpciones: {
+              ...prev.otrasOpciones,
+              metodosPagoPermitidos: activos
+            }
+          }));
+        }
       } catch (e) {
         console.error('Error cargando métodos de pago', e);
       }
@@ -153,8 +171,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           {' '}Mostrar observaciones en correo electrónico de confirmación
         </label>
         {form.otrasOpciones.observacionesEmail.mostrar && (
-          <input
-            type="text"
+          <textarea
+            className="w-full p-2 border border-gray-300 rounded-md"
             value={form.otrasOpciones.observacionesEmail.texto}
             onChange={handleOtherOptionsChange('observacionesEmail', 'texto')}
           />
@@ -171,8 +189,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           {' '}Mostrar observaciones en proceso de compra
         </label>
         {form.otrasOpciones.observacionesCompra.mostrar && (
-          <input
-            type="text"
+          <textarea
+            className="w-full p-2 border border-gray-300 rounded-md"
             value={form.otrasOpciones.observacionesCompra.texto}
             onChange={handleOtherOptionsChange('observacionesCompra', 'texto')}
           />
@@ -189,8 +207,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           {' '}Mostrar un pop-up bloqueante antes de seleccionar el asiento
         </label>
         {form.otrasOpciones.popupAntesAsiento.mostrar && (
-          <input
-            type="text"
+          <textarea
+            className="w-full p-2 border border-gray-300 rounded-md"
             value={form.otrasOpciones.popupAntesAsiento.texto}
             onChange={handleOtherOptionsChange('popupAntesAsiento', 'texto')}
           />

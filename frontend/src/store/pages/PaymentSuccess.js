@@ -6,13 +6,22 @@ const PaymentSuccess = () => {
   const { locator } = useParams();
   const navigate = useNavigate();
   const [paymentDetails, setPaymentDetails] = useState(null);
+  const [eventOptions, setEventOptions] = useState({});
 
   useEffect(() => {
     const fetchPaymentDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/payments/${locator}`);
+        const response = await fetch(`http://localhost:5000/api/payments/locator/${locator}`);
         const data = await response.json();
-        setPaymentDetails(data);
+        if (data?.data) {
+          setPaymentDetails(data.data);
+          const eventId = data.data.event?._id;
+          if (eventId) {
+            const evRes = await fetch(`http://localhost:5000/api/events/${eventId}`);
+            const evData = await evRes.json();
+            setEventOptions(evData.otrasOpciones || {});
+          }
+        }
       } catch (error) {
         console.error('Error fetching payment details:', error);
       }
@@ -74,6 +83,12 @@ const PaymentSuccess = () => {
             Volver al Inicio
           </button>
         </div>
+
+        {eventOptions.observacionesEmail?.mostrar && (
+          <div className="mt-8 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm">
+            {eventOptions.observacionesEmail.texto}
+          </div>
+        )}
 
         <div className="mt-8 text-center text-sm text-gray-500">
           <p>Se ha enviado un correo electrónico con los detalles de tu compra</p>
