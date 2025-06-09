@@ -9,6 +9,7 @@ const eventoSchema = new mongoose.Schema({
   videoURL: { type: String },
   recinto: { type: mongoose.Schema.Types.ObjectId, ref: 'Recinto', required: true },
   sala: { type: mongoose.Schema.Types.ObjectId, ref: 'Sala', required: true },
+  tags: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
   imagenes: {
     banner: String,
     obraImagen: String,

@@ -39,6 +39,7 @@ import uploadRoutes from './routes/uploadRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import seatRoutes from './routes/seatRoutes.js';
 import metodoPagoRoutes from './routes/metodoPagoRoutes.js';
+import tagRoutes from './routes/tagRoutes.js';
 
 import { errorHandler } from './middleware/errorMiddleware.js';
 
@@ -176,6 +177,7 @@ app.use('/api/mesas', mesaRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/seats', seatRoutes);
+app.use('/api/tags', tagRoutes);
 
 // Ruta para validar token (autenticación)
 app.get('/api/user/validate', authMiddleware, (req, res) => {
