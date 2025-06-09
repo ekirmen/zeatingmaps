@@ -31,6 +31,20 @@ const eventoSchema = new mongoose.Schema({
     impresionTaquilla: { type: Boolean, default: false },
     terminosLegales: { type: String }
   },
+  otrasOpciones: {
+    observacionesEmail: {
+      mostrar: { type: Boolean, default: false },
+      texto: { type: String }
+    },
+    observacionesCompra: {
+      mostrar: { type: Boolean, default: false },
+      texto: { type: String }
+    },
+    popupAntesAsiento: {
+      mostrar: { type: Boolean, default: false },
+      texto: { type: String }
+    }
+  },
   activo: { type: Boolean, default: true },
   oculto: { type: Boolean, default: false },
   desactivado: { type: Boolean, default: false },
