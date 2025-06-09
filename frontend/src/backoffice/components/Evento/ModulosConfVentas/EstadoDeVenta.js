@@ -30,61 +30,103 @@ const EstadoDeVenta = () => {
           </thead>
           <tbody>
             {/* Estado: A la venta */}
-            <tr
-              onClick={() => handleEstadoChange('a-la-venta')}
-              className={estadoVenta === 'a-la-venta' ? 'selected' : ''}
-            >
-              <td>A la venta</td>
+            <tr className={estadoVenta === 'a-la-venta' ? 'selected' : ''}>
+              <td>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="estadoVenta"
+                    checked={estadoVenta === 'a-la-venta'}
+                    onChange={() => handleEstadoChange('a-la-venta')}
+                  />
+                  A la venta
+                </label>
+              </td>
               <td><div className="checked-icon">✔</div></td>
               <td><div className="checked-icon">✔</div></td>
             </tr>
 
             {/* Estado: Solo en taquilla */}
-            <tr
-              onClick={() => handleEstadoChange('solo-en-taquilla')}
-              className={estadoVenta === 'solo-en-taquilla' ? 'selected' : ''}
-            >
-              <td>Solo en taquilla</td>
+            <tr className={estadoVenta === 'solo-en-taquilla' ? 'selected' : ''}>
+              <td>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="estadoVenta"
+                    checked={estadoVenta === 'solo-en-taquilla'}
+                    onChange={() => handleEstadoChange('solo-en-taquilla')}
+                  />
+                  Solo en taquilla
+                </label>
+              </td>
               <td><div className="unchecked-icon">✖</div></td>
               <td><div className="checked-icon">✔</div></td>
             </tr>
 
             {/* Estado: Agotado */}
-            <tr
-              onClick={() => handleEstadoChange('agotado')}
-              className={estadoVenta === 'agotado' ? 'selected' : ''}
-            >
-              <td>Agotado</td>
+            <tr className={estadoVenta === 'agotado' ? 'selected' : ''}>
+              <td>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="estadoVenta"
+                    checked={estadoVenta === 'agotado'}
+                    onChange={() => handleEstadoChange('agotado')}
+                  />
+                  Agotado
+                </label>
+              </td>
               <td><div className="unchecked-icon">✖</div></td>
               <td><div className="checked-icon">✔</div></td>
             </tr>
 
             {/* Estado: Próximamente */}
-            <tr
-              onClick={() => handleEstadoChange('proximamente')}
-              className={estadoVenta === 'proximamente' ? 'selected' : ''}
-            >
-              <td>Próximamente</td>
+            <tr className={estadoVenta === 'proximamente' ? 'selected' : ''}>
+              <td>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="estadoVenta"
+                    checked={estadoVenta === 'proximamente'}
+                    onChange={() => handleEstadoChange('proximamente')}
+                  />
+                  Próximamente
+                </label>
+              </td>
               <td><div className="calendar-icon">📅</div></td>
               <td><div className="checked-icon">✔</div></td>
             </tr>
 
             {/* Estado: Próximamente con cuenta atrás */}
-            <tr
-              onClick={() => handleEstadoChange('proximamente-con-cuenta')}
-              className={estadoVenta === 'proximamente-con-cuenta' ? 'selected' : ''}
-            >
-              <td>Próximamente con cuenta atrás</td>
+            <tr className={estadoVenta === 'proximamente-con-cuenta' ? 'selected' : ''}>
+              <td>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="estadoVenta"
+                    checked={estadoVenta === 'proximamente-con-cuenta'}
+                    onChange={() => handleEstadoChange('proximamente-con-cuenta')}
+                  />
+                  Próximamente con cuenta atrás
+                </label>
+              </td>
               <td><div className="calendar-icon">📅</div></td>
               <td><div className="checked-icon">✔</div></td>
             </tr>
 
             {/* Estado: Estado personalizado */}
-            <tr
-              onClick={() => handleEstadoChange('estado-personalizado')}
-              className={estadoVenta === 'estado-personalizado' ? 'selected' : ''}
-            >
-              <td>Estado personalizado</td>
+            <tr className={estadoVenta === 'estado-personalizado' ? 'selected' : ''}>
+              <td>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="estadoVenta"
+                    checked={estadoVenta === 'estado-personalizado'}
+                    onChange={() => handleEstadoChange('estado-personalizado')}
+                  />
+                  Estado personalizado
+                </label>
+              </td>
               <td><div className="unchecked-icon">✖</div></td>
               <td><div className="unchecked-icon">✖</div></td>
             </tr>
