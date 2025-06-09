@@ -64,24 +64,52 @@ const RegistroObligatorio = ({ eventoData, setEventoData }) => {
           />
           Mostrar precio mínimo
         </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="mostrarPrecioDesdeConComision"
-            checked={form.mostrarPrecioDesdeConComision}
-            onChange={handleChange}
-          />
-          Mostrar el 'precio desde' con la comisión
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="mostrarPrecioDesdeSinComision"
-            checked={form.mostrarPrecioDesdeSinComision}
-            onChange={handleChange}
-          />
-          Mostrar el 'precio desde' sin comisión
-        </label>
+        {form.mostrarPrecioMinimo && (
+          <div className="flex flex-col ml-4 gap-1">
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="precioDesdeOption"
+                value="con"
+                checked={form.mostrarPrecioDesdeConComision}
+                onChange={() => {
+                  setForm(prev => ({
+                    ...prev,
+                    mostrarPrecioDesdeConComision: true,
+                    mostrarPrecioDesdeSinComision: false
+                  }));
+                  setEventoData(prev => ({
+                    ...prev,
+                    mostrarPrecioDesdeConComision: true,
+                    mostrarPrecioDesdeSinComision: false
+                  }));
+                }}
+              />
+              Mostrar el 'precio desde' con la comisión
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                name="precioDesdeOption"
+                value="sin"
+                checked={form.mostrarPrecioDesdeSinComision}
+                onChange={() => {
+                  setForm(prev => ({
+                    ...prev,
+                    mostrarPrecioDesdeConComision: false,
+                    mostrarPrecioDesdeSinComision: true
+                  }));
+                  setEventoData(prev => ({
+                    ...prev,
+                    mostrarPrecioDesdeConComision: false,
+                    mostrarPrecioDesdeSinComision: true
+                  }));
+                }}
+              />
+              Mostrar el 'precio desde' sin comisión
+            </label>
+          </div>
+        )}
         <label className="flex items-center gap-2">
           <input
             type="checkbox"
