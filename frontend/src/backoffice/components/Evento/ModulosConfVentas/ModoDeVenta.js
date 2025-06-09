@@ -1,5 +1,4 @@
 import React from 'react';
-import './ModoDeVenta.css';
 import { ReactComponent as GridIcon } from './svg/grid.svg';
 import { ReactComponent as MultiStepIcon } from './svg/manual.svg';
 import { ReactComponent as MapIcon } from './svg/map_first.svg';

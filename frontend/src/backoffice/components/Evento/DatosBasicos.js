@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import './DatosBasicos.css';
 
 const DatosBasicos = ({ eventoData, setEventoData }) => {
   const [form, setForm] = useState({

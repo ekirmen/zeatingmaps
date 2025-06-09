@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import './ConfiguracionBoletas.css';
 
 const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   const [selectedFormat, setSelectedFormat] = useState('pdf');

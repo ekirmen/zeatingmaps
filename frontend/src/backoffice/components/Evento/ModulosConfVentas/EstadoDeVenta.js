@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import './EstadoDeVenta.css'; // Archivo de estilos asociado
 
 const EstadoDeVenta = () => {
   const [estadoVenta, setEstadoVenta] = useState('');
