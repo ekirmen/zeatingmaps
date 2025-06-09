@@ -14,55 +14,7 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
     espectaculo: eventoData.imagenes?.espectaculo?.map(url => `http://localhost:5000/public/uploads/eventos/espectaculo/${url.split('/').pop()}`) || []
   });
   
-  // Fix upload function URL handling
-  const uploadImage = async (formData, imageType) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/events/upload/${eventoData._id}`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `${token}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Server error details:', errorData);
-        throw new Error(errorData.message || `Error del servidor: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log('Upload success:', result);
-      
-      if (result.url) {
-        // Get just the filename from the result URL
-        const filename = result.url.split('/').pop();
-        const fullUrl = `http://localhost:5000/public/uploads/eventos/${imageType}/${filename}`;
-        
-        setImagesPreviews(prev => ({
-          ...prev,
-          [imageType]: imageType === 'espectaculo' 
-            ? [...prev.espectaculo, fullUrl]
-            : fullUrl
-        }));
-
-        setEventoData(prev => ({
-          ...prev,
-          imagenes: {
-            ...prev.imagenes,
-            [imageType]: imageType === 'espectaculo' 
-              ? [...(prev.imagenes?.espectaculo || []), filename]
-              : filename
-          }
-        }));
-      }
-    } catch (error) {
-      console.error('Error al subir imagen:', error);
-      console.error('Error details:', error.stack);
-      alert(`Error al subir la imagen: ${error.message}`);
-    }
-  };
+  // Store uploaded images when saving instead of immediately
   const modules = {
     toolbar: {
       container: [
@@ -146,13 +98,9 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
         return;
       }
   
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('type', imageType);
-  
       // Create temporary preview URL
       const tempPreviewUrl = URL.createObjectURL(file);
-      
+
       // Update preview immediately
       if (imageType === 'espectaculo') {
         setImagesPreviews(prev => ({
@@ -165,10 +113,19 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
           [imageType]: tempPreviewUrl
         }));
       }
-  
-      // Upload image and handle preview cleanup
-      await uploadImage(formData, imageType);
-      // Clean up temporary preview URL when upload is complete
+
+      // Store file in eventoData for later upload on save
+      setEventoData(prev => ({
+        ...prev,
+        imagenes: {
+          ...prev.imagenes,
+          [imageType]: imageType === 'espectaculo'
+            ? [...(prev.imagenes?.espectaculo || []), file]
+            : file
+        }
+      }));
+
+      // Clean up temporary preview URL when component unmounts or when replaced
       URL.revokeObjectURL(tempPreviewUrl);
     };
 
