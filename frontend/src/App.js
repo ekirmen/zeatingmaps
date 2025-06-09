@@ -80,7 +80,9 @@ const App = () => {
         <RecintoProvider>
           <RecintoSalaProvider>
             <IvaProvider>
-              {showHeader && <Header />}
+              {showHeader && (
+                <Header onLogin={handleLogin} onLogout={handleLogout} />
+              )}
               <div className="flex-grow">
                 <Routes>
                   <Route path="/" element={<Login onLogin={handleLogin} />} />
@@ -108,7 +110,7 @@ const App = () => {
                   </Route>
 
                   <Route path="/store/:venueId?" element={<EventsVenue />} />
-                  <Route path="/store/event/:eventId" element={<Event onShowLoginModal={() => {}} onLogin={handleLogin} onLogout={handleLogout} />} />
+                  <Route path="/store/event/:eventId" element={<Event />} />
                   <Route path="/store/event" element={<Navigate to="/store/login-register" replace />} />
                   <Route path="/store/select-seats/:salaId" element={<SelectSeats />} />
                   <Route path="/store/buy-event/:id" element={<BuyEvent />} />

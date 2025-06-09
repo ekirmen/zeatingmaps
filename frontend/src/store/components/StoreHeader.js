@@ -111,8 +111,9 @@ const Header = ({ onLogin, onLogout }) => {
         <nav className="flex gap-4 text-sm">
           <Link to="/store" className="hover:underline">Inicio</Link>
           <Link to="/companias" className="hover:underline">Compañías</Link>
-          <Link to="/store/perfil" className="hover:underline">Perfil</Link>
+          <Link to="/store/seating-demo" className="hover:underline">Demo</Link>
           <Link to="/store/cart" className="hover:underline">Carrito</Link>
+          <Link to="/store/perfil" className="hover:underline">Perfil</Link>
         </nav>
 
         <div className="space-x-2">
