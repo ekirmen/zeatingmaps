@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
  * via `setEventoData`.
  */
 const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
+  const [metodos, setMetodos] = useState([]);
   const [form, setForm] = useState({
     creadoPor: eventoData?.creadoPor || '',
     actualizadoPor: eventoData?.actualizadoPor || '',
@@ -23,9 +24,25 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
       popupAntesAsiento: {
         mostrar: eventoData?.otrasOpciones?.popupAntesAsiento?.mostrar || false,
         texto: eventoData?.otrasOpciones?.popupAntesAsiento?.texto || ''
-      }
+      },
+      metodosPagoPermitidos:
+        eventoData?.otrasOpciones?.metodosPagoPermitidos || []
     }
   });
+
+  // Fetch available payment methods on mount
+  useEffect(() => {
+    const fetchMetodos = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/metodos_pago');
+        const data = await res.json();
+        setMetodos(data);
+      } catch (e) {
+        console.error('Error cargando métodos de pago', e);
+      }
+    };
+    fetchMetodos();
+  }, []);
 
   // When the selected event changes, update local form state
   useEffect(() => {
@@ -47,7 +64,9 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           mostrar:
             eventoData?.otrasOpciones?.popupAntesAsiento?.mostrar || false,
           texto: eventoData?.otrasOpciones?.popupAntesAsiento?.texto || ''
-        }
+        },
+        metodosPagoPermitidos:
+          eventoData?.otrasOpciones?.metodosPagoPermitidos || []
       }
     });
   }, [eventoData]);
@@ -80,6 +99,30 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         }
       }
     }));
+  };
+
+  const handleMetodoToggle = (metodo) => {
+    setForm(prev => {
+      const seleccionado = prev.otrasOpciones.metodosPagoPermitidos.includes(metodo);
+      const nuevos = seleccionado
+        ? prev.otrasOpciones.metodosPagoPermitidos.filter(m => m !== metodo)
+        : [...prev.otrasOpciones.metodosPagoPermitidos, metodo];
+      const updated = {
+        ...prev,
+        otrasOpciones: {
+          ...prev.otrasOpciones,
+          metodosPagoPermitidos: nuevos
+        }
+      };
+      setEventoData(ePrev => ({
+        ...ePrev,
+        otrasOpciones: {
+          ...ePrev.otrasOpciones,
+          metodosPagoPermitidos: nuevos
+        }
+      }));
+      return updated;
+    });
   };
 
   return (
@@ -162,6 +205,22 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
             onChange={handleOtherOptionsChange('popupAntesAsiento', 'texto')}
           />
         )}
+      </div>
+
+      <div className="form-group space-y-2">
+        <label>Métodos de pago permitidos</label>
+        <div className="flex flex-col gap-1">
+          {metodos.map(m => (
+            <label key={m._id} className="inline-flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={form.otrasOpciones.metodosPagoPermitidos.includes(m.metodo)}
+                onChange={() => handleMetodoToggle(m.metodo)}
+              />
+              {m.metodo}
+            </label>
+          ))}
+        </div>
       </div>
     </div>
   );

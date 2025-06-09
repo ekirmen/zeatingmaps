@@ -43,6 +43,10 @@ const eventoSchema = new mongoose.Schema({
     popupAntesAsiento: {
       mostrar: { type: Boolean, default: false },
       texto: { type: String }
+    },
+    metodosPagoPermitidos: {
+      type: [String],
+      default: []
     }
   },
   activo: { type: Boolean, default: true },
