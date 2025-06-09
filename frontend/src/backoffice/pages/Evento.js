@@ -281,7 +281,7 @@ const Evento = () => {
               </button>
             </div>
 
-            <div className="flex border-b bg-gray-100 px-4 overflow-x-auto">
+            <div className="flex border-b bg-gray-100 px-4">
               {tabs.map(tab => (
                 <button
                   key={tab.id}
