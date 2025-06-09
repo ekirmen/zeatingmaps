@@ -32,9 +32,17 @@ const DatosCompradorObligatorios = ({
   datosComprador,
   updateDatosComprador,
 }) => {
-  const handleCheckboxChange = (e) => {
+  const handleSolicitarChange = (e) => {
     const { name, checked } = e.target;
-    updateDatosComprador(name, checked);
+    updateDatosComprador(name, 'solicitado', checked);
+    if (!checked) {
+      updateDatosComprador(name, 'obligatorio', false);
+    }
+  };
+
+  const handleObligatorioChange = (e) => {
+    const { name, checked } = e.target;
+    updateDatosComprador(name, 'obligatorio', checked);
   };
 
   return (
@@ -52,6 +60,7 @@ const DatosCompradorObligatorios = ({
           <thead>
             <tr>
               <th className="text-left">Dato</th>
+              <th className="text-center">Solicitar</th>
               <th className="text-center">Obligatorio</th>
             </tr>
           </thead>
@@ -63,9 +72,19 @@ const DatosCompradorObligatorios = ({
                   <input
                     type="checkbox"
                     name={key}
-                    checked={datosComprador[key]}
-                    onChange={handleCheckboxChange}
+                    checked={datosComprador[key].solicitado}
+                    onChange={handleSolicitarChange}
                   />
+                </td>
+                <td className="text-center">
+                  {datosComprador[key].solicitado && (
+                    <input
+                      type="checkbox"
+                      name={key}
+                      checked={datosComprador[key].obligatorio}
+                      onChange={handleObligatorioChange}
+                    />
+                  )}
                 </td>
               </tr>
             ))}
