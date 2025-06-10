@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ModoDeVenta from './ModulosConfVentas/ModoDeVenta';
 import VentaDeZonas from './ModulosConfVentas/VentaDeZonas';
 import RegistroObligatorio from './ModulosConfVentas/RegistroObligatorio';
@@ -45,6 +45,18 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
     pregunta2: false
   });
 
+  useEffect(() => {
+    if (!eventoData) return;
+    setMostrarDatosComprador(eventoData.mostrarDatosComprador || false);
+    setMostrarDatosBoleto(eventoData.mostrarDatosBoleto || false);
+    if (eventoData.datosComprador) {
+      setDatosComprador(prev => ({ ...prev, ...eventoData.datosComprador }));
+    }
+    if (eventoData.datosBoleto) {
+      setDatosBoleto(prev => ({ ...prev, ...eventoData.datosBoleto }));
+    }
+  }, [eventoData]);
+
   const updateDatosComprador = (field, prop, value) => {
     setDatosComprador(prev => ({
       ...prev,
@@ -70,16 +82,22 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
   const toggleMostrarDatosComprador = () => {
     setMostrarDatosComprador(prev => {
       const nuevo = !prev;
+      setEventoData(prevData => {
+        let updated = { ...prevData, mostrarDatosComprador: nuevo };
+        if (!nuevo) {
+          const { datosComprador, ...rest } = updated;
+          updated = rest;
+        } else {
+          updated.datosComprador = prevData.datosComprador || datosComprador;
+        }
+        return updated;
+      });
       if (!nuevo) {
         const cleared = Object.keys(datosComprador).reduce((acc, key) => {
           acc[key] = { solicitado: false, obligatorio: false };
           return acc;
         }, {});
         setDatosComprador(cleared);
-        setEventoData(prevData => ({
-          ...prevData,
-          datosComprador: cleared,
-        }));
       }
       return nuevo;
     });
@@ -88,16 +106,22 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
   const toggleMostrarDatosBoleto = () => {
     setMostrarDatosBoleto(prev => {
       const nuevo = !prev;
+      setEventoData(prevData => {
+        let updated = { ...prevData, mostrarDatosBoleto: nuevo };
+        if (!nuevo) {
+          const { datosBoleto, ...rest } = updated;
+          updated = rest;
+        } else {
+          updated.datosBoleto = prevData.datosBoleto || datosBoleto;
+        }
+        return updated;
+      });
       if (!nuevo) {
         const cleared = Object.keys(datosBoleto).reduce((acc, key) => {
           acc[key] = false;
           return acc;
         }, {});
         setDatosBoleto(cleared);
-        setEventoData(prevData => ({
-          ...prevData,
-          datosBoleto: cleared,
-        }));
       }
       return nuevo;
     });
@@ -108,7 +132,7 @@ const ConfiguracionVenta = ({ eventoData, setEventoData }) => {
       <ModoDeVenta eventoData={eventoData} setEventoData={setEventoData} />
       <VentaDeZonas />
       <RegistroObligatorio eventoData={eventoData} setEventoData={setEventoData} />
-      <EstadoDeVenta />
+      <EstadoDeVenta eventoData={eventoData} setEventoData={setEventoData} />
       <DatosCompradorObligatorios
         mostrarDatos={mostrarDatosComprador}
         toggleMostrarDatos={toggleMostrarDatosComprador}
