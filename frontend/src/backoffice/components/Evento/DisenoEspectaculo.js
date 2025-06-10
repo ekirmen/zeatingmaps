@@ -9,7 +9,8 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   // Fix initial state image paths
   const getPreview = (img) => {
     if (typeof img === 'string') {
-      return `http://localhost:5000/public/uploads/eventos/espectaculo/${img.split('/').pop()}`;
+      // Stored image paths already include the upload folder, so just prefix
+      return `http://localhost:5000${img}`;
     }
     if (img instanceof File) {
       return URL.createObjectURL(img);
