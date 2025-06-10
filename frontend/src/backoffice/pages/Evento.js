@@ -177,22 +177,33 @@ const Evento = () => {
         'logoCuadrado', 'logoPassbook', 'passBookBanner', 'icono'
       ];
 
+      let imagenesToSend = {};
+
       if (eventoData.imagenes) {
         imageTypes.forEach(type => {
+          const value = eventoData.imagenes[type];
           if (type === 'espectaculo') {
-            if (eventoData.imagenes[type]?.length) {
-              eventoData.imagenes[type].forEach(file => {
-                if (file instanceof File) formData.append(type, file);
+            if (Array.isArray(value)) {
+              value.forEach(item => {
+                if (item instanceof File) {
+                  formData.append(type, item);
+                }
               });
+              // Keep already uploaded URLs
+              const urls = value.filter(item => !(item instanceof File));
+              if (urls.length) imagenesToSend[type] = urls;
             }
-          } else if (eventoData.imagenes[type] instanceof File) {
-            formData.append(type, eventoData.imagenes[type]);
+          } else if (value instanceof File) {
+            formData.append(type, value);
+          } else if (value) {
+            imagenesToSend[type] = value;
           }
         });
       }
 
       const { imagenes, ...eventDataWithoutImages } = eventoData;
-      formData.append('data', JSON.stringify(eventDataWithoutImages));
+      const payloadData = { ...eventDataWithoutImages, imagenes: imagenesToSend };
+      formData.append('data', JSON.stringify(payloadData));
 
       setIsUploading(true);
       setUploadProgress(0);
