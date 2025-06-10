@@ -97,37 +97,49 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
     };
   }
 
-  const handleImageChange = async (e, imageType) => {  // Add async keyword
-      const file = e.target.files[0];
-      if (!file) return;
-  
-      if (file.size > 5 * 1024 * 1024) {
-        alert("Archivo demasiado grande (máx. 5MB)");
-        return;
-      }
-  
-      if (!file.type.startsWith('image/')) {
-        alert("Solo se permiten imágenes");
-        return;
-      }
-  
-      // Create temporary preview URL
-      const tempPreviewUrl = URL.createObjectURL(file);
+  const handleImageChange = (e, imageType) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-      // Update preview immediately
+    const allowedTypes = ['image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Solo se permiten imágenes JPG o PNG');
+      return;
+    }
+
+    if (file.size > 1 * 1024 * 1024) {
+      alert('La imagen debe pesar menos de 1MB');
+      return;
+    }
+
+    const dimensions = {
+      banner: { width: 2560, height: 1713 },
+      obraImagen: { width: 1200, height: 1800 },
+      portada: { width: 2400, height: 1256 }
+    };
+
+    const previewUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const reqDim = dimensions[imageType];
+      if (reqDim && (img.width !== reqDim.width || img.height !== reqDim.height)) {
+        alert(`La imagen debe medir ${reqDim.width}x${reqDim.height}px`);
+        URL.revokeObjectURL(previewUrl);
+        return;
+      }
+
       if (imageType === 'espectaculo') {
         setImagesPreviews(prev => ({
           ...prev,
-          espectaculo: [...prev.espectaculo, tempPreviewUrl]
+          espectaculo: [...prev.espectaculo, previewUrl]
         }));
       } else {
         setImagesPreviews(prev => ({
           ...prev,
-          [imageType]: tempPreviewUrl
+          [imageType]: previewUrl
         }));
       }
 
-      // Store file in eventoData for later upload on save
       setEventoData(prev => ({
         ...prev,
         imagenes: {
@@ -137,10 +149,13 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
             : file
         }
       }));
-
-      // Clean up temporary preview URL when component unmounts or when replaced
-      URL.revokeObjectURL(tempPreviewUrl);
     };
+    img.onerror = () => {
+      URL.revokeObjectURL(previewUrl);
+      alert('No se pudo leer la imagen');
+    };
+    img.src = previewUrl;
+  };
 
   const deleteEspectaculoImage = async (index) => {
     const updatedPreviews = imagesPreviews.espectaculo.filter((_, i) => i !== index);
@@ -253,7 +268,6 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
                   onChange={(e) => handleImageChange(e, type)}
                   className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
                 />
-                <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
               </div>
             </div>
           ))}

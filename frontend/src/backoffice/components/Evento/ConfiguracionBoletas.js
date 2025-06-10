@@ -28,37 +28,56 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   });
 
 
-  const handleImageChange = async (e, imageType) => {
+  const handleImageChange = (e, imageType) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert("Archivo demasiado grande (máx. 5MB)");
+    const allowedTypes = ['image/jpeg', 'image/png'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Solo se permiten imágenes JPG o PNG');
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
-      alert("Solo se permiten imágenes");
+    if (file.size > 1 * 1024 * 1024) {
+      alert('La imagen debe pesar menos de 1MB');
       return;
     }
 
-    // Create temporary preview URL
-    const tempPreviewUrl = URL.createObjectURL(file);
+    const dimensions = {
+      logoHorizontal: { width: 640, height: 200 },
+      banner: { width: 750, height: 196 },
+      logoVertical: { width: 400, height: 600 },
+      bannerPublicidad: { width: 500, height: 700 },
+      logoCuadrado: { width: 600, height: 600 },
+      logoPassbook: { width: 450, height: 150 },
+      passBookBanner: { width: 753, height: 200 },
+      icono: { width: 360, height: 360 }
+    };
 
-    // Update preview immediately
-    setImagesPreviews(prev => ({
-      ...prev,
-      [imageType]: tempPreviewUrl
-    }));
-
-    // Store file in eventoData for later upload on save
-    setEventoData(prev => ({
-      ...prev,
-      imagenes: {
-        ...prev.imagenes,
-        [imageType]: file
+    const previewUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const reqDim = dimensions[imageType];
+      if (reqDim && (img.width !== reqDim.width || img.height !== reqDim.height)) {
+        alert(`La imagen debe medir ${reqDim.width}x${reqDim.height}px`);
+        URL.revokeObjectURL(previewUrl);
+        return;
       }
-    }));
+
+      setImagesPreviews(prev => ({ ...prev, [imageType]: previewUrl }));
+      setEventoData(prev => ({
+        ...prev,
+        imagenes: {
+          ...prev.imagenes,
+          [imageType]: file
+        }
+      }));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(previewUrl);
+      alert('No se pudo leer la imagen');
+    };
+    img.src = previewUrl;
   };
 
   // Remove or comment out the handleSave function since we don't need it
@@ -169,7 +188,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 id="logoHorizontal"
                 className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
@@ -190,7 +208,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 id="banner"
                 className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
@@ -211,7 +228,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 id="logoVertical"
                 className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
@@ -232,7 +248,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 id="bannerPublicidad"
                 className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
@@ -253,7 +268,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 id="logoCuadrado"
                 className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
@@ -274,7 +288,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 id="logoPassbook"
                 className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
@@ -295,7 +308,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 id="passBookBanner"
                 className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
@@ -316,7 +328,6 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 id="icono"
                 className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
         </div>
