@@ -15,7 +15,7 @@ const router = express.Router();
 // Configuración de multer para manejar archivos
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadPath = path.join('public', 'uploads', 'eventos', 'temp');
+    const uploadPath = path.join('src', 'uploads', 'eventos', 'temp');
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }

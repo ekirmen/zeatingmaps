@@ -10,7 +10,7 @@ const router = express.Router();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const uploadPath = path.join(__dirname, '..', 'public', 'uploads');
+const uploadPath = path.join(__dirname, '..', 'uploads');
 
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
