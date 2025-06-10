@@ -7,7 +7,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const destination = path.join(__dirname, '..', 'public', 'uploads', 'eventos', 'espectaculo');
+const destination = path.join(__dirname, '..', 'uploads', 'eventos', 'espectaculo');
 
 // Crear el directorio si no existe
 if (!fs.existsSync(destination)) {
