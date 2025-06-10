@@ -7,7 +7,8 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   // Update initial state with existing images
   const getPreview = (img) => {
     if (typeof img === 'string') {
-      return `http://localhost:5000/public/uploads/eventos/espectaculo/${img.split('/').pop()}`;
+      // Image paths stored in the backend already include the folder
+      return `http://localhost:5000${img}`;
     }
     if (img instanceof File) {
       return URL.createObjectURL(img);
