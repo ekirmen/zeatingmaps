@@ -86,10 +86,10 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
 
   // Add save button at the end of the images-upload section
   return (
-    <div className="tab-codntent">
+    <div className="tab-codntent space-y-6">
       
-      <section className="ticket-formats">
-        <h4>Formatos de boleta</h4>
+      <section className="ticket-formats space-y-4">
+        <h4 className="font-semibold">Formatos de boleta</h4>
         
         <div className="format-option">
           <label>
@@ -143,22 +143,22 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
       </section>
 
       <section className="print-formats">
-        <h4>Configuración de formatos de impresión</h4>
+        <h4 className="font-semibold">Configuración de formatos de impresión</h4>
         {/* Add print format configurations */}
       </section>
 
-      <section className="images-upload">
-        <h4>Imágenes de los formatos de impresión</h4>
-        <p>Las imágenes para los formatos de ticket deben ir en formato PNG y pueden tener el fondo transparente.</p>
-        
-        <div className="image-upload-grid">
-          <div className="image-upload-item">
-            <h5>Logo horizontal (640x200)</h5>
-            <div className="image-preview" style={{ width: '320px', height: '100px' }}>
+      <section className="images-upload space-y-4">
+        <h4 className="font-semibold">Imágenes de los formatos de impresión</h4>
+        <p className="text-sm text-gray-600">Las imágenes para los formatos de ticket deben ir en formato PNG y pueden tener el fondo transparente.</p>
+
+        <div className="image-upload-grid grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="image-upload-item flex flex-col gap-2 items-start">
+            <h5 className="font-medium">Logo horizontal (640x200)</h5>
+            <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ width: '320px', height: '100px' }}>
               {imagesPreviews.logoHorizontal ? (
                 <img src={imagesPreviews.logoHorizontal} alt="Preview" />
               ) : (
-                <div className="placeholder">640x200</div>
+                <div className="placeholder text-sm text-gray-500">640x200</div>
               )}
             </div>
             <div className="upload-buttons">
@@ -167,18 +167,19 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 accept=".jpg,.png"
                 onChange={(e) => handleImageChange(e, 'logoHorizontal')}
                 id="logoHorizontal"
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button">Modificar</button>
+              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
-          <div className="image-upload-item">
-            <h5>Banner (750x196)</h5>
-            <div className="image-preview" style={{ width: '320px', height: '84px' }}>
+          <div className="image-upload-item flex flex-col gap-2 items-start">
+            <h5 className="font-medium">Banner (750x196)</h5>
+            <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ width: '320px', height: '84px' }}>
               {imagesPreviews.banner ? (
                 <img src={imagesPreviews.banner} alt="Preview" />
               ) : (
-                <div className="placeholder">750x196</div>
+                <div className="placeholder text-sm text-gray-500">750x196</div>
               )}
             </div>
             <div className="upload-buttons">
@@ -187,139 +188,146 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
                 accept=".jpg,.png"
                 onChange={(e) => handleImageChange(e, 'banner')}
                 id="banner"
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button">Modificar</button>
+              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
-          <div className="image-upload-item">
-            <h5>Logo vertical (400x600)</h5>
-            <div className="image-preview" style={{ width: '200px', height: '300px' }}>
+          <div className="image-upload-item flex flex-col gap-2 items-start">
+            <h5 className="font-medium">Logo vertical (400x600)</h5>
+            <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ width: '200px', height: '300px' }}>
               {imagesPreviews.logoVertical ? (
                 <img src={imagesPreviews.logoVertical} alt="Preview" />
               ) : (
-                <div className="placeholder">400x600</div>
+                <div className="placeholder text-sm text-gray-500">400x600</div>
               )}
             </div>
-            <div className="upload-buttons">
+            <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
                 accept=".jpg,.png"
                 onChange={(e) => handleImageChange(e, 'logoVertical')}
                 id="logoVertical"
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button">Modificar</button>
+              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
-          <div className="image-upload-item">
-            <h5>Banner publicidad (500x700)</h5>
-            <div className="image-preview" style={{ width: '214px', height: '300px' }}>
+          <div className="image-upload-item flex flex-col gap-2 items-start">
+            <h5 className="font-medium">Banner publicidad (500x700)</h5>
+            <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ width: '214px', height: '300px' }}>
               {imagesPreviews.bannerPublicidad ? (
                 <img src={imagesPreviews.bannerPublicidad} alt="Preview" />
               ) : (
-                <div className="placeholder">500x700</div>
+                <div className="placeholder text-sm text-gray-500">500x700</div>
               )}
             </div>
-            <div className="upload-buttons">
+            <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
                 accept=".jpg,.png"
                 onChange={(e) => handleImageChange(e, 'bannerPublicidad')}
                 id="bannerPublicidad"
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button">Modificar</button>
+              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
-          <div className="image-upload-item">
-            <h5>Logo cuadrado (600x600)</h5>
-            <div className="image-preview" style={{ width: '200px', height: '200px' }}>
+          <div className="image-upload-item flex flex-col gap-2 items-start">
+            <h5 className="font-medium">Logo cuadrado (600x600)</h5>
+            <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ width: '200px', height: '200px' }}>
               {imagesPreviews.logoCuadrado ? (
                 <img src={imagesPreviews.logoCuadrado} alt="Preview" />
               ) : (
-                <div className="placeholder">600x600</div>
+                <div className="placeholder text-sm text-gray-500">600x600</div>
               )}
             </div>
-            <div className="upload-buttons">
+            <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
                 accept=".jpg,.png"
                 onChange={(e) => handleImageChange(e, 'logoCuadrado')}
                 id="logoCuadrado"
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button">Modificar</button>
+              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
-          <div className="image-upload-item">
-            <h5>Logo passbook (450x150)</h5>
-            <div className="image-preview" style={{ width: '300px', height: '100px' }}>
+          <div className="image-upload-item flex flex-col gap-2 items-start">
+            <h5 className="font-medium">Logo passbook (450x150)</h5>
+            <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ width: '300px', height: '100px' }}>
               {imagesPreviews.logoPassbook ? (
                 <img src={imagesPreviews.logoPassbook} alt="Preview" />
               ) : (
-                <div className="placeholder">450x150</div>
+                <div className="placeholder text-sm text-gray-500">450x150</div>
               )}
             </div>
-            <div className="upload-buttons">
+            <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
                 accept=".jpg,.png"
                 onChange={(e) => handleImageChange(e, 'logoPassbook')}
                 id="logoPassbook"
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button">Modificar</button>
+              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
-          <div className="image-upload-item">
-            <h5>Passbook banner (753x200)</h5>
-            <div className="image-preview" style={{ width: '320px', height: '85px' }}>
+          <div className="image-upload-item flex flex-col gap-2 items-start">
+            <h5 className="font-medium">Passbook banner (753x200)</h5>
+            <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ width: '320px', height: '85px' }}>
               {imagesPreviews.passBookBanner ? (
                 <img src={imagesPreviews.passBookBanner} alt="Preview" />
               ) : (
-                <div className="placeholder">753x200</div>
+                <div className="placeholder text-sm text-gray-500">753x200</div>
               )}
             </div>
-            <div className="upload-buttons">
+            <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
                 accept=".jpg,.png"
                 onChange={(e) => handleImageChange(e, 'passBookBanner')}
                 id="passBookBanner"
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button">Modificar</button>
+              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
 
-          <div className="image-upload-item">
-            <h5>Icono (360x360)</h5>
-            <div className="image-preview" style={{ width: '200px', height: '200px' }}>
+          <div className="image-upload-item flex flex-col gap-2 items-start">
+            <h5 className="font-medium">Icono (360x360)</h5>
+            <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ width: '200px', height: '200px' }}>
               {imagesPreviews.icono ? (
                 <img src={imagesPreviews.icono} alt="Preview" />
               ) : (
-                <div className="placeholder">360x360</div>
+                <div className="placeholder text-sm text-gray-500">360x360</div>
               )}
             </div>
-            <div className="upload-buttons">
+            <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
                 accept=".jpg,.png"
                 onChange={(e) => handleImageChange(e, 'icono')}
                 id="icono"
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
               />
-              <button className="modify-button">Modificar</button>
+              <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="legal-terms">
-        <h4>Términos legales</h4>
-        <div className="terms-container">
+      <section className="legal-terms space-y-2">
+        <h4 className="font-semibold">Términos legales</h4>
+        <div className="terms-container flex flex-col gap-2">
           <label>Términos legales 1</label>
-          <textarea 
-            className="terms-textarea"
+          <textarea
+            className="terms-textarea p-2 border border-gray-300 rounded"
             placeholder="Ingrese los términos legales aquí"
             rows={6}
           />
