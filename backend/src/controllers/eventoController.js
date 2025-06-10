@@ -17,7 +17,8 @@ const handleImageUpload = (file, fieldName) => {
   const newPath = path.join(finalPath, file.filename);
   fs.renameSync(file.path, newPath);
   
-  return `/uploads/eventos/${fieldName}/${file.filename}`;
+  // Return the public path used by the frontend
+  return `/public/uploads/eventos/${fieldName}/${file.filename}`;
 };
 
 export const createEvento = async (req, res) => {
@@ -222,7 +223,8 @@ export const uploadEventImage = async (req, res) => {
       return res.status(404).json({ message: 'Evento no encontrado' });
     }
 
-    const imageUrl = `/uploads/eventos/${type}/${req.file.filename}`;
+    // Store the path with the `/public` prefix so it matches the static route
+    const imageUrl = `/public/uploads/eventos/${type}/${req.file.filename}`;
 
     if (!evento.imagenes) {
       evento.imagenes = {};

@@ -51,7 +51,8 @@ router.post('/', protect, upload.single('file'), (req, res) => {
     message: 'Archivo subido correctamente',
     filename: req.file.filename,
     mimetype: req.file.mimetype,
-    url: `/uploads/eventos/${req.file.filename}`
+    // Prefix returned URL with `/public` to match the static path
+    url: `/public/uploads/eventos/${req.file.filename}`
   });
 });
 
@@ -63,7 +64,7 @@ router.post('/espectaculo', protect, upload.array('espectaculo', 10), (req, res)
 
   const fileUrls = req.files.map(file => ({
     filename: file.filename,
-    url: `/uploads/eventos/${file.filename}`
+    url: `/public/uploads/eventos/${file.filename}`
   }));
 
   res.status(200).json({
