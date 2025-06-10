@@ -1,3 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom styles */
+.editor-container .ql-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.editor-container .ql-container {
+  min-height: 200px;
+  max-height: 400px;
+  overflow-y: auto;
+}
