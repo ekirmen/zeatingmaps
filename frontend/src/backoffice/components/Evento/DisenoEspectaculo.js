@@ -188,9 +188,9 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   };
 
   return (
-    <div className="diseno-container">
-      <section className="description-section">
-        <h4>Descripción HTML</h4>
+    <div className="diseno-container space-y-6">
+      <section className="description-section space-y-2">
+        <h4 className="font-semibold">Descripción HTML</h4>
         <div className="editor-container">
           <ReactQuill
             value={description}
@@ -228,42 +228,45 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
         />
       </section>
 
-      <section className="content-section">
-        <h4>Contenidos</h4>
+      <section className="content-section space-y-4">
+        <h4 className="font-semibold">Contenidos</h4>
 
-        <div className="image-upload-grid">
+        <div className="image-upload-grid grid grid-cols-1 md:grid-cols-3 gap-4">
           {['banner', 'obraImagen', 'portada'].map((type) => (
-            <div key={type} className="image-upload-item">
-              <h5>{type === 'banner' ? 'Banner (2560x1713)' :
+            <div key={type} className="image-upload-item flex flex-col gap-2 items-start">
+              <h5 className="font-medium">
+                {type === 'banner' ? 'Banner (2560x1713)' :
                     type === 'obraImagen' ? 'Imagen de obra (1200x1800)' :
-                    'Portada (2400x1256)'}</h5>
-              <div className="image-preview" style={{ width: type === 'obraImagen' ? '200px' : '320px', height: type === 'obraImagen' ? '300px' : (type === 'portada' ? '167px' : '214px') }}>
+                    'Portada (2400x1256)'}
+              </h5>
+              <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ width: type === 'obraImagen' ? '200px' : '320px', height: type === 'obraImagen' ? '300px' : (type === 'portada' ? '167px' : '214px') }}>
                 {imagesPreviews[type] ? (
                   <img src={imagesPreviews[type]} alt={`Preview ${type}`} />
                 ) : (
-                  <div className="placeholder">Esperando imagen</div>
+                  <div className="placeholder text-sm text-gray-500">Esperando imagen</div>
                 )}
               </div>
-              <div className="upload-buttons">
+              <div className="upload-buttons flex items-center gap-2 mt-1">
                 <input
                   type="file"
                   accept=".jpg,.jpeg"
                   onChange={(e) => handleImageChange(e, type)}
+                  className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
                 />
-                <button className="modify-button">Modificar</button>
+                <button className="modify-button px-3 py-1 bg-gray-200 rounded">Modificar</button>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="image-upload-item">
-          <h5>Imágenes del espectáculo</h5>
-          <div className="gallery-preview">
+        <div className="image-upload-item flex flex-col gap-2 mt-4">
+          <h5 className="font-medium">Imágenes del espectáculo</h5>
+          <div className="gallery-preview grid grid-cols-2 md:grid-cols-3 gap-2">
             {imagesPreviews.espectaculo.map((img, index) => (
-              <div key={index} className="thumbnail-container">
-                <img src={img} alt={`Espectáculo ${index}`} className="thumbnail" />
+              <div key={index} className="thumbnail-container relative">
+                <img src={img} alt={`Espectáculo ${index}`} className="thumbnail w-full h-32 object-cover" />
                 <button
-                  className="delete-btn"
+                  className="delete-btn absolute top-1 right-1 bg-white rounded-full px-1 text-xs"
                   onClick={() => deleteEspectaculoImage(index)}
                 >
                   ❌
@@ -275,17 +278,18 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
             type="file"
             accept=".jpg,.jpeg"
             onChange={(e) => handleImageChange(e, 'espectaculo')}
+            className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
           />
         </div>
 
-        <div className="video-section">
-          <h5>URL Video</h5>
+        <div className="video-section flex flex-col gap-2 mt-4">
+          <h5 className="font-medium">URL Video</h5>
           <input
             type="text"
             value={eventoData.videoURL || ''}
             onChange={handleVideoUrlChange}
             placeholder="URL del video (YouTube, Vimeo, etc)"
-            className="video-input"
+            className="video-input p-2 border border-gray-300 rounded"
           />
         </div>
       </section>
