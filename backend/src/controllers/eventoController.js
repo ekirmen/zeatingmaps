@@ -2,14 +2,18 @@ import Evento from '../models/Evento.js';
 import path from 'path';
 import fs from 'fs';
 import mongoose from 'mongoose';
+import { fileURLToPath } from 'url';
 import { slugify } from '../utils/slugify.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const TERMINOS_Y_CONDICIONES = `TÉRMINOS Y CONDICIONES\n1.- Todas las ventas realizadas a través de nuestro sistema o plataforma son definitivas.\n2.-  No se aceptan devoluciones, cambios o reembolsos.\n3.- Si la fecha del evento cambiara por alguna circunstancia, este ticket sera valido para la nueva fecha.\n4.- Los reembolsos únicamente se realizarán para los eventos suspendidos o reprogramados.\n5.- Solo se reembolsa el costo del ticket.\n6.-  Al adquirir este tickets el cliente acepta nuestros terminos y condiciones.`;
 
 const handleImageUpload = (file, fieldName) => {
   if (!file) return null;
   
-  const finalPath = path.join('public', 'uploads', 'eventos', fieldName);
+  const finalPath = path.join(__dirname, '..', 'uploads', 'eventos', fieldName);
   if (!fs.existsSync(finalPath)) {
     fs.mkdirSync(finalPath, { recursive: true });
   }
