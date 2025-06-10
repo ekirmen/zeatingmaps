@@ -18,7 +18,7 @@ const EventoForm = () => {
                 return;
             }
 
-            const response = await axios.post('http://localhost:5000/api/eventos', values, {
+            const response = await axios.post('http://localhost:5000/api/events', values, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

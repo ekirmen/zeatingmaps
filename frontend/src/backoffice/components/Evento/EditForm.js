@@ -106,17 +106,18 @@ const EditForm = ({
                   accept="image/*"
                 />
 
-                {eventoData?.imagenes?.espectaculo && (
-                  <img
-                    src={
-                      eventoData.imagenes.espectaculo instanceof File
-                        ? URL.createObjectURL(eventoData.imagenes.espectaculo)
-                        : `http://localhost:5000${eventoData.imagenes.espectaculo}`
-                    }
-                    alt="Vista previa"
-                    className="preview-image"
-                  />
-                )}
+                {Array.isArray(eventoData?.imagenes?.espectaculo) &&
+                  eventoData.imagenes.espectaculo.length > 0 && (
+                    <img
+                      src={
+                        eventoData.imagenes.espectaculo[0] instanceof File
+                          ? URL.createObjectURL(eventoData.imagenes.espectaculo[0])
+                          : `http://localhost:5000${eventoData.imagenes.espectaculo[0]}`
+                      }
+                      alt="Vista previa"
+                      className="preview-image"
+                    />
+                  )}
               </div>
             </div>
           )}

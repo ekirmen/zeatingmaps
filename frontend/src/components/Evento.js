@@ -66,13 +66,15 @@ const Evento = () => {
             style={{ maxWidth: '200px', marginTop: '10px' }}
           />
         )}
-        {eventoData.imagenes?.espectaculo && !imagePreview && (
-          <img
-            src={`http://localhost:5000/public/uploads/eventos/${eventoData.imagenes.espectaculo}`}
-            alt="Evento"
-            style={{ maxWidth: '200px', marginTop: '10px' }}
-          />
-        )}
+        {Array.isArray(eventoData.imagenes?.espectaculo) &&
+          eventoData.imagenes.espectaculo.length > 0 &&
+          !imagePreview && (
+            <img
+              src={`http://localhost:5000${eventoData.imagenes.espectaculo[0]}`}
+              alt="Evento"
+              style={{ maxWidth: '200px', marginTop: '10px' }}
+            />
+          )}
       </div>
       {/* ... other form fields ... */}
     </div>

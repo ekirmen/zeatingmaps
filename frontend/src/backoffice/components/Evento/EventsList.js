@@ -16,8 +16,11 @@ const EventsList = ({
             {viewMode === 'grid' ? (
               <div className="evento-card">
                 <div className="evento-image">
-                  {evento.banner ? (
-                    <img src={evento.banner} alt={evento.nombre} />
+                  {evento.imagenes?.banner ? (
+                    <img
+                      src={`http://localhost:5000${evento.imagenes.banner}`}
+                      alt={evento.nombre}
+                    />
                   ) : (
                     <div className="placeholder-image">No image</div>
                   )}
