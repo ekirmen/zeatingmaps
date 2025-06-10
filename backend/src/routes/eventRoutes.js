@@ -19,7 +19,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // Directorio de subida de imágenes
-const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'eventos', 'espectaculo');
+const uploadDir = path.join(__dirname, '..', 'public', 'uploads', 'eventos', 'espectaculo');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
