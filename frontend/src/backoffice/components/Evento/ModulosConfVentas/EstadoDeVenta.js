@@ -1,15 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const EstadoDeVenta = () => {
+const EstadoDeVenta = ({ eventoData, setEventoData }) => {
   const [estadoVenta, setEstadoVenta] = useState('');
   const [descripcionEstado, setDescripcionEstado] = useState('');
   const [estadoPersonalizado, setEstadoPersonalizado] = useState(false);
 
+  useEffect(() => {
+    if (!eventoData) return;
+    setEstadoVenta(eventoData.estadoVenta || '');
+    setDescripcionEstado(eventoData.descripcionEstado || '');
+    setEstadoPersonalizado(eventoData.estadoPersonalizado || false);
+  }, [eventoData]);
+
   const handleEstadoChange = (estado) => {
     setEstadoVenta(estado);
+    setEventoData(prev => ({ ...prev, estadoVenta: estado }));
     if (estado !== 'estado-personalizado') {
       setDescripcionEstado('');
       setEstadoPersonalizado(false);
+      setEventoData(prev => ({
+        ...prev,
+        descripcionEstado: '',
+        estadoPersonalizado: false
+      }));
     }
   };
 
@@ -142,7 +155,10 @@ const EstadoDeVenta = () => {
             id="descripcion-estado"
             type="text"
             value={descripcionEstado}
-            onChange={(e) => setDescripcionEstado(e.target.value)}
+            onChange={(e) => {
+              setDescripcionEstado(e.target.value);
+              setEventoData(prev => ({ ...prev, descripcionEstado: e.target.value }));
+            }}
             disabled={!estadoPersonalizado}
             placeholder="Escribe la descripción..."
           />
@@ -150,7 +166,11 @@ const EstadoDeVenta = () => {
             <input
               type="checkbox"
               checked={estadoPersonalizado}
-              onChange={() => setEstadoPersonalizado(!estadoPersonalizado)}
+              onChange={() => {
+                const nuevo = !estadoPersonalizado;
+                setEstadoPersonalizado(nuevo);
+                setEventoData(prev => ({ ...prev, estadoPersonalizado: nuevo }));
+              }}
             />
             Activar estado personalizado
           </label>

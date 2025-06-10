@@ -24,6 +24,22 @@ const eventoSchema = new mongoose.Schema({
   eventoSinLanding: { type: Boolean, default: false },
   forzarFlujoPromociones: { type: Boolean, default: false },
   eventoSinFecha: { type: Boolean, default: false },
+  estadoVenta: {
+    type: String,
+    enum: [
+      'a-la-venta',
+      'solo-en-taquilla',
+      'agotado',
+      'proximamente',
+      'proximamente-con-cuenta',
+      'estado-personalizado'
+    ],
+    default: 'a-la-venta'
+  },
+  descripcionEstado: { type: String },
+  estadoPersonalizado: { type: Boolean, default: false },
+  mostrarDatosComprador: { type: Boolean, default: false },
+  mostrarDatosBoleto: { type: Boolean, default: false },
   datosComprador: {
     nombre: {
       solicitado: { type: Boolean, default: false },

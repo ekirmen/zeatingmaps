@@ -93,6 +93,45 @@ const Evento = () => {
         sector: '',
         recinto: recintoSeleccionado._id,
         sala: salaSeleccionada._id,
+        estadoVenta: 'a-la-venta',
+        descripcionEstado: '',
+        estadoPersonalizado: false,
+        mostrarDatosComprador: false,
+        mostrarDatosBoleto: false,
+        datosComprador: {
+          nombre: { solicitado: false, obligatorio: false },
+          email: { solicitado: false, obligatorio: false },
+          telefono: { solicitado: false, obligatorio: false },
+          rut: { solicitado: false, obligatorio: false },
+          numeroIdentificacionFiscal: { solicitado: false, obligatorio: false },
+          direccion: { solicitado: false, obligatorio: false },
+          nombreFonetico: { solicitado: false, obligatorio: false },
+          apellidosFoneticos: { solicitado: false, obligatorio: false },
+          idioma: { solicitado: false, obligatorio: false },
+          fechaNacimiento: { solicitado: false, obligatorio: false },
+          sexo: { solicitado: false, obligatorio: false },
+          empresa: { solicitado: false, obligatorio: false },
+          departamento: { solicitado: false, obligatorio: false },
+          cargoEmpresa: { solicitado: false, obligatorio: false },
+          matricula: { solicitado: false, obligatorio: false },
+          twitter: { solicitado: false, obligatorio: false },
+          facebook: { solicitado: false, obligatorio: false },
+          youtube: { solicitado: false, obligatorio: false },
+          tiktok: { solicitado: false, obligatorio: false },
+          snapchat: { solicitado: false, obligatorio: false },
+          instagram: { solicitado: false, obligatorio: false },
+          contactoEmergencia: { solicitado: false, obligatorio: false },
+          nacionalidad: { solicitado: false, obligatorio: false }
+        },
+        datosBoleto: {
+          rutTitular: false,
+          idPasaporte: false,
+          nombreTitular: false,
+          verificarEmail: false,
+          verificacionEmail: false,
+          pregunta1: false,
+          pregunta2: false
+        },
         otrasOpciones: {
           observacionesEmail: { mostrar: false, texto: '' },
           observacionesCompra: { mostrar: false, texto: '' },
@@ -109,7 +148,18 @@ const Evento = () => {
 
   const handleEdit = useCallback((eventoId) => {
     const eventoParaEditar = eventos.find((evento) => evento._id === eventoId);
-    setEventoData(eventoParaEditar);
+    if (eventoParaEditar) {
+      setEventoData({
+        datosComprador: {},
+        datosBoleto: {},
+        mostrarDatosComprador: false,
+        mostrarDatosBoleto: false,
+        estadoVenta: 'a-la-venta',
+        descripcionEstado: '',
+        estadoPersonalizado: false,
+        ...eventoParaEditar
+      });
+    }
     setMenuVisible(true);
   }, [eventos]);
 
@@ -202,6 +252,12 @@ const Evento = () => {
       }
 
       const { imagenes, ...eventDataWithoutImages } = eventoData;
+      if (!eventoData.mostrarDatosComprador) {
+        delete eventDataWithoutImages.datosComprador;
+      }
+      if (!eventoData.mostrarDatosBoleto) {
+        delete eventDataWithoutImages.datosBoleto;
+      }
       const payloadData = { ...eventDataWithoutImages, imagenes: imagenesToSend };
       formData.append('data', JSON.stringify(payloadData));
 
