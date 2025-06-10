@@ -68,7 +68,7 @@ const Evento = () => {
         )}
         {eventoData.imagenes?.espectaculo && !imagePreview && (
           <img
-            src={`http://localhost:5000/uploads/eventos/${eventoData.imagenes.espectaculo}`}
+            src={`http://localhost:5000/public/uploads/eventos/${eventoData.imagenes.espectaculo}`}
             alt="Evento"
             style={{ maxWidth: '200px', marginTop: '10px' }}
           />
