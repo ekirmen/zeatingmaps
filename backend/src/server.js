@@ -78,7 +78,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const quillStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(process.cwd(), 'public', 'uploads', 'eventos', 'espectaculo');
+    const uploadPath = path.join(__dirname, 'public', 'uploads', 'eventos', 'espectaculo');
     if (!fs.existsSync(uploadPath)) {
       fs.mkdirSync(uploadPath, { recursive: true });
     }
@@ -97,7 +97,7 @@ const quillUpload = multer({
 
 // ----------- Carpetas estáticas -----------
 
-const publicUploadsPath = path.join(process.cwd(), 'public', 'uploads');
+const publicUploadsPath = path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(publicUploadsPath)) {
   fs.mkdirSync(publicUploadsPath, { recursive: true });
 }

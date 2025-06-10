@@ -1,9 +1,13 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
 // Ruta base donde se guardarán los archivos
-const destination = 'public/uploads/eventos/espectaculo';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const destination = path.join(__dirname, '..', 'public', 'uploads', 'eventos', 'espectaculo');
 
 // Crear el directorio si no existe
 if (!fs.existsSync(destination)) {
