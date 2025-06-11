@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
 import { fetchMapa, fetchZonasPorSala } from '../../services/apibackoffice';
@@ -15,6 +15,24 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   const [activeMenu, setActiveMenu] = useState('Zonas');
   const [openZone, setOpenZone] = useState(null); // zona desplegada
   const [zoneQuantities, setZoneQuantities] = useState({});
+  const [entradas, setEntradas] = useState([]);
+  const [selectedEntrada, setSelectedEntrada] = useState(null);
+
+  const zonePriceRanges = useMemo(() => {
+    const ranges = {};
+    if (selectedPlantilla?.detalles) {
+      selectedPlantilla.detalles.forEach((det) => {
+        const { zonaId, precio } = det;
+        if (!ranges[zonaId]) {
+          ranges[zonaId] = { min: precio, max: precio };
+        } else {
+          ranges[zonaId].min = Math.min(ranges[zonaId].min, precio);
+          ranges[zonaId].max = Math.max(ranges[zonaId].max, precio);
+        }
+      });
+    }
+    return ranges;
+  }, [selectedPlantilla]);
 
   // Cargar plantillas de precios cuando cambia la sala
   useEffect(() => {
@@ -93,6 +111,28 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
       }
     };
     loadSalaData();
+  }, [selectedFuncion]);
+
+  // Cargar entradas (tipos de boleto) por recinto
+  useEffect(() => {
+    const loadEntradas = async () => {
+      if (selectedFuncion?.sala?.recinto) {
+        try {
+          const res = await fetch(
+            `http://localhost:5000/api/entradas/recinto/${selectedFuncion.sala.recinto}`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            setEntradas(Array.isArray(data) ? data : []);
+          }
+        } catch (err) {
+          console.error('Error loading entradas:', err);
+        }
+      } else {
+        setEntradas([]);
+      }
+    };
+    loadEntradas();
   }, [selectedFuncion]);
 
   // Seleccionar un precio (zona) para comprar
@@ -257,6 +297,43 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
 
   return (
     <div className="center-content">
+      {/* Tipo de Entrada */}
+      <div className="mb-4 flex gap-4">
+        <label className="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            value="normal"
+            checked={ticketType === 'normal'}
+            onChange={() => setTicketType('normal')}
+          />
+          Boleto
+        </label>
+        <label className="flex items-center gap-1 text-sm">
+          <input
+            type="radio"
+            value="courtesy"
+            checked={ticketType === 'courtesy'}
+            onChange={() => setTicketType('courtesy')}
+          />
+          Cortesía
+        </label>
+        {entradas.length > 0 && (
+          <select
+            className="border px-2 py-1 text-sm"
+            value={selectedEntrada || ''}
+            onChange={(e) => setSelectedEntrada(e.target.value)}
+          >
+            <option value="" disabled>
+              Seleccionar Entrada
+            </option>
+            {entradas.map((ent) => (
+              <option key={ent._id} value={ent._id}>
+                {ent.producto}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
       {/* Menu Tabs */}
       <div className="flex items-center space-x-2 mb-4">
         {['Zonas', 'Mapa', 'Producto', 'Otros'].map(tab => (
@@ -368,7 +445,9 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
             <div className="template-card selected">
               <h4>{selectedPlantilla.nombre}</h4>
               <div className="price-details">
-                {selectedPlantilla.detalles.map((detalle) => {
+                {selectedPlantilla.detalles
+                  .filter((d) => !selectedEntrada || d.productoId === selectedEntrada)
+                  .map((detalle) => {
                   const zona = zonas.find((z) => z._id === detalle.zonaId);
                   return (
                     <div
@@ -398,6 +477,19 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
             selectedZona={selectedZona}
             availableZonas={selectedZona ? [selectedZona._id] : []}
           />
+          <div className="mt-4 text-sm">
+            <h4 className="font-semibold mb-2">Precios por Zona</h4>
+            <ul className="list-disc pl-4">
+              {Object.entries(zonePriceRanges).map(([zId, r]) => {
+                const z = zonas.find((zn) => zn._id === zId);
+                return (
+                  <li key={zId}>
+                    {z ? z.nombre : zId}: ${r.min} - ${r.max}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
       )}
 
