@@ -55,7 +55,7 @@ const FunctionModal = ({
       onCancel={onCancel}
       footer={null}
       width="90vw"
-      bodyStyle={{ padding: 0 }}
+      styles={{ body: { padding: 0 } }}
       centered
       className="max-w-3xl mx-auto"
     >

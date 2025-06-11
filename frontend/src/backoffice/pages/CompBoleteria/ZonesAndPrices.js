@@ -6,9 +6,7 @@ import { fetchMapa, fetchZonasPorSala } from '../../services/apibackoffice';
 const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }) => {
   const [mapa, setMapa] = useState(null);
   const [zonas, setZonas] = useState([]);
-  const [plantillasPrecios, setPlantillasPrecios] = useState([]);
   const [selectedPlantilla, setSelectedPlantilla] = useState(null);
-  const [preciosZona, setPreciosZona] = useState([]);
   const [selectedZona, setSelectedZona] = useState(null);
   const [selectedPrecio, setSelectedPrecio] = useState(null);
   const [activeMenu, setActiveMenu] = useState('Zonas');
@@ -35,25 +33,6 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     return ranges;
   }, [selectedPlantilla, selectedEntrada]);
 
-  // Cargar plantillas de precios cuando cambia la sala
-  useEffect(() => {
-    const cargarPlantillasPrecios = async () => {
-      if (selectedFuncion?.sala?._id) {
-        try {
-          const response = await fetch(
-            `http://localhost:5000/api/plantillas/recinto/${selectedFuncion.sala.recinto}/sala/${selectedFuncion.sala._id}`
-          );
-          if (response.ok) {
-            const data = await response.json();
-            setPlantillasPrecios(data);
-          }
-        } catch (error) {
-          console.error('Error loading price templates:', error);
-        }
-      }
-    };
-    cargarPlantillasPrecios();
-  }, [selectedFuncion]);
 
   // Cargar plantilla de precios específica de la función
   useEffect(() => {
@@ -65,9 +44,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
           );
           if (response.ok) {
             const data = await response.json();
-            setPlantillasPrecios([data]);
             setSelectedPlantilla(data);
-            setPreciosZona(data.detalles);
           }
         } catch (error) {
           console.error('Error loading function price template:', error);
@@ -141,7 +118,6 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     const zona = zonas.find(z => z._id === detallePrecio.zonaId);
     setSelectedZona(zona);
     setSelectedPrecio(detallePrecio);
-    setPreciosZona(detallePrecio);
   };
 
   const updateSeatState = (seatId, newEstado) => {
@@ -356,12 +332,6 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     return seats;
   };
 
-  // Zonas disponibles para mostrar en el SeatingMap (filtrado)
-  const availableZonas = selectedPlantilla
-    ? selectedPlantilla.detalles
-        .filter(det => !selectedEntrada || det.productoId === selectedEntrada)
-        .map(detalle => detalle.zonaId)
-    : zonas.map(z => z._id);
 
   return (
     <div className="center-content">
