@@ -16,6 +16,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   const [zoneQuantities, setZoneQuantities] = useState({});
   const [entradas, setEntradas] = useState([]);
   const [selectedEntrada, setSelectedEntrada] = useState(null);
+  const [blockMode, setBlockMode] = useState(false);
 
   const zonePriceRanges = useMemo(() => {
     const ranges = {};
@@ -143,8 +144,40 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     setPreciosZona(detallePrecio);
   };
 
-  // Al hacer clic en una silla, agregar o quitar del carrito
+  const updateSeatState = (seatId, newEstado) => {
+    setMapa(prev => ({
+      ...prev,
+      contenido: prev.contenido.map(mesaItem => ({
+        ...mesaItem,
+        sillas: mesaItem.sillas.map(s =>
+          s._id === seatId ? { ...s, estado: newEstado } : s
+        )
+      }))
+    }));
+  };
+
+  // Al hacer clic en una silla, agregar o quitar del carrito o bloquear
   const handleSeatClick = (silla, mesa) => {
+    if (blockMode) {
+      if (silla.estado === 'pagado') {
+        message.error('Este asiento ya está vendido.');
+        return;
+      }
+      const inCart = carrito.find(item => item._id === silla._id);
+      const nuevoEstado = silla.estado === 'bloqueado' ? 'disponible' : 'bloqueado';
+      updateSeatState(silla._id, nuevoEstado);
+      if (inCart) {
+        setCarrito(carrito.filter(item => item._id !== silla._id));
+      } else {
+        setCarrito([...carrito, {
+          ...silla,
+          nombreMesa: mesa.nombre,
+          action: nuevoEstado === 'bloqueado' ? 'block' : 'unblock'
+        }]);
+      }
+      return;
+    }
+
     if (!selectedClient) {
       message.warning('Please select a client first');
       return;
@@ -172,6 +205,10 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   };
 
   const addSeatFromList = (silla) => {
+    if (blockMode) {
+      handleSeatClick(silla, { nombre: silla.mesaNombre || '' });
+      return;
+    }
     if (!selectedClient) {
       message.warning('Please select a client first');
       return;
@@ -208,6 +245,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   };
 
   const addGeneralTickets = (zona) => {
+    if (blockMode) return;
     const cantidad = Number(zoneQuantities[zona._id] || 0);
     if (!selectedClient) {
       message.warning('Please select a client first');
@@ -248,6 +286,11 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   };
 
   const toggleTableSeats = (zonaId, mesaNombre) => {
+    if (blockMode) {
+      const seats = seatsByZone(zonaId).filter((s) => s.mesaNombre === mesaNombre);
+      seats.forEach(s => handleSeatClick(s, { nombre: mesaNombre }));
+      return;
+    }
     if (!selectedClient) {
       message.warning('Please select a client first');
       return;
@@ -326,6 +369,15 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
             ))}
           </select>
         )}
+        <button
+          className={`px-2 py-1 rounded text-sm ${blockMode ? 'bg-red-600 text-white' : 'bg-gray-200'}`}
+          onClick={() => {
+            setBlockMode(!blockMode);
+            setCarrito([]);
+          }}
+        >
+          {blockMode ? 'Desbloquear' : 'Bloquear'}
+        </button>
       </div>
       {/* Menu Tabs */}
       <div className="flex items-center space-x-2 mb-4">

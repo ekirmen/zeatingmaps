@@ -50,7 +50,7 @@ const SeatingMap = ({ mapa, onSeatClick, selectedZona, availableZonas }) => {
     const colorMap = {
       pagado: "#9ca3af",
       reservado: "#ef4444",
-      bloqueado: "#f97316",
+      bloqueado: "red",
       disponible: silla.color || "#60a5fa",
     };
 
