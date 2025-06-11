@@ -12,6 +12,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   const [selectedZona, setSelectedZona] = useState(null);
   const [selectedPrecio, setSelectedPrecio] = useState(null);
   const [ticketType, setTicketType] = useState('normal'); // normal o courtesy
+  const [activeMenu, setActiveMenu] = useState('Zonas');
 
   // Cargar plantillas de precios cuando cambia la sala
   useEffect(() => {
@@ -127,40 +128,64 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
 
   return (
     <div className="center-content">
-      <div className="price-templates-section">
-        <h3>Function Price Template</h3>
-        {selectedPlantilla ? (
-          <div className="template-card selected">
-            <h4>{selectedPlantilla.nombre}</h4>
-            <div className="price-details">
-              {selectedPlantilla.detalles.map(detalle => {
-                const zona = zonas.find(z => z._id === detalle.zonaId);
-                return (
-                  <div
-                    key={detalle._id}
-                    className={`price-item ${selectedPrecio?._id === detalle._id ? 'selected' : ''}`}
-                    onClick={() => handlePrecioSelect(detalle)}
-                  >
-                    <div className="price-item-content">
-                      <span>{zona ? zona.nombre : `Unknown Zone (ID: ${detalle.zonaId})`}</span>
-                      <span>${detalle.precio}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <p>No price template assigned to this function</p>
-        )}
+      {/* Menu Tabs */}
+      <div className="flex items-center space-x-2 mb-4">
+        {['Zonas', 'Mapa', 'Producto', 'Otros'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveMenu(tab)}
+            className={`px-3 py-1 rounded-md text-sm focus:outline-none ${activeMenu === tab ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+          >
+            {tab}
+          </button>
+        ))}
+        <div className="ml-auto text-sm font-semibold">
+          Tickets seleccionados: {carrito.length}
+        </div>
       </div>
 
-      <SeatingMap
-        mapa={mapa}
-        onSeatClick={handleSeatClick}
-        selectedZona={selectedZona}
-        availableZonas={selectedZona ? [selectedZona._id] : []}
-      />
+      {activeMenu === 'Zonas' && (
+        <div className="price-templates-section">
+          <h3>Function Price Template</h3>
+          {selectedPlantilla ? (
+            <div className="template-card selected">
+              <h4>{selectedPlantilla.nombre}</h4>
+              <div className="price-details">
+                {selectedPlantilla.detalles.map(detalle => {
+                  const zona = zonas.find(z => z._id === detalle.zonaId);
+                  return (
+                    <div
+                      key={detalle._id}
+                      className={`price-item ${selectedPrecio?._id === detalle._id ? 'selected' : ''}`}
+                      onClick={() => handlePrecioSelect(detalle)}
+                    >
+                      <div className="price-item-content">
+                        <span>{zona ? zona.nombre : `Unknown Zone (ID: ${detalle.zonaId})`}</span>
+                        <span>${detalle.precio}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <p>No price template assigned to this function</p>
+          )}
+        </div>
+      )}
+
+      {activeMenu === 'Mapa' && (
+        <SeatingMap
+          mapa={mapa}
+          onSeatClick={handleSeatClick}
+          selectedZona={selectedZona}
+          availableZonas={selectedZona ? [selectedZona._id] : []}
+        />
+      )}
+
+      {['Producto', 'Otros'].includes(activeMenu) && (
+        <div className="p-4 text-center text-sm text-gray-600">No existen productos a la venta</div>
+      )}
     </div>
   );
 };
