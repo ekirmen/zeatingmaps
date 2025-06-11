@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 import MetodoPago from '../components/MetodoPago';
 import { Modal } from 'antd';
 import { toast } from 'react-hot-toast';
@@ -11,7 +12,10 @@ const Pay = () => {
   const { user } = useAuth();
 
   // Accede de forma segura a los datos de navegación
-  const { carrito, funcionId } = location.state || {};
+  const { carrito: stateCarrito, funcionId: stateFuncionId } = location.state || {};
+  const { cart, functionId: contextFuncionId } = useCart();
+  const carrito = stateCarrito || cart;
+  const funcionId = stateFuncionId || contextFuncionId;
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
