@@ -12,15 +12,11 @@ const PaymentSuccess = () => {
   const [eventOptions, setEventOptions] = useState({});
   const isReservation = paymentDetails?.status === 'reservado';
 
-  if (!locator) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-500">Localizador no proporcionado.</p>
-      </div>
-    );
-  }
-
   useEffect(() => {
+    if (!locator) {
+      return;
+    }
+
     const fetchPaymentDetails = async () => {
       try {
         const response = await fetch(`http://localhost:5000/api/payments/locator/${locator}`);
@@ -45,6 +41,14 @@ const PaymentSuccess = () => {
     // Implement ticket download functionality
     window.open(`http://localhost:5000/api/tickets/download/${locator}`, '_blank');
   };
+
+  if (!locator) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">Localizador no proporcionado.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
