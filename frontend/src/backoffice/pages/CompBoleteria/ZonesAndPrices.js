@@ -16,22 +16,6 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   const [selectedEntrada, setSelectedEntrada] = useState(null);
   const [blockMode, setBlockMode] = useState(false);
 
-  const zonePriceRanges = useMemo(() => {
-    const ranges = {};
-    if (selectedPlantilla?.detalles) {
-      selectedPlantilla.detalles.forEach((det) => {
-        if (selectedEntrada && det.productoId !== selectedEntrada) return;
-        const { zonaId, precio } = det;
-        if (!ranges[zonaId]) {
-          ranges[zonaId] = { min: precio, max: precio };
-        } else {
-          ranges[zonaId].min = Math.min(ranges[zonaId].min, precio);
-          ranges[zonaId].max = Math.max(ranges[zonaId].max, precio);
-        }
-      });
-    }
-    return ranges;
-  }, [selectedPlantilla, selectedEntrada]);
 
 
   // Cargar plantilla de precios específica de la función
@@ -480,56 +464,37 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
               </div>
             );
           })}
-          <div className="mt-4 grid gap-2 text-sm">
-            {Object.entries(zonePriceRanges).map(([zId, r]) => {
-              const z = zonas.find((zn) => zn._id === zId);
-              if (!z) return null;
-              const rangeText = r.min === r.max ? `$${r.min}` : `$${r.min} - $${r.max}`;
-              return (
-                <div
-                  key={zId}
-                  className="px-3 py-2 rounded border flex justify-between"
-                  style={{ borderColor: z.color }}
-                >
-                  <span>{z.nombre}</span>
-                  <span>{rangeText}</span>
-                </div>
-              );
-            })}
-          </div>
         </div>
       )}
 
       {activeMenu === 'Mapa' && (
         <div className="space-y-4">
           <h3>Function Price Template</h3>
-          {selectedPlantilla ? (
-            <div className="template-card selected">
-              <h4>{selectedPlantilla.nombre}</h4>
-              <div className="price-details">
-                {selectedPlantilla.detalles
-                  .filter((d) => !selectedEntrada || d.productoId === selectedEntrada)
-                  .map((detalle) => {
-                  const zona = zonas.find((z) => z._id === detalle.zonaId);
-                  return (
-                    <div
-                      key={detalle._id}
-                      className={`price-item ${selectedPrecio?._id === detalle._id ? 'selected' : ''}`}
-                      onClick={() => {
-                        handlePrecioSelect(detalle);
-                        setOpenZone(detalle.zonaId);
-                      }}
-                    >
-                      <div className="price-item-content">
-                        <span>{zona ? zona.nombre : `Unknown Zone (ID: ${detalle.zonaId})`}</span>
-                        <span>${detalle.precio}</span>
-                      </div>
-                    </div>
-                  );
-                })}
+            {selectedPlantilla ? (
+              <div className="template-card selected">
+                <h4>{selectedPlantilla.nombre}</h4>
+                <div className="price-details flex gap-2 overflow-x-auto">
+                  {selectedPlantilla.detalles
+                    .filter((d) => !selectedEntrada || d.productoId === selectedEntrada)
+                    .map((detalle) => {
+                      const zona = zonas.find((z) => z._id === detalle.zonaId);
+                      return (
+                        <div
+                          key={detalle._id}
+                          className={`cursor-pointer px-3 py-2 border rounded text-sm flex flex-col items-center ${selectedPrecio?._id === detalle._id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-300'}`}
+                          onClick={() => {
+                            handlePrecioSelect(detalle);
+                            setOpenZone(detalle.zonaId);
+                          }}
+                        >
+                          <span className="font-medium">{zona ? zona.nombre : `Unknown Zone (ID: ${detalle.zonaId})`}</span>
+                          <span>${detalle.precio}</span>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
-            </div>
-          ) : (
+            ) : (
             <p>No price template assigned to this function</p>
           )}
 
