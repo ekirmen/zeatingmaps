@@ -279,8 +279,8 @@ const ClientModals = ({
       footer={null}
       width="90vw"
       centered
-      bodyStyle={{ padding: '1rem 1.5rem' }}
-      destroyOnClose
+      styles={{ body: { padding: '1rem 1.5rem' } }}
+      destroyOnHidden
       className="max-w-3xl mx-auto"
     >
       <Tabs activeKey={activeTab} onChange={setActiveTab} items={items} />
