@@ -194,7 +194,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
 
   const handleDownloadTicket = async (locator) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/tickets/download/${locator}`, {
+      const response = await fetch(`http://localhost:5000/api/payments/${locator}/download`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
