@@ -181,6 +181,11 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
       return;
     }
 
+    if (silla.estado === 'bloqueado') {
+      message.error('Este asiento está bloqueado.');
+      return;
+    }
+
     if (!selectedClient) {
       message.warning('Please select a client first');
       return;
@@ -210,6 +215,10 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   const addSeatFromList = (silla) => {
     if (blockMode) {
       handleSeatClick(silla, { nombre: silla.mesaNombre || '' });
+      return;
+    }
+    if (silla.estado === 'bloqueado') {
+      message.error('Este asiento está bloqueado.');
       return;
     }
     if (!selectedClient) {
@@ -312,7 +321,8 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     const zonaObj = zonas.find((z) => z._id === zonaId);
 
     setCarrito((prev) => {
-      const seats = seatsByZone(zonaId).filter((s) => s.mesaNombre === mesaNombre);
+      const seats = seatsByZone(zonaId)
+        .filter((s) => s.mesaNombre === mesaNombre && s.estado !== 'bloqueado');
       const allSelected = seats.every((s) => prev.some((c) => c._id === s._id));
 
       if (allSelected) {
@@ -558,6 +568,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
             onSeatClick={handleSeatClick}
             selectedZona={selectedZona}
             availableZonas={selectedZona ? [selectedZona._id] : []}
+            blockMode={blockMode}
           />
         </div>
       )}
