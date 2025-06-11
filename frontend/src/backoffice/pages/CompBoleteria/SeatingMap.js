@@ -62,7 +62,8 @@ const SeatingMap = ({
 
     const baseFill = colorMap[silla.estado] || colorMap["disponible"];
     const fill = isSelected && silla.estado === "disponible" ? "#facc15" : baseFill;
-    const canSelect = (isAvailable || isSelected) && (blockMode || silla.estado !== "bloqueado");
+    // When blockMode is active allow selecting any seat regardless of zone
+    const canSelect = blockMode || ((isAvailable || isSelected) && silla.estado !== "bloqueado");
 
     return (
       <Circle
