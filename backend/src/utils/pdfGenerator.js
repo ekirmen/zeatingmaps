@@ -20,13 +20,13 @@ const fonts = {
 const printer = new PdfPrinter(fonts);
 
 export const generateTicketPDF = async (payment) => {
-  const publicDir = path.join(__dirname, '..', 'public');
+  const uploadsDir = path.join(__dirname, '..', 'uploads');
 
   const eventImages = [];
   if (payment.event?.imagenes) {
     try {
       if (payment.event.imagenes.banner) {
-        const bannerPath = path.join(publicDir, payment.event.imagenes.banner.replace('/public/', ''));
+        const bannerPath = path.join(uploadsDir, payment.event.imagenes.banner.replace('/public/uploads/', ''));
         const bannerData = await fs.promises.readFile(bannerPath, 'base64');
         eventImages.push({
           image: `data:image/jpeg;base64,${bannerData}`,
@@ -35,7 +35,7 @@ export const generateTicketPDF = async (payment) => {
         });
       }
       if (payment.event.imagenes.portada) {
-        const portadaPath = path.join(publicDir, payment.event.imagenes.portada.replace('/public/', ''));
+        const portadaPath = path.join(uploadsDir, payment.event.imagenes.portada.replace('/public/uploads/', ''));
         const portadaData = await fs.promises.readFile(portadaPath, 'base64');
         eventImages.push({
           image: `data:image/jpeg;base64,${portadaData}`,
@@ -84,6 +84,7 @@ export const generateTicketPDF = async (payment) => {
   }
 
   const docDefinition = {
+    pageSize: 'A4',
     content,
     styles: {
       header: { fontSize: 24, bold: true, alignment: 'center', margin: [0, 0, 0, 20] },
