@@ -20,6 +20,7 @@ const Plano = () => {
   const [prevAforo, setPrevAforo] = useState(0);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingZona, setEditingZona] = useState(null);
+  const numeradaBloqueada = editingZona?.numerada && editingZona.aforo > 0;
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -297,6 +298,7 @@ const Plano = () => {
               type="checkbox"
               id="numerada"
               checked={nuevaZona.numerada}
+              disabled={numeradaBloqueada}
               onChange={(e) => {
                 const checked = e.target.checked;
                 if (checked) {

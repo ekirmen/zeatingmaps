@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { message } from 'antd';
-import { fetchMapa, saveMapa } from '../services/apibackoffice';
+import { fetchMapa, saveMapa, updateZona } from '../services/apibackoffice';
 
 export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZones) => {
   useEffect(() => {
@@ -178,9 +178,29 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
         console.warn('No hay zonas para guardar');
       }
 
+      // Calcular aforo para zonas numeradas basado en las sillas asignadas
+      const seatCounts = elements.reduce((acc, el) => {
+        if (el.type === 'silla') {
+          const zId = el.zonaId || el.zona?._id;
+          if (zId) acc[zId] = (acc[zId] || 0) + 1;
+        }
+        return acc;
+      }, {});
+
+      const updatedZones = zones.map(z =>
+        z.numerada ? { ...z, aforo: seatCounts[z._id] || 0 } : z
+      );
+
+      // Actualizar backend con nuevos aforos
+      try {
+        await Promise.all(updatedZones.map(z => updateZona(z._id, { aforo: z.aforo })));
+        setZones(updatedZones);
+      } catch (e) {
+        console.error('Error actualizando aforo de zonas', e);
+      }
+
       const dataToSave = {
         contenido: elementosParaGuardar.length ? elementosParaGuardar : [],
-        zonas: zones || [],
       };
 
       // Final check of what we're sending
