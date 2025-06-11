@@ -67,6 +67,13 @@ const Pay = () => {
 
   const handleProcessReservation = async () => {
     try {
+      const seatsPayload = carrito.map(item => ({
+        id: item._id,
+        name: item.nombre || '',
+        price: item.precio,
+        zona: item.zona,
+      }));
+
       const response = await fetch('http://localhost:5000/api/payments', {
         method: 'POST',
         headers: {
@@ -76,7 +83,7 @@ const Pay = () => {
         body: JSON.stringify({
           user: user._id,
           event: currentEventId,
-          seats: carrito,
+          seats: seatsPayload,
           status: 'reservado'
         })
       });
@@ -101,6 +108,13 @@ const Pay = () => {
     }
 
     try {
+      const seatsPayload = carrito.map(item => ({
+        id: item._id,
+        name: item.nombre || '',
+        price: item.precio,
+        zona: item.zona,
+      }));
+
       const response = await fetch('http://localhost:5000/api/payments', {
         method: 'POST',
         headers: {
@@ -110,7 +124,7 @@ const Pay = () => {
         body: JSON.stringify({
           user: user._id,
           event: currentEventId,
-          seats: carrito,
+          seats: seatsPayload,
           status: 'pagado',
           payments: [{ method: selectedPaymentMethod, amount: total }]
         })
@@ -143,7 +157,7 @@ const Pay = () => {
         <h2 className="text-xl font-semibold mb-4">Resumen del Carrito</h2>
         {carrito.map((item, index) => (
           <div key={index} className="flex justify-between py-2 border-b">
-            <span>{item.zona} - {item.nombreMesa}</span>
+            <span>{item.zonaNombre} - {item.nombreMesa}</span>
             <span>${item.precio}</span>
           </div>
         ))}

@@ -26,7 +26,8 @@ const Cart = () => {
         ...seat,
         precio: seat.precio || 0,
         nombreMesa: seat.mesa?.nombre || '',
-        zona: seat.zona?.nombre || ''
+        zona: seat.zona?._id || seat.zona,
+        zonaNombre: seat.zona?.nombre || ''
       })));
       toast.success('Ticket found and loaded');
     } catch (error) {
@@ -74,7 +75,7 @@ const Cart = () => {
             <div className="flex flex-col gap-1 text-xs leading-tight">
               <span><strong>Seat:</strong> {item.nombre}</span>
               <span><strong>Table/Row:</strong> {item.nombreMesa}</span>
-              <span><strong>Zone:</strong> {item.zona}</span>
+              <span><strong>Zone:</strong> {item.zonaNombre}</span>
               <span><strong>Price:</strong> ${formatPrice(item.precio)}</span>
             </div>
             <button

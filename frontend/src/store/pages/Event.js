@@ -3,11 +3,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
-import { fetchMapa, fetchPlantillaPrecios, fetchZonas } from '../services/apistore';
+import { fetchMapa, fetchPlantillaPrecios } from '../services/apistore';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const Event = () => {
-  const userId = localStorage.getItem('userId');
   const { eventId } = useParams(); // eventId puede ser slug o id real
   const navigate = useNavigate();
 
@@ -158,7 +157,7 @@ const Event = () => {
     const zonaNombre = zonas.find(z => z._id === silla.zona)?.nombre || "Desconocida";
     const nuevoCarrito = index !== -1
       ? carrito.filter(item => item._id !== silla._id)
-      : [...carrito, { ...silla, precio, nombreMesa: mesa.nombre, zona: zonaNombre }];
+      : [...carrito, { ...silla, precio, nombreMesa: mesa.nombre, zonaNombre }];
 
     setCarrito(nuevoCarrito);
 
@@ -223,7 +222,7 @@ const Event = () => {
         <h2 className="text-xl font-semibold mb-3">Carrito</h2>
         {carrito.map((item, index) => (
           <div key={index} className="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded">
-            <span>{item.zona} - {item.nombreMesa} - Silla {index + 1} - ${item.precio}</span>
+            <span>{item.zonaNombre} - {item.nombreMesa} - Silla {index + 1} - ${item.precio}</span>
             <button
               onClick={() => toggleSillaEnCarrito(item)}
               className="text-red-500 hover:text-red-700"
