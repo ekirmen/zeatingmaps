@@ -4,15 +4,24 @@ import { toast } from 'react-hot-toast';
 export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState(() => {
+  const [cart, setCartState] = useState(() => {
     const savedCart = localStorage.getItem('cart');
     return savedCart ? JSON.parse(savedCart) : { items: [], functionId: null };
   });
   const [timeLeft, setTimeLeft] = useState(0);
 
   const updateCart = useCallback((newCart) => {
-    setCart(newCart);
+    setCartState(newCart);
     localStorage.setItem('cart', JSON.stringify(newCart));
+  }, []);
+
+  // Replace only the cart items without calling backend
+  const setCart = useCallback((items, functionId = null) => {
+    setCartState(prev => {
+      const updated = { items, functionId: functionId ?? prev.functionId };
+      localStorage.setItem('cart', JSON.stringify(updated));
+      return updated;
+    });
   }, []);
 
   const addToCart = useCallback(async (seats, functionId) => {
@@ -113,6 +122,7 @@ export const CartProvider = ({ children }) => {
     addToCart,
     clearCart,
     removeFromCart,
+    setCart,
     timeLeft
   };
 
