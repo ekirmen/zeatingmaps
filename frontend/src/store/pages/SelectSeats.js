@@ -109,7 +109,12 @@ const SelectSeats = () => {
           <li key={seat._id}>{seat.nombre} - {seat.zona} - ${seat.precio}</li>
         ))}
       </ul>
-      <button onClick={irAPagar} style={{ marginTop: '20px' }}>Ir a pagar</button>
+      <button
+        onClick={irAPagar}
+        className="mt-5 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Ir a pagar
+      </button>
     </div>
   );
 };

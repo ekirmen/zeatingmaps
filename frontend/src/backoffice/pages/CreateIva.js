@@ -82,90 +82,92 @@ const CreateIva = () => {
   };
 
   return (
-    <div className="dashboard-content">
-      <div className="page-content iva-container">
-        <h1 className="iva-title">Gestión de IVA</h1>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Gestión de IVA</h1>
 
-        <div className="iva-form-container">
-          <form onSubmit={handleSubmit} className="iva-form">
-            <div className="form-group">
-              <label>Nombre del IVA:</label>
-              <input
-                type="text"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                required
-                className="form-input"
-                placeholder="Nombre del IVA"
-              />
-            </div>
-            <div className="form-group">
-              <label>Porcentaje:</label>
-              <input
-                type="number"
-                value={porcentaje}
-                onChange={(e) => setPorcentaje(e.target.value)}
-                required
-                step="0.01"
-                className="form-input"
-                placeholder="0.00"
-              />
-            </div>
-            <div className="form-buttons">
-              <button type="submit" className="btn-primary">
-                {editingId ? 'Actualizar IVA' : 'Crear IVA'}
-              </button>
-              {editingId && (
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => {
-                    setEditingId(null);
-                    setNombre('');
-                    setPorcentaje('');
-                  }}
-                >
-                  Cancelar Edición
-                </button>
-              )}
-            </div>
-          </form>
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white shadow rounded-lg p-4 mb-8 space-y-4"
+      >
+        <div>
+          <label className="block mb-1">Nombre del IVA:</label>
+          <input
+            type="text"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
+            required
+            className="w-full border rounded p-2"
+            placeholder="Nombre del IVA"
+          />
         </div>
+        <div>
+          <label className="block mb-1">Porcentaje:</label>
+          <input
+            type="number"
+            value={porcentaje}
+            onChange={(e) => setPorcentaje(e.target.value)}
+            required
+            step="0.01"
+            className="w-full border rounded p-2"
+            placeholder="0.00"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            {editingId ? 'Actualizar IVA' : 'Crear IVA'}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              onClick={() => {
+                setEditingId(null);
+                setNombre('');
+                setPorcentaje('');
+              }}
+            >
+              Cancelar Edición
+            </button>
+          )}
+        </div>
+      </form>
 
-        <div className="iva-table-container">
-          <h2>Lista de IVAs</h2>
-          <table className="iva-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Porcentaje</th>
-                <th>Acciones</th>
+      <div>
+        <h2 className="text-xl font-semibold mb-2">Lista de IVAs</h2>
+        <table className="min-w-full bg-white rounded shadow">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="py-2 px-4 text-left">Nombre</th>
+              <th className="py-2 px-4 text-left">Porcentaje</th>
+              <th className="py-2 px-4 text-left">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ivas.map((iva) => (
+              <tr key={iva._id} className="border-t">
+                <td className="py-2 px-4">{iva.nombre}</td>
+                <td className="py-2 px-4">{iva.porcentaje}%</td>
+                <td className="py-2 px-4 space-x-2">
+                  <button
+                    onClick={() => handleEdit(iva)}
+                    className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDelete(iva._id)}
+                    className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                  >
+                    Eliminar
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {ivas.map((iva) => (
-                <tr key={iva._id}>
-                  <td>{iva.nombre}</td>
-                  <td>{iva.porcentaje}%</td>
-                  <td className="action-buttons">
-                    <button
-                      onClick={() => handleEdit(iva)}
-                      className="btn-edit"
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => handleDelete(iva._id)}
-                      className="btn-delete"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

@@ -58,7 +58,12 @@ const Login = ({ onLogin }) => {
           required
         />
       </div>
-      <button type="submit">Iniciar Sesión</button>
+      <button
+        type="submit"
+        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+      >
+        Iniciar Sesión
+      </button>
     </form>
   );
 };
