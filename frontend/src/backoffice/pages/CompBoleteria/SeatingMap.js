@@ -60,7 +60,8 @@ const SeatingMap = ({
       disponible: silla.color || "#60a5fa",
     };
 
-    const fill = isSelected ? "#facc15" : colorMap[silla.estado] || colorMap["disponible"];
+    const baseFill = colorMap[silla.estado] || colorMap["disponible"];
+    const fill = isSelected && silla.estado === "disponible" ? "#facc15" : baseFill;
     const canSelect = (isAvailable || isSelected) && (blockMode || silla.estado !== "bloqueado");
 
     return (
