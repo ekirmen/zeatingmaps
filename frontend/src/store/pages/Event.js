@@ -274,8 +274,10 @@ const Event = () => {
       <Modal
         open={showSeatPopup}
         closable={false}
-        maskClosable={false}
+        maskClosable={true}
         onOk={() => setShowSeatPopup(false)}
+        onCancel={() => setShowSeatPopup(false)}
+        okText="Continuar"
         cancelButtonProps={{ style: { display: 'none' } }}
       >
         <p>{evento?.otrasOpciones?.popupAntesAsiento?.texto}</p>
