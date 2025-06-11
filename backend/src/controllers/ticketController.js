@@ -33,15 +33,16 @@ export const downloadTicket = async (req, res) => {
     doc.text(`Fecha: ${new Date(payment.createdAt).toLocaleDateString()}`);
     doc.moveDown();
 
-    // Add seats information
+    // Add seats information with a nicer layout
     doc.text('Asientos:', { underline: true });
-    payment.seats.forEach(seat => {
-      doc.text(`- ${seat.name}`);
-      if (seat.zona) doc.text(`  Zona: ${seat.zona.nombre}`);
-      if (seat.mesa) doc.text(`  Mesa: ${seat.mesa.nombre}`);
-      doc.text(`  Precio: $${seat.price.toFixed(2)}`);
-      doc.moveDown(0.5);
+    const seatLines = payment.seats.map(seat => {
+      let line = `${seat.name}`;
+      if (seat.zona) line += ` - Zona: ${seat.zona.nombre}`;
+      if (seat.mesa) line += ` - Mesa: ${seat.mesa.nombre}`;
+      line += ` - Precio: $${seat.price.toFixed(2)}`;
+      return line;
     });
+    doc.list(seatLines, { bulletRadius: 2 });
 
     // Add QR code or barcode here if needed
 
