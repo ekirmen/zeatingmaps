@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecintoSala } from '../contexts/RecintoSalaContext'; // Contexto para mantener recinto y sala
-import { fetchZonasPorSala, createZona, updateZona, deleteZona } from '../services/apibackoffice'; // Funciones de API
+import { fetchZonasPorSala, createZona, updateZona, deleteZona, fetchMapa } from '../services/apibackoffice'; // Funciones de API
 import Modal from 'react-modal'; // Para el popup modal
 // import './Plano.css';  <-- Ya no es necesario con Tailwind
 
@@ -11,6 +11,7 @@ const Plano = () => {
   const { recinto, setRecinto, sala, setSala } = useRecintoSala();
   const [recintos, setRecintos] = useState([]);
   const [zonas, setZonas] = useState([]);
+  const [zoneSeatCounts, setZoneSeatCounts] = useState({});
   const [nuevaZona, setNuevaZona] = useState({
     nombre: '',
     color: '#000000',
@@ -54,6 +55,37 @@ const Plano = () => {
     } else {
       setZonas([]);
     }
+  }, [sala]);
+
+  useEffect(() => {
+    if (!sala) {
+      setZoneSeatCounts({});
+      return;
+    }
+
+    const cargarMapa = async () => {
+      try {
+        const mapa = await fetchMapa(sala._id);
+        const counts = {};
+        if (mapa && Array.isArray(mapa.contenido)) {
+          mapa.contenido.forEach((el) => {
+            if (el.type === 'mesa') {
+              (el.sillas || []).forEach((s) => {
+                if (s.zona) counts[s.zona] = (counts[s.zona] || 0) + 1;
+              });
+            } else if (el.type === 'silla' && el.zona) {
+              counts[el.zona] = (counts[el.zona] || 0) + 1;
+            }
+          });
+        }
+        setZoneSeatCounts(counts);
+      } catch (error) {
+        console.error('Error al cargar el mapa:', error);
+        setZoneSeatCounts({});
+      }
+    };
+
+    cargarMapa();
   }, [sala]);
 
   const handleCrearZona = async () => {
@@ -202,7 +234,9 @@ const Plano = () => {
                         >
                           {zona.nombre}
                         </span>
-                        <span className="ml-2 text-gray-600">- Aforo: {zona.aforo}</span>
+                        <span className="ml-2 text-gray-600">
+                          - Aforo: {zoneSeatCounts[zona._id] ?? zona.aforo}
+                        </span>
                       </div>
                       <div className="space-x-2">
                         <button
