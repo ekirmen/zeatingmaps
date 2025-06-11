@@ -75,7 +75,7 @@ export const generateTicketPDF = async (payment) => {
       { image: qrData, width: 150, alignment: 'center', margin: [0, 10, 0, 10] },
 
       { text: 'Imágenes del Evento:', style: 'sectionHeader' },
-      ...eventImages
+      ...eventImages.slice(0, 1)
     );
 
     if (i < payment.seats.length - 1) {
