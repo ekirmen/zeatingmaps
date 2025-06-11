@@ -1,5 +1,6 @@
 
 import { useEffect } from 'react';
+import { message } from 'antd';
 import { fetchMapa, saveMapa } from '../services/apibackoffice';
 
 export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZones) => {
@@ -187,9 +188,11 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
 
       await saveMapa(salaId, dataToSave);
       console.log('Mapa guardado correctamente');
+      message.success('Mapa guardado correctamente');
       return true;
     } catch (error) {
       console.error('Error al guardar el mapa:', error);
+      message.error('Error al guardar el mapa');
       return false;
     }
   };

@@ -166,15 +166,18 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
       const inCart = carrito.find(item => item._id === silla._id);
       const nuevoEstado = silla.estado === 'bloqueado' ? 'disponible' : 'bloqueado';
       updateSeatState(silla._id, nuevoEstado);
-      if (inCart) {
-        setCarrito(carrito.filter(item => item._id !== silla._id));
-      } else {
-        setCarrito([...carrito, {
-          ...silla,
-          nombreMesa: mesa.nombre,
-          action: nuevoEstado === 'bloqueado' ? 'block' : 'unblock'
-        }]);
-      }
+      setCarrito(prev =>
+        inCart
+          ? prev.filter(item => item._id !== silla._id)
+          : [
+              ...prev,
+              {
+                ...silla,
+                nombreMesa: mesa.nombre,
+                action: nuevoEstado === 'bloqueado' ? 'block' : 'unblock'
+              }
+            ]
+      );
       return;
     }
 
