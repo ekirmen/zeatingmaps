@@ -120,7 +120,7 @@ const Event = () => {
                   color:
                     estado === "bloqueado" ? "orange" :
                     estado === "reservado" ? "red" :
-                    estado === "pagado" ? "gray" : "lightblue"
+                    estado === "pagado" ? "gray" : silla.color || "lightblue"
                 };
               }
               return silla;
@@ -167,7 +167,7 @@ const Event = () => {
         ...elemento,
         sillas: elemento.sillas.map(s => ({
           ...s,
-          color: nuevoCarrito.some(item => item._id === s._id) ? "green" : "lightblue"
+          color: nuevoCarrito.some(item => item._id === s._id) ? "green" : s.color || "lightblue"
         }))
       }))
     };

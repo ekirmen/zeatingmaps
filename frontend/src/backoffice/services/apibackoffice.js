@@ -174,6 +174,13 @@ export const updateMesa = (salaId, mesaId, data) => fetchApi(`/mesas/sala/${sala
   body: JSON.stringify(data),
 });
 
+export const setSeatsBlocked = (seatIds, bloqueado) =>
+  fetchApi('/seats/block', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ seatIds, bloqueado }),
+  });
+
 // Eliminar entidades
 export const deleteEvento = (id) => fetchApi(`/events/${id}`, { method: 'DELETE' });
 export const deleteZona = (id) => fetchApi(`/zonas/${id}`, { method: 'DELETE' });

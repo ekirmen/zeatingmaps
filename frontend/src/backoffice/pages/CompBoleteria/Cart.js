@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, message } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
+import { setSeatsBlocked } from '../../services/apibackoffice';
 
 const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, children }) => {
   const handleTicketSearch = async (locator) => {
@@ -46,10 +47,28 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, children
     message.success('Cart cleared');
   };
 
-  const handleBlockAction = () => {
-    const hasBlock = carrito.some(i => i.action === 'block');
-    message.success(hasBlock ? 'Seats blocked' : 'Seats unblocked');
-    setCarrito([]);
+  const handleBlockAction = async () => {
+    const seatsToBlock = carrito
+      .filter(i => i.action === 'block')
+      .map(i => i._id);
+    const seatsToUnblock = carrito
+      .filter(i => i.action === 'unblock')
+      .map(i => i._id);
+
+    try {
+      if (seatsToBlock.length) {
+        await setSeatsBlocked(seatsToBlock, true);
+      }
+      if (seatsToUnblock.length) {
+        await setSeatsBlocked(seatsToUnblock, false);
+      }
+      const hasBlock = seatsToBlock.length > 0;
+      message.success(hasBlock ? 'Seats blocked' : 'Seats unblocked');
+      setCarrito([]);
+    } catch (error) {
+      console.error('Error updating seats:', error);
+      message.error('Error updating seats');
+    }
   };
 
   const formatPrice = (price) => {
