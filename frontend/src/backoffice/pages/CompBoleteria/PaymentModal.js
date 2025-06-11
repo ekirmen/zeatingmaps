@@ -156,7 +156,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
             id: item._id,
             name: item.nombre,
             price: item.precio,
-            zona: item.zona?._id || null,
+            zona: item.zonaId || (item.zona?._id || null),
             mesa: item.mesa?._id || null
           })),
           locator: generateLocator(),
