@@ -5,7 +5,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 // import { Rect } from 'react-konva';
 import { fetchMapa }  from '../services/apistore'; // Asegúrate de importar fetchMapa
 const SelectSeats = () => {
-  const { salaId } = useParams();
+  const { salaId, funcionId } = useParams();
   const navigate = useNavigate();
   const [mesas, setMesas] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
@@ -39,8 +39,8 @@ const SelectSeats = () => {
     }
   };
 
-  const irAlCarrito = () => {
-    navigate('/store/cart', { state: { selectedSeats } });
+  const irAPagar = () => {
+    navigate('/store/pay', { state: { carrito: selectedSeats, funcionId } });
   };
 
   if (loading) return <p>Cargando asientos...</p>;
@@ -109,7 +109,7 @@ const SelectSeats = () => {
           <li key={seat._id}>{seat.nombre} - {seat.zona} - ${seat.precio}</li>
         ))}
       </ul>
-      <button onClick={irAlCarrito} style={{ marginTop: '20px' }}>Ir al carrito</button>
+      <button onClick={irAPagar} style={{ marginTop: '20px' }}>Ir a pagar</button>
     </div>
   );
 };
