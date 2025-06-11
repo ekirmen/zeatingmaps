@@ -212,17 +212,22 @@ const Profile = ({ userData, onUpdateProfile }) => {
   return (
     <>
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Mi Perfil</h1>
-          <Button 
-            onClick={() => window.history.back()} 
-            className="hover:bg-gray-100 transition-colors"
-          >
-            Atrás
-          </Button>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Mi Perfil</h1>
+        <Button
+          onClick={() => window.history.back()}
+          className="hover:bg-gray-100 transition-colors"
+        >
+          Atrás
+        </Button>
+      </div>
+      {user && (
+        <div className="text-sm text-gray-600 mb-4">
+          Localizador de Cuenta: <span className="font-mono">{user._id}</span>
         </div>
+      )}
 
-        <div className="grid gap-6">
+      <div className="grid gap-6">
           <Input
             placeholder="Usuario"
             value={formData.login}
