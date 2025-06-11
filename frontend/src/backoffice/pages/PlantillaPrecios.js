@@ -417,8 +417,8 @@ const PlantillaPrecios = () => {
             </select>
           )}
   
-          <button 
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          <button
+            className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
             onClick={() => setModalIsOpen(true)}
             disabled={!recinto || !sala}
           >
@@ -444,14 +444,14 @@ const PlantillaPrecios = () => {
                     <p className="text-sm text-gray-600"><span className="font-medium">Zonas:</span> {plantilla.detalles?.length || 0}</p>
                   </div>
                   <div className="px-4 py-3 bg-gray-50 flex justify-end gap-2">
-                    <button 
-                      className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 transition-colors"
+                    <button
+                      className="px-3 py-1 bg-gray-700 text-white text-sm rounded hover:bg-gray-800 transition-colors"
                       onClick={() => handleEditPlantilla(plantilla)}
                     >
                       Editar
                     </button>
-                    <button 
-                      className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                    <button
+                      className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors"
                       onClick={() => handleDeletePlantilla(plantilla._id)}
                     >
                       Eliminar
@@ -516,9 +516,9 @@ const PlantillaPrecios = () => {
                 >
                   Cancelar
                 </button>
-                <button 
-                  type="submit" 
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors"
                 >
                   {editingPlantilla ? 'Actualizar' : 'Guardar'}
                 </button>
