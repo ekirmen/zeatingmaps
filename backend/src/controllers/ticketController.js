@@ -1,5 +1,6 @@
 import Payment from '../models/Payment.js';
 import PDFDocument from 'pdfkit';
+import QRCode from 'qrcode';
 
 export const downloadTicket = async (req, res) => {
   try {
@@ -44,7 +45,14 @@ export const downloadTicket = async (req, res) => {
     });
     doc.list(seatLines, { bulletRadius: 2 });
 
-    // Add QR code or barcode here if needed
+    doc.moveDown();
+    doc.text('Códigos QR de asientos:', { underline: true });
+    for (const seat of payment.seats) {
+      const qrBuffer = await QRCode.toBuffer(seat.id);
+      doc.text(`Asiento ${seat.name}:`);
+      doc.image(qrBuffer, { width: 100 });
+      doc.moveDown();
+    }
 
     // Finalize PDF
     doc.end();
