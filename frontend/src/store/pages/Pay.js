@@ -91,7 +91,7 @@ const Pay = () => {
       const data = await response.json();
 
       if (data.locator) {
-        navigate(`/payment-success/${data.locator}`);
+        navigate('/payment-success', { state: { locator: data.locator } });
       } else {
         toast.error('Error al procesar la reserva');
       }
@@ -133,7 +133,7 @@ const Pay = () => {
       const data = await response.json();
 
       if (data.locator) {
-        navigate(`/payment-success/${data.locator}`);
+        navigate('/payment-success', { state: { locator: data.locator } });
       } else {
         toast.error('Error al procesar el pago');
       }

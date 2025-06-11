@@ -128,7 +128,7 @@ const App = () => {
                       </RequireAuth>
                     } 
                   />
-                  <Route path="/payment-success/:locator" element={<PaymentSuccess />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/store/thank-you" element={<ThankYouPage />} />
                   <Route path="/companias" element={<CompaniasPage />} />
                   <Route path="/store/seating-demo" element={<SeatingDemoPage />} />
