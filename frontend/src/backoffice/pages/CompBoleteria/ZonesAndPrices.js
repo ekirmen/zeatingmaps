@@ -21,6 +21,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     const ranges = {};
     if (selectedPlantilla?.detalles) {
       selectedPlantilla.detalles.forEach((det) => {
+        if (selectedEntrada && det.productoId !== selectedEntrada) return;
         const { zonaId, precio } = det;
         if (!ranges[zonaId]) {
           ranges[zonaId] = { min: precio, max: precio };
@@ -31,7 +32,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
       });
     }
     return ranges;
-  }, [selectedPlantilla]);
+  }, [selectedPlantilla, selectedEntrada]);
 
   // Cargar plantillas de precios cuando cambia la sala
   useEffect(() => {
@@ -177,7 +178,9 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     }
 
     const detallePrecio = selectedPlantilla?.detalles.find(
-      (d) => d.zonaId === silla.zona
+      (d) =>
+        d.zonaId === silla.zona &&
+        (!selectedEntrada || d.productoId === selectedEntrada)
     );
     if (!detallePrecio) {
       message.warning('Please select a price first');
@@ -214,7 +217,11 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
       message.warning('Cantidad inválida');
       return;
     }
-    const detalle = selectedPlantilla?.detalles.find((d) => d.zonaId === zona._id);
+    const detalle = selectedPlantilla?.detalles.find(
+      (d) =>
+        d.zonaId === zona._id &&
+        (!selectedEntrada || d.productoId === selectedEntrada)
+    );
     if (!detalle) {
       message.warning('Please select a price first');
       return;
@@ -247,7 +254,9 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     }
 
     const detallePrecio = selectedPlantilla?.detalles.find(
-      (d) => d.zonaId === zonaId
+      (d) =>
+        d.zonaId === zonaId &&
+        (!selectedEntrada || d.productoId === selectedEntrada)
     );
     if (!detallePrecio) {
       message.warning('Please select a price first');
@@ -292,7 +301,10 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   };
 
   // Zonas disponibles para mostrar en el SeatingMap (filtrado)
-  const availableZonas = selectedPlantilla?.detalles.map(detalle => detalle.zonaId) || [];
+  const availableZonas =
+    selectedPlantilla?.detalles
+      .filter(det => !selectedEntrada || det.productoId === selectedEntrada)
+      .map(detalle => detalle.zonaId) || [];
 
   return (
     <div className="center-content">
@@ -336,7 +348,11 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
           {/* Lista de zonas con entradas */}
           {zonas.map((zona) => {
             const seats = seatsByZone(zona._id);
-            const detalle = selectedPlantilla?.detalles.find((d) => d.zonaId === zona._id);
+            const detalle = selectedPlantilla?.detalles.find(
+              (d) =>
+                d.zonaId === zona._id &&
+                (!selectedEntrada || d.productoId === selectedEntrada)
+            );
             const precioZona = detalle?.precio;
             const totalAforo = seats.length > 0 ? seats.length : zona.aforo;
             const ocupados = seats.filter((s) => ['pagado','reservado','bloqueado'].includes(s.estado)).length;
