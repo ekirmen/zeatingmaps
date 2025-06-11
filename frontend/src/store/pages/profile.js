@@ -113,10 +113,6 @@ const Profile = ({ userData, onUpdateProfile }) => {
   const [purchaseHistory, setPurchaseHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Add purchase history fetch
-  useEffect(() => {
-    fetchPurchaseHistory();
-  }, [user]);
 
   const fetchPurchaseHistory = async () => {
     if (!user?._id) return;
@@ -164,6 +160,12 @@ const Profile = ({ userData, onUpdateProfile }) => {
       render: (text, record) => record.event?.nombre || '-'
     },
     {
+      title: 'Estado',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => status || '-'
+    },
+    {
       title: 'Total',
       key: 'total',
       render: (_, record) => `$${record.seats?.reduce((sum, seat) => sum + (seat.price || 0), 0).toFixed(2) || '0.00'}`
@@ -172,16 +174,21 @@ const Profile = ({ userData, onUpdateProfile }) => {
       title: 'Acciones',
       key: 'actions',
       render: (_, record) => (
-        <Button
-          type="primary"
-          icon={<DownloadOutlined />}
-          onClick={() => handleDownloadTicket(record.locator)}
-        >
-          Descargar Ticket
-        </Button>
+        record.status === 'pagado' && (
+          <Button
+            type="primary"
+            icon={<DownloadOutlined />}
+            onClick={() => handleDownloadTicket(record.locator)}
+          >
+            Descargar Ticket
+          </Button>
+        )
       )
     }
   ];
+
+  const reservedPayments = purchaseHistory.filter(p => p.status === 'reservado');
+  const paidPayments = purchaseHistory.filter(p => p.status === 'pagado');
 
   const handleDownloadTicket = async (locator) => {
     try {
@@ -289,18 +296,34 @@ const Profile = ({ userData, onUpdateProfile }) => {
         </div>
 
         <div className="mt-12">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Historial de Compras</h2>
-          <div className="overflow-hidden rounded-lg border border-gray-200">
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Reservas</h2>
+          <div className="overflow-hidden rounded-lg border border-gray-200 mb-10">
             <Table
               columns={columns}
-              dataSource={purchaseHistory}
+              dataSource={reservedPayments}
               rowKey="_id"
               loading={loading}
-              pagination={{ 
+              pagination={{
                 pageSize: 5,
                 className: "p-4"
               }}
-              locale={{ emptyText: 'No hay compras registradas' }}
+              locale={{ emptyText: 'No hay reservas registradas' }}
+              className="w-full"
+            />
+          </div>
+
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Pagos</h2>
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <Table
+              columns={columns}
+              dataSource={paidPayments}
+              rowKey="_id"
+              loading={loading}
+              pagination={{
+                pageSize: 5,
+                className: "p-4"
+              }}
+              locale={{ emptyText: 'No hay pagos registrados' }}
               className="w-full"
             />
           </div>

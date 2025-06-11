@@ -252,4 +252,21 @@ router.get('/by-email/:email', async (req, res) => {
   }
 });
 
+// Get payments for a specific user
+router.get('/user/:userId', async (req, res) => {
+  try {
+    const payments = await Payment.find({ user: req.params.userId })
+      .populate({
+        path: 'event',
+        select: 'nombre fecha recinto',
+        model: 'Evento'
+      })
+      .sort({ createdAt: -1 });
+
+    res.json(payments);
+  } catch (error) {
+    handlePopulationErrors(res, error);
+  }
+});
+
 export default router;
