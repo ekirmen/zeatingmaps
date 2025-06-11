@@ -1,6 +1,13 @@
 import Payment from '../models/Payment.js';
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const assetsDir = path.join(__dirname, '..', '..', 'assets');
 
 export const downloadTicket = async (req, res) => {
   try {
@@ -27,10 +34,16 @@ export const downloadTicket = async (req, res) => {
     doc.pipe(res);
 
     // --- Logo Horizontal ---
-    doc.image('assets/logo-horizontal.png', 50, 40, { width: 200 });
+    const horizLogo = path.join(assetsDir, 'logo-horizontal.png');
+    if (fs.existsSync(horizLogo)) {
+      doc.image(horizLogo, 50, 40, { width: 200 });
+    }
 
     // --- Logo Vertical ---
-    doc.image('assets/logo-vertical.png', 50, 120, { width: 50 });
+    const vertLogo = path.join(assetsDir, 'logo-vertical.png');
+    if (fs.existsSync(vertLogo)) {
+      doc.image(vertLogo, 50, 120, { width: 50 });
+    }
 
     // --- Datos del evento ---
     const event = payment.event;
@@ -79,10 +92,13 @@ export const downloadTicket = async (req, res) => {
 
     // --- Banner publicidad ---
     doc.rect(320, 330, 200, 200).stroke();
-    doc.image('assets/banner-publicidad.jpg', 320, 330, {
-      width: 200,
-      height: 200,
-    });
+    const banner = path.join(assetsDir, 'banner-publicidad.jpg');
+    if (fs.existsSync(banner)) {
+      doc.image(banner, 320, 330, {
+        width: 200,
+        height: 200,
+      });
+    }
 
     doc.moveDown();
     doc.text('Códigos QR de asientos:', { underline: true });
