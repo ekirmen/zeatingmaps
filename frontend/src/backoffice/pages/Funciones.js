@@ -18,6 +18,8 @@ const Funciones = () => {
     plantilla: '',
     inicioVenta: '',
     finVenta: '',
+    pagoAPlazos: false,
+    permitirReservasWeb: false,
   });
 
   // Fetch eventos when sala changes
@@ -104,6 +106,8 @@ const Funciones = () => {
           plantilla: '',
           inicioVenta: '',
           finVenta: '',
+          pagoAPlazos: false,
+          permitirReservasWeb: false,
         });
         // Refresh funciones list
         const refreshResponse = await fetch(`http://localhost:5000/api/funcions?evento=${eventoSeleccionado}`);
@@ -128,6 +132,8 @@ const Funciones = () => {
       plantilla: funcion.plantilla._id,
       inicioVenta: funcion.inicioVenta.split('T')[0],
       finVenta: funcion.finVenta.split('T')[0],
+      pagoAPlazos: funcion.pagoAPlazos || false,
+      permitirReservasWeb: funcion.permitirReservasWeb || false,
     });
     setModalIsOpen(true);
   };
@@ -156,11 +162,11 @@ const Funciones = () => {
   };
 
   return (
-    <div className="funciones-container">
-      <h2 className="funciones-header">Gestión de Funciones</h2>
+    <div className="p-4 space-y-4">
+      <h2 className="text-2xl font-semibold">Gestión de Funciones</h2>
 
-      <div className="controls-container">
-        <div className="select-group">
+      <div className="flex flex-wrap items-end gap-4 mb-4">
+        <div className="flex flex-col">
           <label>Recinto</label>
           <select
             value={recintoSeleccionado ? recintoSeleccionado._id : ''}
@@ -180,7 +186,7 @@ const Funciones = () => {
         </div>
 
         {recintoSeleccionado && (
-          <div className="select-group">
+          <div className="flex flex-col">
             <label>Sala</label>
             <select
               value={salaSeleccionada ? salaSeleccionada._id : ''}
@@ -200,7 +206,7 @@ const Funciones = () => {
         )}
 
         {salaSeleccionada && (
-          <div className="select-group">
+          <div className="flex flex-col">
             <label>Evento</label>
             <select
               value={eventoSeleccionado || ''}
@@ -216,13 +222,13 @@ const Funciones = () => {
           </div>
         )}
 
-        <button className="nueva-funcion-btn" onClick={() => setModalIsOpen(true)}>
+        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={() => setModalIsOpen(true)}>
           Nueva Función
         </button>
       </div>
 
-      <table className="funciones-table">
-        <thead>
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-100">
           <tr>
             <th>Fecha Celebración</th>
             <th>Evento</th>
@@ -230,6 +236,8 @@ const Funciones = () => {
             <th>Plantilla</th>
             <th>Inicio Venta</th>
             <th>Fin Venta</th>
+            <th>Pago a plazos</th>
+            <th>Reservas web</th>
             <th>Acciones</th>
           </tr>
         </thead>
@@ -242,11 +250,13 @@ const Funciones = () => {
               <td>{funcion.plantilla.nombre}</td>
               <td>{new Date(funcion.inicioVenta).toLocaleDateString()}</td>
               <td>{new Date(funcion.finVenta).toLocaleDateString()}</td>
-              <td className="action-buttons">
-                <button className="edit-btn" onClick={() => handleEdit(funcion)}>
+              <td>{funcion.pagoAPlazos ? 'Sí' : 'No'}</td>
+              <td>{funcion.permitirReservasWeb ? 'Sí' : 'No'}</td>
+              <td className="space-x-2">
+                <button className="text-blue-600 hover:underline" onClick={() => handleEdit(funcion)}>
                   Editar
                 </button>
-                <button className="delete-btn" onClick={() => handleDelete(funcion._id)}>
+                <button className="text-red-600 hover:underline" onClick={() => handleDelete(funcion._id)}>
                   Eliminar
                 </button>
               </td>
@@ -260,20 +270,22 @@ const Funciones = () => {
         onRequestClose={() => {
           setModalIsOpen(false);
           setEditingFuncion(null);
-          setNuevaFuncion({
-            fechaCelebracion: '',
-            evento: '',
-            sala: '',
-            plantilla: '',
-            inicioVenta: '',
-            finVenta: '',
-          });
+        setNuevaFuncion({
+          fechaCelebracion: '',
+          evento: '',
+          sala: '',
+          plantilla: '',
+          inicioVenta: '',
+          finVenta: '',
+          pagoAPlazos: false,
+          permitirReservasWeb: false,
+        });
         }}
-        className="modal-content"
+        className="bg-white p-4 rounded shadow-lg"
       >
         <h2>{editingFuncion ? 'Editar Función' : 'Nueva Función'}</h2>
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
+          <div className="flex flex-col space-y-1 mb-2">
             <label>Fecha Celebración</label>
             <input
               type="date"
@@ -283,7 +295,7 @@ const Funciones = () => {
             />
           </div>
 
-          <div className="form-group">
+          <div className="flex flex-col space-y-1 mb-2">
             <label>Plantilla</label>
             <select
               value={nuevaFuncion.plantilla}
@@ -299,7 +311,7 @@ const Funciones = () => {
             </select>
           </div>
 
-          <div className="form-group">
+          <div className="flex flex-col space-y-1 mb-2">
             <label>Inicio Venta</label>
             <input
               type="date"
@@ -309,7 +321,7 @@ const Funciones = () => {
             />
           </div>
 
-          <div className="form-group">
+          <div className="flex flex-col space-y-1 mb-2">
             <label>Fin Venta</label>
             <input
               type="date"
@@ -319,11 +331,29 @@ const Funciones = () => {
             />
           </div>
 
-          <div className="modal-actions">
-            <button type="button" className="delete-btn" onClick={() => setModalIsOpen(false)}>
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              checked={nuevaFuncion.pagoAPlazos}
+              onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, pagoAPlazos: e.target.checked })}
+            />
+            <label>Pago a plazos</label>
+          </div>
+
+          <div className="flex items-center gap-2 mb-2">
+            <input
+              type="checkbox"
+              checked={nuevaFuncion.permitirReservasWeb}
+              onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, permitirReservasWeb: e.target.checked })}
+            />
+            <label>Permite reservas a clientes web</label>
+          </div>
+
+          <div className="flex justify-end gap-2 mt-4">
+            <button type="button" className="text-red-600 hover:underline" onClick={() => setModalIsOpen(false)}>
               Cancelar
             </button>
-            <button type="submit" className="edit-btn">
+            <button type="submit" className="bg-blue-500 text-white px-4 py-1 rounded">
               {editingFuncion ? 'Actualizar' : 'Crear'}
             </button>
           </div>
