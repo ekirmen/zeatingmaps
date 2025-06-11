@@ -355,7 +355,7 @@ const CrearMapa = () => {
             )}
           </Layer>
         </Stage>
-        <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
+        <div className="fixed bottom-4 right-4 flex flex-col space-y-2">
           <button
             onClick={zoomIn}
             className="p-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
