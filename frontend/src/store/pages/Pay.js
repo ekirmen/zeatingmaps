@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import MetodoPago from '../components/MetodoPago';
+import { Modal } from 'antd';
 import { toast } from 'react-hot-toast';
 
 const Pay = () => {
@@ -14,6 +15,7 @@ const Pay = () => {
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
+  const [isObservacionesModalVisible, setIsObservacionesModalVisible] = useState(false);
   const [availableMethods, setAvailableMethods] = useState(["stripe", "paypal", "transferencia"]);
 
   const subtotal = carrito?.reduce((sum, item) => sum + item.precio, 0) || 0;
@@ -44,6 +46,12 @@ const Pay = () => {
 
     fetchOptions();
   }, [funcionId]);
+
+  useEffect(() => {
+    if (eventOptions.observacionesCompra?.mostrar) {
+      setIsObservacionesModalVisible(true);
+    }
+  }, [eventOptions]);
 
   const handlePaymentMethodSelect = (method) => {
     setSelectedPaymentMethod(method);
@@ -117,12 +125,6 @@ const Pay = () => {
         </div>
       </div>
 
-      {/* Observaciones del evento */}
-      {eventOptions.observacionesCompra?.mostrar && (
-        <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700">
-          {eventOptions.observacionesCompra.texto}
-        </div>
-      )}
 
       {/* Payment Methods */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -142,6 +144,20 @@ const Pay = () => {
       >
         Proceder al Pago
       </button>
+
+      {eventOptions.observacionesCompra?.mostrar && (
+        <Modal
+          open={isObservacionesModalVisible}
+          closable={false}
+          maskClosable={true}
+          onOk={() => setIsObservacionesModalVisible(false)}
+          onCancel={() => setIsObservacionesModalVisible(false)}
+          okText="Continuar"
+          cancelButtonProps={{ style: { display: 'none' } }}
+        >
+          <p>{eventOptions.observacionesCompra.texto}</p>
+        </Modal>
+      )}
     </div>
   );
 };
