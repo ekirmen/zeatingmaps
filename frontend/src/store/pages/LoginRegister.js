@@ -13,15 +13,15 @@ const LoginRegister = () => {
   return (
     <div className="login-register-container">
       <div className="login-register-box">
-        <div className="tabs">
+        <div className="tabs flex gap-2 mb-4">
           <button
-            className={isLogin ? 'active' : ''}
+            className={`px-4 py-2 border-b-2 ${isLogin ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600'}`}
             onClick={() => setIsLogin(true)}
           >
             Iniciar Sesión
           </button>
           <button
-            className={!isLogin ? 'active' : ''}
+            className={`px-4 py-2 border-b-2 ${!isLogin ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600'}`}
             onClick={() => setIsLogin(false)}
           >
             Registrarse
