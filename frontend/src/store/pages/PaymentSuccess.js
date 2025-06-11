@@ -7,6 +7,7 @@ const PaymentSuccess = () => {
   const navigate = useNavigate();
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
+  const isReservation = paymentDetails?.status === 'reservado';
 
   useEffect(() => {
     const fetchPaymentDetails = async () => {
@@ -39,8 +40,12 @@ const PaymentSuccess = () => {
       <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
           <FaCheckCircle className="mx-auto h-16 w-16 text-green-500" />
-          <h2 className="mt-4 text-3xl font-bold text-gray-900">¡Pago Exitoso!</h2>
-          <p className="mt-2 text-lg text-gray-600">Tu compra ha sido registrada con éxito</p>
+          <h2 className="mt-4 text-3xl font-bold text-gray-900">
+            {isReservation ? '¡Reserva Exitosa!' : '¡Pago Exitoso!'}
+          </h2>
+          <p className="mt-2 text-lg text-gray-600">
+            {isReservation ? 'Tu reserva ha sido registrada con éxito' : 'Tu compra ha sido registrada con éxito'}
+          </p>
         </div>
 
         <div className="border-t border-b border-gray-200 py-4 my-6">
@@ -51,14 +56,18 @@ const PaymentSuccess = () => {
           
           {paymentDetails && (
             <>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-gray-600">Total Pagado:</span>
-                <span className="font-bold">${paymentDetails.amount}</span>
-              </div>
-              <div className="flex justify-between items-center mb-4">
-                <span className="text-gray-600">Método de Pago:</span>
-                <span className="capitalize">{paymentDetails.paymentMethod}</span>
-              </div>
+              {!isReservation && (
+                <>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-gray-600">Total Pagado:</span>
+                    <span className="font-bold">${paymentDetails.amount}</span>
+                  </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-gray-600">Método de Pago:</span>
+                    <span className="capitalize">{paymentDetails.paymentMethod}</span>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Fecha:</span>
                 <span>{new Date(paymentDetails.createdAt).toLocaleString()}</span>
@@ -68,13 +77,15 @@ const PaymentSuccess = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-          <button
-            onClick={handleDownloadTickets}
-            className="flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-          >
-            <FaTicketAlt className="mr-2" />
-            Descargar Entradas
-          </button>
+          {!isReservation && (
+            <button
+              onClick={handleDownloadTickets}
+              className="flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            >
+              <FaTicketAlt className="mr-2" />
+              Descargar Entradas
+            </button>
+          )}
           
           <button
             onClick={() => navigate('/store')}

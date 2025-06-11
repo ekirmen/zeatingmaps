@@ -21,6 +21,8 @@ const Pay = () => {
   const [eventOptions, setEventOptions] = useState({});
   const [isObservacionesModalVisible, setIsObservacionesModalVisible] = useState(false);
   const [availableMethods, setAvailableMethods] = useState(["stripe", "paypal", "transferencia"]);
+  const [allowReservation, setAllowReservation] = useState(false);
+  const [currentEventId, setCurrentEventId] = useState(null);
 
   const subtotal = carrito?.reduce((sum, item) => sum + item.precio, 0) || 0;
   const impuestos = subtotal * 0.16;
@@ -34,6 +36,8 @@ const Pay = () => {
         const funcRes = await fetch(`http://localhost:5000/api/funcions/${funcionId}`);
         const funcData = await funcRes.json();
         const eventId = funcData.evento?._id || funcData.evento;
+        setAllowReservation(!!funcData.permitirReservasWeb);
+        setCurrentEventId(eventId);
 
         if (eventId) {
           const eventRes = await fetch(`http://localhost:5000/api/events/${eventId}`);
@@ -61,6 +65,35 @@ const Pay = () => {
     setSelectedPaymentMethod(method);
   };
 
+  const handleProcessReservation = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/payments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          user: user._id,
+          event: currentEventId,
+          seats: carrito,
+          status: 'reservado'
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.locator) {
+        navigate(`/payment-success/${data.locator}`);
+      } else {
+        toast.error('Error al procesar la reserva');
+      }
+    } catch (error) {
+      console.error('Reservation error:', error);
+      toast.error('Error al procesar la reserva');
+    }
+  };
+
   const handleProcessPayment = async () => {
     if (!selectedPaymentMethod) {
       toast.error("Por favor selecciona un método de pago");
@@ -75,19 +108,20 @@ const Pay = () => {
           'Authorization': `Bearer ${user.token}`
         },
         body: JSON.stringify({
-          funcionId,
+          user: user._id,
+          event: currentEventId,
           seats: carrito,
-          paymentMethod: selectedPaymentMethod,
-          amount: total
+          status: 'pagado',
+          payments: [{ method: selectedPaymentMethod, amount: total }]
         })
       });
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.locator) {
         navigate(`/payment-success/${data.locator}`);
       } else {
-        toast.error("Error al procesar el pago");
+        toast.error('Error al procesar el pago');
       }
     } catch (error) {
       console.error('Payment error:', error);
@@ -140,7 +174,15 @@ const Pay = () => {
         />
       </div>
 
-      {/* Process Payment Button */}
+      {/* Process Payment / Reservation Buttons */}
+      {allowReservation && (
+        <button
+          onClick={handleProcessReservation}
+          className="w-full mb-4 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition"
+        >
+          Reservar
+        </button>
+      )}
       <button
         onClick={handleProcessPayment}
         className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"

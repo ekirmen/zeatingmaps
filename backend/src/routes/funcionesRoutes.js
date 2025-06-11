@@ -32,6 +32,24 @@ router.get('/evento/:eventoId', async (req, res) => {
   }
 });
 
+// Get single function by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const funcion = await Funcion.findById(req.params.id)
+      .populate('evento')
+      .populate('sala')
+      .populate('plantilla');
+
+    if (!funcion) {
+      return res.status(404).json({ message: 'Función no encontrada' });
+    }
+
+    res.json(funcion);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Create function
 router.post('/', async (req, res) => {
   const funcion = new Funcion(req.body);
