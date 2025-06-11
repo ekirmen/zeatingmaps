@@ -4,6 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
 import { fetchMapa, fetchPlantillaPrecios, fetchZonas } from '../services/apistore';
+
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const Event = () => {
   const userId = localStorage.getItem('userId');
   const { eventId } = useParams(); // eventId puede ser slug o id real
@@ -147,10 +149,14 @@ const Event = () => {
       return;
     }
 
+    const index = carrito.findIndex(item => item._id === silla._id);
+    if (index === -1 && evento?.maxTicketsCompra && carrito.length >= evento.maxTicketsCompra) {
+      message.error(`Solo puedes seleccionar ${evento.maxTicketsCompra} asientos.`);
+      return;
+    }
+
     const precio = plantillaPrecios?.detalles.find(p => p.zonaId === silla.zona)?.precio || 100;
     const zonaNombre = zonas.find(z => z._id === silla.zona)?.nombre || "Desconocida";
-
-    const index = carrito.findIndex(item => item._id === silla._id);
     const nuevoCarrito = index !== -1
       ? carrito.filter(item => item._id !== silla._id)
       : [...carrito, { ...silla, precio, nombreMesa: mesa.nombre, zona: zonaNombre }];
@@ -205,7 +211,6 @@ const Event = () => {
       if (!response.ok) throw new Error('Failed to process payment');
 
       const data = await response.json();
-      console.log(data);
       message.success("Pago realizado con éxito.");
       setCarrito([]);
       setIsPaymentModalVisible(false);
@@ -219,6 +224,22 @@ const Event = () => {
     <div className="p-4">
 
       <h1 className="text-2xl font-bold text-center my-4">{evento?.nombre}</h1>
+
+      {evento?.imagenes?.banner && (
+        <img
+          src={`${API_URL}${evento.imagenes.banner}`}
+          alt={`Banner de ${evento.nombre}`}
+          className="w-full max-h-72 object-cover rounded mb-4"
+        />
+      )}
+
+      {evento?.imagenes?.portada && (
+        <img
+          src={`${API_URL}${evento.imagenes.portada}`}
+          alt={`Portada de ${evento.nombre}`}
+          className="w-full max-h-72 object-cover rounded mb-4"
+        />
+      )}
 
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Funciones</h3>

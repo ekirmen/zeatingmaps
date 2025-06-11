@@ -2,8 +2,16 @@
 const BASE_URL = 'http://localhost:5000/api';
 
 // Función genérica para solicitudes GET
-export const fetchPlantillaPrecios = async () => {
-  // tu lógica aquí
+// Obtener plantilla de precios por ID
+export const fetchPlantillaPrecios = async (id) => {
+  try {
+    const res = await fetch(`${BASE_URL}/plantillas/${id}`);
+    if (!res.ok) throw new Error('No se pudo obtener la plantilla de precios');
+    return await res.json();
+  } catch (error) {
+    console.error('Error al obtener la plantilla de precios:', error);
+    throw error;
+  }
 };
 
 const fetchStoreData = async (endpoint) => {
@@ -31,6 +39,9 @@ export const getFunciones = (eventId) =>
 export const getZonas = () =>
   fetchStoreData('/zonas');
 
+// Alias utilizado en el store
+export const fetchZonas = () => getZonas();
+
 // 🔹 Obtener pagos por evento
 export const getPagosPorEvento = (eventId) =>
   fetchStoreData(`/payments?evento=${eventId}`);
@@ -46,7 +57,7 @@ export const getMapaPorEvento = (eventId) =>
 // 🔹 Obtener mapa por sala ID
 export const fetchMapa = async (salaId) => {
   try {
-    const res = await fetch(`${BASE_URL}/salas/${salaId}`);
+    const res = await fetch(`${BASE_URL}/salas/${salaId}/mapa`);
     if (!res.ok) throw new Error("No se pudo obtener el mapa");
     return await res.json();
   } catch (error) {

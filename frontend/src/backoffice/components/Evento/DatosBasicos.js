@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMasksTheater, faFilm, faMusic, faFutbol, faImage, faBuilding, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { useTags } from '../../contexts/TagContext';
 
+const MAX_TAGS = 3;
+
 const DatosBasicos = ({ eventoData, setEventoData }) => {
   const [form, setForm] = useState({
     nombre: eventoData?.nombre || '',
@@ -31,12 +33,16 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
   };
 
   const handleTagAdd = () => {
-    if (selectedTag && !form.tags.includes(selectedTag)) {
-      const updated = [...form.tags, selectedTag];
-      setForm(prev => ({ ...prev, tags: updated }));
-      setEventoData(prev => ({ ...prev, tags: updated }));
-      setSelectedTag('');
+    if (!selectedTag || form.tags.includes(selectedTag)) return;
+    if (form.tags.length >= MAX_TAGS) {
+      alert(`Solo puedes añadir hasta ${MAX_TAGS} tags.`);
+      return;
     }
+
+    const updated = [...form.tags, selectedTag];
+    setForm(prev => ({ ...prev, tags: updated }));
+    setEventoData(prev => ({ ...prev, tags: updated }));
+    setSelectedTag('');
   };
 
   const handleRemoveTag = (id) => {
