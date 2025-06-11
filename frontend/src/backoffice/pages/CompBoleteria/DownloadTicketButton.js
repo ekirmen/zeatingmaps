@@ -10,8 +10,12 @@ const DownloadTicketButton = ({ paymentId }) => {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/payments/${paymentId}/download`);
-      
+      const response = await fetch(`http://localhost:5000/api/payments/${paymentId}/download`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
       if (response.status === 404) {
         message.error('Ticket not found');
         return;
@@ -28,7 +32,9 @@ const DownloadTicketButton = ({ paymentId }) => {
       a.download = `ticket_${paymentId}.pdf`;
       document.body.appendChild(a);
       a.click();
-      a.remove();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
       message.success('Ticket downloaded successfully');
     } catch (error) {
       console.error('Error downloading ticket:', error);
