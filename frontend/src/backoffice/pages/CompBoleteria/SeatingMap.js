@@ -51,10 +51,10 @@ const SeatingMap = ({ mapa, onSeatClick, selectedZona, availableZonas }) => {
       pagado: "#9ca3af",
       reservado: "#ef4444",
       bloqueado: "#f97316",
-      disponible: silla.color || "#4b5563",
+      disponible: silla.color || "#60a5fa",
     };
 
-    const fill = isSelected ? "#374151" : colorMap[silla.estado] || colorMap["disponible"];
+    const fill = isSelected ? "#facc15" : colorMap[silla.estado] || colorMap["disponible"];
 
     return (
       <Circle
@@ -63,7 +63,7 @@ const SeatingMap = ({ mapa, onSeatClick, selectedZona, availableZonas }) => {
         y={silla.posicion.y}
         radius={scale < 1 ? 6 : 10}
         fill={fill}
-        stroke={isSelected ? "#1f2937" : "#1f2937"}
+        stroke={isSelected ? "#f97316" : "#1f2937"}
         strokeWidth={isSelected ? 2 : 1}
         onClick={() => {
           if (isAvailable || isSelected) onSeatClick(silla, mesa);
