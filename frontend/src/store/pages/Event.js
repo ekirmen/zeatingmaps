@@ -19,7 +19,6 @@ const Event = () => {
   const [carrito, setCarrito] = useState([]);
   const [zonas, setZonas] = useState([]);
   const [pagos, setPagos] = useState([]);
-  const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
   const [showSeatPopup, setShowSeatPopup] = useState(false);
 
   useEffect(() => {
@@ -177,48 +176,6 @@ const Event = () => {
     setMapa(updatedMapa);
   };
 
-  const handlePayment = async () => {
-    if (!userId) {
-      navigate('/store/login-register');
-      return;
-    }
-
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/store/login-register');
-      return;
-    }
-
-    try {
-      const response = await fetch("http://localhost:5000/api/payments", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          user: userId,
-          seats: carrito.map(item => ({
-            id: item._id,
-            name: item.nombreMesa,
-            price: item.precio,
-            zone: item.zona
-          })),
-          status: "reservado"
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to process payment');
-
-      const data = await response.json();
-      message.success("Pago realizado con éxito.");
-      setCarrito([]);
-      setIsPaymentModalVisible(false);
-    } catch (error) {
-      console.error("Error en la solicitud:", error);
-      message.error("Error al procesar el pago.");
-    }
-  };
 
   return (
     <div className="p-4">
@@ -276,21 +233,12 @@ const Event = () => {
           </div>
         ))}
         <button
-          onClick={() => setIsPaymentModalVisible(true)}
+          onClick={() => navigate('/store/pay', { state: { carrito, funcionId: selectedFunctionId } })}
           className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
         >
-          Reservar
+          Continuar al carrito
         </button>
       </div>
-
-      <Modal
-        title="Confirmar Reserva"
-        open={isPaymentModalVisible}
-        onCancel={() => setIsPaymentModalVisible(false)}
-        onOk={handlePayment}
-      >
-        <p>¿Deseas reservar estos asientos?</p>
-      </Modal>
 
       <Modal
         open={showSeatPopup}
