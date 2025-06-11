@@ -145,7 +145,7 @@ const Header = ({ onLogin, onLogout }) => {
         }}
         footer={[
           <Button key="cancel" onClick={() => setIsModalVisible(false)}>Cancelar</Button>,
-          <Button key="submit" type="primary" onClick={handleLogin}>Iniciar Sesión</Button>,
+          <Button key="submit" type="default" variant="outlined" block onClick={handleLogin}>Iniciar Sesión</Button>,
         ]}
       >
         {error && <div className="text-red-500 mb-4">{error}</div>}
@@ -160,7 +160,7 @@ const Header = ({ onLogin, onLogout }) => {
         onCancel={() => setIsRegisterModalVisible(false)}
         footer={[
           <Button key="cancel" onClick={() => setIsRegisterModalVisible(false)}>Cancelar</Button>,
-          <Button key="submit" type="primary" onClick={handleRegister}>Registrar</Button>,
+          <Button key="submit" type="default" variant="outlined" block onClick={handleRegister}>Registrar</Button>,
         ]}
       >
         <Input placeholder="Usuario" value={registerData.login} onChange={(e) => setRegisterData({ ...registerData, login: e.target.value })} className="mb-4" />

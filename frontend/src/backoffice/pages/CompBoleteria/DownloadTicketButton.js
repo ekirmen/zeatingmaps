@@ -37,7 +37,7 @@ const DownloadTicketButton = ({ paymentId }) => {
   };
 
   return (
-    <Button type="primary" onClick={handleDownload}>
+    <Button type="default" variant="outlined" block onClick={handleDownload}>
       Descargar Ticket
     </Button>
   );

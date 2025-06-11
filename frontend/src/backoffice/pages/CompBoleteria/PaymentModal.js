@@ -231,8 +231,10 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
               <Button onClick={onCancel}>Cancelar</Button>
-              <Button 
-                type="primary"
+              <Button
+                type="default"
+                variant="outlined"
+                block
                 onClick={handlePaymentOrReservation}
                 loading={isProcessing}
                 disabled={!selectedClient || (diferencia === 0 && paymentEntries.length === 0)}  // Updated condition
@@ -329,7 +331,9 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
           </Button>,
           <Button
             key="email"
-            type="primary"
+            type="default"
+            variant="outlined"
+            block
             onClick={() => {/* Implement email sending logic */}}
             disabled={!emailToSend}
           >

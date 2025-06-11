@@ -176,7 +176,9 @@ const Profile = ({ userData, onUpdateProfile }) => {
       render: (_, record) => (
         record.status === 'pagado' && (
           <Button
-            type="primary"
+            type="default"
+            variant="outlined"
+            block
             icon={<DownloadOutlined />}
             onClick={() => handleDownloadTicket(record.locator)}
           >
@@ -284,9 +286,11 @@ const Profile = ({ userData, onUpdateProfile }) => {
             >
               Cambiar Contraseña
             </Button>
-            <Button 
-              type="primary" 
-              onClick={handleSaveChanges} 
+            <Button
+              type="default"
+              variant="outlined"
+              block
+              onClick={handleSaveChanges}
               disabled={!userData}
               className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white transition-colors rounded-lg"
             >

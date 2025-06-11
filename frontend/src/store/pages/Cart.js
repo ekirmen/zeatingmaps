@@ -93,7 +93,7 @@ const Cart = () => {
           <div className="text-right font-semibold text-lg">
             Total: ${formatPrice(cart.reduce((sum, item) => sum + (item.precio || 0), 0))}
           </div>
-          <Button type="primary" onClick={() => navigate('/store/pay')} block>
+          <Button type="default" variant="outlined" block onClick={() => navigate('/store/pay')}>
             Proceed to Payment
           </Button>
         </div>

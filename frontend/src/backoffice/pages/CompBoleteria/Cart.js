@@ -95,7 +95,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, children
           <div className="text-right font-semibold text-lg">
             Total: ${formatPrice(carrito.reduce((sum, item) => sum + (item.precio || 0), 0))}
           </div>
-          <Button type="primary" onClick={onPaymentClick} block>
+          <Button type="default" variant="outlined" block onClick={onPaymentClick}>
             Proceed to Payment
           </Button>
           {children}

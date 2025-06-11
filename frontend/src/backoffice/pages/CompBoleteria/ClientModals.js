@@ -259,7 +259,7 @@ const ClientModals = ({
             <Input className="rounded-md" />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" icon={<UserAddOutlined />} block>
+            <Button type="default" variant="outlined" block htmlType="submit" icon={<UserAddOutlined />}>
               Add Client
             </Button>
           </Form.Item>
