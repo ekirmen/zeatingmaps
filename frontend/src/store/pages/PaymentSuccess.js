@@ -98,9 +98,10 @@ const PaymentSuccess = () => {
         </div>
 
         {eventOptions.observacionesEmail?.mostrar && (
-          <div className="mt-8 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm">
-            {eventOptions.observacionesEmail.texto}
-          </div>
+          <div
+            className="mt-8 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm"
+            dangerouslySetInnerHTML={{ __html: String(eventOptions.observacionesEmail.texto || '') }}
+          />
         )}
 
         <div className="mt-8 text-center text-sm text-gray-500">
