@@ -17,6 +17,7 @@ const Plano = () => {
     aforo: 0,
     numerada: false,
   });
+  const [prevAforo, setPrevAforo] = useState(0);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingZona, setEditingZona] = useState(null);
   const navigate = useNavigate();
@@ -296,7 +297,15 @@ const Plano = () => {
               type="checkbox"
               id="numerada"
               checked={nuevaZona.numerada}
-              onChange={(e) => setNuevaZona({ ...nuevaZona, numerada: e.target.checked })}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                if (checked) {
+                  setPrevAforo(nuevaZona.aforo);
+                  setNuevaZona({ ...nuevaZona, numerada: true, aforo: 0 });
+                } else {
+                  setNuevaZona({ ...nuevaZona, numerada: false, aforo: prevAforo });
+                }
+              }}
               className="w-4 h-4"
             />
             <label htmlFor="numerada" className="font-medium text-gray-700">Numerada</label>
