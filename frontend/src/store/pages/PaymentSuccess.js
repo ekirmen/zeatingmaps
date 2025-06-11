@@ -1,13 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FaCheckCircle, FaTicketAlt } from 'react-icons/fa';
 
 const PaymentSuccess = () => {
-  const { locator } = useParams();
+  const params = useParams();
+  const location = useLocation();
+  const locator = location.state?.locator || params.locator;
   const navigate = useNavigate();
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
   const isReservation = paymentDetails?.status === 'reservado';
+
+  if (!locator) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">Localizador no proporcionado.</p>
+      </div>
+    );
+  }
 
   useEffect(() => {
     const fetchPaymentDetails = async () => {
