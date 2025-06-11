@@ -14,6 +14,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   const [ticketType, setTicketType] = useState('normal'); // normal o courtesy
   const [activeMenu, setActiveMenu] = useState('Zonas');
   const [openZone, setOpenZone] = useState(null); // zona desplegada
+  const [zoneQuantities, setZoneQuantities] = useState({});
 
   // Cargar plantillas de precios cuando cambia la sala
   useEffect(() => {
@@ -78,6 +79,11 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
               nombre: zona.nombre || 'Unnamed Zone'
             }));
             setZonas(validatedZonas);
+            const qtys = {};
+            validatedZonas.forEach(z => {
+              qtys[z._id] = 1;
+            });
+            setZoneQuantities(qtys);
           }
         } catch (error) {
           message.error('Error loading sala data');
@@ -117,6 +123,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
         ...silla,
         nombreMesa: mesa.nombre,
         zona: selectedZona.nombre,
+        zonaId: selectedZona._id,
         precio: ticketType === 'courtesy' ? 0 : selectedPrecio.precio,
         tipoPrecio: ticketType,
         plantillaId: selectedPlantilla._id
@@ -149,12 +156,49 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
           ...silla,
           nombreMesa: silla.mesaNombre || '',
           zona: zonaObj?.nombre || '',
+          zonaId: zonaObj?._id,
           precio: ticketType === 'courtesy' ? 0 : detallePrecio.precio,
           tipoPrecio: ticketType,
           plantillaId: selectedPlantilla._id,
         },
       ]);
     }
+  };
+
+  const addGeneralTickets = (zona) => {
+    const cantidad = Number(zoneQuantities[zona._id] || 0);
+    if (!selectedClient) {
+      message.warning('Please select a client first');
+      return;
+    }
+    if (!cantidad || cantidad <= 0) {
+      message.warning('Cantidad inválida');
+      return;
+    }
+    const detalle = selectedPlantilla?.detalles.find((d) => d.zonaId === zona._id);
+    if (!detalle) {
+      message.warning('Please select a price first');
+      return;
+    }
+
+    const current = carrito.filter((c) => c.zonaId === zona._id).length;
+    if (current + cantidad > zona.aforo) {
+      message.warning('Excede el aforo de la zona');
+      return;
+    }
+
+    const newTickets = Array.from({ length: cantidad }).map((_, idx) => ({
+      _id: `gen-${zona._id}-${Date.now()}-${idx}`,
+      nombre: `Ticket ${zona.nombre}`,
+      nombreMesa: '',
+      zona: zona.nombre,
+      zonaId: zona._id,
+      precio: ticketType === 'courtesy' ? 0 : detalle.precio,
+      tipoPrecio: ticketType,
+      plantillaId: selectedPlantilla._id,
+    }));
+
+    setCarrito((prev) => [...prev, ...newTickets]);
   };
 
   const toggleTableSeats = (zonaId, mesaNombre) => {
@@ -187,6 +231,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
           ...s,
           nombreMesa: s.mesaNombre || '',
           zona: zonaObj?.nombre || '',
+          zonaId: zonaObj?._id,
           precio: ticketType === 'courtesy' ? 0 : detallePrecio.precio,
           tipoPrecio: ticketType,
           plantillaId: selectedPlantilla._id,
@@ -233,8 +278,37 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
           {/* Lista de zonas con entradas */}
           {zonas.map((zona) => {
             const seats = seatsByZone(zona._id);
-            if (seats.length === 0) return null;
-            const precioZona = selectedPlantilla?.detalles.find((d) => d.zonaId === zona._id)?.precio;
+            const detalle = selectedPlantilla?.detalles.find((d) => d.zonaId === zona._id);
+            const precioZona = detalle?.precio;
+
+            if (seats.length === 0 && !detalle) return null; // Sin asientos ni precio
+
+            if (seats.length === 0) {
+              return (
+                <div key={zona._id} className="border rounded p-2 flex justify-between items-center space-x-2">
+                  <span className="flex-1">{zona.nombre}</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={zona.aforo}
+                    value={zoneQuantities[zona._id] || 1}
+                    onChange={(e) =>
+                      setZoneQuantities({
+                        ...zoneQuantities,
+                        [zona._id]: e.target.value,
+                      })
+                    }
+                    className="w-20 border rounded px-2 py-1 text-sm"
+                  />
+                  <button
+                    className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
+                    onClick={() => addGeneralTickets(zona)}
+                  >
+                    Agregar
+                  </button>
+                </div>
+              );
+            }
 
             const seatsByMesa = seats.reduce((acc, seat) => {
               acc[seat.mesaNombre] = acc[seat.mesaNombre] || [];
