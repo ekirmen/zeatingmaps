@@ -23,6 +23,12 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
   const [locator, setLocator] = useState('');
   const [emailToSend, setEmailToSend] = useState('');
 
+  const handleDownloadTicket = () => {
+    if (locator) {
+      window.open(`http://localhost:5000/api/tickets/download/${locator}`, '_blank');
+    }
+  };
+
   // Add the date change handler
   const handleDateChange = (date) => {
     setSelectedDate(date);
@@ -338,6 +344,16 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
             disabled={!emailToSend}
           >
             Enviar por correo
+          </Button>,
+          <Button
+            key="download"
+            type="default"
+            variant="outlined"
+            block
+            onClick={handleDownloadTicket}
+            disabled={!locator}
+          >
+            Descargar Ticket
           </Button>
         ]}
       >
