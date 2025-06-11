@@ -1,7 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Stage, Layer, Circle, Rect, Text, Label, Tag } from "react-konva";
 
-const SeatingMap = ({ mapa, onSeatClick, selectedZona, availableZonas }) => {
+const SeatingMap = ({
+  mapa,
+  onSeatClick,
+  selectedZona,
+  availableZonas,
+  blockMode = false,
+}) => {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -50,11 +56,12 @@ const SeatingMap = ({ mapa, onSeatClick, selectedZona, availableZonas }) => {
     const colorMap = {
       pagado: "#9ca3af",
       reservado: "#ef4444",
-      bloqueado: "red",
+      bloqueado: blockMode ? "red" : "#9ca3af",
       disponible: silla.color || "#60a5fa",
     };
 
     const fill = isSelected ? "#facc15" : colorMap[silla.estado] || colorMap["disponible"];
+    const canSelect = (isAvailable || isSelected) && (blockMode || silla.estado !== "bloqueado");
 
     return (
       <Circle
@@ -66,14 +73,14 @@ const SeatingMap = ({ mapa, onSeatClick, selectedZona, availableZonas }) => {
         stroke={isSelected ? "#f97316" : "#1f2937"}
         strokeWidth={isSelected ? 2 : 1}
         onClick={() => {
-          if (isAvailable || isSelected) onSeatClick(silla, mesa);
+          if (canSelect) onSeatClick(silla, mesa);
         }}
         onTap={() => {
-          if (isAvailable || isSelected) onSeatClick(silla, mesa);
+          if (canSelect) onSeatClick(silla, mesa);
         }}
         onMouseEnter={(e) => {
           const stage = e.target.getStage();
-          stage.container().style.cursor = isAvailable || isSelected ? "pointer" : "not-allowed";
+          stage.container().style.cursor = canSelect ? "pointer" : "not-allowed";
           setTooltip({
             visible: true,
             x: silla.posicion.x + 10,
