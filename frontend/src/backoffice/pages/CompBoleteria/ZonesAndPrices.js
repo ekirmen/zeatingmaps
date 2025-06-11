@@ -344,10 +344,11 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   };
 
   // Zonas disponibles para mostrar en el SeatingMap (filtrado)
-  const availableZonas =
-    selectedPlantilla?.detalles
-      .filter(det => !selectedEntrada || det.productoId === selectedEntrada)
-      .map(detalle => detalle.zonaId) || [];
+  const availableZonas = selectedPlantilla
+    ? selectedPlantilla.detalles
+        .filter(det => !selectedEntrada || det.productoId === selectedEntrada)
+        .map(detalle => detalle.zonaId)
+    : zonas.map(z => z._id);
 
   return (
     <div className="center-content">

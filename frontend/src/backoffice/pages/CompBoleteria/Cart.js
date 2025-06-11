@@ -46,6 +46,12 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, children
     message.success('Cart cleared');
   };
 
+  const handleBlockAction = () => {
+    const hasBlock = carrito.some(i => i.action === 'block');
+    message.success(hasBlock ? 'Seats blocked' : 'Seats unblocked');
+    setCarrito([]);
+  };
+
   const formatPrice = (price) => {
     return typeof price === 'number' ? price.toFixed(2) : '0.00';
   };
@@ -111,6 +117,16 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, children
                 Proceed to Payment
               </Button>
             </>
+          )}
+          {carrito.some(i => i.action) && (
+            <Button
+              type="default"
+              danger={carrito.some(i => i.action === 'block')}
+              block
+              onClick={handleBlockAction}
+            >
+              {carrito.some(i => i.action === 'block') ? 'Bloquear' : 'Desbloquear'}
+            </Button>
           )}
           {children}
         </div>
