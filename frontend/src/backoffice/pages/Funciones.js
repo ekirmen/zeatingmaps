@@ -270,36 +270,43 @@ const Funciones = () => {
         onRequestClose={() => {
           setModalIsOpen(false);
           setEditingFuncion(null);
-        setNuevaFuncion({
-          fechaCelebracion: '',
-          evento: '',
-          sala: '',
-          plantilla: '',
-          inicioVenta: '',
-          finVenta: '',
-          pagoAPlazos: false,
-          permitirReservasWeb: false,
-        });
+          setNuevaFuncion({
+            fechaCelebracion: '',
+            evento: '',
+            sala: '',
+            plantilla: '',
+            inicioVenta: '',
+            finVenta: '',
+            pagoAPlazos: false,
+            permitirReservasWeb: false,
+          });
         }}
-        className="bg-white p-4 rounded shadow-lg"
+        className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto focus:outline-none"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
       >
-        <h2>{editingFuncion ? 'Editar Función' : 'Nueva Función'}</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="flex flex-col space-y-1 mb-2">
+        <h2 className="text-xl font-semibold mb-4 text-center">
+          {editingFuncion ? 'Editar Función' : 'Nueva Función'}
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex flex-col space-y-1">
             <label>Fecha Celebración</label>
             <input
               type="date"
+              className="border rounded p-2"
               value={nuevaFuncion.fechaCelebracion}
-              onChange={(e) => setNuevaFuncion({...nuevaFuncion, fechaCelebracion: e.target.value})}
+              onChange={(e) =>
+                setNuevaFuncion({ ...nuevaFuncion, fechaCelebracion: e.target.value })
+              }
               required
             />
           </div>
 
-          <div className="flex flex-col space-y-1 mb-2">
+          <div className="flex flex-col space-y-1">
             <label>Plantilla</label>
             <select
+              className="border rounded p-2"
               value={nuevaFuncion.plantilla}
-              onChange={(e) => setNuevaFuncion({...nuevaFuncion, plantilla: e.target.value})}
+              onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, plantilla: e.target.value })}
               required
             >
               <option value="">Seleccionar Plantilla</option>
@@ -311,27 +318,29 @@ const Funciones = () => {
             </select>
           </div>
 
-          <div className="flex flex-col space-y-1 mb-2">
+          <div className="flex flex-col space-y-1">
             <label>Inicio Venta</label>
             <input
               type="date"
+              className="border rounded p-2"
               value={nuevaFuncion.inicioVenta}
-              onChange={(e) => setNuevaFuncion({...nuevaFuncion, inicioVenta: e.target.value})}
+              onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, inicioVenta: e.target.value })}
               required
             />
           </div>
 
-          <div className="flex flex-col space-y-1 mb-2">
+          <div className="flex flex-col space-y-1">
             <label>Fin Venta</label>
             <input
               type="date"
+              className="border rounded p-2"
               value={nuevaFuncion.finVenta}
-              onChange={(e) => setNuevaFuncion({...nuevaFuncion, finVenta: e.target.value})}
+              onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, finVenta: e.target.value })}
               required
             />
           </div>
 
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={nuevaFuncion.pagoAPlazos}
@@ -340,7 +349,7 @@ const Funciones = () => {
             <label>Pago a plazos</label>
           </div>
 
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2">
             <input
               type="checkbox"
               checked={nuevaFuncion.permitirReservasWeb}
