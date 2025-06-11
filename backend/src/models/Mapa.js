@@ -10,6 +10,8 @@ const SillaSchema = new mongoose.Schema({
   zona: { type: String, default: null }, // <--- Expects 'zona'
   color: String,
   estado: String,
+  // Indica si la silla está bloqueada o no
+  bloqueado: { type: Boolean, default: false },
   mesaNombre: String,
 });
 
