@@ -28,6 +28,14 @@ const FuncionSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
+  pagoAPlazos: {
+    type: Boolean,
+    default: false,
+  },
+  permitirReservasWeb: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Funcion = mongoose.model('Funcion', FuncionSchema);
