@@ -11,7 +11,6 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   const [preciosZona, setPreciosZona] = useState([]);
   const [selectedZona, setSelectedZona] = useState(null);
   const [selectedPrecio, setSelectedPrecio] = useState(null);
-  const [ticketType, setTicketType] = useState('normal'); // normal o courtesy
   const [activeMenu, setActiveMenu] = useState('Zonas');
   const [openZone, setOpenZone] = useState(null); // zona desplegada
   const [zoneQuantities, setZoneQuantities] = useState({});
@@ -164,8 +163,8 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
         nombreMesa: mesa.nombre,
         zona: selectedZona.nombre,
         zonaId: selectedZona._id,
-        precio: ticketType === 'courtesy' ? 0 : selectedPrecio.precio,
-        tipoPrecio: ticketType,
+        precio: selectedPrecio.precio,
+        tipoPrecio: 'normal',
         plantillaId: selectedPlantilla._id
       }]);
     }
@@ -197,8 +196,8 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
           nombreMesa: silla.mesaNombre || '',
           zona: zonaObj?.nombre || '',
           zonaId: zonaObj?._id,
-          precio: ticketType === 'courtesy' ? 0 : detallePrecio.precio,
-          tipoPrecio: ticketType,
+          precio: detallePrecio.precio,
+          tipoPrecio: 'normal',
           plantillaId: selectedPlantilla._id,
         },
       ]);
@@ -233,8 +232,8 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
       nombreMesa: '',
       zona: zona.nombre,
       zonaId: zona._id,
-      precio: ticketType === 'courtesy' ? 0 : detalle.precio,
-      tipoPrecio: ticketType,
+      precio: detalle.precio,
+      tipoPrecio: 'normal',
       plantillaId: selectedPlantilla._id,
     }));
 
@@ -272,8 +271,8 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
           nombreMesa: s.mesaNombre || '',
           zona: zonaObj?.nombre || '',
           zonaId: zonaObj?._id,
-          precio: ticketType === 'courtesy' ? 0 : detallePrecio.precio,
-          tipoPrecio: ticketType,
+          precio: detallePrecio.precio,
+          tipoPrecio: 'normal',
           plantillaId: selectedPlantilla._id,
         }));
 
@@ -299,24 +298,6 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     <div className="center-content">
       {/* Tipo de Entrada */}
       <div className="mb-4 flex gap-4">
-        <label className="flex items-center gap-1 text-sm">
-          <input
-            type="radio"
-            value="normal"
-            checked={ticketType === 'normal'}
-            onChange={() => setTicketType('normal')}
-          />
-          Boleto
-        </label>
-        <label className="flex items-center gap-1 text-sm">
-          <input
-            type="radio"
-            value="courtesy"
-            checked={ticketType === 'courtesy'}
-            onChange={() => setTicketType('courtesy')}
-          />
-          Cortesía
-        </label>
         {entradas.length > 0 && (
           <select
             className="border px-2 py-1 text-sm"
@@ -357,32 +338,41 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
             const seats = seatsByZone(zona._id);
             const detalle = selectedPlantilla?.detalles.find((d) => d.zonaId === zona._id);
             const precioZona = detalle?.precio;
+            const totalAforo = seats.length > 0 ? seats.length : zona.aforo;
+            const ocupados = seats.filter((s) => ['pagado','reservado','bloqueado'].includes(s.estado)).length;
+            const enCarrito = carrito.filter((c) => c.zonaId === zona._id).length;
+            const disponibles = totalAforo - ocupados - enCarrito;
 
             if (seats.length === 0 && !detalle) return null; // Sin asientos ni precio
 
             if (seats.length === 0) {
               return (
-                <div key={zona._id} className="border rounded p-2 flex justify-between items-center space-x-2">
-                  <span className="flex-1">{zona.nombre}</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={zona.aforo}
-                    value={zoneQuantities[zona._id] || 1}
-                    onChange={(e) =>
-                      setZoneQuantities({
-                        ...zoneQuantities,
-                        [zona._id]: e.target.value,
-                      })
-                    }
-                    className="w-20 border rounded px-2 py-1 text-sm"
-                  />
-                  <button
-                    className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
-                    onClick={() => addGeneralTickets(zona)}
-                  >
-                    Agregar
-                  </button>
+                <div key={zona._id} className="border rounded p-2 flex flex-col gap-2">
+                  <div className="flex justify-between">
+                    <span className="font-medium">{zona.nombre}</span>
+                    <span className="text-xs text-gray-500">Aforo: {totalAforo} | Disponibles: {disponibles}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      max={zona.aforo}
+                      value={zoneQuantities[zona._id] || 1}
+                      onChange={(e) =>
+                        setZoneQuantities({
+                          ...zoneQuantities,
+                          [zona._id]: e.target.value,
+                        })
+                      }
+                      className="w-20 border rounded px-2 py-1 text-sm"
+                    />
+                    <button
+                      className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
+                      onClick={() => addGeneralTickets(zona)}
+                    >
+                      Agregar
+                    </button>
+                  </div>
                 </div>
               );
             }
@@ -399,7 +389,10 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
                   onClick={() => setOpenZone(openZone === zona._id ? null : zona._id)}
                   className="w-full flex justify-between items-center px-3 py-2 bg-gray-100"
                 >
-                  <span>{zona.nombre}</span>
+                  <span>
+                    {zona.nombre}
+                    <span className="ml-2 text-xs text-gray-500">Aforo: {totalAforo} | Disponibles: {disponibles}</span>
+                  </span>
                   <span>{openZone === zona._id ? '-' : '+'}</span>
                 </button>
                 {openZone === zona._id && (
@@ -435,6 +428,23 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
               </div>
             );
           })}
+          <div className="mt-4 grid gap-2 text-sm">
+            {Object.entries(zonePriceRanges).map(([zId, r]) => {
+              const z = zonas.find((zn) => zn._id === zId);
+              if (!z) return null;
+              const rangeText = r.min === r.max ? `$${r.min}` : `$${r.min} - $${r.max}`;
+              return (
+                <div
+                  key={zId}
+                  className="px-3 py-2 rounded border flex justify-between"
+                  style={{ borderColor: z.color }}
+                >
+                  <span>{z.nombre}</span>
+                  <span>{rangeText}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -477,19 +487,6 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
             selectedZona={selectedZona}
             availableZonas={selectedZona ? [selectedZona._id] : []}
           />
-          <div className="mt-4 text-sm">
-            <h4 className="font-semibold mb-2">Precios por Zona</h4>
-            <ul className="list-disc pl-4">
-              {Object.entries(zonePriceRanges).map(([zId, r]) => {
-                const z = zonas.find((zn) => zn._id === zId);
-                return (
-                  <li key={zId}>
-                    {z ? z.nombre : zId}: ${r.min} - ${r.max}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
         </div>
       )}
 
