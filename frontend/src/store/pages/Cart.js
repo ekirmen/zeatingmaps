@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Input } from 'antd';
-import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
+import { CloseOutlined, SearchOutlined, DownloadOutlined } from '@ant-design/icons';
 import { useCart } from '../../contexts/CartContext';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -15,16 +15,41 @@ const Cart = () => {
   const [searchLocator, setSearchLocator] = useState('');
   const { cart, clearCart, removeFromCart, setCart } = useCart();
 
+  const handleDownloadTicket = async (locator) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/tickets/download/${locator}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Error downloading ticket');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ticket-${locator}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      toast.error('Failed to download ticket');
+    }
+  };
+
   const handleTicketSearch = async (locator) => {
     try {
       const response = await fetch(`http://localhost:5000/api/payments/locator/${locator}`);
       if (!response.ok) {
         throw new Error('Ticket not found');
       }
-      const ticketData = await response.json();
-      setCart(ticketData.seats.map(seat => ({
+      const { data } = await response.json();
+      setCart(data.seats.map(seat => ({
         ...seat,
-        precio: seat.precio || 0,
+        locator: data.locator,
+        precio: seat.price || seat.precio || 0,
         nombreMesa: seat.mesa?.nombre || '',
         zona: seat.zona?._id || seat.zona,
         zonaNombre: seat.zona?.nombre || ''
@@ -78,12 +103,23 @@ const Cart = () => {
               <span><strong>Zone:</strong> {item.zonaNombre}</span>
               <span><strong>Price:</strong> ${formatPrice(item.precio)}</span>
             </div>
-            <button
-              onClick={() => handleRemoveSeat(item._id)}
-              className="text-gray-400 hover:text-red-500"
-            >
-              <CloseOutlined />
-            </button>
+            <div className="flex items-center gap-2">
+              {item.locator && (
+                <button
+                  title="Download ticket"
+                  onClick={() => handleDownloadTicket(item.locator)}
+                  className="text-blue-500 hover:text-blue-700"
+                >
+                  <DownloadOutlined />
+                </button>
+              )}
+              <button
+                onClick={() => handleRemoveSeat(item._id)}
+                className="text-gray-400 hover:text-red-500"
+              >
+                <CloseOutlined />
+              </button>
+            </div>
           </div>
         ))}
       </div>
