@@ -157,6 +157,45 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     }
   };
 
+  const toggleTableSeats = (zonaId, mesaNombre) => {
+    if (!selectedClient) {
+      message.warning('Please select a client first');
+      return;
+    }
+
+    const detallePrecio = selectedPlantilla?.detalles.find(
+      (d) => d.zonaId === zonaId
+    );
+    if (!detallePrecio) {
+      message.warning('Please select a price first');
+      return;
+    }
+
+    const zonaObj = zonas.find((z) => z._id === zonaId);
+
+    setCarrito((prev) => {
+      const seats = seatsByZone(zonaId).filter((s) => s.mesaNombre === mesaNombre);
+      const allSelected = seats.every((s) => prev.some((c) => c._id === s._id));
+
+      if (allSelected) {
+        return prev.filter((c) => !seats.some((s) => s._id === c._id));
+      }
+
+      const newSeats = seats
+        .filter((s) => !prev.some((c) => c._id === s._id))
+        .map((s) => ({
+          ...s,
+          nombreMesa: s.mesaNombre || '',
+          zona: zonaObj?.nombre || '',
+          precio: ticketType === 'courtesy' ? 0 : detallePrecio.precio,
+          tipoPrecio: ticketType,
+          plantillaId: selectedPlantilla._id,
+        }));
+
+      return [...prev, ...newSeats];
+    });
+  };
+
   const seatsByZone = (zoneId) => {
     if (!mapa?.contenido) return [];
     const seats = [];
@@ -191,6 +230,65 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
 
       {activeMenu === 'Zonas' && (
         <div className="price-templates-section space-y-4">
+          {/* Lista de zonas con entradas */}
+          {zonas.map((zona) => {
+            const seats = seatsByZone(zona._id);
+            if (seats.length === 0) return null;
+            const precioZona = selectedPlantilla?.detalles.find((d) => d.zonaId === zona._id)?.precio;
+
+            const seatsByMesa = seats.reduce((acc, seat) => {
+              acc[seat.mesaNombre] = acc[seat.mesaNombre] || [];
+              acc[seat.mesaNombre].push(seat);
+              return acc;
+            }, {});
+
+            return (
+              <div key={zona._id} className="border rounded">
+                <button
+                  onClick={() => setOpenZone(openZone === zona._id ? null : zona._id)}
+                  className="w-full flex justify-between items-center px-3 py-2 bg-gray-100"
+                >
+                  <span>{zona.nombre}</span>
+                  <span>{openZone === zona._id ? '-' : '+'}</span>
+                </button>
+                {openZone === zona._id && (
+                  <div className="p-2 space-y-2 bg-white">
+                    {Object.entries(seatsByMesa).map(([mesaNombre, sillasMesa]) => (
+                      <div key={mesaNombre} className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-sm">{mesaNombre}</span>
+                          <button
+                            className="text-xs text-blue-600 hover:underline"
+                            onClick={() => toggleTableSeats(zona._id, mesaNombre)}
+                          >
+                            Seleccionar mesa completa
+                          </button>
+                        </div>
+                        {sillasMesa.map((silla) => {
+                          const inCart = carrito.some((c) => c._id === silla._id);
+                          return (
+                            <div
+                              key={silla._id}
+                              onClick={() => addSeatFromList(silla)}
+                              className={`flex justify-between p-1 rounded cursor-pointer ${inCart ? 'bg-green-100' : 'hover:bg-gray-100'}`}
+                            >
+                              <span>{silla.nombre}</span>
+                              <span>${precioZona ?? 0}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {activeMenu === 'Mapa' && (
+        <div className="space-y-4">
           <h3>Function Price Template</h3>
           {selectedPlantilla ? (
             <div className="template-card selected">
@@ -220,50 +318,13 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
             <p>No price template assigned to this function</p>
           )}
 
-          {/* Lista de zonas con entradas */}
-          {zonas.map((zona) => {
-            const seats = seatsByZone(zona._id);
-            if (seats.length === 0) return null;
-            const precioZona = selectedPlantilla?.detalles.find((d) => d.zonaId === zona._id)?.precio;
-            return (
-              <div key={zona._id} className="border rounded">
-                <button
-                  onClick={() => setOpenZone(openZone === zona._id ? null : zona._id)}
-                  className="w-full flex justify-between items-center px-3 py-2 bg-gray-100"
-                >
-                  <span>{zona.nombre}</span>
-                  <span>{openZone === zona._id ? '-' : '+'}</span>
-                </button>
-                {openZone === zona._id && (
-                  <div className="p-2 space-y-1 bg-white">
-                    {seats.map((silla) => {
-                      const inCart = carrito.some((c) => c._id === silla._id);
-                      return (
-                        <div
-                          key={silla._id}
-                          onClick={() => addSeatFromList(silla)}
-                          className={`flex justify-between p-1 rounded cursor-pointer ${inCart ? 'bg-green-100' : 'hover:bg-gray-100'}`}
-                        >
-                          <span>{silla.nombre}</span>
-                          <span>${precioZona ?? 0}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          <SeatingMap
+            mapa={mapa}
+            onSeatClick={handleSeatClick}
+            selectedZona={selectedZona}
+            availableZonas={selectedZona ? [selectedZona._id] : []}
+          />
         </div>
-      )}
-
-      {activeMenu === 'Mapa' && (
-        <SeatingMap
-          mapa={mapa}
-          onSeatClick={handleSeatClick}
-          selectedZona={selectedZona}
-          availableZonas={selectedZona ? [selectedZona._id] : []}
-        />
       )}
 
       {['Producto', 'Otros'].includes(activeMenu) && (
