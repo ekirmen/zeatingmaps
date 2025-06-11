@@ -256,15 +256,19 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       width={700}
     >
       <div style={{ marginBottom: 16 }}>
-        <Button 
-          type={searchMode === 'locator' ? 'primary' : 'default'}
+        <Button
+          type="default"
+          variant="outlined"
+          block
           onClick={() => setSearchMode('locator')}
           style={{ marginRight: 8 }}
         >
           Por Localizador
         </Button>
-        <Button 
-          type={searchMode === 'email' ? 'primary' : 'default'}
+        <Button
+          type="default"
+          variant="outlined"
+          block
           onClick={() => setSearchMode('email')}
         >
           Por Email
@@ -378,11 +382,12 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             <Input />
           </Form.Item>
           <Form.Item>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
-              loading={searchLoading}
+            <Button
+              type="default"
+              variant="outlined"
               block
+              htmlType="submit"
+              loading={searchLoading}
             >
               Crear Cuenta
             </Button>
@@ -456,8 +461,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       </Button>
 
       {/* Botón para gestionar cuentas */}
-      <Button 
-        type="primary"
+      <Button
+        type="default"
+        variant="outlined"
         icon={<UserAddOutlined />}
         onClick={() => setIsAccountModalVisible(true)}
         block
@@ -476,7 +482,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             </div>
             <div>
               <Button
-                type="primary"
+                type="default"
+                variant="outlined"
+                block
                 icon={<EditOutlined />}
                 onClick={() => setIsAccountModalVisible(true)}
                 size="small"

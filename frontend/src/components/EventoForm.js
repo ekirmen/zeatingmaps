@@ -54,7 +54,7 @@ const EventoForm = () => {
             </Form.Item>
             {/* Add other form fields as needed */}
             <Form.Item>
-                <Button type="primary" htmlType="submit" loading={isLoading}>
+                <Button type="default" variant="outlined" block htmlType="submit" loading={isLoading}>
                     Crear Evento
                 </Button>
             </Form.Item>

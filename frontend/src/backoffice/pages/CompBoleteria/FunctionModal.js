@@ -31,7 +31,9 @@ const FunctionModal = ({
       title: 'Actions',
       render: (_, record) => (
         <Button
-          type="primary"
+          type="default"
+          variant="outlined"
+          block
           onClick={(e) => {
             e.stopPropagation(); // evita que dispare el click de fila
             onFunctionSelect(record);

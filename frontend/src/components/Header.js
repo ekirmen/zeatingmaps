@@ -184,7 +184,7 @@ const Header = ({ onLogin, onLogout }) => {
           <Button key="cancel" onClick={() => setIsModalVisible(false)}>
             Cancelar
           </Button>,
-          <Button key="submit" type="primary" onClick={handleLogin}>
+          <Button key="submit" type="default" variant="outlined" block onClick={handleLogin}>
             Iniciar Sesión
           </Button>
         ]}
@@ -215,7 +215,7 @@ const Header = ({ onLogin, onLogout }) => {
           <Button key="cancel" onClick={() => setIsRegisterModalVisible(false)}>
             Cancelar
           </Button>,
-          <Button key="submit" type="primary" onClick={handleRegister}>
+          <Button key="submit" type="default" variant="outlined" block onClick={handleRegister}>
             Registrar
           </Button>
         ]}
