@@ -13,6 +13,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   const [selectedPrecio, setSelectedPrecio] = useState(null);
   const [ticketType, setTicketType] = useState('normal'); // normal o courtesy
   const [activeMenu, setActiveMenu] = useState('Zonas');
+  const [openZone, setOpenZone] = useState(null); // zona desplegada
 
   // Cargar plantillas de precios cuando cambia la sala
   useEffect(() => {
@@ -123,6 +124,50 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     }
   };
 
+  const addSeatFromList = (silla) => {
+    if (!selectedClient) {
+      message.warning('Please select a client first');
+      return;
+    }
+
+    const detallePrecio = selectedPlantilla?.detalles.find(
+      (d) => d.zonaId === silla.zona
+    );
+    if (!detallePrecio) {
+      message.warning('Please select a price first');
+      return;
+    }
+
+    const zonaObj = zonas.find((z) => z._id === silla.zona);
+    const seatInCart = carrito.find((item) => item._id === silla._id);
+    if (seatInCart) {
+      setCarrito(carrito.filter((item) => item._id !== silla._id));
+    } else {
+      setCarrito([
+        ...carrito,
+        {
+          ...silla,
+          nombreMesa: silla.mesaNombre || '',
+          zona: zonaObj?.nombre || '',
+          precio: ticketType === 'courtesy' ? 0 : detallePrecio.precio,
+          tipoPrecio: ticketType,
+          plantillaId: selectedPlantilla._id,
+        },
+      ]);
+    }
+  };
+
+  const seatsByZone = (zoneId) => {
+    if (!mapa?.contenido) return [];
+    const seats = [];
+    mapa.contenido.forEach((mesa) => {
+      mesa.sillas
+        .filter((s) => s.zona === zoneId)
+        .forEach((s) => seats.push({ ...s, mesaNombre: mesa.nombre }));
+    });
+    return seats;
+  };
+
   // Zonas disponibles para mostrar en el SeatingMap (filtrado)
   const availableZonas = selectedPlantilla?.detalles.map(detalle => detalle.zonaId) || [];
 
@@ -145,19 +190,22 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
       </div>
 
       {activeMenu === 'Zonas' && (
-        <div className="price-templates-section">
+        <div className="price-templates-section space-y-4">
           <h3>Function Price Template</h3>
           {selectedPlantilla ? (
             <div className="template-card selected">
               <h4>{selectedPlantilla.nombre}</h4>
               <div className="price-details">
-                {selectedPlantilla.detalles.map(detalle => {
-                  const zona = zonas.find(z => z._id === detalle.zonaId);
+                {selectedPlantilla.detalles.map((detalle) => {
+                  const zona = zonas.find((z) => z._id === detalle.zonaId);
                   return (
                     <div
                       key={detalle._id}
                       className={`price-item ${selectedPrecio?._id === detalle._id ? 'selected' : ''}`}
-                      onClick={() => handlePrecioSelect(detalle)}
+                      onClick={() => {
+                        handlePrecioSelect(detalle);
+                        setOpenZone(detalle.zonaId);
+                      }}
                     >
                       <div className="price-item-content">
                         <span>{zona ? zona.nombre : `Unknown Zone (ID: ${detalle.zonaId})`}</span>
@@ -171,6 +219,41 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
           ) : (
             <p>No price template assigned to this function</p>
           )}
+
+          {/* Lista de zonas con entradas */}
+          {zonas.map((zona) => {
+            const seats = seatsByZone(zona._id);
+            if (seats.length === 0) return null;
+            const precioZona = selectedPlantilla?.detalles.find((d) => d.zonaId === zona._id)?.precio;
+            return (
+              <div key={zona._id} className="border rounded">
+                <button
+                  onClick={() => setOpenZone(openZone === zona._id ? null : zona._id)}
+                  className="w-full flex justify-between items-center px-3 py-2 bg-gray-100"
+                >
+                  <span>{zona.nombre}</span>
+                  <span>{openZone === zona._id ? '-' : '+'}</span>
+                </button>
+                {openZone === zona._id && (
+                  <div className="p-2 space-y-1 bg-white">
+                    {seats.map((silla) => {
+                      const inCart = carrito.some((c) => c._id === silla._id);
+                      return (
+                        <div
+                          key={silla._id}
+                          onClick={() => addSeatFromList(silla)}
+                          className={`flex justify-between p-1 rounded cursor-pointer ${inCart ? 'bg-green-100' : 'hover:bg-gray-100'}`}
+                        >
+                          <span>{silla.nombre}</span>
+                          <span>${precioZona ?? 0}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -186,6 +269,11 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
       {['Producto', 'Otros'].includes(activeMenu) && (
         <div className="p-4 text-center text-sm text-gray-600">No existen productos a la venta</div>
       )}
+
+      {/* contador de tickets fijo en la esquina */}
+      <div className="fixed bottom-4 right-4 bg-blue-600 text-white px-3 py-1 rounded shadow-md text-sm">
+        Tickets en carrito: {carrito.length}
+      </div>
     </div>
   );
 };
