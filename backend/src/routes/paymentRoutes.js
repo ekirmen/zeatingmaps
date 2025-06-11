@@ -111,6 +111,9 @@ router.post('/', async (req, res) => {
     const savedPayment = await payment.save();
     res.status(201).json(savedPayment);
   } catch (error) {
+    if (error instanceof mongoose.Error.ValidationError || error instanceof mongoose.Error.CastError) {
+      return res.status(400).json({ message: 'Invalid payment data', error: error.message });
+    }
     errorResponse(res, 500, 'Error processing payment', error);
   }
 });
