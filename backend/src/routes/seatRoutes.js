@@ -96,6 +96,44 @@ router.post('/release', protect, async (req, res) => {
   }
 });
 
+// Bloquear o desbloquear asientos
+router.post('/block', protect, async (req, res) => {
+  try {
+    const { seatIds, bloqueado } = req.body;
+
+    if (!Array.isArray(seatIds) || typeof bloqueado !== 'boolean') {
+      return res.status(400).json({ message: 'Datos inválidos' });
+    }
+
+    const mapa = await Mapa.findOne({
+      'contenido.sillas._id': { $in: seatIds }
+    });
+
+    if (!mapa) {
+      return res.status(404).json({ message: 'Asientos no encontrados' });
+    }
+
+    mapa.contenido = mapa.contenido.map(item => {
+      if (item.sillas) {
+        item.sillas = item.sillas.map(seat => {
+          if (seatIds.includes(seat._id.toString())) {
+            seat.bloqueado = bloqueado;
+            seat.estado = bloqueado ? 'bloqueado' : 'disponible';
+          }
+          return seat;
+        });
+      }
+      return item;
+    });
+
+    await mapa.save();
+    res.json({ message: 'Estado actualizado' });
+  } catch (error) {
+    console.error('Error updating seat status:', error);
+    res.status(500).json({ message: 'Error actualizando asientos' });
+  }
+});
+
 // Añade esta ruta para diagnóstico
 router.get('/debug/:seatId', async (req, res) => {
   try {
