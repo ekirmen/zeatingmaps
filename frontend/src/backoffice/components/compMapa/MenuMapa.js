@@ -29,6 +29,7 @@ const Menu = ({
   updateElementProperty,
   updateElementSize,
   zonas,
+  zoneSeatCounts,
   selectedZoneId,
   setSelectedZoneId,
   sillaShape,
@@ -123,6 +124,7 @@ const Menu = ({
         <label className="font-semibold text-sm text-gray-700">Zona:</label>
         <ZonasDropdown
           zonas={zonas}
+          zoneSeatCounts={zoneSeatCounts}
           selectedZoneId={selectedZoneId}
           onChange={setSelectedZoneId}
         />

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Stage, Layer, Rect, Text, Ellipse, Line } from 'react-konva';
 import { Mesa, Silla } from './compMapa/MesaSilla';
@@ -73,6 +73,16 @@ const CrearMapa = () => {
     };
     cargarZonas();
   }, [salaId]);
+
+  const zoneSeatCounts = useMemo(() => {
+    const counts = {};
+    elements.forEach((el) => {
+      if (el.type === 'silla' && el.zonaId) {
+        counts[el.zonaId] = (counts[el.zonaId] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [elements]);
 
   const moverElementosSeleccionados = (deltaX, deltaY) => {
     setElements(prev =>
@@ -164,6 +174,7 @@ const CrearMapa = () => {
         updateElementProperty={updateElementProperty}
         updateElementSize={updateElementSize}
         zonas={loadedZonas}
+        zoneSeatCounts={zoneSeatCounts}
         selectedZoneId={selectedZone?._id || ''}
         setSelectedZoneId={(zoneId) => {
           const zona = loadedZonas.find((z) => z._id === zoneId);
