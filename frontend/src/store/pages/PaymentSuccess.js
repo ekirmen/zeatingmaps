@@ -39,7 +39,7 @@ const PaymentSuccess = () => {
 
   const handleDownloadTickets = () => {
     // Implement ticket download functionality
-    window.open(`http://localhost:5000/api/tickets/download/${locator}`, '_blank');
+    window.open(`http://localhost:5000/api/payments/${locator}/download`, '_blank');
   };
 
   if (!locator) {

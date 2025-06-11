@@ -25,7 +25,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
 
   const handleDownloadTicket = () => {
     if (locator) {
-      window.open(`http://localhost:5000/api/tickets/download/${locator}`, '_blank');
+      window.open(`http://localhost:5000/api/payments/${locator}/download`, '_blank');
     }
   };
 
