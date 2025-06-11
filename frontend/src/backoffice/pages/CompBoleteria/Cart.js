@@ -76,8 +76,18 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, children
             <div className="truncate text-xs leading-tight">
               <strong>Seat:</strong> {item.nombre} &nbsp;|&nbsp;
               <strong>Table:</strong> {item.nombreMesa} &nbsp;|&nbsp;
-              <strong>Zone:</strong> {item.zona} &nbsp;|&nbsp;
-              <strong>Price:</strong> ${formatPrice(item.precio)}
+              <strong>Zone:</strong> {item.zona}
+              {item.action === 'block' && (
+                <span className="text-red-600"> &nbsp;|&nbsp; Bloquear</span>
+              )}
+              {item.action === 'unblock' && (
+                <span className="text-green-600"> &nbsp;|&nbsp; Desbloquear</span>
+              )}
+              {!item.action && (
+                <>
+                  &nbsp;|&nbsp; <strong>Price:</strong> ${formatPrice(item.precio)}
+                </>
+              )}
             </div>
             <button
               onClick={() => handleRemoveSeat(item._id)}
@@ -92,12 +102,16 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, children
       {/* Footer */}
       {carrito.length > 0 && (
         <div className="mt-4 border-t pt-4 space-y-2">
-          <div className="text-right font-semibold text-lg">
-            Total: ${formatPrice(carrito.reduce((sum, item) => sum + (item.precio || 0), 0))}
-          </div>
-          <Button type="default" variant="outlined" block onClick={onPaymentClick}>
-            Proceed to Payment
-          </Button>
+          {!carrito.some(i => i.action) && (
+            <>
+              <div className="text-right font-semibold text-lg">
+                Total: ${formatPrice(carrito.reduce((sum, item) => sum + (item.precio || 0), 0))}
+              </div>
+              <Button type="default" variant="outlined" block onClick={onPaymentClick}>
+                Proceed to Payment
+              </Button>
+            </>
+          )}
           {children}
         </div>
       )}
