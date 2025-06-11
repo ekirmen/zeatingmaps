@@ -2,7 +2,19 @@ const API_BASE_URL = 'http://localhost:5000/api';
 
 const fetchApi = async (url, options = {}) => {
   try {
-    const response = await fetch(`${API_BASE_URL}${url}`, options);
+    const token = localStorage.getItem('token');
+    const headers = {
+      ...(options.headers || {}),
+      ...(token ? {
+        'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
+      } : {})
+    };
+
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      ...options,
+      headers
+    });
+
     if (!response.ok) throw new Error(`Request error: ${response.statusText}`);
     return response.json();
   } catch (error) {
