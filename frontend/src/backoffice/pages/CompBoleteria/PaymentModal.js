@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Tabs, Input, Button, Radio, DatePicker, Select, Table, message } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import { Typography } from 'antd';
@@ -14,6 +14,19 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
   const [paymentEntries, setPaymentEntries] = useState([]);
   const [entregado, setEntregado] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Zelle');
+
+  useEffect(() => {
+    const storedMethod = localStorage.getItem('lastPaymentMethod');
+    if (storedMethod) {
+      setSelectedPaymentMethod(storedMethod);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedPaymentMethod) {
+      localStorage.setItem('lastPaymentMethod', selectedPaymentMethod);
+    }
+  }, [selectedPaymentMethod]);
   const [paymentAmount, setPaymentAmount] = useState('0.00');
   const [scCounter, setScCounter] = useState(1);
   const [selectedDate, setSelectedDate] = useState(null);
