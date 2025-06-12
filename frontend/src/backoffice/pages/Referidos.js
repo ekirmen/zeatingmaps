@@ -42,6 +42,8 @@ const Referidos = () => {
   };
 
   const addAffiliate = async (userId) => {
+    const base = parseFloat(prompt('Base', '0')) || 0;
+    const percentage = parseFloat(prompt('Porcentaje', '0')) || 0;
     try {
       const token = localStorage.getItem('token');
       const res = await fetch('http://localhost:5000/api/affiliate-users', {
@@ -50,7 +52,7 @@ const Referidos = () => {
           'Content-Type': 'application/json',
           Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}`
         },
-        body: JSON.stringify({ userId })
+        body: JSON.stringify({ userId, base, percentage })
       });
       if (res.ok) {
         const data = await res.json();
@@ -88,6 +90,8 @@ const Referidos = () => {
   const editAffiliate = async (id) => {
     const login = prompt('Nuevo usuario login:');
     if (!login) return;
+    const base = parseFloat(prompt('Base', '0')) || 0;
+    const percentage = parseFloat(prompt('Porcentaje', '0')) || 0;
     try {
       const token = localStorage.getItem('token');
       const resSearch = await fetch(`http://localhost:5000/api/user/search?term=${encodeURIComponent(login)}`, {
@@ -103,7 +107,7 @@ const Referidos = () => {
           'Content-Type': 'application/json',
           Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}`
         },
-        body: JSON.stringify({ userId: user._id })
+        body: JSON.stringify({ userId: user._id, base, percentage })
       });
       if (res.ok) {
         const data = await res.json();
@@ -149,6 +153,8 @@ const Referidos = () => {
                 <th className="px-4 py-2">Link</th>
                 <th className="px-4 py-2">Compras</th>
                 <th className="px-4 py-2">Monto</th>
+                <th className="px-4 py-2">Base</th>
+                <th className="px-4 py-2">Porcentaje</th>
                 <th className="px-4 py-2">Acciones</th>
               </tr>
             </thead>
@@ -158,7 +164,9 @@ const Referidos = () => {
                   <td className="px-4 py-2">{a.user.login}</td>
                   <td className="px-4 py-2 break-all">{`${window.location.origin}/store?ref=${a.user.login}`}</td>
                   <td className="px-4 py-2">{a.purchases}</td>
-                  <td className="px-4 py-2">{a.total.toFixed(2)}</td>
+                  <td className="px-4 py-2">{Number(a.total || 0).toFixed(2)}</td>
+                  <td className="px-4 py-2">{Number(a.base || 0).toFixed(2)}</td>
+                  <td className="px-4 py-2">{Number(a.percentage || 0).toFixed(2)}%</td>
                   <td className="px-4 py-2 space-x-2">
                     <button
                       onClick={() => editAffiliate(a._id)}

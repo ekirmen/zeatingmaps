@@ -1,6 +1,7 @@
 import express from 'express';
 import Payment from '../models/Payment.js';
 import User from '../models/User.js';
+import AffiliateUser from '../models/AffiliateUser.js';
 import { generateTicketPDF } from '../utils/pdfGenerator.js';
 import QRCode from 'qrcode';
 import Evento from '../models/Evento.js'; 
@@ -110,9 +111,18 @@ router.post('/', async (req, res) => {
     const locator = Math.random().toString(36).substring(2, 10).toUpperCase();
 
     let referrerId = null;
+    let referralCommission = 0;
     if (referrer) {
       const refUser = await User.findOne({ login: referrer });
-      if (refUser) referrerId = refUser._id;
+      if (refUser) {
+        referrerId = refUser._id;
+        const affiliate = await AffiliateUser.findOne({ user: refUser._id });
+        if (affiliate) {
+          const subtotal = seats.reduce((sum, s) => sum + (s.price || 0), 0);
+          referralCommission = (affiliate.base || 0) +
+            subtotal * ((affiliate.percentage || 0) / 100);
+        }
+      }
     }
 
     const payment = new Payment({
@@ -122,7 +132,8 @@ router.post('/', async (req, res) => {
       seats,
       locator,
       status: status || 'pending',
-      referrer: referrerId
+      referrer: referrerId,
+      referralCommission
     });
 
     const savedPayment = await payment.save();
