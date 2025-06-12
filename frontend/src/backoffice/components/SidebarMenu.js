@@ -104,6 +104,7 @@ const SidebarMenu = () => {
           </div>
           {openMenu === 'personalizacion' && (
             <ul className="ml-4 mt-1 space-y-1">
+              <li><Link to="/dashboard/galeria" className="block p-2 rounded hover:bg-gray-700">Galeria</Link></li>
               <li><Link to="/dashboard/formato-entrada" className="block p-2 rounded hover:bg-gray-700">Formato de Entrada</Link></li>
             </ul>
           )}
