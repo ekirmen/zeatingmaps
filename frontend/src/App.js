@@ -31,6 +31,7 @@ import Evento from './backoffice/pages/Evento';
 import Entrada from './backoffice/pages/Entrada';
 import CrearMapa from './backoffice/pages/CrearMapaPage';
 import PlantillaPrecios from './backoffice/pages/PlantillaPrecios';
+import Descuentos from './backoffice/pages/Descuentos';
 import Funciones from './backoffice/pages/Funciones';
 import Boleteria from './backoffice/pages/Boleteria';
 import CreateIva from './backoffice/pages/CreateIva';
@@ -125,6 +126,7 @@ const App = () => {
                     <Route path="crear-mapa/:salaId" element={<CrearMapa />} />
                     <Route path="crear-iva" element={<CreateIva />} />
                     <Route path="plantillaPrecios" element={<PlantillaPrecios />} />
+                    <Route path="descuentos" element={<Descuentos />} />
                     <Route path="funciones" element={<Funciones />} />
                     <Route path="Boleteria" element={<Boleteria setSidebarCollapsed={setSidebarCollapsed} />} />
                     <Route path="galeria" element={<Galeria />} />
