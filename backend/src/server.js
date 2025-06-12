@@ -14,6 +14,7 @@ import './models/Payment.js';
 import './models/Ticket.js';
 // Add this with your other model imports
 import './models/Seat.js';
+import './models/ReferralSettings.js';
 import Mapa from './models/Mapa.js';
 import User from './models/User.js';
 
@@ -41,6 +42,7 @@ import ticketRoutes from './routes/ticketRoutes.js';
 import seatRoutes from './routes/seatRoutes.js';
 import metodoPagoRoutes from './routes/metodoPagoRoutes.js';
 import tagRoutes from './routes/tagRoutes.js';
+import referralRoutes from './routes/referralRoutes.js';
 
 import { errorHandler } from './middleware/errorMiddleware.js';
 
@@ -172,6 +174,7 @@ app.use('/api', entradaRoutes);
 app.use('/api/plantillas', plantillaRoutes);
 app.use('/api/funcions', funcionsRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/referral', referralRoutes);
 app.use('/api/metodos_pago', metodoPagoRoutes);
 app.use('/api/salas', salaRoutes);
 app.use('/api/mesas', mesaRoutes);
