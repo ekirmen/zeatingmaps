@@ -29,7 +29,7 @@ const Referidos = () => {
     if (!searchTerm) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/user/search?q=${encodeURIComponent(searchTerm)}`, {
+      const res = await fetch(`http://localhost:5000/api/user/search?term=${encodeURIComponent(searchTerm)}`, {
         headers: { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
       });
       if (res.ok) {
