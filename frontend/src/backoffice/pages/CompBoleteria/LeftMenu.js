@@ -101,7 +101,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         precio: seat.price || 0,
         nombreMesa: seat.mesa?.nombre || '',
         zona: seat.zona?.nombre || 'General',
-        status: payment.status
+        status: payment.status,
+        paymentId: payment._id,
+        locator: payment.locator
       })));
     }
 

@@ -23,6 +23,9 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
   const [locator, setLocator] = useState('');
   const [emailToSend, setEmailToSend] = useState('');
 
+  const existingPaymentId = carrito?.[0]?.paymentId;
+  const existingLocator = carrito?.[0]?.locator;
+
   const handleEmailTicket = async () => {
     if (!locator || !emailToSend) return;
     try {
@@ -167,62 +170,76 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
 
     setIsProcessing(true);
     try {
-      // Group seats by event
-      const seatsByEvent = carrito.reduce((acc, item) => {
-        const eventId = item.evento?._id || selectedFuncion.evento._id;
-        if (!acc[eventId]) {
-          acc[eventId] = [];
-        }
-        acc[eventId].push(item);
-        return acc;
-      }, {});
-
-      // Create a payment for each event
-      const paymentPromises = Object.entries(seatsByEvent).map(([eventId, seats]) => {
-      const paymentData = {
-        user: selectedClient._id,
-        event: eventId,
-        funcion: selectedFuncion._id,
-        seats: seats.map(item => ({
-          id: item._id,
-          name: item.nombre,
-          price: item.precio,
-          zona: item.zonaId || (item.zona?._id || null),
-          mesa: item.mesa?._id || null
-        })),
-          locator: generateLocator(),
-          status: diferencia > 0 ? 'reservado' : 'pagado',
-          payments: paymentEntries.map(entry => ({
-            method: entry.formaPago,
-            amount: entry.importe
-          })),
-          ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
-        };
-      
-        // Add reservation deadline if applicable
-        if (reservationType === '2') {
-          paymentData.reservationDeadline = new Date(Date.now() + 16 * 60000);
-        } else if (reservationType === '3' && selectedDate) {
-          paymentData.reservationDeadline = selectedDate.toDate();
-        }
-      
-        return fetch(`${process.env.REACT_APP_API_URL}/api/payments`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(paymentData)
+      if (existingPaymentId) {
+        const newStatus = diferencia > 0 ? 'reservado' : 'pagado';
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/${existingPaymentId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
         });
-      });
-    
-      const responses = await Promise.all(paymentPromises);
-      const results = await Promise.all(responses.map(r => r.json()));
-    
-      // Handle multiple locators if needed
-      setLocator(results[0].locator); // For now, just use the first locator
-      setShowConfirmation(true);
-      message.success('Pago procesado exitosamente');
-      onCancel();
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Error al actualizar pago');
+        setLocator(data.locator || existingLocator);
+        setShowConfirmation(true);
+        message.success('Pago actualizado');
+        onCancel();
+      } else {
+        // Group seats by event
+        const seatsByEvent = carrito.reduce((acc, item) => {
+          const eventId = item.evento?._id || selectedFuncion.evento._id;
+          if (!acc[eventId]) {
+            acc[eventId] = [];
+          }
+          acc[eventId].push(item);
+          return acc;
+        }, {});
+
+        // Create a payment for each event
+        const paymentPromises = Object.entries(seatsByEvent).map(([eventId, seats]) => {
+          const paymentData = {
+            user: selectedClient._id,
+            event: eventId,
+            funcion: selectedFuncion._id,
+            seats: seats.map(item => ({
+              id: item._id,
+              name: item.nombre,
+              price: item.precio,
+              zona: item.zonaId || (item.zona?._id || null),
+              mesa: item.mesa?._id || null
+            })),
+            locator: generateLocator(),
+            status: diferencia > 0 ? 'reservado' : 'pagado',
+            payments: paymentEntries.map(entry => ({
+              method: entry.formaPago,
+              amount: entry.importe
+            })),
+            ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
+          };
+
+          // Add reservation deadline if applicable
+          if (reservationType === '2') {
+            paymentData.reservationDeadline = new Date(Date.now() + 16 * 60000);
+          } else if (reservationType === '3' && selectedDate) {
+            paymentData.reservationDeadline = selectedDate.toDate();
+          }
+
+          return fetch(`${process.env.REACT_APP_API_URL}/api/payments`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(paymentData)
+          });
+        });
+
+        const responses = await Promise.all(paymentPromises);
+        const results = await Promise.all(responses.map(r => r.json()));
+
+        setLocator(results[0].locator);
+        setShowConfirmation(true);
+        message.success('Pago procesado exitosamente');
+        onCancel();
+      }
     } catch (error) {
       console.error('Payment error:', error);
       message.error(error.message || 'Error al procesar el pago');

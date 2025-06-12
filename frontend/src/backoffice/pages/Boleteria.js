@@ -240,7 +240,7 @@ const Boleteria = () => {
               selectedAffiliate={selectedAffiliate}
             >
               {allTicketsPaid && (
-                <DownloadTicketButton paymentId={carrito[0]._id} />
+                <DownloadTicketButton paymentId={carrito[0].paymentId} />
               )}
             </Cart>
           </aside>
@@ -283,7 +283,7 @@ const Boleteria = () => {
               selectedAffiliate={selectedAffiliate}
             >
               {allTicketsPaid && (
-                <DownloadTicketButton paymentId={carrito[0]._id} />
+                <DownloadTicketButton paymentId={carrito[0].paymentId} />
               )}
             </Cart>
           </section>
