@@ -7,6 +7,7 @@ export const useBoleteria = () => {
   const [eventos, setEventos] = useState([]);
   const [funciones, setFunciones] = useState([]);
   const [selectedFuncion, setSelectedFuncion] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedPlantilla, setSelectedPlantilla] = useState(null);
   const [carrito, setCarrito] = useState([]);
 
@@ -52,6 +53,8 @@ export const useBoleteria = () => {
       const response = await fetch(`http://localhost:5000/api/funcions?evento=${eventoId}`);
       const data = await response.json();
       setFunciones(Array.isArray(data) ? data : []);
+      const ev = eventos.find(e => e._id === eventoId);
+      setSelectedEvent(ev || null);
       return true;
     } catch (error) {
       message.error('Error loading functions');
@@ -61,6 +64,9 @@ export const useBoleteria = () => {
 
   const handleFunctionSelect = async (funcion) => {
     setSelectedFuncion(funcion);
+    if (funcion.evento) {
+      setSelectedEvent(funcion.evento);
+    }
     try {
       await Promise.all([
         fetchMapa(funcion.sala._id),
@@ -77,9 +83,11 @@ export const useBoleteria = () => {
     eventos,
     funciones,
     selectedFuncion,
+    selectedEvent,
     selectedPlantilla,
     carrito,
     setCarrito,
+    setSelectedEvent,
     handleEventSelect,
     handleFunctionSelect
   };

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { message } from 'antd';
 import { LeftOutlined, MenuOutlined } from '@ant-design/icons';
 
-import EventSearch from './CompBoleteria/EventSearch';
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
 import ZonesAndPrices from './CompBoleteria/ZonesAndPrices';
@@ -19,11 +18,13 @@ const Boleteria = () => {
     eventos,
     funciones,
     selectedFuncion,
+    selectedEvent,
     selectedPlantilla,
     carrito,
     setCarrito,
     handleEventSelect,
-    handleFunctionSelect
+    handleFunctionSelect,
+    setSelectedEvent
   } = useBoleteria();
 
   const {
@@ -139,7 +140,6 @@ const Boleteria = () => {
           <span>Back</span>
         </button>
         <div className="flex-grow overflow-auto px-4 py-6 space-y-6">
-          <EventSearch eventos={eventos} onEventSelect={onEventSelect} />
           <LeftMenu
             onSearchClick={handleClientManagement}
             onAddClientClick={handleClientManagement}
@@ -148,6 +148,7 @@ const Boleteria = () => {
             setCarrito={setCarrito}
             setSelectedClient={setSelectedClient}
             onFunctionSelect={handleFunctionSelect}
+            setSelectedEvent={setSelectedEvent}
           />
         </div>
       </aside>
@@ -184,7 +185,6 @@ const Boleteria = () => {
               <span>Back</span>
             </button>
             <div className="px-4 py-6 space-y-6">
-              <EventSearch eventos={eventos} onEventSelect={onEventSelect} />
               <LeftMenu
                 onSearchClick={handleClientManagement}
                 onAddClientClick={handleClientManagement}
@@ -193,6 +193,7 @@ const Boleteria = () => {
                 setCarrito={setCarrito}
                 setSelectedClient={setSelectedClient}
                 onFunctionSelect={handleFunctionSelect}
+                setSelectedEvent={setSelectedEvent}
               />
             </div>
           </div>
@@ -207,6 +208,9 @@ const Boleteria = () => {
           <section className="flex-1 h-full min-h-0 bg-white rounded-lg shadow-md overflow-auto">
             {selectedFuncion ? (
               <ZonesAndPrices
+                eventos={eventos}
+                selectedEvent={selectedEvent}
+                onEventSelect={onEventSelect}
                 selectedFuncion={selectedFuncion}
                 selectedClient={selectedClient}
                 carrito={carrito}
@@ -247,6 +251,9 @@ const Boleteria = () => {
           <section className="min-h-[300px]">
             {selectedFuncion ? (
               <ZonesAndPrices
+                eventos={eventos}
+                selectedEvent={selectedEvent}
+                onEventSelect={onEventSelect}
                 selectedFuncion={selectedFuncion}
                 selectedClient={selectedClient}
                 carrito={carrito}
