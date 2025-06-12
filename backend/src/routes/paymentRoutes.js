@@ -99,7 +99,7 @@ router.get('/', async (req, res) => {
 // Create a new payment
 router.post('/', async (req, res) => {
   try {
-    const { user, seats, status, event, funcion } = req.body;
+    const { user, seats, status, event, funcion, referrer } = req.body;
 
     // Validate required fields
     if (!user) return res.status(400).json({ message: 'User is required', field: 'user' });
@@ -109,13 +109,20 @@ router.post('/', async (req, res) => {
 
     const locator = Math.random().toString(36).substring(2, 10).toUpperCase();
 
+    let referrerId = null;
+    if (referrer) {
+      const refUser = await User.findOne({ login: referrer });
+      if (refUser) referrerId = refUser._id;
+    }
+
     const payment = new Payment({
       user,
       event,
       funcion,
       seats,
       locator,
-      status: status || 'pending'
+      status: status || 'pending',
+      referrer: referrerId
     });
 
     const savedPayment = await payment.save();

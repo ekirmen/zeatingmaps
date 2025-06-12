@@ -87,7 +87,8 @@ const Pay = () => {
           event: currentEventId,
           funcion: funcionId,
           seats: seatsPayload,
-          status: 'reservado'
+          status: 'reservado',
+          ...(refParam ? { referrer: refParam } : {})
         })
       });
 
@@ -130,7 +131,8 @@ const Pay = () => {
           funcion: funcionId,
           seats: seatsPayload,
           status: 'pagado',
-          payments: [{ method: selectedPaymentMethod, amount: total }]
+          payments: [{ method: selectedPaymentMethod, amount: total }],
+          ...(refParam ? { referrer: refParam } : {})
         })
       });
 
