@@ -112,6 +112,7 @@ const App = () => {
                     <Route path="plantillaPrecios" element={<PlantillaPrecios />} />
                     <Route path="funciones" element={<Funciones />} />
                     <Route path="Boleteria" element={<Boleteria setSidebarCollapsed={setSidebarCollapsed} />} />
+                    <Route path="galeria" element={<Galeria />} />
                   </Route>
 
                   <Route path="/store/:venueId?" element={<EventsVenue />} />
@@ -137,7 +138,6 @@ const App = () => {
                   <Route path="/store/seating-demo" element={<SeatingDemoPage />} />
                   <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
 
-                  <Route path="/dashboard/galeria" element={<Galeria />} />
                   <Route path="/dashboard/formato-entrada" element={<FormatoEntrada />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
