@@ -22,3 +22,25 @@ npm run start:all
 ```
 
 This runs the backend with `nodemon` and the frontend with `react-scripts`.
+
+## Environment Variables
+
+Create a `.env` file inside `backend` with at least the following variables:
+
+```ini
+MONGO_URI=mongodb://localhost:27017/tickera
+JWT_SECRET=your_jwt_secret
+PORT=5000
+NODE_ENV=development
+
+EMAIL_HOST=smtp.example.com
+EMAIL_PORT=587
+EMAIL_USER=user@example.com
+EMAIL_PASS=your_password
+```
+
+For the frontend create `frontend/.env`:
+
+```ini
+REACT_APP_API_URL=http://localhost:5000
+```

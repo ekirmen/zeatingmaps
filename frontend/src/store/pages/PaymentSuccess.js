@@ -8,6 +8,7 @@ const PaymentSuccess = () => {
   const params = useParams();
   const location = useLocation();
   const locator = location.state?.locator || params.locator;
+  const emailSent = location.state?.emailSent;
   const navigate = useNavigate();
   const { refParam } = useRefParam();
   const [paymentDetails, setPaymentDetails] = useState(null);
@@ -124,10 +125,12 @@ const PaymentSuccess = () => {
           />
         )}
 
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Se ha enviado un correo electrónico con los detalles de tu compra</p>
-          <p className="mt-1">Guarda tu localizador para futuras referencias</p>
-        </div>
+        {emailSent && (
+          <div className="mt-8 text-center text-sm text-gray-500">
+            <p>Se ha enviado un correo electrónico con los detalles de tu compra</p>
+            <p className="mt-1">Guarda tu localizador para futuras referencias</p>
+          </div>
+        )}
       </div>
     </div>
   );
