@@ -28,7 +28,10 @@ const PaymentSuccess = () => {
         const response = await fetch(`http://localhost:5000/api/payments/locator/${locator}`);
         const data = await response.json();
         if (data?.data) {
-          setPaymentDetails(data.data);
+          const details = data.data;
+          details.amount = details.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+          details.paymentMethod = details.payments?.map(p => p.method).join(', ') || '';
+          setPaymentDetails(details);
           const eventId = data.data.event?._id;
           if (eventId) {
             const evRes = await fetch(`http://localhost:5000/api/events/${eventId}`);

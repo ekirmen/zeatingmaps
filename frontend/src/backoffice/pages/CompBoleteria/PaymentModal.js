@@ -189,7 +189,13 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
         const res = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/${existingPaymentId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: newStatus })
+          body: JSON.stringify({
+            status: newStatus,
+            payments: paymentEntries.map(entry => ({
+              method: entry.formaPago,
+              amount: entry.importe
+            }))
+          })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Error al actualizar pago');
