@@ -32,7 +32,9 @@ export const authorizeRoles = (...roles) => {
       return res.status(401).json({ message: 'No autorizado' });
     }
     
-    if (!roles.includes(req.user.role)) {
+    // 'perfil' is our primary role indicator, but fall back to 'role' for legacy support
+    const userPerfil = req.user.perfil || req.user.role;
+    if (!roles.includes(userPerfil)) {
       return res.status(403).json({ 
         message: 'No tiene permisos para realizar esta acción' 
       });
