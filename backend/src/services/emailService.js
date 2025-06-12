@@ -45,7 +45,9 @@ export const sendPasswordResetEmail = async (user, token) => {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${token}`;
   const defaults = {
     subject: 'Restablecer contrase\u00f1a',
-    body: 'Para restablecer tu contrase\u00f1a, haz clic en el siguiente enlace: {{resetUrl}}'
+    body:
+      '<p>Para restablecer tu contrase\u00f1a, haz clic en el siguiente enlace:</p>' +
+      '<p><a href="{{resetUrl}}">{{resetUrl}}</a></p>'
   };
   const { subject, body } = await getTemplateContent(
     'resetPassword',
