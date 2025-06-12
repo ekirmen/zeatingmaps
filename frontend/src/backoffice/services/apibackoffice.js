@@ -197,3 +197,17 @@ export const setSeatsBlocked = (seatIds, bloqueado) =>
 export const deleteEvento = (id) => fetchApi(`/events/${id}`, { method: 'DELETE' });
 export const deleteZona = (id) => fetchApi(`/zonas/${id}`, { method: 'DELETE' });
 export const deleteEntrada = (id) => fetchApi(`/entradas/${id}`, { method: 'DELETE' });
+
+// Descuentos
+export const fetchDescuentos = () => fetchApi('/descuentos');
+export const createDescuento = (data) => fetchApi('/descuentos', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data),
+});
+export const updateDescuento = (id, data) => fetchApi(`/descuentos/${id}`, {
+  method: 'PUT',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data),
+});
+export const deleteDescuento = (id) => fetchApi(`/descuentos/${id}`, { method: 'DELETE' });
