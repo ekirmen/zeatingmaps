@@ -65,8 +65,7 @@ export const createUser = async (req, res) => {
   const {
     login, nombre, apellido, empresa,
     perfil, email, telefono, direccion,
-    password, permisos, formaDePago,
-    referrerCode
+    password, permisos, formaDePago
   } = req.body;
 
   if (!login || !perfil || !email) {
@@ -90,13 +89,6 @@ export const createUser = async (req, res) => {
       passwordPending = true;
     }
 
-    let referredBy = null;
-    if (referrerCode) {
-      const refUser = await User.findOne({ referralCode: referrerCode });
-      if (refUser) {
-        referredBy = refUser._id;
-      }
-    }
 
     const newUser = new User({
       login,
@@ -107,7 +99,6 @@ export const createUser = async (req, res) => {
       email,
       telefono,
       direccion,
-      referredBy,
       password: hashedPassword,
       passwordPending,
       permisos
@@ -274,17 +265,3 @@ export const setPassword = async (req, res) => {
 };
 
 // Obtener usuarios referidos por un usuario
-export const getReferrals = async (req, res) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: 'ID inválido' });
-  }
-
-  try {
-    const referrals = await User.find({ referredBy: id }).select('-password');
-    res.json(referrals);
-  } catch (error) {
-    console.error('Error al obtener referidos:', error);
-    res.status(500).json({ message: 'Error al obtener referidos' });
-  }
-};
