@@ -199,15 +199,17 @@ const Pay = () => {
             <span>${subtotal.toFixed(2)}</span>
           </div>
           {affiliate && (
-            <div className="flex justify-between py-2 text-sm text-gray-600">
-              <span>Comisión {affiliate.user.login} ({Number(affiliate.base || 0).toFixed(2)} + {affiliate.percentage}%):</span>
-              <span>- ${commission.toFixed(2)}</span>
-            </div>
+            <>
+              <div className="flex justify-between py-2 text-sm text-gray-600">
+                <span>Comisión {affiliate.user.login} ({Number(affiliate.base || 0).toFixed(2)} + {affiliate.percentage}%):</span>
+                <span>- ${commission.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between py-2">
+                <span>Subtotal con descuento:</span>
+                <span>${subtotalAfter.toFixed(2)}</span>
+              </div>
+            </>
           )}
-          <div className="flex justify-between py-2">
-            <span>Subtotal con descuento:</span>
-            <span>${subtotalAfter.toFixed(2)}</span>
-          </div>
           <div className="flex justify-between py-2">
             <span>Impuestos (16%):</span>
             <span>${impuestos.toFixed(2)}</span>
