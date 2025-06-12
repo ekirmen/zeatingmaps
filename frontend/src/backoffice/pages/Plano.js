@@ -23,9 +23,6 @@ const Plano = () => {
   const [editingZona, setEditingZona] = useState(null);
   const numeradaBloqueada = editingZona?.numerada && editingZona.aforo > 0;
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 10;
 
   useEffect(() => {
     const fetchRecintosYSalas = async () => {
@@ -141,13 +138,6 @@ const Plano = () => {
     }
   };
 
-  const filteredZonas = zonas.filter(zona =>
-    zona.nombre.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const indexOfLastZona = currentPage * recordsPerPage;
-  const indexOfFirstZona = indexOfLastZona - recordsPerPage;
-  const currentZonas = filteredZonas.slice(indexOfFirstZona, indexOfLastZona);
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">

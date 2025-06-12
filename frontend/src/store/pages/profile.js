@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Input, Button, Modal, message, Table, Space } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Input, Button, Modal, message, Table } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -19,7 +19,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
 
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
 
-  const { user, token } = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (userData) {
@@ -114,7 +114,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
   const [loading, setLoading] = useState(false);
 
 
-  const fetchPurchaseHistory = async () => {
+  const fetchPurchaseHistory = useCallback(async () => {
     if (!user?._id) return;
     
     setLoading(true);
@@ -133,13 +133,13 @@ const Profile = ({ userData, onUpdateProfile }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (user?._id) {
       fetchPurchaseHistory();
     }
-  }, [user]); // Add fetchPurchaseHistory to deps if needed
+  }, [user, fetchPurchaseHistory]);
 
   const columns = [
     {

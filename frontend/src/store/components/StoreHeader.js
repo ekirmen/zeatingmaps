@@ -14,7 +14,6 @@ const Header = ({ onLogin, onLogout }) => {
     password: '',
     confirmPassword: ''
   });
-  const [pendingUser, setPendingUser] = useState(null);
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
 
@@ -88,7 +87,6 @@ const Header = ({ onLogin, onLogout }) => {
       localStorage.setItem('userId', data.user._id);
 
       if (data.passwordPending) {
-        setPendingUser(data.user);
         setIsPasswordModalVisible(true);
         setIsModalVisible(false);
         setFormData({ login: '', password: '' });

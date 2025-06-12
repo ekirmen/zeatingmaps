@@ -7,7 +7,6 @@ const Login = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
-  const [pendingUser, setPendingUser] = useState(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -28,7 +27,6 @@ const Login = ({ onLogin }) => {
         localStorage.setItem('userId', data.user._id);
 
         if (data.passwordPending) {
-          setPendingUser(data.user);
           setIsPasswordModalVisible(true);
           return;
         }
