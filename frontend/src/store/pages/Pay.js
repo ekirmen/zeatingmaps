@@ -85,7 +85,8 @@ const Pay = () => {
           event: currentEventId,
           funcion: funcionId,
           seats: seatsPayload,
-          status: 'reservado'
+          status: 'reservado',
+          referralCode: localStorage.getItem('referralCode') || undefined
         })
       });
 
@@ -128,7 +129,8 @@ const Pay = () => {
           funcion: funcionId,
           seats: seatsPayload,
           status: 'pagado',
-          payments: [{ method: selectedPaymentMethod, amount: total }]
+          payments: [{ method: selectedPaymentMethod, amount: total }],
+          referralCode: localStorage.getItem('referralCode') || undefined
         })
       });
 

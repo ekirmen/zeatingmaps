@@ -11,6 +11,7 @@ const Menu = () => {
         <li><Link to="/dashboard/actividad">Actividad</Link></li>
         <li><Link to="/dashboard/recinto">Lista de Salas</Link></li>
         <li><Link to="/dashboard/usuarios">Usuarios</Link></li>
+        <li><Link to="/dashboard/Referidos">Referidos</Link></li>
         <li><Link to="/dashboard/Plano">Plano</Link></li>
         <li><Link to="/dashboard/Evento">Evento</Link></li>
       </ul>

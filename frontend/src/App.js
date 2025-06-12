@@ -24,6 +24,7 @@ import Dashboard from './backoffice/pages/Dashboard';
 import Actividad from './backoffice/pages/Actividad';
 import Recinto from './backoffice/pages/Recinto';
 import Usuarios from './backoffice/pages/Usuarios';
+import Referidos from './backoffice/pages/Referidos';
 import Plano from './backoffice/pages/Plano';
 import Evento from './backoffice/pages/Evento';
 import Entrada from './backoffice/pages/Entrada';
@@ -52,6 +53,14 @@ const App = () => {
   const location = useLocation();
   const { user, login, logout, updateProfile } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      localStorage.setItem('referralCode', ref);
+    }
+  }, [location.search]);
 
   const handleLogin = async (credentials) => {
     try {
@@ -104,6 +113,7 @@ const App = () => {
                     <Route path="actividad" element={<Actividad />} />
                     <Route path="recinto" element={<Recinto />} />
                     <Route path="usuarios" element={<Usuarios />} />
+                    <Route path="referidos" element={<Referidos />} />
                     <Route path="plano" element={<Plano />} />
                     <Route path="evento" element={<Evento />} />
                     <Route path="entrada" element={<Entrada />} />

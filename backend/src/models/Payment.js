@@ -23,6 +23,8 @@ const paymentSchema = new mongoose.Schema({
   }],
   locator: String,
   status: String,
+  referrer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  referralCommission: { type: Number, default: 0 },
   scanned: Boolean,
   history: [{
     action: { type: String, required: true },

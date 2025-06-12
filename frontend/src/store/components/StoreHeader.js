@@ -12,8 +12,16 @@ const Header = ({ onLogin, onLogout }) => {
     login: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    referrerCode: ''
   });
+
+  React.useEffect(() => {
+    const stored = localStorage.getItem('referralCode');
+    if (stored) {
+      setRegisterData(prev => ({ ...prev, referrerCode: stored }));
+    }
+  }, []);
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
 
@@ -35,7 +43,8 @@ const Header = ({ onLogin, onLogout }) => {
           login: registerData.login.trim(),
           perfil: 'cliente',
           email: registerData.email.trim(),
-          password: registerData.password.trim()
+          password: registerData.password.trim(),
+          referrerCode: registerData.referrerCode.trim() || undefined
         }),
       });
 
@@ -228,7 +237,8 @@ const Header = ({ onLogin, onLogout }) => {
         <Input placeholder="Usuario" value={registerData.login} onChange={(e) => setRegisterData({ ...registerData, login: e.target.value })} className="mb-4" />
         <Input placeholder="Email" value={registerData.email} onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} className="mb-4" />
         <Input.Password placeholder="Contraseña" value={registerData.password} onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} className="mb-4" />
-        <Input.Password placeholder="Confirmar Contraseña" value={registerData.confirmPassword} onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })} />
+        <Input.Password placeholder="Confirmar Contraseña" value={registerData.confirmPassword} onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })} className="mb-4" />
+        <Input placeholder="Código de Referido (opcional)" value={registerData.referrerCode} onChange={(e) => setRegisterData({ ...registerData, referrerCode: e.target.value })} />
       </Modal>
 
       {/* Modal Nueva Contraseña */}
