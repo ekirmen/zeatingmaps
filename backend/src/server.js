@@ -14,6 +14,7 @@ import './models/Payment.js';
 import './models/Ticket.js';
 // Add this with your other model imports
 import './models/Seat.js';
+import './models/EmailTemplate.js';
 import './models/AffiliateUser.js';
 import Mapa from './models/Mapa.js';
 import User from './models/User.js';
@@ -43,6 +44,7 @@ import seatRoutes from './routes/seatRoutes.js';
 import metodoPagoRoutes from './routes/metodoPagoRoutes.js';
 import tagRoutes from './routes/tagRoutes.js';
 import affiliateRoutes from './routes/affiliateRoutes.js';
+import emailTemplateRoutes from './routes/emailTemplateRoutes.js';
 
 import { errorHandler } from './middleware/errorMiddleware.js';
 
@@ -183,6 +185,7 @@ app.use('/api/galeria', galeriaRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/seats', seatRoutes);
 app.use('/api/tags', tagRoutes);
+app.use('/api/email-templates', emailTemplateRoutes);
 
 // Ruta para validar token (autenticación)
 app.get('/api/user/validate', authMiddleware, (req, res) => {

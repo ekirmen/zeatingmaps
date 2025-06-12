@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { generateTicketPDF } from '../utils/pdfGenerator.js';
+import EmailTemplate from '../models/EmailTemplate.js';
 
 dotenv.config();
 
@@ -14,6 +15,14 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+const applyTemplate = (body, replacements) => {
+  let result = body;
+  Object.entries(replacements).forEach(([key, value]) => {
+    result = result.replace(new RegExp(`{{${key}}}`, 'g'), value);
+  });
+  return result;
+};
+
 export const sendEmail = async (options) => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     throw new Error('Email credentials not configured');
@@ -26,11 +35,17 @@ export const sendEmail = async (options) => {
 
 export const sendPasswordResetEmail = async (user, token) => {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${token}`;
-  const message = `Para restablecer tu contrase\u00f1a, haz clic en el siguiente enlace: ${resetUrl}`;
+  const template = await EmailTemplate.findOne({ type: 'resetPassword' });
+  let subject = 'Restablecer contrase\u00f1a';
+  let body = `Para restablecer tu contrase\u00f1a, haz clic en el siguiente enlace: ${resetUrl}`;
+  if (template) {
+    subject = template.subject;
+    body = applyTemplate(template.body, { resetUrl, email: user.email });
+  }
   await sendEmail({
     to: user.email,
-    subject: 'Restablecer contrase\u00f1a',
-    text: message
+    subject,
+    html: body
   });
 };
 
@@ -44,17 +59,32 @@ export const sendTicketEmail = async (payment, to) => {
     doc.end();
   });
 
+  const template = await EmailTemplate.findOne({ type: 'paid' });
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  let subject = 'Tus entradas';
+  let body = 'Adjunto se encuentran tus tickets en PDF.';
+  if (template) {
+    subject = template.subject;
+    body = applyTemplate(template.body, {
+      locator: payment.locator,
+      date: new Date(payment.createdAt).toLocaleString(),
+      link: `${frontendUrl}/payment-success?locator=${payment.locator}`
+    });
+  }
+
   await sendEmail({
     to,
-    subject: 'Tus entradas',
-    text: 'Adjunto se encuentran tus tickets en PDF.',
+    subject,
+    html: body,
     attachments: [{ filename: `ticket_${payment.locator}.pdf`, content: Buffer.concat(buffers) }]
   });
 };
 
 export const sendReservationEmail = async (payment, to) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  const html = `
+  const template = await EmailTemplate.findOne({ type: 'reservation' });
+  let subject = 'Reserva realizada';
+  let html = `
     <div style="font-family: Arial, sans-serif; background-color: #f3f4f6; padding: 24px;">
       <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -74,10 +104,17 @@ export const sendReservationEmail = async (payment, to) => {
       </div>
     </div>
   `;
-
+  if (template) {
+    subject = template.subject;
+    html = applyTemplate(template.body, {
+      locator: payment.locator,
+      date: new Date(payment.createdAt).toLocaleString(),
+      link: `${frontendUrl}/payment-success?locator=${payment.locator}`
+    });
+  }
   await sendEmail({
     to,
-    subject: 'Reserva realizada',
+    subject,
     html
   });
 };
