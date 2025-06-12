@@ -208,6 +208,10 @@ router.get('/:id/download', async (req, res) => {
 
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
 
+    if (payment.status !== 'pagado') {
+      return res.status(403).json({ message: 'El ticket no ha sido pagado' });
+    }
+
     const pdfDoc = await generateTicketPDF(payment);
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=ticket_${payment.locator}.pdf`);
@@ -236,6 +240,10 @@ router.post('/:id/email', async (req, res) => {
       .populate('seats.mesa');
 
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
+
+    if (payment.status !== 'pagado') {
+      return res.status(403).json({ message: 'El ticket no ha sido pagado' });
+    }
 
   await sendTicketEmail(payment, email);
   res.json({ message: 'Correo enviado' });

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
+import { useCart } from '../../contexts/CartContext';
+import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
 
@@ -11,6 +13,7 @@ const PaymentSuccess = () => {
   const emailSent = location.state?.emailSent;
   const navigate = useNavigate();
   const { refParam } = useRefParam();
+  const { setCart } = useCart();
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
   const isReservation = paymentDetails?.status === 'reservado';
@@ -43,6 +46,29 @@ const PaymentSuccess = () => {
   const handleDownloadTickets = () => {
     // Implement ticket download functionality
     window.open(`http://localhost:5000/api/payments/${locator}/download`, '_blank');
+  };
+
+  const handleContinuePayment = async () => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/payments/locator/${locator}`);
+      if (!response.ok) throw new Error('Error al cargar la reserva');
+      const { data } = await response.json();
+      setCart(
+        data.seats.map(seat => ({
+          _id: seat.id,
+          nombre: seat.name,
+          precio: seat.price,
+          nombreMesa: seat.mesa?.nombre || '',
+          zona: seat.zona?._id || seat.zona,
+          zonaNombre: seat.zona?.nombre || ''
+        })),
+        data.funcion?._id || data.funcion
+      );
+      navigate('/store/pay');
+    } catch (err) {
+      console.error('Load reservation error:', err);
+      toast.error('No se pudo cargar la reserva');
+    }
   };
 
   if (!locator) {
@@ -104,6 +130,14 @@ const PaymentSuccess = () => {
             >
               <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
               Descargar Entradas
+            </button>
+          )}
+          {isReservation && (
+            <button
+              onClick={handleContinuePayment}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              Completar Pago
             </button>
           )}
           
