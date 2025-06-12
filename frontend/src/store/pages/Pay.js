@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Navigate, useNavigate } from 'react-router-dom';
+import { useRefParam } from '../../contexts/RefContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
 import MetodoPago from '../components/MetodoPago';
@@ -9,6 +10,7 @@ import { toast } from 'react-hot-toast';
 const Pay = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { refParam } = useRefParam();
   const { user } = useAuth();
 
   // Accede de forma segura a los datos de navegación
@@ -147,7 +149,8 @@ const Pay = () => {
 
   // ✅ Render condicional después de los hooks
   if (!carrito || !funcionId) {
-    return <Navigate to="/store" replace />;
+    const path = refParam ? `/store?ref=${refParam}` : '/store';
+    return <Navigate to={path} replace />;
   }
 
   return (

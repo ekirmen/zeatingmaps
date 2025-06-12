@@ -1,9 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRefParam } from '../../contexts/RefContext';
 import { FaHeart } from 'react-icons/fa';
 
 const ThankYouPage = () => {
   const navigate = useNavigate();
+  const { refParam } = useRefParam();
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
@@ -19,7 +21,10 @@ const ThankYouPage = () => {
             Si necesitas ayuda o tienes alguna pregunta, no dudes en contactarnos.
           </p>
           <button
-            onClick={() => navigate('/store')}
+            onClick={() => {
+              const path = refParam ? `/store?ref=${refParam}` : '/store';
+              navigate(path);
+            }}
             className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
             Explorar más eventos

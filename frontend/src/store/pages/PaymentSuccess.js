@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useRefParam } from '../../contexts/RefContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
 
@@ -8,6 +9,7 @@ const PaymentSuccess = () => {
   const location = useLocation();
   const locator = location.state?.locator || params.locator;
   const navigate = useNavigate();
+  const { refParam } = useRefParam();
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
   const isReservation = paymentDetails?.status === 'reservado';
@@ -105,7 +107,10 @@ const PaymentSuccess = () => {
           )}
           
           <button
-            onClick={() => navigate('/store')}
+            onClick={() => {
+              const path = refParam ? `/store?ref=${refParam}` : '/store';
+              navigate(path);
+            }}
             className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
           >
             Volver al Inicio

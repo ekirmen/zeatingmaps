@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Stage, Layer, Circle, Text } from 'react-konva';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useRefParam } from '../../contexts/RefContext';
 // Remove unused import
 // import { Rect } from 'react-konva';
 import { fetchMapa }  from '../services/apistore'; // Asegúrate de importar fetchMapa
 const SelectSeats = () => {
   const { salaId, funcionId } = useParams();
   const navigate = useNavigate();
+  const { refParam } = useRefParam();
   const [mesas, setMesas] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
 // Removed unused state since seats and setSeats are not being used
@@ -40,7 +42,8 @@ const SelectSeats = () => {
   };
 
   const irAPagar = () => {
-    navigate('/store/pay', { state: { carrito: selectedSeats, funcionId } });
+    const path = refParam ? `/store/pay?ref=${refParam}` : '/store/pay';
+    navigate(path, { state: { carrito: selectedSeats, funcionId } });
   };
 
   if (loading) return <p>Cargando asientos...</p>;

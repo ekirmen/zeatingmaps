@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRefParam } from '../../contexts/RefContext';
 const EventsVenue = () => {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { refParam } = useRefParam();
 
   useEffect(() => {
     const fetchEventos = async () => {
@@ -26,7 +28,9 @@ const EventsVenue = () => {
   }, []);
 
   const handleEventClick = (slugOrId) => {
-    navigate(`/store/event/${slugOrId}`); // Redirigir a la página de detalles del evento
+    const base = `/store/event/${slugOrId}`;
+    const url = refParam ? `${base}?ref=${refParam}` : base;
+    navigate(url); // Redirigir a la página de detalles del evento
   };
 
   if (loading) {

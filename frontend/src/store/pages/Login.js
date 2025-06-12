@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRefParam } from '../../contexts/RefContext';
 import { Modal, Input, Button, message } from 'antd';
 
 const Login = ({ onLogin }) => {
@@ -8,6 +9,7 @@ const Login = ({ onLogin }) => {
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
   const navigate = useNavigate();
+  const { refParam } = useRefParam();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,7 +35,7 @@ const Login = ({ onLogin }) => {
 
         onLogin?.({ token: data.token, user: data.user });
         message.success('Inicio de sesión exitoso');
-        navigate('/store');
+        navigate(refParam ? `/store?ref=${refParam}` : '/store');
       } else {
         message.error(data.message || 'Error de autenticación');
       }
@@ -74,7 +76,7 @@ const Login = ({ onLogin }) => {
       setPasswordData({ newPassword: '', confirmPassword: '' });
       onLogin?.({ token: token.replace('Bearer ', ''), user: data.user });
       message.success('Contraseña actualizada');
-      navigate('/store');
+      navigate(refParam ? `/store?ref=${refParam}` : '/store');
     } catch (error) {
       console.error('Set password error:', error);
       message.error(error.message || 'Error al guardar contraseña');
