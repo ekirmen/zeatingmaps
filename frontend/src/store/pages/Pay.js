@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
+import { useReferral } from '../../contexts/ReferralContext';
 import MetodoPago from '../components/MetodoPago';
 import { Modal } from 'antd';
 import { toast } from 'react-hot-toast';
@@ -10,6 +11,7 @@ const Pay = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { referralCode } = useReferral();
 
   // Accede de forma segura a los datos de navegación
   const { carrito: stateCarrito, funcionId: stateFuncionId } = location.state || {};
@@ -86,7 +88,7 @@ const Pay = () => {
           funcion: funcionId,
           seats: seatsPayload,
           status: 'reservado',
-          referralCode: localStorage.getItem('referralCode') || undefined
+          referralCode: referralCode || undefined
         })
       });
 
@@ -130,7 +132,7 @@ const Pay = () => {
           seats: seatsPayload,
           status: 'pagado',
           payments: [{ method: selectedPaymentMethod, amount: total }],
-          referralCode: localStorage.getItem('referralCode') || undefined
+          referralCode: referralCode || undefined
         })
       });
 

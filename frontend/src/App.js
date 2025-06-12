@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // Context Providers
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ReferralProvider } from './contexts/ReferralContext';
 import { RecintoProvider } from './backoffice/contexts/RecintoContext';
 import { RecintoSalaProvider } from './backoffice/contexts/RecintoSalaContext';
 import { IvaProvider } from './backoffice/contexts/IvaContext';
@@ -90,10 +91,11 @@ const App = () => {
   return (
     <CartProvider>
       <AuthProvider>
-        <RecintoProvider>
-          <RecintoSalaProvider>
-            <IvaProvider>
-              <TagProvider>
+        <ReferralProvider>
+          <RecintoProvider>
+            <RecintoSalaProvider>
+              <IvaProvider>
+                <TagProvider>
                 {showHeader && (
                   <Header onLogin={handleLogin} onLogout={handleLogout} />
                 )}
@@ -159,6 +161,7 @@ const App = () => {
             </IvaProvider>
           </RecintoSalaProvider>
         </RecintoProvider>
+        </ReferralProvider>
       </AuthProvider>
     </CartProvider>
   );
