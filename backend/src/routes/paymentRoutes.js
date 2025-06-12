@@ -5,7 +5,7 @@ import AffiliateUser from '../models/AffiliateUser.js';
 import { generateTicketPDF } from '../utils/pdfGenerator.js';
 import QRCode from 'qrcode';
 import Evento from '../models/Evento.js';
-import { sendTicketEmail } from '../services/emailService.js';
+import { sendTicketEmail, sendReservationEmail } from '../services/emailService.js';
 import mongoose from 'mongoose'; // Add this import for error handling
 
 const router = express.Router();
@@ -139,7 +139,19 @@ router.post('/', async (req, res) => {
     });
 
     const savedPayment = await payment.save();
-    res.status(201).json(savedPayment);
+    let emailSent = false;
+
+    if (savedPayment.status === 'reservado') {
+      await savedPayment.populate('user');
+      try {
+        await sendReservationEmail(savedPayment, savedPayment.user.email);
+        emailSent = true;
+      } catch (emailError) {
+        console.error('Reservation email error:', emailError);
+      }
+    }
+
+    res.status(201).json({ ...savedPayment.toObject(), emailSent });
   } catch (error) {
     if (error instanceof mongoose.Error.ValidationError || error instanceof mongoose.Error.CastError) {
       return res.status(400).json({ message: 'Invalid payment data', error: error.message });
