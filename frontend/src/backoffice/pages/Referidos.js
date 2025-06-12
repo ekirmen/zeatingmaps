@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import Modal from 'react-modal';
 import RequireAuth from '../components/RequireAuth';
+
+Modal.setAppElement('#root');
 
 const Referidos = () => {
   const [affiliates, setAffiliates] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [results, setResults] = useState([]);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ id: null, login: '', base: 0, percentage: 0 });
 
   useEffect(() => {
     const fetchAffiliates = async () => {
@@ -87,11 +92,18 @@ const Referidos = () => {
     }
   };
 
-  const editAffiliate = async (id) => {
-    const login = prompt('Nuevo usuario login:');
-    if (!login) return;
-    const base = parseFloat(prompt('Base', '0')) || 0;
-    const percentage = parseFloat(prompt('Porcentaje', '0')) || 0;
+  const openEditModal = (affiliate) => {
+    setEditForm({
+      id: affiliate._id,
+      login: affiliate.user.login,
+      base: affiliate.base || 0,
+      percentage: affiliate.percentage || 0
+    });
+    setEditModalOpen(true);
+  };
+
+  const handleUpdateAffiliate = async () => {
+    const { id, login, base, percentage } = editForm;
     try {
       const token = localStorage.getItem('token');
       const resSearch = await fetch(`http://localhost:5000/api/user/search?term=${encodeURIComponent(login)}`, {
@@ -113,6 +125,7 @@ const Referidos = () => {
         const data = await res.json();
         setAffiliates(prev => prev.map(a => a._id === id ? data : a));
         toast.success('Actualizado');
+        setEditModalOpen(false);
       } else {
         toast.error('Error al actualizar');
       }
@@ -169,7 +182,7 @@ const Referidos = () => {
                   <td className="px-4 py-2">{Number(a.percentage || 0).toFixed(2)}%</td>
                   <td className="px-4 py-2 space-x-2">
                     <button
-                      onClick={() => editAffiliate(a._id)}
+                      onClick={() => openEditModal(a)}
                       className="bg-yellow-400 text-white px-2 py-1 rounded"
                     >
                       Editar
@@ -186,6 +199,78 @@ const Referidos = () => {
             </tbody>
           </table>
         </div>
+        <Modal
+          isOpen={editModalOpen}
+          onRequestClose={() => setEditModalOpen(false)}
+          contentLabel="Editar Afiliado"
+          className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-auto mt-20 outline-none"
+          overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50"
+        >
+          <h2 className="text-xl font-bold mb-4">Editar Afiliado</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Usuario login</label>
+              <input
+                type="text"
+                className="w-full border px-3 py-2 rounded"
+                value={editForm.login}
+                onChange={e => setEditForm({ ...editForm, login: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Base</label>
+              <input
+                type="number"
+                className="w-full border px-3 py-2 rounded"
+                value={editForm.base}
+                onChange={e => setEditForm({ ...editForm, base: parseFloat(e.target.value) })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Porcentaje</label>
+              <input
+                type="number"
+                className="w-full border px-3 py-2 rounded"
+                value={editForm.percentage}
+                onChange={e => setEditForm({ ...editForm, percentage: parseFloat(e.target.value) })}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Link</label>
+              <div className="flex">
+                <input
+                  type="text"
+                  readOnly
+                  className="w-full border px-3 py-2 rounded-l"
+                  value={`${window.location.origin}/store?ref=${editForm.login}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => navigator.clipboard.writeText(`${window.location.origin}/store?ref=${editForm.login}`)}
+                  className="px-3 py-2 bg-gray-200 rounded-r"
+                >
+                  Copiar
+                </button>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                className="px-4 py-2 border rounded"
+                onClick={() => setEditModalOpen(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={handleUpdateAffiliate}
+              >
+                Guardar
+              </button>
+            </div>
+          </div>
+        </Modal>
       </div>
     </RequireAuth>
   );
