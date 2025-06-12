@@ -23,6 +23,28 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
   const [locator, setLocator] = useState('');
   const [emailToSend, setEmailToSend] = useState('');
 
+  const handleEmailTicket = async () => {
+    if (!locator || !emailToSend) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/payments/${locator}/email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailToSend })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        message.success('Correo enviado');
+        setShowConfirmation(false);
+        setEmailToSend('');
+      } else {
+        message.error(data.message || 'Error al enviar correo');
+      }
+    } catch (err) {
+      console.error('Send email error:', err);
+      message.error('Error al enviar correo');
+    }
+  };
+
   const handleDownloadTicket = () => {
     if (locator) {
       window.open(`http://localhost:5000/api/payments/${locator}/download`, '_blank');
@@ -350,7 +372,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
             type="default"
             variant="outlined"
             block
-            onClick={() => {/* Implement email sending logic */}}
+            onClick={handleEmailTicket}
             disabled={!emailToSend}
           >
             Enviar por correo
