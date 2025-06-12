@@ -15,6 +15,9 @@ const transporter = nodemailer.createTransport({
 });
 
 export const sendEmail = async (options) => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error('Email credentials not configured');
+  }
   return transporter.sendMail({
     from: process.env.EMAIL_USER,
     ...options

@@ -236,12 +236,15 @@ router.post('/:id/email', async (req, res) => {
 
     if (!payment) return res.status(404).json({ message: 'Payment not found' });
 
-    await sendTicketEmail(payment, email);
-    res.json({ message: 'Correo enviado' });
-  } catch (error) {
-    console.error('Send ticket email error:', error);
-    res.status(500).json({ message: 'Error al enviar el correo' });
-  }
+  await sendTicketEmail(payment, email);
+  res.json({ message: 'Correo enviado' });
+} catch (error) {
+  console.error('Send ticket email error:', error);
+  res.status(500).json({
+    message: 'Error al enviar el correo',
+    error: error.message
+  });
+}
 });
 
 // Ticket scanning endpoint
