@@ -54,6 +54,14 @@ const App = () => {
   const { user, login, logout, updateProfile } = useAuth();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const ref = params.get('ref');
+    if (ref) {
+      localStorage.setItem('referralCode', ref);
+    }
+  }, [location.search]);
+
   const handleLogin = async (credentials) => {
     try {
       await login(credentials);

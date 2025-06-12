@@ -15,6 +15,13 @@ const Header = ({ onLogin, onLogout }) => {
     confirmPassword: '',
     referrerCode: ''
   });
+
+  React.useEffect(() => {
+    const stored = localStorage.getItem('referralCode');
+    if (stored) {
+      setRegisterData(prev => ({ ...prev, referrerCode: stored }));
+    }
+  }, []);
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
 

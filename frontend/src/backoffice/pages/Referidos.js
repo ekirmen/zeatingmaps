@@ -4,6 +4,7 @@ import RequireAuth from '../components/RequireAuth';
 const Referidos = () => {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [earnings, setEarnings] = useState({});
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -21,6 +22,27 @@ const Referidos = () => {
     };
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    const fetchEarnings = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const results = await Promise.all(users.map(u =>
+          fetch(`http://localhost:5000/api/payments/referrer/${u._id}`, {
+            headers: { Authorization: token }
+          }).then(res => res.json())
+        ));
+        const map = {};
+        users.forEach((u, i) => {
+          map[u._id] = results[i]?.totalCommission || 0;
+        });
+        setEarnings(map);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    if (users.length) fetchEarnings();
+  }, [users]);
 
   const filtered = users.filter(u =>
     u.login && u.login.toLowerCase().includes(searchTerm.toLowerCase())
@@ -46,8 +68,10 @@ const Referidos = () => {
               <tr>
                 <th className="px-4 py-2">Usuario</th>
                 <th className="px-4 py-2">Código</th>
+                <th className="px-4 py-2">Link</th>
                 <th className="px-4 py-2">Referido Por</th>
                 <th className="px-4 py-2"># Referidos</th>
+                <th className="px-4 py-2">Ganancias</th>
               </tr>
             </thead>
             <tbody>
@@ -55,8 +79,12 @@ const Referidos = () => {
                 <tr key={user._id} className="text-center border-t">
                   <td className="px-4 py-2">{user.login}</td>
                   <td className="px-4 py-2">{user.referralCode}</td>
+                  <td className="px-4 py-2 break-all">
+                    {`${window.location.origin}/store?ref=${user.referralCode}`}
+                  </td>
                   <td className="px-4 py-2">{getReferrer(user.referredBy)}</td>
                   <td className="px-4 py-2">{countReferrals(user._id)}</td>
+                  <td className="px-4 py-2">{earnings[user._id]?.toFixed(2) || '0.00'}</td>
                 </tr>
               ))}
             </tbody>
