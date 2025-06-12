@@ -147,6 +147,7 @@ const Boleteria = () => {
             onClientRemove={() => setSelectedClient(null)}
             setCarrito={setCarrito}
             setSelectedClient={setSelectedClient}
+            onFunctionSelect={handleFunctionSelect}
           />
         </div>
       </aside>
@@ -191,6 +192,7 @@ const Boleteria = () => {
                 onClientRemove={() => setSelectedClient(null)}
                 setCarrito={setCarrito}
                 setSelectedClient={setSelectedClient}
+                onFunctionSelect={handleFunctionSelect}
               />
             </div>
           </div>
