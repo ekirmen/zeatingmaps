@@ -13,7 +13,7 @@ const Referidos = () => {
       try {
         const token = localStorage.getItem('token');
         const res = await fetch('http://localhost:5000/api/user', {
-          headers: { 'Authorization': token }
+          headers: { 'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Error cargando usuarios');
         const data = await res.json();
@@ -28,7 +28,7 @@ const Referidos = () => {
       try {
         const token = localStorage.getItem('token');
         const res = await fetch('http://localhost:5000/api/referral/main-user', {
-          headers: { Authorization: token }
+          headers: { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
         });
         if (res.ok) {
           const data = await res.json();
@@ -47,7 +47,7 @@ const Referidos = () => {
         const token = localStorage.getItem('token');
         const results = await Promise.all(users.map(u =>
           fetch(`http://localhost:5000/api/payments/referrer/${u._id}`, {
-            headers: { Authorization: token }
+            headers: { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
           }).then(res => res.json())
         ));
         const map = {};
@@ -74,7 +74,7 @@ const Referidos = () => {
       const token = localStorage.getItem('token');
       const res = await fetch(`http://localhost:5000/api/referral/main-user/${mainUserId}`, {
         method: 'PUT',
-        headers: { Authorization: token }
+        headers: { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
       });
       if (res.ok) {
         toast.success('Usuario principal actualizado');

@@ -61,7 +61,8 @@ export const AuthProvider = ({ children }) => {
       }
 
       const token = data.token;
-      localStorage.setItem('token', `Bearer ${token}`);
+      // Guarda el token tal como viene del backend para evitar duplicar el prefijo
+      localStorage.setItem('token', token);
       setUser(data.user);
       return data;
     } catch (error) {

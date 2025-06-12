@@ -62,7 +62,7 @@ const Login = ({ onLogin }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': token
+          'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
         },
         body: JSON.stringify({ newPassword: passwordData.newPassword.trim() })
       });
