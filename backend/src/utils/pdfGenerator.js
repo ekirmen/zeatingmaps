@@ -62,6 +62,7 @@ export const generateTicketPDF = async (payment) => {
       { text: 'Información del Evento:', style: 'sectionHeader' },
       { text: `Nombre: ${payment.event?.nombre || 'N/A'}` },
       { text: `Fecha: ${payment.event?.fecha ? new Date(payment.event.fecha).toLocaleString() : 'N/A'}` },
+      { text: `Fecha celebración: ${payment.funcion?.fechaCelebracion ? new Date(payment.funcion.fechaCelebracion).toLocaleString() : 'N/A'}` },
       { text: `Lugar: ${payment.event?.recinto?.name || 'N/A'}` },
 
       { text: 'Datos del Comprador:', style: 'sectionHeader' },
