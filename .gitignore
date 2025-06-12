@@ -1,6 +1,8 @@
 node_modules/
 Escaner/
 .env
+backend/.env
+frontend/.env
 dist/
 build/
 **/node_modules/
