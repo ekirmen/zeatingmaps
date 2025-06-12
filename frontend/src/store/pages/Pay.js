@@ -25,10 +25,13 @@ const Pay = () => {
   const [availableMethods, setAvailableMethods] = useState(["stripe", "paypal", "transferencia"]);
   const [allowReservation, setAllowReservation] = useState(false);
   const [currentEventId, setCurrentEventId] = useState(null);
+  const [affiliate, setAffiliate] = useState(null);
 
   const subtotal = carrito?.reduce((sum, item) => sum + item.precio, 0) || 0;
-  const impuestos = subtotal * 0.16;
-  const total = subtotal + impuestos;
+  const commission = affiliate ? (affiliate.base || 0) + subtotal * ((affiliate.percentage || 0) / 100) : 0;
+  const subtotalAfter = subtotal - commission;
+  const impuestos = subtotalAfter * 0.16;
+  const total = subtotalAfter + impuestos;
 
   useEffect(() => {
     if (!funcionId) return;
@@ -56,6 +59,28 @@ const Pay = () => {
 
     fetchOptions();
   }, [funcionId]);
+
+  useEffect(() => {
+    const fetchAffiliate = async () => {
+      if (!refParam) {
+        setAffiliate(null);
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:5000/api/affiliate-users?login=${encodeURIComponent(refParam)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setAffiliate(data);
+        } else {
+          setAffiliate(null);
+        }
+      } catch (err) {
+        console.error('Error fetching affiliate', err);
+        setAffiliate(null);
+      }
+    };
+    fetchAffiliate();
+  }, [refParam]);
 
   useEffect(() => {
     if (eventOptions.observacionesCompra?.mostrar) {
@@ -172,6 +197,16 @@ const Pay = () => {
           <div className="flex justify-between py-2">
             <span>Subtotal:</span>
             <span>${subtotal.toFixed(2)}</span>
+          </div>
+          {affiliate && (
+            <div className="flex justify-between py-2 text-sm text-gray-600">
+              <span>Comisión {affiliate.user.login} ({Number(affiliate.base || 0).toFixed(2)} + {affiliate.percentage}%):</span>
+              <span>- ${commission.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between py-2">
+            <span>Subtotal con descuento:</span>
+            <span>${subtotalAfter.toFixed(2)}</span>
           </div>
           <div className="flex justify-between py-2">
             <span>Impuestos (16%):</span>
