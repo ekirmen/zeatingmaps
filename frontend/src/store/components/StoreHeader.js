@@ -43,9 +43,20 @@ const Header = ({ onLogin, onLogout }) => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || 'Error al registrar usuario');
 
+      if (!data.token || !data.user?._id) {
+        throw new Error('Respuesta de registro inválida');
+      }
+
+      const cleanToken = data.token.replace('Bearer ', '');
+      const formattedToken = `Bearer ${cleanToken}`;
+      localStorage.setItem('token', formattedToken);
+      localStorage.setItem('userId', data.user._id);
+      onLogin?.({ token: cleanToken, user: data.user });
+
       message.success('Usuario registrado exitosamente');
       setIsRegisterModalVisible(false);
       setRegisterData({ login: '', email: '', password: '', confirmPassword: '' });
+      navigate('/store');
 
     } catch (error) {
       console.error('Registration error:', error);
