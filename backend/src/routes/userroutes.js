@@ -12,7 +12,8 @@ import {
   changePassword,
   setPassword,
   getProfile,
-  updateProfile
+  updateProfile,
+  getReferrals
 } from '../controllers/userControllers.js';
 
 import {
@@ -39,6 +40,8 @@ router.get('/search', authorizeRoles('admin', 'supervisor'), searchUsers);
 router.post('/', authorizeRoles('admin', 'supervisor'), createUser);
 
 // Obtener usuario por ID (admin y supervisor)
+router.get('/:id/referrals', authorizeRoles('admin'), getReferrals);
+
 router.get('/:id', authorizeRoles('admin', 'supervisor'), async (req, res) => {
   const { id } = req.params;
 

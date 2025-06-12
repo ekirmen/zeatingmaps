@@ -1,6 +1,7 @@
 // src/models/User.js
 
 import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 const UserSchema = new mongoose.Schema({
     login: {
@@ -32,6 +33,15 @@ const UserSchema = new mongoose.Schema({
     telefono: {
         type: String,
         required: false
+    },
+    referralCode: {
+        type: String,
+        unique: true
+    },
+    referredBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
     },
     direccion: {
         type: String,
@@ -72,6 +82,14 @@ const UserSchema = new mongoose.Schema({
             bloqueos: { type: Boolean, default: false }
         }
     }
+});
+
+// Generate a referral code automatically if not present
+UserSchema.pre('save', function (next) {
+    if (!this.referralCode) {
+        this.referralCode = uuidv4();
+    }
+    next();
 });
 
 const User = mongoose.model('User', UserSchema);
