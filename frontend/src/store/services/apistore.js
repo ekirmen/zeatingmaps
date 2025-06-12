@@ -65,3 +65,10 @@ export const fetchMapa = async (salaId) => {
     throw error;
   }
 };
+
+// Obtener descuento por código
+export const fetchDescuentoPorCodigo = async (codigo) => {
+  const res = await fetch(`${BASE_URL}/descuentos/code/${codigo}`);
+  if (!res.ok) throw new Error('Código de descuento no válido');
+  return await res.json();
+};

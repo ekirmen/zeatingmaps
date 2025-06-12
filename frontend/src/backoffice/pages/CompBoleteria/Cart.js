@@ -115,6 +115,9 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
               {!item.action && (
                 <>
                   &nbsp;|&nbsp; <strong>Price:</strong> ${formatPrice(item.precio)}
+                  {item.tipoPrecio === 'descuento' && (
+                    <span className="text-green-600"> &nbsp;|&nbsp; {item.descuentoNombre}</span>
+                  )}
                 </>
               )}
             </div>

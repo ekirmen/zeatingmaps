@@ -26,6 +26,9 @@ const ZonesAndPrices = ({
   const [selectedEntrada, setSelectedEntrada] = useState(null);
   const [blockMode, setBlockMode] = useState(false);
   const [affiliates, setAffiliates] = useState([]);
+  
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState(null);
 
 
 
@@ -124,6 +127,23 @@ const ZonesAndPrices = ({
     loadAffiliates();
   }, []);
 
+  const applyDiscountCode = async () => {
+    if (!discountCode.trim()) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/descuentos/code/${encodeURIComponent(discountCode.trim())}`);
+      if (!res.ok) throw new Error('Código no válido');
+      const data = await res.json();
+      const now = Date.now();
+      if (data.fechaInicio && new Date(data.fechaInicio).getTime() > now) throw new Error('Descuento no disponible aún');
+      if (data.fechaFinal && new Date(data.fechaFinal).getTime() < now) throw new Error('Descuento expirado');
+      setAppliedDiscount(data);
+      message.success('Descuento aplicado');
+    } catch (err) {
+      setAppliedDiscount(null);
+      message.error(err.message);
+    }
+  };
+
   // Seleccionar un precio (zona) para comprar
   const handlePrecioSelect = (detallePrecio) => {
     const zona = zonas.find(z => z._id === detallePrecio.zonaId);
@@ -187,13 +207,23 @@ const ZonesAndPrices = ({
     if (seatInCart) {
       setCarrito(carrito.filter(item => item._id !== silla._id));
     } else {
+      const basePrice = selectedPrecio.precio;
+      let finalPrice = basePrice;
+      let tipoPrecio = 'normal';
+      let descuentoNombre = '';
+      if (appliedDiscount && appliedDiscount.zonas?.includes(selectedZona._id)) {
+        finalPrice = Math.max(0, basePrice - appliedDiscount.cantidad);
+        tipoPrecio = 'descuento';
+        descuentoNombre = appliedDiscount.nombreCodigo;
+      }
       setCarrito([...carrito, {
         ...silla,
         nombreMesa: mesa.nombre,
         zona: selectedZona.nombre,
         zonaId: selectedZona._id,
-        precio: selectedPrecio.precio,
-        tipoPrecio: 'normal',
+        precio: finalPrice,
+        tipoPrecio,
+        descuentoNombre,
         plantillaId: selectedPlantilla._id
       }]);
     }
@@ -228,6 +258,15 @@ const ZonesAndPrices = ({
     if (seatInCart) {
       setCarrito(carrito.filter((item) => item._id !== silla._id));
     } else {
+      const basePrice = detallePrecio.precio;
+      let finalPrice = basePrice;
+      let tipoPrecio = 'normal';
+      let descuentoNombre = '';
+      if (appliedDiscount && appliedDiscount.zonas?.includes(zonaObj?._id)) {
+        finalPrice = Math.max(0, basePrice - appliedDiscount.cantidad);
+        tipoPrecio = 'descuento';
+        descuentoNombre = appliedDiscount.nombreCodigo;
+      }
       setCarrito([
         ...carrito,
         {
@@ -235,8 +274,9 @@ const ZonesAndPrices = ({
           nombreMesa: silla.mesaNombre || '',
           zona: zonaObj?.nombre || '',
           zonaId: zonaObj?._id,
-          precio: detallePrecio.precio,
-          tipoPrecio: 'normal',
+          precio: finalPrice,
+          tipoPrecio,
+          descuentoNombre,
           plantillaId: selectedPlantilla._id,
         },
       ]);
@@ -270,16 +310,28 @@ const ZonesAndPrices = ({
       return;
     }
 
-    const newTickets = Array.from({ length: cantidad }).map((_, idx) => ({
-      _id: `gen-${zona._id}-${Date.now()}-${idx}`,
-      nombre: `Ticket ${zona.nombre}`,
-      nombreMesa: '',
-      zona: zona.nombre,
-      zonaId: zona._id,
-      precio: detalle.precio,
-      tipoPrecio: 'normal',
-      plantillaId: selectedPlantilla._id,
-    }));
+    const newTickets = Array.from({ length: cantidad }).map((_, idx) => {
+      const basePrice = detalle.precio;
+      let finalPrice = basePrice;
+      let tipoPrecio = 'normal';
+      let descuentoNombre = '';
+      if (appliedDiscount && appliedDiscount.zonas?.includes(zona._id)) {
+        finalPrice = Math.max(0, basePrice - appliedDiscount.cantidad);
+        tipoPrecio = 'descuento';
+        descuentoNombre = appliedDiscount.nombreCodigo;
+      }
+      return {
+        _id: `gen-${zona._id}-${Date.now()}-${idx}`,
+        nombre: `Ticket ${zona.nombre}`,
+        nombreMesa: '',
+        zona: zona.nombre,
+        zonaId: zona._id,
+        precio: finalPrice,
+        tipoPrecio,
+        descuentoNombre,
+        plantillaId: selectedPlantilla._id,
+      };
+    });
 
     setCarrito((prev) => [...prev, ...newTickets]);
   };
@@ -318,15 +370,27 @@ const ZonesAndPrices = ({
 
       const newSeats = seats
         .filter((s) => !prev.some((c) => c._id === s._id))
-        .map((s) => ({
-          ...s,
-          nombreMesa: s.mesaNombre || '',
-          zona: zonaObj?.nombre || '',
-          zonaId: zonaObj?._id,
-          precio: detallePrecio.precio,
-          tipoPrecio: 'normal',
-          plantillaId: selectedPlantilla._id,
-        }));
+        .map((s) => {
+          const basePrice = detallePrecio.precio;
+          let finalPrice = basePrice;
+          let tipoPrecio = 'normal';
+          let descuentoNombre = '';
+          if (appliedDiscount && appliedDiscount.zonas?.includes(zonaObj?._id)) {
+            finalPrice = Math.max(0, basePrice - appliedDiscount.cantidad);
+            tipoPrecio = 'descuento';
+            descuentoNombre = appliedDiscount.nombreCodigo;
+          }
+          return {
+            ...s,
+            nombreMesa: s.mesaNombre || '',
+            zona: zonaObj?.nombre || '',
+            zonaId: zonaObj?._id,
+            precio: finalPrice,
+            tipoPrecio,
+            descuentoNombre,
+            plantillaId: selectedPlantilla._id,
+          };
+        });
 
       return [...prev, ...newSeats];
     });
@@ -399,7 +463,7 @@ const ZonesAndPrices = ({
       </div>
       {/* Menu Tabs */}
       <div className="flex items-center space-x-2 mb-4">
-        {['Zonas', 'Mapa', 'Producto', 'Referidos'].map(tab => (
+        {['Zonas', 'Mapa', 'Producto'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveMenu(tab)}
@@ -408,6 +472,29 @@ const ZonesAndPrices = ({
             {tab}
           </button>
         ))}
+        <input
+          type="text"
+          value={discountCode}
+          onChange={e => setDiscountCode(e.target.value)}
+          placeholder="Código"
+          className="border px-2 py-1 text-sm"
+        />
+        <button
+          onClick={applyDiscountCode}
+          className="px-2 py-1 bg-green-600 text-white rounded text-sm"
+        >
+          Aplicar
+        </button>
+        {appliedDiscount && (
+          <span className="text-sm text-green-700">{appliedDiscount.nombreCodigo}</span>
+        )}
+        <button
+          key="Referidos"
+          onClick={() => setActiveMenu('Referidos')}
+          className={`px-3 py-1 rounded-md text-sm focus:outline-none ${activeMenu === 'Referidos' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700'}`}
+        >
+          Referidos
+        </button>
       </div>
 
       {activeMenu === 'Zonas' && (
