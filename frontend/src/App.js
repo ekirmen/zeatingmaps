@@ -37,6 +37,7 @@ import CreateIva from './backoffice/pages/CreateIva';
 import CompaniasPage from './backoffice/pages/CompaniasPage';
 import FormatoEntrada from './backoffice/pages/FormatoEntrada';
 import Galeria from './backoffice/pages/Galeria';
+import Correo from './backoffice/pages/Correo';
 
 // Store Pages
 import EventsVenue from './store/pages/EventsVenue';
@@ -127,6 +128,7 @@ const App = () => {
                     <Route path="funciones" element={<Funciones />} />
                     <Route path="Boleteria" element={<Boleteria setSidebarCollapsed={setSidebarCollapsed} />} />
                     <Route path="galeria" element={<Galeria />} />
+                    <Route path="correo" element={<Correo />} />
                   </Route>
 
                   <Route path="/store/:venueId?" element={<EventsVenue />} />
