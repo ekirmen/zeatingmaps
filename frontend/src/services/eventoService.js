@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL + '/api';
 
 export const fetchEventos = async (token) => {
   const res = await fetch(`${API_BASE_URL}/events`, {

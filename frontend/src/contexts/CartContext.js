@@ -31,7 +31,7 @@ export const CartProvider = ({ children }) => {
         throw new Error('No hay sesión activa');
       }
 
-      const response = await fetch('http://localhost:5000/api/seats/reserve', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/seats/reserve`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -59,7 +59,7 @@ export const CartProvider = ({ children }) => {
   const clearCart = useCallback(async () => {
     try {
       if (cart.items?.length > 0) {
-        const response = await fetch('http://localhost:5000/api/seats/release', {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/seats/release`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ export const CartProvider = ({ children }) => {
 
   const removeFromCart = useCallback(async (seatId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/seats/release`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/seats/release`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
