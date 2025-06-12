@@ -132,6 +132,7 @@ router.post('/', async (req, res) => {
       funcion,
       seats,
       locator,
+      payments: req.body.payments || [],
       status: status || 'pending',
       referrer: referrerId,
       referralCommission
@@ -279,7 +280,7 @@ router.post('/scan', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const updateFields = {};
-    const allowed = ['status', 'user', 'event', 'funcion', 'seats', 'referrer', 'referralCommission'];
+    const allowed = ['status', 'user', 'event', 'funcion', 'seats', 'referrer', 'referralCommission', 'payments'];
     allowed.forEach(field => {
       if (req.body[field] !== undefined) updateFields[field] = req.body[field];
     });
