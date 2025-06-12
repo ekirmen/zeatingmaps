@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 import RequireAuth from '../components/RequireAuth';
 
 const Referidos = () => {
   const [users, setUsers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [earnings, setEarnings] = useState({});
+  const [mainUserId, setMainUserId] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -21,6 +23,22 @@ const Referidos = () => {
       }
     };
     fetchUsers();
+
+    const fetchMain = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await fetch('http://localhost:5000/api/referral/main-user', {
+          headers: { Authorization: token }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setMainUserId(data?._id || null);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchMain();
   }, []);
 
   useEffect(() => {
@@ -51,6 +69,24 @@ const Referidos = () => {
   const getReferrer = (id) => users.find(u => u._id === id)?.login || '';
   const countReferrals = (id) => users.filter(u => u.referredBy === id).length;
 
+  const saveMainUser = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/api/referral/main-user/${mainUserId}`, {
+        method: 'PUT',
+        headers: { Authorization: token }
+      });
+      if (res.ok) {
+        toast.success('Usuario principal actualizado');
+      } else {
+        toast.error('Error al actualizar');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al actualizar');
+    }
+  };
+
   return (
     <RequireAuth>
       <div className="p-6 max-w-5xl mx-auto">
@@ -62,6 +98,22 @@ const Referidos = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="mb-4 px-3 py-2 border rounded"
         />
+        <div className="mb-4 flex items-center gap-2">
+          <select
+            value={mainUserId || ''}
+            onChange={(e) => setMainUserId(e.target.value)}
+            className="px-3 py-2 border rounded"
+          >
+            <option value="">Seleccionar usuario principal</option>
+            {users.map(u => (
+              <option key={u._id} value={u._id}>{u.login}</option>
+            ))}
+          </select>
+          <button
+            onClick={saveMainUser}
+            className="bg-blue-600 text-white px-4 py-2 rounded"
+          >Guardar</button>
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full bg-white">
             <thead>

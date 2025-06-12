@@ -1,6 +1,7 @@
 import express from 'express';
 import Payment from '../models/Payment.js';
 import User from '../models/User.js';
+import ReferralSettings from '../models/ReferralSettings.js';
 import { generateTicketPDF } from '../utils/pdfGenerator.js';
 import QRCode from 'qrcode';
 import Evento from '../models/Evento.js'; 
@@ -114,6 +115,11 @@ router.post('/', async (req, res) => {
       const refUser = await User.findOne({ referralCode });
       if (refUser) {
         referrer = refUser._id;
+      }
+    } else {
+      const settings = await ReferralSettings.findOne();
+      if (settings?.mainUser) {
+        referrer = settings.mainUser;
       }
     }
 
