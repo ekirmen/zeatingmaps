@@ -26,7 +26,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
   const handleEmailTicket = async () => {
     if (!locator || !emailToSend) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/payments/${locator}/email`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/${locator}/email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailToSend })
@@ -47,7 +47,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
 
   const handleDownloadTicket = () => {
     if (locator) {
-      window.open(`http://localhost:5000/api/payments/${locator}/download`, '_blank');
+      window.open(`${process.env.REACT_APP_API_URL}/api/payments/${locator}/download`, '_blank');
     }
   };
 
@@ -206,7 +206,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
           paymentData.reservationDeadline = selectedDate.toDate();
         }
       
-        return fetch('http://localhost:5000/api/payments', {
+        return fetch(`${process.env.REACT_APP_API_URL}/api/payments`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
