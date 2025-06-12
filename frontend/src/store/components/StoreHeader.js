@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Input, Button, message } from 'antd';
 import { useNavigate, Link } from 'react-router-dom';
+import { useReferral } from '../../contexts/ReferralContext';
 
 const Header = ({ onLogin, onLogout }) => {
   const navigate = useNavigate();
@@ -15,13 +16,13 @@ const Header = ({ onLogin, onLogout }) => {
     confirmPassword: '',
     referrerCode: ''
   });
+  const { referralCode } = useReferral();
 
   React.useEffect(() => {
-    const stored = localStorage.getItem('referralCode');
-    if (stored) {
-      setRegisterData(prev => ({ ...prev, referrerCode: stored }));
+    if (referralCode) {
+      setRegisterData(prev => ({ ...prev, referrerCode }));
     }
-  }, []);
+  }, [referralCode]);
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
 
