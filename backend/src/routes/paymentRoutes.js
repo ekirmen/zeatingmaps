@@ -275,6 +275,35 @@ router.post('/scan', async (req, res) => {
   }
 });
 
+// Update payment status or details
+router.put('/:id', async (req, res) => {
+  try {
+    const updateFields = {};
+    const allowed = ['status', 'user', 'event', 'funcion', 'seats', 'referrer', 'referralCommission'];
+    allowed.forEach(field => {
+      if (req.body[field] !== undefined) updateFields[field] = req.body[field];
+    });
+
+    const payment = await Payment.findById(req.params.id);
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment not found' });
+    }
+
+    Object.assign(payment, updateFields);
+    if (updateFields.status) {
+      payment.history.push({
+        action: `Estado actualizado a ${updateFields.status}`,
+        timestamp: new Date()
+      });
+    }
+
+    await payment.save();
+    res.json(payment);
+  } catch (error) {
+    errorResponse(res, 500, 'Error updating payment', error);
+  }
+});
+
 // Nueva ruta para buscar pagos por email
 router.get('/by-email/:email', async (req, res) => {
   try {
