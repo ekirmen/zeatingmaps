@@ -40,6 +40,10 @@ EMAIL_USER=user@example.com
 EMAIL_PASS=your_password
 ```
 
+When `EMAIL_PORT` is set to `465` (for example when using Gmail's SSL
+endpoint), the service will automatically enable secure connections. In that
+case you must also set `EMAIL_SECURE=true`.
+
 For the frontend create `frontend/.env`:
 
 ```ini

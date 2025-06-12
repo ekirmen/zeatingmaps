@@ -4,10 +4,14 @@ import { generateTicketPDF } from '../utils/pdfGenerator.js';
 
 dotenv.config();
 
+const secureOption = process.env.EMAIL_PORT === '465'
+  ? true
+  : process.env.EMAIL_SECURE === 'true';
+
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
-  secure: process.env.EMAIL_SECURE === 'true',
+  secure: secureOption,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
