@@ -23,6 +23,14 @@ const applyTemplate = (body, replacements) => {
   return result;
 };
 
+const getTemplateContent = async (type, replacements, defaults) => {
+  const template = await EmailTemplate.findOne({ type });
+  const subject = template?.subject || defaults.subject;
+  const htmlTemplate = template?.body || defaults.body;
+  const body = applyTemplate(htmlTemplate, replacements);
+  return { subject, body };
+};
+
 export const sendEmail = async (options) => {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     throw new Error('Email credentials not configured');
@@ -35,13 +43,15 @@ export const sendEmail = async (options) => {
 
 export const sendPasswordResetEmail = async (user, token) => {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password/${token}`;
-  const template = await EmailTemplate.findOne({ type: 'resetPassword' });
-  let subject = 'Restablecer contrase\u00f1a';
-  let body = `Para restablecer tu contrase\u00f1a, haz clic en el siguiente enlace: ${resetUrl}`;
-  if (template) {
-    subject = template.subject;
-    body = applyTemplate(template.body, { resetUrl, email: user.email });
-  }
+  const defaults = {
+    subject: 'Restablecer contrase\u00f1a',
+    body: 'Para restablecer tu contrase\u00f1a, haz clic en el siguiente enlace: {{resetUrl}}'
+  };
+  const { subject, body } = await getTemplateContent(
+    'resetPassword',
+    { resetUrl, email: user.email },
+    defaults
+  );
   await sendEmail({
     to: user.email,
     subject,
@@ -59,18 +69,17 @@ export const sendTicketEmail = async (payment, to) => {
     doc.end();
   });
 
-  const template = await EmailTemplate.findOne({ type: 'paid' });
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  let subject = 'Tus entradas';
-  let body = 'Adjunto se encuentran tus tickets en PDF.';
-  if (template) {
-    subject = template.subject;
-    body = applyTemplate(template.body, {
+  const defaults = { subject: 'Tus entradas', body: 'Adjunto se encuentran tus tickets en PDF.' };
+  const { subject, body } = await getTemplateContent(
+    'paid',
+    {
       locator: payment.locator,
       date: new Date(payment.createdAt).toLocaleString(),
       link: `${frontendUrl}/payment-success?locator=${payment.locator}`
-    });
-  }
+    },
+    defaults
+  );
 
   await sendEmail({
     to,
@@ -82,9 +91,7 @@ export const sendTicketEmail = async (payment, to) => {
 
 export const sendReservationEmail = async (payment, to) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-  const template = await EmailTemplate.findOne({ type: 'reservation' });
-  let subject = 'Reserva realizada';
-  let html = `
+  const defaultHtml = `
     <div style="font-family: Arial, sans-serif; background-color: #f3f4f6; padding: 24px;">
       <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
         <div style="text-align: center; margin-bottom: 24px;">
@@ -94,24 +101,26 @@ export const sendReservationEmail = async (payment, to) => {
         </div>
         <div style="border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; padding: 16px 0; margin: 24px 0;">
           <p style="margin: 0; color: #4b5563;">Localizador:</p>
-          <p style="font-family: monospace; font-weight: bold; font-size: 20px; margin: 4px 0;">${payment.locator}</p>
-          <p style="margin: 0; color: #4b5563;">Fecha: ${new Date(payment.createdAt).toLocaleString()}</p>
+          <p style="font-family: monospace; font-weight: bold; font-size: 20px; margin: 4px 0;">{{locator}}</p>
+          <p style="margin: 0; color: #4b5563;">Fecha: {{date}}</p>
         </div>
         <div style="text-align: center; margin-top: 24px;">
-          <a href="${frontendUrl}/payment-success?locator=${payment.locator}" style="display:inline-block; padding:12px 24px; background-color:#3b82f6; color:#ffffff; border-radius:4px; text-decoration:none;">Ver detalles</a>
+          <a href="{{link}}" style="display:inline-block; padding:12px 24px; background-color:#3b82f6; color:#ffffff; border-radius:4px; text-decoration:none;">Ver detalles</a>
         </div>
         <p style="margin-top:24px; font-size:12px; color:#6b7280; text-align:center;">Guarda tu localizador para futuras referencias.</p>
       </div>
     </div>
   `;
-  if (template) {
-    subject = template.subject;
-    html = applyTemplate(template.body, {
+  const defaults = { subject: 'Reserva realizada', body: defaultHtml };
+  const { subject, body: html } = await getTemplateContent(
+    'reservation',
+    {
       locator: payment.locator,
       date: new Date(payment.createdAt).toLocaleString(),
       link: `${frontendUrl}/payment-success?locator=${payment.locator}`
-    });
-  }
+    },
+    defaults
+  );
   await sendEmail({
     to,
     subject,
