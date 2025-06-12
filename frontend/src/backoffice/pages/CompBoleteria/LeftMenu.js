@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, message, Modal, Input, Card, Table, Tag, Form } from 'antd';
 import { SearchOutlined, UserAddOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons';
 
-const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient, onFunctionSelect }) => {
+const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient, onFunctionSelect, setSelectedEvent }) => {
   // Estados para búsqueda de tickets
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -114,6 +114,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     // Si el pago tiene evento, guardar la información
     if (payment.event) {
       setEventData(payment.event);
+      if (typeof setSelectedEvent === 'function') {
+        setSelectedEvent(payment.event);
+      }
     }
 
     setIsSearchModalVisible(false);

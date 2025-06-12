@@ -154,9 +154,15 @@ router.get('/locator/:locator', async (req, res) => {
       .populate({
         path: 'event',
         select: 'nombre fecha recinto',
-        model: 'Evento' // Cambiado de 'Event' a 'Evento'
+        model: 'Evento'
       })
-      .populate('funcion')
+      .populate({
+        path: 'funcion',
+        populate: [
+          { path: 'sala', model: 'Sala' },
+          { path: 'evento', model: 'Evento' }
+        ]
+      })
       .populate('seats.zona', 'nombre color precio');
 
     if (!payment) {

@@ -4,6 +4,9 @@ import SeatingMap from './SeatingMap';
 import { fetchMapa, fetchZonasPorSala } from '../../services/apibackoffice';
 
 const ZonesAndPrices = ({
+  eventos = [],
+  selectedEvent,
+  onEventSelect,
   selectedFuncion,
   selectedClient,
   carrito,
@@ -343,8 +346,31 @@ const ZonesAndPrices = ({
 
   return (
     <div className="center-content">
-      {/* Tipo de Entrada */}
-      <div className="mb-4 flex gap-4">
+      {/* Selección de evento y tipo de entrada */}
+      <div className="mb-4 flex gap-4 items-center">
+        <div className="flex items-center gap-2">
+          <select
+            className="border px-2 py-1 text-sm"
+            value={selectedEvent?._id || ''}
+            onChange={(e) => onEventSelect && onEventSelect(e.target.value)}
+          >
+            <option value="" disabled>
+              Seleccionar Evento
+            </option>
+            {eventos.map((ev) => (
+              <option key={ev._id} value={ev._id}>
+                {ev.nombre}
+              </option>
+            ))}
+          </select>
+          {selectedEvent?.imagenes?.logoCuadrado && (
+            <img
+              src={selectedEvent.imagenes.logoCuadrado}
+              alt="Evento"
+              className="w-10 h-10 object-cover rounded"
+            />
+          )}
+        </div>
         {entradas.length > 0 && (
           <select
             className="border px-2 py-1 text-sm"
