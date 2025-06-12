@@ -193,6 +193,9 @@ const Header = ({ onLogin, onLogout }) => {
               <Button onClick={() => setIsModalVisible(true)} className="bg-green-600 text-white">
                 Iniciar Sesión
               </Button>
+              <Button onClick={() => navigate('/forgot-password')} className="bg-yellow-600 text-white">
+                Olvidé mi contraseña
+              </Button>
               <Button onClick={() => setIsRegisterModalVisible(true)} className="bg-indigo-600 text-white">
                 Registrarse
               </Button>
