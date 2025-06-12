@@ -5,7 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // Context Providers
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { ReferralProvider } from './contexts/ReferralContext';
+import { RefProvider } from './contexts/RefContext';
 import { RecintoProvider } from './backoffice/contexts/RecintoContext';
 import { RecintoSalaProvider } from './backoffice/contexts/RecintoSalaContext';
 import { IvaProvider } from './backoffice/contexts/IvaContext';
@@ -59,7 +59,7 @@ const App = () => {
     const params = new URLSearchParams(location.search);
     const ref = params.get('ref');
     if (ref) {
-      localStorage.setItem('referralCode', ref);
+      localStorage.setItem('refParam', ref);
     }
   }, [location.search]);
 
@@ -91,7 +91,7 @@ const App = () => {
   return (
     <CartProvider>
       <AuthProvider>
-        <ReferralProvider>
+        <RefProvider>
           <RecintoProvider>
             <RecintoSalaProvider>
               <IvaProvider>
@@ -161,7 +161,7 @@ const App = () => {
             </IvaProvider>
           </RecintoSalaProvider>
         </RecintoProvider>
-        </ReferralProvider>
+        </RefProvider>
       </AuthProvider>
     </CartProvider>
   );
