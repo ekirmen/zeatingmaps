@@ -2,6 +2,7 @@ import User from '../models/User.js';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
+import jwt from 'jsonwebtoken';
 
 // Obtener todos los usuarios (solo admin)
 export const getUsers = async (req, res) => {
@@ -103,15 +104,21 @@ export const createUser = async (req, res) => {
     });
 
     const savedUser = await newUser.save();
+
+    // Generar token de acceso para el nuevo usuario
+    const token = jwt.sign({ id: savedUser._id.toString() }, process.env.JWT_SECRET, {
+      expiresIn: '24h',
+    });
+
+    const userResponse = savedUser.toObject();
+    delete userResponse.password;
+
     res.status(201).json({
+      success: true,
       message: 'Usuario creado exitosamente',
-      user: {
-        id: savedUser._id,
-        login: savedUser.login,
-        nombre: savedUser.nombre,
-        email: savedUser.email,
-        perfil: savedUser.perfil
-      }
+      token: `Bearer ${token}`,
+      user: userResponse,
+      passwordPending: savedUser.passwordPending,
     });
   } catch (error) {
     console.error('Error al crear usuario:', error);
