@@ -206,28 +206,18 @@ const Boleteria = () => {
         {/* Para desktop: contenido + carrito lado a lado */}
         <div className="hidden md:flex flex-grow space-x-6 min-h-0 overflow-hidden">
           <section className="flex-1 h-full min-h-0 bg-white rounded-lg shadow-md overflow-auto">
-            {selectedFuncion ? (
-              <ZonesAndPrices
-                eventos={eventos}
-                selectedEvent={selectedEvent}
-                onEventSelect={onEventSelect}
-                selectedFuncion={selectedFuncion}
-                selectedClient={selectedClient}
-                carrito={carrito}
-                setCarrito={setCarrito}
-                selectedPlantilla={selectedPlantilla}
-                selectedAffiliate={selectedAffiliate}
-                setSelectedAffiliate={setSelectedAffiliate}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full p-10">
-                <img
-                  src="/assets/logo.png"
-                  alt="Company Logo"
-                  className="max-w-xs opacity-70"
-                />
-              </div>
-            )}
+            <ZonesAndPrices
+              eventos={eventos}
+              selectedEvent={selectedEvent}
+              onEventSelect={onEventSelect}
+              selectedFuncion={selectedFuncion}
+              selectedClient={selectedClient}
+              carrito={carrito}
+              setCarrito={setCarrito}
+              selectedPlantilla={selectedPlantilla}
+              selectedAffiliate={selectedAffiliate}
+              setSelectedAffiliate={setSelectedAffiliate}
+            />
           </section>
 
           <aside className="h-full bg-white rounded-lg shadow-md flex flex-col overflow-auto w-96 min-w-[300px]">
@@ -249,28 +239,18 @@ const Boleteria = () => {
         {/* Para mobile: apilar contenido y carrito */}
         <div className="flex flex-col md:hidden flex-grow min-h-0 overflow-auto space-y-6 p-4 bg-white rounded-lg shadow-md">
           <section className="min-h-[300px]">
-            {selectedFuncion ? (
-              <ZonesAndPrices
-                eventos={eventos}
-                selectedEvent={selectedEvent}
-                onEventSelect={onEventSelect}
-                selectedFuncion={selectedFuncion}
-                selectedClient={selectedClient}
-                carrito={carrito}
-                setCarrito={setCarrito}
-                selectedPlantilla={selectedPlantilla}
-                selectedAffiliate={selectedAffiliate}
-                setSelectedAffiliate={setSelectedAffiliate}
-              />
-            ) : (
-              <div className="flex items-center justify-center p-10">
-                <img
-                  src="/assets/logo.png"
-                  alt="Company Logo"
-                  className="max-w-xs opacity-70"
-                />
-              </div>
-            )}
+            <ZonesAndPrices
+              eventos={eventos}
+              selectedEvent={selectedEvent}
+              onEventSelect={onEventSelect}
+              selectedFuncion={selectedFuncion}
+              selectedClient={selectedClient}
+              carrito={carrito}
+              setCarrito={setCarrito}
+              selectedPlantilla={selectedPlantilla}
+              selectedAffiliate={selectedAffiliate}
+              setSelectedAffiliate={setSelectedAffiliate}
+            />
           </section>
 
           <section>
