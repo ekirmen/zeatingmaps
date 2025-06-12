@@ -330,7 +330,8 @@ router.get('/by-email/:email', async (req, res) => {
 
     // 2. Buscar todos los pagos de ese usuario
     const payments = await Payment.find({ user: user._id })
-      .select('locator createdAt status seats') // Solo los campos necesarios
+      .select('locator createdAt status seats event payments') // Incluir evento y metodos
+      .populate({ path: 'event', select: 'nombre fecha recinto', model: 'Evento' })
       .sort({ createdAt: -1 }); // Ordenar por fecha descendente
 
     // 3. Formatear la respuesta
@@ -339,7 +340,15 @@ router.get('/by-email/:email', async (req, res) => {
       date: payment.createdAt,
       status: payment.status,
       seatCount: payment.seats.length,
-      totalAmount: payment.seats.reduce((sum, seat) => sum + (seat.price || 0), 0)
+      totalAmount: payment.seats.reduce((sum, seat) => sum + (seat.price || 0), 0),
+      event: payment.event ? {
+        _id: payment.event._id,
+        nombre: payment.event.nombre,
+        fecha: payment.event.fecha,
+        recinto: payment.event.recinto
+      } : null,
+      paymentMethod: payment.payments.map(p => p.method).join(', '),
+      amount: payment.payments.reduce((sum, p) => sum + (p.amount || 0), 0)
     }));
 
     res.json({
