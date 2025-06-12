@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
 
 // Obtener todos los usuarios (solo admin)
 export const getUsers = async (req, res) => {
@@ -66,8 +67,8 @@ export const createUser = async (req, res) => {
     password, permisos, formaDePago
   } = req.body;
 
-  if (!login || !perfil || !email || !password) {
-    return res.status(400).json({ message: 'Campos obligatorios: login, perfil, email, password' });
+  if (!login || !perfil || !email) {
+    return res.status(400).json({ message: 'Campos obligatorios: login, perfil, email' });
   }
 
   try {
@@ -76,7 +77,16 @@ export const createUser = async (req, res) => {
       return res.status(400).json({ message: 'El usuario ya existe con ese email' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    let hashedPassword;
+    let passwordPending = false;
+
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
+    } else {
+      const tempPass = uuidv4();
+      hashedPassword = await bcrypt.hash(tempPass, 10);
+      passwordPending = true;
+    }
 
     const newUser = new User({
       login,
@@ -88,6 +98,7 @@ export const createUser = async (req, res) => {
       telefono,
       direccion,
       password: hashedPassword,
+      passwordPending,
       permisos
     });
 
@@ -216,5 +227,31 @@ export const changePassword = async (req, res) => {
   } catch (error) {
     console.error('Error al cambiar contraseña:', error);
     res.status(500).json({ message: 'Error al cambiar contraseña' });
+  }
+};
+
+// Establecer contraseña inicial
+export const setPassword = async (req, res) => {
+  const { newPassword } = req.body;
+
+  if (!newPassword) {
+    return res.status(400).json({ message: 'Contraseña requerida' });
+  }
+
+  try {
+    const user = await User.findById(req.user._id).select('+password');
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.passwordPending = false;
+    await user.save();
+
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
+    res.json({ message: 'Contraseña establecida correctamente', user: userResponse });
+  } catch (error) {
+    console.error('Set password error:', error);
+    res.status(500).json({ message: 'Error al establecer contraseña' });
   }
 };
