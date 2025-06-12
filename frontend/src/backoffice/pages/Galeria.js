@@ -1,22 +1,22 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { fetchImagenes, uploadImagen, deleteImagen } from '../../services/galeriaService';
 
 const Galeria = () => {
   const [imagenes, setImagenes] = useState([]);
   const token = localStorage.getItem('token');
 
-  const cargarImagenes = async () => {
+  const cargarImagenes = useCallback(async () => {
     try {
       const data = await fetchImagenes(token);
       setImagenes(data);
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     cargarImagenes();
-  }, []);
+  }, [cargarImagenes]);
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];

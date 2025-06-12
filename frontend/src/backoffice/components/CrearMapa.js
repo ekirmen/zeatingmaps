@@ -9,7 +9,7 @@ import EditPopup from './compMapa/EditPopup';
 import FilaPopup from './compMapa/FilaPopup';
 import { useCrearMapa } from '../hooks/useCrearMapa';
 import { useMapaZoomStage } from '../hooks/useMapaZoomStage';
-import { fetchZonasPorSala, updateMesa } from '../services/apibackoffice';
+import { fetchZonasPorSala } from '../services/apibackoffice';
 
 const CrearMapa = () => {
   const { salaId } = useParams();
@@ -51,7 +51,6 @@ const CrearMapa = () => {
 
   const [sillaShape, setSillaShape] = useState('rect');
   const [loadedZonas, setLoadedZonas] = useState([]);
-  const [loadingZonas, setLoadingZonas] = useState(false);
 
   const [showNumeracion, setShowNumeracion] = useState(false);
 
@@ -61,14 +60,11 @@ const CrearMapa = () => {
   useEffect(() => {
     if (!salaId) return;
     const cargarZonas = async () => {
-      setLoadingZonas(true);
       try {
         const zonasData = await fetchZonasPorSala(salaId);
         setLoadedZonas(zonasData);
       } catch (err) {
         console.error('Error al cargar zonas:', err);
-      } finally {
-        setLoadingZonas(false);
       }
     };
     cargarZonas();
