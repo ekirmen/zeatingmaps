@@ -164,6 +164,9 @@ const Header = ({ onLogin, onLogout }) => {
           <Link to="/store/seating-demo" className="hover:underline">Demo</Link>
           <Link to="/store/cart" className="hover:underline">Carrito</Link>
           <Link to="/store/perfil" className="hover:underline">Perfil</Link>
+          <Link to="/store/login-register" className="hover:underline">
+            Registrarse
+          </Link>
         </nav>
 
         <div className="space-x-2">
