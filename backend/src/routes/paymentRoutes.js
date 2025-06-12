@@ -81,7 +81,8 @@ router.get('/', async (req, res) => {
       .skip((page - 1) * limit)
       .sort({ createdAt: -1 })
       .populate('user', 'login email telefono')
-      .populate('event', 'nombre fecha recinto');  // Added recinto field
+      .populate('event', 'nombre fecha recinto')  // Added recinto field
+      .populate('funcion');
 
     const count = await Payment.countDocuments();
     
@@ -98,15 +99,16 @@ router.get('/', async (req, res) => {
 // Create a new payment
 router.post('/', async (req, res) => {
   try {
-    const { user, seats, status, event } = req.body;
+    const { user, seats, status, event, funcion } = req.body;
 
     // Validate required fields
     if (!user) return res.status(400).json({ message: 'User is required', field: 'user' });
     if (!event) return res.status(400).json({ message: 'Event is required', field: 'event' });
+    if (!funcion) return res.status(400).json({ message: 'Funcion is required', field: 'funcion' });
     if (!seats?.length) return res.status(400).json({ message: 'At least one seat is required', field: 'seats' });
 
     const locator = Math.random().toString(36).substring(2, 10).toUpperCase();
-    const payment = new Payment({ user, event, seats, locator, status: status || 'pending' });
+    const payment = new Payment({ user, event, funcion, seats, locator, status: status || 'pending' });
 
     const savedPayment = await payment.save();
     res.status(201).json(savedPayment);
@@ -128,6 +130,7 @@ router.get('/locator/:locator', async (req, res) => {
         select: 'nombre fecha recinto',
         model: 'Evento' // Cambiado de 'Event' a 'Evento'
       })
+      .populate('funcion')
       .populate('seats.zona', 'nombre color precio');
 
     if (!payment) {
@@ -165,6 +168,7 @@ router.get('/:id/download', async (req, res) => {
         path: 'event',
         populate: { path: 'recinto', model: 'Recintos' }
       })
+      .populate('funcion')
       .populate('seats.zona')
       .populate('seats.mesa');
 
@@ -261,6 +265,7 @@ router.get('/user/:userId', async (req, res) => {
         select: 'nombre fecha recinto',
         model: 'Evento'
       })
+      .populate('funcion')
       .sort({ createdAt: -1 });
 
     res.json(payments);
