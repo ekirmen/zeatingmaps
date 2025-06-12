@@ -61,22 +61,17 @@ export const generateTicketPDF = async (payment) => {
 
       { text: 'Información del Evento:', style: 'sectionHeader' },
       { text: `Nombre: ${payment.event?.nombre || 'N/A'}` },
-      { text: `Fecha: ${payment.event?.fecha ? new Date(payment.event.fecha).toLocaleString() : 'N/A'}` },
       { text: `Fecha celebración: ${payment.funcion?.fechaCelebracion ? new Date(payment.funcion.fechaCelebracion).toLocaleString() : 'N/A'}` },
       { text: `Lugar: ${payment.event?.recinto?.name || 'N/A'}` },
 
       { text: 'Datos del Comprador:', style: 'sectionHeader' },
       { text: `Nombre: ${payment.user?.name || 'N/A'}` },
-      { text: `Email: ${payment.user?.email || 'N/A'}` },
 
       { text: 'Datos del Asiento:', style: 'sectionHeader' },
       { text: `${seat.name} - ${seat.zona?.name || 'N/A'} - Mesa ${seat.mesa?.nombre || 'N/A'} - $${seat.price}` },
 
       { text: 'Código QR de acceso:', style: 'sectionHeader' },
-      { image: qrData, width: 150, alignment: 'center', margin: [0, 10, 0, 10] },
-
-      { text: 'Imágenes del Evento:', style: 'sectionHeader' },
-      ...eventImages.slice(0, 1)
+      { image: qrData, width: 150, alignment: 'center', margin: [0, 10, 0, 10] }
     );
 
     if (i < payment.seats.length - 1) {
@@ -87,6 +82,9 @@ export const generateTicketPDF = async (payment) => {
   const docDefinition = {
     pageSize: 'A4',
     content,
+    footer: (currentPage, pageCount) => (eventImages.length
+      ? { image: eventImages[0].image, width: eventImages[0].width || 300, alignment: 'center', margin: [0, 0, 0, 10] }
+      : null),
     styles: {
       header: { fontSize: 24, bold: true, alignment: 'center', margin: [0, 0, 0, 20] },
       subheader: { fontSize: 14, bold: true, margin: [0, 0, 0, 10] },
