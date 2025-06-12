@@ -77,6 +77,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
   const total = subtotal - commission;
   const totalPagado = paymentEntries.reduce((sum, entry) => sum + entry.importe, 0);
   const diferencia = total - totalPagado;
+  const isFullyPaid = diferencia <= 0;
 
   const handleCashInput = (value) => {
     setEntregado(value);
@@ -397,26 +398,30 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
           <Button key="close" onClick={() => setShowConfirmation(false)}>
             Cerrar
           </Button>,
-          <Button
-            key="email"
-            type="default"
-            variant="outlined"
-            block
-            onClick={handleEmailTicket}
-            disabled={!emailToSend}
-          >
-            Enviar por correo
-          </Button>,
-          <Button
-            key="download"
-            type="default"
-            variant="outlined"
-            block
-            onClick={handleDownloadTicket}
-            disabled={!locator}
-          >
-            Descargar Ticket
-          </Button>
+          ...(isFullyPaid
+            ? [
+                <Button
+                  key="email"
+                  type="default"
+                  variant="outlined"
+                  block
+                  onClick={handleEmailTicket}
+                  disabled={!emailToSend}
+                >
+                  Enviar por correo
+                </Button>,
+                <Button
+                  key="download"
+                  type="default"
+                  variant="outlined"
+                  block
+                  onClick={handleDownloadTicket}
+                  disabled={!locator}
+                >
+                  Descargar Ticket
+                </Button>
+              ]
+            : [])
         ]}
       >
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
