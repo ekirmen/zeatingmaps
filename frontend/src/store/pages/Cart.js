@@ -4,6 +4,7 @@ import { CloseOutlined, SearchOutlined, DownloadOutlined } from '@ant-design/ico
 import { useCart } from '../../contexts/CartContext';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useRefParam } from '../../contexts/RefContext';
 
 // Move formatPrice outside the component to make it reusable
 const formatPrice = (price) => {
@@ -12,6 +13,7 @@ const formatPrice = (price) => {
 
 const Cart = () => {
   const navigate = useNavigate();
+  const { refParam } = useRefParam();
   const [searchLocator, setSearchLocator] = useState('');
   const { cart, clearCart, removeFromCart, setCart } = useCart();
 
@@ -129,7 +131,15 @@ const Cart = () => {
           <div className="text-right font-semibold text-lg">
             Total: ${formatPrice(cart.reduce((sum, item) => sum + (item.precio || 0), 0))}
           </div>
-          <Button type="default" variant="outlined" block onClick={() => navigate('/store/pay')}>
+          <Button
+            type="default"
+            variant="outlined"
+            block
+            onClick={() => {
+              const path = refParam ? `/store/pay?ref=${refParam}` : '/store/pay';
+              navigate(path);
+            }}
+          >
             Proceed to Payment
           </Button>
         </div>

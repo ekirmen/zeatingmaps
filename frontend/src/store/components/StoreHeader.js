@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Modal, Input, Button, message } from 'antd';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import LinkWithRef from './LinkWithRef';
+import { useRefParam } from '../../contexts/RefContext';
 
 const Header = ({ onLogin, onLogout }) => {
   const navigate = useNavigate();
+  const { refParam } = useRefParam();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ login: '', password: '' });
@@ -55,7 +58,7 @@ const Header = ({ onLogin, onLogout }) => {
       message.success('Usuario registrado exitosamente');
       setIsRegisterModalVisible(false);
       setRegisterData({ login: '', email: '', password: '', confirmPassword: '' });
-      navigate('/store');
+      navigate(refParam ? `/store?ref=${refParam}` : '/store');
 
     } catch (error) {
       console.error('Registration error:', error);
@@ -97,7 +100,7 @@ const Header = ({ onLogin, onLogout }) => {
       setIsModalVisible(false);
       setFormData({ login: '', password: '' });
       message.success('Inicio de sesión exitoso');
-      navigate('/store');
+      navigate(refParam ? `/store?ref=${refParam}` : '/store');
 
     } catch (error) {
       console.error('Login error:', error);
@@ -113,7 +116,9 @@ const Header = ({ onLogin, onLogout }) => {
     localStorage.removeItem('userId');
     if (typeof onLogout === 'function') onLogout();
     message.success('Sesión cerrada correctamente');
-    if (window.location.pathname === '/store/perfil') navigate('/store');
+    if (window.location.pathname === '/store/perfil') {
+      navigate(refParam ? `/store?ref=${refParam}` : '/store');
+    }
   };
 
   const handlePasswordChange = (e) => {
@@ -147,7 +152,7 @@ const Header = ({ onLogin, onLogout }) => {
       setPasswordData({ newPassword: '', confirmPassword: '' });
       onLogin?.({ token: token.replace('Bearer ', ''), user: data.user });
       message.success('Contraseña actualizada');
-      navigate('/store');
+      navigate(refParam ? `/store?ref=${refParam}` : '/store');
     } catch (error) {
       console.error('Set password error:', error);
       message.error(error.message || 'Error al guardar contraseña');
@@ -163,19 +168,19 @@ const Header = ({ onLogin, onLogout }) => {
   return (
     <header className="bg-gray-900 text-white py-4 shadow-md">
       <div className="container mx-auto flex justify-between items-center px-4">
-        <Link to="/store" className="text-xl font-bold">
+        <LinkWithRef to="/store" className="text-xl font-bold">
           🎟️ TuEmpresa
-        </Link>
+        </LinkWithRef>
 
         <nav className="flex gap-4 text-sm">
-          <Link to="/store" className="hover:underline">Inicio</Link>
-          <Link to="/companias" className="hover:underline">Compañías</Link>
-          <Link to="/store/seating-demo" className="hover:underline">Demo</Link>
-          <Link to="/store/cart" className="hover:underline">Carrito</Link>
-          <Link to="/store/perfil" className="hover:underline">Perfil</Link>
-          <Link to="/store/login-register" className="hover:underline">
+          <LinkWithRef to="/store" className="hover:underline">Inicio</LinkWithRef>
+          <LinkWithRef to="/companias" className="hover:underline">Compañías</LinkWithRef>
+          <LinkWithRef to="/store/seating-demo" className="hover:underline">Demo</LinkWithRef>
+          <LinkWithRef to="/store/cart" className="hover:underline">Carrito</LinkWithRef>
+          <LinkWithRef to="/store/perfil" className="hover:underline">Perfil</LinkWithRef>
+          <LinkWithRef to="/store/login-register" className="hover:underline">
             Registrarse
-          </Link>
+          </LinkWithRef>
         </nav>
 
         <div className="space-x-2">

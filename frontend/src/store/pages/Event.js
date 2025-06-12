@@ -1,6 +1,7 @@
 // src/pages/Event.jsx
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useRefParam } from '../../contexts/RefContext';
 import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
 import { fetchMapa, fetchPlantillaPrecios } from '../services/apistore';
@@ -9,6 +10,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const Event = () => {
   const { eventId } = useParams(); // eventId puede ser slug o id real
   const navigate = useNavigate();
+  const { refParam } = useRefParam();
 
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
@@ -232,7 +234,10 @@ const Event = () => {
           </div>
         ))}
         <button
-          onClick={() => navigate('/store/pay', { state: { carrito, funcionId: selectedFunctionId } })}
+          onClick={() => {
+            const path = refParam ? `/store/pay?ref=${refParam}` : '/store/pay';
+            navigate(path, { state: { carrito, funcionId: selectedFunctionId } });
+          }}
           className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
         >
           Continuar al carrito

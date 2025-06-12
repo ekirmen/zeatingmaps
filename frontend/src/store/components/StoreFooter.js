@@ -1,4 +1,5 @@
 import React from 'react';
+import LinkWithRef from './LinkWithRef';
 
 const Footer = () => {
   return (
@@ -7,9 +8,9 @@ const Footer = () => {
         &copy; {new Date().getFullYear()} TuEmpresa. Todos los derechos reservados.
       </p>
       <div className="flex justify-center gap-4 mt-2 text-xs">
-        <a href="/store/perfil" className="hover:underline">Perfil</a>
-        <a href="/companias" className="hover:underline">Compañías</a>
-        <a href="/store/login-register" className="hover:underline">Login</a>
+        <LinkWithRef to="/store/perfil" className="hover:underline">Perfil</LinkWithRef>
+        <LinkWithRef to="/companias" className="hover:underline">Compañías</LinkWithRef>
+        <LinkWithRef to="/store/login-register" className="hover:underline">Login</LinkWithRef>
       </div>
     </footer>
   );
