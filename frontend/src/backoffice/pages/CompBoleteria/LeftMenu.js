@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, message, Modal, Input, Card, Table, Tag, Form } from 'antd';
 import { SearchOutlined, UserAddOutlined, CloseOutlined, EditOutlined } from '@ant-design/icons';
 
-const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient }) => {
+const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient, onFunctionSelect }) => {
   // Estados para búsqueda de tickets
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -84,6 +84,14 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
     const payment = data.data;
     setTicketData(payment);
+
+    if (payment.funcion && typeof onFunctionSelect === 'function') {
+      try {
+        await onFunctionSelect(payment.funcion);
+      } catch (err) {
+        console.error('Error setting function from ticket search:', err);
+      }
+    }
 
     // Actualizar carrito
     if (typeof setCarrito === 'function') {
