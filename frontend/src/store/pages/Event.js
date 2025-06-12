@@ -185,7 +185,7 @@ const Event = () => {
         <img
           src={`${API_URL}${evento.imagenes.banner}`}
           alt={`Banner de ${evento.nombre}`}
-          className="w-full max-h-72 object-cover rounded mb-4"
+          className="w-full max-h-[80vh] object-contain rounded mb-4"
         />
       )}
 
@@ -193,7 +193,7 @@ const Event = () => {
         <img
           src={`${API_URL}${evento.imagenes.portada}`}
           alt={`Portada de ${evento.nombre}`}
-          className="w-full max-h-72 object-cover rounded mb-4"
+          className="w-full max-h-[80vh] object-contain rounded mb-4"
         />
       )}
 
