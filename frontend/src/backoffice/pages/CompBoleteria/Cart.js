@@ -3,7 +3,7 @@ import { Button, message } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
 import { setSeatsBlocked } from '../../services/apibackoffice';
 
-const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, children }) => {
+const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selectedAffiliate, children }) => {
   const handleTicketSearch = async (locator) => {
     try {
       const response = await fetch(`http://localhost:5000/api/payments/locator/${locator}`);
@@ -75,6 +75,10 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, children
     return typeof price === 'number' ? price.toFixed(2) : '0.00';
   };
 
+  const subtotal = carrito.reduce((sum, item) => sum + (item.precio || 0), 0);
+  const commission = selectedAffiliate ? (selectedAffiliate.base || 0) + subtotal * ((selectedAffiliate.percentage || 0) / 100) : 0;
+  const total = subtotal - commission;
+
   return (
     <div className="bg-white shadow-md rounded-md">
       {/* Header */}
@@ -129,8 +133,13 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, children
         <div className="mt-4 border-t pt-4 space-y-2">
           {!carrito.some(i => i.action) && (
             <>
+              {selectedAffiliate && (
+                <div className="text-right text-sm">
+                  Com.Ref {selectedAffiliate.user.login}: -${formatPrice(commission)}
+                </div>
+              )}
               <div className="text-right font-semibold text-lg">
-                Total: ${formatPrice(carrito.reduce((sum, item) => sum + (item.precio || 0), 0))}
+                Total: ${formatPrice(total)}
               </div>
               <Button type="default" variant="outlined" block onClick={onPaymentClick}>
                 Proceed to Payment

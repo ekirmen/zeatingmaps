@@ -43,6 +43,7 @@ const Boleteria = () => {
 
   // Para toggle sidebar en mobile
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [selectedAffiliate, setSelectedAffiliate] = useState(null);
 
   const handleClientManagement = () => {
     setIsSearchModalVisible(true);
@@ -120,7 +121,8 @@ const Boleteria = () => {
     onCancel: () => setIsPaymentModalVisible(false),
     carrito,
     selectedClient,
-    selectedFuncion
+    selectedFuncion,
+    selectedAffiliate
   };
 
   return (
@@ -208,6 +210,8 @@ const Boleteria = () => {
                 carrito={carrito}
                 setCarrito={setCarrito}
                 selectedPlantilla={selectedPlantilla}
+                selectedAffiliate={selectedAffiliate}
+                setSelectedAffiliate={setSelectedAffiliate}
               />
             ) : (
               <div className="flex items-center justify-center h-full p-10">
@@ -227,6 +231,7 @@ const Boleteria = () => {
               selectedClient={selectedClient}
               onPaymentClick={() => setIsPaymentModalVisible(true)}
               setSelectedClient={setSelectedClient}
+              selectedAffiliate={selectedAffiliate}
             >
               {allTicketsPaid && (
                 <DownloadTicketButton paymentId={carrito[0]._id} />
@@ -245,6 +250,8 @@ const Boleteria = () => {
                 carrito={carrito}
                 setCarrito={setCarrito}
                 selectedPlantilla={selectedPlantilla}
+                selectedAffiliate={selectedAffiliate}
+                setSelectedAffiliate={setSelectedAffiliate}
               />
             ) : (
               <div className="flex items-center justify-center p-10">
@@ -264,6 +271,7 @@ const Boleteria = () => {
               selectedClient={selectedClient}
               onPaymentClick={() => setIsPaymentModalVisible(true)}
               setSelectedClient={setSelectedClient}
+              selectedAffiliate={selectedAffiliate}
             >
               {allTicketsPaid && (
                 <DownloadTicketButton paymentId={carrito[0]._id} />

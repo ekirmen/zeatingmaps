@@ -8,7 +8,7 @@ const { Option } = Select;
 
 const { Text } = Typography;
 
-const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion }) => {
+const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion, selectedAffiliate }) => {
   const [activeTab, setActiveTab] = useState('1');
   const [reservationType, setReservationType] = useState('1');
   const [paymentEntries, setPaymentEntries] = useState([]);
@@ -34,7 +34,9 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
     setSelectedDate(date);
   };
 
-  const total = carrito.reduce((sum, item) => sum + (item.precio || 0), 0);
+  const subtotal = carrito.reduce((sum, item) => sum + (item.precio || 0), 0);
+  const commission = selectedAffiliate ? (selectedAffiliate.base || 0) + subtotal * ((selectedAffiliate.percentage || 0) / 100) : 0;
+  const total = subtotal - commission;
   const totalPagado = paymentEntries.reduce((sum, entry) => sum + entry.importe, 0);
   const diferencia = total - totalPagado;
 
@@ -161,17 +163,18 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
         funcion: selectedFuncion._id,
         seats: seats.map(item => ({
           id: item._id,
-            name: item.nombre,
-            price: item.precio,
-            zona: item.zonaId || (item.zona?._id || null),
-            mesa: item.mesa?._id || null
-          })),
+          name: item.nombre,
+          price: item.precio,
+          zona: item.zonaId || (item.zona?._id || null),
+          mesa: item.mesa?._id || null
+        })),
           locator: generateLocator(),
           status: diferencia > 0 ? 'reservado' : 'pagado',
           payments: paymentEntries.map(entry => ({
             method: entry.formaPago,
             amount: entry.importe
-          }))
+          })),
+          ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
         };
       
         // Add reservation deadline if applicable
@@ -221,6 +224,12 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
               background: '#f5f5f5', 
               borderRadius: '4px' 
             }}>
+              {selectedAffiliate && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <Text strong>{`Com.Ref ${selectedAffiliate.user.login}:`}</Text>
+                  <Input style={{ width: '200px' }} value={`-$${commission.toFixed(2)}`} disabled />
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <Text strong>Total a pagar:</Text>
                 <Input
