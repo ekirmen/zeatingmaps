@@ -168,7 +168,12 @@ const Profile = ({ userData, onUpdateProfile }) => {
     {
       title: 'Total',
       key: 'total',
-      render: (_, record) => `$${record.seats?.reduce((sum, seat) => sum + (seat.price || 0), 0).toFixed(2) || '0.00'}`
+      render: (_, record) => {
+        const totalAmount = record.seats
+          ? record.seats.reduce((sum, seat) => sum + (seat.price || 0), 0)
+          : 0;
+        return `$${totalAmount.toFixed(2)}`;
+      }
     },
     {
       title: 'Acciones',
