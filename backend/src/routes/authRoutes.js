@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { forgotPassword, resetPassword } from '../controllers/authController.js';
 
 const router = express.Router();
 
@@ -140,5 +141,9 @@ router.put('/user/password', protect, async (req, res) => {
     res.status(500).json({ message: 'Error al actualizar la contraseña' });
   }
 });
+
+// Password recovery
+router.post('/auth/forgot-password', forgotPassword);
+router.post('/auth/reset-password/:token', resetPassword);
 
 export default router;

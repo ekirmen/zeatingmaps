@@ -85,3 +85,52 @@ export const registerUser = async (req, res) => {
     res.status(500).json({ message: 'Error al registrar el usuario' });
   }
 };
+
+import crypto from 'crypto';
+import { sendPasswordResetEmail } from '../services/emailService.js';
+
+export const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ message: 'Email requerido' });
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+    const token = crypto.randomBytes(20).toString('hex');
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    await sendPasswordResetEmail(user, token);
+    res.json({ message: 'Correo de restablecimiento enviado' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ message: 'Error al procesar la solicitud' });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ message: 'Contraseña requerida' });
+
+  try {
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    }).select('+password');
+
+    if (!user) return res.status(400).json({ message: 'Token inválido o expirado' });
+
+    user.password = await bcrypt.hash(password, 10);
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    await user.save();
+
+    res.json({ message: 'Contraseña restablecida correctamente' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Error al restablecer la contraseña' });
+  }
+};

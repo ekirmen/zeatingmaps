@@ -4,7 +4,8 @@ import User from '../models/User.js';
 import AffiliateUser from '../models/AffiliateUser.js';
 import { generateTicketPDF } from '../utils/pdfGenerator.js';
 import QRCode from 'qrcode';
-import Evento from '../models/Evento.js'; 
+import Evento from '../models/Evento.js';
+import { sendTicketEmail } from '../services/emailService.js';
 import mongoose from 'mongoose'; // Add this import for error handling
 
 const router = express.Router();
@@ -213,6 +214,33 @@ router.get('/:id/download', async (req, res) => {
     pdfDoc.end();
   } catch (error) {
     errorResponse(res, 500, 'Error generating PDF', error);
+  }
+});
+
+// Send ticket by email
+router.post('/:id/email', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required' });
+
+    const isObjectId = /^[0-9a-fA-F]{24}$/.test(id);
+    const query = isObjectId ? { _id: id } : { locator: id };
+
+    const payment = await Payment.findOne(query)
+      .populate('user')
+      .populate('event')
+      .populate('funcion')
+      .populate('seats.zona')
+      .populate('seats.mesa');
+
+    if (!payment) return res.status(404).json({ message: 'Payment not found' });
+
+    await sendTicketEmail(payment, email);
+    res.json({ message: 'Correo enviado' });
+  } catch (error) {
+    console.error('Send ticket email error:', error);
+    res.status(500).json({ message: 'Error al enviar el correo' });
   }
 });
 
