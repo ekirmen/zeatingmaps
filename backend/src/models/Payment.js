@@ -3,10 +3,15 @@ import './Mesa.js'; // Ensure Mesa model is registered
 
 const paymentSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  event: { 
-    type: mongoose.Schema.Types.ObjectId, 
+  funcion: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Funcion',
+    required: true
+  },
+  event: {
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Evento',  // Change from 'Event' to 'Evento' to match your model name
-    required: true 
+    required: true
   },
   seats: [{
     id: String,

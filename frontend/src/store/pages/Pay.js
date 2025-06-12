@@ -83,6 +83,7 @@ const Pay = () => {
         body: JSON.stringify({
           user: user._id,
           event: currentEventId,
+          funcion: funcionId,
           seats: seatsPayload,
           status: 'reservado'
         })
@@ -124,6 +125,7 @@ const Pay = () => {
         body: JSON.stringify({
           user: user._id,
           event: currentEventId,
+          funcion: funcionId,
           seats: seatsPayload,
           status: 'pagado',
           payments: [{ method: selectedPaymentMethod, amount: total }]

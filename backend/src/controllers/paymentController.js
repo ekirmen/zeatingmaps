@@ -18,7 +18,7 @@ const generateLocator = async () => {
 export const createPayment = async (req, res) => {
   try {
     console.log('Datos recibidos:', req.body);
-    const { seats, status, payments, reservationDeadline } = req.body;
+    const { seats, status, payments, reservationDeadline, funcion, event } = req.body;
     const userId = req.body.user; // Changed to use user from request body
 
     if (!userId || !seats || seats.length === 0) {
@@ -29,6 +29,8 @@ export const createPayment = async (req, res) => {
 
     const newPayment = new Payment({
       user: userId,
+      event,
+      funcion,
       seats,
       locator,
       status: status || 'reservado', // Default to reservado
