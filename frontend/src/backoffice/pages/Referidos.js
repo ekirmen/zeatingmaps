@@ -15,8 +15,8 @@ const Referidos = () => {
           headers: { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
         });
         if (res.ok) {
-          const data = await res.json();
-          setAffiliates(data);
+        const data = await res.json();
+        setAffiliates(data);
         }
       } catch (err) {
         console.error(err);
@@ -65,6 +65,59 @@ const Referidos = () => {
     }
   };
 
+  const deleteAffiliate = async (id) => {
+    if (!window.confirm('¿Eliminar afiliado?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:5000/api/affiliate-users/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setAffiliates(prev => prev.filter(a => a._id !== id));
+        toast.success('Eliminado');
+      } else {
+        toast.error('Error al eliminar');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al eliminar');
+    }
+  };
+
+  const editAffiliate = async (id) => {
+    const login = prompt('Nuevo usuario login:');
+    if (!login) return;
+    try {
+      const token = localStorage.getItem('token');
+      const resSearch = await fetch(`http://localhost:5000/api/user/search?term=${encodeURIComponent(login)}`, {
+        headers: { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
+      });
+      const users = resSearch.ok ? await resSearch.json() : [];
+      const user = users[0];
+      if (!user) return toast.error('Usuario no encontrado');
+
+      const res = await fetch(`http://localhost:5000/api/affiliate-users/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}`
+        },
+        body: JSON.stringify({ userId: user._id })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAffiliates(prev => prev.map(a => a._id === id ? data : a));
+        toast.success('Actualizado');
+      } else {
+        toast.error('Error al actualizar');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error al actualizar');
+    }
+  };
+
   return (
     <RequireAuth>
       <div className="p-6 max-w-3xl mx-auto">
@@ -94,6 +147,9 @@ const Referidos = () => {
               <tr>
                 <th className="px-4 py-2">Usuario</th>
                 <th className="px-4 py-2">Link</th>
+                <th className="px-4 py-2">Compras</th>
+                <th className="px-4 py-2">Monto</th>
+                <th className="px-4 py-2">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -101,6 +157,22 @@ const Referidos = () => {
                 <tr key={a._id} className="text-center border-t">
                   <td className="px-4 py-2">{a.user.login}</td>
                   <td className="px-4 py-2 break-all">{`${window.location.origin}/store?ref=${a.user.login}`}</td>
+                  <td className="px-4 py-2">{a.purchases}</td>
+                  <td className="px-4 py-2">{a.total.toFixed(2)}</td>
+                  <td className="px-4 py-2 space-x-2">
+                    <button
+                      onClick={() => editAffiliate(a._id)}
+                      className="bg-yellow-400 text-white px-2 py-1 rounded"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => deleteAffiliate(a._id)}
+                      className="bg-red-600 text-white px-2 py-1 rounded"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
