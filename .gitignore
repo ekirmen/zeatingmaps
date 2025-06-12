@@ -1,5 +1,6 @@
 node_modules/
 Escaner/
+.env
 dist/
 build/
 **/node_modules/
