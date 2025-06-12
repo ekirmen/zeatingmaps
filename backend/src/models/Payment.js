@@ -13,6 +13,10 @@ const paymentSchema = new mongoose.Schema({
     ref: 'Evento',  // Change from 'Event' to 'Evento' to match your model name
     required: true
   },
+  payments: [{
+    method: String,
+    amount: Number
+  }],
   seats: [{
     id: String,
     name: String,
