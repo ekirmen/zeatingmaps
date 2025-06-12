@@ -34,6 +34,7 @@ import Boleteria from './backoffice/pages/Boleteria';
 import CreateIva from './backoffice/pages/CreateIva';
 import CompaniasPage from './backoffice/pages/CompaniasPage';
 import FormatoEntrada from './backoffice/pages/FormatoEntrada';
+import Galeria from './backoffice/pages/Galeria';
 
 // Store Pages
 import EventsVenue from './store/pages/EventsVenue';
@@ -136,6 +137,7 @@ const App = () => {
                   <Route path="/store/seating-demo" element={<SeatingDemoPage />} />
                   <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
 
+                  <Route path="/dashboard/galeria" element={<Galeria />} />
                   <Route path="/dashboard/formato-entrada" element={<FormatoEntrada />} />
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
