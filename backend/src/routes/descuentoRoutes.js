@@ -24,6 +24,17 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Obtener descuento por código
+router.get('/code/:codigo', async (req, res) => {
+  try {
+    const descuento = await Descuento.findOne({ nombreCodigo: req.params.codigo }).populate('evento zonas');
+    if (!descuento) return res.status(404).json({ message: 'Descuento no encontrado' });
+    res.json(descuento);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Crear un nuevo descuento
 router.post('/', async (req, res) => {
   try {

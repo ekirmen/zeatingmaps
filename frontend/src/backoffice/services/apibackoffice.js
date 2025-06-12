@@ -211,3 +211,4 @@ export const updateDescuento = (id, data) => fetchApi(`/descuentos/${id}`, {
   body: JSON.stringify(data),
 });
 export const deleteDescuento = (id) => fetchApi(`/descuentos/${id}`, { method: 'DELETE' });
+export const getDescuentoByCodigo = (codigo) => fetchApi(`/descuentos/code/${codigo}`);

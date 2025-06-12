@@ -21,6 +21,8 @@ const Event = () => {
   const [zonas, setZonas] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [showSeatPopup, setShowSeatPopup] = useState(false);
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState(null);
 
   useEffect(() => {
     const fetchEvento = async () => {
@@ -143,6 +145,23 @@ const Event = () => {
     cargarDatosSeleccionados();
   }, [selectedFunctionId, funciones, pagos]);
 
+  const applyDiscountCode = async () => {
+    if (!discountCode.trim()) return;
+    try {
+      const res = await fetch(`http://localhost:5000/api/descuentos/code/${encodeURIComponent(discountCode.trim())}`);
+      if (!res.ok) throw new Error('Código no válido');
+      const data = await res.json();
+      const now = Date.now();
+      if (data.fechaInicio && new Date(data.fechaInicio).getTime() > now) throw new Error('Descuento no disponible aún');
+      if (data.fechaFinal && new Date(data.fechaFinal).getTime() < now) throw new Error('Descuento expirado');
+      setAppliedDiscount(data);
+      message.success('Descuento aplicado');
+    } catch (err) {
+      setAppliedDiscount(null);
+      message.error(err.message);
+    }
+  };
+
   const toggleSillaEnCarrito = (silla, mesa) => {
     if (!silla.zona || ["reservado", "pagado", "bloqueado"].includes(silla.estado)) {
       message.error("Este asiento no está disponible.");
@@ -155,11 +174,19 @@ const Event = () => {
       return;
     }
 
-    const precio = plantillaPrecios?.detalles.find(p => p.zonaId === silla.zona)?.precio || 100;
+    const basePrice = plantillaPrecios?.detalles.find(p => p.zonaId === silla.zona)?.precio || 100;
     const zonaNombre = zonas.find(z => z._id === silla.zona)?.nombre || "Desconocida";
+    let finalPrice = basePrice;
+    let tipoPrecio = 'normal';
+    let descuentoNombre = '';
+    if (appliedDiscount && appliedDiscount.zonas?.includes(silla.zona)) {
+      finalPrice = Math.max(0, basePrice - appliedDiscount.cantidad);
+      tipoPrecio = 'descuento';
+      descuentoNombre = appliedDiscount.nombreCodigo;
+    }
     const nuevoCarrito = index !== -1
       ? carrito.filter(item => item._id !== silla._id)
-      : [...carrito, { ...silla, precio, nombreMesa: mesa.nombre, zonaNombre }];
+      : [...carrito, { ...silla, precio: finalPrice, nombreMesa: mesa.nombre, zonaNombre, tipoPrecio, descuentoNombre }];
 
     setCarrito(nuevoCarrito);
 
@@ -216,6 +243,25 @@ const Event = () => {
         </div>
       </div>
 
+      <div className="mb-4 flex gap-2 items-center">
+        <input
+          type="text"
+          value={discountCode}
+          onChange={e => setDiscountCode(e.target.value)}
+          placeholder="Código de descuento"
+          className="border px-2 py-1 text-sm"
+        />
+        <button
+          onClick={applyDiscountCode}
+          className="px-2 py-1 bg-green-600 text-white rounded text-sm"
+        >
+          Aplicar
+        </button>
+        {appliedDiscount && (
+          <span className="text-sm text-green-700">{appliedDiscount.nombreCodigo}</span>
+        )}
+      </div>
+
       <div className="my-6 border rounded shadow-md p-4 flex justify-center bg-gray-100">
         <SeatingMap mapa={mapa} onClickSilla={toggleSillaEnCarrito} />
       </div>
@@ -224,7 +270,9 @@ const Event = () => {
         <h2 className="text-xl font-semibold mb-3">Carrito</h2>
         {carrito.map((item, index) => (
           <div key={index} className="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded">
-            <span>{item.zonaNombre} - {item.nombreMesa} - Silla {index + 1} - ${item.precio}</span>
+            <span>{item.zonaNombre} - {item.nombreMesa} - Silla {index + 1} - ${item.precio}
+              {item.tipoPrecio === 'descuento' && ` (${item.descuentoNombre})`}
+            </span>
             <button
               onClick={() => toggleSillaEnCarrito(item)}
               className="text-red-500 hover:text-red-700"
