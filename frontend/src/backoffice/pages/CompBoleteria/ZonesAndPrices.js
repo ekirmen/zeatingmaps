@@ -3,7 +3,14 @@ import { message } from 'antd';
 import SeatingMap from './SeatingMap';
 import { fetchMapa, fetchZonasPorSala } from '../../services/apibackoffice';
 
-const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }) => {
+const ZonesAndPrices = ({
+  selectedFuncion,
+  selectedClient,
+  carrito,
+  setCarrito,
+  selectedAffiliate,
+  setSelectedAffiliate
+}) => {
   const [mapa, setMapa] = useState(null);
   const [zonas, setZonas] = useState([]);
   const [selectedPlantilla, setSelectedPlantilla] = useState(null);
@@ -15,6 +22,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
   const [entradas, setEntradas] = useState([]);
   const [selectedEntrada, setSelectedEntrada] = useState(null);
   const [blockMode, setBlockMode] = useState(false);
+  const [affiliates, setAffiliates] = useState([]);
 
 
 
@@ -96,6 +104,22 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
     };
     loadEntradas();
   }, [selectedFuncion]);
+
+  // Cargar referidos
+  useEffect(() => {
+    const loadAffiliates = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/affiliate-users');
+        if (res.ok) {
+          const data = await res.json();
+          setAffiliates(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        console.error('Error loading affiliates:', err);
+      }
+    };
+    loadAffiliates();
+  }, []);
 
   // Seleccionar un precio (zona) para comprar
   const handlePrecioSelect = (detallePrecio) => {
@@ -349,7 +373,7 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
       </div>
       {/* Menu Tabs */}
       <div className="flex items-center space-x-2 mb-4">
-        {['Zonas', 'Mapa', 'Producto', 'Otros'].map(tab => (
+        {['Zonas', 'Mapa', 'Producto', 'Referidos'].map(tab => (
           <button
             key={tab}
             onClick={() => setActiveMenu(tab)}
@@ -358,9 +382,6 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
             {tab}
           </button>
         ))}
-        <div className="ml-auto text-sm font-semibold">
-          Tickets seleccionados: {carrito.length}
-        </div>
       </div>
 
       {activeMenu === 'Zonas' && (
@@ -508,7 +529,22 @@ const ZonesAndPrices = ({ selectedFuncion, selectedClient, carrito, setCarrito }
         </div>
       )}
 
-      {['Producto', 'Otros'].includes(activeMenu) && (
+      {activeMenu === 'Referidos' && (
+        <div className="space-y-2">
+          {affiliates.map(a => (
+            <div
+              key={a._id}
+              onClick={() => setSelectedAffiliate(a)}
+              className={`p-2 border rounded cursor-pointer flex justify-between ${selectedAffiliate?._id === a._id ? 'bg-blue-100' : 'bg-white'}`}
+            >
+              <span>{a.user.login}</span>
+              <span>{Number(a.base || 0).toFixed(2)} + {a.percentage}%</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {activeMenu === 'Producto' && (
         <div className="p-4 text-center text-sm text-gray-600">No existen productos a la venta</div>
       )}
 
