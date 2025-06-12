@@ -20,7 +20,7 @@ const Header = ({ onLogin, onLogout }) => {
 
   React.useEffect(() => {
     if (referralCode) {
-      setRegisterData(prev => ({ ...prev, referrerCode }));
+      setRegisterData(prev => ({ ...prev, referrerCode: referralCode }));
     }
   }, [referralCode]);
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
