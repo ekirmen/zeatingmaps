@@ -49,6 +49,8 @@ import Pay from './store/pages/Pay';
 import PaymentSuccess from './store/pages/PaymentSuccess';
 import ThankYouPage from './store/pages/ThankYouPage';
 import SeatingDemoPage from './pages/SeatingDemoPage';
+import ForgotPassword from './store/pages/ForgotPassword';
+import ResetPassword from './store/pages/ResetPassword';
 
 const App = () => {
   const location = useLocation();
@@ -134,6 +136,8 @@ const App = () => {
                   <Route path="/store/buy-event/:id" element={<BuyEvent />} />
                   <Route path="/store/select-seats/:salaId/:funcionId" element={<SelectSeats />} />
                   <Route path="/store/login-register" element={<LoginRegister />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password/:token" element={<ResetPassword />} />
                   <Route path="/store/cart" element={<Cart />} />
                   {/* Update the pay route to include RequireAuth and match the store path pattern */}
                   <Route 

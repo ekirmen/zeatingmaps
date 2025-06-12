@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { Modal, Input, Button, message } from 'antd';
 
@@ -111,6 +111,11 @@ const Login = ({ onLogin }) => {
       >
         Iniciar Sesión
       </Button>
+      <div className="mt-2">
+        <Link to="/forgot-password" className="text-blue-600 hover:underline">
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </div>
     </form>
 
     <Modal
