@@ -10,6 +10,7 @@ import {
   deleteUser,
   searchUsers,
   changePassword,
+  setPassword,
   getProfile,
   updateProfile
 } from '../controllers/userControllers.js';
@@ -61,6 +62,7 @@ router.delete('/:id', authorizeRoles('admin'), deleteUser);
 
 // Cambiar contraseña (usuario autenticado)
 router.put('/profile/change-password', changePassword);
+router.post('/set-password', setPassword);
 
 // Obtener perfil propio (usuario autenticado)
 router.get('/profile/me', getProfile);

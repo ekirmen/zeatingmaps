@@ -14,6 +14,9 @@ const Header = ({ onLogin, onLogout }) => {
     password: '',
     confirmPassword: ''
   });
+  const [pendingUser, setPendingUser] = useState(null);
+  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
+  const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
 
   const handleRegister = async () => {
     try {
@@ -69,8 +72,17 @@ const Header = ({ onLogin, onLogout }) => {
 
       const cleanToken = data.token.replace('Bearer ', '');
       const formattedToken = `Bearer ${cleanToken}`;
+
       localStorage.setItem('token', formattedToken);
       localStorage.setItem('userId', data.user._id);
+
+      if (data.passwordPending) {
+        setPendingUser(data.user);
+        setIsPasswordModalVisible(true);
+        setIsModalVisible(false);
+        setFormData({ login: '', password: '' });
+        return;
+      }
 
       onLogin?.({ token: cleanToken, user: data.user });
       setIsModalVisible(false);
@@ -93,6 +105,44 @@ const Header = ({ onLogin, onLogout }) => {
     if (typeof onLogout === 'function') onLogout();
     message.success('Sesión cerrada correctamente');
     if (window.location.pathname === '/store/perfil') navigate('/store');
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSavePassword = async () => {
+    try {
+      if (!passwordData.newPassword || !passwordData.confirmPassword)
+        throw new Error('Complete ambos campos');
+      if (passwordData.newPassword !== passwordData.confirmPassword)
+        throw new Error('Las contraseñas no coinciden');
+      if (passwordData.newPassword.length < 6)
+        throw new Error('La contraseña debe tener al menos 6 caracteres');
+
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5000/api/user/set-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        },
+        body: JSON.stringify({ newPassword: passwordData.newPassword.trim() })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Error al guardar contraseña');
+
+      setIsPasswordModalVisible(false);
+      setPasswordData({ newPassword: '', confirmPassword: '' });
+      onLogin?.({ token: token.replace('Bearer ', ''), user: data.user });
+      message.success('Contraseña actualizada');
+      navigate('/store');
+    } catch (error) {
+      console.error('Set password error:', error);
+      message.error(error.message || 'Error al guardar contraseña');
+    }
   };
 
   const handleInputChange = (e) => {
@@ -167,6 +217,31 @@ const Header = ({ onLogin, onLogout }) => {
         <Input placeholder="Email" value={registerData.email} onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} className="mb-4" />
         <Input.Password placeholder="Contraseña" value={registerData.password} onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} className="mb-4" />
         <Input.Password placeholder="Confirmar Contraseña" value={registerData.confirmPassword} onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })} />
+      </Modal>
+
+      {/* Modal Nueva Contraseña */}
+      <Modal
+        title="Establecer Contraseña"
+        open={isPasswordModalVisible}
+        onCancel={() => setIsPasswordModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsPasswordModalVisible(false)}>Cancelar</Button>,
+          <Button key="submit" type="default" onClick={handleSavePassword}>Guardar</Button>,
+        ]}
+      >
+        <Input.Password
+          name="newPassword"
+          value={passwordData.newPassword}
+          onChange={handlePasswordChange}
+          placeholder="Nueva contraseña"
+          className="mb-4"
+        />
+        <Input.Password
+          name="confirmPassword"
+          value={passwordData.confirmPassword}
+          onChange={handlePasswordChange}
+          placeholder="Repetir contraseña"
+        />
       </Modal>
     </header>
   );

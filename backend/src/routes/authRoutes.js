@@ -11,11 +11,13 @@ router.post('/login', async (req, res) => {
   try {
     const { login, password } = req.body;
 
-    const user = await User.findOne({ login }).select('+password');
+    const user = await User.findOne({ login }).select('+password +passwordPending');
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!user.passwordPending) {
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+    }
 
     const token = jwt.sign({ id: user._id.toString() }, process.env.JWT_SECRET, {
       expiresIn: '24h',
@@ -28,6 +30,7 @@ router.post('/login', async (req, res) => {
       success: true,
       token: `Bearer ${token}`,
       user: userResponse,
+      passwordPending: user.passwordPending,
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -40,11 +43,13 @@ router.post('/store/login', async (req, res) => {
   try {
     const { login, password } = req.body;
 
-    const user = await User.findOne({ login }).select('+password');
+    const user = await User.findOne({ login }).select('+password +passwordPending');
     if (!user) return res.status(401).json({ message: 'Invalid credentials' });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+    if (!user.passwordPending) {
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+    }
 
     const token = jwt.sign({ id: user._id.toString() }, process.env.JWT_SECRET, {
       expiresIn: '24h',
@@ -57,6 +62,7 @@ router.post('/store/login', async (req, res) => {
       success: true,
       token,
       user: userResponse,
+      passwordPending: user.passwordPending,
     });
   } catch (error) {
     console.error('Store login error:', error);

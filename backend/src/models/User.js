@@ -42,6 +42,10 @@ const UserSchema = new mongoose.Schema({
         required: true,
         select: false // This makes password field excluded by default
     },
+    passwordPending: {
+        type: Boolean,
+        default: false
+    },
     permisos: {
         administracion: {
             sistema: { type: Boolean, default: false },
