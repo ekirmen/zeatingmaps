@@ -18,9 +18,21 @@ const FooterContext = createContext({
 });
 
 export const FooterProvider = ({ children }) => {
+  const parseSaved = (saved) => {
+    try {
+      const parsed = JSON.parse(saved);
+      return Object.keys(defaultFooter).reduce((acc, key) => {
+        acc[key] = typeof parsed[key] === 'string' ? parsed[key] : '';
+        return acc;
+      }, { ...defaultFooter });
+    } catch {
+      return { ...defaultFooter };
+    }
+  };
+
   const [footer, setFooter] = useState(() => {
     const saved = localStorage.getItem('footerSettings');
-    return saved ? { ...defaultFooter, ...JSON.parse(saved) } : defaultFooter;
+    return saved ? parseSaved(saved) : defaultFooter;
   });
 
   useEffect(() => {
