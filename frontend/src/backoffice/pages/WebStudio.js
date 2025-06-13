@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import FaqWidget from '../../store/components/FaqWidget';
 import { toast } from 'react-hot-toast';
 import { fetchCmsPage, saveCmsPage } from '../services/apibackoffice';
 
@@ -13,6 +12,7 @@ const defaultWidgets = { header: [], content: [], footer: [] };
 const WebStudio = ({ setSidebarCollapsed }) => {
   const [selectedPage, setSelectedPage] = useState(pagesData[0]);
   const [widgets, setWidgets] = useState(defaultWidgets);
+  const [draggingIdx, setDraggingIdx] = useState(null);
 
   useEffect(() => {
     if (setSidebarCollapsed) setSidebarCollapsed(true);
@@ -53,6 +53,26 @@ const WebStudio = ({ setSidebarCollapsed }) => {
       ...prev,
       [area]: [...prev[area], { type }]
     }));
+  };
+
+  const removeWidget = index => {
+    setWidgets(prev => ({
+      ...prev,
+      content: prev.content.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleDragStart = idx => setDraggingIdx(idx);
+  const handleDragOver = e => e.preventDefault();
+  const handleDrop = idx => {
+    if (draggingIdx === null || draggingIdx === idx) return;
+    setWidgets(prev => {
+      const updated = [...prev.content];
+      const [moved] = updated.splice(draggingIdx, 1);
+      updated.splice(idx, 0, moved);
+      return { ...prev, content: updated };
+    });
+    setDraggingIdx(null);
   };
 
   const handleSave = async () => {
@@ -147,24 +167,26 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         <div className="border p-2">Header</div>
         <div className="border p-2 min-h-[200px]">
           {widgets.content.map((w, idx) => (
-            <div key={idx} className="border p-2 mb-2 bg-gray-50">
+            <div
+              key={idx}
+              className="relative border p-2 mb-2 bg-gray-50"
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragOver={handleDragOver}
+              onDrop={() => handleDrop(idx)}
+            >
+              <button
+                className="absolute top-1 right-1 text-red-500"
+                onClick={() => removeWidget(idx)}
+              >
+                x
+              </button>
               {w.type}
             </div>
           ))}
         </div>
         <div className="border p-2">Footer</div>
 
-        <div className="container-pages-viewer mt-6">
-          <iframe
-            id="pageViewerIframe"
-            className="page-viewer-iframe"
-            title="viewer"
-            width="100%"
-            height="600px"
-            src="cmsWindowDevice?skin=0_default&timestamp=1749765383042&cmsZoomPercentage="
-            allowFullScreen
-          />
-        </div>
       </main>
     </div>
   );
