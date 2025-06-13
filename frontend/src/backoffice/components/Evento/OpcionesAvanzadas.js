@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 /**
  * Advanced options for an event.  Handles optional messages and payment

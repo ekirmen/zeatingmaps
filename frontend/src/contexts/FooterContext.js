@@ -33,9 +33,6 @@ export const FooterProvider = ({ children }) => {
   const [footer, setFooter] = useState(() => {
     const saved = localStorage.getItem('footerSettings');
     const parsed = saved ? parseSaved(saved) : defaultFooter;
-    if (!saved || saved !== JSON.stringify(parsed)) {
-      localStorage.setItem('footerSettings', JSON.stringify(parsed));
-    }
     return parsed;
   });
 
@@ -43,8 +40,12 @@ export const FooterProvider = ({ children }) => {
     localStorage.setItem('footerSettings', JSON.stringify(footer));
   }, [footer]);
 
-  const updateFooter = updates => {
-    setFooter(prev => ({ ...prev, ...updates }));
+  const updateFooter = (updates) => {
+    setFooter(prev => {
+      const updated = { ...prev, ...updates };
+      localStorage.setItem('footerSettings', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   return (
