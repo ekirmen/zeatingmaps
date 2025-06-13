@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 import { getCmsPage } from '../services/apistore';
-import StoreFooter from '../components/StoreFooter';
+import BasicFooter from '../../components/BasicFooter';
 
 const EventsVenue = () => {
   const [widgets, setWidgets] = useState(null);
@@ -46,7 +46,7 @@ const EventsVenue = () => {
   return (
     <>
       <div className="event-container">{content}</div>
-      <StoreFooter />
+      <BasicFooter />
     </>
   );
 };
