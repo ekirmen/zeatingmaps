@@ -41,6 +41,7 @@ import Galeria from './backoffice/pages/Galeria';
 import Correo from './backoffice/pages/Correo';
 import WebStudio from './backoffice/pages/WebStudio';
 import WebColors from './backoffice/pages/WebColors';
+import WebFooter from './backoffice/pages/WebFooter';
 
 // Store Pages
 import EventsVenue from './store/pages/EventsVenue';
@@ -103,11 +104,12 @@ const App = () => {
             <RecintoSalaProvider>
               <IvaProvider>
                 <TagProvider>
+                <div className="min-h-screen flex flex-col">
                 {showHeader && (
                   <Header onLogin={handleLogin} onLogout={handleLogout} />
                 )}
                 <div className="flex-grow">
-                <Routes>
+                  <Routes>
                   <Route path="/" element={<Login onLogin={handleLogin} />} />
                   <Route path="/backoffice" element={<Navigate to="/dashboard" replace />} />
 
@@ -136,6 +138,7 @@ const App = () => {
                     <Route path="correo" element={<Correo />} />
                     <Route path="web-studio" element={<WebStudio setSidebarCollapsed={setSidebarCollapsed} />} />
                     <Route path="colores-web" element={<WebColors />} />
+                    <Route path="pie-pagina" element={<WebFooter />} />
                   </Route>
 
                   <Route path="/store/:venueId?" element={<EventsVenue />} />
@@ -171,6 +174,7 @@ const App = () => {
                 {showFooter && <Footer />}
                 <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
                 <CartTimer />
+              </div>
               </TagProvider>
             </IvaProvider>
           </RecintoSalaProvider>
