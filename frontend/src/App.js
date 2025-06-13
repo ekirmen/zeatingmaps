@@ -15,7 +15,7 @@ import CartTimer from './store/components/CartTimer';
 
 // Components
 import RequireAuth from './backoffice/components/RequireAuth';
-import Footer from './components/BasicFooter';
+import StoreFooter from './store/components/StoreFooter';
 import Header from './store/components/StoreHeader';
 import Profile from './store/pages/profile'; // Updated to match file name
 
@@ -173,7 +173,7 @@ const App = () => {
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
               </div>
-                {showFooter && <Footer />}
+                {showFooter && <StoreFooter />}
                 <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
                 <CartTimer />
               </div>
