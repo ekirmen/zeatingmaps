@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
-import { fetchMapa, fetchPlantillaPrecios } from '../services/apistore';
+import { fetchMapa, fetchPlantillaPrecios, getCmsPage } from '../services/apistore';
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 
@@ -28,14 +28,23 @@ const Event = () => {
   const [widgets, setWidgets] = useState(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('cms-page-events');
-    if (saved) {
+    const load = async () => {
       try {
-        setWidgets(JSON.parse(saved));
+        const data = await getCmsPage('events');
+        setWidgets(data.widgets);
+        localStorage.setItem('cms-page-events', JSON.stringify(data.widgets));
       } catch (e) {
-        console.error('Error parsing widgets', e);
+        const saved = localStorage.getItem('cms-page-events');
+        if (saved) {
+          try {
+            setWidgets(JSON.parse(saved));
+          } catch (err) {
+            console.error('Error parsing widgets', err);
+          }
+        }
       }
-    }
+    };
+    load();
   }, []);
 
   const renderWidget = (widget) => {

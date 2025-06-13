@@ -212,3 +212,12 @@ export const updateDescuento = (id, data) => fetchApi(`/descuentos/${id}`, {
 });
 export const deleteDescuento = (id) => fetchApi(`/descuentos/${id}`, { method: 'DELETE' });
 export const getDescuentoByCodigo = (codigo) => fetchApi(`/descuentos/code/${codigo}`);
+
+// CMS Pages
+export const fetchCmsPage = (pageId) => fetchApi(`/cms-pages/${pageId}`);
+export const saveCmsPage = (pageId, widgets) =>
+  fetchApi(`/cms-pages/${pageId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ widgets })
+  });
