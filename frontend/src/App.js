@@ -15,7 +15,7 @@ import CartTimer from './store/components/CartTimer';
 
 // Components
 import RequireAuth from './backoffice/components/RequireAuth';
-import Footer from './store/components/StoreFooter';
+import Footer from './components/BasicFooter';
 import Header from './store/components/StoreHeader';
 import Profile from './store/pages/profile'; // Updated to match file name
 
