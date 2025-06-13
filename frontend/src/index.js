@@ -7,6 +7,7 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { FooterProvider } from './contexts/FooterContext';
+import { HeaderProvider } from './contexts/HeaderContext';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -15,9 +16,11 @@ root.render(
     <Router>
       <AuthProvider>
         <ThemeProvider>
-          <FooterProvider>
-            <App />
-          </FooterProvider>
+          <HeaderProvider>
+            <FooterProvider>
+              <App />
+            </FooterProvider>
+          </HeaderProvider>
         </ThemeProvider>
       </AuthProvider>
     </Router>

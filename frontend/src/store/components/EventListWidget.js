@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 
 const EventListWidget = () => {
@@ -7,7 +7,10 @@ const EventListWidget = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { refParam } = useRefParam();
+  const searchParams = new URLSearchParams(location.search);
+  const query = searchParams.get('q') || '';
 
   useEffect(() => {
     const fetchEventos = async () => {
@@ -25,6 +28,10 @@ const EventListWidget = () => {
     fetchEventos();
   }, []);
 
+  const filteredEventos = eventos.filter(e =>
+    e.nombre.toLowerCase().includes(query.toLowerCase())
+  );
+
   const handleEventClick = slugOrId => {
     const base = `/store/event/${slugOrId}`;
     const url = refParam ? `${base}?ref=${refParam}` : base;
@@ -37,9 +44,9 @@ const EventListWidget = () => {
   return (
     <div className="events-venue" key="event-list">
       <h1>Eventos Disponibles</h1>
-      {eventos.length > 0 ? (
+      {filteredEventos.length > 0 ? (
         <ul>
-          {eventos.map(evento => (
+          {filteredEventos.map(evento => (
             <li
               key={evento._id}
               onClick={() => handleEventClick(evento.slug || evento._id)}
@@ -58,7 +65,7 @@ const EventListWidget = () => {
           ))}
         </ul>
       ) : (
-        <p>No hay eventos disponibles.</p>
+        <p>No se encontraron eventos.</p>
       )}
     </div>
   );

@@ -4,10 +4,12 @@ import { Modal, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import LinkWithRef from './LinkWithRef';
 import { useRefParam } from '../../contexts/RefContext';
+import { useHeader } from '../../contexts/HeaderContext';
 
 const Header = ({ onLogin, onLogout }) => {
   const navigate = useNavigate();
   const { refParam } = useRefParam();
+  const { header } = useHeader();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ login: '', password: '' });
@@ -20,6 +22,7 @@ const Header = ({ onLogin, onLogout }) => {
   });
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleRegister = async () => {
     try {
@@ -160,6 +163,15 @@ const Header = ({ onLogin, onLogout }) => {
     }
   };
 
+  const handleSearch = () => {
+    const base = '/store';
+    const q = encodeURIComponent(searchTerm.trim());
+    const url = refParam
+      ? `${base}?ref=${refParam}&q=${q}`
+      : `${base}?q=${q}`;
+    navigate(url);
+  };
+
   const { theme } = useTheme();
 
   const handleInputChange = (e) => {
@@ -172,7 +184,7 @@ const Header = ({ onLogin, onLogout }) => {
     <header className="header-custom py-4 shadow-md" style={{ backgroundColor: theme.headerBg, color: theme.headerText }}>
       <div className="container mx-auto flex justify-between items-center px-4">
         <LinkWithRef to="/store" className="text-xl font-bold">
-          🎟️ TuEmpresa
+          {header.logoIcon} TuEmpresa
         </LinkWithRef>
 
         <nav className="flex gap-4 text-sm">
@@ -185,6 +197,16 @@ const Header = ({ onLogin, onLogout }) => {
             Registrarse
           </LinkWithRef>
         </nav>
+
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Buscar eventos"
+            size="small"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+          <Button onClick={handleSearch} size="small">Buscar</Button>
+        </div>
 
         <div className="space-x-2">
           {localStorage.getItem('token') ? (
