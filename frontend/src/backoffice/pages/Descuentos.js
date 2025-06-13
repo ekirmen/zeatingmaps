@@ -6,6 +6,7 @@ const Descuentos = () => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFinal, setFechaFinal] = useState('');
   const [eventoId, setEventoId] = useState('');
+  const [maxUsos, setMaxUsos] = useState('');
   const [eventos, setEventos] = useState([]);
   const [zonas, setZonas] = useState([]);
   const [zoneDetails, setZoneDetails] = useState({});
@@ -70,7 +71,8 @@ const Descuentos = () => {
         fechaInicio,
         fechaFinal,
         evento: eventoId,
-        detalles
+        detalles,
+        maxUsos: maxUsos ? Number(maxUsos) : 0
       };
       const response = await fetch(url, {
         method,
@@ -96,6 +98,7 @@ const Descuentos = () => {
     setFechaInicio('');
     setFechaFinal('');
     setEventoId('');
+    setMaxUsos('');
     setZoneDetails({});
     setEditingId(null);
   };
@@ -105,6 +108,7 @@ const Descuentos = () => {
     setFechaInicio(descuento.fechaInicio?.slice(0, 10));
     setFechaFinal(descuento.fechaFinal?.slice(0, 10));
     setEventoId(descuento.evento);
+    setMaxUsos(descuento.maxUsos ?? '');
     const detalles = {};
     (descuento.detalles || []).forEach(d => {
       const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
@@ -147,7 +151,7 @@ const Descuentos = () => {
           <label className="block mb-1">Código:</label>
           <input type="text" value={codigo} onChange={e => setCodigo(e.target.value)} required className="w-full border rounded p-2" />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="block mb-1">Fecha Inicio:</label>
             <input type="date" value={fechaInicio} onChange={e => setFechaInicio(e.target.value)} required className="w-full border rounded p-2" />
@@ -155,6 +159,10 @@ const Descuentos = () => {
           <div>
             <label className="block mb-1">Fecha Final:</label>
             <input type="date" value={fechaFinal} onChange={e => setFechaFinal(e.target.value)} required className="w-full border rounded p-2" />
+          </div>
+          <div>
+            <label className="block mb-1">Máximo de Usos:</label>
+            <input type="number" value={maxUsos} onChange={e => setMaxUsos(e.target.value)} className="w-full border rounded p-2" />
           </div>
         </div>
         <div>
@@ -228,6 +236,8 @@ const Descuentos = () => {
               <th className="py-2 px-4 text-left">Código</th>
               <th className="py-2 px-4 text-left">Detalles</th>
               <th className="py-2 px-4 text-left">Evento</th>
+              <th className="py-2 px-4 text-left">Máx Usos</th>
+              <th className="py-2 px-4 text-left">Usados</th>
               <th className="py-2 px-4 text-left">Acciones</th>
             </tr>
           </thead>
@@ -243,6 +253,8 @@ const Descuentos = () => {
                   }).join(', ')}
                 </td>
                 <td className="py-2 px-4">{d.evento?.nombre || d.evento}</td>
+                <td className="py-2 px-4 text-center">{d.maxUsos || 0}</td>
+                <td className="py-2 px-4 text-center">{d.usos || 0}</td>
                 <td className="py-2 px-4 space-x-2">
                   <button onClick={() => handleEdit(d)} className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">Editar</button>
                   <button onClick={() => handleDelete(d._id)} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700">Eliminar</button>

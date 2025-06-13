@@ -100,6 +100,7 @@ const Pay = () => {
         price: item.precio,
         zona: item.zona,
       }));
+      const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
 
       const response = await fetch('http://localhost:5000/api/payments', {
         method: 'POST',
@@ -113,7 +114,8 @@ const Pay = () => {
           funcion: funcionId,
           seats: seatsPayload,
           status: 'reservado',
-          ...(refParam ? { referrer: refParam } : {})
+          ...(refParam ? { referrer: refParam } : {}),
+          ...(discountCode ? { discountCode } : {})
         })
       });
 
@@ -143,6 +145,7 @@ const Pay = () => {
         price: item.precio,
         zona: item.zona,
       }));
+      const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
 
       const response = await fetch('http://localhost:5000/api/payments', {
         method: 'POST',
@@ -157,7 +160,8 @@ const Pay = () => {
           seats: seatsPayload,
           status: 'pagado',
           payments: [{ method: selectedPaymentMethod, amount: total }],
-          ...(refParam ? { referrer: refParam } : {})
+          ...(refParam ? { referrer: refParam } : {}),
+          ...(discountCode ? { discountCode } : {})
         })
       });
 

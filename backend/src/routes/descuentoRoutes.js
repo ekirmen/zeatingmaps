@@ -29,7 +29,26 @@ router.get('/code/:codigo', async (req, res) => {
   try {
     const descuento = await Descuento.findOne({ nombreCodigo: req.params.codigo }).populate('evento detalles.zona');
     if (!descuento) return res.status(404).json({ message: 'Descuento no encontrado' });
+    if (descuento.maxUsos > 0 && descuento.usos >= descuento.maxUsos) {
+      return res.status(400).json({ message: 'Descuento sin usos disponibles' });
+    }
     res.json(descuento);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Incrementar uso de descuento
+router.patch('/use/:codigo', async (req, res) => {
+  try {
+    const descuento = await Descuento.findOne({ nombreCodigo: req.params.codigo });
+    if (!descuento) return res.status(404).json({ message: 'Descuento no encontrado' });
+    if (descuento.maxUsos > 0 && descuento.usos >= descuento.maxUsos) {
+      return res.status(400).json({ message: 'No hay usos disponibles' });
+    }
+    descuento.usos = (descuento.usos || 0) + 1;
+    await descuento.save();
+    res.json({ usos: descuento.usos });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

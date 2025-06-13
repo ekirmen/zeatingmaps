@@ -5,6 +5,7 @@ import AffiliateUser from '../models/AffiliateUser.js';
 import { generateTicketPDF } from '../utils/pdfGenerator.js';
 import QRCode from 'qrcode';
 import Evento from '../models/Evento.js';
+import Descuento from '../models/Descuento.js';
 import { sendTicketEmail, sendReservationEmail } from '../services/emailService.js';
 import mongoose from 'mongoose'; // Add this import for error handling
 
@@ -101,7 +102,7 @@ router.get('/', async (req, res) => {
 // Create a new payment
 router.post('/', async (req, res) => {
   try {
-    const { user, seats, status, event, funcion, referrer } = req.body;
+    const { user, seats, status, event, funcion, referrer, discountCode } = req.body;
 
     // Validate required fields
     if (!user) return res.status(400).json({ message: 'User is required', field: 'user' });
@@ -135,10 +136,19 @@ router.post('/', async (req, res) => {
       payments: req.body.payments || [],
       status: status || 'pending',
       referrer: referrerId,
-      referralCommission
+      referralCommission,
+      discountCode: discountCode || null
     });
 
     const savedPayment = await payment.save();
+
+    if (discountCode) {
+      const descuento = await Descuento.findOne({ nombreCodigo: discountCode });
+      if (descuento && !(descuento.maxUsos > 0 && descuento.usos >= descuento.maxUsos)) {
+        descuento.usos = (descuento.usos || 0) + 1;
+        await descuento.save();
+      }
+    }
     let emailSent = false;
 
     if (savedPayment.status === 'reservado') {

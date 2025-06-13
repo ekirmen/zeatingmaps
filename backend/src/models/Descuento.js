@@ -9,7 +9,9 @@ const descuentoSchema = new mongoose.Schema({
     zona: { type: mongoose.Schema.Types.ObjectId, ref: 'Zona', required: true },
     tipo: { type: String, enum: ['monto', 'porcentaje'], default: 'monto' },
     valor: { type: Number, required: true }
-  }]
+  }],
+  maxUsos: { type: Number, default: 0 }, // 0 = sin límite
+  usos: { type: Number, default: 0 }
 }, { timestamps: true });
 
 export default mongoose.model('Descuento', descuentoSchema);
