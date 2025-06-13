@@ -179,10 +179,20 @@ const Event = () => {
     let finalPrice = basePrice;
     let tipoPrecio = 'normal';
     let descuentoNombre = '';
-    if (appliedDiscount && appliedDiscount.zonas?.includes(silla.zona)) {
-      finalPrice = Math.max(0, basePrice - appliedDiscount.cantidad);
-      tipoPrecio = 'descuento';
-      descuentoNombre = appliedDiscount.nombreCodigo;
+    if (appliedDiscount?.detalles) {
+      const detalle = appliedDiscount.detalles.find(d => {
+        const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
+        return id === silla.zona;
+      });
+      if (detalle) {
+        if (detalle.tipo === 'porcentaje') {
+          finalPrice = Math.max(0, basePrice - (basePrice * detalle.valor / 100));
+        } else {
+          finalPrice = Math.max(0, basePrice - detalle.valor);
+        }
+        tipoPrecio = 'descuento';
+        descuentoNombre = appliedDiscount.nombreCodigo;
+      }
     }
     const nuevoCarrito = index !== -1
       ? carrito.filter(item => item._id !== silla._id)

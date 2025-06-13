@@ -211,10 +211,20 @@ const ZonesAndPrices = ({
       let finalPrice = basePrice;
       let tipoPrecio = 'normal';
       let descuentoNombre = '';
-      if (appliedDiscount && appliedDiscount.zonas?.includes(selectedZona._id)) {
-        finalPrice = Math.max(0, basePrice - appliedDiscount.cantidad);
-        tipoPrecio = 'descuento';
-        descuentoNombre = appliedDiscount.nombreCodigo;
+      if (appliedDiscount?.detalles) {
+        const det = appliedDiscount.detalles.find(d => {
+          const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
+          return id === selectedZona._id;
+        });
+        if (det) {
+          if (det.tipo === 'porcentaje') {
+            finalPrice = Math.max(0, basePrice - (basePrice * det.valor / 100));
+          } else {
+            finalPrice = Math.max(0, basePrice - det.valor);
+          }
+          tipoPrecio = 'descuento';
+          descuentoNombre = appliedDiscount.nombreCodigo;
+        }
       }
       setCarrito([...carrito, {
         ...silla,
@@ -262,10 +272,20 @@ const ZonesAndPrices = ({
       let finalPrice = basePrice;
       let tipoPrecio = 'normal';
       let descuentoNombre = '';
-      if (appliedDiscount && appliedDiscount.zonas?.includes(zonaObj?._id)) {
-        finalPrice = Math.max(0, basePrice - appliedDiscount.cantidad);
-        tipoPrecio = 'descuento';
-        descuentoNombre = appliedDiscount.nombreCodigo;
+      if (appliedDiscount?.detalles) {
+        const det = appliedDiscount.detalles.find(d => {
+          const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
+          return id === zonaObj?._id;
+        });
+        if (det) {
+          if (det.tipo === 'porcentaje') {
+            finalPrice = Math.max(0, basePrice - (basePrice * det.valor / 100));
+          } else {
+            finalPrice = Math.max(0, basePrice - det.valor);
+          }
+          tipoPrecio = 'descuento';
+          descuentoNombre = appliedDiscount.nombreCodigo;
+        }
       }
       setCarrito([
         ...carrito,
@@ -315,10 +335,20 @@ const ZonesAndPrices = ({
       let finalPrice = basePrice;
       let tipoPrecio = 'normal';
       let descuentoNombre = '';
-      if (appliedDiscount && appliedDiscount.zonas?.includes(zona._id)) {
-        finalPrice = Math.max(0, basePrice - appliedDiscount.cantidad);
-        tipoPrecio = 'descuento';
-        descuentoNombre = appliedDiscount.nombreCodigo;
+      if (appliedDiscount?.detalles) {
+        const det = appliedDiscount.detalles.find(d => {
+          const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
+          return id === zona._id;
+        });
+        if (det) {
+          if (det.tipo === 'porcentaje') {
+            finalPrice = Math.max(0, basePrice - (basePrice * det.valor / 100));
+          } else {
+            finalPrice = Math.max(0, basePrice - det.valor);
+          }
+          tipoPrecio = 'descuento';
+          descuentoNombre = appliedDiscount.nombreCodigo;
+        }
       }
       return {
         _id: `gen-${zona._id}-${Date.now()}-${idx}`,
@@ -375,10 +405,20 @@ const ZonesAndPrices = ({
           let finalPrice = basePrice;
           let tipoPrecio = 'normal';
           let descuentoNombre = '';
-          if (appliedDiscount && appliedDiscount.zonas?.includes(zonaObj?._id)) {
-            finalPrice = Math.max(0, basePrice - appliedDiscount.cantidad);
-            tipoPrecio = 'descuento';
-            descuentoNombre = appliedDiscount.nombreCodigo;
+          if (appliedDiscount?.detalles) {
+            const det = appliedDiscount.detalles.find(d => {
+              const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
+              return id === zonaObj?._id;
+            });
+            if (det) {
+              if (det.tipo === 'porcentaje') {
+                finalPrice = Math.max(0, basePrice - (basePrice * det.valor / 100));
+              } else {
+                finalPrice = Math.max(0, basePrice - det.valor);
+              }
+              tipoPrecio = 'descuento';
+              descuentoNombre = appliedDiscount.nombreCodigo;
+            }
           }
           return {
             ...s,
