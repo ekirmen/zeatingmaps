@@ -2,6 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --headerBg: #ffffff;
+  --headerText: #000000;
+  --primary: #e94243;
+  --btnPrimaryText: #ffffff;
+}
+
 /* Custom styles */
 .editor-container .ql-toolbar {
   position: sticky;
@@ -21,5 +28,12 @@ button,
 [type='button'],
 [type='reset'],
 [type='submit'] {
-  background-color: revert;
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: var(--btnPrimaryText) !important;
+}
+
+.header-custom {
+  background-color: var(--headerBg);
+  color: var(--headerText);
 }
