@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import FaqWidget from '../../store/components/FaqWidget';
+import { toast } from 'react-hot-toast';
 import { fetchCmsPage, saveCmsPage } from '../services/apibackoffice';
 
 const pagesData = [
@@ -36,8 +37,15 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   }, [selectedPage]);
 
   useEffect(() => {
-    localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
-    saveCmsPage(selectedPage.id, widgets).catch(() => {});
+    const autoSave = async () => {
+      try {
+        await saveCmsPage(selectedPage.id, widgets);
+        localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
+      } catch (err) {
+        console.error('Auto save failed', err);
+      }
+    };
+    autoSave();
   }, [widgets, selectedPage]);
 
   const addWidget = (area, type) => {
@@ -47,9 +55,14 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     }));
   };
 
-  const handleSave = () => {
-    localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
-    saveCmsPage(selectedPage.id, widgets).catch(() => {});
+  const handleSave = async () => {
+    try {
+      await saveCmsPage(selectedPage.id, widgets);
+      localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
+      toast.success('Página guardada');
+    } catch (error) {
+      toast.error('Error al guardar la página');
+    }
   };
 
   return (
