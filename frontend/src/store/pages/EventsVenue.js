@@ -5,6 +5,7 @@ const EventsVenue = () => {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [widgets, setWidgets] = useState(null);
   const navigate = useNavigate();
   const { refParam } = useRefParam();
 
@@ -27,10 +28,48 @@ const EventsVenue = () => {
     fetchEventos();
   }, []);
 
+  useEffect(() => {
+    const saved = localStorage.getItem('cms-page-home');
+    if (saved) {
+      try {
+        setWidgets(JSON.parse(saved));
+      } catch (e) {
+        console.error('Error parsing widgets', e);
+      }
+    }
+  }, []);
+
   const handleEventClick = (slugOrId) => {
     const base = `/store/event/${slugOrId}`;
     const url = refParam ? `${base}?ref=${refParam}` : base;
     navigate(url); // Redirigir a la página de detalles del evento
+  };
+
+  const renderWidget = (widget) => {
+    switch (widget.type) {
+      case 'Listado de eventos':
+        return (
+          <div className="events-venue" key="event-list">
+            <h1>Eventos Disponibles</h1>
+            {eventos.length > 0 ? (
+              <ul>
+                {eventos.map((evento) => (
+                  <li key={evento._id} onClick={() => handleEventClick(evento.slug || evento._id)}>
+                    <h2>{evento.nombre}</h2>
+                    <p><strong>Sector:</strong> {evento.sector}</p>
+                    <p><strong>Recinto:</strong> {evento.recinto}</p>
+                    <p><strong>Sala:</strong> {evento.sala}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No hay eventos disponibles.</p>
+            )}
+          </div>
+        );
+      default:
+        return null;
+    }
   };
 
   if (loading) {
@@ -41,27 +80,11 @@ const EventsVenue = () => {
     return <div>Error: {error}</div>;
   }
 
-  return (
-    <div className="event-container">
-      <div className="events-venue">
-        <h1>Eventos Disponibles</h1>
-        {eventos.length > 0 ? (
-          <ul>
-            {eventos.map((evento) => (
-              <li key={evento._id} onClick={() => handleEventClick(evento.slug || evento._id)}>
-                <h2>{evento.nombre}</h2>
-                <p><strong>Sector:</strong> {evento.sector}</p>
-                <p><strong>Recinto:</strong> {evento.recinto}</p>
-                <p><strong>Sala:</strong> {evento.sala}</p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No hay eventos disponibles.</p>
-        )}
-      </div>
-    </div>
-  );
+  const content = widgets?.content?.length
+    ? widgets.content.map((w, idx) => <React.Fragment key={idx}>{renderWidget(w)}</React.Fragment>)
+    : renderWidget({ type: 'Listado de eventos' });
+
+  return <div className="event-container">{content}</div>;
 };
 
 export default EventsVenue;

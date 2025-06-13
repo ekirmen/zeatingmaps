@@ -36,8 +36,12 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     }));
   };
 
+  const handleSave = () => {
+    localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
+  };
+
   return (
-    <div className="flex min-h-screen">
+    <div className="flex">
       <aside className="w-64 bg-gray-100 p-4 overflow-y-auto">
         <h3 className="font-bold mb-2">Páginas</h3>
         <ul className="mb-4 space-y-1">
@@ -88,6 +92,12 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             </div>
           </div>
         </details>
+        <button
+          className="mt-4 w-full bg-blue-600 text-white py-1 rounded"
+          onClick={handleSave}
+        >
+          Guardar
+        </button>
       </aside>
 
       <main className="flex-grow p-4 space-y-4">
