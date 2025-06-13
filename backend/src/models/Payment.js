@@ -29,6 +29,7 @@ const paymentSchema = new mongoose.Schema({
   status: String,
   referrer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   referralCommission: { type: Number, default: 0 },
+  discountCode: { type: String, default: null },
   scanned: Boolean,
   history: [{
     action: { type: String, required: true },
