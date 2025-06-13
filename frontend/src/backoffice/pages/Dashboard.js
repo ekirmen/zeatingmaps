@@ -6,15 +6,15 @@ import { Outlet, useLocation } from 'react-router-dom';
 const Dashboard = () => {
   const location = useLocation();
 
-  // Verifica si estamos en la página de boletería
-  const isBoleteriaPage = location.pathname === '/dashboard/Boleteria';
+  // Verifica si estamos en páginas que usan toda la pantalla
+  const isFullPage = location.pathname === '/dashboard/Boleteria' || location.pathname === '/dashboard/web-studio';
 
   return (
     <div className="flex min-h-screen">
-      {/* Mostrar Sidebar solo si no estamos en Boleteria */}
-      {!isBoleteriaPage && <SidebarMenu />}
+      {/* Mostrar Sidebar solo si no estamos en páginas de pantalla completa */}
+      {!isFullPage && <SidebarMenu />}
 
-      <div className={`${isBoleteriaPage ? 'w-full' : 'w-full'}`}>
+      <div className={`${isFullPage ? 'w-full' : 'w-full'}`}>
         <TopBar />
         <div className="p-4">
           <Outlet />
