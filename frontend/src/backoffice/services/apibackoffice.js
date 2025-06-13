@@ -221,3 +221,18 @@ export const saveCmsPage = (pageId, widgets) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ widgets })
   });
+
+// Abonos
+export const fetchAbonosByUser = (userId) => fetchApi(`/abonos/user/${userId}`);
+export const createAbono = (data) =>
+  fetchApi('/abonos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+export const renewAbono = (id, data) =>
+  fetchApi(`/abonos/${id}/renew`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });

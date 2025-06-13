@@ -9,6 +9,7 @@ const ZonesAndPrices = ({
   onEventSelect,
   selectedFuncion,
   selectedClient,
+  abonos = [],
   carrito,
   setCarrito,
   selectedAffiliate,
@@ -29,6 +30,10 @@ const ZonesAndPrices = ({
   
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(null);
+
+  const seatHasAbono = (seatId) => {
+    return abonos.some(a => a.seat && (a.seat._id || a.seat) === seatId && a.status === 'activo');
+  };
 
 
 
@@ -208,10 +213,11 @@ const ZonesAndPrices = ({
       setCarrito(carrito.filter(item => item._id !== silla._id));
     } else {
       const basePrice = selectedPrecio.precio;
-      let finalPrice = basePrice;
-      let tipoPrecio = 'normal';
-      let descuentoNombre = '';
-      if (appliedDiscount?.detalles) {
+      const abonoActive = seatHasAbono(silla._id);
+      let finalPrice = abonoActive ? 0 : basePrice;
+      let tipoPrecio = abonoActive ? 'abono' : 'normal';
+      let descuentoNombre = abonoActive ? 'Abono' : '';
+      if (!abonoActive && appliedDiscount?.detalles) {
         const det = appliedDiscount.detalles.find(d => {
           const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
           return id === selectedZona._id;
@@ -269,10 +275,11 @@ const ZonesAndPrices = ({
       setCarrito(carrito.filter((item) => item._id !== silla._id));
     } else {
       const basePrice = detallePrecio.precio;
-      let finalPrice = basePrice;
-      let tipoPrecio = 'normal';
-      let descuentoNombre = '';
-      if (appliedDiscount?.detalles) {
+      const abonoActive = seatHasAbono(silla._id);
+      let finalPrice = abonoActive ? 0 : basePrice;
+      let tipoPrecio = abonoActive ? 'abono' : 'normal';
+      let descuentoNombre = abonoActive ? 'Abono' : '';
+      if (!abonoActive && appliedDiscount?.detalles) {
         const det = appliedDiscount.detalles.find(d => {
           const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
           return id === zonaObj?._id;
@@ -402,10 +409,11 @@ const ZonesAndPrices = ({
         .filter((s) => !prev.some((c) => c._id === s._id))
         .map((s) => {
           const basePrice = detallePrecio.precio;
-          let finalPrice = basePrice;
-          let tipoPrecio = 'normal';
-          let descuentoNombre = '';
-          if (appliedDiscount?.detalles) {
+          const abonoActive = seatHasAbono(s._id);
+          let finalPrice = abonoActive ? 0 : basePrice;
+          let tipoPrecio = abonoActive ? 'abono' : 'normal';
+          let descuentoNombre = abonoActive ? 'Abono' : '';
+          if (!abonoActive && appliedDiscount?.detalles) {
             const det = appliedDiscount.detalles.find(d => {
               const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
               return id === zonaObj?._id;

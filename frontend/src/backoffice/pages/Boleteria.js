@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { message } from 'antd';
 import { LeftOutlined, MenuOutlined } from '@ant-design/icons';
 
@@ -9,6 +9,7 @@ import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
 import FunctionModal from './CompBoleteria/FunctionModal';
 import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
+import { fetchAbonosByUser } from '../../services/abonoService';
 
 import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
@@ -45,6 +46,25 @@ const Boleteria = () => {
   // Para toggle sidebar en mobile
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
+  const [clientAbonos, setClientAbonos] = useState([]);
+
+  useEffect(() => {
+    const loadAbonos = async () => {
+      if (selectedClient?._id) {
+        try {
+          const token = localStorage.getItem('token');
+          const data = await fetchAbonosByUser(selectedClient._id, token);
+          setClientAbonos(Array.isArray(data) ? data : []);
+        } catch (err) {
+          console.error('Error loading abonos', err);
+          setClientAbonos([]);
+        }
+      } else {
+        setClientAbonos([]);
+      }
+    };
+    loadAbonos();
+  }, [selectedClient]);
 
   const handleClientManagement = () => {
     setIsSearchModalVisible(true);
@@ -212,6 +232,7 @@ const Boleteria = () => {
               onEventSelect={onEventSelect}
               selectedFuncion={selectedFuncion}
               selectedClient={selectedClient}
+              abonos={clientAbonos}
               carrito={carrito}
               setCarrito={setCarrito}
               selectedPlantilla={selectedPlantilla}
@@ -245,6 +266,7 @@ const Boleteria = () => {
               onEventSelect={onEventSelect}
               selectedFuncion={selectedFuncion}
               selectedClient={selectedClient}
+              abonos={clientAbonos}
               carrito={carrito}
               setCarrito={setCarrito}
               selectedPlantilla={selectedPlantilla}
