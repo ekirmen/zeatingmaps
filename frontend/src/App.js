@@ -42,6 +42,7 @@ import Correo from './backoffice/pages/Correo';
 import WebStudio from './backoffice/pages/WebStudio';
 import WebColors from './backoffice/pages/WebColors';
 import WebFooter from './backoffice/pages/WebFooter';
+import Abonos from './backoffice/pages/Abonos';
 
 // Store Pages
 import EventsVenue from './store/pages/EventsVenue';
@@ -130,6 +131,7 @@ const App = () => {
                     <Route path="entrada" element={<Entrada />} />
                     <Route path="crear-mapa/:salaId" element={<CrearMapa />} />
                     <Route path="crear-iva" element={<CreateIva />} />
+                    <Route path="abonos" element={<Abonos />} />
                     <Route path="plantillaPrecios" element={<PlantillaPrecios />} />
                     <Route path="descuentos" element={<Descuentos />} />
                     <Route path="funciones" element={<Funciones />} />

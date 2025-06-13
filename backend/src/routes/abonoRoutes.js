@@ -4,6 +4,16 @@ import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Obtener todos los abonos
+router.get('/', protect, async (req, res) => {
+  try {
+    const abonos = await Abono.find().populate('seat user');
+    res.json(abonos);
+  } catch (error) {
+    res.status(500).json({ message: 'Error al obtener abonos', error: error.message });
+  }
+});
+
 // Crear un nuevo abono
 router.post('/', protect, async (req, res) => {
   try {
