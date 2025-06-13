@@ -14,6 +14,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   const [selectedPage, setSelectedPage] = useState(pagesData[0]);
   const [widgets, setWidgets] = useState(defaultWidgets);
   const [draggingIdx, setDraggingIdx] = useState(null);
+  const [pageLoaded, setPageLoaded] = useState(false);
 
   useEffect(() => {
     if (setSidebarCollapsed) setSidebarCollapsed(true);
@@ -22,6 +23,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
   useEffect(() => {
     const loadPage = async () => {
+      setPageLoaded(false);
       try {
         const data = await fetchCmsPage(selectedPage.id);
         setWidgets(data.widgets || defaultWidgets);
@@ -33,11 +35,13 @@ const WebStudio = ({ setSidebarCollapsed }) => {
           setWidgets(defaultWidgets);
         }
       }
+      setPageLoaded(true);
     };
     loadPage();
   }, [selectedPage]);
 
   useEffect(() => {
+    if (!pageLoaded) return;
     const autoSave = async () => {
       try {
         await saveCmsPage(selectedPage.id, widgets);
@@ -47,7 +51,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
       }
     };
     autoSave();
-  }, [widgets, selectedPage]);
+  }, [widgets, selectedPage, pageLoaded]);
 
   const addWidget = (area, type) => {
     setWidgets(prev => ({
