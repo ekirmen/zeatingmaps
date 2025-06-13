@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
 import { Modal, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import LinkWithRef from './LinkWithRef';
@@ -159,6 +160,8 @@ const Header = ({ onLogin, onLogout }) => {
     }
   };
 
+  const { theme } = useTheme();
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -166,7 +169,7 @@ const Header = ({ onLogin, onLogout }) => {
   };
 
   return (
-    <header className="bg-gray-900 text-white py-4 shadow-md">
+    <header className="header-custom py-4 shadow-md" style={{ backgroundColor: theme.headerBg, color: theme.headerText }}>
       <div className="container mx-auto flex justify-between items-center px-4">
         <LinkWithRef to="/store" className="text-xl font-bold">
           🎟️ TuEmpresa
@@ -185,18 +188,18 @@ const Header = ({ onLogin, onLogout }) => {
 
         <div className="space-x-2">
           {localStorage.getItem('token') ? (
-            <Button onClick={handleLogout} className="bg-red-600 text-white">
+            <Button onClick={handleLogout} style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}>
               Cerrar Sesión
             </Button>
           ) : (
             <>
-              <Button onClick={() => setIsModalVisible(true)} className="bg-green-600 text-white">
+              <Button onClick={() => setIsModalVisible(true)} style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}>
                 Iniciar Sesión
               </Button>
-              <Button onClick={() => navigate('/forgot-password')} className="bg-yellow-600 text-white">
+              <Button onClick={() => navigate('/forgot-password')} style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}>
                 Olvidé mi contraseña
               </Button>
-              <Button onClick={() => setIsRegisterModalVisible(true)} className="bg-indigo-600 text-white">
+              <Button onClick={() => setIsRegisterModalVisible(true)} style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}>
                 Registrarse
               </Button>
             </>
