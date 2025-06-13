@@ -91,6 +91,7 @@ const SidebarMenu = () => {
               <li><Link to="/dashboard/plantillaPrecios" className="block p-2 rounded hover:bg-gray-700">Plantillas de Precios</Link></li>
               <li><Link to="/dashboard/descuentos" className="block p-2 rounded hover:bg-gray-700">Descuentos</Link></li>
               <li><Link to="/dashboard/funciones" className="block p-2 rounded hover:bg-gray-700">Funciones</Link></li>
+              <li><Link to="/dashboard/abonos" className="block p-2 rounded hover:bg-gray-700">Abonos</Link></li>
             </ul>
           )}
         </li>
