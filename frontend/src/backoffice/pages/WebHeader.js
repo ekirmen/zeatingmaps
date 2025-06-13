@@ -14,9 +14,12 @@ const WebHeader = () => {
     formData.append('file', file);
     try {
       const token = localStorage.getItem('token');
+      const authHeader = token && !token.startsWith('Bearer ')
+        ? `Bearer ${token}`
+        : token;
       const res = await fetch('http://localhost:5000/api/upload', {
         method: 'POST',
-        headers: token ? { Authorization: token } : {},
+        headers: token ? { Authorization: authHeader } : {},
         body: formData
       });
       const data = await res.json();
