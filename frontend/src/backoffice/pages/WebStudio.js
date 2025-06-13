@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import FaqWidget from '../../store/components/FaqWidget';
 
 const pagesData = [
   { id: 'home', name: 'Home', url: '/store' },
@@ -89,6 +90,24 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             </div>
             <div className="label-type-widget full">
               <label>Listado de eventos</label>
+            </div>
+
+            <div
+              className="preview-widget mb-2 cursor-pointer"
+              onClick={() => addWidget('content', 'Preguntas frecuentes')}
+            >
+              <div className="layer"></div>
+              <div className="preview-over">
+                <i className="palco4icon palco4icon-plus-circle-o"></i>
+              </div>
+              <img
+                src="https://palco4static.s3.us-east-2.amazonaws.com/23.02/backoffice/cms/previews/faq/preview.gif"
+                draggable="false"
+                alt="Preguntas frecuentes"
+              />
+            </div>
+            <div className="label-type-widget full">
+              <label>Preguntas frecuentes</label>
             </div>
           </div>
         </details>

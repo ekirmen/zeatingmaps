@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
+import FaqWidget from '../components/FaqWidget';
 const EventsVenue = () => {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +68,8 @@ const EventsVenue = () => {
             )}
           </div>
         );
+      case 'Preguntas frecuentes':
+        return <FaqWidget />;
       default:
         return null;
     }
