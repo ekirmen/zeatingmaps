@@ -72,3 +72,5 @@ export const fetchDescuentoPorCodigo = async (codigo) => {
   if (!res.ok) throw new Error('Código de descuento no válido');
   return await res.json();
 };
+
+export const getCmsPage = (pageId) => fetchStoreData(`/cms-pages/${pageId}`);

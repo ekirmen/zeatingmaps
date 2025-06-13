@@ -1,19 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
+import { getCmsPage } from '../services/apistore';
 
 const EventsVenue = () => {
   const [widgets, setWidgets] = useState(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem('cms-page-home');
-    if (saved) {
+    const load = async () => {
       try {
-        setWidgets(JSON.parse(saved));
+        const data = await getCmsPage('home');
+        setWidgets(data.widgets);
+        localStorage.setItem('cms-page-home', JSON.stringify(data.widgets));
       } catch (e) {
-        console.error('Error parsing widgets', e);
+        const saved = localStorage.getItem('cms-page-home');
+        if (saved) {
+          try {
+            setWidgets(JSON.parse(saved));
+          } catch (err) {
+            console.error('Error parsing widgets', err);
+          }
+        }
       }
-    }
+    };
+    load();
   }, []);
 
   const renderWidget = (widget) => {

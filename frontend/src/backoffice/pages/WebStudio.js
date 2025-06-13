@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import FaqWidget from '../../store/components/FaqWidget';
+import { fetchCmsPage, saveCmsPage } from '../services/apibackoffice';
 
 const pagesData = [
   { id: 'home', name: 'Home', url: '/store' },
@@ -18,16 +19,25 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   }, [setSidebarCollapsed]);
 
   useEffect(() => {
-    const saved = localStorage.getItem(`cms-page-${selectedPage.id}`);
-    if (saved) {
-      setWidgets(JSON.parse(saved));
-    } else {
-      setWidgets(defaultWidgets);
-    }
+    const loadPage = async () => {
+      try {
+        const data = await fetchCmsPage(selectedPage.id);
+        setWidgets(data.widgets || defaultWidgets);
+      } catch (e) {
+        const saved = localStorage.getItem(`cms-page-${selectedPage.id}`);
+        if (saved) {
+          setWidgets(JSON.parse(saved));
+        } else {
+          setWidgets(defaultWidgets);
+        }
+      }
+    };
+    loadPage();
   }, [selectedPage]);
 
   useEffect(() => {
     localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
+    saveCmsPage(selectedPage.id, widgets).catch(() => {});
   }, [widgets, selectedPage]);
 
   const addWidget = (area, type) => {
@@ -39,6 +49,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
   const handleSave = () => {
     localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
+    saveCmsPage(selectedPage.id, widgets).catch(() => {});
   };
 
   return (
@@ -138,16 +149,6 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             width="100%"
             height="600px"
             src="cmsWindowDevice?skin=0_default&timestamp=1749765383042&cmsZoomPercentage="
-            allowFullScreen
-          />
-          <iframe
-            id="pageViewerIframeEmail"
-            style={{ display: 'none' }}
-            title="email viewer"
-            className="page-viewer-iframe"
-            width="100%"
-            height="600px"
-            src="cmsWindowDeviceEmail?skin=0_default&timestamp=1749765383042&idEmpresa=50&cmsZoomPercentage="
             allowFullScreen
           />
         </div>
