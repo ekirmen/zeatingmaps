@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const defaultHeader = {
-  logoIcon: '🎟️',
   logoUrl: '',
   companyName: 'TuEmpresa'
 };

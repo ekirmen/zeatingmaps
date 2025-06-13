@@ -16,10 +16,8 @@ const TopBar = () => {
     <div className="bg-gray-900 text-white p-4 flex justify-between items-center shadow-md">
       {/* Marca o nombre */}
       <div className="text-lg font-semibold flex items-center gap-2">
-        {header.logoUrl ? (
+        {header.logoUrl && (
           <img src={`http://localhost:5000${header.logoUrl}`} alt="Logo" className="h-6 w-auto" />
-        ) : (
-          <span>{header.logoIcon}</span>
         )}
         {header.companyName}
       </div>
