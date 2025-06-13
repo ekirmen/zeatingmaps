@@ -1,12 +1,39 @@
 import React, { useState } from 'react';
+
+const SOCIAL_FIELDS = [
+  { key: 'facebook', label: 'Facebook' },
+  { key: 'twitter', label: 'Twitter' },
+  { key: 'instagram', label: 'Instagram' },
+  { key: 'spotify', label: 'Spotify' },
+  { key: 'youtube', label: 'YouTube' },
+  { key: 'tiktok', label: 'TikTok' },
+  { key: 'whatsapp', label: 'WhatsApp' },
+  { key: 'telegram', label: 'Telegram' }
+];
 import { useFooter } from '../../contexts/FooterContext';
 
 const WebFooter = () => {
   const { footer, updateFooter } = useFooter();
   const [text, setText] = useState(footer?.copyrightText || '');
+  const [socials, setSocials] = useState(() => {
+    return SOCIAL_FIELDS.reduce((acc, { key }) => {
+      acc[key] = {
+        active: footer?.socials?.[key]?.active || false,
+        url: footer?.socials?.[key]?.url || ''
+      };
+      return acc;
+    }, {});
+  });
+
+  const handleSocialChange = (key, field, value) => {
+    setSocials(prev => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: value }
+    }));
+  };
 
   const handleSave = () => {
-    updateFooter({ copyrightText: text });
+    updateFooter({ copyrightText: text, socials });
     alert('Pie de página guardado');
   };
 
@@ -21,6 +48,24 @@ const WebFooter = () => {
         value={text}
         onChange={e => setText(e.target.value)}
       />
+      <h3 className="text-xl font-semibold mt-6 mb-4">Redes Sociales</h3>
+      {SOCIAL_FIELDS.map(({ key, label }) => (
+        <div key={key} className="flex items-center gap-3 mb-3">
+          <input
+            type="checkbox"
+            checked={socials[key].active}
+            onChange={e => handleSocialChange(key, 'active', e.target.checked)}
+          />
+          <span className="w-28">{label}</span>
+          <input
+            type="text"
+            className="flex-1 border p-2 rounded border-gray-300"
+            placeholder="URL"
+            value={socials[key].url}
+            onChange={e => handleSocialChange(key, 'url', e.target.value)}
+          />
+        </div>
+      ))}
       <div className="mt-6 text-right">
         <button
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
