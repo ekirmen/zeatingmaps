@@ -26,11 +26,11 @@ const WebColors = () => {
   const { theme, updateTheme } = useTheme();
   const [activeTab, setActiveTab] = useState('basic');
   const [colors, setColors] = useState({
-    headerBg: theme.headerBg,
-    headerText: theme.headerText,
+    headerBg: theme.headerBg || '#ffffff',
+    headerText: theme.headerText || '#000000',
     subHeaderBg: '#ffffff',
     subHeaderText: '#000000',
-    primary: theme.primary,
+    primary: theme.primary || '#e94243',
     bodyBg: '#f5f5f5',
     pieBg: '#212121',
     pieText: '#5d6264',
@@ -38,8 +38,8 @@ const WebColors = () => {
     textoTitulo: '#383838',
     bodyFont: '#5d6264',
     linkColor: '#e94243',
-    btnPrimary: theme.primary,
-    btnPrimaryText: theme.btnPrimaryText,
+    btnPrimary: theme.primary || '#e94243',
+    btnPrimaryText: theme.btnPrimaryText || '#ffffff',
     btnSecondary: '#e7e7e7',
     btnSecondaryText: '#333333',
     contHeader: '#edefed',
@@ -62,7 +62,7 @@ const WebColors = () => {
     { key: 'headerText', label: 'Color textos cabecera' },
     { key: 'subHeaderBg', label: 'Color sub-cabecera' },
     { key: 'subHeaderText', label: 'Color textos sub-cabecera' },
-    { key: 'primary', label: 'Color principal (bot\u00f3n, enlaces, notificaciones, spinner)' }
+    { key: 'primary', label: 'Color principal (botón, enlaces, notificaciones, spinner)' }
   ];
 
   const advancedGroups = [
@@ -78,7 +78,7 @@ const WebColors = () => {
     {
       title: 'Textos',
       fields: [
-        { key: 'textoTitulo', label: 'Color textos titulo' },
+        { key: 'textoTitulo', label: 'Color textos título' },
         { key: 'bodyFont', label: 'Color textos contenidos' },
         { key: 'linkColor', label: 'Color enlaces' }
       ]
@@ -86,19 +86,19 @@ const WebColors = () => {
     {
       title: 'Botones',
       fields: [
-        { key: 'btnPrimary', label: 'Color bot\u00f3n primario' },
-        { key: 'btnPrimaryText', label: 'Color texto bot\u00f3n primario' },
-        { key: 'btnSecondary', label: 'Color bot\u00f3n secundario' },
-        { key: 'btnSecondaryText', label: 'Color texto bot\u00f3n secundario' }
+        { key: 'btnPrimary', label: 'Color botón primario' },
+        { key: 'btnPrimaryText', label: 'Color texto botón primario' },
+        { key: 'btnSecondary', label: 'Color botón secundario' },
+        { key: 'btnSecondaryText', label: 'Color texto botón secundario' }
       ]
     },
     {
       title: 'Componentes',
       fields: [
         { key: 'contHeader', label: 'Color cabecera contenedor' },
-        { key: 'headerTextColor', label: 'Color de texto de cabecera' },
+        { key: 'headerTextColor', label: 'Color texto cabecera' },
         { key: 'contBody', label: 'Color cuerpo contenedor' },
-        { key: 'headerLink', label: 'Color de link en cabecera' },
+        { key: 'headerLink', label: 'Color enlace cabecera' },
         { key: 'borderColor', label: 'Color borde contenedor' }
       ]
     },
@@ -125,13 +125,13 @@ const WebColors = () => {
           onClick={() => setActiveTab('basic')}
           className={`px-3 py-1 rounded ${activeTab === 'basic' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
         >
-          Estilos b\u00e1sicos
+          Estilos básicos
         </button>
         <button
           onClick={() => setActiveTab('advanced')}
           className={`px-3 py-1 rounded ${activeTab === 'advanced' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
         >
-          Personalizaci\u00f3n avanzada
+          Personalización avanzada
         </button>
       </div>
 
@@ -176,4 +176,3 @@ const WebColors = () => {
 };
 
 export default WebColors;
-
