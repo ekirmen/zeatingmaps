@@ -3,7 +3,6 @@ import { useHeader } from '../../contexts/HeaderContext';
 
 const WebHeader = () => {
   const { header, updateHeader } = useHeader();
-  const [icon, setIcon] = useState(header?.logoIcon || '🎟️');
   const [companyName, setCompanyName] = useState(header?.companyName || 'TuEmpresa');
   const [logoUrl, setLogoUrl] = useState(header?.logoUrl || '');
 
@@ -32,7 +31,7 @@ const WebHeader = () => {
   };
 
   const handleSave = () => {
-    updateHeader({ logoIcon: icon, logoUrl, companyName });
+    updateHeader({ logoUrl, companyName });
     alert('Cabecera guardada');
   };
 
@@ -40,14 +39,6 @@ const WebHeader = () => {
     <div className="p-6 max-w-md mx-auto">
       <h2 className="text-2xl font-bold mb-6">Cabecera</h2>
 
-      <label className="block text-sm font-medium mb-1">Icono emoji</label>
-      <input
-        type="text"
-        className="border p-2 w-full rounded border-gray-300"
-        maxLength={10}
-        value={icon}
-        onChange={e => setIcon(e.target.value)}
-      />
 
       <label className="block text-sm font-medium mb-1 mt-4">Logo</label>
       <input type="file" accept=".jpg,.png" onChange={handleFileChange} />
@@ -64,6 +55,7 @@ const WebHeader = () => {
         type="text"
         className="border p-2 w-full rounded border-gray-300"
         value={companyName}
+        maxLength={15}
         onChange={e => setCompanyName(e.target.value)}
       />
 
