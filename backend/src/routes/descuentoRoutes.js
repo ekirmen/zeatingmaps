@@ -6,7 +6,7 @@ const router = express.Router();
 // Obtener todos los descuentos
 router.get('/', async (req, res) => {
   try {
-    const descuentos = await Descuento.find().populate('evento zonas');
+    const descuentos = await Descuento.find().populate('evento detalles.zona');
     res.json(descuentos);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 // Obtener un descuento por ID
 router.get('/:id', async (req, res) => {
   try {
-    const descuento = await Descuento.findById(req.params.id).populate('evento zonas');
+    const descuento = await Descuento.findById(req.params.id).populate('evento detalles.zona');
     if (!descuento) return res.status(404).json({ message: 'Descuento no encontrado' });
     res.json(descuento);
   } catch (error) {
@@ -27,7 +27,7 @@ router.get('/:id', async (req, res) => {
 // Obtener descuento por código
 router.get('/code/:codigo', async (req, res) => {
   try {
-    const descuento = await Descuento.findOne({ nombreCodigo: req.params.codigo }).populate('evento zonas');
+    const descuento = await Descuento.findOne({ nombreCodigo: req.params.codigo }).populate('evento detalles.zona');
     if (!descuento) return res.status(404).json({ message: 'Descuento no encontrado' });
     res.json(descuento);
   } catch (error) {

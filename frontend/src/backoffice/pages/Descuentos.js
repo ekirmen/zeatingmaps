@@ -3,13 +3,12 @@ import React, { useState, useEffect } from 'react';
 const Descuentos = () => {
   const [descuentos, setDescuentos] = useState([]);
   const [codigo, setCodigo] = useState('');
-  const [cantidad, setCantidad] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFinal, setFechaFinal] = useState('');
   const [eventoId, setEventoId] = useState('');
   const [eventos, setEventos] = useState([]);
   const [zonas, setZonas] = useState([]);
-  const [selectedZonas, setSelectedZonas] = useState([]);
+  const [zoneDetails, setZoneDetails] = useState({});
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
@@ -61,13 +60,17 @@ const Descuentos = () => {
     try {
       const url = editingId ? `http://localhost:5000/api/descuentos/${editingId}` : 'http://localhost:5000/api/descuentos';
       const method = editingId ? 'PUT' : 'POST';
+      const detalles = Object.entries(zoneDetails).map(([zonaId, det]) => ({
+        zona: zonaId,
+        tipo: det.tipo,
+        valor: Number(det.cantidad)
+      }));
       const body = {
         nombreCodigo: codigo,
-        cantidad: Number(cantidad),
         fechaInicio,
         fechaFinal,
         evento: eventoId,
-        zonas: selectedZonas
+        detalles
       };
       const response = await fetch(url, {
         method,
@@ -90,21 +93,24 @@ const Descuentos = () => {
 
   const resetForm = () => {
     setCodigo('');
-    setCantidad('');
     setFechaInicio('');
     setFechaFinal('');
     setEventoId('');
-    setSelectedZonas([]);
+    setZoneDetails({});
     setEditingId(null);
   };
 
   const handleEdit = (descuento) => {
     setCodigo(descuento.nombreCodigo);
-    setCantidad(descuento.cantidad);
-    setFechaInicio(descuento.fechaInicio?.slice(0,10));
-    setFechaFinal(descuento.fechaFinal?.slice(0,10));
+    setFechaInicio(descuento.fechaInicio?.slice(0, 10));
+    setFechaFinal(descuento.fechaFinal?.slice(0, 10));
     setEventoId(descuento.evento);
-    setSelectedZonas(descuento.zonas || []);
+    const detalles = {};
+    (descuento.detalles || []).forEach(d => {
+      const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
+      detalles[id] = { tipo: d.tipo, cantidad: d.valor };
+    });
+    setZoneDetails(detalles);
     setEditingId(descuento._id);
   };
 
@@ -124,7 +130,13 @@ const Descuentos = () => {
   };
 
   const toggleZona = (zonaId) => {
-    setSelectedZonas(prev => prev.includes(zonaId) ? prev.filter(z => z !== zonaId) : [...prev, zonaId]);
+    setZoneDetails(prev => {
+      if (prev[zonaId]) {
+        const { [zonaId]: removed, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [zonaId]: { tipo: 'monto', cantidad: '' } };
+    });
   };
 
   return (
@@ -134,10 +146,6 @@ const Descuentos = () => {
         <div>
           <label className="block mb-1">Código:</label>
           <input type="text" value={codigo} onChange={e => setCodigo(e.target.value)} required className="w-full border rounded p-2" />
-        </div>
-        <div>
-          <label className="block mb-1">Cantidad:</label>
-          <input type="number" value={cantidad} onChange={e => setCantidad(e.target.value)} required className="w-full border rounded p-2" />
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -161,12 +169,41 @@ const Descuentos = () => {
         {zonas.length > 0 && (
           <div>
             <label className="block mb-1">Zonas:</label>
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2">
               {zonas.map(z => (
-                <label key={z._id} className="flex items-center gap-1">
-                  <input type="checkbox" value={z._id} checked={selectedZonas.includes(z._id)} onChange={() => toggleZona(z._id)} />
-                  {z.nombre}
-                </label>
+                <div key={z._id} className="flex items-center gap-2">
+                  <input type="checkbox" checked={!!zoneDetails[z._id]} onChange={() => toggleZona(z._id)} />
+                  <span>{z.nombre}</span>
+                  {zoneDetails[z._id] && (
+                    <>
+                      <select
+                        value={zoneDetails[z._id].tipo}
+                        onChange={e =>
+                          setZoneDetails(prev => ({
+                            ...prev,
+                            [z._id]: { ...prev[z._id], tipo: e.target.value }
+                          }))
+                        }
+                        className="border rounded p-1"
+                      >
+                        <option value="monto">Monto</option>
+                        <option value="porcentaje">Porcentaje</option>
+                      </select>
+                      <input
+                        type="number"
+                        value={zoneDetails[z._id].cantidad}
+                        onChange={e =>
+                          setZoneDetails(prev => ({
+                            ...prev,
+                            [z._id]: { ...prev[z._id], cantidad: e.target.value }
+                          }))
+                        }
+                        placeholder="Valor"
+                        className="w-24 border rounded p-1"
+                      />
+                    </>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -189,7 +226,7 @@ const Descuentos = () => {
           <thead className="bg-gray-100">
             <tr>
               <th className="py-2 px-4 text-left">Código</th>
-              <th className="py-2 px-4 text-left">Cantidad</th>
+              <th className="py-2 px-4 text-left">Detalles</th>
               <th className="py-2 px-4 text-left">Evento</th>
               <th className="py-2 px-4 text-left">Acciones</th>
             </tr>
@@ -198,7 +235,13 @@ const Descuentos = () => {
             {descuentos.map(d => (
               <tr key={d._id} className="border-t">
                 <td className="py-2 px-4">{d.nombreCodigo}</td>
-                <td className="py-2 px-4">{d.cantidad}</td>
+                <td className="py-2 px-4">
+                  {d.detalles?.map(dt => {
+                    const name = dt.zona?.nombre || dt.zona;
+                    const val = dt.tipo === 'porcentaje' ? `${dt.valor}%` : dt.valor;
+                    return `${name}: ${val}`;
+                  }).join(', ')}
+                </td>
                 <td className="py-2 px-4">{d.evento?.nombre || d.evento}</td>
                 <td className="py-2 px-4 space-x-2">
                   <button onClick={() => handleEdit(d)} className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">Editar</button>
