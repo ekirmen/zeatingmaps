@@ -40,6 +40,7 @@ import FormatoEntrada from './backoffice/pages/FormatoEntrada';
 import Galeria from './backoffice/pages/Galeria';
 import Correo from './backoffice/pages/Correo';
 import WebStudio from './backoffice/pages/WebStudio';
+import WebColors from './backoffice/pages/WebColors';
 
 // Store Pages
 import EventsVenue from './store/pages/EventsVenue';
@@ -134,6 +135,7 @@ const App = () => {
                     <Route path="galeria" element={<Galeria />} />
                     <Route path="correo" element={<Correo />} />
                     <Route path="web-studio" element={<WebStudio setSidebarCollapsed={setSidebarCollapsed} />} />
+                    <Route path="colores-web" element={<WebColors />} />
                   </Route>
 
                   <Route path="/store/:venueId?" element={<EventsVenue />} />
