@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
+import { LeftOutlined } from '@ant-design/icons';
 import { fetchCmsPage, saveCmsPage } from '../services/apibackoffice';
 
 const pagesData = [
@@ -88,6 +89,14 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   return (
     <div className="flex">
       <aside className="w-64 bg-gray-100 p-4 overflow-y-auto">
+        <button
+          className="flex items-center gap-2 mb-2 text-gray-700 hover:text-gray-900"
+          onClick={() => window.history.back()}
+          aria-label="Volver"
+        >
+          <LeftOutlined />
+          <span>Back</span>
+        </button>
         <h3 className="font-bold mb-2">Páginas</h3>
         <ul className="mb-4 space-y-1">
           {pagesData.map(p => (
