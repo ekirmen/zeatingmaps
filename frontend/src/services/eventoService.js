@@ -40,9 +40,12 @@ export const saveEvento = async (eventoData, token, files = {}) => {
     if (file) formData.append(key, file);
   });
 
+  const authHeader = token && !token.startsWith('Bearer ')
+    ? `Bearer ${token}`
+    : token;
   const res = await fetch(`${API_BASE_URL}/events`, {
     method: 'POST',
-    headers: { Authorization: token },
+    headers: { Authorization: authHeader },
     body: formData
   });
   if (!res.ok) {
