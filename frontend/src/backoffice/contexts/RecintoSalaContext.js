@@ -1,12 +1,34 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const RecintoSalaContext = createContext();
 
 export const RecintoSalaProvider = ({ children }) => {
   const [recintos, setRecintos] = useState([]);
-  const [recinto, setRecinto] = useState(null);
+  const [recinto, setRecinto] = useState(() => {
+    const stored = localStorage.getItem('recinto');
+    return stored ? JSON.parse(stored) : null;
+  });
   const [salas, setSalas] = useState([]);
-  const [sala, setSala] = useState(null);
+  const [sala, setSala] = useState(() => {
+    const stored = localStorage.getItem('sala');
+    return stored ? JSON.parse(stored) : null;
+  });
+
+  useEffect(() => {
+    if (recinto) {
+      localStorage.setItem('recinto', JSON.stringify(recinto));
+    } else {
+      localStorage.removeItem('recinto');
+    }
+  }, [recinto]);
+
+  useEffect(() => {
+    if (sala) {
+      localStorage.setItem('sala', JSON.stringify(sala));
+    } else {
+      localStorage.removeItem('sala');
+    }
+  }, [sala]);
 
   return (
     <RecintoSalaContext.Provider

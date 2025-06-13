@@ -4,8 +4,14 @@ const RecintoContext = createContext();
 
 export const RecintoProvider = ({ children }) => {
   const [recintos, setRecintos] = useState([]);
-  const [recintoSeleccionado, setRecintoSeleccionado] = useState(null);
-  const [salaSeleccionada, setSalaSeleccionada] = useState(null);
+  const [recintoSeleccionado, setRecintoSeleccionado] = useState(() => {
+    const stored = localStorage.getItem('recintoSeleccionado');
+    return stored ? JSON.parse(stored) : null;
+  });
+  const [salaSeleccionada, setSalaSeleccionada] = useState(() => {
+    const stored = localStorage.getItem('salaSeleccionada');
+    return stored ? JSON.parse(stored) : null;
+  });
 
   useEffect(() => {
     const fetchRecintos = async () => {
@@ -19,6 +25,22 @@ export const RecintoProvider = ({ children }) => {
     };
     fetchRecintos();
   }, []);
+
+  useEffect(() => {
+    if (recintoSeleccionado) {
+      localStorage.setItem('recintoSeleccionado', JSON.stringify(recintoSeleccionado));
+    } else {
+      localStorage.removeItem('recintoSeleccionado');
+    }
+  }, [recintoSeleccionado]);
+
+  useEffect(() => {
+    if (salaSeleccionada) {
+      localStorage.setItem('salaSeleccionada', JSON.stringify(salaSeleccionada));
+    } else {
+      localStorage.removeItem('salaSeleccionada');
+    }
+  }, [salaSeleccionada]);
 
   return (
     <RecintoContext.Provider
