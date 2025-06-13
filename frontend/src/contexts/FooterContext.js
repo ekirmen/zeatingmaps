@@ -32,7 +32,11 @@ export const FooterProvider = ({ children }) => {
 
   const [footer, setFooter] = useState(() => {
     const saved = localStorage.getItem('footerSettings');
-    return saved ? parseSaved(saved) : defaultFooter;
+    const parsed = saved ? parseSaved(saved) : defaultFooter;
+    if (!saved || saved !== JSON.stringify(parsed)) {
+      localStorage.setItem('footerSettings', JSON.stringify(parsed));
+    }
+    return parsed;
   });
 
   useEffect(() => {
