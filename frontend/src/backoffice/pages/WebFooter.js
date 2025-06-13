@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaFacebook, FaTwitter, FaInstagram, FaSpotify, FaYoutube, FaWhatsapp, FaTelegram } from 'react-icons/fa';
 import { FaTiktok } from 'react-icons/fa6';
 import { useFooter } from '../../contexts/FooterContext';
@@ -36,9 +36,19 @@ const NetworkInput = ({ label, Icon, value, onChange }) => (
   </div>
 );
 
+const sanitize = (obj) =>
+  Object.keys(obj).reduce((acc, key) => {
+    acc[key] = typeof obj[key] === 'string' ? obj[key] : '';
+    return acc;
+  }, {});
+
 const WebFooter = () => {
   const { footer, updateFooter } = useFooter();
-  const [data, setData] = useState({ ...footer });
+  const [data, setData] = useState(() => sanitize(footer));
+
+  useEffect(() => {
+    setData(sanitize(footer));
+  }, [footer]);
 
   const handleChange = (key, value) => setData(prev => ({ ...prev, [key]: value }));
 
