@@ -5,6 +5,8 @@ import { useRefParam } from '../../contexts/RefContext';
 import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
 import { fetchMapa, fetchPlantillaPrecios } from '../services/apistore';
+import EventListWidget from '../components/EventListWidget';
+import FaqWidget from '../components/FaqWidget';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const Event = () => {
@@ -23,6 +25,29 @@ const Event = () => {
   const [showSeatPopup, setShowSeatPopup] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(null);
+  const [widgets, setWidgets] = useState(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('cms-page-events');
+    if (saved) {
+      try {
+        setWidgets(JSON.parse(saved));
+      } catch (e) {
+        console.error('Error parsing widgets', e);
+      }
+    }
+  }, []);
+
+  const renderWidget = (widget) => {
+    switch (widget.type) {
+      case 'Listado de eventos':
+        return <EventListWidget />;
+      case 'Preguntas frecuentes':
+        return <FaqWidget />;
+      default:
+        return null;
+    }
+  };
 
   useEffect(() => {
     const fetchEvento = async () => {
@@ -313,6 +338,12 @@ const Event = () => {
       >
         <p>{evento?.otrasOpciones?.popupAntesAsiento?.texto}</p>
       </Modal>
+
+      {widgets?.content?.length
+        ? widgets.content.map((w, idx) => (
+            <React.Fragment key={idx}>{renderWidget(w)}</React.Fragment>
+          ))
+        : <EventListWidget />}
     </div>
   );
 };
