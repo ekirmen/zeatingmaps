@@ -1,15 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
+// Only store the basic copyright text for the footer.
 const defaultFooter = {
-  copyrightText: '',
-  facebookUrl: '',
-  twitterUrl: '',
-  instagramUrl: '',
-  spotifyUrl: '',
-  youtubeUrl: '',
-  whatsappUrl: '',
-  tiktokUrl: '',
-  telegramUrl: ''
+  copyrightText: ''
 };
 
 const FooterContext = createContext({
