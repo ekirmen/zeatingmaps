@@ -183,8 +183,13 @@ const Header = ({ onLogin, onLogout }) => {
   return (
     <header className="header-custom py-4 shadow-md" style={{ backgroundColor: theme.headerBg, color: theme.headerText }}>
       <div className="container mx-auto flex justify-between items-center px-4">
-        <LinkWithRef to="/store" className="text-xl font-bold">
-          {header.logoIcon} TuEmpresa
+        <LinkWithRef to="/store" className="text-xl font-bold flex items-center gap-2">
+          {header.logoUrl ? (
+            <img src={`http://localhost:5000${header.logoUrl}`} alt="Logo" className="h-6 w-auto" />
+          ) : (
+            <span>{header.logoIcon}</span>
+          )}
+          {header.companyName}
         </LinkWithRef>
 
         <nav className="flex gap-4 text-sm">
