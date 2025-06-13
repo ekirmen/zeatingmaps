@@ -54,6 +54,7 @@ import ThankYouPage from './store/pages/ThankYouPage';
 import SeatingDemoPage from './pages/SeatingDemoPage';
 import ForgotPassword from './store/pages/ForgotPassword';
 import ResetPassword from './store/pages/ResetPassword';
+import FaqPage from './store/pages/FaqPage';
 
 const App = () => {
   const location = useLocation();
@@ -158,6 +159,7 @@ const App = () => {
                   <Route path="/store/thank-you" element={<ThankYouPage />} />
                   <Route path="/companias" element={<CompaniasPage />} />
                   <Route path="/store/seating-demo" element={<SeatingDemoPage />} />
+                  <Route path="/store/faq" element={<FaqPage />} />
                   <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
 
                   <Route path="/dashboard/formato-entrada" element={<FormatoEntrada />} />

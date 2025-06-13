@@ -10,6 +10,7 @@ const Footer = () => {
       <div className="flex justify-center gap-4 mt-2 text-xs">
         <LinkWithRef to="/store/perfil" className="hover:underline">Perfil</LinkWithRef>
         <LinkWithRef to="/companias" className="hover:underline">Compañías</LinkWithRef>
+        <LinkWithRef to="/store/faq" className="hover:underline">Preguntas</LinkWithRef>
         <LinkWithRef to="/store/login-register" className="hover:underline">Login</LinkWithRef>
       </div>
     </footer>
