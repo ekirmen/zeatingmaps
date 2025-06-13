@@ -42,6 +42,7 @@ import Correo from './backoffice/pages/Correo';
 import WebStudio from './backoffice/pages/WebStudio';
 import WebColors from './backoffice/pages/WebColors';
 import WebFooter from './backoffice/pages/WebFooter';
+import WebHeader from './backoffice/pages/WebHeader';
 import Abonos from './backoffice/pages/Abonos';
 
 // Store Pages
@@ -140,7 +141,8 @@ const App = () => {
                     <Route path="correo" element={<Correo />} />
                     <Route path="web-studio" element={<WebStudio setSidebarCollapsed={setSidebarCollapsed} />} />
                     <Route path="colores-web" element={<WebColors />} />
-                    <Route path="pie-pagina" element={<WebFooter />} />
+                    <Route path="sitio-web" element={<WebFooter />} />
+                    <Route path="cabecera" element={<WebHeader />} />
                   </Route>
 
                   <Route path="/store/:venueId?" element={<EventsVenue />} />

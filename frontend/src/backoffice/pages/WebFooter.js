@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useFooter } from '../../contexts/FooterContext';
 
 const SOCIAL_FIELDS = [
   { key: 'facebook', label: 'Facebook' },
@@ -10,7 +11,6 @@ const SOCIAL_FIELDS = [
   { key: 'whatsapp', label: 'WhatsApp' },
   { key: 'telegram', label: 'Telegram' }
 ];
-import { useFooter } from '../../contexts/FooterContext';
 
 const WebFooter = () => {
   const { footer, updateFooter } = useFooter();
@@ -34,12 +34,12 @@ const WebFooter = () => {
 
   const handleSave = () => {
     updateFooter({ copyrightText: text, socials });
-    alert('Pie de página guardado');
+    alert('Configuración guardada');
   };
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Pie de página</h2>
+      <h2 className="text-2xl font-bold mb-6">Sitio web</h2>
       <label className="block text-sm font-medium mb-1">Texto copyright</label>
       <input
         type="text"

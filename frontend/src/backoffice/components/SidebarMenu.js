@@ -112,7 +112,8 @@ const SidebarMenu = () => {
               <li><Link to="/dashboard/correo" className="block p-2 rounded hover:bg-gray-700">Correo</Link></li>
               <li><Link to="/dashboard/web-studio" className="block p-2 rounded hover:bg-gray-700">Web Studio</Link></li>
               <li><Link to="/dashboard/colores-web" className="block p-2 rounded hover:bg-gray-700">Colores Web</Link></li>
-              <li><Link to="/dashboard/pie-pagina" className="block p-2 rounded hover:bg-gray-700">Pie de página</Link></li>
+              <li><Link to="/dashboard/cabecera" className="block p-2 rounded hover:bg-gray-700">Cabecera</Link></li>
+              <li><Link to="/dashboard/sitio-web" className="block p-2 rounded hover:bg-gray-700">Sitio web</Link></li>
             </ul>
           )}
         </li>
