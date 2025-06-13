@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FaFacebook, FaTwitter, FaInstagram, FaSpotify, FaYoutube, FaWhatsapp, FaTiktok, FaTelegram } from 'react-icons/fa';
+import { FaFacebook, FaTwitter, FaInstagram, FaSpotify, FaYoutube, FaWhatsapp, FaTelegram } from 'react-icons/fa';
+import { FaTiktok } from 'react-icons/fa6';
 import { useFooter } from '../../contexts/FooterContext';
 
 const networks = [
