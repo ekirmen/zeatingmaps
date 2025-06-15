@@ -8,7 +8,7 @@ router.get('/:salaId/mapa', async (req, res) => {
   try {
     const { salaId } = req.params;
 
-    const mapa = await Mapa.findOne({ sala: salaId }).lean();
+    const mapa = await Mapa.findOne({ salaId }).lean();
     if (!mapa) {
       return res.status(404).json({ message: 'Mapa no encontrado para esta sala' });
     }

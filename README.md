@@ -57,3 +57,17 @@ npm test
 # run frontend tests
 npm run test:frontend
 ```
+
+## Database Migration
+
+If you previously stored the sala reference in the `sala` field of the `mapas` collection, run the migration script to rename it to `salaId`:
+
+```bash
+node backend/scripts/renameMapaSala.js
+```
+
+After running the script you can safely drop the old index (if it exists):
+
+```js
+db.mapas.dropIndex('sala_1')
+```
