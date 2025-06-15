@@ -68,16 +68,18 @@ export const useBoleteria = () => {
     try {
       const response = await fetch(`http://localhost:5000/api/funcions?evento=${eventoId}`);
       const data = await response.json();
-      setFunciones(Array.isArray(data) ? data : []);
+      const funcs = Array.isArray(data) ? data : [];
+      setFunciones(funcs);
       const ev = eventos.find(e => e._id === eventoId);
       setSelectedEvent(ev || null);
+      setSelectedFuncion(null);
       if (ev?._id) {
         localStorage.setItem(EVENT_KEY, ev._id);
       }
-      return true;
+      return { success: true, funciones: funcs };
     } catch (error) {
       message.error('Error loading functions');
-      return false;
+      return { success: false, funciones: [] };
     }
   };
 

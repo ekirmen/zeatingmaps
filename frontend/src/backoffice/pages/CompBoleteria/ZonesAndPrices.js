@@ -8,6 +8,8 @@ const ZonesAndPrices = ({
   eventos = [],
   selectedEvent,
   onEventSelect,
+  funciones = [],
+  onShowFunctions,
   selectedFuncion,
   selectedClient,
   abonos = [],
@@ -506,14 +508,22 @@ const ZonesAndPrices = ({
               </option>
             ))}
           </select>
-          {selectedEvent?.imagenes?.logoCuadrado && (
-            <img
-              src={`${process.env.REACT_APP_API_URL}${selectedEvent.imagenes.logoCuadrado}`}
-              alt="Evento"
-              className="w-10 h-10 object-cover rounded"
-            />
-          )}
-        </div>
+        {selectedEvent?.imagenes?.logoCuadrado && (
+          <img
+            src={`${process.env.REACT_APP_API_URL}${selectedEvent.imagenes.logoCuadrado}`}
+            alt="Evento"
+            className="w-10 h-10 object-cover rounded"
+          />
+        )}
+        {funciones.length >= 2 && !selectedFuncion && (
+          <button
+            onClick={onShowFunctions}
+            className="px-2 py-1 bg-blue-600 text-white rounded text-sm"
+          >
+            Mostrar Funciones
+          </button>
+        )}
+      </div>
         {entradas.length > 0 && (
           <select
             className="border px-2 py-1 text-sm"
