@@ -42,7 +42,10 @@ const MapaSchema = new mongoose.Schema({
 
 // Garantiza un único mapa por combinación de sala y función
 // Permite múltiples mapas para la misma sala si pertenecen a funciones distintas
-MapaSchema.index({ salaId: 1, funcionId: 1 }, { unique: true });
+MapaSchema.index(
+  { salaId: 1, funcionId: 1 },
+  { unique: true, name: 'salaId_1_funcionId_1' },
+);
 
 const Mapa = mongoose.model('Mapa', MapaSchema);
 

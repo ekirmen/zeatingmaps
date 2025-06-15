@@ -13,8 +13,7 @@ async function renameSalaField() {
     const Mapas = mongoose.connection.collection('mapas');
     const cursor = Mapas.find({ sala: { $exists: true } });
 
-    while (await cursor.hasNext()) {
-      const doc = await cursor.next();
+    for await (const doc of cursor) {
       await Mapas.updateOne(
         { _id: doc._id },
         {
@@ -39,8 +38,34 @@ async function renameSalaField() {
       }
     }
 
+    // Remove existing duplicates before creating the new index
+    const duplicates = await Mapas.aggregate([
+      {
+        $group: {
+          _id: { salaId: '$salaId', funcionId: '$funcionId' },
+          ids: { $push: '$_id' },
+          count: { $sum: 1 },
+        },
+      },
+      { $match: { count: { $gt: 1 } } },
+    ]).toArray();
+
+    for (const dup of duplicates) {
+      const [keep, ...remove] = dup.ids;
+      if (remove.length) {
+        await Mapas.deleteMany({ _id: { $in: remove } });
+        console.log(
+          `Removed ${remove.length} duplicate maps for sala ${dup._id.salaId} ` +
+            `and funcion ${dup._id.funcionId}`,
+        );
+      }
+    }
+
     // Create the new unique compound index
-    await Mapas.createIndex({ salaId: 1, funcionId: 1 }, { unique: true });
+    await Mapas.createIndex(
+      { salaId: 1, funcionId: 1 },
+      { unique: true, name: 'salaId_1_funcionId_1' },
+    );
     console.log('Created index salaId_1_funcionId_1');
 
     console.log('Migration completed successfully');
