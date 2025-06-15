@@ -60,17 +60,27 @@ router.post('/', async (req, res) => {
   try {
     const nuevaFuncion = await funcion.save();
 
-    // Clone sala map for this function
-    const baseMapa = await Mapa.findOne({ salaId: nuevaFuncion.sala });
-    if (baseMapa) {
-      const nuevoMapa = await Mapa.create({
-        salaId: baseMapa.salaId,
-        funcionId: nuevaFuncion._id,
-        contenido: baseMapa.contenido,
+    // Clone base sala map for this function
+    const baseMapa = await Mapa.findOne({
+      salaId: nuevaFuncion.sala,
+      funcionId: null
+    });
+
+    if (!baseMapa) {
+      // Rollback function if no base map exists
+      await Funcion.findByIdAndDelete(nuevaFuncion._id);
+      return res.status(400).json({
+        message: 'Mapa base no encontrado para la sala seleccionada'
       });
-      nuevaFuncion.mapa = nuevoMapa._id;
-      await nuevaFuncion.save();
     }
+
+    const nuevoMapa = await Mapa.create({
+      salaId: baseMapa.salaId,
+      funcionId: nuevaFuncion._id,
+      contenido: baseMapa.contenido,
+    });
+    nuevaFuncion.mapa = nuevoMapa._id;
+    await nuevaFuncion.save();
 
     const funcionPopulada = await Funcion.findById(nuevaFuncion._id)
       .populate('evento')
