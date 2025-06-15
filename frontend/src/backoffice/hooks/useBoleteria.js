@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { message } from 'antd';
 import { fetchEventos, fetchMapa, fetchZonasPorSala } from '../services/apibackoffice';
 
+const EVENT_KEY = 'boleteriaEventId';
+const FUNC_KEY = 'boleteriaFunctionId';
+
 export const useBoleteria = () => {
   const restoredEventRef = useRef(false);
   const restoredFunctionRef = useRef(false);
@@ -38,7 +41,7 @@ export const useBoleteria = () => {
   // Restore selection from localStorage after events load
   useEffect(() => {
     if (eventos.length > 0 && !restoredEventRef.current) {
-      const storedEventId = localStorage.getItem('boleteriaEventId');
+      const storedEventId = localStorage.getItem(EVENT_KEY);
       if (storedEventId) {
         handleEventSelect(storedEventId);
       }
@@ -69,7 +72,7 @@ export const useBoleteria = () => {
       const ev = eventos.find(e => e._id === eventoId);
       setSelectedEvent(ev || null);
       if (ev?._id) {
-        localStorage.setItem('boleteriaEventId', ev._id);
+        localStorage.setItem(EVENT_KEY, ev._id);
       }
       return true;
     } catch (error) {
@@ -83,11 +86,11 @@ export const useBoleteria = () => {
     if (funcion.evento) {
       setSelectedEvent(funcion.evento);
       if (funcion.evento._id) {
-        localStorage.setItem('boleteriaEventId', funcion.evento._id);
+        localStorage.setItem(EVENT_KEY, funcion.evento._id);
       }
     }
     if (funcion._id) {
-      localStorage.setItem('boleteriaFunctionId', funcion._id);
+      localStorage.setItem(FUNC_KEY, funcion._id);
     }
     try {
       await Promise.all([
@@ -104,24 +107,24 @@ export const useBoleteria = () => {
   // Persist selections to localStorage
   useEffect(() => {
     if (selectedEvent?._id) {
-      localStorage.setItem('boleteriaEventId', selectedEvent._id);
+      localStorage.setItem(EVENT_KEY, selectedEvent._id);
     } else {
-      localStorage.removeItem('boleteriaEventId');
+      localStorage.removeItem(EVENT_KEY);
     }
   }, [selectedEvent]);
 
   useEffect(() => {
     if (selectedFuncion?._id) {
-      localStorage.setItem('boleteriaFunctionId', selectedFuncion._id);
+      localStorage.setItem(FUNC_KEY, selectedFuncion._id);
     } else {
-      localStorage.removeItem('boleteriaFunctionId');
+      localStorage.removeItem(FUNC_KEY);
     }
   }, [selectedFuncion]);
 
   // Restore selected function from localStorage after functions load
   useEffect(() => {
     if (funciones.length > 0 && !restoredFunctionRef.current) {
-      const storedFunctionId = localStorage.getItem('boleteriaFunctionId');
+      const storedFunctionId = localStorage.getItem(FUNC_KEY);
       if (storedFunctionId) {
         const func = funciones.find(f => f._id === storedFunctionId);
         if (func) {
