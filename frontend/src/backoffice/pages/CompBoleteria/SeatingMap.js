@@ -66,7 +66,10 @@ const SeatingMap = ({
     const baseFill = colorMap[silla.estado] || colorMap["disponible"];
     const fill = isSelected && silla.estado === "disponible" ? "#facc15" : baseFill;
     // When blockMode is active allow selecting any seat regardless of zone
-    const canSelect = blockMode || ((isAvailable || isSelected) && silla.estado !== "bloqueado" && (!abonoMode || isAbono));
+    // When abonoMode is active but the list of available seats failed to load
+    // allow selection by default. Only restrict when abonoSeats has entries.
+    const abonoRestriction = abonoMode && abonoSeats.length > 0 ? isAbono : true;
+    const canSelect = blockMode || ((isAvailable || isSelected) && silla.estado !== "bloqueado" && abonoRestriction);
 
     return (
       <Circle
