@@ -20,6 +20,11 @@ const FuncionSchema = new mongoose.Schema({
     ref: 'Plantilla',
     required: true,
   },
+  mapa: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Mapa',
+    default: null,
+  },
   inicioVenta: {
     type: Date,
     required: true,

@@ -61,12 +61,13 @@ export const CartProvider = ({ children }) => {
       if (cart.items?.length > 0) {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/api/seats/release`, {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
-          body: JSON.stringify({ 
-            seats: cart.items.map(item => item._id)
+          body: JSON.stringify({
+            seats: cart.items.map(item => item._id),
+            functionId: cart.functionId
           })
         });
 
@@ -86,11 +87,11 @@ export const CartProvider = ({ children }) => {
     try {
       const response = await fetch(`${process.env.REACT_APP_API_URL}/api/seats/release`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ seats: [seatId] })
+        body: JSON.stringify({ seats: [seatId], functionId: cart.functionId })
       });
 
       if (!response.ok) {

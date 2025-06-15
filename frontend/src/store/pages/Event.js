@@ -144,7 +144,7 @@ const Event = () => {
       if (!funcion) return;
 
       try {
-        const mapaData = await fetchMapa(funcion.sala._id);
+        const mapaData = await fetchMapa(funcion.sala._id, funcion._id);
         const mapaActualizado = {
           ...mapaData,
           contenido: mapaData.contenido.map(elemento => ({

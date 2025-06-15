@@ -6,36 +6,30 @@ const router = express.Router();
 
 router.post('/reserve', protect, async (req, res) => {
   try {
-    const { seatId, eventId } = req.body;
-    
-    // Busca el mapa que contiene la silla
-    const mapa = await Mapa.findOne({
-      'contenido.sillas._id': seatId
-    });
+    const { seats, functionId } = req.body;
+
+    if (!Array.isArray(seats) || seats.length === 0 || !functionId) {
+      return res.status(400).json({ message: 'Datos inválidos' });
+    }
+
+    const mapa = await Mapa.findOne({ funcionId: functionId });
 
     if (!mapa) {
       return res.status(404).json({ message: 'Asiento no encontrado' });
     }
 
-    // Recorre el contenido del mapa buscando la silla específica
-    let seatFound = false;
     mapa.contenido = mapa.contenido.map(item => {
       if (item.sillas) {
         item.sillas = item.sillas.map(seat => {
-          // Cuando encuentra la silla correcta
-          if (seat._id.toString() === seatId) {
-            seatFound = true;
-            // Verifica si ya está reservada
+          if (seats.includes(seat._id.toString())) {
             if (seat.isReserved) {
               throw new Error('El asiento ya está reservado');
             }
-            // Actualiza el estado de la silla
             return {
               ...seat,
               isReserved: true,
               reservedBy: req.user._id,
               reservedAt: new Date(),
-              eventId
             };
           }
           return seat;
@@ -56,28 +50,27 @@ router.post('/reserve', protect, async (req, res) => {
 
 router.post('/release', protect, async (req, res) => {
   try {
-    const { seats } = req.body;
-    
-    // Encuentra el mapa que contiene las sillas a liberar
-    const mapa = await Mapa.findOne({
-      'contenido.sillas._id': { $in: seats }
-    });
+    const { seats, functionId } = req.body;
+
+    if (!Array.isArray(seats) || seats.length === 0 || !functionId) {
+      return res.status(400).json({ message: 'Datos inválidos' });
+    }
+
+    const mapa = await Mapa.findOne({ funcionId: functionId });
 
     // Actualiza cada silla, verificando que el usuario sea el propietario
     let releasedCount = 0;
     mapa.contenido = mapa.contenido.map(item => {
       if (item.sillas) {
         item.sillas = item.sillas.map(seat => {
-          if (seats.includes(seat._id.toString()) && 
+          if (seats.includes(seat._id.toString()) &&
               seat.reservedBy?.toString() === req.user._id.toString()) {
             releasedCount++;
-            // Resetea el estado de la silla
             return {
               ...seat,
               isReserved: false,
               reservedBy: null,
               reservedAt: null,
-              eventId: null
             };
           }
           return seat;
@@ -99,15 +92,13 @@ router.post('/release', protect, async (req, res) => {
 // Bloquear o desbloquear asientos
 router.post('/block', protect, async (req, res) => {
   try {
-    const { seatIds, bloqueado } = req.body;
+    const { seatIds, bloqueado, functionId } = req.body;
 
-    if (!Array.isArray(seatIds) || typeof bloqueado !== 'boolean') {
+    if (!Array.isArray(seatIds) || typeof bloqueado !== 'boolean' || !functionId) {
       return res.status(400).json({ message: 'Datos inválidos' });
     }
 
-    const mapa = await Mapa.findOne({
-      'contenido.sillas._id': { $in: seatIds }
-    });
+    const mapa = await Mapa.findOne({ funcionId: functionId });
 
     if (!mapa) {
       return res.status(404).json({ message: 'Asientos no encontrados' });

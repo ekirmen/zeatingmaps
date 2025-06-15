@@ -35,7 +35,8 @@ const ElementoSchema = new mongoose.Schema({
 });
 
 const MapaSchema = new mongoose.Schema({
-  salaId: { type: mongoose.Schema.Types.ObjectId, ref: 'Sala', required: true, unique: true },
+  salaId: { type: mongoose.Schema.Types.ObjectId, ref: 'Sala', required: true },
+  funcionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Funcion', default: null },
   contenido: [ElementoSchema],
 });
 
