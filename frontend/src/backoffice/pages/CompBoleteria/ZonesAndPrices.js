@@ -259,17 +259,22 @@ const ZonesAndPrices = ({
         }
       }
       const abonoGroup = abonoMode ? `${selectedEvent?._id || ''}-${silla._id}` : undefined;
-      setCarrito([...carrito, {
-        ...silla,
-        nombreMesa: mesa.nombre,
-        zona: selectedZona.nombre,
-        zonaId: selectedZona._id,
-        precio: finalPrice,
-        tipoPrecio,
-        descuentoNombre,
-        plantillaId: selectedPlantilla._id,
-        ...(abonoGroup ? { abonoGroup } : {})
-      }]);
+      setCarrito([
+        ...carrito,
+        {
+          ...silla,
+          nombreMesa: mesa.nombre,
+          zona: selectedZona.nombre,
+          zonaId: selectedZona._id,
+          precio: finalPrice,
+          tipoPrecio,
+          descuentoNombre,
+          plantillaId: selectedPlantilla._id,
+          funcionId: selectedFuncion?._id,
+          funcionFecha: selectedFuncion?.fechaCelebracion,
+          ...(abonoGroup ? { abonoGroup } : {})
+        }
+      ]);
     }
   };
 
@@ -334,6 +339,8 @@ const ZonesAndPrices = ({
           tipoPrecio,
           descuentoNombre,
           plantillaId: selectedPlantilla._id,
+          funcionId: selectedFuncion?._id,
+          funcionFecha: selectedFuncion?.fechaCelebracion,
           ...(abonoGroup ? { abonoGroup } : {})
         },
       ]);
@@ -467,6 +474,9 @@ const ZonesAndPrices = ({
             tipoPrecio,
             descuentoNombre,
             plantillaId: selectedPlantilla._id,
+            funcionId: selectedFuncion?._id,
+            funcionFecha: selectedFuncion?.fechaCelebracion,
+            ...(abonoMode ? { abonoGroup: `${selectedEvent?._id || ''}-${s._id}` } : {})
           };
         });
 
