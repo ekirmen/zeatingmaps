@@ -66,7 +66,7 @@ router.get('/available/:eventId', protect, async (req, res) => {
       .distinct('seats.id');
 
     const salaId = funciones[0].sala;
-    const mapa = await Mapa.findOne({ sala: salaId });
+    const mapa = await Mapa.findOne({ salaId });
     if (!mapa) return res.json([]);
 
     const allSeatIds = [];
