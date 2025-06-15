@@ -9,10 +9,10 @@ const FunctionModal = ({
 }) => {
   const columns = [
     {
-      title: 'Time',
+      title: 'Date',
       dataIndex: 'fechaCelebracion',
-      render: (date) =>
-        new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      render: (date) => new Date(date).toLocaleDateString(),
+      // No ocultar columnas para móvil
     },
     {
       title: 'Room',
@@ -48,13 +48,6 @@ const FunctionModal = ({
     },
   ];
 
-  const grouped = funciones.reduce((acc, f) => {
-    const dateKey = new Date(f.fechaCelebracion).toLocaleDateString();
-    if (!acc[dateKey]) acc[dateKey] = [];
-    acc[dateKey].push(f);
-    return acc;
-  }, {});
-
   return (
     <Modal
       title="Select Function"
@@ -66,25 +59,20 @@ const FunctionModal = ({
       centered
       className="max-w-3xl mx-auto"
     >
-      <div className="overflow-x-auto p-4 space-y-6">
-        {Object.entries(grouped).map(([date, funcs]) => (
-          <div key={date} className="space-y-2">
-            <h4 className="font-semibold">{date}</h4>
-            <Table
-              dataSource={funcs}
-              columns={columns}
-              pagination={false}
-              rowKey={(record) => record._id || record.key}
-              size="middle"
-              scroll={{ x: 'max-content' }}
-              className="min-w-full"
-              onRow={(record) => ({
-                onClick: () => onFunctionSelect(record),
-                style: { cursor: 'pointer' },
-              })}
-            />
-          </div>
-        ))}
+      <div className="overflow-x-auto p-4">
+        <Table
+          dataSource={funciones}
+          columns={columns}
+          pagination={false}
+          rowKey={(record) => record._id || record.key}
+          size="middle"
+          scroll={{ x: 'max-content' }}
+          className="min-w-full"
+          onRow={(record) => ({
+            onClick: () => onFunctionSelect(record), // click fila selecciona función
+            style: { cursor: 'pointer' },
+          })}
+        />
       </div>
     </Modal>
   );
