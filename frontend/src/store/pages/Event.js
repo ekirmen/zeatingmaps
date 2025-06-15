@@ -77,20 +77,24 @@ const Event = () => {
   useEffect(() => {
     const fetchFunciones = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/funcions');
+        const response = await fetch(
+          `http://localhost:5000/api/funcions?evento=${eventId}`
+        );
         const data = await response.json();
         setFunciones(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching functions:', error);
       }
     };
-    fetchFunciones();
-  }, []);
+    if (eventId) fetchFunciones();
+  }, [eventId]);
 
   useEffect(() => {
     const fetchAllZonas = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/funcions/");
+        const response = await fetch(
+          `http://localhost:5000/api/funcions?evento=${eventId}`
+        );
         const funciones = await response.json();
   
         if (!Array.isArray(funciones)) throw new Error("Funciones not found");
@@ -116,8 +120,8 @@ const Event = () => {
       }
     };
   
-    fetchAllZonas();
-  }, []);
+    if (eventId) fetchAllZonas();
+  }, [eventId]);
   
   useEffect(() => {
     const fetchPagos = async () => {
