@@ -51,12 +51,21 @@ export const getPagosPorEvento = (eventoId) => fetchApi(`/pagos?evento=${eventoI
 // Mapas
 export const fetchMapa = async (salaId, funcionId = null) => {
   try {
-    const url = funcionId
-      ? `${API_BASE_URL}/funcions/${funcionId}/mapa`
-      : `${API_BASE_URL}/salas/${salaId}/mapa`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Error ${res.status}`);
-    return await res.json();
+    if (funcionId) {
+      const resFuncion = await fetch(`${API_BASE_URL}/funcions/${funcionId}/mapa`);
+      if (resFuncion.ok) {
+        return await resFuncion.json();
+      }
+      if (resFuncion.status !== 404) {
+        throw new Error(`Error ${resFuncion.status}`);
+      }
+      // Si no se encontró mapa específico para la función,
+      // se intenta obtener el mapa general de la sala
+    }
+
+    const resSala = await fetch(`${API_BASE_URL}/salas/${salaId}/mapa`);
+    if (!resSala.ok) throw new Error(`Error ${resSala.status}`);
+    return await resSala.json();
   } catch (error) {
     console.error('Error al obtener el mapa:', error);
     return null;
