@@ -234,9 +234,17 @@ const ZonesAndPrices = ({
       return;
     }
 
-    const seatInCart = carrito.find(item => item._id === silla._id);
+    const groupKey = `${selectedEvent?._id || ''}-${silla._id}`;
+    const seatInCart = carrito.some(item =>
+      abonoMode ? item.abonoGroup === groupKey :
+        (item._id === silla._id && item.funcionId === selectedFuncion?._id && !item.abonoGroup)
+    );
+
     if (seatInCart) {
-      setCarrito(carrito.filter(item => item._id !== silla._id));
+      setCarrito(carrito.filter(item =>
+        abonoMode ? item.abonoGroup !== groupKey :
+          !(item._id === silla._id && item.funcionId === selectedFuncion?._id && !item.abonoGroup)
+      ));
     } else {
       const basePrice = selectedPrecio.precio;
       const abonoActive = seatHasAbono(silla._id);
@@ -258,10 +266,8 @@ const ZonesAndPrices = ({
           descuentoNombre = appliedDiscount.nombreCodigo;
         }
       }
-      const abonoGroup = abonoMode ? `${selectedEvent?._id || ''}-${silla._id}` : undefined;
-      setCarrito([
-        ...carrito,
-        {
+      if (abonoMode) {
+        const seatsToAdd = funciones.map(func => ({
           ...silla,
           nombreMesa: mesa.nombre,
           zona: selectedZona.nombre,
@@ -270,11 +276,28 @@ const ZonesAndPrices = ({
           tipoPrecio,
           descuentoNombre,
           plantillaId: selectedPlantilla._id,
-          funcionId: selectedFuncion?._id,
-          funcionFecha: selectedFuncion?.fechaCelebracion,
-          ...(abonoGroup ? { abonoGroup } : {})
-        }
-      ]);
+          funcionId: func._id,
+          funcionFecha: func.fechaCelebracion,
+          abonoGroup: groupKey
+        }));
+        setCarrito([...carrito, ...seatsToAdd]);
+      } else {
+        setCarrito([
+          ...carrito,
+          {
+            ...silla,
+            nombreMesa: mesa.nombre,
+            zona: selectedZona.nombre,
+            zonaId: selectedZona._id,
+            precio: finalPrice,
+            tipoPrecio,
+            descuentoNombre,
+            plantillaId: selectedPlantilla._id,
+            funcionId: selectedFuncion?._id,
+            funcionFecha: selectedFuncion?.fechaCelebracion
+          }
+        ]);
+      }
     }
   };
 
@@ -303,9 +326,17 @@ const ZonesAndPrices = ({
     }
 
     const zonaObj = zonas.find((z) => z._id === silla.zona);
-    const seatInCart = carrito.find((item) => item._id === silla._id);
+    const groupKey = `${selectedEvent?._id || ''}-${silla._id}`;
+    const seatInCart = carrito.some(item =>
+      abonoMode ? item.abonoGroup === groupKey :
+        (item._id === silla._id && item.funcionId === selectedFuncion?._id && !item.abonoGroup)
+    );
+
     if (seatInCart) {
-      setCarrito(carrito.filter((item) => item._id !== silla._id));
+      setCarrito(carrito.filter(item =>
+        abonoMode ? item.abonoGroup !== groupKey :
+          !(item._id === silla._id && item.funcionId === selectedFuncion?._id && !item.abonoGroup)
+      ));
     } else {
       const basePrice = detallePrecio.precio;
       const abonoActive = seatHasAbono(silla._id);
@@ -327,10 +358,8 @@ const ZonesAndPrices = ({
           descuentoNombre = appliedDiscount.nombreCodigo;
         }
       }
-      const abonoGroup = abonoMode ? `${selectedEvent?._id || ''}-${silla._id}` : undefined;
-      setCarrito([
-        ...carrito,
-        {
+      if (abonoMode) {
+        const seatsToAdd = funciones.map(func => ({
           ...silla,
           nombreMesa: silla.mesaNombre || '',
           zona: zonaObj?.nombre || '',
@@ -339,11 +368,28 @@ const ZonesAndPrices = ({
           tipoPrecio,
           descuentoNombre,
           plantillaId: selectedPlantilla._id,
-          funcionId: selectedFuncion?._id,
-          funcionFecha: selectedFuncion?.fechaCelebracion,
-          ...(abonoGroup ? { abonoGroup } : {})
-        },
-      ]);
+          funcionId: func._id,
+          funcionFecha: func.fechaCelebracion,
+          abonoGroup: groupKey
+        }));
+        setCarrito([...carrito, ...seatsToAdd]);
+      } else {
+        setCarrito([
+          ...carrito,
+          {
+            ...silla,
+            nombreMesa: silla.mesaNombre || '',
+            zona: zonaObj?.nombre || '',
+            zonaId: zonaObj?._id,
+            precio: finalPrice,
+            tipoPrecio,
+            descuentoNombre,
+            plantillaId: selectedPlantilla._id,
+            funcionId: selectedFuncion?._id,
+            funcionFecha: selectedFuncion?.fechaCelebracion
+          },
+        ]);
+      }
     }
   };
 
@@ -411,77 +457,8 @@ const ZonesAndPrices = ({
   };
 
   const toggleTableSeats = (zonaId, mesaNombre) => {
-    if (blockMode) {
-      const seats = seatsByZone(zonaId).filter((s) => s.mesaNombre === mesaNombre);
-      seats.forEach(s => handleSeatClick(s, { nombre: mesaNombre }));
-      return;
-    }
-    if (!selectedClient) {
-      message.warning('Please select a client first');
-      return;
-    }
-
-    const detallePrecio = selectedPlantilla?.detalles.find(
-      (d) =>
-        d.zonaId === zonaId &&
-        (!selectedEntrada || d.productoId === selectedEntrada)
-    );
-    if (!detallePrecio) {
-      message.warning('Please select a price first');
-      return;
-    }
-
-    const zonaObj = zonas.find((z) => z._id === zonaId);
-
-    setCarrito((prev) => {
-      const seats = seatsByZone(zonaId)
-        .filter((s) => s.mesaNombre === mesaNombre && s.estado !== 'bloqueado');
-      const allSelected = seats.every((s) => prev.some((c) => c._id === s._id));
-
-      if (allSelected) {
-        return prev.filter((c) => !seats.some((s) => s._id === c._id));
-      }
-
-      const newSeats = seats
-        .filter((s) => !prev.some((c) => c._id === s._id))
-        .map((s) => {
-          const basePrice = detallePrecio.precio;
-          const abonoActive = seatHasAbono(s._id);
-          let finalPrice = abonoActive ? 0 : basePrice;
-          let tipoPrecio = abonoActive ? 'abono' : 'normal';
-          let descuentoNombre = abonoActive ? 'Abono' : '';
-          if (!abonoActive && appliedDiscount?.detalles) {
-            const det = appliedDiscount.detalles.find(d => {
-              const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
-              return id === zonaObj?._id;
-            });
-            if (det) {
-              if (det.tipo === 'porcentaje') {
-                finalPrice = Math.max(0, basePrice - (basePrice * det.valor / 100));
-              } else {
-                finalPrice = Math.max(0, basePrice - det.valor);
-              }
-              tipoPrecio = 'descuento';
-              descuentoNombre = appliedDiscount.nombreCodigo;
-            }
-          }
-          return {
-            ...s,
-            nombreMesa: s.mesaNombre || '',
-            zona: zonaObj?.nombre || '',
-            zonaId: zonaObj?._id,
-            precio: finalPrice,
-            tipoPrecio,
-            descuentoNombre,
-            plantillaId: selectedPlantilla._id,
-            funcionId: selectedFuncion?._id,
-            funcionFecha: selectedFuncion?.fechaCelebracion,
-            ...(abonoMode ? { abonoGroup: `${selectedEvent?._id || ''}-${s._id}` } : {})
-          };
-        });
-
-      return [...prev, ...newSeats];
-    });
+    const seats = seatsByZone(zonaId).filter(s => s.mesaNombre === mesaNombre);
+    seats.forEach(s => handleSeatClick(s, { nombre: mesaNombre }));
   };
 
   const seatsByZone = (zoneId) => {
