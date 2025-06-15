@@ -225,7 +225,8 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
               name: item.nombre,
               price: item.precio,
               zona: item.zonaId || (item.zona?._id || null),
-              mesa: item.mesa?._id || null
+              mesa: item.mesa?._id || null,
+              ...(item.abonoGroup ? { abonoGroup: item.abonoGroup } : {})
             })),
             locator: generateLocator(),
             status: diferencia > 0 ? 'reservado' : 'pagado',

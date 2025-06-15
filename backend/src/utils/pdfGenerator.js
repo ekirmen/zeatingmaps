@@ -50,10 +50,21 @@ export const generateTicketPDF = async (payment) => {
 
   const content = [];
 
-  for (let i = 0; i < payment.seats.length; i += 1) {
-    const seat = payment.seats[i];
-    const qrData = await QRCode.toDataURL(seat.id);
+  const groups = {};
+  payment.seats.forEach(seat => {
+    const key = seat.abonoGroup || seat.id;
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(seat);
+  });
 
+  const groupKeys = Object.keys(groups);
+  for (let i = 0; i < groupKeys.length; i += 1) {
+    const key = groupKeys[i];
+    const seats = groups[key];
+    const seat = seats[0];
+    const qrData = await QRCode.toDataURL(key);
+
+    const seatLines = seats.map(s => `${s.name} - ${s.zona?.name || 'N/A'} - Mesa ${s.mesa?.nombre || 'N/A'} - $${s.price}`);
     content.push(
       { text: 'Ticket de Compra', style: 'header' },
       { text: `Locator: ${payment.locator}`, style: 'subheader' },
@@ -69,13 +80,13 @@ export const generateTicketPDF = async (payment) => {
       { text: `Nombre: ${payment.user?.name || 'N/A'}` },
 
       { text: 'Datos del Asiento:', style: 'sectionHeader' },
-      { text: `${seat.name} - ${seat.zona?.name || 'N/A'} - Mesa ${seat.mesa?.nombre || 'N/A'} - $${seat.price}` },
+      { text: seatLines.join('\n') },
 
       { text: 'Código QR de acceso:', style: 'sectionHeader' },
       { image: qrData, width: 150, alignment: 'center', margin: [0, 10, 0, 10] }
     );
 
-    if (i < payment.seats.length - 1) {
+    if (i < groupKeys.length - 1) {
       content.push({ text: '', pageBreak: 'after' });
     }
   }

@@ -7,6 +7,8 @@ const SeatingMap = ({
   selectedZona,
   availableZonas,
   blockMode = false,
+  abonoMode = false,
+  abonoSeats = [],
 }) => {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(1);
@@ -51,6 +53,7 @@ const SeatingMap = ({
 
   const renderSeat = (silla, mesa) => {
     const isAvailable = availableZonas?.includes(silla.zona);
+    const isAbono = abonoMode && abonoSeats.includes(silla._id);
     const isSelected = selectedZona && selectedZona._id === silla.zona;
 
     const colorMap = {
@@ -63,7 +66,7 @@ const SeatingMap = ({
     const baseFill = colorMap[silla.estado] || colorMap["disponible"];
     const fill = isSelected && silla.estado === "disponible" ? "#facc15" : baseFill;
     // When blockMode is active allow selecting any seat regardless of zone
-    const canSelect = blockMode || ((isAvailable || isSelected) && silla.estado !== "bloqueado");
+    const canSelect = blockMode || ((isAvailable || isSelected) && silla.estado !== "bloqueado" && (!abonoMode || isAbono));
 
     return (
       <Circle
@@ -72,8 +75,8 @@ const SeatingMap = ({
         y={silla.posicion.y}
         radius={scale < 1 ? 6 : 10}
         fill={fill}
-        stroke={isSelected ? "#f97316" : "#1f2937"}
-        strokeWidth={isSelected ? 2 : 1}
+        stroke={isAbono ? "#4ade80" : isSelected ? "#f97316" : "#1f2937"}
+        strokeWidth={isSelected || isAbono ? 2 : 1}
         onClick={() => {
           if (canSelect) onSeatClick(silla, mesa);
         }}

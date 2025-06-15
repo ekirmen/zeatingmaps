@@ -23,7 +23,9 @@ const paymentSchema = new mongoose.Schema({
     price: Number,
     zona: { type: mongoose.Schema.Types.ObjectId, ref: 'Zona' },
     mesa: { type: mongoose.Schema.Types.ObjectId, ref: 'Mesa' },
-    acceso: { type: Number, default: 0 } // 0 = not scanned, 1 = scanned
+    acceso: { type: Number, default: 0 }, // 0 = not scanned, 1 = scanned
+    // When seats belong to an abono purchase they will share the same group id
+    abonoGroup: { type: String, default: null }
   }],
   locator: String,
   status: String,
