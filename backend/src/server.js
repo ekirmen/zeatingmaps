@@ -221,7 +221,7 @@ app.get('/api/health', (req, res) => {
 app.get('/api/salas/:salaId/seats', async (req, res) => {
   const { salaId } = req.params;
   try {
-    const mapa = await Mapa.findOne({ sala: salaId });
+    const mapa = await Mapa.findOne({ salaId });
     if (!mapa) return res.status(404).json({ message: 'Mapa no encontrado' });
 
     const sillas = mapa.contenido.reduce((acc, item) => {
