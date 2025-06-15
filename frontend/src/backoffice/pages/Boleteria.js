@@ -71,9 +71,11 @@ const Boleteria = () => {
   };
 
   const onEventSelect = async (eventoId) => {
-    const success = await handleEventSelect(eventoId);
+    const { success, funciones: funcs = [] } = await handleEventSelect(eventoId);
     if (success) {
-      setIsFunctionsModalVisible(true);
+      if (funcs.length === 1) {
+        await handleFunctionSelect(funcs[0]);
+      }
       if (sidebarOpen) setSidebarOpen(false); // cerrar sidebar mobile al seleccionar
     }
   };
@@ -230,6 +232,8 @@ const Boleteria = () => {
               eventos={eventos}
               selectedEvent={selectedEvent}
               onEventSelect={onEventSelect}
+              funciones={funciones}
+              onShowFunctions={() => setIsFunctionsModalVisible(true)}
               selectedFuncion={selectedFuncion}
               selectedClient={selectedClient}
               abonos={clientAbonos}
@@ -264,6 +268,8 @@ const Boleteria = () => {
               eventos={eventos}
               selectedEvent={selectedEvent}
               onEventSelect={onEventSelect}
+              funciones={funciones}
+              onShowFunctions={() => setIsFunctionsModalVisible(true)}
               selectedFuncion={selectedFuncion}
               selectedClient={selectedClient}
               abonos={clientAbonos}
