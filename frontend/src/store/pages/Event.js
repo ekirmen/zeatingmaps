@@ -316,6 +316,14 @@ const Event = () => {
 
       <div className="bg-white p-4 rounded shadow-md mt-6">
         <h2 className="text-xl font-semibold mb-3">Carrito</h2>
+        {selectedFunctionId && (
+          <div className="mb-2 font-medium">
+            {(() => {
+              const fn = funciones.find(f => f._id === selectedFunctionId);
+              return fn ? new Date(fn.fechaCelebracion).toLocaleString() : '';
+            })()}
+          </div>
+        )}
         {carrito.map((item, index) => (
           <div key={index} className="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded">
             <span>{item.zonaNombre} - {item.nombreMesa} - Silla {index + 1} - ${item.precio}

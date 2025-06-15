@@ -25,6 +25,7 @@ const Pay = () => {
   const [availableMethods, setAvailableMethods] = useState(["stripe", "paypal", "transferencia"]);
   const [allowReservation, setAllowReservation] = useState(false);
   const [currentEventId, setCurrentEventId] = useState(null);
+  const [funcionDetails, setFuncionDetails] = useState(null);
   const [affiliate, setAffiliate] = useState(null);
 
   const subtotal = carrito?.reduce((sum, item) => sum + item.precio, 0) || 0;
@@ -40,6 +41,7 @@ const Pay = () => {
       try {
         const funcRes = await fetch(`http://localhost:5000/api/funcions/${funcionId}`);
         const funcData = await funcRes.json();
+        setFuncionDetails(funcData);
         const eventId = funcData.evento?._id || funcData.evento;
         setAllowReservation(!!funcData.permitirReservasWeb);
         setCurrentEventId(eventId);
@@ -191,6 +193,11 @@ const Pay = () => {
       {/* Cart Summary */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <h2 className="text-xl font-semibold mb-4">Resumen del Carrito</h2>
+        {funcionDetails && (
+          <div className="mb-2 font-medium">
+            {new Date(funcionDetails.fechaCelebracion).toLocaleString()}
+          </div>
+        )}
         {carrito.map((item, index) => (
           <div key={index} className="flex justify-between py-2 border-b">
             <span>{item.zonaNombre} - {item.nombreMesa}</span>
