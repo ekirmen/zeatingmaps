@@ -512,7 +512,8 @@ const ZonesAndPrices = ({
           <img
             src={`${process.env.REACT_APP_API_URL}${selectedEvent.imagenes.logoCuadrado}`}
             alt="Evento"
-            className="w-10 h-10 object-cover rounded"
+            className="w-10 h-10 object-cover rounded cursor-pointer"
+            onClick={onShowFunctions}
           />
         )}
         {funciones.length >= 2 && !selectedFuncion && (
