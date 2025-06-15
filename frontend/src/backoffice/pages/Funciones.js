@@ -129,7 +129,7 @@ const Funciones = () => {
       fechaCelebracion: funcion.fechaCelebracion.split('T')[0],
       evento: funcion.evento._id,
       sala: funcion.sala._id,
-      plantilla: funcion.plantilla._id,
+      plantilla: funcion.plantilla ? funcion.plantilla._id : '',
       inicioVenta: funcion.inicioVenta.split('T')[0],
       finVenta: funcion.finVenta.split('T')[0],
       pagoAPlazos: funcion.pagoAPlazos || false,
@@ -273,7 +273,7 @@ const Funciones = () => {
               <td>{new Date(funcion.fechaCelebracion).toLocaleDateString()}</td>
               <td>{funcion.evento.nombre}</td>
               <td>{funcion.sala.nombre}</td>
-              <td>{funcion.plantilla.nombre}</td>
+              <td>{funcion.plantilla ? funcion.plantilla.nombre : 'Plantilla eliminada'}</td>
               <td>{new Date(funcion.inicioVenta).toLocaleDateString()}</td>
               <td>{new Date(funcion.finVenta).toLocaleDateString()}</td>
               <td>{funcion.pagoAPlazos ? 'Sí' : 'No'}</td>
