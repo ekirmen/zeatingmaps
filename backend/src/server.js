@@ -182,6 +182,8 @@ app.use('/api', entradaRoutes);
 app.use('/api/plantillas', plantillaRoutes);
 app.use('/api/descuentos', descuentoRoutes);
 app.use('/api/funcions', funcionsRoutes);
+// Alias to support Spanish plural spelling
+app.use('/api/funciones', funcionsRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/affiliate-users', affiliateRoutes);
 app.use('/api/metodos_pago', metodoPagoRoutes);

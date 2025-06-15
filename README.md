@@ -71,3 +71,8 @@ After running the script you can safely drop the old index (if it exists):
 ```js
 db.mapas.dropIndex('sala_1')
 ```
+
+## API Notes
+
+Function endpoints are available under `/api/funcions`. An alias is also
+provided at `/api/funciones` to avoid confusion with the Spanish plural.
