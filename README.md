@@ -76,3 +76,8 @@ db.mapas.dropIndex('sala_1')
 
 Function endpoints are available under `/api/funcions`. An alias is also
 provided at `/api/funciones` to avoid confusion with the Spanish plural.
+
+Each Sala must have a base `Mapa` (with `funcionId: null`) before creating
+a Función. When a function is created the API clones this base map and
+links it to the new record. If no base map exists the creation will fail
+with a `400` response.
