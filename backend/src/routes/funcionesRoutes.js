@@ -153,7 +153,9 @@ router.get('/:id/mapa', async (req, res) => {
   try {
     const mapa = await Mapa.findOne({ funcionId: req.params.id });
     if (!mapa) {
-      return res.status(404).json({ message: 'Mapa not found' });
+      // Return null when no map is found so the client can
+      // gracefully fall back to the sala's default map
+      return res.status(200).json(null);
     }
     res.json(mapa);
   } catch (error) {
