@@ -38,7 +38,11 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
   };
 
   const handleRemoveSeat = (id) => {
-    setCarrito(carrito.filter((item) => (item.abonoGroup || item._id) !== id));
+    setCarrito(
+      carrito.filter(
+        (item) => (item.abonoGroup || `${item._id}-${item.funcionId || ''}`) !== id
+      )
+    );
     message.success('Seat removed from cart');
   };
 
@@ -78,7 +82,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
   const subtotal = carrito.reduce((sum, item) => sum + (item.precio || 0), 0);
 
   const grouped = carrito.reduce((acc, item) => {
-    const key = item.abonoGroup || item._id;
+    const key = item.abonoGroup || `${item._id}-${item.funcionId || ''}`;
     if (!acc[key]) {
       acc[key] = { ...item, seats: [item], total: item.precio || 0 };
     } else {
@@ -111,7 +115,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
       <div className="max-h-[430px] overflow-y-auto space-y-2 pr-1">
         {groupedItems.map((group) => (
           <div
-            key={group.abonoGroup || group._id}
+            key={group.abonoGroup || `${group._id}-${group.funcionId || ''}`}
             className="flex justify-between items-start bg-gray-100 p-2 rounded shadow-sm text-sm"
           >
             <div className="truncate text-xs leading-tight">
@@ -139,7 +143,11 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
               )}
             </div>
             <button
-              onClick={() => handleRemoveSeat(group.abonoGroup || group._id)}
+              onClick={() =>
+                handleRemoveSeat(
+                  group.abonoGroup || `${group._id}-${group.funcionId || ''}`
+                )
+              }
               className="text-gray-400 hover:text-red-500"
             >
               <CloseOutlined />
