@@ -93,6 +93,10 @@ const ZonesAndPrices = ({
 
           if (mapaData && typeof mapaData === 'object') {
             setMapa(mapaData);
+            setActiveMenu('Mapa');
+          } else {
+            setMapa(null);
+            setActiveMenu('Zonas');
           }
 
           if (Array.isArray(zonasData)) {
@@ -682,7 +686,6 @@ const ZonesAndPrices = ({
 
       {activeMenu === 'Mapa' && (
         <div className="space-y-4">
-          <h3>Function Price Template</h3>
             {selectedPlantilla ? (
               <div className="template-card selected">
                 <h4>{selectedPlantilla.nombre}</h4>
