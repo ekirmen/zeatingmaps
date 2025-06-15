@@ -45,3 +45,15 @@ Copy `frontend/.env.example` to `frontend/.env`:
 ```ini
 REACT_APP_API_URL=http://localhost:5000
 ```
+
+## Running Tests
+
+After installing dependencies in each folder you can run the test suites.
+
+```bash
+# run backend tests
+npm test
+
+# run frontend tests
+npm run test:frontend
+```
