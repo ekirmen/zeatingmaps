@@ -477,7 +477,7 @@ const ZonesAndPrices = ({
           </select>
           {selectedEvent?.imagenes?.logoCuadrado && (
             <img
-              src={selectedEvent.imagenes.logoCuadrado}
+              src={`${process.env.REACT_APP_API_URL}${selectedEvent.imagenes.logoCuadrado}`}
               alt="Evento"
               className="w-10 h-10 object-cover rounded"
             />
