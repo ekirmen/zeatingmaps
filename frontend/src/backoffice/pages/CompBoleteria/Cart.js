@@ -81,17 +81,14 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
 
   const subtotal = carrito.reduce((sum, item) => sum + (item.precio || 0), 0);
 
-  const grouped = carrito.reduce((acc, item) => {
-    const key = item.abonoGroup || `${item._id}-${item.funcionId || ''}`;
+  const groupedByFunction = carrito.reduce((acc, item) => {
+    const key = item.funcionId || 'default';
     if (!acc[key]) {
-      acc[key] = { ...item, seats: [item], total: item.precio || 0 };
-    } else {
-      acc[key].seats.push(item);
-      acc[key].total += item.precio || 0;
+      acc[key] = { fecha: item.funcionFecha, items: [] };
     }
+    acc[key].items.push(item);
     return acc;
   }, {});
-  const groupedItems = Object.values(grouped);
   const commission = selectedAffiliate ? (selectedAffiliate.base || 0) + subtotal * ((selectedAffiliate.percentage || 0) / 100) : 0;
   const total = subtotal - commission;
 
@@ -113,45 +110,45 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
 
       {/* Scrollable Item List */}
       <div className="max-h-[430px] overflow-y-auto space-y-2 pr-1">
-        {groupedItems.map((group) => (
-          <div
-            key={group.abonoGroup || `${group._id}-${group.funcionId || ''}`}
-            className="flex justify-between items-start bg-gray-100 p-2 rounded shadow-sm text-sm"
-          >
-            <div className="truncate text-xs leading-tight">
-              <strong>Seat:</strong> {group.nombre} &nbsp;|&nbsp;
-              <strong>Table:</strong> {group.nombreMesa} &nbsp;|&nbsp;
-              <strong>Zone:</strong> {group.zona}
-              {group.seats.length > 1 && (
-                <>
-                  &nbsp;|&nbsp; <strong>Functions:</strong> {group.seats.map(s => new Date(s.funcionFecha).toLocaleString()).join(' | ')}
-                </>
-              )}
-              {group.action === 'block' && (
-                <span className="text-red-600"> &nbsp;|&nbsp; Bloquear</span>
-              )}
-              {group.action === 'unblock' && (
-                <span className="text-green-600"> &nbsp;|&nbsp; Desbloquear</span>
-              )}
-              {!group.action && (
-                <>
-                  &nbsp;|&nbsp; <strong>Price:</strong> ${formatPrice(group.total)}
-                  {group.tipoPrecio === 'descuento' && (
-                    <span className="text-green-600"> &nbsp;|&nbsp; {group.descuentoNombre}</span>
-                  )}
-                </>
-              )}
+        {Object.entries(groupedByFunction).map(([fid, group]) => (
+          <div key={fid} className="space-y-1">
+            <div className="text-xs font-medium">
+              {group.fecha ? new Date(group.fecha).toLocaleString() : ''}
             </div>
-            <button
-              onClick={() =>
-                handleRemoveSeat(
-                  group.abonoGroup || `${group._id}-${group.funcionId || ''}`
-                )
-              }
-              className="text-gray-400 hover:text-red-500"
-            >
-              <CloseOutlined />
-            </button>
+            {group.items.map((item) => (
+              <div
+                key={item.abonoGroup || `${item._id}-${item.funcionId || ''}`}
+                className="flex justify-between items-start bg-gray-100 p-2 rounded shadow-sm text-sm"
+              >
+                <div className="truncate text-xs leading-tight">
+                  <strong>Seat:</strong> {item.nombre} &nbsp;|&nbsp;
+                  <strong>Table:</strong> {item.nombreMesa} &nbsp;|&nbsp;
+                  <strong>Zone:</strong> {item.zona}
+                  {item.action === 'block' && (
+                    <span className="text-red-600"> &nbsp;|&nbsp; Bloquear</span>
+                  )}
+                  {item.action === 'unblock' && (
+                    <span className="text-green-600"> &nbsp;|&nbsp; Desbloquear</span>
+                  )}
+                  {!item.action && (
+                    <>
+                      &nbsp;|&nbsp; <strong>Price:</strong> ${formatPrice(item.precio || 0)}
+                      {item.tipoPrecio === 'descuento' && (
+                        <span className="text-green-600"> &nbsp;|&nbsp; {item.descuentoNombre}</span>
+                      )}
+                    </>
+                  )}
+                </div>
+                <button
+                  onClick={() =>
+                    handleRemoveSeat(`${item._id}-${item.funcionId || ''}`)
+                  }
+                  className="text-gray-400 hover:text-red-500"
+                >
+                  <CloseOutlined />
+                </button>
+              </div>
+            ))}
           </div>
         ))}
       </div>
