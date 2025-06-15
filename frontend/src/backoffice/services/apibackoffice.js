@@ -236,3 +236,6 @@ export const renewAbono = (id, data) =>
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
+
+export const fetchAbonoAvailableSeats = (eventId) =>
+  fetchApi(`/abonos/available/${eventId}`);

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
 import { fetchMapa, fetchZonasPorSala } from '../../services/apibackoffice';
+import { fetchAbonoAvailableSeats } from '../../services/apibackoffice';
 
 const ZonesAndPrices = ({
   eventos = [],
@@ -26,6 +27,8 @@ const ZonesAndPrices = ({
   const [entradas, setEntradas] = useState([]);
   const [selectedEntrada, setSelectedEntrada] = useState(null);
   const [blockMode, setBlockMode] = useState(false);
+  const [abonoMode, setAbonoMode] = useState(false);
+  const [abonoSeats, setAbonoSeats] = useState([]);
   const [affiliates, setAffiliates] = useState([]);
   
   const [discountCode, setDiscountCode] = useState('');
@@ -57,6 +60,26 @@ const ZonesAndPrices = ({
     };
     cargarPlantillaPrecios();
   }, [selectedFuncion]);
+
+  useEffect(() => {
+    const loadAbonoSeats = async () => {
+      if (abonoMode && selectedEvent?._id) {
+        try {
+          const res = await fetchAbonoAvailableSeats(selectedEvent._id);
+          if (res.ok) {
+            const data = await res.json();
+            setAbonoSeats(Array.isArray(data) ? data : []);
+          }
+        } catch (err) {
+          console.error('Error loading abono seats:', err);
+          setAbonoSeats([]);
+        }
+      } else {
+        setAbonoSeats([]);
+      }
+    };
+    loadAbonoSeats();
+  }, [abonoMode, selectedEvent]);
 
   // Cargar mapa y zonas de la sala
   useEffect(() => {
@@ -215,8 +238,8 @@ const ZonesAndPrices = ({
       const basePrice = selectedPrecio.precio;
       const abonoActive = seatHasAbono(silla._id);
       let finalPrice = abonoActive ? 0 : basePrice;
-      let tipoPrecio = abonoActive ? 'abono' : 'normal';
-      let descuentoNombre = abonoActive ? 'Abono' : '';
+      let tipoPrecio = abonoMode ? 'abono' : abonoActive ? 'abono' : 'normal';
+      let descuentoNombre = abonoMode ? 'Abono' : abonoActive ? 'Abono' : '';
       if (!abonoActive && appliedDiscount?.detalles) {
         const det = appliedDiscount.detalles.find(d => {
           const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
@@ -232,6 +255,7 @@ const ZonesAndPrices = ({
           descuentoNombre = appliedDiscount.nombreCodigo;
         }
       }
+      const abonoGroup = abonoMode ? `${selectedEvent?._id || ''}-${silla._id}` : undefined;
       setCarrito([...carrito, {
         ...silla,
         nombreMesa: mesa.nombre,
@@ -240,7 +264,8 @@ const ZonesAndPrices = ({
         precio: finalPrice,
         tipoPrecio,
         descuentoNombre,
-        plantillaId: selectedPlantilla._id
+        plantillaId: selectedPlantilla._id,
+        ...(abonoGroup ? { abonoGroup } : {})
       }]);
     }
   };
@@ -277,8 +302,8 @@ const ZonesAndPrices = ({
       const basePrice = detallePrecio.precio;
       const abonoActive = seatHasAbono(silla._id);
       let finalPrice = abonoActive ? 0 : basePrice;
-      let tipoPrecio = abonoActive ? 'abono' : 'normal';
-      let descuentoNombre = abonoActive ? 'Abono' : '';
+      let tipoPrecio = abonoMode ? 'abono' : abonoActive ? 'abono' : 'normal';
+      let descuentoNombre = abonoMode ? 'Abono' : abonoActive ? 'Abono' : '';
       if (!abonoActive && appliedDiscount?.detalles) {
         const det = appliedDiscount.detalles.find(d => {
           const id = typeof d.zona === 'object' ? d.zona._id : d.zona;
@@ -294,6 +319,7 @@ const ZonesAndPrices = ({
           descuentoNombre = appliedDiscount.nombreCodigo;
         }
       }
+      const abonoGroup = abonoMode ? `${selectedEvent?._id || ''}-${silla._id}` : undefined;
       setCarrito([
         ...carrito,
         {
@@ -305,6 +331,7 @@ const ZonesAndPrices = ({
           tipoPrecio,
           descuentoNombre,
           plantillaId: selectedPlantilla._id,
+          ...(abonoGroup ? { abonoGroup } : {})
         },
       ]);
     }
@@ -508,6 +535,10 @@ const ZonesAndPrices = ({
         >
           {blockMode ? 'Desbloquear' : 'Bloquear'}
         </button>
+        <label className="flex items-center gap-1 text-sm">
+          <input type="checkbox" checked={abonoMode} onChange={() => setAbonoMode(!abonoMode)} />
+          Abono
+        </label>
       </div>
       {/* Menu Tabs */}
       <div className="flex items-center space-x-2 mb-4">
@@ -686,6 +717,8 @@ const ZonesAndPrices = ({
             selectedZona={selectedZona}
             availableZonas={selectedZona ? [selectedZona._id] : []}
             blockMode={blockMode}
+            abonoMode={abonoMode}
+            abonoSeats={abonoSeats}
           />
         </div>
       )}

@@ -1,6 +1,9 @@
 import express from 'express';
 import Abono from '../models/Abono.js';
 import { protect } from '../middleware/authMiddleware.js';
+import Funcion from '../models/Funcion.js';
+import Payment from '../models/Payment.js';
+import Mapa from '../models/Mapa.js';
 
 const router = express.Router();
 
@@ -48,6 +51,33 @@ router.put('/:id/renew', protect, async (req, res) => {
     res.json(abono);
   } catch (error) {
     res.status(500).json({ message: 'Error al renovar abono', error: error.message });
+  }
+});
+
+// Seats available for abono across all functions of an event
+router.get('/available/:eventId', protect, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const funciones = await Funcion.find({ evento: eventId });
+    if (!funciones.length) return res.json([]);
+
+    const funcionIds = funciones.map(f => f._id);
+    const soldSeatIds = await Payment.find({ funcion: { $in: funcionIds } })
+      .distinct('seats.id');
+
+    const salaId = funciones[0].sala;
+    const mapa = await Mapa.findOne({ sala: salaId });
+    if (!mapa) return res.json([]);
+
+    const allSeatIds = [];
+    mapa.contenido.forEach(m => {
+      (m.sillas || []).forEach(s => allSeatIds.push(s._id));
+    });
+
+    const available = allSeatIds.filter(id => !soldSeatIds.includes(id));
+    res.json(available);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching available seats', error: error.message });
   }
 });
 
