@@ -152,3 +152,4 @@ router.get('/:id/mapa', async (req, res) => {
 });
 
 export default router;
+
