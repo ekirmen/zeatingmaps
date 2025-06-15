@@ -67,11 +67,8 @@ const ZonesAndPrices = ({
     const loadAbonoSeats = async () => {
       if (abonoMode && selectedEvent?._id) {
         try {
-          const res = await fetchAbonoAvailableSeats(selectedEvent._id);
-          if (res.ok) {
-            const data = await res.json();
-            setAbonoSeats(Array.isArray(data) ? data : []);
-          }
+          const data = await fetchAbonoAvailableSeats(selectedEvent._id);
+          setAbonoSeats(Array.isArray(data) ? data : []);
         } catch (err) {
           console.error('Error loading abono seats:', err);
           setAbonoSeats([]);
