@@ -161,6 +161,32 @@ const Funciones = () => {
     }
   };
 
+  const handleDuplicate = async (funcionId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/funcions/${funcionId}`);
+      if (!response.ok) {
+        alert('Error al obtener la función');
+        return;
+      }
+      const funcionOriginal = await response.json();
+      const { _id, __v, ...funcionDuplicada } = funcionOriginal;
+      const saveResponse = await fetch('http://localhost:5000/api/funcions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(funcionDuplicada),
+      });
+      if (!saveResponse.ok) {
+        alert('Error al duplicar la función');
+        return;
+      }
+      const refreshResponse = await fetch(`http://localhost:5000/api/funcions?evento=${eventoSeleccionado}`);
+      const refreshData = await refreshResponse.json();
+      setFunciones(Array.isArray(refreshData) ? refreshData : []);
+    } catch (error) {
+      console.error('Error al duplicar la función:', error);
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
       <h2 className="text-2xl font-semibold">Gestión de Funciones</h2>
@@ -258,6 +284,9 @@ const Funciones = () => {
                 </button>
                 <button className="text-red-600 hover:underline" onClick={() => handleDelete(funcion._id)}>
                   Eliminar
+                </button>
+                <button className="text-gray-600 hover:underline" onClick={() => handleDuplicate(funcion._id)}>
+                  Duplicar
                 </button>
               </td>
             </tr>
