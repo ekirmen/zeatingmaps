@@ -528,7 +528,7 @@ const PlantillaPrecios = () => {
         </div>
       </Modal>
 
-      <style jsx global>{`
+      <style>{`
         .modal {
           position: absolute;
           top: 50%;
