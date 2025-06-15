@@ -1,5 +1,6 @@
 import express from 'express';
 import Funcion from '../models/Funcion.js';
+import Mapa from '../models/Mapa.js';
 
 const router = express.Router();
 
@@ -12,7 +13,8 @@ router.get('/', async (req, res) => {
     const funciones = await Funcion.find(query)
       .populate('evento')
       .populate('sala')
-      .populate('plantilla');
+      .populate('plantilla')
+      .populate('mapa');
     res.json(funciones);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -25,7 +27,8 @@ router.get('/evento/:eventoId', async (req, res) => {
     const funciones = await Funcion.find({ evento: req.params.eventoId })
       .populate('evento')
       .populate('sala')
-      .populate('plantilla');
+      .populate('plantilla')
+      .populate('mapa');
     res.json(funciones);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -38,7 +41,8 @@ router.get('/:id', async (req, res) => {
     const funcion = await Funcion.findById(req.params.id)
       .populate('evento')
       .populate('sala')
-      .populate('plantilla');
+      .populate('plantilla')
+      .populate('mapa');
 
     if (!funcion) {
       return res.status(404).json({ message: 'Función no encontrada' });
@@ -55,10 +59,24 @@ router.post('/', async (req, res) => {
   const funcion = new Funcion(req.body);
   try {
     const nuevaFuncion = await funcion.save();
+
+    // Clone sala map for this function
+    const baseMapa = await Mapa.findOne({ salaId: nuevaFuncion.sala });
+    if (baseMapa) {
+      const nuevoMapa = await Mapa.create({
+        salaId: baseMapa.salaId,
+        funcionId: nuevaFuncion._id,
+        contenido: baseMapa.contenido,
+      });
+      nuevaFuncion.mapa = nuevoMapa._id;
+      await nuevaFuncion.save();
+    }
+
     const funcionPopulada = await Funcion.findById(nuevaFuncion._id)
       .populate('evento')
       .populate('sala')
-      .populate('plantilla');
+      .populate('plantilla')
+      .populate('mapa');
     res.status(201).json(funcionPopulada);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -75,7 +93,8 @@ router.put('/:id', async (req, res) => {
     )
     .populate('evento')
     .populate('sala')
-    .populate('plantilla');
+    .populate('plantilla')
+    .populate('mapa');
     
     if (!funcion) {
       return res.status(404).json({ message: 'Función no encontrada' });
@@ -114,6 +133,19 @@ router.get('/:id/plantilla', async (req, res) => {
     }
 
     res.json(funcion.plantilla);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Get mapa for a specific function
+router.get('/:id/mapa', async (req, res) => {
+  try {
+    const mapa = await Mapa.findOne({ funcionId: req.params.id });
+    if (!mapa) {
+      return res.status(404).json({ message: 'Mapa not found' });
+    }
+    res.json(mapa);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

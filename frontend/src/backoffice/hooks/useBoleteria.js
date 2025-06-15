@@ -96,7 +96,7 @@ export const useBoleteria = () => {
     }
     try {
       await Promise.all([
-        fetchMapa(funcion.sala._id),
+        fetchMapa(funcion.sala._id, funcion._id),
         fetchZonasPorSala(funcion.sala._id)
       ]);
       return true;

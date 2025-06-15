@@ -55,9 +55,12 @@ export const getMapaPorEvento = (eventId) =>
   fetchStoreData(`/mapa?evento=${eventId}`);
 
 // 🔹 Obtener mapa por sala ID
-export const fetchMapa = async (salaId) => {
+export const fetchMapa = async (salaId, funcionId = null) => {
   try {
-    const res = await fetch(`${BASE_URL}/salas/${salaId}/mapa`);
+    const url = funcionId
+      ? `${BASE_URL}/funcions/${funcionId}/mapa`
+      : `${BASE_URL}/salas/${salaId}/mapa`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error("No se pudo obtener el mapa");
     return await res.json();
   } catch (error) {

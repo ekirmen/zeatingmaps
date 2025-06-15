@@ -18,7 +18,7 @@ const SelectSeats = () => {
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const data = await fetchMapa(salaId);
+        const data = await fetchMapa(salaId, funcionId);
         if (!data || !data.contenido) {
           throw new Error('Datos no válidos o vacíos');
         }

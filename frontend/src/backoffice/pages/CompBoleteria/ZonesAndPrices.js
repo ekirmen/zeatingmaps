@@ -86,7 +86,7 @@ const ZonesAndPrices = ({
       if (selectedFuncion?.sala?._id) {
         try {
           const [mapaData, zonasData] = await Promise.all([
-            fetchMapa(selectedFuncion.sala._id),
+            fetchMapa(selectedFuncion.sala._id, selectedFuncion._id),
             fetchZonasPorSala(selectedFuncion.sala._id)
           ]);
 

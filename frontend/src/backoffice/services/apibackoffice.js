@@ -49,9 +49,12 @@ export const fetchPagoByLocator = (locator) => fetchApi(`/pagos/${locator}`);
 export const getPagosPorEvento = (eventoId) => fetchApi(`/pagos?evento=${eventoId}`);
 
 // Mapas
-export const fetchMapa = async (salaId) => {
+export const fetchMapa = async (salaId, funcionId = null) => {
   try {
-    const res = await fetch(`${API_BASE_URL}/salas/${salaId}/mapa`);
+    const url = funcionId
+      ? `${API_BASE_URL}/funcions/${funcionId}/mapa`
+      : `${API_BASE_URL}/salas/${salaId}/mapa`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`Error ${res.status}`);
     return await res.json();
   } catch (error) {
