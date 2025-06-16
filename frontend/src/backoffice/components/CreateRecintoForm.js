@@ -2,6 +2,12 @@
 import React, { useState } from 'react';
 
 const geocodeAddress = async (address) => {
+  const clean = address
+    .split(',')
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .join(', ');
+
   const fetchGeo = async (query) => {
     if (process.env.REACT_APP_GOOGLE_MAPS_API_KEY) {
       const googleRes = await fetch(
@@ -20,7 +26,14 @@ const geocodeAddress = async (address) => {
     return data && data.length ? { lat: data[0].lat, lon: data[0].lon } : null;
   };
 
-  let result = await fetchGeo(address);
+  let result = await fetchGeo(clean);
+  if (!result) {
+    const parts = clean.split(', ');
+    if (parts.length > 3) {
+      const partial = parts.slice(-3).join(', ');
+      result = await fetchGeo(partial);
+    }
+  }
   if (!result) {
     result = await fetchGeo('Hesperia WTC Valencia, Carabobo, Venezuela');
   }

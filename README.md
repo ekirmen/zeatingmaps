@@ -7,5 +7,5 @@ This project requires a Google Maps API key to accurately geocode addresses when
 
 The Google Maps API key is optional. If not provided, the application will fall back to OpenStreetMap for geocoding.
 
-If an address cannot be resolved, the geocoder now performs a secondary search
-using "Hesperia WTC Valencia, Carabobo, Venezuela" as a known reference point.
+When geocoding addresses, extra spaces and empty fields are trimmed to avoid duplicate commas. The geocoder first attempts the full address. If that fails, it retries using only the city, state and country before finally falling back to
+"Hesperia WTC Valencia, Carabobo, Venezuela" as a known reference location.
