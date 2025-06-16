@@ -33,12 +33,7 @@ export const createEvento = async (req, res) => {
     if (!eventoData.nombre || !eventoData.nombre.trim()) {
       errors.push('El nombre es obligatorio');
     }
-    if (!eventoData.sector || !eventoData.sector.trim()) {
-      errors.push('El sector es obligatorio');
-    }
-    if (!eventoData.tags || !Array.isArray(eventoData.tags) || eventoData.tags.length === 0) {
-      errors.push('Los tags son obligatorios');
-    }
+
 
     if (!eventoData.slug && eventoData.nombre) {
       eventoData.slug = slugify(eventoData.nombre);
@@ -103,12 +98,7 @@ export const updateEvento = async (req, res) => {
     if (!eventoData.nombre || !eventoData.nombre.trim()) {
       errors.push('El nombre es obligatorio');
     }
-    if (!eventoData.sector || !eventoData.sector.trim()) {
-      errors.push('El sector es obligatorio');
-    }
-    if (!eventoData.tags || !Array.isArray(eventoData.tags) || eventoData.tags.length === 0) {
-      errors.push('Los tags son obligatorios');
-    }
+
 
     if (!eventoData.slug && eventoData.nombre) {
       eventoData.slug = slugify(eventoData.nombre);
