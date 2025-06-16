@@ -5,6 +5,7 @@ import { useCart } from '../../contexts/CartContext';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
+import { useTranslation } from 'react-i18next';
 
 // Move formatPrice outside the component to make it reusable
 const formatPrice = (price) => {
@@ -14,6 +15,7 @@ const formatPrice = (price) => {
 const Cart = () => {
   const navigate = useNavigate();
   const { refParam } = useRefParam();
+  const { t } = useTranslation();
   const [searchLocator, setSearchLocator] = useState('');
   const { cart, clearCart, removeFromCart, setCart, functionId } = useCart();
   const [functionsInfo, setFunctionsInfo] = useState({});
@@ -101,12 +103,12 @@ const Cart = () => {
     <div className="flex flex-col w-[350px] h-screen max-h-screen bg-white shadow-md p-4 border-l border-gray-200">
       <div className="flex flex-col gap-2 mb-4 border-b pb-2">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">Shopping Cart</h3>
+          <h3 className="text-lg font-semibold">{t('cart.title')}</h3>
           {cart.length > 0 && (
             <button
               onClick={clearCart}
               className="text-red-500 hover:text-red-700 transition"
-              title="Clear cart"
+              title={t('cart.clear')}
             >
               <CloseOutlined />
             </button>
@@ -114,7 +116,7 @@ const Cart = () => {
         </div>
         <div className="flex gap-2">
           <Input
-            placeholder="Search by locator"
+            placeholder={t('cart.search_placeholder')}
             value={searchLocator}
             onChange={(e) => setSearchLocator(e.target.value)}
             onPressEnter={() => handleTicketSearch(searchLocator)}
@@ -175,7 +177,7 @@ const Cart = () => {
       {cart.length > 0 && (
         <div className="mt-4 border-t pt-4 space-y-2 bg-white">
           <div className="text-right font-semibold text-lg">
-            Total: ${formatPrice(cart.reduce((sum, item) => sum + (item.precio || 0), 0))}
+            {t('cart.total')}: ${formatPrice(cart.reduce((sum, item) => sum + (item.precio || 0), 0))}
           </div>
           <Button
             type="default"
@@ -186,7 +188,7 @@ const Cart = () => {
               navigate(path);
             }}
           >
-            Proceed to Payment
+            {t('button.proceed_payment')}
           </Button>
         </div>
       )}

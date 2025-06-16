@@ -10,7 +10,16 @@ i18n
       en: { translation: en },
       es: { translation: es }
     },
-    lng: 'es',
+    lng: (() => {
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        const qLang = params.get('lang') || params.get('language');
+        if (qLang) return qLang.toLowerCase().startsWith('en') ? 'en' : 'es';
+        const navLang = navigator.language || navigator.userLanguage || 'es';
+        return navLang.toLowerCase().startsWith('en') ? 'en' : 'es';
+      }
+      return 'es';
+    })(),
     fallbackLng: 'es',
     interpolation: {
       escapeValue: false
