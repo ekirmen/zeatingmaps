@@ -35,6 +35,12 @@ const Event = () => {
   const [recintoInfo, setRecintoInfo] = useState(null);
   const [tagNames, setTagNames] = useState([]);
 
+  const getEmbedUrl = (url) => {
+    if (!url) return url;
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/);
+    return match ? `https://www.youtube.com/embed/${match[1]}` : url;
+  };
+
   useEffect(() => {
     const load = async () => {
       try {
@@ -494,7 +500,7 @@ const Event = () => {
         <div className="mt-6">
           <iframe
             title="video"
-            src={evento.videoURL}
+            src={getEmbedUrl(evento.videoURL)}
             className="w-full rounded"
             height="315"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
