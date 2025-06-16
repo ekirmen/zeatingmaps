@@ -79,8 +79,9 @@ const Event = () => {
   useEffect(() => {
     const fetchFunciones = async () => {
       try {
+        const id = evento?._id || eventId;
         const response = await fetch(
-          `http://localhost:5000/api/funcions?evento=${eventId}`
+          `http://localhost:5000/api/funcions?evento=${id}`
         );
         const data = await response.json();
         setFunciones(Array.isArray(data) ? data : []);
@@ -88,17 +89,18 @@ const Event = () => {
         console.error('Error fetching functions:', error);
       }
     };
-    if (eventId) fetchFunciones();
-  }, [eventId]);
+    if (evento?._id || eventId) fetchFunciones();
+  }, [eventId, evento]);
 
   useEffect(() => {
     const fetchAllZonas = async () => {
       try {
+        const id = evento?._id || eventId;
         const response = await fetch(
-          `http://localhost:5000/api/funcions?evento=${eventId}`
+          `http://localhost:5000/api/funcions?evento=${id}`
         );
         const funciones = await response.json();
-  
+
         if (!Array.isArray(funciones)) throw new Error("Funciones not found");
   
         // Extraer zonas de todas las plantillas
@@ -122,8 +124,8 @@ const Event = () => {
       }
     };
   
-    if (eventId) fetchAllZonas();
-  }, [eventId]);
+    if (evento?._id || eventId) fetchAllZonas();
+  }, [eventId, evento]);
   
   useEffect(() => {
     const fetchPagos = async () => {
