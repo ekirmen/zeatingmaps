@@ -55,7 +55,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed 
   }, [recinto]);
 
   const handleSearchAddress = async () => {
-    const full = `${formData.direccionLinea1} ${formData.direccion} ${formData.ciudad} ${formData.estado} ${formData.pais} ${formData.codigoPostal}`;
+    const full = `${formData.direccion}, ${formData.direccionLinea1}, ${formData.ciudad} ${formData.codigoPostal}, ${formData.estado}, ${formData.pais}`;
     const geo = await geocodeAddress(full);
     if (geo) {
       setFormData(prev => ({ ...prev, latitud: geo.lat, longitud: geo.lon }));
