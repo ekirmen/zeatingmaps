@@ -57,7 +57,7 @@ const EventListWidget = () => {
                 <img
                   src={`${API_URL}${evento.imagenes.portada}`}
                   alt={`Portada de ${evento.nombre}`}
-                  className="max-w-full h-auto mb-2"
+                  className="w-full max-w-xs h-auto object-cover mb-2"
                 />
               )}
               <h2>{evento.nombre}</h2>

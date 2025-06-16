@@ -41,7 +41,7 @@ const EventsVenue = () => {
     ? widgets.content.map((w, idx) => (
         <React.Fragment key={idx}>{renderWidget(w)}</React.Fragment>
       ))
-    : <EventListWidget />;
+    : null;
   return (
     <>
       <div className="event-container">{content}</div>
