@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { useTranslation } from 'react-i18next';
+import { loadMetaPixel } from '../utils/analytics';
 
 // Move formatPrice outside the component to make it reusable
 const formatPrice = (price) => {
@@ -19,6 +20,13 @@ const Cart = () => {
   const [searchLocator, setSearchLocator] = useState('');
   const { cart, clearCart, removeFromCart, setCart, functionId } = useCart();
   const [functionsInfo, setFunctionsInfo] = useState({});
+
+  useEffect(() => {
+    const pixelId = localStorage.getItem('metaPixelId');
+    if (pixelId) {
+      loadMetaPixel(pixelId);
+    }
+  }, []);
 
   useEffect(() => {
     const ids = Array.from(new Set(cart.map(i => i.funcionId).filter(Boolean)));

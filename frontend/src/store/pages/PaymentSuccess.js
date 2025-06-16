@@ -5,6 +5,7 @@ import { useCart } from '../../contexts/CartContext';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
+import { loadMetaPixel } from '../utils/analytics';
 
 const PaymentSuccess = () => {
   const params = useParams();
@@ -17,6 +18,13 @@ const PaymentSuccess = () => {
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
   const isReservation = paymentDetails?.status === 'reservado';
+
+  useEffect(() => {
+    const pixelId = localStorage.getItem('metaPixelId');
+    if (pixelId) {
+      loadMetaPixel(pixelId);
+    }
+  }, []);
 
   useEffect(() => {
     if (!locator) {

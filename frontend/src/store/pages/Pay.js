@@ -6,6 +6,7 @@ import { useCart } from '../../contexts/CartContext';
 import MetodoPago from '../components/MetodoPago';
 import { Modal } from 'antd';
 import { toast } from 'react-hot-toast';
+import { loadMetaPixel } from '../utils/analytics';
 
 const Pay = () => {
   const location = useLocation();
@@ -27,6 +28,13 @@ const Pay = () => {
   const [currentEventId, setCurrentEventId] = useState(null);
   const [funcionDetails, setFuncionDetails] = useState(null);
   const [affiliate, setAffiliate] = useState(null);
+
+  useEffect(() => {
+    const pixelId = localStorage.getItem('metaPixelId');
+    if (pixelId) {
+      loadMetaPixel(pixelId);
+    }
+  }, []);
 
   const subtotal = carrito?.reduce((sum, item) => sum + item.precio, 0) || 0;
   const commission = affiliate ? (affiliate.base || 0) + subtotal * ((affiliate.percentage || 0) / 100) : 0;
