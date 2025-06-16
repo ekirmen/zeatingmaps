@@ -9,6 +9,7 @@ import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 import { useTranslation } from 'react-i18next';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
+import QRCode from 'qrcode.react';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const Event = () => {
@@ -427,6 +428,27 @@ const Event = () => {
             <React.Fragment key={idx}>{renderWidget(w)}</React.Fragment>
           ))
         : null}
+
+      {evento?.recinto && evento.recinto.latitud && evento.recinto.longitud && (
+        <div className="mt-6">
+          <h2 className="text-lg font-semibold mb-2">¿Cómo llegar?</h2>
+          {evento.recinto.comoLlegar && (
+            <p className="mb-2">{evento.recinto.comoLlegar}</p>
+          )}
+          <iframe
+            title="map"
+            src={`https://www.google.com/maps?q=${evento.recinto.latitud},${evento.recinto.longitud}&output=embed`}
+            width="100%"
+            height="300"
+            allowFullScreen
+            loading="lazy"
+            className="rounded"
+          />
+          <div className="mt-2 flex justify-center">
+            <QRCode value={`https://www.google.com/maps?q=${evento.recinto.latitud},${evento.recinto.longitud}`} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -16,14 +16,38 @@ export const getRecintos = async (req, res) => {
 
 // Crear un nuevo recinto y una sala por defecto
 export const createRecinto = async (req, res) => {
-  const { nombre, direccion, capacidad } = req.body;
+  const {
+    nombre,
+    direccion,
+    capacidad,
+    pais,
+    estado,
+    ciudad,
+    codigoPostal,
+    direccionLinea1,
+    latitud,
+    longitud,
+    comoLlegar
+  } = req.body;
 
   if (!nombre || !direccion || !capacidad) {
     return res.status(400).json({ message: 'Todos los campos son requeridos' });
   }
 
   try {
-    const nuevoRecinto = new Recinto({ nombre, direccion, capacidad });
+    const nuevoRecinto = new Recinto({
+      nombre,
+      direccion,
+      capacidad,
+      pais,
+      estado,
+      ciudad,
+      codigoPostal,
+      direccionLinea1,
+      latitud,
+      longitud,
+      comoLlegar
+    });
     await nuevoRecinto.save();
 
     // Crear una sala principal automáticamente al crear el recinto
@@ -121,11 +145,35 @@ export const deleteSala = async (req, res) => {
 export const updateRecinto = async (req, res) => {
   try {
     const { recintoId } = req.params;
-    const { nombre, direccion, capacidad } = req.body;
+    const {
+      nombre,
+      direccion,
+      capacidad,
+      pais,
+      estado,
+      ciudad,
+      codigoPostal,
+      direccionLinea1,
+      latitud,
+      longitud,
+      comoLlegar
+    } = req.body;
 
     const updatedRecinto = await Recinto.findByIdAndUpdate(
       recintoId,
-      { nombre, direccion, capacidad },
+      {
+        nombre,
+        direccion,
+        capacidad,
+        pais,
+        estado,
+        ciudad,
+        codigoPostal,
+        direccionLinea1,
+        latitud,
+        longitud,
+        comoLlegar
+      },
       { new: true }
     ).populate('salas');
 
