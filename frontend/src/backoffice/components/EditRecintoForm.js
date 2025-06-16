@@ -1,31 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NotificationManager } from 'react-notifications';
-
-const geocodeAddress = async (address) => {
-  const fetchGeo = async (query) => {
-    if (process.env.REACT_APP_GOOGLE_MAPS_API_KEY) {
-      const googleRes = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&region=ve&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`
-      );
-      const googleData = await googleRes.json();
-      if (googleData.results && googleData.results.length) {
-        const loc = googleData.results[0].geometry.location;
-        return { lat: loc.lat, lon: loc.lng };
-      }
-    }
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&countrycodes=ve&q=${encodeURIComponent(query)}`
-    );
-    const data = await res.json();
-    return data && data.length ? { lat: data[0].lat, lon: data[0].lon } : null;
-  };
-
-  let result = await fetchGeo(address);
-  if (!result) {
-    result = await fetchGeo('Hesperia WTC Valencia, Carabobo, Venezuela');
-  }
-  return result;
-};
+import { geocodeAddress } from '../../utils/geocode';
 
 const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed from onUpdateRecinto to onEditRecinto
   const [formData, setFormData] = useState({
