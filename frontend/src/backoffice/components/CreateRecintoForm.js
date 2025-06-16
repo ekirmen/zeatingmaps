@@ -1,10 +1,10 @@
 // src/components/CreateRecintoForm.js
 import React, { useState } from 'react';
 import { geocodeAddress } from '../../utils/geocode';
+import buildAddress from '../../utils/address';
 
 const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
   const [nombre, setNombre] = useState('');
-  const [direccion, setDireccion] = useState('');
   const [capacidad, setCapacidad] = useState('');
   const [showAddress, setShowAddress] = useState(false);
   const [details, setDetails] = useState({
@@ -20,7 +20,7 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
   const [mapUrl, setMapUrl] = useState('');
 
   const handleSearchAddress = async () => {
-    const full = `${direccion}, ${details.direccionLinea1}, ${details.ciudad} ${details.codigoPostal}, ${details.estado}, ${details.pais}`;
+    const full = buildAddress(details);
     const geo = await geocodeAddress(full);
     if (geo) {
       setDetails(prev => ({ ...prev, latitud: geo.lat, longitud: geo.lon }));
@@ -30,8 +30,10 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onCreateRecinto({ nombre, direccion, capacidad, ...details });
+    onCreateRecinto({ nombre, direccion: buildAddress(details), capacidad, ...details });
   };
+
+  const fullAddress = buildAddress(details);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -41,9 +43,10 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
       <label>Dirección:</label>
       <input
         type="text"
-        value={direccion}
-        onChange={(e) => setDireccion(e.target.value)}
+        value={fullAddress}
+        readOnly
         onFocus={() => setShowAddress(true)}
+        placeholder="Completa los detalles"
         required
       />
       {showAddress && (
