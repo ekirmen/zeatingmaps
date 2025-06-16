@@ -184,6 +184,12 @@ const eventoSchema = new mongoose.Schema({
       default: []
     }
   },
+  analytics: {
+    enabled: { type: Boolean, default: false },
+    gtmId: { type: String },
+    metaPixelId: { type: String },
+    metaAccessToken: { type: String }
+  },
   activo: { type: Boolean, default: true },
   oculto: { type: Boolean, default: false },
   desactivado: { type: Boolean, default: false },
