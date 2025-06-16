@@ -33,6 +33,7 @@ const Event = () => {
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef(null);
   const [recintoInfo, setRecintoInfo] = useState(null);
+  const [tagNames, setTagNames] = useState([]);
 
   useEffect(() => {
     const load = async () => {
@@ -103,6 +104,31 @@ const Event = () => {
   }, [eventId]);
 
   useEffect(() => {
+    const loadTagNames = async () => {
+      if (!evento?.tags || evento.tags.length === 0) return;
+
+      // If tags are object IDs, fetch their names
+      if (typeof evento.tags[0] === 'string' && evento.tags[0].length === 24) {
+        try {
+          const res = await fetch('http://localhost:5000/api/tags');
+          const allTags = await res.json();
+          const names = evento.tags.map(id => {
+            const found = allTags.find(t => t._id === id);
+            return found ? found.name : id;
+          });
+          setTagNames(names);
+        } catch (err) {
+          console.error('Error fetching tags', err);
+          setTagNames(evento.tags);
+        }
+      } else {
+        setTagNames(evento.tags.map(t => (typeof t === 'string' ? t : t.name)));
+      }
+    };
+    loadTagNames();
+  }, [evento]);
+
+  useEffect(() => {
     const fetchFunciones = async () => {
       try {
         const id = evento?._id || eventId;
@@ -111,6 +137,9 @@ const Event = () => {
         );
         const data = await response.json();
         setFunciones(Array.isArray(data) ? data : []);
+        if (Array.isArray(data) && data.length === 1) {
+          setSelectedFunctionId(data[0]._id);
+        }
       } catch (error) {
         console.error('Error fetching functions:', error);
       }
@@ -337,12 +366,12 @@ const Event = () => {
             className="w-full max-h-[80vh] object-cover rounded"
           />
           <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-4 text-white rounded">
-            {evento?.tags && evento.tags.length > 0 && (
+            {tagNames.length > 0 && (
               <span className="text-sm mb-1">
-                {typeof evento.tags[0] === 'string' ? evento.tags[0] : evento.tags[0].name}
+                {tagNames.join(', ')}
               </span>
             )}
-            <h1 className="text-2xl font-bold">{evento?.nombre}</h1>
+            <h1 className="text-3xl font-bold">{evento?.nombre}</h1>
             {recintoInfo?.nombre ? (
               <p className="text-sm">{recintoInfo.nombre}</p>
             ) : (
@@ -371,7 +400,7 @@ const Event = () => {
         </div>
       </div>
 
-      <div className="mb-4 flex gap-2 items-center">
+      <div className="mb-2 flex gap-2 items-center">
         <input
           type="text"
           value={discountCode}
@@ -454,17 +483,19 @@ const Event = () => {
           {recintoInfo.comoLlegar && (
             <p className="mb-2">{recintoInfo.comoLlegar}</p>
           )}
-          <iframe
-            title="map"
-            src={`https://www.google.com/maps?q=${recintoInfo.latitud},${recintoInfo.longitud}&output=embed`}
-            width="100%"
-            height="300"
-            allowFullScreen
-            loading="lazy"
-            className="rounded"
-          />
-          <div className="mt-2 flex justify-center">
-            <QRCodeSVG value={`https://www.google.com/maps?q=${recintoInfo.latitud},${recintoInfo.longitud}`} />
+          <div className="flex flex-col md:flex-row md:items-start gap-4">
+            <iframe
+              title="map"
+              src={`https://www.google.com/maps?q=${recintoInfo.latitud},${recintoInfo.longitud}&output=embed`}
+              className="rounded w-full md:flex-1"
+              height="300"
+              allowFullScreen
+              loading="lazy"
+            />
+            <div className="flex flex-col items-center md:w-64">
+              <p className="mb-2 font-medium text-center">Escanea para llegar a tu destino.</p>
+              <QRCodeSVG value={`https://www.google.com/maps?q=${recintoInfo.latitud},${recintoInfo.longitud}`} />
+            </div>
           </div>
         </div>
       )}
