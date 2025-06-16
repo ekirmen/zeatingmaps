@@ -202,7 +202,10 @@ const Evento = () => {
       }
       const eventoOriginal = await response.json();
       if (!eventoOriginal) throw new Error('Evento no encontrado');
-      const { _id, __v, ...eventoDuplicado } = eventoOriginal;
+      const { _id, __v, createdAt, updatedAt, ...eventoDuplicado } = eventoOriginal;
+      if (eventoDuplicado.slug) {
+        eventoDuplicado.slug = `${eventoDuplicado.slug}-copia-${Date.now()}`;
+      }
 
       const formData = new FormData();
       formData.append('data', JSON.stringify(eventoDuplicado));
