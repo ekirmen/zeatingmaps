@@ -215,7 +215,6 @@ const Header = ({ onLogin, onLogout }) => {
 
         <nav className="flex gap-4 text-sm">
           <LinkWithRef to="/store" className="hover:underline">{t('header.home')}</LinkWithRef>
-          <LinkWithRef to="/companias" className="hover:underline">{t('header.companies')}</LinkWithRef>
           <LinkWithRef to="/store/cart" className="hover:underline">{t('header.cart')}</LinkWithRef>
         </nav>
 
