@@ -90,6 +90,11 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     }
   };
 
+  const handleClearCache = () => {
+    localStorage.removeItem(`cms-page-${selectedPage.id}`);
+    toast.success('Cache limpia');
+  };
+
   return (
     <div className="flex">
       <aside className="w-64 bg-gray-100 p-4 overflow-y-auto">
@@ -173,6 +178,12 @@ const WebStudio = ({ setSidebarCollapsed }) => {
           onClick={handleSave}
         >
           Guardar
+        </button>
+        <button
+          className="mt-2 w-full bg-gray-300 text-gray-800 py-1 rounded"
+          onClick={handleClearCache}
+        >
+          Limpiar cache
         </button>
       </aside>
 
