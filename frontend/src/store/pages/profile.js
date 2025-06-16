@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Input, Button, Modal, message, Table } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const Profile = ({ userData, onUpdateProfile }) => {
   const [formData, setFormData] = useState({
@@ -20,6 +21,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
 
   const { user } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (userData) {
@@ -104,7 +106,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
 
       setIsPasswordModalVisible(false);
       setPasswordData({ currentPassword: '', newPassword: '' });
-      message.success('Contraseña actualizada exitosamente');
+      message.success(t('password.updated'));
     } catch (error) {
       console.error('Error:', error);
       message.error(error.message || 'Error al actualizar la contraseña');
@@ -143,30 +145,30 @@ const Profile = ({ userData, onUpdateProfile }) => {
 
   const columns = [
     {
-      title: 'Fecha',
+      title: t('profile.date'),
       dataIndex: 'createdAt',
       key: 'createdAt',
       render: (date) => date ? new Date(date).toLocaleDateString() : '-'
     },
     {
-      title: 'Localizador',
+      title: t('profile.locator'),
       dataIndex: 'locator',
       key: 'locator'
     },
     {
-      title: 'Evento',
+      title: t('profile.event'),
       dataIndex: ['event', 'nombre'],
       key: 'event',
       render: (text, record) => record.event?.nombre || '-'
     },
     {
-      title: 'Estado',
+      title: t('profile.status'),
       dataIndex: 'status',
       key: 'status',
       render: (status) => status || '-'
     },
     {
-      title: 'Total',
+      title: t('profile.total'),
       key: 'total',
       render: (_, record) => {
         const totalAmount = record.seats
@@ -176,7 +178,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
       }
     },
     {
-      title: 'Acciones',
+      title: t('profile.actions'),
       key: 'actions',
       render: (_, record) => (
         record.status === 'pagado' && (
@@ -187,7 +189,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
             icon={<DownloadOutlined />}
             onClick={() => handleDownloadTicket(record.locator)}
           >
-            Descargar Ticket
+            {t('button.download_ticket')}
           </Button>
         )
       )
@@ -227,23 +229,23 @@ const Profile = ({ userData, onUpdateProfile }) => {
     <>
       <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Mi Perfil</h1>
+        <h1 className="text-3xl font-bold text-gray-800">{t('profile.title')}</h1>
         <Button
           onClick={() => window.history.back()}
           className="hover:bg-gray-100 transition-colors"
         >
-          Atrás
+          {t('profile.back')}
         </Button>
       </div>
       {user && (
         <div className="text-sm text-gray-600 mb-4">
-          Localizador de Cuenta: <span className="font-mono">{user._id}</span>
+          {t('profile.account_locator', 'Localizador de Cuenta')}: <span className="font-mono">{user._id}</span>
         </div>
       )}
 
       <div className="grid gap-6">
           <Input
-            placeholder="Usuario"
+            placeholder={t('header.login')}
             value={formData.login}
             name="login"
             onChange={handleInputChange}
@@ -259,7 +261,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
             className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
           <Input
-            placeholder="Teléfono"
+            placeholder={t('profile.phone', 'Teléfono')}
             value={formData.telefono}
             name="telefono"
             onChange={handleInputChange}
@@ -267,7 +269,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
             className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
           <Input
-            placeholder="Empresa"
+            placeholder={t('profile.company', 'Empresa')}
             value={formData.empresa}
             name="empresa"
             onChange={handleInputChange}
@@ -275,7 +277,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
             className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
           <Input
-            placeholder="Perfil"
+            placeholder={t('profile.role', 'Perfil')}
             value={formData.perfil}
             name="perfil"
             onChange={handleInputChange}
@@ -284,12 +286,12 @@ const Profile = ({ userData, onUpdateProfile }) => {
           />
 
           <div className="flex gap-4">
-            <Button 
-              onClick={() => setIsPasswordModalVisible(true)} 
+            <Button
+              onClick={() => setIsPasswordModalVisible(true)}
               disabled={!userData}
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded-lg"
             >
-              Cambiar Contraseña
+              {t('profile.change_password')}
             </Button>
             <Button
               type="default"
@@ -299,13 +301,13 @@ const Profile = ({ userData, onUpdateProfile }) => {
               disabled={!userData}
               className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white transition-colors rounded-lg"
             >
-              Guardar Cambios
+              {t('profile.save_changes')}
             </Button>
           </div>
         </div>
 
         <div className="mt-12">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Reservas</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800">{t('profile.reservations')}</h2>
           <div className="overflow-hidden rounded-lg border border-gray-200 mb-10">
             <Table
               columns={columns}
@@ -316,12 +318,12 @@ const Profile = ({ userData, onUpdateProfile }) => {
                 pageSize: 5,
                 className: "p-4"
               }}
-              locale={{ emptyText: 'No hay reservas registradas' }}
+              locale={{ emptyText: t('profile.no_reservations') }}
               className="w-full"
             />
           </div>
 
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">Pagos</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-gray-800">{t('profile.payments')}</h2>
           <div className="overflow-hidden rounded-lg border border-gray-200">
             <Table
               columns={columns}
@@ -332,7 +334,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
                 pageSize: 5,
                 className: "p-4"
               }}
-              locale={{ emptyText: 'No hay pagos registrados' }}
+              locale={{ emptyText: t('profile.no_payments') }}
               className="w-full"
             />
           </div>
@@ -340,7 +342,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
       </div>
 
       <Modal
-        title="Cambiar Contraseña"
+        title={t('profile.change_password')}
         open={isPasswordModalVisible}
         onOk={handleChangePassword}
         onCancel={() => setIsPasswordModalVisible(false)}
@@ -348,14 +350,14 @@ const Profile = ({ userData, onUpdateProfile }) => {
       >
         <div className="space-y-4">
           <Input.Password
-            placeholder="Contraseña Actual"
+            placeholder={t('profile.current_password', 'Contraseña Actual')}
             value={passwordData.currentPassword}
             name="currentPassword"
             onChange={handlePasswordChange}
             className="rounded-lg"
           />
           <Input.Password
-            placeholder="Nueva Contraseña"
+            placeholder={t('profile.new_password', 'Nueva Contraseña')}
             value={passwordData.newPassword}
             name="newPassword"
             onChange={handlePasswordChange}

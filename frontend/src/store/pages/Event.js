@@ -7,12 +7,14 @@ import SeatingMap from '../components/SeatingMap'; // al inicio
 import { fetchMapa, fetchPlantillaPrecios, getCmsPage } from '../services/apistore';
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
+import { useTranslation } from 'react-i18next';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const Event = () => {
   const { eventId } = useParams(); // eventId puede ser slug o id real
   const navigate = useNavigate();
   const { refParam } = useRefParam();
+  const { t } = useTranslation();
 
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
@@ -296,14 +298,14 @@ const Event = () => {
           type="text"
           value={discountCode}
           onChange={e => setDiscountCode(e.target.value)}
-          placeholder="Código de descuento"
+          placeholder={t('discount.placeholder')}
           className="border px-2 py-1 text-sm"
         />
         <button
           onClick={applyDiscountCode}
           className="px-2 py-1 bg-green-600 text-white rounded text-sm"
         >
-          Aplicar
+          {t('discount.apply')}
         </button>
         {appliedDiscount && (
           <span className="text-sm text-green-700">{appliedDiscount.nombreCodigo}</span>

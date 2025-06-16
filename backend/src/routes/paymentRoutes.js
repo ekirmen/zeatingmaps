@@ -154,7 +154,8 @@ router.post('/', async (req, res) => {
     if (savedPayment.status === 'reservado') {
       await savedPayment.populate('user');
       try {
-        await sendReservationEmail(savedPayment, savedPayment.user.email);
+        const lang = (req.query.lang || req.get('accept-language') || 'es').toLowerCase();
+        await sendReservationEmail(savedPayment, savedPayment.user.email, lang);
         emailSent = true;
       } catch (emailError) {
         console.error('Reservation email error:', emailError);
@@ -267,7 +268,8 @@ router.post('/:id/email', async (req, res) => {
       return res.status(403).json({ message: 'El ticket no ha sido pagado' });
     }
 
-  await sendTicketEmail(payment, email);
+  const lang = (req.query.lang || req.get('accept-language') || 'es').toLowerCase();
+  await sendTicketEmail(payment, email, lang);
   res.json({ message: 'Correo enviado' });
 } catch (error) {
   console.error('Send ticket email error:', error);

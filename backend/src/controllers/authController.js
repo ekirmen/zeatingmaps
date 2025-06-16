@@ -102,7 +102,8 @@ export const forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
 
-    await sendPasswordResetEmail(user, token);
+    const lang = (req.query.lang || req.get('accept-language') || 'es').toLowerCase();
+    await sendPasswordResetEmail(user, token, lang);
     res.json({ message: 'Correo de restablecimiento enviado' });
   } catch (error) {
     console.error('Forgot password error:', error);
