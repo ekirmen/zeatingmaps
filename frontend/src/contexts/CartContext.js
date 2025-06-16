@@ -16,11 +16,6 @@ export const CartProvider = ({ children }) => {
     return expiration ? Math.max(0, Math.floor((expiration - Date.now()) / 1000)) : 0;
   });
 
-  useEffect(() => {
-    if (expiration && expiration <= Date.now()) {
-      clearCart();
-    }
-  }, [clearCart]);
 
   const updateCart = useCallback((newCart) => {
     setCartState(newCart);
@@ -74,6 +69,7 @@ export const CartProvider = ({ children }) => {
     }
   }, [updateCart]);
 
+
   const clearCart = useCallback(async () => {
     try {
       if (cart.items?.length > 0) {
@@ -102,6 +98,12 @@ export const CartProvider = ({ children }) => {
       toast.error(error.message || 'Error al limpiar el carrito');
     }
   }, [cart, updateCart]);
+
+  useEffect(() => {
+    if (expiration && expiration <= Date.now()) {
+      clearCart();
+    }
+  }, [expiration, clearCart]);
 
   const removeFromCart = useCallback(async (seatId) => {
     try {
