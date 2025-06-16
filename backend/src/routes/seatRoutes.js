@@ -1,6 +1,7 @@
 import express from 'express';
 import { protect } from '../middleware/authMiddleware.js';
 import Mapa from '../models/Mapa.js';
+import Setting from '../models/Setting.js';
 
 const router = express.Router();
 
@@ -18,18 +19,30 @@ router.post('/reserve', protect, async (req, res) => {
       return res.status(404).json({ message: 'Asiento no encontrado' });
     }
 
+    const setting = await Setting.findOne({ key: 'reservationTime' });
+    const holdMinutes = parseInt(setting?.value, 10) || parseInt(process.env.DEFAULT_RESERVATION_TIME || '15', 10);
+    const expiration = new Date(Date.now() + holdMinutes * 60 * 1000);
+
     mapa.contenido = mapa.contenido.map(item => {
       if (item.sillas) {
         item.sillas = item.sillas.map(seat => {
           if (seats.includes(seat._id.toString())) {
             if (seat.isReserved) {
-              throw new Error('El asiento ya está reservado');
+              if (seat.temporaryHoldUntil && new Date(seat.temporaryHoldUntil) < new Date()) {
+                seat.isReserved = false;
+                seat.reservedBy = null;
+                seat.reservedAt = null;
+                seat.temporaryHoldUntil = null;
+              } else {
+                throw new Error('El asiento ya está reservado');
+              }
             }
             return {
               ...seat,
               isReserved: true,
               reservedBy: req.user._id,
               reservedAt: new Date(),
+              temporaryHoldUntil: expiration,
             };
           }
           return seat;
@@ -39,7 +52,7 @@ router.post('/reserve', protect, async (req, res) => {
     });
 
     await mapa.save();
-    res.json({ message: 'Asiento reservado exitosamente' });
+    res.json({ message: 'Asiento reservado exitosamente', expiresAt: expiration });
 
   } catch (error) {
     console.error('Error al reservar asiento:', error);
@@ -71,6 +84,7 @@ router.post('/release', protect, async (req, res) => {
               isReserved: false,
               reservedBy: null,
               reservedAt: null,
+              temporaryHoldUntil: null,
             };
           }
           return seat;

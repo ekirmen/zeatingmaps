@@ -19,6 +19,7 @@ import './models/AffiliateUser.js';
 import './models/Descuento.js';
 import './models/CmsPage.js';
 import './models/Abono.js';
+import './models/Setting.js';
 import Mapa from './models/Mapa.js';
 import User from './models/User.js';
 
@@ -51,6 +52,7 @@ import affiliateRoutes from './routes/affiliateRoutes.js';
 import emailTemplateRoutes from './routes/emailTemplateRoutes.js';
 import cmsRoutes from './routes/cmsRoutes.js';
 import abonoRoutes from './routes/abonoRoutes.js';
+import settingRoutes from './routes/settingRoutes.js';
 
 import { errorHandler } from './middleware/errorMiddleware.js';
 
@@ -212,6 +214,7 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/seats', seatRoutes);
 app.use('/api/tags', tagRoutes);
 app.use('/api/abonos', abonoRoutes);
+app.use('/api/settings', settingRoutes);
 app.use('/api/email-templates', emailTemplateRoutes);
 app.use('/api/cms-pages', cmsRoutes);
 

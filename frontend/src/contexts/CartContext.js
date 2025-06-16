@@ -8,7 +8,19 @@ export const CartProvider = ({ children }) => {
     const savedCart = localStorage.getItem('cart');
     return savedCart ? JSON.parse(savedCart) : { items: [], functionId: null };
   });
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [expiration, setExpiration] = useState(() => {
+    const saved = localStorage.getItem('cartExpiration');
+    return saved ? parseInt(saved, 10) : null;
+  });
+  const [timeLeft, setTimeLeft] = useState(() => {
+    return expiration ? Math.max(0, Math.floor((expiration - Date.now()) / 1000)) : 0;
+  });
+
+  useEffect(() => {
+    if (expiration && expiration <= Date.now()) {
+      clearCart();
+    }
+  }, [clearCart]);
 
   const updateCart = useCallback((newCart) => {
     setCartState(newCart);
@@ -49,7 +61,13 @@ export const CartProvider = ({ children }) => {
         throw new Error(error.message || 'Error al reservar asientos');
       }
 
+      const data = await response.json();
       updateCart({ items: seats, functionId });
+      if (data.expiresAt) {
+        const exp = new Date(data.expiresAt).getTime();
+        setExpiration(exp);
+        localStorage.setItem('cartExpiration', String(exp));
+      }
       toast.success('Asientos añadidos al carrito');
     } catch (error) {
       toast.error(error.message || 'Error al actualizar el carrito');
@@ -77,6 +95,8 @@ export const CartProvider = ({ children }) => {
         }
       }
       updateCart({ items: [], functionId: null });
+      setExpiration(null);
+      localStorage.removeItem('cartExpiration');
       setTimeLeft(0);
     } catch (error) {
       toast.error(error.message || 'Error al limpiar el carrito');
@@ -107,15 +127,19 @@ export const CartProvider = ({ children }) => {
   }, [updateCart]);
 
   useEffect(() => {
-    if (cart.length > 0) {
-      const timer = setTimeout(() => {
+    if (!expiration) return;
+    const tick = () => {
+      const diff = Math.floor((expiration - Date.now()) / 1000);
+      setTimeLeft(diff > 0 ? diff : 0);
+      if (diff <= 0) {
         clearCart();
         toast.error('Tiempo expirado - asientos liberados');
-      }, 15 * 60 * 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [cart, clearCart]);
+      }
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [expiration, clearCart]);
 
   const value = {
     cart: cart.items || [],
@@ -124,7 +148,8 @@ export const CartProvider = ({ children }) => {
     clearCart,
     removeFromCart,
     setCart,
-    timeLeft
+    timeLeft,
+    hasActiveTimer: !!expiration && expiration > Date.now()
   };
 
   return (
