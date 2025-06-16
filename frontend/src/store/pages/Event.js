@@ -9,6 +9,42 @@ import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 import { useTranslation } from 'react-i18next';
 
+const loadGtm = (gtmId) => {
+  if (!gtmId) return;
+  if (!window.dataLayer) {
+    window.dataLayer = [];
+    window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmId}`;
+    document.head.appendChild(script);
+    const noscript = document.createElement('noscript');
+    noscript.innerHTML = `<iframe src="https://www.googletagmanager.com/ns.html?id=${gtmId}" height="0" width="0" style="display:none;visibility:hidden"></iframe>`;
+    document.body.appendChild(noscript);
+  }
+};
+
+const loadMetaPixel = (pixelId) => {
+  if (!pixelId) return;
+  if (!window.fbq) {
+    !(function(f, b, e, v, n, t, s) {
+      if (f.fbq) return;
+      n = f.fbq = function() { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
+      if (!f._fbq) f._fbq = n;
+      n.push = n;
+      n.loaded = !0;
+      n.version = '2.0';
+      n.queue = [];
+      t = b.createElement(e); t.async = !0;
+      t.src = v;
+      s = b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t, s);
+    })(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+  }
+  window.fbq('init', pixelId);
+  window.fbq('track', 'PageView');
+};
+
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const Event = () => {
   const { eventId } = useParams(); // eventId puede ser slug o id real
@@ -68,6 +104,10 @@ const Event = () => {
         setEvento(data);
         if (data?.otrasOpciones?.popupAntesAsiento?.mostrar) {
           setShowSeatPopup(true);
+        }
+        if (data?.analytics?.enabled) {
+          loadGtm(data.analytics.gtmId);
+          loadMetaPixel(data.analytics.metaPixelId);
         }
       } catch (error) {
         console.error('Error fetching event:', error);

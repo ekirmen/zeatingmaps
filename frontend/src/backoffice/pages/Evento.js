@@ -138,6 +138,12 @@ const Evento = () => {
           popupAntesAsiento: { mostrar: false, texto: '' },
           habilitarMetodosPago: false,
           metodosPagoPermitidos: []
+        },
+        analytics: {
+          enabled: false,
+          gtmId: '',
+          metaPixelId: '',
+          metaAccessToken: ''
         }
       });
       setMenuVisible(true);
