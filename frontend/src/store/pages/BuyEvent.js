@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { NotificationManager } from 'react-notifications';
 import { useParams } from 'react-router-dom';
 
 const BuyEvent = () => {
@@ -47,7 +48,7 @@ const BuyEvent = () => {
 
       {/* Aquí puedes agregar el formulario de compra o la lógica de compra */}
       <button
-        onClick={() => alert('Compra realizada con éxito')}
+        onClick={() => NotificationManager.success('Compra realizada con éxito')}
         className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
       >
         Confirmar Compra

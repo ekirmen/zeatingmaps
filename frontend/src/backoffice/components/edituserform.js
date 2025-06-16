@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { NotificationManager } from 'react-notifications';
 
 const EditUserForm = ({ user, onUpdateUser, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -21,7 +22,7 @@ const EditUserForm = ({ user, onUpdateUser, onCancel }) => {
     e.preventDefault();
 
     if (!user || !user._id) {
-      alert('Error: Usuario no válido');
+      NotificationManager.error('Error: Usuario no válido');
       return;
     }
 
@@ -45,10 +46,10 @@ const EditUserForm = ({ user, onUpdateUser, onCancel }) => {
 
       const updatedUser = await response.json();
       onUpdateUser(updatedUser);
-      alert('Usuario actualizado con éxito');
+      NotificationManager.success('Usuario actualizado con éxito');
     } catch (error) {
       console.error('Error al actualizar:', error);
-      alert(`Error: ${error.message}`);
+      NotificationManager.error(`Error: ${error.message}`);
     }
   };
 

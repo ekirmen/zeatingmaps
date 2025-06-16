@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { NotificationContainer } from 'react-notifications';
+import 'react-notifications/lib/notifications.css';
 
 // Context Providers
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -176,6 +178,7 @@ const App = () => {
               </div>
                 {showFooter && <BasicFooter />}
                 <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+                <NotificationContainer />
                 <CartTimer />
               </div>
               </TagProvider>

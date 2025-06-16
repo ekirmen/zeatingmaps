@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { NotificationManager } from 'react-notifications';
 
 const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed from onUpdateRecinto to onEditRecinto
   const [formData, setFormData] = useState({
@@ -36,10 +37,10 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed 
 
       const updatedRecinto = await response.json();
       onEditRecinto(updatedRecinto);  // Changed from onUpdateRecinto to onEditRecinto
-      alert('Recinto actualizado con éxito');
+      NotificationManager.success('Recinto actualizado con éxito');
     } catch (error) {
       console.error('Error al actualizar el recinto:', error);
-      alert(`Error al actualizar el recinto: ${error.message}`);
+      NotificationManager.error(`Error al actualizar el recinto: ${error.message}`);
     }
   };
 
