@@ -35,7 +35,6 @@ import Descuentos from './backoffice/pages/Descuentos';
 import Funciones from './backoffice/pages/Funciones';
 import Boleteria from './backoffice/pages/Boleteria';
 import CreateIva from './backoffice/pages/CreateIva';
-import CompaniasPage from './backoffice/pages/CompaniasPage';
 import FormatoEntrada from './backoffice/pages/FormatoEntrada';
 import Galeria from './backoffice/pages/Galeria';
 import Correo from './backoffice/pages/Correo';
@@ -167,7 +166,6 @@ const App = () => {
                   />
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/store/thank-you" element={<ThankYouPage />} />
-                  <Route path="/companias" element={<CompaniasPage />} />
                   <Route path="/store/faq" element={<FaqPage />} />
                   <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
 
