@@ -57,6 +57,7 @@ import ThankYouPage from './store/pages/ThankYouPage';
 import ForgotPassword from './store/pages/ForgotPassword';
 import ResetPassword from './store/pages/ResetPassword';
 import FaqPage from './store/pages/FaqPage';
+import NotFoundPage from './store/pages/NotFoundPage';
 
 const App = () => {
   const location = useLocation();
@@ -93,8 +94,11 @@ const App = () => {
 
   const showHeader =
     location.pathname.startsWith('/store') ||
-    location.pathname === '/payment-success';
-  const showFooter = location.pathname.startsWith('/store');
+    location.pathname === '/payment-success' ||
+    location.pathname === '/404';
+  const showFooter =
+    location.pathname.startsWith('/store') ||
+    location.pathname === '/404';
 
   return (
     <CartProvider>
@@ -168,7 +172,8 @@ const App = () => {
                   <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
 
                   <Route path="/dashboard/formato-entrada" element={<FormatoEntrada />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
+                  <Route path="/404" element={<NotFoundPage />} />
+                  <Route path="*" element={<Navigate to="/404" replace />} />
                 </Routes>
               </div>
                 {showFooter && <BasicFooter />}
