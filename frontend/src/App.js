@@ -50,12 +50,10 @@ import EventsVenue from './store/pages/EventsVenue';
 import Event from './store/pages/Event';
 import BuyEvent from './store/pages/BuyEvent';
 import SelectSeats from './store/pages/SelectSeats';
-import LoginRegister from './store/pages/LoginRegister';
 import Cart from './store/pages/Cart';
 import Pay from './store/pages/Pay';
 import PaymentSuccess from './store/pages/PaymentSuccess';
 import ThankYouPage from './store/pages/ThankYouPage';
-import SeatingDemoPage from './pages/SeatingDemoPage';
 import ForgotPassword from './store/pages/ForgotPassword';
 import ResetPassword from './store/pages/ResetPassword';
 import FaqPage from './store/pages/FaqPage';
@@ -147,11 +145,10 @@ const App = () => {
 
                   <Route path="/store/:venueId?" element={<EventsVenue />} />
                   <Route path="/store/event/:eventId" element={<Event />} />
-                  <Route path="/store/event" element={<Navigate to="/store/login-register" replace />} />
+                  <Route path="/store/event" element={<Navigate to="/store" replace />} />
                   <Route path="/store/select-seats/:salaId" element={<SelectSeats />} />
                   <Route path="/store/buy-event/:id" element={<BuyEvent />} />
                   <Route path="/store/select-seats/:salaId/:funcionId" element={<SelectSeats />} />
-                  <Route path="/store/login-register" element={<LoginRegister />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password/:token" element={<ResetPassword />} />
                   <Route path="/store/cart" element={<Cart />} />
@@ -167,7 +164,6 @@ const App = () => {
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/store/thank-you" element={<ThankYouPage />} />
                   <Route path="/companias" element={<CompaniasPage />} />
-                  <Route path="/store/seating-demo" element={<SeatingDemoPage />} />
                   <Route path="/store/faq" element={<FaqPage />} />
                   <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
 

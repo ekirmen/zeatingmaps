@@ -27,7 +27,7 @@ const ResetPassword = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || t('errors.reset_password', 'Error al restablecer contraseña'));
       message.success(t('password.updated'));
-      navigate('/store/login-register');
+      navigate('/store');
     } catch (error) {
       console.error('Reset password error:', error);
       message.error(error.message || t('errors.request', 'Error al procesar la solicitud'));
