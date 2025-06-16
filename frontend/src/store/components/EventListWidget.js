@@ -70,6 +70,9 @@ const EventListWidget = () => {
               <p>
                 <strong>Sala:</strong> {evento.sala}
               </p>
+              {evento.resumenDescripcion && (
+                <p className="mt-1">{evento.resumenDescripcion}</p>
+              )}
             </li>
           ))}
         </ul>
