@@ -125,7 +125,6 @@ const Login = ({ onLogin }) => {
       open={isPasswordModalVisible}
       onCancel={() => setIsPasswordModalVisible(false)}
       footer={[
-        <Button key="cancel" onClick={() => setIsPasswordModalVisible(false)}>{t('button.cancel')}</Button>,
         <Button key="save" type="primary" onClick={handleSavePassword}>{t('button.save')}</Button>,
       ]}
     >
