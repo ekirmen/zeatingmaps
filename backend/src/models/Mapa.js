@@ -13,7 +13,11 @@ const SillaSchema = new mongoose.Schema({
   // Indica si la silla está bloqueada o no
   bloqueado: { type: Boolean, default: false },
   mesaNombre: String,
-});
+  isReserved: { type: Boolean, default: false },
+  reservedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+  reservedAt: { type: Date, default: null },
+  temporaryHoldUntil: { type: Date, default: null },
+}, { strict: false });
 
 const ElementoSchema = new mongoose.Schema({
   _id: String,
