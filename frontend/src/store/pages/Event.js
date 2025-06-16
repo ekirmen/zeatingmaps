@@ -1,5 +1,5 @@
 // src/pages/Event.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { Modal, message } from 'antd';
@@ -29,6 +29,8 @@ const Event = () => {
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [widgets, setWidgets] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const timerRef = useRef(null);
 
   useEffect(() => {
     const load = async () => {
@@ -212,6 +214,26 @@ const Event = () => {
     }
   };
 
+  const startTimer = () => {
+    clearInterval(timerRef.current);
+    setTimeLeft(15 * 60);
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          setCarrito([]);
+          message.info('Tiempo expirado, asientos liberados');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  useEffect(() => {
+    return () => clearInterval(timerRef.current);
+  }, []);
+
   const toggleSillaEnCarrito = (silla, mesa) => {
     if (!silla.zona || ["reservado", "pagado", "bloqueado"].includes(silla.estado)) {
       message.error("Este asiento no está disponible.");
@@ -248,7 +270,15 @@ const Event = () => {
       ? carrito.filter(item => item._id !== silla._id)
       : [...carrito, { ...silla, precio: finalPrice, nombreMesa: mesa.nombre, zonaNombre, tipoPrecio, descuentoNombre }];
 
+    const wasEmpty = carrito.length === 0;
     setCarrito(nuevoCarrito);
+    if (wasEmpty && nuevoCarrito.length > 0) {
+      startTimer();
+    }
+    if (nuevoCarrito.length === 0) {
+      clearInterval(timerRef.current);
+      setTimeLeft(0);
+    }
 
     const updatedMapa = {
       ...mapa,
@@ -267,6 +297,14 @@ const Event = () => {
 
   return (
     <div className="p-4">
+      {timeLeft > 0 && (
+        <div className="fixed top-4 right-4 bg-black bg-opacity-75 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+          <p className="text-sm">Tiempo restante de reserva:</p>
+          <p className="text-xl font-mono">
+            {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
+          </p>
+        </div>
+      )}
 
       <h1 className="text-2xl font-bold text-center my-4">{evento?.nombre}</h1>
 
@@ -322,20 +360,21 @@ const Event = () => {
         )}
       </div>
 
-      <div className="my-6 border rounded shadow-md p-4 flex justify-center bg-gray-100">
-        <SeatingMap mapa={mapa} onClickSilla={toggleSillaEnCarrito} />
-      </div>
+      <div className="md:flex md:items-start md:gap-6">
+        <div className="my-6 border rounded shadow-md p-4 flex justify-center bg-gray-100 md:flex-1">
+          <SeatingMap mapa={mapa} onClickSilla={toggleSillaEnCarrito} />
+        </div>
 
-      <div className="bg-white p-4 rounded shadow-md mt-6">
-        <h2 className="text-xl font-semibold mb-3">Carrito</h2>
-        {selectedFunctionId && (
-          <div className="mb-2 font-medium">
-            {(() => {
-              const fn = funciones.find(f => f._id === selectedFunctionId);
-              return fn ? new Date(fn.fechaCelebracion).toLocaleString() : '';
-            })()}
-          </div>
-        )}
+        <div className="bg-white p-4 rounded shadow-md mt-6 md:mt-6 md:w-80">
+          <h2 className="text-xl font-semibold mb-3">Carrito</h2>
+          {selectedFunctionId && (
+            <div className="mb-2 font-medium">
+              {(() => {
+                const fn = funciones.find(f => f._id === selectedFunctionId);
+                return fn ? new Date(fn.fechaCelebracion).toLocaleString() : '';
+              })()}
+            </div>
+          )}
         {carrito.map((item, index) => (
           <div key={index} className="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded">
             <span>{item.zonaNombre} - {item.nombreMesa} - Silla {index + 1} - ${item.precio}
@@ -358,6 +397,7 @@ const Event = () => {
         >
           Continuar al carrito
         </button>
+        </div>
       </div>
 
       <Modal
