@@ -238,7 +238,8 @@ const Event = () => {
   }, []);
 
   const toggleSillaEnCarrito = (silla, mesa) => {
-    if (!silla.zona || ["reservado", "pagado", "bloqueado"].includes(silla.estado)) {
+    const zonaId = silla.zona || mesa.zona;
+    if (!zonaId || ["reservado", "pagado", "bloqueado"].includes(silla.estado)) {
       message.error("Este asiento no está disponible.");
       return;
     }
@@ -249,8 +250,8 @@ const Event = () => {
       return;
     }
 
-    const basePrice = plantillaPrecios?.detalles.find(p => p.zonaId === silla.zona)?.precio || 100;
-    const zonaNombre = zonas.find(z => z._id === silla.zona)?.nombre || "Desconocida";
+    const basePrice = plantillaPrecios?.detalles.find(p => p.zonaId === zonaId)?.precio || 100;
+    const zonaNombre = zonas.find(z => z._id === zonaId)?.nombre || "Desconocida";
     let finalPrice = basePrice;
     let tipoPrecio = 'normal';
     let descuentoNombre = '';
@@ -271,7 +272,7 @@ const Event = () => {
     }
     const nuevoCarrito = index !== -1
       ? carrito.filter(item => item._id !== silla._id)
-      : [...carrito, { ...silla, precio: finalPrice, nombreMesa: mesa.nombre, zonaNombre, tipoPrecio, descuentoNombre }];
+      : [...carrito, { ...silla, zona: zonaId, precio: finalPrice, nombreMesa: mesa.nombre, zonaNombre, tipoPrecio, descuentoNombre }];
 
     const wasEmpty = carrito.length === 0;
     setCarrito(nuevoCarrito);
@@ -289,6 +290,7 @@ const Event = () => {
         ...elemento,
         sillas: elemento.sillas.map(s => ({
           ...s,
+          zona: s.zona || elemento.zona,
           color: nuevoCarrito.some(item => item._id === s._id) ? "green" : s.color || "lightblue"
         }))
       }))
@@ -309,16 +311,27 @@ const Event = () => {
         </div>
       )}
 
-      <h1 className="text-2xl font-bold text-center my-4">{evento?.nombre}</h1>
-
       {(evento?.imagenes?.portada || evento?.imagenes?.banner) && (
-        <img
-          src={`${API_URL}${
-            evento?.imagenes?.portada || evento?.imagenes?.banner
-          }`}
-          alt={`Imagen de ${evento.nombre}`}
-          className="w-full max-h-[80vh] object-contain rounded mb-4"
-        />
+        <div className="relative mb-4">
+          <img
+            src={`${API_URL}${
+              evento?.imagenes?.portada || evento?.imagenes?.banner
+            }`}
+            alt={`Imagen de ${evento.nombre}`}
+            className="w-full max-h-[80vh] object-cover rounded"
+          />
+          <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-4 text-white rounded">
+            {evento?.tags && evento.tags.length > 0 && (
+              <span className="text-sm mb-1">
+                {typeof evento.tags[0] === 'string' ? evento.tags[0] : evento.tags[0].name}
+              </span>
+            )}
+            <h1 className="text-2xl font-bold">{evento?.nombre}</h1>
+            {evento?.recinto && (
+              <p className="text-sm">{evento.recinto}</p>
+            )}
+          </div>
+        </div>
       )}
 
       <div className="mb-6">
@@ -374,7 +387,7 @@ const Event = () => {
           )}
         {carrito.map((item, index) => (
           <div key={index} className="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded">
-            <span>{item.zonaNombre} - {item.nombreMesa} - Silla {index + 1} - ${item.precio}
+            <span>{item.zonaNombre} - {item.nombreMesa} - Silla {item.nombre || index + 1} - ${item.precio}
               {item.tipoPrecio === 'descuento' && ` (${item.descuentoNombre})`}
             </span>
             <button
