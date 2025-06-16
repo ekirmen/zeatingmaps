@@ -15,9 +15,8 @@ const Header = ({ onLogin, onLogout }) => {
   const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
   const [accountMode, setAccountMode] = useState('login'); // login | register | forgot
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({ login: '', password: '' });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({
-    login: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -29,7 +28,7 @@ const Header = ({ onLogin, onLogout }) => {
 
   const handleRegister = async () => {
     try {
-      if (!registerData.login || !registerData.email || !registerData.password)
+      if (!registerData.email || !registerData.password)
         throw new Error(t('errors.fields_required', 'Todos los campos son obligatorios'));
 
       if (registerData.password !== registerData.confirmPassword)
@@ -42,7 +41,7 @@ const Header = ({ onLogin, onLogout }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          login: registerData.login.trim(),
+          login: registerData.email.trim(),
           perfil: 'cliente',
           email: registerData.email.trim(),
           password: registerData.password.trim()
@@ -65,7 +64,7 @@ const Header = ({ onLogin, onLogout }) => {
       message.success(t('register.success'));
       setIsAccountModalVisible(false);
       setAccountMode('login');
-      setRegisterData({ login: '', email: '', password: '', confirmPassword: '' });
+      setRegisterData({ email: '', password: '', confirmPassword: '' });
       navigate(refParam ? `/store?ref=${refParam}` : '/store');
 
     } catch (error) {
@@ -76,14 +75,14 @@ const Header = ({ onLogin, onLogout }) => {
 
   const handleLogin = async () => {
     try {
-      if (!formData.login || !formData.password)
-        throw new Error(t('errors.enter_credentials', 'Por favor ingrese usuario y contraseña'));
+      if (!formData.email || !formData.password)
+        throw new Error(t('errors.enter_credentials', 'Por favor ingrese correo y contraseña'));
 
       const response = await fetch('http://localhost:5000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          login: formData.login.trim(),
+          login: formData.email.trim(),
           password: formData.password.trim()
         }),
       });
@@ -100,13 +99,13 @@ const Header = ({ onLogin, onLogout }) => {
       if (data.passwordPending) {
         setIsPasswordModalVisible(true);
         setIsAccountModalVisible(false);
-        setFormData({ login: '', password: '' });
+        setFormData({ email: '', password: '' });
         return;
       }
 
       onLogin?.({ token: cleanToken, user: data.user });
       setIsAccountModalVisible(false);
-      setFormData({ login: '', password: '' });
+      setFormData({ email: '', password: '' });
       message.success(t('login.success'));
       navigate(refParam ? `/store?ref=${refParam}` : '/store');
 
@@ -281,7 +280,7 @@ const Header = ({ onLogin, onLogout }) => {
         {accountMode === 'login' && (
           <>
             {error && <div className="text-red-500 mb-4">{error}</div>}
-            <Input placeholder={t('header.login')} name="login" value={formData.login} onChange={handleInputChange} className="mb-4" />
+            <Input placeholder={t('header.email')} name="email" value={formData.email} onChange={handleInputChange} className="mb-4" />
             <Input.Password placeholder={t('password.new')} name="password" value={formData.password} onChange={handleInputChange} />
             <div className="mt-2 text-sm space-x-4">
               <span className="cursor-pointer text-blue-600 hover:underline" onClick={() => setAccountMode('forgot')}>{t('header.forgot')}</span>
@@ -291,8 +290,7 @@ const Header = ({ onLogin, onLogout }) => {
         )}
         {accountMode === 'register' && (
           <>
-            <Input placeholder={t('header.login')} value={registerData.login} onChange={(e) => setRegisterData({ ...registerData, login: e.target.value })} className="mb-4" />
-            <Input placeholder="Email" value={registerData.email} onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} className="mb-4" />
+            <Input placeholder={t('header.email')} value={registerData.email} onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} className="mb-4" />
             <Input.Password placeholder={t('password.new')} value={registerData.password} onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} className="mb-4" />
             <Input.Password placeholder={t('password.repeat')} value={registerData.confirmPassword} onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })} className="mb-4" />
             <div className="mt-2 text-sm">

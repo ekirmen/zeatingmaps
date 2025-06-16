@@ -5,6 +5,7 @@
   "header.profile": "Profile",
   "header.register": "Register",
   "header.account": "Account",
+  "header.email": "Email",
   "header.login": "Login",
   "header.logout": "Logout",
   "header.forgot": "Forgot Password",
@@ -33,7 +34,7 @@
   ,"errors.password_min_length": "Password must be at least 6 characters"
   ,"errors.register": "Registration error"
   ,"errors.invalid_register": "Invalid registration response"
-  ,"errors.enter_credentials": "Please enter username and password"
+  ,"errors.enter_credentials": "Please enter email and password"
   ,"errors.invalid_credentials": "Invalid credentials"
   ,"errors.login": "Login error"
   ,"errors.save_password": "Error saving password"

@@ -7,12 +7,11 @@ const Header = ({ onLogin, onLogout }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    login: '',
+    email: '',
     password: ''
   });
   const [isRegisterModalVisible, setIsRegisterModalVisible] = useState(false);
   const [registerData, setRegisterData] = useState({
-    login: '',
     email: '',
     password: '',
     confirmPassword: ''
@@ -20,7 +19,7 @@ const Header = ({ onLogin, onLogout }) => {
 
   const handleRegister = async () => {
     try {
-      if (!registerData.login || !registerData.email || !registerData.password) {
+      if (!registerData.email || !registerData.password) {
         throw new Error('Todos los campos son obligatorios');
       }
 
@@ -36,7 +35,7 @@ const Header = ({ onLogin, onLogout }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          login: registerData.login.trim(),
+          login: registerData.email.trim(),
           perfil: 'cliente',
           email: registerData.email.trim(),
           password: registerData.password.trim()
@@ -63,7 +62,6 @@ const Header = ({ onLogin, onLogout }) => {
       message.success('Usuario registrado exitosamente');
       setIsRegisterModalVisible(false);
       setRegisterData({
-        login: '',
         email: '',
         password: '',
         confirmPassword: ''
@@ -84,15 +82,15 @@ const Header = ({ onLogin, onLogout }) => {
 
   const handleLogin = async () => {
     try {
-      if (!formData.login || !formData.password) {
-        throw new Error('Por favor ingrese usuario y contraseña');
+      if (!formData.email || !formData.password) {
+        throw new Error('Por favor ingrese correo y contraseña');
       }
 
       const response = await fetch('http://localhost:5000/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          login: formData.login.trim(),
+          login: formData.email.trim(),
           password: formData.password.trim()
         }),
       });
@@ -119,7 +117,7 @@ const Header = ({ onLogin, onLogout }) => {
       });
 
       setIsModalVisible(false);
-      setFormData({ login: '', password: '' });
+      setFormData({ email: '', password: '' });
       message.success('Inicio de sesión exitoso');
       navigate('/store');
     } catch (error) {
@@ -189,7 +187,7 @@ const Header = ({ onLogin, onLogout }) => {
         onCancel={() => {
           setIsModalVisible(false);
           setError('');
-          setFormData({ login: '', password: '' });
+          setFormData({ email: '', password: '' });
         }}
         footer={[
           <Button key="cancel" onClick={() => setIsModalVisible(false)}>
@@ -202,9 +200,9 @@ const Header = ({ onLogin, onLogout }) => {
       >
         {error && <div className="text-red-500 mb-4">{error}</div>}
         <Input
-          placeholder="Usuario"
-          name="login"
-          value={formData.login}
+          placeholder="Email"
+          name="email"
+          value={formData.email}
           onChange={handleInputChange}
           className="mb-4"
         />
@@ -231,13 +229,6 @@ const Header = ({ onLogin, onLogout }) => {
           </Button>
         ]}
       >
-        <Input
-          placeholder="Usuario"
-          name="login"
-          value={registerData.login}
-          onChange={(e) => setRegisterData({ ...registerData, login: e.target.value })}
-          className="mb-4"
-        />
         <Input
           placeholder="Email"
           name="email"
