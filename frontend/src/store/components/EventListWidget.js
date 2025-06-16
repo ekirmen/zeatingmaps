@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
 const EventListWidget = () => {
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,6 +53,13 @@ const EventListWidget = () => {
               key={evento._id}
               onClick={() => handleEventClick(evento.slug || evento._id)}
             >
+              {evento.imagenes?.portada && (
+                <img
+                  src={`${API_URL}${evento.imagenes.portada}`}
+                  alt={`Portada de ${evento.nombre}`}
+                  className="max-w-full h-auto mb-2"
+                />
+              )}
               <h2>{evento.nombre}</h2>
               <p>
                 <strong>Sector:</strong> {evento.sector}
