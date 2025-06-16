@@ -37,7 +37,7 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
   const [mapUrl, setMapUrl] = useState('');
 
   const handleSearchAddress = async () => {
-    const full = `${details.direccionLinea1} ${direccion} ${details.ciudad} ${details.estado} ${details.pais} ${details.codigoPostal}`;
+    const full = `${direccion}, ${details.direccionLinea1}, ${details.ciudad} ${details.codigoPostal}, ${details.estado}, ${details.pais}`;
     const geo = await geocodeAddress(full);
     if (geo) {
       setDetails(prev => ({ ...prev, latitud: geo.lat, longitud: geo.lon }));
