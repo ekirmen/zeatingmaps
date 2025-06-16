@@ -40,6 +40,7 @@ import Boleteria from './backoffice/pages/Boleteria';
 import CreateIva from './backoffice/pages/CreateIva';
 import FormatoEntrada from './backoffice/pages/FormatoEntrada';
 import Galeria from './backoffice/pages/Galeria';
+import Tags from './backoffice/pages/Tags';
 import Correo from './backoffice/pages/Correo';
 import WebStudio from './backoffice/pages/WebStudio';
 import WebColors from './backoffice/pages/WebColors';
@@ -141,6 +142,7 @@ const App = () => {
                     <Route path="descuentos" element={<Descuentos />} />
                     <Route path="funciones" element={<Funciones />} />
                     <Route path="Boleteria" element={<Boleteria setSidebarCollapsed={setSidebarCollapsed} />} />
+                    <Route path="tags" element={<Tags />} />
                     <Route path="galeria" element={<Galeria />} />
                     <Route path="correo" element={<Correo />} />
                     <Route path="web-studio" element={<WebStudio setSidebarCollapsed={setSidebarCollapsed} />} />

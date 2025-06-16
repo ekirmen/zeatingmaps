@@ -6,6 +6,7 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const EventListWidget = () => {
   const [eventos, setEventos] = useState([]);
+  const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -15,19 +16,25 @@ const EventListWidget = () => {
   const query = searchParams.get('q') || '';
 
   useEffect(() => {
-    const fetchEventos = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/events');
-        if (!response.ok) throw new Error('Error al obtener los eventos');
-        const data = await response.json();
-        setEventos(data);
+        const [evRes, tagRes] = await Promise.all([
+          fetch('http://localhost:5000/api/events'),
+          fetch('http://localhost:5000/api/tags')
+        ]);
+        if (!evRes.ok) throw new Error('Error al obtener los eventos');
+        if (!tagRes.ok) throw new Error('Error al obtener tags');
+        const evData = await evRes.json();
+        const tagData = await tagRes.json();
+        setEventos(evData);
+        setTags(tagData);
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    fetchEventos();
+    fetchData();
   }, []);
 
   const filteredEventos = eventos.filter(e =>
@@ -43,39 +50,42 @@ const EventListWidget = () => {
   if (loading) return <div>Cargando eventos...</div>;
   if (error) return <div>Error: {error}</div>;
 
+  const eventosPorTag = tags.reduce((acc, tag) => {
+    const evts = filteredEventos.filter(e => (e.tags || []).includes(tag._id));
+    if (evts.length) acc.push({ tag, eventos: evts });
+    return acc;
+  }, []);
+
   return (
     <div className="events-venue" key="event-list">
       <h1>Eventos Disponibles</h1>
-      {filteredEventos.length > 0 ? (
-        <ul>
-          {filteredEventos.map(evento => (
-            <li
-              key={evento._id}
-              onClick={() => handleEventClick(evento.slug || evento._id)}
-            >
-              {evento.imagenes?.portada && (
-                <img
-                  src={`${API_URL}${evento.imagenes.portada}`}
-                  alt={`Portada de ${evento.nombre}`}
-                  className="w-full max-w-xs h-auto object-cover mb-2"
-                />
-              )}
-              <h2>{evento.nombre}</h2>
-              <p>
-                <strong>Sector:</strong> {evento.sector}
-              </p>
-              <p>
-                <strong>Recinto:</strong> {evento.recinto}
-              </p>
-              <p>
-                <strong>Sala:</strong> {evento.sala}
-              </p>
-              {evento.resumenDescripcion && (
-                <p className="mt-1">{evento.resumenDescripcion}</p>
-              )}
-            </li>
-          ))}
-        </ul>
+      {eventosPorTag.length > 0 ? (
+        eventosPorTag.map(grp => (
+          <div key={grp.tag._id} className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">{grp.tag.name}</h2>
+            <ul>
+              {grp.eventos.map(evento => (
+                <li
+                  key={evento._id}
+                  onClick={() => handleEventClick(evento.slug || evento._id)}
+                  className="mb-4 cursor-pointer"
+                >
+                  {evento.imagenes?.portada && (
+                    <img
+                      src={`${API_URL}${evento.imagenes.portada}`}
+                      alt={`Portada de ${evento.nombre}`}
+                      className="w-full max-w-xs h-auto object-cover mb-2"
+                    />
+                  )}
+                  <h3>{evento.nombre}</h3>
+                  {evento.resumenDescripcion && (
+                    <p className="mt-1 text-sm">{evento.resumenDescripcion}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
       ) : (
         <p>No se encontraron eventos.</p>
       )}
