@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { NotificationManager } from 'react-notifications';
 import { geocodeAddress } from '../../utils/geocode';
+import buildAddress from '../../utils/address';
 
 const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed from onUpdateRecinto to onEditRecinto
   const [formData, setFormData] = useState({
@@ -38,11 +39,13 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed 
   }, [recinto]);
 
   const handleSearchAddress = async () => {
-    const full = `${formData.direccion}, ${formData.direccionLinea1}, ${formData.ciudad} ${formData.codigoPostal}, ${formData.estado}, ${formData.pais}`;
+    const full = buildAddress(formData);
     const geo = await geocodeAddress(full);
     if (geo) {
-      setFormData(prev => ({ ...prev, latitud: geo.lat, longitud: geo.lon }));
+      setFormData(prev => ({ ...prev, latitud: geo.lat, longitud: geo.lon, direccion: full }));
       setMapUrl(`https://www.google.com/maps?q=${geo.lat},${geo.lon}&output=embed`);
+    } else {
+      setFormData(prev => ({ ...prev, direccion: full }));
     }
   };
 
@@ -50,12 +53,13 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed 
     e.preventDefault();
 
     try {
+      const payload = { ...formData, direccion: buildAddress(formData) };
       const response = await fetch(`http://localhost:5000/api/recintos/${recinto._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -90,9 +94,10 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed 
           Dirección:
           <input
             type="text"
-            value={formData.direccion}
-            onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+            value={buildAddress(formData)}
+            readOnly
             onFocus={() => setShowAddress(true)}
+            placeholder="Completa los detalles"
           />
         </label>
         {showAddress && (
