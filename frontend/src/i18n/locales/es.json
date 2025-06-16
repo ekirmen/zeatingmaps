@@ -5,6 +5,7 @@
   "header.cart": "Carrito",
   "header.profile": "Perfil",
   "header.register": "Registrarse",
+  "header.account": "Cuenta",
   "header.login": "Iniciar Sesión",
   "header.logout": "Cerrar Sesión",
   "header.forgot": "Olvidé mi contraseña",
@@ -42,6 +43,7 @@
   ,"errors.request": "Error al procesar la solicitud"
   ,"errors.reset_password": "Error al restablecer contraseña"
   ,"forgot.placeholder": "Ingresa tu email"
+  ,"forgot.sent": "Correo enviado"
   ,"faq.title": "Preguntas Frecuentes"
   ,"faq.q1": "¿Cómo compro entradas?"
   ,"faq.a1": "Selecciona el evento deseado, elige tus asientos y completa el proceso de pago."
