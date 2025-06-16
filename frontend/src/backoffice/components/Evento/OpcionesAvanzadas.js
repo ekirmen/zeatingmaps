@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFacebookF } from '@fortawesome/free-brands-svg-icons';
+import { FaFacebookF } from 'react-icons/fa';
 
 /**
  * Advanced options for an event.  Handles optional messages and payment
@@ -309,7 +309,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
 
           <div className="form-group space-y-1">
             <label className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faFacebookF} /> Código Meta Pixel
+              <FaFacebookF /> Código Meta Pixel
             </label>
             <input
               type="text"

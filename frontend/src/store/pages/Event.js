@@ -9,7 +9,7 @@ import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 import { useTranslation } from 'react-i18next';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
-import QRCode from '@rc-component/qrcode';
+import { QRCodeSVG } from '@rc-component/qrcode';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 const Event = () => {
@@ -445,7 +445,7 @@ const Event = () => {
             className="rounded"
           />
           <div className="mt-2 flex justify-center">
-            <QRCode value={`https://www.google.com/maps?q=${evento.recinto.latitud},${evento.recinto.longitud}`} />
+            <QRCodeSVG value={`https://www.google.com/maps?q=${evento.recinto.latitud},${evento.recinto.longitud}`} />
           </div>
         </div>
       )}
