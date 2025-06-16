@@ -258,7 +258,6 @@ const Header = ({ onLogin, onLogout }) => {
         open={isAccountModalVisible}
         onCancel={() => setIsAccountModalVisible(false)}
         footer={[
-          <Button key="cancel" onClick={() => setIsAccountModalVisible(false)}>{t('button.cancel')}</Button>,
           <Button
             key="submit"
             type="default"
@@ -318,7 +317,6 @@ const Header = ({ onLogin, onLogout }) => {
         open={isPasswordModalVisible}
         onCancel={() => setIsPasswordModalVisible(false)}
         footer={[
-          <Button key="cancel" onClick={() => setIsPasswordModalVisible(false)}>{t('button.cancel')}</Button>,
           <Button key="submit" type="default" onClick={handleSavePassword}>{t('button.save')}</Button>,
         ]}
       >

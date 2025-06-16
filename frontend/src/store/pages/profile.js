@@ -346,6 +346,8 @@ const Profile = ({ userData, onUpdateProfile }) => {
         open={isPasswordModalVisible}
         onOk={handleChangePassword}
         onCancel={() => setIsPasswordModalVisible(false)}
+        cancelButtonProps={{ style: { display: 'none' } }}
+        okText={t('button.save')}
         className="rounded-lg"
       >
         <div className="space-y-4">
