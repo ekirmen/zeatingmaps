@@ -111,7 +111,10 @@ const Event = () => {
         );
         const funciones = await response.json();
 
-        if (!Array.isArray(funciones)) throw new Error("Funciones not found");
+        if (!Array.isArray(funciones)) {
+          setZonas([]);
+          return;
+        }
   
         // Extraer zonas de todas las plantillas
         const zonasMap = new Map();
@@ -308,18 +311,12 @@ const Event = () => {
 
       <h1 className="text-2xl font-bold text-center my-4">{evento?.nombre}</h1>
 
-      {evento?.imagenes?.banner && (
+      {(evento?.imagenes?.portada || evento?.imagenes?.banner) && (
         <img
-          src={`${API_URL}${evento.imagenes.banner}`}
-          alt={`Banner de ${evento.nombre}`}
-          className="w-full max-h-[80vh] object-contain rounded mb-4"
-        />
-      )}
-
-      {evento?.imagenes?.portada && (
-        <img
-          src={`${API_URL}${evento.imagenes.portada}`}
-          alt={`Portada de ${evento.nombre}`}
+          src={`${API_URL}${
+            evento?.imagenes?.portada || evento?.imagenes?.banner
+          }`}
+          alt={`Imagen de ${evento.nombre}`}
           className="w-full max-h-[80vh] object-contain rounded mb-4"
         />
       )}
