@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Modal, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -7,6 +8,7 @@ import { useRefParam } from '../../contexts/RefContext';
 import { useHeader } from '../../contexts/HeaderContext';
 
 const Header = ({ onLogin, onLogout }) => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { refParam } = useRefParam();
   const { header } = useHeader();
@@ -27,13 +29,13 @@ const Header = ({ onLogin, onLogout }) => {
   const handleRegister = async () => {
     try {
       if (!registerData.login || !registerData.email || !registerData.password)
-        throw new Error('Todos los campos son obligatorios');
+        throw new Error(t('errors.fields_required', 'Todos los campos son obligatorios'));
 
       if (registerData.password !== registerData.confirmPassword)
-        throw new Error('Las contraseñas no coinciden');
+        throw new Error(t('errors.passwords_no_match', 'Las contraseñas no coinciden'));
 
       if (registerData.password.length < 6)
-        throw new Error('La contraseña debe tener al menos 6 caracteres');
+        throw new Error(t('errors.password_min_length', 'La contraseña debe tener al menos 6 caracteres'));
 
       const response = await fetch('http://localhost:5000/api/user/register', {
         method: 'POST',
@@ -47,10 +49,10 @@ const Header = ({ onLogin, onLogout }) => {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Error al registrar usuario');
+      if (!response.ok) throw new Error(data.message || t('errors.register', 'Error al registrar usuario'));
 
       if (!data.token || !data.user?._id) {
-        throw new Error('Respuesta de registro inválida');
+        throw new Error(t('errors.invalid_register', 'Respuesta de registro inválida'));
       }
 
       const cleanToken = data.token.replace('Bearer ', '');
@@ -59,7 +61,7 @@ const Header = ({ onLogin, onLogout }) => {
       localStorage.setItem('userId', data.user._id);
       onLogin?.({ token: cleanToken, user: data.user });
 
-      message.success('Usuario registrado exitosamente');
+      message.success(t('register.success'));
       setIsRegisterModalVisible(false);
       setRegisterData({ login: '', email: '', password: '', confirmPassword: '' });
       navigate(refParam ? `/store?ref=${refParam}` : '/store');
@@ -73,7 +75,7 @@ const Header = ({ onLogin, onLogout }) => {
   const handleLogin = async () => {
     try {
       if (!formData.login || !formData.password)
-        throw new Error('Por favor ingrese usuario y contraseña');
+        throw new Error(t('errors.enter_credentials', 'Por favor ingrese usuario y contraseña'));
 
       const response = await fetch('http://localhost:5000/api/login', {
         method: 'POST',
@@ -85,7 +87,7 @@ const Header = ({ onLogin, onLogout }) => {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Credenciales incorrectas');
+      if (!response.ok) throw new Error(data.message || t('errors.invalid_credentials', 'Credenciales incorrectas'));
 
       const cleanToken = data.token.replace('Bearer ', '');
       const formattedToken = `Bearer ${cleanToken}`;
@@ -103,13 +105,13 @@ const Header = ({ onLogin, onLogout }) => {
       onLogin?.({ token: cleanToken, user: data.user });
       setIsModalVisible(false);
       setFormData({ login: '', password: '' });
-      message.success('Inicio de sesión exitoso');
+      message.success(t('login.success'));
       navigate(refParam ? `/store?ref=${refParam}` : '/store');
 
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.message || 'Error al iniciar sesión');
-      message.error(error.message || 'Error al iniciar sesión');
+      setError(error.message || t('errors.login', 'Error al iniciar sesión'));
+      message.error(error.message || t('errors.login', 'Error al iniciar sesión'));
       localStorage.removeItem('token');
       localStorage.removeItem('userId');
     }
@@ -119,7 +121,7 @@ const Header = ({ onLogin, onLogout }) => {
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
     if (typeof onLogout === 'function') onLogout();
-    message.success('Sesión cerrada correctamente');
+    message.success(t('logout.success'));
     if (window.location.pathname === '/store/perfil') {
       navigate(refParam ? `/store?ref=${refParam}` : '/store');
     }
@@ -155,7 +157,7 @@ const Header = ({ onLogin, onLogout }) => {
       setIsPasswordModalVisible(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
       onLogin?.({ token: token.replace('Bearer ', ''), user: data.user });
-      message.success('Contraseña actualizada');
+      message.success(t('password.updated'));
       navigate(refParam ? `/store?ref=${refParam}` : '/store');
     } catch (error) {
       console.error('Set password error:', error);
@@ -191,41 +193,45 @@ const Header = ({ onLogin, onLogout }) => {
         </LinkWithRef>
 
         <nav className="flex gap-4 text-sm">
-          <LinkWithRef to="/store" className="hover:underline">Inicio</LinkWithRef>
-          <LinkWithRef to="/companias" className="hover:underline">Compañías</LinkWithRef>
-          <LinkWithRef to="/store/seating-demo" className="hover:underline">Demo</LinkWithRef>
-          <LinkWithRef to="/store/cart" className="hover:underline">Carrito</LinkWithRef>
-          <LinkWithRef to="/store/perfil" className="hover:underline">Perfil</LinkWithRef>
+          <LinkWithRef to="/store" className="hover:underline">{t('header.home')}</LinkWithRef>
+          <LinkWithRef to="/companias" className="hover:underline">{t('header.companies')}</LinkWithRef>
+          <LinkWithRef to="/store/seating-demo" className="hover:underline">{t('header.demo')}</LinkWithRef>
+          <LinkWithRef to="/store/cart" className="hover:underline">{t('header.cart')}</LinkWithRef>
+          <LinkWithRef to="/store/perfil" className="hover:underline">{t('header.profile')}</LinkWithRef>
           <LinkWithRef to="/store/login-register" className="hover:underline">
-            Registrarse
+            {t('header.register')}
           </LinkWithRef>
         </nav>
 
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Buscar eventos"
+            placeholder={t('search.placeholder')}
             size="small"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
-          <Button onClick={handleSearch} size="small">Buscar</Button>
+          <Button onClick={handleSearch} size="small">{t('search.button')}</Button>
+          <select value={i18n.language} onChange={e => i18n.changeLanguage(e.target.value)} className="border rounded px-1 text-sm">
+            <option value="es">ES</option>
+            <option value="en">EN</option>
+          </select>
         </div>
 
         <div className="space-x-2">
           {localStorage.getItem('token') ? (
             <Button onClick={handleLogout} style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}>
-              Cerrar Sesión
+              {t('header.logout')}
             </Button>
           ) : (
             <>
               <Button onClick={() => setIsModalVisible(true)} style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}>
-                Iniciar Sesión
+                {t('header.login')}
               </Button>
               <Button onClick={() => navigate('/forgot-password')} style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}>
-                Olvidé mi contraseña
+                {t('header.forgot')}
               </Button>
               <Button onClick={() => setIsRegisterModalVisible(true)} style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}>
-                Registrarse
+                {t('header.register')}
               </Button>
             </>
           )}
@@ -234,7 +240,7 @@ const Header = ({ onLogin, onLogout }) => {
 
       {/* Modal Login */}
       <Modal
-        title="Iniciar Sesión"
+        title={t('header.login')}
         open={isModalVisible}
         onCancel={() => {
           setIsModalVisible(false);
@@ -242,53 +248,53 @@ const Header = ({ onLogin, onLogout }) => {
           setFormData({ login: '', password: '' });
         }}
         footer={[
-          <Button key="cancel" onClick={() => setIsModalVisible(false)}>Cancelar</Button>,
-          <Button key="submit" type="default" variant="outlined" block onClick={handleLogin}>Iniciar Sesión</Button>,
+          <Button key="cancel" onClick={() => setIsModalVisible(false)}>{t('button.cancel')}</Button>,
+          <Button key="submit" type="default" variant="outlined" block onClick={handleLogin}>{t('header.login')}</Button>,
         ]}
       >
         {error && <div className="text-red-500 mb-4">{error}</div>}
-        <Input placeholder="Usuario" name="login" value={formData.login} onChange={handleInputChange} className="mb-4" />
-        <Input.Password placeholder="Contraseña" name="password" value={formData.password} onChange={handleInputChange} />
+        <Input placeholder={t('header.login')} name="login" value={formData.login} onChange={handleInputChange} className="mb-4" />
+        <Input.Password placeholder={t('password.new')} name="password" value={formData.password} onChange={handleInputChange} />
       </Modal>
 
       {/* Modal Registro */}
       <Modal
-        title="Registrar Nueva Cuenta"
+        title={t('header.signup')}
         open={isRegisterModalVisible}
         onCancel={() => setIsRegisterModalVisible(false)}
         footer={[
-          <Button key="cancel" onClick={() => setIsRegisterModalVisible(false)}>Cancelar</Button>,
-          <Button key="submit" type="default" variant="outlined" block onClick={handleRegister}>Registrar</Button>,
+          <Button key="cancel" onClick={() => setIsRegisterModalVisible(false)}>{t('button.cancel')}</Button>,
+          <Button key="submit" type="default" variant="outlined" block onClick={handleRegister}>{t('header.register')}</Button>,
         ]}
       >
-        <Input placeholder="Usuario" value={registerData.login} onChange={(e) => setRegisterData({ ...registerData, login: e.target.value })} className="mb-4" />
+        <Input placeholder={t('header.login')} value={registerData.login} onChange={(e) => setRegisterData({ ...registerData, login: e.target.value })} className="mb-4" />
         <Input placeholder="Email" value={registerData.email} onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} className="mb-4" />
-        <Input.Password placeholder="Contraseña" value={registerData.password} onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} className="mb-4" />
-        <Input.Password placeholder="Confirmar Contraseña" value={registerData.confirmPassword} onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })} className="mb-4" />
+        <Input.Password placeholder={t('password.new')} value={registerData.password} onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} className="mb-4" />
+        <Input.Password placeholder={t('password.repeat')} value={registerData.confirmPassword} onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })} className="mb-4" />
       </Modal>
 
       {/* Modal Nueva Contraseña */}
       <Modal
-        title="Establecer Contraseña"
+        title={t('password.change')}
         open={isPasswordModalVisible}
         onCancel={() => setIsPasswordModalVisible(false)}
         footer={[
-          <Button key="cancel" onClick={() => setIsPasswordModalVisible(false)}>Cancelar</Button>,
-          <Button key="submit" type="default" onClick={handleSavePassword}>Guardar</Button>,
+          <Button key="cancel" onClick={() => setIsPasswordModalVisible(false)}>{t('button.cancel')}</Button>,
+          <Button key="submit" type="default" onClick={handleSavePassword}>{t('button.save')}</Button>,
         ]}
       >
         <Input.Password
           name="newPassword"
           value={passwordData.newPassword}
           onChange={handlePasswordChange}
-          placeholder="Nueva contraseña"
+          placeholder={t('password.new')}
           className="mb-4"
         />
         <Input.Password
           name="confirmPassword"
           value={passwordData.confirmPassword}
           onChange={handlePasswordChange}
-          placeholder="Repetir contraseña"
+          placeholder={t('password.repeat')}
         />
       </Modal>
     </header>

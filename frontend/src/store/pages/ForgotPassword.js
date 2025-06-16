@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Input, Button, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 const ForgotPassword = () => {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -15,12 +17,12 @@ const ForgotPassword = () => {
         body: JSON.stringify({ email })
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Error al enviar correo');
-      message.success('Se envió un enlace de recuperación a tu correo');
+      if (!response.ok) throw new Error(data.message || t('errors.email_send', 'Error al enviar correo'));
+      message.success(t('forgot.sent'));
       setEmail('');
     } catch (error) {
       console.error('Forgot password error:', error);
-      message.error(error.message || 'Error al procesar la solicitud');
+      message.error(error.message || t('errors.request', 'Error al procesar la solicitud'));
     } finally {
       setLoading(false);
     }
@@ -28,17 +30,17 @@ const ForgotPassword = () => {
 
   return (
     <div className="p-4 max-w-md mx-auto">
-      <h2 className="text-xl mb-4">Recuperar Contraseña</h2>
+      <h2 className="text-xl mb-4">{t('password.change')}</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
           type="email"
-          placeholder="Ingresa tu email"
+          placeholder={t('forgot.placeholder', 'Ingresa tu email')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
         />
         <Button type="primary" htmlType="submit" loading={loading}>
-          Enviar enlace
+          {t('button.continue')}
         </Button>
       </form>
     </div>
