@@ -194,7 +194,7 @@ const Evento = () => {
     const token = localStorage.getItem('token');
     try {
       const response = await fetch(`http://localhost:5000/api/events/${eventoId}`, {
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (response.status === 401) {
         navigate('/login');
@@ -202,12 +202,15 @@ const Evento = () => {
       }
       const eventoOriginal = await response.json();
       if (!eventoOriginal) throw new Error('Evento no encontrado');
-      const { _id, ...eventoDuplicado } = eventoOriginal;
+      const { _id, __v, ...eventoDuplicado } = eventoOriginal;
+
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(eventoDuplicado));
 
       const saveResponse = await fetch('http://localhost:5000/api/events', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify(eventoDuplicado),
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
       if (!saveResponse.ok) throw new Error('Error al duplicar el evento');
       fetchEventos();
