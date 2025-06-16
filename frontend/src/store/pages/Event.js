@@ -383,6 +383,19 @@ const Event = () => {
         </div>
       )}
 
+      {evento?.descripcionHTML && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-2">Diseño del espectáculo</h3>
+          <div
+            className="prose"
+            dangerouslySetInnerHTML={{ __html: evento.descripcionHTML }}
+          />
+          {evento.resumenDescripcion && (
+            <p className="mt-2">{evento.resumenDescripcion}</p>
+          )}
+        </div>
+      )}
+
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">Funciones</h3>
         <div className="flex flex-col gap-2">
@@ -476,6 +489,19 @@ const Event = () => {
             <React.Fragment key={idx}>{renderWidget(w)}</React.Fragment>
           ))
         : null}
+
+      {evento?.videoURL && (
+        <div className="mt-6">
+          <iframe
+            title="video"
+            src={evento.videoURL}
+            className="w-full rounded"
+            height="315"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      )}
 
       {(recintoInfo?.latitud && recintoInfo.longitud) && (
         <div className="mt-6">
