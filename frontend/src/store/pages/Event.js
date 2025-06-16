@@ -32,6 +32,7 @@ const Event = () => {
   const [widgets, setWidgets] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef(null);
+  const [recintoInfo, setRecintoInfo] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -70,6 +71,20 @@ const Event = () => {
         const response = await fetch(`http://localhost:5000/api/events/${eventId}`);
         const data = await response.json();
         setEvento(data);
+        // Si el evento tiene un recinto como ID, obtener los detalles del recinto
+        const recintoId = typeof data.recinto === 'string' ? data.recinto : data.recinto?._id;
+        if (recintoId) {
+          try {
+            const recRes = await fetch('http://localhost:5000/api/recintos');
+            const recData = await recRes.json();
+            const found = Array.isArray(recData)
+              ? recData.find(r => r._id === recintoId)
+              : null;
+            if (found) setRecintoInfo(found);
+          } catch (err) {
+            console.error('Error fetching recinto:', err);
+          }
+        }
         if (data?.otrasOpciones?.popupAntesAsiento?.mostrar) {
           setShowSeatPopup(true);
         }
@@ -328,8 +343,12 @@ const Event = () => {
               </span>
             )}
             <h1 className="text-2xl font-bold">{evento?.nombre}</h1>
-            {evento?.recinto && (
-              <p className="text-sm">{evento.recinto}</p>
+            {recintoInfo?.nombre ? (
+              <p className="text-sm">{recintoInfo.nombre}</p>
+            ) : (
+              typeof evento?.recinto === 'string' && (
+                <p className="text-sm">{evento.recinto}</p>
+              )
             )}
           </div>
         </div>
@@ -429,15 +448,15 @@ const Event = () => {
           ))
         : null}
 
-      {evento?.recinto && evento.recinto.latitud && evento.recinto.longitud && (
+      {(recintoInfo?.latitud && recintoInfo.longitud) && (
         <div className="mt-6">
           <h2 className="text-lg font-semibold mb-2">¿Cómo llegar?</h2>
-          {evento.recinto.comoLlegar && (
-            <p className="mb-2">{evento.recinto.comoLlegar}</p>
+          {recintoInfo.comoLlegar && (
+            <p className="mb-2">{recintoInfo.comoLlegar}</p>
           )}
           <iframe
             title="map"
-            src={`https://www.google.com/maps?q=${evento.recinto.latitud},${evento.recinto.longitud}&output=embed`}
+            src={`https://www.google.com/maps?q=${recintoInfo.latitud},${recintoInfo.longitud}&output=embed`}
             width="100%"
             height="300"
             allowFullScreen
@@ -445,7 +464,7 @@ const Event = () => {
             className="rounded"
           />
           <div className="mt-2 flex justify-center">
-            <QRCodeSVG value={`https://www.google.com/maps?q=${evento.recinto.latitud},${evento.recinto.longitud}`} />
+            <QRCodeSVG value={`https://www.google.com/maps?q=${recintoInfo.latitud},${recintoInfo.longitud}`} />
           </div>
         </div>
       )}
