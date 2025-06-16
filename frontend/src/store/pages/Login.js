@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { Modal, Input, Button, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 const Login = ({ onLogin }) => {
+  const { t } = useTranslation();
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
@@ -34,14 +36,14 @@ const Login = ({ onLogin }) => {
         }
 
         onLogin?.({ token: data.token, user: data.user });
-        message.success('Inicio de sesión exitoso');
+        message.success(t('login.success'));
         navigate(refParam ? `/store?ref=${refParam}` : '/store');
       } else {
-        message.error(data.message || 'Error de autenticación');
+        message.error(data.message || t('errors.auth', 'Error de autenticación'));
       }
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
-      message.error('Error al iniciar sesión');
+      message.error(t('errors.login', 'Error al iniciar sesión'));
     }
   };
 
@@ -53,11 +55,11 @@ const Login = ({ onLogin }) => {
   const handleSavePassword = async () => {
     try {
       if (!passwordData.newPassword || !passwordData.confirmPassword)
-        throw new Error('Complete ambos campos');
+        throw new Error(t('errors.fields_required', 'Complete ambos campos'));
       if (passwordData.newPassword !== passwordData.confirmPassword)
-        throw new Error('Las contraseñas no coinciden');
+        throw new Error(t('errors.passwords_no_match', 'Las contraseñas no coinciden'));
       if (passwordData.newPassword.length < 6)
-        throw new Error('La contraseña debe tener al menos 6 caracteres');
+        throw new Error(t('errors.password_min_length', 'La contraseña debe tener al menos 6 caracteres'));
 
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:5000/api/user/set-password', {
@@ -70,16 +72,16 @@ const Login = ({ onLogin }) => {
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Error al guardar contraseña');
+      if (!response.ok) throw new Error(data.message || t('errors.save_password', 'Error al guardar contraseña'));
 
       setIsPasswordModalVisible(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
       onLogin?.({ token: token.replace('Bearer ', ''), user: data.user });
-      message.success('Contraseña actualizada');
+      message.success(t('password.updated'));
       navigate(refParam ? `/store?ref=${refParam}` : '/store');
     } catch (error) {
       console.error('Set password error:', error);
-      message.error(error.message || 'Error al guardar contraseña');
+      message.error(error.message || t('errors.save_password', 'Error al guardar contraseña'));
     }
   };
 
@@ -87,7 +89,7 @@ const Login = ({ onLogin }) => {
     <>
     <form onSubmit={handleSubmit}>
       <div>
-        <label>Login:</label>
+        <label>{t('header.login')}:</label>
         <input
           type="text"
           value={login}
@@ -96,7 +98,7 @@ const Login = ({ onLogin }) => {
         />
       </div>
       <div>
-        <label>Contraseña:</label>
+        <label>{t('password.new')}:</label>
         <input
           type="password"
           value={password}
@@ -109,36 +111,36 @@ const Login = ({ onLogin }) => {
         htmlType="submit"
         className="mt-4"
       >
-        Iniciar Sesión
+        {t('header.login')}
       </Button>
       <div className="mt-2">
         <Link to="/forgot-password" className="text-blue-600 hover:underline">
-          ¿Olvidaste tu contraseña?
+          {t('header.forgot')}
         </Link>
       </div>
     </form>
 
     <Modal
-      title="Establecer Contraseña"
+      title={t('password.change')}
       open={isPasswordModalVisible}
       onCancel={() => setIsPasswordModalVisible(false)}
       footer={[
-        <Button key="cancel" onClick={() => setIsPasswordModalVisible(false)}>Cancelar</Button>,
-        <Button key="save" type="primary" onClick={handleSavePassword}>Guardar</Button>,
+        <Button key="cancel" onClick={() => setIsPasswordModalVisible(false)}>{t('button.cancel')}</Button>,
+        <Button key="save" type="primary" onClick={handleSavePassword}>{t('button.save')}</Button>,
       ]}
     >
       <Input.Password
         name="newPassword"
         value={passwordData.newPassword}
         onChange={handlePasswordChange}
-        placeholder="Nueva contraseña"
+        placeholder={t('password.new')}
         className="mb-4"
       />
       <Input.Password
         name="confirmPassword"
         value={passwordData.confirmPassword}
         onChange={handlePasswordChange}
-        placeholder="Repetir contraseña"
+        placeholder={t('password.repeat')}
       />
     </Modal>
     </>
