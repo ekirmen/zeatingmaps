@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { Toaster } from 'react-hot-toast';
 import 'react-toastify/dist/ReactToastify.css';
 import { NotificationContainer } from 'react-notifications';
 import 'react-notifications/lib/notifications.css';
@@ -177,6 +178,7 @@ const App = () => {
                 </Routes>
               </div>
                 {showFooter && <BasicFooter />}
+                <Toaster position="top-right" />
                 <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
                 <NotificationContainer />
                 <CartTimer />
