@@ -150,7 +150,6 @@ const App = () => {
                     <Route path="sitio-web" element={<WebFooter />} />
                     <Route path="cabecera" element={<WebHeader />} />
                   </Route>
-
                   <Route path="/store/:venueId?" element={<EventsVenue />} />
                   <Route path="/store/event/:eventId" element={<Event />} />
                   <Route path="/store/event" element={<Navigate to="/store" replace />} />
