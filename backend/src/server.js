@@ -1,5 +1,4 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
@@ -21,7 +20,6 @@ import './models/CmsPage.js';
 import './models/Abono.js';
 import './models/Setting.js';
 import Mapa from './models/Mapa.js';
-import User from './models/User.js';
 
 // Middleware autenticación
 import { protect as authMiddleware } from './middleware/authMiddleware.js';
@@ -131,15 +129,6 @@ supabase
   })
   .catch(err => console.error('❌ Error al conectar a Supabase:', err));
 
-// ----------- Middleware para validar ObjectId -----------
-
-const validateObjectId = (req, res, next) => {
-  const { id } = req.params;
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).json({ message: 'Invalid ID format' });
-  }
-  next();
-};
 
 // ----------- Rutas -----------
 
@@ -156,18 +145,20 @@ app.post('/api/events/upload', authMiddleware, quillUpload.single('file'), (req,
   }
 });
 
-// Ruta búsqueda de usuarios
+// Ruta búsqueda de usuarios usando Supabase
 app.get('/api/user/search', async (req, res) => {
   try {
     const { term } = req.query;
     if (!term) return res.status(400).json({ message: 'Search term is required' });
 
-    const users = await User.find({
-      $or: [
-        { email: { $regex: term, $options: 'i' } },
-        { login: { $regex: term, $options: 'i' } }
-      ]
-    }).select('-password');
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('*')
+      .or(`email.ilike.%${term}%,login.ilike.%${term}%`);
+
+    if (error) {
+      throw error;
+    }
 
     res.json(users);
   } catch (error) {
@@ -176,8 +167,6 @@ app.get('/api/user/search', async (req, res) => {
   }
 });
 
-// Uso de middleware validateObjectId para rutas con :id
-app.use('/api/users/:id', validateObjectId); // Keep this as it might be used elsewhere
 
 // Rutas agrupadas
 app.use('/api', authRoutes);

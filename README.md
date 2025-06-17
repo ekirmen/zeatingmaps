@@ -1,6 +1,6 @@
 # Zeating Maps
 
-This project requires a Google Maps API key to accurately geocode addresses when creating or editing "recintos" (venues).
+This project now stores data in **Supabase** instead of MongoDB. A Google Maps API key is required to accurately geocode addresses when creating or editing "recintos" (venues).
 
 ## Installation
 
