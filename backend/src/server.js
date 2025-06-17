@@ -118,28 +118,18 @@ if (!fs.existsSync(publicUploadsPath)) {
 
 app.use('/public/uploads', express.static(publicUploadsPath));
 
-// ----------- Conexión a MongoDB -----------
+// ----------- Conexión a Supabase -----------
 
-mongoose.connect(process.env.MONGO_URI)
-  .then(async () => {
-    console.log('✅ MongoDB conectado');
+import supabase from './lib/supabaseClient.js';
 
-    // Asegura que el índice compuesto { salaId, funcionId } sea el único índice
-    // para la colección de mapas. Si existe el antiguo índice único en salaId,
-    // se elimina para evitar errores de clave duplicada al crear mapas por
-    // función.
-    try {
-      const collection = mongoose.connection.collection('mapas');
-      await collection.dropIndex('salaId_1').catch(err => {
-        if (err.codeName !== 'IndexNotFound') throw err;
-      });
-      await Mapa.syncIndexes();
-      console.log('🛠️  Índices de Mapa sincronizados');
-    } catch (idxErr) {
-      console.error('Error sincronizando índices de Mapa:', idxErr);
-    }
+supabase
+  .from('test')
+  .select('*')
+  .limit(1)
+  .then(() => {
+    console.log('✅ Supabase conectado');
   })
-  .catch(err => console.error('❌ Error al conectar a MongoDB:', err));
+  .catch(err => console.error('❌ Error al conectar a Supabase:', err));
 
 // ----------- Middleware para validar ObjectId -----------
 
