@@ -10,6 +10,7 @@ import { FooterProvider } from './contexts/FooterContext';
 import { HeaderProvider } from './contexts/HeaderContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -22,6 +23,7 @@ root.render(
             <HeaderProvider>
               <FooterProvider>
                 <App />
+                <SpeedInsights />
               </FooterProvider>
             </HeaderProvider>
           </ThemeProvider>
