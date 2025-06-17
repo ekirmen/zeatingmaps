@@ -4,6 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "build": "cd frontend && npm run build",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test": "jest",
