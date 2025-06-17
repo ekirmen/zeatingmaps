@@ -12,9 +12,10 @@
   "devDependencies": {
     "concurrently": "^9.1.2"
   },
-  "dependencies": {
-    "framer-motion": "^12.16.0",
-    "react-icons": "^5.5.0"
-  },
+    "dependencies": {
+      "framer-motion": "^12.16.0",
+      "react-icons": "^5.5.0",
+      "@remix-run/dev": "^1.0.0"
+    },
   "license": "MIT"
 }
