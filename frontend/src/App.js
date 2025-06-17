@@ -61,7 +61,7 @@ import ForgotPassword from './store/pages/ForgotPassword';
 import ResetPassword from './store/pages/ResetPassword';
 import FaqPage from './store/pages/FaqPage';
 import NotFoundPage from './store/pages/NotFoundPage';
-import TestPage from '../pages/test';
+import TestPage from './pages/test';
 
 const App = () => {
   const location = useLocation();
