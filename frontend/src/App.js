@@ -61,6 +61,7 @@ import ForgotPassword from './store/pages/ForgotPassword';
 import ResetPassword from './store/pages/ResetPassword';
 import FaqPage from './store/pages/FaqPage';
 import NotFoundPage from './store/pages/NotFoundPage';
+import TestPage from '../pages/test';
 
 const App = () => {
   const location = useLocation();
@@ -171,6 +172,7 @@ const App = () => {
                   <Route path="/payment-success" element={<PaymentSuccess />} />
                   <Route path="/store/thank-you" element={<ThankYouPage />} />
                   <Route path="/store/faq" element={<FaqPage />} />
+                  <Route path="/test" element={<TestPage />} />
                   <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
 
                   <Route path="/dashboard/formato-entrada" element={<FormatoEntrada />} />
