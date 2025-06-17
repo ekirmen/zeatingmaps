@@ -8,7 +8,7 @@ export const TagProvider = ({ children }) => {
   useEffect(() => {
     const fetchTags = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/tags');
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/tags`);
         const data = await res.json();
         setTags(data);
       } catch (e) {

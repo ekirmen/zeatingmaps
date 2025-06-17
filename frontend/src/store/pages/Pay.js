@@ -47,7 +47,7 @@ const Pay = () => {
 
     const fetchOptions = async () => {
       try {
-        const funcRes = await fetch(`http://localhost:5000/api/funcions/${funcionId}`);
+        const funcRes = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions/${funcionId}`);
         const funcData = await funcRes.json();
         setFuncionDetails(funcData);
         const eventId = funcData.evento?._id || funcData.evento;
@@ -55,7 +55,7 @@ const Pay = () => {
         setCurrentEventId(eventId);
 
         if (eventId) {
-          const eventRes = await fetch(`http://localhost:5000/api/events/${eventId}`);
+          const eventRes = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${eventId}`);
           const eventData = await eventRes.json();
           setEventOptions(eventData.otrasOpciones || {});
           if (eventData.otrasOpciones?.metodosPagoPermitidos?.length) {
@@ -77,7 +77,7 @@ const Pay = () => {
         return;
       }
       try {
-        const res = await fetch(`http://localhost:5000/api/affiliate-users?login=${encodeURIComponent(refParam)}`);
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/affiliate-users?login=${encodeURIComponent(refParam)}`);
         if (res.ok) {
           const data = await res.json();
           setAffiliate(data);
@@ -112,7 +112,7 @@ const Pay = () => {
       }));
       const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
 
-      const response = await fetch('http://localhost:5000/api/payments', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ const Pay = () => {
       }));
       const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
 
-      const response = await fetch('http://localhost:5000/api/payments', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

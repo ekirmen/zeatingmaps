@@ -8,7 +8,7 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   const getPreview = (img) => {
     if (typeof img === 'string') {
       // Image paths stored in the backend already include the folder
-      return `http://localhost:5000${img}`;
+      return `${process.env.REACT_APP_API_URL}${img}`;
     }
     if (img instanceof File) {
       return URL.createObjectURL(img);

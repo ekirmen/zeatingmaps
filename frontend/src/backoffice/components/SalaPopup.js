@@ -7,7 +7,7 @@ const SalaPopup = ({ recintoId, onClose }) => {
   const handleCreateSala = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/recintos/${recintoId}/salas`,
+        `${process.env.REACT_APP_API_URL}/api/recintos/${recintoId}/salas`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

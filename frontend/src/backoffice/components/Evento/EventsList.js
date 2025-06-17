@@ -31,7 +31,7 @@ const EventsList = ({
                 <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
                   {evento.imagenes?.banner ? (
                     <img
-                      src={`http://localhost:5000${evento.imagenes.banner}`}
+                      src={`${process.env.REACT_APP_API_URL}${evento.imagenes.banner}`}
                       alt={evento.nombre}
                       className="object-cover w-full h-full"
                     />

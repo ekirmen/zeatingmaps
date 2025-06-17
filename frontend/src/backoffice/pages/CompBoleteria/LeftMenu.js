@@ -26,7 +26,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const fetchEventData = async (eventId) => {
     try {
       const token = localStorage.getItem('token')?.replace('Bearer ', '');
-      const response = await fetch(`http://localhost:5000/api/eventos/${eventId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/eventos/${eventId}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -59,7 +59,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
   // Búsqueda por email (para tickets)
   const handleEmailSearch = async (email) => {
-    const response = await fetch(`http://localhost:5000/api/payments/by-email/${encodeURIComponent(email)}`);
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/by-email/${encodeURIComponent(email)}`);
     const data = await response.json();
 
     if (!response.ok) throw new Error(data.message || 'Error en la búsqueda');
@@ -76,7 +76,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       'Content-Type': 'application/json'
     };
 
-    const response = await fetch(`http://localhost:5000/api/payments/locator/${locator}`, { headers });
+    const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/locator/${locator}`, { headers });
     const data = await response.json();
     
     if (!response.ok) throw new Error(data.message || 'Error al buscar el ticket');
@@ -132,7 +132,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       // Ensure the search term is properly encoded
       const encodedTerm = encodeURIComponent(searchTerm.trim());
       
-      const response = await fetch(`http://localhost:5000/api/user/search?term=${encodedTerm}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/search?term=${encodedTerm}`);
       const data = await response.json();
       
       if (!response.ok) throw new Error(data.message || 'Error en la búsqueda');
@@ -194,7 +194,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         }
       };
   
-      const response = await fetch('http://localhost:5000/api/user', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)

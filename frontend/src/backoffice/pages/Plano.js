@@ -27,7 +27,7 @@ const Plano = () => {
   useEffect(() => {
     const fetchRecintosYSalas = async () => {
       try {
-        const resRecintos = await fetch('http://localhost:5000/api/recintos');
+        const resRecintos = await fetch(`${process.env.REACT_APP_API_URL}/api/recintos`);
         const recintosData = await resRecintos.json();
         setRecintos(recintosData);
       } catch (error) {

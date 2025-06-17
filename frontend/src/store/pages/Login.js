@@ -16,7 +16,7 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ login, password }),
@@ -62,7 +62,7 @@ const Login = ({ onLogin }) => {
         throw new Error(t('errors.password_min_length', 'La contraseña debe tener al menos 6 caracteres'));
 
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/user/set-password', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/set-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

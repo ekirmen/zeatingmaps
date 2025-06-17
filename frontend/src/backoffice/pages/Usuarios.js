@@ -15,7 +15,7 @@ const Usuarios = () => {
     const fetchUsers = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/user', {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -39,7 +39,7 @@ const Usuarios = () => {
   const handleCreateUser = async (newUser) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/user', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -64,7 +64,7 @@ const Usuarios = () => {
   const handleUpdateUser = async (updatedUser) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/user/${updatedUser._id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/${updatedUser._id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -92,7 +92,7 @@ const Usuarios = () => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`http://localhost:5000/api/user/${userId}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/${userId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,

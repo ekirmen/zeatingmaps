@@ -39,7 +39,7 @@ const Cart = () => {
       const info = {};
       await Promise.all(ids.map(async id => {
         try {
-          const res = await fetch(`http://localhost:5000/api/funcions/${id}`);
+          const res = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions/${id}`);
           if (res.ok) {
             info[id] = await res.json();
           }
@@ -54,7 +54,7 @@ const Cart = () => {
 
   const handleDownloadTicket = async (locator) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/payments/${locator}/download`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/${locator}/download`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -78,7 +78,7 @@ const Cart = () => {
 
   const handleTicketSearch = async (locator) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/payments/locator/${locator}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/locator/${locator}`);
       if (!response.ok) {
         throw new Error('Ticket not found');
       }

@@ -54,7 +54,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed 
 
     try {
       const payload = { ...formData, direccion: buildAddress(formData) };
-      const response = await fetch(`http://localhost:5000/api/recintos/${recinto._id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/recintos/${recinto._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

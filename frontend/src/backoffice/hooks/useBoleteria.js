@@ -52,7 +52,7 @@ export const useBoleteria = () => {
   const cargarPlantillasPrecios = async () => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/funcions/${selectedFuncion._id}/plantilla`
+        `${process.env.REACT_APP_API_URL}/api/funcions/${selectedFuncion._id}/plantilla`
       );
       if (response.ok) {
         const data = await response.json();
@@ -66,7 +66,7 @@ export const useBoleteria = () => {
 
   const handleEventSelect = async (eventoId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/funcions?evento=${eventoId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions?evento=${eventoId}`);
       const data = await response.json();
       const funcs = Array.isArray(data) ? data : [];
       setFunciones(funcs);

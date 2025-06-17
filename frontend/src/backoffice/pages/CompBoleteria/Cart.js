@@ -6,7 +6,7 @@ import { setSeatsBlocked } from '../../services/apibackoffice';
 const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selectedAffiliate, children }) => {
   const handleTicketSearch = async (locator) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/payments/locator/${locator}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/locator/${locator}`);
       if (response.ok) {
         const payment = await response.json();
 
@@ -20,7 +20,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
         );
 
         if (payment.user) {
-          const userResponse = await fetch(`http://localhost:5000/api/users/${payment.user}`);
+          const userResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/users/${payment.user}`);
           if (userResponse.ok) {
             const userData = await userResponse.json();
             setSelectedClient(userData);

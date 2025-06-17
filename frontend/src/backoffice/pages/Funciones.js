@@ -27,7 +27,7 @@ const Funciones = () => {
     const fetchEventos = async () => {
       if (salaSeleccionada && recintoSeleccionado) {
         try {
-          const response = await fetch(`http://localhost:5000/api/events?recinto=${recintoSeleccionado._id}&sala=${salaSeleccionada._id}`);
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events?recinto=${recintoSeleccionado._id}&sala=${salaSeleccionada._id}`);
           const data = await response.json();
           setEventos(data);
           setEventoSeleccionado(null); // Reset selected event
@@ -46,7 +46,7 @@ const Funciones = () => {
     const fetchFunciones = async () => {
       if (eventoSeleccionado) {
         try {
-          const response = await fetch(`http://localhost:5000/api/funcions?evento=${eventoSeleccionado}`);
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions?evento=${eventoSeleccionado}`);
           const data = await response.json();
           setFunciones(Array.isArray(data) ? data : []);
         } catch (error) {
@@ -84,8 +84,8 @@ const Funciones = () => {
     };
 
     const url = editingFuncion 
-      ? `http://localhost:5000/api/funcions/${editingFuncion._id}`
-      : 'http://localhost:5000/api/funcions';
+      ? `${process.env.REACT_APP_API_URL}/api/funcions/${editingFuncion._id}`
+      : `${process.env.REACT_APP_API_URL}/api/funcions`;
     const method = editingFuncion ? 'PUT' : 'POST';
 
     try {
@@ -110,7 +110,7 @@ const Funciones = () => {
           permitirReservasWeb: false,
         });
         // Refresh funciones list
-        const refreshResponse = await fetch(`http://localhost:5000/api/funcions?evento=${eventoSeleccionado}`);
+        const refreshResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions?evento=${eventoSeleccionado}`);
         const refreshData = await refreshResponse.json();
         setFunciones(Array.isArray(refreshData) ? refreshData : []);
       } else {
@@ -141,13 +141,13 @@ const Funciones = () => {
   const handleDelete = async (funcionId) => {
     if (window.confirm('¿Seguro que deseas eliminar esta función?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/funcions/${funcionId}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions/${funcionId}`, {
           method: 'DELETE',
         });
 
         if (response.ok) {
           alert('Función eliminada');
-          const refreshResponse = await fetch(`http://localhost:5000/api/funcions?evento=${eventoSeleccionado}`);
+          const refreshResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions?evento=${eventoSeleccionado}`);
           const refreshData = await refreshResponse.json();
           setFunciones(Array.isArray(refreshData) ? refreshData : []);
         } else {
@@ -163,14 +163,14 @@ const Funciones = () => {
 
   const handleDuplicate = async (funcionId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/funcions/${funcionId}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions/${funcionId}`);
       if (!response.ok) {
         alert('Error al obtener la función');
         return;
       }
       const funcionOriginal = await response.json();
       const { _id, __v, ...funcionDuplicada } = funcionOriginal;
-      const saveResponse = await fetch('http://localhost:5000/api/funcions', {
+      const saveResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(funcionDuplicada),
@@ -179,7 +179,7 @@ const Funciones = () => {
         alert('Error al duplicar la función');
         return;
       }
-      const refreshResponse = await fetch(`http://localhost:5000/api/funcions?evento=${eventoSeleccionado}`);
+      const refreshResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions?evento=${eventoSeleccionado}`);
       const refreshData = await refreshResponse.json();
       setFunciones(Array.isArray(refreshData) ? refreshData : []);
     } catch (error) {

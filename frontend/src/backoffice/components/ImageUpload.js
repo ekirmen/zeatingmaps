@@ -17,7 +17,7 @@ const ImageUpload = () => {
     formData.append('image', selectedFile);
 
     try {
-      const response = await fetch('http://localhost:5000/api/upload', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -27,7 +27,7 @@ const ImageUpload = () => {
       }
 
       const data = await response.json();
-      setUploadedImage(`http://localhost:5000${data.path}`);
+      setUploadedImage(`${process.env.REACT_APP_API_URL}${data.path}`);
     } catch (error) {
       console.error('Upload error:', error);
     }
