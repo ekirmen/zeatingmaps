@@ -9,8 +9,9 @@ const connectToCompanyDB = async (dbName) => {
 
   try {
     const connection = await mongoose.createConnection(
-      `mongodb://localhost:27017/${dbName}`,
+      process.env.MONGO_URI,
       {
+        dbName,
         useNewUrlParser: true,
         useUnifiedTopology: true,
       }
