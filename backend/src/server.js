@@ -245,7 +245,8 @@ app.get('/api/salas/:salaId/seats', async (req, res) => {
 });
 
 // ----------- Servir frontend -----------
-const frontendPath = path.join(__dirname, '../../frontend', 'build');
+// When deployed, the React build lives in backend/frontend/build
+const frontendPath = path.join(__dirname, '../frontend', 'build');
 if (fs.existsSync(frontendPath)) {
   app.use(express.static(frontendPath));
   app.get('*', (req, res) => {

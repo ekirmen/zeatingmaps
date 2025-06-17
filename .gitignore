@@ -2,7 +2,7 @@ node_modules/
 Escaner/
 .env
 backend/.env
-frontend/.env
+backend/frontend/.env
 dist/
 build/
 **/build/

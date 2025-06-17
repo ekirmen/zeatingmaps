@@ -1,13 +1,13 @@
 {
   "scripts": {
     "start:backend": "cd backend && npm run dev",
-    "start:frontend": "cd frontend && npm start",
+    "start:frontend": "cd backend/frontend && npm start",
     "start:all": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
     "start": "node backend/src/server.js",
-    "build": "cd frontend && npm run build",
+    "build": "cd backend/frontend && npm run build",
     "test": "npm run test:backend",
     "test:backend": "cd backend && npm test",
-    "test:frontend": "cd frontend && npm test"
+    "test:frontend": "cd backend/frontend && npm test"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
