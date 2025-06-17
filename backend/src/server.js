@@ -244,6 +244,15 @@ app.get('/api/salas/:salaId/seats', async (req, res) => {
   }
 });
 
+// ----------- Servir frontend -----------
+const frontendPath = path.join(__dirname, '../../frontend', 'build');
+if (fs.existsSync(frontendPath)) {
+  app.use(express.static(frontendPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendPath, 'index.html'));
+  });
+}
+
 // Ruta no encontrada
 app.use((req, res) => {
   res.status(404).json({ message: 'Ruta no encontrada' });

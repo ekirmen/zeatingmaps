@@ -17,7 +17,14 @@ This project now stores data in **Supabase** instead of MongoDB. A Google Maps A
    - `SUPABASE_KEY` – Supabase API key
    - `JWT_SECRET` – secret key for JWT tokens
    - `FRONTEND_URL` – allowed origin for CORS
-4. Run the frontend and backend using `npm run start:all` from the repository root.
+4. For development, run the frontend and backend using `npm run start:all` from the repository root.
+
+To serve the React application from the same Express server in production:
+
+```bash
+npm run build       # builds the frontend
+npm start           # starts the backend which now serves the built frontend
+```
 
 The Google Maps API key is optional. If not provided, the application will fall back to OpenStreetMap for geocoding.
 
