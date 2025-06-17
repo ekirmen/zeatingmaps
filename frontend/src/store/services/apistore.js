@@ -1,5 +1,5 @@
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = process.env.REACT_APP_API_URL + '/api';
 
 // Función genérica para solicitudes GET
 // Obtener plantilla de precios por ID

@@ -58,7 +58,7 @@ const Entrada = () => {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:5000/api/entradas?recinto=${formData.recinto}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/entradas?recinto=${formData.recinto}`);
       const data = await response.json();
 
       if (Array.isArray(data)) {
@@ -77,7 +77,7 @@ const Entrada = () => {
 
   const handleSaveData = async (datos) => {
     try {
-      const response = await fetch('http://localhost:5000/api/entradas', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/entradas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datos)
@@ -99,7 +99,7 @@ const Entrada = () => {
   const handleEditTicket = async (id) => {
     setTicketId(id);
     try {
-      const response = await fetch(`http://localhost:5000/api/entradas/${id}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/entradas/${id}`);
       const ticket = await response.json();
 
       setEditFormData({
@@ -118,7 +118,7 @@ const Entrada = () => {
 
   const handleSaveEditData = async (datosEditados) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/entradas/${ticketId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/entradas/${ticketId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datosEditados)
@@ -140,7 +140,7 @@ const Entrada = () => {
   const handleDeleteTicket = async (id) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este ticket?")) {
       try {
-        await fetch(`http://localhost:5000/api/entradas/${id}`, { method: "DELETE" });
+        await fetch(`${process.env.REACT_APP_API_URL}/api/entradas/${id}`, { method: "DELETE" });
         alert("Ticket eliminado correctamente.");
         loadTickets();
       } catch (error) {

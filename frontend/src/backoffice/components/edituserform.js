@@ -30,7 +30,7 @@ const EditUserForm = ({ user, onUpdateUser, onCancel }) => {
       const token = localStorage.getItem('token');
       if (!token) throw new Error('No se encontró el token de autorización');
 
-      const response = await fetch(`http://localhost:5000/api/user/${user._id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/${user._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

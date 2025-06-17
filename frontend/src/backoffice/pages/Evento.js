@@ -43,7 +43,7 @@ const Evento = () => {
       if (recintoSeleccionado) queryParams.append('recinto', recintoSeleccionado._id);
       if (salaSeleccionada) queryParams.append('sala', salaSeleccionada._id);
       
-      const response = await fetch(`http://localhost:5000/api/events?${queryParams}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events?${queryParams}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -174,7 +174,7 @@ const Evento = () => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar este evento?')) return;
 
     try {
-      const response = await fetch(`http://localhost:5000/api/events/${eventoId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${eventoId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
@@ -193,7 +193,7 @@ const Evento = () => {
   const handleDuplicate = useCallback(async (eventoId) => {
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch(`http://localhost:5000/api/events/${eventoId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${eventoId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.status === 401) {
@@ -210,7 +210,7 @@ const Evento = () => {
       const formData = new FormData();
       formData.append('data', JSON.stringify(eventoDuplicado));
 
-      const saveResponse = await fetch('http://localhost:5000/api/events', {
+      const saveResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/events`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -225,8 +225,8 @@ const Evento = () => {
   const handleSave = useCallback(async () => {
     const token = localStorage.getItem('token');
     const url = eventoData._id
-      ? `http://localhost:5000/api/events/${eventoData._id}`
-      : 'http://localhost:5000/api/events';
+      ? `${process.env.REACT_APP_API_URL}/api/events/${eventoData._id}`
+      : `${process.env.REACT_APP_API_URL}/api/events`;
 
     const method = eventoData._id ? 'PUT' : 'POST';
 

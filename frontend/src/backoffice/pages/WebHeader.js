@@ -16,7 +16,7 @@ const WebHeader = () => {
       const authHeader = token && !token.startsWith('Bearer ')
         ? `Bearer ${token}`
         : token;
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/upload`, {
         method: 'POST',
         headers: token ? { Authorization: authHeader } : {},
         body: formData
@@ -44,7 +44,7 @@ const WebHeader = () => {
       <input type="file" accept=".jpg,.png" onChange={handleFileChange} />
       {logoUrl && (
         <img
-          src={`http://localhost:5000${logoUrl}`}
+          src={`${process.env.REACT_APP_API_URL}${logoUrl}`}
           alt="Logo"
           className="h-12 mt-2"
         />

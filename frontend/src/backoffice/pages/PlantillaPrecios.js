@@ -22,7 +22,7 @@ const PlantillaPrecios = () => {
   useEffect(() => {
     const obtenerRecintos = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/recintos');
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/recintos`);
         const data = await response.json();
         setRecintos(data);
       } catch (error) {
@@ -42,7 +42,7 @@ const PlantillaPrecios = () => {
     if (sala) {
       const obtenerZonas = async () => {
         try {
-          const response = await fetch(`http://localhost:5000/api/zonas/sala/${sala._id}`);
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/zonas/sala/${sala._id}`);
           const zonasData = await response.json();
           setZonas(zonasData);
         } catch (error) {
@@ -57,7 +57,7 @@ const PlantillaPrecios = () => {
     if (recinto) {
       const obtenerEntradas = async () => {
         try {
-          const response = await fetch(`http://localhost:5000/api/entradas/recinto/${recinto._id}`);
+          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/entradas/recinto/${recinto._id}`);
           if (!response.ok) {
             throw new Error('Error al obtener las entradas');
           }
@@ -81,7 +81,7 @@ const PlantillaPrecios = () => {
     if (recinto && sala) {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/plantillas/recinto/${recinto._id}/sala/${sala._id}`
+          `${process.env.REACT_APP_API_URL}/api/plantillas/recinto/${recinto._id}/sala/${sala._id}`
         );
   
         if (!response.ok) {
@@ -174,8 +174,8 @@ const PlantillaPrecios = () => {
 
     try {
       const url = editingPlantilla 
-        ? `http://localhost:5000/api/plantillas/${editingPlantilla._id}`
-        : 'http://localhost:5000/api/plantillas';
+        ? `${process.env.REACT_APP_API_URL}/api/plantillas/${editingPlantilla._id}`
+        : `${process.env.REACT_APP_API_URL}/api/plantillas`;
       
       const method = editingPlantilla ? 'PUT' : 'POST';
   
@@ -219,7 +219,7 @@ const PlantillaPrecios = () => {
   const handleDeletePlantilla = async (plantillaId) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar esta plantilla?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/plantillas/${plantillaId}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/plantillas/${plantillaId}`, {
           method: 'DELETE'
         });
         if (!response.ok) throw new Error('Error al eliminar la plantilla');

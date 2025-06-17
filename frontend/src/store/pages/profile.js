@@ -85,7 +85,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
 
     try {
       // Use the correct backend endpoint for changing password
-      const response = await fetch(`http://localhost:5000/api/user/profile/change-password`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/profile/change-password`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
     
     setLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/api/payments/user/${user._id}`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/user/${user._id}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -201,7 +201,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
 
   const handleDownloadTicket = async (locator) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/payments/${locator}/download`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/${locator}/download`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

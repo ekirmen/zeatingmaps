@@ -19,7 +19,7 @@ const Descuentos = () => {
 
   const fetchDescuentos = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/descuentos');
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/descuentos`);
       const data = await response.json();
       setDescuentos(data);
     } catch (error) {
@@ -29,7 +29,7 @@ const Descuentos = () => {
 
   const fetchEventos = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/events');
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events`);
       const data = await response.json();
       setEventos(data);
     } catch (error) {
@@ -41,10 +41,10 @@ const Descuentos = () => {
     const loadZonas = async () => {
       if (!eventoId) return setZonas([]);
       try {
-        const evRes = await fetch(`http://localhost:5000/api/events/${eventoId}`);
+        const evRes = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${eventoId}`);
         const ev = await evRes.json();
         if (ev && ev.sala) {
-          const zRes = await fetch(`http://localhost:5000/api/zonas/sala/${ev.sala}`);
+          const zRes = await fetch(`${process.env.REACT_APP_API_URL}/api/zonas/sala/${ev.sala}`);
           const zData = await zRes.json();
           setZonas(Array.isArray(zData) ? zData : []);
         }
@@ -59,7 +59,7 @@ const Descuentos = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const url = editingId ? `http://localhost:5000/api/descuentos/${editingId}` : 'http://localhost:5000/api/descuentos';
+      const url = editingId ? `${process.env.REACT_APP_API_URL}/api/descuentos/${editingId}` : `${process.env.REACT_APP_API_URL}/api/descuentos`;
       const method = editingId ? 'PUT' : 'POST';
       const detalles = Object.entries(zoneDetails).map(([zonaId, det]) => ({
         zona: zonaId,
@@ -121,7 +121,7 @@ const Descuentos = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar este descuento?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/descuentos/${id}`, { method: 'DELETE' });
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/descuentos/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchDescuentos();
       } else {

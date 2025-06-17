@@ -48,7 +48,7 @@ const ZonesAndPrices = ({
       if (selectedFuncion?._id) {
         try {
           const response = await fetch(
-            `http://localhost:5000/api/funcions/${selectedFuncion._id}/plantilla`
+            `${process.env.REACT_APP_API_URL}/api/funcions/${selectedFuncion._id}/plantilla`
           );
           if (response.ok) {
             const data = await response.json();
@@ -126,7 +126,7 @@ const ZonesAndPrices = ({
       if (selectedFuncion?.sala?.recinto) {
         try {
           const res = await fetch(
-            `http://localhost:5000/api/entradas/recinto/${selectedFuncion.sala.recinto}`
+            `${process.env.REACT_APP_API_URL}/api/entradas/recinto/${selectedFuncion.sala.recinto}`
           );
           if (res.ok) {
             const data = await res.json();
@@ -146,7 +146,7 @@ const ZonesAndPrices = ({
   useEffect(() => {
     const loadAffiliates = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/affiliate-users');
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/affiliate-users`);
         if (res.ok) {
           const data = await res.json();
           setAffiliates(Array.isArray(data) ? data : []);
@@ -161,7 +161,7 @@ const ZonesAndPrices = ({
   const applyDiscountCode = async () => {
     if (!discountCode.trim()) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/descuentos/code/${encodeURIComponent(discountCode.trim())}`);
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/descuentos/code/${encodeURIComponent(discountCode.trim())}`);
       if (!res.ok) throw new Error('Código no válido');
       const data = await res.json();
       const now = Date.now();

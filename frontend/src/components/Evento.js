@@ -70,7 +70,7 @@ const Evento = () => {
           eventoData.imagenes.espectaculo.length > 0 &&
           !imagePreview && (
             <img
-              src={`http://localhost:5000${eventoData.imagenes.espectaculo[0]}`}
+              src={`${process.env.REACT_APP_API_URL}${eventoData.imagenes.espectaculo[0]}`}
               alt="Evento"
               style={{ maxWidth: '200px', marginTop: '10px' }}
             />

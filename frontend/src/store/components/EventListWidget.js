@@ -29,8 +29,8 @@ const EventListWidget = () => {
     const fetchData = async () => {
       try {
         const [evRes, tagRes] = await Promise.all([
-          fetch('http://localhost:5000/api/events'),
-          fetch('http://localhost:5000/api/tags')
+          fetch(`${API_URL}/api/events`),
+          fetch(`${API_URL}/api/tags`)
         ]);
         if (!evRes.ok) throw new Error('Error al obtener los eventos');
         if (!tagRes.ok) throw new Error('Error al obtener tags');

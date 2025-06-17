@@ -44,7 +44,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   useEffect(() => {
     const fetchMetodos = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/metodos_pago');
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/metodos_pago`);
         const data = await res.json();
         setMetodos(data);
 

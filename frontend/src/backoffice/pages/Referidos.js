@@ -16,7 +16,7 @@ const Referidos = () => {
     const fetchAffiliates = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/affiliate-users', {
+        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/affiliate-users`, {
           headers: { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
         });
         if (res.ok) {
@@ -34,7 +34,7 @@ const Referidos = () => {
     if (!searchTerm) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/user/search?term=${encodeURIComponent(searchTerm)}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/user/search?term=${encodeURIComponent(searchTerm)}`, {
         headers: { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
       });
       if (res.ok) {
@@ -51,7 +51,7 @@ const Referidos = () => {
     const percentage = parseFloat(prompt('Porcentaje', '0')) || 0;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch('http://localhost:5000/api/affiliate-users', {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/affiliate-users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -76,7 +76,7 @@ const Referidos = () => {
     if (!window.confirm('¿Eliminar afiliado?')) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`http://localhost:5000/api/affiliate-users/${id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/affiliate-users/${id}`, {
         method: 'DELETE',
         headers: { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
       });
@@ -106,14 +106,14 @@ const Referidos = () => {
     const { id, login, base, percentage } = editForm;
     try {
       const token = localStorage.getItem('token');
-      const resSearch = await fetch(`http://localhost:5000/api/user/search?term=${encodeURIComponent(login)}`, {
+      const resSearch = await fetch(`${process.env.REACT_APP_API_URL}/api/user/search?term=${encodeURIComponent(login)}`, {
         headers: { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` }
       });
       const users = resSearch.ok ? await resSearch.json() : [];
       const user = users[0];
       if (!user) return toast.error('Usuario no encontrado');
 
-      const res = await fetch(`http://localhost:5000/api/affiliate-users/${id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/affiliate-users/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

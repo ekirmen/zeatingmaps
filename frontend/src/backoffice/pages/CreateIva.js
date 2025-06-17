@@ -12,7 +12,7 @@ const CreateIva = () => {
 
   const fetchIvas = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/ivas');
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/ivas`);
       const data = await response.json();
       setIvas(data);
     } catch (error) {
@@ -24,9 +24,9 @@ const CreateIva = () => {
     e.preventDefault();
 
     try {
-      const url = editingId 
-        ? `http://localhost:5000/api/ivas/${editingId}`
-        : 'http://localhost:5000/api/ivas';
+      const url = editingId
+        ? `${process.env.REACT_APP_API_URL}/api/ivas/${editingId}`
+        : `${process.env.REACT_APP_API_URL}/api/ivas`;
 
       const method = editingId ? 'PUT' : 'POST';
 
@@ -63,7 +63,7 @@ const CreateIva = () => {
   const handleDelete = async (id) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este IVA?')) {
       try {
-        const response = await fetch(`http://localhost:5000/api/ivas/${id}`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/ivas/${id}`, {
           method: 'DELETE',
         });
 

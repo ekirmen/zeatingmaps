@@ -75,14 +75,14 @@ const Event = () => {
   useEffect(() => {
     const fetchEvento = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/events/${eventId}`);
+        const response = await fetch(`${API_URL}/api/events/${eventId}`);
         const data = await response.json();
         setEvento(data);
         // Si el evento tiene un recinto como ID, obtener los detalles del recinto
         const recintoId = typeof data.recinto === 'string' ? data.recinto : data.recinto?._id;
         if (recintoId) {
           try {
-            const recRes = await fetch('http://localhost:5000/api/recintos');
+            const recRes = await fetch(`${API_URL}/api/recintos`);
             const recData = await recRes.json();
             const found = Array.isArray(recData)
               ? recData.find(r => r._id === recintoId)
@@ -116,7 +116,7 @@ const Event = () => {
       // If tags are object IDs, fetch their names
       if (typeof evento.tags[0] === 'string' && evento.tags[0].length === 24) {
         try {
-          const res = await fetch('http://localhost:5000/api/tags');
+          const res = await fetch(`${API_URL}/api/tags`);
           const allTags = await res.json();
           const names = evento.tags.map(id => {
             const found = allTags.find(t => t._id === id);
@@ -139,7 +139,7 @@ const Event = () => {
       try {
         const id = evento?._id || eventId;
         const response = await fetch(
-          `http://localhost:5000/api/funcions?evento=${id}`
+          `${API_URL}/api/funcions?evento=${id}`
         );
         const data = await response.json();
         setFunciones(Array.isArray(data) ? data : []);
@@ -158,7 +158,7 @@ const Event = () => {
       try {
         const id = evento?._id || eventId;
         const response = await fetch(
-          `http://localhost:5000/api/funcions?evento=${id}`
+          `${API_URL}/api/funcions?evento=${id}`
         );
         const funciones = await response.json();
 
@@ -194,7 +194,7 @@ const Event = () => {
   useEffect(() => {
     const fetchPagos = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/payments');
+        const response = await fetch(`${API_URL}/api/payments`);
         const data = await response.json();
         setPagos(Array.isArray(data) ? data : []);
       } catch (error) {
@@ -254,7 +254,7 @@ const Event = () => {
   const applyDiscountCode = async () => {
     if (!discountCode.trim()) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/descuentos/code/${encodeURIComponent(discountCode.trim())}`);
+      const res = await fetch(`${API_URL}/api/descuentos/code/${encodeURIComponent(discountCode.trim())}`);
       if (!res.ok) throw new Error('Código no válido');
       const data = await res.json();
       const now = Date.now();

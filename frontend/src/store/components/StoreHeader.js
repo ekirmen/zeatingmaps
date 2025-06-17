@@ -37,7 +37,7 @@ const Header = ({ onLogin, onLogout }) => {
       if (registerData.password.length < 6)
         throw new Error(t('errors.password_min_length', 'La contraseña debe tener al menos 6 caracteres'));
 
-      const response = await fetch('http://localhost:5000/api/user/register', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -78,7 +78,7 @@ const Header = ({ onLogin, onLogout }) => {
       if (!formData.email || !formData.password)
         throw new Error(t('errors.enter_credentials', 'Por favor ingrese correo y contraseña'));
 
-      const response = await fetch('http://localhost:5000/api/login', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -162,7 +162,7 @@ const Header = ({ onLogin, onLogout }) => {
         throw new Error('La contraseña debe tener al menos 6 caracteres');
 
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5000/api/user/set-password', {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/set-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -207,7 +207,7 @@ const Header = ({ onLogin, onLogout }) => {
       <div className="container mx-auto flex justify-between items-center px-4">
         <LinkWithRef to="/store" className="text-xl font-bold flex items-center gap-2">
           {header.logoUrl && (
-            <img src={`http://localhost:5000${header.logoUrl}`} alt="Logo" className="h-6 w-auto" />
+            <img src={`${process.env.REACT_APP_API_URL}${header.logoUrl}`} alt="Logo" className="h-6 w-auto" />
           )}
           {header.companyName}
         </LinkWithRef>

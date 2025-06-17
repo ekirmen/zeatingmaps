@@ -112,7 +112,7 @@ const EditForm = ({
                       src={
                         eventoData.imagenes.espectaculo[0] instanceof File
                           ? URL.createObjectURL(eventoData.imagenes.espectaculo[0])
-                          : `http://localhost:5000${eventoData.imagenes.espectaculo[0]}`
+                          : `${process.env.REACT_APP_API_URL}${eventoData.imagenes.espectaculo[0]}`
                       }
                       alt="Vista previa"
                       className="preview-image"

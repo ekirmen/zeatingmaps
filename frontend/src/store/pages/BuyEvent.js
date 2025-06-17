@@ -11,7 +11,7 @@ const BuyEvent = () => {
   useEffect(() => {
     const fetchEvento = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/events/${id}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${id}`);
         if (!response.ok) {
           throw new Error('Error al obtener los detalles del evento');
         }

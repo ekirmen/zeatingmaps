@@ -33,7 +33,7 @@ const PaymentSuccess = () => {
 
     const fetchPaymentDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/payments/locator/${locator}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/locator/${locator}`);
         const data = await response.json();
         if (data?.data) {
           const details = data.data;
@@ -42,7 +42,7 @@ const PaymentSuccess = () => {
           setPaymentDetails(details);
           const eventId = data.data.event?._id;
           if (eventId) {
-            const evRes = await fetch(`http://localhost:5000/api/events/${eventId}`);
+            const evRes = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${eventId}`);
             const evData = await evRes.json();
             setEventOptions(evData.otrasOpciones || {});
           }
@@ -56,12 +56,12 @@ const PaymentSuccess = () => {
 
   const handleDownloadTickets = () => {
     // Implement ticket download functionality
-    window.open(`http://localhost:5000/api/payments/${locator}/download`, '_blank');
+    window.open(`${process.env.REACT_APP_API_URL}/api/payments/${locator}/download`, '_blank');
   };
 
   const handleContinuePayment = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/payments/locator/${locator}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/locator/${locator}`);
       if (!response.ok) throw new Error('Error al cargar la reserva');
       const { data } = await response.json();
       setCart(

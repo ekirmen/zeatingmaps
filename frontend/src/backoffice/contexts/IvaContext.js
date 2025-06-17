@@ -8,7 +8,7 @@ export const IvaProvider = ({ children }) => {
   useEffect(() => {
     const fetchIvas = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/ivas');
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/ivas`);
         const data = await response.json();
         setIvas(data);
       } catch (error) {
