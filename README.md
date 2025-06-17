@@ -12,7 +12,7 @@ This project requires a Google Maps API key to accurately geocode addresses when
 2. Copy `frontend/.env.example` to `frontend/.env` and provide values for:
    - `REACT_APP_API_URL` – URL of the backend (e.g. `http://localhost:5000`)
    - `REACT_APP_GOOGLE_MAPS_API_KEY` – your Google Maps API key
-3. Create a `backend/.env` file with at least:
+3. Copy `backend/.env.example` to `backend/.env` and provide values for:
    - `MONGO_URI` – MongoDB connection string
    - `JWT_SECRET` – secret key for JWT tokens
    - `FRONTEND_URL` – allowed origin for CORS
