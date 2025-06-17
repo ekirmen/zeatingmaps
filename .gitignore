@@ -1,10 +1,25 @@
+# Ignorar módulos de Node.js
 node_modules/
-Escaner/
+**/node_modules/
+
+# Ignorar archivos de entorno
 .env
 backend/.env
 backend/frontend/.env
+
+# Ignorar distribuciones del backend
 dist/
-build/
-**/build/
-**/node_modules/
-**/dist/
+backend/dist/
+
+# PERMITIR build del frontend para que Vercel pueda compilar
+# (solo se ignoran si no necesitas subirlos manualmente)
+# build/
+# **/build/
+
+# Archivos del escáner (si lo usas localmente)
+Escaner/
+
+# Logs y demás
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
