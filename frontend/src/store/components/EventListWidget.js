@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+const slugify = str =>
+  str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 
 const EventListWidget = () => {
   const [eventos, setEventos] = useState([]);
@@ -11,7 +19,9 @@ const EventListWidget = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { venueId: tagSlug } = useParams();
   const { refParam } = useRefParam();
+  const normalizedTagSlug = tagSlug ? tagSlug.toLowerCase() : null;
   const searchParams = new URLSearchParams(location.search);
   const query = searchParams.get('q') || '';
 
@@ -50,15 +60,28 @@ const EventListWidget = () => {
   if (loading) return <div>Cargando eventos...</div>;
   if (error) return <div>Error: {error}</div>;
 
-  const eventosPorTag = tags.reduce((acc, tag) => {
-    const evts = filteredEventos.filter(e => (e.tags || []).includes(tag._id));
-    if (evts.length) acc.push({ tag, eventos: evts });
-    return acc;
-  }, []);
+  const eventosPorTag = normalizedTagSlug
+    ? (() => {
+        const tag = tags.find(t => slugify(t.name) === normalizedTagSlug);
+        if (!tag) return [];
+        const evts = filteredEventos.filter(e => (e.tags || []).includes(tag._id));
+        return evts.length ? [{ tag, eventos: evts }] : [];
+      })()
+    : tags.reduce((acc, tag) => {
+        const evts = filteredEventos.filter(e => (e.tags || []).includes(tag._id));
+        if (evts.length) acc.push({ tag, eventos: evts });
+        return acc;
+      }, []);
+
+  const currentTag = normalizedTagSlug
+    ? tags.find(t => slugify(t.name) === normalizedTagSlug)
+    : null;
 
   return (
     <div className="events-venue" key="event-list">
-      <h1>Eventos Disponibles</h1>
+      <h1>
+        {currentTag ? `Eventos - ${currentTag.name}` : 'Eventos Disponibles'}
+      </h1>
       {eventosPorTag.length > 0 ? (
         eventosPorTag.map(grp => (
           <div key={grp.tag._id} className="mb-6">
