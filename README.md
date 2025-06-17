@@ -4,12 +4,12 @@ This project now stores data in **Supabase** instead of MongoDB. A Google Maps A
 
 ## Installation
 
-1. Install dependencies in both the backend and frontend:
+1. Install dependencies in both the backend and its bundled frontend:
    ```bash
    cd backend && npm install
-   cd ../frontend && npm install
+   cd frontend && npm install  # from inside backend
    ```
-2. Copy `frontend/.env.example` to `frontend/.env` and provide values for:
+2. Copy `backend/frontend/.env.example` to `backend/frontend/.env` and provide values for:
    - `REACT_APP_API_URL` – URL of the backend (e.g. `http://localhost:5000`)
    - `REACT_APP_GOOGLE_MAPS_API_KEY` – your Google Maps API key
 3. Copy `backend/.env.example` to `backend/.env` and provide values for:
