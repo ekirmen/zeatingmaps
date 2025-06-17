@@ -13,7 +13,8 @@ This project requires a Google Maps API key to accurately geocode addresses when
    - `REACT_APP_API_URL` – URL of the backend (e.g. `http://localhost:5000`)
    - `REACT_APP_GOOGLE_MAPS_API_KEY` – your Google Maps API key
 3. Copy `backend/.env.example` to `backend/.env` and provide values for:
-   - `MONGO_URI` – MongoDB connection string
+   - `SUPABASE_URL` – your Supabase project URL
+   - `SUPABASE_KEY` – Supabase API key
    - `JWT_SECRET` – secret key for JWT tokens
    - `FRONTEND_URL` – allowed origin for CORS
 4. Run the frontend and backend using `npm run start:all` from the repository root.
