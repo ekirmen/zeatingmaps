@@ -16,7 +16,8 @@ export const RecintoProvider = ({ children }) => {
   useEffect(() => {
     const fetchRecintos = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/recintos`);
+        const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const response = await fetch(`${baseUrl}/api/recintos`);
         const data = await response.json();
         setRecintos(data);
       } catch (error) {
