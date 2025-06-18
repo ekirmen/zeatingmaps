@@ -6,6 +6,7 @@ import EditSalaForm from '../components/EditSalaForm';
 
 const Recinto = () => {
   const [recintos, setRecintos] = useState([]);
+  const API_URL = process.env.REACT_APP_API_URL || '';
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingSala, setIsAddingSala] = useState(false);
@@ -23,7 +24,7 @@ const Recinto = () => {
 
   const fetchRecintos = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/recintos`);
+      const response = await fetch(`${API_URL}/api/recintos`);
       const data = await response.json();
       setRecintos(data);
     } catch (error) {
@@ -33,7 +34,7 @@ const Recinto = () => {
 
   const handleCreateRecinto = async (newRecinto) => {
     try {
-      const responseRecinto = await fetch(`${process.env.REACT_APP_API_URL}/api/recintos`, {
+      const responseRecinto = await fetch(`${API_URL}/api/recintos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newRecinto),
@@ -68,7 +69,7 @@ const Recinto = () => {
 
   const handleEditRecinto = async (editedRecinto) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/recintos/${currentRecinto._id}`, {
+      const response = await fetch(`${API_URL}/api/recintos/${currentRecinto._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(editedRecinto),
@@ -91,7 +92,7 @@ const Recinto = () => {
 
   const handleAddSala = async (newSala) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/recintos/${currentRecinto._id}/salas`, {
+      const response = await fetch(`${API_URL}/api/recintos/${currentRecinto._id}/salas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newSala),
@@ -122,7 +123,7 @@ const Recinto = () => {
 
   const handleEditSala = async (recintoId, salaId, updatedSalaData) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/salas/${salaId}`, {
+      const response = await fetch(`${API_URL}/api/salas/${salaId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updatedSalaData),
@@ -157,7 +158,7 @@ const Recinto = () => {
   const handleDeleteSala = async (recintoId, salaId) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar esta sala?')) {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/salas/${salaId}`, {
+        const response = await fetch(`${API_URL}/api/salas/${salaId}`, {
           method: 'DELETE',
         });
 
