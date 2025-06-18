@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NotificationManager } from 'react-notifications';
 import { useParams } from 'react-router-dom';
+import { supabase } from '../../lib/supabaseClient';
 
 const BuyEvent = () => {
   const { id } = useParams(); // id puede ser slug o ID
@@ -11,11 +12,12 @@ const BuyEvent = () => {
   useEffect(() => {
     const fetchEvento = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${id}`);
-        if (!response.ok) {
-          throw new Error('Error al obtener los detalles del evento');
-        }
-        const data = await response.json();
+        const { data, error } = await supabase
+          .from('events')
+          .select('*')
+          .eq('id', id)
+          .single();
+        if (error) throw error;
         setEvento(data);
       } catch (error) {
         setError(error.message);
