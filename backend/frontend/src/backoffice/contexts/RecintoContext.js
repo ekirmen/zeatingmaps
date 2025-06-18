@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import API_BASE_URL from '../../utils/apiBase';
+import { supabase } from '../../lib/supabaseClient';
 
 const RecintoContext = createContext();
 
@@ -17,13 +17,18 @@ export const RecintoProvider = ({ children }) => {
   useEffect(() => {
     const fetchRecintos = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/recintos`);
-        const data = await response.json();
+        const { data, error } = await supabase
+          .from('recintos')
+          .select('*, salas(*)'); // Asegúrate que 'salas' está relacionada
+
+        if (error) throw error;
+
         setRecintos(data);
       } catch (error) {
-        console.error('Error fetching recintos:', error);
+        console.error('Error al obtener recintos desde Supabase:', error.message);
       }
     };
+
     fetchRecintos();
   }, []);
 
