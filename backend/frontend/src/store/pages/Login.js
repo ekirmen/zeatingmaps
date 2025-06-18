@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { Modal, Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../../lib/supabaseClient';
 
 const Login = ({ onLogin }) => {
   const { t } = useTranslation();
@@ -16,34 +17,21 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login, password }),
-      });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: login, password });
 
-      const data = await response.json();
-      console.log('Login response:', data);
-
-      if (response.ok) {
-        const formattedToken = data.token.startsWith('Bearer') ? data.token : `Bearer ${data.token}`;
-        localStorage.setItem('token', formattedToken);
-        localStorage.setItem('userId', data.user._id);
-
-        if (data.passwordPending) {
-          setIsPasswordModalVisible(true);
-          return;
-        }
-
-        onLogin?.({ token: data.token, user: data.user });
-        message.success(t('login.success'));
-        navigate(refParam ? `/store?ref=${refParam}` : '/store');
-      } else {
-        message.error(data.message || t('errors.auth', 'Error de autenticación'));
+      if (error || !data.session) {
+        throw new Error(error?.message || t('errors.auth', 'Error de autenticación'));
       }
+
+      const token = data.session.access_token;
+      localStorage.setItem('token', token);
+
+      onLogin?.({ token, user: data.user });
+      message.success(t('login.success'));
+      navigate(refParam ? `/store?ref=${refParam}` : '/store');
     } catch (error) {
       console.error('Error al iniciar sesión:', error);
-      message.error(t('errors.login', 'Error al iniciar sesión'));
+      message.error(error.message || t('errors.login', 'Error al iniciar sesión'));
     }
   };
 
@@ -61,22 +49,14 @@ const Login = ({ onLogin }) => {
       if (passwordData.newPassword.length < 6)
         throw new Error(t('errors.password_min_length', 'La contraseña debe tener al menos 6 caracteres'));
 
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/set-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
-        },
-        body: JSON.stringify({ newPassword: passwordData.newPassword.trim() })
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || t('errors.save_password', 'Error al guardar contraseña'));
-
+      const { data, error } = await supabase.auth.updateUser({ password: passwordData.newPassword.trim() });
+      if (error) throw error;
+      const session = await supabase.auth.getSession();
+      const token = session.data.session?.access_token;
+      if (token) localStorage.setItem('token', token);
       setIsPasswordModalVisible(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
-      onLogin?.({ token: token.replace('Bearer ', ''), user: data.user });
+      onLogin?.({ token, user: data.user });
       message.success(t('password.updated'));
       navigate(refParam ? `/store?ref=${refParam}` : '/store');
     } catch (error) {

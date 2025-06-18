@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { supabase } from '../lib/supabaseClient';
 
 const AuthContext = createContext();
 
@@ -7,33 +8,16 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const validateSession = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/profile`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
-        },
-        credentials: 'include'
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('token');
-          setUser(null);
-          throw new Error('Sesión expirada');
-        }
-        throw new Error('Error al validar sesión');
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+      if (session) {
+        localStorage.setItem('token', session.access_token);
+        setUser(session.user);
+      } else {
+        localStorage.removeItem('token');
+        setUser(null);
       }
-
-      const userData = await response.json();
-      setUser(userData);
     } catch (error) {
       console.error('❌ Error al validar sesión:', error.message);
       localStorage.removeItem('token');
@@ -43,25 +27,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (credentials) => {
+  const login = async ({ email, password }) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-        credentials: 'include'
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Error en el inicio de sesión');
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !data.session) {
+        throw new Error(error?.message || 'Error en el inicio de sesión');
       }
-
-      const token = data.token;
-      // Guarda el token tal como viene del backend para evitar duplicar el prefijo
+      const token = data.session.access_token;
       localStorage.setItem('token', token);
       setUser(data.user);
       return data;
@@ -70,7 +42,8 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('token');
     setUser(null);
   };
