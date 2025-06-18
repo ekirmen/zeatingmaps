@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
+import { supabase } from '../../lib/supabaseClient';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
@@ -28,16 +29,18 @@ const EventListWidget = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [evRes, tagRes] = await Promise.all([
-          fetch(`${API_URL}/api/events`),
-          fetch(`${API_URL}/api/tags`)
-        ]);
-        if (!evRes.ok) throw new Error('Error al obtener los eventos');
-        if (!tagRes.ok) throw new Error('Error al obtener tags');
-        const evData = await evRes.json();
-        const tagData = await tagRes.json();
-        setEventos(evData);
-        setTags(tagData);
+        const { data: evData, error: evErr } = await supabase
+          .from('events')
+          .select('*');
+        if (evErr) throw evErr;
+
+        const { data: tagData, error: tagErr } = await supabase
+          .from('tags')
+          .select('*');
+        if (tagErr) throw tagErr;
+
+        setEventos(evData || []);
+        setTags(tagData || []);
       } catch (err) {
         setError(err.message);
       } finally {

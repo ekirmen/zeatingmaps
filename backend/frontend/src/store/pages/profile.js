@@ -3,6 +3,7 @@ import { Input, Button, Modal, message, Table } from 'antd';
 import { DownloadOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../../lib/supabaseClient';
 
 const Profile = ({ userData, onUpdateProfile }) => {
   const [formData, setFormData] = useState({
@@ -121,13 +122,12 @@ const Profile = ({ userData, onUpdateProfile }) => {
     
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/user/${user._id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      const data = await response.json();
-      // Ensure data is an array
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*, event:events(*)')
+        .eq('user', user._id)
+        .order('createdAt', { ascending: false });
+      if (error) throw error;
       setPurchaseHistory(Array.isArray(data) ? data : []);
     } catch (error) {
       message.error('Error al cargar el historial de compras');

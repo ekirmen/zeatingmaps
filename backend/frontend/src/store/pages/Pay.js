@@ -7,6 +7,7 @@ import MetodoPago from '../components/MetodoPago';
 import { Modal } from 'antd';
 import { toast } from 'react-hot-toast';
 import { loadMetaPixel } from '../utils/analytics';
+import { supabase } from '../../lib/supabaseClient';
 
 const Pay = () => {
   const location = useLocation();
@@ -47,16 +48,24 @@ const Pay = () => {
 
     const fetchOptions = async () => {
       try {
-        const funcRes = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions/${funcionId}`);
-        const funcData = await funcRes.json();
+        const { data: funcData, error: funcErr } = await supabase
+          .from('funcions')
+          .select('*')
+          .eq('id', funcionId)
+          .single();
+        if (funcErr) throw funcErr;
         setFuncionDetails(funcData);
         const eventId = funcData.evento?._id || funcData.evento;
         setAllowReservation(!!funcData.permitirReservasWeb);
         setCurrentEventId(eventId);
 
         if (eventId) {
-          const eventRes = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${eventId}`);
-          const eventData = await eventRes.json();
+          const { data: eventData, error: evErr } = await supabase
+            .from('events')
+            .select('*')
+            .eq('id', eventId)
+            .single();
+          if (evErr) throw evErr;
           setEventOptions(eventData.otrasOpciones || {});
           if (eventData.otrasOpciones?.metodosPagoPermitidos?.length) {
             setAvailableMethods(eventData.otrasOpciones.metodosPagoPermitidos);
@@ -77,13 +86,13 @@ const Pay = () => {
         return;
       }
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/affiliate-users?login=${encodeURIComponent(refParam)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setAffiliate(data);
-        } else {
-          setAffiliate(null);
-        }
+        const { data, error } = await supabase
+          .from('affiliate_users')
+          .select('*')
+          .eq('login', refParam)
+          .single();
+        if (error) throw error;
+        setAffiliate(data);
       } catch (err) {
         console.error('Error fetching affiliate', err);
         setAffiliate(null);
