@@ -1,13 +1,14 @@
-const API_BASE_URL = (process.env.REACT_APP_API_URL || '') + '/api';
+import API_BASE_URL from '../utils/apiBase';
+const API_BASE_URL_WITH_API = API_BASE_URL + '/api';
 
 export const fetchTags = async () => {
-  const res = await fetch(`${API_BASE_URL}/tags`);
+  const res = await fetch(`${API_BASE_URL_WITH_API}/tags`);
   if (!res.ok) throw new Error('Error fetching tags');
   return res.json();
 };
 
 export const createTag = async (data) => {
-  const res = await fetch(`${API_BASE_URL}/tags`, {
+  const res = await fetch(`${API_BASE_URL_WITH_API}/tags`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -17,7 +18,7 @@ export const createTag = async (data) => {
 };
 
 export const updateTag = async (id, data) => {
-  const res = await fetch(`${API_BASE_URL}/tags/${id}`, {
+  const res = await fetch(`${API_BASE_URL_WITH_API}/tags/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
@@ -27,7 +28,7 @@ export const updateTag = async (id, data) => {
 };
 
 export const deleteTag = async (id) => {
-  const res = await fetch(`${API_BASE_URL}/tags/${id}`, {
+  const res = await fetch(`${API_BASE_URL_WITH_API}/tags/${id}`, {
     method: 'DELETE'
   });
   if (!res.ok) throw new Error('Error deleting tag');

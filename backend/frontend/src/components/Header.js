@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from '../utils/apiBase';
 
 const Header = ({ onLogin, onLogout }) => {
   const navigate = useNavigate();
@@ -31,7 +32,7 @@ const Header = ({ onLogin, onLogout }) => {
         throw new Error('La contraseña debe tener al menos 6 caracteres');
       }
 
-      const API_URL = process.env.REACT_APP_API_URL || '';
+      const API_URL = API_BASE_URL;
       const response = await fetch(`${API_URL}/api/user/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -87,7 +88,7 @@ const Header = ({ onLogin, onLogout }) => {
         throw new Error('Por favor ingrese correo y contraseña');
       }
 
-      const API_URL = process.env.REACT_APP_API_URL || '';
+      const API_URL = API_BASE_URL;
       const response = await fetch(`${API_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

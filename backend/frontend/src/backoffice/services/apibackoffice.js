@@ -1,4 +1,5 @@
-const API_BASE_URL = (process.env.REACT_APP_API_URL || '') + '/api';
+import API_BASE_URL from '../../utils/apiBase';
+const API_BASE_URL_WITH_API = API_BASE_URL + '/api';
 
 const fetchApi = async (url, options = {}) => {
   try {
@@ -10,7 +11,7 @@ const fetchApi = async (url, options = {}) => {
       } : {})
     };
 
-    const response = await fetch(`${API_BASE_URL}${url}`, {
+    const response = await fetch(`${API_BASE_URL_WITH_API}${url}`, {
       ...options,
       headers
     });
@@ -52,7 +53,7 @@ export const getPagosPorEvento = (eventoId) => fetchApi(`/pagos?evento=${eventoI
 export const fetchMapa = async (salaId, funcionId = null) => {
   try {
     if (funcionId) {
-      const resFuncion = await fetch(`${API_BASE_URL}/funcions/${funcionId}/mapa`);
+      const resFuncion = await fetch(`${API_BASE_URL_WITH_API}/funcions/${funcionId}/mapa`);
       if (resFuncion.ok) {
         return await resFuncion.json();
       }
@@ -63,7 +64,7 @@ export const fetchMapa = async (salaId, funcionId = null) => {
       // se intenta obtener el mapa general de la sala
     }
 
-    const resSala = await fetch(`${API_BASE_URL}/salas/${salaId}/mapa`);
+    const resSala = await fetch(`${API_BASE_URL_WITH_API}/salas/${salaId}/mapa`);
     if (!resSala.ok) throw new Error(`Error ${resSala.status}`);
     return await resSala.json();
   } catch (error) {
@@ -73,7 +74,7 @@ export const fetchMapa = async (salaId, funcionId = null) => {
 };
 
 export const saveMapa = async (salaId, data) => {
-  const response = await fetch(`${API_BASE_URL}/salas/${salaId}/mapa`, {
+  const response = await fetch(`${API_BASE_URL_WITH_API}/salas/${salaId}/mapa`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

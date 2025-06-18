@@ -7,11 +7,12 @@ import SeatingMap from '../components/SeatingMap'; // al inicio
 import { fetchMapa, fetchPlantillaPrecios, getCmsPage } from '../services/apistore';
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
+import API_BASE_URL from '../../utils/apiBase';
 import { useTranslation } from 'react-i18next';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
 import { QRCodeSVG } from '@rc-component/qrcode';
 
-const API_URL = process.env.REACT_APP_API_URL || '';
+const API_URL = API_BASE_URL;
 const Event = () => {
   const { eventId } = useParams(); // eventId puede ser slug o id real
   const navigate = useNavigate();

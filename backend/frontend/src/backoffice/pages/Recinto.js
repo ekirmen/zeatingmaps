@@ -3,10 +3,11 @@ import CreateRecintoForm from '../components/CreateRecintoForm';
 import EditRecintoForm from '../components/EditRecintoForm';
 import AddSalaForm from '../components/AddSalaForm';
 import EditSalaForm from '../components/EditSalaForm';
+import API_BASE_URL from '../../utils/apiBase';
 
 const Recinto = () => {
   const [recintos, setRecintos] = useState([]);
-  const API_URL = process.env.REACT_APP_API_URL || '';
+  const API_URL = API_BASE_URL;
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isAddingSala, setIsAddingSala] = useState(false);
