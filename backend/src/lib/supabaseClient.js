@@ -1,8 +1,14 @@
-import { createClient } from '@supabase/supabase-js';
+// backend/frontend/src/lib/supabaseClient.js
+import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_KEY;
+// CRA solo expone variables que comienzan con REACT_APP_
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Validación para prevenir errores en tiempo de ejecución
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('❌ Supabase URL o Anon Key no están definidas. Verifica tu .env en el frontend.')
+}
 
-export default supabase;
+// Cliente Supabase exportado para usar en cualquier componente
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
