@@ -62,6 +62,7 @@ import ResetPassword from './store/pages/ResetPassword';
 import FaqPage from './store/pages/FaqPage';
 import NotFoundPage from './store/pages/NotFoundPage';
 import TestPage from './pages/test';
+import SupabaseAuthExample from './pages/SupabaseAuthExample';
 
 const App = () => {
   const location = useLocation();
@@ -173,6 +174,7 @@ const App = () => {
                   <Route path="/store/thank-you" element={<ThankYouPage />} />
                   <Route path="/store/faq" element={<FaqPage />} />
                   <Route path="/test" element={<TestPage />} />
+                  <Route path="/supabase-auth" element={<SupabaseAuthExample />} />
                   <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
 
                   <Route path="/dashboard/formato-entrada" element={<FormatoEntrada />} />
