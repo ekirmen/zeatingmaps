@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_API_URL + '/api';
+const API_BASE_URL = (process.env.REACT_APP_API_URL || '') + '/api';
 
 export const fetchEmailTemplates = async (token) => {
   const authHeader = token && !token.startsWith('Bearer ')
