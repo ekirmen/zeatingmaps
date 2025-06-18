@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../lib/supabaseClient';
 
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({ login: '', password: '' });
@@ -20,21 +21,19 @@ const Login = ({ onLogin }) => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.login,
+        password: formData.password,
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Credenciales incorrectas');
+      if (error || !data.session) {
+        throw new Error(error?.message || 'Credenciales incorrectas');
+      }
 
-      if (!data.token) throw new Error('No se recibió el token de autenticación');
+      const token = data.session.access_token;
+      localStorage.setItem('token', token);
 
-      const cleanToken = data.token.replace(/^Bearer\s*/, '');
-      localStorage.setItem('token', cleanToken);
-
-      onLogin({ token: cleanToken, user: data.user || data.userData });
+      onLogin?.({ token, user: data.user });
 
       navigate('/dashboard');
     } catch (error) {
