@@ -1,30 +1,36 @@
-import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 
 const TestPage = () => {
-  const [data, setData] = useState([])
-  const [error, setError] = useState(null)
+  const [data, setData] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       const { data, error } = await supabase
         .from('tu_tabla') // ← Sustituye con tu tabla real
-        .select('*')
+        .select('*');
 
-      if (error) setError(error)
-      else setData(data)
-    }
+      if (error) setError(error);
+      else setData(data);
+    };
 
-    fetchData()
-  }, [])
+    fetchData();
+  }, []);
 
-  if (error) return <div>Error: {error.message}</div>
+  if (error) return <div>Error: {error.message}</div>;
   return (
     <div>
       <h1>Datos desde Supabase</h1>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
+      <ul>
+        {data.map((item) => (
+          <li key={item.id}>
+            {item.Nombre} {item.Apellido}
+          </li>
+        ))}
+      </ul>
     </div>
-  )
+  );
 }
 
-export default TestPage
+export default TestPage;
