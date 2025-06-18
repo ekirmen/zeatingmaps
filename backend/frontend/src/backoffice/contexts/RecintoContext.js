@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import API_BASE_URL from '../../utils/apiBase';
 
 const RecintoContext = createContext();
 
@@ -16,8 +17,7 @@ export const RecintoProvider = ({ children }) => {
   useEffect(() => {
     const fetchRecintos = async () => {
       try {
-        const baseUrl = process.env.REACT_APP_API_URL || '';
-        const response = await fetch(`${baseUrl}/api/recintos`);
+        const response = await fetch(`${API_BASE_URL}/api/recintos`);
         const data = await response.json();
         setRecintos(data);
       } catch (error) {

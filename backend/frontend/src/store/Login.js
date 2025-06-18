@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { message } from 'antd';
+import API_BASE_URL from '../utils/apiBase';
 
 const Login = ({ onLogin }) => {
   const [login, setLogin] = useState('');
@@ -10,7 +11,7 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const API_URL = process.env.REACT_APP_API_URL || '';
+      const API_URL = API_BASE_URL;
       const response = await fetch(`${API_URL}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

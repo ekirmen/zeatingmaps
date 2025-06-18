@@ -1,7 +1,8 @@
-const API_BASE_URL = (process.env.REACT_APP_API_URL || '') + '/api';
+import API_BASE_URL from '../utils/apiBase';
+const API_BASE_URL_WITH_API = API_BASE_URL + '/api';
 
 export const fetchEventos = async (token) => {
-  const res = await fetch(`${API_BASE_URL}/events`, {
+  const res = await fetch(`${API_BASE_URL_WITH_API}/events`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {}
   });
   if (!res.ok) {
@@ -13,7 +14,7 @@ export const fetchEventos = async (token) => {
 export const getEventos = fetchEventos;
 
 export const deleteEvento = async (id, token) => {
-  const res = await fetch(`${API_BASE_URL}/events/${id}`, {
+  const res = await fetch(`${API_BASE_URL_WITH_API}/events/${id}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -23,7 +24,7 @@ export const deleteEvento = async (id, token) => {
 };
 
 export const duplicateEvento = async (id, token) => {
-  const res = await fetch(`${API_BASE_URL}/events/${id}/duplicate`, {
+  const res = await fetch(`${API_BASE_URL_WITH_API}/events/${id}/duplicate`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -43,7 +44,7 @@ export const saveEvento = async (eventoData, token, files = {}) => {
   const authHeader = token && !token.startsWith('Bearer ')
     ? `Bearer ${token}`
     : token;
-  const res = await fetch(`${API_BASE_URL}/events`, {
+  const res = await fetch(`${API_BASE_URL_WITH_API}/events`, {
     method: 'POST',
     headers: { Authorization: authHeader },
     body: formData

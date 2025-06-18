@@ -1,5 +1,6 @@
 
-const BASE_URL = (process.env.REACT_APP_API_URL || '') + '/api';
+import API_BASE_URL from '../../utils/apiBase';
+const BASE_URL = API_BASE_URL + '/api';
 
 // Función genérica para solicitudes GET
 // Obtener plantilla de precios por ID

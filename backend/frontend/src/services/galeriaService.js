@@ -1,10 +1,11 @@
-const API_BASE_URL = (process.env.REACT_APP_API_URL || '') + '/api';
+import API_BASE_URL from '../utils/apiBase';
+const API_BASE_URL_WITH_API = API_BASE_URL + '/api';
 
 export const fetchImagenes = async (token) => {
   const authHeader = token && !token.startsWith('Bearer ')
     ? `Bearer ${token}`
     : token;
-  const res = await fetch(`${API_BASE_URL}/galeria`, {
+  const res = await fetch(`${API_BASE_URL_WITH_API}/galeria`, {
     headers: { Authorization: authHeader }
   });
   if (!res.ok) throw new Error('Error loading images');
@@ -17,7 +18,7 @@ export const uploadImagen = async (file, token) => {
   const authHeader = token && !token.startsWith('Bearer ')
     ? `Bearer ${token}`
     : token;
-  const res = await fetch(`${API_BASE_URL}/galeria`, {
+  const res = await fetch(`${API_BASE_URL_WITH_API}/galeria`, {
     method: 'POST',
     headers: { Authorization: authHeader },
     body: formData
@@ -30,7 +31,7 @@ export const deleteImagen = async (filename, token) => {
   const authHeader = token && !token.startsWith('Bearer ')
     ? `Bearer ${token}`
     : token;
-  const res = await fetch(`${API_BASE_URL}/galeria/${filename}`, {
+  const res = await fetch(`${API_BASE_URL_WITH_API}/galeria/${filename}`, {
     method: 'DELETE',
     headers: { Authorization: authHeader }
   });
