@@ -30,3 +30,39 @@ The Google Maps API key is optional. If not provided, the application will fall 
 
 If an address cannot be resolved, the geocoder now performs a secondary search
 using "Hesperia WTC Valencia, Carabobo, Venezuela" as a known reference point.
+
+## Deploying to Vercel
+
+1. Push this repository to GitHub if it is not already there.
+2. In the [Vercel](https://vercel.com/) dashboard, create a new project from the GitHub repo.
+3. Add the environment variables shown in the `.env.example` files to the Vercel configuration:
+   - `SUPABASE_URL` and `SUPABASE_KEY`
+   - `JWT_SECRET`
+   - `FRONTEND_URL`
+   - `REACT_APP_API_URL`
+   - `REACT_APP_SUPABASE_URL`
+   - `REACT_APP_SUPABASE_ANON_KEY`
+4. Trigger a deployment. Vercel will build the React frontend and run the Node backend using `vercel.json`.
+
+## Using Supabase Auth
+
+Supabase provides an authentication service that can replace the local `users` table. The
+frontend already exposes a `supabase` client under `src/lib/supabaseClient.js`. A basic
+sign-up example looks like this:
+
+```javascript
+import { supabase } from './lib/supabaseClient';
+
+const signUp = async (email, password) => {
+  const { error } = await supabase.auth.signUp({ email, password });
+  if (error) console.error('Sign up error', error);
+};
+
+const signIn = async (email, password) => {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) console.error('Sign in error', error);
+};
+```
+
+You can call these functions from your login or registration forms to authenticate users
+directly with Supabase.
