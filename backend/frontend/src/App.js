@@ -47,6 +47,7 @@ import WebColors from './backoffice/pages/WebColors';
 import WebFooter from './backoffice/pages/WebFooter';
 import WebHeader from './backoffice/pages/WebHeader';
 import Abonos from './backoffice/pages/Abonos';
+import SupabaseEvents from './backoffice/pages/SupabaseEvents';
 
 // Store Pages
 import EventsVenue from './store/pages/EventsVenue';
@@ -140,6 +141,7 @@ const App = () => {
                     <Route path="crear-mapa/:salaId" element={<CrearMapa />} />
                     <Route path="crear-iva" element={<CreateIva />} />
                     <Route path="abonos" element={<Abonos />} />
+                    <Route path="supabase-events" element={<SupabaseEvents />} />
                     <Route path="plantillaPrecios" element={<PlantillaPrecios />} />
                     <Route path="descuentos" element={<Descuentos />} />
                     <Route path="funciones" element={<Funciones />} />
