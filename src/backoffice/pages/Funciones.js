@@ -13,8 +13,6 @@ const Funciones = () => {
   const [editingFuncion, setEditingFuncion] = useState(null);
   const [nuevaFuncion, setNuevaFuncion] = useState({
     fechaCelebracion: '',
-    evento: '',
-    sala: '',
     plantilla: '',
     inicioVenta: '',
     finVenta: '',
@@ -89,8 +87,9 @@ const Funciones = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const { evento, sala, plantilla, ...rest } = nuevaFuncion;
     const funcionData = {
-      ...nuevaFuncion,
+      ...rest,
       evento_id: eventoSeleccionado,
       sala_id: salaSeleccionada.id,
       plantilla_id: nuevaFuncion.plantilla,
@@ -115,8 +114,6 @@ const Funciones = () => {
       setEditingFuncion(null);
       setNuevaFuncion({
         fechaCelebracion: '',
-        evento: '',
-        sala: '',
         plantilla: '',
         inicioVenta: '',
         finVenta: '',
@@ -139,8 +136,6 @@ const Funciones = () => {
     setEditingFuncion(funcion);
     setNuevaFuncion({
       fechaCelebracion: funcion.fechaCelebracion?.split('T')[0] || '',
-      evento: funcion.evento_id,
-      sala: funcion.sala_id,
       plantilla: funcion.plantilla_id || '',
       inicioVenta: funcion.inicioVenta?.split('T')[0] || '',
       finVenta: funcion.finVenta?.split('T')[0] || '',
@@ -310,8 +305,6 @@ const Funciones = () => {
           setEditingFuncion(null);
           setNuevaFuncion({
             fechaCelebracion: '',
-            evento: '',
-            sala: '',
             plantilla: '',
             inicioVenta: '',
             finVenta: '',
