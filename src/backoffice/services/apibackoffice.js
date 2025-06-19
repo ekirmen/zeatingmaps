@@ -100,13 +100,13 @@ export const deleteEvento = async (id) => {
 
 // === FUNCIONES ===
 export const fetchFuncionesPorEvento = async (eventoId) => {
-  const { data, error } = await supabase.from('funciones').select('*').eq('evento_id', eventoId);
+  const { data, error } = await supabase.from('funcions').select('*').eq('evento', eventoId);
   handleError(error);
   return data;
 };
 
 export const createFuncion = async (data) => {
-  const { data: result, error } = await supabase.from('funciones').insert(data).single();
+  const { data: result, error } = await supabase.from('funcions').insert(data).single();
   handleError(error);
   return result;
 };

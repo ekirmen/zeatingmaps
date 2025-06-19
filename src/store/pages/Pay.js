@@ -49,7 +49,7 @@ const Pay = () => {
     const fetchOptions = async () => {
       try {
         const { data: funcData, error: funcErr } = await supabase
-          .from('funciones')
+          .from('funcions')
           .select('*')
           .eq('id', funcionId)
           .single();

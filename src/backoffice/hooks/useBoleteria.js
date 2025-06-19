@@ -64,7 +64,7 @@ export const useBoleteria = () => {
 
   const handleEventSelect = async (eventoId) => {
     const { data, error } = await supabase
-      .from('funciones')
+      .from('funcions')
       .select('*')
       .eq('evento', eventoId);
 
