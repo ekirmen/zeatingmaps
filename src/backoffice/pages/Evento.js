@@ -42,7 +42,7 @@ const Evento = () => {
   
     try {
       const { data, error } = await supabase
-        .from('events')
+        .from('eventos')
         .select('*')
         .eq('recinto', recintoSeleccionado.id)
         .eq('sala', salaSeleccionada.id)
@@ -175,7 +175,7 @@ const Evento = () => {
   
     try {
       const { error } = await supabase
-        .from('events')
+        .from('eventos')
         .delete()
         .eq('id', eventoId);
   
@@ -191,7 +191,7 @@ const Evento = () => {
   const handleDuplicate = useCallback(async (eventoId) => {
     try {
       const { data: original, error } = await supabase
-        .from('events')
+        .from('eventos')
         .select('*')
         .eq('id', eventoId)
         .single();
@@ -205,7 +205,7 @@ const Evento = () => {
       }
   
       const { error: insertError } = await supabase
-        .from('events')
+        .from('eventos')
         .insert([duplicated]);
   
       if (insertError) throw insertError;
@@ -232,12 +232,12 @@ const Evento = () => {
       let response;
       if (eventoData.id) {
         response = await supabase
-          .from('events')
+          .from('eventos')
           .update(cleanData)
           .eq('id', eventoData.id);
       } else {
         response = await supabase
-          .from('events')
+          .from('eventos')
           .insert([cleanData]);
       }
   

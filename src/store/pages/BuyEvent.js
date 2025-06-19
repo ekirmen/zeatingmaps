@@ -13,7 +13,7 @@ const BuyEvent = () => {
     const fetchEvento = async () => {
       try {
         const { data, error } = await supabase
-          .from('events')
+          .from('eventos')
           .select('*')
           .eq('id', id)
           .single();

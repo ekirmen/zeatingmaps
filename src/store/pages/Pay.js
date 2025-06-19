@@ -61,7 +61,7 @@ const Pay = () => {
 
         if (eventId) {
           const { data: eventData, error: evErr } = await supabase
-            .from('events')
+            .from('eventos')
             .select('*')
             .eq('id', eventId)
             .single();
