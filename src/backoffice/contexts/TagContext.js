@@ -1,30 +1,29 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from '../services/supabaseClient'; // Ajusta la ruta si es diferente
+import { fetchTags } from '../services/tagService'; // Usa la función del servicio
 
 const TagContext = createContext();
 
 export const TagProvider = ({ children }) => {
   const [tags, setTags] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTags = async () => {
-      const { data, error } = await supabase
-        .from('tags')
-        .select('*')
-        .order('name', { ascending: true });
-
-      if (error) {
-        console.error('Error al obtener tags:', error.message);
-      } else {
+    const loadTags = async () => {
+      try {
+        const data = await fetchTags();
         setTags(data);
+      } catch (error) {
+        console.error('Error al obtener tags:', error.message);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchTags();
+    loadTags();
   }, []);
 
   return (
-    <TagContext.Provider value={{ tags, setTags }}>
+    <TagContext.Provider value={{ tags, setTags, loading }}>
       {children}
     </TagContext.Provider>
   );

@@ -1,112 +1,83 @@
 // CreateUserForm.js
 import React, { useState } from 'react';
+import { supabase } from '../services/supabaseClient';
 
 const CreateUserForm = ({ onCreateUser, onCancel }) => {
   const [formData, setFormData] = useState({
-    login: '',
-    password: '',
     email: '',
-    telefono: '',
-    perfil: '',
+    password: '',
+    login: '',
+    nombre: '',
+    apellido: '',
     empresa: '',
+    telefono: '',
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          ...formData,
-          permisos: {}
-        }),
+      const { data: userResponse, error } = await supabase.auth.admin.createUser({
+        email: formData.email,
+        password: formData.password,
+        email_confirm: true,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al crear usuario');
-      }
+      if (error) throw error;
 
-      const data = await response.json();
-      onCreateUser(data);
-      alert('Usuario creado con éxito');
-    } catch (error) {
-      console.error('Error al crear el usuario:', error);
-      alert(`Error al crear el usuario: ${error.message}`);
+      // Esperar un poco para que el trigger inserte en profiles
+      await new Promise((res) => setTimeout(res, 1500));
+
+      // Actualizamos los datos del perfil usando el ID del usuario recién creado
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          login: formData.login,
+          nombre: formData.nombre,
+          apellido: formData.apellido,
+          empresa: formData.empresa,
+          telefono: formData.telefono,
+        })
+        .eq('id', userResponse.user.id);
+
+      if (profileError) throw profileError;
+
+      // Obtener el nuevo perfil
+      const { data: newProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userResponse.user.id)
+        .single();
+
+      onCreateUser(newProfile);
+    } catch (err) {
+      console.error('Error al crear usuario:', err);
+      alert('Error al crear usuario: ' + err.message);
     }
   };
-  
+
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Crear Nuevo Usuario</h2>
-      <div>
-        <label>
-          Login:
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {['login', 'nombre', 'apellido', 'empresa', 'telefono', 'email', 'password'].map(field => (
+        <div key={field}>
+          <label className="block text-sm font-medium text-gray-700 capitalize">{field}:</label>
           <input
-            type="text"
-            value={formData.login}
-            onChange={(e) => setFormData({ ...formData, login: e.target.value })}
+            type={field === 'password' ? 'password' : 'text'}
+            required={['email', 'password', 'login'].includes(field)}
+            value={formData[field]}
+            onChange={(e) => setFormData({ ...formData, [field]: e.target.value })}
+            className="w-full border rounded px-3 py-2"
           />
-        </label>
+        </div>
+      ))}
+      <div className="flex justify-end gap-3">
+        <button type="button" onClick={onCancel} className="bg-gray-300 px-4 py-2 rounded">
+          Cancelar
+        </button>
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">
+          Crear Usuario
+        </button>
       </div>
-      <div>
-        <label>
-          Contraseña:
-          <input
-            type="password"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Email:
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Teléfono:
-          <input
-            type="text"
-            value={formData.telefono}
-            onChange={(e) => setFormData({ ...formData, telefono: e.target.value })}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Perfil:
-          <input
-            type="text"
-            value={formData.perfil}
-            onChange={(e) => setFormData({ ...formData, perfil: e.target.value })}
-          />
-        </label>
-      </div>
-      <div>
-        <label>
-          Empresa:
-          <input
-            type="text"
-            value={formData.empresa}
-            onChange={(e) => setFormData({ ...formData, empresa: e.target.value })}
-          />
-        </label>
-      </div>
-      <button className="submit-button">Crear Usuario</button>
-      <button className="delete-button" type="button" onClick={onCancel}>Cancelar</button>
     </form>
   );
 };

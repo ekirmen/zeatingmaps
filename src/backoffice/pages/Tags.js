@@ -37,7 +37,7 @@ const Tags = () => {
 
   const handleEdit = (tag) => {
     setName(tag.name);
-    setEditingId(tag._id);
+    setEditingId(tag.id); // 🔧 Supabase usa `id`, no `_id`
   };
 
   const handleDelete = async (id) => {
@@ -81,11 +81,11 @@ const Tags = () => {
         </thead>
         <tbody>
           {tags.map(t => (
-            <tr key={t._id} className="border-t">
+            <tr key={t.id} className="border-t">
               <td className="py-2 px-4">{t.name}</td>
               <td className="py-2 px-4 space-x-2">
                 <button onClick={() => handleEdit(t)} className="px-2 py-1 bg-yellow-500 text-white rounded">Editar</button>
-                <button onClick={() => handleDelete(t._id)} className="px-2 py-1 bg-red-600 text-white rounded">Eliminar</button>
+                <button onClick={() => handleDelete(t.id)} className="px-2 py-1 bg-red-600 text-white rounded">Eliminar</button>
               </td>
             </tr>
           ))}
