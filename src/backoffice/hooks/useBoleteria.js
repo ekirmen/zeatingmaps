@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { message } from 'antd';
 import { supabase } from '../services/supabaseClient';
+import { fetchMapa, fetchZonasPorSala } from '../../services/supabaseServices';
 
 const EVENT_KEY = 'boleteriaEventId';
 const FUNC_KEY = 'boleteriaFunctionId';
@@ -119,8 +120,8 @@ export const useBoleteria = () => {
 
     try {
       await Promise.all([
-        supabase.from('mapas').select('*').eq('sala_id', funcion.sala).maybeSingle(),
-        supabase.from('zonas').select('*').eq('sala_id', funcion.sala)
+        fetchMapa(funcion.sala, funcion.id),
+        fetchZonasPorSala(funcion.sala)
       ]);
       return true;
     } catch (error) {
