@@ -46,7 +46,7 @@ const Recinto = () => {
   
       const salaInicial = {
         nombre: 'Sala Principal',
-        recinto_id: recinto.id,
+        recinto_id: recinto.id, // corregido
       };
   
       const { data: sala, error: errorSala } = await supabase
@@ -89,12 +89,12 @@ const Recinto = () => {
     try {
       const { data: sala, error } = await supabase
         .from('salas')
-        .insert([{ ...newSala, recinto_id: currentRecinto.id }])
+        .insert([{ ...newSala, recinto_id: currentRecinto.id }]) // corregido
         .select()
         .single();
-
+  
       if (error) throw error;
-
+  
       setRecintos((prev) =>
         prev.map((r) =>
           r.id === currentRecinto.id
@@ -102,7 +102,7 @@ const Recinto = () => {
             : r
         )
       );
-
+  
       alert('Sala agregada con éxito');
       setIsAddingSala(false);
       setCurrentRecinto(null);
@@ -151,27 +151,29 @@ const Recinto = () => {
   };
 
   const handleDeleteRecinto = async (recintoId) => {
-    if (!window.confirm('¿Deseas eliminar este recinto y todas sus salas?')) return;
-
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este recinto y todas sus salas?')) return;
+  
     try {
-      const { error: salasError } = await supabase
+      // Eliminar salas primero
+      const { error: errorSalas } = await supabase
         .from('salas')
         .delete()
-        .eq('recinto_id', recintoId);
-
-      if (salasError) throw salasError;
-
-      const { error: recintoError } = await supabase
+        .eq('recinto_id', recintoId); // corregido
+  
+      if (errorSalas) throw errorSalas;
+  
+      // Luego eliminar el recinto
+      const { error: errorRecinto } = await supabase
         .from('recintos')
         .delete()
         .eq('id', recintoId);
-
-      if (recintoError) throw recintoError;
-
+  
+      if (errorRecinto) throw errorRecinto;
+  
       await fetchRecintos();
       alert('Recinto y sus salas eliminados con éxito');
     } catch (error) {
-      console.error('Error al eliminar recinto:', error.message);
+      console.error('Error al eliminar recinto y salas:', error.message);
       alert(error.message);
     }
   };
@@ -276,38 +278,12 @@ const Recinto = () => {
           >
             {showSalas[recinto.id] ? 'Ocultar Salas' : 'Mostrar Salas'}
           </button>
-          <button
-            onClick={async () => {
-              if (window.confirm('¿Estás seguro de eliminar este recinto y todas sus salas?')) {
-                try {
-                  // Eliminar salas asociadas
-                  const { error: salasError } = await supabase
-                    .from('salas')
-                    .delete()
-                    .eq('recinto', recinto.id);
-
-                  if (salasError) throw salasError;
-
-                  // Eliminar recinto
-                  const { error: recintoError } = await supabase
-                    .from('recintos')
-                    .delete()
-                    .eq('id', recinto.id);
-
-                  if (recintoError) throw recintoError;
-
-                  await fetchRecintos();
-                  alert('Recinto y salas eliminados con éxito');
-                } catch (error) {
-                  console.error('Error al eliminar recinto:', error.message);
-                  alert(`Error: ${error.message}`);
-                }
-              }
-            }}
-            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Eliminar Recinto
-          </button>
+            <button
+    onClick={() => handleDeleteRecinto(recinto.id)}
+    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+  >
+    Eliminar Recinto
+            </button>
               </div>
             </div>
 
