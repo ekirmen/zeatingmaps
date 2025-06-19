@@ -12,7 +12,7 @@ const Silla = ({
   zonaId,
   zonas = [], // ✅ nuevo prop
 }) => {
-  const zona = zonas.find((z) => z._id === zonaId);
+  const zona = zonas.find((z) => z.id === zonaId);
   const zonaColor = zona?.color || 'black';
   const strokeColor = selected ? 'blue' : zonaColor;
 

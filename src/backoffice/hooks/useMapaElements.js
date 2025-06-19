@@ -32,7 +32,7 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
       height: shape === 'rect' ? 80 : undefined, // Set initial height for rect
       nombre: 'Mesa ' + (elements.filter(e => e.type === 'mesa').length + 1),
       sillas: [], // This 'sillas' array is not used for rendering chairs anymore
-      zonaId: selectedZone?._id || null,
+      zonaId: selectedZone?.id || null,
       fila: ''
     };
     setElements(prev => [...prev, nuevaMesa]);
@@ -68,7 +68,7 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
             mesaId, x, y,
             numero: i + 1,
             sillaShape,
-            zonaId: selectedZone?._id || mesa.zonaId
+            zonaId: selectedZone?.id || mesa.zonaId
           }));
         }
       } else {
@@ -95,7 +95,7 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
               mesaId, x, y,
               numero: colocadas + 1,
               sillaShape,
-              zonaId: selectedZone?._id || mesa.zonaId
+              zonaId: selectedZone?.id || mesa.zonaId
             }));
             colocadas++;
           }

@@ -13,7 +13,7 @@ export const useMapaZones = (elements, setElements, selectedIds, selectedZone) =
       if (el.type === 'silla' && selectedIds.includes(el._id)) {
         return {
           ...el,
-          zonaId: selectedZone._id,
+          zonaId: selectedZone.id,
         };
       }
 
@@ -21,11 +21,11 @@ export const useMapaZones = (elements, setElements, selectedIds, selectedZone) =
       if (el.type === 'mesa' && selectedIds.includes(el._id)) {
         const nuevasSillas = (el.sillas || []).map(silla => ({
           ...silla,
-          zonaId: selectedZone._id,
+          zonaId: selectedZone.id,
         }));
         return {
           ...el,
-          zonaId: selectedZone._id,
+          zonaId: selectedZone.id,
           sillas: nuevasSillas,
         };
       }
@@ -36,7 +36,7 @@ export const useMapaZones = (elements, setElements, selectedIds, selectedZone) =
           if (selectedIds.includes(silla._id)) {
             return {
               ...silla,
-              zonaId: selectedZone._id,
+              zonaId: selectedZone.id,
             };
           }
           return silla;
@@ -66,12 +66,12 @@ export const useMapaZones = (elements, setElements, selectedIds, selectedZone) =
           // 👉 Si es mesa, también asignar zona a sus sillas
         const nuevasSillas = (el.sillas || []).map(silla => ({
           ...silla,
-          zonaId: selectedZone._id,
+          zonaId: selectedZone.id,
         }));
 
         return {
           ...el,
-          zonaId: selectedZone._id,
+          zonaId: selectedZone.id,
           sillas: nuevasSillas,
         };
         }

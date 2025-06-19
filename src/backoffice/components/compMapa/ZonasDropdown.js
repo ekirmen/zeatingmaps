@@ -5,8 +5,8 @@ const ZonasDropdown = ({ zonas, zoneSeatCounts = {}, selectedZoneId, onChange })
     <select value={selectedZoneId || ''} onChange={(e) => onChange(e.target.value)}>
       <option value=''>Seleccionar zona</option>
       {zonas.map((zona) => (
-        <option key={zona._id} value={zona._id}>
-          {zona.nombre} ({zoneSeatCounts[zona._id] || 0})
+        <option key={zona.id} value={zona.id}>
+          {zona.nombre} ({zoneSeatCounts[zona.id] || 0})
         </option>
       ))}
     </select>
