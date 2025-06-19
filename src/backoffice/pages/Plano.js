@@ -80,7 +80,9 @@ const Plano = () => {
     try {
       const nuevaZonaData = { ...nuevaZona, sala_id: sala.id };
       const zonaCreada = await createZona(nuevaZonaData);
-      setZonas([...zonas, zonaCreada]);
+      if (zonaCreada) {
+        setZonas([...zonas, zonaCreada]);
+      }
       setNuevaZona({ nombre: '', color: '#000000', aforo: 0, numerada: false });
       setModalIsOpen(false);
     } catch (err) {
@@ -92,7 +94,9 @@ const Plano = () => {
     try {
       const zonaData = { ...nuevaZona, sala_id: sala.id };
       const updatedZona = await updateZona(editingZona.id, zonaData);
-      setZonas(zonas.map(z => z.id === editingZona.id ? updatedZona : z));
+      if (updatedZona) {
+        setZonas(zonas.map(z => z.id === editingZona.id ? updatedZona : z));
+      }
       setEditingZona(null);
       setNuevaZona({ nombre: '', color: '#000000', aforo: 0, numerada: false });
       setModalIsOpen(false);
@@ -175,10 +179,10 @@ const Plano = () => {
             ) : (
               <>
                 <ul className="space-y-3 mb-4">
-                  {zonas.map(z => (
+                  {zonas.filter(Boolean).map(z => (
                     <li key={z.id} className="flex justify-between items-center border px-4 py-3 rounded">
                       <div>
-                        <span style={{ color: z.color }} className="font-semibold">{z.nombre}</span>
+                        <span style={{ color: z.color || '#000000' }} className="font-semibold">{z.nombre}</span>
                         <span className="ml-2 text-gray-600">- Aforo: {zoneSeatCounts[z.id] ?? z.aforo}</span>
                       </div>
                       <div className="space-x-2">
