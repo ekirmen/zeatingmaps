@@ -74,7 +74,13 @@ const Entrada = () => {
   }, [loadTickets]);
 
   const handleSaveData = async (datos) => {
-    const { error } = await supabase.from("entradas").insert(datos);
+    const datosConIva = {
+      ...datos,
+      iva: datos.ivaSeleccionado, // mapear correctamente
+    };
+    delete datosConIva.ivaSeleccionado; // eliminar el campo innecesario
+  
+    const { error } = await supabase.from("entradas").insert(datosConIva);
     if (error) {
       console.error("Error al guardar datos:", error.message);
       alert("Error al guardar datos");
@@ -104,7 +110,13 @@ const Entrada = () => {
   };
 
   const handleSaveEditData = async (datosEditados) => {
-    const { error } = await supabase.from("entradas").update(datosEditados).eq("id", ticketId);
+    const datosConIva = {
+      ...datosEditados,
+      iva: datosEditados.ivaSeleccionado,
+    };
+    delete datosConIva.ivaSeleccionado;
+  
+    const { error } = await supabase.from("entradas").update(datosConIva).eq("id", ticketId);
     if (error) {
       console.error("Error al actualizar:", error.message);
       alert("Error al actualizar el ticket");
@@ -114,7 +126,7 @@ const Entrada = () => {
       loadTickets();
     }
   };
-
+  
   const handleDeleteTicket = async (id) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este ticket?")) {
       const { error } = await supabase.from("entradas").delete().eq("id", id);

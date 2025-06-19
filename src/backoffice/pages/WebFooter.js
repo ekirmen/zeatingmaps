@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFooter } from '../../contexts/FooterContext';
+import { supabase } from '../services/supabaseClient';
 
 const SOCIAL_FIELDS = [
   { key: 'facebook', label: 'Facebook' },
@@ -28,13 +29,15 @@ const WebFooter = () => {
 
   useEffect(() => {
     const load = async () => {
-      try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/settings/reservation-time`);
-        if (res.ok) {
-          const data = await res.json();
-          setReservationTime(data.value);
-        }
-      } catch {}
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'reservation-time')
+        .single();
+
+      if (!error && data) {
+        setReservationTime(parseInt(data.value, 10));
+      }
     };
     load();
   }, []);
@@ -48,17 +51,17 @@ const WebFooter = () => {
 
   const handleSave = async () => {
     updateFooter({ copyrightText: text, socials });
-    try {
-      await fetch(`${process.env.REACT_APP_API_URL}/api/settings/reservation-time`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ value: reservationTime })
-      });
-    } catch {}
-    alert('Configuración guardada');
+
+    const { error } = await supabase
+      .from('settings')
+      .upsert({ key: 'reservation-time', value: String(reservationTime) }, { onConflict: ['key'] });
+
+    if (error) {
+      console.error('Error al guardar el tiempo de reserva:', error);
+      alert('Error al guardar la configuración');
+    } else {
+      alert('Configuración guardada correctamente');
+    }
   };
 
   return (

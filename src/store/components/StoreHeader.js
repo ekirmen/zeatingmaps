@@ -165,7 +165,7 @@ const Header = ({ onLogin, onLogout }) => {
       <div className="container mx-auto flex justify-between items-center px-4">
         <LinkWithRef to="/store" className="text-xl font-bold flex items-center gap-2">
           {header.logoUrl && (
-            <img src={`${process.env.REACT_APP_API_URL}${header.logoUrl}`} alt="Logo" className="h-6 w-auto" />
+            <img src={header.logoUrl} alt="Logo" className="h-6 w-auto" />
           )}
           {header.companyName}
         </LinkWithRef>

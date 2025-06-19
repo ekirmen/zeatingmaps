@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
+import { supabase } from '../backoffice/services/supabaseClient';
 
 export const CartContext = createContext();
 
@@ -8,21 +9,21 @@ export const CartProvider = ({ children }) => {
     const savedCart = localStorage.getItem('cart');
     return savedCart ? JSON.parse(savedCart) : { items: [], functionId: null };
   });
+
   const [expiration, setExpiration] = useState(() => {
     const saved = localStorage.getItem('cartExpiration');
     return saved ? parseInt(saved, 10) : null;
   });
+
   const [timeLeft, setTimeLeft] = useState(() => {
     return expiration ? Math.max(0, Math.floor((expiration - Date.now()) / 1000)) : 0;
   });
-
 
   const updateCart = useCallback((newCart) => {
     setCartState(newCart);
     localStorage.setItem('cart', JSON.stringify(newCart));
   }, []);
 
-  // Replace only the cart items without calling backend
   const setCart = useCallback((items, functionId = null) => {
     setCartState(prev => {
       const updated = { items, functionId: functionId ?? prev.functionId };
@@ -33,63 +34,40 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = useCallback(async (seats, functionId) => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No hay sesión activa');
-      }
+      const seatIds = seats.map(s => s.id);
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/seats/reserve`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          seats: seats.map(seat => seat._id),
-          functionId 
-        }),
-        credentials: 'include'
-      });
+      const { error } = await supabase
+        .from('seats')
+        .update({ reserved: true, reserved_at: new Date().toISOString() })
+        .in('id', seatIds);
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Error al reservar asientos');
-      }
+      if (error) throw error;
 
-      const data = await response.json();
       updateCart({ items: seats, functionId });
-      if (data.expiresAt) {
-        const exp = new Date(data.expiresAt).getTime();
-        setExpiration(exp);
-        localStorage.setItem('cartExpiration', String(exp));
-      }
+
+      const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+      setExpiration(expiresAt);
+      localStorage.setItem('cartExpiration', String(expiresAt));
+
       toast.success('Asientos añadidos al carrito');
     } catch (error) {
-      toast.error(error.message || 'Error al actualizar el carrito');
+      toast.error(error.message || 'Error al reservar asientos');
     }
   }, [updateCart]);
 
-
   const clearCart = useCallback(async () => {
     try {
-      if (cart.items?.length > 0) {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/seats/release`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            seats: cart.items.map(item => item._id),
-            functionId: cart.functionId
-          })
-        });
+      const seatIds = cart.items.map(i => i.id);
 
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || 'Error al liberar asientos');
-        }
+      if (seatIds.length > 0) {
+        const { error } = await supabase
+          .from('seats')
+          .update({ reserved: false, reserved_at: null })
+          .in('id', seatIds);
+
+        if (error) throw error;
       }
+
       updateCart({ items: [], functionId: null });
       setExpiration(null);
       localStorage.removeItem('cartExpiration');
@@ -99,34 +77,23 @@ export const CartProvider = ({ children }) => {
     }
   }, [cart, updateCart]);
 
-  useEffect(() => {
-    if (expiration && expiration <= Date.now()) {
-      clearCart();
-    }
-  }, [expiration, clearCart]);
-
   const removeFromCart = useCallback(async (seatId) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/seats/release`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ seats: [seatId], functionId: cart.functionId })
-      });
+      const { error } = await supabase
+        .from('seats')
+        .update({ reserved: false, reserved_at: null })
+        .eq('id', seatId);
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Error al liberar asiento');
-      }
+      if (error) throw error;
 
-      updateCart(prev => prev.filter(item => item._id !== seatId));
+      const newItems = cart.items.filter(item => item.id !== seatId);
+      updateCart({ items: newItems, functionId: cart.functionId });
+
       toast.success('Asiento eliminado del carrito');
     } catch (error) {
       toast.error(error.message || 'Error al eliminar del carrito');
     }
-  }, [updateCart]);
+  }, [cart, updateCart]);
 
   useEffect(() => {
     if (!expiration) return;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../services/supabaseClient';
 
 const CreateIva = () => {
   const [ivas, setIvas] = useState([]);
@@ -11,73 +12,56 @@ const CreateIva = () => {
   }, []);
 
   const fetchIvas = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/ivas`);
-      const data = await response.json();
+    const { data, error } = await supabase.from('ivas').select('*');
+    if (error) {
+      console.error('Error al cargar IVAs:', error.message);
+      setIvas([]);
+    } else {
       setIvas(data);
-    } catch (error) {
-      console.error('Error al cargar IVAs:', error);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const payload = { nombre, porcentaje: parseFloat(porcentaje) };
 
-    try {
-      const url = editingId
-        ? `${process.env.REACT_APP_API_URL}/api/ivas/${editingId}`
-        : `${process.env.REACT_APP_API_URL}/api/ivas`;
-
-      const method = editingId ? 'PUT' : 'POST';
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nombre, porcentaje }),
-      });
-
-      if (response.ok) {
-        alert(editingId ? 'IVA actualizado con éxito' : 'IVA creado con éxito');
-        setNombre('');
-        setPorcentaje('');
-        setEditingId(null);
-        fetchIvas();
-      } else {
-        const data = await response.json();
-        alert(data.message || 'Error en la operación');
+    if (editingId) {
+      const { error } = await supabase.from('ivas').update(payload).eq('id', editingId);
+      if (error) {
+        alert('Error al actualizar: ' + error.message);
+        return;
       }
-    } catch (error) {
-      console.error('Error:', error);
-      alert('Error en la operación');
+      alert('IVA actualizado con éxito');
+    } else {
+      const { error } = await supabase.from('ivas').insert([payload]);
+      if (error) {
+        alert('Error al crear: ' + error.message);
+        return;
+      }
+      alert('IVA creado con éxito');
     }
+
+    setNombre('');
+    setPorcentaje('');
+    setEditingId(null);
+    fetchIvas();
   };
 
   const handleEdit = (iva) => {
     setNombre(iva.nombre);
     setPorcentaje(iva.porcentaje);
-    setEditingId(iva._id);
+    setEditingId(iva.id);
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar este IVA?')) {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/ivas/${id}`, {
-          method: 'DELETE',
-        });
-
-        if (response.ok) {
-          alert('IVA eliminado con éxito');
-          fetchIvas();
-        } else {
-          const data = await response.json();
-          alert(data.message || 'Error al eliminar el IVA');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Error al eliminar el IVA');
+    if (window.confirm('¿Deseas eliminar este IVA?')) {
+      const { error } = await supabase.from('ivas').delete().eq('id', id);
+      if (error) {
+        alert('Error al eliminar: ' + error.message);
+        return;
       }
+      alert('IVA eliminado con éxito');
+      fetchIvas();
     }
   };
 
@@ -85,10 +69,7 @@ const CreateIva = () => {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Gestión de IVA</h1>
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow rounded-lg p-4 mb-8 space-y-4"
-      >
+      <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-4 mb-8 space-y-4">
         <div>
           <label className="block mb-1">Nombre del IVA:</label>
           <input
@@ -122,12 +103,12 @@ const CreateIva = () => {
           {editingId && (
             <button
               type="button"
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
               onClick={() => {
                 setEditingId(null);
                 setNombre('');
                 setPorcentaje('');
               }}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
             >
               Cancelar Edición
             </button>
@@ -147,7 +128,7 @@ const CreateIva = () => {
           </thead>
           <tbody>
             {ivas.map((iva) => (
-              <tr key={iva._id} className="border-t">
+              <tr key={iva.id} className="border-t">
                 <td className="py-2 px-4">{iva.nombre}</td>
                 <td className="py-2 px-4">{iva.porcentaje}%</td>
                 <td className="py-2 px-4 space-x-2">
@@ -158,7 +139,7 @@ const CreateIva = () => {
                     Editar
                   </button>
                   <button
-                    onClick={() => handleDelete(iva._id)}
+                    onClick={() => handleDelete(iva.id)}
                     className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                   >
                     Eliminar

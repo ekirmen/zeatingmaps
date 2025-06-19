@@ -1,33 +1,45 @@
 import React, { useState } from 'react';
 import { useHeader } from '../../contexts/HeaderContext';
+import { supabase } from '../../backoffice/services/supabaseClient';
 
 const WebHeader = () => {
   const { header, updateHeader } = useHeader();
   const [companyName, setCompanyName] = useState(header?.companyName || 'TuEmpresa');
   const [logoUrl, setLogoUrl] = useState(header?.logoUrl || '');
+  const [uploading, setUploading] = useState(false);
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      const token = localStorage.getItem('token');
-      const authHeader = token && !token.startsWith('Bearer ')
-        ? `Bearer ${token}`
-        : token;
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/upload`, {
-        method: 'POST',
-        headers: token ? { Authorization: authHeader } : {},
-        body: formData
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    setUploading(true);
+    const { error } = await supabase.storage
+      .from('logos')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Error al subir imagen');
-      setLogoUrl(data.url || data.path || '');
-    } catch (err) {
-      console.error('Upload error:', err);
-      alert(err.message);
+
+    if (error) {
+      console.error('Upload error:', error.message);
+      alert('Error al subir imagen');
+      setUploading(false);
+      return;
     }
+
+    const { data: publicData } = supabase.storage
+      .from('logos')
+      .getPublicUrl(filePath);
+
+    if (publicData?.publicUrl) {
+      setLogoUrl(publicData.publicUrl);
+    }
+
+    setUploading(false);
   };
 
   const handleSave = () => {
@@ -39,30 +51,30 @@ const WebHeader = () => {
     <div className="p-6 max-w-md mx-auto">
       <h2 className="text-2xl font-bold mb-6">Cabecera</h2>
 
-
-      <label className="block text-sm font-medium mb-1 mt-4">Logo</label>
-      <input type="file" accept=".jpg,.png" onChange={handleFileChange} />
+      <label className="block text-sm font-medium mb-1">Logo</label>
+      <input type="file" accept=".jpg,.jpeg,.png" onChange={handleFileChange} />
+      {uploading && <p className="text-sm text-gray-500 mt-1">Subiendo imagen...</p>}
       {logoUrl && (
         <img
-          src={`${process.env.REACT_APP_API_URL}${logoUrl}`}
+          src={logoUrl}
           alt="Logo"
-          className="h-12 mt-2"
+          className="h-16 mt-4 object-contain"
         />
       )}
 
-      <label className="block text-sm font-medium mb-1 mt-4">Nombre Empresa</label>
+      <label className="block text-sm font-medium mt-6 mb-1">Nombre Empresa</label>
       <input
         type="text"
-        className="border p-2 w-full rounded border-gray-300"
         value={companyName}
-        maxLength={15}
+        maxLength={30}
         onChange={e => setCompanyName(e.target.value)}
+        className="border p-2 w-full rounded border-gray-300"
       />
 
       <div className="mt-6 text-right">
         <button
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
           onClick={handleSave}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
         >
           Guardar
         </button>

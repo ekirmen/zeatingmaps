@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { message } from 'antd';
-import { fetchEventos, fetchMapa, fetchZonasPorSala } from '../services/apibackoffice';
+import { supabase } from '../services/supabaseClient';
 
 const EVENT_KEY = 'boleteriaEventId';
 const FUNC_KEY = 'boleteriaFunctionId';
@@ -8,7 +8,7 @@ const FUNC_KEY = 'boleteriaFunctionId';
 export const useBoleteria = () => {
   const restoredEventRef = useRef(false);
   const restoredFunctionRef = useRef(false);
-  // Core states
+
   const [eventos, setEventos] = useState([]);
   const [funciones, setFunciones] = useState([]);
   const [selectedFuncion, setSelectedFuncion] = useState(null);
@@ -16,29 +16,27 @@ export const useBoleteria = () => {
   const [selectedPlantilla, setSelectedPlantilla] = useState(null);
   const [carrito, setCarrito] = useState([]);
 
-  // Load eventos on mount
   useEffect(() => {
     loadEventos();
   }, []);
 
-  // Load plantilla when function changes
   useEffect(() => {
-    if (selectedFuncion?._id) {
+    if (selectedFuncion?.id) {
       cargarPlantillasPrecios();
     }
   }, [selectedFuncion]);
 
   const loadEventos = async () => {
-    try {
-      const data = await fetchEventos();
-      setEventos(Array.isArray(data) ? data : []);
-    } catch (error) {
-      message.error('Error loading events');
+    const { data, error } = await supabase.from('eventos').select('*');
+    if (error) {
+      console.error(error);
+      message.error('Error cargando eventos');
       setEventos([]);
+    } else {
+      setEventos(data);
     }
   };
 
-  // Restore selection from localStorage after events load
   useEffect(() => {
     if (eventos.length > 0 && !restoredEventRef.current) {
       const storedEventId = localStorage.getItem(EVENT_KEY);
@@ -50,85 +48,89 @@ export const useBoleteria = () => {
   }, [eventos]);
 
   const cargarPlantillasPrecios = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/funcions/${selectedFuncion._id}/plantilla`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setSelectedPlantilla(data);
-      }
-    } catch (error) {
-      console.error('Error loading function price template:', error);
-      message.error('Error loading price template');
+    const { data, error } = await supabase
+      .from('plantillas')
+      .select('*')
+      .eq('funcion_id', selectedFuncion.id)
+      .single();
+
+    if (error) {
+      console.error(error);
+      message.error('Error cargando plantilla');
+    } else {
+      setSelectedPlantilla(data);
     }
   };
 
   const handleEventSelect = async (eventoId) => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions?evento=${eventoId}`);
-      const data = await response.json();
-      const funcs = Array.isArray(data) ? data : [];
-      setFunciones(funcs);
-      const ev = eventos.find(e => e._id === eventoId);
+    const { data, error } = await supabase
+      .from('funcions')
+      .select('*')
+      .eq('evento', eventoId);
+
+    if (error) {
+      message.error('Error cargando funciones');
+      return { success: false, funciones: [] };
+    } else {
+      const ev = eventos.find(e => e.id === eventoId);
+      setFunciones(data);
       setSelectedEvent(ev || null);
       setSelectedFuncion(null);
-      if (ev?._id) {
-        localStorage.setItem(EVENT_KEY, ev._id);
+      if (ev?.id) {
+        localStorage.setItem(EVENT_KEY, ev.id);
       }
-      return { success: true, funciones: funcs };
-    } catch (error) {
-      message.error('Error loading functions');
-      return { success: false, funciones: [] };
+      return { success: true, funciones: data };
     }
   };
 
   const handleFunctionSelect = async (funcion) => {
     setSelectedFuncion(funcion);
+
     if (funcion.evento) {
       setSelectedEvent(funcion.evento);
-      if (funcion.evento._id) {
-        localStorage.setItem(EVENT_KEY, funcion.evento._id);
+      if (typeof funcion.evento === 'object' && funcion.evento.id) {
+        localStorage.setItem(EVENT_KEY, funcion.evento.id);
       }
     }
-    if (funcion._id) {
-      localStorage.setItem(FUNC_KEY, funcion._id);
+
+    if (funcion.id) {
+      localStorage.setItem(FUNC_KEY, funcion.id);
     }
+
     try {
       await Promise.all([
-        fetchMapa(funcion.sala._id, funcion._id),
-        fetchZonasPorSala(funcion.sala._id)
+        supabase.from('mapas').select('*').eq('salaId', funcion.sala).single(),
+        supabase.from('zonas').select('*').eq('salaId', funcion.sala)
       ]);
       return true;
     } catch (error) {
-      message.error('Error loading sala data');
+      console.error('Error cargando sala/zonas:', error);
+      message.error('Error cargando datos de sala');
       return false;
     }
   };
 
-  // Persist selections to localStorage
   useEffect(() => {
-    if (selectedEvent?._id) {
-      localStorage.setItem(EVENT_KEY, selectedEvent._id);
+    if (selectedEvent?.id) {
+      localStorage.setItem(EVENT_KEY, selectedEvent.id);
     } else {
       localStorage.removeItem(EVENT_KEY);
     }
   }, [selectedEvent]);
 
   useEffect(() => {
-    if (selectedFuncion?._id) {
-      localStorage.setItem(FUNC_KEY, selectedFuncion._id);
+    if (selectedFuncion?.id) {
+      localStorage.setItem(FUNC_KEY, selectedFuncion.id);
     } else {
       localStorage.removeItem(FUNC_KEY);
     }
   }, [selectedFuncion]);
 
-  // Restore selected function from localStorage after functions load
   useEffect(() => {
     if (funciones.length > 0 && !restoredFunctionRef.current) {
       const storedFunctionId = localStorage.getItem(FUNC_KEY);
       if (storedFunctionId) {
-        const func = funciones.find(f => f._id === storedFunctionId);
+        const func = funciones.find(f => f.id === storedFunctionId);
         if (func) {
           handleFunctionSelect(func);
         }

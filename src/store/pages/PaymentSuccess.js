@@ -6,6 +6,7 @@ import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
 import { loadMetaPixel } from '../utils/analytics';
+import { supabase } from '../../backoffice/services/supabaseClient';
 
 const PaymentSuccess = () => {
   const params = useParams();
@@ -17,6 +18,7 @@ const PaymentSuccess = () => {
   const { setCart } = useCart();
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
+
   const isReservation = paymentDetails?.status === 'reservado';
 
   useEffect(() => {
@@ -27,59 +29,59 @@ const PaymentSuccess = () => {
   }, []);
 
   useEffect(() => {
-    if (!locator) {
-      return;
-    }
+    if (!locator) return;
 
     const fetchPaymentDetails = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/locator/${locator}`);
-        const data = await response.json();
-        if (data?.data) {
-          const details = data.data;
-          details.amount = details.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-          details.paymentMethod = details.payments?.map(p => p.method).join(', ') || '';
-          setPaymentDetails(details);
-          const eventId = data.data.event?._id;
-          if (eventId) {
-            const evRes = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${eventId}`);
-            const evData = await evRes.json();
-            setEventOptions(evData.otrasOpciones || {});
-          }
-        }
-      } catch (error) {
+      const { data: payment, error } = await supabase
+        .from('payments')
+        .select(`*, event:event (id, otrasOpciones), seats, funcion`)
+        .eq('locator', locator)
+        .single();
+
+      if (error || !payment) {
         console.error('Error fetching payment details:', error);
+        return;
       }
+
+      const amount = payment.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+      const paymentMethod = payment.payments?.map(p => p.method).join(', ') || '';
+
+      setPaymentDetails({ ...payment, amount, paymentMethod });
+      setEventOptions(payment.event?.otrasOpciones || {});
     };
+
     fetchPaymentDetails();
   }, [locator]);
 
   const handleDownloadTickets = () => {
-    // Implement ticket download functionality
-    window.open(`${process.env.REACT_APP_API_URL}/api/payments/${locator}/download`, '_blank');
+    window.open(`/api/payments/${locator}/download`, '_blank');
   };
 
   const handleContinuePayment = async () => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/locator/${locator}`);
-      if (!response.ok) throw new Error('Error al cargar la reserva');
-      const { data } = await response.json();
-      setCart(
-        data.seats.map(seat => ({
-          _id: seat.id,
-          nombre: seat.name,
-          precio: seat.price,
-          nombreMesa: seat.mesa?.nombre || '',
-          zona: seat.zona?._id || seat.zona,
-          zonaNombre: seat.zona?.nombre || ''
-        })),
-        data.funcion?._id || data.funcion
-      );
-      navigate('/store/pay');
-    } catch (err) {
-      console.error('Load reservation error:', err);
+    const { data: payment, error } = await supabase
+      .from('payments')
+      .select(`*, seats, funcion`)
+      .eq('locator', locator)
+      .single();
+
+    if (error || !payment) {
+      console.error('Load reservation error:', error);
       toast.error('No se pudo cargar la reserva');
+      return;
     }
+
+    setCart(
+      payment.seats.map(seat => ({
+        _id: seat.id,
+        nombre: seat.name,
+        precio: seat.price,
+        nombreMesa: seat.mesa?.nombre || '',
+        zona: seat.zona?.id || seat.zona,
+        zonaNombre: seat.zona?.nombre || ''
+      })),
+      payment.funcion?.id || payment.funcion
+    );
+    navigate('/store/pay');
   };
 
   if (!locator) {
@@ -108,16 +110,14 @@ const PaymentSuccess = () => {
             <span className="text-gray-600">Localizador:</span>
             <span className="font-mono font-bold text-lg">{locator}</span>
           </div>
-          
+
           {paymentDetails && (
             <>
               {!isReservation && (
                 <>
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-gray-600">Total Pagado:</span>
-                    <span className="font-bold">
-                      $ {paymentDetails.amount}
-                    </span>
+                    <span className="font-bold">$ {paymentDetails.amount}</span>
                   </div>
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-gray-600">Método de Pago:</span>
@@ -127,7 +127,7 @@ const PaymentSuccess = () => {
               )}
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Fecha:</span>
-                <span>{new Date(paymentDetails.createdAt).toLocaleString()}</span>
+                <span>{new Date(paymentDetails.created_at).toLocaleString()}</span>
               </div>
             </>
           )}
@@ -151,7 +151,7 @@ const PaymentSuccess = () => {
               Completar Pago
             </button>
           )}
-          
+
           <button
             onClick={() => {
               const path = refParam ? `/store?ref=${refParam}` : '/store';
