@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import CreateUserForm from '../components/CreateUserForm';
-import EditUserForm from '../components/EditUserForm';
+import EditUserForm from '../components/edituserform';
 
 const Usuarios = () => {
   const [profiles, setProfiles] = useState([]);
