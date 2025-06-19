@@ -4,7 +4,7 @@ export const fetchMapa = async (salaId, funcionId = null) => {
   let query = supabase.from('mapas').select('*');
   if (funcionId) query = query.eq('funcion_id', funcionId);
   else query = query.eq('sala_id', salaId);
-  const { data, error } = await query.single();
+  const { data, error } = await query.maybeSingle();
   if (error && error.code !== 'PGRST116') throw error;
   return data;
 };

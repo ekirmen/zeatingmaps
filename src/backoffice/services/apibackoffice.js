@@ -113,7 +113,7 @@ export const createFuncion = async (data) => {
 
 // === MAPAS ===
 export const fetchMapa = async (salaId) => {
-  const { data, error } = await supabase.from('mapas').select('*').eq('sala_id', salaId).single();
+  const { data, error } = await supabase.from('mapas').select('*').eq('sala_id', salaId).maybeSingle();
   handleError(error);
   return data;
 };
