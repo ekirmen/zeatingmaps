@@ -8,7 +8,7 @@ const SalasList = ({ salas }) => {
   return (
     <ul>
       {salas.map((sala) => (
-        <li key={sala._id}>{sala.nombre}</li>
+        <li key={sala.id}>{sala.nombre}</li>
       ))}
     </ul>
   );
