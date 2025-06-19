@@ -1,0 +1,184 @@
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useRefParam } from '../../contexts/RefContext';
+import { useCart } from '../../contexts/CartContext';
+import { toast } from 'react-hot-toast';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
+import { loadMetaPixel } from '../utils/analytics';
+
+const PaymentSuccess = () => {
+  const params = useParams();
+  const location = useLocation();
+  const locator = location.state?.locator || params.locator;
+  const emailSent = location.state?.emailSent;
+  const navigate = useNavigate();
+  const { refParam } = useRefParam();
+  const { setCart } = useCart();
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [eventOptions, setEventOptions] = useState({});
+  const isReservation = paymentDetails?.status === 'reservado';
+
+  useEffect(() => {
+    const pixelId = localStorage.getItem('metaPixelId');
+    if (pixelId) {
+      loadMetaPixel(pixelId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!locator) {
+      return;
+    }
+
+    const fetchPaymentDetails = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/locator/${locator}`);
+        const data = await response.json();
+        if (data?.data) {
+          const details = data.data;
+          details.amount = details.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+          details.paymentMethod = details.payments?.map(p => p.method).join(', ') || '';
+          setPaymentDetails(details);
+          const eventId = data.data.event?._id;
+          if (eventId) {
+            const evRes = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${eventId}`);
+            const evData = await evRes.json();
+            setEventOptions(evData.otrasOpciones || {});
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching payment details:', error);
+      }
+    };
+    fetchPaymentDetails();
+  }, [locator]);
+
+  const handleDownloadTickets = () => {
+    // Implement ticket download functionality
+    window.open(`${process.env.REACT_APP_API_URL}/api/payments/${locator}/download`, '_blank');
+  };
+
+  const handleContinuePayment = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/locator/${locator}`);
+      if (!response.ok) throw new Error('Error al cargar la reserva');
+      const { data } = await response.json();
+      setCart(
+        data.seats.map(seat => ({
+          _id: seat.id,
+          nombre: seat.name,
+          precio: seat.price,
+          nombreMesa: seat.mesa?.nombre || '',
+          zona: seat.zona?._id || seat.zona,
+          zonaNombre: seat.zona?.nombre || ''
+        })),
+        data.funcion?._id || data.funcion
+      );
+      navigate('/store/pay');
+    } catch (err) {
+      console.error('Load reservation error:', err);
+      toast.error('No se pudo cargar la reserva');
+    }
+  };
+
+  if (!locator) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-500">Localizador no proporcionado.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <div className="text-center mb-8">
+          <FontAwesomeIcon icon={faCheckCircle} className="mx-auto h-16 w-16 text-green-500" />
+          <h2 className="mt-4 text-3xl font-bold text-gray-900">
+            {isReservation ? '¡Reserva Exitosa!' : '¡Pago Exitoso!'}
+          </h2>
+          <p className="mt-2 text-lg text-gray-600">
+            {isReservation ? 'Tu reserva ha sido registrada con éxito' : 'Tu compra ha sido registrada con éxito'}
+          </p>
+        </div>
+
+        <div className="border-t border-b border-gray-200 py-4 my-6">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-gray-600">Localizador:</span>
+            <span className="font-mono font-bold text-lg">{locator}</span>
+          </div>
+          
+          {paymentDetails && (
+            <>
+              {!isReservation && (
+                <>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-gray-600">Total Pagado:</span>
+                    <span className="font-bold">
+                      $ {paymentDetails.amount}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-gray-600">Método de Pago:</span>
+                    <span className="capitalize">{paymentDetails.paymentMethod}</span>
+                  </div>
+                </>
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Fecha:</span>
+                <span>{new Date(paymentDetails.createdAt).toLocaleString()}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+          {!isReservation && (
+            <button
+              onClick={handleDownloadTickets}
+              className="flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            >
+              <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
+              Descargar Entradas
+            </button>
+          )}
+          {isReservation && (
+            <button
+              onClick={handleContinuePayment}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              Completar Pago
+            </button>
+          )}
+          
+          <button
+            onClick={() => {
+              const path = refParam ? `/store?ref=${refParam}` : '/store';
+              navigate(path);
+            }}
+            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+          >
+            Volver al Inicio
+          </button>
+        </div>
+
+        {eventOptions.observacionesEmail?.mostrar && (
+          <div
+            className="mt-8 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm"
+            dangerouslySetInnerHTML={{ __html: String(eventOptions.observacionesEmail.texto || '') }}
+          />
+        )}
+
+        {emailSent && (
+          <div className="mt-8 text-center text-sm text-gray-500">
+            <p>Se ha enviado un correo electrónico con los detalles de tu compra</p>
+            <p className="mt-1">Guarda tu localizador para futuras referencias</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default PaymentSuccess;

@@ -1,0 +1,80 @@
+{
+  "header.home": "Inicio",
+  "header.demo": "Demo",
+  "header.cart": "Carrito",
+  "header.profile": "Perfil",
+  "header.register": "Registrarse",
+  "header.account": "Cuenta",
+  "header.email": "Correo electrónico",
+  "header.login": "Iniciar Sesión",
+  "header.logout": "Cerrar Sesión",
+  "header.forgot": "Olvidé mi contraseña",
+  "header.signup": "Registrarse",
+  "login.success": "Inicio de sesión exitoso",
+  "register.success": "Usuario registrado exitosamente",
+  "logout.success": "Sesión cerrada correctamente",
+  "search.placeholder": "Buscar eventos",
+  "search.button": "Buscar",
+  "password.updated": "Contraseña actualizada",
+  "password.change": "Cambiar Contraseña",
+  "password.new": "Nueva contraseña",
+  "password.repeat": "Repetir contraseña",
+  "button.cancel": "Cancelar",
+  "button.save": "Guardar",
+  "button.apply": "Aplicar",
+  "button.continue": "Continuar",
+  "button.proceed_payment": "Proceder al Pago",
+  "button.reserve": "Reservar",
+  "button.download_ticket": "Descargar Entradas",
+  "button.back_home": "Volver al Inicio",
+  "payment.success": "¡Pago Exitoso!",
+  "reservation.success": "¡Reserva Exitosa!"
+  ,"errors.fields_required": "Todos los campos son obligatorios"
+  ,"errors.passwords_no_match": "Las contraseñas no coinciden"
+  ,"errors.password_min_length": "La contraseña debe tener al menos 6 caracteres"
+  ,"errors.register": "Error al registrar usuario"
+  ,"errors.invalid_register": "Respuesta de registro inválida"
+  ,"errors.enter_credentials": "Por favor ingrese correo y contraseña"
+  ,"errors.invalid_credentials": "Credenciales incorrectas"
+  ,"errors.login": "Error al iniciar sesión"
+  ,"errors.save_password": "Error al guardar contraseña"
+  ,"errors.auth": "Error de autenticación"
+  ,"errors.email_send": "Error al enviar correo"
+  ,"errors.request": "Error al procesar la solicitud"
+  ,"errors.reset_password": "Error al restablecer contraseña"
+  ,"forgot.placeholder": "Ingresa tu email"
+  ,"forgot.sent": "Correo enviado"
+  ,"faq.title": "Preguntas Frecuentes"
+  ,"faq.q1": "¿Cómo compro entradas?"
+  ,"faq.a1": "Selecciona el evento deseado, elige tus asientos y completa el proceso de pago."
+  ,"faq.q2": "¿Puedo obtener un reembolso?"
+  ,"faq.a2": "Dependerá de las políticas del evento. Contacta con soporte si tienes dudas."
+  ,"faq.q3": "¿Dónde encuentro mis tickets?"
+  ,"faq.a3": "Tras la compra podrás descargarlos desde tu perfil o desde el enlace enviado a tu correo."
+  ,"cart.title": "Carrito"
+  ,"cart.clear": "Vaciar carrito"
+  ,"cart.search_placeholder": "Buscar por localizador"
+  ,"cart.total": "Total"
+  ,"discount.placeholder": "Código de descuento"
+  ,"discount.apply": "Aplicar"
+  ,"profile.title": "Mi Perfil"
+  ,"profile.back": "Atrás"
+  ,"profile.change_password": "Cambiar Contraseña"
+  ,"profile.save_changes": "Guardar Cambios"
+  ,"profile.reservations": "Reservas"
+  ,"profile.payments": "Pagos"
+  ,"profile.no_reservations": "No hay reservas registradas"
+  ,"profile.no_payments": "No hay pagos registrados"
+  ,"profile.date": "Fecha"
+  ,"profile.locator": "Localizador"
+  ,"profile.event": "Evento"
+  ,"profile.status": "Estado"
+  ,"profile.total": "Total"
+  ,"profile.actions": "Acciones"
+  ,"profile.phone": "Teléfono"
+  ,"profile.company": "Empresa"
+  ,"profile.role": "Perfil"
+  ,"profile.current_password": "Contraseña Actual"
+  ,"profile.new_password": "Nueva Contraseña"
+  ,"profile.account_locator": "Localizador de Cuenta"
+}
