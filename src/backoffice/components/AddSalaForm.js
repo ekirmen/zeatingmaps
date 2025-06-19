@@ -8,7 +8,7 @@ const AddSalaForm = ({ onAddSala, onCancel, recintoId }) => {
     e.preventDefault();
 
     // Importante: usar la clave 'recinto' tal como está definida en tu tabla SQL
-    onAddSala({ nombre, recinto: recintoId });
+    onAddSala({ nombre, recinto_id: recintoId });
   };
 
   return (
