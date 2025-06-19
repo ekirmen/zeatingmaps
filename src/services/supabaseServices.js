@@ -2,10 +2,29 @@ import { supabase } from '../backoffice/services/supabaseClient';
 
 export const fetchMapa = async (salaId, funcionId = null) => {
   let query = supabase.from('mapas').select('*');
-  if (funcionId) query = query.eq('funcion_id', funcionId);
-  else query = query.eq('sala_id', salaId);
-  const { data, error } = await query.maybeSingle();
+
+  // Intenta obtener el mapa específico para la función
+  if (funcionId) {
+    const { data, error } = await query
+      .eq('funcion_id', funcionId)
+      .maybeSingle();
+
+    // Si ocurre un error distinto a "registro no encontrado", propaga el error
+    if (error && error.code !== 'PGRST116') throw error;
+
+    // Si se encontró un mapa para la función, retórnalo
+    if (data) return data;
+  }
+
+  // Como alternativa, busca el mapa asociado a la sala
+  const { data, error } = await supabase
+    .from('mapas')
+    .select('*')
+    .eq('sala_id', salaId)
+    .maybeSingle();
+
   if (error && error.code !== 'PGRST116') throw error;
+
   return data;
 };
 
