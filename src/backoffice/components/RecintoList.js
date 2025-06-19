@@ -5,7 +5,7 @@ const RecintoList = ({ recintos, onEdit, onAddSala }) => {
   return (
     <div>
       {recintos.map((recinto) => (
-        <div key={recinto._id} style={{ marginBottom: '20px', border: '1px solid #ddd', padding: '10px' }}>
+        <div key={recinto.id} style={{ marginBottom: '20px', border: '1px solid #ddd', padding: '10px' }}>
           <h3>{recinto.nombre}</h3>
           <p>Dirección: {recinto.direccion}</p>
           <p>Capacidad: {recinto.capacidad}</p>
@@ -14,7 +14,7 @@ const RecintoList = ({ recintos, onEdit, onAddSala }) => {
           {recinto.salas && Array.isArray(recinto.salas) && recinto.salas.length > 0 ? (
             <ul>
               {recinto.salas.map((sala) => (
-                <li key={sala._id}>{sala.nombre}</li>
+                <li key={sala.id}>{sala.nombre}</li>
               ))}
             </ul>
           ) : (

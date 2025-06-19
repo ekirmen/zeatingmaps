@@ -29,8 +29,8 @@ const Funciones = () => {
         const { data, error } = await supabase
           .from('eventos')
           .select('*')
-          .eq('recinto_id', recintoSeleccionado._id)
-          .eq('sala_id', salaSeleccionada._id);
+          .eq('recinto_id', recintoSeleccionado.id)
+          .eq('sala_id', salaSeleccionada.id);
 
         if (error) {
           console.error('Error al obtener eventos:', error);
@@ -73,8 +73,8 @@ const Funciones = () => {
         const { data, error } = await supabase
           .from('plantillas')
           .select('*')
-          .eq('recinto_id', recintoSeleccionado._id)
-          .eq('sala_id', salaSeleccionada._id);
+          .eq('recinto_id', recintoSeleccionado.id)
+          .eq('sala_id', salaSeleccionada.id);
 
         if (error) {
           console.error('Error al obtener plantillas:', error);
@@ -92,7 +92,7 @@ const Funciones = () => {
     const funcionData = {
       ...nuevaFuncion,
       evento_id: eventoSeleccionado,
-      sala_id: salaSeleccionada._id,
+      sala_id: salaSeleccionada.id,
       plantilla_id: nuevaFuncion.plantilla,
     };
 
@@ -193,16 +193,16 @@ const Funciones = () => {
         <div className="flex flex-col">
           <label>Recinto</label>
           <select
-            value={recintoSeleccionado ? recintoSeleccionado._id : ''}
+            value={recintoSeleccionado ? recintoSeleccionado.id : ''}
             onChange={(e) => {
-              const recinto = recintos.find(r => r._id === e.target.value);
+              const recinto = recintos.find(r => String(r.id) === e.target.value);
               setRecintoSeleccionado(recinto);
               setSalaSeleccionada(null);
             }}
           >
             <option value="">Seleccionar Recinto</option>
             {recintos.map(recinto => (
-              <option key={recinto._id} value={recinto._id}>
+              <option key={recinto.id} value={recinto.id}>
                 {recinto.nombre}
               </option>
             ))}
@@ -213,15 +213,15 @@ const Funciones = () => {
           <div className="flex flex-col">
             <label>Sala</label>
             <select
-              value={salaSeleccionada ? salaSeleccionada._id : ''}
+              value={salaSeleccionada ? salaSeleccionada.id : ''}
               onChange={(e) => {
-                const sala = recintoSeleccionado.salas.find(s => s._id === e.target.value);
+                const sala = recintoSeleccionado.salas.find(s => String(s.id) === e.target.value);
                 setSalaSeleccionada(sala);
               }}
             >
               <option value="">Seleccionar Sala</option>
               {recintoSeleccionado.salas.map(sala => (
-                <option key={sala._id} value={sala._id}>
+                <option key={sala.id} value={sala.id}>
                   {sala.nombre}
                 </option>
               ))}
@@ -238,7 +238,7 @@ const Funciones = () => {
             >
               <option value="">Seleccionar Evento</option>
               {eventos.map(evento => (
-                <option key={evento._id} value={evento._id}>
+                <option key={evento.id} value={evento.id}>
                   {evento.nombre}
                 </option>
               ))}
@@ -267,7 +267,7 @@ const Funciones = () => {
         </thead>
         <tbody>
           {funciones.map(funcion => (
-            <tr key={funcion._id}>
+            <tr key={funcion.id}>
               <td>{new Date(funcion.fechaCelebracion).toLocaleDateString()}</td>
               <td>{funcion.evento.nombre}</td>
               <td>{funcion.sala.nombre}</td>
@@ -280,10 +280,10 @@ const Funciones = () => {
                 <button className="text-blue-600 hover:underline" onClick={() => handleEdit(funcion)}>
                   Editar
                 </button>
-                <button className="text-red-600 hover:underline" onClick={() => handleDelete(funcion._id)}>
+                <button className="text-red-600 hover:underline" onClick={() => handleDelete(funcion.id)}>
                   Eliminar
                 </button>
-                <button className="text-gray-600 hover:underline" onClick={() => handleDuplicate(funcion._id)}>
+                <button className="text-gray-600 hover:underline" onClick={() => handleDuplicate(funcion.id)}>
                   Duplicar
                 </button>
               </td>
@@ -338,7 +338,7 @@ const Funciones = () => {
             >
               <option value="">Seleccionar Plantilla</option>
               {plantillas.map(plantilla => (
-                <option key={plantilla._id} value={plantilla._id}>
+                <option key={plantilla.id} value={plantilla.id}>
                   {plantilla.nombre}
                 </option>
               ))}
