@@ -48,7 +48,7 @@ const Funciones = () => {
     const fetchFunciones = async () => {
       if (eventoSeleccionado) {
         const { data, error } = await supabase
-          .from('funcions')
+          .from('funciones')
           .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
           .eq('evento_id', eventoSeleccionado);
 
@@ -98,14 +98,14 @@ const Funciones = () => {
     try {
       if (editingFuncion) {
         const { error } = await supabase
-          .from('funcions')
+          .from('funciones')
           .update(funcionData)
           .eq('id', editingFuncion.id);
 
         if (error) throw error;
         alert('Función actualizada');
       } else {
-        const { error } = await supabase.from('funcions').insert([funcionData]);
+        const { error } = await supabase.from('funciones').insert([funcionData]);
         if (error) throw error;
         alert('Función creada');
       }
@@ -122,7 +122,7 @@ const Funciones = () => {
       });
 
       const { data: refreshed, error: err2 } = await supabase
-        .from('funcions')
+        .from('funciones')
         .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
         .eq('evento_id', eventoSeleccionado);
       if (!err2) setFunciones(refreshed);
@@ -148,12 +148,12 @@ const Funciones = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar esta función?')) return;
 
-    const { error } = await supabase.from('funcions').delete().eq('id', id);
+    const { error } = await supabase.from('funciones').delete().eq('id', id);
     if (error) {
       alert('Error al eliminar');
     } else {
       const { data } = await supabase
-        .from('funcions')
+        .from('funciones')
         .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
         .eq('evento_id', eventoSeleccionado);
       setFunciones(data);
@@ -161,19 +161,19 @@ const Funciones = () => {
   };
 
   const handleDuplicate = async (id) => {
-    const { data, error } = await supabase.from('funcions').select('*').eq('id', id).single();
+    const { data, error } = await supabase.from('funciones').select('*').eq('id', id).single();
     if (error || !data) {
       alert('No se pudo duplicar');
       return;
     }
 
     const { id: _, ...duplicatedData } = data;
-    const { error: insertError } = await supabase.from('funcions').insert([duplicatedData]);
+    const { error: insertError } = await supabase.from('funciones').insert([duplicatedData]);
     if (insertError) {
       alert('Error al duplicar');
     } else {
       const { data: refreshed } = await supabase
-        .from('funcions')
+        .from('funciones')
         .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
         .eq('evento_id', eventoSeleccionado);
       setFunciones(refreshed);
