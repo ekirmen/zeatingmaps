@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { supabase } from '../../lib/supabaseClient';
 
 const RecintoSalaContext = createContext();
 
@@ -15,10 +16,26 @@ export const RecintoSalaProvider = ({ children }) => {
   });
 
   useEffect(() => {
+    const fetchRecintos = async () => {
+      const { data, error } = await supabase.from('recintos').select('*, salas(*)');
+      if (error) {
+        console.error('Error fetching recintos:', error.message);
+      } else {
+        setRecintos(data);
+      }
+    };
+
+    fetchRecintos();
+  }, []);
+
+  useEffect(() => {
     if (recinto) {
       localStorage.setItem('recinto', JSON.stringify(recinto));
+      // actualizar las salas del recinto seleccionado
+      setSalas(recinto.salas || []);
     } else {
       localStorage.removeItem('recinto');
+      setSalas([]);
     }
   }, [recinto]);
 

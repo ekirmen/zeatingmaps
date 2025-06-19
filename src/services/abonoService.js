@@ -1,36 +1,36 @@
-import API_BASE_URL from '../utils/apiBase';
-const API_BASE_URL_WITH_API = API_BASE_URL + '/api';
+import { supabase } from '../lib/supabaseClient';
 
-export const fetchAbonosByUser = async (userId, token) => {
-  const res = await fetch(`${API_BASE_URL_WITH_API}/abonos/user/${userId}`, {
-    headers: token ? { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` } : {}
-  });
-  if (!res.ok) throw new Error('Error fetching abonos');
-  return res.json();
+export const fetchAbonosByUser = async (userId) => {
+  if (!userId) throw new Error('User ID es requerido');
+
+  const { data, error } = await supabase
+    .from('abonos')
+    .select('*')
+    .eq('user_id', userId);
+
+  if (error) throw new Error(`Error al obtener abonos: ${error.message}`);
+  return data;
 };
 
-export const createAbono = async (data, token) => {
-  const res = await fetch(`${API_BASE_URL_WITH_API}/abonos`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` } : {})
-    },
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error('Error creating abono');
-  return res.json();
+export const createAbono = async (abonoData) => {
+  const { data, error } = await supabase
+    .from('abonos')
+    .insert([abonoData])
+    .select()
+    .single();
+
+  if (error) throw new Error(`Error al crear abono: ${error.message}`);
+  return data;
 };
 
-export const renewAbono = async (id, data, token) => {
-  const res = await fetch(`${API_BASE_URL_WITH_API}/abonos/${id}/renew`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: token.startsWith('Bearer ') ? token : `Bearer ${token}` } : {})
-    },
-    body: JSON.stringify(data)
-  });
-  if (!res.ok) throw new Error('Error renewing abono');
-  return res.json();
+export const renewAbono = async (id, renewData) => {
+  const { data, error } = await supabase
+    .from('abonos')
+    .update(renewData)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw new Error(`Error al renovar abono: ${error.message}`);
+  return data;
 };
