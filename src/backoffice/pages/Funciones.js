@@ -229,6 +229,12 @@ const Funciones = () => {
           </div>
         )}
 
+        {!salaSeleccionada && (
+          <p className="text-sm text-gray-600">
+            Seleccione un recinto y una sala para cargar los eventos
+          </p>
+        )}
+
         {salaSeleccionada && (
           <div className="flex flex-col">
             <label>Evento</label>
@@ -243,6 +249,11 @@ const Funciones = () => {
                 </option>
               ))}
             </select>
+            {eventos.length === 0 && (
+              <span className="text-sm text-gray-500 mt-1">
+                No hay eventos para la sala seleccionada
+              </span>
+            )}
           </div>
         )}
 
