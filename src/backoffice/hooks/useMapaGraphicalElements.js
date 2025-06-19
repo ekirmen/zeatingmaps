@@ -16,7 +16,7 @@ export const useMapaGraphicalElements = (
       type,
       posicion: { x: 50, y: 50 }, // Default position
       ...initialProps,
-      zonaId: selectedZone?._id || null, // Assign selected zone if any
+      zonaId: selectedZone?.id || null, // Assign selected zone if any
     };
     setElements(prevElements => [...prevElements, newElement]);
   }, [setElements, selectedZone]); // Dependencies for addElement
@@ -89,7 +89,7 @@ export const useMapaGraphicalElements = (
           height: CHAIR_SIZE,
           shape: sillaShape,
           numero: i + 1,
-          zonaId: selectedZone?._id || null,
+          zonaId: selectedZone?.id || null,
           fila: ''
         });
       }

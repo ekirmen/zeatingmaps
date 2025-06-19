@@ -11,7 +11,7 @@ export const TagProvider = ({ children }) => {
       const { data, error } = await supabase
         .from('tags')
         .select('*')
-        .order('nombre', { ascending: true }); // Cambia "nombre" por el campo correcto si es necesario
+        .order('name', { ascending: true });
 
       if (error) {
         console.error('Error al obtener tags:', error.message);

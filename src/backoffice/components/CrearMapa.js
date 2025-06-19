@@ -171,9 +171,9 @@ const CrearMapa = () => {
         updateElementSize={updateElementSize}
         zonas={loadedZonas}
         zoneSeatCounts={zoneSeatCounts}
-        selectedZoneId={selectedZone?._id || ''}
+        selectedZoneId={selectedZone?.id || ''}
         setSelectedZoneId={(zoneId) => {
-          const zona = loadedZonas.find((z) => z._id === zoneId);
+          const zona = loadedZonas.find((z) => z.id === zoneId);
           setSelectedZone(zona || null);
         }}
         setShowZones={setShowZones}
@@ -208,7 +208,7 @@ const CrearMapa = () => {
 
             {elements.map((element) => {
               const isSelected = selectedIds.includes(element._id);
-              const elementZone = loadedZonas.find(z => z._id === element.zonaId);
+              const elementZone = loadedZonas.find(z => z.id === element.zonaId);
               const strokeColor = isSelected ? 'blue' : elementZone?.color || 'black';
 
               switch (element.type) {

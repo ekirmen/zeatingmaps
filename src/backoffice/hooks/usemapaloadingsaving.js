@@ -23,8 +23,8 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
             width: mesa.width || mesa.radius * 2,
             height: mesa.height || mesa.radius * 2,
             posicion: mesa.posicion || { x: 0, y: 0 },
-            zona: typeof mesa.zona === 'string' ? zonasCargadas.find(z => z._id === mesa.zona) : mesa.zona,
-            zonaId: typeof mesa.zona === 'string' ? mesa.zona : mesa.zona?._id || null,
+            zona: typeof mesa.zona === 'string' ? zonasCargadas.find(z => z.id === mesa.zona) : mesa.zona,
+            zonaId: typeof mesa.zona === 'string' ? mesa.zona : mesa.zona?.id || null,
           };
 
           // Transform sillas array
@@ -43,8 +43,8 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
               fontWeight: 'bold',
               marginBottom: '5px'
             },
-            zona: typeof silla.zona === 'string' ? zonasCargadas.find(z => z._id === silla.zona) : silla.zona,
-            zonaId: typeof silla.zona === 'string' ? silla.zona : silla.zona?._id || null,
+            zona: typeof silla.zona === 'string' ? zonasCargadas.find(z => z.id === silla.zona) : silla.zona,
+            zonaId: typeof silla.zona === 'string' ? silla.zona : silla.zona?.id || null,
           }));
 
           return [mesaConZona, ...sillas];
@@ -74,7 +74,7 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
           width: silla.width || 20,
           height: silla.height || 20,
           nombre: silla.nombre || silla.numero || '',
-          zona: silla.zonaId || silla.zona?._id || null,
+          zona: silla.zonaId || silla.zona?.id || null,
           parentId: silla.parentId,
           mesa_id: mesa._id,
         }));
@@ -94,7 +94,7 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
             : mesa.height || 100,
         radius: mesa.radius || 50,
         nombre: mesa.nombre || '',
-        zona: mesa.zonaId || mesa.zona?._id || null,
+        zona: mesa.zonaId || mesa.zona?.id || null,
         sillas,
       };
 
@@ -124,7 +124,7 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
         width: silla.width || 20,
         height: silla.height || 20,
         nombre: silla.nombre || silla.numero || '',
-        zona: silla.zonaId || silla.zona?._id || null,
+        zona: silla.zonaId || silla.zona?.id || null,
         parentId: null,
       });
     });
@@ -137,7 +137,7 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
         _id: el._id,
         type: el.type,
         posicion: el.posicion,
-        zona: el.zonaId || el.zona?._id || null,
+        zona: el.zonaId || el.zona?.id || null,
       };
       if (el.width !== undefined) obj.width = el.width;
       if (el.height !== undefined) obj.height = el.height;
@@ -181,19 +181,19 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
       // Calcular aforo para zonas numeradas basado en las sillas asignadas
       const seatCounts = elements.reduce((acc, el) => {
         if (el.type === 'silla') {
-          const zId = el.zonaId || el.zona?._id;
+          const zId = el.zonaId || el.zona?.id;
           if (zId) acc[zId] = (acc[zId] || 0) + 1;
         }
         return acc;
       }, {});
 
       const updatedZones = zones.map(z =>
-        z.numerada ? { ...z, aforo: seatCounts[z._id] || 0 } : z
+        z.numerada ? { ...z, aforo: seatCounts[z.id] || 0 } : z
       );
 
       // Actualizar backend con nuevos aforos
       try {
-        await Promise.all(updatedZones.map(z => updateZona(z._id, { aforo: z.aforo })));
+        await Promise.all(updatedZones.map(z => updateZona(z.id, { aforo: z.aforo })));
         setZones(updatedZones);
       } catch (e) {
         console.error('Error actualizando aforo de zonas', e);
