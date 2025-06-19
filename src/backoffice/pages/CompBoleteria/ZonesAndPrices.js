@@ -54,14 +54,14 @@ const ZonesAndPrices = ({
     <div className="space-y-4 p-4">
       <select
         className="border p-2 rounded w-full"
-        value={selectedEvent?._id || ''}
+        value={selectedEvent?.id || selectedEvent?._id || ''}
         onChange={(e) => onEventSelect(e.target.value)}
       >
         <option value="" disabled>
           Seleccionar evento
         </option>
         {eventos.map((ev) => (
-          <option key={ev._id} value={ev._id}>
+          <option key={ev.id || ev._id} value={ev.id || ev._id}>
             {ev.nombre}
           </option>
         ))}

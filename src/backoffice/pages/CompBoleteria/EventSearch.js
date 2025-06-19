@@ -16,7 +16,7 @@ const EventSearch = ({
           notFoundContent={<Empty description="No events found" />}
         >
           {eventos.map(evento => (
-            <Option key={evento._id} value={evento._id}>
+            <Option key={evento.id || evento._id} value={evento.id || evento._id}>
               {evento.nombre}
             </Option>
           ))}

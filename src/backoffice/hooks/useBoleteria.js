@@ -73,7 +73,7 @@ export const useBoleteria = () => {
       message.error(error.message || 'Error cargando funciones');
       return { success: false, funciones: [] };
     } else {
-      const ev = eventos.find(e => e.id === eventoId);
+      const ev = eventos.find(e => e.id === eventoId || e._id === eventoId);
       setFunciones(data);
       setSelectedEvent(ev || null);
       setSelectedFuncion(null);
@@ -88,9 +88,17 @@ export const useBoleteria = () => {
     setSelectedFuncion(funcion);
 
     if (funcion.evento) {
-      setSelectedEvent(funcion.evento);
-      if (typeof funcion.evento === 'object' && funcion.evento.id) {
-        localStorage.setItem(EVENT_KEY, funcion.evento.id);
+      if (typeof funcion.evento === 'object') {
+        setSelectedEvent(funcion.evento);
+        if (funcion.evento.id) {
+          localStorage.setItem(EVENT_KEY, funcion.evento.id);
+        }
+      } else {
+        const ev = eventos.find(e => e.id === funcion.evento || e._id === funcion.evento);
+        setSelectedEvent(ev || null);
+        if (ev?.id) {
+          localStorage.setItem(EVENT_KEY, ev.id);
+        }
       }
     }
 
@@ -112,8 +120,9 @@ export const useBoleteria = () => {
   };
 
   useEffect(() => {
-    if (selectedEvent?.id) {
-      localStorage.setItem(EVENT_KEY, selectedEvent.id);
+    const evId = selectedEvent?.id || selectedEvent?._id;
+    if (evId) {
+      localStorage.setItem(EVENT_KEY, evId);
     } else {
       localStorage.removeItem(EVENT_KEY);
     }
