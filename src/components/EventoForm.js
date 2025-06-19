@@ -1,65 +1,59 @@
 import React, { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { supabase } from '../backoffice/services/supabaseClient';
 
 const EventoForm = () => {
-    const navigate = useNavigate();
-    const [form] = Form.useForm();
-    const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const [form] = Form.useForm();
+  const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (values) => {
-        setIsLoading(true);
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                message.error("No hay sesión activa");
-                navigate('/login');
-                return;
-            }
+  const handleSubmit = async (values) => {
+    setIsLoading(true);
+    try {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
 
-            const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/events`, values, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+      if (sessionError || !session) {
+        message.error("No hay sesión activa");
+        navigate('/login');
+        return;
+      }
 
-            if (response.data) {
-                message.success('Evento creado exitosamente');
-                form.resetFields();
-            }
-        } catch (error) {
-            handleError(error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+      const { data, error } = await supabase
+        .from('eventos')
+        .insert([{ ...values, user_id: session.user.id }]);
 
-    const handleError = (error) => {
-        if (error.response && error.response.status === 401) {
-            message.error("Sesión expirada. Por favor, inicie sesión nuevamente.");
-            localStorage.removeItem('token');
-            navigate('/login');
-        } else {
-            message.error("Error al procesar la solicitud: " + (error.response?.data?.message || error.message));
-        }
-    };
+      if (error) throw error;
 
-    return (
-        <Form form={form} onFinish={handleSubmit} layout="vertical">
-            <Form.Item
-                name="nombre"
-                label="Nombre del Evento"
-                rules={[{ required: true, message: 'Por favor ingrese el nombre del evento' }]}
-            >
-                <Input />
-            </Form.Item>
-            {/* Add other form fields as needed */}
-            <Form.Item>
-                <Button type="default" variant="outlined" block htmlType="submit" loading={isLoading}>
-                    Crear Evento
-                </Button>
-            </Form.Item>
-        </Form>
-    );
+      message.success('Evento creado exitosamente');
+      form.resetFields();
+    } catch (error) {
+      message.error("Error al crear el evento: " + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Form form={form} onFinish={handleSubmit} layout="vertical">
+      <Form.Item
+        name="nombre"
+        label="Nombre del Evento"
+        rules={[{ required: true, message: 'Por favor ingrese el nombre del evento' }]}
+      >
+        <Input />
+      </Form.Item>
+      {/* Puedes agregar más campos como descripción, fecha, etc. */}
+      <Form.Item>
+        <Button type="primary" htmlType="submit" loading={isLoading} block>
+          Crear Evento
+        </Button>
+      </Form.Item>
+    </Form>
+  );
 };
 
 export default EventoForm;

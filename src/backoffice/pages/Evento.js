@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
 import { useRecinto } from '../contexts/RecintoContext';
 import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -12,6 +11,8 @@ import OpcionesAvanzadas from '../components/Evento/OpcionesAvanzadas';
 import EventsList from '../components/Evento/EventsList';
 import SearchBar from '../components/Evento/SearchBar';
 import VenueSelectors from '../components/Evento/VenueSelectors';
+import { supabase } from '../services/supabaseClient';
+
 const Evento = () => {
   const [viewMode, setViewMode] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
@@ -37,34 +38,24 @@ const Evento = () => {
   }, [recintoSeleccionado, salaSeleccionada, eventos]);
 
   const fetchEventos = useCallback(async () => {
+    if (!recintoSeleccionado || !salaSeleccionada) return;
+  
     try {
-      const token = localStorage.getItem('token');
-       const queryParams = new URLSearchParams();
-      if (recintoSeleccionado) queryParams.append('recinto', recintoSeleccionado._id);
-      if (salaSeleccionada) queryParams.append('sala', salaSeleccionada._id);
-      
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events?${queryParams}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      if (!response.ok) {
-        if (response.status === 401) {
-          navigate('/login');
-          return;
-        }
-        throw new Error('Error al cargar eventos');
-      }
-      const data = await response.json();
-      if (Array.isArray(data.eventos)) setEventos(data.eventos);
-      else if (Array.isArray(data)) setEventos(data);
-      else setEventos([]);
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('recinto', recintoSeleccionado.id)
+        .eq('sala', salaSeleccionada.id)
+        .order('created_at', { ascending: false });
+  
+      if (error) throw error;
+      setEventos(data || []);
     } catch (error) {
-      console.error(error);
+      console.error('Error cargando eventos:', error);
       setEventos([]);
     }
-  }, [navigate, recintoSeleccionado, salaSeleccionada]);
+  }, [recintoSeleccionado, salaSeleccionada]);
+  
 
   useEffect(() => { fetchEventos(); }, [fetchEventos]);
   useEffect(() => { filtrarEventos(); }, [filtrarEventos]);
@@ -170,141 +161,87 @@ const Evento = () => {
   }, [eventos]);
 
   const handleDelete = useCallback(async (eventoId) => {
-    const token = localStorage.getItem('token');
     if (!window.confirm('¿Estás seguro de que deseas eliminar este evento?')) return;
-
+  
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${eventoId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-      });
-      if (response.status === 401) {
-        navigate('/login');
-        return;
-      }
-      if (!response.ok) throw new Error('Error al eliminar el evento.');
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventoId);
+  
+      if (error) throw error;
+  
       fetchEventos();
     } catch (error) {
-      alert('Hubo un problema al eliminar el evento.');
+      alert('Error al eliminar el evento');
       console.error(error);
     }
-  }, [navigate, fetchEventos]);
-
+  }, [fetchEventos]);
+  
   const handleDuplicate = useCallback(async (eventoId) => {
-    const token = localStorage.getItem('token');
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events/${eventoId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.status === 401) {
-        navigate('/login');
-        return;
+      const { data: original, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', eventoId)
+        .single();
+  
+      if (error || !original) throw error;
+  
+      const { id, created_at, updated_at, ...duplicated } = original;
+      duplicated.nombre += ' (copia)';
+      if (duplicated.slug) {
+        duplicated.slug = `${duplicated.slug}-copia-${Date.now()}`;
       }
-      const eventoOriginal = await response.json();
-      if (!eventoOriginal) throw new Error('Evento no encontrado');
-      const { _id, __v, createdAt, updatedAt, ...eventoDuplicado } = eventoOriginal;
-      if (eventoDuplicado.slug) {
-        eventoDuplicado.slug = `${eventoDuplicado.slug}-copia-${Date.now()}`;
-      }
-
-      const formData = new FormData();
-      formData.append('data', JSON.stringify(eventoDuplicado));
-
-      const saveResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/events`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-      if (!saveResponse.ok) throw new Error('Error al duplicar el evento');
+  
+      const { error: insertError } = await supabase
+        .from('events')
+        .insert([duplicated]);
+  
+      if (insertError) throw insertError;
+  
       fetchEventos();
     } catch (error) {
-      console.error(error);
+      console.error('Error duplicando el evento', error);
     }
-  }, [navigate, fetchEventos]);
+  }, [fetchEventos]);
+  
 
   const handleSave = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    const url = eventoData._id
-      ? `${process.env.REACT_APP_API_URL}/api/events/${eventoData._id}`
-      : `${process.env.REACT_APP_API_URL}/api/events`;
-
-    const method = eventoData._id ? 'PUT' : 'POST';
-
+    if (!eventoData) return;
+  
     try {
-      const formData = new FormData();
-
-      const imageTypes = [
-        'banner', 'obraImagen', 'portada', 'espectaculo',
-        'logoHorizontal', 'logoVertical', 'bannerPublicidad',
-        'logoCuadrado', 'logoPassbook', 'passBookBanner', 'icono'
-      ];
-
-      let imagenesToSend = {};
-
-      if (eventoData.imagenes) {
-        imageTypes.forEach(type => {
-          const value = eventoData.imagenes[type];
-          if (type === 'espectaculo') {
-            if (Array.isArray(value)) {
-              value.forEach(item => {
-                if (item instanceof File) {
-                  formData.append(type, item);
-                }
-              });
-              // Keep already uploaded URLs
-              const urls = value.filter(item => !(item instanceof File));
-              if (urls.length) imagenesToSend[type] = urls;
-            }
-          } else if (value instanceof File) {
-            formData.append(type, value);
-          } else if (value) {
-            imagenesToSend[type] = value;
-          }
-        });
+      const cleanData = { ...eventoData };
+  
+      // Eliminar campos temporales o nulos
+      delete cleanData._id;
+      delete cleanData.__v;
+      delete cleanData.createdAt;
+      delete cleanData.updatedAt;
+  
+      let response;
+      if (eventoData.id) {
+        response = await supabase
+          .from('events')
+          .update(cleanData)
+          .eq('id', eventoData.id);
+      } else {
+        response = await supabase
+          .from('events')
+          .insert([cleanData]);
       }
-
-      const { imagenes, ...eventDataWithoutImages } = eventoData;
-      if (!eventoData.mostrarDatosComprador) {
-        delete eventDataWithoutImages.datosComprador;
-      }
-      if (!eventoData.mostrarDatosBoleto) {
-        delete eventDataWithoutImages.datosBoleto;
-      }
-      const payloadData = { ...eventDataWithoutImages, imagenes: imagenesToSend };
-      formData.append('data', JSON.stringify(payloadData));
-
-      setIsUploading(true);
-      setUploadProgress(0);
-
-      const response = await axios({
-        method,
-        url,
-        headers: { Authorization: `Bearer ${token}` },
-        data: formData,
-        onUploadProgress: (e) => {
-          if (e.total) {
-            const progress = Math.round((e.loaded * 100) / e.total);
-            setUploadProgress(progress);
-          }
-        }
-      });
-
-      if (response.status < 200 || response.status >= 300) {
-        const data = response.data || {};
-        const message = data.errors ? data.errors.join(', ') : data.message;
-        throw new Error(message || 'Error al guardar el evento');
-      }
-
+  
+      if (response.error) throw response.error;
+  
       setIsSaved(true);
       setMenuVisible(false);
       fetchEventos();
       setTimeout(() => setIsSaved(false), 3000);
     } catch (error) {
       alert(error.message || 'Error al guardar el evento');
-    } finally {
-      setIsUploading(false);
     }
   }, [eventoData, fetchEventos]);
+  
 
   const handleSearch = (term) => {
     setSearchTerm(term);

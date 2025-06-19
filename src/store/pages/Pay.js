@@ -120,43 +120,33 @@ const Pay = () => {
         zona: item.zona,
       }));
       const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
-
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`
-        },
-        body: JSON.stringify({
-          user: user._id,
-          event: currentEventId,
-          funcion: funcionId,
-          seats: seatsPayload,
-          status: 'reservado',
-          ...(refParam ? { referrer: refParam } : {}),
-          ...(discountCode ? { discountCode } : {})
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.locator) {
-        navigate('/payment-success', { state: { locator: data.locator, emailSent: data.emailSent } });
-      } else {
-        toast.error('Error al procesar la reserva');
-      }
+  
+      const { data, error } = await supabase.from('payments').insert([{
+        user_id: user.id,
+        event: currentEventId,
+        funcion: funcionId,
+        seats: seatsPayload,
+        status: 'reservado',
+        referrer: refParam || null,
+        discountCode: discountCode || null,
+        created_at: new Date().toISOString()
+      }]).select().single();
+  
+      if (error) throw error;
+  
+      navigate('/payment-success', { state: { locator: data.locator || data.id, emailSent: false } });
     } catch (error) {
       console.error('Reservation error:', error);
       toast.error('Error al procesar la reserva');
     }
   };
-
+  
   const handleProcessPayment = async () => {
     if (!selectedPaymentMethod) {
       toast.error("Por favor selecciona un método de pago");
       return;
     }
-
+  
     try {
       const seatsPayload = carrito.map(item => ({
         id: item._id,
@@ -165,37 +155,28 @@ const Pay = () => {
         zona: item.zona,
       }));
       const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
-
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.token}`
-        },
-        body: JSON.stringify({
-          user: user._id,
-          event: currentEventId,
-          funcion: funcionId,
-          seats: seatsPayload,
-          status: 'pagado',
-          payments: [{ method: selectedPaymentMethod, amount: total }],
-          ...(refParam ? { referrer: refParam } : {}),
-          ...(discountCode ? { discountCode } : {})
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.locator) {
-        navigate('/payment-success', { state: { locator: data.locator, emailSent: data.emailSent } });
-      } else {
-        toast.error('Error al procesar el pago');
-      }
+  
+      const { data, error } = await supabase.from('payments').insert([{
+        user_id: user.id,
+        event: currentEventId,
+        funcion: funcionId,
+        seats: seatsPayload,
+        status: 'pagado',
+        payments: [{ method: selectedPaymentMethod, amount: total }],
+        referrer: refParam || null,
+        discountCode: discountCode || null,
+        created_at: new Date().toISOString()
+      }]).select().single();
+  
+      if (error) throw error;
+  
+      navigate('/payment-success', { state: { locator: data.locator || data.id, emailSent: true } });
     } catch (error) {
       console.error('Payment error:', error);
       toast.error("Error al procesar el pago");
     }
   };
+  
 
   // ✅ Render condicional después de los hooks
   if (!carrito || !funcionId) {
