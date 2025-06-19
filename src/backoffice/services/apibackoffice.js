@@ -15,6 +15,12 @@ export const fetchZonas = async () => {
   return data;
 };
 
+export const fetchEventos = async () => {
+  const { data, error } = await supabase.from('eventos').select('*');
+  if (error) throw new Error(error.message);
+  return data;
+};
+
 export const fetchZonasPorSala = async (salaId) => {
   const { data, error } = await supabase.from('zonas').select('*').eq('sala_id', salaId);
   handleError(error);
