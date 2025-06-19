@@ -69,7 +69,8 @@ export const useBoleteria = () => {
       .eq('evento', eventoId);
 
     if (error) {
-      message.error('Error cargando funciones');
+      console.error('Error cargando funciones:', error);
+      message.error(error.message || 'Error cargando funciones');
       return { success: false, funciones: [] };
     } else {
       const ev = eventos.find(e => e.id === eventoId);
