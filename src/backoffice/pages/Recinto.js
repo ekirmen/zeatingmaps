@@ -269,21 +269,8 @@ const Recinto = () => {
               <div className="flex space-x-2 mt-4 md:mt-0">
                 <button onClick={() => { setCurrentRecinto(recinto); setIsEditing(true); }} className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600">Editar</button>
                 <button onClick={() => { setCurrentRecinto(recinto); setIsAddingSala(true); }} className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">Agregar Sala</button>
-                <button onClick={() => setShowSalas(prev => ({ ...prev, [recinto.id]: !prev[recinto.id] }))} className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
-                  {showSalas[recinto.id] ? 'Ocultar Salas' : 'Mostrar Salas'}
-                </button>
-                <button
-            onClick={() => setShowSalas(prev => ({ ...prev, [recinto.id]: !prev[recinto.id] }))}
-            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            {showSalas[recinto.id] ? 'Ocultar Salas' : 'Mostrar Salas'}
-          </button>
-            <button
-    onClick={() => handleDeleteRecinto(recinto.id)}
-    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-  >
-    Eliminar Recinto
-            </button>
+                <button onClick={() => setShowSalas(prev => ({ ...prev, [recinto.id]: !prev[recinto.id] }))} className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"> {showSalas[recinto.id] ? 'Ocultar Salas' : 'Mostrar Salas'} </button>    
+                <button onClick={() => handleDeleteRecinto(recinto.id)} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"> Eliminar Recinto </button>
               </div>
             </div>
 
