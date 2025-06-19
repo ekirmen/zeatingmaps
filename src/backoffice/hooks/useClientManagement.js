@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { message } from 'antd';
+import { supabase } from '../services/supabaseClient';
 
 export const useClientManagement = (setCarrito) => {
   const [selectedClient, setSelectedClient] = useState(null);
@@ -8,66 +9,37 @@ export const useClientManagement = (setCarrito) => {
   const [clientError, setClientError] = useState(null);
   const [paymentResults, setPaymentResults] = useState([]);
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('token')?.replace('Bearer ', '');
-    return {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    };
-  };
+  const handleClientSearch = async (searchTerm) => {
+    setSearchLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .ilike('email', `%${searchTerm}%`);
 
- // En tu función handleClientSearch dentro de useClientManagement
-const handleClientSearch = async (searchTerm) => {
-  setSearchLoading(true);
-  try {
-    const token = localStorage.getItem('token')?.replace('Bearer ', '');
-    const response = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/user/search?term=${encodeURIComponent(searchTerm)}`,
-      { 
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to fetch client data');
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error searching for client:', error);
+      throw error;
+    } finally {
+      setSearchLoading(false);
     }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error searching for client:', error);
-    throw error;
-  } finally {
-    setSearchLoading(false);
-  }
-};
+  };
 
   const handleAddClient = async (values) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/users`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          ...values,
-          perfil: 'cliente',
-          empresa: 'default',
-          login: values.email
-        })
-      });
+      const { data, error } = await supabase
+        .from('users')
+        .insert([{ ...values, perfil: 'cliente', empresa: 'default', login: values.email }])
+        .select()
+        .single();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to add client');
-      }
+      if (error) throw error;
 
-      const newUser = await response.json();
-      setSelectedClient(newUser);
+      setSelectedClient(data);
       message.success('Client added successfully');
-      return newUser;
+      return data;
     } catch (error) {
       console.error('Error adding client:', error);
       message.error(error.message || 'Error adding client');
@@ -78,30 +50,20 @@ const handleClientSearch = async (searchTerm) => {
   const handleLocatorSearch = async (locator) => {
     setSearchLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/tickets/locator/${locator}`,
-        { headers: getAuthHeaders() }
-      );
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('*, user:users(*), seats(*)')
+        .eq('locator', locator)
+        .single();
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Ticket not found');
-      }
+      if (error) throw error;
+      if (!data.user) throw new Error('Client information not found in ticket');
 
-      const ticketData = await response.json();
-      
-      if (!ticketData.user) {
-        throw new Error('Client information not found in ticket');
-      }
-
-      // Set the cart with the ticket data
-      setCarrito([ticketData]);
-      
-      // Set the client information
-      setSelectedClient(ticketData.user);
-      setSearchResults([ticketData.user]);
+      setCarrito([data]);
+      setSelectedClient(data.user);
+      setSearchResults([data.user]);
       setClientError(null);
-      return ticketData;
+      return data;
     } catch (error) {
       console.error('Error searching by locator:', error);
       setClientError(error.message);
@@ -116,17 +78,13 @@ const handleClientSearch = async (searchTerm) => {
   const handlePaymentSearch = async (searchTerm) => {
     setSearchLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/payments/search?term=${encodeURIComponent(searchTerm)}`,
-        { headers: getAuthHeaders() }
-      );
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .or(`locator.ilike.%${searchTerm}%,discountCode.ilike.%${searchTerm}%`);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to search payments');
-      }
+      if (error) throw error;
 
-      const data = await response.json();
       setPaymentResults(data);
       setClientError(null);
       return data;
@@ -143,13 +101,11 @@ const handleClientSearch = async (searchTerm) => {
   const handleUnifiedSearch = async (searchTerm) => {
     setSearchLoading(true);
     try {
-      // Primero buscar clientes directamente
       const clients = await handleClientSearch(searchTerm);
       if (clients.length > 0) {
         return { type: 'clients', data: clients };
       }
-  
-      // Si no hay clientes, buscar pagos
+
       const payments = await handlePaymentSearch(searchTerm);
       return { type: 'payments', data: payments };
     } catch (error) {

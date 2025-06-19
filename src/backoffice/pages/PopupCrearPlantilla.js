@@ -1,7 +1,9 @@
 // PopupCrearPlantilla.js
 import React, { useState, useEffect } from 'react';
 import { useRecintoSala } from '../contexts/RecintoSalaContext';
+import { supabase } from '../supabaseClient';
 import './PopupCrearPlantilla.css';
+
 const PopupCrearPlantilla = ({ closePopup }) => {
   const { recinto, sala } = useRecintoSala();
 
@@ -18,33 +20,62 @@ const PopupCrearPlantilla = ({ closePopup }) => {
   const [orden, setOrden] = useState('');
 
   useEffect(() => {
-    // Simulación de obtener zonas del servidor para la sala y recinto
-    if (recinto && sala) {
-      fetch(`/api/zonas/sala/${sala}`)
-        .then((res) => res.json())
-        .then((data) => setZonas(data))
-        .catch((error) => console.error('Error al obtener zonas', error));
+    const fetchZonasYEntradas = async () => {
+      if (recinto && sala) {
+        try {
+          const { data: zonasData, error: zonasError } = await supabase
+            .from('zonas')
+            .select('*')
+            .eq('sala_id', sala);
 
-      fetch('/api/entradas')
-        .then((res) => res.json())
-        .then((productos) => setProductos(productos))
-        .catch((error) => console.error('Error al obtener productos', error));
-    }
+          if (zonasError) throw zonasError;
+          setZonas(zonasData);
+
+          const { data: productosData, error: productosError } = await supabase
+            .from('entradas')
+            .select('*')
+            .eq('recinto', recinto);
+
+          if (productosError) throw productosError;
+          setProductos(productosData);
+        } catch (error) {
+          console.error('Error al cargar zonas o productos:', error);
+        }
+      }
+    };
+
+    fetchZonasYEntradas();
   }, [recinto, sala]);
 
-  const handleGuardar = () => {
-    console.log({
-      nombrePlantilla,
-      activo,
-      zonaSeleccionada,
-      productoSeleccionado,
-      precio,
-      comision,
-      precioOriginal,
-      canal,
-      orden
-    });
-    closePopup();
+  const handleGuardar = async () => {
+    try {
+      const plantilla = {
+        nombre: nombrePlantilla,
+        activo,
+        recinto_id: recinto,
+        sala_id: sala,
+        detalles: [
+          {
+            zona: zonaSeleccionada,
+            producto: productoSeleccionado,
+            precio: parseFloat(precio),
+            comision: parseFloat(comision),
+            precio_original: parseFloat(precioOriginal),
+            canal,
+            orden: parseInt(orden)
+          }
+        ]
+      };
+
+      const { error } = await supabase.from('plantillas').insert([plantilla]);
+
+      if (error) throw error;
+      alert('Plantilla guardada con éxito');
+      closePopup();
+    } catch (error) {
+      console.error('Error al guardar plantilla:', error);
+      alert('Error al guardar plantilla');
+    }
   };
 
   return (
@@ -83,9 +114,8 @@ const PopupCrearPlantilla = ({ closePopup }) => {
           <tbody>
             <tr>
               <td>
-                <select
-                  onChange={(e) => setZonaSeleccionada(e.target.value)}
-                >
+                <select onChange={(e) => setZonaSeleccionada(e.target.value)}>
+                  <option value="">Seleccionar</option>
                   {zonas.map((zona) => (
                     <option key={zona.id} value={zona.nombre}>
                       {zona.nombre}
@@ -94,12 +124,11 @@ const PopupCrearPlantilla = ({ closePopup }) => {
                 </select>
               </td>
               <td>
-                <select
-                  onChange={(e) => setProductoSeleccionado(e.target.value)}
-                >
+                <select onChange={(e) => setProductoSeleccionado(e.target.value)}>
+                  <option value="">Seleccionar</option>
                   {productos.map((entrada) => (
-                    <option key={entrada.id} value={entrada.nombre}>
-                      {entrada.nombre}
+                    <option key={entrada.id} value={entrada.producto}>
+                      {entrada.producto}
                     </option>
                   ))}
                 </select>
@@ -126,10 +155,17 @@ const PopupCrearPlantilla = ({ closePopup }) => {
                 />
               </td>
               <td>
-                <input placeholder="Canal" onChange={(e) => setCanal(e.target.value)} />
+                <input
+                  placeholder="Canal"
+                  onChange={(e) => setCanal(e.target.value)}
+                />
               </td>
               <td>
-                <input placeholder="Orden" type="number" onChange={(e) => setOrden(e.target.value)} />
+                <input
+                  placeholder="Orden"
+                  type="number"
+                  onChange={(e) => setOrden(e.target.value)}
+                />
               </td>
               <td>
                 <button>···</button>
@@ -138,7 +174,7 @@ const PopupCrearPlantilla = ({ closePopup }) => {
           </tbody>
         </table>
 
-        <button onClick={() => closePopup()}>Cancelar</button>
+        <button onClick={closePopup}>Cancelar</button>
         <button onClick={handleGuardar}>Guardar</button>
       </div>
     </div>

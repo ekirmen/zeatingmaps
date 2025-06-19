@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '../services/supabaseClient'; // Ajusta la ruta si es diferente
 
 const TagContext = createContext();
 
@@ -7,14 +8,18 @@ export const TagProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchTags = async () => {
-      try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/tags`);
-        const data = await res.json();
+      const { data, error } = await supabase
+        .from('tags')
+        .select('*')
+        .order('nombre', { ascending: true }); // Cambia "nombre" por el campo correcto si es necesario
+
+      if (error) {
+        console.error('Error al obtener tags:', error.message);
+      } else {
         setTags(data);
-      } catch (e) {
-        console.error('Error fetching tags:', e);
       }
     };
+
     fetchTags();
   }, []);
 

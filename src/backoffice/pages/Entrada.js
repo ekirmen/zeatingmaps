@@ -5,6 +5,7 @@ import RecintoSelector from "./CompPlantillaPrecio/RecintoSelector";
 import TicketsList from "./CompPlantillaPrecio/TicketsList";
 import PopupCrearEntrada from "./CompPlantillaPrecio/PopupCrearEntrada";
 import PopupEditarEntrada from "./CompPlantillaPrecio/PopupEditarEntrada";
+import { supabase } from "../services/supabaseClient";
 
 const tiposDeProducto = [
   { label: "General", description: "Precio general.", value: "General" },
@@ -40,7 +41,6 @@ const Entrada = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [tickets, setTickets] = useState([]);
   const [showEditPopup, setShowEditPopup] = useState(false);
-
   const [editFormData, setEditFormData] = useState({
     producto: "",
     tipo: "",
@@ -49,25 +49,23 @@ const Entrada = () => {
     ivaSeleccionado: "",
     recinto: ""
   });
-
-  const [ticketId, setTicketId] = useState("");
+  const [ticketId, setTicketId] = useState(null);
 
   const loadTickets = useCallback(async () => {
     if (!formData.recinto) {
       setTickets([]);
       return;
     }
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/entradas?recinto=${formData.recinto}`);
-      const data = await response.json();
+    const { data, error } = await supabase
+      .from("entradas")
+      .select("*")
+      .eq("recinto", formData.recinto);
 
-      if (Array.isArray(data)) {
-        setTickets(data);
-      } else {
-        setTickets([]);
-      }
-    } catch (error) {
-      console.error('Error al cargar tickets:', error);
+    if (error) {
+      console.error("Error al cargar tickets:", error.message);
+      setTickets([]);
+    } else {
+      setTickets(data);
     }
   }, [formData.recinto]);
 
@@ -76,75 +74,55 @@ const Entrada = () => {
   }, [loadTickets]);
 
   const handleSaveData = async (datos) => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/entradas`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos)
-      });
-      const result = await response.json();
-
-      if (response.ok) {
-        alert('Entrada creada correctamente');
-        setShowPopup(false);
-        loadTickets();
-      } else {
-        alert('Error al guardar datos');
-      }
-    } catch (error) {
-      console.error('Error de conexión:', error.message);
+    const { error } = await supabase.from("entradas").insert(datos);
+    if (error) {
+      console.error("Error al guardar datos:", error.message);
+      alert("Error al guardar datos");
+    } else {
+      alert("Entrada creada correctamente");
+      setShowPopup(false);
+      loadTickets();
     }
   };
 
   const handleEditTicket = async (id) => {
     setTicketId(id);
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/entradas/${id}`);
-      const ticket = await response.json();
-
+    const { data, error } = await supabase.from("entradas").select("*").eq("id", id).single();
+    if (error) {
+      console.error("Error al obtener el ticket:", error.message);
+    } else {
       setEditFormData({
-        producto: ticket.producto,
-        tipo: ticket.tipo,
-        min: ticket.min,
-        max: ticket.max,
-        ivaSeleccionado: ticket.iva || '',
-        recinto: ticket.recinto
+        producto: data.producto,
+        tipo: data.tipo,
+        min: data.min,
+        max: data.max,
+        ivaSeleccionado: data.iva || '',
+        recinto: data.recinto
       });
       setShowEditPopup(true);
-    } catch (error) {
-      console.error('Error al obtener el ticket:', error.message);
     }
   };
 
   const handleSaveEditData = async (datosEditados) => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/entradas/${ticketId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datosEditados)
-      });
-      const result = await response.json();
-
-      if (response.ok) {
-        alert('Entrada actualizada correctamente');
-        setShowEditPopup(false);
-        loadTickets();
-      } else {
-        console.error('Error al actualizar:', result.message);
-      }
-    } catch (error) {
-      console.error('Error de conexión:', error.message);
+    const { error } = await supabase.from("entradas").update(datosEditados).eq("id", ticketId);
+    if (error) {
+      console.error("Error al actualizar:", error.message);
+      alert("Error al actualizar el ticket");
+    } else {
+      alert("Entrada actualizada correctamente");
+      setShowEditPopup(false);
+      loadTickets();
     }
   };
 
   const handleDeleteTicket = async (id) => {
     if (window.confirm("¿Estás seguro de que deseas eliminar este ticket?")) {
-      try {
-        await fetch(`${process.env.REACT_APP_API_URL}/api/entradas/${id}`, { method: "DELETE" });
+      const { error } = await supabase.from("entradas").delete().eq("id", id);
+      if (error) {
+        console.error("Error al eliminar el ticket:", error.message);
+      } else {
         alert("Ticket eliminado correctamente.");
         loadTickets();
-      } catch (error) {
-        console.error("Error al eliminar el ticket:", error);
       }
     }
   };
@@ -202,4 +180,4 @@ const Entrada = () => {
   );
 };
 
-export default Entrada; 
+export default Entrada;

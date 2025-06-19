@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import RequireAuth from '../components/RequireAuth';
 import CreateUserForm from '../components/CreateUserForm';
 import EditUserForm from '../components/edituserform';
 
@@ -122,7 +121,7 @@ const Usuarios = () => {
   const currentUsers = filteredUsers.slice(indexOfFirstUser, indexOfLastUser);
 
   return (
-    <RequireAuth>
+   
       <div className="p-6 max-w-6xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">Usuarios</h1>
@@ -231,7 +230,6 @@ const Usuarios = () => {
           </div>
         )}
       </div>
-    </RequireAuth>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../services/supabaseClient'; // Ajusta la ruta si es necesario
 
 const IvaContext = createContext();
 
@@ -7,14 +8,18 @@ export const IvaProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchIvas = async () => {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/ivas`);
-        const data = await response.json();
+      const { data, error } = await supabase
+        .from('ivas')
+        .select('*')
+        .order('nombre', { ascending: true }); // Orden opcional
+
+      if (error) {
+        console.error('Error al obtener IVAs:', error.message);
+      } else {
         setIvas(data);
-      } catch (error) {
-        console.error('Error fetching ivas:', error);
       }
     };
+
     fetchIvas();
   }, []);
 

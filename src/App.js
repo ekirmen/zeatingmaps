@@ -17,7 +17,6 @@ import { CartProvider } from './contexts/CartContext';
 import CartTimer from './store/components/CartTimer';
 
 // Components
-import RequireAuth from './backoffice/components/RequireAuth';
 import BasicFooter from './components/BasicFooter';
 import Header from './store/components/StoreHeader';
 import Profile from './store/pages/profile';
@@ -122,7 +121,7 @@ const App = () => {
 
                         <Route
                           path="/dashboard"
-                          element={<RequireAuth><Dashboard sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} /></RequireAuth>}
+                          element={<Dashboard sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />}
                         >
                           <Route path="actividad" element={<Actividad />} />
                           <Route path="recinto" element={<Recinto />} />
@@ -157,11 +156,11 @@ const App = () => {
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password/:token" element={<ResetPassword />} />
                         <Route path="/store/cart" element={<Cart />} />
-                        <Route path="/store/pay" element={<RequireAuth><Pay /></RequireAuth>} />
+                        <Route path="/store/pay" element={<Pay />} />
                         <Route path="/payment-success" element={<PaymentSuccess />} />
                         <Route path="/store/thank-you" element={<ThankYouPage />} />
                         <Route path="/store/faq" element={<FaqPage />} />
-                        <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
+                        <Route path="/store/perfil" element={<Profile userData={user} onUpdateProfile={handleUpdateProfile} />} />
 
                         <Route path="/404" element={<NotFoundPage />} />
                         <Route path="*" element={<Navigate to="/404" replace />} />

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import Modal from 'react-modal';
-import RequireAuth from '../components/RequireAuth';
 
 Modal.setAppElement('#root');
 
@@ -136,7 +135,6 @@ const Referidos = () => {
   };
 
   return (
-    <RequireAuth>
       <div className="p-6 max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-4">Usuarios</h1>
         <div className="flex gap-2 mb-4">
@@ -272,7 +270,6 @@ const Referidos = () => {
           </div>
         </Modal>
       </div>
-    </RequireAuth>
   );
 };
 
