@@ -118,10 +118,23 @@ export const fetchMapa = async (salaId) => {
   return data;
 };
 
-export const saveMapa = async (salaId, contenido) => {
-  const { data, error } = await supabase.from('mapas').upsert({ sala_id: salaId, contenido }, { onConflict: ['sala_id'] });
-  handleError(error);
-  return data;
+export const saveMapa = async (salaId, data) => {
+  const { error } = await supabase
+    .from('mapas')
+    .upsert(
+      {
+        sala_id: salaId,
+        contenido: data.contenido || [],
+      },
+      {
+        onConflict: 'sala_id',
+      }
+    );
+
+  if (error) {
+    console.error('❌ Supabase error:', error);
+    throw new Error(error.message);
+  }
 };
 
 // === ENTRADAS ===
