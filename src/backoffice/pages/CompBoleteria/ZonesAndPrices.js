@@ -100,20 +100,37 @@ const [mapa, setMapa] = useState(null);
 
   return (
     <div className="space-y-4 p-4">
-      <select
-        className="border p-2 rounded w-full"
-        value={selectedEvent?.id || selectedEvent?._id || ''}
-        onChange={(e) => onEventSelect(e.target.value)}
-      >
-        <option value="" disabled>
-          Seleccionar evento
-        </option>
-        {eventos.map((ev) => (
-          <option key={ev.id || ev._id} value={ev.id || ev._id}>
-            {ev.nombre}
+      <div className="flex items-center gap-2">
+        <select
+          className="border p-2 rounded text-sm"
+          value={selectedEvent?.id || selectedEvent?._id || ''}
+          onChange={(e) => onEventSelect(e.target.value)}
+        >
+          <option value="" disabled>
+            Seleccionar evento
           </option>
-        ))}
-      </select>
+          {eventos.map((ev) => (
+            <option key={ev.id || ev._id} value={ev.id || ev._id}>
+              {ev.nombre}
+            </option>
+          ))}
+        </select>
+        {selectedEvent?.imagenes?.logoCuadrado && (
+          <img
+            src={`${process.env.REACT_APP_API_URL}${selectedEvent.imagenes.logoCuadrado}`}
+            alt="Evento"
+            className="w-10 h-10 object-cover rounded"
+          />
+        )}
+        {funciones.length >= 2 && !selectedFuncion && (
+          <button
+            onClick={onShowFunctions}
+            className="px-2 py-1 bg-blue-600 text-white rounded text-sm"
+          >
+            Mostrar Funciones
+          </button>
+        )}
+      </div>
 
       {selectedFuncion && (
         <div className="flex items-center gap-2">
