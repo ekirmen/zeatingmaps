@@ -6,7 +6,7 @@ const RecintoSelector = ({ recintos, recintoSeleccionado, onChange }) => {
       <select value={recintoSeleccionado} onChange={e => onChange(e.target.value)}>
         <option value="">Selecciona un recinto</option>
         {recintos.map(r => (
-          <option key={r._id} value={r._id}>{r.nombre}</option>
+          <option key={r.id} value={r.id}>{r.nombre}</option>
         ))}
       </select>
     </div>
