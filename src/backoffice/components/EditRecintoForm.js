@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { NotificationManager } from 'react-notifications';
 import { geocodeAddress } from '../../utils/geocode';
 import buildAddress from '../../utils/address';
+import { supabase } from '../../lib/supabaseClient';
 
-const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed from onUpdateRecinto to onEditRecinto
+const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
   const [formData, setFormData] = useState({
     nombre: '',
     direccion: '',
@@ -11,12 +12,13 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed 
     pais: '',
     estado: '',
     ciudad: '',
-    codigoPostal: '',
-    direccionLinea1: '',
+    codigopostal: '',
+    direccionlinea1: '',
     latitud: '',
     longitud: '',
-    comoLlegar: ''
+    comollegar: ''
   });
+
   const [showAddress, setShowAddress] = useState(false);
   const [mapUrl, setMapUrl] = useState('');
 
@@ -29,11 +31,11 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed 
         pais: recinto.pais || '',
         estado: recinto.estado || '',
         ciudad: recinto.ciudad || '',
-        codigoPostal: recinto.codigoPostal || '',
-        direccionLinea1: recinto.direccionLinea1 || '',
+        codigopostal: recinto.codigopostal || '',
+        direccionlinea1: recinto.direccionlinea1 || '',
         latitud: recinto.latitud || '',
         longitud: recinto.longitud || '',
-        comoLlegar: recinto.comoLlegar || ''
+        comollegar: recinto.comollegar || ''
       });
     }
   }, [recinto]);
@@ -51,92 +53,63 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {  // Changed 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const payload = {
+      ...formData,
+      direccion: buildAddress(formData)
+    };
 
-    try {
-      const payload = { ...formData, direccion: buildAddress(formData) };
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/recintos/${recinto._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
+    const { error } = await supabase
+      .from('recintos')
+      .update(payload)
+      .eq('id', recinto.id);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error desconocido');
-      }
-
-      const updatedRecinto = await response.json();
-      onEditRecinto(updatedRecinto);  // Changed from onUpdateRecinto to onEditRecinto
+    if (error) {
+      console.error('Error al actualizar:', error.message);
+      NotificationManager.error(`Error: ${error.message}`);
+    } else {
       NotificationManager.success('Recinto actualizado con éxito');
-    } catch (error) {
-      console.error('Error al actualizar el recinto:', error);
-      NotificationManager.error(`Error al actualizar el recinto: ${error.message}`);
+      onEditRecinto(); // Para que el padre actualice los datos
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
       <h2>Editar Recinto</h2>
-      <div>
-        <label>
-          Nombre:
-          <input
-            type="text"
-            value={formData.nombre}
-            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-          />
-        </label>
+      <label>Nombre:</label>
+      <input type="text" value={formData.nombre} onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} />
+
+      <label>Dirección:</label>
+      <input
+        type="text"
+        value={buildAddress(formData)}
+        readOnly
+        onFocus={() => setShowAddress(true)}
+        placeholder="Completa los detalles"
+      />
+      {showAddress && (
+        <div className="mt-2 border p-2 rounded">
+          <input type="text" placeholder="País" value={formData.pais} onChange={(e) => setFormData({ ...formData, pais: e.target.value })} />
+          <input type="text" placeholder="Estado" value={formData.estado} onChange={(e) => setFormData({ ...formData, estado: e.target.value })} />
+          <input type="text" placeholder="Ciudad" value={formData.ciudad} onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })} />
+          <input type="text" placeholder="Código postal" value={formData.codigopostal} onChange={(e) => setFormData({ ...formData, codigopostal: e.target.value })} />
+          <input type="text" placeholder="Dirección línea 1" value={formData.direccionlinea1} onChange={(e) => setFormData({ ...formData, direccionlinea1: e.target.value })} />
+          <button type="button" onClick={handleSearchAddress}>Buscar dirección</button>
+          {mapUrl && <iframe title="map" src={mapUrl} width="100%" height="200" allowFullScreen loading="lazy" className="mt-2" />}
+          <input type="text" placeholder="Cómo llegar" value={formData.comollegar} onChange={(e) => setFormData({ ...formData, comollegar: e.target.value })} />
+          <input type="text" placeholder="Latitud" value={formData.latitud} readOnly />
+          <input type="text" placeholder="Longitud" value={formData.longitud} readOnly />
+          <button type="button" onClick={() => setShowAddress(false)}>Validar</button>
+          <button type="button" onClick={() => setShowAddress(false)}>Cancelar</button>
+        </div>
+      )}
+
+      <label>Capacidad:</label>
+      <input type="number" value={formData.capacidad} onChange={(e) => setFormData({ ...formData, capacidad: e.target.value })} />
+
+      <div className="mt-4 flex gap-2">
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded">Actualizar Recinto</button>
+        <button type="button" onClick={onCancel} className="bg-gray-400 text-white px-4 py-2 rounded">Cancelar</button>
       </div>
-      <div>
-        <label>
-          Dirección:
-          <input
-            type="text"
-            value={buildAddress(formData)}
-            readOnly
-            onFocus={() => setShowAddress(true)}
-            placeholder="Completa los detalles"
-          />
-        </label>
-        {showAddress && (
-          <div className="mt-2 border p-2 rounded">
-            <div className="grid grid-cols-1 gap-2">
-              <input type="text" placeholder="País" value={formData.pais} onChange={(e) => setFormData({ ...formData, pais: e.target.value })} />
-              <input type="text" placeholder="Estado" value={formData.estado} onChange={(e) => setFormData({ ...formData, estado: e.target.value })} />
-              <input type="text" placeholder="Ciudad" value={formData.ciudad} onChange={(e) => setFormData({ ...formData, ciudad: e.target.value })} />
-              <input type="text" placeholder="Código postal" value={formData.codigoPostal} onChange={(e) => setFormData({ ...formData, codigoPostal: e.target.value })} />
-              <input type="text" placeholder="Línea de dirección 1" value={formData.direccionLinea1} onChange={(e) => setFormData({ ...formData, direccionLinea1: e.target.value })} />
-              <button type="button" onClick={handleSearchAddress} className="bg-blue-500 text-white px-2 py-1 rounded">Buscar dirección</button>
-              {mapUrl && (
-                <iframe title="map" src={mapUrl} width="100%" height="200" allowFullScreen loading="lazy" className="mt-2" />
-              )}
-              <input type="text" placeholder="Cómo llegar" value={formData.comoLlegar} onChange={(e) => setFormData({ ...formData, comoLlegar: e.target.value })} />
-              <div className="grid grid-cols-2 gap-2">
-                <input type="text" placeholder="Latitud" value={formData.latitud} readOnly />
-                <input type="text" placeholder="Longitud" value={formData.longitud} readOnly />
-              </div>
-              <div className="flex gap-2 mt-2">
-                <button type="button" onClick={() => setShowAddress(false)} className="bg-green-600 text-white px-2 py-1 rounded">Validar</button>
-                <button type="button" onClick={() => setShowAddress(false)} className="bg-gray-400 text-white px-2 py-1 rounded">Cancelar</button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      <div>
-        <label>
-          Capacidad:
-          <input
-            type="number"
-            value={formData.capacidad}
-            onChange={(e) => setFormData({ ...formData, capacidad: e.target.value })}
-          />
-        </label>
-      </div>
-      <button type="submit">Actualizar Recinto</button>
-      <button type="button" onClick={onCancel}>Cancelar</button>
     </form>
   );
 };
