@@ -89,7 +89,11 @@ const Funciones = () => {
     e.preventDefault();
     const { evento, sala, plantilla, ...rest } = nuevaFuncion;
     const funcionData = {
-      ...rest,
+      fecha_celebracion: nuevaFuncion.fechaCelebracion,
+      inicio_venta: nuevaFuncion.inicioVenta,
+      fin_venta: nuevaFuncion.finVenta,
+      pago_a_plazos: nuevaFuncion.pagoAPlazos,
+      permitir_reservas_web: nuevaFuncion.permitirReservasWeb,
       evento: eventoSeleccionado,
       sala: salaSeleccionada.id,
       plantilla: nuevaFuncion.plantilla,
