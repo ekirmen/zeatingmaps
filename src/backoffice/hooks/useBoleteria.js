@@ -119,7 +119,7 @@ export const useBoleteria = () => {
 
     try {
       await Promise.all([
-        supabase.from('mapas').select('*').eq('sala_id', funcion.sala).single(),
+        supabase.from('mapas').select('*').eq('sala_id', funcion.sala).maybeSingle(),
         supabase.from('zonas').select('*').eq('sala_id', funcion.sala)
       ]);
       return true;
