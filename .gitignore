@@ -10,7 +10,7 @@ backend/frontend/.env
 # Ignorar distribuciones del backend
 dist/
 backend/dist/
-
+backend/
 # PERMITIR build del frontend para que Vercel pueda compilar
 # (solo se ignoran si no necesitas subirlos manualmente)
 # build/
