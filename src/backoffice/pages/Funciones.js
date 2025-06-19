@@ -29,8 +29,8 @@ const Funciones = () => {
         const { data, error } = await supabase
           .from('eventos')
           .select('*')
-          .eq('recinto_id', recintoSeleccionado.id)
-          .eq('sala_id', salaSeleccionada.id);
+          .eq('recinto', recintoSeleccionado.id)
+          .eq('sala', salaSeleccionada.id);
 
         if (error) {
           console.error('Error al obtener eventos:', error);
@@ -73,8 +73,8 @@ const Funciones = () => {
         const { data, error } = await supabase
           .from('plantillas')
           .select('*')
-          .eq('recinto_id', recintoSeleccionado.id)
-          .eq('sala_id', salaSeleccionada.id);
+          .eq('recinto', recintoSeleccionado.id)
+          .eq('sala', salaSeleccionada.id);
 
         if (error) {
           console.error('Error al obtener plantillas:', error);
