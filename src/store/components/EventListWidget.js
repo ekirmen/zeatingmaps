@@ -31,7 +31,7 @@ const EventListWidget = () => {
     const fetchData = async () => {
       try {
         const { data: evData, error: evErr } = await supabase
-          .from('events')
+          .from('eventos')
           .select('*');
         if (evErr) throw evErr;
 
