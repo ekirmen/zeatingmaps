@@ -1,6 +1,6 @@
 // CreateUserForm.js
 import React, { useState } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabaseAdmin as supabase } from '../services/supabaseClient';
 
 const CreateUserForm = ({ onCreateUser, onCancel }) => {
   const [formData, setFormData] = useState({
