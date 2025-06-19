@@ -87,7 +87,7 @@ const Evento = () => {
     if (recintoSeleccionado && salaSeleccionada) {
       setEventoData({
         nombre: '',
-        fecha: '',
+        fecha: null,
         activo: true,
         oculto: false,
         desactivado: false,
@@ -228,6 +228,9 @@ const Evento = () => {
       delete cleanData.__v;
       delete cleanData.createdAt;
       delete cleanData.updatedAt;
+      if (cleanData.fecha === '') {
+        delete cleanData.fecha;
+      }
   
       let response;
       if (eventoData.id) {
