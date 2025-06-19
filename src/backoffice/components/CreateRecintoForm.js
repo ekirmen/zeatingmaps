@@ -15,7 +15,7 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
     direccionLinea1: '',
     latitud: '',
     longitud: '',
-    comoLlegar: ''
+    comollegar: ''
   });
   const [mapUrl, setMapUrl] = useState('');
 
@@ -89,8 +89,8 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
             <input
               type="text"
               placeholder="Cómo llegar"
-              value={details.comoLlegar}
-              onChange={(e) => setDetails({ ...details, comoLlegar: e.target.value })}
+              value={details.comollegar}
+              onChange={(e) => setDetails({ ...details, comollegar: e.target.value })}
             />
             <div className="grid grid-cols-2 gap-2">
               <input
