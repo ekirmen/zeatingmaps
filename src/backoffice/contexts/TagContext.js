@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { fetchTags } from '../services/tagService'; // Usa la función del servicio
+import { fetchTags } from '../../services/tagService'; // Usa la función del servicio
 
 const TagContext = createContext();
 
