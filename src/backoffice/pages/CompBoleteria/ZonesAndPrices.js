@@ -1,87 +1,94 @@
 import React, { useEffect, useState } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
-import {
-  fetchMapa,
-  fetchZonasPorSala,
-  fetchAbonoAvailableSeats,
-  fetchEntradasPorRecinto,
-  fetchPlantillaPorFuncion,
-  fetchAffiliates
-} from '../../../services/supabaseServices';
+import { fetchMapa } from '../../../services/supabaseServices';
 
 const ZonesAndPrices = ({
-  eventos=[],
+  eventos = [],
   selectedEvent,
   onEventSelect,
-  funciones=[],
+  funciones = [],
   onShowFunctions,
   selectedFuncion,
-  selectedClient,
-  abonos=[],
-  carrito, setCarrito,
-  selectedAffiliate, setSelectedAffiliate
+  carrito,
+  setCarrito,
 }) => {
   const [mapa, setMapa] = useState(null);
-  const [zonas, setZonas] = useState([]);
-  const [plantilla, setPlantilla] = useState(null);
-  const [entradas, setEntradas] = useState([]);
-  const [affiliates, setAffiliates] = useState([]);
-  const [abonoSeats, setAbonoSeats] = useState([]);
-  // ... otros estados idénticos al original
-const [abonoMode, setAbonoMode] = useState(false);
 
   useEffect(() => {
-    if (selectedFuncion?._id) {
-      fetchPlantillaPorFuncion(selectedFuncion._id)
-        .then(setPlantilla)
-        .catch(() => message.error('Error fetching price template'));
-    }
+    const loadMapa = async () => {
+      if (selectedFuncion?.sala?._id) {
+        try {
+          const m = await fetchMapa(selectedFuncion.sala._id, selectedFuncion._id);
+          setMapa(m);
+        } catch (err) {
+          console.error('Error loading map:', err);
+          message.error('Error cargando mapa');
+          setMapa(null);
+        }
+      } else {
+        setMapa(null);
+      }
+    };
+    loadMapa();
   }, [selectedFuncion]);
 
-  useEffect(() => {
-    if (abonoMode && selectedEvent?._id) {
-      fetchAbonoAvailableSeats(selectedEvent._id)
-        .then(setAbonoSeats)
-        .catch(() => setAbonoSeats([]));
+  const handleSeatClick = (seat, table) => {
+    const exists = carrito.find((i) => i._id === seat._id);
+    if (exists) {
+      setCarrito(carrito.filter((i) => i._id !== seat._id));
     } else {
-      setAbonoSeats([]);
+      setCarrito([
+        ...carrito,
+        {
+          _id: seat._id,
+          nombre: seat.nombre,
+          nombreMesa: table.nombre,
+          zona: seat.zona,
+        },
+      ]);
     }
-  }, [abonoMode, selectedEvent]);
-
-  useEffect(() => {
-    if (selectedFuncion?.sala?._id) {
-      Promise.all([
-        fetchMapa(selectedFuncion.sala._id, selectedFuncion._id),
-        fetchZonasPorSala(selectedFuncion.sala._id)
-      ])
-      .then(([m,z])=> {
-        setMapa(m);
-        setZonas(z);
-      })
-      .catch(()=> message.error('Error loading sala data'));
-    }
-  }, [selectedFuncion]);
-
-  useEffect(() => {
-    if (selectedFuncion?.sala?.recinto) {
-      fetchEntradasPorRecinto(selectedFuncion.sala.recinto)
-        .then(setEntradas)
-        .catch(()=>message.error('Error loading entradas'));
-    }
-  }, [selectedFuncion]);
-
-  useEffect(() => {
-    fetchAffiliates()
-      .then(setAffiliates)
-      .catch(()=>message.error('Error loading affiliates'));
-  }, []);
-
-  // resto del componente: funciones de manejo y render idénticas, con datos provenientes de supabase
+  };
 
   return (
-    <div>
-      {/* layout igual al componente original, usando los estados ya poblados */}
+    <div className="space-y-4 p-4">
+      <select
+        className="border p-2 rounded w-full"
+        value={selectedEvent?._id || ''}
+        onChange={(e) => onEventSelect(e.target.value)}
+      >
+        <option value="" disabled>
+          Seleccionar evento
+        </option>
+        {eventos.map((ev) => (
+          <option key={ev._id} value={ev._id}>
+            {ev.nombre}
+          </option>
+        ))}
+      </select>
+
+      {selectedFuncion && (
+        <div className="flex items-center gap-2">
+          <span className="text-sm">
+            {new Date(selectedFuncion.fechaCelebracion).toLocaleString()}
+          </span>
+          {typeof onShowFunctions === 'function' && (
+            <button
+              type="button"
+              onClick={() => onShowFunctions()}
+              className="text-blue-600 underline text-sm"
+            >
+              Cambiar función
+            </button>
+          )}
+        </div>
+      )}
+
+      {mapa ? (
+        <SeatingMap mapa={mapa} onSeatClick={handleSeatClick} />
+      ) : (
+        <p className="text-center text-gray-500">No hay mapa disponible</p>
+      )}
     </div>
   );
 };
