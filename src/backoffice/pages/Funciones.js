@@ -94,22 +94,37 @@ const Funciones = () => {
       sala: salaSeleccionada.id,
       plantilla: nuevaFuncion.plantilla,
     };
-
+  
     try {
+      const {
+        data: userData,
+        error: userError
+      } = await supabase.auth.getUser();
+  
+      if (userError || !userData?.user?.id) throw new Error('No se pudo obtener el usuario autenticado');
+  
+      const creadopor = userData.user.id;
+  
       if (editingFuncion) {
         const { error } = await supabase
           .from('funcions')
           .update(funcionData)
           .eq('id', editingFuncion.id);
-
+  
         if (error) throw error;
         alert('Función actualizada');
       } else {
-        const { error } = await supabase.from('funcions').insert([funcionData]);
+        const { error } = await supabase.from('funcions').insert([
+          {
+            ...funcionData,
+            creadopor, // 👈 insertamos el creador
+          },
+        ]);
         if (error) throw error;
         alert('Función creada');
       }
-
+  
+      // limpiar
       setModalIsOpen(false);
       setEditingFuncion(null);
       setNuevaFuncion({
@@ -120,7 +135,7 @@ const Funciones = () => {
         pagoAPlazos: false,
         permitirReservasWeb: false,
       });
-
+  
       const { data: refreshed, error: err2 } = await supabase
         .from('funcions')
         .select(`*, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
@@ -131,6 +146,7 @@ const Funciones = () => {
       alert('Ocurrió un error');
     }
   };
+  
 
   const handleEdit = (funcion) => {
     setEditingFuncion(funcion);
