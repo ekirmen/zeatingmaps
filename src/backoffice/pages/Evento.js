@@ -32,7 +32,7 @@ const Evento = () => {
     if (!recintoSeleccionado || !salaSeleccionada) return;
     const filtrados = eventos.filter(
       (evento) =>
-        evento.recinto === recintoSeleccionado._id && evento.sala === salaSeleccionada._id
+        evento.recinto === recintoSeleccionado.id && evento.sala === salaSeleccionada.id
     );
     setEventosFiltrados(filtrados);
   }, [recintoSeleccionado, salaSeleccionada, eventos]);
@@ -60,18 +60,28 @@ const Evento = () => {
   useEffect(() => { fetchEventos(); }, [fetchEventos]);
   useEffect(() => { filtrarEventos(); }, [filtrarEventos]);
 
-  const handleRecintoChange = useCallback((e) => {
-    const selectedRecintoId = e.target.value;
-    const selectedRecinto = recintos.find(r => r._id === selectedRecintoId);
-    setRecintoSeleccionado(selectedRecinto);
-    setSalaSeleccionada(null);
-  }, [recintos, setRecintoSeleccionado, setSalaSeleccionada]);
+  const handleRecintoChange = useCallback(
+    (e) => {
+      const selectedRecintoId = e.target.value;
+      const selectedRecinto = recintos.find(
+        (r) => String(r.id) === String(selectedRecintoId)
+      );
+      setRecintoSeleccionado(selectedRecinto);
+      setSalaSeleccionada(null);
+    },
+    [recintos, setRecintoSeleccionado, setSalaSeleccionada]
+  );
 
-  const handleSalaChange = useCallback((e) => {
-    const salaId = e.target.value;
-    const sala = recintoSeleccionado?.salas?.find(s => s._id === salaId) || null;
-    setSalaSeleccionada(sala);
-  }, [recintoSeleccionado, setSalaSeleccionada]);
+  const handleSalaChange = useCallback(
+    (e) => {
+      const salaId = e.target.value;
+      const sala =
+        recintoSeleccionado?.salas?.find((s) => String(s.id) === String(salaId)) ||
+        null;
+      setSalaSeleccionada(sala);
+    },
+    [recintoSeleccionado, setSalaSeleccionada]
+  );
 
   const handleCreateEventClick = useCallback(() => {
     if (recintoSeleccionado && salaSeleccionada) {
@@ -82,8 +92,8 @@ const Evento = () => {
         oculto: false,
         desactivado: false,
         sector: '',
-        recinto: recintoSeleccionado._id,
-        sala: salaSeleccionada._id,
+        recinto: recintoSeleccionado.id,
+        sala: salaSeleccionada.id,
         estadoVenta: 'a-la-venta',
         descripcionEstado: '',
         estadoPersonalizado: false,
@@ -144,7 +154,7 @@ const Evento = () => {
   }, [recintoSeleccionado, salaSeleccionada]);
 
   const handleEdit = useCallback((eventoId) => {
-    const eventoParaEditar = eventos.find((evento) => evento._id === eventoId);
+    const eventoParaEditar = eventos.find((evento) => evento.id === eventoId);
     if (eventoParaEditar) {
       setEventoData({
         datosComprador: {},

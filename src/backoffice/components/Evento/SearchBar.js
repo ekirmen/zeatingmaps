@@ -12,10 +12,10 @@ const SearchBar = ({ searchTerm, handleSearch, searchResults, handleEdit }) => {
       {searchResults.length > 0 && (
         <div className="search-results">
           {searchResults.map(evento => (
-            <div 
-              key={evento._id}
+            <div
+              key={evento.id}
               className="search-result-item"
-              onClick={() => handleEdit(evento._id)}
+              onClick={() => handleEdit(evento.id)}
             >
               <strong>{evento.nombre}</strong>
               <span style={{ color: '#666', marginLeft: '8px' }}>

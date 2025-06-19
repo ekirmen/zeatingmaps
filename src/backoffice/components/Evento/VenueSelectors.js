@@ -12,14 +12,14 @@ const VenueSelectors = ({
       <div className="recinto-select">
         <select
           id="recintoSelect"
-          value={recintoSeleccionado ? recintoSeleccionado._id : ''}
+          value={recintoSeleccionado ? recintoSeleccionado.id : ''}
           onChange={handleRecintoChange}
         >
           <option value="" disabled>
             Seleccione un recinto
           </option>
           {recintos.map((recinto) => (
-            <option key={recinto._id} value={recinto._id}>
+            <option key={recinto.id} value={recinto.id}>
               {recinto.nombre}
             </option>
           ))}
@@ -29,10 +29,10 @@ const VenueSelectors = ({
       {recintoSeleccionado && (
         <div className="sala-select">
           <select
-            value={salaSeleccionada ? salaSeleccionada._id : ''}
+            value={salaSeleccionada ? salaSeleccionada.id : ''}
             onChange={(e) =>
               setSalaSeleccionada(
-                recintoSeleccionado.salas.find((sala) => sala._id === e.target.value)
+                recintoSeleccionado.salas.find((sala) => sala.id === e.target.value)
               )
             }
           >
@@ -40,7 +40,7 @@ const VenueSelectors = ({
               Seleccione una sala
             </option>
             {recintoSeleccionado.salas.map((sala) => (
-              <option key={sala._id} value={sala._id}>
+              <option key={sala.id} value={sala.id}>
                 {sala.nombre}
               </option>
             ))}

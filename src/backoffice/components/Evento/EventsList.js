@@ -19,7 +19,7 @@ const EventsList = ({
       {eventosFiltrados.length > 0 ? (
         eventosFiltrados.map((evento) => (
           <div
-            key={evento._id}
+            key={evento.id}
             className={
               viewMode === 'grid'
                 ? 'border rounded shadow-sm overflow-hidden flex flex-col'
@@ -43,24 +43,24 @@ const EventsList = ({
                   <div>
                     <h3 className="font-semibold truncate">{evento.nombre}</h3>
                     <p className="text-xs text-gray-500">{recintoSeleccionado?.nombre}</p>
-                    <p className="text-xs text-gray-400">ID: {evento._id}</p>
+                    <p className="text-xs text-gray-400">ID: {evento.id}</p>
                   </div>
                   <div className="mt-2 flex gap-2 text-xs">
                     <button
                       className="px-2 py-1 bg-blue-600 text-white rounded"
-                      onClick={() => handleEdit(evento._id)}
+                      onClick={() => handleEdit(evento.id)}
                     >
                       Editar
                     </button>
                     <button
                       className="px-2 py-1 bg-red-600 text-white rounded"
-                      onClick={() => handleDelete(evento._id)}
+                      onClick={() => handleDelete(evento.id)}
                     >
                       Eliminar
                     </button>
                     <button
                       className="px-2 py-1 bg-gray-300 rounded"
-                      onClick={() => handleDuplicate(evento._id)}
+                      onClick={() => handleDuplicate(evento.id)}
                     >
                       Duplicar
                     </button>
@@ -76,19 +76,19 @@ const EventsList = ({
                 <div className="flex gap-2 text-xs">
                   <button
                     className="px-2 py-1 bg-blue-600 text-white rounded"
-                    onClick={() => handleEdit(evento._id)}
+                    onClick={() => handleEdit(evento.id)}
                   >
                     Editar
                   </button>
                   <button
                     className="px-2 py-1 bg-red-600 text-white rounded"
-                    onClick={() => handleDelete(evento._id)}
+                    onClick={() => handleDelete(evento.id)}
                   >
                     Eliminar
                   </button>
                   <button
                     className="px-2 py-1 bg-gray-300 rounded"
-                    onClick={() => handleDuplicate(evento._id)}
+                    onClick={() => handleDuplicate(evento.id)}
                   >
                     Duplicar
                   </button>
