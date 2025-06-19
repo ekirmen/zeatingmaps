@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
-import { fetchMapa } from '../../../services/supabaseServices';
+import { fetchMapa, fetchZonasPorSala } from '../../../services/supabaseServices';
 import { fetchDescuentoPorCodigo } from '../../../store/services/apistore';
 
 const ZonesAndPrices = ({
@@ -20,28 +20,37 @@ const ZonesAndPrices = ({
   setSelectedAffiliate,
 }) => {
 const [mapa, setMapa] = useState(null);
+  const [zonas, setZonas] = useState([]);
+  const [selectedZonaId, setSelectedZonaId] = useState(null);
+  const [zoneQuantities, setZoneQuantities] = useState({});
   const [viewMode, setViewMode] = useState('map');
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(null);
 
   useEffect(() => {
-    const loadMapa = async () => {
+    const loadData = async () => {
       const salaId = selectedFuncion?.sala?._id || selectedFuncion?.sala;
       const funcionId = selectedFuncion?.id || selectedFuncion?._id;
       if (salaId) {
         try {
-          const m = await fetchMapa(salaId, funcionId);
+          const [m, zs] = await Promise.all([
+            fetchMapa(salaId, funcionId),
+            fetchZonasPorSala(salaId),
+          ]);
           setMapa(m);
+          setZonas(Array.isArray(zs) ? zs : []);
         } catch (err) {
-          console.error('Error loading map:', err);
+          console.error('Error loading map/zones:', err);
           message.error('Error cargando mapa');
           setMapa(null);
+          setZonas([]);
         }
       } else {
         setMapa(null);
+        setZonas([]);
       }
     };
-    loadMapa();
+    loadData();
   }, [selectedFuncion]);
 
   const handleSeatClick = (seat, table) => {
@@ -96,6 +105,28 @@ const [mapa, setMapa] = useState(null);
       }
     }
     return price;
+  };
+
+  const handleQuantityChange = (zonaId, value) => {
+    setZoneQuantities(prev => ({ ...prev, [zonaId]: value }));
+  };
+
+  const handleAddZoneToCart = (detalle) => {
+    const zonaId = detalle.zonaId || (typeof detalle.zona === 'object' ? detalle.zona._id : detalle.zona);
+    const qty = parseInt(zoneQuantities[zonaId], 10);
+    if (!qty || qty <= 0) return;
+
+    const zonaNombre = detalle.zona?.nombre || detalle.zonaId || detalle.zona;
+    const precio = getPrecioConDescuento(detalle);
+    const items = Array.from({ length: qty }).map((_, idx) => ({
+      _id: `${zonaId}-${Date.now()}-${idx}`,
+      nombre: '',
+      nombreMesa: '',
+      zona: zonaNombre,
+      precio,
+    }));
+    setCarrito([...carrito, ...items]);
+    setZoneQuantities(prev => ({ ...prev, [zonaId]: '' }));
   };
 
   return (
@@ -188,7 +219,31 @@ const [mapa, setMapa] = useState(null);
 
       {viewMode === 'map' ? (
         mapa ? (
-          <SeatingMap mapa={mapa} onSeatClick={handleSeatClick} />
+          <>
+            {zonas.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {zonas.map(z => {
+                  const id = z.id || z._id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => setSelectedZonaId(id === selectedZonaId ? null : id)}
+                      className={`px-2 py-1 rounded text-sm ${selectedZonaId === id ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                    >
+                      {z.nombre}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <SeatingMap
+              mapa={mapa}
+              onSeatClick={handleSeatClick}
+              selectedZona={zonas.find(z => (z.id || z._id) === selectedZonaId) || null}
+              availableZonas={selectedZonaId ? [selectedZonaId] : zonas.map(z => z.id || z._id)}
+            />
+          </>
         ) : (
           <p className="text-center text-gray-500">No hay mapa disponible</p>
         )
@@ -200,16 +255,34 @@ const [mapa, setMapa] = useState(null);
                 <tr>
                   <th className="border px-2 py-1 text-left">Zona</th>
                   <th className="border px-2 py-1 text-right">Precio</th>
+                  <th className="border px-2 py-1 text-center">Cantidad</th>
                 </tr>
               </thead>
               <tbody>
                 {selectedPlantilla.detalles.map((d) => {
+                  const zonaId = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
                   const zonaNombre = d.zona?.nombre || d.zonaId || d.zona;
                   const precio = getPrecioConDescuento(d);
                   return (
-                    <tr key={zonaNombre}>
+                    <tr key={zonaId}>
                       <td className="border px-2 py-1">{zonaNombre}</td>
                       <td className="border px-2 py-1 text-right">${precio.toFixed(2)}</td>
+                      <td className="border px-2 py-1 text-center">
+                        <input
+                          type="number"
+                          min="1"
+                          className="border p-1 w-16 mr-2"
+                          value={zoneQuantities[zonaId] || ''}
+                          onChange={(e) => handleQuantityChange(zonaId, e.target.value)}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleAddZoneToCart(d)}
+                          className="px-2 py-1 bg-blue-600 text-white rounded"
+                        >
+                          Añadir
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
