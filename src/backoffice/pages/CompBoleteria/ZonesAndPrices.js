@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
 import { fetchMapa } from '../../../services/supabaseServices';
+import { fetchDescuentoPorCodigo } from '../../../store/services/apistore';
 
 const ZonesAndPrices = ({
   eventos = [],
@@ -12,8 +13,16 @@ const ZonesAndPrices = ({
   selectedFuncion,
   carrito,
   setCarrito,
+  selectedPlantilla,
+  selectedClient,
+  abonos = [],
+  selectedAffiliate,
+  setSelectedAffiliate,
 }) => {
-  const [mapa, setMapa] = useState(null);
+const [mapa, setMapa] = useState(null);
+  const [viewMode, setViewMode] = useState('map');
+  const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState(null);
 
   useEffect(() => {
     const loadMapa = async () => {
@@ -52,6 +61,43 @@ const ZonesAndPrices = ({
     }
   };
 
+  const handleApplyDiscount = async () => {
+    if (!discountCode.trim()) return;
+    try {
+      const data = await fetchDescuentoPorCodigo(encodeURIComponent(discountCode.trim()));
+      const now = Date.now();
+      if (data.fechaInicio && new Date(data.fechaInicio).getTime() > now) {
+        throw new Error('Descuento no disponible aún');
+      }
+      if (data.fechaFinal && new Date(data.fechaFinal).getTime() < now) {
+        throw new Error('Descuento expirado');
+      }
+      setAppliedDiscount(data);
+      message.success('Descuento aplicado');
+    } catch (err) {
+      setAppliedDiscount(null);
+      message.error(err.message || 'Código inválido');
+    }
+  };
+
+  const getPrecioConDescuento = (detalle) => {
+    let price = detalle.precio || 0;
+    if (appliedDiscount?.detalles) {
+      const d = appliedDiscount.detalles.find((dt) => {
+        const id = typeof dt.zona === 'object' ? dt.zona._id : dt.zona;
+        return id === detalle.zonaId || id === detalle.zona?._id;
+      });
+      if (d) {
+        if (d.tipo === 'porcentaje') {
+          price = Math.max(0, price - (price * d.valor) / 100);
+        } else {
+          price = Math.max(0, price - d.valor);
+        }
+      }
+    }
+    return price;
+  };
+
   return (
     <div className="space-y-4 p-4">
       <select
@@ -86,10 +132,87 @@ const ZonesAndPrices = ({
         </div>
       )}
 
-      {mapa ? (
-        <SeatingMap mapa={mapa} onSeatClick={handleSeatClick} />
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setViewMode('map')}
+          className={`px-3 py-1 rounded ${viewMode === 'map' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+        >
+          Mapa
+        </button>
+        <button
+          type="button"
+          onClick={() => setViewMode('zonas')}
+          className={`px-3 py-1 rounded ${viewMode === 'zonas' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+        >
+          Zonas
+        </button>
+      </div>
+
+      <div className="flex gap-2 items-center">
+        <input
+          type="text"
+          className="border p-1 rounded flex-1"
+          placeholder="Código de descuento"
+          value={discountCode}
+          onChange={(e) => setDiscountCode(e.target.value)}
+        />
+        <button
+          type="button"
+          onClick={handleApplyDiscount}
+          className="px-3 py-1 bg-green-600 text-white rounded"
+        >
+          Aplicar
+        </button>
+        {appliedDiscount && (
+          <span className="text-green-700 text-sm">{appliedDiscount.nombreCodigo}</span>
+        )}
+      </div>
+
+      {viewMode === 'map' ? (
+        mapa ? (
+          <SeatingMap mapa={mapa} onSeatClick={handleSeatClick} />
+        ) : (
+          <p className="text-center text-gray-500">No hay mapa disponible</p>
+        )
       ) : (
-        <p className="text-center text-gray-500">No hay mapa disponible</p>
+        <div className="overflow-x-auto">
+          {selectedPlantilla?.detalles?.length ? (
+            <table className="min-w-full text-sm border">
+              <thead>
+                <tr>
+                  <th className="border px-2 py-1 text-left">Zona</th>
+                  <th className="border px-2 py-1 text-right">Precio</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedPlantilla.detalles.map((d) => {
+                  const zonaNombre = d.zona?.nombre || d.zonaId || d.zona;
+                  const precio = getPrecioConDescuento(d);
+                  return (
+                    <tr key={zonaNombre}>
+                      <td className="border px-2 py-1">{zonaNombre}</td>
+                      <td className="border px-2 py-1 text-right">${precio.toFixed(2)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-center text-gray-500">No hay plantilla de precios</p>
+          )}
+
+          {abonos.length > 0 && (
+            <div className="mt-4">
+              <h4 className="font-semibold mb-2">Abonos disponibles</h4>
+              <ul className="list-disc list-inside text-sm space-y-1">
+                {abonos.map((a) => (
+                  <li key={a.id || a._id}>{a.packageType || a.tipo}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
