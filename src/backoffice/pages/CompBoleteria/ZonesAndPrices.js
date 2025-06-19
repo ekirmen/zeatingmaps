@@ -17,9 +17,11 @@ const ZonesAndPrices = ({
 
   useEffect(() => {
     const loadMapa = async () => {
-      if (selectedFuncion?.sala?._id) {
+      const salaId = selectedFuncion?.sala?._id || selectedFuncion?.sala;
+      const funcionId = selectedFuncion?.id || selectedFuncion?._id;
+      if (salaId) {
         try {
-          const m = await fetchMapa(selectedFuncion.sala._id, selectedFuncion._id);
+          const m = await fetchMapa(salaId, funcionId);
           setMapa(m);
         } catch (err) {
           console.error('Error loading map:', err);
