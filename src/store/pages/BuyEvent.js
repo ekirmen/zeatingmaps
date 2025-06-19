@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { NotificationManager } from 'react-notifications';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../backoffice/services/supabaseClient';
 
 const BuyEvent = () => {
   const { id } = useParams(); // id puede ser slug o ID

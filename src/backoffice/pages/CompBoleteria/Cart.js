@@ -1,36 +1,39 @@
 import React from 'react';
 import { Button, message } from 'antd';
-import { CloseOutlined } from '@ant-design/icons';
-import { setSeatsBlocked } from '../../services/apibackoffice';
+import { AiOutlineClose } from 'react-icons/ai';
+import { setSeatsBlocked } from '../../services/supabaseSeats';
+import { supabase } from '../../services/supabaseClient';
 
 const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selectedAffiliate, children }) => {
   const handleTicketSearch = async (locator) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/locator/${locator}`);
-      if (response.ok) {
-        const payment = await response.json();
+      const { data: payment, error } = await supabase
+        .from('payments')
+        .select('*, user:users(*), seats, funcions(fecha)')
+        .eq('locator', locator)
+        .single();
 
-        setCarrito(
-          payment.seats.map((seat) => ({
-            ...seat,
-            precio: seat.precio || 0,
-            nombreMesa: seat.mesa?.nombre || '',
-            zona: seat.zona?.nombre || '',
-          }))
-        );
-
-        if (payment.user) {
-          const userResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/users/${payment.user}`);
-          if (userResponse.ok) {
-            const userData = await userResponse.json();
-            setSelectedClient(userData);
-          }
-        }
-
-        message.success('Ticket found and loaded');
-      } else {
+      if (error || !payment) {
         message.error('Ticket not found');
+        return;
       }
+
+      setCarrito(
+        payment.seats.map((seat) => ({
+          ...seat,
+          precio: seat.precio || 0,
+          nombreMesa: seat.mesa?.nombre || '',
+          zona: seat.zona?.nombre || '',
+          funcionFecha: payment.funcions?.fecha || null,
+          funcionId: payment.funcion,
+        }))
+      );
+
+      if (payment.user) {
+        setSelectedClient(payment.user);
+      }
+
+      message.success('Ticket found and loaded');
     } catch (error) {
       console.error('Error searching ticket:', error);
       message.error('Error searching ticket');
@@ -52,12 +55,8 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
   };
 
   const handleBlockAction = async () => {
-    const seatsToBlock = carrito
-      .filter(i => i.action === 'block')
-      .map(i => i._id);
-    const seatsToUnblock = carrito
-      .filter(i => i.action === 'unblock')
-      .map(i => i._id);
+    const seatsToBlock = carrito.filter(i => i.action === 'block').map(i => i._id);
+    const seatsToUnblock = carrito.filter(i => i.action === 'unblock').map(i => i._id);
 
     try {
       if (seatsToBlock.length) {
@@ -75,9 +74,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
     }
   };
 
-  const formatPrice = (price) => {
-    return typeof price === 'number' ? price.toFixed(2) : '0.00';
-  };
+  const formatPrice = (price) => (typeof price === 'number' ? price.toFixed(2) : '0.00');
 
   const subtotal = carrito.reduce((sum, item) => sum + (item.precio || 0), 0);
 
@@ -89,12 +86,14 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
     acc[key].items.push(item);
     return acc;
   }, {});
-  const commission = selectedAffiliate ? (selectedAffiliate.base || 0) + subtotal * ((selectedAffiliate.percentage || 0) / 100) : 0;
+
+  const commission = selectedAffiliate
+    ? (selectedAffiliate.base || 0) + subtotal * ((selectedAffiliate.percentage || 0) / 100)
+    : 0;
   const total = subtotal - commission;
 
   return (
     <div className="bg-white shadow-md rounded-md">
-      {/* Header */}
       <div className="flex justify-between items-center mb-4 border-b pb-2">
         <h3 className="text-lg font-semibold">Shopping Cart</h3>
         {carrito.length > 0 && (
@@ -103,12 +102,11 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
             className="text-red-500 hover:text-red-700 transition"
             title="Clear cart"
           >
-            <CloseOutlined />
+            <AiOutlineClose  />
           </button>
         )}
       </div>
 
-      {/* Scrollable Item List */}
       <div className="max-h-[430px] overflow-y-auto space-y-2 pr-1">
         {Object.entries(groupedByFunction).map(([fid, group]) => (
           <div key={fid} className="space-y-1">
@@ -124,12 +122,8 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
                   <strong>Seat:</strong> {item.nombre} &nbsp;|&nbsp;
                   <strong>Table:</strong> {item.nombreMesa} &nbsp;|&nbsp;
                   <strong>Zone:</strong> {item.zona}
-                  {item.action === 'block' && (
-                    <span className="text-red-600"> &nbsp;|&nbsp; Bloquear</span>
-                  )}
-                  {item.action === 'unblock' && (
-                    <span className="text-green-600"> &nbsp;|&nbsp; Desbloquear</span>
-                  )}
+                  {item.action === 'block' && <span className="text-red-600"> &nbsp;|&nbsp; Bloquear</span>}
+                  {item.action === 'unblock' && <span className="text-green-600"> &nbsp;|&nbsp; Desbloquear</span>}
                   {!item.action && (
                     <>
                       &nbsp;|&nbsp; <strong>Price:</strong> ${formatPrice(item.precio || 0)}
@@ -140,12 +134,10 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
                   )}
                 </div>
                 <button
-                  onClick={() =>
-                    handleRemoveSeat(`${item._id}-${item.funcionId || ''}`)
-                  }
+                  onClick={() => handleRemoveSeat(`${item._id}-${item.funcionId || ''}`)}
                   className="text-gray-400 hover:text-red-500"
                 >
-                  <CloseOutlined />
+                  <AiOutlineClose  />
                 </button>
               </div>
             ))}
@@ -153,7 +145,6 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
         ))}
       </div>
 
-      {/* Footer */}
       {carrito.length > 0 && (
         <div className="mt-4 border-t pt-4 space-y-2">
           {!carrito.some(i => i.action) && (

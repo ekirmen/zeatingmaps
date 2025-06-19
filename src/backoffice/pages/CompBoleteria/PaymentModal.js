@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Tabs, Input, Button, Radio, DatePicker, Select, Table, message } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { AiOutlineDelete } from 'react-icons/ai';
 import { Typography } from 'antd';
 
 const { TabPane } = Tabs;
@@ -138,7 +138,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
           <Button 
             type="text" 
             danger 
-            icon={<DeleteOutlined />} 
+            icon={<AiOutlineDelete />} 
             onClick={() => handleDeleteEntry(record.sc)}
           />
         </div>

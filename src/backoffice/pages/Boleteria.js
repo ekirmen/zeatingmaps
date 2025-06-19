@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { message } from 'antd';
-import { LeftOutlined, MenuOutlined } from '@ant-design/icons';
+import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
 
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
@@ -9,10 +9,9 @@ import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
 import FunctionModal from './CompBoleteria/FunctionModal';
 import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
-import { fetchAbonosByUser } from '../../services/abonoService';
-
 import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
+import { supabase } from '../services/supabaseClient';
 
 const Boleteria = () => {
   const {
@@ -42,19 +41,22 @@ const Boleteria = () => {
   const [isFunctionsModalVisible, setIsFunctionsModalVisible] = useState(false);
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
-
-  // Para toggle sidebar en mobile
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
   const [clientAbonos, setClientAbonos] = useState([]);
 
   useEffect(() => {
     const loadAbonos = async () => {
-      if (selectedClient?._id) {
+      if (selectedClient?.id) {
         try {
-          const token = localStorage.getItem('token');
-          const data = await fetchAbonosByUser(selectedClient._id, token);
-          setClientAbonos(Array.isArray(data) ? data : []);
+          const { data, error } = await supabase
+            .from('abonos')
+            .select('*')
+            .eq('user_id', selectedClient.id);
+
+          if (error) throw error;
+
+          setClientAbonos(data);
         } catch (err) {
           console.error('Error loading abonos', err);
           setClientAbonos([]);
@@ -76,7 +78,7 @@ const Boleteria = () => {
       if (funcs.length === 1) {
         await handleFunctionSelect(funcs[0]);
       }
-      if (sidebarOpen) setSidebarOpen(false); // cerrar sidebar mobile al seleccionar
+      if (sidebarOpen) setSidebarOpen(false);
     }
   };
 
@@ -150,15 +152,13 @@ const Boleteria = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-
-      {/* Sidebar para desktop */}
       <aside className="hidden md:flex md:w-80 bg-white border-r border-gray-200 flex-col">
         <button
           className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-100 border-b border-gray-200"
           onClick={() => window.history.back()}
           aria-label="Volver"
         >
-          <LeftOutlined />
+          <AiOutlineLeft className="text-lg" />
           <span>Back</span>
         </button>
         <div className="flex-grow overflow-auto px-4 py-6 space-y-6">
@@ -175,22 +175,18 @@ const Boleteria = () => {
         </div>
       </aside>
 
-      {/* Sidebar para mobile: botón y drawer */}
       <div className="md:hidden fixed top-2 left-2 z-50">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="p-2 rounded bg-white shadow-md focus:outline-none"
           aria-label="Toggle menu"
         >
-          <MenuOutlined className="text-xl" />
+          <AiOutlineMenu className="text-xl" />
         </button>
       </div>
+
       {sidebarOpen && (
-        <aside
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={() => setSidebarOpen(false)}
-          aria-hidden="true"
-        >
+        <aside className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setSidebarOpen(false)}>
           <div
             className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-xl overflow-auto"
             onClick={(e) => e.stopPropagation()}
@@ -203,7 +199,7 @@ const Boleteria = () => {
               }}
               aria-label="Volver"
             >
-              <LeftOutlined />
+              <AiOutlineLeft className="text-lg" />
               <span>Back</span>
             </button>
             <div className="px-4 py-6 space-y-6">
@@ -222,10 +218,7 @@ const Boleteria = () => {
         </aside>
       )}
 
-      {/* Content + Cart */}
       <main className="flex-1 flex flex-col h-full min-w-0">
-
-        {/* Para desktop: contenido + carrito lado a lado */}
         <div className="hidden md:flex flex-grow space-x-6 min-h-0 overflow-hidden">
           <section className="flex-1 h-full min-h-0 bg-white rounded-lg shadow-md overflow-auto">
             <ZonesAndPrices
@@ -261,7 +254,6 @@ const Boleteria = () => {
           </aside>
         </div>
 
-        {/* Para mobile: apilar contenido y carrito */}
         <div className="flex flex-col md:hidden flex-grow min-h-0 overflow-auto space-y-6 p-4 bg-white rounded-lg shadow-md">
           <section className="min-h-[300px]">
             <ZonesAndPrices
@@ -298,7 +290,6 @@ const Boleteria = () => {
         </div>
       </main>
 
-      {/* Modals */}
       <ClientModals {...clientModalsProps} />
       <FunctionModal {...functionModalProps} />
       <PaymentModal {...paymentModalProps} />

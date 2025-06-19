@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Input, Table, Tag, Tabs, Form, Button, Divider, message } from 'antd';
-import { SearchOutlined, UserAddOutlined } from '@ant-design/icons';
+import { AiOutlineSearch, AiOutlineUserAdd } from 'react-icons/ai';
+import { supabase } from '../../services/supabaseClient';
 
 const ClientModals = ({
   isSearchModalVisible,
@@ -24,19 +25,16 @@ const ClientModals = ({
 
     try {
       setSearchLoading(true);
-      const response = await fetch(
-        `${process.env.REACT_APP_API_URL}/api/user/search?term=${searchTerm.trim()}`
-      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error searching clients');
-      }
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, login, email, telefono')
+        .or(`login.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%`);
 
-      const data = await response.json();
+      if (error) throw error;
 
       const mappedResults = data.map((user) => ({
-        _id: user._id,
+        _id: user.id,
         nombre: user.login,
         email: user.email,
         telefono: user.telefono,
@@ -58,8 +56,38 @@ const ClientModals = ({
   const resetSearch = () => {
     setSearchTerm('');
     setSearchResults([]);
-    if (typeof clearSearchResults === 'function') {
-      clearSearchResults();
+    if (typeof clearSearchResults === 'function') clearSearchResults();
+  };
+
+  const handleAddClient = async (values) => {
+    try {
+      const clientData = {
+        login: values.email,
+        password: 'defaultPassword',
+        email: values.email,
+        telefono: values.telefono,
+        perfil: 'cliente',
+        empresa: values.empresa || 'Sin empresa',
+      };
+
+      const { data, error } = await supabase
+        .from('users')
+        .insert([clientData])
+        .select()
+        .single();
+
+      if (error?.code === '23505') {
+        throw new Error('El usuario ya existe');
+      }
+
+      if (error) throw error;
+
+      message.success('Usuario creado con éxito');
+      form.resetFields();
+      setActiveTab('search');
+    } catch (error) {
+      console.error('Error creating client:', error);
+      message.error(`Error al crear el usuario: ${error.message}`);
     }
   };
 
@@ -83,7 +111,9 @@ const ClientModals = ({
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Tag color={status === 'paid' ? 'green' : 'orange'}>{status.toUpperCase()}</Tag>
+        <Tag color={status === 'paid' ? 'green' : 'orange'}>
+          {status.toUpperCase()}
+        </Tag>
       ),
       className: 'whitespace-nowrap',
     },
@@ -133,45 +163,6 @@ const ClientModals = ({
     },
   ];
 
-  const handleAddClient = async (values) => {
-    try {
-      const clientData = {
-        login: values.email,
-        password: 'defaultPassword',
-        email: values.email,
-        telefono: values.telefono,
-        perfil: 'cliente',
-        empresa: values.empresa || 'Sin empresa',
-      };
-
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(clientData),
-      });
-
-      if (response.status === 409) {
-        throw new Error('El usuario ya existe');
-      }
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error desconocido');
-      }
-
-      await response.json();
-
-      message.success('Usuario creado con éxito');
-      form.resetFields();
-      setActiveTab('search');
-    } catch (error) {
-      console.error('Error creating client:', error);
-      message.error(`Error al crear el usuario: ${error.message}`);
-    }
-  };
-
   const items = [
     {
       key: 'search',
@@ -182,7 +173,7 @@ const ClientModals = ({
             placeholder="Search by name, email or phone"
             enterButton={
               <>
-                <SearchOutlined /> Search
+                <AiOutlineSearch className="mr-1" /> Search
               </>
             }
             size="large"
@@ -191,7 +182,6 @@ const ClientModals = ({
             onSearch={handleSearch}
             loading={searchLoading}
             allowClear
-            onClear={resetSearch}
             className="mb-6"
           />
 
@@ -259,7 +249,13 @@ const ClientModals = ({
             <Input className="rounded-md" />
           </Form.Item>
           <Form.Item>
-            <Button type="default" variant="outlined" block htmlType="submit" icon={<UserAddOutlined />}>
+            <Button
+              type="default"
+              block
+              htmlType="submit"
+              icon={<AiOutlineUserAdd />}
+              className="bg-blue-500 text-white hover:bg-blue-600"
+            >
               Add Client
             </Button>
           </Form.Item>
@@ -280,7 +276,7 @@ const ClientModals = ({
       width="90vw"
       centered
       styles={{ body: { padding: '1rem 1.5rem' } }}
-      destroyOnHidden
+      destroyOnClose
       className="max-w-3xl mx-auto"
     >
       <Tabs activeKey={activeTab} onChange={setActiveTab} items={items} />

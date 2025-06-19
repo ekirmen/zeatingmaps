@@ -7,7 +7,7 @@ import MetodoPago from '../components/MetodoPago';
 import { Modal } from 'antd';
 import { toast } from 'react-hot-toast';
 import { loadMetaPixel } from '../utils/analytics';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../backoffice/services/supabaseClient';
 
 const Pay = () => {
   const location = useLocation();

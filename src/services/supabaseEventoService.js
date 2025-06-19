@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../backoffice/services/supabaseClient';
 
 export const fetchEventos = async () => {
   const { data, error } = await supabase

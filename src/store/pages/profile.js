@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Input, Button, Modal, message, Table } from 'antd';
-import { DownloadOutlined } from '@ant-design/icons';
+import { AiOutlineDownload } from 'react-icons/ai'; // Ant Design icon set (AI)
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../backoffice/services/supabaseClient';
 
 const Profile = ({ userData, onUpdateProfile }) => {
   const [formData, setFormData] = useState({
@@ -47,88 +47,70 @@ const Profile = ({ userData, onUpdateProfile }) => {
   };
 
   const handleSaveChanges = async () => {
-    if (onUpdateProfile) {
-      try {
-        await onUpdateProfile({
-          login: formData.login,
-          email: formData.email,
-          telefono: formData.telefono,
-          empresa: formData.empresa,
-          perfil: formData.perfil
-        });
-      } catch (error) {
-        console.error('Error:', error);
-      }
+    if (!user?.id) {
+      message.error("Usuario no autenticado");
+      return;
+    }
+  
+    const { error } = await supabase
+      .from('users')
+      .update({
+        login: formData.login,
+        email: formData.email,
+        telefono: formData.telefono,
+        empresa: formData.empresa,
+        perfil: formData.perfil
+      })
+      .eq('id', user.id);
+  
+    if (error) {
+      console.error(error);
+      message.error("Error al actualizar el perfil");
     } else {
-        console.error("onUpdateProfile prop is not provided.");
-        message.error("Update function not available.");
+      message.success("Perfil actualizado correctamente");
     }
   };
+  
 
- const handleChangePassword = async () => {
-    const userId = user?._id;
-    const authToken = localStorage.getItem('token'); // Or use 'token' from useAuth if available
-
-    if (!authToken || !userId) {
-      message.error('No se encontró información de autenticación');
+  const handleChangePassword = async () => {
+    if (!passwordData.newPassword?.trim()) {
+      message.warning('Por favor ingresa la nueva contraseña');
       return;
     }
-
-    if (!passwordData.currentPassword?.trim() || !passwordData.newPassword?.trim()) {
-      message.warning('Por favor complete ambos campos de contraseña');
-      return;
-    }
-
-    if (passwordData.currentPassword === passwordData.newPassword) {
-      message.warning('La nueva contraseña debe ser diferente a la actual');
-      return;
-    }
-
+  
     try {
-      // Use the correct backend endpoint for changing password
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/profile/change-password`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          // Ensure token has 'Bearer' prefix for the backend middleware
-          'Authorization': authToken.startsWith('Bearer ') ? authToken : `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({
-          oldPassword: passwordData.currentPassword.trim(),
-          newPassword: passwordData.newPassword.trim()
-        }),
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword.trim()
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al actualizar la contraseña');
-      }
-
+  
+      if (error) throw error;
+  
       setIsPasswordModalVisible(false);
       setPasswordData({ currentPassword: '', newPassword: '' });
-      message.success(t('password.updated'));
+      message.success('Contraseña actualizada exitosamente');
     } catch (error) {
-      console.error('Error:', error);
+      console.error(error);
       message.error(error.message || 'Error al actualizar la contraseña');
     }
   };
+  
   const [purchaseHistory, setPurchaseHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
 
   const fetchPurchaseHistory = useCallback(async () => {
-    if (!user?._id) return;
-    
+    if (!user?.id) return;
+  
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('payments')
-        .select('*, event:events(*)')
-        .eq('user', user._id)
-        .order('createdAt', { ascending: false });
+        .select('*, event:eventos(*)')
+        .eq('user', user.id)
+        .order('created_at', { ascending: false });
+  
       if (error) throw error;
-      setPurchaseHistory(Array.isArray(data) ? data : []);
+      setPurchaseHistory(data || []);
     } catch (error) {
       message.error('Error al cargar el historial de compras');
       setPurchaseHistory([]);
@@ -136,6 +118,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
       setLoading(false);
     }
   }, [user]);
+  
 
   useEffect(() => {
     if (user?._id) {
@@ -186,7 +169,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
             type="default"
             variant="outlined"
             block
-            icon={<DownloadOutlined />}
+            icon={<AiOutlineDownload />}
             onClick={() => handleDownloadTicket(record.locator)}
           >
             {t('button.download_ticket')}

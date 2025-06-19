@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../backoffice/services/supabaseClient';
 import API_BASE_URL from '../../utils/apiBase';
 
 const API_URL = API_BASE_URL;

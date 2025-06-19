@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { LeftOutlined } from '@ant-design/icons';
+import { AiOutlineLeft } from 'react-icons/ai';
 import { fetchCmsPage, saveCmsPage } from '../services/apibackoffice';
 
 const pagesData = [
@@ -103,7 +103,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
           onClick={() => window.history.back()}
           aria-label="Volver"
         >
-          <LeftOutlined />
+          <AiOutlineLeft  />
           <span>Back</span>
         </button>
         <h3 className="font-bold mb-2">Páginas</h3>

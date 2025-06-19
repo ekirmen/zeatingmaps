@@ -20,7 +20,7 @@ import CartTimer from './store/components/CartTimer';
 import RequireAuth from './backoffice/components/RequireAuth';
 import BasicFooter from './components/BasicFooter';
 import Header from './store/components/StoreHeader';
-import Profile from './store/pages/profile'; // Updated to match file name
+import Profile from './store/pages/profile';
 
 // Backoffice Pages
 import Login from './backoffice/pages/Login';
@@ -47,7 +47,6 @@ import WebColors from './backoffice/pages/WebColors';
 import WebFooter from './backoffice/pages/WebFooter';
 import WebHeader from './backoffice/pages/WebHeader';
 import Abonos from './backoffice/pages/Abonos';
-import SupabaseEvents from './backoffice/pages/SupabaseEvents';
 
 // Store Pages
 import EventsVenue from './store/pages/EventsVenue';
@@ -62,8 +61,6 @@ import ForgotPassword from './store/pages/ForgotPassword';
 import ResetPassword from './store/pages/ResetPassword';
 import FaqPage from './store/pages/FaqPage';
 import NotFoundPage from './store/pages/NotFoundPage';
-import TestPage from './pages/test';
-import SupabaseAuthExample from './pages/SupabaseAuthExample';
 
 const App = () => {
   const location = useLocation();
@@ -114,86 +111,72 @@ const App = () => {
             <RecintoSalaProvider>
               <IvaProvider>
                 <TagProvider>
-                <div className="min-h-screen flex flex-col">
-                {showHeader && (
-                  <Header onLogin={handleLogin} onLogout={handleLogout} />
-                )}
-                <div className="flex-grow">
-                  <Routes>
-                  <Route path="/" element={<Login onLogin={handleLogin} />} />
-                  <Route path="/backoffice" element={<Navigate to="/dashboard" replace />} />
+                  <div className="min-h-screen flex flex-col">
+                    {showHeader && (
+                      <Header onLogin={handleLogin} onLogout={handleLogout} />
+                    )}
+                    <div className="flex-grow">
+                      <Routes>
+                        <Route path="/" element={<Login onLogin={handleLogin} />} />
+                        <Route path="/backoffice" element={<Navigate to="/dashboard" replace />} />
 
-                  <Route
-                    path="/dashboard"
-                    element={
-                      <RequireAuth>
-                        <Dashboard sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} />
-                      </RequireAuth>
-                    }
-                  >
-                    <Route path="actividad" element={<Actividad />} />
-                    <Route path="recinto" element={<Recinto />} />
-                    <Route path="usuarios" element={<Usuarios />} />
-                    <Route path="referidos" element={<Referidos />} />
-                    <Route path="plano" element={<Plano />} />
-                    <Route path="evento" element={<Evento />} />
-                    <Route path="entrada" element={<Entrada />} />
-                    <Route path="crear-mapa/:salaId" element={<CrearMapa />} />
-                    <Route path="crear-iva" element={<CreateIva />} />
-                    <Route path="abonos" element={<Abonos />} />
-                    <Route path="supabase-events" element={<SupabaseEvents />} />
-                    <Route path="plantillaPrecios" element={<PlantillaPrecios />} />
-                    <Route path="descuentos" element={<Descuentos />} />
-                    <Route path="funciones" element={<Funciones />} />
-                    <Route path="Boleteria" element={<Boleteria setSidebarCollapsed={setSidebarCollapsed} />} />
-                    <Route path="tags" element={<Tags />} />
-                    <Route path="galeria" element={<Galeria />} />
-                    <Route path="correo" element={<Correo />} />
-                    <Route path="web-studio" element={<WebStudio setSidebarCollapsed={setSidebarCollapsed} />} />
-                    <Route path="colores-web" element={<WebColors />} />
-                    <Route path="sitio-web" element={<WebFooter />} />
-                    <Route path="cabecera" element={<WebHeader />} />
-                  </Route>
-                  <Route path="/store/:venueId?" element={<EventsVenue />} />
-                  <Route path="/store/event/:eventId" element={<Event />} />
-                  <Route path="/store/event" element={<Navigate to="/store" replace />} />
-                  <Route path="/store/select-seats/:salaId" element={<SelectSeats />} />
-                  <Route path="/store/buy-event/:id" element={<BuyEvent />} />
-                  <Route path="/store/select-seats/:salaId/:funcionId" element={<SelectSeats />} />
-                  <Route path="/forgot-password" element={<ForgotPassword />} />
-                  <Route path="/reset-password/:token" element={<ResetPassword />} />
-                  <Route path="/store/cart" element={<Cart />} />
-                  {/* Update the pay route to include RequireAuth and match the store path pattern */}
-                  <Route 
-                    path="/store/pay" 
-                    element={
-                      <RequireAuth>
-                        <Pay />
-                      </RequireAuth>
-                    } 
-                  />
-                  <Route path="/payment-success" element={<PaymentSuccess />} />
-                  <Route path="/store/thank-you" element={<ThankYouPage />} />
-                  <Route path="/store/faq" element={<FaqPage />} />
-                  <Route path="/test" element={<TestPage />} />
-                  <Route path="/supabase-auth" element={<SupabaseAuthExample />} />
-                  <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
+                        <Route
+                          path="/dashboard"
+                          element={<RequireAuth><Dashboard sidebarCollapsed={sidebarCollapsed} setSidebarCollapsed={setSidebarCollapsed} /></RequireAuth>}
+                        >
+                          <Route path="actividad" element={<Actividad />} />
+                          <Route path="recinto" element={<Recinto />} />
+                          <Route path="usuarios" element={<Usuarios />} />
+                          <Route path="referidos" element={<Referidos />} />
+                          <Route path="plano" element={<Plano />} />
+                          <Route path="evento" element={<Evento />} />
+                          <Route path="entrada" element={<Entrada />} />
+                          <Route path="crear-mapa/:salaId" element={<CrearMapa />} />
+                          <Route path="crear-iva" element={<CreateIva />} />
+                          <Route path="abonos" element={<Abonos />} />
+                          <Route path="plantillaPrecios" element={<PlantillaPrecios />} />
+                          <Route path="descuentos" element={<Descuentos />} />
+                          <Route path="funciones" element={<Funciones />} />
+                          <Route path="Boleteria" element={<Boleteria setSidebarCollapsed={setSidebarCollapsed} />} />
+                          <Route path="tags" element={<Tags />} />
+                          <Route path="galeria" element={<Galeria />} />
+                          <Route path="correo" element={<Correo />} />
+                          <Route path="web-studio" element={<WebStudio setSidebarCollapsed={setSidebarCollapsed} />} />
+                          <Route path="colores-web" element={<WebColors />} />
+                          <Route path="sitio-web" element={<WebFooter />} />
+                          <Route path="cabecera" element={<WebHeader />} />
+                          <Route path="formato-entrada" element={<FormatoEntrada />} />
+                        </Route>
 
-                  <Route path="/dashboard/formato-entrada" element={<FormatoEntrada />} />
-                  <Route path="/404" element={<NotFoundPage />} />
-                  <Route path="*" element={<Navigate to="/404" replace />} />
-                </Routes>
-              </div>
-                {showFooter && <BasicFooter />}
-                <Toaster position="top-right" />
-                <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-                <NotificationContainer />
-                <CartTimer />
-              </div>
-              </TagProvider>
-            </IvaProvider>
-          </RecintoSalaProvider>
-        </RecintoProvider>
+                        <Route path="/store/:venueId?" element={<EventsVenue />} />
+                        <Route path="/store/event/:eventId" element={<Event />} />
+                        <Route path="/store/event" element={<Navigate to="/store" replace />} />
+                        <Route path="/store/select-seats/:salaId" element={<SelectSeats />} />
+                        <Route path="/store/buy-event/:id" element={<BuyEvent />} />
+                        <Route path="/store/select-seats/:salaId/:funcionId" element={<SelectSeats />} />
+                        <Route path="/forgot-password" element={<ForgotPassword />} />
+                        <Route path="/reset-password/:token" element={<ResetPassword />} />
+                        <Route path="/store/cart" element={<Cart />} />
+                        <Route path="/store/pay" element={<RequireAuth><Pay /></RequireAuth>} />
+                        <Route path="/payment-success" element={<PaymentSuccess />} />
+                        <Route path="/store/thank-you" element={<ThankYouPage />} />
+                        <Route path="/store/faq" element={<FaqPage />} />
+                        <Route path="/store/perfil" element={<RequireAuth><Profile userData={user} onUpdateProfile={handleUpdateProfile} /></RequireAuth>} />
+
+                        <Route path="/404" element={<NotFoundPage />} />
+                        <Route path="*" element={<Navigate to="/404" replace />} />
+                      </Routes>
+                    </div>
+                    {showFooter && <BasicFooter />}
+                    <Toaster position="top-right" />
+                    <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+                    <NotificationContainer />
+                    <CartTimer />
+                  </div>
+                </TagProvider>
+              </IvaProvider>
+            </RecintoSalaProvider>
+          </RecintoProvider>
         </RefProvider>
       </AuthProvider>
     </CartProvider>

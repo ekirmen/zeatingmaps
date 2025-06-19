@@ -3,7 +3,7 @@ import CreateRecintoForm from '../components/CreateRecintoForm';
 import EditRecintoForm from '../components/EditRecintoForm';
 import AddSalaForm from '../components/AddSalaForm';
 import EditSalaForm from '../components/EditSalaForm';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../services/supabaseClient';
 
 const Recinto = () => {
   const [recintos, setRecintos] = useState([]);

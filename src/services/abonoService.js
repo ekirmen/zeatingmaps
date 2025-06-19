@@ -1,4 +1,4 @@
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../backoffice/services/supabaseClient';
 
 export const fetchAbonosByUser = async (userId) => {
   if (!userId) throw new Error('User ID es requerido');

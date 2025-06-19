@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useRecinto } from '../contexts/RecintoContext';
 import Modal from 'react-modal';
-import { fetchPlantillasPorRecintoYSala } from '../services/apibackoffice';
+import { useRecinto } from '../contexts/RecintoContext';
+import { supabase } from '../services/supabaseClient';
 
 const Funciones = () => {
   const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
@@ -26,164 +26,162 @@ const Funciones = () => {
   useEffect(() => {
     const fetchEventos = async () => {
       if (salaSeleccionada && recintoSeleccionado) {
-        try {
-          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events?recinto=${recintoSeleccionado._id}&sala=${salaSeleccionada._id}`);
-          const data = await response.json();
+        const { data, error } = await supabase
+          .from('eventos')
+          .select('*')
+          .eq('recinto_id', recintoSeleccionado._id)
+          .eq('sala_id', salaSeleccionada._id);
+
+        if (error) {
+          console.error('Error al obtener eventos:', error);
+        } else {
           setEventos(data);
-          setEventoSeleccionado(null); // Reset selected event
-        } catch (error) {
-          console.error('Error fetching eventos:', error);
+          setEventoSeleccionado(null);
         }
       } else {
         setEventos([]);
       }
     };
+
     fetchEventos();
   }, [recintoSeleccionado, salaSeleccionada]);
 
-  // Fetch funciones when evento changes
   useEffect(() => {
     const fetchFunciones = async () => {
       if (eventoSeleccionado) {
-        try {
-          const response = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions?evento=${eventoSeleccionado}`);
-          const data = await response.json();
-          setFunciones(Array.isArray(data) ? data : []);
-        } catch (error) {
-          console.error('Error fetching funciones:', error);
+        const { data, error } = await supabase
+          .from('funcions')
+          .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
+          .eq('evento_id', eventoSeleccionado);
+
+        if (error) {
+          console.error('Error al obtener funciones:', error);
+        } else {
+          setFunciones(data);
         }
       } else {
         setFunciones([]);
       }
     };
+
     fetchFunciones();
   }, [eventoSeleccionado]);
 
-  // Fetch plantillas when sala changes
   useEffect(() => {
-    if (recintoSeleccionado && salaSeleccionada) {
-      const fetchPlantillas = async () => {
-        try {
-          const data = await fetchPlantillasPorRecintoYSala(recintoSeleccionado._id, salaSeleccionada._id);
+    const fetchPlantillas = async () => {
+      if (recintoSeleccionado && salaSeleccionada) {
+        const { data, error } = await supabase
+          .from('plantillas')
+          .select('*')
+          .eq('recinto_id', recintoSeleccionado._id)
+          .eq('sala_id', salaSeleccionada._id);
+
+        if (error) {
+          console.error('Error al obtener plantillas:', error);
+        } else {
           setPlantillas(data);
-        } catch (error) {
-          console.error('Error fetching plantillas:', error);
         }
-      };
-      fetchPlantillas();
-    }
+      }
+    };
+
+    fetchPlantillas();
   }, [recintoSeleccionado, salaSeleccionada]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const funcionData = {
       ...nuevaFuncion,
-      sala: salaSeleccionada._id,
-      evento: eventoSeleccionado
+      evento_id: eventoSeleccionado,
+      sala_id: salaSeleccionada._id,
+      plantilla_id: nuevaFuncion.plantilla,
     };
 
-    const url = editingFuncion 
-      ? `${process.env.REACT_APP_API_URL}/api/funcions/${editingFuncion._id}`
-      : `${process.env.REACT_APP_API_URL}/api/funcions`;
-    const method = editingFuncion ? 'PUT' : 'POST';
-
     try {
-      const response = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(funcionData),
+      if (editingFuncion) {
+        const { error } = await supabase
+          .from('funcions')
+          .update(funcionData)
+          .eq('id', editingFuncion.id);
+
+        if (error) throw error;
+        alert('Función actualizada');
+      } else {
+        const { error } = await supabase.from('funcions').insert([funcionData]);
+        if (error) throw error;
+        alert('Función creada');
+      }
+
+      setModalIsOpen(false);
+      setEditingFuncion(null);
+      setNuevaFuncion({
+        fechaCelebracion: '',
+        evento: '',
+        sala: '',
+        plantilla: '',
+        inicioVenta: '',
+        finVenta: '',
+        pagoAPlazos: false,
+        permitirReservasWeb: false,
       });
 
-      if (response.ok) {
-        alert(editingFuncion ? 'Función actualizada' : 'Función creada');
-        setModalIsOpen(false);
-        setEditingFuncion(null);
-        setNuevaFuncion({
-          fechaCelebracion: '',
-          evento: '',
-          sala: '',
-          plantilla: '',
-          inicioVenta: '',
-          finVenta: '',
-          pagoAPlazos: false,
-          permitirReservasWeb: false,
-        });
-        // Refresh funciones list
-        const refreshResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions?evento=${eventoSeleccionado}`);
-        const refreshData = await refreshResponse.json();
-        setFunciones(Array.isArray(refreshData) ? refreshData : []);
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.message}`);
-      }
+      const { data: refreshed, error: err2 } = await supabase
+        .from('funcions')
+        .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
+        .eq('evento_id', eventoSeleccionado);
+      if (!err2) setFunciones(refreshed);
     } catch (error) {
-      console.error('Error:', error);
-      alert('Error al procesar la función');
+      console.error('Error al guardar función:', error);
+      alert('Ocurrió un error');
     }
   };
 
   const handleEdit = (funcion) => {
     setEditingFuncion(funcion);
     setNuevaFuncion({
-      fechaCelebracion: funcion.fechaCelebracion.split('T')[0],
-      evento: funcion.evento._id,
-      sala: funcion.sala._id,
-      plantilla: funcion.plantilla ? funcion.plantilla._id : '',
-      inicioVenta: funcion.inicioVenta.split('T')[0],
-      finVenta: funcion.finVenta.split('T')[0],
+      fechaCelebracion: funcion.fechaCelebracion?.split('T')[0] || '',
+      evento: funcion.evento_id,
+      sala: funcion.sala_id,
+      plantilla: funcion.plantilla_id || '',
+      inicioVenta: funcion.inicioVenta?.split('T')[0] || '',
+      finVenta: funcion.finVenta?.split('T')[0] || '',
       pagoAPlazos: funcion.pagoAPlazos || false,
       permitirReservasWeb: funcion.permitirReservasWeb || false,
     });
     setModalIsOpen(true);
   };
 
-  const handleDelete = async (funcionId) => {
-    if (window.confirm('¿Seguro que deseas eliminar esta función?')) {
-      try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions/${funcionId}`, {
-          method: 'DELETE',
-        });
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Eliminar esta función?')) return;
 
-        if (response.ok) {
-          alert('Función eliminada');
-          const refreshResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions?evento=${eventoSeleccionado}`);
-          const refreshData = await refreshResponse.json();
-          setFunciones(Array.isArray(refreshData) ? refreshData : []);
-        } else {
-          const errorData = await response.json();
-          alert(`Error: ${errorData.message}`);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Error al eliminar la función');
-      }
+    const { error } = await supabase.from('funcions').delete().eq('id', id);
+    if (error) {
+      alert('Error al eliminar');
+    } else {
+      const { data } = await supabase
+        .from('funcions')
+        .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
+        .eq('evento_id', eventoSeleccionado);
+      setFunciones(data);
     }
   };
 
-  const handleDuplicate = async (funcionId) => {
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions/${funcionId}`);
-      if (!response.ok) {
-        alert('Error al obtener la función');
-        return;
-      }
-      const funcionOriginal = await response.json();
-      const { _id, __v, ...funcionDuplicada } = funcionOriginal;
-      const saveResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(funcionDuplicada),
-      });
-      if (!saveResponse.ok) {
-        alert('Error al duplicar la función');
-        return;
-      }
-      const refreshResponse = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions?evento=${eventoSeleccionado}`);
-      const refreshData = await refreshResponse.json();
-      setFunciones(Array.isArray(refreshData) ? refreshData : []);
-    } catch (error) {
-      console.error('Error al duplicar la función:', error);
+  const handleDuplicate = async (id) => {
+    const { data, error } = await supabase.from('funcions').select('*').eq('id', id).single();
+    if (error || !data) {
+      alert('No se pudo duplicar');
+      return;
+    }
+
+    const { id: _, ...duplicatedData } = data;
+    const { error: insertError } = await supabase.from('funcions').insert([duplicatedData]);
+    if (insertError) {
+      alert('Error al duplicar');
+    } else {
+      const { data: refreshed } = await supabase
+        .from('funcions')
+        .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
+        .eq('evento_id', eventoSeleccionado);
+      setFunciones(refreshed);
     }
   };
 
