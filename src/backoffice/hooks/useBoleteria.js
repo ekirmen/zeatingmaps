@@ -51,7 +51,7 @@ export const useBoleteria = () => {
     const { data, error } = await supabase
       .from('plantillas')
       .select('*')
-      .eq('funcion_id', selectedFuncion.id)
+      .eq('id', selectedFuncion.plantilla)
       .single();
 
     if (error) {
@@ -114,8 +114,8 @@ export const useBoleteria = () => {
 
     try {
       await Promise.all([
-        supabase.from('mapas').select('*').eq('salaId', funcion.sala).single(),
-        supabase.from('zonas').select('*').eq('salaId', funcion.sala)
+        supabase.from('mapas').select('*').eq('sala_id', funcion.sala).single(),
+        supabase.from('zonas').select('*').eq('sala_id', funcion.sala)
       ]);
       return true;
     } catch (error) {
