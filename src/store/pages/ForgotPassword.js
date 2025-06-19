@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../../backoffice/services/supabaseClient';
 
 const ForgotPassword = () => {
   const { t } = useTranslation();
@@ -11,13 +12,8 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/forgot-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || t('errors.email_send', 'Error al enviar correo'));
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
       message.success(t('forgot.sent'));
       setEmail('');
     } catch (error) {

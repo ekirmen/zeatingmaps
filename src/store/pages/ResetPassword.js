@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '../../backoffice/services/supabaseClient';
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -19,13 +20,8 @@ const ResetPassword = () => {
     }
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/reset-password/${token}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || t('errors.reset_password', 'Error al restablecer contraseña'));
+      const { error } = await supabase.auth.updateUser({ password: password.trim() });
+      if (error) throw error;
       message.success(t('password.updated'));
       navigate('/store');
     } catch (error) {

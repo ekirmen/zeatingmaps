@@ -8,6 +8,7 @@ import { useMapaSelection } from './useMapaSelection';
 import { useMapaZones } from './usemapazones';
 import { useMapaZoomStage } from './useMapaZoomStage';
 import { useMapaGraphicalElements } from './useMapaGraphicalElements';
+import { fetchZonasPorSala } from '../services/apibackoffice';
 
 export const useCrearMapa = () => {
   const { salaId } = useParams();
@@ -31,9 +32,7 @@ export const useCrearMapa = () => {
     async function cargarZonas() {
       if (!salaId) return;
       try {
-        // Aquí debes tener tu función fetchZonasPorSala que trae las zonas desde backend
-        const response = await fetch(`/api/zonas/sala/${salaId}`);
-        const data = await response.json();
+        const data = await fetchZonasPorSala(salaId);
         setZones(data);
       } catch (error) {
         console.error('Error cargando zonas:', error);
