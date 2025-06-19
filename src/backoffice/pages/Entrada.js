@@ -65,7 +65,12 @@ const Entrada = () => {
       console.error("Error al cargar tickets:", error.message);
       setTickets([]);
     } else {
-      setTickets(data);
+      const mapped = data.map(t => ({
+        ...t,
+        tipo: t.tipo_producto,
+        _id: t.id
+      }));
+      setTickets(mapped);
     }
   }, [formData.recinto]);
 
@@ -76,10 +81,12 @@ const Entrada = () => {
   const handleSaveData = async (datos) => {
     const datosConIva = {
       ...datos,
-      iva: datos.ivaSeleccionado, // mapear correctamente
+      iva: datos.ivaSeleccionado,
+      tipo_producto: datos.tipoProducto,
     };
-    delete datosConIva.ivaSeleccionado; // eliminar el campo innecesario
-  
+    delete datosConIva.ivaSeleccionado;
+    delete datosConIva.tipoProducto;
+
     const { error } = await supabase.from("entradas").insert(datosConIva);
     if (error) {
       console.error("Error al guardar datos:", error.message);
@@ -99,7 +106,7 @@ const Entrada = () => {
     } else {
       setEditFormData({
         producto: data.producto,
-        tipo: data.tipo,
+        tipo: data.tipo_producto,
         min: data.min,
         max: data.max,
         ivaSeleccionado: data.iva || '',
@@ -113,8 +120,10 @@ const Entrada = () => {
     const datosConIva = {
       ...datosEditados,
       iva: datosEditados.ivaSeleccionado,
+      tipo_producto: datosEditados.tipo,
     };
     delete datosConIva.ivaSeleccionado;
+    delete datosConIva.tipo;
   
     const { error } = await supabase.from("entradas").update(datosConIva).eq("id", ticketId);
     if (error) {
