@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { fetchEventos } from '../services/eventoService';
+import { fetchEventos } from '../services/supabaseEventoService';
 import EventoForm from '../components/Evento/EventoForm';
 
 const EventoListPage = () => {
@@ -7,8 +7,7 @@ const EventoListPage = () => {
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetchEventos(token).then(data => setEventos(data));
+    fetchEventos().then(setEventos);
   }, []);
 
   return (
