@@ -228,7 +228,7 @@ const Evento = () => {
       delete cleanData.__v;
       delete cleanData.createdAt;
       delete cleanData.updatedAt;
-      if (cleanData.fecha === '') {
+      if (cleanData.fecha === '' || cleanData.fecha == null) {
         delete cleanData.fecha;
       }
   
