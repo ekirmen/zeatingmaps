@@ -48,15 +48,10 @@ export const useBoleteria = () => {
   }, [eventos]);
 
   const cargarPlantillasPrecios = async () => {
-    const plantillaId =
-      typeof selectedFuncion.plantilla === 'object'
-        ? selectedFuncion.plantilla.id || selectedFuncion.plantilla._id
-        : selectedFuncion.plantilla;
-
     const { data, error } = await supabase
       .from('plantillas')
       .select('*')
-      .eq('id', plantillaId)
+      .eq('id', selectedFuncion.plantilla)
       .single();
 
     if (error) {
