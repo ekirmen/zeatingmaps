@@ -11,7 +11,7 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
     pais: '',
     estado: '',
     ciudad: '',
-    codigoPostal: '',
+    codigopostal: '',
     direccionLinea1: '',
     latitud: '',
     longitud: '',
@@ -73,8 +73,8 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
             <input
               type="text"
               placeholder="Código postal"
-              value={details.codigoPostal}
-              onChange={(e) => setDetails({ ...details, codigoPostal: e.target.value })}
+              value={details.codigopostal}
+              onChange={(e) => setDetails({ ...details, codigopostal: e.target.value })}
             />
             <input
               type="text"
