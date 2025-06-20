@@ -4,6 +4,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { Modal, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../backoffice/services/supabaseClient';
+import { registerUser, loginUser } from '../services/authService';
 import LinkWithRef from './LinkWithRef';
 import { useRefParam } from '../../contexts/RefContext';
 import { useHeader } from '../../contexts/HeaderContext';
@@ -38,16 +39,14 @@ const Header = ({ onLogin, onLogout }) => {
       if (registerData.password.length < 6)
         throw new Error(t('errors.password_min_length', 'La contraseña debe tener al menos 6 caracteres'));
 
-      const { data, error } = await supabase.auth.signUp({
+      const { user, session } = await registerUser({
         email: registerData.email.trim(),
         password: registerData.password.trim()
       });
 
-      if (error || !data.user) throw new Error(error?.message || t('errors.register', 'Error al registrar usuario'));
-
-      const token = data.session?.access_token;
+      const token = session?.access_token;
       if (token) localStorage.setItem('token', token);
-      onLogin?.({ token, user: data.user });
+      onLogin?.({ token, user });
 
       message.success(t('register.success'));
       setIsAccountModalVisible(false);
@@ -66,16 +65,14 @@ const Header = ({ onLogin, onLogout }) => {
         if (!formData.email || !formData.password)
           throw new Error(t('errors.enter_credentials', 'Por favor ingrese correo y contraseña'));
 
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { user, session } = await loginUser({
           email: formData.email.trim(),
           password: formData.password.trim()
         });
-        if (error || !data.session) throw new Error(error?.message || t('errors.invalid_credentials', 'Credenciales incorrectas'));
-
-        const token = data.session.access_token;
+        const token = session.access_token;
         localStorage.setItem('token', token);
 
-        onLogin?.({ token, user: data.user });
+        onLogin?.({ token, user });
         setIsAccountModalVisible(false);
         setFormData({ email: '', password: '' });
         message.success(t('login.success'));
