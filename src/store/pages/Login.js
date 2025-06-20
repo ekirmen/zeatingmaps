@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { Modal, Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../backoffice/services/supabaseClient';
 
 const Login = ({ onLogin }) => {
   const { t } = useTranslation();

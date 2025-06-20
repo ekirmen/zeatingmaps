@@ -1,6 +1,6 @@
 import React from 'react';
 import { message, Button } from 'antd';
-import { supabase } from '../../../backoffice/services/supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 
 const DownloadTicketButton = ({ paymentId }) => {
   const handleDownload = async () => {

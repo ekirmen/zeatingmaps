@@ -1,6 +1,6 @@
 // hooks/useEventos.js
 import { useCallback } from 'react';
-import { supabase } from '../../lib/supabaseClient';
+import { supabase } from '../../backoffice/services/supabaseClient';
 
 export const useEventos = (navigate, setEventos, setEventosFiltrados) => {
   const fetchEventos = useCallback(async () => {
