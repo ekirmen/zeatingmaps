@@ -36,3 +36,15 @@ fetchUsers().then(console.log).catch(console.error);
 
 The request is executed with the Supabase client configured via the `.env` variables, so it adheres to any row level security policies defined in your Supabase project.
 
+## Admin operations
+
+Certain backoffice components use `supabase.auth.admin` to create users. These calls require the **Service Role Key**. If `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` is not provided or is invalid, the request will fail with a `403` error when hitting `auth/v1/admin` endpoints.
+
+For development you can add the key to your `.env` file:
+
+```bash
+REACT_APP_SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+```
+
+This key grants full access to your Supabase project, so avoid exposing it in production builds and prefer performing admin tasks on a secure server.
+
