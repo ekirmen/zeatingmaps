@@ -51,8 +51,8 @@ const Funciones = () => {
       if (eventoSeleccionado) {
         const { data, error } = await supabase
           .from('funcions')
-          .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
-          .eq('evento_id', eventoSeleccionado);
+          .select(`*, evento:evento(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
+          .eq('evento', eventoSeleccionado);
 
         if (error) {
           console.error('Error al obtener funciones:', error);
@@ -91,7 +91,7 @@ const Funciones = () => {
     e.preventDefault();
     const funcionData = {
       ...nuevaFuncion,
-      evento_id: eventoSeleccionado,
+      evento: eventoSeleccionado,
       sala_id: salaSeleccionada.id,
       plantilla_id: nuevaFuncion.plantilla,
     };
@@ -126,8 +126,8 @@ const Funciones = () => {
 
       const { data: refreshed, error: err2 } = await supabase
         .from('funcions')
-        .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
-        .eq('evento_id', eventoSeleccionado);
+        .select(`*, evento:evento(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
+        .eq('evento', eventoSeleccionado);
       if (!err2) setFunciones(refreshed);
     } catch (error) {
       console.error('Error al guardar función:', error);
@@ -139,7 +139,7 @@ const Funciones = () => {
     setEditingFuncion(funcion);
     setNuevaFuncion({
       fechaCelebracion: funcion.fechaCelebracion?.split('T')[0] || '',
-      evento: funcion.evento_id,
+      evento: funcion.evento,
       sala: funcion.sala_id,
       plantilla: funcion.plantilla_id || '',
       inicioVenta: funcion.inicioVenta?.split('T')[0] || '',
@@ -159,8 +159,8 @@ const Funciones = () => {
     } else {
       const { data } = await supabase
         .from('funcions')
-        .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
-        .eq('evento_id', eventoSeleccionado);
+        .select(`*, evento:evento(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
+        .eq('evento', eventoSeleccionado);
       setFunciones(data);
     }
   };
@@ -179,8 +179,8 @@ const Funciones = () => {
     } else {
       const { data: refreshed } = await supabase
         .from('funcions')
-        .select(`*, evento:evento_id(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
-        .eq('evento_id', eventoSeleccionado);
+        .select(`*, evento:evento(nombre), sala:sala_id(nombre), plantilla:plantilla_id(nombre)`)
+        .eq('evento', eventoSeleccionado);
       setFunciones(refreshed);
     }
   };
