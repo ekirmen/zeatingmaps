@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Input, Table, Tag, Tabs, Form, Button, Divider, message } from 'antd';
 import { AiOutlineSearch, AiOutlineUserAdd } from 'react-icons/ai';
-import { supabase } from '../../services/supabaseClient';
+import { supabase, supabaseAdmin } from '../../services/supabaseClient';
 
 const ClientModals = ({
   isSearchModalVisible,
@@ -27,17 +27,19 @@ const ClientModals = ({
       setSearchLoading(true);
 
       const { data, error } = await supabase
-        .from('users')
-        .select('id, login, email, telefono')
-        .or(`login.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%`);
+        .from('profiles')
+        .select('id, login, nombre, telefono, empresa, auth:auth.users(email)')
+        .or(
+          `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,auth.email.ilike.%${searchTerm}%`
+        );
 
       if (error) throw error;
 
-      const mappedResults = data.map((user) => ({
-        _id: user.id,
-        nombre: user.login,
-        email: user.email,
-        telefono: user.telefono,
+      const mappedResults = data.map((p) => ({
+        _id: p.id,
+        nombre: p.login,
+        email: p.auth?.email || '',
+        telefono: p.telefono,
       }));
 
       setSearchResults(mappedResults);
@@ -61,30 +63,34 @@ const ClientModals = ({
 
   const handleAddClient = async (values) => {
     try {
-      const clientData = {
-        login: values.email,
-        password: 'defaultPassword',
+      const { data: userResp, error } = await supabaseAdmin.auth.admin.createUser({
         email: values.email,
-        telefono: values.telefono,
-        perfil: 'cliente',
-        empresa: values.empresa || 'Sin empresa',
-      };
+        password: values.password || 'defaultPassword',
+        email_confirm: true,
+      });
 
-      const { data, error } = await supabase
-        .from('users')
-        .insert([clientData])
+      if (error) throw error;
+
+      await new Promise((res) => setTimeout(res, 1500));
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          login: values.email,
+          nombre: values.nombre,
+          telefono: values.telefono,
+          empresa: values.empresa || 'Sin empresa',
+        })
+        .eq('id', userResp.user.id)
         .select()
         .single();
 
-      if (error?.code === '23505') {
-        throw new Error('El usuario ya existe');
-      }
-
-      if (error) throw error;
+      if (profileError) throw profileError;
 
       message.success('Usuario creado con éxito');
       form.resetFields();
       setActiveTab('search');
+      if (typeof onAddClient === 'function') onAddClient(profileData);
     } catch (error) {
       console.error('Error creating client:', error);
       message.error(`Error al crear el usuario: ${error.message}`);

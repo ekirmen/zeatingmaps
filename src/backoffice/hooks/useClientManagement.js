@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { message } from 'antd';
-import { supabase } from '../services/supabaseClient';
+import { supabase, supabaseAdmin } from '../services/supabaseClient';
 
 export const useClientManagement = (setCarrito) => {
   const [selectedClient, setSelectedClient] = useState(null);
@@ -13,12 +13,22 @@ export const useClientManagement = (setCarrito) => {
     setSearchLoading(true);
     try {
       const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .ilike('email', `%${searchTerm}%`);
+        .from('profiles')
+        .select('id, login, nombre, apellido, telefono, empresa, auth:auth.users(email)')
+        .or(
+          `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,auth.email.ilike.%${searchTerm}%`
+        );
 
       if (error) throw error;
-      return data;
+      return data.map((p) => ({
+        id: p.id,
+        login: p.login,
+        nombre: p.nombre,
+        apellido: p.apellido,
+        telefono: p.telefono,
+        empresa: p.empresa,
+        email: p.auth?.email || '',
+      }));
     } catch (error) {
       console.error('Error searching for client:', error);
       throw error;
@@ -29,17 +39,33 @@ export const useClientManagement = (setCarrito) => {
 
   const handleAddClient = async (values) => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .insert([{ ...values, perfil: 'cliente', empresa: 'default', login: values.email }])
-        .select()
-        .single();
+      const { data: userResp, error } = await supabaseAdmin.auth.admin.createUser({
+        email: values.email,
+        password: values.password || 'defaultPassword',
+        email_confirm: true,
+      });
 
       if (error) throw error;
 
-      setSelectedClient(data);
+      await new Promise((res) => setTimeout(res, 1500));
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          login: values.email,
+          nombre: values.nombre,
+          telefono: values.telefono,
+          empresa: values.empresa || 'default',
+        })
+        .eq('id', userResp.user.id)
+        .select()
+        .single();
+
+      if (profileError) throw profileError;
+
+      setSelectedClient(profileData);
       message.success('Client added successfully');
-      return data;
+      return profileData;
     } catch (error) {
       console.error('Error adding client:', error);
       message.error(error.message || 'Error adding client');
