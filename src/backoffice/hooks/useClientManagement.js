@@ -78,7 +78,7 @@ export const useClientManagement = (setCarrito) => {
     try {
       const { data, error } = await supabase
         .from('tickets')
-        .select('*, user:users(*), seats(*)')
+        .select('*, user:profiles(*), seats(*)')
         .eq('locator', locator)
         .single();
 

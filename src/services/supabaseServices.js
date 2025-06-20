@@ -61,7 +61,7 @@ export const fetchPlantillaPorFuncion = async (funcionId) => {
 };
 
 export const fetchAffiliates = async () => {
-  const { data, error } = await supabase.from('affiliateusers').select('*, users(login)');
+  const { data, error } = await supabase.from('affiliateusers').select('*, users:profiles(login)');
   if (error) throw error;
   return data.map(a => ({ ...a, user: a.users }));
 };

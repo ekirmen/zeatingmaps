@@ -8,7 +8,7 @@ import { supabase } from '../backoffice/services/supabaseClient';
  */
 export const fetchUsers = async () => {
   const { data, error } = await supabase
-    .from('users')
+    .from('profiles')
     .select('login, email, telefono, empresa, perfil, permisos, formaDePago');
 
   if (error) throw error;

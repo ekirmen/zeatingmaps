@@ -53,7 +53,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
     }
   
     const { error } = await supabase
-      .from('users')
+      .from('profiles')
       .update({
         login: formData.login,
         email: formData.email,

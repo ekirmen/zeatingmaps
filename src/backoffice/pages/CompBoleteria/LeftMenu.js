@@ -24,7 +24,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     try {
       const { data: payment, error } = await supabase
         .from('payments')
-        .select('*, user:users(*), seats, event:event_id(*), funcion:funcion_id(fecha)')
+        .select('*, user:profiles(*), seats, event:event_id(*), funcion:funcion_id(fecha)')
         .eq('locator', locator)
         .single();
 
@@ -98,7 +98,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     setSearchLoading(true);
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .select('*')
         .ilike('email', `%${term}%`);
 
@@ -122,7 +122,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         formaDePago: {},
       };
 
-      const { data, error } = await supabase.from('users').insert([newUser]).select().single();
+      const { data, error } = await supabase.from('profiles').insert([newUser]).select().single();
 
       if (error) throw error;
 
