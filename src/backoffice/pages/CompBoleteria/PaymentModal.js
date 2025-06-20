@@ -206,7 +206,8 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
       } else {
         // Group seats by event
         const seatsByEvent = carrito.reduce((acc, item) => {
-          const eventId = item.evento?._id || selectedFuncion.evento._id;
+          const eventId = item.evento?.id || item.evento?._id ||
+            selectedFuncion.evento?.id || selectedFuncion.evento?._id;
           if (!acc[eventId]) {
             acc[eventId] = [];
           }
@@ -219,7 +220,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
           const paymentData = {
             user: selectedClient._id,
             event: eventId,
-            funcion: selectedFuncion._id,
+            funcion: selectedFuncion.id || selectedFuncion._id,
             seats: seats.map(item => ({
               id: item._id,
               name: item.nombre,

@@ -75,6 +75,7 @@ const Boleteria = () => {
   const onEventSelect = async (eventoId) => {
     const { success, funciones: funcs = [] } = await handleEventSelect(eventoId);
     if (success) {
+      setIsFunctionsModalVisible(true);
       if (funcs.length === 1) {
         await handleFunctionSelect(funcs[0]);
       }

@@ -9,7 +9,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
     try {
       const { data: payment, error } = await supabase
         .from('payments')
-        .select('*, user:users(*), seats, funciones(fecha)')
+        .select('*, user:profiles(*), seats, funciones(fecha)')
         .eq('locator', locator)
         .single();
 
@@ -119,9 +119,17 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
                 className="flex justify-between items-start bg-gray-100 p-2 rounded shadow-sm text-sm"
               >
                 <div className="truncate text-xs leading-tight">
-                  <strong>Seat:</strong> {item.nombre} &nbsp;|&nbsp;
-                  <strong>Table:</strong> {item.nombreMesa} &nbsp;|&nbsp;
-                  <strong>Zone:</strong> {item.zona}
+                  {item.nombre ? (
+                    <>
+                      <strong>Seat:</strong> {item.nombre} &nbsp;|&nbsp;
+                      <strong>Table:</strong> {item.nombreMesa} &nbsp;|&nbsp;
+                      <strong>Zone:</strong> {item.zona}
+                    </>
+                  ) : (
+                    <>
+                      <strong>Zone Ticket:</strong> {item.zona}
+                    </>
+                  )}
                   {item.action === 'block' && <span className="text-red-600"> &nbsp;|&nbsp; Bloquear</span>}
                   {item.action === 'unblock' && <span className="text-green-600"> &nbsp;|&nbsp; Desbloquear</span>}
                   {!item.action && (

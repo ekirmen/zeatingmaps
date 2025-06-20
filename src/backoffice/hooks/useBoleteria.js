@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { message } from 'antd';
 import { supabase } from '../services/supabaseClient';
+import { fetchMapa, fetchZonasPorSala } from '../../services/supabaseServices';
 
 const EVENT_KEY = 'boleteriaEventId';
 const FUNC_KEY = 'boleteriaFunctionId';
@@ -48,10 +49,15 @@ export const useBoleteria = () => {
   }, [eventos]);
 
   const cargarPlantillasPrecios = async () => {
+    const plantillaId =
+      typeof selectedFuncion.plantilla === 'object'
+        ? selectedFuncion.plantilla.id || selectedFuncion.plantilla._id
+        : selectedFuncion.plantilla;
+
     const { data, error } = await supabase
       .from('plantillas')
       .select('*')
-      .eq('funcion_id', selectedFuncion.id)
+      .eq('id', plantillaId)
       .single();
 
     if (error) {
@@ -65,14 +71,21 @@ export const useBoleteria = () => {
   const handleEventSelect = async (eventoId) => {
     const { data, error } = await supabase
       .from('funcions')
-      .select('*')
+      .select(`
+        *,
+        plantilla (
+          id,
+          nombre
+        )
+      `)
       .eq('evento', eventoId);
 
     if (error) {
-      message.error('Error cargando funciones');
+      console.error('Error cargando funciones:', error);
+      message.error(error.message || 'Error cargando funciones');
       return { success: false, funciones: [] };
     } else {
-      const ev = eventos.find(e => e.id === eventoId);
+      const ev = eventos.find(e => e.id === eventoId || e._id === eventoId);
       setFunciones(data);
       setSelectedEvent(ev || null);
       setSelectedFuncion(null);
@@ -87,9 +100,17 @@ export const useBoleteria = () => {
     setSelectedFuncion(funcion);
 
     if (funcion.evento) {
-      setSelectedEvent(funcion.evento);
-      if (typeof funcion.evento === 'object' && funcion.evento.id) {
-        localStorage.setItem(EVENT_KEY, funcion.evento.id);
+      if (typeof funcion.evento === 'object') {
+        setSelectedEvent(funcion.evento);
+        if (funcion.evento.id) {
+          localStorage.setItem(EVENT_KEY, funcion.evento.id);
+        }
+      } else {
+        const ev = eventos.find(e => e.id === funcion.evento || e._id === funcion.evento);
+        setSelectedEvent(ev || null);
+        if (ev?.id) {
+          localStorage.setItem(EVENT_KEY, ev.id);
+        }
       }
     }
 
@@ -99,8 +120,8 @@ export const useBoleteria = () => {
 
     try {
       await Promise.all([
-        supabase.from('mapas').select('*').eq('salaId', funcion.sala).single(),
-        supabase.from('zonas').select('*').eq('salaId', funcion.sala)
+        fetchMapa(funcion.sala, funcion.id),
+        fetchZonasPorSala(funcion.sala)
       ]);
       return true;
     } catch (error) {
@@ -111,8 +132,9 @@ export const useBoleteria = () => {
   };
 
   useEffect(() => {
-    if (selectedEvent?.id) {
-      localStorage.setItem(EVENT_KEY, selectedEvent.id);
+    const evId = selectedEvent?.id || selectedEvent?._id;
+    if (evId) {
+      localStorage.setItem(EVENT_KEY, evId);
     } else {
       localStorage.removeItem(EVENT_KEY);
     }
