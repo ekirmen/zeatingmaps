@@ -16,6 +16,8 @@ This project is a React application that relies on Supabase for data storage and
    REACT_APP_SUPABASE_URL=<your-supabase-url>
    REACT_APP_SUPABASE_ANON_KEY=<your-anon-key>
    REACT_APP_SUPABASE_SERVICE_ROLE_KEY=<service-role-key-if-needed>
+   # Base URL for the REST API used by the store and backoffice
+   REACT_APP_API_URL=<your-api-url>
    ```
 
 3. Start the development server:
