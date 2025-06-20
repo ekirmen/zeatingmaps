@@ -2,9 +2,10 @@
 import { createClient } from '@supabase/supabase-js'
 
 // CRA solo expone variables que comienzan con REACT_APP_
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY
-const serviceRoleKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
+const serviceRoleKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
+
 
 // Validación para prevenir errores en tiempo de ejecución
 if (!supabaseUrl || !supabaseAnonKey) {
