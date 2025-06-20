@@ -22,4 +22,9 @@ export const supabaseAdmin = serviceRoleKey
         persistSession: false,
       },
     })
-  : supabase
+  : (() => {
+      console.warn(
+        '⚠️  REACT_APP_SUPABASE_SERVICE_ROLE_KEY no está definido. Las operaciones de administrador devolverán 403.'
+      )
+      return supabase
+    })()

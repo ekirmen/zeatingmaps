@@ -40,10 +40,21 @@ The request is executed with the Supabase client configured via the `.env` varia
 
 Certain backoffice components use `supabase.auth.admin` to create users. These calls require the **Service Role Key**. If `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` is not provided or is invalid, the request will fail with a `403` error when hitting `auth/v1/admin` endpoints.
 
-For development you can add the key to your `.env` file:
+For development you can add the key to your `.env` file and restart the dev server:
 
 ```bash
 REACT_APP_SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+```
+
+Then use the `supabaseAdmin` client to perform admin requests:
+
+```javascript
+import { supabaseAdmin } from './backoffice/services/supabaseClient';
+
+supabaseAdmin.auth.admin
+  .createUser({ email: 'admin@example.com', password: 'secret', email_confirm: true })
+  .then(console.log)
+  .catch(console.error);
 ```
 
 This key grants full access to your Supabase project, so avoid exposing it in production builds and prefer performing admin tasks on a secure server.
