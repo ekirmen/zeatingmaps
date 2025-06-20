@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, Input, Card, Table, Tag, Form, Button, message } from 'antd';
 import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit } from 'react-icons/ai';
-import { supabase } from '../../services/supabaseClient';
+import { supabase, supabaseAdmin } from '../../services/supabaseClient';
 
 const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient, onFunctionSelect, setSelectedEvent }) => {
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
@@ -114,17 +114,33 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const handleAddAccount = async (values) => {
     setSearchLoading(true);
     try {
-      const newUser = {
-        ...values,
-        perfil: 'cliente',
-        empresa: values.empresa || 'Sin empresa',
-        permisos: {},
-        formaDePago: {},
-      };
-
-      const { data, error } = await supabase.from('profiles').insert([newUser]).select().single();
+      // Create auth user first
+      const { data: userResp, error } = await supabaseAdmin.auth.admin.createUser({
+        email: values.email,
+        password: values.password || 'defaultPassword',
+        email_confirm: true,
+      });
 
       if (error) throw error;
+
+      // Wait a bit for the trigger to create the profile
+      await new Promise((res) => setTimeout(res, 1500));
+
+      const { data, error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          login: values.login,
+          telefono: values.telefono,
+          empresa: values.empresa || 'Sin empresa',
+          perfil: 'cliente',
+          permisos: {},
+          formaDePago: {},
+        })
+        .eq('id', userResp.user.id)
+        .select()
+        .single();
+
+      if (profileError) throw profileError;
 
       setSelectedClient(data);
       setUserData(data);
