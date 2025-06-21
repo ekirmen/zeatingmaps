@@ -133,7 +133,7 @@ const Plano = () => {
               className="border border-gray-300 rounded px-3 py-2"
               value={recinto?.id || ''}
               onChange={(e) => {
-                const r = recintos.find(r => r.id === e.target.value);
+                const r = recintos.find(r => String(r.id) === e.target.value);
                 setRecinto(r);
                 setSala(null);
               }}
@@ -151,7 +151,7 @@ const Plano = () => {
               className="border border-gray-300 rounded px-3 py-2"
               value={sala?.id || ''}
               onChange={(e) => {
-                const s = recinto?.salas?.find(s => s.id === e.target.value);
+                const s = recinto?.salas?.find(s => String(s.id) === e.target.value);
                 setSala(s);
               }}
               disabled={!recinto}
