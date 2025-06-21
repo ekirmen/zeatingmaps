@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useRefParam } from '../../contexts/RefContext';
 import { Modal, Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../backoffice/services/supabaseClient';
@@ -9,119 +8,183 @@ const Login = ({ onLogin }) => {
   const { t } = useTranslation();
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
-  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
+  const [user, setUser] = useState(null);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
+  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
+  const [isForgotModalVisible, setIsForgotModalVisible] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   const navigate = useNavigate();
-  const { refParam } = useRefParam();
 
-  const handleSubmit = async (e) => {
+  // Detectar si ya hay sesión activa
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setUser(data.session.user);
+        onLogin?.({ user: data.session.user });
+        navigate('/store');
+      }
+    };
+    checkSession();
+  }, []);
+
+  const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: login, password });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: login,
+        password,
+      });
 
       if (error || !data.session) {
         throw new Error(error?.message || t('errors.auth', 'Error de autenticación'));
       }
 
-      const token = data.session.access_token;
-      localStorage.setItem('token', token);
-
-      onLogin?.({ token, user: data.user });
+      setUser(data.user);
+      onLogin?.({ user: data.user });
       message.success(t('login.success'));
-      navigate(refParam ? `/store?ref=${refParam}` : '/store');
-    } catch (error) {
-      console.error('Error al iniciar sesión:', error);
-      message.error(error.message || t('errors.login', 'Error al iniciar sesión'));
+      navigate('/store');
+    } catch (err) {
+      console.error(err);
+      message.error(err.message || t('errors.login', 'Error al iniciar sesión'));
     }
   };
 
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
-    setPasswordData(prev => ({ ...prev, [name]: value }));
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSavePassword = async () => {
     try {
       if (!passwordData.newPassword || !passwordData.confirmPassword)
         throw new Error(t('errors.fields_required', 'Complete ambos campos'));
+
       if (passwordData.newPassword !== passwordData.confirmPassword)
         throw new Error(t('errors.passwords_no_match', 'Las contraseñas no coinciden'));
-      if (passwordData.newPassword.length < 6)
-        throw new Error(t('errors.password_min_length', 'La contraseña debe tener al menos 6 caracteres'));
 
-      const { data, error } = await supabase.auth.updateUser({ password: passwordData.newPassword.trim() });
+      if (passwordData.newPassword.length < 6)
+        throw new Error(t('errors.password_min_length', 'Mínimo 6 caracteres'));
+
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword.trim(),
+      });
+
       if (error) throw error;
-      const session = await supabase.auth.getSession();
-      const token = session.data.session?.access_token;
-      if (token) localStorage.setItem('token', token);
+
       setIsPasswordModalVisible(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });
-      onLogin?.({ token, user: data.user });
       message.success(t('password.updated'));
-      navigate(refParam ? `/store?ref=${refParam}` : '/store');
     } catch (error) {
-      console.error('Set password error:', error);
+      console.error(error);
       message.error(error.message || t('errors.save_password', 'Error al guardar contraseña'));
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    try {
+      if (!resetEmail) throw new Error('Debes ingresar un correo válido');
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail);
+      if (error) throw error;
+      message.success('Se envió un correo para recuperar tu contraseña.');
+      setIsForgotModalVisible(false);
+      setResetEmail('');
+    } catch (err) {
+      message.error(err.message || 'Error al solicitar recuperación');
     }
   };
 
   return (
     <>
-    <form onSubmit={handleSubmit}>
-      <div>
-        <label>{t('header.login')}:</label>
-        <input
-          type="text"
-          value={login}
-          onChange={(e) => setLogin(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label>{t('password.new')}:</label>
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </div>
-      <Button
-        type="primary"
-        htmlType="submit"
-        className="mt-4"
-      >
-        {t('header.login')}
-      </Button>
-      <div className="mt-2">
-        <Link to="/forgot-password" className="text-blue-600 hover:underline">
-          {t('header.forgot')}
-        </Link>
-      </div>
-    </form>
+      <form onSubmit={handleLogin} className="space-y-4 max-w-md mx-auto mt-10">
+        <div>
+          <label className="block mb-1">{t('header.login')}:</label>
+          <input
+            type="email"
+            value={login}
+            onChange={(e) => setLogin(e.target.value)}
+            className="w-full border px-3 py-2 rounded"
+            required
+          />
+        </div>
+        <div>
+          <label className="block mb-1">{t('password.new')}:</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border px-3 py-2 rounded"
+            required
+          />
+        </div>
+        <Button type="primary" htmlType="submit" className="w-full">
+          {t('header.login')}
+        </Button>
 
-    <Modal
-      title={t('password.change')}
-      open={isPasswordModalVisible}
-      onCancel={() => setIsPasswordModalVisible(false)}
-      footer={[
-        <Button key="save" type="primary" onClick={handleSavePassword}>{t('button.save')}</Button>,
-      ]}
-    >
-      <Input.Password
-        name="newPassword"
-        value={passwordData.newPassword}
-        onChange={handlePasswordChange}
-        placeholder={t('password.new')}
-        className="mb-4"
-      />
-      <Input.Password
-        name="confirmPassword"
-        value={passwordData.confirmPassword}
-        onChange={handlePasswordChange}
-        placeholder={t('password.repeat')}
-      />
-    </Modal>
+        <div className="flex justify-between text-sm mt-2">
+          <button
+            type="button"
+            className="text-blue-600 hover:underline"
+            onClick={() => setIsForgotModalVisible(true)}
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+          {user && (
+            <button
+              type="button"
+              className="text-green-600 hover:underline"
+              onClick={() => setIsPasswordModalVisible(true)}
+            >
+              Cambiar contraseña
+            </button>
+          )}
+        </div>
+      </form>
+
+      {/* Modal cambiar contraseña */}
+      <Modal
+        title={t('password.change')}
+        open={isPasswordModalVisible}
+        onCancel={() => setIsPasswordModalVisible(false)}
+        footer={[
+          <Button key="save" type="primary" onClick={handleSavePassword}>
+            {t('button.save')}
+          </Button>,
+        ]}
+      >
+        <Input.Password
+          name="newPassword"
+          value={passwordData.newPassword}
+          onChange={handlePasswordChange}
+          placeholder={t('password.new')}
+          className="mb-4"
+        />
+        <Input.Password
+          name="confirmPassword"
+          value={passwordData.confirmPassword}
+          onChange={handlePasswordChange}
+          placeholder={t('password.repeat')}
+        />
+      </Modal>
+
+      {/* Modal recuperar contraseña */}
+      <Modal
+        title="Recuperar contraseña"
+        open={isForgotModalVisible}
+        onCancel={() => setIsForgotModalVisible(false)}
+        footer={[
+          <Button key="send" type="primary" onClick={handleForgotPassword}>
+            Enviar correo
+          </Button>,
+        ]}
+      >
+        <Input
+          type="email"
+          placeholder="Correo de recuperación"
+          value={resetEmail}
+          onChange={(e) => setResetEmail(e.target.value)}
+        />
+      </Modal>
     </>
   );
 };
