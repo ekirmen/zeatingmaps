@@ -1,6 +1,5 @@
 // services/supabaseSeats.js
-import { supabase } from './supabaseClient';
-
+import { supabase } from '../../backoffice/services/supabaseClient';
 // ✅ Bloquear o desbloquear varios asientos por ID
 export const setSeatsBlocked = async (seatIds, bloqueado) => {
   const { data, error } = await supabase

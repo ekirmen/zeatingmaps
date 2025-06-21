@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient';
+import { supabase } from '../../backoffice/services/supabaseClient';
 
 const handleError = (error) => {
   if (error) {

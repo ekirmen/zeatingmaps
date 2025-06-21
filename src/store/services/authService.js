@@ -1,5 +1,5 @@
 // src/backoffice/services/authService.js
-import { supabase } from './supabaseClient';
+import { supabase } from '../../backoffice/services/supabaseClient';
 
 // Registro (sign up) con creación de perfil
 export const registerUser = async ({ email, password }) => {
