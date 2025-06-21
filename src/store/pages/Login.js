@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Modal, Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../backoffice/services/supabaseClient';
@@ -26,7 +26,8 @@ const Login = ({ onLogin }) => {
       }
     };
     checkSession();
-  }, []);
+  }, [navigate, onLogin]);
+  
 
   const handleLogin = async (e) => {
     e.preventDefault();
