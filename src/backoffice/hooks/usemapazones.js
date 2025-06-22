@@ -7,50 +7,32 @@ export const useMapaZones = (elements, setElements, selectedIds, selectedZone) =
     return;
   }
 
-  setElements(prev =>
-    prev.map(el => {
-      // 👉 Silla individual seleccionada
-      if (el.type === 'silla' && selectedIds.includes(el._id)) {
+  setElements(prev => {
+    const selectedMesaIds = prev
+      .filter(el => el.type === 'mesa' && selectedIds.includes(el._id))
+      .map(mesa => mesa._id);
+
+    return prev.map(el => {
+      const isSelected = selectedIds.includes(el._id);
+      const isChildOfSelectedMesa = el.type === 'silla' && selectedMesaIds.includes(el.parentId);
+
+      if (el.type === 'silla' && (isSelected || isChildOfSelectedMesa)) {
         return {
           ...el,
           zonaId: selectedZone.id,
         };
       }
 
-      // 👉 Mesa seleccionada: aplicar zona a todas sus sillas
-      if (el.type === 'mesa' && selectedIds.includes(el._id)) {
-        const nuevasSillas = (el.sillas || []).map(silla => ({
-          ...silla,
-          zonaId: selectedZone.id,
-        }));
+      if (el.type === 'mesa' && isSelected) {
         return {
           ...el,
           zonaId: selectedZone.id,
-          sillas: nuevasSillas,
         };
       }
 
-      // 👉 Mesa no seleccionada, pero con algunas sillas seleccionadas
-      if (el.type === 'mesa' && el.sillas) {
-        const nuevasSillas = el.sillas.map(silla => {
-          if (selectedIds.includes(silla._id)) {
-            return {
-              ...silla,
-              zonaId: selectedZone.id,
-            };
-          }
-          return silla;
-        });
-        return {
-          ...el,
-          sillas: nuevasSillas,
-        };
-      }
-
-      // Otros elementos sin cambios
       return el;
-    })
-  );
+    });
+  });
 };
 
  // 🔁 Aplica la zona a todos los elementos seleccionados (mesas, sillas, textos, etc.)
@@ -60,25 +42,25 @@ export const useMapaZones = (elements, setElements, selectedIds, selectedZone) =
       return;
     }
 
-    setElements(prev =>
-      prev.map(el => {
-        if (selectedIds.includes(el._id)) {
-          // 👉 Si es mesa, también asignar zona a sus sillas
-        const nuevasSillas = (el.sillas || []).map(silla => ({
-          ...silla,
-          zonaId: selectedZone.id,
-        }));
+    setElements(prev => {
+      const selectedMesaIds = prev
+        .filter(el => el.type === 'mesa' && selectedIds.includes(el._id))
+        .map(mesa => mesa._id);
 
-        return {
-          ...el,
-          zonaId: selectedZone.id,
-          sillas: nuevasSillas,
-        };
+      return prev.map(el => {
+        const isSelected = selectedIds.includes(el._id);
+        const isChildOfSelectedMesa = el.type === 'silla' && selectedMesaIds.includes(el.parentId);
+
+        if (isSelected || isChildOfSelectedMesa) {
+          return {
+            ...el,
+            zonaId: selectedZone.id,
+          };
         }
 
         return el;
-      })
-    );
+      });
+    });
   };
 
   return {
