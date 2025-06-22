@@ -36,23 +36,7 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
       <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 mx-4">
         <h3 className="text-xl font-semibold mb-4 text-center">Crear Entrada</h3>
 
-        <input
-          type="text"
-          name="evento_id"
-          placeholder="ID del Evento"
-          value={formData.evento_id}
-          onChange={handleChange}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-
-        <input
-          type="text"
-          name="tipoEntrada"
-          placeholder="Tipo de Entrada"
-          value={formData.tipoEntrada}
-          onChange={handleChange}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
+        {/* Removed evento_id and tipoEntrada inputs */}
 
         <input
           type="text"
@@ -63,25 +47,7 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
           className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
 
-        <input
-          type="number"
-          name="precio"
-          placeholder="Precio"
-          min="0"
-          value={formData.precio}
-          onChange={handleChange}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-
-        <input
-          type="number"
-          name="cantidad"
-          placeholder="Cantidad"
-          min="0"
-          value={formData.cantidad}
-          onChange={handleChange}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
+        {/* Removed precio and cantidad inputs */}
 
         <div className="flex gap-2 mb-3">
           <input
