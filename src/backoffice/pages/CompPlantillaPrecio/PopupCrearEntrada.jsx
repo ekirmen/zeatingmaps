@@ -33,7 +33,6 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
         <h3 className="text-xl font-semibold mb-4 text-center">Crear Entrada</h3>
 
         {/* Campo Producto */}
-
         <input
           type="text"
           name="producto"
@@ -44,7 +43,6 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
         />
 
         {/* Campo Mínimo */}
-
         <div className="flex gap-2 mb-3">
           <input
             type="number"
@@ -87,11 +85,7 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
           <label className="block font-semibold mb-2">Tipo de Producto</label>
           <div className="flex flex-wrap gap-3 max-h-40 overflow-y-auto border border-gray-200 rounded p-2">
             {tiposDeProducto.map(tipo => (
-              <label
-                key={tipo.value}
-                className="flex items-center gap-2 cursor-pointer select-none"
-                title={tipo.description}
-              >
+              <label key={tipo.value} className="flex items-center gap-2 cursor-pointer select-none" title={tipo.description}>
                 <input
                   type="radio"
                   name="tipoProducto"
