@@ -31,6 +31,7 @@ const Entrada = () => {
 
   const [formData, setFormData] = useState({
     producto: "",
+    nombreEntrada: "",
     min: 1,
     max: 10,
     tipoProducto: "",
@@ -43,7 +44,7 @@ const Entrada = () => {
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [editFormData, setEditFormData] = useState({
     producto: "",
-    tipoEntrada: "",
+    nombreEntrada: "",
     precio: "",
     cantidad: "",
     min: 1,
@@ -58,12 +59,10 @@ const Entrada = () => {
       setTickets([]);
       return;
     }
-    const query = supabase
+    const { data, error } = await supabase
       .from("entradas")
       .select("*")
       .eq("recinto", formData.recinto);
-    if (formData.evento_id) query.eq("evento_id", formData.evento_id);
-    const { data, error } = await query;
 
     if (error) {
       console.error("Error al cargar tickets:", error.message);
@@ -76,7 +75,7 @@ const Entrada = () => {
       }));
       setTickets(mapped);
     }
-  }, [formData.recinto, formData.evento_id]);
+  }, [formData.recinto]);
 
   useEffect(() => {
     loadTickets();
@@ -87,13 +86,13 @@ const Entrada = () => {
       ...datos,
       iva: datos.ivaSeleccionado,
       tipo_producto: datos.tipoProducto,
-      tipo_entrada: datos.tipoEntrada,
+      nombre_entrada: datos.nombreEntrada,
     };
-    
+
     // Eliminar campos innecesarios
     delete datosConIva.ivaSeleccionado;
     delete datosConIva.tipoProducto;
-    delete datosConIva.tipoEntrada;
+    delete datosConIva.nombreEntrada;
   
     const { error } = await supabase.from("entradas").insert(datosConIva);
     if (error) {
@@ -115,7 +114,7 @@ const Entrada = () => {
     } else {
       setEditFormData({
         producto: data.producto,
-        tipoEntrada: data.tipo_entrada,
+        nombreEntrada: data.nombre_entrada,
         precio: data.precio,
         cantidad: data.cantidad,
         min: data.min,
@@ -132,12 +131,11 @@ const Entrada = () => {
       ...datosEditados,
       iva: datosEditados.ivaSeleccionado,
       tipo_producto: datosEditados.tipo,
-      evento_id: datosEditados.evento_id,
-      tipo_entrada: datosEditados.tipoEntrada,
+      nombre_entrada: datosEditados.nombreEntrada,
     };
     delete datosConIva.ivaSeleccionado;
     delete datosConIva.tipo;
-    delete datosConIva.tipoEntrada;
+    delete datosConIva.nombreEntrada;
   
     const { error } = await supabase.from("entradas").update(datosConIva).eq("id", ticketId);
     if (error) {
@@ -180,13 +178,6 @@ const Entrada = () => {
           recintoSeleccionado={formData.recinto}
           onChange={(value) => setFormData({ ...formData, recinto: value })}
         />
-        <input
-          type="text"
-          placeholder="ID del Evento"
-          className="mt-4 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          value={formData.evento_id}
-          onChange={(e) => setFormData({ ...formData, evento_id: e.target.value })}
-        />
       </div>
 
       <div className="mb-8">
@@ -204,7 +195,6 @@ const Entrada = () => {
           onClose={() => setShowPopup(false)}
           onSave={handleSaveData}
           recintoSeleccionado={formData.recinto}
-          eventoId={formData.evento_id}
         />
       )}
 

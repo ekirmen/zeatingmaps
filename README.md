@@ -48,3 +48,8 @@ REACT_APP_SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 
 This key grants full access to your Supabase project, so avoid exposing it in production builds and prefer performing admin tasks on a secure server.
 
+
+## Database
+
+The project expects a table named `entradas` in Supabase. An example schema is provided in `sql/create_entradas_table.sql`.
+It defines standard ticket fields, including a `recinto` column referencing the venue and a `nombre_entrada` column for the ticket name. The example no longer includes an `evento_id` field.

@@ -22,18 +22,9 @@ const PopupEditarEntrada = ({ tiposDeProducto, ivas, formData, onClose, onSave, 
 
         <input
           type="text"
-          name="evento_id"
-          placeholder="ID del Evento"
-          value={formData.evento_id}
-          onChange={handleChange}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-
-        <input
-          type="text"
-          name="tipoEntrada"
-          placeholder="Tipo de Entrada"
-          value={formData.tipoEntrada}
+          name="nombreEntrada"
+          placeholder="Nombre de la Entrada"
+          value={formData.nombreEntrada}
           onChange={handleChange}
           className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
