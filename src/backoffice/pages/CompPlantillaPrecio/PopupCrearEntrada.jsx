@@ -3,12 +3,15 @@ import React, { useState } from "react";
 const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSeleccionado, salaSeleccionada }) => {
   const [formData, setFormData] = useState({
     producto: "",
+    tipo_entrada: "",  // Asegúrate de que 'tipo_entrada' esté presente en el estado
+    precio: "",
+    cantidad: "",
     min: 1,
     max: 10,
     tipoProducto: "",
     ivaSeleccionado: "",
     recinto: recintoSeleccionado,
-    sala: salaSeleccionada
+    sala: salaSeleccionada,
   });
 
   const handleChange = (e) => {
@@ -21,15 +24,24 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
   };
 
   const handleSubmit = () => {
+    // Validación para asegurarse de que tipo_entrada no esté vacío
+    if (!formData.tipo_entrada) {
+      alert("Por favor, selecciona un tipo de entrada.");
+      return;
+    }
+
     if (!formData.recinto) {
       alert("Selecciona un recinto antes de guardar.");
       return;
     }
+
     if (!formData.sala) {
       alert("Selecciona una sala antes de guardar.");
       return;
     }
-    onSave(formData);  // Asegúrate de que onSave maneje los datos correctamente
+
+    // Llamada a onSave con los datos correctos
+    onSave(formData);
   };
 
   return (
@@ -46,6 +58,20 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
           onChange={handleChange}
           className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
+
+        {/* Campo Tipo de Entrada */}
+        <select
+          name="tipo_entrada"
+          value={formData.tipo_entrada}
+          onChange={handleChange}
+          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        >
+          <option value="">Seleccionar tipo de entrada</option>
+          <option value="general">General</option>
+          <option value="vip">VIP</option>
+          <option value="promocional">Promocional</option>
+          {/* Agrega más opciones si es necesario */}
+        </select>
 
         {/* Campo Mínimo */}
         <div className="flex gap-2 mb-3">
