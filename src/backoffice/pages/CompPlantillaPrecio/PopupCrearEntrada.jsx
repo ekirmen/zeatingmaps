@@ -3,6 +3,7 @@ import React, { useState } from "react";
 const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSeleccionado }) => {
   const [formData, setFormData] = useState({
     producto: "",
+    nombreEntrada: "",
     min: 1,
     max: 10,
     tipoProducto: "",
@@ -20,8 +21,11 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
   };
 
   const handleSubmit = () => {
-    // Validación para asegurarse de que tipo_entrada no esté vacío
-   
+    // Validación de campos obligatorios
+    if (!formData.nombreEntrada) {
+      alert("Debes ingresar un nombre para la entrada.");
+      return;
+    }
     if (!formData.recinto) {
       alert("Selecciona un recinto antes de guardar.");
       return;
@@ -42,6 +46,16 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
           name="producto"
           placeholder="Nombre del Producto"
           value={formData.producto}
+          onChange={handleChange}
+          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+
+        {/* Nombre de la Entrada */}
+        <input
+          type="text"
+          name="nombreEntrada"
+          placeholder="Nombre de la Entrada"
+          value={formData.nombreEntrada}
           onChange={handleChange}
           className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
         />
