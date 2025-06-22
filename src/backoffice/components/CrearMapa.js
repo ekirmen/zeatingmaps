@@ -171,9 +171,10 @@ const CrearMapa = () => {
         updateElementSize={updateElementSize}
         zonas={loadedZonas}
         zoneSeatCounts={zoneSeatCounts}
-        selectedZoneId={selectedZone?.id || ''}
+        selectedZoneId={selectedZone ? String(selectedZone.id) : ''}
         setSelectedZoneId={(zoneId) => {
-          const zona = loadedZonas.find((z) => z.id === zoneId);
+          const numericId = parseInt(zoneId, 10);
+          const zona = loadedZonas.find((z) => z.id === numericId);
           setSelectedZone(zona || null);
         }}
         setShowZones={setShowZones}
