@@ -5,7 +5,23 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchUserRole = async (id) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('permisos')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      setRole(data.permisos?.role || null);
+    } catch (err) {
+      console.error('Error fetching role:', err.message);
+      setRole(null);
+    }
+  };
 
   const validateSession = async () => {
     try {
@@ -14,9 +30,11 @@ export const AuthProvider = ({ children }) => {
       if (session) {
         localStorage.setItem('token', session.access_token);
         setUser(session.user);
+        fetchUserRole(session.user.id);
       } else {
         localStorage.removeItem('token');
         setUser(null);
+        setRole(null);
       }
     } catch (error) {
       console.error('❌ Error al validar sesión:', error.message);
@@ -36,6 +54,7 @@ export const AuthProvider = ({ children }) => {
       const token = data.session.access_token;
       localStorage.setItem('token', token);
       setUser(data.user);
+      fetchUserRole(data.user.id);
       return data;
     } catch (error) {
       throw error;
@@ -46,6 +65,7 @@ export const AuthProvider = ({ children }) => {
     await supabase.auth.signOut();
     localStorage.removeItem('token');
     setUser(null);
+    setRole(null);
   };
 
   useEffect(() => {
@@ -54,6 +74,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    role,
     login,
     logout,
     loading,

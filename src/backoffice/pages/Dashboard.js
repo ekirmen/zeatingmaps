@@ -1,10 +1,19 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import SidebarMenu from '../components/SidebarMenu';
 import TopBar from '../components/TopBar';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Dashboard = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { role } = useAuth();
+
+  useEffect(() => {
+    if (role && role !== 'administrador') {
+      navigate('/store');
+    }
+  }, [role, navigate]);
 
   // Verifica si estamos en páginas que usan toda la pantalla
   const isFullPage = location.pathname === '/dashboard/Boleteria' || location.pathname === '/dashboard/web-studio';

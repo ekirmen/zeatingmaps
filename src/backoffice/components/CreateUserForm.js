@@ -37,6 +37,7 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
           apellido: formData.apellido,
           empresa: formData.empresa,
           telefono: formData.telefono,
+          permisos: { role: 'usuario' },
         })
         .eq('id', userResponse.user.id);
 
