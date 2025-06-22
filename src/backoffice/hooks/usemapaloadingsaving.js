@@ -23,8 +23,12 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
             width: mesa.width || mesa.radius * 2,
             height: mesa.height || mesa.radius * 2,
             posicion: mesa.posicion || { x: 0, y: 0 },
-            zona: typeof mesa.zona === 'string' ? zonasCargadas.find(z => z.id === mesa.zona) : mesa.zona,
-            zonaId: typeof mesa.zona === 'string' ? mesa.zona : mesa.zona?.id || null,
+            zona: ['string', 'number'].includes(typeof mesa.zona)
+              ? zonasCargadas.find(z => z.id === mesa.zona)
+              : mesa.zona,
+            zonaId: ['string', 'number'].includes(typeof mesa.zona)
+              ? mesa.zona
+              : mesa.zona?.id || null,
           };
 
           // Transform sillas array
@@ -43,8 +47,12 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
               fontWeight: 'bold',
               marginBottom: '5px'
             },
-            zona: typeof silla.zona === 'string' ? zonasCargadas.find(z => z.id === silla.zona) : silla.zona,
-            zonaId: typeof silla.zona === 'string' ? silla.zona : silla.zona?.id || null,
+            zona: ['string', 'number'].includes(typeof silla.zona)
+              ? zonasCargadas.find(z => z.id === silla.zona)
+              : silla.zona,
+            zonaId: ['string', 'number'].includes(typeof silla.zona)
+              ? silla.zona
+              : silla.zona?.id || null,
           }));
 
           return [mesaConZona, ...sillas];
