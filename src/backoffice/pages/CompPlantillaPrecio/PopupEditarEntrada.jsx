@@ -97,7 +97,7 @@ const PopupEditarEntrada = ({ tiposDeProducto, ivas, formData, onClose, onSave, 
         >
           <option value="">Seleccionar IVA</option>
           {ivas.map(iva => (
-            <option key={iva._id} value={iva._id}>
+            <option key={iva.id} value={iva.id}>
               {iva.nombre} - {iva.porcentaje}%
             </option>
           ))}
@@ -107,9 +107,9 @@ const PopupEditarEntrada = ({ tiposDeProducto, ivas, formData, onClose, onSave, 
           <div className="mb-4 p-3 border border-indigo-200 rounded bg-indigo-50 text-indigo-700">
             <p><strong>IVA Seleccionado:</strong></p>
             {ivas
-              .filter(iva => iva._id === formData.ivaSeleccionado)
+              .filter(iva => iva.id === formData.ivaSeleccionado)
               .map(iva => (
-                <p key={iva._id}>
+                <p key={iva.id}>
                   {iva.nombre} - {iva.porcentaje}%
                 </p>
               ))}

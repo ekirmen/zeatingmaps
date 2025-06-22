@@ -74,7 +74,7 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
         >
           <option value="">Seleccionar IVA</option>
           {ivas.map(iva => (
-            <option key={iva._id} value={iva._id}>
+            <option key={iva.id} value={iva.id}>
               {iva.nombre} - {iva.porcentaje}%
             </option>
           ))}
