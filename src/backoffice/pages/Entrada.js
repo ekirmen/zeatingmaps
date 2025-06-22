@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRecinto } from "../contexts/RecintoContext";
 import { useIva } from "../contexts/IvaContext";
 import RecintoSelector from "./CompPlantillaPrecio/RecintoSelector";
-import SalaSelector from "./CompPlantillaPrecio/SalaSelector";
 import TicketsList from "./CompPlantillaPrecio/TicketsList";
 import PopupCrearEntrada from "./CompPlantillaPrecio/PopupCrearEntrada";
 import PopupEditarEntrada from "./CompPlantillaPrecio/PopupEditarEntrada";
@@ -27,13 +26,7 @@ const tiposDeProducto = [
 ];
 
 const Entrada = () => {
-  const {
-    recintos,
-    recintoSeleccionado,
-    setRecintoSeleccionado,
-    salaSeleccionada,
-    setSalaSeleccionada,
-  } = useRecinto();
+  const { recintos } = useRecinto();
   const { ivas } = useIva();
 
   const [formData, setFormData] = useState({
@@ -46,7 +39,6 @@ const Entrada = () => {
     tipoProducto: "",
     ivaSeleccionado: "",
     recinto: "",
-    sala: "",
     evento_id: ""
   });
 
@@ -63,7 +55,6 @@ const Entrada = () => {
     max: 10,
     ivaSeleccionado: "",
     recinto: "",
-    sala: "",
     evento_id: ""
   });
   const [ticketId, setTicketId] = useState(null);
@@ -77,7 +68,6 @@ const Entrada = () => {
       .from("entradas")
       .select("*")
       .eq("recinto", formData.recinto);
-    if (formData.sala) query.eq("sala", formData.sala);
     if (formData.evento_id) query.eq("evento_id", formData.evento_id);
     const { data, error } = await query;
 
@@ -92,7 +82,7 @@ const Entrada = () => {
       }));
       setTickets(mapped);
     }
-  }, [formData.recinto, formData.sala, formData.evento_id]);
+  }, [formData.recinto, formData.evento_id]);
 
   useEffect(() => {
     loadTickets();
@@ -104,7 +94,6 @@ const Entrada = () => {
       iva: datos.ivaSeleccionado,
       tipo_producto: datos.tipoProducto,
       evento_id: datos.evento_id,
-      sala: datos.sala,
       tipo_entrada: datos.tipoEntrada,
       precio: datos.precio,
       cantidad: datos.cantidad,
@@ -140,7 +129,6 @@ const Entrada = () => {
         max: data.max,
         ivaSeleccionado: data.iva || '',
         recinto: data.recinto,
-        sala: data.sala || '',
         evento_id: data.evento_id,
       });
       setShowEditPopup(true);
@@ -153,7 +141,6 @@ const Entrada = () => {
       iva: datosEditados.ivaSeleccionado,
       tipo_producto: datosEditados.tipo,
       evento_id: datosEditados.evento_id,
-      sala: datosEditados.sala,
       tipo_entrada: datosEditados.tipoEntrada,
       precio: datosEditados.precio,
       cantidad: datosEditados.cantidad,
@@ -200,25 +187,9 @@ const Entrada = () => {
       <div className="mb-8">
         <RecintoSelector
           recintos={recintos}
-          recintoSeleccionado={recintoSeleccionado?.id || formData.recinto}
-          onChange={(value) => {
-            const r = recintos.find(r => String(r.id) === value);
-            setRecintoSeleccionado(r || null);
-            setSalaSeleccionada(null);
-            setFormData({ ...formData, recinto: value, sala: "" });
-          }}
+          recintoSeleccionado={formData.recinto}
+          onChange={(value) => setFormData({ ...formData, recinto: value })}
         />
-        {recintoSeleccionado && (
-          <SalaSelector
-            salas={recintoSeleccionado.salas || []}
-            salaSeleccionada={salaSeleccionada?.id || formData.sala}
-            onChange={(value) => {
-              const s = (recintoSeleccionado.salas || []).find(s => String(s.id) === value);
-              setSalaSeleccionada(s || null);
-              setFormData({ ...formData, sala: value });
-            }}
-          />
-        )}
         <input
           type="text"
           placeholder="ID del Evento"
@@ -243,7 +214,6 @@ const Entrada = () => {
           onClose={() => setShowPopup(false)}
           onSave={handleSaveData}
           recintoSeleccionado={formData.recinto}
-          salaSeleccionada={formData.sala}
           eventoId={formData.evento_id}
         />
       )}
@@ -256,7 +226,6 @@ const Entrada = () => {
           onClose={() => setShowEditPopup(false)}
           onSave={handleSaveEditData}
           recintoSeleccionado={editFormData.recinto}
-          salaSeleccionada={editFormData.sala}
           onFormChange={setEditFormData}
         />
       )}
