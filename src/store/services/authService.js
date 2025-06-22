@@ -17,7 +17,11 @@ export const registerUser = async ({ email, password }) => {
   // Crea perfil en tabla 'profiles' (relacionada con auth.users)
   const { error: profileError } = await supabase
     .from('profiles')
-    .upsert({ id: userId, login: email }); // Puedes agregar más campos si tienes otros
+    .upsert({
+      id: userId,
+      login: email,
+      permisos: { role: 'usuario' }, // Asignar rol por defecto
+    });
 
   if (profileError) {
     console.warn('⚠️ Error al crear perfil:', profileError.message);

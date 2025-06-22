@@ -133,7 +133,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           telefono: values.telefono,
           empresa: values.empresa || 'Sin empresa',
           perfil: 'cliente',
-          permisos: {},
+          permisos: { role: 'usuario' },
           formaDePago: {},
         })
         .eq('id', userResp.user.id)

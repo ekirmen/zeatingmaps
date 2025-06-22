@@ -80,6 +80,7 @@ const ClientModals = ({
           nombre: values.nombre,
           telefono: values.telefono,
           empresa: values.empresa || 'Sin empresa',
+          permisos: { role: 'usuario' },
         })
         .eq('id', userResp.user.id)
         .select()

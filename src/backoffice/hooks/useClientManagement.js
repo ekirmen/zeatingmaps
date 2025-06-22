@@ -56,6 +56,7 @@ export const useClientManagement = (setCarrito) => {
           nombre: values.nombre,
           telefono: values.telefono,
           empresa: values.empresa || 'default',
+          permisos: { role: 'usuario' },
         })
         .eq('id', userResp.user.id)
         .select()
