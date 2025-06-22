@@ -74,18 +74,19 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
         {/* Selección de IVA */}
         <label className="block font-semibold mb-1">IVA</label>
         <select
-          name="ivaSeleccionado"
-          value={formData.ivaSeleccionado}
-          onChange={handleChange}
-          className="w-full mb-4 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          <option value="">Seleccionar IVA</option>
-          {ivas.map(iva => (
-            <option key={iva.id} value={iva.id}>
-              {iva.nombre} - {iva.porcentaje}%
-            </option>
-          ))}
-        </select>
+            name="ivaSeleccionado"
+            value={formData.ivaSeleccionado}
+            onChange={handleChange}
+            className="w-full mb-4 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">Seleccionar IVA</option>
+            {ivas.map(iva => (
+              <option key={iva.id} value={iva.id}>
+                {iva.nombre} - {iva.porcentaje}%
+              </option>
+            ))}
+          </select>
+
 
         {/* Selección de Tipo de Producto */}
         <div className="mb-4">

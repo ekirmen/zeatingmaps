@@ -89,19 +89,32 @@ const Entrada = () => {
   }, [loadTickets]);
 
   const handleSaveData = async (datos) => {
+    // Validar los campos que deben ser numéricos
+    if (!datos.precio || isNaN(datos.precio)) {
+      alert("El precio debe ser un número válido.");
+      return;
+    }
+    if (!datos.cantidad || isNaN(datos.cantidad)) {
+      alert("La cantidad debe ser un número válido.");
+      return;
+    }
+  
+    // Resto del código para agregar los datos...
     const datosConIva = {
       ...datos,
       iva: datos.ivaSeleccionado,
       tipo_producto: datos.tipoProducto,
       evento_id: datos.evento_id,
       tipo_entrada: datos.tipoEntrada,
-      precio: datos.precio,
-      cantidad: datos.cantidad,
+      precio: parseFloat(datos.precio), // Asegurarse de que es un número
+      cantidad: parseInt(datos.cantidad, 10), // Asegurarse de que es un número
     };
+    
+    // Eliminar campos innecesarios
     delete datosConIva.ivaSeleccionado;
     delete datosConIva.tipoProducto;
     delete datosConIva.tipoEntrada;
-
+  
     const { error } = await supabase.from("entradas").insert(datosConIva);
     if (error) {
       console.error("Error al guardar datos:", error.message);
@@ -112,6 +125,7 @@ const Entrada = () => {
       loadTickets();
     }
   };
+  
 
   const handleEditTicket = async (id) => {
     setTicketId(id);
