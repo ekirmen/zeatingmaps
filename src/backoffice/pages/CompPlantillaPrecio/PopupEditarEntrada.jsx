@@ -1,6 +1,6 @@
 import React from "react";
 
-const PopupEditarEntrada = ({ tiposDeProducto, ivas, formData, onClose, onSave, onFormChange }) => {
+const PopupEditarEntrada = ({ tiposDeProducto, ivas, formData, onClose, onSave, onFormChange, salaSeleccionada }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;

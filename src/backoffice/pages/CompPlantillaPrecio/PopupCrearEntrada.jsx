@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 
-const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSeleccionado }) => {
+const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSeleccionado, salaSeleccionada }) => {
   const [formData, setFormData] = useState({
     producto: "",
     min: 1,
     max: 10,
     tipoProducto: "",
     ivaSeleccionado: "",
-    recinto: recintoSeleccionado
+    recinto: recintoSeleccionado,
+    sala: salaSeleccionada
   });
 
   const handleChange = (e) => {
@@ -22,6 +23,10 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
   const handleSubmit = () => {
     if (!formData.recinto) {
       alert("Selecciona un recinto antes de guardar.");
+      return;
+    }
+    if (!formData.sala) {
+      alert("Selecciona una sala antes de guardar.");
       return;
     }
     onSave(formData);  // Asegúrate de que onSave maneje los datos correctamente
