@@ -31,11 +31,15 @@ const Entrada = () => {
 
   const [formData, setFormData] = useState({
     producto: "",
+    tipoEntrada: "",
+    precio: "",
+    cantidad: "",
     min: 1,
     max: 10,
     tipoProducto: "",
     ivaSeleccionado: "",
-    recinto: ""
+    recinto: "",
+    evento_id: ""
   });
 
   const [showPopup, setShowPopup] = useState(false);
@@ -44,10 +48,14 @@ const Entrada = () => {
   const [editFormData, setEditFormData] = useState({
     producto: "",
     tipo: "",
+    tipoEntrada: "",
+    precio: "",
+    cantidad: "",
     min: 1,
     max: 10,
     ivaSeleccionado: "",
-    recinto: ""
+    recinto: "",
+    evento_id: ""
   });
   const [ticketId, setTicketId] = useState(null);
 
@@ -56,10 +64,12 @@ const Entrada = () => {
       setTickets([]);
       return;
     }
-    const { data, error } = await supabase
+    const query = supabase
       .from("entradas")
       .select("*")
       .eq("recinto", formData.recinto);
+    if (formData.evento_id) query.eq("evento_id", formData.evento_id);
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error al cargar tickets:", error.message);
@@ -72,7 +82,7 @@ const Entrada = () => {
       }));
       setTickets(mapped);
     }
-  }, [formData.recinto]);
+  }, [formData.recinto, formData.evento_id]);
 
   useEffect(() => {
     loadTickets();
@@ -83,9 +93,14 @@ const Entrada = () => {
       ...datos,
       iva: datos.ivaSeleccionado,
       tipo_producto: datos.tipoProducto,
+      evento_id: datos.evento_id,
+      tipo_entrada: datos.tipoEntrada,
+      precio: datos.precio,
+      cantidad: datos.cantidad,
     };
     delete datosConIva.ivaSeleccionado;
     delete datosConIva.tipoProducto;
+    delete datosConIva.tipoEntrada;
 
     const { error } = await supabase.from("entradas").insert(datosConIva);
     if (error) {
@@ -107,10 +122,14 @@ const Entrada = () => {
       setEditFormData({
         producto: data.producto,
         tipo: data.tipo_producto,
+        tipoEntrada: data.tipo_entrada,
+        precio: data.precio,
+        cantidad: data.cantidad,
         min: data.min,
         max: data.max,
         ivaSeleccionado: data.iva || '',
-        recinto: data.recinto
+        recinto: data.recinto,
+        evento_id: data.evento_id,
       });
       setShowEditPopup(true);
     }
@@ -121,9 +140,14 @@ const Entrada = () => {
       ...datosEditados,
       iva: datosEditados.ivaSeleccionado,
       tipo_producto: datosEditados.tipo,
+      evento_id: datosEditados.evento_id,
+      tipo_entrada: datosEditados.tipoEntrada,
+      precio: datosEditados.precio,
+      cantidad: datosEditados.cantidad,
     };
     delete datosConIva.ivaSeleccionado;
     delete datosConIva.tipo;
+    delete datosConIva.tipoEntrada;
   
     const { error } = await supabase.from("entradas").update(datosConIva).eq("id", ticketId);
     if (error) {
@@ -166,6 +190,13 @@ const Entrada = () => {
           recintoSeleccionado={formData.recinto}
           onChange={(value) => setFormData({ ...formData, recinto: value })}
         />
+        <input
+          type="text"
+          placeholder="ID del Evento"
+          className="mt-4 w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          value={formData.evento_id}
+          onChange={(e) => setFormData({ ...formData, evento_id: e.target.value })}
+        />
       </div>
 
       <div className="mb-8">
@@ -183,6 +214,7 @@ const Entrada = () => {
           onClose={() => setShowPopup(false)}
           onSave={handleSaveData}
           recintoSeleccionado={formData.recinto}
+          eventoId={formData.evento_id}
         />
       )}
 
