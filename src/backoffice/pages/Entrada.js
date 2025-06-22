@@ -31,15 +31,11 @@ const Entrada = () => {
 
   const [formData, setFormData] = useState({
     producto: "",
-    tipoEntrada: "",
-    precio: "",
-    cantidad: "",
     min: 1,
     max: 10,
     tipoProducto: "",
     ivaSeleccionado: "",
-    recinto: "",
-    evento_id: ""
+    recinto: ""
   });
 
   const [showPopup, setShowPopup] = useState(false);
@@ -47,15 +43,13 @@ const Entrada = () => {
   const [showEditPopup, setShowEditPopup] = useState(false);
   const [editFormData, setEditFormData] = useState({
     producto: "",
-    tipo: "",
     tipoEntrada: "",
     precio: "",
     cantidad: "",
     min: 1,
     max: 10,
     ivaSeleccionado: "",
-    recinto: "",
-    evento_id: ""
+    recinto: ""
   });
   const [ticketId, setTicketId] = useState(null);
 
@@ -89,25 +83,11 @@ const Entrada = () => {
   }, [loadTickets]);
 
   const handleSaveData = async (datos) => {
-    // Validar los campos que deben ser numéricos
-    if (!datos.precio || isNaN(datos.precio)) {
-      alert("El precio debe ser un número válido.");
-      return;
-    }
-    if (!datos.cantidad || isNaN(datos.cantidad)) {
-      alert("La cantidad debe ser un número válido.");
-      return;
-    }
-  
-    // Resto del código para agregar los datos...
     const datosConIva = {
       ...datos,
       iva: datos.ivaSeleccionado,
       tipo_producto: datos.tipoProducto,
-      evento_id: datos.evento_id,
       tipo_entrada: datos.tipoEntrada,
-      precio: parseFloat(datos.precio), // Asegurarse de que es un número
-      cantidad: parseInt(datos.cantidad, 10), // Asegurarse de que es un número
     };
     
     // Eliminar campos innecesarios
@@ -135,7 +115,6 @@ const Entrada = () => {
     } else {
       setEditFormData({
         producto: data.producto,
-        tipo: data.tipo_producto,
         tipoEntrada: data.tipo_entrada,
         precio: data.precio,
         cantidad: data.cantidad,
@@ -143,7 +122,6 @@ const Entrada = () => {
         max: data.max,
         ivaSeleccionado: data.iva || '',
         recinto: data.recinto,
-        evento_id: data.evento_id,
       });
       setShowEditPopup(true);
     }
@@ -156,8 +134,6 @@ const Entrada = () => {
       tipo_producto: datosEditados.tipo,
       evento_id: datosEditados.evento_id,
       tipo_entrada: datosEditados.tipoEntrada,
-      precio: datosEditados.precio,
-      cantidad: datosEditados.cantidad,
     };
     delete datosConIva.ivaSeleccionado;
     delete datosConIva.tipo;

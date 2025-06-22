@@ -3,9 +3,6 @@ import React, { useState } from "react";
 const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSeleccionado }) => {
   const [formData, setFormData] = useState({
     producto: "",
-    tipo_entrada: "",  // Asegúrate de que 'tipo_entrada' esté presente en el estado
-    precio: "",
-    cantidad: "",
     min: 1,
     max: 10,
     tipoProducto: "",
