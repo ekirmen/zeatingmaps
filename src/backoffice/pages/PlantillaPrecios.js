@@ -63,7 +63,19 @@ const PlantillaPrecios = () => {
       .select('*')
       .eq('recinto', recinto.id)
       .eq('sala', sala.id);
-    setPlantillas(!error ? data : []);
+
+    const parsed = !error && Array.isArray(data)
+      ? data.map(p => ({
+          ...p,
+          detalles: typeof p.detalles === 'string'
+            ? JSON.parse(p.detalles)
+            : Array.isArray(p.detalles)
+            ? p.detalles
+            : []
+        }))
+      : [];
+
+    setPlantillas(parsed);
   }, [recinto, sala]);
 
   useEffect(() => {
@@ -141,8 +153,11 @@ const PlantillaPrecios = () => {
       setEditingPlantilla(plantilla);
       setNombrePlantilla(plantilla.nombre);
       // Supabase puede retornar `null` si la plantilla no tiene detalles
-      // Aseguramos que siempre sea un arreglo antes de usarlo
-      setDetallesPrecios(Array.isArray(plantilla.detalles) ? plantilla.detalles : []);
+      // También puede almacenarlos como texto JSON
+      const parsedDetalles = typeof plantilla.detalles === 'string'
+        ? JSON.parse(plantilla.detalles)
+        : plantilla.detalles;
+      setDetallesPrecios(Array.isArray(parsedDetalles) ? parsedDetalles : []);
       setModalIsOpen(true);
     } catch (err) {
       console.error('Error cargando plantilla para editar:', err);
