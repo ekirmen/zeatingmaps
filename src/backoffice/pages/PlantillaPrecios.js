@@ -122,7 +122,9 @@ const PlantillaPrecios = () => {
   const handleEditPlantilla = (p) => {
     setEditingPlantilla(p);
     setNombrePlantilla(p.nombre);
-    setDetallesPrecios(p.detalles);
+    // Supabase puede retornar `null` si la plantilla no tiene detalles
+    // Aseguramos que siempre sea un arreglo antes de usarlo
+    setDetallesPrecios(Array.isArray(p.detalles) ? p.detalles : []);
     setModalIsOpen(true);
   };
 
