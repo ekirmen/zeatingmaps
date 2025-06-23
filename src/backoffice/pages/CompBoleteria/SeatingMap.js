@@ -52,9 +52,12 @@ const SeatingMap = ({
   };
 
   const renderSeat = (silla, mesa) => {
-    const isAvailable = availableZonas?.includes(silla.zona);
+    const seatZonaId =
+      typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
+    const isAvailable = availableZonas?.includes(seatZonaId);
     const isAbono = abonoMode && abonoSeats.includes(silla._id);
-    const isSelected = selectedZona && selectedZona._id === silla.zona;
+    const selectedZonaId = selectedZona ? selectedZona._id || selectedZona.id : null;
+    const isSelected = selectedZonaId && selectedZonaId === seatZonaId;
 
     const colorMap = {
       pagado: "#9ca3af",
