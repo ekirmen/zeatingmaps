@@ -55,6 +55,36 @@ const [mapa, setMapa] = useState(null);
 
   const handleSeatClick = (seat, table) => {
     const exists = carrito.find((i) => i._id === seat._id);
+    const zonaId = seat.zona;
+    const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
+
+    // Determine pricing from the selected plantilla
+    const detalle = selectedPlantilla?.detalles?.find(d => {
+      const id = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
+      return id === zonaId;
+    });
+    const basePrice = detalle?.precio || 0;
+
+    let finalPrice = basePrice;
+    let tipoPrecio = 'normal';
+    let descuentoNombre = '';
+
+    if (appliedDiscount?.detalles) {
+      const d = appliedDiscount.detalles.find(dt => {
+        const id = typeof dt.zona === 'object' ? dt.zona._id : dt.zona;
+        return id === zonaId;
+      });
+      if (d) {
+        if (d.tipo === 'porcentaje') {
+          finalPrice = Math.max(0, basePrice - (basePrice * d.valor) / 100);
+        } else {
+          finalPrice = Math.max(0, basePrice - d.valor);
+        }
+        tipoPrecio = 'descuento';
+        descuentoNombre = appliedDiscount.nombreCodigo;
+      }
+    }
+
     if (exists) {
       setCarrito(carrito.filter((i) => i._id !== seat._id));
     } else {
@@ -64,7 +94,10 @@ const [mapa, setMapa] = useState(null);
           _id: seat._id,
           nombre: seat.nombre,
           nombreMesa: table.nombre,
-          zona: seat.zona,
+          zona: zonaObj?.nombre || seat.zona,
+          precio: finalPrice,
+          tipoPrecio,
+          descuentoNombre,
         },
       ]);
     }
@@ -118,12 +151,28 @@ const [mapa, setMapa] = useState(null);
 
     const zonaNombre = detalle.zona?.nombre || detalle.zonaId || detalle.zona;
     const precio = getPrecioConDescuento(detalle);
+    let tipoPrecio = 'normal';
+    let descuentoNombre = '';
+
+    if (appliedDiscount?.detalles) {
+      const d = appliedDiscount.detalles.find(dt => {
+        const id = typeof dt.zona === 'object' ? dt.zona._id : dt.zona;
+        return id === zonaId;
+      });
+      if (d) {
+        tipoPrecio = 'descuento';
+        descuentoNombre = appliedDiscount.nombreCodigo;
+      }
+    }
+
     const items = Array.from({ length: qty }).map((_, idx) => ({
       _id: `${zonaId}-${Date.now()}-${idx}`,
       nombre: '',
       nombreMesa: '',
       zona: zonaNombre,
       precio,
+      tipoPrecio,
+      descuentoNombre,
     }));
     setCarrito([...carrito, ...items]);
     setZoneQuantities(prev => ({ ...prev, [zonaId]: '' }));
