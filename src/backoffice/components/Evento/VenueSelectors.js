@@ -32,7 +32,9 @@ const VenueSelectors = ({
             value={salaSeleccionada ? salaSeleccionada.id : ''}
             onChange={(e) =>
               setSalaSeleccionada(
-                recintoSeleccionado.salas.find((sala) => sala.id === e.target.value)
+                recintoSeleccionado.salas.find(
+                  (sala) => String(sala.id) === e.target.value
+                )
               )
             }
           >
