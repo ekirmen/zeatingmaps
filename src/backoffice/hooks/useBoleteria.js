@@ -120,7 +120,7 @@ export const useBoleteria = () => {
 
     try {
       await Promise.all([
-        fetchMapa(funcion.sala, funcion.id),
+        fetchMapa(funcion.sala),
         fetchZonasPorSala(funcion.sala)
       ]);
       return true;

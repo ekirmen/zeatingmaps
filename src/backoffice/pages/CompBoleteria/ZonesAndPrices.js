@@ -34,7 +34,7 @@ const [mapa, setMapa] = useState(null);
       if (salaId) {
         try {
           const [m, zs] = await Promise.all([
-            fetchMapa(salaId, funcionId),
+            fetchMapa(salaId),
             fetchZonasPorSala(salaId),
           ]);
           setMapa(m);
