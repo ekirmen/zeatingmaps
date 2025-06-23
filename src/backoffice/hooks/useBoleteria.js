@@ -70,7 +70,7 @@ export const useBoleteria = () => {
 
   const handleEventSelect = async (eventoId) => {
     const { data, error } = await supabase
-      .from('funcions')
+      .from('funciones')
       .select(`
         *,
         plantilla (
