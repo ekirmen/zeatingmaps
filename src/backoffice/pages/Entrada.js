@@ -82,19 +82,20 @@ const Entrada = () => {
   }, [loadTickets]);
 
   const handleSaveData = async (datos) => {
-    const datosConIva = {
-      ...datos,
-      iva: datos.ivaSeleccionado,
-      tipo_producto: datos.tipoProducto,
+    // Prepara sólo los campos que realmente quieres persistir
+    const datosAInsertar = {
       nombre_entrada: datos.nombreEntrada,
+      min: datos.min,
+      max: datos.max,
+      iva: datos.ivaSeleccionado,        // viene de la tabla ivas
+      tipo_producto: datos.tipoProducto,
+      recinto: datos.recinto,
     };
-
-    // Eliminar campos innecesarios
-    delete datosConIva.ivaSeleccionado;
-    delete datosConIva.tipoProducto;
-    delete datosConIva.nombreEntrada;
   
-    const { error } = await supabase.from("entradas").insert(datosConIva);
+    const { error } = await supabase
+      .from("entradas")
+      .insert([ datosAInsertar ]);  // insert espera un array
+  
     if (error) {
       console.error("Error al guardar datos:", error.message);
       alert("Error al guardar datos");
@@ -103,7 +104,7 @@ const Entrada = () => {
       setShowPopup(false);
       loadTickets();
     }
-  };
+  };  
   
 
   const handleEditTicket = async (id) => {

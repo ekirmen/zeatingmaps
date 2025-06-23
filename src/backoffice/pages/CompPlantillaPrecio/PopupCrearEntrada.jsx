@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSeleccionado }) => {
   const [formData, setFormData] = useState({
-    producto: "",
     nombreEntrada: "",
     min: 1,
     max: 10,
@@ -11,9 +10,19 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
     recinto: recintoSeleccionado,
   });
 
+  useEffect(() => {
+    // Mantener sincronizado el recinto
+    setFormData(prev => ({ ...prev, recinto: recintoSeleccionado }));
+  }, [recintoSeleccionado]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: name === "min" || name === "max"
+        ? Number(value)
+        : value 
+    }));
   };
 
   const handleTipoProductoChange = (value) => {
@@ -21,7 +30,6 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
   };
 
   const handleSubmit = () => {
-    // Validación de campos obligatorios
     if (!formData.nombreEntrada) {
       alert("Debes ingresar un nombre para la entrada.");
       return;
@@ -30,8 +38,10 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
       alert("Selecciona un recinto antes de guardar.");
       return;
     }
-
-    // Llamada a onSave con los datos correctos
+    if (!formData.ivaSeleccionado) {
+      alert("Selecciona un IVA.");
+      return;
+    }
     onSave(formData);
   };
 
@@ -40,16 +50,6 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
       <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 mx-4">
         <h3 className="text-xl font-semibold mb-4 text-center">Crear Entrada</h3>
 
-        {/* Campo Producto */}
-        <input
-          type="text"
-          name="producto"
-          placeholder="Nombre del Producto"
-          value={formData.producto}
-          onChange={handleChange}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-
         {/* Nombre de la Entrada */}
         <input
           type="text"
@@ -57,10 +57,10 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
           placeholder="Nombre de la Entrada"
           value={formData.nombreEntrada}
           onChange={handleChange}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full mb-3 px-3 py-2 border rounded focus:ring-2"
         />
 
-        {/* Campo Mínimo */}
+        {/* Cantidad Mín / Máx */}
         <div className="flex gap-2 mb-3">
           <input
             type="number"
@@ -69,7 +69,7 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
             min="1"
             value={formData.min}
             onChange={handleChange}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 px-3 py-2 border rounded focus:ring-2"
           />
           <input
             type="number"
@@ -78,33 +78,32 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
             min="1"
             value={formData.max}
             onChange={handleChange}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 px-3 py-2 border rounded focus:ring-2"
           />
         </div>
 
         {/* Selección de IVA */}
         <label className="block font-semibold mb-1">IVA</label>
         <select
-            name="ivaSeleccionado"
-            value={formData.ivaSeleccionado}
-            onChange={handleChange}
-            className="w-full mb-4 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="">Seleccionar IVA</option>
-            {ivas.map(iva => (
-              <option key={iva.id} value={iva.id}>
-                {iva.nombre} - {iva.porcentaje}%
-              </option>
-            ))}
-          </select>
+          name="ivaSeleccionado"
+          value={formData.ivaSeleccionado}
+          onChange={handleChange}
+          className="w-full mb-4 px-3 py-2 border rounded focus:ring-2"
+        >
+          <option value="">Seleccionar IVA</option>
+          {ivas.map(iva => (
+            <option key={iva.id} value={iva.id}>
+              {iva.nombre} – {iva.porcentaje}%
+            </option>
+          ))}
+        </select>
 
-
-        {/* Selección de Tipo de Producto */}
+        {/* Tipo de Producto */}
         <div className="mb-4">
           <label className="block font-semibold mb-2">Tipo de Producto</label>
-          <div className="flex flex-wrap gap-3 max-h-40 overflow-y-auto border border-gray-200 rounded p-2">
+          <div className="flex flex-wrap gap-3 max-h-40 overflow-y-auto border rounded p-2">
             {tiposDeProducto.map(tipo => (
-              <label key={tipo.value} className="flex items-center gap-2 cursor-pointer select-none" title={tipo.description}>
+              <label key={tipo.value} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
                   name="tipoProducto"
@@ -113,23 +112,18 @@ const PopupCrearEntrada = ({ tiposDeProducto, ivas, onClose, onSave, recintoSele
                   onChange={() => handleTipoProductoChange(tipo.value)}
                   className="accent-indigo-600"
                 />
-                <span className="text-gray-700">{tipo.label}</span>
+                <span>{tipo.label}</span>
               </label>
             ))}
           </div>
         </div>
 
+        {/* Botones */}
         <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
-          >
+          <button onClick={onClose} className="px-4 py-2 border rounded">
             Cancelar
           </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition"
-          >
+          <button onClick={handleSubmit} className="px-4 py-2 bg-indigo-600 text-white rounded">
             Guardar
           </button>
         </div>
