@@ -9,6 +9,15 @@ const Funciones = () => {
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const [plantillas, setPlantillas] = useState([]);
   const [funciones, setFunciones] = useState([]);
+
+  const mapFuncion = (f) => ({
+    ...f,
+    fechaCelebracion: f.fecha_celebracion,
+    inicioVenta: f.inicio_venta,
+    finVenta: f.fin_venta,
+    pagoAPlazos: f.pago_a_plazos,
+    permitirReservasWeb: f.permitir_reservas_web,
+  });
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingFuncion, setEditingFuncion] = useState(null);
   const [nuevaFuncion, setNuevaFuncion] = useState({
@@ -55,7 +64,7 @@ const Funciones = () => {
         if (error) {
           console.error('Error al obtener funciones:', error);
         } else {
-          setFunciones(data);
+          setFunciones(data.map(mapFuncion));
         }
       } else {
         setFunciones([]);
@@ -144,7 +153,7 @@ const Funciones = () => {
         .from('funciones')
         .select(`*, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
         .eq('evento', eventoSeleccionado);
-      if (!err2) setFunciones(refreshed);
+      if (!err2) setFunciones(refreshed.map(mapFuncion));
     } catch (error) {
       console.error('Error al guardar función:', error);
       alert('Ocurrió un error');
@@ -176,7 +185,7 @@ const Funciones = () => {
         .from('funciones')
         .select(`*, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
         .eq('evento', eventoSeleccionado);
-      setFunciones(data);
+      setFunciones(data.map(mapFuncion));
     }
   };
 
@@ -196,7 +205,7 @@ const Funciones = () => {
         .from('funciones')
         .select(`*, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
         .eq('evento', eventoSeleccionado);
-      setFunciones(refreshed);
+      setFunciones(refreshed.map(mapFuncion));
     }
   };
 
