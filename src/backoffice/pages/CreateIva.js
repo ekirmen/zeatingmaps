@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../services/supabaseClient';
+import { useIva } from '../contexts/IvaContext';
 
 const CreateIva = () => {
-  const [ivas, setIvas] = useState([]);
+  const { ivas, setIvas } = useIva();
   const [nombre, setNombre] = useState('');
   const [porcentaje, setPorcentaje] = useState('');
   const [editingId, setEditingId] = useState(null);
