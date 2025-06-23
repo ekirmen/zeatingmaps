@@ -105,7 +105,12 @@ const PlantillaPrecios = () => {
 
     let res;
     if (editingPlantilla) {
-      res = await supabase.from('plantillas').update(payload).eq('id', editingPlantilla.id);
+      res = await supabase
+        .from('plantillas')
+        .update(payload)
+        .eq('id', editingPlantilla.id)
+        .select()
+        .single();
     } else {
       res = await supabase.from('plantillas').insert(payload);
     }
@@ -119,13 +124,29 @@ const PlantillaPrecios = () => {
   };
 
   /* ------------------------- EDITAR/ELIMINAR ------------------------ */
-  const handleEditPlantilla = (p) => {
-    setEditingPlantilla(p);
-    setNombrePlantilla(p.nombre);
-    // Supabase puede retornar `null` si la plantilla no tiene detalles
-    // Aseguramos que siempre sea un arreglo antes de usarlo
-    setDetallesPrecios(Array.isArray(p.detalles) ? p.detalles : []);
-    setModalIsOpen(true);
+  const handleEditPlantilla = async (p) => {
+    try {
+      // Obtener la plantilla más actualizada desde la BD por si la consulta
+      // inicial no incluye todos los campos de "detalles".
+      const { data, error } = await supabase
+        .from('plantillas')
+        .select('*')
+        .eq('id', p.id)
+        .single();
+
+      if (error) throw error;
+
+      const plantilla = data || p;
+
+      setEditingPlantilla(plantilla);
+      setNombrePlantilla(plantilla.nombre);
+      // Supabase puede retornar `null` si la plantilla no tiene detalles
+      // Aseguramos que siempre sea un arreglo antes de usarlo
+      setDetallesPrecios(Array.isArray(plantilla.detalles) ? plantilla.detalles : []);
+      setModalIsOpen(true);
+    } catch (err) {
+      console.error('Error cargando plantilla para editar:', err);
+    }
   };
 
   const handleDeletePlantilla = async (id) => {
