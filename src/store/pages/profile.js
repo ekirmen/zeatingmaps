@@ -106,7 +106,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
       const { data, error } = await supabase
         .from('payments')
         .select('*, event:eventos(*)')
-        .eq('user', user.id)
+        .eq('usuario_id', user.id)
         .order('created_at', { ascending: false });
   
       if (error) throw error;
