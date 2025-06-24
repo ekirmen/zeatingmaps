@@ -255,7 +255,21 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
         });
 
         const responses = await Promise.all(paymentPromises);
-        const results = await Promise.all(responses.map(r => r.json()));
+        const results = await Promise.all(
+          responses.map(async r => {
+            const text = await r.text();
+            let json;
+            try {
+              json = text ? JSON.parse(text) : null;
+            } catch (e) {
+              json = null;
+            }
+            if (!r.ok) {
+              throw new Error(json?.message || `Error ${r.status}`);
+            }
+            return json;
+          })
+        );
 
         setLocator(results[0].locator);
         setShowConfirmation(true);
