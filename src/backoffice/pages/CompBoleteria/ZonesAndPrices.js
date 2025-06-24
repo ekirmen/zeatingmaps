@@ -249,6 +249,20 @@ const [mapa, setMapa] = useState(null);
     }
   }, [blockMode]);
 
+  // Liberar asientos bloqueados temporalmente al desmontar o recargar la página
+  useEffect(() => {
+    const cleanupTemp = () => {
+      tempBlocks.forEach(id => {
+        unlockSeat(id).catch(() => {});
+      });
+    };
+    window.addEventListener('beforeunload', cleanupTemp);
+    return () => {
+      cleanupTemp();
+      window.removeEventListener('beforeunload', cleanupTemp);
+    };
+  }, [tempBlocks]);
+
   const handleApplyDiscount = async () => {
     if (!discountCode.trim()) return;
     try {

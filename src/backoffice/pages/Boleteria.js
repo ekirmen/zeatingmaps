@@ -12,6 +12,8 @@ import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
 import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
 import { supabase } from '../services/supabaseClient';
+import { unlockSeat } from '../services/seatLocks';
+import { isUuid } from '../../utils/isUuid';
 
 const Boleteria = () => {
   const {
@@ -75,6 +77,23 @@ const Boleteria = () => {
     };
     loadAbonos();
   }, [selectedClient]);
+
+  // Liberar asientos bloqueados cuando la página se recarga o el componente se desmonta
+  useEffect(() => {
+    const cleanupLocks = () => {
+      carrito
+        .filter(i => isUuid((i._id || '').replace(/^silla_/, '')))
+        .forEach(i => {
+          unlockSeat(i._id).catch(() => {});
+        });
+    };
+
+    window.addEventListener('beforeunload', cleanupLocks);
+    return () => {
+      cleanupLocks();
+      window.removeEventListener('beforeunload', cleanupLocks);
+    };
+  }, [carrito]);
 
   const handleClientManagement = () => {
     setIsSearchModalVisible(true);
