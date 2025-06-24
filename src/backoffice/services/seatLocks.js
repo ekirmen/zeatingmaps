@@ -7,14 +7,17 @@ const TABLE = 'seat_locks';
 const normalizeSeatId = (id) =>
   typeof id === 'string' && id.startsWith('silla_') ? id.slice(6) : id;
 
-// Add a seat to the locking table with the provided status.
+// Add a seat to the locking table with the provided status. If the seat
+// already exists in the table we simply update its status.
 export const lockSeat = async (seatId, status = 'bloqueado') => {
   const id = normalizeSeatId(seatId);
   if (!isUuid(id)) {
     throw new Error('Invalid seat ID');
   }
   const client = supabaseAdmin || supabase;
-  const { error } = await client.from(TABLE).insert({ seat_id: id, status });
+  const { error } = await client
+    .from(TABLE)
+    .upsert({ seat_id: id, status }, { onConflict: ['seat_id'] });
   if (error) throw new Error(error.message);
 };
 

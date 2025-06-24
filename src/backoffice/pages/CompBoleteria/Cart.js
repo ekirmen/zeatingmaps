@@ -91,11 +91,14 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
         );
         if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock, 'disponible');
       }
-      await Promise.all(
-        [...seatsToBlock, ...seatsToUnblock]
+      await Promise.all([
+        ...seatsToBlock
           .filter(id => isUuid(id.replace(/^silla_/, '')))
-          .map(id => unlockSeat(id).catch(() => {}))
-      );
+          .map(id => lockSeat(id, 'bloqueado').catch(() => {})),
+        ...seatsToUnblock
+          .filter(id => isUuid(id.replace(/^silla_/, '')))
+          .map(id => unlockSeat(id).catch(() => {})),
+      ]);
       const hasBlock = seatsToBlock.length > 0;
       message.success(hasBlock ? 'Seats blocked' : 'Seats unblocked');
       setCarrito([]);
