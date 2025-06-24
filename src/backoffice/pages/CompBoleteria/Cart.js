@@ -78,7 +78,6 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
         );
         if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock, 'disponible');
       }
- main
       const hasBlock = seatsToBlock.length > 0;
       message.success(hasBlock ? 'Seats blocked' : 'Seats unblocked');
       setCarrito([]);
