@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
-import { fetchMapa, fetchZonasPorSala } from '../../../services/supabaseServices';
+import { fetchMapa, fetchZonasPorSala, fetchAbonoAvailableSeats } from '../../../services/supabaseServices';
 import { fetchSeatsByFuncion } from '../../services/supabaseSeats';
 import { fetchDescuentoPorCodigo } from '../../../store/services/apistore';
 import { unlockSeat } from '../../services/seatLocks';
@@ -30,6 +30,8 @@ const [mapa, setMapa] = useState(null);
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [blockMode, setBlockMode] = useState(false);
   const [tempBlocks, setTempBlocks] = useState([]);
+  const [abonoMode, setAbonoMode] = useState(false);
+  const [abonoSeats, setAbonoSeats] = useState([]);
 
   const onSeatsUpdated = useCallback((ids, estado) => {
     setMapa((prev) => {
@@ -152,7 +154,9 @@ const [mapa, setMapa] = useState(null);
   const handleSeatClick = (seat, table) => {
     const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
     const exists = carrito.find(
-      (i) => i._id === seat._id && i.funcionId === currentFuncId
+      (i) =>
+        i._id === seat._id &&
+        (abonoMode ? i.abonoGroup : i.funcionId === currentFuncId)
     );
     const zonaId = seat.zona;
     const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
@@ -212,15 +216,20 @@ const [mapa, setMapa] = useState(null);
     }
 
     if (exists) {
-      setCarrito(
-        carrito.filter(
-          (i) => !(i._id === seat._id && i.funcionId === currentFuncId)
-        )
-      );
+      if (abonoMode) {
+        const groupId = `abono-${seat._id}`;
+        setCarrito(carrito.filter(i => i.abonoGroup !== groupId));
+      } else {
+        setCarrito(
+          carrito.filter(
+            (i) => !(i._id === seat._id && i.funcionId === currentFuncId)
+          )
+        );
+      }
     } else {
-      setCarrito([
-        ...carrito,
-        {
+      if (abonoMode) {
+        const groupId = `abono-${seat._id}`;
+        const items = funciones.map(f => ({
           _id: seat._id,
           nombre: seat.nombre,
           nombreMesa: table.nombre,
@@ -228,10 +237,27 @@ const [mapa, setMapa] = useState(null);
           precio: finalPrice,
           tipoPrecio,
           descuentoNombre,
-          funcionId: currentFuncId,
-          funcionFecha: selectedFuncion?.fechaCelebracion,
-        },
-      ]);
+          funcionId: f.id || f._id,
+          funcionFecha: f.fechaCelebracion,
+          abonoGroup: groupId,
+        }));
+        setCarrito([...carrito, ...items]);
+      } else {
+        setCarrito([
+          ...carrito,
+          {
+            _id: seat._id,
+            nombre: seat.nombre,
+            nombreMesa: table.nombre,
+            zona: zonaObj?.nombre || seat.zona,
+            precio: finalPrice,
+            tipoPrecio,
+            descuentoNombre,
+            funcionId: currentFuncId,
+            funcionFecha: selectedFuncion?.fechaCelebracion,
+          },
+        ]);
+      }
     }
   };
 
@@ -241,6 +267,24 @@ const [mapa, setMapa] = useState(null);
       setCarrito(carrito.filter(i => !i.action));
     }
   }, [blockMode]);
+
+  useEffect(() => {
+    const loadAbonoSeats = async () => {
+      if (abonoMode && selectedEvent?.id) {
+        try {
+          const ids = await fetchAbonoAvailableSeats(selectedEvent.id);
+          setAbonoSeats(Array.isArray(ids) ? ids : []);
+        } catch (err) {
+          console.error('Error loading abono seats', err);
+          message.error('Error cargando asientos de abono');
+          setAbonoSeats([]);
+        }
+      } else {
+        setAbonoSeats([]);
+      }
+    };
+    loadAbonoSeats();
+  }, [abonoMode, selectedEvent]);
 
   // Liberar asientos bloqueados temporalmente al desmontar o recargar la página
   useEffect(() => {
@@ -452,6 +496,14 @@ const [mapa, setMapa] = useState(null);
           />
           Bloquear asientos
         </label>
+        <label className="ml-4 text-sm flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={abonoMode}
+            onChange={e => setAbonoMode(e.target.checked)}
+          />
+          Modo abono
+        </label>
       </div>
 
       {viewMode === 'map' ? (
@@ -499,6 +551,8 @@ const [mapa, setMapa] = useState(null);
               availableZonas={selectedZonaId ? [selectedZonaId] : zonas.map(z => z.id || z._id)}
               blockMode={blockMode}
               tempBlocks={tempBlocks}
+              abonoMode={abonoMode}
+              abonoSeats={abonoSeats}
             />
           </>
         ) : (

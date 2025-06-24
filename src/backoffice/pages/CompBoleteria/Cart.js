@@ -156,7 +156,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
                   )}
                 </div>
                 <button
-                  onClick={() => handleRemoveSeat(`${item._id}-${item.funcionId || ''}`)}
+                  onClick={() => handleRemoveSeat(item.abonoGroup || `${item._id}-${item.funcionId || ''}`)}
                   className="text-gray-400 hover:text-red-500"
                 >
                   <AiOutlineClose  />
