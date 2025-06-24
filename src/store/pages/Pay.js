@@ -137,7 +137,7 @@ const Pay = () => {
       if (error) throw error;
 
       await Promise.all(
-        carrito.map(item => updateSeat(item._id, { estado: 'reservado' }))
+        carrito.map(item => updateSeat(item._id, { status: 'reservado' }))
       );
 
       navigate('/payment-success', { state: { locator: data.locator || data.id, emailSent: false } });
@@ -177,7 +177,7 @@ const Pay = () => {
       if (error) throw error;
 
       await Promise.all(
-        carrito.map(item => updateSeat(item._id, { estado: 'pagado' }))
+        carrito.map(item => updateSeat(item._id, { status: 'pagado' }))
       );
 
       navigate('/payment-success', { state: { locator: data.locator || data.id, emailSent: true } });

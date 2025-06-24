@@ -45,7 +45,7 @@ const Event = () => {
   const releaseSeats = async (seats) => {
     try {
       await Promise.all(
-        seats.map((s) => updateSeat(s._id, { estado: 'disponible' }))
+        seats.map((s) => updateSeat(s._id, { status: 'disponible' }))
       );
     } catch (err) {
       console.error('Error releasing seats', err);
@@ -237,7 +237,7 @@ const Event = () => {
         const seatMap = seatStates.reduce((acc, s) => {
           // Prioritize the `bloqueado` flag when determining the seat status so
           // seats blocked via the backoffice show up correctly in the map.
-          const estado = s.bloqueado ? 'bloqueado' : s.estado;
+          const estado = s.bloqueado ? 'bloqueado' : s.status;
           acc[s._id || s.id] = estado;
           return acc;
         }, {});
@@ -361,7 +361,7 @@ const Event = () => {
       : [...carrito, { ...silla, zona: zonaId, precio: finalPrice, nombreMesa: mesa.nombre, zonaNombre, tipoPrecio, descuentoNombre }];
 
     try {
-      await updateSeat(silla._id, { estado: index !== -1 ? 'disponible' : 'bloqueado' });
+      await updateSeat(silla._id, { status: index !== -1 ? 'disponible' : 'bloqueado' });
     } catch (err) {
       console.error('Error updating seat', err);
     }

@@ -40,7 +40,7 @@ export const fetchAsientosComprados = async (funcionId) => {
     .from('seats')
     .select('*')
     .eq('funcion_id', funcionId)
-    .eq('estado', 'vendido');
+    .eq('status', 'vendido');
 
   if (error) throw new Error(error.message);
   return data;
