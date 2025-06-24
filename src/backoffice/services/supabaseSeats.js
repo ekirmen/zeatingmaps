@@ -1,5 +1,6 @@
 // services/supabaseSeats.js
-import { supabase } from '../../backoffice/services/supabaseClient';
+// Prefer the admin client when available so updates bypass RLS restrictions.
+import { supabase, supabaseAdmin } from '../../backoffice/services/supabaseClient';
 import { isUuid } from '../../utils/isUuid';
 
 const normalizeSeatId = (id) =>
@@ -12,7 +13,8 @@ export const setSeatsBlocked = async (seatIds, bloqueado) => {
   // include the `silla_` prefix and are not numeric. We therefore update the
   // records using the `_id` column instead of `id`.
   const normalized = seatIds.map(normalizeSeatId);
-  const { data, error } = await supabase
+  const client = supabaseAdmin || supabase;
+  const { data, error } = await client
     .from('seats')
     .update({ bloqueado })
     .in('_id', normalized);
@@ -58,7 +60,8 @@ export const createSeat = async (seatData) => {
 // ✅ Eliminar asiento por ID
 export const deleteSeat = async (seatId) => {
   const id = normalizeSeatId(seatId);
-  const { error } = await supabase
+  const client = supabaseAdmin || supabase;
+  const { error } = await client
     .from('seats')
     .delete()
     .eq('_id', id);
@@ -72,7 +75,8 @@ export const updateSeat = async (seatId, updates) => {
   if (!isUuid(id)) {
     throw new Error('Invalid seat ID');
   }
-  const { data, error } = await supabase
+  const client = supabaseAdmin || supabase;
+  const { data, error } = await client
     .from('seats')
     .update(updates)
     .eq('_id', id)
