@@ -130,7 +130,7 @@ const Pay = () => {
       const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
   
       const { data, error } = await supabase.from('payments').insert([{
-        user_id: user.id,
+        usuario_id: user.id,
         event: currentEventId,
         funcion: funcionId,
         seats: seatsPayload,
@@ -174,7 +174,7 @@ const Pay = () => {
       const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
   
       const { data, error } = await supabase.from('payments').insert([{
-        user_id: user.id,
+        usuario_id: user.id,
         event: currentEventId,
         funcion: funcionId,
         seats: seatsPayload,
