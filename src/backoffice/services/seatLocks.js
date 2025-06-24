@@ -1,0 +1,27 @@
+// src/backoffice/services/seatLocks.js
+// Simple helpers to lock or unlock seats using the `seat_locks` table.
+import { supabase, supabaseAdmin } from './supabaseClient';
+import { isUuid } from '../../utils/isUuid';
+
+const TABLE = 'seat_locks';
+const normalizeSeatId = (id) =>
+  typeof id === 'string' && id.startsWith('silla_') ? id.slice(6) : id;
+
+// Add a seat to the locking table with the provided status.
+export const lockSeat = async (seatId, status = 'bloqueado') => {
+  const id = normalizeSeatId(seatId);
+  if (!isUuid(id)) {
+    throw new Error('Invalid seat ID');
+  }
+  const client = supabaseAdmin || supabase;
+  const { error } = await client.from(TABLE).insert({ seat_id: id, status });
+  if (error) throw new Error(error.message);
+};
+
+// Remove a seat from the locking table.
+export const unlockSeat = async (seatId) => {
+  const id = normalizeSeatId(seatId);
+  const client = supabaseAdmin || supabase;
+  const { error } = await client.from(TABLE).delete().eq('seat_id', id);
+  if (error) throw new Error(error.message);
+};

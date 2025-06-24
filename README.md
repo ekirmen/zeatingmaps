@@ -75,3 +75,16 @@ if (isUuid(seatId)) {
 Blocking or unblocking seats also updates the `seats` table. Make sure
 `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` (or `REACT_SUPABASE_SERVICE_ROLE_KEY`) is defined or your anonymous role has
 `UPDATE` privileges; otherwise these changes won't persist.
+
+## Seat locking table
+
+A minimal table named `seat_locks` can be used to keep track of blocked seats. Each row stores the seat UUID and its current status. When a seat is unlocked the row is simply removed. An example schema is provided in `sql/create_seat_locks_table.sql`.
+
+The helper functions `lockSeat` and `unlockSeat` are available in `src/backoffice/services/seatLocks.js`:
+
+```javascript
+import { lockSeat, unlockSeat } from './backoffice/services/seatLocks';
+
+await lockSeat(seatId);      // Adds the seat to the locking table
+await unlockSeat(seatId);    // Removes the seat from the table
+```
