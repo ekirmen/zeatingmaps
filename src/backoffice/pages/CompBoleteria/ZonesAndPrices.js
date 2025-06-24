@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
 import { fetchMapa, fetchZonasPorSala } from '../../../services/supabaseServices';
@@ -26,6 +26,56 @@ const [mapa, setMapa] = useState(null);
   const [viewMode, setViewMode] = useState('map');
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(null);
+
+  function getPrecioConDescuento(detalle) {
+    let price = detalle.precio || 0;
+    if (appliedDiscount?.detalles) {
+      const d = appliedDiscount.detalles.find((dt) => {
+        const id = typeof dt.zona === 'object' ? dt.zona._id : dt.zona;
+        return id === detalle.zonaId || id === detalle.zona?._id;
+      });
+      if (d) {
+        if (d.tipo === 'porcentaje') {
+          price = Math.max(0, price - (price * d.valor) / 100);
+        } else {
+          price = Math.max(0, price - d.valor);
+        }
+      }
+    }
+    return price;
+  }
+
+  const detallesPlantilla = useMemo(() => {
+    if (!selectedPlantilla?.detalles) return [];
+    if (Array.isArray(selectedPlantilla.detalles)) return selectedPlantilla.detalles;
+    try {
+      if (typeof selectedPlantilla.detalles === 'string') {
+        const parsed = JSON.parse(selectedPlantilla.detalles);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+      return Array.isArray(selectedPlantilla.detalles)
+        ? selectedPlantilla.detalles
+        : Object.values(selectedPlantilla.detalles);
+    } catch {
+      return [];
+    }
+  }, [selectedPlantilla]);
+
+  const zonePriceRanges = useMemo(() => {
+    const ranges = {};
+    detallesPlantilla.forEach((d) => {
+      const zonaId = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
+      const nombre = d.zona?.nombre || d.zonaId || d.zona;
+      const precio = getPrecioConDescuento(d);
+      if (!ranges[zonaId]) {
+        ranges[zonaId] = { nombre, min: precio, max: precio };
+      } else {
+        ranges[zonaId].min = Math.min(ranges[zonaId].min, precio);
+        ranges[zonaId].max = Math.max(ranges[zonaId].max, precio);
+      }
+    });
+    return ranges;
+  }, [detallesPlantilla, appliedDiscount]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -59,7 +109,7 @@ const [mapa, setMapa] = useState(null);
     const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
 
     // Determine pricing from the selected plantilla
-    const detalle = selectedPlantilla?.detalles?.find(d => {
+    const detalle = detallesPlantilla.find(d => {
       const id = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
       return id === zonaId;
     });
@@ -122,23 +172,6 @@ const [mapa, setMapa] = useState(null);
     }
   };
 
-  const getPrecioConDescuento = (detalle) => {
-    let price = detalle.precio || 0;
-    if (appliedDiscount?.detalles) {
-      const d = appliedDiscount.detalles.find((dt) => {
-        const id = typeof dt.zona === 'object' ? dt.zona._id : dt.zona;
-        return id === detalle.zonaId || id === detalle.zona?._id;
-      });
-      if (d) {
-        if (d.tipo === 'porcentaje') {
-          price = Math.max(0, price - (price * d.valor) / 100);
-        } else {
-          price = Math.max(0, price - d.valor);
-        }
-      }
-    }
-    return price;
-  };
 
   const handleQuantityChange = (zonaId, value) => {
     setZoneQuantities(prev => ({ ...prev, [zonaId]: value }));
@@ -286,6 +319,16 @@ const [mapa, setMapa] = useState(null);
                 })}
               </div>
             )}
+            {Object.keys(zonePriceRanges).length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-2">
+                {Object.values(zonePriceRanges).map(zr => (
+                  <div key={zr.nombre} className="text-xs bg-gray-100 rounded px-2 py-1">
+                    <strong>{zr.nombre}</strong>{' '}
+                    {zr.min === zr.max ? `$${zr.min.toFixed(2)}` : `$${zr.min.toFixed(2)} - $${zr.max.toFixed(2)}`}
+                  </div>
+                ))}
+              </div>
+            )}
             <SeatingMap
               mapa={mapa}
               onSeatClick={handleSeatClick}
@@ -298,7 +341,7 @@ const [mapa, setMapa] = useState(null);
         )
       ) : (
         <div className="overflow-x-auto">
-          {selectedPlantilla?.detalles?.length ? (
+          {detallesPlantilla.length ? (
             <table className="min-w-full text-sm border">
               <thead>
                 <tr>
@@ -308,7 +351,7 @@ const [mapa, setMapa] = useState(null);
                 </tr>
               </thead>
               <tbody>
-                {selectedPlantilla.detalles.map((d) => {
+                {detallesPlantilla.map((d) => {
                   const zonaId = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
                   const zonaNombre = d.zona?.nombre || d.zonaId || d.zona;
                   const precio = getPrecioConDescuento(d);
