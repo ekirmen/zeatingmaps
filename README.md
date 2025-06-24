@@ -71,6 +71,10 @@ JOIN auth.users u ON u.id = p.id;
 
 Queries can then reference `profiles_with_auth` to retrieve profile fields and email in a single call.
 
+A `payments` table is also required to store ticket sales. The example schema in
+`sql/create_payments_table.sql` includes a `usuario_id` column for the customer
+and a `processed_by` field to track the user that processed the sale.
+
 ## Seat utilities
 
 The `src/utils/isUuid.js` helper verifies whether a string is a valid UUID. Use it when calling `updateSeat` to prevent typos in seat IDs:
