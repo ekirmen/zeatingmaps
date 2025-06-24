@@ -27,10 +27,10 @@ const ClientModals = ({
       setSearchLoading(true);
 
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, login, nombre, telefono, empresa, auth:auth.users(email)')
+        .from('profiles_with_auth')
+        .select('id, login, nombre, telefono, empresa, email')
         .or(
-          `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,auth.email.ilike.%${searchTerm}%`
+          `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
         );
 
       if (error) throw error;
@@ -38,7 +38,7 @@ const ClientModals = ({
       const mappedResults = data.map((p) => ({
         _id: p.id,
         nombre: p.login,
-        email: p.auth?.email || '',
+        email: p.email || '',
         telefono: p.telefono,
       }));
 

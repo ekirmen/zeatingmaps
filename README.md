@@ -59,6 +59,18 @@ This key grants full access to your Supabase project, so avoid exposing it in pr
 The project expects a table named `entradas` in Supabase. An example schema is provided in `sql/create_entradas_table.sql`.
 It defines standard ticket fields, including a `recinto` column referencing the venue and a `nombre_entrada` column for the ticket name. The example no longer includes an `evento_id` field.
 
+To easily fetch profile data together with the user's email, create the `profiles_with_auth` view using the script in `sql/create_profiles_with_auth_view.sql`:
+
+```sql
+-- Run inside the SQL editor
+CREATE OR REPLACE VIEW public.profiles_with_auth AS
+SELECT p.id, p.login, p.nombre, p.apellido, p.telefono, p.empresa, u.email
+FROM public.profiles p
+JOIN auth.users u ON u.id = p.id;
+```
+
+Queries can then reference `profiles_with_auth` to retrieve profile fields and email in a single call.
+
 ## Seat utilities
 
 The `src/utils/isUuid.js` helper verifies whether a string is a valid UUID. Use it when calling `updateSeat` to prevent typos in seat IDs:
