@@ -236,6 +236,8 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
             ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
           };
 
+          console.log('Creating payment with data:', paymentData);
+
           // Add reservation deadline if applicable
           if (reservationType === '2') {
             paymentData.reservationDeadline = new Date(Date.now() + 16 * 60000);
