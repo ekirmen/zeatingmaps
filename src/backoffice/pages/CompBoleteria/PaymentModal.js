@@ -3,6 +3,7 @@ import { Modal, Tabs, Input, Button, Radio, DatePicker, Select, Table, message }
 import { AiOutlineDelete } from 'react-icons/ai';
 import { Typography } from 'antd';
 import { createPayment, updatePayment } from '../../services/apibackoffice';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -10,6 +11,7 @@ const { Option } = Select;
 const { Text } = Typography;
 
 const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion, selectedAffiliate }) => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('1');
   const [reservationType, setReservationType] = useState('1');
   const [paymentEntries, setPaymentEntries] = useState([]);
@@ -212,11 +214,12 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
 
         // Create a payment for each event
         const paymentPromises = Object.entries(seatsByEvent).map(([eventId, seats]) => {
-          const paymentData = {
-            user: selectedClient._id,
-            event: eventId,
-            funcion: selectedFuncion.id || selectedFuncion._id,
-            seats: seats.map(item => ({
+        const paymentData = {
+          user: selectedClient._id,
+          event: eventId,
+          funcion: selectedFuncion.id || selectedFuncion._id,
+          processed_by: user?.id,
+          seats: seats.map(item => ({
               id: item._id,
               name: item.nombre,
               price: item.precio,
