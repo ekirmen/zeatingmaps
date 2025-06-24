@@ -14,7 +14,9 @@ export const lockSeat = async (seatId, status = 'bloqueado') => {
     throw new Error('Invalid seat ID');
   }
   const client = supabaseAdmin || supabase;
-  const { error } = await client.from(TABLE).insert({ seat_id: id, status });
+  const { error } = await client
+    .from(TABLE)
+    .upsert({ seat_id: id, status }, { onConflict: 'seat_id' });
   if (error) throw new Error(error.message);
 };
 
