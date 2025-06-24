@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { useTranslation } from 'react-i18next';
 import { loadMetaPixel } from '../utils/analytics';
+import { fetchPaymentByLocator } from '../../backoffice/services/apibackoffice';
 
 // Move formatPrice outside the component to make it reusable
 const formatPrice = (price) => {
@@ -78,11 +79,10 @@ const Cart = () => {
 
   const handleTicketSearch = async (locator) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/locator/${locator}`);
-      if (!response.ok) {
+      const data = await fetchPaymentByLocator(locator);
+      if (!data) {
         throw new Error('Ticket not found');
       }
-      const { data } = await response.json();
       setCart(
         data.seats.map(seat => ({
           ...seat,

@@ -9,6 +9,7 @@ import { fetchSeatsByFuncion, updateSeat } from '../../backoffice/services/supab
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 import API_BASE_URL from '../../utils/apiBase';
+import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { useTranslation } from 'react-i18next';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
 import { QRCodeSVG } from '@rc-component/qrcode';
@@ -211,8 +212,7 @@ const Event = () => {
   useEffect(() => {
     const fetchPagos = async () => {
       try {
-        const response = await fetch(`${API_URL}/api/payments`);
-        const data = await response.json();
+        const data = await fetchPayments();
         setPagos(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Error fetching payments:', error);

@@ -277,4 +277,42 @@ export const fetchPlantillasPorRecintoYSala = async (recintoId, salaId) => {
 
   return data;
 };
+
+// === PAYMENTS ===
+export const createPayment = async (data) => {
+  const { data: result, error } = await supabase
+    .from('payments')
+    .insert(data)
+    .select()
+    .single();
+  handleError(error);
+  return result;
+};
+
+export const updatePayment = async (id, data) => {
+  const { data: result, error } = await supabase
+    .from('payments')
+    .update(data)
+    .eq('id', id)
+    .select()
+    .single();
+  handleError(error);
+  return result;
+};
+
+export const fetchPayments = async () => {
+  const { data, error } = await supabase.from('payments').select('*');
+  handleError(error);
+  return data;
+};
+
+export const fetchPaymentByLocator = async (locator) => {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('*, seats, funcion')
+    .eq('locator', locator)
+    .single();
+  handleError(error);
+  return data;
+};
 // Puedes seguir migrando más entidades según este mismo patrón.
