@@ -2,10 +2,15 @@
 import { supabase } from '../../backoffice/services/supabaseClient';
 // ✅ Bloquear o desbloquear varios asientos por ID
 export const setSeatsBlocked = async (seatIds, bloqueado) => {
+  // The `seats` table identifies each seat using the `_id` field. When the
+  // frontend sends seat identifiers they correspond to this column rather than
+  // the numeric primary key. Filtering by `id` caused errors because the values
+  // include the `silla_` prefix and are not numeric. We therefore update the
+  // records using the `_id` column instead of `id`.
   const { data, error } = await supabase
     .from('seats')
     .update({ bloqueado })
-    .in('id', seatIds);
+    .in('_id', seatIds);
 
   if (error) throw new Error(error.message);
   return data;
