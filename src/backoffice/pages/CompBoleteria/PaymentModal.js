@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal, Tabs, Input, Button, Radio, DatePicker, Select, Table, message } from 'antd';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { Typography } from 'antd';
+import { createPayment, updatePayment } from '../../services/apibackoffice';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -186,19 +187,13 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
     try {
       if (existingPaymentId) {
         const newStatus = diferencia > 0 ? 'reservado' : 'pagado';
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/${existingPaymentId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            status: newStatus,
-            payments: paymentEntries.map(entry => ({
-              method: entry.formaPago,
-              amount: entry.importe
-            }))
-          })
+        const data = await updatePayment(existingPaymentId, {
+          status: newStatus,
+          payments: paymentEntries.map(entry => ({
+            method: entry.formaPago,
+            amount: entry.importe
+          }))
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || 'Error al actualizar pago');
         setLocator(data.locator || existingLocator);
         setShowConfirmation(true);
         message.success('Pago actualizado');
@@ -245,31 +240,10 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
             paymentData.reservationDeadline = selectedDate.toDate();
           }
 
-          return fetch(`${process.env.REACT_APP_API_URL}/api/payments`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(paymentData)
-          });
+          return createPayment(paymentData);
         });
 
-        const responses = await Promise.all(paymentPromises);
-        const results = await Promise.all(
-          responses.map(async r => {
-            const text = await r.text();
-            let json;
-            try {
-              json = text ? JSON.parse(text) : null;
-            } catch (e) {
-              json = null;
-            }
-            if (!r.ok) {
-              throw new Error(json?.message || `Error ${r.status}`);
-            }
-            return json;
-          })
-        );
+        const results = await Promise.all(paymentPromises);
 
         setLocator(results[0].locator);
         setShowConfirmation(true);
