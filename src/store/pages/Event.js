@@ -235,7 +235,10 @@ const Event = () => {
         ]);
 
         const seatMap = seatStates.reduce((acc, s) => {
-          acc[s._id || s.id] = s.estado;
+          // Prioritize the `bloqueado` flag when determining the seat status so
+          // seats blocked via the backoffice show up correctly in the map.
+          const estado = s.bloqueado ? 'bloqueado' : s.estado;
+          acc[s._id || s.id] = estado;
           return acc;
         }, {});
 
@@ -318,7 +321,11 @@ const Event = () => {
 
   const toggleSillaEnCarrito = async (silla, mesa) => {
     const zonaId = silla.zona || mesa.zona;
-    if (!zonaId || ["reservado", "pagado", "bloqueado"].includes(silla.estado)) {
+    if (
+      !zonaId ||
+      ["reservado", "pagado", "bloqueado"].includes(silla.estado) ||
+      silla.bloqueado
+    ) {
       message.error("Este asiento no está disponible.");
       return;
     }
