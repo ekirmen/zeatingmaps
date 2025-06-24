@@ -8,6 +8,7 @@ import { Modal } from 'antd';
 import { toast } from 'react-hot-toast';
 import { loadMetaPixel } from '../utils/analytics';
 import { supabase } from '../../backoffice/services/supabaseClient';
+import { updateSeat } from '../../backoffice/services/supabaseSeats';
 
 const Pay = () => {
   const location = useLocation();
@@ -133,7 +134,11 @@ const Pay = () => {
       }]).select().single();
   
       if (error) throw error;
-  
+
+      await Promise.all(
+        carrito.map(item => updateSeat(item._id, { estado: 'reservado' }))
+      );
+
       navigate('/payment-success', { state: { locator: data.locator || data.id, emailSent: false } });
     } catch (error) {
       console.error('Reservation error:', error);
@@ -169,7 +174,11 @@ const Pay = () => {
       }]).select().single();
   
       if (error) throw error;
-  
+
+      await Promise.all(
+        carrito.map(item => updateSeat(item._id, { estado: 'pagado' }))
+      );
+
       navigate('/payment-success', { state: { locator: data.locator || data.id, emailSent: true } });
     } catch (error) {
       console.error('Payment error:', error);
