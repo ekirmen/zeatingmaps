@@ -10,6 +10,7 @@ import { loadMetaPixel } from '../utils/analytics';
 import { supabase } from '../../backoffice/services/supabaseClient';
 import { updateSeat } from '../../backoffice/services/supabaseSeats';
 
+
 const Pay = () => {
   const location = useLocation();
   const navigate = useNavigate();
