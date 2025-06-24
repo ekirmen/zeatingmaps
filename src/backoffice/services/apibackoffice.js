@@ -280,12 +280,14 @@ export const fetchPlantillasPorRecintoYSala = async (recintoId, salaId) => {
 
 // === PAYMENTS ===
 export const createPayment = async (data) => {
+  console.log('createPayment request:', data);
   const { data: result, error } = await supabase
     .from('payments')
     .insert(data)
     .select()
     .single();
   handleError(error);
+  console.log('createPayment response:', { result, error });
   return result;
 };
 
