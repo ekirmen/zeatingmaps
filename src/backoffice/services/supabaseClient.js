@@ -6,7 +6,7 @@ const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
 const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
 
 // Estas variables deben estar definidas solo en entornos backend seguros
-const serviceRoleKey = process.env.REACT_SUPABASE_SERVICE_ROLE_KEY;
+const serviceRoleKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
 
 if (!serviceRoleKey) {
   throw new Error('❌ Service Role Key no está definida.');
