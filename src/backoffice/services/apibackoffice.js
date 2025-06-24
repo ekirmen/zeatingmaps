@@ -1,4 +1,4 @@
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase, supabaseAdmin } from '../../backoffice/services/supabaseClient';
 
 const handleError = (error) => {
   if (error) {
@@ -184,6 +184,21 @@ export const syncSeatsForSala = async (salaId) => {
       handleError(insertErr);
     }
   }
+};
+
+// Bloquear o desbloquear varios asientos por ID
+export const setSeatsBlocked = async (seatIds, bloqueado) => {
+  const normalized = seatIds.map((id) =>
+    typeof id === 'string' && id.startsWith('silla_') ? id.slice(6) : id
+  );
+  const client = supabaseAdmin || supabase;
+  const { data, error } = await client
+    .from('seats')
+    .update({ bloqueado })
+    .in('_id', normalized);
+
+  handleError(error);
+  return data;
 };
 
 // === ENTRADAS ===
