@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast';
 import { loadMetaPixel } from '../utils/analytics';
 import { supabase } from '../../backoffice/services/supabaseClient';
 import { updateSeat } from '../../backoffice/services/supabaseSeats';
+import { isUuid } from '../../utils/isUuid';
 
 
 const Pay = () => {
@@ -115,6 +116,11 @@ const Pay = () => {
 
   const handleProcessReservation = async () => {
     try {
+      if (!isUuid(user?.id) || !isUuid(currentEventId) || !isUuid(funcionId)) {
+        console.error('Invalid UUIDs provided for reservation');
+        toast.error('Error al procesar la reserva');
+        return;
+      }
       const seatsPayload = carrito.map(item => ({
         id: item._id,
         name: item.nombre || '',
@@ -152,8 +158,13 @@ const Pay = () => {
       toast.error("Por favor selecciona un método de pago");
       return;
     }
-  
+
     try {
+      if (!isUuid(user?.id) || !isUuid(currentEventId) || !isUuid(funcionId)) {
+        console.error('Invalid UUIDs provided for payment');
+        toast.error('Error al procesar el pago');
+        return;
+      }
       const seatsPayload = carrito.map(item => ({
         id: item._id,
         name: item.nombre || '',
