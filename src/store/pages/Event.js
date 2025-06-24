@@ -5,6 +5,7 @@ import { useRefParam } from '../../contexts/RefContext';
 import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
 import { fetchMapa, fetchPlantillaPrecios, getCmsPage } from '../services/apistore';
+import { fetchSeatsByFuncion, updateSeat } from '../../backoffice/services/supabaseSeats';
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 import API_BASE_URL from '../../utils/apiBase';
@@ -25,6 +26,7 @@ const Event = () => {
   const [mapa, setMapa] = useState(null);
   const [plantillaPrecios, setPlantillaPrecios] = useState(null);
   const [carrito, setCarrito] = useState([]);
+  const cartRef = useRef([]);
   const [zonas, setZonas] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [showSeatPopup, setShowSeatPopup] = useState(false);
@@ -35,6 +37,20 @@ const Event = () => {
   const timerRef = useRef(null);
   const [recintoInfo, setRecintoInfo] = useState(null);
   const [tagNames, setTagNames] = useState([]);
+
+  useEffect(() => {
+    cartRef.current = carrito;
+  }, [carrito]);
+
+  const releaseSeats = async (seats) => {
+    try {
+      await Promise.all(
+        seats.map((s) => updateSeat(s._id, { estado: 'disponible' }))
+      );
+    } catch (err) {
+      console.error('Error releasing seats', err);
+    }
+  };
 
   const getEmbedUrl = (url) => {
     if (!url) return url;
@@ -213,25 +229,30 @@ const Event = () => {
       if (!funcion) return;
 
       try {
-        const mapaData = await fetchMapa(funcion.sala._id);
+        const [mapaData, seatStates] = await Promise.all([
+          fetchMapa(funcion.sala._id),
+          fetchSeatsByFuncion(selectedFunctionId)
+        ]);
+
+        const seatMap = seatStates.reduce((acc, s) => {
+          acc[s._id || s.id] = s.estado;
+          return acc;
+        }, {});
+
         const mapaActualizado = {
           ...mapaData,
           contenido: mapaData.contenido.map(elemento => ({
             ...elemento,
             sillas: elemento.sillas.map(silla => {
-              const pagoAsiento = pagos.find(pago =>
-                Array.isArray(pago.seats) && pago.seats.some(seat => seat.id === silla._id)
-              );
-
-              if (pagoAsiento) {
-                const estado = pagoAsiento.status;
+              const estado = seatMap[silla._id];
+              if (estado) {
                 return {
                   ...silla,
                   estado,
                   color:
-                    estado === "bloqueado" ? "orange" :
-                    estado === "reservado" ? "red" :
-                    estado === "pagado" ? "gray" : silla.color || "lightblue"
+                    estado === 'bloqueado' ? 'orange' :
+                    estado === 'reservado' ? 'red' :
+                    estado === 'pagado' ? 'gray' : silla.color || 'lightblue'
                 };
               }
               return silla;
@@ -250,7 +271,7 @@ const Event = () => {
       }
     };
     cargarDatosSeleccionados();
-  }, [selectedFunctionId, funciones, pagos]);
+  }, [selectedFunctionId, funciones]);
 
   const applyDiscountCode = async () => {
     if (!discountCode.trim()) return;
@@ -276,6 +297,7 @@ const Event = () => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
+          releaseSeats(cartRef.current);
           setCarrito([]);
           message.info('Tiempo expirado, asientos liberados');
           return 0;
@@ -286,10 +308,15 @@ const Event = () => {
   };
 
   useEffect(() => {
-    return () => clearInterval(timerRef.current);
+    return () => {
+      clearInterval(timerRef.current);
+      if (cartRef.current.length) {
+        releaseSeats(cartRef.current);
+      }
+    };
   }, []);
 
-  const toggleSillaEnCarrito = (silla, mesa) => {
+  const toggleSillaEnCarrito = async (silla, mesa) => {
     const zonaId = silla.zona || mesa.zona;
     if (!zonaId || ["reservado", "pagado", "bloqueado"].includes(silla.estado)) {
       message.error("Este asiento no está disponible.");
@@ -325,6 +352,12 @@ const Event = () => {
     const nuevoCarrito = index !== -1
       ? carrito.filter(item => item._id !== silla._id)
       : [...carrito, { ...silla, zona: zonaId, precio: finalPrice, nombreMesa: mesa.nombre, zonaNombre, tipoPrecio, descuentoNombre }];
+
+    try {
+      await updateSeat(silla._id, { estado: index !== -1 ? 'disponible' : 'bloqueado' });
+    } catch (err) {
+      console.error('Error updating seat', err);
+    }
 
     const wasEmpty = carrito.length === 0;
     setCarrito(nuevoCarrito);
