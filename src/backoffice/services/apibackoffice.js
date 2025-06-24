@@ -137,6 +137,55 @@ export const saveMapa = async (salaId, data) => {
   }
 };
 
+// After saving the base map we may need to replicate the seat
+// layout to every function associated with the same sala. This
+// helper ensures each function has the seats defined in the map so
+// tickets can be sold independently per function.
+export const syncSeatsForSala = async (salaId) => {
+  const mapa = await fetchMapa(salaId);
+  if (!mapa || !Array.isArray(mapa.contenido)) return;
+
+  const { data: funciones, error: funcError } = await supabase
+    .from('funciones')
+    .select('id')
+    .eq('sala', salaId);
+  handleError(funcError);
+  if (!funciones || funciones.length === 0) return;
+
+  const seatDefs = [];
+  mapa.contenido.forEach(el => {
+    if (el.type === 'mesa') {
+      (el.sillas || []).forEach(s => {
+        seatDefs.push({ id: s._id, zona: s.zona || null });
+      });
+    } else if (el.type === 'silla') {
+      seatDefs.push({ id: el._id, zona: el.zona || null });
+    }
+  });
+
+  for (const func of funciones) {
+    const { data: existing, error: exErr } = await supabase
+      .from('seats')
+      .select('_id')
+      .eq('funcion_id', func.id);
+    handleError(exErr);
+    const existingIds = new Set((existing || []).map(s => s._id));
+    const newSeats = seatDefs
+      .filter(s => !existingIds.has(s.id))
+      .map(s => ({
+        _id: s.id,
+        funcion_id: func.id,
+        zona: s.zona,
+        estado: 'disponible',
+        bloqueado: false,
+      }));
+    if (newSeats.length > 0) {
+      const { error: insertErr } = await supabase.from('seats').insert(newSeats);
+      handleError(insertErr);
+    }
+  }
+};
+
 // === ENTRADAS ===
 export const fetchEntradas = async () => {
   const { data, error } = await supabase.from('entradas').select('*');

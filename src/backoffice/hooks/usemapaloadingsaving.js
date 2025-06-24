@@ -1,7 +1,12 @@
 
 import { useEffect } from 'react';
 import { message } from 'antd';
-import { fetchMapa, saveMapa, updateZona } from '../services/apibackoffice';
+import {
+  fetchMapa,
+  saveMapa,
+  updateZona,
+  syncSeatsForSala,
+} from '../services/apibackoffice';
 
 export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZones) => {
   useEffect(() => {
@@ -215,6 +220,8 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
       console.log('Data being sent to server:', dataToSave);
 
       await saveMapa(salaId, dataToSave);
+      // Ensure all functions have the updated seat layout
+      await syncSeatsForSala(salaId);
       console.log('Mapa guardado correctamente');
       message.success('Mapa guardado correctamente');
       return true;
