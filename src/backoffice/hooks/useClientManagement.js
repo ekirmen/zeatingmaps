@@ -13,10 +13,10 @@ export const useClientManagement = (setCarrito) => {
     setSearchLoading(true);
     try {
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, login, nombre, apellido, telefono, empresa, auth:auth.users(email)')
+        .from('profiles_with_auth')
+        .select('id, login, nombre, apellido, telefono, empresa, email')
         .or(
-          `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,auth.email.ilike.%${searchTerm}%`
+          `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
         );
 
       if (error) throw error;
@@ -27,7 +27,7 @@ export const useClientManagement = (setCarrito) => {
         apellido: p.apellido,
         telefono: p.telefono,
         empresa: p.empresa,
-        email: p.auth?.email || '',
+        email: p.email || '',
       }));
     } catch (error) {
       console.error('Error searching for client:', error);

@@ -16,14 +16,14 @@ export const getUserByEmail = async (email) => {
 
   // Fallback for libraries that removed getUserByEmail.
   const { data, error } = await client
-    .from('profiles')
-    .select('id, auth:auth.users(email)')
-    .eq('auth.email', email)
+    .from('profiles_with_auth')
+    .select('id, email')
+    .eq('email', email)
     .single();
 
   if (error || !data) {
     return { data: null, error: error || new Error('User not found') };
   }
 
-  return { data: { user: { id: data.id, email: data.auth?.email } }, error: null };
+  return { data: { user: { id: data.id, email: data.email } }, error: null };
 };
