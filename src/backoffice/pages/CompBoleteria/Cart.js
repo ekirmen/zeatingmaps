@@ -119,9 +119,10 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
       </div>
 
       <div className="max-h-[430px] overflow-y-auto space-y-2 pr-1">
-        {Object.entries(groupedByFunction).map(([fid, group]) => (
+        {Object.entries(groupedByFunction).map(([fid, group], idx) => (
           <div key={fid} className="space-y-1">
             <div className="text-xs font-medium">
+              {`Función ${idx + 1}: `}
               {group.fecha ? new Date(group.fecha).toLocaleString() : ''}
             </div>
             {group.items.map((item) => (
