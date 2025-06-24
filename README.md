@@ -10,13 +10,16 @@ This project is a React application that relies on Supabase for data storage and
    npm install
    ```
 
-2. Create a `.env` file in the project root with the following variables:
+2. Copy `.env.example` to `.env` and fill in your Supabase credentials:
 
    ```bash
-   REACT_APP_SUPABASE_URL=<your-supabase-url>
-   REACT_APP_SUPABASE_ANON_KEY=<your-anon-key>
-   REACT_APP_SUPABASE_SERVICE_ROLE_KEY=<service-role-key-if-needed>
+   cp .env.example .env
+   # Edit .env and provide your values
    ```
+
+   The `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` variable is optional but required
+   for administrative actions such as blocking seats. Without it, updates may be
+   rejected by Supabase if your anonymous role lacks `UPDATE` privileges.
 
 3. Start the development server:
 
@@ -66,3 +69,7 @@ if (isUuid(seatId)) {
   await updateSeat(seatId, {/* your updates */});
 }
 ```
+
+Blocking or unblocking seats also updates the `seats` table. Make sure
+`REACT_APP_SUPABASE_SERVICE_ROLE_KEY` is defined or your anonymous role has
+`UPDATE` privileges; otherwise these changes won't persist.
