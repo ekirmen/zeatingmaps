@@ -127,14 +127,21 @@ const [mapa, setMapa] = useState(null);
   }, [selectedFuncion]);
 
   const handleSeatClick = (seat, table) => {
-    const exists = carrito.find((i) => i._id === seat._id);
+    const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
+    const exists = carrito.find(
+      (i) => i._id === seat._id && i.funcionId === currentFuncId
+    );
     const zonaId = seat.zona;
     const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
 
     if (blockMode) {
       const action = seat.estado === 'bloqueado' ? 'unblock' : 'block';
       if (exists) {
-        setCarrito(carrito.filter(i => i._id !== seat._id));
+        setCarrito(
+          carrito.filter(
+            i => !(i._id === seat._id && i.funcionId === currentFuncId)
+          )
+        );
         setTempBlocks(tempBlocks.filter(id => id !== seat._id));
       } else {
         setCarrito([
@@ -145,7 +152,7 @@ const [mapa, setMapa] = useState(null);
             nombreMesa: table.nombre,
             zona: zonaObj?.nombre || seat.zona,
             action,
-            funcionId: selectedFuncion?.id || selectedFuncion?._id,
+            funcionId: currentFuncId,
             funcionFecha: selectedFuncion?.fechaCelebracion,
           },
         ]);
@@ -182,7 +189,11 @@ const [mapa, setMapa] = useState(null);
     }
 
     if (exists) {
-      setCarrito(carrito.filter((i) => i._id !== seat._id));
+      setCarrito(
+        carrito.filter(
+          (i) => !(i._id === seat._id && i.funcionId === currentFuncId)
+        )
+      );
     } else {
       setCarrito([
         ...carrito,
@@ -194,6 +205,8 @@ const [mapa, setMapa] = useState(null);
           precio: finalPrice,
           tipoPrecio,
           descuentoNombre,
+          funcionId: currentFuncId,
+          funcionFecha: selectedFuncion?.fechaCelebracion,
         },
       ]);
     }
@@ -251,6 +264,8 @@ const [mapa, setMapa] = useState(null);
       }
     }
 
+    const funcId = selectedFuncion?.id || selectedFuncion?._id;
+    const funcFecha = selectedFuncion?.fechaCelebracion;
     const items = Array.from({ length: qty }).map((_, idx) => ({
       _id: `${zonaId}-${Date.now()}-${idx}`,
       nombre: '',
@@ -259,6 +274,8 @@ const [mapa, setMapa] = useState(null);
       precio,
       tipoPrecio,
       descuentoNombre,
+      funcionId: funcId,
+      funcionFecha: funcFecha,
     }));
     setCarrito([...carrito, ...items]);
     setZoneQuantities(prev => ({ ...prev, [zonaId]: '' }));
@@ -288,6 +305,8 @@ const [mapa, setMapa] = useState(null);
       }
     }
 
+    const funcId = selectedFuncion?.id || selectedFuncion?._id;
+    const funcFecha = selectedFuncion?.fechaCelebracion;
     const item = {
       _id: `${zonaId}-${Date.now()}`,
       nombre: '',
@@ -296,6 +315,8 @@ const [mapa, setMapa] = useState(null);
       precio,
       tipoPrecio,
       descuentoNombre,
+      funcionId: funcId,
+      funcionFecha: funcFecha,
     };
     setCarrito([...carrito, item]);
   };
