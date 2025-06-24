@@ -4,6 +4,7 @@ import SeatingMap from './SeatingMap';
 import { fetchMapa, fetchZonasPorSala } from '../../../services/supabaseServices';
 import { fetchSeatsByFuncion } from '../../services/supabaseSeats';
 import { fetchDescuentoPorCodigo } from '../../../store/services/apistore';
+import { unlockSeat } from '../services/seatLocks';
 
 const ZonesAndPrices = ({
   eventos = [],

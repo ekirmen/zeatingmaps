@@ -15,9 +15,7 @@ export const lockSeat = async (seatId, status = 'bloqueado') => {
   const client = supabaseAdmin || supabase;
   const { error } = await client
     .from(TABLE)
- codex/configurar-botón-de-bloqueo-y-agregar-datos-a-la-base-
     .upsert({ seat_id: id, status }, { onConflict: 'seat_id' });
- main
   if (error) throw new Error(error.message);
 };
 
