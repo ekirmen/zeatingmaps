@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useImperativeHandle, forwardRef } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
 import { fetchMapa, fetchZonasPorSala } from '../../../services/supabaseServices';
@@ -19,7 +19,7 @@ const ZonesAndPrices = ({
   abonos = [],
   selectedAffiliate,
   setSelectedAffiliate,
-}) => {
+}, ref) => {
 const [mapa, setMapa] = useState(null);
   const [zonas, setZonas] = useState([]);
   const [selectedZonaId, setSelectedZonaId] = useState(null);
@@ -29,6 +29,28 @@ const [mapa, setMapa] = useState(null);
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [blockMode, setBlockMode] = useState(false);
   const [tempBlocks, setTempBlocks] = useState([]);
+
+  const onSeatsUpdated = useCallback((ids, estado) => {
+    setMapa((prev) => {
+      if (!prev) return prev;
+      const blocked = estado === 'bloqueado';
+      return {
+        ...prev,
+        contenido: prev.contenido.map((mesa) => ({
+          ...mesa,
+          sillas: mesa.sillas.map((s) => {
+            const sid = s._id || s.id;
+            if (ids.includes(sid)) {
+              return { ...s, estado: estado, bloqueado: blocked };
+            }
+            return s;
+          }),
+        })),
+      };
+    });
+  }, []);
+
+  useImperativeHandle(ref, () => ({ onSeatsUpdated }));
 
   function getPrecioConDescuento(detalle) {
     let price = detalle.precio || 0;
@@ -528,4 +550,4 @@ const [mapa, setMapa] = useState(null);
   );
 };
 
-export default ZonesAndPrices;
+export default forwardRef(ZonesAndPrices);
