@@ -53,3 +53,16 @@ This key grants full access to your Supabase project, so avoid exposing it in pr
 
 The project expects a table named `entradas` in Supabase. An example schema is provided in `sql/create_entradas_table.sql`.
 It defines standard ticket fields, including a `recinto` column referencing the venue and a `nombre_entrada` column for the ticket name. The example no longer includes an `evento_id` field.
+
+## Seat utilities
+
+The `src/utils/isUuid.js` helper verifies whether a string is a valid UUID. Use it when calling `updateSeat` to prevent typos in seat IDs:
+
+```javascript
+import { updateSeat } from './backoffice/services/supabaseSeats';
+import { isUuid } from './utils/isUuid';
+
+if (isUuid(seatId)) {
+  await updateSeat(seatId, {/* your updates */});
+}
+```

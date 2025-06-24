@@ -1,5 +1,6 @@
 // services/supabaseSeats.js
 import { supabase } from '../../backoffice/services/supabaseClient';
+import { isUuid } from '../../utils/isUuid';
 // ✅ Bloquear o desbloquear varios asientos por ID
 export const setSeatsBlocked = async (seatIds, bloqueado) => {
   // The `seats` table identifies each seat using the `_id` field. When the
@@ -62,6 +63,9 @@ export const deleteSeat = async (seatId) => {
 
 // ✅ Actualizar asiento
 export const updateSeat = async (seatId, updates) => {
+  if (!isUuid(seatId)) {
+    throw new Error('Invalid seat ID');
+  }
   const { data, error } = await supabase
     .from('seats')
     .update(updates)
