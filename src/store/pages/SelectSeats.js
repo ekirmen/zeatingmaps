@@ -11,9 +11,9 @@ const SelectSeats = () => {
   const { refParam } = useRefParam();
   const [mesas, setMesas] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
-// Removed unused state since seats and setSeats are not being used
-  const [loading, setLoading] = useState(true); // Add loading state
-  const [error, setError] = useState(null); // Add error state
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -33,7 +33,21 @@ const SelectSeats = () => {
     if (salaId) cargarDatos();
   }, [salaId]);
 
+  useEffect(() => {
+    const updateSize = () => {
+      const width = window.innerWidth < 640 ? window.innerWidth * 0.95 : window.innerWidth * 0.6;
+      const height = window.innerWidth < 640 ? window.innerHeight * 0.6 : window.innerHeight * 0.7;
+      setStageSize({ width, height });
+    };
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+
   const toggleSeatSelection = (seat) => {
+    if (['reservado', 'pagado', 'bloqueado'].includes(seat.estado)) {
+      return;
+    }
     if (selectedSeats.some(s => s._id === seat._id)) {
       setSelectedSeats(selectedSeats.filter(s => s._id !== seat._id));
     } else {
@@ -52,7 +66,7 @@ const SelectSeats = () => {
   return (
     <div>
       <h1>Seleccionar Asientos - Sala {salaId}</h1>
-      <Stage width={window.innerWidth} height={window.innerHeight - 200}>
+      <Stage width={stageSize.width} height={stageSize.height}>
         <Layer>
           {mesas.map((mesa, mesaIndex) => (
             <React.Fragment key={mesa._id}>
@@ -86,7 +100,13 @@ const SelectSeats = () => {
                       x={x}
                       y={y}
                       radius={10}
-                      fill={selectedSeats.some(s => s._id === silla._id) ? 'blue' : 'gray'}
+                      fill={
+                        silla.estado === 'reservado' ? 'red' :
+                        silla.estado === 'pagado' ? 'gray' :
+                        silla.estado === 'bloqueado' ? 'orange' :
+                        selectedSeats.some(s => s._id === silla._id) ? 'blue' :
+                        silla.color || 'lightblue'
+                      }
                       stroke="black"
                       strokeWidth={1}
                       onClick={() => toggleSeatSelection(silla)}
