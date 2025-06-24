@@ -64,7 +64,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
         await setSeatsBlocked(seatsToBlock, true);
         await Promise.all(
           seatsToBlock.map(id =>
-            updateSeat(id, { bloqueado: true, estado: 'bloqueado' })
+            updateSeat(id, { bloqueado: true, status: 'bloqueado' })
           )
         );
         if (onSeatsUpdated) onSeatsUpdated(seatsToBlock, 'bloqueado');
@@ -73,7 +73,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
         await setSeatsBlocked(seatsToUnblock, false);
         await Promise.all(
           seatsToUnblock.map(id =>
-            updateSeat(id, { bloqueado: false, estado: 'disponible' })
+            updateSeat(id, { bloqueado: false, status: 'disponible' })
           )
         );
         if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock, 'disponible');

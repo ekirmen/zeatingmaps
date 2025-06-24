@@ -176,7 +176,7 @@ export const syncSeatsForSala = async (salaId) => {
         _id: s.id,
         funcion_id: func.id,
         zona: s.zona,
-        estado: 'disponible',
+        status: 'disponible',
         bloqueado: false,
       }));
     if (newSeats.length > 0) {
