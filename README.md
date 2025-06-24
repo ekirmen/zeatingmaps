@@ -17,7 +17,8 @@ This project is a React application that relies on Supabase for data storage and
    # Edit .env and provide your values
    ```
 
-   The `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` variable is optional but required
+   The `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` variable (or its alias
+   `REACT_SUPABASE_SERVICE_ROLE_KEY`) is optional but required
    for administrative actions such as blocking seats. Without it, updates may be
    rejected by Supabase if your anonymous role lacks `UPDATE` privileges.
 
@@ -41,11 +42,12 @@ The request is executed with the Supabase client configured via the `.env` varia
 
 ## Admin operations
 
-Certain backoffice components use `supabase.auth.admin` to create users. These calls require the **Service Role Key**. If `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` is not provided or is invalid, the request will fail with a `403` error when hitting `auth/v1/admin` endpoints.
+Certain backoffice components use `supabase.auth.admin` to create users. These calls require the **Service Role Key**. If `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` (or `REACT_SUPABASE_SERVICE_ROLE_KEY`) is not provided or is invalid, the request will fail with a `403` error when hitting `auth/v1/admin` endpoints.
 
 For development you can add the key to your `.env` file:
 
 ```bash
+# You can also set REACT_SUPABASE_SERVICE_ROLE_KEY
 REACT_APP_SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 ```
 
@@ -71,5 +73,5 @@ if (isUuid(seatId)) {
 ```
 
 Blocking or unblocking seats also updates the `seats` table. Make sure
-`REACT_APP_SUPABASE_SERVICE_ROLE_KEY` is defined or your anonymous role has
+`REACT_APP_SUPABASE_SERVICE_ROLE_KEY` (or `REACT_SUPABASE_SERVICE_ROLE_KEY`) is defined or your anonymous role has
 `UPDATE` privileges; otherwise these changes won't persist.
