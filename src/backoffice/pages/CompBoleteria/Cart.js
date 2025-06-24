@@ -5,7 +5,7 @@ import { setSeatsBlocked } from '../../services/supabaseSeats';
 import { updateSeat } from '../../services/supabaseSeats';
 import { supabase } from '../../services/supabaseClient';
 
-const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selectedAffiliate, children }) => {
+const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selectedAffiliate, onSeatsUpdated, children }) => {
   const handleTicketSearch = async (locator) => {
     try {
       const { data: payment, error } = await supabase
@@ -67,6 +67,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
             updateSeat(id, { bloqueado: true, estado: 'bloqueado' })
           )
         );
+        if (onSeatsUpdated) onSeatsUpdated(seatsToBlock, 'bloqueado');
       }
       if (seatsToUnblock.length) {
         await setSeatsBlocked(seatsToUnblock, false);
@@ -75,6 +76,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
             updateSeat(id, { bloqueado: false, estado: 'disponible' })
           )
         );
+        if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock, 'disponible');
       }
       const hasBlock = seatsToBlock.length > 0;
       message.success(hasBlock ? 'Seats blocked' : 'Seats unblocked');

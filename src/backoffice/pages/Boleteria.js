@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { message } from 'antd';
 import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
 
@@ -26,6 +26,14 @@ const Boleteria = () => {
     handleFunctionSelect,
     setSelectedEvent
   } = useBoleteria();
+
+  const zonesRef = useRef(null);
+  const mobileZonesRef = useRef(null);
+
+  const handleSeatsUpdated = (ids, estado) => {
+    zonesRef.current?.onSeatsUpdated(ids, estado);
+    mobileZonesRef.current?.onSeatsUpdated(ids, estado);
+  };
 
   const {
     selectedClient,
@@ -223,6 +231,7 @@ const Boleteria = () => {
         <div className="hidden md:flex flex-grow space-x-6 min-h-0 overflow-hidden">
           <section className="flex-1 h-full min-h-0 bg-white rounded-lg shadow-md overflow-auto">
             <ZonesAndPrices
+              ref={zonesRef}
               eventos={eventos}
               selectedEvent={selectedEvent}
               onEventSelect={onEventSelect}
@@ -236,6 +245,7 @@ const Boleteria = () => {
               selectedPlantilla={selectedPlantilla}
               selectedAffiliate={selectedAffiliate}
               setSelectedAffiliate={setSelectedAffiliate}
+              
             />
           </section>
 
@@ -243,6 +253,7 @@ const Boleteria = () => {
             <Cart
               carrito={carrito}
               setCarrito={setCarrito}
+              onSeatsUpdated={handleSeatsUpdated}
               selectedClient={selectedClient}
               onPaymentClick={() => setIsPaymentModalVisible(true)}
               setSelectedClient={setSelectedClient}
@@ -258,6 +269,7 @@ const Boleteria = () => {
         <div className="flex flex-col md:hidden flex-grow min-h-0 overflow-auto space-y-6 p-4 bg-white rounded-lg shadow-md">
           <section className="min-h-[300px]">
             <ZonesAndPrices
+              ref={mobileZonesRef}
               eventos={eventos}
               selectedEvent={selectedEvent}
               onEventSelect={onEventSelect}
@@ -278,6 +290,7 @@ const Boleteria = () => {
             <Cart
               carrito={carrito}
               setCarrito={setCarrito}
+              onSeatsUpdated={handleSeatsUpdated}
               selectedClient={selectedClient}
               onPaymentClick={() => setIsPaymentModalVisible(true)}
               setSelectedClient={setSelectedClient}
