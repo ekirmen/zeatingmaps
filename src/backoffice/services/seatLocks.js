@@ -1,5 +1,3 @@
-// src/backoffice/services/seatLocks.js
-// Simple helpers to lock or unlock seats using the `seat_locks` table.
 import { supabase, supabaseAdmin } from './supabaseClient';
 import { isUuid } from '../../utils/isUuid';
 
