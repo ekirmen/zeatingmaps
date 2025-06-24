@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Input, Card, Table, Tag, Form, Button, message } from 'antd';
 import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit } from 'react-icons/ai';
 import { supabase, supabaseAdmin } from '../../services/supabaseClient';
+import { getUserByEmail } from '../../services/adminUsers';
 
 const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient, onFunctionSelect, setSelectedEvent }) => {
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
@@ -97,10 +98,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const handleAccountSearch = async (term) => {
     setSearchLoading(true);
     try {
-      // Look up the user by email using the auth API first
-      const { data: userResp, error: userError } = await (supabaseAdmin
-        ? supabaseAdmin.auth.admin.getUserByEmail(term)
-        : supabase.auth.admin.getUserByEmail(term));
+      // Look up the user by email using the helper which handles
+      // different supabase-js versions gracefully.
+      const { data: userResp, error: userError } = await getUserByEmail(term);
 
       if (userError) throw userError;
       if (!userResp || !userResp.user) {
