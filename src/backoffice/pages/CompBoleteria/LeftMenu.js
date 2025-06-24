@@ -97,13 +97,30 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const handleAccountSearch = async (term) => {
     setSearchLoading(true);
     try {
+      // Look up the user by email using the auth API first
+      const { data: userResp, error: userError } = await (supabaseAdmin
+        ? supabaseAdmin.auth.admin.getUserByEmail(term)
+        : supabase.auth.admin.getUserByEmail(term));
+
+      if (userError) throw userError;
+      if (!userResp || !userResp.user) {
+        setAccountSearchResults([]);
+        message.info('No se encontró un usuario con ese email');
+        return;
+      }
+
+      // Fetch the related profile data using the user id
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
-        .ilike('email', `%${term}%`);
+        .select('id, login, telefono, empresa')
+        .eq('id', userResp.user.id)
+        .single();
 
       if (error) throw error;
-      setAccountSearchResults(data || []);
+
+      setAccountSearchResults([
+        { ...data, email: userResp.user.email }
+      ]);
     } catch (err) {
       message.error(err.message);
     } finally {
