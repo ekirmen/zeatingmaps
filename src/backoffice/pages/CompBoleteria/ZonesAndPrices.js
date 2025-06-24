@@ -4,6 +4,7 @@ import SeatingMap from './SeatingMap';
 import { fetchMapa, fetchZonasPorSala } from '../../../services/supabaseServices';
 import { fetchSeatsByFuncion } from '../../services/supabaseSeats';
 import { fetchDescuentoPorCodigo } from '../../../store/services/apistore';
+import { lockSeat, unlockSeat } from '../../services/seatLocks';
 
 const ZonesAndPrices = ({
   eventos = [],
@@ -148,7 +149,7 @@ const [mapa, setMapa] = useState(null);
     loadData();
   }, [selectedFuncion]);
 
-  const handleSeatClick = (seat, table) => {
+  const handleSeatClick = async (seat, table) => {
     const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
     const exists = carrito.find(
       (i) => i._id === seat._id && i.funcionId === currentFuncId
@@ -165,6 +166,7 @@ const [mapa, setMapa] = useState(null);
           )
         );
         setTempBlocks(tempBlocks.filter(id => id !== seat._id));
+        try { await unlockSeat(seat._id); } catch (e) { console.error(e); }
       } else {
         setCarrito([
           ...carrito,
@@ -179,6 +181,7 @@ const [mapa, setMapa] = useState(null);
           },
         ]);
         setTempBlocks([...tempBlocks, seat._id]);
+        try { await lockSeat(seat._id); } catch (e) { console.error(e); }
       }
       return;
     }
@@ -216,6 +219,7 @@ const [mapa, setMapa] = useState(null);
           (i) => !(i._id === seat._id && i.funcionId === currentFuncId)
         )
       );
+      try { await unlockSeat(seat._id); } catch (e) { console.error(e); }
     } else {
       setCarrito([
         ...carrito,
@@ -231,11 +235,15 @@ const [mapa, setMapa] = useState(null);
           funcionFecha: selectedFuncion?.fechaCelebracion,
         },
       ]);
+      try { await lockSeat(seat._id); } catch (e) { console.error(e); }
     }
   };
 
   useEffect(() => {
     if (!blockMode) {
+      tempBlocks.forEach(id => {
+        unlockSeat(id).catch(() => {});
+      });
       setTempBlocks([]);
       setCarrito(carrito.filter(i => !i.action));
     }

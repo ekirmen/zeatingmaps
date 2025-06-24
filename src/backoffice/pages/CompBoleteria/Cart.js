@@ -4,6 +4,8 @@ import { AiOutlineClose } from 'react-icons/ai';
 import { setSeatsBlocked } from '../../services/supabaseSeats';
 import { updateSeat } from '../../services/supabaseSeats';
 import { supabase } from '../../services/supabaseClient';
+import { lockSeat, unlockSeat } from '../../services/seatLocks';
+import { isUuid } from '../../../utils/isUuid';
 
 const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selectedAffiliate, onSeatsUpdated, children }) => {
   const handleTicketSearch = async (locator) => {
@@ -41,16 +43,27 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
     }
   };
 
-  const handleRemoveSeat = (id) => {
+  const handleRemoveSeat = async (id) => {
+    const item = carrito.find(
+      (it) => (it.abonoGroup || `${it._id}-${it.funcionId || ''}`) === id
+    );
+    if (item && isUuid((item._id || '').replace(/^silla_/, ''))) {
+      try { await unlockSeat(item._id); } catch (e) { console.error(e); }
+    }
     setCarrito(
       carrito.filter(
-        (item) => (item.abonoGroup || `${item._id}-${item.funcionId || ''}`) !== id
+        (it) => (it.abonoGroup || `${it._id}-${it.funcionId || ''}`) !== id
       )
     );
     message.success('Seat removed from cart');
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
+    await Promise.all(
+      carrito
+        .filter(i => isUuid((i._id || '').replace(/^silla_/, '')))
+        .map(i => unlockSeat(i._id).catch(() => {}))
+    );
     setCarrito([]);
     message.success('Cart cleared');
   };
@@ -78,6 +91,11 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
         );
         if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock, 'disponible');
       }
+      await Promise.all(
+        [...seatsToBlock, ...seatsToUnblock]
+          .filter(id => isUuid(id.replace(/^silla_/, '')))
+          .map(id => unlockSeat(id).catch(() => {}))
+      );
       const hasBlock = seatsToBlock.length > 0;
       message.success(hasBlock ? 'Seats blocked' : 'Seats unblocked');
       setCarrito([]);
