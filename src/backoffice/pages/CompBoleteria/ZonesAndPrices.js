@@ -103,7 +103,9 @@ const [mapa, setMapa] = useState(null);
               ...el,
               sillas: el.sillas.map(s => {
                 const st = seatMap[s._id || s.id];
-                return st ? { ...s, estado: st.estado || (st.bloqueado ? 'bloqueado' : s.estado) } : s;
+                if (!st) return s;
+                const estado = st.bloqueado ? 'bloqueado' : st.estado || s.estado;
+                return { ...s, estado };
               })
             }))
           };
@@ -262,6 +264,42 @@ const [mapa, setMapa] = useState(null);
     setZoneQuantities(prev => ({ ...prev, [zonaId]: '' }));
   };
 
+  const handleAddSingleZoneTicket = (zona) => {
+    const zonaId = zona.id || zona._id;
+    const zonaNombre = zona.nombre;
+    const detalle = detallesPlantilla.find(d => {
+      const id = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
+      return id === zonaId;
+    });
+    if (!detalle) return;
+
+    const precio = getPrecioConDescuento(detalle);
+    let tipoPrecio = 'normal';
+    let descuentoNombre = '';
+
+    if (appliedDiscount?.detalles) {
+      const d = appliedDiscount.detalles.find(dt => {
+        const id = typeof dt.zona === 'object' ? dt.zona._id : dt.zona;
+        return id === zonaId;
+      });
+      if (d) {
+        tipoPrecio = 'descuento';
+        descuentoNombre = appliedDiscount.nombreCodigo;
+      }
+    }
+
+    const item = {
+      _id: `${zonaId}-${Date.now()}`,
+      nombre: '',
+      nombreMesa: '',
+      zona: zonaNombre,
+      precio,
+      tipoPrecio,
+      descuentoNombre,
+    };
+    setCarrito([...carrito, item]);
+  };
+
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center gap-2">
@@ -366,14 +404,22 @@ const [mapa, setMapa] = useState(null);
                 {zonas.map(z => {
                   const id = z.id || z._id;
                   return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => setSelectedZonaId(id === selectedZonaId ? null : id)}
-                      className={`px-2 py-1 rounded text-sm ${selectedZonaId === id ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-                    >
-                      {z.nombre}
-                    </button>
+                    <div key={id} className="flex rounded overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedZonaId(id === selectedZonaId ? null : id)}
+                        className={`px-2 py-1 text-sm ${selectedZonaId === id ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                      >
+                        {z.nombre}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAddSingleZoneTicket(z)}
+                        className="px-2 py-1 bg-green-600 text-white text-sm"
+                      >
+                        +
+                      </button>
+                    </div>
                   );
                 })}
               </div>
