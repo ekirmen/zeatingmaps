@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
 import { fetchMapa, fetchZonasPorSala } from '../../../services/supabaseServices';
+import { fetchSeatsByFuncion } from '../../services/supabaseSeats';
 import { fetchDescuentoPorCodigo } from '../../../store/services/apistore';
 
 const ZonesAndPrices = ({
@@ -26,6 +27,8 @@ const [mapa, setMapa] = useState(null);
   const [viewMode, setViewMode] = useState('map');
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(null);
+  const [blockMode, setBlockMode] = useState(false);
+  const [tempBlocks, setTempBlocks] = useState([]);
 
   function getPrecioConDescuento(detalle) {
     let price = detalle.precio || 0;
@@ -83,11 +86,29 @@ const [mapa, setMapa] = useState(null);
       const funcionId = selectedFuncion?.id || selectedFuncion?._id;
       if (salaId) {
         try {
-          const [m, zs] = await Promise.all([
+          const [m, zs, seats] = await Promise.all([
             fetchMapa(salaId),
             fetchZonasPorSala(salaId),
+            funcionId ? fetchSeatsByFuncion(funcionId) : Promise.resolve([]),
           ]);
-          setMapa(m);
+
+          const seatMap = seats.reduce((acc, s) => {
+            acc[s.id || s._id] = { estado: s.estado, bloqueado: s.bloqueado };
+            return acc;
+          }, {});
+
+          const mapped = {
+            ...m,
+            contenido: m.contenido.map(el => ({
+              ...el,
+              sillas: el.sillas.map(s => {
+                const st = seatMap[s._id || s.id];
+                return st ? { ...s, estado: st.estado || (st.bloqueado ? 'bloqueado' : s.estado) } : s;
+              })
+            }))
+          };
+
+          setMapa(mapped);
           setZonas(Array.isArray(zs) ? zs : []);
         } catch (err) {
           console.error('Error loading map/zones:', err);
@@ -107,6 +128,29 @@ const [mapa, setMapa] = useState(null);
     const exists = carrito.find((i) => i._id === seat._id);
     const zonaId = seat.zona;
     const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
+
+    if (blockMode) {
+      const action = seat.estado === 'bloqueado' ? 'unblock' : 'block';
+      if (exists) {
+        setCarrito(carrito.filter(i => i._id !== seat._id));
+        setTempBlocks(tempBlocks.filter(id => id !== seat._id));
+      } else {
+        setCarrito([
+          ...carrito,
+          {
+            _id: seat._id,
+            nombre: seat.nombre,
+            nombreMesa: table.nombre,
+            zona: zonaObj?.nombre || seat.zona,
+            action,
+            funcionId: selectedFuncion?.id || selectedFuncion?._id,
+            funcionFecha: selectedFuncion?.fechaCelebracion,
+          },
+        ]);
+        setTempBlocks([...tempBlocks, seat._id]);
+      }
+      return;
+    }
 
     // Determine pricing from the selected plantilla
     const detalle = detallesPlantilla.find(d => {
@@ -152,6 +196,13 @@ const [mapa, setMapa] = useState(null);
       ]);
     }
   };
+
+  useEffect(() => {
+    if (!blockMode) {
+      setTempBlocks([]);
+      setCarrito(carrito.filter(i => !i.action));
+    }
+  }, [blockMode]);
 
   const handleApplyDiscount = async () => {
     if (!discountCode.trim()) return;
@@ -297,6 +348,14 @@ const [mapa, setMapa] = useState(null);
         {appliedDiscount && (
           <span className="text-green-700 text-sm">{appliedDiscount.nombreCodigo}</span>
         )}
+        <label className="ml-4 text-sm flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={blockMode}
+            onChange={e => setBlockMode(e.target.checked)}
+          />
+          Bloquear asientos
+        </label>
       </div>
 
       {viewMode === 'map' ? (
@@ -334,6 +393,8 @@ const [mapa, setMapa] = useState(null);
               onSeatClick={handleSeatClick}
               selectedZona={zonas.find(z => (z.id || z._id) === selectedZonaId) || null}
               availableZonas={selectedZonaId ? [selectedZonaId] : zonas.map(z => z.id || z._id)}
+              blockMode={blockMode}
+              tempBlocks={tempBlocks}
             />
           </>
         ) : (

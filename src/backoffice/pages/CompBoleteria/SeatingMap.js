@@ -9,6 +9,7 @@ const SeatingMap = ({
   blockMode = false,
   abonoMode = false,
   abonoSeats = [],
+  tempBlocks = [],
 }) => {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(1);
@@ -66,8 +67,9 @@ const SeatingMap = ({
       disponible: silla.color || "#60a5fa",
     };
 
-    const baseFill = colorMap[silla.estado] || colorMap["disponible"];
-    const fill = isSelected && silla.estado === "disponible" ? "#facc15" : baseFill;
+    const isTempBlock = tempBlocks.includes(silla._id);
+    const baseFill = isTempBlock ? "red" : colorMap[silla.estado] || colorMap["disponible"];
+    const fill = isSelected && silla.estado === "disponible" && !isTempBlock ? "#facc15" : baseFill;
     // When blockMode is active allow selecting any seat regardless of zone
     // When abonoMode is active but the list of available seats failed to load
     // allow selection by default. Only restrict when abonoSeats has entries.
