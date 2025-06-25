@@ -203,11 +203,16 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
       } else {
         // Group seats by event
         const seatsByEvent = carrito.reduce((acc, item) => {
+          // Some seats only contain the raw event ID rather than an object.
+          // `selectedFuncion.evento` can also be either a UUID value or an
+          // object. Normalise these cases to reliably obtain the identifier.
           const eventId =
             item.evento?.id ||
             item.evento?._id ||
+            item.evento ||
             selectedFuncion.evento?.id ||
-            selectedFuncion.evento?._id;
+            selectedFuncion.evento?._id ||
+            selectedFuncion.evento;
 
           // Event IDs may be numeric or UUID. Only skip if the value is null or
           // undefined to allow both formats.
