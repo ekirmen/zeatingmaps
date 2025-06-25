@@ -203,11 +203,16 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
       } else {
         // Group seats by event
         const seatsByEvent = carrito.reduce((acc, item) => {
-          const eventId = item.evento?.id || item.evento?._id ||
-            selectedFuncion.evento?.id || selectedFuncion.evento?._id;
+          const eventId =
+            item.evento?.id ||
+            item.evento?._id ||
+            selectedFuncion.evento?.id ||
+            selectedFuncion.evento?._id;
 
-          if (!isUuid(eventId)) {
-            console.error('Invalid event ID for seat:', item);
+          // Event IDs may be numeric or UUID. Only skip if the value is null or
+          // undefined to allow both formats.
+          if (eventId === null || eventId === undefined) {
+            console.error('Missing event ID for seat:', item);
             return acc;
           }
 
