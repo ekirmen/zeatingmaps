@@ -1,18 +1,43 @@
 // src/backoffice/services/authService.js
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase, supabaseAdmin } from '../../backoffice/services/supabaseClient';
 
 // Registro (sign up) con creación de perfil
 export const registerUser = async ({ email, password }) => {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-  });
+  let user = null;
+  let session = null;
 
-  if (error || !data.user) {
-    throw new Error(error?.message || 'Error al registrar usuario');
+  if (password) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (error || !data.user) {
+      throw new Error(error?.message || 'Error al registrar usuario');
+    }
+
+    user = data.user;
+    session = data.session;
+  } else if (supabaseAdmin) {
+    const { data, error } = await supabaseAdmin.auth.admin.createUser({
+      email,
+      user_metadata: { password_set: false },
+      email_confirm: false,
+    });
+    if (error || !data.user) {
+      throw new Error(error?.message || 'Error al registrar usuario');
+    }
+    user = data.user;
+    // send magic link for initial login
+    await supabase.auth.signInWithOtp({ email });
+  } else {
+    // Fallback to OTP signup if no admin client available
+    const { error } = await supabase.auth.signInWithOtp({ email });
+    if (error) throw new Error(error.message);
+    return { user: null, session: null };
   }
 
-  const userId = data.user.id;
+  const userId = user.id;
 
   // Crea perfil en tabla 'profiles' (relacionada con auth.users)
   const { error: profileError } = await supabase
@@ -27,11 +52,17 @@ export const registerUser = async ({ email, password }) => {
     console.warn('⚠️ Error al crear perfil:', profileError.message);
   }
 
-  return data;
+  return { user, session };
 };
 
 // Inicio de sesión (sign in)
 export const loginUser = async ({ email, password }) => {
+  if (!password) {
+    const { error } = await supabase.auth.signInWithOtp({ email });
+    if (error) throw new Error(error.message);
+    return { user: null, session: null };
+  }
+
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,

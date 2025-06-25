@@ -12,6 +12,7 @@
   "header.signup": "Sign Up",
   "login.success": "Login successful",
   "register.success": "User registered successfully",
+  "login.email_sent": "Check your email for the login link",
   "logout.success": "Logged out successfully",
   "search.placeholder": "Search events",
   "search.button": "Search",

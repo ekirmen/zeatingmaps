@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Modal, Input, Button, message } from 'antd';
@@ -19,41 +19,35 @@ const Header = ({ onLogin, onLogout }) => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: ''
+    email: ''
   });
   const [forgotEmail, setForgotEmail] = useState('');
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
   const [searchTerm, setSearchTerm] = useState('');
 
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      const current = data.session?.user;
+      if (current && current.user_metadata?.password_set === false) {
+        setIsPasswordModalVisible(true);
+      }
+    };
+    checkSession();
+  }, []);
+
   const handleRegister = async () => {
     try {
-      if (!registerData.email || !registerData.password)
+      if (!registerData.email)
         throw new Error(t('errors.fields_required', 'Todos los campos son obligatorios'));
 
-      if (registerData.password !== registerData.confirmPassword)
-        throw new Error(t('errors.passwords_no_match', 'Las contraseñas no coinciden'));
-
-      if (registerData.password.length < 6)
-        throw new Error(t('errors.password_min_length', 'La contraseña debe tener al menos 6 caracteres'));
-
-      const { user, session } = await registerUser({
-        email: registerData.email.trim(),
-        password: registerData.password.trim()
-      });
-
-      const token = session?.access_token;
-      if (token) localStorage.setItem('token', token);
-      onLogin?.({ token, user });
+      await registerUser({ email: registerData.email.trim() });
 
       message.success(t('register.success'));
       setIsAccountModalVisible(false);
       setAccountMode('login');
-      setRegisterData({ email: '', password: '', confirmPassword: '' });
-      navigate(refParam ? `/store?ref=${refParam}` : '/store');
-
+      setRegisterData({ email: '' });
     } catch (error) {
       console.error('Registration error:', error);
       message.error(error.message);
@@ -62,22 +56,28 @@ const Header = ({ onLogin, onLogout }) => {
 
     const handleLogin = async () => {
       try {
-        if (!formData.email || !formData.password)
-          throw new Error(t('errors.enter_credentials', 'Por favor ingrese correo y contraseña'));
+        if (!formData.email)
+          throw new Error(t('errors.enter_credentials', 'Por favor ingrese correo'));
 
         const { user, session } = await loginUser({
           email: formData.email.trim(),
           password: formData.password.trim()
         });
-        const token = session.access_token;
-        localStorage.setItem('token', token);
 
-        onLogin?.({ token, user });
-        setIsAccountModalVisible(false);
-        setFormData({ email: '', password: '' });
-        message.success(t('login.success'));
-        navigate(refParam ? `/store?ref=${refParam}` : '/store');
-
+        if (session && session.access_token) {
+          const token = session.access_token;
+          localStorage.setItem('token', token);
+          onLogin?.({ token, user });
+          setIsAccountModalVisible(false);
+          setFormData({ email: '', password: '' });
+          message.success(t('login.success'));
+          if (user?.user_metadata?.password_set !== true) {
+            setIsPasswordModalVisible(true);
+          }
+          navigate(refParam ? `/store?ref=${refParam}` : '/store');
+        } else {
+          message.success(t('login.email_sent'));
+        }
       } catch (error) {
         console.error('Login error:', error);
         setError(error.message || t('errors.login', 'Error al iniciar sesión'));
@@ -124,7 +124,10 @@ const Header = ({ onLogin, onLogout }) => {
       if (passwordData.newPassword.length < 6)
         throw new Error('La contraseña debe tener al menos 6 caracteres');
 
-    const { data, error } = await supabase.auth.updateUser({ password: passwordData.newPassword.trim() });
+    const { data, error } = await supabase.auth.updateUser({
+      password: passwordData.newPassword.trim(),
+      data: { password_set: true }
+    });
     if (error) throw error;
     const session = await supabase.auth.getSession();
     const token = session.data.session?.access_token;
@@ -245,9 +248,12 @@ const Header = ({ onLogin, onLogout }) => {
         )}
         {accountMode === 'register' && (
           <>
-            <Input placeholder={t('header.email')} value={registerData.email} onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })} className="mb-4" />
-            <Input.Password placeholder={t('password.new')} value={registerData.password} onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })} className="mb-4" />
-            <Input.Password placeholder={t('password.repeat')} value={registerData.confirmPassword} onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })} className="mb-4" />
+            <Input
+              placeholder={t('header.email')}
+              value={registerData.email}
+              onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+              className="mb-4"
+            />
             <div className="mt-2 text-sm">
               <span className="cursor-pointer text-blue-600 hover:underline" onClick={() => setAccountMode('login')}>{t('header.login')}</span>
             </div>

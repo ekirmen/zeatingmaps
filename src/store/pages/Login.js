@@ -15,6 +15,12 @@ const Login = ({ onLogin }) => {
   const [resetEmail, setResetEmail] = useState('');
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (user && user.user_metadata?.password_set === false) {
+      setIsPasswordModalVisible(true);
+    }
+  }, [user]);
+
   // Detectar si ya hay sesión activa
   useEffect(() => {
     const checkSession = async () => {
@@ -22,7 +28,11 @@ const Login = ({ onLogin }) => {
       if (data.session) {
         setUser(data.session.user);
         onLogin?.({ user: data.session.user });
-        navigate('/store');
+        if (data.session.user.user_metadata?.password_set === false) {
+          setIsPasswordModalVisible(true);
+        } else {
+          navigate('/store');
+        }
       }
     };
     checkSession();
@@ -32,19 +42,34 @@ const Login = ({ onLogin }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: login,
-        password,
-      });
+      let data = null;
+      let error = null;
 
-      if (error || !data.session) {
-        throw new Error(error?.message || t('errors.auth', 'Error de autenticación'));
+      if (password) {
+        ({ data, error } = await supabase.auth.signInWithPassword({
+          email: login,
+          password,
+        }));
+      } else {
+        ({ error } = await supabase.auth.signInWithOtp({ email: login }));
       }
 
-      setUser(data.user);
-      onLogin?.({ user: data.user });
-      message.success(t('login.success'));
-      navigate('/store');
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data?.session) {
+        setUser(data.user);
+        onLogin?.({ user: data.user });
+        message.success(t('login.success'));
+        if (data.user.user_metadata?.password_set === false) {
+          setIsPasswordModalVisible(true);
+        } else {
+          navigate('/store');
+        }
+      } else {
+        message.success(t('login.email_sent'));
+      }
     } catch (err) {
       console.error(err);
       message.error(err.message || t('errors.login', 'Error al iniciar sesión'));
@@ -69,6 +94,7 @@ const Login = ({ onLogin }) => {
 
       const { error } = await supabase.auth.updateUser({
         password: passwordData.newPassword.trim(),
+        data: { password_set: true }
       });
 
       if (error) throw error;
@@ -115,7 +141,6 @@ const Login = ({ onLogin }) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full border px-3 py-2 rounded"
-            required
           />
         </div>
         <Button type="primary" htmlType="submit" className="w-full">

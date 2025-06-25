@@ -12,6 +12,7 @@
   "header.signup": "Registrarse",
   "login.success": "Inicio de sesión exitoso",
   "register.success": "Usuario registrado exitosamente",
+  "login.email_sent": "Se envió un enlace a tu correo",
   "logout.success": "Sesión cerrada correctamente",
   "search.placeholder": "Buscar eventos",
   "search.button": "Buscar",
