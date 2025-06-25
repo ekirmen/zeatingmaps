@@ -98,14 +98,20 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const handleAccountSearch = async (term) => {
     setSearchLoading(true);
     try {
+      const cleanTerm = term.trim();
+      if (!cleanTerm) {
+        setAccountSearchResults([]);
+        message.info('Usuario no encontrado y/o campo vacío');
+        return;
+      }
+
       // Look up the user by email using the helper which handles
       // different supabase-js versions gracefully.
-      const { data: userResp, error: userError } = await getUserByEmail(term);
+      const { data: userResp, error: userError } = await getUserByEmail(cleanTerm);
 
-      if (userError) throw userError;
-      if (!userResp || !userResp.user) {
+      if (userError || !userResp || !userResp.user) {
         setAccountSearchResults([]);
-        message.info('No se encontró un usuario con ese email');
+        message.info('Usuario no encontrado y/o campo vacío');
         return;
       }
 
@@ -114,9 +120,15 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         .from('profiles')
         .select('id, login, telefono, empresa')
         .eq('id', userResp.user.id)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') throw error;
+
+      if (!data) {
+        setAccountSearchResults([]);
+        message.info('Usuario no encontrado y/o campo vacío');
+        return;
+      }
 
       setAccountSearchResults([
         { ...data, email: userResp.user.email }
