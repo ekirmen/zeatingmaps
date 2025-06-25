@@ -4,6 +4,7 @@ import { AiOutlineDelete } from 'react-icons/ai';
 import { Typography } from 'antd';
 import { createPayment, updatePayment } from '../../services/apibackoffice';
 import { useAuth } from '../../../contexts/AuthContext';
+import { isUuid } from '../../../utils/isUuid';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -205,6 +206,12 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
         const seatsByEvent = carrito.reduce((acc, item) => {
           const eventId = item.evento?.id || item.evento?._id ||
             selectedFuncion.evento?.id || selectedFuncion.evento?._id;
+
+          if (!isUuid(eventId)) {
+            console.error('Invalid event ID for seat:', item);
+            return acc;
+          }
+
           if (!acc[eventId]) {
             acc[eventId] = [];
           }
@@ -218,7 +225,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
           user: selectedClient.id || selectedClient._id,
           event: eventId,
           funcion: selectedFuncion.id || selectedFuncion._id,
-          processed_by: user?.id,
+          processed_by: isUuid(user?.id) ? user.id : null,
           seats: seats.map(item => ({
               id: item.id || item._id,
               name: item.nombre,
