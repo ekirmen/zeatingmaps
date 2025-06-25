@@ -70,6 +70,12 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     }
   };
 
+  const handleDownloadTicket = (locator) => {
+    if (locator) {
+      window.open(`${process.env.REACT_APP_API_URL}/api/payments/${locator}/download`, '_blank');
+    }
+  };
+
   const handleEmailSearch = async (email) => {
     setSearchLoading(true);
     try {
@@ -262,11 +268,18 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 )
               },
               {
-                title: 'Acción',
+                title: 'Acciones',
                 render: (_, record) => (
-                  <Button type="link" onClick={() => handleTicketSearch(record.locator)}>
-                    Cargar
-                  </Button>
+                  <>
+                    <Button type="link" onClick={() => handleTicketSearch(record.locator)}>
+                      Cargar
+                    </Button>
+                    {record.status === 'pagado' && (
+                      <Button type="link" onClick={() => handleDownloadTicket(record.locator)}>
+                        Descargar
+                      </Button>
+                    )}
+                  </>
                 )
               }
             ]}
