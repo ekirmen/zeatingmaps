@@ -155,7 +155,8 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       // Wait a bit for the trigger to create the profile
       await new Promise((res) => setTimeout(res, 1500));
 
-      const { data, error: profileError } = await supabase
+      const client = supabaseAdmin || supabase;
+      const { data, error: profileError } = await client
         .from('profiles')
         .update({
           login: values.login,

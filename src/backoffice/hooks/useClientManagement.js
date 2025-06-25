@@ -49,7 +49,8 @@ export const useClientManagement = (setCarrito) => {
 
       await new Promise((res) => setTimeout(res, 1500));
 
-      const { data: profileData, error: profileError } = await supabase
+      const client = supabaseAdmin || supabase;
+      const { data: profileData, error: profileError } = await client
         .from('profiles')
         .update({
           login: values.email,
