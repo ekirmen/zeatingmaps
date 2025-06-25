@@ -79,7 +79,6 @@ const ClientModals = ({
           login: values.email,
           nombre: values.nombre,
           telefono: values.telefono,
-          empresa: values.empresa || 'Sin empresa',
           permisos: { role: 'usuario' },
         })
         .eq('id', userResp.user.id)
@@ -250,9 +249,6 @@ const ClientModals = ({
             label="Phone"
             rules={[{ required: true, message: 'Please input client phone!' }]}
           >
-            <Input className="rounded-md" />
-          </Form.Item>
-          <Form.Item name="empresa" label="Company">
             <Input className="rounded-md" />
           </Form.Item>
           <Form.Item>

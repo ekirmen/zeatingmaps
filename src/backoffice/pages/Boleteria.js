@@ -135,8 +135,7 @@ const Boleteria = () => {
       try {
         const newClient = await handleAddClient({
           ...values,
-          perfil: 'cliente',
-          empresa: values.empresa || 'Sin empresa'
+          perfil: 'cliente'
         });
         if (newClient) {
           setSelectedClient(newClient);
