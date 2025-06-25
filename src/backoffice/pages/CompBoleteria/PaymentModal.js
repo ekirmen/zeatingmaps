@@ -3,6 +3,7 @@ import { Modal, Tabs, Input, Button, Radio, DatePicker, Select, Table, message }
 import { AiOutlineDelete } from 'react-icons/ai';
 import { Typography } from 'antd';
 import { createPayment, updatePayment } from '../../services/apibackoffice';
+import generateRandomLocator from '../../../utils/generateLocator';
 import { useAuth } from '../../../contexts/AuthContext';
 import { isUuid } from '../../../utils/isUuid';
 
@@ -170,10 +171,8 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
 
   const paymentStatus = getPaymentStatus();
 
-  const generateLocator = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    return Array(8).fill(0).map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
-  };
+  // Generate a random 7 character locator consisting of letters and numbers
+  const generateLocator = () => generateRandomLocator();
 
   const handlePaymentOrReservation = async () => {
     if (!selectedClient) {
@@ -256,8 +255,9 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
         });
 
         const results = await Promise.all(paymentPromises);
-
-        setLocator(results[0].locator);
+        if (results && results.length > 0 && results[0]) {
+          setLocator(results[0].locator);
+        }
         setShowConfirmation(true);
         message.success('Pago procesado exitosamente');
         onCancel();
