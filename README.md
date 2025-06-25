@@ -30,7 +30,7 @@ This project is a React application that relies on Supabase for data storage and
 
 ## Fetching users
 
-Use the helper in `src/services/userService.js` to retrieve the list of users with fields such as `login`, `email`, `telefono`, `empresa`, `perfil`, `permisos` and `formaDePago`:
+Use the helper in `src/services/userService.js` to retrieve the list of users with fields such as `login`, `email`, `telefono`, `empresa`, `perfil` and `permisos`:
 
 ```javascript
 import { fetchUsers } from './services/userService';

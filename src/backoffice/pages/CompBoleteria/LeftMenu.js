@@ -148,10 +148,8 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         .update({
           login: values.login,
           telefono: values.telefono,
-          empresa: values.empresa || 'Sin empresa',
           perfil: 'cliente',
           permisos: { role: 'usuario' },
-          formaDePago: {},
         })
         .eq('id', userResp.user.id)
         .select()
@@ -284,9 +282,6 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
               <Input />
             </Form.Item>
             <Form.Item name="telefono" label="Teléfono">
-              <Input />
-            </Form.Item>
-            <Form.Item name="empresa" label="Empresa">
               <Input />
             </Form.Item>
             <Button htmlType="submit" block>
