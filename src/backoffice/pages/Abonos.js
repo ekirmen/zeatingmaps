@@ -31,7 +31,16 @@ const Abonos = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await createAbono({ user: userId, seat: seatId, packageType, startDate, endDate }, token);
+      await createAbono(
+        {
+          usuario_id: userId,
+          seat_id: seatId,
+          package_type: packageType,
+          start_date: startDate,
+          end_date: endDate,
+        },
+        token,
+      );
       setSeatId('');
       setPackageType('');
       setStartDate('');

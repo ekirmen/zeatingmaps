@@ -62,11 +62,16 @@ const Boleteria = () => {
           const { data, error } = await supabase
             .from('abonos')
             .select('*')
-            .eq('user', selectedClient.id);
+            .eq('usuario_id', selectedClient.id);
 
           if (error) throw error;
 
-          setClientAbonos(data);
+          const mapped = (data || []).map((a) => ({
+            ...a,
+            packageType: a.package_type,
+            seat: a.seat_id,
+          }));
+          setClientAbonos(mapped);
         } catch (err) {
           console.error('Error loading abonos', err);
           setClientAbonos([]);
