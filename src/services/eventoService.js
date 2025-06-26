@@ -1,4 +1,5 @@
 import { supabase } from '../backoffice/services/supabaseClient';
+import { v4 as uuidv4 } from 'uuid';
 
 // Allow bucket name to be configured via environment variable
 const rawEventBucket = process.env.REACT_APP_EVENT_BUCKET || 'eventos';
@@ -56,11 +57,19 @@ export const duplicateEvento = async (id) => {
 
 // Crear o actualizar evento (si tiene ID, lo actualiza)
 export const saveEvento = async (eventoData, files = {}) => {
-  // Si tienes que subir imágenes, debes hacerlo con Supabase Storage
+  // Determine if this is a new event (no ID was provided initially)
+  const isExisting = !!eventoData.id;
+  if (!isExisting) {
+    // Generate an ID so uploaded images can go inside a folder named
+    // after the event ID and so we can insert the record with this ID
+    eventoData.id = uuidv4();
+  }
+
+  // Handle image upload if provided
   if (files.imagenDestacada) {
     const file = files.imagenDestacada;
     const filename = `${Date.now()}-${file.name}`;
-    const idPath = eventoData.id ? `${eventoData.id}/` : '';
+    const idPath = `${eventoData.id}/`;
     const base = EVENT_FOLDER ? `${EVENT_FOLDER}/${idPath}` : idPath;
     const path = `${base}${filename}`;
 
@@ -68,7 +77,9 @@ export const saveEvento = async (eventoData, files = {}) => {
       .from(EVENT_BUCKET)
       .upload(path, file);
 
-    if (uploadError) throw new Error(`Error uploading image: ${uploadError.message}`);
+    if (uploadError) {
+      throw new Error(`Error uploading image: ${uploadError.message}`);
+    }
 
     const publicUrl = supabase.storage
       .from(EVENT_BUCKET)
@@ -77,9 +88,8 @@ export const saveEvento = async (eventoData, files = {}) => {
     eventoData.imagenDestacada = publicUrl;
   }
 
-  // Insertar o actualizar según si tiene `id`
-  const isUpdate = !!eventoData.id;
-  const query = isUpdate
+  // Insertar o actualizar según si el evento existía previamente
+  const query = isExisting
     ? supabase.from('eventos').update(eventoData).eq('id', eventoData.id)
     : supabase.from('eventos').insert([eventoData]);
 
