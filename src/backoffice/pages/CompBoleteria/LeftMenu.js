@@ -87,10 +87,17 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const handleEmailSearch = async (email) => {
     setSearchLoading(true);
     try {
+      // First lookup the user by email to obtain the associated id
+      const { data: userResp, error: userError } = await getUserByEmail(email);
+
+      if (userError || !userResp || !userResp.user) {
+        throw userError || new Error('Usuario no encontrado');
+      }
+
       const { data, error } = await supabase
         .from('payments')
         .select('locator, status, created_at, event:event(nombre), funcion:funcion(fecha)')
-        .eq('email', email);
+        .eq('usuario_id', userResp.user.id);
 
       if (error) throw error;
       setEmailSearchResults(data || []);
