@@ -1,5 +1,8 @@
 import { supabase } from '../backoffice/services/supabaseClient';
 
+// Allow bucket name to be configured via environment variable
+const EVENT_BUCKET = process.env.REACT_APP_EVENT_BUCKET || 'eventos';
+
 
 // Obtener todos los eventos
 export const fetchEventos = async () => {
@@ -55,13 +58,13 @@ export const saveEvento = async (eventoData, files = {}) => {
     const filename = `${Date.now()}-${file.name}`;
 
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('eventos')
+      .from(EVENT_BUCKET)
       .upload(filename, file);
 
     if (uploadError) throw new Error(`Error uploading image: ${uploadError.message}`);
 
     const publicUrl = supabase.storage
-      .from('eventos')
+      .from(EVENT_BUCKET)
       .getPublicUrl(uploadData.path).data.publicUrl;
 
     eventoData.imagenDestacada = publicUrl;

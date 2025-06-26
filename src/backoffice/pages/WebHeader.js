@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useHeader } from '../../contexts/HeaderContext';
 import { supabase } from '../../backoffice/services/supabaseClient';
 
+// Allow custom bucket name via environment variable
+const LOGO_BUCKET = process.env.REACT_APP_LOGO_BUCKET || 'logos';
+
 const WebHeader = () => {
   const { header, updateHeader } = useHeader();
   const [companyName, setCompanyName] = useState(header?.companyName || 'TuEmpresa');
@@ -18,7 +21,7 @@ const WebHeader = () => {
 
     setUploading(true);
     const { error } = await supabase.storage
-      .from('logos')
+      .from(LOGO_BUCKET)
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false,
@@ -32,7 +35,7 @@ const WebHeader = () => {
     }
 
     const { data: publicData } = supabase.storage
-      .from('logos')
+      .from(LOGO_BUCKET)
       .getPublicUrl(filePath);
 
     if (publicData?.publicUrl) {
