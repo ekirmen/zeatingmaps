@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../utils/apiBase';
+import resolveImageUrl from '../utils/resolveImageUrl';
 
 const Evento = () => {
   const { token } = useAuth();
@@ -71,7 +72,7 @@ const Evento = () => {
           eventoData.imagenes.espectaculo.length > 0 &&
           !imagePreview && (
             <img
-              src={`${API_BASE_URL}${eventoData.imagenes.espectaculo[0]}`}
+              src={resolveImageUrl(eventoData.imagenes.espectaculo[0])}
               alt="Evento"
               style={{ maxWidth: '200px', marginTop: '10px' }}
             />

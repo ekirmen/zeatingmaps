@@ -9,6 +9,7 @@ import { fetchSeatsByFuncion, updateSeat } from '../../backoffice/services/supab
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 import API_BASE_URL from '../../utils/apiBase';
+import resolveImageUrl from '../../utils/resolveImageUrl';
 import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { useTranslation } from 'react-i18next';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
@@ -406,9 +407,9 @@ const Event = () => {
       {(evento?.imagenes?.portada || evento?.imagenes?.banner) && (
         <div className="relative mb-4">
           <img
-            src={`${API_URL}${
+            src={resolveImageUrl(
               evento?.imagenes?.portada || evento?.imagenes?.banner
-            }`}
+            )}
             alt={`Imagen de ${evento.nombre}`}
             className="w-full max-h-[80vh] object-cover rounded"
           />

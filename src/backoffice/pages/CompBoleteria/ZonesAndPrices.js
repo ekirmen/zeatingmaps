@@ -6,6 +6,7 @@ import { fetchSeatsByFuncion } from '../../services/supabaseSeats';
 import { fetchDescuentoPorCodigo } from '../../../store/services/apistore';
 import { unlockSeat } from '../../services/seatLocks';
 import API_BASE_URL from '../../../utils/apiBase';
+import resolveImageUrl from '../../../utils/resolveImageUrl';
 
 const ZonesAndPrices = ({
   eventos = [],
@@ -422,7 +423,7 @@ const [mapa, setMapa] = useState(null);
         </select>
         {selectedEvent?.imagenes?.logoCuadrado && (
           <img
-            src={`${API_BASE_URL}${selectedEvent.imagenes.logoCuadrado}`}
+            src={resolveImageUrl(selectedEvent.imagenes.logoCuadrado)}
             alt="Evento"
             className="w-10 h-10 object-cover rounded"
           />

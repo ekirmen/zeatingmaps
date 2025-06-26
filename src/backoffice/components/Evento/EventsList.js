@@ -1,5 +1,6 @@
 import React from 'react';
 import API_BASE_URL from '../../../utils/apiBase';
+import resolveImageUrl from '../../../utils/resolveImageUrl';
 
 const EventsList = ({ 
   eventosFiltrados, 
@@ -32,7 +33,7 @@ const EventsList = ({
                 <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
                   {evento.imagenes?.banner ? (
                     <img
-                      src={`${API_BASE_URL}${evento.imagenes.banner}`}
+                      src={resolveImageUrl(evento.imagenes.banner)}
                       alt={evento.nombre}
                       className="object-cover w-full h-full"
                     />

@@ -3,6 +3,7 @@ import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { supabase } from '../../backoffice/services/supabaseClient';
 import API_BASE_URL from '../../utils/apiBase';
+import resolveImageUrl from '../../utils/resolveImageUrl';
 
 const API_URL = API_BASE_URL;
 
@@ -99,7 +100,7 @@ const EventListWidget = () => {
                 >
                   {evento.imagenes?.portada && (
                     <img
-                      src={`${API_URL}${evento.imagenes.portada}`}
+                      src={resolveImageUrl(evento.imagenes.portada)}
                       alt={`Portada de ${evento.nombre}`}
                       className="w-full max-w-xs h-auto object-cover mb-2"
                     />
