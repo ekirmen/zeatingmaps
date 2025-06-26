@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS payments (
     metodo_pago_id integer NOT NULL,
     monto numeric NOT NULL,
     fecha TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    event uuid NULL,
+    event uuid NULL REFERENCES eventos(id),
     funcion integer NULL REFERENCES funciones(id),
     locator text,
     payments jsonb,

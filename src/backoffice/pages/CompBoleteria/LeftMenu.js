@@ -25,9 +25,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const handleTicketSearch = async (locator) => {
     setSearchLoading(true);
     try {
-      const { data: payment, error } = await supabase
-        .from('payments')
-        .select('*, user:profiles(*), seats, event:event_id(*), funcion:funcion_id(fecha)')
+        const { data: payment, error } = await supabase
+          .from('payments')
+          .select('*, user:profiles(*), seats, event:event(*), funcion:funcion(fecha)')
         .eq('locator', locator)
         .single();
 
@@ -59,7 +59,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           status: ticketData.status,
           paymentId: ticketData.id,
           locator: ticketData.locator,
-          funcionId: ticketData.funcion_id
+          funcionId: ticketData.funcion
         }))
       );
     }
@@ -69,7 +69,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     }
 
     if (ticketData.funcion && typeof onFunctionSelect === 'function') {
-      await onFunctionSelect(ticketData.funcion_id);
+      await onFunctionSelect(ticketData.funcion);
     }
 
     setIsSearchModalVisible(false);
@@ -89,7 +89,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     try {
       const { data, error } = await supabase
         .from('payments')
-        .select('locator, status, created_at, event:event_id(nombre), funcion:funcion_id(fecha)')
+        .select('locator, status, created_at, event:event(nombre), funcion:funcion(fecha)')
         .eq('email', email);
 
       if (error) throw error;
