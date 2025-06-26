@@ -307,9 +307,16 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 ]}
               />
             )}
-            <Button type="primary" onClick={loadTicketIntoPOS} block className="mt-2">
-              Seleccionar
-            </Button>
+            <div className="flex gap-2 mt-2">
+              <Button type="primary" onClick={loadTicketIntoPOS} block>
+                Seleccionar
+              </Button>
+              {ticketData.status === 'pagado' && (
+                <Button type="default" onClick={() => handleDownloadTicket(ticketData.locator)} block>
+                  Descargar
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
