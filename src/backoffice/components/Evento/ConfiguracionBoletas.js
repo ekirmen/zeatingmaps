@@ -8,7 +8,11 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   // Update initial state with existing images
   const getPreview = (img) => {
     if (typeof img === 'string') {
-      // Image paths stored in the backend already include the folder
+      // Leave absolute URLs untouched
+      if (/^https?:\/\//i.test(img)) {
+        return img;
+      }
+      // Otherwise prefix with API base URL
       return `${API_BASE_URL}${img}`;
     }
     if (img instanceof File) {
