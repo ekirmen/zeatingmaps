@@ -4,6 +4,7 @@ import { Modal, Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../backoffice/services/supabaseClient';
 
+import { SITE_URL } from "../../utils/siteUrl";
 const Login = ({ onLogin }) => {
   const { t } = useTranslation();
   const [login, setLogin] = useState('');
@@ -51,7 +52,7 @@ const Login = ({ onLogin }) => {
           password,
         }));
       } else {
-        ({ error } = await supabase.auth.signInWithOtp({ email: login }));
+        ({ error } = await supabase.auth.signInWithOtp({ email: login, options: { emailRedirectTo: SITE_URL } }));
       }
 
       if (error) {
@@ -111,7 +112,7 @@ const Login = ({ onLogin }) => {
   const handleForgotPassword = async () => {
     try {
       if (!resetEmail) throw new Error('Debes ingresar un correo válido');
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail);
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, { redirectTo: SITE_URL });
       if (error) throw error;
       message.success('Se envió un correo para recuperar tu contraseña.');
       setIsForgotModalVisible(false);
