@@ -34,42 +34,46 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       if (error || !payment) throw new Error('Ticket no encontrado');
 
       setTicketData(payment);
-
-      if (payment.user) {
-        setUserData(payment.user);
-        setSelectedClient(payment.user);
-      }
-
-      if (payment.seats && setCarrito) {
-        setCarrito(payment.seats.map((seat) => ({
-          _id: seat._id || seat.id,
-          nombre: seat.name,
-          precio: seat.price || 0,
-          nombreMesa: seat.mesa?.nombre || '',
-          zona: seat.zona?.nombre || 'General',
-          status: payment.status,
-          paymentId: payment.id,
-          locator: payment.locator,
-          funcionId: payment.funcion_id
-        })));
-      }
-
-      if (payment.event && setSelectedEvent) {
-        setEventData(payment.event);
-        setSelectedEvent(payment.event);
-      }
-
-      if (payment.funcion && typeof onFunctionSelect === 'function') {
-        await onFunctionSelect(payment.funcion_id);
-      }
-
-      setIsSearchModalVisible(false);
-      message.success('Ticket cargado correctamente');
+      if (payment.user) setUserData(payment.user);
+      if (payment.event) setEventData(payment.event);
     } catch (err) {
       message.error(err.message);
     } finally {
       setSearchLoading(false);
     }
+  };
+
+  const loadTicketIntoPOS = async () => {
+    if (!ticketData) return;
+    if (ticketData.user) {
+      setSelectedClient(ticketData.user);
+    }
+    if (ticketData.seats && setCarrito) {
+      setCarrito(
+        ticketData.seats.map((seat) => ({
+          _id: seat._id || seat.id,
+          nombre: seat.name,
+          precio: seat.price || 0,
+          nombreMesa: seat.mesa?.nombre || '',
+          zona: seat.zona?.nombre || 'General',
+          status: ticketData.status,
+          paymentId: ticketData.id,
+          locator: ticketData.locator,
+          funcionId: ticketData.funcion_id
+        }))
+      );
+    }
+
+    if (ticketData.event && setSelectedEvent) {
+      setSelectedEvent(ticketData.event);
+    }
+
+    if (ticketData.funcion && typeof onFunctionSelect === 'function') {
+      await onFunctionSelect(ticketData.funcion_id);
+    }
+
+    setIsSearchModalVisible(false);
+    message.success('Ticket cargado correctamente');
   };
 
   const handleDownloadTicket = async (locator) => {
@@ -85,7 +89,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     try {
       const { data, error } = await supabase
         .from('payments')
-        .select('locator, status, created_at')
+        .select('locator, status, created_at, event:event_id(nombre), funcion:funcion_id(fecha)')
         .eq('email', email);
 
       if (error) throw error;
@@ -98,6 +102,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   };
 
   const handleSearch = async () => {
+    setTicketData(null);
+    setUserData(null);
+    setEventData(null);
     if (searchMode === 'locator') {
       await handleTicketSearch(searchTerm);
     } else {
@@ -251,6 +258,43 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           loading={searchLoading}
         />
 
+        {ticketData && (
+          <div className="mt-4 space-y-2">
+            {userData && (
+              <div>
+                <strong>Comprador:</strong> {userData.login} ({userData.email})
+              </div>
+            )}
+            {eventData && (
+              <div>
+                <strong>Evento:</strong> {eventData.nombre}
+              </div>
+            )}
+            {ticketData.funcion && (
+              <div>
+                <strong>Función:</strong>{' '}
+                {new Date(ticketData.funcion.fecha).toLocaleString()}
+              </div>
+            )}
+            {ticketData.seats && (
+              <Table
+                dataSource={ticketData.seats}
+                rowKey={(s) => s._id || s.id}
+                size="small"
+                pagination={false}
+                columns={[
+                  { title: 'Asiento', dataIndex: 'name' },
+                  { title: 'Zona', dataIndex: ['zona', 'nombre'] },
+                  { title: 'Precio', dataIndex: 'price' }
+                ]}
+              />
+            )}
+            <Button type="primary" onClick={loadTicketIntoPOS} block className="mt-2">
+              Seleccionar
+            </Button>
+          </div>
+        )}
+
         {searchMode === 'email' && emailSearchResults.length > 0 && (
           <Table
             dataSource={emailSearchResults}
@@ -259,10 +303,11 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             className="mt-4"
             columns={[
               { title: 'Localizador', dataIndex: 'locator' },
+              { title: 'Evento', dataIndex: ['event', 'nombre'] },
               {
-                title: 'Fecha',
-                dataIndex: 'created_at',
-                render: date => new Date(date).toLocaleDateString()
+                title: 'Función',
+                dataIndex: ['funcion', 'fecha'],
+                render: date => new Date(date).toLocaleString(),
               },
               {
                 title: 'Estado',
@@ -276,7 +321,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 render: (_, record) => (
                   <>
                     <Button type="link" onClick={() => handleTicketSearch(record.locator)}>
-                      Cargar
+                      Ver
                     </Button>
                     {record.status === 'pagado' && (
                       <Button type="link" onClick={() => handleDownloadTicket(record.locator)}>
