@@ -1,8 +1,11 @@
 import { supabase } from '../backoffice/services/supabaseClient';
 
 export const fetchMapa = async (salaId) => {
-  // El esquema actual ya no cuenta con mapas por función, por lo que
-  // simplemente obtenemos el mapa asociado a la sala.
+  // Avoid making a request if the sala ID is missing. This prevents
+  // an invalid query like `sala_id=eq.undefined` that results in a
+  // 400 error from Supabase.
+  if (!salaId) return null;
+
   const { data, error } = await supabase
     .from('mapas')
     .select('*')
