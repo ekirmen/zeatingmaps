@@ -184,6 +184,17 @@ const Evento = () => {
         return [];
       };
 
+      const parseImages = (imgs) => {
+        if (!imgs) return {};
+        if (typeof imgs === 'object') return imgs;
+        try {
+          const parsed = JSON.parse(imgs);
+          return typeof parsed === 'object' && parsed !== null ? parsed : {};
+        } catch {
+          return {};
+        }
+      };
+
       setEventoData({
         datosComprador: {},
         datosBoleto: {},
@@ -194,6 +205,7 @@ const Evento = () => {
         estadoPersonalizado: false,
         ...eventoParaEditar,
         tags: normalizeTags(eventoParaEditar.tags),
+        imagenes: parseImages(eventoParaEditar.imagenes),
       });
     }
     setMenuVisible(true);
