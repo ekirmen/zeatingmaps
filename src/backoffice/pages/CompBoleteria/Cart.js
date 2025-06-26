@@ -10,7 +10,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
     try {
       const { data: payment, error } = await supabase
         .from('payments')
-        .select('*, user:profiles(*), seats, funciones(fecha:fecha_celebracion)')
+        .select('*, user:profiles!usuario_id(*), seats, funciones(fecha:fecha_celebracion)')
         .eq('locator', locator)
         .single();
 
