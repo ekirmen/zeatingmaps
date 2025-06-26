@@ -13,6 +13,9 @@ import SearchBar from '../components/Evento/SearchBar';
 import VenueSelectors from '../components/Evento/VenueSelectors';
 import { supabase } from '../services/supabaseClient';
 
+// Bucket where event related images are stored
+const EVENT_BUCKET = process.env.REACT_APP_EVENT_BUCKET || 'eventos';
+
 const Evento = () => {
   const [viewMode, setViewMode] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
@@ -219,10 +222,33 @@ const Evento = () => {
 
   const handleSave = useCallback(async () => {
     if (!eventoData) return;
-  
+
     try {
       const cleanData = { ...eventoData };
-  
+
+      // Upload images from `imagenes` if they are File objects
+      if (cleanData.imagenes) {
+        setIsUploading(true);
+        const uploaded = {};
+        for (const [key, value] of Object.entries(cleanData.imagenes)) {
+          if (value instanceof File) {
+            const filename = `${Date.now()}-${value.name}`;
+            const { data: upData, error: upErr } = await supabase.storage
+              .from(EVENT_BUCKET)
+              .upload(filename, value);
+            if (upErr) throw upErr;
+            const { data: urlData } = supabase.storage
+              .from(EVENT_BUCKET)
+              .getPublicUrl(upData.path);
+            uploaded[key] = urlData.publicUrl;
+          } else if (typeof value === 'string') {
+            uploaded[key] = value;
+          }
+        }
+        cleanData.imagenes = uploaded;
+        setIsUploading(false);
+      }
+
       // Eliminar campos temporales o nulos
       delete cleanData._id;
       delete cleanData.__v;
@@ -231,7 +257,7 @@ const Evento = () => {
       if (cleanData.fecha === '' || cleanData.fecha == null) {
         delete cleanData.fecha;
       }
-  
+
       let response;
       if (eventoData.id) {
         response = await supabase
@@ -243,15 +269,17 @@ const Evento = () => {
           .from('eventos')
           .insert([cleanData]);
       }
-  
+
       if (response.error) throw response.error;
-  
+
       setIsSaved(true);
       setMenuVisible(false);
       fetchEventos();
       setTimeout(() => setIsSaved(false), 3000);
     } catch (error) {
       alert(error.message || 'Error al guardar el evento');
+    } finally {
+      setIsUploading(false);
     }
   }, [eventoData, fetchEventos]);
   
