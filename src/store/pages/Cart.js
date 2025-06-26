@@ -73,6 +73,8 @@ const Cart = () => {
         data.seats.map(seat => ({
           ...seat,
           locator: data.locator,
+          status: data.status,
+          isPaid: data.status === 'pagado',
           precio: seat.price || seat.precio || 0,
           nombreMesa: seat.mesa?.nombre || '',
           zona: seat.zona?._id || seat.zona,
@@ -146,7 +148,7 @@ const Cart = () => {
                   <span><strong>Price:</strong> ${formatPrice(item.precio)}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {item.locator && (
+                  {item.isPaid && item.locator && (
                     <button
                       title="Download ticket"
                       onClick={() => handleDownloadTicket(item.locator)}
