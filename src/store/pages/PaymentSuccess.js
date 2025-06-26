@@ -7,7 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
 import { loadMetaPixel } from '../utils/analytics';
 import { supabase } from '../../backoffice/services/supabaseClient';
-import API_BASE_URL from '../../utils/apiBase';
+import downloadTicket from '../../utils/downloadTicket';
 
 const PaymentSuccess = () => {
   const params = useParams();
@@ -54,8 +54,12 @@ const PaymentSuccess = () => {
     fetchPaymentDetails();
   }, [locator]);
 
-  const handleDownloadTickets = () => {
-    window.open(`${API_BASE_URL}/api/payments/${locator}/download`, '_blank');
+  const handleDownloadTickets = async () => {
+    try {
+      await downloadTicket(locator);
+    } catch {
+      toast.error('No se pudo descargar el ticket');
+    }
   };
 
   const handleContinuePayment = async () => {

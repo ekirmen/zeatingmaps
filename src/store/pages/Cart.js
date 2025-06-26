@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { loadMetaPixel } from '../utils/analytics';
 import { fetchPaymentByLocator } from '../../backoffice/services/apibackoffice';
 import API_BASE_URL from '../../utils/apiBase';
+import downloadTicket from '../../utils/downloadTicket';
 
 // Move formatPrice outside the component to make it reusable
 const formatPrice = (price) => {
@@ -56,24 +57,8 @@ const Cart = () => {
 
   const handleDownloadTicket = async (locator) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/payments/${locator}/download`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (!response.ok) throw new Error('Error downloading ticket');
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ticket-${locator}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
+      await downloadTicket(locator);
+    } catch {
       toast.error('Failed to download ticket');
     }
   };
