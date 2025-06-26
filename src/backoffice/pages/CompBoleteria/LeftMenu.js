@@ -27,9 +27,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     try {
         const { data: payment, error } = await supabase
           .from('payments')
-          .select('*, user:profiles(*), seats, event:event(*), funcion:funcion(fecha)')
-        .eq('locator', locator)
-        .single();
+          .select('*, user:profiles(*), seats, event:eventos(*), funcion:funciones(fecha)')
+          .eq('locator', locator)
+          .single();
 
       if (error || !payment) throw new Error('Ticket no encontrado');
 
@@ -96,7 +96,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       const { data, error } = await supabase
         .from('payments')
-        .select('locator, status, created_at, event:event(nombre), funcion:funcion(fecha)')
+        .select('locator, status, created_at, event:eventos(nombre), funcion:funciones(fecha)')
         .eq('usuario_id', userResp.user.id);
 
       if (error) throw error;

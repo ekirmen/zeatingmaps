@@ -35,7 +35,7 @@ const PaymentSuccess = () => {
     const fetchPaymentDetails = async () => {
       const { data: payment, error } = await supabase
         .from('payments')
-        .select(`*, event:event (id, otrasOpciones), seats, funcion`)
+        .select(`*, event:eventos (id, otrasOpciones), seats, funcion`)
         .eq('locator', locator)
         .single();
 
