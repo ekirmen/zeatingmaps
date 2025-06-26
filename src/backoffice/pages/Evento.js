@@ -35,6 +35,8 @@ const Evento = () => {
   const [activeTab, setActiveTab] = useState('datosBasicos');
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  // Keep track of original images when editing so we can delete replaced files
+  const [originalImages, setOriginalImages] = useState({});
 
   const filtrarEventos = useCallback(() => {
     if (!recintoSeleccionado || !salaSeleccionada) return;
@@ -155,6 +157,8 @@ const Evento = () => {
           metaAccessToken: ''
         }
       });
+      // No previous images when creating a new event
+      setOriginalImages({});
       setMenuVisible(true);
     } else {
       alert('Por favor, selecciona un recinto y una sala para crear un evento.');
@@ -196,6 +200,8 @@ const Evento = () => {
         }
       };
 
+      const parsedImages = parseImages(eventoParaEditar.imagenes);
+      setOriginalImages(parsedImages);
       setEventoData({
         datosComprador: {},
         datosBoleto: {},
@@ -206,7 +212,7 @@ const Evento = () => {
         estadoPersonalizado: false,
         ...eventoParaEditar,
         tags: normalizeTags(eventoParaEditar.tags),
-        imagenes: parseImages(eventoParaEditar.imagenes),
+        imagenes: parsedImages,
       });
     }
     setMenuVisible(true);
@@ -274,6 +280,20 @@ const Evento = () => {
       if (cleanData.imagenes) {
         setIsUploading(true);
         const uploaded = {};
+        const extractPath = (url) => {
+          try {
+            const u = new URL(url);
+            const prefix = `/storage/v1/object/public/${EVENT_BUCKET}/`;
+            const idx = u.pathname.indexOf(prefix);
+            if (idx !== -1) {
+              return decodeURIComponent(u.pathname.slice(idx + prefix.length));
+            }
+          } catch (e) {
+            console.error('Failed to parse storage url', url, e);
+          }
+          return null;
+        };
+
         for (const [key, value] of Object.entries(cleanData.imagenes)) {
           if (value instanceof File) {
             const filename = `${Date.now()}-${value.name}`;
@@ -288,6 +308,14 @@ const Evento = () => {
               .from(EVENT_BUCKET)
               .getPublicUrl(upData.path);
             uploaded[key] = urlData.publicUrl;
+
+            // Remove old image if replacing on existing record
+            if (isExisting && originalImages[key]) {
+              const oldPath = extractPath(originalImages[key]);
+              if (oldPath) {
+                await supabase.storage.from(EVENT_BUCKET).remove([oldPath]);
+              }
+            }
           } else if (typeof value === 'string') {
             uploaded[key] = value;
           }
