@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input } from 'antd';
-import { AiOutlineClose, AiOutlineSearch, AiOutlineDownload } from 'react-icons/ai';
+import { AiOutlineClose, AiOutlineSearch } from 'react-icons/ai';
 import { useCart } from '../../contexts/CartContext';
 import { toast } from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,6 @@ import { useTranslation } from 'react-i18next';
 import { loadMetaPixel } from '../utils/analytics';
 import { fetchPaymentByLocator } from '../../backoffice/services/apibackoffice';
 import API_BASE_URL from '../../utils/apiBase';
-import downloadTicket from '../../utils/downloadTicket';
 
 // Move formatPrice outside the component to make it reusable
 const formatPrice = (price) => {
@@ -54,15 +53,6 @@ const Cart = () => {
     };
     fetchData();
   }, [cart, functionId]);
-
-  const handleDownloadTicket = async (locator) => {
-    try {
-      await downloadTicket(locator);
-    } catch {
-      toast.error('Failed to download ticket');
-    }
-  };
-
   const handleTicketSearch = async (locator) => {
     try {
       const data = await fetchPaymentByLocator(locator);
@@ -148,15 +138,6 @@ const Cart = () => {
                   <span><strong>Price:</strong> ${formatPrice(item.precio)}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  {item.isPaid && item.locator && (
-                    <button
-                      title="Download ticket"
-                      onClick={() => handleDownloadTicket(item.locator)}
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      <AiOutlineDownload  />
-                    </button>
-                  )}
                   <button
                     onClick={() => handleRemoveSeat(item._id)}
                     className="text-gray-400 hover:text-red-500"
