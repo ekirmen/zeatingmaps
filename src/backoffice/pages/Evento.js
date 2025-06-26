@@ -237,7 +237,9 @@ const Evento = () => {
         for (const [key, value] of Object.entries(cleanData.imagenes)) {
           if (value instanceof File) {
             const filename = `${Date.now()}-${value.name}`;
-            const path = EVENT_FOLDER ? `${EVENT_FOLDER}/${filename}` : filename;
+            const idPath = cleanData.id ? `${cleanData.id}/` : '';
+            const base = EVENT_FOLDER ? `${EVENT_FOLDER}/${idPath}` : idPath;
+            const path = `${base}${filename}`;
             const { data: upData, error: upErr } = await supabase.storage
               .from(EVENT_BUCKET)
               .upload(path, value);

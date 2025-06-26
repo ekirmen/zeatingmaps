@@ -20,6 +20,8 @@ This project is a React application that relies on Supabase for data storage and
    # along with REACT_APP_EVENT_FOLDER or REACT_APP_LOGO_FOLDER to
    # organize uploaded files in Storage. Bucket names and folders
    # should not include leading or trailing slashes.
+   # Event images are uploaded inside a subfolder with the event ID so
+   # each event keeps its own directory.
    ```
 
    The `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` variable (or its alias

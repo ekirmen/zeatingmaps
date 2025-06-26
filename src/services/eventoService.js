@@ -60,7 +60,9 @@ export const saveEvento = async (eventoData, files = {}) => {
   if (files.imagenDestacada) {
     const file = files.imagenDestacada;
     const filename = `${Date.now()}-${file.name}`;
-    const path = EVENT_FOLDER ? `${EVENT_FOLDER}/${filename}` : filename;
+    const idPath = eventoData.id ? `${eventoData.id}/` : '';
+    const base = EVENT_FOLDER ? `${EVENT_FOLDER}/${idPath}` : idPath;
+    const path = `${base}${filename}`;
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(EVENT_BUCKET)
