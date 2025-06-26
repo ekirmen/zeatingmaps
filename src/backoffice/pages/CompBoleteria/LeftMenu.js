@@ -25,13 +25,24 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const handleTicketSearch = async (locator) => {
     setSearchLoading(true);
     try {
+        console.log('[Boleteria] Searching ticket for locator:', locator);
         const { data: payment, error } = await supabase
           .from('payments')
           .select('*, user:profiles(*), seats, event:eventos(*), funcion:funciones(fecha:fecha_celebracion)')
           .eq('locator', locator)
           .single();
 
-      if (error || !payment) throw new Error('Ticket no encontrado');
+      if (error) {
+        console.error(`[Boleteria] Error searching ticket for locator ${locator}:`, error);
+        throw new Error('Ticket no encontrado');
+      }
+
+      if (!payment) {
+        console.warn(`[Boleteria] No ticket found for locator ${locator}`);
+        throw new Error('Ticket no encontrado');
+      }
+
+      console.log('[Boleteria] Ticket search result:', payment);
 
       setTicketData(payment);
       if (payment.user) setUserData(payment.user);
