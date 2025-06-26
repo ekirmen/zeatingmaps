@@ -6,7 +6,7 @@ export const fetchAbonosByUser = async (userId) => {
   const { data, error } = await supabase
     .from('abonos')
     .select('*')
-    .eq('user_id', userId);
+    .eq('user', userId);
 
   if (error) throw new Error(`Error al obtener abonos: ${error.message}`);
   return data;
