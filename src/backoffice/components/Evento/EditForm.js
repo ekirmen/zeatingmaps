@@ -3,6 +3,7 @@ import DatosBasicos from './DatosBasicos';
 import DisenoEspectaculo from './DisenoEspectaculo';
 import ConfiguracionVenta from './ConfiguracionVenta';
 import ConfiguracionBoletas from './ConfiguracionBoletas';
+import API_BASE_URL from '../../../utils/apiBase';
 import OpcionesAvanzadas from './OpcionesAvanzadas';
 import './EditForm.css';
 
@@ -112,7 +113,7 @@ const EditForm = ({
                       src={
                         eventoData.imagenes.espectaculo[0] instanceof File
                           ? URL.createObjectURL(eventoData.imagenes.espectaculo[0])
-                          : `${process.env.REACT_APP_API_URL}${eventoData.imagenes.espectaculo[0]}`
+                          : `${API_BASE_URL}${eventoData.imagenes.espectaculo[0]}`
                       }
                       alt="Vista previa"
                       className="preview-image"

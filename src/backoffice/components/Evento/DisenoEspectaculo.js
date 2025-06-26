@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import API_BASE_URL from '../../../utils/apiBase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
@@ -10,7 +11,7 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   const getPreview = (img) => {
     if (typeof img === 'string') {
       // Stored image paths already include the upload folder, so just prefix
-      return `${process.env.REACT_APP_API_URL}${img}`;
+      return `${API_BASE_URL}${img}`;
     }
     if (img instanceof File) {
       return URL.createObjectURL(img);
@@ -74,7 +75,7 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
           throw new Error('No se encontró el token de autenticación');
         }
 
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events/upload`, {
+        const response = await fetch(`${API_BASE_URL}/api/events/upload`, {
           method: 'POST',
           headers: {
             'Authorization': `${token}`
@@ -177,7 +178,7 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
     // Si la imagen tiene un ID o URL identificable en el backend, envía un DELETE
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/events/delete-image/${eventoData._id}?index=${index}`, {
+      const response = await fetch(`${API_BASE_URL}/api/events/delete-image/${eventoData._id}?index=${index}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

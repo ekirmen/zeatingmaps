@@ -6,6 +6,7 @@ import { createPayment, updatePayment } from '../../services/apibackoffice';
 import generateRandomLocator from '../../../utils/generateLocator';
 import { useAuth } from '../../../contexts/AuthContext';
 import { isUuid } from '../../../utils/isUuid';
+import API_BASE_URL from '../../../utils/apiBase';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -47,7 +48,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
   const handleEmailTicket = async () => {
     if (!locator || !emailToSend) return;
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/${locator}/email`, {
+      const res = await fetch(`${API_BASE_URL}/api/payments/${locator}/email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: emailToSend })
@@ -68,7 +69,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
 
   const handleDownloadTicket = () => {
     if (locator) {
-      window.open(`${process.env.REACT_APP_API_URL}/api/payments/${locator}/download`, '_blank');
+      window.open(`${API_BASE_URL}/api/payments/${locator}/download`, '_blank');
     }
   };
 

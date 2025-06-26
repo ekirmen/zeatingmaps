@@ -1,4 +1,5 @@
 import React from 'react';
+import API_BASE_URL from '../../../utils/apiBase';
 
 const EventsList = ({ 
   eventosFiltrados, 
@@ -31,7 +32,7 @@ const EventsList = ({
                 <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
                   {evento.imagenes?.banner ? (
                     <img
-                      src={`${process.env.REACT_APP_API_URL}${evento.imagenes.banner}`}
+                      src={`${API_BASE_URL}${evento.imagenes.banner}`}
                       alt={evento.nombre}
                       className="object-cover w-full h-full"
                     />

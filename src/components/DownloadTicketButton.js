@@ -1,7 +1,9 @@
+import API_BASE_URL from '../utils/apiBase';
+
 const DownloadTicketButton = ({ paymentId }) => {
   const handleDownload = async () => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/${paymentId}/download`);
+      const response = await fetch(`${API_BASE_URL}/api/payments/${paymentId}/download`);
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
