@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHeader } from '../../contexts/HeaderContext';
+import API_BASE_URL from '../../utils/apiBase';
 
 const TopBar = () => {
   const { logout } = useAuth();
@@ -17,7 +18,7 @@ const TopBar = () => {
       {/* Marca o nombre */}
       <div className="text-lg font-semibold flex items-center gap-2">
         {header.logoUrl && (
-          <img src={`${process.env.REACT_APP_API_URL}${header.logoUrl}`} alt="Logo" className="h-6 w-auto" />
+          <img src={`${API_BASE_URL}${header.logoUrl}`} alt="Logo" className="h-6 w-auto" />
         )}
         {header.companyName}
       </div>

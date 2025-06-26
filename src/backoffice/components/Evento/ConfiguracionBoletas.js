@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_BASE_URL from '../../../utils/apiBase';
 
 const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   const [selectedFormat, setSelectedFormat] = useState('pdf');
@@ -8,7 +9,7 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   const getPreview = (img) => {
     if (typeof img === 'string') {
       // Image paths stored in the backend already include the folder
-      return `${process.env.REACT_APP_API_URL}${img}`;
+      return `${API_BASE_URL}${img}`;
     }
     if (img instanceof File) {
       return URL.createObjectURL(img);

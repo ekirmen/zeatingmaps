@@ -1,5 +1,6 @@
 // src/components/ImageUpload.js
 import React, { useState } from 'react';
+import API_BASE_URL from '../utils/apiBase';
 
 const ImageUpload = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -17,7 +18,7 @@ const ImageUpload = () => {
     formData.append('image', selectedFile);
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/upload`, {
+      const response = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -27,7 +28,7 @@ const ImageUpload = () => {
       }
 
       const data = await response.json();
-      setUploadedImage(`${process.env.REACT_APP_API_URL}${data.path}`);
+      setUploadedImage(`${API_BASE_URL}${data.path}`);
     } catch (error) {
       console.error('Upload error:', error);
     }

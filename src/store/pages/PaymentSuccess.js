@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
 import { loadMetaPixel } from '../utils/analytics';
 import { supabase } from '../../backoffice/services/supabaseClient';
+import API_BASE_URL from '../../utils/apiBase';
 
 const PaymentSuccess = () => {
   const params = useParams();
@@ -54,7 +55,7 @@ const PaymentSuccess = () => {
   }, [locator]);
 
   const handleDownloadTickets = () => {
-    window.open(`/api/payments/${locator}/download`, '_blank');
+    window.open(`${API_BASE_URL}/api/payments/${locator}/download`, '_blank');
   };
 
   const handleContinuePayment = async () => {

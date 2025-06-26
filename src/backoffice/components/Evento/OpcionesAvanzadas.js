@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
+import API_BASE_URL from '../../../utils/apiBase';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FaFacebookF } from 'react-icons/fa';
 
@@ -44,7 +45,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   useEffect(() => {
     const fetchMetodos = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/metodos_pago`);
+        const res = await fetch(`${API_BASE_URL}/api/metodos_pago`);
         const data = await res.json();
         setMetodos(data);
 

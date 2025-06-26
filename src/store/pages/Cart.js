@@ -8,6 +8,7 @@ import { useRefParam } from '../../contexts/RefContext';
 import { useTranslation } from 'react-i18next';
 import { loadMetaPixel } from '../utils/analytics';
 import { fetchPaymentByLocator } from '../../backoffice/services/apibackoffice';
+import API_BASE_URL from '../../utils/apiBase';
 
 // Move formatPrice outside the component to make it reusable
 const formatPrice = (price) => {
@@ -40,7 +41,7 @@ const Cart = () => {
       const info = {};
       await Promise.all(ids.map(async id => {
         try {
-          const res = await fetch(`${process.env.REACT_APP_API_URL}/api/funcions/${id}`);
+          const res = await fetch(`${API_BASE_URL}/api/funcions/${id}`);
           if (res.ok) {
             info[id] = await res.json();
           }
@@ -55,7 +56,7 @@ const Cart = () => {
 
   const handleDownloadTicket = async (locator) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payments/${locator}/download`, {
+      const response = await fetch(`${API_BASE_URL}/api/payments/${locator}/download`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
