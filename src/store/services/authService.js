@@ -1,5 +1,6 @@
 // src/backoffice/services/authService.js
 import { supabase, supabaseAdmin } from '../../backoffice/services/supabaseClient';
+import { SITE_URL } from '../../utils/siteUrl';
 
 // Registro (sign up) con creación de perfil
 export const registerUser = async ({ email, password }) => {
@@ -29,10 +30,10 @@ export const registerUser = async ({ email, password }) => {
     }
     user = data.user;
     // send magic link for initial login
-    await supabase.auth.signInWithOtp({ email });
+    await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: SITE_URL } });
   } else {
     // Fallback to OTP signup if no admin client available
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: SITE_URL } });
     if (error) throw new Error(error.message);
     return { user: null, session: null };
   }
@@ -58,7 +59,7 @@ export const registerUser = async ({ email, password }) => {
 // Inicio de sesión (sign in)
 export const loginUser = async ({ email, password }) => {
   if (!password) {
-    const { error } = await supabase.auth.signInWithOtp({ email });
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: SITE_URL } });
     if (error) throw new Error(error.message);
     return { user: null, session: null };
   }

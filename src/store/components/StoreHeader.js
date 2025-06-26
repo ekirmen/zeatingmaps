@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../backoffice/services/supabaseClient';
 import { registerUser, loginUser } from '../services/authService';
 import LinkWithRef from './LinkWithRef';
+import { SITE_URL } from '../../utils/siteUrl';
 import { useRefParam } from '../../contexts/RefContext';
 import { useHeader } from '../../contexts/HeaderContext';
 
@@ -88,7 +89,7 @@ const Header = ({ onLogin, onLogout }) => {
 
   const handleForgotPassword = async () => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail);
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, { redirectTo: SITE_URL });
       if (error) throw error;
       message.success(t('forgot.sent'));
       setForgotEmail('');

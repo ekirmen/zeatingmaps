@@ -3,6 +3,7 @@ import { Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../backoffice/services/supabaseClient';
 
+import { SITE_URL } from '../../utils/siteUrl';
 const ForgotPassword = () => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
@@ -12,7 +13,7 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: SITE_URL });
       if (error) throw error;
       message.success(t('forgot.sent'));
       setEmail('');

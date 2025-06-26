@@ -24,6 +24,7 @@ This project is a React application that relies on Supabase for data storage and
    # each event keeps its own directory.
    ```
 
+   Set `REACT_APP_SITE_URL` to your deployed domain so Supabase emails point to the correct host.
    The `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` variable (or its alias
    `REACT_SUPABASE_SERVICE_ROLE_KEY`) is optional but required
    for administrative actions such as blocking seats. Without it, updates may be
