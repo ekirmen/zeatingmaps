@@ -62,7 +62,7 @@ const Boleteria = () => {
           const { data, error } = await supabase
             .from('abonos')
             .select('*')
-            .eq('user_id', selectedClient.id);
+            .eq('user', selectedClient.id);
 
           if (error) throw error;
 

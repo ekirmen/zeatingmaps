@@ -26,12 +26,12 @@ export const fetchZonasPorSala = async (salaId) => {
 export const fetchAbonoAvailableSeats = async (eventId) => {
   const { data, error } = await supabase
     .from('abonos')
-    .select('seat')
+    .select('seat_id')
     .eq('package_type', 'evento')
     .eq('event_id', eventId)
     .eq('status', 'activo');
   if (error) throw error;
-  return data.map(a => a.seat);
+  return data.map(a => a.seat_id);
 };
 
 export const fetchEntradasPorRecinto = async (recintoId) => {

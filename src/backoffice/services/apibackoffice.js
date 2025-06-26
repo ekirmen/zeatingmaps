@@ -252,7 +252,7 @@ export const saveCmsPage = async (pageId, widgets) => {
 
 // === ABONOS ===
 export const fetchAbonosByUser = async (userId) => {
-  const { data, error } = await supabase.from('abonos').select('*').eq('user_id', userId);
+  const { data, error } = await supabase.from('abonos').select('*').eq('user', userId);
   handleError(error);
   return data;
 };
