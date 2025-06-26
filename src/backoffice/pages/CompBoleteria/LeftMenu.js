@@ -4,6 +4,7 @@ import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit } from
 import { supabase, supabaseAdmin } from '../../services/supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
 import API_BASE_URL from '../../../utils/apiBase';
+import downloadTicket from '../../../utils/downloadTicket';
 
 const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient, onFunctionSelect, setSelectedEvent }) => {
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
@@ -71,9 +72,11 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     }
   };
 
-  const handleDownloadTicket = (locator) => {
-    if (locator) {
-      window.open(`${API_BASE_URL}/api/payments/${locator}/download`, '_blank');
+  const handleDownloadTicket = async (locator) => {
+    try {
+      await downloadTicket(locator);
+    } catch {
+      message.error('Error al descargar ticket');
     }
   };
 

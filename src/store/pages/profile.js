@@ -4,7 +4,7 @@ import { AiOutlineDownload } from 'react-icons/ai'; // Ant Design icon set (AI)
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../backoffice/services/supabaseClient';
-import API_BASE_URL from '../../utils/apiBase';
+import downloadTicket from '../../utils/downloadTicket';
 
 const Profile = ({ userData, onUpdateProfile }) => {
   const [formData, setFormData] = useState({
@@ -185,26 +185,9 @@ const Profile = ({ userData, onUpdateProfile }) => {
 
   const handleDownloadTicket = async (locator) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/payments/${locator}/download`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) throw new Error('Error al descargar el ticket');
-      
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ticket-${locator}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      
+      await downloadTicket(locator);
       message.success('Ticket descargado exitosamente');
-    } catch (error) {
+    } catch {
       message.error('Error al descargar el ticket');
     }
   };

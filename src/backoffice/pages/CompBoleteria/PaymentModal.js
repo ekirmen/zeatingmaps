@@ -7,6 +7,7 @@ import generateRandomLocator from '../../../utils/generateLocator';
 import { useAuth } from '../../../contexts/AuthContext';
 import { isUuid } from '../../../utils/isUuid';
 import API_BASE_URL from '../../../utils/apiBase';
+import downloadTicket from '../../../utils/downloadTicket';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -67,9 +68,11 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
     }
   };
 
-  const handleDownloadTicket = () => {
-    if (locator) {
-      window.open(`${API_BASE_URL}/api/payments/${locator}/download`, '_blank');
+  const handleDownloadTicket = async () => {
+    try {
+      await downloadTicket(locator);
+    } catch (err) {
+      message.error('Error al descargar ticket');
     }
   };
 
