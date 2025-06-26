@@ -163,6 +163,27 @@ const Evento = () => {
   const handleEdit = useCallback((eventoId) => {
     const eventoParaEditar = eventos.find((evento) => evento.id === eventoId);
     if (eventoParaEditar) {
+      const normalizeTags = (val) => {
+        if (!val) return [];
+        if (Array.isArray(val)) return val;
+        if (typeof val === 'string') {
+          try {
+            const parsed = JSON.parse(val);
+            if (Array.isArray(parsed)) return parsed;
+            return val
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean);
+          } catch {
+            return val
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean);
+          }
+        }
+        return [];
+      };
+
       setEventoData({
         datosComprador: {},
         datosBoleto: {},
@@ -171,7 +192,8 @@ const Evento = () => {
         estadoVenta: 'a-la-venta',
         descripcionEstado: '',
         estadoPersonalizado: false,
-        ...eventoParaEditar
+        ...eventoParaEditar,
+        tags: normalizeTags(eventoParaEditar.tags),
       });
     }
     setMenuVisible(true);
