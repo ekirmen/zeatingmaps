@@ -72,9 +72,10 @@ JOIN auth.users u ON u.id = p.id;
 Queries can then reference `profiles_with_auth` to retrieve profile fields and email in a single call.
 
 A `payments` table is also required to store ticket sales. The example schema in
-`sql/create_payments_table.sql` includes a `usuario_id` column for the customer,
-a `processed_by` field to track the user that processed the sale and an `event`
-column referencing `eventos.id`.
+`sql/create_payments_table.sql` includes a `usuario_id` column for the customer
+and a `processed_by` field to track the user that processed the sale. Both
+columns reference `profiles.id` so you can easily join payment records with user
+profiles. The table also includes an `event` column referencing `eventos.id`.
 
 ## Seat utilities
 
