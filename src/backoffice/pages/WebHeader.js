@@ -3,7 +3,11 @@ import { useHeader } from '../../contexts/HeaderContext';
 import { supabase } from '../../backoffice/services/supabaseClient';
 
 // Allow custom bucket name via environment variable
-const LOGO_BUCKET = process.env.REACT_APP_LOGO_BUCKET || 'logos';
+const rawLogoBucket = process.env.REACT_APP_LOGO_BUCKET || 'logos';
+const LOGO_BUCKET = rawLogoBucket.replace(/^\/+|\/+$/g, '');
+// Optional subdirectory inside the bucket
+const rawLogoFolder = process.env.REACT_APP_LOGO_FOLDER || '';
+const LOGO_FOLDER = rawLogoFolder.replace(/^\/+|\/+$/g, '');
 
 const WebHeader = () => {
   const { header, updateHeader } = useHeader();
@@ -17,7 +21,7 @@ const WebHeader = () => {
 
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    const filePath = LOGO_FOLDER ? `${LOGO_FOLDER}/${fileName}` : `${fileName}`;
 
     setUploading(true);
     const { error } = await supabase.storage
