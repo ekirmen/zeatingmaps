@@ -6,10 +6,17 @@ export const fetchAbonosByUser = async (userId) => {
   const { data, error } = await supabase
     .from('abonos')
     .select('*')
-    .eq('user', userId);
+    .eq('usuario_id', userId);
 
   if (error) throw new Error(`Error al obtener abonos: ${error.message}`);
-  return data;
+  return data.map((a) => ({
+    ...a,
+    user: a.usuario_id,
+    seat: a.seat_id,
+    packageType: a.package_type,
+    startDate: a.start_date,
+    endDate: a.end_date,
+  }));
 };
 
 export const createAbono = async (abonoData) => {
