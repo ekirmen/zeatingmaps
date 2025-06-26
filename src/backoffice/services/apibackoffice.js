@@ -303,13 +303,15 @@ export const updatePayment = async (id, data) => {
 };
 
 export const fetchPayments = async () => {
-  const { data, error } = await supabase.from('payments').select('*');
+  const client = supabaseAdmin || supabase;
+  const { data, error } = await client.from('payments').select('*');
   handleError(error);
   return data;
 };
 
 export const fetchPaymentByLocator = async (locator) => {
-  const { data, error } = await supabase
+  const client = supabaseAdmin || supabase;
+  const { data, error } = await client
     .from('payments')
     .select('*, seats, funcion')
     .eq('locator', locator)
