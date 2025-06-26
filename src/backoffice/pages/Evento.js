@@ -12,6 +12,7 @@ import EventsList from '../components/Evento/EventsList';
 import SearchBar from '../components/Evento/SearchBar';
 import VenueSelectors from '../components/Evento/VenueSelectors';
 import { supabase } from '../services/supabaseClient';
+import { v4 as uuidv4 } from 'uuid';
 
 // Bucket where event related images are stored
 const rawEventBucket = process.env.REACT_APP_EVENT_BUCKET || 'eventos';
@@ -251,6 +252,11 @@ const Evento = () => {
 
     try {
       const cleanData = { ...eventoData };
+      const isExisting = !!cleanData.id;
+      if (!isExisting) {
+        // Generate an ID upfront so uploaded images can be organized
+        cleanData.id = uuidv4();
+      }
 
       // Upload images from `imagenes` if they are File objects
       if (cleanData.imagenes) {
@@ -259,7 +265,7 @@ const Evento = () => {
         for (const [key, value] of Object.entries(cleanData.imagenes)) {
           if (value instanceof File) {
             const filename = `${Date.now()}-${value.name}`;
-            const idPath = cleanData.id ? `${cleanData.id}/` : '';
+            const idPath = `${cleanData.id}/`;
             const base = EVENT_FOLDER ? `${EVENT_FOLDER}/${idPath}` : idPath;
             const path = `${base}${filename}`;
             const { data: upData, error: upErr } = await supabase.storage
@@ -288,11 +294,11 @@ const Evento = () => {
       }
 
       let response;
-      if (eventoData.id) {
+      if (isExisting) {
         response = await supabase
           .from('eventos')
           .update(cleanData)
-          .eq('id', eventoData.id);
+          .eq('id', cleanData.id);
       } else {
         response = await supabase
           .from('eventos')
