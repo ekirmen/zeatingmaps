@@ -27,7 +27,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     try {
         const { data: payment, error } = await supabase
           .from('payments')
-          .select('*, user:profiles(*), seats, event:eventos(*), funcion:funciones(fecha)')
+          .select('*, user:profiles(*), seats, event:eventos(*), funcion:funciones(fecha:fecha_celebracion)')
           .eq('locator', locator)
           .single();
 
@@ -96,7 +96,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       const { data, error } = await supabase
         .from('payments')
-        .select('locator, status, created_at, event:eventos(nombre), funcion:funciones(fecha)')
+        .select('locator, status, created_at, event:eventos(nombre), funcion:funciones(fecha:fecha_celebracion)')
         .eq('usuario_id', userResp.user.id);
 
       if (error) throw error;
