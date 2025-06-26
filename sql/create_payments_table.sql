@@ -4,8 +4,8 @@
 
 CREATE TABLE IF NOT EXISTS payments (
     id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-    usuario_id uuid NOT NULL,
-    processed_by uuid NULL,
+    usuario_id uuid NOT NULL REFERENCES profiles(id),
+    processed_by uuid NULL REFERENCES profiles(id),
     metodo_pago_id integer NOT NULL,
     monto numeric NOT NULL,
     fecha TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
