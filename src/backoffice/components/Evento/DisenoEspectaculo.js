@@ -10,7 +10,11 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   // Fix initial state image paths
   const getPreview = (img) => {
     if (typeof img === 'string') {
-      // Stored image paths already include the upload folder, so just prefix
+      // If it's already an absolute URL, return it unchanged
+      if (/^https?:\/\//i.test(img)) {
+        return img;
+      }
+      // Otherwise prefix with the API base URL
       return `${API_BASE_URL}${img}`;
     }
     if (img instanceof File) {
