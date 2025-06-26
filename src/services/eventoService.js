@@ -1,7 +1,11 @@
 import { supabase } from '../backoffice/services/supabaseClient';
 
 // Allow bucket name to be configured via environment variable
-const EVENT_BUCKET = process.env.REACT_APP_EVENT_BUCKET || 'eventos';
+const rawEventBucket = process.env.REACT_APP_EVENT_BUCKET || 'eventos';
+const EVENT_BUCKET = rawEventBucket.replace(/^\/+|\/+$/g, '');
+// Optional subdirectory inside the bucket
+const rawEventFolder = process.env.REACT_APP_EVENT_FOLDER || '';
+const EVENT_FOLDER = rawEventFolder.replace(/^\/+|\/+$/g, '');
 
 
 // Obtener todos los eventos
@@ -56,10 +60,11 @@ export const saveEvento = async (eventoData, files = {}) => {
   if (files.imagenDestacada) {
     const file = files.imagenDestacada;
     const filename = `${Date.now()}-${file.name}`;
+    const path = EVENT_FOLDER ? `${EVENT_FOLDER}/${filename}` : filename;
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(EVENT_BUCKET)
-      .upload(filename, file);
+      .upload(path, file);
 
     if (uploadError) throw new Error(`Error uploading image: ${uploadError.message}`);
 

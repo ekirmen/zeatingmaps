@@ -14,7 +14,11 @@ import VenueSelectors from '../components/Evento/VenueSelectors';
 import { supabase } from '../services/supabaseClient';
 
 // Bucket where event related images are stored
-const EVENT_BUCKET = process.env.REACT_APP_EVENT_BUCKET || 'eventos';
+const rawEventBucket = process.env.REACT_APP_EVENT_BUCKET || 'eventos';
+const EVENT_BUCKET = rawEventBucket.replace(/^\/+|\/+$/g, '');
+// Optional subdirectory inside the bucket
+const rawEventFolder = process.env.REACT_APP_EVENT_FOLDER || '';
+const EVENT_FOLDER = rawEventFolder.replace(/^\/+|\/+$/g, '');
 
 const Evento = () => {
   const [viewMode, setViewMode] = useState('list');
@@ -233,9 +237,10 @@ const Evento = () => {
         for (const [key, value] of Object.entries(cleanData.imagenes)) {
           if (value instanceof File) {
             const filename = `${Date.now()}-${value.name}`;
+            const path = EVENT_FOLDER ? `${EVENT_FOLDER}/${filename}` : filename;
             const { data: upData, error: upErr } = await supabase.storage
               .from(EVENT_BUCKET)
-              .upload(filename, value);
+              .upload(path, value);
             if (upErr) throw upErr;
             const { data: urlData } = supabase.storage
               .from(EVENT_BUCKET)

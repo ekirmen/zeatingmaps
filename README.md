@@ -10,11 +10,16 @@ This project is a React application that relies on Supabase for data storage and
    npm install
    ```
 
-2. Copy `.env.example` to `.env` and fill in your Supabase credentials:
+2. Copy `.env.example` to `.env` and fill in your Supabase credentials. You can also
+   set custom bucket names and optional folders for uploaded images:
 
    ```bash
    cp .env.example .env
    # Edit .env and provide your values
+   # You may specify REACT_APP_EVENT_BUCKET and REACT_APP_LOGO_BUCKET
+   # along with REACT_APP_EVENT_FOLDER or REACT_APP_LOGO_FOLDER to
+   # organize uploaded files in Storage. Bucket names and folders
+   # should not include leading or trailing slashes.
    ```
 
    The `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` variable (or its alias
