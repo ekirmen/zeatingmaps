@@ -20,7 +20,10 @@ const Header = ({ onLogin, onLogout }) => {
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [registerData, setRegisterData] = useState({
-    email: ''
+    email: '',
+    password: '',
+    phone: '',
+    phoneCode: '+58',
   });
   const [forgotEmail, setForgotEmail] = useState('');
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
@@ -40,15 +43,22 @@ const Header = ({ onLogin, onLogout }) => {
 
   const handleRegister = async () => {
     try {
-      if (!registerData.email)
+      if (!registerData.email || !registerData.password || !registerData.phone)
         throw new Error(t('errors.fields_required', 'Todos los campos son obligatorios'));
 
-      await registerUser({ email: registerData.email.trim() });
+      if (registerData.password.length < 6)
+        throw new Error(t('errors.password_min_length', 'Mínimo 6 caracteres'));
+
+      await registerUser({
+        email: registerData.email.trim(),
+        password: registerData.password.trim(),
+        phone: `${registerData.phoneCode}${registerData.phone}`,
+      });
 
       message.success(t('register.success'));
       setIsAccountModalVisible(false);
       setAccountMode('login');
-      setRegisterData({ email: '' });
+      setRegisterData({ email: '', password: '', phone: '', phoneCode: '+58' });
     } catch (error) {
       console.error('Registration error:', error);
       message.error(error.message);
@@ -253,6 +263,30 @@ const Header = ({ onLogin, onLogout }) => {
               placeholder={t('header.email')}
               value={registerData.email}
               onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+              className="mb-4"
+            />
+            <div className="flex mb-4">
+              <select
+                value={registerData.phoneCode}
+                onChange={(e) => setRegisterData({ ...registerData, phoneCode: e.target.value })}
+                className="border rounded-l px-2"
+              >
+                <option value="+58">🇻🇪 +58</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+52">🇲🇽 +52</option>
+                <option value="+34">🇪🇸 +34</option>
+              </select>
+              <Input
+                placeholder={t('profile.phone')}
+                value={registerData.phone}
+                onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
+                className="flex-1 rounded-l-none"
+              />
+            </div>
+            <Input.Password
+              placeholder={t('password.new')}
+              value={registerData.password}
+              onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
               className="mb-4"
             />
             <div className="mt-2 text-sm">
