@@ -31,10 +31,10 @@ export const registerUser = async ({ email, password, phone }) => {
     }
     user = data.user;
     // send magic link for initial login
-    await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: SITE_URL } });
+    await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${SITE_URL}/store` } });
   } else {
     // Fallback to OTP signup if no admin client available
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: SITE_URL } });
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${SITE_URL}/store` } });
     if (error) throw new Error(error.message);
     return { user: null, session: null };
   }
@@ -61,7 +61,7 @@ export const registerUser = async ({ email, password, phone }) => {
 // Inicio de sesión (sign in)
 export const loginUser = async ({ email, password }) => {
   if (!password) {
-    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: SITE_URL } });
+    const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${SITE_URL}/store` } });
     if (error) throw new Error(error.message);
     return { user: null, session: null };
   }
