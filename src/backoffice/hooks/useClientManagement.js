@@ -43,6 +43,7 @@ export const useClientManagement = (setCarrito) => {
         email: values.email,
         password: values.password || 'defaultPassword',
         email_confirm: true,
+        user_metadata: { password_set: !!values.password },
       });
 
       if (error) throw error;
