@@ -100,7 +100,7 @@ const Header = ({ onLogin, onLogout }) => {
   const handleForgotPassword = async () => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-        redirectTo: `${SITE_URL}/reset-password`,
+        redirectTo: `${SITE_URL}/store/reset-password`,
       });
       if (error) throw error;
       message.success(t('forgot.sent'));
@@ -208,7 +208,10 @@ const Header = ({ onLogin, onLogout }) => {
               {t('header.logout')}
             </Button>
           ) : (
-            <Button onClick={() => { setAccountMode('login'); setIsAccountModalVisible(true); }} style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}>
+            <Button
+              onClick={() => navigate('/store/login')}
+              style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}
+            >
               {t('header.account')}
             </Button>
           )}

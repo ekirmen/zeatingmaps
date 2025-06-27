@@ -12,8 +12,6 @@ const Login = ({ onLogin }) => {
   const [user, setUser] = useState(null);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
-  const [isForgotModalVisible, setIsForgotModalVisible] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,7 +50,7 @@ const Login = ({ onLogin }) => {
           password,
         }));
       } else {
-        ({ error } = await supabase.auth.signInWithOtp({ email: login, options: { emailRedirectTo: SITE_URL } }));
+        ({ error } = await supabase.auth.signInWithOtp({ email: login, options: { emailRedirectTo: `${SITE_URL}/store` } }));
       }
 
       if (error) {
@@ -109,20 +107,6 @@ const Login = ({ onLogin }) => {
     }
   };
 
-  const handleForgotPassword = async () => {
-    try {
-      if (!resetEmail) throw new Error('Debes ingresar un correo válido');
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${SITE_URL}/reset-password`,
-      });
-      if (error) throw error;
-      message.success('Se envió un correo para recuperar tu contraseña.');
-      setIsForgotModalVisible(false);
-      setResetEmail('');
-    } catch (err) {
-      message.error(err.message || 'Error al solicitar recuperación');
-    }
-  };
 
   return (
     <>
@@ -154,9 +138,16 @@ const Login = ({ onLogin }) => {
           <button
             type="button"
             className="text-blue-600 hover:underline"
-            onClick={() => setIsForgotModalVisible(true)}
+            onClick={() => navigate('/store/forgot-password')}
           >
             ¿Olvidaste tu contraseña?
+          </button>
+          <button
+            type="button"
+            className="text-blue-600 hover:underline"
+            onClick={() => navigate('/store/register')}
+          >
+            {t('header.register')}
           </button>
           {user && (
             <button
@@ -193,25 +184,6 @@ const Login = ({ onLogin }) => {
           value={passwordData.confirmPassword}
           onChange={handlePasswordChange}
           placeholder={t('password.repeat')}
-        />
-      </Modal>
-
-      {/* Modal recuperar contraseña */}
-      <Modal
-        title="Recuperar contraseña"
-        open={isForgotModalVisible}
-        onCancel={() => setIsForgotModalVisible(false)}
-        footer={[
-          <Button key="send" type="primary" onClick={handleForgotPassword}>
-            Enviar correo
-          </Button>,
-        ]}
-      >
-        <Input
-          type="email"
-          placeholder="Correo de recuperación"
-          value={resetEmail}
-          onChange={(e) => setResetEmail(e.target.value)}
         />
       </Modal>
     </>

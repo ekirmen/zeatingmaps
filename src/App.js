@@ -58,6 +58,8 @@ import PaymentSuccess from './store/pages/PaymentSuccess';
 import ThankYouPage from './store/pages/ThankYouPage';
 import ForgotPassword from './store/pages/ForgotPassword';
 import ResetPassword from './store/pages/ResetPassword';
+import StoreLogin from './store/pages/Login';
+import Register from './store/pages/Register';
 import FaqPage from './store/pages/FaqPage';
 import NotFoundPage from './store/pages/NotFoundPage';
 
@@ -153,8 +155,10 @@ const App = () => {
                         <Route path="/store/select-seats/:salaId" element={<SelectSeats />} />
                         <Route path="/store/buy-event/:id" element={<BuyEvent />} />
                         <Route path="/store/select-seats/:salaId/:funcionId" element={<SelectSeats />} />
-                        <Route path="/forgot-password" element={<ForgotPassword />} />
-                        <Route path="/reset-password" element={<ResetPassword />} />
+                          <Route path="/store/login" element={<StoreLogin />} />
+                          <Route path="/store/register" element={<Register />} />
+                          <Route path="/store/forgot-password" element={<ForgotPassword />} />
+                          <Route path="/store/reset-password" element={<ResetPassword />} />
                         <Route path="/store/cart" element={<Cart />} />
                         <Route path="/store/pay" element={<Pay />} />
                         <Route path="/payment-success" element={<PaymentSuccess />} />
