@@ -24,10 +24,17 @@ This project is a React application that relies on Supabase for data storage and
    # each event keeps its own directory.
    ```
 
-   Set `REACT_APP_SITE_URL` to your deployed domain so Supabase emails point to the correct host.
-   Also update the **Site URL** in your Supabase Dashboard under
-   **Settings → Auth → URL Configuration** to the same domain;
-   otherwise recovery or confirmation emails may still link back to
+   Set `REACT_APP_SITE_URL` to your deployed domain so Supabase emails point to
+   the correct host. If your application is served from a subfolder (for example
+   `/store`), include that path here:
+
+   ```bash
+   REACT_APP_SITE_URL=https://your-domain.com/store
+   ```
+
+   The **Site URL** in your Supabase Dashboard should only contain the domain
+   (no path). Update it under **Settings → Auth → URL Configuration** to match
+   your domain; otherwise recovery or confirmation emails may still link back to
    `http://localhost:3000`.
    The `REACT_APP_SUPABASE_SERVICE_ROLE_KEY` variable (or its alias
    `REACT_SUPABASE_SERVICE_ROLE_KEY`) is optional but required
