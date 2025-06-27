@@ -6,6 +6,7 @@
   "header.register": "Register",
   "header.account": "Account",
   "header.email": "Email",
+  "header.phone": "Phone",
   "header.login": "Login",
   "header.logout": "Logout",
   "header.forgot": "Forgot Password",

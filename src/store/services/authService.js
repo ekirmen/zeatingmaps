@@ -3,7 +3,7 @@ import { supabase, supabaseAdmin } from '../../backoffice/services/supabaseClien
 import { SITE_URL } from '../../utils/siteUrl';
 
 // Registro (sign up) con creación de perfil
-export const registerUser = async ({ email, password }) => {
+export const registerUser = async ({ email, password, phone }) => {
   let user = null;
   let session = null;
 
@@ -46,6 +46,7 @@ export const registerUser = async ({ email, password }) => {
     .upsert({
       id: userId,
       login: email,
+      telefono: phone,
       permisos: { role: 'usuario' }, // Asignar rol por defecto
     });
 
