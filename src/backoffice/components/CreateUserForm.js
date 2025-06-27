@@ -21,6 +21,7 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
         email: formData.email,
         password: formData.password,
         email_confirm: true,
+        user_metadata: { password_set: !!formData.password },
       });
 
       if (error) throw error;
