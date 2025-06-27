@@ -99,7 +99,9 @@ const Header = ({ onLogin, onLogout }) => {
 
   const handleForgotPassword = async () => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, { redirectTo: SITE_URL });
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${SITE_URL}/reset-password`,
+      });
       if (error) throw error;
       message.success(t('forgot.sent'));
       setForgotEmail('');

@@ -154,7 +154,7 @@ const App = () => {
                         <Route path="/store/buy-event/:id" element={<BuyEvent />} />
                         <Route path="/store/select-seats/:salaId/:funcionId" element={<SelectSeats />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
-                        <Route path="/reset-password/:token" element={<ResetPassword />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/store/cart" element={<Cart />} />
                         <Route path="/store/pay" element={<Pay />} />
                         <Route path="/payment-success" element={<PaymentSuccess />} />

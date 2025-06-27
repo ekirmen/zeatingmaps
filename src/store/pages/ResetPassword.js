@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../backoffice/services/supabaseClient';
 
 const ResetPassword = () => {
-  const { token } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [password, setPassword] = useState('');

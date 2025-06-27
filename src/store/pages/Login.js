@@ -112,7 +112,9 @@ const Login = ({ onLogin }) => {
   const handleForgotPassword = async () => {
     try {
       if (!resetEmail) throw new Error('Debes ingresar un correo válido');
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, { redirectTo: SITE_URL });
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${SITE_URL}/reset-password`,
+      });
       if (error) throw error;
       message.success('Se envió un correo para recuperar tu contraseña.');
       setIsForgotModalVisible(false);
