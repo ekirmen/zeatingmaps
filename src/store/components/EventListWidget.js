@@ -73,11 +73,18 @@ const EventListWidget = () => {
         const evts = filteredEventos.filter(e => (e.tags || []).includes(tag._id));
         return evts.length ? [{ tag, eventos: evts }] : [];
       })()
-    : tags.reduce((acc, tag) => {
-        const evts = filteredEventos.filter(e => (e.tags || []).includes(tag._id));
-        if (evts.length) acc.push({ tag, eventos: evts });
-        return acc;
-      }, []);
+    : (() => {
+        const groups = tags.reduce((acc, tag) => {
+          const evts = filteredEventos.filter(e => (e.tags || []).includes(tag._id));
+          if (evts.length) acc.push({ tag, eventos: evts });
+          return acc;
+        }, []);
+        const untagged = filteredEventos.filter(e => !e.tags || e.tags.length === 0);
+        if (untagged.length) {
+          groups.push({ tag: { _id: 'otros', name: 'Otros' }, eventos: untagged });
+        }
+        return groups;
+      })();
 
   const currentTag = normalizedTagSlug
     ? tags.find(t => slugify(t.name) === normalizedTagSlug)
