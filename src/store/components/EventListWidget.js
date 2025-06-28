@@ -37,12 +37,24 @@ const EventListWidget = () => {
           .eq('activo', true);
         if (evErr) throw evErr;
 
+        const parsedEvents = (evData || []).map((e) => {
+          if (typeof e.tags === 'string') {
+            try {
+              e.tags = JSON.parse(e.tags);
+            } catch {
+              e.tags = [];
+            }
+          }
+          if (!Array.isArray(e.tags)) e.tags = [];
+          return e;
+        });
+
         const { data: tagData, error: tagErr } = await supabase
           .from('tags')
           .select('*');
         if (tagErr) throw tagErr;
 
-        setEventos(evData || []);
+        setEventos(parsedEvents);
         setTags(tagData || []);
       } catch (err) {
         setError(err.message);
