@@ -33,7 +33,8 @@ const EventListWidget = () => {
       try {
         const { data: evData, error: evErr } = await supabase
           .from('eventos')
-          .select('*');
+          .select('*')
+          .eq('activo', true);
         if (evErr) throw evErr;
 
         const { data: tagData, error: tagErr } = await supabase
