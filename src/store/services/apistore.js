@@ -21,7 +21,14 @@ const fetchStoreData = async (endpoint) => {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      return await response.json();
+    }
+    const text = await response.text();
+    throw new Error(
+      `Unexpected response when fetching ${endpoint}: ${text.slice(0, 100)}`
+    );
   } catch (error) {
     console.error(`Error al hacer fetch a ${endpoint}:`, error);
     throw error;
