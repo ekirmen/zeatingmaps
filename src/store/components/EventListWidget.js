@@ -117,6 +117,8 @@ const EventListWidget = () => {
                   key={evento._id}
                   onClick={() => handleEventClick(evento.slug || evento._id)}
                   className="mb-4 cursor-pointer"
+                  role="button"
+                  tabIndex={0}
                 >
                   {evento.imagenes?.portada && (
                     <img
