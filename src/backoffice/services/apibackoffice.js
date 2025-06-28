@@ -252,14 +252,27 @@ export const deleteEntrada = async (id) => {
 // === CMS ===
 export const fetchCmsPage = async (pageId) => {
   const id = resolveCmsId(pageId);
-  const { data, error } = await supabase.from('cms_pages').select('*').eq('id', id).single();
+  let query = supabase.from('cms_pages').select('*');
+  if (/^\d+$/.test(String(id))) {
+    query = query.eq('id', id);
+  } else {
+    // Fallback to searching by name when we don't have a numeric id
+    query = query.eq('nombre', pageId);
+  }
+  const { data, error } = await query.single();
   handleError(error);
   return data;
 };
 
 export const saveCmsPage = async (pageId, widgets) => {
   const id = resolveCmsId(pageId);
-  const { data, error } = await supabase.from('cms_pages').upsert({ id, widgets });
+  let payload;
+  if (/^\d+$/.test(String(id))) {
+    payload = { id, widgets };
+  } else {
+    payload = { nombre: pageId, widgets };
+  }
+  const { data, error } = await supabase.from('cms_pages').upsert(payload);
   handleError(error);
   return data;
 };
