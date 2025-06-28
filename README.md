@@ -96,6 +96,10 @@ and a `processed_by` field to track the user that processed the sale. Both
 columns reference `profiles.id` so you can easily join payment records with user
 profiles. The table also includes an `event` column referencing `eventos.id`.
 
+To power the web studio CMS, create a `cms_pages` table. The
+`sql/create_cms_pages_table.sql` script defines the basic schema and inserts the
+default `home` and `events` pages expected by the application.
+
 ## Seat utilities
 
 The `src/utils/isUuid.js` helper verifies whether a string is a valid UUID. Use it when calling `updateSeat` to prevent typos in seat IDs:
