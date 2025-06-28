@@ -266,11 +266,12 @@ export const fetchCmsPage = async (pageId) => {
 
 export const saveCmsPage = async (pageId, widgets) => {
   const id = resolveCmsId(pageId);
-  let payload;
+  const payload = { widgets };
   if (/^\d+$/.test(String(id))) {
-    payload = { id, widgets };
-  } else {
-    payload = { nombre: pageId, widgets };
+    payload.id = id;
+  }
+  if (typeof pageId === 'string') {
+    payload.nombre = pageId;
   }
   const { data, error } = await supabase.from('cms_pages').upsert(payload);
   handleError(error);
