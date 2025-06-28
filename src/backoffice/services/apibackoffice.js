@@ -249,7 +249,8 @@ export const deleteEntrada = async (id) => {
   handleError(error);
 };
 
-// === CMS ===
+
+// Obtener página CMS por slug
 export const fetchCmsPage = async (slug) => {
   const { data, error } = await supabase
     .from('cms_pages')
@@ -257,18 +258,27 @@ export const fetchCmsPage = async (slug) => {
     .eq('slug', slug)
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('Supabase error:', error);
+    throw error;
+  }
+
   return data;
 };
 
+// Guardar widgets en una página CMS por slug
 export const saveCmsPage = async (slug, widgets) => {
   const { error } = await supabase
     .from('cms_pages')
     .update({ widgets })
     .eq('slug', slug);
 
-  if (error) throw error;
+  if (error) {
+    console.error('Error al guardar página CMS:', error);
+    throw error;
+  }
 };
+
 
 // === ABONOS ===
 export const fetchAbonosByUser = async (userId) => {
