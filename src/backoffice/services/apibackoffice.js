@@ -267,15 +267,27 @@ export const fetchCmsPage = async (pageId) => {
 export const saveCmsPage = async (pageId, widgets) => {
   const id = resolveCmsId(pageId);
   const payload = { widgets };
+  let result, error;
+
   if (/^\d+$/.test(String(id))) {
-    payload.id = id;
+    // Update existing page identified by numeric ID without inserting the ID
+    ({ data: result, error } = await supabase
+      .from('cms_pages')
+      .update(payload)
+      .eq('id', id)
+      .single());
+  } else {
+    // Use the page name as the unique key when upserting
+    payload.nombre = String(pageId);
+    ({ data: result, error } = await supabase
+      .from('cms_pages')
+      .upsert(payload, { onConflict: 'nombre' })
+      .select()
+      .single());
   }
-  if (typeof pageId === 'string') {
-    payload.nombre = pageId;
-  }
-  const { data, error } = await supabase.from('cms_pages').upsert(payload);
+
   handleError(error);
-  return data;
+  return result;
 };
 
 // === ABONOS ===
