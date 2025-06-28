@@ -129,3 +129,4 @@ import { lockSeat, unlockSeat } from './backoffice/services/seatLocks';
 await lockSeat(seatId);      // Adds the seat to the locking table
 await unlockSeat(seatId);    // Removes the seat from the table
 ```
+Última edición: redeploy for vercel
