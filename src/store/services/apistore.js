@@ -1,87 +1,159 @@
+import { supabase } from '../../backoffice/services/supabaseClient';
 
-import API_BASE_URL from '../../utils/apiBase';
-const BASE_URL = API_BASE_URL + '/api';
+// 🔹 Obtener una página CMS por slug
+export const getCmsPage = async (slug) => {
+  const { data, error } = await supabase
+    .from('cms_pages')
+    .select('*')
+    .eq('slug', slug)
+    .single();
 
-// Función genérica para solicitudes GET
-// Obtener plantilla de precios por ID
-export const fetchPlantillaPrecios = async (id) => {
-  try {
-    const res = await fetch(`${BASE_URL}/plantillas/${id}`);
-    if (!res.ok) throw new Error('No se pudo obtener la plantilla de precios');
-    return await res.json();
-  } catch (error) {
-    console.error('Error al obtener la plantilla de precios:', error);
+  if (error) {
+    console.error('Error al obtener CMS page desde Supabase:', error);
     throw error;
   }
-};
 
-const fetchStoreData = async (endpoint) => {
-  try {
-    const response = await fetch(`${BASE_URL}${endpoint}`);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      return await response.json();
-    }
-    const text = await response.text();
-    throw new Error(
-      `Unexpected response when fetching ${endpoint}: ${text.slice(0, 100)}`
-    );
-  } catch (error) {
-    console.error(`Error al hacer fetch a ${endpoint}:`, error);
-    throw error;
-  }
+  return data;
 };
 
 // 🔹 Obtener un evento por ID
-export const getEvent = (eventId) =>
-  fetchStoreData(`/events/${eventId}`);
+export const getEvent = async (eventId) => {
+  const { data, error } = await supabase
+    .from('eventos')
+    .select('*')
+    .eq('id', eventId)
+    .single();
+
+  if (error) {
+    console.error('Error al obtener evento:', error);
+    throw error;
+  }
+
+  return data;
+};
 
 // 🔹 Obtener funciones por evento
-export const getFunciones = (eventId) =>
-  fetchStoreData(`/funcions?evento=${eventId}`);
+export const getFunciones = async (eventId) => {
+  const { data, error } = await supabase
+    .from('funciones')
+    .select('*')
+    .eq('evento', eventId);
+
+  if (error) {
+    console.error('Error al obtener funciones:', error);
+    throw error;
+  }
+
+  return data;
+};
 
 // 🔹 Obtener todas las zonas
-export const getZonas = () =>
-  fetchStoreData('/zonas');
+export const getZonas = async () => {
+  const { data, error } = await supabase
+    .from('zonas')
+    .select('*');
 
-// Alias utilizado en el store
+  if (error) {
+    console.error('Error al obtener zonas:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+// Alias usado por otros componentes
 export const fetchZonas = () => getZonas();
 
 // 🔹 Obtener pagos por evento
-export const getPagosPorEvento = (eventId) =>
-  fetchStoreData(`/payments?evento=${eventId}`);
+export const getPagosPorEvento = async (eventId) => {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('*')
+    .eq('evento', eventId);
+
+  if (error) {
+    console.error('Error al obtener pagos:', error);
+    throw error;
+  }
+
+  return data;
+};
 
 // 🔹 Obtener plantilla por ID
-export const getPlantilla = (plantillaId) =>
-  fetchStoreData(`/plantillas/${plantillaId}`);
+export const getPlantilla = async (plantillaId) => {
+  const { data, error } = await supabase
+    .from('plantillas')
+    .select('*')
+    .eq('id', plantillaId)
+    .single();
+
+  if (error) {
+    console.error('Error al obtener plantilla:', error);
+    throw error;
+  }
+
+  return data;
+};
 
 // 🔹 Obtener mapa por evento
-export const getMapaPorEvento = (eventId) =>
-  fetchStoreData(`/mapa?evento=${eventId}`);
+export const getMapaPorEvento = async (eventId) => {
+  const { data, error } = await supabase
+    .from('mapas')
+    .select('*')
+    .eq('evento', eventId)
+    .single();
 
-// 🔹 Obtener mapa por sala ID
+  if (error) {
+    console.error('Error al obtener mapa por evento:', error);
+    throw error;
+  }
+
+  return data;
+};
+
+// 🔹 Obtener mapa por sala ID (y opcionalmente función)
 export const fetchMapa = async (salaId, funcionId = null) => {
   try {
-    const url = funcionId
-      ? `${BASE_URL}/funcions/${funcionId}/mapa`
-      : `${BASE_URL}/salas/${salaId}/mapa`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error("No se pudo obtener el mapa");
-    return await res.json();
+    if (funcionId) {
+      const { data, error } = await supabase
+        .from('mapas')
+        .select('*')
+        .eq('funcion', funcionId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } else {
+      const { data, error } = await supabase
+        .from('mapas')
+        .select('*')
+        .eq('sala', salaId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
   } catch (error) {
-    console.error('Error al obtener el mapa por sala:', error);
+    console.error('Error al obtener el mapa:', error);
     throw error;
   }
 };
 
-// Obtener descuento por código
+// 🔹 Obtener descuento por código
 export const fetchDescuentoPorCodigo = async (codigo) => {
-  const res = await fetch(`${BASE_URL}/descuentos/code/${codigo}`);
-  if (!res.ok) throw new Error('Código de descuento no válido');
-  return await res.json();
+  const { data, error } = await supabase
+    .from('descuentos')
+    .select('*')
+    .eq('codigo', codigo)
+    .single();
+
+  if (error) {
+    console.error('Código de descuento no válido:', error);
+    throw error;
+  }
+
+  return data;
 };
 
-export const getCmsPage = (pageId) => fetchStoreData(`/cms-pages/${pageId}`);
+// 🔹 Obtener plantilla de precios (alias de getPlantilla)
+export const fetchPlantillaPrecios = (id) => getPlantilla(id);

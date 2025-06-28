@@ -60,10 +60,10 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     }));
   };
 
-  const removeWidget = index => {
+  const removeWidget = (area, index) => {
     setWidgets(prev => ({
       ...prev,
-      content: prev.content.filter((_, i) => i !== index)
+      [area]: prev[area].filter((_, i) => i !== index)
     }));
   };
 
@@ -95,122 +95,110 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     toast.success('Cache limpia');
   };
 
+  const renderWidget = (area, widget, idx) => (
+    <div
+      key={idx}
+      className="relative border p-2 mb-2 bg-white rounded shadow-sm"
+      draggable={area === 'content'}
+      onDragStart={() => area === 'content' && handleDragStart(idx)}
+      onDragOver={area === 'content' ? handleDragOver : undefined}
+      onDrop={() => area === 'content' && handleDrop(idx)}
+    >
+      <button
+        className="absolute top-1 right-1 text-red-500 font-bold"
+        onClick={() => removeWidget(area, idx)}
+        title="Eliminar widget"
+      >
+        ×
+      </button>
+      <div className="text-sm">{widget.type}</div>
+    </div>
+  );
+
   return (
-    <div className="flex">
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar */}
       <aside className="w-64 bg-gray-100 p-4 overflow-y-auto">
         <button
-          className="flex items-center gap-2 mb-2 text-gray-700 hover:text-gray-900"
+          className="flex items-center gap-2 mb-4 text-gray-700 hover:text-gray-900"
           onClick={() => window.history.back()}
-          aria-label="Volver"
         >
-          <AiOutlineLeft  />
-          <span>Back</span>
+          <AiOutlineLeft />
+          <span>Volver</span>
         </button>
+
         <h3 className="font-bold mb-2">Páginas</h3>
-        <ul className="mb-4 space-y-1">
+        <ul className="space-y-1 mb-4">
           {pagesData.map(p => (
             <li
               key={p.id}
-              className="cursor-pointer p-1 hover:bg-gray-200 rounded"
               onClick={() => setSelectedPage(p)}
+              className={`cursor-pointer p-2 rounded ${
+                selectedPage.id === p.id ? 'bg-blue-200 font-semibold' : 'hover:bg-gray-200'
+              }`}
             >
               {p.name}
             </li>
           ))}
         </ul>
 
-        <details open className="mb-4">
-          <summary className="font-semibold">Propiedades</summary>
-          <div className="mt-2 text-sm space-y-2">
-            <div>
-              <label className="block text-gray-600 text-xs">Nombre</label>
-              <input className="border w-full p-1" value={selectedPage.name} readOnly />
-            </div>
-            <div>
-              <label className="block text-gray-600 text-xs">URL</label>
-              <input className="border w-full p-1" value={selectedPage.url} readOnly />
-            </div>
-          </div>
-        </details>
+        <div className="mb-4">
+          <h4 className="font-semibold mb-1">Widgets disponibles</h4>
+          <button
+            onClick={() => addWidget('content', 'Listado de eventos')}
+            className="text-sm bg-blue-500 text-white w-full py-1 rounded mb-2"
+          >
+            + Listado de eventos
+          </button>
+          <button
+            onClick={() => addWidget('content', 'Preguntas frecuentes')}
+            className="text-sm bg-blue-500 text-white w-full py-1 rounded"
+          >
+            + Preguntas frecuentes
+          </button>
+        </div>
 
-        <details>
-          <summary className="font-semibold">Widgets</summary>
-          <div className="mt-2">
-            <div
-              className="preview-widget mb-2 cursor-pointer"
-              onClick={() => addWidget('content', 'Listado de eventos')}
-            >
-              <div className="layer"></div>
-              <div className="preview-over">
-                <i className="palco4icon palco4icon-plus-circle-o"></i>
-              </div>
-              <img
-                src="https://palco4static.s3.us-east-2.amazonaws.com/23.02/backoffice/cms/previews/events_list/preview.gif"
-                draggable="false"
-                alt="Listado de eventos"
-              />
-            </div>
-            <div className="label-type-widget full">
-              <label>Listado de eventos</label>
-            </div>
-
-            <div
-              className="preview-widget mb-2 cursor-pointer"
-              onClick={() => addWidget('content', 'Preguntas frecuentes')}
-            >
-              <div className="layer"></div>
-              <div className="preview-over">
-                <i className="palco4icon palco4icon-plus-circle-o"></i>
-              </div>
-              <img
-                src="https://palco4static.s3.us-east-2.amazonaws.com/23.02/backoffice/cms/previews/faq/preview.gif"
-                draggable="false"
-                alt="Preguntas frecuentes"
-              />
-            </div>
-            <div className="label-type-widget full">
-              <label>Preguntas frecuentes</label>
-            </div>
+        <div className="space-y-2 text-sm">
+          <div>
+            <label className="block text-gray-600">Nombre</label>
+            <input className="border w-full px-2 py-1 rounded" value={selectedPage.name} readOnly />
           </div>
-        </details>
-        <button
-          className="mt-4 w-full bg-blue-600 text-white py-1 rounded"
-          onClick={handleSave}
-        >
-          Guardar
-        </button>
-        <button
-          className="mt-2 w-full bg-gray-300 text-gray-800 py-1 rounded"
-          onClick={handleClearCache}
-        >
-          Limpiar cache
-        </button>
+          <div>
+            <label className="block text-gray-600">URL</label>
+            <input className="border w-full px-2 py-1 rounded" value={selectedPage.url} readOnly />
+          </div>
+        </div>
+
+        <div className="mt-6 space-y-2">
+          <button
+            onClick={handleSave}
+            className="bg-green-600 hover:bg-green-700 text-white w-full py-2 rounded"
+          >
+            Guardar página
+          </button>
+          <button
+            onClick={handleClearCache}
+            className="bg-gray-400 hover:bg-gray-500 text-white w-full py-2 rounded"
+          >
+            Limpiar cache
+          </button>
+        </div>
       </aside>
 
-      <main className="flex-grow p-4 space-y-4">
-        <div className="border p-2">Header</div>
-        <div className="border p-2 min-h-[200px]">
-          {widgets.content.map((w, idx) => (
-            <div
-              key={idx}
-              className="relative border p-2 mb-2 bg-gray-50"
-              draggable
-              onDragStart={() => handleDragStart(idx)}
-              onDragOver={handleDragOver}
-              onDrop={() => handleDrop(idx)}
-            >
-              <button
-                className="absolute top-1 right-1 text-red-500"
-                onClick={() => removeWidget(idx)}
-              >
-                x
-              </button>
-              {w.type}
+      {/* Main Editor */}
+      <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
+        {['header', 'content', 'footer'].map((area) => (
+          <div key={area} className="mb-6">
+            <h2 className="font-semibold mb-2 capitalize">{area}</h2>
+            <div className="bg-white p-3 border rounded min-h-[80px]">
+              {widgets[area]?.length > 0 ? (
+                widgets[area].map((w, idx) => renderWidget(area, w, idx))
+              ) : (
+                <p className="text-sm text-gray-500">Sin widgets</p>
+              )}
             </div>
-          ))}
-        </div>
-        <div className="border p-2">Footer</div>
-
+          </div>
+        ))}
       </main>
     </div>
   );
