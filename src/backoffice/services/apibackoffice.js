@@ -265,14 +265,14 @@ export const fetchCmsPage = async (pageId) => {
 };
 
 export const saveCmsPage = async (pageId, widgets) => {
-  const id = resolveCmsId(pageId);
-  let payload;
-  if (/^\d+$/.test(String(id))) {
-    payload = { id, widgets };
-  } else {
-    payload = { nombre: pageId, widgets };
-  }
-  const { data, error } = await supabase.from('cms_pages').upsert(payload);
+  // The `cms_pages.id` column is an identity field, so inserting explicit ids
+  // results in a "cannot insert a non-DEFAULT value" error when a row does not
+  // exist yet.  To avoid that we upsert using the unique `nombre` column which
+  // accepts the page slug (e.g. "home" or "events").
+  const payload = { nombre: pageId, widgets };
+  const { data, error } = await supabase
+    .from('cms_pages')
+    .upsert(payload, { onConflict: 'nombre' });
   handleError(error);
   return data;
 };
