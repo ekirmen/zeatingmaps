@@ -250,44 +250,24 @@ export const deleteEntrada = async (id) => {
 };
 
 // === CMS ===
-export const fetchCmsPage = async (pageId) => {
-  const id = resolveCmsId(pageId);
-  let query = supabase.from('cms_pages').select('*');
-  if (/^\d+$/.test(String(id))) {
-    query = query.eq('id', id);
-  } else {
-    // Fallback to searching by name when we don't have a numeric id
-    query = query.eq('nombre', pageId);
-  }
-  const { data, error } = await query.single();
-  handleError(error);
+export const fetchCmsPage = async (slug) => {
+  const { data, error } = await supabase
+    .from('cms_pages')
+    .select('*')
+    .eq('slug', slug)
+    .single();
+
+  if (error) throw error;
   return data;
 };
 
-export const saveCmsPage = async (pageId, widgets) => {
-  const id = resolveCmsId(pageId);
-  const payload = { widgets };
-  let result, error;
+export const saveCmsPage = async (slug, widgets) => {
+  const { error } = await supabase
+    .from('cms_pages')
+    .update({ widgets })
+    .eq('slug', slug);
 
-  if (/^\d+$/.test(String(id))) {
-    // Update existing page identified by numeric ID without inserting the ID
-    ({ data: result, error } = await supabase
-      .from('cms_pages')
-      .update(payload)
-      .eq('id', id)
-      .single());
-  } else {
-    // Use the page name as the unique key when upserting
-    payload.nombre = String(pageId);
-    ({ data: result, error } = await supabase
-      .from('cms_pages')
-      .upsert(payload, { onConflict: 'nombre' })
-      .select()
-      .single());
-  }
-
-  handleError(error);
-  return result;
+  if (error) throw error;
 };
 
 // === ABONOS ===
