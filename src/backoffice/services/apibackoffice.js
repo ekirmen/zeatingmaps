@@ -1,5 +1,17 @@
 import { supabase, supabaseAdmin } from '../../backoffice/services/supabaseClient';
 
+// Map human readable page identifiers to numeric ids stored in Supabase.
+// The cms_pages table uses an integer primary key, but within the
+// application we refer to pages by a slug such as "home" or "events".
+// This helper allows the UI to keep using slugs while converting them
+// to the numeric ids expected by Supabase.
+const CMS_PAGE_IDS = {
+  home: 1,
+  events: 2
+};
+
+const resolveCmsId = (pageId) => CMS_PAGE_IDS[pageId] || pageId;
+
 const handleError = (error) => {
   if (error) {
     console.error('Supabase error:', error.message);
@@ -239,13 +251,15 @@ export const deleteEntrada = async (id) => {
 
 // === CMS ===
 export const fetchCmsPage = async (pageId) => {
-  const { data, error } = await supabase.from('cms_pages').select('*').eq('id', pageId).single();
+  const id = resolveCmsId(pageId);
+  const { data, error } = await supabase.from('cms_pages').select('*').eq('id', id).single();
   handleError(error);
   return data;
 };
 
 export const saveCmsPage = async (pageId, widgets) => {
-  const { data, error } = await supabase.from('cms_pages').upsert({ id: pageId, widgets });
+  const id = resolveCmsId(pageId);
+  const { data, error } = await supabase.from('cms_pages').upsert({ id, widgets });
   handleError(error);
   return data;
 };
