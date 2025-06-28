@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    { "source": "/store/:path*", "destination": "/store/index.html" },
+    { "source": "/backoffice/:path*", "destination": "/index.html" }
+  ],
+  "redirects": [
+    {
+      "source": "/404",
+      "destination": "/index.html",
+      "statusCode": 404
+    }
+  ]
+}
