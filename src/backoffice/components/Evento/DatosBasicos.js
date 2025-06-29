@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMasksTheater, faFilm, faMusic, faFutbol, faImage, faBuilding, faEllipsis } from '@fortawesome/free-solid-svg-icons';
 import { useTags } from '../../contexts/TagContext';
@@ -16,6 +16,20 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
     desactivado: eventoData?.desactivado ?? false,
     tags: eventoData?.tags || []
   });
+
+  // Sync local form state whenever the selected event changes
+  useEffect(() => {
+    setForm({
+      nombre: eventoData?.nombre || '',
+      slug: eventoData?.slug || '',
+      sector: eventoData?.sector || '',
+      descripcion: eventoData?.descripcion || '',
+      activo: eventoData?.activo ?? true,
+      oculto: eventoData?.oculto ?? false,
+      desactivado: eventoData?.desactivado ?? false,
+      tags: eventoData?.tags || []
+    });
+  }, [eventoData]);
 
   const { tags } = useTags();
   const [selectedTag, setSelectedTag] = useState('');
