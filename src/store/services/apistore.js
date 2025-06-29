@@ -2,11 +2,21 @@ import { supabase } from '../../backoffice/services/supabaseClient';
 
 // 🔹 Obtener una página CMS por slug
 export const getCmsPage = async (slug) => {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('cms_pages')
     .select('*')
     .eq('slug', slug)
     .single();
+
+  if (error || !data) {
+    const fallback = await supabase
+      .from('cms_pages')
+      .select('*')
+      .eq('nombre', slug)
+      .single();
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) {
     console.error('Error al obtener CMS page desde Supabase:', error);
