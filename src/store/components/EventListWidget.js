@@ -83,6 +83,12 @@ const EventListWidget = () => {
         return evts.length ? [{ tag, eventos: evts }] : [];
       })()
     : (() => {
+        if (tags.length === 0) {
+          // Si no hay etiquetas configuradas, mostrar todos los eventos
+          return filteredEventos.length
+            ? [{ tag: { _id: 'todos', name: 'Todos' }, eventos: filteredEventos }]
+            : [];
+        }
         const groups = tags.reduce((acc, tag) => {
           const evts = filteredEventos.filter(e => (e.tags || []).includes(tag._id));
           if (evts.length) acc.push({ tag, eventos: evts });
