@@ -57,6 +57,22 @@ export const getFunciones = async (eventId) => {
   return data;
 };
 
+// 🔹 Obtener una función por ID
+export const getFuncion = async (funcionId) => {
+  const { data, error } = await supabase
+    .from('funciones')
+    .select('*')
+    .eq('id', funcionId)
+    .single();
+
+  if (error) {
+    console.error('Error al obtener función:', error);
+    throw error;
+  }
+
+  return data;
+};
+
 // 🔹 Obtener todas las zonas
 export const getZonas = async () => {
   const { data, error } = await supabase

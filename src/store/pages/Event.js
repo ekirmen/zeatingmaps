@@ -4,7 +4,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
-import { fetchMapa, fetchPlantillaPrecios, getCmsPage } from '../services/apistore';
+import { fetchMapa, fetchPlantillaPrecios, getCmsPage, getFunciones } from '../services/apistore';
 import { fetchSeatsByFuncion, updateSeat } from '../../backoffice/services/supabaseSeats';
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
@@ -173,10 +173,7 @@ const Event = () => {
     const fetchFunciones = async () => {
       try {
         const id = evento?._id || eventId;
-        const response = await fetch(
-          `${API_URL}/api/funcions?evento=${id}`
-        );
-        const data = await response.json();
+        const data = await getFunciones(id);
         setFunciones(Array.isArray(data) ? data : []);
         if (Array.isArray(data) && data.length === 1 && !selectedFunctionId) {
           setSelectedFunctionId(data[0]._id);
@@ -192,10 +189,7 @@ const Event = () => {
     const fetchAllZonas = async () => {
       try {
         const id = evento?._id || eventId;
-        const response = await fetch(
-          `${API_URL}/api/funcions?evento=${id}`
-        );
-        const funciones = await response.json();
+        const funciones = await getFunciones(id);
 
         if (!Array.isArray(funciones)) {
           setZonas([]);

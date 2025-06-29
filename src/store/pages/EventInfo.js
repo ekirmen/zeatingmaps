@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import API_BASE_URL from '../../utils/apiBase';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 import { supabase } from '../../backoffice/services/supabaseClient';
 import { isUuid } from '../../utils/isUuid';
+import { getFunciones } from '../services/apistore';
 
 const EventInfo = () => {
   const { eventId } = useParams();
@@ -31,8 +31,7 @@ const EventInfo = () => {
   useEffect(() => {
     const fetchFunciones = async () => {
       const id = evento?._id || eventId;
-      const res = await fetch(`${API_BASE_URL}/api/funcions?evento=${id}`);
-      const data = await res.json();
+      const data = await getFunciones(id);
       setFunciones(Array.isArray(data) ? data : []);
       if (Array.isArray(data) && data.length === 1) {
         setSelectedFunctionId(data[0]._id);
