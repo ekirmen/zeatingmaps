@@ -9,7 +9,7 @@ export const useEventoUIHandlers = (
     if (recintoSeleccionado && salaSeleccionada) {
       setEventoData({
         nombre: '',
-        activo: true,
+        activo: 'true',
         recinto: recintoSeleccionado,
         sala: salaSeleccionada,
         fecha: null,

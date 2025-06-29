@@ -34,7 +34,7 @@ const EventListWidget = () => {
         const { data: evData, error: evErr } = await supabase
           .from('eventos')
           .select('*')
-          .eq('activo', true);
+          .eq('activo', 'true');
         if (evErr) throw evErr;
 
         const parsedEvents = (evData || []).map((e) => {
