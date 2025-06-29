@@ -1,6 +1,6 @@
 // src/pages/Event.jsx
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
@@ -20,6 +20,7 @@ const API_URL = API_BASE_URL;
 const Event = () => {
   const { eventId } = useParams(); // eventId puede ser slug o id real
   const navigate = useNavigate();
+  const location = useLocation();
   const { refParam } = useRefParam();
   const { t } = useTranslation();
 
@@ -44,6 +45,15 @@ const Event = () => {
   useEffect(() => {
     cartRef.current = carrito;
   }, [carrito]);
+
+  // Allow selecting a function via query parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const funcId = params.get('funcion');
+    if (funcId) {
+      setSelectedFunctionId(funcId);
+    }
+  }, [location.search]);
 
   const releaseSeats = async (seats) => {
     try {
@@ -166,7 +176,7 @@ const Event = () => {
         );
         const data = await response.json();
         setFunciones(Array.isArray(data) ? data : []);
-        if (Array.isArray(data) && data.length === 1) {
+        if (Array.isArray(data) && data.length === 1 && !selectedFunctionId) {
           setSelectedFunctionId(data[0]._id);
         }
       } catch (error) {
