@@ -50,6 +50,8 @@ import Abonos from './backoffice/pages/Abonos';
 // Store Pages
 import EventsVenue from './store/pages/EventsVenue';
 import Event from './store/pages/Event';
+import EventInfo from "./store/pages/EventInfo";
+import EventMap from "./store/pages/EventMap";
 import BuyEvent from './store/pages/BuyEvent';
 import SelectSeats from './store/pages/SelectSeats';
 import Cart from './store/pages/Cart';
@@ -150,7 +152,8 @@ const App = () => {
                         </Route>
 
                         <Route path="/store/:venueId?" element={<EventsVenue />} />
-                        <Route path="/store/event/:eventId" element={<Event />} />
+                        <Route path="/store/event/:eventId" element={<EventInfo />} />
+                        <Route path="/store/event/:eventId/map" element={<EventMap />} />
                         <Route path="/store/event" element={<Navigate to="/store" replace />} />
                         <Route path="/store/select-seats/:salaId" element={<SelectSeats />} />
                         <Route path="/store/buy-event/:id" element={<BuyEvent />} />
