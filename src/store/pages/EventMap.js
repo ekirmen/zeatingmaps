@@ -136,7 +136,10 @@ const EventMap = () => {
 
   useEffect(() => {
     const loadTagNames = async () => {
-      if (!evento?.tags || evento.tags.length === 0) return;
+      if (!Array.isArray(evento?.tags) || evento.tags.length === 0) {
+        setTagNames([]);
+        return;
+      }
 
       // If tags are object IDs, fetch their names
       if (typeof evento.tags[0] === 'string' && evento.tags[0].length === 24) {
