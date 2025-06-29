@@ -98,7 +98,7 @@ const Evento = () => {
       setEventoData({
         nombre: '',
         fecha: null,
-        activo: true,
+        activo: 'true',
         oculto: false,
         desactivado: false,
         sector: '',
