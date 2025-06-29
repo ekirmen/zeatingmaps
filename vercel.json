@@ -1,7 +1,13 @@
 {
   "rewrites": [
-    { "source": "/store/:path*", "destination": "/store/index.html" },
-    { "source": "/backoffice/:path*", "destination": "/index.html" }
+    {
+      "source": "/store/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/backoffice/:path*",
+      "destination": "/index.html"
+    }
   ],
   "redirects": [
     {
