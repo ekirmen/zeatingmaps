@@ -252,11 +252,21 @@ export const deleteEntrada = async (id) => {
 
 // Obtener página CMS por slug
 export const fetchCmsPage = async (slug) => {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('cms_pages')
     .select('*')
     .eq('slug', slug)
     .single();
+
+  if (error || !data) {
+    const fallback = await supabase
+      .from('cms_pages')
+      .select('*')
+      .eq('nombre', slug)
+      .single();
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) {
     console.error('Supabase error:', error);
@@ -268,10 +278,18 @@ export const fetchCmsPage = async (slug) => {
 
 // Guardar widgets en una página CMS por slug
 export const saveCmsPage = async (slug, widgets) => {
-  const { error } = await supabase
+  let { error } = await supabase
     .from('cms_pages')
     .update({ widgets })
     .eq('slug', slug);
+
+  if (error) {
+    const fallback = await supabase
+      .from('cms_pages')
+      .update({ widgets })
+      .eq('nombre', slug);
+    error = fallback.error;
+  }
 
   if (error) {
     console.error('Error al guardar página CMS:', error);
