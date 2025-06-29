@@ -14,6 +14,7 @@ import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { useTranslation } from 'react-i18next';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
 import { QRCodeSVG } from '@rc-component/qrcode';
+import { supabase } from '../services/supabaseClient'; // asegúrate de tener este cliente
 
 const API_URL = API_BASE_URL;
 const Event = () => {
@@ -93,38 +94,41 @@ const Event = () => {
 
   useEffect(() => {
     const fetchEvento = async () => {
-      try {
-        const response = await fetch(`${API_URL}/api/events/${eventId}`);
-        const data = await response.json();
-        setEvento(data);
-        // Si el evento tiene un recinto como ID, obtener los detalles del recinto
-        const recintoId = typeof data.recinto === 'string' ? data.recinto : data.recinto?._id;
-        if (recintoId) {
-          try {
-            const recRes = await fetch(`${API_URL}/api/recintos`);
-            const recData = await recRes.json();
-            const found = Array.isArray(recData)
-              ? recData.find(r => r._id === recintoId)
-              : null;
-            if (found) setRecintoInfo(found);
-          } catch (err) {
-            console.error('Error fetching recinto:', err);
-          }
-        }
-        if (data?.otrasOpciones?.popupAntesAsiento?.mostrar) {
-          setShowSeatPopup(true);
-        }
-        if (data?.analytics?.enabled) {
-          const { gtmId, metaPixelId } = data.analytics;
-          loadGtm(gtmId);
-          loadMetaPixel(metaPixelId);
-          if (metaPixelId) localStorage.setItem('metaPixelId', metaPixelId);
-          if (gtmId) localStorage.setItem('gtmId', gtmId);
-        }
-      } catch (error) {
-        console.error('Error fetching event:', error);
-      }
-    };
+  try {
+    const { data, error } = await supabase
+      .from('eventos')
+      .select('*')
+      .or(`id.eq.${eventId},slug.eq.${eventId}`)
+      .maybeSingle();
+
+    if (error) throw error;
+    setEvento(data);
+
+    // Opcional: carga datos del recinto si necesitas
+    if (data?.recinto) {
+      const { data: recintoData, error: recintoError } = await supabase
+        .from('recintos')
+        .select('*')
+        .eq('id', data.recinto)
+        .single();
+      if (!recintoError) setRecintoInfo(recintoData);
+    }
+
+    if (data?.otrasOpciones?.popupAntesAsiento?.mostrar) {
+      setShowSeatPopup(true);
+    }
+
+    if (data?.analytics?.enabled) {
+      const { gtmId, metaPixelId } = data.analytics;
+      loadGtm(gtmId);
+      loadMetaPixel(metaPixelId);
+      if (metaPixelId) localStorage.setItem('metaPixelId', metaPixelId);
+      if (gtmId) localStorage.setItem('gtmId', gtmId);
+    }
+  } catch (error) {
+    console.error('Error fetching event:', error);
+  }
+};
     fetchEvento();
   }, [eventId]);
 
