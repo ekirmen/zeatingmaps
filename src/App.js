@@ -151,7 +151,8 @@ const App = () => {
                           <Route path="formato-entrada" element={<FormatoEntrada />} />
                         </Route>
 
-                        <Route path="/store/:venueId?" element={<EventsVenue />} />
+                        <Route path="/store/tag/:tagSlug?" element={<EventsVenue groupByTags />} />
+                        <Route path="/store" element={<EventsVenue groupByTags={false} />} />
                         <Route path="/store/event/:eventId" element={<EventInfo />} />
                         <Route path="/store/event/:eventId/map" element={<EventMap />} />
                         <Route path="/store/event" element={<Navigate to="/store" replace />} />
