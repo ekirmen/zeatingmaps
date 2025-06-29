@@ -2,6 +2,8 @@
   "name": "ekirmen",
   "version": "0.1.0",
   "private": true,
+  "homepage": ".",
+
   "scripts": {
     "start": "react-scripts start",
     "dev": "react-scripts start",
