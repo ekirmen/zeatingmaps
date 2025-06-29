@@ -50,6 +50,8 @@ import Abonos from './backoffice/pages/Abonos';
 // Store Pages
 import EventsVenue from './store/pages/EventsVenue';
 import Event from './store/pages/Event';
+import EventInfo from './store/pages/EventInfo';
+import EventMap from './store/pages/EventMap';
 import BuyEvent from './store/pages/BuyEvent';
 import SelectSeats from './store/pages/SelectSeats';
 import Cart from './store/pages/Cart';
@@ -151,10 +153,11 @@ const App = () => {
 
                         <Route path="/store/tag/:tagSlug?" element={<EventsVenue groupByTags />} />
                         <Route path="/store" element={<EventsVenue groupByTags={false} />} />
-                        {/* The Event page now handles functions, seat maps and pricing */}
-                        <Route path="/store/event/:eventId" element={<Event />} />
-                        {/* Legacy path kept for backward compatibility */}
-                        <Route path="/store/event/:eventId/map" element={<Event />} />
+                        {/* Split event information and seat map into separate pages */}
+                        <Route path="/store/event/:eventId" element={<EventInfo />} />
+                        <Route path="/store/event/:eventId/map" element={<EventMap />} />
+                        {/* Legacy path using the combined Event page */}
+                        <Route path="/store/event/:eventId/full" element={<Event />} />
                         <Route path="/store/event" element={<Navigate to="/store" replace />} />
                         <Route path="/store/select-seats/:salaId" element={<SelectSeats />} />
                         <Route path="/store/buy-event/:id" element={<BuyEvent />} />
