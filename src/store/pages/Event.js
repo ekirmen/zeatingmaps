@@ -32,6 +32,7 @@ const Event = () => {
   const [plantillaPrecios, setPlantillaPrecios] = useState(null);
   const [carrito, setCarrito] = useState([]);
   const cartRef = useRef([]);
+  const seatMapRef = useRef(null);
   const [zonas, setZonas] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [showSeatPopup, setShowSeatPopup] = useState(false);
@@ -297,6 +298,12 @@ const Event = () => {
     cargarDatosSeleccionados();
   }, [selectedFunctionId, funciones]);
 
+  useEffect(() => {
+    if (selectedFunctionId && seatMapRef.current) {
+      seatMapRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [selectedFunctionId]);
+
   const applyDiscountCode = async () => {
     if (!discountCode.trim()) return;
     try {
@@ -501,7 +508,7 @@ const Event = () => {
       </div>
 
       <div className="md:flex md:items-start md:gap-6">
-        <div className="my-6 border rounded shadow-md p-4 flex justify-center bg-gray-100 md:flex-1">
+        <div ref={seatMapRef} className="my-6 border rounded shadow-md p-4 flex justify-center bg-gray-100 md:flex-1">
           <SeatingMap mapa={mapa} onClickSilla={toggleSillaEnCarrito} />
         </div>
 
