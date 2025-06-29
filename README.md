@@ -25,14 +25,16 @@ This project is a React application that relies on Supabase for data storage and
    ```
 
 Set `REACT_APP_SITE_URL` to your deployed domain so Supabase emails point to
-the correct host. If your application is served from a subfolder (for example
-`/store`), include that path here:
+the correct host. This variable should contain only the domain (for example
+`https://your-domain.com`). Routes under `/store` are handled automatically by
+the code:
 
-   ```bash
-REACT_APP_SITE_URL=https://your-domain.com/store
+```bash
+REACT_APP_SITE_URL=https://your-domain.com
 ```
 
-To ensure static assets load correctly from that subfolder, also update the
+To ensure static assets load correctly when the app is served from a subfolder,
+also update the
 `homepage` field in your `package.json`:
 
 ```json
