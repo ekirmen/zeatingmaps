@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { supabase } from '../../backoffice/services/supabaseClient';
-import { fetchEventos } from '../../backoffice/services/apibackoffice';
+import { fetchPublicEventos } from '../../services/publicEventoRest';
 import API_BASE_URL from '../../utils/apiBase';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 
@@ -16,14 +16,14 @@ const slugify = str =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 
-const EventListWidget = () => {
+const EventListWidget = ({ groupByTags = true }) => {
   const [eventos, setEventos] = useState([]);
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
-  const { venueId: tagSlug } = useParams();
+  const { tagSlug } = useParams();
   const { refParam } = useRefParam();
   const normalizedTagSlug = tagSlug ? tagSlug.toLowerCase() : null;
   const searchParams = new URLSearchParams(location.search);
@@ -32,7 +32,7 @@ const EventListWidget = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const evData = await fetchEventos();
+        const evData = await fetchPublicEventos();
 
         const parsedEvents = (evData || []).map((e) => {
           if (typeof e.tags === 'string') {
@@ -82,9 +82,9 @@ const EventListWidget = () => {
         const evts = filteredEventos.filter(e => (e.tags || []).includes(tag._id));
         return evts.length ? [{ tag, eventos: evts }] : [];
       })()
-    : (() => {
+    : groupByTags
+    ? (() => {
         if (tags.length === 0) {
-          // Si no hay etiquetas configuradas, mostrar todos los eventos
           return filteredEventos.length
             ? [{ tag: { _id: 'todos', name: 'Todos' }, eventos: filteredEventos }]
             : [];
@@ -99,7 +99,10 @@ const EventListWidget = () => {
           groups.push({ tag: { _id: 'otros', name: 'Otros' }, eventos: untagged });
         }
         return groups;
-      })();
+      })()
+    : filteredEventos.length
+    ? [{ tag: { _id: 'todos', name: 'Todos' }, eventos: filteredEventos }]
+    : [];
 
   const currentTag = normalizedTagSlug
     ? tags.find(t => slugify(t.name) === normalizedTagSlug)

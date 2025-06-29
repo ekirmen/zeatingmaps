@@ -3,7 +3,7 @@ import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 import { getCmsPage } from '../services/apistore';
 
-const EventsVenue = () => {
+const EventsVenue = ({ groupByTags = true }) => {
   const [widgets, setWidgets] = useState(null);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ const EventsVenue = () => {
   const renderWidget = (widget) => {
     switch (widget.type) {
       case 'Listado de eventos':
-        return <EventListWidget />;
+        return <EventListWidget groupByTags={groupByTags} />;
       case 'Preguntas frecuentes':
         return <FaqWidget />;
       default:
