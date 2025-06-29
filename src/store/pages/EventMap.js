@@ -165,7 +165,8 @@ const EventMap = () => {
   useEffect(() => {
     const fetchFunciones = async () => {
       try {
-        const id = evento?._id || eventId;
+        const id = evento?.id || (isUuid(eventId) ? eventId : null);
+        if (!id) return;
         const data = await getFunciones(id);
         setFunciones(Array.isArray(data) ? data : []);
         if (Array.isArray(data) && data.length === 1) {
@@ -175,13 +176,14 @@ const EventMap = () => {
         console.error('Error fetching functions:', error);
       }
     };
-    if (evento?._id || eventId) fetchFunciones();
+    if (evento?.id || isUuid(eventId)) fetchFunciones();
   }, [eventId, evento]);
 
   useEffect(() => {
     const fetchAllZonas = async () => {
       try {
-        const id = evento?._id || eventId;
+        const id = evento?.id || (isUuid(eventId) ? eventId : null);
+        if (!id) return;
         const funciones = await getFunciones(id);
 
         if (!Array.isArray(funciones)) {
@@ -210,7 +212,7 @@ const EventMap = () => {
       }
     };
   
-    if (evento?._id || eventId) fetchAllZonas();
+    if (evento?.id || isUuid(eventId)) fetchAllZonas();
   }, [eventId, evento]);
   
   useEffect(() => {
