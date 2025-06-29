@@ -1,8 +1,16 @@
 {
   "rewrites": [
     {
+      "source": "/store/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
       "source": "/store/:path*",
       "destination": "/index.html"
+    },
+    {
+      "source": "/backoffice/static/:path*",
+      "destination": "/static/:path*"
     },
     {
       "source": "/backoffice/:path*",
