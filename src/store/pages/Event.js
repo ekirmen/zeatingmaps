@@ -93,6 +93,7 @@ const Event = () => {
   }, []);
 
   const renderWidget = (widget) => {
+    if (eventId && widget.type === 'Listado de eventos') return null;
     switch (widget.type) {
       case 'Listado de eventos':
         return <EventListWidget />;
@@ -179,7 +180,11 @@ const Event = () => {
         if (!id) return;
         const data = await getFunciones(id);
         setFunciones(Array.isArray(data) ? data : []);
-        if (Array.isArray(data) && data.length === 1 && !selectedFunctionId) {
+        if (
+          Array.isArray(data) &&
+          data.length > 0 &&
+          !selectedFunctionId
+        ) {
           setSelectedFunctionId(data[0]._id);
         }
       } catch (error) {
