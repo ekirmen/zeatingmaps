@@ -58,7 +58,7 @@ const Pay = () => {
           .single();
         if (funcErr) throw funcErr;
         setFuncionDetails(funcData);
-        const eventId = funcData.evento?._id || funcData.evento;
+        const eventId = funcData.evento?.id || funcData.evento;
         setAllowReservation(!!funcData.permitirReservasWeb);
         setCurrentEventId(eventId);
 

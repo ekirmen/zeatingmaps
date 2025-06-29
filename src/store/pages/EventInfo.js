@@ -30,14 +30,15 @@ const EventInfo = () => {
 
   useEffect(() => {
     const fetchFunciones = async () => {
-      const id = evento?._id || eventId;
+      const id = evento?.id || (isUuid(eventId) ? eventId : null);
+      if (!id) return;
       const data = await getFunciones(id);
       setFunciones(Array.isArray(data) ? data : []);
       if (Array.isArray(data) && data.length === 1) {
         setSelectedFunctionId(data[0]._id);
       }
     };
-    if (evento?._id || eventId) fetchFunciones();
+    if (evento?.id || isUuid(eventId)) fetchFunciones();
   }, [evento, eventId]);
 
   return (
