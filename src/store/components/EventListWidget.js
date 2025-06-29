@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { supabase } from '../../backoffice/services/supabaseClient';
-import { fetchPublicEventos } from '../../services/publicEventoRest';
+import { fetchEventos } from '../../backoffice/services/apibackoffice';
 import API_BASE_URL from '../../utils/apiBase';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 
@@ -32,7 +32,7 @@ const EventListWidget = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const evData = await fetchPublicEventos();
+        const evData = await fetchEventos();
 
         const parsedEvents = (evData || []).map((e) => {
           if (typeof e.tags === 'string') {
