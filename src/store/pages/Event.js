@@ -251,8 +251,12 @@ const Event = () => {
       if (!funcion) return;
 
       try {
+        const salaId =
+          typeof funcion.sala === 'object'
+            ? funcion.sala._id || funcion.sala.id
+            : funcion.sala;
         const [mapaData, seatStates] = await Promise.all([
-          fetchMapa(funcion.sala._id),
+          fetchMapa(salaId),
           fetchSeatsByFuncion(selectedFunctionId)
         ]);
 
