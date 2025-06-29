@@ -8,7 +8,7 @@ import { useRefParam } from '../../contexts/RefContext';
 import { useTranslation } from 'react-i18next';
 import { loadMetaPixel } from '../utils/analytics';
 import { fetchPaymentByLocator } from '../../backoffice/services/apibackoffice';
-import API_BASE_URL from '../../utils/apiBase';
+import { getFuncion } from '../services/apistore';
 
 // Move formatPrice outside the component to make it reusable
 const formatPrice = (price) => {
@@ -41,10 +41,7 @@ const Cart = () => {
       const info = {};
       await Promise.all(ids.map(async id => {
         try {
-          const res = await fetch(`${API_BASE_URL}/api/funcions/${id}`);
-          if (res.ok) {
-            info[id] = await res.json();
-          }
+          info[id] = await getFuncion(id);
         } catch (err) {
           console.error('Error fetching function details:', err);
         }
