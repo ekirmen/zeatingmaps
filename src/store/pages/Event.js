@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
 import { QRCodeSVG } from '@rc-component/qrcode';
 import { supabase } from '../../backoffice/services/supabaseClient'; // asegúrate de tener este cliente
+import { isUuid } from '../../utils/isUuid';
 
 const API_URL = API_BASE_URL;
 const Event = () => {
@@ -105,11 +106,17 @@ const Event = () => {
   useEffect(() => {
     const fetchEvento = async () => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('eventos')
-      .select('*')
-      .or(`id.eq.${eventId},slug.eq.${eventId}`)
-      .maybeSingle();
+      .select('*');
+
+    if (isUuid(eventId)) {
+      query = query.or(`id.eq.${eventId},slug.eq.${eventId}`);
+    } else {
+      query = query.eq('slug', eventId);
+    }
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) throw error;
     setEvento(data);

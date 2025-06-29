@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import API_BASE_URL from '../../utils/apiBase';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 import { supabase } from '../../backoffice/services/supabaseClient';
+import { isUuid } from '../../utils/isUuid';
 
 const EventInfo = () => {
   const { eventId } = useParams();
@@ -16,11 +17,17 @@ const EventInfo = () => {
 
   useEffect(() => {
     const fetchEvento = async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('eventos')
-        .select('*')
-        .or(`id.eq.${eventId},slug.eq.${eventId}`)
-        .maybeSingle();
+        .select('*');
+
+      if (isUuid(eventId)) {
+        query = query.or(`id.eq.${eventId},slug.eq.${eventId}`);
+      } else {
+        query = query.eq('slug', eventId);
+      }
+
+      const { data, error } = await query.maybeSingle();
       if (!error) setEvento(data);
     };
     fetchEvento();
