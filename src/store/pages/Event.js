@@ -14,7 +14,7 @@ import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { useTranslation } from 'react-i18next';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
 import { QRCodeSVG } from '@rc-component/qrcode';
-import { supabase } from '../services/supabaseClient'; // asegúrate de tener este cliente
+import { supabase } from '../../backoffice/services/supabaseClient'; // asegúrate de tener este cliente
 
 const API_URL = API_BASE_URL;
 const Event = () => {
