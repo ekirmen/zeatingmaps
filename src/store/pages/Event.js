@@ -17,6 +17,7 @@ import { QRCodeSVG } from '@rc-component/qrcode';
 import { supabase } from '../../backoffice/services/supabaseClient'; // asegúrate de tener este cliente
 import { isUuid } from '../../utils/isUuid';
 import formatDateString from '../../utils/formatDateString';
+import EventMap from '../../components/EventMap';
 
 const API_URL = API_BASE_URL;
 const Event = () => {
@@ -591,13 +592,11 @@ const Event = () => {
             <p className="mb-2">{recintoInfo.comoLlegar}</p>
           )}
           <div className="flex flex-col md:flex-row md:items-start gap-4">
-            <iframe
-              title="map"
-              src={`https://www.google.com/maps?q=${recintoInfo.latitud},${recintoInfo.longitud}&output=embed`}
-              className="rounded w-full md:flex-1"
-              height="300"
-              allowFullScreen
-              loading="lazy"
+            <EventMap
+              latitude={recintoInfo.latitud}
+              longitude={recintoInfo.longitud}
+              width="100%"
+              height={300}
             />
             <div className="flex flex-col items-center md:w-64">
               <p className="mb-2 font-medium text-center">Escanea para llegar a tu destino.</p>
