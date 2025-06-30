@@ -116,8 +116,9 @@ const Pay = () => {
 
   const handleProcessReservation = async () => {
     try {
-      if (!isUuid(user?.id) || !isUuid(currentEventId) || !isUuid(funcionId)) {
-        console.error('Invalid UUIDs provided for reservation');
+      const isValidFuncionId = Number.isInteger(Number(funcionId)) && Number(funcionId) > 0;
+      if (!isUuid(user?.id) || !isUuid(currentEventId) || !isValidFuncionId) {
+        console.error('Invalid IDs provided for reservation');
         toast.error('Error al procesar la reserva');
         return;
       }
@@ -160,8 +161,9 @@ const Pay = () => {
     }
 
     try {
-      if (!isUuid(user?.id) || !isUuid(currentEventId) || !isUuid(funcionId)) {
-        console.error('Invalid UUIDs provided for payment');
+      const isValidFuncionId = Number.isInteger(Number(funcionId)) && Number(funcionId) > 0;
+      if (!isUuid(user?.id) || !isUuid(currentEventId) || !isValidFuncionId) {
+        console.error('Invalid IDs provided for payment');
         toast.error('Error al procesar el pago');
         return;
       }
