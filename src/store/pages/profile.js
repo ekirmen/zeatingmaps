@@ -122,7 +122,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
   
 
   useEffect(() => {
-    if (user?._id) {
+    if (user?.id) {
       fetchPurchaseHistory();
     }
   }, [user, fetchPurchaseHistory]);
@@ -206,7 +206,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
       </div>
       {user && (
         <div className="text-sm text-gray-600 mb-4">
-          {t('profile.account_locator', 'Localizador de Cuenta')}: <span className="font-mono">{user._id}</span>
+          {t('profile.account_locator', 'Localizador de Cuenta')}: <span className="font-mono">{user.id}</span>
         </div>
       )}
 
@@ -279,7 +279,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
             <Table
               columns={columns}
               dataSource={reservedPayments}
-              rowKey="_id"
+              rowKey="id"
               loading={loading}
               pagination={{
                 pageSize: 5,
@@ -295,7 +295,7 @@ const Profile = ({ userData, onUpdateProfile }) => {
             <Table
               columns={columns}
               dataSource={paidPayments}
-              rowKey="_id"
+              rowKey="id"
               loading={loading}
               pagination={{
                 pageSize: 5,
