@@ -28,7 +28,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         console.log('[Boleteria] Searching ticket for locator:', locator);
         const { data: payment, error } = await supabase
           .from('payments')
-          .select('*, user:profiles!payments_user_fkey(*), seats, event:eventos(*), funcion:funciones(fecha:fecha_celebracion)')
+          .select('*, user:profiles!usuario_id(*), seats, event:eventos(*), funcion:funciones(fecha:fecha_celebracion)')
           .eq('locator', locator)
           .single();
 
