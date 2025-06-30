@@ -186,6 +186,11 @@ const Header = ({ onLogin, onLogout }) => {
         <nav className="flex gap-4 text-sm">
           <LinkWithRef to="/store" className="hover:underline">{t('header.home')}</LinkWithRef>
           <LinkWithRef to="/store/cart" className="hover:underline">{t('header.cart')}</LinkWithRef>
+          {localStorage.getItem('token') && (
+            <LinkWithRef to="/store/perfil" className="hover:underline">
+              {t('header.profile')}
+            </LinkWithRef>
+          )}
         </nav>
 
         <div className="flex items-center gap-2">
