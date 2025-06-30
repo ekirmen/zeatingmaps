@@ -16,6 +16,7 @@ import { loadGtm, loadMetaPixel } from '../utils/analytics';
 import { QRCodeSVG } from '@rc-component/qrcode';
 import { supabase } from '../../backoffice/services/supabaseClient'; // asegúrate de tener este cliente
 import { isUuid } from '../../utils/isUuid';
+import formatDateString from '../../utils/formatDateString';
 
 const API_URL = API_BASE_URL;
 const Event = () => {
@@ -487,7 +488,7 @@ const Event = () => {
                 value={funcion._id}
                 onChange={() => setSelectedFunctionId(funcion._id)}
               />
-              <span>{funcion.evento?.nombre} - {new Date(funcion.fechaCelebracion).toLocaleString()}</span>
+              <span>{funcion.evento?.nombre} - {formatDateString(funcion.fechaCelebracion)}</span>
             </label>
           ))}
         </div>
@@ -523,7 +524,7 @@ const Event = () => {
             <div className="mb-2 font-medium">
               {(() => {
                 const fn = funciones.find(f => f._id === selectedFunctionId);
-                return fn ? new Date(fn.fechaCelebracion).toLocaleString() : '';
+                return fn ? formatDateString(fn.fechaCelebracion) : '';
               })()}
             </div>
           )}

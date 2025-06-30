@@ -5,6 +5,7 @@ import resolveImageUrl from '../../utils/resolveImageUrl';
 import { supabase } from '../../backoffice/services/supabaseClient';
 import { isUuid } from '../../utils/isUuid';
 import { getFunciones } from '../services/apistore';
+import formatDateString from '../../utils/formatDateString';
 
 const EventInfo = () => {
   const { eventId } = useParams();
@@ -67,7 +68,7 @@ const EventInfo = () => {
               value={f._id}
               onChange={() => setSelectedFunctionId(f._id)}
             />
-            <span>{new Date(f.fechaCelebracion).toLocaleString()}</span>
+            <span>{formatDateString(f.fechaCelebracion)}</span>
           </label>
         ))}
       </div>
