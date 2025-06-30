@@ -271,28 +271,32 @@ const Event = () => {
           return acc;
         }, {});
 
-        const mapaActualizado = {
-          ...mapaData,
-          contenido: mapaData.contenido.map(elemento => ({
-            ...elemento,
-            sillas: elemento.sillas.map(silla => {
-              const estado = seatMap[silla._id];
-              if (estado) {
-                return {
-                  ...silla,
-                  estado,
-                  color:
-                    estado === 'bloqueado' ? 'orange' :
-                    estado === 'reservado' ? 'red' :
-                    estado === 'pagado' ? 'gray' : silla.color || 'lightblue'
-                };
-              }
-              return silla;
-            })
-          }))
-        };
+        if (mapaData && Array.isArray(mapaData.contenido)) {
+          const mapaActualizado = {
+            ...mapaData,
+            contenido: mapaData.contenido.map(elemento => ({
+              ...elemento,
+              sillas: elemento.sillas.map(silla => {
+                const estado = seatMap[silla._id];
+                if (estado) {
+                  return {
+                    ...silla,
+                    estado,
+                    color:
+                      estado === 'bloqueado' ? 'orange' :
+                      estado === 'reservado' ? 'red' :
+                      estado === 'pagado' ? 'gray' : silla.color || 'lightblue'
+                  };
+                }
+                return silla;
+              })
+            }))
+          };
 
-        setMapa(mapaActualizado);
+          setMapa(mapaActualizado);
+        } else {
+          setMapa(null);
+        }
 
         if (funcion.plantilla?.id || funcion.plantilla?._id) {
           const plantillaData = await fetchPlantillaPrecios(funcion.plantilla._id);
