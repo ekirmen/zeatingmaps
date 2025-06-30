@@ -1,6 +1,6 @@
 // src/pages/Event.jsx
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
@@ -22,6 +22,7 @@ const API_URL = API_BASE_URL;
 const EventMap = () => {
   const { eventId } = useParams(); // eventId puede ser slug o id real
   const navigate = useNavigate();
+  const location = useLocation();
   const { refParam } = useRefParam();
   const { t } = useTranslation();
 
@@ -46,6 +47,15 @@ const EventMap = () => {
   useEffect(() => {
     cartRef.current = carrito;
   }, [carrito]);
+
+  // Allow selecting a function via query parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const funcId = params.get('funcion');
+    if (funcId) {
+      setSelectedFunctionId(funcId);
+    }
+  }, [location.search]);
 
   const releaseSeats = async (seats) => {
     try {
@@ -254,28 +264,32 @@ const EventMap = () => {
           return acc;
         }, {});
 
-        const mapaActualizado = {
-          ...mapaData,
-          contenido: mapaData.contenido.map(elemento => ({
-            ...elemento,
-            sillas: elemento.sillas.map(silla => {
-              const estado = seatMap[silla._id];
-              if (estado) {
-                return {
-                  ...silla,
-                  estado,
-                  color:
-                    estado === 'bloqueado' ? 'orange' :
-                    estado === 'reservado' ? 'red' :
-                    estado === 'pagado' ? 'gray' : silla.color || 'lightblue'
-                };
-              }
-              return silla;
-            })
-          }))
-        };
+        if (mapaData && Array.isArray(mapaData.contenido)) {
+          const mapaActualizado = {
+            ...mapaData,
+            contenido: mapaData.contenido.map(elemento => ({
+              ...elemento,
+              sillas: elemento.sillas.map(silla => {
+                const estado = seatMap[silla._id];
+                if (estado) {
+                  return {
+                    ...silla,
+                    estado,
+                    color:
+                      estado === 'bloqueado' ? 'orange' :
+                      estado === 'reservado' ? 'red' :
+                      estado === 'pagado' ? 'gray' : silla.color || 'lightblue'
+                  };
+                }
+                return silla;
+              })
+            }))
+          };
 
-        setMapa(mapaActualizado);
+          setMapa(mapaActualizado);
+        } else {
+          setMapa(null);
+        }
 
         if (funcion.plantilla?.id || funcion.plantilla?._id) {
           const plantillaData = await fetchPlantillaPrecios(funcion.plantilla._id);
