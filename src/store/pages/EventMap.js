@@ -171,7 +171,7 @@ const EventMap = () => {
         const data = await getFunciones(id);
         setFunciones(Array.isArray(data) ? data : []);
         if (Array.isArray(data) && data.length === 1) {
-          setSelectedFunctionId(data[0]._id);
+          setSelectedFunctionId(data[0].id || data[0]._id);
         }
       } catch (error) {
         console.error('Error fetching functions:', error);
@@ -232,7 +232,7 @@ const EventMap = () => {
   useEffect(() => {
     const cargarDatosSeleccionados = async () => {
       if (!selectedFunctionId) return;
-      const funcion = funciones.find(f => f._id === selectedFunctionId);
+      const funcion = funciones.find(f => (f.id || f._id) === selectedFunctionId);
       if (!funcion) return;
 
       try {
@@ -459,12 +459,12 @@ const EventMap = () => {
         <h3 className="text-lg font-semibold mb-2">Funciones</h3>
         <div className="flex flex-col gap-2">
           {funciones.map(funcion => (
-            <label key={funcion._id} className="flex items-center gap-2">
+            <label key={funcion.id || funcion._id} className="flex items-center gap-2">
               <input
                 type="radio"
                 name="funcion"
-                value={funcion._id}
-                onChange={() => setSelectedFunctionId(funcion._id)}
+                value={funcion.id || funcion._id}
+                onChange={() => setSelectedFunctionId(funcion.id || funcion._id)}
               />
               <span>{funcion.evento?.nombre} - {formatDateString(funcion.fechaCelebracion)}</span>
             </label>
@@ -501,7 +501,7 @@ const EventMap = () => {
           {selectedFunctionId && (
             <div className="mb-2 font-medium">
               {(() => {
-                const fn = funciones.find(f => f._id === selectedFunctionId);
+                const fn = funciones.find(f => (f.id || f._id) === selectedFunctionId);
                 return fn ? formatDateString(fn.fechaCelebracion) : '';
               })()}
             </div>

@@ -36,7 +36,7 @@ const EventInfo = () => {
       const data = await getFunciones(id);
       setFunciones(Array.isArray(data) ? data : []);
       if (Array.isArray(data) && data.length === 1) {
-        setSelectedFunctionId(data[0]._id);
+        setSelectedFunctionId(data[0].id || data[0]._id);
       }
     };
     if (evento?.id || isUuid(eventId)) fetchFunciones();
@@ -61,12 +61,12 @@ const EventInfo = () => {
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-2">{t('functions')}</h3>
         {funciones.map((f) => (
-          <label key={f._id} className="flex items-center gap-2">
+          <label key={f.id || f._id} className="flex items-center gap-2">
             <input
               type="radio"
               name="funcion"
-              value={f._id}
-              onChange={() => setSelectedFunctionId(f._id)}
+              value={f.id || f._id}
+              onChange={() => setSelectedFunctionId(f.id || f._id)}
             />
             <span>{formatDateString(f.fechaCelebracion)}</span>
           </label>
