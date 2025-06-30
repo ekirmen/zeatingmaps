@@ -63,6 +63,8 @@ import ResetPassword from './store/pages/ResetPassword';
 import StoreLogin from './store/pages/Login';
 import Register from './store/pages/Register';
 import FaqPage from './store/pages/FaqPage';
+import EventSearchMap from './store/pages/EventSearchMap';
+
 import NotFoundPage from './store/pages/NotFoundPage';
 
 const App = () => {
@@ -169,8 +171,10 @@ const App = () => {
                         <Route path="/store/cart" element={<Cart />} />
                         <Route path="/store/pay" element={<Pay />} />
                         <Route path="/payment-success" element={<PaymentSuccess />} />
-                        <Route path="/store/thank-you" element={<ThankYouPage />} />
+                        
                         <Route path="/store/faq" element={<FaqPage />} />
+                        
+                        <Route path="/store/search-map" element={<EventSearchMap />} />
                         <Route path="/store/perfil" element={<Profile userData={user} onUpdateProfile={handleUpdateProfile} />} />
 
                         <Route path="/404" element={<NotFoundPage />} />
