@@ -53,7 +53,7 @@ const Pay = () => {
       try {
         const { data: funcData, error: funcErr } = await supabase
           .from('funciones')
-          .select('*')
+          .select('*, permitirReservasWeb:permitir_reservas_web')
           .eq('id', funcionId)
           .single();
         if (funcErr) throw funcErr;
