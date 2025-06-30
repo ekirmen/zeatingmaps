@@ -19,7 +19,7 @@ const Descuentos = () => {
   }, []);
 
   const fetchDescuentos = async () => {
-    const { data, error } = await supabase.from('descuentos').select('*, evento:evento (nombre), detalles:detalles_descuento (*, zona:zona (nombre))');
+    const { data, error } = await supabase.from('descuentos').select('*, evento:eventos (nombre), detalles:detalles_descuento (*, zona:zona (nombre))');
     if (error) return console.error('Error al cargar descuentos:', error);
     setDescuentos(data);
   };
