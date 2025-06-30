@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS payments (
     payments jsonb,
     seats jsonb,
     status text,
+    referrer text,
+    discountCode text,
+    reservationDeadline TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_metodo_pago FOREIGN KEY (metodo_pago_id) REFERENCES metodos_pago(id) ON DELETE CASCADE
 );
