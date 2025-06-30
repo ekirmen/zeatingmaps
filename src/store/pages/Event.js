@@ -209,18 +209,36 @@ const Event = () => {
           return;
         }
   
-        // Extraer zonas de todas las plantillas
+        // Extraer zonas desde plantillas y desde cada sala asociada
         const zonasMap = new Map();
-  
-        funciones.forEach((funcion) => {
+
+        for (const funcion of funciones) {
           const detalles = funcion?.plantilla?.detalles || [];
           detalles.forEach((detalle) => {
             if (detalle.zonaId && !zonasMap.has(detalle.zonaId)) {
-              zonasMap.set(detalle.zonaId, detalle);
+              zonasMap.set(detalle.zonaId, { id: detalle.zonaId, nombre: detalle.nombre || detalle.zonaNombre || '' });
             }
           });
-        });
-  
+
+          const salaId =
+            typeof funcion.sala === 'object'
+              ? funcion.sala._id || funcion.sala.id
+              : funcion.sala;
+          if (salaId) {
+            try {
+              const zonasSala = await fetchZonasPorSala(salaId);
+              zonasSala.forEach((z) => {
+                const key = z.id || z._id;
+                if (key && !zonasMap.has(key)) {
+                  zonasMap.set(key, { id: key, nombre: z.nombre });
+                }
+              });
+            } catch (e) {
+              console.error('Error fetching zonas por sala', e);
+            }
+          }
+        }
+
         const zonasUnicas = Array.from(zonasMap.values());
         setZonas(zonasUnicas); // Esto depende de cómo quieras estructurarlas visualmente
   
@@ -375,7 +393,7 @@ const Event = () => {
     }
 
     const basePrice = plantillaPrecios?.detalles.find(p => p.zonaId === zonaId)?.precio || 100;
-    const zonaNombre = zonas.find(z => z._id === zonaId)?.nombre || "Desconocida";
+    const zonaNombre = zonas.find(z => (z.id || z._id || z.zonaId) === zonaId)?.nombre || "Desconocida";
     let finalPrice = basePrice;
     let tipoPrecio = 'normal';
     let descuentoNombre = '';
