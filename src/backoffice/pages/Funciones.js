@@ -20,6 +20,16 @@ const Funciones = () => {
     permitirReservasWeb: false,
   });
 
+  const getEventoNombre = (eventoId) => {
+    const evento = eventos.find((e) => e.id === eventoId);
+    return evento ? evento.nombre : 'Evento eliminado';
+  };
+
+  const getPlantillaNombre = (plantillaId) => {
+    const plantilla = plantillas.find((p) => p.id === plantillaId);
+    return plantilla ? plantilla.nombre : 'Plantilla eliminada';
+  };
+
   // Fetch eventos when sala changes
   useEffect(() => {
     const fetchEventos = async () => {
@@ -49,7 +59,9 @@ const Funciones = () => {
       if (eventoSeleccionado) {
         const { data, error } = await supabase
           .from('funciones')
-          .select(`id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento:eventos(nombre), sala:salas(nombre), plantilla:plantillas(nombre)`)
+          .select(
+            `id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento, sala, plantilla`
+          )
           .eq('evento', eventoSeleccionado);
 
         if (error) {
@@ -142,7 +154,9 @@ const Funciones = () => {
   
         const { data: refreshed, error: err2 } = await supabase
           .from('funciones')
-          .select(`id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento:eventos(nombre), sala:salas(nombre), plantilla:plantillas(nombre)`)
+          .select(
+            `id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento, sala, plantilla`
+          )
           .eq('evento', eventoSeleccionado);
       if (!err2) setFunciones(refreshed);
     } catch (error) {
@@ -174,7 +188,9 @@ const Funciones = () => {
     } else {
       const { data } = await supabase
         .from('funciones')
-        .select(`id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento:eventos(nombre), sala:salas(nombre), plantilla:plantillas(nombre)`)
+        .select(
+          `id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento, sala, plantilla`
+        )
         .eq('evento', eventoSeleccionado);
       setFunciones(data);
     }
@@ -194,7 +210,9 @@ const Funciones = () => {
     } else {
       const { data: refreshed } = await supabase
         .from('funciones')
-        .select(`id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento:eventos(nombre), sala:salas(nombre), plantilla:plantillas(nombre)`)
+        .select(
+          `id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento, sala, plantilla`
+        )
         .eq('evento', eventoSeleccionado);
       setFunciones(refreshed);
     }
@@ -295,9 +313,9 @@ const Funciones = () => {
           {funciones.map(funcion => (
             <tr key={funcion.id}>
               <td>{new Date(funcion.fechaCelebracion).toLocaleDateString()}</td>
-              <td>{funcion.evento.nombre}</td>
-              <td>{funcion.sala.nombre}</td>
-              <td>{funcion.plantilla ? funcion.plantilla.nombre : 'Plantilla eliminada'}</td>
+              <td>{getEventoNombre(funcion.evento)}</td>
+              <td>{salaSeleccionada?.nombre}</td>
+              <td>{getPlantillaNombre(funcion.plantilla)}</td>
               <td>{new Date(funcion.inicioVenta).toLocaleDateString()}</td>
               <td>{new Date(funcion.finVenta).toLocaleDateString()}</td>
               <td>{funcion.pagoAPlazos ? 'Sí' : 'No'}</td>
