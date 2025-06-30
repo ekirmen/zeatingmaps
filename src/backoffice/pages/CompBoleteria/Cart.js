@@ -3,6 +3,7 @@ import { Button, message } from 'antd';
 import { AiOutlineClose } from 'react-icons/ai';
 import { setSeatsBlocked } from '../../services/supabaseSeats';
 import { updateSeat } from '../../services/supabaseSeats';
+import { lockSeat, unlockSeat } from '../../services/seatLocks';
 import { supabase } from '../../services/supabaseClient';
 
 const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selectedAffiliate, onSeatsUpdated, children }) => {
@@ -64,7 +65,10 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
         await setSeatsBlocked(seatsToBlock, true);
         await Promise.all(
           seatsToBlock.map(id =>
-            updateSeat(id, { bloqueado: true, status: 'bloqueado' })
+            Promise.all([
+              updateSeat(id, { bloqueado: true, status: 'bloqueado' }),
+              lockSeat(id, 'bloqueado')
+            ])
           )
         );
         if (onSeatsUpdated) onSeatsUpdated(seatsToBlock, 'bloqueado');
@@ -73,7 +77,10 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
         await setSeatsBlocked(seatsToUnblock, false);
         await Promise.all(
           seatsToUnblock.map(id =>
-            updateSeat(id, { bloqueado: false, status: 'disponible' })
+            Promise.all([
+              updateSeat(id, { bloqueado: false, status: 'disponible' }),
+              unlockSeat(id)
+            ])
           )
         );
         if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock, 'disponible');

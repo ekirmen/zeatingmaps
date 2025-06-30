@@ -7,6 +7,7 @@ import SeatingMap from '../components/SeatingMap'; // al inicio
 import { fetchMapa, fetchPlantillaPrecios, getCmsPage, getFunciones } from '../services/apistore';
 import { fetchZonasPorSala } from '../../services/supabaseServices';
 import { fetchSeatsByFuncion, updateSeat } from '../../backoffice/services/supabaseSeats';
+import { lockSeat, unlockSeat } from '../../backoffice/services/seatLocks';
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 import API_BASE_URL from '../../utils/apiBase';
@@ -63,7 +64,11 @@ const Event = () => {
   const releaseSeats = async (seats) => {
     try {
       await Promise.all(
-        seats.map((s) => updateSeat(s._id, { status: 'disponible' }))
+        seats.map((s) => {
+          const ops = [updateSeat(s._id, { status: 'disponible' })];
+          if (isUuid(s._id)) ops.push(unlockSeat(s._id));
+          return Promise.all(ops);
+        })
       );
     } catch (err) {
       console.error('Error releasing seats', err);
@@ -418,7 +423,17 @@ const Event = () => {
       : [...carrito, { ...silla, zona: zonaId, precio: finalPrice, nombreMesa: mesa.nombre, zonaNombre, tipoPrecio, descuentoNombre }];
 
     try {
-      await updateSeat(silla._id, { status: index !== -1 ? 'disponible' : 'bloqueado' });
+      if (index !== -1) {
+        await Promise.all([
+          updateSeat(silla._id, { status: 'disponible' }),
+          isUuid(silla._id) ? unlockSeat(silla._id) : Promise.resolve()
+        ]);
+      } else {
+        await Promise.all([
+          updateSeat(silla._id, { status: 'bloqueado' }),
+          isUuid(silla._id) ? lockSeat(silla._id, 'bloqueado') : Promise.resolve()
+        ]);
+      }
     } catch (err) {
       console.error('Error updating seat', err);
     }
