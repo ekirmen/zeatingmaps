@@ -140,25 +140,29 @@ export const getMapaPorEvento = async (eventId) => {
 // 🔹 Obtener mapa por sala ID (y opcionalmente función)
 export const fetchMapa = async (salaId, funcionId = null) => {
   try {
+    // Avoid an invalid request when no identifiers are provided. This
+    // prevents queries like `sala_id=eq.undefined` that cause a 400 error.
+    if (!salaId && !funcionId) return null;
+
     if (funcionId) {
       const { data, error } = await supabase
         .from('mapas')
         .select('*')
-        .eq('funcion', funcionId)
-        .single();
+        .eq('funcion_id', funcionId)
+        .maybeSingle();
 
-      if (error) throw error;
-      return data;
-    } else {
-      const { data, error } = await supabase
-        .from('mapas')
-        .select('*')
-        .eq('sala', salaId)
-        .single();
-
-      if (error) throw error;
+      if (error && error.code !== 'PGRST116') throw error;
       return data;
     }
+
+    const { data, error } = await supabase
+      .from('mapas')
+      .select('*')
+      .eq('sala_id', salaId)
+      .maybeSingle();
+
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
   } catch (error) {
     console.error('Error al obtener el mapa:', error);
     throw error;
