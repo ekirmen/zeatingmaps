@@ -129,7 +129,8 @@ const Pay = () => {
         id: item._id,
         name: item.nombre || '',
         price: item.precio,
-        zona: item.zona,
+        zona: { id: item.zona, nombre: item.zonaNombre },
+        mesa: { nombre: item.nombreMesa }
       }));
       const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
   
@@ -180,7 +181,8 @@ const Pay = () => {
         id: item._id,
         name: item.nombre || '',
         price: item.precio,
-        zona: item.zona,
+        zona: { id: item.zona, nombre: item.zonaNombre },
+        mesa: { nombre: item.nombreMesa }
       }));
       const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
   
