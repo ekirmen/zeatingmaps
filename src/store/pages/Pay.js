@@ -11,6 +11,9 @@ import { supabase } from '../../backoffice/services/supabaseClient';
 import { updateSeat } from '../../backoffice/services/supabaseSeats';
 import { isUuid } from '../../utils/isUuid';
 
+const locatorFromId = (id) =>
+  typeof id === 'string' ? id.replace(/-/g, '').slice(-6).toUpperCase() : '';
+
 
 const Pay = () => {
   const location = useLocation();
@@ -140,14 +143,20 @@ const Pay = () => {
         discountCode: discountCode || null,
         created_at: new Date().toISOString()
       }]).select().single();
-  
+
       if (error) throw error;
+
+      let locator = data.locator;
+      if (!locator) {
+        locator = locatorFromId(data.id);
+        await supabase.from('payments').update({ locator }).eq('id', data.id);
+      }
 
       await Promise.all(
         carrito.map(item => updateSeat(item._id, { status: 'reservado' }))
       );
 
-      navigate('/payment-success', { state: { locator: data.locator || data.id, emailSent: false } });
+      navigate('/payment-success', { state: { locator, emailSent: false } });
     } catch (error) {
       console.error('Reservation error:', error);
       toast.error('Error al procesar la reserva');
@@ -186,14 +195,20 @@ const Pay = () => {
         discountCode: discountCode || null,
         created_at: new Date().toISOString()
       }]).select().single();
-  
+
       if (error) throw error;
+
+      let locator = data.locator;
+      if (!locator) {
+        locator = locatorFromId(data.id);
+        await supabase.from('payments').update({ locator }).eq('id', data.id);
+      }
 
       await Promise.all(
         carrito.map(item => updateSeat(item._id, { status: 'pagado' }))
       );
 
-      navigate('/payment-success', { state: { locator: data.locator || data.id, emailSent: true } });
+      navigate('/payment-success', { state: { locator, emailSent: true } });
     } catch (error) {
       console.error('Payment error:', error);
       toast.error("Error al procesar el pago");
