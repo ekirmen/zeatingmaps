@@ -5,6 +5,7 @@ import { useRefParam } from '../../contexts/RefContext';
 import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
 import { fetchMapa, fetchPlantillaPrecios, getCmsPage, getFunciones } from '../services/apistore';
+import { fetchZonasPorSala } from '../../services/supabaseServices';
 import { fetchSeatsByFuncion, updateSeat } from '../../backoffice/services/supabaseSeats';
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
