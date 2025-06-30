@@ -105,6 +105,9 @@ A `payments` table is also required to store ticket sales. The example schema in
 and a `processed_by` field to track the user that processed the sale. Both
 columns reference `profiles.id` so you can easily join payment records with user
 profiles. The table also includes an `event` column referencing `eventos.id`.
+Additional optional fields like `referrer`, `discountCode` and
+`reservationDeadline` allow you to track affiliate sources, applied discounts and
+reservation expiry times.
 
 To power the web studio CMS, create a `cms_pages` table. The
 `sql/create_cms_pages_table.sql` script defines the basic schema including a
