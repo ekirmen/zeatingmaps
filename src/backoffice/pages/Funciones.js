@@ -49,7 +49,7 @@ const Funciones = () => {
       if (eventoSeleccionado) {
         const { data, error } = await supabase
           .from('funciones')
-          .select(`*, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
+          .select(`id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
           .eq('evento', eventoSeleccionado);
 
         if (error) {
@@ -142,7 +142,7 @@ const Funciones = () => {
   
         const { data: refreshed, error: err2 } = await supabase
           .from('funciones')
-          .select(`*, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
+          .select(`id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
           .eq('evento', eventoSeleccionado);
       if (!err2) setFunciones(refreshed);
     } catch (error) {
@@ -174,7 +174,7 @@ const Funciones = () => {
     } else {
       const { data } = await supabase
         .from('funciones')
-        .select(`*, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
+        .select(`id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
         .eq('evento', eventoSeleccionado);
       setFunciones(data);
     }
@@ -194,7 +194,7 @@ const Funciones = () => {
     } else {
       const { data: refreshed } = await supabase
         .from('funciones')
-        .select(`*, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
+        .select(`id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento:evento(nombre), sala:sala(nombre), plantilla:plantilla(nombre)`)
         .eq('evento', eventoSeleccionado);
       setFunciones(refreshed);
     }
