@@ -28,7 +28,17 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         console.log('[Boleteria] Searching ticket for locator:', locator);
         const { data: payment, error } = await supabase
           .from('payments')
-          .select('*, user:profiles!usuario_id(*), seats, event:eventos(*), funcion:funciones(fecha:fecha_celebracion)')
+          .select(`*,
+            user:profiles!usuario_id(*),
+            seats,
+            event:eventos(*),
+            funcion:funciones(
+              id,
+              fechaCelebracion:fecha_celebracion,
+              evento,
+              sala,
+              plantilla
+            )`)
           .eq('locator', locator)
           .single();
 
@@ -70,7 +80,8 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           status: ticketData.status,
           paymentId: ticketData.id,
           locator: ticketData.locator,
-          funcionId: ticketData.funcion
+          funcionId: ticketData.funcion?.id || ticketData.funcion,
+          funcionFecha: ticketData.funcion?.fechaCelebracion
         }))
       );
     }
