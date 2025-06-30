@@ -519,7 +519,7 @@ const Event = () => {
 
       <div className="md:flex md:items-start md:gap-6">
         <div ref={seatMapRef} className="my-6 border rounded shadow-md p-4 flex justify-center bg-gray-100 md:flex-1">
-          <SeatingMap mapa={mapa} onClickSilla={toggleSillaEnCarrito} />
+          <SeatingMap mapa={mapa} zonas={zonas} onClickSilla={toggleSillaEnCarrito} />
         </div>
 
         <div className="bg-white p-4 rounded shadow-md mt-6 md:mt-6 md:w-80">
