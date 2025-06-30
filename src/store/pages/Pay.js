@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast';
 import { loadMetaPixel } from '../utils/analytics';
 import { supabase } from '../../backoffice/services/supabaseClient';
 import { updateSeat } from '../../backoffice/services/supabaseSeats';
+import { lockSeat } from '../../backoffice/services/seatLocks';
 import { isUuid } from '../../utils/isUuid';
 
 const locatorFromId = (id) =>
@@ -156,6 +157,11 @@ const Pay = () => {
       await Promise.all(
         carrito.map(item => updateSeat(item._id, { status: 'reservado' }))
       );
+      await Promise.all(
+        carrito
+          .filter(item => isUuid(item._id))
+          .map(item => lockSeat(item._id, 'reservado'))
+      );
 
       navigate('/payment-success', { state: { locator, emailSent: false } });
     } catch (error) {
@@ -208,6 +214,11 @@ const Pay = () => {
 
       await Promise.all(
         carrito.map(item => updateSeat(item._id, { status: 'pagado' }))
+      );
+      await Promise.all(
+        carrito
+          .filter(item => isUuid(item._id))
+          .map(item => lockSeat(item._id, 'pagado'))
       );
 
       navigate('/payment-success', { state: { locator, emailSent: true } });
