@@ -6,7 +6,7 @@ import { Modal, message } from 'antd';
 import SeatingMap from '../components/SeatingMap'; // al inicio
 import { fetchMapa, fetchPlantillaPrecios, getCmsPage, getFunciones } from '../services/apistore';
 import { fetchZonasPorSala } from '../../services/supabaseServices';
-import { fetchSeatsByFuncion, updateSeat } from '../../backoffice/services/supabaseSeats';
+import { fetchSeatsByFuncion, updateSeat, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
 import { lockSeat, unlockSeat } from '../../backoffice/services/seatLocks';
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
@@ -425,12 +425,12 @@ const Event = () => {
     try {
       if (index !== -1) {
         await Promise.all([
-          updateSeat(silla._id, { status: 'disponible' }),
+          createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'disponible' }),
           isUuid(silla._id) ? unlockSeat(silla._id) : Promise.resolve()
         ]);
       } else {
         await Promise.all([
-          updateSeat(silla._id, { status: 'bloqueado' }),
+          createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'bloqueado' }),
           isUuid(silla._id) ? lockSeat(silla._id, 'bloqueado') : Promise.resolve()
         ]);
       }
