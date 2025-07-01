@@ -109,6 +109,11 @@ Additional optional fields like `referrer`, `discountCode` and
 `reservationDeadline` allow you to track affiliate sources, applied discounts and
 reservation expiry times.
 
+Seats for each function are stored in a separate `seats` table. The schema in
+`sql/create_seats_table.sql` enforces a unique `(_id, funcion_id)` pair so the
+same seat cannot be inserted twice for a single function. This helps prevent the
+sale of duplicate tickets when multiple users try to purchase the same seat.
+
 To power the web studio CMS, create a `cms_pages` table. The
 `sql/create_cms_pages_table.sql` script defines the basic schema including a
 `slug` column and inserts the default `home` and `events` pages expected by the
@@ -144,4 +149,14 @@ import { lockSeat, unlockSeat } from './backoffice/services/seatLocks';
 await lockSeat(seatId);      // Adds the seat to the locking table
 await unlockSeat(seatId);    // Removes the seat from the table
 ```
+## Seat synchronization
+
+Use the `syncSeatsForSala` helper to populate the `seats` table after creating or importing a map. A small script is available:
+
+```bash
+node scripts/syncSeatsForSala.mjs <sala_id>
+```
+
+This reads the map for the given hall and inserts any missing seat records for all of its functions.
+
 Última edición: redeploy for vercel
