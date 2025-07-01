@@ -20,6 +20,7 @@ import { supabase } from '../../backoffice/services/supabaseClient'; // asegúra
 import { isUuid } from '../../utils/isUuid';
 import formatDateString from '../../utils/formatDateString';
 import EventMap from '../../components/EventMap';
+import useSeatRealtime from '../hooks/useSeatRealtime';
 
 const API_URL = API_BASE_URL;
 const Event = () => {
@@ -52,6 +53,8 @@ const Event = () => {
     const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
     return zonaObj?.color;
   };
+
+  useSeatRealtime(selectedFunctionId, zonas, setMapa, cartRef);
 
   useEffect(() => {
     cartRef.current = carrito;

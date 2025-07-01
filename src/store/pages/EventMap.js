@@ -19,6 +19,7 @@ import { QRCodeSVG } from '@rc-component/qrcode';
 import { supabase } from '../../backoffice/services/supabaseClient'; // asegúrate de tener este cliente
 import { isUuid } from '../../utils/isUuid';
 import formatDateString from '../../utils/formatDateString';
+import useSeatRealtime from '../hooks/useSeatRealtime';
 
 const API_URL = API_BASE_URL;
 const EventMap = () => {
@@ -50,6 +51,8 @@ const EventMap = () => {
     const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
     return zonaObj?.color;
   };
+
+  useSeatRealtime(selectedFunctionId, zonas, setMapa, cartRef);
 
   useEffect(() => {
     cartRef.current = carrito;
