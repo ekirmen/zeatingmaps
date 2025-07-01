@@ -12,28 +12,36 @@ const SeatingMap = ({ mapa, zonas = [], onClickSilla }) => {
     return zona ? zona.nombre : '';
   };
 
+  const getZonaColor = (idOrObj) => {
+    if (!idOrObj) return undefined;
+    if (typeof idOrObj === 'object') return idOrObj.color;
+    const zona = zonas.find(z => (z.id || z._id) === idOrObj);
+    return zona ? zona.color : undefined;
+  };
+
   return (
     <Stage width={800} height={500}>
       <Layer>
         {mapa.contenido.map(elemento => (
           <React.Fragment key={elemento._id}>
-            {elemento.type === 'rect' && (
-              <Rect
-                x={elemento.posicion.x}
-                y={elemento.posicion.y}
-                width={elemento.width}
-                height={elemento.height}
-                fill="lightblue"
-                cornerRadius={10}
-              />
-            )}
-            {elemento.type === 'circle' && (
-              <Circle
-                x={elemento.posicion.x}
-                y={elemento.posicion.y}
-                radius={elemento.width / 2}
-                fill="lightblue"
-              />
+            {elemento.type === 'mesa' && (
+              elemento.shape === 'rect' ? (
+                <Rect
+                  x={elemento.posicion.x}
+                  y={elemento.posicion.y}
+                  width={elemento.width}
+                  height={elemento.height}
+                  fill="lightblue"
+                  cornerRadius={10}
+                />
+              ) : (
+                <Circle
+                  x={elemento.posicion.x}
+                  y={elemento.posicion.y}
+                  radius={elemento.width / 2}
+                  fill="lightblue"
+                />
+              )
             )}
             {getZonaNombre(elemento.zona || elemento.zonaId) && (
               <Text
@@ -50,7 +58,9 @@ const SeatingMap = ({ mapa, zonas = [], onClickSilla }) => {
                 x={silla.posicion.x}
                 y={silla.posicion.y}
                 radius={10}
-                fill={silla.color || 'gray'}
+                fill={silla.color || getZonaColor(silla.zona || elemento.zonaId) || 'gray'}
+                stroke={silla.selected ? '#000' : undefined}
+                strokeWidth={silla.selected ? 2 : 0}
                 onClick={() => onClickSilla(silla, elemento)}
               />
             ))}
