@@ -8,7 +8,7 @@ import { Modal } from 'antd';
 import { toast } from 'react-hot-toast';
 import { loadMetaPixel } from '../utils/analytics';
 import { supabase } from '../../backoffice/services/supabaseClient';
-import { updateSeat } from '../../backoffice/services/supabaseSeats';
+import { updateSeat, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
 import { lockSeat } from '../../backoffice/services/seatLocks';
 import { isUuid } from '../../utils/isUuid';
 
@@ -155,7 +155,9 @@ const Pay = () => {
       }
 
       await Promise.all(
-        carrito.map(item => updateSeat(item._id, { status: 'reservado' }))
+        carrito.map(item =>
+          createOrUpdateSeat(item._id, funcionId, item.zona, { status: 'reservado' })
+        )
       );
       await Promise.all(
         carrito
@@ -213,7 +215,9 @@ const Pay = () => {
       }
 
       await Promise.all(
-        carrito.map(item => updateSeat(item._id, { status: 'pagado' }))
+        carrito.map(item =>
+          createOrUpdateSeat(item._id, funcionId, item.zona, { status: 'pagado' })
+        )
       );
       await Promise.all(
         carrito

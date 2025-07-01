@@ -83,5 +83,37 @@ export const updateSeat = async (seatId, updates) => {
     .select();
 
   if (error) throw new Error(error.message);
+  if (!data || data.length === 0) {
+    return null;
+  }
   return data[0];
+};
+
+// ✅ Create or update a seat
+export const createOrUpdateSeat = async (seatId, funcionId, zonaId, updates) => {
+  const id = normalizeSeatId(seatId);
+  if (!isUuid(id)) {
+    throw new Error('Invalid seat ID');
+  }
+  const client = supabaseAdmin || supabase;
+  const { data, error } = await client
+    .from('seats')
+    .update(updates)
+    .match({ _id: id, funcion_id: funcionId })
+    .select();
+
+  if (error) throw new Error(error.message);
+  if (data && data.length > 0) {
+    return data[0];
+  }
+
+  const seatData = { _id: id, funcion_id: funcionId, zona: zonaId, ...updates };
+  const { data: insertData, error: insertErr } = await client
+    .from('seats')
+    .insert([seatData])
+    .select()
+    .single();
+
+  if (insertErr) throw new Error(insertErr.message);
+  return insertData;
 };
