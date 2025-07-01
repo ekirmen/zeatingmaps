@@ -48,6 +48,11 @@ const Event = () => {
   const [recintoInfo, setRecintoInfo] = useState(null);
   const [tagNames, setTagNames] = useState([]);
 
+  const getZonaColor = (zonaId) => {
+    const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
+    return zonaObj?.color;
+  };
+
   useEffect(() => {
     cartRef.current = carrito;
   }, [carrito]);
@@ -229,7 +234,7 @@ const Event = () => {
           const detalles = funcion?.plantilla?.detalles || [];
           detalles.forEach((detalle) => {
             if (detalle.zonaId && !zonasMap.has(detalle.zonaId)) {
-              zonasMap.set(detalle.zonaId, { id: detalle.zonaId, nombre: detalle.nombre || detalle.zonaNombre || '' });
+              zonasMap.set(detalle.zonaId, { id: detalle.zonaId, nombre: detalle.nombre || detalle.zonaNombre || '', color: detalle.color });
             }
           });
 
@@ -243,7 +248,7 @@ const Event = () => {
               zonasSala.forEach((z) => {
                 const key = z.id || z._id;
                 if (key && !zonasMap.has(key)) {
-                  zonasMap.set(key, { id: key, nombre: z.nombre });
+                  zonasMap.set(key, { id: key, nombre: z.nombre, color: z.color });
                 }
               });
             } catch (e) {
@@ -308,17 +313,18 @@ const Event = () => {
               ...elemento,
               sillas: elemento.sillas.map(silla => {
                 const estado = seatMap[silla._id];
-                if (estado) {
-                  return {
-                    ...silla,
-                    estado,
-                    color:
-                      estado === 'bloqueado' ? 'orange' :
-                      estado === 'reservado' ? 'red' :
-                      estado === 'pagado' ? 'gray' : silla.color || 'lightblue'
-                  };
-                }
-                return silla;
+                const zonaId = silla.zona || elemento.zona;
+                const baseColor = getZonaColor(zonaId) || 'lightblue';
+                let finalColor = baseColor;
+                if (estado === 'bloqueado') finalColor = 'orange';
+                else if (estado === 'reservado') finalColor = 'red';
+                else if (estado === 'pagado') finalColor = 'gray';
+                return {
+                  ...silla,
+                  estado: estado || silla.estado,
+                  color: finalColor,
+                  selected: false
+                };
               })
             }))
           };
@@ -459,11 +465,26 @@ const Event = () => {
       ...mapa,
       contenido: mapa.contenido.map(elemento => ({
         ...elemento,
-        sillas: elemento.sillas.map(s => ({
-          ...s,
-          zona: s.zona || elemento.zona,
-          color: nuevoCarrito.some(item => item._id === s._id) ? "green" : s.color || "lightblue"
-        }))
+        sillas: elemento.sillas.map(s => {
+          const zonaIdSilla = s.zona || elemento.zona;
+          const baseColor = getZonaColor(zonaIdSilla) || 'lightblue';
+          const isSelected = nuevoCarrito.some(item => item._id === s._id);
+          let finalColor = baseColor;
+          let newEstado = s.estado;
+          if (s.estado === 'bloqueado') finalColor = 'orange';
+          else if (s.estado === 'reservado') finalColor = 'red';
+          else if (s.estado === 'pagado') finalColor = 'gray';
+          else {
+            newEstado = isSelected ? 'bloqueado' : 'disponible';
+          }
+          return {
+            ...s,
+            zona: zonaIdSilla,
+            color: finalColor,
+            selected: isSelected,
+            estado: newEstado
+          };
+        })
       }))
     };
 
