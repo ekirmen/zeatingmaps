@@ -84,7 +84,7 @@ export const updateSeat = async (seatId, updates) => {
 
   if (error) throw new Error(error.message);
   if (!data || data.length === 0) {
-    return null;
+    throw new Error('Seat not found');
   }
   return data[0];
 };

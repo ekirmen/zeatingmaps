@@ -1,8 +1,7 @@
 import React from 'react';
 import { Button, message } from 'antd';
 import { AiOutlineClose } from 'react-icons/ai';
-import { setSeatsBlocked } from '../../services/supabaseSeats';
-import { updateSeat } from '../../services/supabaseSeats';
+import { setSeatsBlocked, updateSeat, createOrUpdateSeat } from '../../services/supabaseSeats';
 import { lockSeat, unlockSeat } from '../../services/seatLocks';
 import { supabase } from '../../services/supabaseClient';
 
@@ -64,24 +63,40 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
       if (seatsToBlock.length) {
         await setSeatsBlocked(seatsToBlock, true);
         await Promise.all(
-          seatsToBlock.map(id =>
-            Promise.all([
-              updateSeat(id, { bloqueado: true, status: 'bloqueado' }),
-              lockSeat(id, 'bloqueado')
-            ])
-          )
+          seatsToBlock.map(async (id) => {
+            const item = carrito.find(i => i._id === id);
+            const updates = { bloqueado: true, status: 'bloqueado' };
+            try {
+              await updateSeat(id, updates);
+            } catch (err) {
+              if (err.message === 'Seat not found' && item) {
+                await createOrUpdateSeat(id, item.funcionId, item.zona, updates);
+              } else {
+                throw err;
+              }
+            }
+            await lockSeat(id, 'bloqueado');
+          })
         );
         if (onSeatsUpdated) onSeatsUpdated(seatsToBlock, 'bloqueado');
       }
       if (seatsToUnblock.length) {
         await setSeatsBlocked(seatsToUnblock, false);
         await Promise.all(
-          seatsToUnblock.map(id =>
-            Promise.all([
-              updateSeat(id, { bloqueado: false, status: 'disponible' }),
-              unlockSeat(id)
-            ])
-          )
+          seatsToUnblock.map(async (id) => {
+            const item = carrito.find(i => i._id === id);
+            const updates = { bloqueado: false, status: 'disponible' };
+            try {
+              await updateSeat(id, updates);
+            } catch (err) {
+              if (err.message === 'Seat not found' && item) {
+                await createOrUpdateSeat(id, item.funcionId, item.zona, updates);
+              } else {
+                throw err;
+              }
+            }
+            await unlockSeat(id);
+          })
         );
         if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock, 'disponible');
       }
