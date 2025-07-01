@@ -65,7 +65,14 @@ const Event = () => {
     try {
       await Promise.all(
         seats.map((s) => {
-          const ops = [updateSeat(s._id, { status: 'disponible' })];
+          const updates = { status: 'disponible' };
+          const updatePromise = updateSeat(s._id, updates).catch((err) => {
+            if (err.message === 'Seat not found') {
+              return createOrUpdateSeat(s._id, selectedFunctionId, s.zona, updates);
+            }
+            throw err;
+          });
+          const ops = [updatePromise];
           if (isUuid(s._id)) ops.push(unlockSeat(s._id));
           return Promise.all(ops);
         })
