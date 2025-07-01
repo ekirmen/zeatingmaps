@@ -62,7 +62,10 @@ const Pay = () => {
           .single();
         if (funcErr) throw funcErr;
         setFuncionDetails(funcData);
-        const eventId = funcData.evento?.id || funcData.evento;
+        const eventId =
+          typeof funcData.evento === 'object'
+            ? funcData.evento.id || funcData.evento._id
+            : funcData.evento;
         setAllowReservation(!!funcData.permitirReservasWeb);
         setCurrentEventId(eventId);
 
@@ -121,7 +124,8 @@ const Pay = () => {
   const handleProcessReservation = async () => {
     try {
       const isValidFuncionId = Number.isInteger(Number(funcionId)) && Number(funcionId) > 0;
-      if (!isUuid(user?.id) || !isUuid(currentEventId) || !isValidFuncionId) {
+      const isValidEventId = isUuid(currentEventId) || typeof currentEventId === 'string';
+      if (!isUuid(user?.id) || !isValidEventId || !isValidFuncionId) {
         console.error('Invalid IDs provided for reservation');
         toast.error('Error al procesar la reserva');
         return;
@@ -180,7 +184,8 @@ const Pay = () => {
 
     try {
       const isValidFuncionId = Number.isInteger(Number(funcionId)) && Number(funcionId) > 0;
-      if (!isUuid(user?.id) || !isUuid(currentEventId) || !isValidFuncionId) {
+      const isValidEventId = isUuid(currentEventId) || typeof currentEventId === 'string';
+      if (!isUuid(user?.id) || !isValidEventId || !isValidFuncionId) {
         console.error('Invalid IDs provided for payment');
         toast.error('Error al procesar el pago');
         return;
