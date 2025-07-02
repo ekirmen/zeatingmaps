@@ -12,7 +12,12 @@ export const setSeatsBlocked = async (seatIds, bloqueado) => {
   // the numeric primary key. Filtering by `id` caused errors because the values
   // include the `silla_` prefix and are not numeric. We therefore update the
   // records using the `_id` column instead of `id`.
-  const normalized = seatIds.map(normalizeSeatId);
+  const normalized = seatIds
+    .map(normalizeSeatId)
+    .filter((id) => id && isUuid(id));
+
+  if (normalized.length === 0) return [];
+
   const client = supabaseAdmin || supabase;
   const { data, error } = await client
     .from('seats')
