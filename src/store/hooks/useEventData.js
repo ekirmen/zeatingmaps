@@ -280,6 +280,7 @@ const useEventData = (eventId, seatMapRef) => {
         }, {});
 
         if (mapaData && Array.isArray(mapaData.contenido)) {
+          const selectedIds = carrito.map(c => c._id);
           const mapaActualizado = {
             ...mapaData,
             contenido: mapaData.contenido.map(elemento => ({
@@ -288,15 +289,16 @@ const useEventData = (eventId, seatMapRef) => {
                 const estado = seatMap[silla._id];
                 const zonaId = silla.zona || elemento.zona;
                 const baseColor = getZonaColor(zonaId) || 'lightblue';
+                const isSelected = selectedIds.includes(silla._id);
                 let finalColor = baseColor;
-                if (estado === 'bloqueado') finalColor = 'orange';
+                if (estado === 'bloqueado') finalColor = isSelected ? baseColor : 'orange';
                 else if (estado === 'reservado') finalColor = 'red';
                 else if (estado === 'pagado') finalColor = 'gray';
                 return {
                   ...silla,
                   estado: estado || silla.estado,
                   color: finalColor,
-                  selected: false
+                  selected: isSelected
                 };
               })
             }))
@@ -424,6 +426,31 @@ const useEventData = (eventId, seatMapRef) => {
 
     setMapa(updatedMapa);
   };
+
+  // Mantener la selección visual al restaurar el carrito
+  useEffect(() => {
+    if (!mapa) return;
+    if (!carrito.length) return;
+
+    setMapa(prevMapa => {
+      const selectedIds = carrito.map(c => c._id);
+      const contenido = prevMapa.contenido.map(elemento => ({
+        ...elemento,
+        sillas: elemento.sillas.map(s => {
+          const zonaIdSilla = s.zona || elemento.zona;
+          const baseColor = getZonaColor(zonaIdSilla) || 'lightblue';
+          const isSelected = selectedIds.includes(s._id);
+          let finalColor = baseColor;
+          if (s.estado === 'bloqueado') finalColor = isSelected ? baseColor : 'orange';
+          else if (s.estado === 'reservado') finalColor = 'red';
+          else if (s.estado === 'pagado') finalColor = 'gray';
+          if (s.selected === isSelected && s.color === finalColor) return s;
+          return { ...s, selected: isSelected, color: finalColor };
+        })
+      }));
+      return { ...prevMapa, contenido };
+    });
+  }, [carrito]);
 
   return {
     evento,
