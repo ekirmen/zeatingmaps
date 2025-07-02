@@ -120,6 +120,11 @@ To power the web studio CMS, create a `cms_pages` table. The
 application. Pages are looked up by slug, falling back to the legacy `nombre`
 field if it exists.
 
+The backoffice also stores configuration values in a small `settings`
+table. Create it using the script in `sql/create_settings_table.sql`. It
+contains just `key` and `value` columns and is used to persist options
+such as the Firebase credentials or the cart seat expiration time.
+
 ## Seat utilities
 
 The `src/utils/isUuid.js` helper verifies whether a string is a valid UUID. Use it when calling `updateSeat` to prevent typos in seat IDs:

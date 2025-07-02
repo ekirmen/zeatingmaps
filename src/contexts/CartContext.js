@@ -15,9 +15,33 @@ export const CartProvider = ({ children }) => {
     return saved ? parseInt(saved, 10) : null;
   });
 
+  const [duration, setDuration] = useState(() => {
+    const saved = localStorage.getItem('cartSeatMinutes');
+    const mins = saved ? parseInt(saved, 10) : 15;
+    return isNaN(mins) ? 15 : mins;
+  });
+
   const [timeLeft, setTimeLeft] = useState(() => {
     return expiration ? Math.max(0, Math.floor((expiration - Date.now()) / 1000)) : 0;
   });
+
+  useEffect(() => {
+    const load = async () => {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'cart-seat-expiration')
+        .single();
+      if (!error && data) {
+        const mins = parseInt(data.value, 10);
+        if (!isNaN(mins)) {
+          setDuration(mins);
+          localStorage.setItem('cartSeatMinutes', String(mins));
+        }
+      }
+    };
+    load();
+  }, []);
 
   const updateCart = useCallback((newCart) => {
     setCartState(newCart);
@@ -30,7 +54,7 @@ export const CartProvider = ({ children }) => {
         const updated = { items, functionId: functionId ?? prev.functionId };
         localStorage.setItem('cart', JSON.stringify(updated));
         if (items.length > 0) {
-          const expiresAt = Date.now() + 15 * 60 * 1000;
+          const expiresAt = Date.now() + duration * 60 * 1000; // minutes from settings
           setExpiration(expiresAt);
           localStorage.setItem('cartExpiration', String(expiresAt));
         } else {
@@ -57,7 +81,7 @@ export const CartProvider = ({ children }) => {
 
       updateCart({ items: seats, functionId });
 
-      const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+      const expiresAt = Date.now() + duration * 60 * 1000; // minutes from settings
       setExpiration(expiresAt);
       localStorage.setItem('cartExpiration', String(expiresAt));
 
