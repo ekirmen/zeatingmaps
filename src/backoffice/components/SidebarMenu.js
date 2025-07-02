@@ -115,6 +115,7 @@ const SidebarMenu = () => {
               <li><Link to="/dashboard/colores-web" className="block p-2 rounded hover:bg-gray-700">Colores Web</Link></li>
               <li><Link to="/dashboard/cabecera" className="block p-2 rounded hover:bg-gray-700">Cabecera</Link></li>
               <li><Link to="/dashboard/sitio-web" className="block p-2 rounded hover:bg-gray-700">Sitio web</Link></li>
+              <li><Link to="/dashboard/firebase-config" className="block p-2 rounded hover:bg-gray-700">Firebase configuración</Link></li>
             </ul>
           )}
         </li>

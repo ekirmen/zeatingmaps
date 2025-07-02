@@ -46,6 +46,7 @@ import WebColors from './backoffice/pages/WebColors';
 import WebFooter from './backoffice/pages/WebFooter';
 import WebHeader from './backoffice/pages/WebHeader';
 import Abonos from './backoffice/pages/Abonos';
+import FirebaseConfig from './backoffice/pages/FirebaseConfig';
 
 // Store Pages
 import EventsVenue from './store/pages/EventsVenue';
@@ -150,6 +151,7 @@ const App = () => {
                           <Route path="colores-web" element={<WebColors />} />
                           <Route path="sitio-web" element={<WebFooter />} />
                           <Route path="cabecera" element={<WebHeader />} />
+                          <Route path="firebase-config" element={<FirebaseConfig />} />
                           <Route path="formato-entrada" element={<FormatoEntrada />} />
                         </Route>
 
