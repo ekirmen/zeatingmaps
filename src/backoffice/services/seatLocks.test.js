@@ -1,5 +1,3 @@
-import { lockSeat, unlockSeat } from './seatLocks';
-
 jest.mock('./supabaseClient', () => {
   const fromMock = jest.fn();
   const upsertMock = jest.fn().mockResolvedValue({ error: null });
@@ -14,10 +12,22 @@ jest.mock('./supabaseClient', () => {
   };
 });
 
+jest.mock('../../services/firebaseClient', () => ({
+  getDatabaseInstance: jest.fn(() => Promise.resolve(null))
+}));
+
+jest.mock('firebase/database', () => ({
+  ref: jest.fn((db, path) => ({ db, path })),
+  set: jest.fn(() => Promise.resolve()),
+  remove: jest.fn(() => Promise.resolve())
+}));
+
 jest.mock('../../utils/isUuid', () => ({
   isUuid: jest.fn(() => true),
   default: jest.fn(() => true)
 }));
+
+import { lockSeat, unlockSeat } from './seatLocks';
 
 const { supabaseAdmin } = require('./supabaseClient');
 const { isUuid } = require('../../utils/isUuid');

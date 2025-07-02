@@ -11,8 +11,11 @@ import { HeaderProvider } from './contexts/HeaderContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { initFirebase } from './services/firebaseClient';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
+initFirebase();
 
 root.render(
   <React.StrictMode>
