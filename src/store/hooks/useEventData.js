@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { fetchMapa, fetchPlantillaPrecios, getFunciones } from '../services/apistore';
+import normalizeSeatId from '../../utils/normalizeSeatId';
 import { fetchZonasPorSala } from '../../services/supabaseServices';
 import { fetchSeatsByFuncion, updateSeat, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
 import { lockSeat, unlockSeat } from '../../backoffice/services/seatLocks';
@@ -275,7 +276,7 @@ const useEventData = (eventId, seatMapRef) => {
 
         const seatMap = seatStates.reduce((acc, s) => {
           const estado = s.bloqueado ? 'bloqueado' : s.status;
-          acc[s._id || s.id] = estado;
+          acc[normalizeSeatId(s._id || s.id)] = estado;
           return acc;
         }, {});
 
@@ -286,7 +287,7 @@ const useEventData = (eventId, seatMapRef) => {
             contenido: mapaData.contenido.map(elemento => ({
               ...elemento,
               sillas: elemento.sillas.map(silla => {
-                const estado = seatMap[silla._id];
+                const estado = seatMap[normalizeSeatId(silla._id)];
                 const zonaId = silla.zona || elemento.zona;
                 const baseColor = getZonaColor(zonaId) || 'lightblue';
                 const isSelected = selectedIds.includes(silla._id);

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '../../backoffice/services/supabaseClient';
+import normalizeSeatId from '../../utils/normalizeSeatId';
 
 const useSeatRealtime = (selectedFunctionId, zonas, setMapa, cartRef) => {
   const channelRef = useRef(null);
@@ -37,7 +38,7 @@ const useSeatRealtime = (selectedFunctionId, zonas, setMapa, cartRef) => {
               contenido: prevMapa.contenido.map((elemento) => ({
                 ...elemento,
                 sillas: elemento.sillas.map((s) => {
-                  if (s._id !== seat._id) return s;
+                  if (normalizeSeatId(s._id) !== normalizeSeatId(seat._id)) return s;
                   const zonaId = s.zona || elemento.zona;
                   const baseColor = getZonaColor(zonaId) || 'lightblue';
                   const estado = seat.bloqueado ? 'bloqueado' : seat.status;
