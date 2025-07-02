@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useCart } from '../../contexts/CartContext';
 import { fetchMapa, fetchPlantillaPrecios, getFunciones } from '../services/apistore';
 import { fetchZonasPorSala } from '../../services/supabaseServices';
 import { fetchSeatsByFuncion, updateSeat, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
@@ -27,8 +28,22 @@ const useEventData = (eventId, seatMapRef) => {
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef(null);
+  const { cart: globalCart, functionId: globalFunctionId, setCart: setGlobalCart } = useCart();
   const [recintoInfo, setRecintoInfo] = useState(null);
   const [tagNames, setTagNames] = useState([]);
+
+  useEffect(() => {
+    if (globalCart.length) {
+      setCarrito(globalCart);
+    }
+    if (globalFunctionId) {
+      setSelectedFunctionId(globalFunctionId);
+    }
+  }, []); // run once on mount
+
+  useEffect(() => {
+    setGlobalCart(carrito, selectedFunctionId);
+  }, [carrito, selectedFunctionId, setGlobalCart]);
 
   const getZonaColor = (zonaId) => {
     const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
@@ -312,9 +327,6 @@ const useEventData = (eventId, seatMapRef) => {
   useEffect(() => {
     return () => {
       clearInterval(timerRef.current);
-      if (cartRef.current.length) {
-        releaseSeats(cartRef.current);
-      }
     };
   }, []);
 

@@ -24,13 +24,25 @@ export const CartProvider = ({ children }) => {
     localStorage.setItem('cart', JSON.stringify(newCart));
   }, []);
 
-  const setCart = useCallback((items, functionId = null) => {
-    setCartState(prev => {
-      const updated = { items, functionId: functionId ?? prev.functionId };
-      localStorage.setItem('cart', JSON.stringify(updated));
-      return updated;
-    });
-  }, []);
+  const setCart = useCallback(
+    (items, functionId = null) => {
+      setCartState(prev => {
+        const updated = { items, functionId: functionId ?? prev.functionId };
+        localStorage.setItem('cart', JSON.stringify(updated));
+        if (items.length > 0) {
+          const expiresAt = Date.now() + 15 * 60 * 1000;
+          setExpiration(expiresAt);
+          localStorage.setItem('cartExpiration', String(expiresAt));
+        } else {
+          setExpiration(null);
+          localStorage.removeItem('cartExpiration');
+          setTimeLeft(0);
+        }
+        return updated;
+      });
+    },
+    []
+  );
 
   const addToCart = useCallback(async (seats, functionId) => {
     try {
