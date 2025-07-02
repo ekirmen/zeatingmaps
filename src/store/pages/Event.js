@@ -36,6 +36,7 @@ const Event = () => {
     zonas,
     pagos,
     showSeatPopup,
+    setShowSeatPopup,
     discountCode,
     setDiscountCode,
     appliedDiscount,

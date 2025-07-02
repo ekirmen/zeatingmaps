@@ -424,6 +424,7 @@ const useEventData = (eventId, seatMapRef) => {
     zonas,
     pagos,
     showSeatPopup,
+    setShowSeatPopup,
     discountCode,
     setDiscountCode,
     appliedDiscount,
