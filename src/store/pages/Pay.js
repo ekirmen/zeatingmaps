@@ -8,7 +8,7 @@ import { Modal } from 'antd';
 import { toast } from 'react-hot-toast';
 import { loadMetaPixel } from '../utils/analytics';
 import { supabase } from '../../backoffice/services/supabaseClient';
-import { updateSeat, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
+import { updateSeat, createOrUpdateSeat, fetchSeatsByFuncion } from '../../backoffice/services/supabaseSeats';
 import { lockSeat } from '../../backoffice/services/seatLocks';
 import { isUuid } from '../../utils/isUuid';
 
@@ -49,6 +49,23 @@ const Pay = () => {
   const subtotalAfter = subtotal - commission;
   const impuestos = subtotalAfter * 0.16;
   const total = subtotalAfter + impuestos;
+
+  // Verifica que los asientos del carrito sigan disponibles antes de procesar
+  const verifySeatsAvailable = async () => {
+    try {
+      if (!funcionId || !Array.isArray(carrito) || carrito.length === 0) return true;
+      const seatStates = await fetchSeatsByFuncion(funcionId);
+      const seatMap = seatStates.reduce((acc, s) => {
+        const estado = s.bloqueado ? 'bloqueado' : s.status;
+        acc[s._id] = estado;
+        return acc;
+      }, {});
+      return !carrito.some(it => ['reservado', 'pagado'].includes(seatMap[it._id]));
+    } catch (err) {
+      console.error('Error verifying seat availability', err);
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (!funcionId) return;
@@ -123,6 +140,11 @@ const Pay = () => {
 
   const handleProcessReservation = async () => {
     try {
+      const available = await verifySeatsAvailable();
+      if (!available) {
+        toast.error('Alguno de los asientos ya no está disponible');
+        return;
+      }
       const isValidFuncionId = Number.isInteger(Number(funcionId)) && Number(funcionId) > 0;
       const isValidEventId = isUuid(currentEventId) || typeof currentEventId === 'string';
       if (!isUuid(user?.id) || !isValidEventId || !isValidFuncionId) {
@@ -183,6 +205,11 @@ const Pay = () => {
     }
 
     try {
+      const available = await verifySeatsAvailable();
+      if (!available) {
+        toast.error('Alguno de los asientos ya no está disponible');
+        return;
+      }
       const isValidFuncionId = Number.isInteger(Number(funcionId)) && Number(funcionId) > 0;
       const isValidEventId = isUuid(currentEventId) || typeof currentEventId === 'string';
       if (!isUuid(user?.id) || !isValidEventId || !isValidFuncionId) {
