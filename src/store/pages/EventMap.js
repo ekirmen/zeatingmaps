@@ -34,6 +34,7 @@ const EventMap = () => {
     zonas,
     pagos,
     showSeatPopup,
+    setShowSeatPopup,
     discountCode,
     setDiscountCode,
     appliedDiscount,
