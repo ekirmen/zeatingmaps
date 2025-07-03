@@ -9,7 +9,7 @@ import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
 import { isUuid } from '../../utils/isUuid';
 import API_BASE_URL from '../../utils/apiBase';
-import useSeatRealtime from './useSeatRealtime';
+import { useSeatRealtime } from './useSeatRealtime';
 import useFirebaseSeatLocks from './useFirebaseSeatLocks';
 
 const API_URL = API_BASE_URL;
@@ -58,13 +58,37 @@ const useEventData = (eventId, seatMapRef) => {
     cartRef,
     process.env.REACT_APP_USE_FIREBASE === 'true'
   );
-  useSeatRealtime(
-    selectedFunctionId,
-    zonas,
-    setMapa,
-    cartRef,
-    process.env.REACT_APP_USE_FIREBASE !== 'true'
-  );
+
+  const handleSeatRealtimeUpdate = (payload) => {
+    const seat = payload.new || payload.old;
+    if (!seat) return;
+    setMapa((prevMapa) => {
+      if (!prevMapa) return prevMapa;
+      return {
+        ...prevMapa,
+        contenido: prevMapa.contenido.map((elemento) => ({
+          ...elemento,
+          sillas: elemento.sillas.map((s) => {
+            if (s._id !== seat._id) return s;
+            const zonaId = s.zona || elemento.zona;
+            const baseColor = getZonaColor(zonaId) || 'lightblue';
+            const estado = seat.bloqueado ? 'bloqueado' : seat.status;
+            let color = baseColor;
+            if (estado === 'bloqueado') color = 'orange';
+            else if (estado === 'reservado') color = 'red';
+            else if (estado === 'pagado') color = 'gray';
+            const selected = cartRef.current.some((c) => c._id === s._id);
+            return { ...s, estado, color, selected };
+          }),
+        })),
+      };
+    });
+  };
+
+  useSeatRealtime({
+    funcionId: process.env.REACT_APP_USE_FIREBASE !== 'true' ? selectedFunctionId : null,
+    onSeatUpdate: handleSeatRealtimeUpdate,
+  });
 
   useEffect(() => {
     cartRef.current = carrito;
