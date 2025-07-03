@@ -1,19 +1,9 @@
-import API_BASE_URL from '../utils/apiBase';
+import downloadTicket from '../utils/downloadTicket';
 
 const DownloadTicketButton = ({ paymentId }) => {
   const handleDownload = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/payments/${paymentId}/download`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `ticket_${paymentId}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      }
+      await downloadTicket(paymentId);
     } catch (error) {
       console.error('Error downloading ticket:', error);
     }
