@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import resolveImageUrl from '../../utils/resolveImageUrl';
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { isUuid } from '../../utils/isUuid';
 import { getFunciones } from '../services/apistore';
 import formatDateString from '../../utils/formatDateString';

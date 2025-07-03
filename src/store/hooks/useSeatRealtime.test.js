@@ -2,7 +2,7 @@ import React from 'react';
 import { render, cleanup } from '@testing-library/react';
 import useSeatRealtime from './useSeatRealtime';
 
-jest.mock('../../backoffice/services/supabaseClient', () => {
+jest.mock('../../supabaseClient', () => {
   let callback = null;
   let subscribeCb = null;
   const channelObj = {
@@ -27,37 +27,27 @@ jest.mock('../../backoffice/services/supabaseClient', () => {
   };
 });
 
-const { supabase, __callback } = require('../../backoffice/services/supabaseClient');
+const { supabase, __callback } = require('../../supabaseClient');
 
 afterEach(() => {
   cleanup();
   jest.clearAllMocks();
 });
 
-function TestComp({ fid, zonas, setMapa, cartRef }) {
-  useSeatRealtime(fid, zonas, setMapa, cartRef);
+function TestComp({ fid, onSeatUpdate }) {
+  useSeatRealtime({ funcionId: fid, onSeatUpdate });
   return null;
 }
 
 describe('useSeatRealtime', () => {
   test('updates seat state on payload', () => {
-    const setMapa = jest.fn();
-    const cartRef = { current: [] };
-    const zonas = [{ id: 'z1', color: 'green' }];
-    render(<TestComp fid="fun1" zonas={zonas} setMapa={setMapa} cartRef={cartRef} />);
+    const onSeatUpdate = jest.fn();
+    render(<TestComp fid="fun1" onSeatUpdate={onSeatUpdate} />);
 
     const cb = __callback();
     const payload = { new: { _id: 's1', status: 'reservado', bloqueado: false } };
-    let result;
-    setMapa.mockImplementation(fn => { result = fn({
-      contenido: [{ zona: 'z1', sillas: [{ _id: 's1', zona: 'z1', estado: 'disponible', color: 'green' }] }]
-    }); });
     cb(payload);
 
-    expect(result.contenido[0].sillas[0]).toMatchObject({
-      estado: 'reservado',
-      color: 'red',
-      selected: false
-    });
+    expect(onSeatUpdate).toHaveBeenCalledWith(payload);
   });
 });

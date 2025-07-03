@@ -1,6 +1,7 @@
 // src/backoffice/services/supabaseClient.js
 /* global globalThis */
 import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../../supabaseClient';
 
 // Solo estas variables deben estar disponibles para frontend
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
@@ -29,15 +30,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Cliente público (seguro para frontend)
-// Mantén una única instancia reutilizable en entornos con HMR o
-// cuando varios módulos importen este archivo. Esto previene el
-// aviso de Supabase sobre múltiples clientes compartiendo el mismo
-// localStorage.
-export const supabase =
-  globalThis.supabase || createClient(supabaseUrl, supabaseAnonKey);
-if (!globalThis.supabase) {
-  globalThis.supabase = supabase;
-}
+// Reutiliza la instancia única exportada desde src/supabaseClient.js
+export { supabase };
 
 // Cliente administrativo (solo usar en backend: API Routes, Edge Functions)
 export const supabaseAdmin = serviceRoleKey

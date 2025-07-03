@@ -4,7 +4,7 @@ import { fetchMapa, fetchPlantillaPrecios, getFunciones } from '../services/apis
 import { fetchZonasPorSala } from '../../services/supabaseServices';
 import { fetchSeatsByFuncion, updateSeat, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
 import { lockSeat, unlockSeat } from '../../backoffice/services/seatLocks';
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
 import { isUuid } from '../../utils/isUuid';

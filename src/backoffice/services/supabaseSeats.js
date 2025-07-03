@@ -1,6 +1,7 @@
 // services/supabaseSeats.js
 // Prefer the admin client when available so updates bypass RLS restrictions.
-import { supabase, supabaseAdmin } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
+import { supabaseAdmin } from './supabaseClient';
 import { isUuid } from '../../utils/isUuid';
 
 const normalizeSeatId = (id) =>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Input, List, Button } from 'antd';
 import SeatingMap from '../components/SeatingMap';
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { fetchMapa, getFunciones } from '../services/apistore';
 
 const EventSearchMap = () => {

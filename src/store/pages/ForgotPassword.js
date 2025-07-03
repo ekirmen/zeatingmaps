@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 import { SITE_URL } from '../../utils/siteUrl';
 const ForgotPassword = () => {

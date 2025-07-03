@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import { supabase } from '../backoffice/services/supabaseClient';
+import { supabase } from '../supabaseClient';
 import normalizeSeatId from '../utils/normalizeSeatId';
 import { isUuid } from '../utils/isUuid';
 

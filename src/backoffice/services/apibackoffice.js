@@ -1,4 +1,5 @@
-import { supabase, supabaseAdmin } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
+import { supabaseAdmin } from './supabaseClient';
 
 // Map human readable page identifiers to numeric ids stored in Supabase.
 // The cms_pages table uses an integer primary key, but within the
