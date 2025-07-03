@@ -4,9 +4,17 @@ import useSeatRealtime from './useSeatRealtime';
 
 jest.mock('../../backoffice/services/supabaseClient', () => {
   let callback = null;
+  let subscribeCb = null;
   const channelObj = {
-    on: jest.fn((event, opts, cb) => { callback = cb; return channelObj; }),
-    subscribe: jest.fn(),
+    on: jest.fn((event, opts, cb) => {
+      callback = cb;
+      return channelObj;
+    }),
+    subscribe: jest.fn((cb) => {
+      subscribeCb = cb;
+      return channelObj;
+    }),
+    onError: jest.fn(),
   };
   return {
     supabase: {
@@ -14,6 +22,7 @@ jest.mock('../../backoffice/services/supabaseClient', () => {
       removeChannel: jest.fn(),
     },
     __callback: () => callback,
+    __subscribe: () => subscribeCb,
     __channel: channelObj,
   };
 });
