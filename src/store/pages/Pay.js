@@ -145,9 +145,14 @@ const Pay = () => {
         toast.error('Alguno de los asientos ya no está disponible');
         return;
       }
+      if (!isUuid(user?.id)) {
+        toast.error('Debes iniciar sesión para reservar');
+        navigate('/store/login');
+        return;
+      }
       const isValidFuncionId = Number.isInteger(Number(funcionId)) && Number(funcionId) > 0;
       const isValidEventId = isUuid(currentEventId) || typeof currentEventId === 'string';
-      if (!isUuid(user?.id) || !isValidEventId || !isValidFuncionId) {
+      if (!isValidEventId || !isValidFuncionId) {
         console.error('Invalid IDs provided for reservation');
         toast.error('Error al procesar la reserva');
         return;
@@ -210,9 +215,14 @@ const Pay = () => {
         toast.error('Alguno de los asientos ya no está disponible');
         return;
       }
+      if (!isUuid(user?.id)) {
+        toast.error('Debes iniciar sesión para comprar');
+        navigate('/store/login');
+        return;
+      }
       const isValidFuncionId = Number.isInteger(Number(funcionId)) && Number(funcionId) > 0;
       const isValidEventId = isUuid(currentEventId) || typeof currentEventId === 'string';
-      if (!isUuid(user?.id) || !isValidEventId || !isValidFuncionId) {
+      if (!isValidEventId || !isValidFuncionId) {
         console.error('Invalid IDs provided for payment');
         toast.error('Error al procesar el pago');
         return;
