@@ -449,27 +449,32 @@ const useEventData = (eventId, seatMapRef) => {
       contenido: mapa.contenido.map(elemento => ({
         ...elemento,
         sillas: elemento.sillas.map(s => {
-          const zonaIdSilla = s.zona || elemento.zona;
-          const baseColor = getZonaColor(zonaIdSilla) || 'lightblue';
-          const isSelected = nuevoCarrito.some(item => item._id === s._id);
-          let finalColor = baseColor;
-          let newEstado = s.estado;
-          if (s.estado === 'bloqueado') finalColor = 'orange';
-          else if (s.estado === 'reservado') finalColor = 'red';
-          else if (s.estado === 'pagado') finalColor = 'gray';
-          else {
-            newEstado = isSelected ? 'bloqueado' : 'disponible';
+          const zonaIdSilla = s.zona || elemento.zona
+          const baseColor = getZonaColor(zonaIdSilla) || 'lightblue'
+          const isSelected = nuevoCarrito.some(item => item._id === s._id)
+
+          let newEstado = s.estado
+          let finalColor = baseColor
+
+          if (s.estado === 'reservado') {
+            finalColor = 'red'
+          } else if (s.estado === 'pagado') {
+            finalColor = 'gray'
+          } else {
+            newEstado = isSelected ? 'bloqueado' : 'disponible'
+            finalColor = isSelected ? 'orange' : baseColor
           }
+
           return {
             ...s,
             zona: zonaIdSilla,
             color: finalColor,
             selected: isSelected,
             estado: newEstado
-          };
+          }
         })
       }))
-    };
+    }
 
     setMapa(updatedMapa);
   };
@@ -480,23 +485,32 @@ const useEventData = (eventId, seatMapRef) => {
     if (!carrito.length) return;
 
     setMapa(prevMapa => {
-      const selectedIds = carrito.map(c => c._id);
+      const selectedIds = carrito.map(c => c._id)
       const contenido = prevMapa.contenido.map(elemento => ({
         ...elemento,
         sillas: elemento.sillas.map(s => {
-          const zonaIdSilla = s.zona || elemento.zona;
-          const baseColor = getZonaColor(zonaIdSilla) || 'lightblue';
-          const isSelected = selectedIds.includes(s._id);
-          let finalColor = baseColor;
-          if (s.estado === 'bloqueado') finalColor = isSelected ? baseColor : 'orange';
-          else if (s.estado === 'reservado') finalColor = 'red';
-          else if (s.estado === 'pagado') finalColor = 'gray';
-          if (s.selected === isSelected && s.color === finalColor) return s;
-          return { ...s, selected: isSelected, color: finalColor };
+          const zonaIdSilla = s.zona || elemento.zona
+          const baseColor = getZonaColor(zonaIdSilla) || 'lightblue'
+          const isSelected = selectedIds.includes(s._id)
+
+          let newEstado = s.estado
+          let finalColor = baseColor
+
+          if (s.estado === 'reservado') {
+            finalColor = 'red'
+          } else if (s.estado === 'pagado') {
+            finalColor = 'gray'
+          } else {
+            newEstado = isSelected ? 'bloqueado' : 'disponible'
+            finalColor = isSelected ? 'orange' : baseColor
+          }
+
+          if (s.selected === isSelected && s.color === finalColor && s.estado === newEstado) return s
+          return { ...s, selected: isSelected, color: finalColor, estado: newEstado }
         })
-      }));
-      return { ...prevMapa, contenido };
-    });
+      }))
+      return { ...prevMapa, contenido }
+    })
   }, [carrito]);
 
   return {
