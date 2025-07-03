@@ -51,11 +51,20 @@ const useEventData = (eventId, seatMapRef) => {
     return zonaObj?.color;
   };
 
-  if (process.env.REACT_APP_USE_FIREBASE === 'true') {
-    useFirebaseSeatLocks(selectedFunctionId, zonas, setMapa, cartRef);
-  } else {
-    useSeatRealtime(selectedFunctionId, zonas, setMapa, cartRef);
-  }
+  useFirebaseSeatLocks(
+    selectedFunctionId,
+    zonas,
+    setMapa,
+    cartRef,
+    process.env.REACT_APP_USE_FIREBASE === 'true'
+  );
+  useSeatRealtime(
+    selectedFunctionId,
+    zonas,
+    setMapa,
+    cartRef,
+    process.env.REACT_APP_USE_FIREBASE !== 'true'
+  );
 
   useEffect(() => {
     cartRef.current = carrito;
