@@ -11,7 +11,9 @@ import { FaFacebookF } from 'react-icons/fa';
  */
 const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   const [metodos, setMetodos] = useState([]);
-  Modal.setAppElement('#root');
+  if (typeof document !== 'undefined' && document.getElementById('root')) {
+    Modal.setAppElement('#root');
+  }
   const [showHelp, setShowHelp] = useState(false);
   const [form, setForm] = useState({
     otrasOpciones: {

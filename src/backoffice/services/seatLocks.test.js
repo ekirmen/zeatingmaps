@@ -1,7 +1,7 @@
 jest.mock('./supabaseClient', () => ({}));
 
 jest.mock('../../services/firebaseClient', () => ({
-  getDatabaseInstance: jest.fn(() => Promise.resolve(null))
+  getDatabaseInstance: jest.fn(() => Promise.resolve({}))
 }));
 
 jest.mock('firebase/database', () => ({

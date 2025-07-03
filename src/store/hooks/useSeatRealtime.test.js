@@ -3,27 +3,33 @@ import { render, cleanup } from '@testing-library/react';
 import { useSeatRealtime } from './useSeatRealtime';
 
 jest.mock('../../supabaseClient', () => {
-  let callback = null;
-  let subscribeCb = null;
-  const channelObj = {
-    on: jest.fn((event, opts, cb) => {
-      callback = cb;
-      return channelObj;
-    }),
-    subscribe: jest.fn((cb) => {
-      subscribeCb = cb;
-      return channelObj;
-    }),
-    onError: jest.fn(),
-  };
+  // Ensure named exports work correctly with ES module interop
   return {
-    supabase: {
-      channel: jest.fn(() => channelObj),
-      removeChannel: jest.fn(),
-    },
-    __callback: () => callback,
-    __subscribe: () => subscribeCb,
-    __channel: channelObj,
+    __esModule: true,
+    ...(() => {
+      let callback = null;
+      let subscribeCb = null;
+      const channelObj = {
+        on: jest.fn((event, opts, cb) => {
+          callback = cb;
+          return channelObj;
+        }),
+        subscribe: jest.fn((cb) => {
+          subscribeCb = cb;
+          return channelObj;
+        }),
+        onError: jest.fn(),
+      };
+      return {
+        supabase: {
+          channel: jest.fn(() => channelObj),
+          removeChannel: jest.fn(),
+        },
+        __callback: () => callback,
+        __subscribe: () => subscribeCb,
+        __channel: channelObj,
+      };
+    })(),
   };
 });
 

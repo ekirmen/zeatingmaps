@@ -4,7 +4,9 @@ import { useRecintoSala } from '../contexts/RecintoSalaContext';
 import { fetchZonasPorSala, createZona, updateZona, deleteZona, fetchMapa } from '../services/apibackoffice';
 import Modal from 'react-modal';
 
-Modal.setAppElement('#root');
+if (typeof document !== 'undefined' && document.getElementById('root')) {
+  Modal.setAppElement('#root');
+}
 
 const Plano = () => {
   const { recinto, setRecinto, sala, setSala, recintos, setRecintos } = useRecintoSala();

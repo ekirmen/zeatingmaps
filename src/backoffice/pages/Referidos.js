@@ -3,7 +3,9 @@ import API_BASE_URL from '../../utils/apiBase';
 import { toast } from 'react-hot-toast';
 import Modal from 'react-modal';
 
-Modal.setAppElement('#root');
+if (typeof document !== 'undefined' && document.getElementById('root')) {
+  Modal.setAppElement('#root');
+}
 
 const Referidos = () => {
   const [affiliates, setAffiliates] = useState([]);
