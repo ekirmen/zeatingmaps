@@ -343,6 +343,11 @@ const useEventData = (eventId, seatMapRef) => {
       return;
     }
 
+    if (!mapa || !Array.isArray(mapa.contenido)) {
+      console.warn('toggleSillaEnCarrito called before map data was loaded');
+      return;
+    }
+
     const index = carrito.findIndex(item => item._id === silla._id);
     if (index === -1 && evento?.maxTicketsCompra && carrito.length >= evento.maxTicketsCompra) {
       return;
