@@ -29,7 +29,7 @@ const useEventData = (eventId, seatMapRef) => {
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef(null);
-  const { cart: globalCart, functionId: globalFunctionId, setCart: setGlobalCart } = useCart();
+  const { cart: globalCart, functionId: globalFunctionId, setCart: setGlobalCart, duration } = useCart();
   const [recintoInfo, setRecintoInfo] = useState(null);
   const [tagNames, setTagNames] = useState([]);
 
@@ -132,7 +132,8 @@ const useEventData = (eventId, seatMapRef) => {
 
   const startTimer = () => {
     clearInterval(timerRef.current);
-    setTimeLeft(15 * 60);
+    const mins = typeof duration === 'number' && !isNaN(duration) ? duration : 15;
+    setTimeLeft(mins * 60);
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
