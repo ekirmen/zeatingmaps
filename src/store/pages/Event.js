@@ -44,7 +44,8 @@ const Event = () => {
     tagNames,
     recintoInfo,
     toggleSillaEnCarrito,
-    applyDiscountCode
+    applyDiscountCode,
+    closeSeatPopup
   } = useEventData(eventId, seatMapRef);
 
   // Allow selecting a function via query parameter
@@ -227,8 +228,8 @@ const Event = () => {
         open={showSeatPopup}
         closable={false}
         maskClosable={true}
-        onOk={() => setShowSeatPopup(false)}
-        onCancel={() => setShowSeatPopup(false)}
+        onOk={closeSeatPopup}
+        onCancel={closeSeatPopup}
         okText="Continuar"
         cancelButtonProps={{ style: { display: 'none' } }}
       >
