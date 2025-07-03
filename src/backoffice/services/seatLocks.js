@@ -16,6 +16,7 @@ export const lockSeat = async (seatId, status = 'bloqueado') => {
   if (db) {
     console.log('[seatLocks] Writing lock to Firebase for seat', id);
     await set(ref(db, `in-cart/${id}`), { status, timestamp: Date.now() });
+    console.log('[seatLocks] Seat', id, 'stored in Firebase with status', status);
   } else {
     console.log('[seatLocks] No Firebase database instance available');
   }
