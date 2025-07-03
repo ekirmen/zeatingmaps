@@ -1,4 +1,4 @@
-import { supabase } from '../backoffice/services/supabaseClient';
+import { supabase } from '../supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 
 // Allow bucket name to be configured via environment variable

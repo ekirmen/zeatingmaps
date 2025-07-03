@@ -3,7 +3,7 @@ import { Input, Button, Modal, message, Table } from 'antd';
 import { AiOutlineDownload } from 'react-icons/ai'; // Ant Design icon set (AI)
 import { useAuth } from '../../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import downloadTicket from '../../utils/downloadTicket';
 
 const Profile = ({ userData, onUpdateProfile }) => {

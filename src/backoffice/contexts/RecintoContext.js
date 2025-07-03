@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const RecintoContext = createContext();
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const ResetPassword = () => {
   const navigate = useNavigate();

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useHeader } from '../../contexts/HeaderContext';
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 // Allow custom bucket name via environment variable
 const rawLogoBucket = process.env.REACT_APP_LOGO_BUCKET || 'logos';

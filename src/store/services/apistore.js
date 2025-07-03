@@ -1,4 +1,4 @@
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 // 🔹 Obtener una página CMS por slug
 export const getCmsPage = async (slug) => {

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Modal, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { registerUser, loginUser } from '../services/authService';
 import LinkWithRef from './LinkWithRef';
 import { SITE_URL } from '../../utils/siteUrl';

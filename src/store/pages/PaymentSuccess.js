@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
 import { loadMetaPixel } from '../utils/analytics';
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import downloadTicket from '../../utils/downloadTicket';
 
 const PaymentSuccess = () => {

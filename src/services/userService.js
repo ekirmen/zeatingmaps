@@ -1,4 +1,4 @@
-import { supabase } from '../backoffice/services/supabaseClient';
+import { supabase } from '../supabaseClient';
 
 /**
  * Fetch all users with relevant profile fields.

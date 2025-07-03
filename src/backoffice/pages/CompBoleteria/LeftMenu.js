@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, Input, Card, Table, Tag, Form, Button, message } from 'antd';
 import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit } from 'react-icons/ai';
-import { supabase, supabaseAdmin } from '../../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
+import { supabaseAdmin } from '../../services/supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
 import API_BASE_URL from '../../../utils/apiBase';
 import downloadTicket from '../../../utils/downloadTicket';

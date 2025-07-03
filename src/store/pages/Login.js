@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Modal, Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '../../backoffice/services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 import { SITE_URL } from "../../utils/siteUrl";
 const Login = ({ onLogin }) => {

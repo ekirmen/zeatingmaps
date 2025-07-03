@@ -1,4 +1,4 @@
-import { supabase } from '../backoffice/services/supabaseClient'; // Ajusta si la ruta es distinta
+import { supabase } from '../supabaseClient'; // Ajusta si la ruta es distinta
 
 export const fetchTags = async () => {
   const { data, error } = await supabase

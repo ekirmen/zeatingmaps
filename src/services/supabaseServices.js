@@ -1,4 +1,4 @@
-import { supabase } from '../backoffice/services/supabaseClient';
+import { supabase } from '../supabaseClient';
 
 export const fetchMapa = async (salaId) => {
   // Avoid making a request if the sala ID is missing. This prevents

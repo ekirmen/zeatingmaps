@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { message } from 'antd';
-import { supabase, supabaseAdmin } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
+import { supabaseAdmin } from '../services/supabaseClient';
 
 export const useClientManagement = (setCarrito) => {
   const [selectedClient, setSelectedClient] = useState(null);
