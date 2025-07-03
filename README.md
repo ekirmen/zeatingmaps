@@ -2,6 +2,8 @@
 
 This project is a React application that relies on Supabase for data storage and authentication. To run it locally you will need to provide your own Supabase credentials.
 
+The production instance is hosted at **https://zeatingmaps-ekirmens-projects.vercel.app**. The backoffice ticketing module can now be accessed from **/dashboard/Boleteria** on that domain. Older links pointing to `https://zeatingmaps-backend.vercel.app/api/payments/&lt;locator&gt;/download` no longer exist and should be replaced with the new dashboard URL.
+
 ## Setup
 
 1. Install dependencies
@@ -41,6 +43,18 @@ the correct host. If your application is served from a subfolder (for example
    ```bash
 REACT_APP_SITE_URL=https://your-domain.com/store
 ```
+
+If your backend runs on a different domain, also set `REACT_APP_API_URL`. This
+variable should contain **only the domain**, without any additional path. In
+production the API is hosted at:
+
+```bash
+REACT_APP_API_URL=https://zeatingmaps-ekirmens-projects.vercel.app
+```
+
+For example, `https://zeatingmaps-ekirmens-projects.vercel.app` is correct but
+`https://zeatingmaps-ekirmens-projects.vercel.app/dashboard/Boleteria` will
+break ticket downloads.
 
 To ensure static assets load correctly from that subfolder, also update the
 `homepage` field in your `package.json`:
