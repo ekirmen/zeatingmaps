@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../backoffice/services/supabaseClient';
+import normalizeSeatId from '../utils/normalizeSeatId';
+import { isUuid } from '../utils/isUuid';
 
 export const CartContext = createContext();
 
@@ -71,8 +73,8 @@ export const CartProvider = ({ children }) => {
   const addToCart = useCallback(async (seats, functionId) => {
     try {
       const seatIds = seats
-        .map(s => s._id || s.id)
-        .filter(id => id !== undefined && id !== null);
+        .map((s) => normalizeSeatId(s._id || s.id))
+        .filter((id) => id !== undefined && id !== null && isUuid(id));
 
       const { error } = await supabase
         .from('seats')
@@ -96,8 +98,8 @@ export const CartProvider = ({ children }) => {
   const clearCart = useCallback(async () => {
     try {
       const seatIds = cart.items
-        .map(i => i._id || i.id)
-        .filter(id => id !== undefined && id !== null);
+        .map((i) => normalizeSeatId(i._id || i.id))
+        .filter((id) => id !== undefined && id !== null && isUuid(id));
 
       if (seatIds.length > 0) {
         const { error } = await supabase
@@ -119,7 +121,7 @@ export const CartProvider = ({ children }) => {
 
   const removeFromCart = useCallback(async (seatId) => {
     try {
-      const id = seatId?._id || seatId;
+      const id = normalizeSeatId(seatId?._id || seatId);
       const { error } = await supabase
         .from('seats')
         .update({ reserved: false, reserved_at: null })
