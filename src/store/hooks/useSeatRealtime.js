@@ -16,11 +16,12 @@ const useSeatRealtime = (
   };
 
   useEffect(() => {
-    if (!enabled || !selectedFunctionId) return;
-
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
     }
+
+    if (!enabled || !selectedFunctionId) return;
 
     const channel = supabase
       .channel(`seats-${selectedFunctionId}`)
