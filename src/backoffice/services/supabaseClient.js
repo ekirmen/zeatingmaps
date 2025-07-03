@@ -1,4 +1,5 @@
 // src/backoffice/services/supabaseClient.js
+/* global globalThis */
 import { createClient } from '@supabase/supabase-js';
 
 // Solo estas variables deben estar disponibles para frontend
