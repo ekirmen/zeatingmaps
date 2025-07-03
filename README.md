@@ -125,12 +125,15 @@ same seat cannot be inserted twice for a single function. This helps prevent the
 sale of duplicate tickets when multiple users try to purchase the same seat.
 
 To receive realtime updates from Supabase you must add the table to the
-`supabase_realtime` publication after creating it. Run the following SQL inside
-your project:
+`supabase_realtime` publication after creating it. A helper SQL script is
+provided at `sql/enable_realtime_for_seats.sql` which contains the following
+command:
 
 ```sql
 ALTER PUBLICATION supabase_realtime ADD TABLE seats;
 ```
+Run this file using `psql` or the Supabase SQL editor after the `seats` table is
+created.
 
 To power the web studio CMS, create a `cms_pages` table. The
 `sql/create_cms_pages_table.sql` script defines the basic schema including a
