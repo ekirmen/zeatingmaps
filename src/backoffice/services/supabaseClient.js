@@ -28,14 +28,26 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Cliente público (seguro para frontend)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Mantén una única instancia reutilizable en entornos con HMR o
+// cuando varios módulos importen este archivo. Esto previene el
+// aviso de Supabase sobre múltiples clientes compartiendo el mismo
+// localStorage.
+export const supabase =
+  globalThis.supabase || createClient(supabaseUrl, supabaseAnonKey);
+if (!globalThis.supabase) {
+  globalThis.supabase = supabase;
+}
 
 // Cliente administrativo (solo usar en backend: API Routes, Edge Functions)
 export const supabaseAdmin = serviceRoleKey
-  ? createClient(supabaseUrl, serviceRoleKey, {
+  ? globalThis.supabaseAdmin ||
+    createClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
       },
     })
   : null;
+if (serviceRoleKey && !globalThis.supabaseAdmin) {
+  globalThis.supabaseAdmin = supabaseAdmin;
+}
