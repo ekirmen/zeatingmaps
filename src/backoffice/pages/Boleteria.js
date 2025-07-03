@@ -89,7 +89,7 @@ const Boleteria = () => {
       carrito
         .filter(i => isUuid((i._id || '').replace(/^silla_/, '')))
         .forEach(i => {
-          unlockSeat(i._id).catch(() => {});
+          unlockSeat(i._id, i.funcionId).catch(() => {});
         });
     };
 

@@ -16,7 +16,7 @@ const useFirebaseSeatLocks = (selectedFunctionId, zonas, setMapa, cartRef) => {
       const db = await getDatabaseInstance();
       if (!db) return;
 
-      const locksRef = ref(db, 'in-cart');
+      const locksRef = ref(db, `in-cart/${selectedFunctionId}`);
       const handler = (snapshot) => {
         const locks = snapshot.val() || {};
         setMapa(prevMapa => {

@@ -73,7 +73,7 @@ const useEventData = (eventId, seatMapRef) => {
             throw err;
           });
           const ops = [updatePromise];
-          if (isUuid(s._id)) ops.push(unlockSeat(s._id));
+          if (isUuid(s._id)) ops.push(unlockSeat(s._id, selectedFunctionId));
           return Promise.all(ops);
         })
       );
@@ -386,13 +386,13 @@ const useEventData = (eventId, seatMapRef) => {
       if (index !== -1) {
         await Promise.all([
           createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'disponible' }),
-          isUuid(silla._id) ? unlockSeat(silla._id) : Promise.resolve()
+          isUuid(silla._id) ? unlockSeat(silla._id, selectedFunctionId) : Promise.resolve()
         ]);
         console.log('[store] seat unlocked', silla._id);
       } else {
         await Promise.all([
           createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'bloqueado' }),
-          isUuid(silla._id) ? lockSeat(silla._id, 'bloqueado') : Promise.resolve()
+          isUuid(silla._id) ? lockSeat(silla._id, 'bloqueado', selectedFunctionId) : Promise.resolve()
         ]);
         console.log('[store] seat locked', silla._id);
       }
