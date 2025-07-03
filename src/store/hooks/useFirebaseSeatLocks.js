@@ -7,10 +7,16 @@ const getZonaColor = (zonaId, zonas) => {
   return zonaObj?.color;
 };
 
-const useFirebaseSeatLocks = (selectedFunctionId, zonas, setMapa, cartRef) => {
+const useFirebaseSeatLocks = (
+  selectedFunctionId,
+  zonas,
+  setMapa,
+  cartRef,
+  enabled = true
+) => {
   useEffect(() => {
     let unsubscribe = () => {};
-    if (!selectedFunctionId) return undefined;
+    if (!enabled || !selectedFunctionId) return undefined;
 
     const setup = async () => {
       const db = await getDatabaseInstance();
@@ -50,7 +56,7 @@ const useFirebaseSeatLocks = (selectedFunctionId, zonas, setMapa, cartRef) => {
 
     setup();
     return () => unsubscribe();
-  }, [selectedFunctionId, zonas, setMapa, cartRef]);
+  }, [selectedFunctionId, zonas, setMapa, cartRef, enabled]);
 };
 
 export default useFirebaseSeatLocks;

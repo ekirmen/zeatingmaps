@@ -1,7 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '../../backoffice/services/supabaseClient';
 
-const useSeatRealtime = (selectedFunctionId, zonas, setMapa, cartRef) => {
+const useSeatRealtime = (
+  selectedFunctionId,
+  zonas,
+  setMapa,
+  cartRef,
+  enabled = true
+) => {
   const channelRef = useRef(null);
 
   const getZonaColor = (zonaId) => {
@@ -10,7 +16,7 @@ const useSeatRealtime = (selectedFunctionId, zonas, setMapa, cartRef) => {
   };
 
   useEffect(() => {
-    if (!selectedFunctionId) return;
+    if (!enabled || !selectedFunctionId) return;
 
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
@@ -61,7 +67,7 @@ const useSeatRealtime = (selectedFunctionId, zonas, setMapa, cartRef) => {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     };
-  }, [selectedFunctionId, zonas]);
+  }, [selectedFunctionId, zonas, enabled]);
 };
 
 export default useSeatRealtime;
