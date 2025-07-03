@@ -1,0 +1,56 @@
+import { useEffect } from 'react';
+import { getDatabaseInstance } from '../../services/firebaseClient';
+import { ref, onValue, off } from 'firebase/database';
+
+const getZonaColor = (zonaId, zonas) => {
+  const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
+  return zonaObj?.color;
+};
+
+const useFirebaseSeatLocks = (selectedFunctionId, zonas, setMapa, cartRef) => {
+  useEffect(() => {
+    let unsubscribe = () => {};
+    if (!selectedFunctionId) return undefined;
+
+    const setup = async () => {
+      const db = await getDatabaseInstance();
+      if (!db) return;
+
+      const locksRef = ref(db, 'in-cart');
+      const handler = (snapshot) => {
+        const locks = snapshot.val() || {};
+        setMapa(prevMapa => {
+          if (!prevMapa) return prevMapa;
+          return {
+            ...prevMapa,
+            contenido: prevMapa.contenido.map(elemento => ({
+              ...elemento,
+              sillas: elemento.sillas.map(s => {
+                const lock = locks[s._id];
+                const zonaId = s.zona || elemento.zona;
+                const baseColor = getZonaColor(zonaId, zonas) || 'lightblue';
+                let estado = s.estado;
+                let color = baseColor;
+                if (lock) {
+                  estado = lock.status || 'bloqueado';
+                  if (estado === 'bloqueado') color = 'orange';
+                  else if (estado === 'reservado') color = 'red';
+                  else if (estado === 'pagado') color = 'gray';
+                }
+                const selected = cartRef.current.some(c => c._id === s._id);
+                return { ...s, estado, color, selected };
+              })
+            }))
+          };
+        });
+      };
+      onValue(locksRef, handler);
+      unsubscribe = () => off(locksRef, 'value', handler);
+    };
+
+    setup();
+    return () => unsubscribe();
+  }, [selectedFunctionId, zonas, setMapa, cartRef]);
+};
+
+export default useFirebaseSeatLocks;

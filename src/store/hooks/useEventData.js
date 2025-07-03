@@ -10,6 +10,7 @@ import { loadGtm, loadMetaPixel } from '../utils/analytics';
 import { isUuid } from '../../utils/isUuid';
 import API_BASE_URL from '../../utils/apiBase';
 import useSeatRealtime from './useSeatRealtime';
+import useFirebaseSeatLocks from './useFirebaseSeatLocks';
 
 const API_URL = API_BASE_URL;
 
@@ -50,7 +51,11 @@ const useEventData = (eventId, seatMapRef) => {
     return zonaObj?.color;
   };
 
-  useSeatRealtime(selectedFunctionId, zonas, setMapa, cartRef);
+  if (process.env.REACT_APP_USE_FIREBASE === 'true') {
+    useFirebaseSeatLocks(selectedFunctionId, zonas, setMapa, cartRef);
+  } else {
+    useSeatRealtime(selectedFunctionId, zonas, setMapa, cartRef);
+  }
 
   useEffect(() => {
     cartRef.current = carrito;
