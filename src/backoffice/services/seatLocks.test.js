@@ -1,16 +1,4 @@
-jest.mock('./supabaseClient', () => {
-  const fromMock = jest.fn();
-  const upsertMock = jest.fn().mockResolvedValue({ error: null });
-  const eqMock = jest.fn().mockResolvedValue({ error: null });
-  fromMock.mockReturnValue({
-    upsert: upsertMock,
-    delete: jest.fn(() => ({ eq: eqMock }))
-  });
-  return {
-    supabase: { from: fromMock },
-    supabaseAdmin: { from: fromMock }
-  };
-});
+jest.mock('./supabaseClient', () => ({}));
 
 jest.mock('../../services/firebaseClient', () => ({
   getDatabaseInstance: jest.fn(() => Promise.resolve(null))
@@ -28,8 +16,6 @@ jest.mock('../../utils/isUuid', () => ({
 }));
 
 import { lockSeat, unlockSeat } from './seatLocks';
-
-const { supabaseAdmin } = require('./supabaseClient');
 const { isUuid } = require('../../utils/isUuid');
 
 describe('seatLocks service', () => {
@@ -37,14 +23,12 @@ describe('seatLocks service', () => {
     jest.clearAllMocks();
   });
 
-  test('lockSeat calls upsert with normalized id and status', async () => {
-    const from = supabaseAdmin.from;
-    const upsert = from().upsert;
+  test('lockSeat writes to Firebase with normalized id', async () => {
+    const { set } = require('firebase/database');
     await lockSeat('silla_abc', 'bloqueado');
-    expect(from).toHaveBeenCalledWith('seat_locks');
-    expect(upsert).toHaveBeenCalledWith(
-      { seat_id: 'abc', status: 'bloqueado' },
-      { onConflict: 'seat_id' }
+    expect(set).toHaveBeenCalledWith(
+      expect.any(Object),
+      { status: 'bloqueado', timestamp: expect.any(Number) }
     );
   });
 
@@ -53,11 +37,9 @@ describe('seatLocks service', () => {
     await expect(lockSeat('bad')).rejects.toThrow('Invalid seat ID');
   });
 
-  test('unlockSeat deletes by seat id', async () => {
-    const from = supabaseAdmin.from;
-    const eq = from().delete().eq;
+  test('unlockSeat removes path from Firebase', async () => {
+    const { remove } = require('firebase/database');
     await unlockSeat('silla_def');
-    expect(from).toHaveBeenCalledWith('seat_locks');
-    expect(eq).toHaveBeenCalledWith('seat_id', 'def');
+    expect(remove).toHaveBeenCalledWith(expect.any(Object));
   });
 });
