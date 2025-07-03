@@ -132,6 +132,15 @@ your project:
 ALTER PUBLICATION supabase_realtime ADD TABLE seats;
 ```
 
+The table must also be configured with `REPLICA IDENTITY FULL` so realtime
+events include all columns:
+
+```sql
+ALTER TABLE seats REPLICA IDENTITY FULL;
+```
+
+Existing realtime subscriptions may need to reconnect for the setting to take effect.
+
 To power the web studio CMS, create a `cms_pages` table. The
 `sql/create_cms_pages_table.sql` script defines the basic schema including a
 `slug` column and inserts the default `home` and `events` pages expected by the
