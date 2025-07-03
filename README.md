@@ -24,6 +24,16 @@ This project is a React application that relies on Supabase for data storage and
    # each event keeps its own directory.
    ```
 
+If you plan to use Firebase for seat locking, also set the Firebase
+environment variables in your `.env` file:
+
+```bash
+REACT_APP_USE_FIREBASE=true
+REACT_APP_FIREBASE_API_KEY=<your-key>
+REACT_APP_FIREBASE_AUTH_DOMAIN=<your-domain>
+REACT_APP_FIREBASE_DB_URL=<your-db-url>
+```
+
 Set `REACT_APP_SITE_URL` to your deployed domain so Supabase emails point to
 the correct host. If your application is served from a subfolder (for example
 `/store`), include that path here:

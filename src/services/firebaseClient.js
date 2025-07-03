@@ -1,43 +1,31 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
-import { supabase } from '../backoffice/services/supabaseClient';
 
 let firebaseApp = null;
 let database = null;
 let useFirebase = false;
 
-const CONFIG_KEYS = [
-  'firebase-use',
-  'firebase-auth-domain',
-  'firebase-db-url',
-  'firebase-api-key',
-];
+const getEnvConfig = () => ({
+  useFirebase: process.env.REACT_APP_USE_FIREBASE === 'true',
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  databaseURL: process.env.REACT_APP_FIREBASE_DB_URL,
+});
 
-const fetchConfig = async () => {
-  const { data, error } = await supabase
-    .from('settings')
-    .select('key, value')
-    .in('key', CONFIG_KEYS);
-  if (error || !data) {
-    console.error('Error loading Firebase config:', error);
+export const initFirebase = () => {
+  if (firebaseApp) return { firebaseApp, database };
+  const cfg = getEnvConfig();
+  if (!cfg.useFirebase) return null;
+
+  if (!cfg.apiKey || !cfg.authDomain || !cfg.databaseURL) {
+    console.warn('Missing Firebase configuration.');
     return null;
   }
-  const cfg = {};
-  for (const row of data) {
-    cfg[row.key] = row.value;
-  }
-  return cfg;
-};
-
-export const initFirebase = async () => {
-  if (firebaseApp) return { firebaseApp, database };
-  const cfg = await fetchConfig();
-  if (!cfg || cfg['firebase-use'] !== 'true') return null;
 
   firebaseApp = initializeApp({
-    apiKey: cfg['firebase-api-key'],
-    authDomain: cfg['firebase-auth-domain'],
-    databaseURL: cfg['firebase-db-url'],
+    apiKey: cfg.apiKey,
+    authDomain: cfg.authDomain,
+    databaseURL: cfg.databaseURL,
   });
   database = getDatabase(firebaseApp);
   useFirebase = true;
@@ -46,7 +34,7 @@ export const initFirebase = async () => {
 
 export const getDatabaseInstance = async () => {
   if (!firebaseApp && !useFirebase) {
-    await initFirebase();
+    initFirebase();
   }
   return useFirebase ? database : null;
 };
