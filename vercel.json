@@ -5,12 +5,20 @@
       "destination": "/static/:path*"
     },
     {
+      "source": "/store/manifest.json",
+      "destination": "/manifest.json"
+    },
+    {
       "source": "/store/:path*",
       "destination": "/index.html"
     },
     {
       "source": "/backoffice/static/:path*",
       "destination": "/static/:path*"
+    },
+    {
+      "source": "/backoffice/manifest.json",
+      "destination": "/manifest.json"
     },
     {
       "source": "/backoffice/:path*",
