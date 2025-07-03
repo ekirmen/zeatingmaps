@@ -70,12 +70,14 @@ export const CartProvider = ({ children }) => {
 
   const addToCart = useCallback(async (seats, functionId) => {
     try {
-      const seatIds = seats.map(s => s.id);
+      const seatIds = seats
+        .map(s => s._id || s.id)
+        .filter(id => id !== undefined && id !== null);
 
       const { error } = await supabase
         .from('seats')
         .update({ reserved: true, reserved_at: new Date().toISOString() })
-        .in('id', seatIds);
+        .in('_id', seatIds);
 
       if (error) throw error;
 
@@ -93,13 +95,15 @@ export const CartProvider = ({ children }) => {
 
   const clearCart = useCallback(async () => {
     try {
-      const seatIds = cart.items.map(i => i.id);
+      const seatIds = cart.items
+        .map(i => i._id || i.id)
+        .filter(id => id !== undefined && id !== null);
 
       if (seatIds.length > 0) {
         const { error } = await supabase
-          .from('seats')
-          .update({ reserved: false, reserved_at: null })
-          .in('id', seatIds);
+        .from('seats')
+        .update({ reserved: false, reserved_at: null })
+        .in('_id', seatIds);
 
         if (error) throw error;
       }
@@ -115,14 +119,15 @@ export const CartProvider = ({ children }) => {
 
   const removeFromCart = useCallback(async (seatId) => {
     try {
+      const id = seatId?._id || seatId;
       const { error } = await supabase
         .from('seats')
         .update({ reserved: false, reserved_at: null })
-        .eq('id', seatId);
+        .eq('_id', id);
 
       if (error) throw error;
 
-      const newItems = cart.items.filter(item => item.id !== seatId);
+      const newItems = cart.items.filter(item => (item._id || item.id) !== id);
       updateCart({ items: newItems, functionId: cart.functionId });
 
       toast.success('Asiento eliminado del carrito');
