@@ -333,6 +333,7 @@ const useEventData = (eventId, seatMapRef) => {
   }, []);
 
   const toggleSillaEnCarrito = async (silla, mesa) => {
+    console.log('[store] seat click', silla._id);
     const zonaId = silla.zona || mesa.zona;
     if (
       !zonaId ||
@@ -377,11 +378,13 @@ const useEventData = (eventId, seatMapRef) => {
           createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'disponible' }),
           isUuid(silla._id) ? unlockSeat(silla._id) : Promise.resolve()
         ]);
+        console.log('[store] seat unlocked', silla._id);
       } else {
         await Promise.all([
           createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'bloqueado' }),
           isUuid(silla._id) ? lockSeat(silla._id, 'bloqueado') : Promise.resolve()
         ]);
+        console.log('[store] seat locked', silla._id);
       }
     } catch (err) {
       console.error('Error updating seat', err);
