@@ -160,6 +160,7 @@ export const CartProvider = ({ children }) => {
     clearCart,
     removeFromCart,
     setCart,
+    duration,
     timeLeft,
     hasActiveTimer: !!expiration && expiration > Date.now()
   };
