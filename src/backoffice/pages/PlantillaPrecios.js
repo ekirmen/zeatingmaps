@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Modal from 'react-modal';
 import { supabase } from '../services/supabaseClient';
 
-Modal.setAppElement('#root');
+if (typeof document !== 'undefined' && document.getElementById('root')) {
+  Modal.setAppElement('#root');
+}
 
 const PlantillaPrecios = () => {
   const [recintos, setRecintos] = useState([]);
