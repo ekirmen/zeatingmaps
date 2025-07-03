@@ -42,7 +42,8 @@ const EventMap = () => {
     tagNames,
     recintoInfo,
     toggleSillaEnCarrito,
-    applyDiscountCode
+    applyDiscountCode,
+    closeSeatPopup
   } = useEventData(eventId);
 
   useEffect(() => {
@@ -221,8 +222,8 @@ const EventMap = () => {
         open={showSeatPopup}
         closable={false}
         maskClosable={true}
-        onOk={() => setShowSeatPopup(false)}
-        onCancel={() => setShowSeatPopup(false)}
+        onOk={closeSeatPopup}
+        onCancel={closeSeatPopup}
         okText="Continuar"
         cancelButtonProps={{ style: { display: 'none' } }}
       >

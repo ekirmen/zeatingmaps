@@ -33,6 +33,16 @@ const useEventData = (eventId, seatMapRef) => {
   const [recintoInfo, setRecintoInfo] = useState(null);
   const [tagNames, setTagNames] = useState([]);
 
+  const closeSeatPopup = () => {
+    setShowSeatPopup(false);
+    const key = `seat-popup-${evento?.id || eventId}`;
+    try {
+      localStorage.setItem(key, '1');
+    } catch (e) {
+      console.error('Error saving popup state', e);
+    }
+  };
+
   useEffect(() => {
     if (globalCart.length) {
       setCarrito(globalCart);
@@ -170,7 +180,10 @@ const useEventData = (eventId, seatMapRef) => {
         }
 
         if (data?.otrasOpciones?.popupAntesAsiento?.mostrar) {
-          setShowSeatPopup(true);
+          const key = `seat-popup-${data.id || data.slug}`;
+          if (!localStorage.getItem(key)) {
+            setShowSeatPopup(true);
+          }
         }
 
         if (data?.analytics?.enabled) {
@@ -532,7 +545,8 @@ const useEventData = (eventId, seatMapRef) => {
     tagNames,
     recintoInfo,
     toggleSillaEnCarrito,
-    applyDiscountCode
+    applyDiscountCode,
+    closeSeatPopup
   };
 };
 
