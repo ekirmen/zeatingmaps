@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, cleanup } from '@testing-library/react';
-import useSeatRealtime from './useSeatRealtime';
+import { useSeatRealtime } from './useSeatRealtime';
 
 jest.mock('../../supabaseClient', () => {
   let callback = null;
