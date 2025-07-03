@@ -65,7 +65,7 @@ import StoreLogin from './store/pages/Login';
 import Register from './store/pages/Register';
 import FaqPage from './store/pages/FaqPage';
 import EventSearchMap from './store/pages/EventSearchMap';
-import SeatSelectionPage from './pages/SeatSelectionPage';
+import SeatSelectionPage from './store/pages/SeatSelectionPage';
 
 import NotFoundPage from './store/pages/NotFoundPage';
 
