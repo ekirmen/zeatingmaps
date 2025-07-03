@@ -1,5 +1,5 @@
 import React from 'react';
-import SeatMap from '../components/SeatMap';
+import SeatMap from '../../components/SeatMap';
 import { useParams } from 'react-router-dom';
 
 const SeatSelectionPage = () => {
