@@ -124,6 +124,14 @@ Seats for each function are stored in a separate `seats` table. The schema in
 same seat cannot be inserted twice for a single function. This helps prevent the
 sale of duplicate tickets when multiple users try to purchase the same seat.
 
+To receive realtime updates from Supabase you must add the table to the
+`supabase_realtime` publication after creating it. Run the following SQL inside
+your project:
+
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE seats;
+```
+
 To power the web studio CMS, create a `cms_pages` table. The
 `sql/create_cms_pages_table.sql` script defines the basic schema including a
 `slug` column and inserts the default `home` and `events` pages expected by the
