@@ -65,6 +65,7 @@ import StoreLogin from './store/pages/Login';
 import Register from './store/pages/Register';
 import FaqPage from './store/pages/FaqPage';
 import EventSearchMap from './store/pages/EventSearchMap';
+import SeatSelectionPage from './pages/SeatSelectionPage';
 
 import NotFoundPage from './store/pages/NotFoundPage';
 
@@ -166,6 +167,7 @@ const App = () => {
                         <Route path="/store/select-seats/:salaId" element={<SelectSeats />} />
                         <Route path="/store/buy-event/:id" element={<BuyEvent />} />
                         <Route path="/store/select-seats/:salaId/:funcionId" element={<SelectSeats />} />
+                        <Route path="/store/seat-selection/:funcionId" element={<SeatSelectionPage />} />
                           <Route path="/store/login" element={<StoreLogin />} />
                           <Route path="/store/register" element={<Register />} />
                           <Route path="/store/forgot-password" element={<ForgotPassword />} />
