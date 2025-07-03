@@ -41,12 +41,15 @@ export const fetchSeatsByFuncion = async (funcionId) => {
 };
 
 // ✅ Obtener asientos comprados de una función (opcionalmente por estado)
+// Fetch seats already purchased for a function. Older records may still use
+// the legacy "vendido" value while newer ones store the status as "pagado".
+// We return seats that match either state so the caller sees all sold seats.
 export const fetchAsientosComprados = async (funcionId) => {
   const { data, error } = await supabase
     .from('seats')
     .select('*')
     .eq('funcion_id', funcionId)
-    .eq('status', 'vendido');
+    .in('status', ['pagado', 'vendido']);
 
   if (error) throw new Error(error.message);
   return data;
