@@ -191,4 +191,17 @@ node scripts/syncSeatsForSala.mjs <sala_id>
 
 This reads the map for the given hall and inserts any missing seat records for all of its functions.
 
+## Pruebas en Vercel
+
+Si quieres ejecutar `npm test --silent` en Vercel como parte del despliegue,
+agrega este script en tu `package.json`:
+
+```json
+  "vercel-build": "npm install && npm test --silent && npm run build"
+```
+
+Luego define `npm run vercel-build` como **Build Command** en la configuración
+del proyecto de Vercel. De esta forma se instalan las dependencias, se ejecutan
+los tests y finalmente se genera el build de producción.
+
 Última edición: redeploy for vercel
