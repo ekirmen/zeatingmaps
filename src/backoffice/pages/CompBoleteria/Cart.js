@@ -75,7 +75,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
                 throw err;
               }
             }
-            await lockSeat(id, 'bloqueado');
+            await lockSeat(id, 'bloqueado', item.funcionId);
           })
         );
         if (onSeatsUpdated) onSeatsUpdated(seatsToBlock, 'bloqueado');
@@ -95,7 +95,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
                 throw err;
               }
             }
-            await unlockSeat(id);
+            await unlockSeat(id, item.funcionId);
           })
         );
         if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock, 'disponible');

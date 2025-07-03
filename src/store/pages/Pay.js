@@ -188,7 +188,7 @@ const Pay = () => {
       await Promise.all(
         carrito
           .filter(item => isUuid(item._id))
-          .map(item => lockSeat(item._id, 'reservado'))
+          .map(item => lockSeat(item._id, 'reservado', funcionId))
       );
 
       navigate('/payment-success', { state: { locator, emailSent: false } });
@@ -254,7 +254,7 @@ const Pay = () => {
       await Promise.all(
         carrito
           .filter(item => isUuid(item._id))
-          .map(item => lockSeat(item._id, 'pagado'))
+          .map(item => lockSeat(item._id, 'pagado', funcionId))
       );
 
       navigate('/payment-success', { state: { locator, emailSent: true } });

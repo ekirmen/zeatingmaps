@@ -25,7 +25,7 @@ describe('seatLocks service', () => {
 
   test('lockSeat writes to Firebase with normalized id', async () => {
     const { set } = require('firebase/database');
-    await lockSeat('silla_abc', 'bloqueado');
+    await lockSeat('silla_abc', 'bloqueado', 'func1');
     expect(set).toHaveBeenCalledWith(
       expect.any(Object),
       { status: 'bloqueado', timestamp: expect.any(Number) }
@@ -39,7 +39,7 @@ describe('seatLocks service', () => {
 
   test('unlockSeat removes path from Firebase', async () => {
     const { remove } = require('firebase/database');
-    await unlockSeat('silla_def');
+    await unlockSeat('silla_def', 'func1');
     expect(remove).toHaveBeenCalledWith(expect.any(Object));
   });
 });
