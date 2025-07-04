@@ -14,6 +14,8 @@ const FirebaseTest = () => {
         data: {
           mensaje: 'Prueba de conexión desde el frontend',
           timestamp: new Date().toISOString(),
+          // Include a random number so the response changes on every request
+          random: Math.floor(Math.random() * 100000),
         },
       },
     });
