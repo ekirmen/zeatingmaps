@@ -58,13 +58,23 @@ serve(async (req) => {
     console.log("[firebase-direct] Sending", operation, "to", url);
     if (data) console.log("[firebase-direct] Payload", data);
 
-    const firebaseRes = await fetch(url, {
+    const options: RequestInit = {
       method: operation,
       headers: { "Content-Type": "application/json" },
-      body: operation === "DELETE" ? undefined : JSON.stringify(data),
-    });
+    };
+    if (!["GET", "HEAD", "DELETE"].includes(operation) && data !== undefined) {
+      options.body = JSON.stringify(data);
+    }
 
-    const firebaseJson = await firebaseRes.json();
+    const firebaseRes = await fetch(url, options);
+
+    const firebaseText = await firebaseRes.text();
+    let firebaseJson;
+    try {
+      firebaseJson = firebaseText ? JSON.parse(firebaseText) : null;
+    } catch (_err) {
+      firebaseJson = firebaseText;
+    }
     console.log("[firebase-direct] Firebase response", firebaseJson);
 
     return new Response(
