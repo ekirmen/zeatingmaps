@@ -31,18 +31,53 @@ serve(async (req) => {
       },
     );
 
-    const { firebaseData } = await req.json();
+    const { operation = "PUT", path = "/", data } = await req.json();
+    console.log("[firebase-direct] Request", { operation, path, data });
 
-    // TODO: replace with actual Firebase integration
-    const result = {
-      success: true,
-      message: "Firebase data processed successfully",
-      data: firebaseData,
-    };
+    // Fetch Firebase credentials stored in the settings table
+    const { data: settings, error: settingsErr } = await supabaseClient
+      .from("settings")
+      .select("key, value")
+      .in("key", ["firebase-db-url", "firebase-secret-key"]);
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (settingsErr) {
+      throw new Error(settingsErr.message);
+    }
+
+    const creds = Object.fromEntries(
+      settings?.map((s: { key: string; value: string }) => [s.key, s.value]) || []
+    );
+
+    const dbUrl = creds["firebase-db-url"];
+    const secret = creds["firebase-secret-key"];
+
+    if (!dbUrl || !secret) {
+      throw new Error("Missing Firebase configuration in settings table");
+    }
+
+    const url = `${dbUrl}${path}.json?auth=${secret}`;
+    console.log("[firebase-direct] Sending", operation, "to", url);
+    if (data) console.log("[firebase-direct] Payload", data);
+
+    const firebaseRes = await fetch(url, {
+      method: operation,
+      headers: { "Content-Type": "application/json" },
+      body: operation === "DELETE" ? undefined : JSON.stringify(data),
     });
+
+    const firebaseJson = await firebaseRes.json();
+    console.log("[firebase-direct] Firebase response", firebaseJson);
+
+    return new Response(
+      JSON.stringify({
+        success: firebaseRes.ok,
+        status: firebaseRes.status,
+        firebase: firebaseJson,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   } catch (error) {
     console.error("firebase-direct error", error);
     return new Response(
