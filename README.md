@@ -171,7 +171,8 @@ such as the Firebase credentials or the cart seat expiration time.
 After configuring the credentials you can verify the integration by visiting
 `/dashboard/firebase-test` while the app is running. The page invokes the
 `firebase-direct` edge function and shows the JSON response so you can confirm
-that Supabase can reach Firebase.
+that Supabase can reach Firebase. Open your browser's console to see the
+request and response logs from the page.
 
 If you deploy your own `firebase-direct` function make sure it responds to the
 preflight `OPTIONS` request with the appropriate CORS headers. An example
