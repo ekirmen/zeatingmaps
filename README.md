@@ -197,6 +197,12 @@ Run this command from your terminal (not the SQL editor). Install the CLI with
 `npm install -g supabase` and authenticate using `supabase login` before
 deploying.
 
+You can also automate the deployment using GitHub Actions. The workflow
+defined in `.github/workflows/deploy-edge-functions.yml` deploys the
+`firebase-direct` function whenever changes are pushed to `main`. Configure the
+`SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF` secrets in your repository so
+the action can authenticate with Supabase.
+
 ## Seat utilities
 
 The `src/utils/isUuid.js` helper verifies whether a string is a valid UUID. Use it when calling `updateSeat` to prevent typos in seat IDs:
