@@ -177,6 +177,18 @@ If you deploy your own `firebase-direct` function make sure it responds to the
 preflight `OPTIONS` request with the appropriate CORS headers. An example
 implementation is included in `supabase/functions/firebase-direct/index.ts`.
 
+### Deploying the `firebase-direct` function
+
+Deploy the example Edge Function using the Supabase CLI:
+
+```bash
+supabase functions deploy firebase-direct
+```
+
+Run this command from your terminal (not the SQL editor). Install the CLI with
+`npm install -g supabase` and authenticate using `supabase login` before
+deploying.
+
 ## Seat utilities
 
 The `src/utils/isUuid.js` helper verifies whether a string is a valid UUID. Use it when calling `updateSeat` to prevent typos in seat IDs:
