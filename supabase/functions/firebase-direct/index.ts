@@ -55,7 +55,9 @@ serve(async (req) => {
       throw new Error("Missing Firebase configuration in settings table");
     }
 
-    const url = `${dbUrl}${path}.json?auth=${secret}`;
+    const normalizedUrl = dbUrl.endsWith("/") ? dbUrl.slice(0, -1) : dbUrl;
+    const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+    const url = `${normalizedUrl}${normalizedPath}.json?auth=${secret}`;
     console.log("[firebase-direct] Sending", operation, "to", url);
     if (data) console.log("[firebase-direct] Payload", data);
 
