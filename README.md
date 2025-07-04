@@ -173,6 +173,10 @@ After configuring the credentials you can verify the integration by visiting
 `firebase-direct` edge function and shows the JSON response so you can confirm
 that Supabase can reach Firebase.
 
+If you deploy your own `firebase-direct` function make sure it responds to the
+preflight `OPTIONS` request with the appropriate CORS headers. An example
+implementation is included in `supabase/functions/firebase-direct/index.ts`.
+
 ## Seat utilities
 
 The `src/utils/isUuid.js` helper verifies whether a string is a valid UUID. Use it when calling `updateSeat` to prevent typos in seat IDs:
