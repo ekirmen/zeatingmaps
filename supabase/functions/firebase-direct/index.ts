@@ -32,6 +32,7 @@ serve(async (req) => {
     );
 
     const { operation = "PUT", path = "/", data } = await req.json();
+    console.log("[firebase-direct] Request", { operation, path, data });
 
     // Fetch Firebase credentials stored in the settings table
     const { data: settings, error: settingsErr } = await supabaseClient
@@ -58,23 +59,13 @@ serve(async (req) => {
     console.log("[firebase-direct] Sending", operation, "to", url);
     if (data) console.log("[firebase-direct] Payload", data);
 
-    const options: RequestInit = {
+    const firebaseRes = await fetch(url, {
       method: operation,
       headers: { "Content-Type": "application/json" },
-    };
-    if (!["GET", "HEAD", "DELETE"].includes(operation) && data !== undefined) {
-      options.body = JSON.stringify(data);
-    }
+      body: operation === "DELETE" ? undefined : JSON.stringify(data),
+    });
 
-    const firebaseRes = await fetch(url, options);
-
-    const firebaseText = await firebaseRes.text();
-    let firebaseJson;
-    try {
-      firebaseJson = firebaseText ? JSON.parse(firebaseText) : null;
-    } catch (_err) {
-      firebaseJson = firebaseText;
-    }
+    const firebaseJson = await firebaseRes.json();
     console.log("[firebase-direct] Firebase response", firebaseJson);
 
     return new Response(

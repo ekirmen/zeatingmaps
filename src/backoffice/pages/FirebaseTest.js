@@ -6,23 +6,31 @@ const FirebaseTest = () => {
   const [loading, setLoading] = useState(false);
 
   const handleTest = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.functions.invoke('firebase-direct', {
-      body: {
-        operation: 'PUT',
-        path: '/test',
-        data: {
-          mensaje: 'Prueba de conexión desde el frontend',
-          timestamp: new Date().toISOString(),
-          // Include a random number so the response changes on every request
-          random: Math.floor(Math.random() * 100000),
-        },
+    const payload = {
+      operation: 'PUT',
+      path: '/test',
+      data: {
+        mensaje: 'Prueba de conexión desde el frontend',
+        timestamp: new Date().toISOString(),
+        random: Math.floor(Math.random() * 100000),
+        id: crypto.randomUUID(),
       },
+    };
+
+    console.log('[FirebaseTest] Invoking firebase-direct', payload);
+    setLoading(true);
+
+    const { data, error } = await supabase.functions.invoke('firebase-direct', {
+      body: payload,
     });
+
     setLoading(false);
+
     if (error) {
+      console.error('[FirebaseTest] Error', error);
       setResult({ error: error.message });
     } else {
+      console.log('[FirebaseTest] Response', data);
       setResult(data);
     }
   };
