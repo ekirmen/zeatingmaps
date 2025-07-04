@@ -9,6 +9,14 @@
       "destination": "/manifest.json"
     },
     {
+      "source": "/store/logo192.png",
+      "destination": "/logo192.png"
+    },
+    {
+      "source": "/store/logo512.png",
+      "destination": "/logo512.png"
+    },
+    {
       "source": "/store/:path*",
       "destination": "/index.html"
     },
@@ -19,6 +27,14 @@
     {
       "source": "/backoffice/manifest.json",
       "destination": "/manifest.json"
+    },
+    {
+      "source": "/backoffice/logo192.png",
+      "destination": "/logo192.png"
+    },
+    {
+      "source": "/backoffice/logo512.png",
+      "destination": "/logo512.png"
     },
     {
       "source": "/backoffice/:path*",
