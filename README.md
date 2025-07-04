@@ -166,6 +166,13 @@ table. Create it using the script in `sql/create_settings_table.sql`. It
 contains just `key` and `value` columns and is used to persist options
 such as the Firebase credentials or the cart seat expiration time.
 
+When populating this table make sure the `firebase-secret-key` value
+comes from the **Database secrets** section of your Firebase project.
+This is not the API key from the web configuration but the secret used
+by the Realtime Database REST API. If this key is incorrect the
+`firebase-direct` function will report a success status but no data will
+appear in the Firebase console.
+
 ### Testing the Firebase connection
 
 After configuring the credentials you can verify the integration by visiting
