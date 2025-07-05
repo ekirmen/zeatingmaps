@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import { useRecinto } from '../contexts/RecintoContext';
 import { supabase } from '../services/supabaseClient';
+import { syncSeatsForSala } from '../services/apibackoffice';
 
 const Funciones = () => {
   const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
@@ -129,6 +130,9 @@ const Funciones = () => {
   
         if (error) throw error;
         alert('Función actualizada');
+        if (salaSeleccionada?.id) {
+          await syncSeatsForSala(salaSeleccionada.id);
+        }
       } else {
         const { error } = await supabase.from('funciones').insert([
           {
@@ -138,6 +142,9 @@ const Funciones = () => {
         ]);
         if (error) throw error;
         alert('Función creada');
+        if (salaSeleccionada?.id) {
+          await syncSeatsForSala(salaSeleccionada.id);
+        }
       }
   
       // limpiar
@@ -208,6 +215,9 @@ const Funciones = () => {
     if (insertError) {
       alert('Error al duplicar');
     } else {
+      if (duplicatedData.sala) {
+        await syncSeatsForSala(duplicatedData.sala);
+      }
       const { data: refreshed } = await supabase
         .from('funciones')
         .select(
