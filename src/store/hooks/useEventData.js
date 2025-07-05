@@ -166,12 +166,12 @@ const useEventData = (eventId, seatMapRef) => {
   useEffect(() => {
     const fetchEvento = async () => {
       try {
-        const column = isUuid(eventId) ? 'id' : 'slug';
-        const { data, error } = await supabase
-          .from('eventos')
-          .select('*')
-          .eq(column, eventId)
-          .maybeSingle();
+        const query = supabase.from('eventos').select('*');
+        const { data, error } = await (
+          isUuid(eventId)
+            ? query.eq('id', eventId)
+            : query.ilike('slug', eventId)
+        ).maybeSingle();
 
         if (error) throw error;
         setEvento(data);
