@@ -37,6 +37,11 @@ REACT_APP_FIREBASE_AUTH_DOMAIN=<your-domain>
 REACT_APP_FIREBASE_DB_URL=<your-db-url>
 ```
 
+`REACT_APP_USE_FIREBASE` must be set to `true` **at build time** for the front end
+to subscribe to Firebase. If this variable is missing or `false`, seat selections
+won't sync across browser tabs even if the credentials are stored in the
+`settings` table.
+
 Set `REACT_APP_SITE_URL` to your deployed domain so Supabase emails point to
 the correct host. If your application is served from a subfolder (for example
 `/store`), include that path here:
