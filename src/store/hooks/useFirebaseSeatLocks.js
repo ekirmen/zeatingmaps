@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { getDatabaseInstance } from '../../services/firebaseClient';
 import { ref, onValue, off } from 'firebase/database';
 import getZonaColor from '../../utils/getZonaColor';
+import normalizeSeatId from '../../utils/normalizeSeatId';
 
 const useFirebaseSeatLocks = (
   selectedFunctionId,
@@ -28,7 +29,10 @@ const useFirebaseSeatLocks = (
             contenido: prevMapa.contenido.map(elemento => ({
               ...elemento,
               sillas: elemento.sillas.map(s => {
-                const lock = locks[s._id];
+                const keys = [s._id, s.id]
+                  .filter(Boolean)
+                  .flatMap((k) => [k, normalizeSeatId(k)]);
+                const lock = keys.reduce((acc, k) => acc || locks[k], null);
                 const zonaId = s.zona || elemento.zona;
                 const baseColor = getZonaColor(zonaId, zonas) || 'lightblue';
                 let estado = s.estado;

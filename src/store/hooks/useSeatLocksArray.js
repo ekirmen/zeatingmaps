@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { getDatabaseInstance } from '../../services/firebaseClient';
 import { ref, onValue, off } from 'firebase/database';
+import normalizeSeatId from '../../utils/normalizeSeatId';
 
 const useSeatLocksArray = (funcionId, setSeats, getSessionId, enabled = true) => {
   useEffect(() => {
@@ -15,7 +16,10 @@ const useSeatLocksArray = (funcionId, setSeats, getSessionId, enabled = true) =>
       const handler = (snapshot) => {
         const locks = snapshot.val() || {};
         setSeats(prev => prev.map(seat => {
-          const lock = locks[seat.id] || locks[seat._id];
+          const keys = [seat.id, seat._id]
+            .filter(Boolean)
+            .flatMap((k) => [k, normalizeSeatId(k)]);
+          const lock = keys.reduce((acc, k) => acc || locks[k], null);
           if (lock) {
             const sameSession = getSessionId && lock.session_id === getSessionId();
             const status = lock.status || 'bloqueado';
