@@ -28,7 +28,12 @@ describe('seatLocks service', () => {
     await lockSeat('silla_abc', 'bloqueado', 'func1');
     expect(set).toHaveBeenCalledWith(
       expect.any(Object),
-      { status: 'bloqueado', timestamp: expect.any(Number) }
+      expect.objectContaining({
+        status: 'bloqueado',
+        timestamp: expect.any(Number),
+        session_id: expect.any(String),
+        expires: expect.any(Number),
+      })
     );
   });
 
