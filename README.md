@@ -27,7 +27,8 @@ The production instance is hosted at **https://zeatingmaps-ekirmens-projects.ver
    ```
 
 If you plan to use Firebase for seat locking, also set the Firebase
-environment variables in your `.env` file:
+environment variables in your `.env` file or add them to the `settings`
+table in Supabase:
 
 ```bash
 REACT_APP_USE_FIREBASE=true

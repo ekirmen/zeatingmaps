@@ -8,6 +8,7 @@ import { supabase } from '../../supabaseClient';
 import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
 import { isUuid } from '../../utils/isUuid';
+import getZonaColor from '../../utils/getZonaColor';
 import API_BASE_URL from '../../utils/apiBase';
 import { useSeatRealtime } from './useSeatRealtime';
 import useFirebaseSeatLocks from './useFirebaseSeatLocks';
@@ -56,10 +57,6 @@ const useEventData = (eventId, seatMapRef) => {
     setGlobalCart(carrito, selectedFunctionId);
   }, [carrito, selectedFunctionId, setGlobalCart]);
 
-  const getZonaColor = (zonaId) => {
-    const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
-    return zonaObj?.color;
-  };
 
   useFirebaseSeatLocks(
     selectedFunctionId,
