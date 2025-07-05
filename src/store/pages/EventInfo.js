@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 import { supabase } from '../../supabaseClient';
-import { isUuid } from '../../utils/isUuid';
+import { isUuid, isNumericId } from '../../utils/isUuid';
 import { getFunciones } from '../services/apistore';
 import formatDateString from '../../utils/formatDateString';
 
@@ -18,12 +18,14 @@ const EventInfo = () => {
 
   useEffect(() => {
     const fetchEvento = async () => {
-      const column = isUuid(eventId) ? 'id' : 'slug';
-      const { data, error } = await supabase
-        .from('eventos')
-        .select('*')
-        .eq(column, eventId)
-        .maybeSingle();
+      const query = supabase.from('eventos').select('*');
+      const { data, error } = await (
+        isUuid(eventId)
+          ? query.eq('id', eventId)
+          : isNumericId(eventId)
+            ? query.eq('id', parseInt(eventId, 10))
+            : query.ilike('slug', eventId)
+      ).maybeSingle();
       if (!error) setEvento(data);
     };
     fetchEvento();
@@ -31,7 +33,9 @@ const EventInfo = () => {
 
   useEffect(() => {
     const fetchFunciones = async () => {
-      const id = evento?.id || (isUuid(eventId) ? eventId : null);
+      const id =
+        evento?.id ||
+        (isUuid(eventId) ? eventId : isNumericId(eventId) ? parseInt(eventId, 10) : null);
       if (!id) return;
       const data = await getFunciones(id);
       setFunciones(Array.isArray(data) ? data : []);
@@ -39,7 +43,7 @@ const EventInfo = () => {
         setSelectedFunctionId(data[0].id || data[0]._id);
       }
     };
-    if (evento?.id || isUuid(eventId)) fetchFunciones();
+    if (evento?.id || isUuid(eventId) || isNumericId(eventId)) fetchFunciones();
   }, [evento, eventId]);
 
   return (

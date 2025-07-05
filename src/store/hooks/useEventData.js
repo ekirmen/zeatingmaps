@@ -7,7 +7,7 @@ import { lockSeat, unlockSeat } from '../../backoffice/services/seatLocks';
 import { supabase } from '../../supabaseClient';
 import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
-import { isUuid } from '../../utils/isUuid';
+import { isUuid, isNumericId } from '../../utils/isUuid';
 import getZonaColor from '../../utils/getZonaColor';
 import API_BASE_URL from '../../utils/apiBase';
 import { useSeatRealtime } from './useSeatRealtime';
@@ -166,12 +166,14 @@ const useEventData = (eventId, seatMapRef) => {
   useEffect(() => {
     const fetchEvento = async () => {
       try {
-        const column = isUuid(eventId) ? 'id' : 'slug';
-        const { data, error } = await supabase
-          .from('eventos')
-          .select('*')
-          .eq(column, eventId)
-          .maybeSingle();
+        const query = supabase.from('eventos').select('*');
+        const { data, error } = await (
+          isUuid(eventId)
+            ? query.eq('id', eventId)
+            : isNumericId(eventId)
+              ? query.eq('id', parseInt(eventId, 10))
+              : query.ilike('slug', eventId)
+        ).maybeSingle();
 
         if (error) throw error;
         setEvento(data);
@@ -241,7 +243,13 @@ const useEventData = (eventId, seatMapRef) => {
   useEffect(() => {
     const fetchFunciones = async () => {
       try {
-        const id = evento?.id || (isUuid(eventId) ? eventId : null);
+        const id =
+          evento?.id ||
+          (isUuid(eventId)
+            ? eventId
+            : isNumericId(eventId)
+              ? parseInt(eventId, 10)
+              : null);
         if (!id) return;
         const data = await getFunciones(id);
         setFunciones(Array.isArray(data) ? data : []);
@@ -252,13 +260,19 @@ const useEventData = (eventId, seatMapRef) => {
         console.error('Error fetching functions:', error);
       }
     };
-    if (evento?.id || isUuid(eventId)) fetchFunciones();
+    if (evento?.id || isUuid(eventId) || isNumericId(eventId)) fetchFunciones();
   }, [eventId, evento]);
 
   useEffect(() => {
     const fetchAllZonas = async () => {
       try {
-        const id = evento?.id || (isUuid(eventId) ? eventId : null);
+        const id =
+          evento?.id ||
+          (isUuid(eventId)
+            ? eventId
+            : isNumericId(eventId)
+              ? parseInt(eventId, 10)
+              : null);
         if (!id) return;
         const funciones = await getFunciones(id);
 
@@ -304,7 +318,7 @@ const useEventData = (eventId, seatMapRef) => {
       }
     };
 
-    if (evento?.id || isUuid(eventId)) fetchAllZonas();
+    if (evento?.id || isUuid(eventId) || isNumericId(eventId)) fetchAllZonas();
   }, [eventId, evento]);
 
   useEffect(() => {
