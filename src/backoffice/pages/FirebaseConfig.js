@@ -6,7 +6,6 @@ const FirebaseConfig = () => {
   const [authDomain, setAuthDomain] = useState('');
   const [dbUrl, setDbUrl] = useState('');
   const [apiKey, setApiKey] = useState('');
-  const [secret, setSecret] = useState('');
   const [expiration, setExpiration] = useState('');
 
   useEffect(() => {
@@ -19,7 +18,6 @@ const FirebaseConfig = () => {
           'firebase-auth-domain',
           'firebase-db-url',
           'firebase-api-key',
-          'firebase-secret-key',
           'cart-seat-expiration',
         ]);
       if (!error && data) {
@@ -36,9 +34,6 @@ const FirebaseConfig = () => {
               break;
             case 'firebase-api-key':
               setApiKey(row.value);
-              break;
-            case 'firebase-secret-key':
-              setSecret(row.value);
               break;
             case 'cart-seat-expiration':
               setExpiration(row.value);
@@ -58,7 +53,6 @@ const FirebaseConfig = () => {
       { key: 'firebase-auth-domain', value: authDomain },
       { key: 'firebase-db-url', value: dbUrl },
       { key: 'firebase-api-key', value: apiKey },
-      { key: 'firebase-secret-key', value: secret },
       { key: 'cart-seat-expiration', value: expiration },
     ];
     const { error } = await supabase.from('settings').upsert(entries, { onConflict: ['key'] });
@@ -106,15 +100,6 @@ const FirebaseConfig = () => {
         placeholder="your API key here"
         value={apiKey}
         onChange={(e) => setApiKey(e.target.value)}
-      />
-
-      <label className="block text-sm font-medium mb-1 mt-4">Database Secret Key</label>
-      <input
-        type="password"
-        className="border p-2 w-full rounded border-gray-300"
-        placeholder="you secret key here"
-        value={secret}
-        onChange={(e) => setSecret(e.target.value)}
       />
 
       <label className="block text-sm font-medium mb-1 mt-4">Other cart seat expiration (minutos)</label>
