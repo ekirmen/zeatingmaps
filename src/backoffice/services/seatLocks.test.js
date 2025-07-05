@@ -10,13 +10,8 @@ jest.mock('firebase/database', () => ({
   remove: jest.fn(() => Promise.resolve())
 }));
 
-jest.mock('../../utils/isUuid', () => ({
-  isUuid: jest.fn(() => true),
-  default: jest.fn(() => true)
-}));
 
 import { lockSeat, unlockSeat } from './seatLocks';
-const { isUuid } = require('../../utils/isUuid');
 
 describe('seatLocks service', () => {
   beforeEach(() => {
@@ -35,11 +30,6 @@ describe('seatLocks service', () => {
         expires: expect.any(Number),
       })
     );
-  });
-
-  test('lockSeat throws on invalid id', async () => {
-    isUuid.mockReturnValueOnce(false);
-    await expect(lockSeat('bad')).rejects.toThrow('Invalid seat ID');
   });
 
   test('unlockSeat removes path from Firebase', async () => {

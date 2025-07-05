@@ -13,7 +13,6 @@ import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
 import { supabase } from '../services/supabaseClient';
 import { unlockSeat } from '../services/seatLocks';
-import { isUuid } from '../../utils/isUuid';
 
 const Boleteria = () => {
   const {
@@ -86,11 +85,9 @@ const Boleteria = () => {
   // Liberar asientos bloqueados cuando la página se recarga o el componente se desmonta
   useEffect(() => {
     const cleanupLocks = () => {
-      carrito
-        .filter(i => isUuid((i._id || '').replace(/^silla_/, '')))
-        .forEach(i => {
-          unlockSeat(i._id, i.funcionId).catch(() => {});
-        });
+      carrito.forEach(i => {
+        unlockSeat(i._id, i.funcionId).catch(() => {});
+      });
     };
 
     window.addEventListener('beforeunload', cleanupLocks);

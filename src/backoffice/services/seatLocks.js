@@ -1,4 +1,3 @@
-import { isUuid } from '../../utils/isUuid';
 import { getDatabaseInstance } from '../../services/firebaseClient';
 import { ref, set, remove } from 'firebase/database';
 
@@ -40,9 +39,6 @@ export const lockSeat = async (
   options = {}
 ) => {
   const id = normalizeSeatId(seatId);
-  if (!isUuid(id)) {
-    throw new Error('Invalid seat ID');
-  }
   const db = await getDatabaseInstance();
   if (db) {
     const path = funcionId ? `in-cart/${funcionId}/${id}` : `in-cart/${id}`;
