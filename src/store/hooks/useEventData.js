@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useCart } from '../../contexts/CartContext';
-import { fetchMapa, fetchPlantillaPrecios, getFunciones } from '../services/apistore';
+import { fetchMapa, fetchPlantillaPrecios, getFunciones, getMapaPorEvento } from '../services/apistore';
 import { fetchZonasPorSala } from '../../services/supabaseServices';
 import { fetchSeatsByFuncion, updateSeat, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
 import { lockSeat, unlockSeat } from '../../backoffice/services/seatLocks';
@@ -331,10 +331,22 @@ const useEventData = (eventId, seatMapRef) => {
           typeof funcion.sala === 'object'
             ? funcion.sala._id || funcion.sala.id
             : funcion.sala;
-        const [mapaData, seatStates] = await Promise.all([
+        const [mapaSala, seatStates] = await Promise.all([
           fetchMapa(salaId),
           fetchSeatsByFuncion(selectedFunctionId)
         ]);
+
+        let mapaData = mapaSala;
+        if (!mapaData) {
+          const eventIdToUse = evento?.id || funcion.evento;
+          if (eventIdToUse) {
+            try {
+              mapaData = await getMapaPorEvento(eventIdToUse);
+            } catch (err) {
+              console.error('Error fetching map by event:', err);
+            }
+          }
+        }
 
         const seatMap = seatStates.reduce((acc, s) => {
           const estado = s.bloqueado ? 'bloqueado' : s.status;
