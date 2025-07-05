@@ -1,12 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { isUuid } from '../utils/isUuid';
+import { lockSeat, unlockSeat } from '../backoffice/services/seatLocks';
+import useSeatLocksArray from '../store/hooks/useSeatLocksArray';
+import getCartSessionId from '../utils/getCartSessionId';
 import './SeatMap.css';
 
 const SeatMap = ({ funcionId }) => {
   const [seats, setSeats] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState({});
   const [loading, setLoading] = useState(true);
+
+  useSeatLocksArray(
+    funcionId,
+    setSeats,
+    getCartSessionId,
+    process.env.REACT_APP_USE_FIREBASE === 'true'
+  );
 
   useEffect(() => {
     const fetchSeats = async () => {
@@ -122,6 +132,14 @@ const SeatMap = ({ funcionId }) => {
         })
         .eq('id', seatId);
       if (error) throw error;
+
+      if (process.env.REACT_APP_USE_FIREBASE === 'true') {
+        if (isCurrentlySelected) {
+          await unlockSeat(seatId, funcionId);
+        } else {
+          await lockSeat(seatId, 'bloqueado', funcionId);
+        }
+      }
     } catch (err) {
       console.error('Error al seleccionar asiento:', err);
     }
