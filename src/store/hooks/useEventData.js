@@ -171,8 +171,13 @@ const useEventData = (eventId, seatMapRef) => {
             .from('recintos')
             .select('*')
             .eq('id', data.recinto)
-            .single();
-          if (!recintoError) setRecintoInfo(recintoData);
+            .maybeSingle();
+
+          if (recintoError && recintoError.code !== 'PGRST116') {
+            console.error('Error fetching recinto:', recintoError.message);
+          } else {
+            setRecintoInfo(recintoData || null);
+          }
         }
 
         if (data?.otrasOpciones?.popupAntesAsiento?.mostrar) {
