@@ -136,7 +136,7 @@ const FirebaseConfig = () => {
            }
        },
        ".read": true,
-       ".write": false
+       ".write": true
    }
 }`}
       </pre>

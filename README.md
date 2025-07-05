@@ -42,6 +42,26 @@ to subscribe to Firebase. If this variable is missing or `false`, seat selection
 won't sync across browser tabs even if the credentials are stored in the
 `settings` table.
 
+Your Firebase Realtime Database must also allow both reads and writes on the
+paths used for seat locks. A minimal example:
+
+```json
+{
+  "rules": {
+    "reserved": {
+      "$chart_id": { ".indexOn": "timestamp" }
+    },
+    "in-cart": {
+      "$chart_id": {
+        "$seat": { ".indexOn": "timestamp" }
+      }
+    },
+    ".read": true,
+    ".write": true
+  }
+}
+```
+
 Set `REACT_APP_SITE_URL` to your deployed domain so Supabase emails point to
 the correct host. If your application is served from a subfolder (for example
 `/store`), include that path here:
