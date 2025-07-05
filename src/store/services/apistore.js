@@ -6,14 +6,14 @@ export const getCmsPage = async (slug) => {
     .from('cms_pages')
     .select('*')
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
 
   if (error || !data) {
     const fallback = await supabase
       .from('cms_pages')
       .select('*')
       .eq('nombre', slug)
-      .single();
+      .maybeSingle();
     data = fallback.data;
     error = fallback.error;
   }
