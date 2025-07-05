@@ -388,11 +388,11 @@ const useEventData = (eventId, seatMapRef) => {
   const toggleSillaEnCarrito = async (silla, mesa) => {
     console.log('[store] seat click', silla._id);
     const zonaId = silla.zona || mesa.zona;
-    if (
-      !zonaId ||
-      ['reservado', 'pagado', 'bloqueado'].includes(silla.estado) ||
-      silla.bloqueado
-    ) {
+    if (!zonaId) return;
+    if (['reservado', 'pagado'].includes(silla.estado) || silla.bloqueado) {
+      if (silla.estado === 'bloqueado' || silla.bloqueado) {
+        alert('Silla en reserva');
+      }
       return;
     }
 
@@ -474,9 +474,16 @@ const useEventData = (eventId, seatMapRef) => {
             finalColor = 'red'
           } else if (s.estado === 'pagado') {
             finalColor = 'gray'
-          } else {
+          } else if (s.estado === 'bloqueado') {
+            finalColor = 'orange'
+          }
+
+          if (!['reservado', 'pagado', 'bloqueado'].includes(s.estado)) {
             newEstado = isSelected ? 'bloqueado' : 'disponible'
             finalColor = isSelected ? 'orange' : baseColor
+          } else if (isSelected) {
+            newEstado = 'bloqueado'
+            finalColor = 'orange'
           }
 
           return {
@@ -514,9 +521,16 @@ const useEventData = (eventId, seatMapRef) => {
             finalColor = 'red'
           } else if (s.estado === 'pagado') {
             finalColor = 'gray'
-          } else {
+          } else if (s.estado === 'bloqueado') {
+            finalColor = 'orange'
+          }
+
+          if (!['reservado', 'pagado', 'bloqueado'].includes(s.estado)) {
             newEstado = isSelected ? 'bloqueado' : 'disponible'
             finalColor = isSelected ? 'orange' : baseColor
+          } else if (isSelected) {
+            newEstado = 'bloqueado'
+            finalColor = 'orange'
           }
 
           if (s.selected === isSelected && s.color === finalColor && s.estado === newEstado) return s
