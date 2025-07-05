@@ -12,6 +12,7 @@ import getZonaColor from '../../utils/getZonaColor';
 import API_BASE_URL from '../../utils/apiBase';
 import { useSeatRealtime } from './useSeatRealtime';
 import useFirebaseSeatLocks from './useFirebaseSeatLocks';
+import { isFirebaseEnabled } from '../../services/firebaseClient';
 
 const API_URL = API_BASE_URL;
 
@@ -33,6 +34,7 @@ const useEventData = (eventId, seatMapRef) => {
   const { cart: globalCart, functionId: globalFunctionId, setCart: setGlobalCart, duration } = useCart();
   const [recintoInfo, setRecintoInfo] = useState(null);
   const [tagNames, setTagNames] = useState([]);
+  const [firebaseEnabled, setFirebaseEnabled] = useState(false);
 
   const closeSeatPopup = () => {
     setShowSeatPopup(false);
@@ -57,13 +59,21 @@ const useEventData = (eventId, seatMapRef) => {
     setGlobalCart(carrito, selectedFunctionId);
   }, [carrito, selectedFunctionId, setGlobalCart]);
 
+  useEffect(() => {
+    const check = async () => {
+      const enabled = await isFirebaseEnabled();
+      setFirebaseEnabled(enabled);
+    };
+    check();
+  }, []);
+
 
   useFirebaseSeatLocks(
     selectedFunctionId,
     zonas,
     setMapa,
     cartRef,
-    process.env.REACT_APP_USE_FIREBASE === 'true'
+    firebaseEnabled
   );
 
   const handleSeatRealtimeUpdate = (payload) => {
@@ -93,7 +103,7 @@ const useEventData = (eventId, seatMapRef) => {
   };
 
   useSeatRealtime({
-    funcionId: process.env.REACT_APP_USE_FIREBASE !== 'true' ? selectedFunctionId : null,
+    funcionId: firebaseEnabled ? null : selectedFunctionId,
     onSeatUpdate: handleSeatRealtimeUpdate,
   });
 
