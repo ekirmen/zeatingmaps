@@ -12,7 +12,7 @@ export const getCmsPage = async (slug) => {
     const fallback = await supabase
       .from('cms_pages')
       .select('*')
-      .eq('nombre', slug)
+      .ilike('nombre', slug)
       .maybeSingle();
     data = fallback.data;
     error = fallback.error;
