@@ -2,69 +2,70 @@ import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
 import { supabase } from '../supabaseClient';
 
-let firebaseApp = null;
-let database = null;
-let useFirebase = false;
+let firebaseApp;
+let database;
 
-const loadSettingsConfig = async () => {
+const CONFIG_KEYS = [
+  'firebase-use',
+  'firebase-api-key',
+  'firebase-auth-domain',
+  'firebase-db-url',
+];
+
+const getConfig = async () => {
+  const env = {
+    useFirebase: process.env.REACT_APP_USE_FIREBASE === 'true',
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+    databaseURL: process.env.REACT_APP_FIREBASE_DB_URL,
+  };
+
+  if (env.useFirebase && env.apiKey && env.authDomain && env.databaseURL) {
+    return env;
+  }
+
   const { data, error } = await supabase
     .from('settings')
     .select('key, value')
-    .in('key', [
-      'firebase-api-key',
-      'firebase-auth-domain',
-      'firebase-db-url',
-      'firebase-use',
-    ]);
+    .in('key', CONFIG_KEYS);
+
   if (error) {
-    console.error('[firebaseClient] Error loading settings', error);
-    return null;
+    console.error('[firebaseClient] Settings load error', error);
+    return env;
   }
-  const map = Object.fromEntries(data?.map((r) => [r.key, r.value]) || []);
+
+  const map = Object.fromEntries(data.map((r) => [r.key, r.value]));
   return {
     useFirebase: map['firebase-use'] === 'true',
-    apiKey: map['firebase-api-key'],
-    authDomain: map['firebase-auth-domain'],
-    databaseURL: map['firebase-db-url'],
+    apiKey: map['firebase-api-key'] || env.apiKey,
+    authDomain: map['firebase-auth-domain'] || env.authDomain,
+    databaseURL: map['firebase-db-url'] || env.databaseURL,
   };
 };
 
-const getEnvConfig = () => ({
-  useFirebase: process.env.REACT_APP_USE_FIREBASE === 'true',
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  databaseURL: process.env.REACT_APP_FIREBASE_DB_URL,
-});
+export const getDatabaseInstance = async () => {
+  if (database) return database;
 
-export const initFirebase = (config = null) => {
-  if (firebaseApp) return { firebaseApp, database };
-  const cfg = config || getEnvConfig();
+  const cfg = await getConfig();
   if (!cfg.useFirebase) return null;
-
   if (!cfg.apiKey || !cfg.authDomain || !cfg.databaseURL) {
-    console.warn('Missing Firebase configuration.');
+    console.warn('[firebaseClient] Missing Firebase configuration.');
     return null;
   }
 
-  firebaseApp = initializeApp({
-    apiKey: cfg.apiKey,
-    authDomain: cfg.authDomain,
-    databaseURL: cfg.databaseURL,
-  });
-  database = getDatabase(firebaseApp);
-  useFirebase = true;
-  return { firebaseApp, database };
+  if (!firebaseApp) {
+    firebaseApp = initializeApp({
+      apiKey: cfg.apiKey,
+      authDomain: cfg.authDomain,
+      databaseURL: cfg.databaseURL,
+    });
+    database = getDatabase(firebaseApp);
+  }
+
+  return database;
 };
 
-export const getDatabaseInstance = async () => {
-  if (!firebaseApp && !useFirebase) {
-    let instance = initFirebase();
-    if (!instance) {
-      const cfg = await loadSettingsConfig();
-      if (cfg) {
-        instance = initFirebase(cfg);
-      }
-    }
-  }
-  return useFirebase ? database : null;
+export const initFirebase = async () => {
+  await getDatabaseInstance();
+  return { firebaseApp, database };
 };

@@ -30,6 +30,9 @@ const getExpiration = () => {
 const normalizeSeatId = (id) =>
   typeof id === 'string' && id.startsWith('silla_') ? id.slice(6) : id;
 
+const buildLockPath = (funcionId, seatId) =>
+  funcionId ? `in-cart/${funcionId}/${seatId}` : `in-cart/${seatId}`;
+
 // Add a seat to the locking table with the provided status. If the seat
 // already exists in the table we simply update its status.
 export const lockSeat = async (
@@ -41,7 +44,7 @@ export const lockSeat = async (
   const id = normalizeSeatId(seatId);
   const db = await getDatabaseInstance();
   if (db) {
-    const path = funcionId ? `in-cart/${funcionId}/${id}` : `in-cart/${id}`;
+    const path = buildLockPath(funcionId, id);
     console.log('[seatLocks] Writing lock to Firebase for seat', id, 'at', path);
     const payload = {
       status,
@@ -61,7 +64,7 @@ export const unlockSeat = async (seatId, funcionId) => {
   const id = normalizeSeatId(seatId);
   const db = await getDatabaseInstance();
   if (db) {
-    const path = funcionId ? `in-cart/${funcionId}/${id}` : `in-cart/${id}`;
+    const path = buildLockPath(funcionId, id);
     console.log('[seatLocks] Removing lock from Firebase for seat', id, 'at', path);
     await remove(ref(db, path));
   } else {

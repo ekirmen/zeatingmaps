@@ -1,11 +1,7 @@
 import { useEffect } from 'react';
 import { getDatabaseInstance } from '../../services/firebaseClient';
 import { ref, onValue, off } from 'firebase/database';
-
-const getZonaColor = (zonaId, zonas) => {
-  const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
-  return zonaObj?.color;
-};
+import getZonaColor from '../../utils/getZonaColor';
 
 const useFirebaseSeatLocks = (
   selectedFunctionId,
