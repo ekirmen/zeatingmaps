@@ -236,6 +236,13 @@ node scripts/syncSeatsForSala.mjs <sala_id>
 
 This reads the map for the given hall and inserts any missing seat records for all of its functions.
 
+## Event navigation
+
+The `/store/event/:eventId` page shows the event details and lets the user pick a
+function. If the event only has a single function available, the page now
+automatically redirects to the seat map so customers can select their seats
+without an extra click.
+
 ## Pruebas en Vercel
 
 Si quieres ejecutar `npm test --silent` en Vercel como parte del despliegue,
