@@ -4,19 +4,29 @@ import { isUuid } from '../utils/isUuid';
 import { lockSeat, unlockSeat } from '../backoffice/services/seatLocks';
 import useSeatLocksArray from '../store/hooks/useSeatLocksArray';
 import getCartSessionId from '../utils/getCartSessionId';
+import { isFirebaseEnabled } from '../services/firebaseClient';
 import './SeatMap.css';
 
 const SeatMap = ({ funcionId }) => {
   const [seats, setSeats] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState({});
   const [loading, setLoading] = useState(true);
+  const [firebaseEnabled, setFirebaseEnabled] = useState(false);
 
   useSeatLocksArray(
     funcionId,
     setSeats,
     getCartSessionId,
-    process.env.REACT_APP_USE_FIREBASE === 'true'
+    firebaseEnabled
   );
+
+  useEffect(() => {
+    const check = async () => {
+      const enabled = await isFirebaseEnabled();
+      setFirebaseEnabled(enabled);
+    };
+    check();
+  }, []);
 
   useEffect(() => {
     const fetchSeats = async () => {
@@ -133,7 +143,7 @@ const SeatMap = ({ funcionId }) => {
         .eq('id', seatId);
       if (error) throw error;
 
-      if (process.env.REACT_APP_USE_FIREBASE === 'true') {
+      if (firebaseEnabled) {
         if (isCurrentlySelected) {
           await unlockSeat(seatId, funcionId);
         } else {

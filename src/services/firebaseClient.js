@@ -69,3 +69,13 @@ export const initFirebase = async () => {
   await getDatabaseInstance();
   return { firebaseApp, database };
 };
+
+let enabledCache;
+
+export const isFirebaseEnabled = async () => {
+  if (enabledCache !== undefined) return enabledCache;
+  const cfg = await getConfig();
+  enabledCache =
+    cfg.useFirebase && cfg.apiKey && cfg.authDomain && cfg.databaseURL;
+  return enabledCache;
+};

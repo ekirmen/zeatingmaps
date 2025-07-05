@@ -26,21 +26,18 @@ The production instance is hosted at **https://zeatingmaps-ekirmens-projects.ver
    # each event keeps its own directory.
    ```
 
-If you plan to use Firebase for seat locking, also set the Firebase
+If you plan to use Firebase for seat locking, set the Firebase
 environment variables in your `.env` file or add them to the `settings`
 table in Supabase:
 
 ```bash
-REACT_APP_USE_FIREBASE=true
 REACT_APP_FIREBASE_API_KEY=<your-key>
 REACT_APP_FIREBASE_AUTH_DOMAIN=<your-domain>
 REACT_APP_FIREBASE_DB_URL=<your-db-url>
 ```
 
-`REACT_APP_USE_FIREBASE` must be set to `true` **at build time** for the front end
-to subscribe to Firebase. If this variable is missing or `false`, seat selections
-won't sync across browser tabs even if the credentials are stored in the
-`settings` table.
+The application now detects Firebase configuration automatically at runtime.
+No build-time flag is required for synchronization across browser tabs.
 
 Your Firebase Realtime Database must also allow both reads and writes on the
 paths used for seat locks. A minimal example:
