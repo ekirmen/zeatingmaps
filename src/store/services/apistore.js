@@ -46,7 +46,14 @@ export const getEvent = async (eventId) => {
 export const getFunciones = async (eventId) => {
   const { data, error } = await supabase
     .from('funciones')
-    .select('*')
+    .select(
+      `id, evento, sala, plantilla,
+       fechaCelebracion:fecha_celebracion,
+       inicioVenta:inicio_venta,
+       finVenta:fin_venta,
+       pagoAPlazos:pago_a_plazos,
+       permitirReservasWeb:permitir_reservas_web`
+    )
     .eq('evento', eventId);
 
   if (error) {
