@@ -256,7 +256,7 @@ export const fetchCmsPage = async (slug) => {
   let { data, error } = await supabase
     .from('cms_pages')
     .select('*')
-    .eq('slug', slug)
+    .ilike('slug', slug)
     .single();
 
   if (error || !data) {
@@ -282,7 +282,7 @@ export const saveCmsPage = async (slug, widgets) => {
   let { error } = await supabase
     .from('cms_pages')
     .update({ widgets })
-    .eq('slug', slug);
+    .ilike('slug', slug);
 
   if (error) {
     const fallback = await supabase

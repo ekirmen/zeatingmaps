@@ -5,7 +5,7 @@ export const getCmsPage = async (slug) => {
   let { data, error } = await supabase
     .from('cms_pages')
     .select('*')
-    .eq('slug', slug)
+    .ilike('slug', slug)
     .maybeSingle();
 
   if (error || !data) {
