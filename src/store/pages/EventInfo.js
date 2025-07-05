@@ -44,7 +44,9 @@ const EventInfo = () => {
         const data = await getFunciones(id);
         setFunciones(Array.isArray(data) ? data : []);
         if (Array.isArray(data) && data.length === 1) {
-          setSelectedFunctionId(data[0].id || data[0]._id);
+          const fid = data[0].id || data[0]._id;
+          setSelectedFunctionId(fid);
+          navigate(`/store/event/${eventId}/map?funcion=${fid}`, { replace: true });
         }
       } catch (err) {
         console.error('Error fetching funciones:', err);
