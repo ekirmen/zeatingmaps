@@ -85,9 +85,7 @@ export const CartProvider = ({ children }) => {
       if (error) throw error;
 
       await Promise.all(
-        seats
-          .filter((s) => isUuid(s._id || s.id))
-          .map((s) => lockSeat(s._id || s.id, 'bloqueado', functionId))
+        seats.map((s) => lockSeat(s._id || s.id, 'bloqueado', functionId))
       );
 
       updateCart({ items: seats, functionId });
@@ -117,9 +115,7 @@ export const CartProvider = ({ children }) => {
         if (error) throw error;
 
         await Promise.all(
-          cart.items
-            .filter((i) => isUuid(i._id || i.id))
-            .map((i) => unlockSeat(i._id || i.id, cart.functionId))
+          cart.items.map((i) => unlockSeat(i._id || i.id, cart.functionId))
         );
       }
 
@@ -142,9 +138,7 @@ export const CartProvider = ({ children }) => {
 
       if (error) throw error;
 
-      if (isUuid(id)) {
-        await unlockSeat(id, cart.functionId);
-      }
+      await unlockSeat(id, cart.functionId);
 
       const newItems = cart.items.filter(item => (item._id || item.id) !== id);
       updateCart({ items: newItems, functionId: cart.functionId });
