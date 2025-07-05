@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 import normalizeSeatId from '../utils/normalizeSeatId';
 import { isUuid } from '../utils/isUuid';
+import { lockSeat, unlockSeat } from '../backoffice/services/seatLocks';
 
 export const CartContext = createContext();
 
@@ -83,6 +84,12 @@ export const CartProvider = ({ children }) => {
 
       if (error) throw error;
 
+      await Promise.all(
+        seats
+          .filter((s) => isUuid(s._id || s.id))
+          .map((s) => lockSeat(s._id || s.id, 'bloqueado', functionId))
+      );
+
       updateCart({ items: seats, functionId });
 
       const expiresAt = Date.now() + duration * 60 * 1000; // minutes from settings
@@ -103,11 +110,17 @@ export const CartProvider = ({ children }) => {
 
       if (seatIds.length > 0) {
         const { error } = await supabase
-        .from('seats')
-        .update({ reserved: false, reserved_at: null })
-        .in('_id', seatIds);
+          .from('seats')
+          .update({ reserved: false, reserved_at: null })
+          .in('_id', seatIds);
 
         if (error) throw error;
+
+        await Promise.all(
+          cart.items
+            .filter((i) => isUuid(i._id || i.id))
+            .map((i) => unlockSeat(i._id || i.id, cart.functionId))
+        );
       }
 
       updateCart({ items: [], functionId: null });
@@ -128,6 +141,10 @@ export const CartProvider = ({ children }) => {
         .eq('_id', id);
 
       if (error) throw error;
+
+      if (isUuid(id)) {
+        await unlockSeat(id, cart.functionId);
+      }
 
       const newItems = cart.items.filter(item => (item._id || item.id) !== id);
       updateCart({ items: newItems, functionId: cart.functionId });
