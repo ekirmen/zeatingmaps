@@ -46,13 +46,14 @@ const EventMap = () => {
     closeSeatPopup
   } = useEventData(eventId);
 
+  const params = new URLSearchParams(location.search);
+  const queryFunctionId = params.get('funcion');
+
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const funcId = params.get('funcion');
-    if (funcId) {
-      setSelectedFunctionId(funcId);
+    if (queryFunctionId) {
+      setSelectedFunctionId(queryFunctionId);
     }
-  }, [location.search, setSelectedFunctionId]);
+  }, [queryFunctionId, setSelectedFunctionId]);
 
   const getEmbedUrl = (url) => {
     if (!url) return url;
@@ -142,22 +143,24 @@ const EventMap = () => {
         </div>
       )}
 
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Funciones</h3>
-        <div className="flex flex-col gap-2">
-          {funciones.map(funcion => (
-            <label key={funcion.id || funcion._id} className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="funcion"
-                value={funcion.id || funcion._id}
-                onChange={() => setSelectedFunctionId(funcion.id || funcion._id)}
-              />
-              <span>{funcion.evento?.nombre} - {formatDateString(funcion.fechaCelebracion)}</span>
-            </label>
-          ))}
+      {!queryFunctionId && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-2">Funciones</h3>
+          <div className="flex flex-col gap-2">
+            {funciones.map(funcion => (
+              <label key={funcion.id || funcion._id} className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="funcion"
+                  value={funcion.id || funcion._id}
+                  onChange={() => setSelectedFunctionId(funcion.id || funcion._id)}
+                />
+                <span>{funcion.evento?.nombre} - {formatDateString(funcion.fechaCelebracion)}</span>
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="mb-2 flex gap-2 items-center">
         <input
