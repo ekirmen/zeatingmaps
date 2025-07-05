@@ -166,42 +166,13 @@ table. Create it using the script in `sql/create_settings_table.sql`. It
 contains just `key` and `value` columns and is used to persist options
 such as the Firebase credentials or the cart seat expiration time.
 
-When populating this table make sure the `firebase-secret-key` value
-comes from the **Database secrets** section of your Firebase project.
-This is not the API key from the web configuration but the secret used
-by the Realtime Database REST API. If this key is incorrect the
-`firebase-direct` function will report a success status but no data will
-appear in the Firebase console.
-
 ### Testing the Firebase connection
 
 After configuring the credentials you can verify the integration by visiting
-`/dashboard/firebase-test` while the app is running. The page invokes the
-`firebase-direct` edge function and shows the JSON response so you can confirm
-that Supabase can reach Firebase. Open your browser's console to see the
-request and response logs from the page.
-
-If you deploy your own `firebase-direct` function make sure it responds to the
-preflight `OPTIONS` request with the appropriate CORS headers. An example
-implementation is included in `supabase/functions/firebase-direct/index.ts`.
-
-### Deploying the `firebase-direct` function
-
-Deploy the example Edge Function using the Supabase CLI:
-
-```bash
-supabase functions deploy firebase-direct
-```
-
-Run this command from your terminal (not the SQL editor). Install the CLI with
-`npm install -g supabase` and authenticate using `supabase login` before
-deploying.
-
-You can also automate the deployment using GitHub Actions. The workflow
-defined in `.github/workflows/deploy-edge-functions.yml` deploys the
-`firebase-direct` function whenever changes are pushed to `main`. Configure the
-`SUPABASE_ACCESS_TOKEN` and `SUPABASE_PROJECT_REF` secrets in your repository so
-the action can authenticate with Supabase.
+`/dashboard/firebase-test` while the app is running. The page writes to Firebase
+using the client SDK and shows the JSON response so you can confirm that your
+credentials are correct. Open your browser's console to see the request and
+response logs from the page.
 
 ## Seat utilities
 

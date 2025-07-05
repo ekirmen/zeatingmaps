@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { supabase } from '../services/supabaseClient';
 import { getDatabaseInstance } from '../../services/firebaseClient';
 import { ref, set } from 'firebase/database';
 
@@ -9,35 +8,6 @@ const FirebaseTest = () => {
   const [path, setPath] = useState('/test');
   const [message, setMessage] = useState('');
 
-const handleTest = async () => {
-    const payload = {
-      operation: 'PUT',
-      path,
-      data: {
-        mensaje: message || 'Prueba de conexión desde el frontend',
-        timestamp: new Date().toISOString(),
-        random: Math.floor(Math.random() * 100000),
-        id: crypto.randomUUID(),
-      },
-    };
-
-    console.log('[FirebaseTest] Invoking firebase-direct', payload);
-    setLoading(true);
-
-    const { data, error } = await supabase.functions.invoke('firebase-direct', {
-      body: payload,
-    });
-
-    setLoading(false);
-
-    if (error) {
-      console.error('[FirebaseTest] Error', error);
-      setResult({ error: error.message });
-    } else {
-      console.log('[FirebaseTest] Response', data);
-      setResult(data);
-    }
-  };
 
   const handleDirectWrite = async () => {
     setLoading(true);
@@ -56,7 +26,7 @@ const handleTest = async () => {
         random: Math.floor(Math.random() * 100000),
         id,
       });
-      setResult({ success: true, method: 'firebase-direct' });
+      setResult({ success: true, method: 'client-sdk' });
     } catch (error) {
       console.error('[FirebaseTest] Firebase direct error', error);
       setResult({ error: error.message });
@@ -83,18 +53,11 @@ const handleTest = async () => {
       />
       <div className="flex gap-4">
         <button
-          onClick={handleTest}
-          disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition"
-        >
-          {loading ? 'Enviando...' : 'Enviar (edge)'}
-        </button>
-        <button
           onClick={handleDirectWrite}
           disabled={loading}
           className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded transition"
         >
-          {loading ? 'Enviando...' : 'Enviar directo'}
+          {loading ? 'Enviando...' : 'Enviar'}
         </button>
       </div>
       {result && (
