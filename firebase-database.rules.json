@@ -1,0 +1,21 @@
+{
+  "rules": {
+    "reserved": {
+      "$chart_id": {
+        ".indexOn": ["timestamp"]
+      }
+    },
+    "in-cart": {
+      "$chart_id": {
+        "$seat": {
+          ".indexOn": ["timestamp"],
+          ".read": true,
+          ".write": true,
+          ".validate": "newData.hasChildren(['status', 'timestamp', 'session_id', 'expires', 'seatDetails']) && newData.child('status').isString() && newData.child('timestamp').isNumber() && newData.child('session_id').isString() && newData.child('expires').isNumber() && newData.child('seatDetails').hasChildren(['zona', 'precio', 'nombreMesa', 'zonaNombre', 'tipoPrecio', 'descuentoNombre'])"
+        }
+      }
+    },
+    ".read": true,
+    ".write": true
+  }
+}

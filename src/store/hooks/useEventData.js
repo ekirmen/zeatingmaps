@@ -256,7 +256,9 @@ const useEventData = (eventId, seatMapRef) => {
       console.error('Error actualizando asiento', err);
     }
 
-    if (carrito.length === 0 && nuevoCarrito.length > 0) startTimer();
+    if (carrito.length === 0 && nuevoCarrito.length > 0) {
+      startTimer();
+    }
     if (nuevoCarrito.length === 0) {
       clearInterval(timerRef.current);
       setTimeLeft(0);

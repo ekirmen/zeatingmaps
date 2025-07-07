@@ -59,7 +59,19 @@ const useFirebaseSeatLocks = (
           // Add locked seats not in carrito
           const newSeats = lockedSeatIds
             .filter(seatId => !currentCarrito.some(c => c._id === seatId))
-            .map(seatId => ({ _id: seatId, locked: true }));
+            .map(seatId => {
+              const lock = locks[seatId];
+              return {
+                _id: seatId,
+                locked: true,
+                zona: lock?.seatDetails?.zona || null,
+                precio: lock?.seatDetails?.precio || null,
+                nombreMesa: lock?.seatDetails?.nombreMesa || null,
+                zonaNombre: lock?.seatDetails?.zonaNombre || null,
+                tipoPrecio: lock?.seatDetails?.tipoPrecio || null,
+                descuentoNombre: lock?.seatDetails?.descuentoNombre || null,
+              };
+            });
           // Remove seats unlocked
           const updatedCarrito = currentCarrito.filter(c => lockedSeatIds.includes(c._id));
           const combinedCarrito = [...updatedCarrito, ...newSeats];
