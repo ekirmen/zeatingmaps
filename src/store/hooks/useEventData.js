@@ -40,6 +40,37 @@ const useEventData = (eventId, seatMapRef) => {
   const cartRef = useRef([]);
   const timerRef = useRef(null);
 
+  // Use a unique localStorage key per user/session to isolate carts
+  const localStorageCartKey = `cart-${eventId}-${selectedFunctionId || 'none'}`;
+
+  // Load cart from localStorage on mount or when eventId or selectedFunctionId changes
+  useEffect(() => {
+    try {
+      const savedCart = localStorage.getItem(localStorageCartKey);
+      if (savedCart) {
+        const parsedCart = JSON.parse(savedCart);
+        setCarrito(parsedCart);
+        setCart(parsedCart, selectedFunctionId);
+      } else {
+        setCarrito([]);
+        setCart([], selectedFunctionId);
+      }
+    } catch (e) {
+      console.error('Error loading cart from localStorage', e);
+      setCarrito([]);
+      setCart([], selectedFunctionId);
+    }
+  }, [localStorageCartKey, setCart, selectedFunctionId]);
+
+  // Save cart to localStorage whenever carrito changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(localStorageCartKey, JSON.stringify(carrito));
+    } catch (e) {
+      console.error('Error saving cart to localStorage', e);
+    }
+  }, [carrito, localStorageCartKey]);
+
   const closeSeatPopup = () => {
     setShowSeatPopup(false);
     try {
@@ -264,7 +295,15 @@ const useEventData = (eventId, seatMapRef) => {
       setTimeLeft(0);
     }
 
-    setCarrito(nuevoCarrito);
+    // Sort nuevoCarrito by seat number or id to keep order stable and fluid
+    const sortedCarrito = nuevoCarrito.slice().sort((a, b) => {
+      if (a.nombre && b.nombre) {
+        return a.nombre.localeCompare(b.nombre);
+      }
+      return (a._id || '').localeCompare(b._id || '');
+    });
+
+    setCarrito(sortedCarrito);
   };
 
   useEffect(() => {

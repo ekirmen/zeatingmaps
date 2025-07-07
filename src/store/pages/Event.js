@@ -40,7 +40,8 @@ const Event = () => {
     showSeatPopup,
     toggleSillaEnCarrito,
     applyDiscountCode,
-    closeSeatPopup
+    closeSeatPopup,
+    setCarrito
   } = useEventData(eventId, seatMapRef);
 
   // Extract images from evento.imagenes object
@@ -243,6 +244,12 @@ const Event = () => {
             </button>
           </div>
         ))}
+        <button
+          onClick={() => setCarrito([])}
+          className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
+        >
+          Limpiar carrito
+        </button>
         <button
           onClick={() => {
             const path = refParam ? `/store/pay?ref=${refParam}` : '/store/pay';
