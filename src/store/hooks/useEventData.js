@@ -123,7 +123,9 @@ const useEventData = (eventId, seatMapRef) => {
   }, [funciones]);
 
   const loadMapaYSeats = useCallback(async () => {
-    const funcion = funciones.find(f => f.id === selectedFunctionId);
+    console.log('loadMapaYSeats: funciones:', funciones);
+    console.log('loadMapaYSeats: selectedFunctionId:', selectedFunctionId, 'type:', typeof selectedFunctionId);
+    const funcion = funciones.find(f => String(f.id) === String(selectedFunctionId));
     if (!funcion) {
       console.warn('loadMapaYSeats: funcion not found for selectedFunctionId:', selectedFunctionId);
       return;
