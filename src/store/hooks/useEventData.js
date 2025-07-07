@@ -175,15 +175,20 @@ const useEventData = (eventId, seatMapRef) => {
     } catch (err) {
       console.error('Error loading mapa/seats', err);
     }
-  }, [selectedFunctionId, funciones, carrito, evento]);
+  }, [selectedFunctionId, funciones, evento]);
 
   const startTimer = useCallback(() => {
-    clearInterval(timerRef.current);
+    if (timerRef.current) {
+      console.log('startTimer: timer already running, skipping restart');
+      return;
+    }
+    console.log('startTimer: starting timer');
     setTimeLeft(duration ? duration * 60 : 900);
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
+          timerRef.current = null;
           setCarrito([]);
           return 0;
         }
@@ -191,6 +196,7 @@ const useEventData = (eventId, seatMapRef) => {
       });
     }, 1000);
   }, [duration]);
+
 
   const applyDiscountCode = async () => {
     if (!discountCode.trim()) return;
