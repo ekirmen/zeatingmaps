@@ -9,17 +9,17 @@ export const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cart, setCartState] = useState(() => {
-    const savedCart = localStorage.getItem('cart');
+    const savedCart = sessionStorage.getItem('cart');
     return savedCart ? JSON.parse(savedCart) : { items: [], functionId: null };
   });
 
   const [expiration, setExpiration] = useState(() => {
-    const saved = localStorage.getItem('cartExpiration');
+    const saved = sessionStorage.getItem('cartExpiration');
     return saved ? parseInt(saved, 10) : null;
   });
 
   const [duration, setDuration] = useState(() => {
-    const saved = localStorage.getItem('cartSeatMinutes');
+    const saved = sessionStorage.getItem('cartSeatMinutes');
     const mins = saved ? parseInt(saved, 10) : 15;
     return isNaN(mins) ? 15 : mins;
   });
@@ -39,7 +39,7 @@ export const CartProvider = ({ children }) => {
         const mins = parseInt(data.value, 10);
         if (!isNaN(mins)) {
           setDuration(mins);
-          localStorage.setItem('cartSeatMinutes', String(mins));
+          sessionStorage.setItem('cartSeatMinutes', String(mins));
         }
       }
     };
@@ -48,21 +48,21 @@ export const CartProvider = ({ children }) => {
 
   const updateCart = useCallback((newCart) => {
     setCartState(newCart);
-    localStorage.setItem('cart', JSON.stringify(newCart));
+    sessionStorage.setItem('cart', JSON.stringify(newCart));
   }, []);
 
   const setCart = useCallback(
     (items, functionId = null) => {
       setCartState(prev => {
         const updated = { items, functionId: functionId ?? prev.functionId };
-        localStorage.setItem('cart', JSON.stringify(updated));
+        sessionStorage.setItem('cart', JSON.stringify(updated));
         if (items.length > 0) {
           const expiresAt = Date.now() + duration * 60 * 1000; // minutes from settings
           setExpiration(expiresAt);
-          localStorage.setItem('cartExpiration', String(expiresAt));
+          sessionStorage.setItem('cartExpiration', String(expiresAt));
         } else {
           setExpiration(null);
-          localStorage.removeItem('cartExpiration');
+          sessionStorage.removeItem('cartExpiration');
           setTimeLeft(0);
         }
         return updated;
@@ -92,7 +92,7 @@ export const CartProvider = ({ children }) => {
 
       const expiresAt = Date.now() + duration * 60 * 1000; // minutes from settings
       setExpiration(expiresAt);
-      localStorage.setItem('cartExpiration', String(expiresAt));
+      sessionStorage.setItem('cartExpiration', String(expiresAt));
 
       toast.success('Asientos añadidos al carrito');
     } catch (error) {
@@ -121,7 +121,7 @@ export const CartProvider = ({ children }) => {
 
       updateCart({ items: [], functionId: null });
       setExpiration(null);
-      localStorage.removeItem('cartExpiration');
+      sessionStorage.removeItem('cartExpiration');
       setTimeLeft(0);
     } catch (error) {
       toast.error(error.message || 'Error al limpiar el carrito');

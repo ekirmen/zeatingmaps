@@ -120,24 +120,24 @@ const SeatMap = ({ funcionId }) => {
     if (!isUuid(seatId)) return;
     try {
       const currentSeat = seats.find((s) => s.id === seatId);
+      const sessionId = getCartSessionId();
       if (
         currentSeat &&
         (currentSeat.status === 'blocked' ||
           (currentSeat.status === 'selected' &&
-            currentSeat.selected_by !== supabase.auth.user()?.id))
+            currentSeat.selected_by !== sessionId))
       ) {
         alert('Este asiento ya está seleccionado por otro usuario');
         return;
       }
-      const user = supabase.auth.user();
       const isCurrentlySelected =
-        selectedSeats[seatId] && selectedSeats[seatId].selectedBy === user?.id;
+        selectedSeats[seatId] && selectedSeats[seatId].selectedBy === sessionId;
       const newStatus = isCurrentlySelected ? 'available' : 'selected';
       const { error } = await supabase
         .from('seats')
         .update({
           status: newStatus,
-          selected_by: isCurrentlySelected ? null : user?.id,
+          selected_by: isCurrentlySelected ? null : sessionId,
           selected_at: isCurrentlySelected ? null : new Date().toISOString(),
         })
         .eq('id', seatId);
