@@ -272,7 +272,9 @@ const useEventData = (eventId, seatMapRef) => {
   }, [cart]);
 
   useEffect(() => {
-    setCart(carrito, selectedFunctionId);
+    if (carrito.length > 0) {
+      setCart(carrito, selectedFunctionId);
+    }
   }, [carrito, selectedFunctionId, setCart]);
 
   useEffect(() => {
