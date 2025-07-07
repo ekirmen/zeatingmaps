@@ -53,10 +53,35 @@ export const lockSeat = async (
       expires: options.expires || getExpiration(),
       seatDetails: options.seatDetails || null,
     };
-    await set(ref(db, path), payload);
-    console.log('[seatLocks] Seat', id, 'stored in Firebase with status', status);
+    try {
+      await set(ref(db, path), payload);
+      console.log('[seatLocks] Seat', id, 'stored in Firebase with status', status);
+    } catch (error) {
+      console.error('[seatLocks] Error storing seat lock:', error);
+    }
   } else {
     console.log('[seatLocks] No Firebase database instance available');
+  }
+};
+
+// Cleanup expired locks for a given functionId
+export const cleanupExpiredLocks = async (funcionId) => {
+  const db = await getDatabaseInstance();
+  if (!db) return;
+  const locksRef = ref(db, `in-cart/${funcionId}`);
+  try {
+    const snapshot = await locksRef.get();
+    const locks = snapshot.val() || {};
+    const now = Date.now();
+    for (const [seatId, lock] of Object.entries(locks)) {
+      if (lock.expires && lock.expires < now) {
+        const seatRef = ref(db, `in-cart/${funcionId}/${seatId}`);
+        await remove(seatRef);
+        console.log(`[seatLocks] Removed expired lock for seat ${seatId}`);
+      }
+    }
+  } catch (error) {
+    console.error('[seatLocks] Error cleaning up expired locks:', error);
   }
 };
 

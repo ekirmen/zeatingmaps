@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Stage, Layer } from 'react-konva';
+import React, { useState, useRef, useEffect } from 'react';
+import { Stage, Layer, Circle, Rect, Text, Label, Tag } from 'react-konva';
 import Table from './Table';
 import Chair from './Chair';
 
@@ -12,12 +12,13 @@ const generateChairs = (table) => {
     const rad = (angle * Math.PI) / 180;
     const x = table.x + Math.cos(rad) * radius;
     const y = table.y + Math.sin(rad) * radius;
-    chairs.push({ id: `${table.id}-c${i}`, x, y });
+    chairs.push({ id: `${table.id}-c${i}`, x, y, status: 'available' });
   }
   return chairs;
 };
 
 const SeatingMap = () => {
+  const stageRef = useRef(null);
   const [tables, setTables] = useState([]);
   const [seatRows, setSeatRows] = useState([]);
   const [activeRow, setActiveRow] = useState(null);
@@ -27,24 +28,42 @@ const SeatingMap = () => {
   const [selectedSeatRow, setSelectedSeatRow] = useState(null);
   const [selectedTable, setSelectedTable] = useState(null);
   const [editName, setEditName] = useState('');
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
   const seatSpacing = 30;
 
-  const addTable = (type = 'rect') => {
-    const id = `t-${Date.now()}`;
-    const table = {
-      id,
-      type,
-      x: 150,
-      y: 150,
-      width: 80,
-      height: 60,
-      radius: 40,
-      name: `Mesa ${tables.length + 1}`,
-      capacity: 4,
+  useEffect(() => {
+    const stage = stageRef.current;
+    const container = stage?.container();
+
+    const handleWheel = (e) => {
+      e.preventDefault();
+      const scaleBy = 1.1;
+      const oldScale = scale;
+      const pointer = stage.getPointerPosition();
+      if (!pointer) return;
+
+      const mousePointTo = {
+        x: (pointer.x - position.x) / oldScale,
+        y: (pointer.y - position.y) / oldScale,
+      };
+
+      const newScale = Math.min(Math.max(e.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy, 0.5), 5);
+
+      setScale(newScale);
+      setPosition({
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+      });
     };
-    table.chairs = generateChairs(table);
-    setTables([...tables, table]);
-  };
+
+    container?.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      container?.removeEventListener('wheel', handleWheel);
+    };
+  }, [scale, position]);
 
   const moveTable = (id, e) => {
     const { x, y } = e.target.position();
@@ -58,8 +77,6 @@ const SeatingMap = () => {
   };
 
   const startSeatRow = () => {
-    // Preserve previously typed row names when reopening the modal. Only
-    // initialize the input if it is empty to avoid losing the user's value.
     if (!rowNameInput) {
       setRowNameInput(`A${seatRows.length + 1}`);
     }
@@ -77,7 +94,7 @@ const SeatingMap = () => {
     if (!activeRow) return;
     const stage = e.target.getStage();
     const pos = stage.getPointerPosition();
-    const seat = { id: `${activeRow.zone}-${activeRow.seats.length + 1}`, x: pos.x, y: pos.y };
+    const seat = { id: `${activeRow.zone}-${activeRow.seats.length + 1}`, x: pos.x, y: pos.y, status: 'available' };
     setActiveRow({ ...activeRow, seats: [seat] });
     setIsDrawing(true);
   };
@@ -91,7 +108,7 @@ const SeatingMap = () => {
     const dy = pos.y - lastSeat.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist >= seatSpacing) {
-      const seat = { id: `${activeRow.zone}-${activeRow.seats.length + 1}`, x: pos.x, y: pos.y };
+      const seat = { id: `${activeRow.zone}-${activeRow.seats.length + 1}`, x: pos.x, y: pos.y, status: 'available' };
       setActiveRow({ ...activeRow, seats: [...activeRow.seats, seat] });
     }
   };
@@ -144,21 +161,65 @@ const SeatingMap = () => {
   return (
     <div>
       <div style={{ marginBottom: '8px' }}>
-        <button onClick={() => addTable('rect')} style={{ marginRight: '4px' }}>
+        <button onClick={() => setTables([...tables, {
+          id: `t-${Date.now()}`,
+          type: 'rect',
+          x: 150,
+          y: 150,
+          width: 80,
+          height: 60,
+          radius: 40,
+          name: `Mesa ${tables.length + 1}`,
+          capacity: 4,
+          chairs: generateChairs({
+            id: `t-${Date.now()}`,
+            type: 'rect',
+            x: 150,
+            y: 150,
+            width: 80,
+            height: 60,
+            radius: 40,
+          }),
+        }])} style={{ marginRight: '4px' }}>
           Agregar mesa rectangular
         </button>
-        <button onClick={() => addTable('circle')} style={{ marginRight: '4px' }}>
+        <button onClick={() => setTables([...tables, {
+          id: `t-${Date.now()}`,
+          type: 'circle',
+          x: 150,
+          y: 150,
+          width: 80,
+          height: 60,
+          radius: 40,
+          name: `Mesa ${tables.length + 1}`,
+          capacity: 4,
+          chairs: generateChairs({
+            id: `t-${Date.now()}`,
+            type: 'circle',
+            x: 150,
+            y: 150,
+            width: 80,
+            height: 60,
+            radius: 40,
+          }),
+        }])} style={{ marginRight: '4px' }}>
           Agregar mesa circular
         </button>
         <button onClick={startSeatRow}>Crear fila de sillas</button>
       </div>
       <Stage
+        ref={stageRef}
         width={800}
         height={600}
         style={{ border: '1px solid #ccc' }}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        draggable
+        scaleX={scale}
+        scaleY={scale}
+        x={position.x}
+        y={position.y}
       >
         <Layer>
           {tables.map((t) => (
@@ -178,6 +239,12 @@ const SeatingMap = () => {
             activeRow.seats.map((seat) => (
               <Chair key={seat.id} {...seat} onSelect={handleSeatSelect} />
             ))}
+          {tooltip.visible && (
+            <Label x={tooltip.x} y={tooltip.y}>
+              <Tag fill="black" opacity={0.75} cornerRadius={4} />
+              <Text text={tooltip.text} fontSize={12} fill="white" padding={4} />
+            </Label>
+          )}
         </Layer>
       </Stage>
 
