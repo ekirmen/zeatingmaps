@@ -265,9 +265,19 @@ const useEventData = (eventId, seatMapRef) => {
     setCarrito(nuevoCarrito);
   };
 
-  useEffect(() => { setCarrito(cart); }, [cart]);
-  useEffect(() => { setCart(carrito, selectedFunctionId); }, [carrito, selectedFunctionId, setCart]);
-  useEffect(() => { cartRef.current = carrito; }, [carrito]);
+  useEffect(() => {
+    if (JSON.stringify(carrito) !== JSON.stringify(cart)) {
+      setCarrito(cart);
+    }
+  }, [cart]);
+
+  useEffect(() => {
+    setCart(carrito, selectedFunctionId);
+  }, [carrito, selectedFunctionId, setCart]);
+
+  useEffect(() => {
+    cartRef.current = carrito;
+  }, [carrito]);
 
   useEffect(() => { isFirebaseEnabled().then(setFirebaseEnabled); }, []);
   useEffect(() => { if (eventId) loadEvento(); }, [eventId, loadEvento]);
