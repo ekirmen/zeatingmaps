@@ -48,21 +48,24 @@ const Event = () => {
     closeSeatPopup
   } = useEventData(eventId, seatMapRef);
 
-  console.log('Event.js - mapa:', mapa);
-  console.log('Event.js - zonas:', zonas);
-  console.log('Event.js - selectedFunctionId:', selectedFunctionId);
+  // Extract images from evento.imagenes object
+  const images = evento?.imagenes ? Object.entries(evento.imagenes).filter(([key, url]) => url) : [];
+
+  // Separate portada and banner images
+  const portadaImage = evento?.imagenes?.portada || null;
+  const bannerImage = evento?.imagenes?.banner || null;
+
+  // Other images excluding portada and banner
+  const otherImages = images.filter(([key]) => key !== 'portada' && key !== 'banner');
 
   // Allow selecting a function via query parameter
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const funcId = params.get('funcion');
-    console.log('Event.js - query param funcion:', funcId);
     if (funcId) {
       setSelectedFunctionId(funcId);
     }
   }, [location.search, setSelectedFunctionId]);
-
-  console.log('Event.js - eventId param:', eventId);
 
   const getEmbedUrl = (url) => {
     if (!url) return url;
@@ -102,8 +105,6 @@ const Event = () => {
     }
   };
 
-
-
   return (
     <div className="p-4">
       {timeLeft > 0 && (
@@ -115,13 +116,12 @@ const Event = () => {
         </div>
       )}
 
-      {(evento?.imagenes?.portada || evento?.imagenes?.banner) && (
+      {/* Display portada image as main banner */}
+      {portadaImage && (
         <div className="relative mb-4">
           <img
-            src={resolveImageUrl(
-              evento?.imagenes?.portada || evento?.imagenes?.banner
-            )}
-            alt={`Imagen de ${evento.nombre}`}
+            src={resolveImageUrl(portadaImage)}
+            alt={`Portada de ${evento?.nombre}`}
             className="w-full max-h-[80vh] object-cover rounded"
           />
           <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-4 text-white rounded">
@@ -139,6 +139,31 @@ const Event = () => {
               )
             )}
           </div>
+        </div>
+      )}
+
+      {/* Display banner image below portada */}
+      {bannerImage && bannerImage !== portadaImage && (
+        <div className="mb-4">
+          <img
+            src={resolveImageUrl(bannerImage)}
+            alt={`Banner de ${evento?.nombre}`}
+            className="w-full max-h-[40vh] object-cover rounded"
+          />
+        </div>
+      )}
+
+      {/* Display other images in a gallery */}
+      {otherImages.length > 0 && (
+        <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {otherImages.map(([key, url]) => (
+            <img
+              key={key}
+              src={resolveImageUrl(url)}
+              alt={`${evento?.nombre} - ${key}`}
+              className="rounded shadow-md object-cover w-full h-32"
+            />
+          ))}
         </div>
       )}
 
