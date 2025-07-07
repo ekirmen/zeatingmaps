@@ -122,7 +122,13 @@ const useEventData = (eventId, seatMapRef) => {
     }
   }, [funciones]);
 
+  const mapaLoadedForFunctionId = useRef(null);
+
   const loadMapaYSeats = useCallback(async () => {
+    if (mapaLoadedForFunctionId.current === selectedFunctionId) {
+      // Prevent repeated loading if already loaded for this function
+      return;
+    }
     console.log('loadMapaYSeats: funciones:', funciones);
     console.log('loadMapaYSeats: selectedFunctionId:', selectedFunctionId, 'type:', typeof selectedFunctionId);
     const funcion = funciones.find(f => String(f.id) === String(selectedFunctionId));
@@ -160,6 +166,7 @@ const useEventData = (eventId, seatMapRef) => {
       };
 
       setMapa(actualizado);
+      mapaLoadedForFunctionId.current = selectedFunctionId;
 
       if (funcion.plantilla?.id || funcion.plantilla?._id) {
         const plantilla = await fetchPlantillaPrecios(funcion.plantilla.id || funcion.plantilla._id);
