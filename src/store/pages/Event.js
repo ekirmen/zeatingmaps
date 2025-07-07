@@ -56,10 +56,13 @@ const Event = () => {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const funcId = params.get('funcion');
+    console.log('Event.js - query param funcion:', funcId);
     if (funcId) {
       setSelectedFunctionId(funcId);
     }
   }, [location.search, setSelectedFunctionId]);
+
+  console.log('Event.js - eventId param:', eventId);
 
   const getEmbedUrl = (url) => {
     if (!url) return url;
