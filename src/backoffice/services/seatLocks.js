@@ -51,6 +51,7 @@ export const lockSeat = async (
       timestamp: Date.now(),
       session_id: getSessionId(),
       expires: options.expires || getExpiration(),
+      seatDetails: options.seatDetails || null,
     };
     await set(ref(db, path), payload);
     console.log('[seatLocks] Seat', id, 'stored in Firebase with status', status);

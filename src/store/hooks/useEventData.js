@@ -249,7 +249,7 @@ const useEventData = (eventId, seatMapRef) => {
       } else {
         await Promise.all([
           createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'bloqueado' }),
-          lockSeat(silla._id, 'bloqueado', selectedFunctionId)
+          lockSeat(silla._id, 'bloqueado', selectedFunctionId, { seatDetails: { zona: zonaId, precio: finalPrice, nombreMesa: mesa?.nombre, zonaNombre, tipoPrecio, descuentoNombre } })
         ]);
       }
     } catch (err) {
