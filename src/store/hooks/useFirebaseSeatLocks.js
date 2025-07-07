@@ -9,6 +9,8 @@ const useFirebaseSeatLocks = (
   zonas,
   setMapa,
   cartRef,
+  setCarrito,
+  carritoRef,
   enabled = true
 ) => {
   useEffect(() => {
@@ -49,6 +51,21 @@ const useFirebaseSeatLocks = (
             }))
           };
         });
+
+        // Update carrito based on locks
+        if (setCarrito && carritoRef) {
+          const lockedSeatIds = Object.keys(locks);
+          const currentCarrito = carritoRef.current || [];
+          // Add locked seats not in carrito
+          const newSeats = lockedSeatIds
+            .filter(seatId => !currentCarrito.some(c => c._id === seatId))
+            .map(seatId => ({ _id: seatId, locked: true }));
+          // Remove seats unlocked
+          const updatedCarrito = currentCarrito.filter(c => lockedSeatIds.includes(c._id));
+          const combinedCarrito = [...updatedCarrito, ...newSeats];
+          setCarrito(combinedCarrito);
+          carritoRef.current = combinedCarrito;
+        }
       };
       onValue(locksRef, handler);
       unsubscribe = () => off(locksRef, 'value', handler);
@@ -56,7 +73,7 @@ const useFirebaseSeatLocks = (
 
     setup();
     return () => unsubscribe();
-  }, [selectedFunctionId, zonas, setMapa, cartRef, enabled]);
+  }, [selectedFunctionId, zonas, setMapa, cartRef, setCarrito, carritoRef, enabled]);
 };
 
 export default useFirebaseSeatLocks;

@@ -263,7 +263,7 @@ const useEventData = (eventId, seatMapRef) => {
   useEffect(() => { if (selectedFunctionId) loadMapaYSeats(); }, [selectedFunctionId, loadMapaYSeats]);
   useEffect(() => { fetchPayments().then(setPagos).catch(() => setPagos([])); }, []);
 
-  useFirebaseSeatLocks(selectedFunctionId, zonas, setMapa, cartRef, firebaseEnabled);
+  useFirebaseSeatLocks(selectedFunctionId, zonas, setMapa, cartRef, setCarrito, cartRef, firebaseEnabled);
   useSeatRealtime({ funcionId: firebaseEnabled ? null : selectedFunctionId, onSeatUpdate: () => {} });
   useEffect(() => () => clearInterval(timerRef.current), []);
 
