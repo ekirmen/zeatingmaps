@@ -3,10 +3,10 @@ let cachedSessionId = null;
 const getCartSessionId = () => {
   if (cachedSessionId) return cachedSessionId;
   try {
-    cachedSessionId = localStorage.getItem('cart_session_id');
+    cachedSessionId = sessionStorage.getItem('cart_session_id');
     if (!cachedSessionId) {
       cachedSessionId = crypto.randomUUID();
-      localStorage.setItem('cart_session_id', cachedSessionId);
+      sessionStorage.setItem('cart_session_id', cachedSessionId);
     }
   } catch (err) {
     cachedSessionId = crypto.randomUUID();
