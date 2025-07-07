@@ -124,14 +124,19 @@ const useEventData = (eventId, seatMapRef) => {
 
   const loadMapaYSeats = useCallback(async () => {
     const funcion = funciones.find(f => f.id === selectedFunctionId);
-    if (!funcion) return;
+    if (!funcion) {
+      console.warn('loadMapaYSeats: funcion not found for selectedFunctionId:', selectedFunctionId);
+      return;
+    }
 
     try {
       const salaId = typeof funcion.sala === 'object' ? funcion.sala.id || funcion.sala._id : funcion.sala;
+      console.log('loadMapaYSeats: salaId:', salaId);
       const [mapaSala, seatStates] = await Promise.all([
         fetchMapa(salaId),
         fetchSeatsByFuncion(selectedFunctionId),
       ]);
+      console.log('loadMapaYSeats: mapaSala:', mapaSala);
 
       const mapaData = mapaSala || await getMapaPorEvento(evento?.id || funcion.evento);
       const seatMap = Object.fromEntries(seatStates.map(s => [s._id || s.id, s.bloqueado ? 'bloqueado' : s.status]));
