@@ -5,7 +5,7 @@ import { useRefParam } from '../../contexts/RefContext';
 import { Modal } from 'antd';
 import SeatingMap from '../components/SeatingMap';
 import { getCmsPage } from '../services/apistore';
-import EventListWidget from '../components/EventLegistWidget';
+import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 import API_BASE_URL from '../../utils/apiBase';
 import resolveImageUrl from '../../utils/resolveImageUrl';
