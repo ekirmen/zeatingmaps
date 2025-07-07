@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { fetchMapa, fetchPlantillaPrecios, getFunciones, getMapaPorEvento } from '../services/apistore';
 import { fetchZonasPorSala } from '../../services/supabaseServices';
-import { fetchSeatsByFuncion, updateSeat, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
+import { fetchSeatsByFuncion, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
 import { lockSeat, unlockSeat } from '../../backoffice/services/seatLocks';
 import { supabase } from '../../supabaseClient';
 import { fetchPayments } from '../../backoffice/services/apibackoffice';
@@ -28,14 +28,14 @@ const useEventData = (eventId, seatMapRef) => {
   const [zonas, setZonas] = useState([]);
   const [pagos, setPagos] = useState([]);
   const [recintoInfo, setRecintoInfo] = useState(null);
-  const [tagNames, setTagNames] = useState([]);
+  const [tagNames] = useState([]);
   const [showSeatPopup, setShowSeatPopup] = useState(false);
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [firebaseEnabled, setFirebaseEnabled] = useState(false);
 
-  const { cart, setCart, functionId, duration } = useCart();
+  const { cart, setCart, duration } = useCart();
   const [carrito, setCarrito] = useState([]);
   const cartRef = useRef([]);
   const timerRef = useRef(null);
@@ -175,7 +175,7 @@ const useEventData = (eventId, seatMapRef) => {
     } catch (err) {
       console.error('Error loading mapa/seats', err);
     }
-  }, [selectedFunctionId, funciones, evento]);
+  }, [selectedFunctionId, funciones, evento, carrito]);
 
   const startTimer = useCallback(() => {
     if (timerRef.current) {
@@ -215,8 +215,8 @@ const useEventData = (eventId, seatMapRef) => {
   };
 
   const toggleSillaEnCarrito = async (silla, mesa) => {
-    const zonaId = silla.zona || mesa.zona;
-    if (!zonaId || ['reservado', 'pagado'].includes(silla.estado) || silla.bloqueado) return;
+    const zonaId = silla?.zona || mesa?.zona;
+    if (!zonaId || ['reservado', 'pagado'].includes(silla?.estado) || silla?.bloqueado) return;
 
     const index = carrito.findIndex(item => item._id === silla._id);
     const basePrice = plantillaPrecios?.detalles.find(p => p.zonaId === zonaId)?.precio || 100;
@@ -226,7 +226,7 @@ const useEventData = (eventId, seatMapRef) => {
     let descuentoNombre = '';
 
     if (appliedDiscount?.detalles) {
-      const detalle = appliedDiscount.detalles.find(d => d.zona === silla.zona);
+      const detalle = appliedDiscount.detalles.find(d => d.zona === silla?.zona);
       if (detalle) {
         finalPrice = detalle.tipo === 'porcentaje'
           ? basePrice * (1 - detalle.valor / 100)
@@ -238,7 +238,7 @@ const useEventData = (eventId, seatMapRef) => {
 
     const nuevoCarrito = index !== -1
       ? carrito.filter(item => item._id !== silla._id)
-      : [...carrito, { ...silla, zona: zonaId, precio: finalPrice, nombreMesa: mesa.nombre, zonaNombre, tipoPrecio, descuentoNombre }];
+      : [...carrito, { ...silla, zona: zonaId, precio: finalPrice, nombreMesa: mesa?.nombre, zonaNombre, tipoPrecio, descuentoNombre }];
 
     try {
       if (index !== -1) {
@@ -266,7 +266,7 @@ const useEventData = (eventId, seatMapRef) => {
   };
 
   useEffect(() => { setCarrito(cart); }, [cart]);
-  useEffect(() => { setCart(carrito, selectedFunctionId); }, [carrito, selectedFunctionId]);
+  useEffect(() => { setCart(carrito, selectedFunctionId); }, [carrito, selectedFunctionId, setCart]);
   useEffect(() => { cartRef.current = carrito; }, [carrito]);
 
   useEffect(() => { isFirebaseEnabled().then(setFirebaseEnabled); }, []);

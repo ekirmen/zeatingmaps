@@ -7,7 +7,6 @@ import SeatingMap from '../components/SeatingMap';
 import { getCmsPage } from '../services/apistore';
 import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
-import API_BASE_URL from '../../utils/apiBase';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 import { useTranslation } from 'react-i18next';
 import { QRCodeSVG } from '@rc-component/qrcode';
@@ -15,7 +14,6 @@ import formatDateString from '../../utils/formatDateString';
 import EventMap from '../../components/EventMap';
 import useEventData from '../hooks/useEventData';
 
-const API_URL = API_BASE_URL;
 const Event = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
@@ -31,18 +29,15 @@ const Event = () => {
     selectedFunctionId,
     setSelectedFunctionId,
     mapa,
-    plantillaPrecios,
     carrito,
     zonas,
-    pagos,
-    showSeatPopup,
-    setShowSeatPopup,
     discountCode,
     setDiscountCode,
     appliedDiscount,
     timeLeft,
     tagNames,
     recintoInfo,
+    showSeatPopup,
     toggleSillaEnCarrito,
     applyDiscountCode,
     closeSeatPopup
