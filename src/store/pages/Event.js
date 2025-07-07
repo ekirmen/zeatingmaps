@@ -5,7 +5,7 @@ import { useRefParam } from '../../contexts/RefContext';
 import { Modal } from 'antd';
 import SeatingMap from '../components/SeatingMap';
 import { getCmsPage } from '../services/apistore';
-import EventListWidget from '../components/EventListWidget';
+import EventListWidget from '../components/EventLegistWidget';
 import FaqWidget from '../components/FaqWidget';
 import API_BASE_URL from '../../utils/apiBase';
 import resolveImageUrl from '../../utils/resolveImageUrl';
@@ -47,6 +47,10 @@ const Event = () => {
     applyDiscountCode,
     closeSeatPopup
   } = useEventData(eventId, seatMapRef);
+
+  console.log('Event.js - mapa:', mapa);
+  console.log('Event.js - zonas:', zonas);
+  console.log('Event.js - selectedFunctionId:', selectedFunctionId);
 
   // Allow selecting a function via query parameter
   useEffect(() => {
@@ -186,7 +190,11 @@ const Event = () => {
 
       <div className="md:flex md:items-start md:gap-6">
         <div ref={seatMapRef} className="my-6 border rounded shadow-md p-4 flex justify-center bg-gray-100 md:flex-1">
-          <SeatingMap mapa={mapa} zonas={zonas} onClickSilla={toggleSillaEnCarrito} />
+          {mapa && mapa.contenido && mapa.contenido.length > 0 ? (
+            <SeatingMap mapa={mapa} zonas={zonas} onClickSilla={toggleSillaEnCarrito} />
+          ) : (
+            <div className="text-gray-500 italic">Mapa no disponible o vacío</div>
+          )}
         </div>
 
         <div className="bg-white p-4 rounded shadow-md mt-6 md:mt-6 md:w-80">
