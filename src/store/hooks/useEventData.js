@@ -301,7 +301,7 @@ const useEventData = (eventId, seatMapRef) => {
     // Sort nuevoCarrito by seat number or id to keep order stable and fluid
     const sortedCarrito = nuevoCarrito.slice().sort((a, b) => {
       if (a.nombre && b.nombre) {
-        return a.nombre.localeCompare(b.nombre);
+        return String(a.nombre).localeCompare(String(b.nombre));
       }
       return (a._id || '').localeCompare(b._id || '');
     });
