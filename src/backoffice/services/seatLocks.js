@@ -34,7 +34,7 @@ export const lockSeat = async (
     const payload = {
       status,
       timestamp: Date.now(),
-      session_id: getCartSessionId(),
+      session_id: options.sessionId || getCartSessionId(),
       expires: options.expires || getExpiration(),
       seatDetails: options.seatDetails || null,
     };
