@@ -1,21 +1,80 @@
 {
   "rules": {
-    "reserved": {
-      "$chart_id": {
-        ".indexOn": ["timestamp"]
-      }
-    },
-    "in-cart": {
-      "$chart_id": {
-        "$seat": {
-          ".indexOn": ["timestamp"],
-          ".read": true,
-          ".write": true,
-          ".validate": "newData.hasChildren(['status', 'timestamp', 'session_id', 'expires', 'seatDetails']) && newData.child('status').isString() && newData.child('timestamp').isNumber() && newData.child('session_id').isString() && newData.child('expires').isNumber() && newData.child('seatDetails').hasChildren(['zona', 'precio', 'nombreMesa', 'zonaNombre', 'tipoPrecio', 'descuentoNombre'])"
+    // Regla global que niega el acceso por defecto para mayor seguridad
+    ".read": false,
+    ".write": false,
+
+    // Colección de asientos principales (donde se guarda el estado real y persistente del asiento)
+    "seats": {
+      // Permitir la lectura de los asientos para que todos vean la disponibilidad
+      ".read": true,
+      "$chart_id": { // ID del evento o mapa de asientos
+        "$seat_id": { // ID del asiento individual
+          // Permitir escritura solo si el usuario está autenticado y se cumplen condiciones específicas
+          // NOTA: Esta regla de escritura es COMPLEMENTARIA a la lógica de transacciones en tu código.
+          // Las transacciones manejan la concurrencia, las reglas aquí refuerzan la seguridad.
+          ".write": "auth != null && (
+                       // 1. Un usuario puede tomar un asiento si está 'available' y se convierte en 'occupied' por ESE USUARIO
+                       (newData.child('status').val() === 'occupied' &&
+                        newData.child('reservedBy').val() === auth.uid &&
+                        data.child('status').val() === 'available') ||
+                       // 2. Un usuario puede liberar UN ASIENTO QUE YA RESERVÓ
+                       (data.child('reservedBy').val() === auth.uid &&
+                        newData.child('status').val() === 'available' &&
+                        newData.child('reservedBy').val() === null) ||
+                       // 3. Un administrador puede modificar el estado
+                       (root.child('admins').hasChild(auth.uid) &&
+                        newData.hasChildren(['status', 'reservedBy']))
+                     )", // <--- ¡Asegúrate que este paréntesis de cierre esté aquí!
+          // Validar la estructura de los datos del asiento al escribir
+          ".validate": "newData.hasChildren(['status', 'reservedBy']) &&
+                        newData.child('status').isString() &&
+                        (newData.child('reservedBy').val() === null || newData.child('reservedBy').isString())"
         }
       }
     },
-    ".read": true,
-    ".write": true
+
+    // Colección "in-cart" para asientos temporales en el carrito de compra
+    // Estos asientos se bloquean temporalmente para una sesión específica
+    "in-cart": {
+      "$chart_id": {
+        "$seat_id": {
+          ".indexOn": ["timestamp"],
+          // Permitir lectura SOLO al usuario dueño de la sesión o a un admin
+          ".read": "auth != null && (data.child('session_id').val() === auth.uid || root.child('admins').hasChild(auth.uid))",
+          // Permitir escritura SOLO al usuario dueño de la sesión
+          ".write": "auth != null && (newData.child('session_id').val() === auth.uid)",
+          // Validar los datos al escribir
+          ".validate": "newData.hasChildren(['status', 'timestamp', 'session_id', 'expires', 'seatDetails']) &&
+                        newData.child('status').isString() &&
+                        newData.child('timestamp').isNumber() &&
+                        newData.child('session_id').isString() &&
+                        newData.child('expires').isNumber() &&
+                        newData.child('seatDetails').hasChildren(['zona', 'precio', 'nombreMesa', 'zonaNombre', 'tipoPrecio', 'descuentoNombre'])"
+        }
+      }
+    },
+
+    // Colección "reserved" para guardar información sobre reservas completadas
+    // Si "reserved" solo contiene metadatos de la reserva (y el estado del asiento se maneja en "seats"),
+    // las reglas aquí serían para crear/leer/actualizar esos metadatos.
+    "reserved": {
+      ".read": "auth != null", // Solo usuarios autenticados pueden ver sus reservas
+      "$chart_id": {
+        ".indexOn": ["timestamp"],
+        "$reservation_id": { // ID de la reserva individual
+          // Permitir escritura solo al usuario que posee la reserva o a un admin
+          ".write": "auth != null && (newData.child('userId').val() === auth.uid || root.child('admins').hasChild(auth.uid))",
+          ".validate": "newData.hasChildren(['userId', 'seatId', 'timestamp', 'status'])" // Ejemplo de validación
+        }
+      }
+    },
+
+    // Opcional: una colección de administradores para darles permisos especiales
+    "admins": {
+      ".read": "auth != null",
+      ".write": false // Solo los administradores pueden añadir/quitar otros administradores desde un backend seguro
+      // Ejemplo: "auth.uid": true
+    }
   }
 }
