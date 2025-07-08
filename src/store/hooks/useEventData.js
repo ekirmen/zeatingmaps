@@ -68,11 +68,16 @@ const useEventData = (eventId, seatMapRef) => {
   // Save cart to localStorage whenever carrito changes
   useEffect(() => {
     try {
-      localStorage.setItem(localStorageCartKey, JSON.stringify(carrito));
+      // Ensure zonaNombre is present in each cart item before saving
+      const carritoWithZonaNombre = carrito.map(item => ({
+        ...item,
+        zonaNombre: item.zonaNombre || (item.zona ? zonas.find(z => z.id === item.zona || z._id === item.zona)?.nombre : '') || ''
+      }));
+      localStorage.setItem(localStorageCartKey, JSON.stringify(carritoWithZonaNombre));
     } catch (e) {
       console.error('Error saving cart to localStorage', e);
     }
-  }, [carrito, localStorageCartKey]);
+  }, [carrito, localStorageCartKey, zonas]);
 
   const closeSeatPopup = () => {
     setShowSeatPopup(false);
