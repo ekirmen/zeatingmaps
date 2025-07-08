@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import normalizeSeatId from '../utils/normalizeSeatId';
 import { isUuid } from '../utils/isUuid';
 import { lockSeat, unlockSeat } from '../backoffice/services/seatLocks';
+import getCartSessionId from '../utils/getCartSessionId';
 
 export const CartContext = createContext();
 
@@ -77,9 +78,17 @@ export const CartProvider = ({ children }) => {
         .map((s) => normalizeSeatId(s._id || s.id))
         .filter((id) => id !== undefined && id !== null && isUuid(id));
 
+      const sessionId = getCartSessionId();
+      const now = new Date().toISOString();
       const { error } = await supabase
         .from('seats')
-        .update({ reserved: true, reserved_at: new Date().toISOString() })
+        .update({
+          reserved: true,
+          reserved_at: now,
+          status: 'selected',
+          selected_by: sessionId,
+          selected_at: now
+        })
         .in('_id', seatIds);
 
       if (error) throw error;
@@ -107,10 +116,16 @@ export const CartProvider = ({ children }) => {
         .filter((id) => id !== undefined && id !== null && isUuid(id));
 
       if (seatIds.length > 0) {
-        const { error } = await supabase
-          .from('seats')
-          .update({ reserved: false, reserved_at: null })
-          .in('_id', seatIds);
+      const { error } = await supabase
+        .from('seats')
+        .update({
+          reserved: false,
+          reserved_at: null,
+          status: 'available',
+          selected_by: null,
+          selected_at: null
+        })
+        .in('_id', seatIds);
 
         if (error) throw error;
 
@@ -133,7 +148,13 @@ export const CartProvider = ({ children }) => {
       const id = normalizeSeatId(seatId?._id || seatId);
       const { error } = await supabase
         .from('seats')
-        .update({ reserved: false, reserved_at: null })
+        .update({
+          reserved: false,
+          reserved_at: null,
+          status: 'available',
+          selected_by: null,
+          selected_at: null
+        })
         .eq('_id', id);
 
       if (error) throw error;
