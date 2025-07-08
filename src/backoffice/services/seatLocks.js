@@ -70,7 +70,9 @@ export const cleanupExpiredLocks = async (funcionId) => {
   if (!db) return;
   const locksRef = ref(db, `in-cart/${funcionId}`);
   try {
-    const snapshot = await locksRef.get();
+    // Use get() from firebase/database to fetch snapshot
+    const { get } = await import('firebase/database');
+    const snapshot = await get(locksRef);
     const locks = snapshot.val() || {};
     const now = Date.now();
     for (const [seatId, lock] of Object.entries(locks)) {
