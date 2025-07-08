@@ -3,6 +3,7 @@ import { supabase } from "../supabaseClient";
 import { isUuid } from "../utils/isUuid";
 import { lockSeat, unlockSeat } from "../backoffice/services/seatLocks";
 import { getDatabaseInstance } from "../services/firebaseClient";
+import normalizeSeatId from "../utils/normalizeSeatId";
 import { ref, get } from "firebase/database";
 import useSeatLocksArray from "../store/hooks/useSeatLocksArray";
 import getCartSessionId from "../utils/getCartSessionId";
@@ -137,7 +138,8 @@ const SeatMap = ({ funcionId }) => {
         try {
           const db = await getDatabaseInstance();
           if (db) {
-            const snap = await get(ref(db, `in-cart/${funcionId}/${seatId}`));
+            const normalizedId = normalizeSeatId(seatId);
+            const snap = await get(ref(db, `in-cart/${funcionId}/${normalizedId}`));
             const lock = snap.val();
             if (
               lock &&
