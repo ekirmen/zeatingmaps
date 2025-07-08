@@ -47,7 +47,6 @@ import WebFooter from './backoffice/pages/WebFooter';
 import WebHeader from './backoffice/pages/WebHeader';
 import Abonos from './backoffice/pages/Abonos';
 import FirebaseConfig from './backoffice/pages/FirebaseConfig';
-import FirebaseTest from './backoffice/pages/FirebaseTest';
 
 // Store Pages
 import EventsVenue from './store/pages/EventsVenue';
@@ -59,7 +58,6 @@ import SelectSeats from './store/pages/SelectSeats';
 import Cart from './store/pages/Cart';
 import Pay from './store/pages/Pay';
 import PaymentSuccess from './store/pages/PaymentSuccess';
-import ThankYouPage from './store/pages/ThankYouPage';
 import ForgotPassword from './store/pages/ForgotPassword';
 import ResetPassword from './store/pages/ResetPassword';
 import StoreLogin from './store/pages/Login';
@@ -154,7 +152,6 @@ const App = () => {
                           <Route path="sitio-web" element={<WebFooter />} />
                           <Route path="cabecera" element={<WebHeader />} />
                           <Route path="firebase-config" element={<FirebaseConfig />} />
-                          <Route path="firebase-test" element={<FirebaseTest />} />
                           <Route path="formato-entrada" element={<FormatoEntrada />} />
                         </Route>
 
