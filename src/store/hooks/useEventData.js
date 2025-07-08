@@ -332,27 +332,28 @@ const useEventData = (eventId, seatMapRef) => {
                         alert("Debes iniciar sesión o registrarte para seleccionar un asiento.");
                         return; // Detiene la ejecución si el registro es obligatorio
                     } else {
-                        // Intenta iniciar sesión de forma anónima para obtener un UID temporal
-                        try {
-                            // Wait for auth state to be ready before signing in anonymously
-                            await new Promise((resolve, reject) => {
-                                const unsubscribe = auth.onAuthStateChanged(user => {
-                                    unsubscribe();
-                                    resolve(user);
-                                }, reject);
-                            });
-                            if (!auth.currentUser) {
-                                const userCredential = await auth.signInAnonymously();
-                                userId = userCredential.user.uid;
-                                console.log(`Usuario anónimo ${userId} iniciado.`);
-                            } else {
-                                userId = auth.currentUser.uid;
-                            }
-                        } catch (error) {
-                            console.error("Error al iniciar sesión de forma anónima:", error);
-                            alert("No pudimos preparar tu sesión para seleccionar asientos. Por favor, intenta de nuevo.");
-                            return; // Detiene la ejecución si falla la autenticación anónima
-                        }
+                // Intenta iniciar sesión de forma anónima para obtener un UID temporal
+                try {
+                    const authInstance = await auth;
+                    // Wait for auth state to be ready before signing in anonymously
+                    await new Promise((resolve, reject) => {
+                        const unsubscribe = authInstance.onAuthStateChanged(user => {
+                            unsubscribe();
+                            resolve(user);
+                        }, reject);
+                    });
+                    if (!authInstance.currentUser) {
+                        const userCredential = await authInstance.signInAnonymously();
+                        userId = userCredential.user.uid;
+                        console.log(`Usuario anónimo ${userId} iniciado.`);
+                    } else {
+                        userId = authInstance.currentUser.uid;
+                    }
+                } catch (error) {
+                    console.error("Error al iniciar sesión de forma anónima:", error);
+                    alert("No pudimos preparar tu sesión para seleccionar asientos. Por favor, intenta de nuevo.");
+                    return; // Detiene la ejecución si falla la autenticación anónima
+                }
                     }
                 }
                 // --- FIN: Lógica para obtener el userId ---
@@ -410,7 +411,8 @@ const useEventData = (eventId, seatMapRef) => {
 
             if (firebaseEnabled) {
                 const seatRef = ref(db, `seats/${eventId}/${selectedFunctionId}/${silla._id}`);
-                const userId = auth.currentUser ? auth.currentUser.uid : null;
+                const authInstance = await auth;
+                const userId = authInstance.currentUser ? authInstance.currentUser.uid : null;
 
                 // Si se va a liberar un asiento, necesitamos un userId, real o anónimo.
                 // Si 'userId' es null aquí, es un caso edge que no debería pasar si el asiento
