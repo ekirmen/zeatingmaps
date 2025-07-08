@@ -35,6 +35,7 @@ const useFirebaseSeatLocks = (
       cleanupExpiredLocks(selectedFunctionId).catch(console.error);
 
       const locksRef = ref(db, `in-cart/${selectedFunctionId}`);
+
       const handler = (snapshot) => {
         try {
           const locks = snapshot.val() || {};
