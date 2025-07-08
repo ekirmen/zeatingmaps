@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "../supabaseClient";
-import { isUuid } from "../utils/isUuid";
-import { lockSeat, unlockSeat } from "../backoffice/services/seatLocks";
 import { getDatabaseInstance } from "../services/firebaseClient";
+import { ref, onValue, off, update } from "firebase/database";
 import normalizeSeatId from "../utils/normalizeSeatId";
-import { ref, get } from "firebase/database";
 import useSeatLocksArray from "../store/hooks/useSeatLocksArray";
 import getCartSessionId from "../utils/getCartSessionId";
-import { isFirebaseEnabled } from "../services/firebaseClient";
 import normalizeSeatStatus from "../utils/normalizeSeatStatus";
 import "./SeatMap.css";
 
@@ -15,172 +11,117 @@ const SeatMap = ({ funcionId }) => {
   const [seats, setSeats] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState({});
   const [loading, setLoading] = useState(true);
-  const [firebaseEnabled, setFirebaseEnabled] = useState(false);
+  const [firebaseEnabled, setFirebaseEnabled] = useState(true); // Assume Firebase enabled
 
   useSeatLocksArray(funcionId, setSeats, getCartSessionId, firebaseEnabled);
 
   useEffect(() => {
-    const check = async () => {
-      const enabled = await isFirebaseEnabled();
-      setFirebaseEnabled(enabled);
-    };
-    check();
-  }, []);
+    if (!funcionId) return;
 
-  useEffect(() => {
+    const dbPromise = getDatabaseInstance();
+
+    let seatsRef;
+    let unsubscribe;
+
     const fetchSeats = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from("seats")
-          .select("*")
-          .eq("funcion_id", funcionId);
-        if (error) throw error;
-        const normalized = data.map((seat) => ({
-          ...seat,
-          status: normalizeSeatStatus(seat.status),
-        }));
-        const selectedMap = {};
-        normalized.forEach((seat) => {
-          if (seat.status === "selected" || seat.status === "blocked") {
-            selectedMap[seat.id] = {
-              id: seat.id,
-              status: seat.status,
-              selectedBy: seat.selected_by,
-            };
-          }
-        });
-        setSeats(normalized);
-        setSelectedSeats(selectedMap);
+        const db = await dbPromise;
+        if (!db) {
+          setLoading(false);
+          return;
+        }
+        seatsRef = ref(db, `seats/${funcionId}`);
+
+        const handler = (snapshot) => {
+          const data = snapshot.val() || {};
+          const seatsArray = Object.entries(data).map(([key, seat]) => ({
+            id: key,
+            ...seat,
+            status: normalizeSeatStatus(seat.status),
+          }));
+
+          const selectedMap = {};
+          seatsArray.forEach((seat) => {
+            if (seat.status === "selected" || seat.status === "blocked" || seat.status === "bloqueado") {
+              selectedMap[seat.id] = {
+                id: seat.id,
+                status: seat.status,
+                selectedBy: seat.selected_by || null,
+              };
+            }
+          });
+
+          setSeats(seatsArray);
+          setSelectedSeats(selectedMap);
+          setLoading(false);
+        };
+
+        onValue(seatsRef, handler);
+        unsubscribe = () => off(seatsRef, "value", handler);
       } catch (err) {
-        console.error("Error fetching seats:", err);
-      } finally {
+        console.error("Error fetching seats from Firebase:", err);
         setLoading(false);
       }
     };
-    if (funcionId) fetchSeats();
-  }, [funcionId]);
 
-  useEffect(() => {
-    if (!funcionId) return undefined;
-    const subscription = supabase
-      .channel("seats-channel")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "seats",
-          filter: `funcion_id=eq.${funcionId}`,
-        },
-        (payload) => {
-          console.log("Cambio en tiempo real recibido:", payload);
-          if (payload.eventType === "INSERT") {
-            setSeats((prev) => [
-              ...prev,
-              {
-                ...payload.new,
-                status: normalizeSeatStatus(payload.new.status),
-              },
-            ]);
-          } else if (payload.eventType === "UPDATE") {
-            const updatedSeat = {
-              ...payload.new,
-              status: normalizeSeatStatus(payload.new.status),
-            };
-            setSeats((prev) =>
-              prev.map((seat) =>
-                seat.id === updatedSeat.id ? updatedSeat : seat,
-              ),
-            );
-            if (
-              normalizeSeatStatus(payload.new.status) === "selected" ||
-              normalizeSeatStatus(payload.new.status) === "blocked"
-            ) {
-              setSelectedSeats((prev) => ({
-                ...prev,
-                [payload.new.id]: {
-                  id: payload.new.id,
-                  status: normalizeSeatStatus(payload.new.status),
-                  selectedBy: payload.new.selected_by,
-                },
-              }));
-            } else {
-              setSelectedSeats((prev) => {
-                const updated = { ...prev };
-                delete updated[payload.new.id];
-                return updated;
-              });
-            }
-          } else if (payload.eventType === "DELETE") {
-            setSeats((prev) => prev.filter((s) => s.id !== payload.old.id));
-            setSelectedSeats((prev) => {
-              const updated = { ...prev };
-              delete updated[payload.old.id];
-              return updated;
-            });
-          }
-        },
-      )
-      .subscribe();
+    fetchSeats();
 
     return () => {
-      supabase.removeChannel(subscription);
+      if (unsubscribe) unsubscribe();
     };
   }, [funcionId]);
 
   const handleSeatSelect = async (seatId) => {
-    if (!isUuid(seatId)) return;
+    if (!seatId) return;
     try {
       const currentSeat = seats.find((s) => s.id === seatId);
       const sessionId = getCartSessionId();
-      if (firebaseEnabled) {
-        try {
-          const db = await getDatabaseInstance();
-          if (db) {
-            const normalizedId = normalizeSeatId(seatId);
-            const snap = await get(ref(db, `in-cart/${funcionId}/${normalizedId}`));
-            const lock = snap.val();
-            if (
-              lock &&
-              lock.session_id !== sessionId &&
-              (!lock.expires || lock.expires > Date.now())
-            ) {
-              alert("Este asiento ya está seleccionado por otro usuario");
-              return;
-            }
-          }
-        } catch (fbErr) {
-          console.error("Error checking seat lock:", fbErr);
-        }
-      }
+
+      if (!currentSeat) return;
+
+      // Check if seat is locked by another session
       if (
-        currentSeat &&
-        (normalizeSeatStatus(currentSeat.status) === "blocked" ||
-          (normalizeSeatStatus(currentSeat.status) === "selected" &&
-            currentSeat.selected_by !== sessionId))
+        (currentSeat.status === "blocked" || currentSeat.status === "bloqueado") ||
+        (currentSeat.status === "selected" && currentSeat.selected_by !== sessionId)
       ) {
         alert("Este asiento ya está seleccionado por otro usuario");
         return;
       }
+
       const isCurrentlySelected =
         selectedSeats[seatId] && selectedSeats[seatId].selectedBy === sessionId;
       const newStatus = isCurrentlySelected ? "available" : "selected";
-      const { error } = await supabase
-        .from("seats")
-        .update({
-          status: newStatus,
-          selected_by: isCurrentlySelected ? null : sessionId,
-          selected_at: isCurrentlySelected ? null : new Date().toISOString(),
-        })
-        .eq("id", seatId);
-      if (error) throw error;
 
+      const db = await getDatabaseInstance();
+      if (!db) return;
+
+      const seatRef = ref(db, `seats/${funcionId}/${seatId}`);
+
+      // Update seat status and selected_by in Firebase Realtime Database
+      await update(seatRef, {
+        status: newStatus,
+        selected_by: isCurrentlySelected ? null : sessionId,
+        selected_at: isCurrentlySelected ? null : new Date().toISOString(),
+      });
+
+      // Lock or unlock seat in Firebase Realtime Database
       if (firebaseEnabled) {
         if (isCurrentlySelected) {
-          await unlockSeat(seatId, funcionId);
+          // Unlock seat
+          const lockRef = ref(db, `in-cart/${funcionId}/${normalizeSeatId(seatId)}`);
+          await update(lockRef, null);
         } else {
-          await lockSeat(seatId, "bloqueado", funcionId);
+          // Lock seat
+          const lockRef = ref(db, `in-cart/${funcionId}/${normalizeSeatId(seatId)}`);
+          await update(lockRef, {
+            status: "bloqueado",
+            session_id: sessionId,
+            seatDetails: {
+              // Add any seat details if needed
+            },
+            expires: Date.now() + 15 * 60 * 1000, // 15 minutes lock expiry
+          });
         }
       }
     } catch (err) {
@@ -206,7 +147,7 @@ const SeatMap = ({ funcionId }) => {
                   : seat.name
               }
             >
-              {seat.name || seat._id}
+              {seat.name || seat.id}
             </div>
           ))}
         </div>
