@@ -23,6 +23,7 @@ const getConfig = async () => {
     };
 
     if (env.useFirebase && env.apiKey && env.authDomain && env.databaseURL) {
+        console.log('[firebaseClient] Using Firebase config from environment variables:', env);
         return env;
     }
 
@@ -37,12 +38,14 @@ const getConfig = async () => {
     }
 
     const map = Object.fromEntries(data.map((r) => [r.key, r.value]));
-    return {
+    const config = {
         useFirebase: map['firebase-use'] === 'true',
         apiKey: map['firebase-api-key'] || env.apiKey,
         authDomain: map['firebase-auth-domain'] || env.authDomain,
         databaseURL: map['firebase-db-url'] || env.databaseURL,
     };
+    console.log('[firebaseClient] Using Firebase config from Supabase settings:', config);
+    return config;
 };
 
 export const getDatabaseInstance = async () => {
