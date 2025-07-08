@@ -27,12 +27,12 @@ const useFirebaseSeatLocks = (
       const db = await getDatabaseInstance();
       if (!db) return;
 
-      // Cleanup expired locks on setup and periodically every 30 seconds
-      const cleanupInterval = setInterval(() => {
-        cleanupExpiredLocks(selectedFunctionId).catch(console.error);
-      }, 30000);
+      // Removed client-side cleanup of expired locks to avoid permission errors
+      // const cleanupInterval = setInterval(() => {
+      //   cleanupExpiredLocks(selectedFunctionId).catch(console.error);
+      // }, 30000);
       // Initial cleanup
-      cleanupExpiredLocks(selectedFunctionId).catch(console.error);
+      // cleanupExpiredLocks(selectedFunctionId).catch(console.error);
 
       const locksRef = ref(db, `in-cart/${selectedFunctionId}`);
 
@@ -116,7 +116,7 @@ const useFirebaseSeatLocks = (
       onValue(locksRef, handler);
       unsubscribe = () => {
         off(locksRef, 'value', handler);
-        clearInterval(cleanupInterval);
+        // clearInterval(cleanupInterval);
       };
     };
 
