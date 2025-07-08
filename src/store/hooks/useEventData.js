@@ -17,6 +17,11 @@ import useFirebaseSeatLocks from './useFirebaseSeatLocks';
 import { ref, runTransaction } from 'firebase/database'; // ref y runTransaction son funciones
 import { db, auth, isFirebaseEnabled } from '../../services/firebaseClient'; // db y auth son las instancias inicializadas
 
+// Helper function to await db promise before using
+const getDbInstance = async () => {
+  return await db;
+};
+
 const API_URL = API_BASE_URL;
 
 const normalizeId = (obj) => ({ ...obj, id: obj.id || obj._id });
@@ -315,7 +320,7 @@ const useEventData = (eventId, seatMapRef) => {
                 }
             } else {
                 // Lógica con Transacción de Firebase
-                const seatRef = ref(db, `seats/${eventId}/${selectedFunctionId}/${silla._id}`);
+                const seatRef = await getDbInstance().then(database => ref(database, `seats/${eventId}/${selectedFunctionId}/${silla._id}`));
 
                 // --- INICIO: Lógica para obtener el userId (autenticado o anónimo) ---
                 let userId = auth.currentUser ? auth.currentUser.uid : null;
@@ -383,6 +388,7 @@ const useEventData = (eventId, seatMapRef) => {
                         // await createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'bloqueado' });
                     } else {
                         console.log(`Transacción de asiento ${silla._id} abortada. El asiento ya fue tomado.`);
+
                         alert('Lo siento, el asiento acaba de ser tomado por otra persona. Por favor, elige otro.');
                     }
                 } catch (error) {
