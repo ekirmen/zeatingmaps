@@ -1,21 +1,6 @@
 import { getDatabaseInstance } from '../../services/firebaseClient';
 import { ref, set, remove } from 'firebase/database';
-
-let cachedSessionId = null;
-
-const getSessionId = () => {
-  if (cachedSessionId) return cachedSessionId;
-  try {
-    cachedSessionId = sessionStorage.getItem('cart_session_id');
-    if (!cachedSessionId) {
-      cachedSessionId = crypto.randomUUID();
-      sessionStorage.setItem('cart_session_id', cachedSessionId);
-    }
-  } catch (err) {
-    cachedSessionId = crypto.randomUUID();
-  }
-  return cachedSessionId;
-};
+import getCartSessionId from '../../utils/getCartSessionId';
 
 const getExpiration = () => {
   let mins = 15;
@@ -49,7 +34,7 @@ export const lockSeat = async (
     const payload = {
       status,
       timestamp: Date.now(),
-      session_id: getSessionId(),
+      session_id: getCartSessionId(),
       expires: options.expires || getExpiration(),
       seatDetails: options.seatDetails || null,
     };
