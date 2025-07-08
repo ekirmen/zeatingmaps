@@ -437,7 +437,7 @@ const useEventData = (eventId, seatMapRef) => {
         });
 
         setCarrito(sortedCarrito);
-    }, [carrito, selectedFunctionId, firebaseEnabled, plantillaPrecios, zonas, appliedDiscount, eventId, startTimer]);
+    }, [carrito, selectedFunctionId, firebaseEnabled, plantillaPrecios, zonas, appliedDiscount, eventId, startTimer, evento?.otrasOpciones?.registroObligatorioAntesSeleccion]);
 
 
     useEffect(() => {
