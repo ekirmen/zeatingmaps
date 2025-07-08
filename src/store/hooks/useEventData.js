@@ -318,10 +318,14 @@ const useEventData = (eventId, seatMapRef) => {
                 const seatRef = ref(db, `seats/${eventId}/${selectedFunctionId}/${silla._id}`);
                 const userId = auth.currentUser ? auth.currentUser.uid : null;
 
-                if (!userId) {
-                    console.error("Usuario no autenticado. No se puede bloquear el asiento.");
-                    alert("Debes iniciar sesión para seleccionar un asiento.");
-                    return;
+                // Check if "Forzar el registro" is enabled in evento settings
+                const forzarRegistro = evento?.otrasOpciones?.registroObligatorioAntesSeleccion ?? false;
+                if (forzarRegistro) {
+                    if (!userId) {
+                        console.error("Usuario no autenticado. No se puede bloquear el asiento.");
+                        alert("Debes iniciar sesión para seleccionar un asiento.");
+                        return;
+                    }
                 }
 
                 try {
