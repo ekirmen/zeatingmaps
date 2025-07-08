@@ -4,6 +4,7 @@ import { ref, onValue, off } from 'firebase/database';
 import getZonaColor from '../../utils/getZonaColor';
 import normalizeSeatId from '../../utils/normalizeSeatId';
 import { cleanupExpiredLocks } from '../../backoffice/services/seatLocks';
+import getCartSessionId from '../../utils/getCartSessionId';
 
 const useFirebaseSeatLocks = (
   selectedFunctionId,
@@ -33,6 +34,7 @@ const useFirebaseSeatLocks = (
       const handler = (snapshot) => {
         try {
           const locks = snapshot.val() || {};
+          const sessionId = getCartSessionId();
 
           // Debounce updates to reduce frequent re-renders
           if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
@@ -75,20 +77,19 @@ const useFirebaseSeatLocks = (
               const currentCarrito = carritoRef.current || [];
               // Add locked seats not in carrito
               const newSeats = lockedSeatIds
-                .filter(seatId => !currentCarrito.some(c => c._id === seatId))
-                .map(seatId => {
-                  const lock = locks[seatId];
-                  return {
-                    _id: seatId,
-                    locked: true,
-                    zona: lock?.seatDetails?.zona || null,
-                    precio: lock?.seatDetails?.precio || null,
-                    nombreMesa: lock?.seatDetails?.nombreMesa || null,
-                    zonaNombre: lock?.seatDetails?.zonaNombre || null,
-                    tipoPrecio: lock?.seatDetails?.tipoPrecio || null,
-                    descuentoNombre: lock?.seatDetails?.descuentoNombre || null,
-                  };
-                });
+                .map(seatId => [seatId, locks[seatId]])
+                .filter(([seatId, lock]) => lock?.session_id === sessionId)
+                .filter(([seatId]) => !currentCarrito.some(c => c._id === seatId))
+                .map(([seatId, lock]) => ({
+                  _id: seatId,
+                  locked: true,
+                  zona: lock?.seatDetails?.zona || null,
+                  precio: lock?.seatDetails?.precio || null,
+                  nombreMesa: lock?.seatDetails?.nombreMesa || null,
+                  zonaNombre: lock?.seatDetails?.zonaNombre || null,
+                  tipoPrecio: lock?.seatDetails?.tipoPrecio || null,
+                  descuentoNombre: lock?.seatDetails?.descuentoNombre || null,
+                }));
               // Remove seats unlocked
               const updatedCarrito = currentCarrito.filter(c => lockedSeatIds.includes(c._id));
               const combinedCarrito = [...updatedCarrito, ...newSeats];
