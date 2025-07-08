@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { isUuid } from "../utils/isUuid";
 import { lockSeat, unlockSeat } from "../backoffice/services/seatLocks";
+import { getDatabaseInstance } from "../services/firebaseClient";
+import { ref, get } from "firebase/database";
 import useSeatLocksArray from "../store/hooks/useSeatLocksArray";
 import getCartSessionId from "../utils/getCartSessionId";
 import { isFirebaseEnabled } from "../services/firebaseClient";
@@ -131,6 +133,25 @@ const SeatMap = ({ funcionId }) => {
     try {
       const currentSeat = seats.find((s) => s.id === seatId);
       const sessionId = getCartSessionId();
+      if (firebaseEnabled) {
+        try {
+          const db = await getDatabaseInstance();
+          if (db) {
+            const snap = await get(ref(db, `in-cart/${funcionId}/${seatId}`));
+            const lock = snap.val();
+            if (
+              lock &&
+              lock.session_id !== sessionId &&
+              (!lock.expires || lock.expires > Date.now())
+            ) {
+              alert("Este asiento ya está seleccionado por otro usuario");
+              return;
+            }
+          }
+        } catch (fbErr) {
+          console.error("Error checking seat lock:", fbErr);
+        }
+      }
       if (
         currentSeat &&
         (normalizeSeatStatus(currentSeat.status) === "blocked" ||
