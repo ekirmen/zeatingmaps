@@ -3,7 +3,6 @@ import { getDatabaseInstance } from '../../services/firebaseClient';
 import { ref, onValue, off } from 'firebase/database';
 import getZonaColor from '../../utils/getZonaColor';
 import normalizeSeatId from '../../utils/normalizeSeatId';
-import { cleanupExpiredLocks } from '../../backoffice/services/seatLocks';
 import getCartSessionId from '../../utils/getCartSessionId';
 
 const useFirebaseSeatLocks = (
@@ -26,13 +25,6 @@ const useFirebaseSeatLocks = (
     const setup = async () => {
       const db = await getDatabaseInstance();
       if (!db) return;
-
-      // Removed client-side cleanup of expired locks to avoid permission errors
-      // const cleanupInterval = setInterval(() => {
-      //   cleanupExpiredLocks(selectedFunctionId).catch(console.error);
-      // }, 30000);
-      // Initial cleanup
-      // cleanupExpiredLocks(selectedFunctionId).catch(console.error);
 
       const locksRef = ref(db, `in-cart/${selectedFunctionId}`);
 
@@ -116,7 +108,6 @@ const useFirebaseSeatLocks = (
       onValue(locksRef, handler);
       unsubscribe = () => {
         off(locksRef, 'value', handler);
-        // clearInterval(cleanupInterval);
       };
     };
 

@@ -329,9 +329,20 @@ const useEventData = (eventId, seatMapRef) => {
                     } else {
                         // Intenta iniciar sesión de forma anónima para obtener un UID temporal
                         try {
-                            const userCredential = await auth.signInAnonymously();
-                            userId = userCredential.user.uid;
-                            console.log(`Usuario anónimo ${userId} iniciado.`);
+                            // Wait for auth state to be ready before signing in anonymously
+                            await new Promise((resolve, reject) => {
+                                const unsubscribe = auth.onAuthStateChanged(user => {
+                                    unsubscribe();
+                                    resolve(user);
+                                }, reject);
+                            });
+                            if (!auth.currentUser) {
+                                const userCredential = await auth.signInAnonymously();
+                                userId = userCredential.user.uid;
+                                console.log(`Usuario anónimo ${userId} iniciado.`);
+                            } else {
+                                userId = auth.currentUser.uid;
+                            }
                         } catch (error) {
                             console.error("Error al iniciar sesión de forma anónima:", error);
                             alert("No pudimos preparar tu sesión para seleccionar asientos. Por favor, intenta de nuevo.");
@@ -471,8 +482,7 @@ const useEventData = (eventId, seatMapRef) => {
         eventId,
         startTimer,
         evento?.otrasOpciones?.registroObligatorioAntesSeleccion, // Dependencia para la opción de registro
-        auth, // Dependencia para el hook useCallback, ya que auth.currentUser se usa dentro
-        db // Dependencia para el hook useCallback, ya que db se usa dentro
+        // Removed auth and db from dependencies as they are stable and do not cause re-render
     ]);
 
 
