@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import { isUuid } from '../utils/isUuid';
-import { lockSeat, unlockSeat } from '../backoffice/services/seatLocks';
-import useSeatLocksArray from '../store/hooks/useSeatLocksArray';
-import getCartSessionId from '../utils/getCartSessionId';
-import { isFirebaseEnabled } from '../services/firebaseClient';
-import './SeatMap.css';
+import React, { useState, useEffect } from "react";
+import { supabase } from "../supabaseClient";
+import { isUuid } from "../utils/isUuid";
+import { lockSeat, unlockSeat } from "../backoffice/services/seatLocks";
+import useSeatLocksArray from "../store/hooks/useSeatLocksArray";
+import getCartSessionId from "../utils/getCartSessionId";
+import { isFirebaseEnabled } from "../services/firebaseClient";
+import normalizeSeatStatus from "../utils/normalizeSeatStatus";
+import "./SeatMap.css";
 
 const SeatMap = ({ funcionId }) => {
   const [seats, setSeats] = useState([]);
@@ -13,12 +14,7 @@ const SeatMap = ({ funcionId }) => {
   const [loading, setLoading] = useState(true);
   const [firebaseEnabled, setFirebaseEnabled] = useState(false);
 
-  useSeatLocksArray(
-    funcionId,
-    setSeats,
-    getCartSessionId,
-    firebaseEnabled
-  );
+  useSeatLocksArray(funcionId, setSeats, getCartSessionId, firebaseEnabled);
 
   useEffect(() => {
     const check = async () => {
@@ -33,13 +29,17 @@ const SeatMap = ({ funcionId }) => {
       try {
         setLoading(true);
         const { data, error } = await supabase
-          .from('seats')
-          .select('*')
-          .eq('funcion_id', funcionId);
+          .from("seats")
+          .select("*")
+          .eq("funcion_id", funcionId);
         if (error) throw error;
+        const normalized = data.map((seat) => ({
+          ...seat,
+          status: normalizeSeatStatus(seat.status),
+        }));
         const selectedMap = {};
-        data.forEach((seat) => {
-          if (seat.status === 'selected' || seat.status === 'blocked') {
+        normalized.forEach((seat) => {
+          if (seat.status === "selected" || seat.status === "blocked") {
             selectedMap[seat.id] = {
               id: seat.id,
               status: seat.status,
@@ -47,10 +47,10 @@ const SeatMap = ({ funcionId }) => {
             };
           }
         });
-        setSeats(data);
+        setSeats(normalized);
         setSelectedSeats(selectedMap);
       } catch (err) {
-        console.error('Error fetching seats:', err);
+        console.error("Error fetching seats:", err);
       } finally {
         setLoading(false);
       }
@@ -61,34 +61,44 @@ const SeatMap = ({ funcionId }) => {
   useEffect(() => {
     if (!funcionId) return undefined;
     const subscription = supabase
-      .channel('seats-channel')
+      .channel("seats-channel")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'seats',
+          event: "*",
+          schema: "public",
+          table: "seats",
           filter: `funcion_id=eq.${funcionId}`,
         },
         (payload) => {
-          console.log('Cambio en tiempo real recibido:', payload);
-          if (payload.eventType === 'INSERT') {
-            setSeats((prev) => [...prev, payload.new]);
-          } else if (payload.eventType === 'UPDATE') {
+          console.log("Cambio en tiempo real recibido:", payload);
+          if (payload.eventType === "INSERT") {
+            setSeats((prev) => [
+              ...prev,
+              {
+                ...payload.new,
+                status: normalizeSeatStatus(payload.new.status),
+              },
+            ]);
+          } else if (payload.eventType === "UPDATE") {
+            const updatedSeat = {
+              ...payload.new,
+              status: normalizeSeatStatus(payload.new.status),
+            };
             setSeats((prev) =>
               prev.map((seat) =>
-                seat.id === payload.new.id ? payload.new : seat
-              )
+                seat.id === updatedSeat.id ? updatedSeat : seat,
+              ),
             );
             if (
-              payload.new.status === 'selected' ||
-              payload.new.status === 'blocked'
+              normalizeSeatStatus(payload.new.status) === "selected" ||
+              normalizeSeatStatus(payload.new.status) === "blocked"
             ) {
               setSelectedSeats((prev) => ({
                 ...prev,
                 [payload.new.id]: {
                   id: payload.new.id,
-                  status: payload.new.status,
+                  status: normalizeSeatStatus(payload.new.status),
                   selectedBy: payload.new.selected_by,
                 },
               }));
@@ -99,7 +109,7 @@ const SeatMap = ({ funcionId }) => {
                 return updated;
               });
             }
-          } else if (payload.eventType === 'DELETE') {
+          } else if (payload.eventType === "DELETE") {
             setSeats((prev) => prev.filter((s) => s.id !== payload.old.id));
             setSelectedSeats((prev) => {
               const updated = { ...prev };
@@ -107,7 +117,7 @@ const SeatMap = ({ funcionId }) => {
               return updated;
             });
           }
-        }
+        },
       )
       .subscribe();
 
@@ -123,35 +133,35 @@ const SeatMap = ({ funcionId }) => {
       const sessionId = getCartSessionId();
       if (
         currentSeat &&
-        (currentSeat.status === 'blocked' ||
-          (currentSeat.status === 'selected' &&
+        (normalizeSeatStatus(currentSeat.status) === "blocked" ||
+          (normalizeSeatStatus(currentSeat.status) === "selected" &&
             currentSeat.selected_by !== sessionId))
       ) {
-        alert('Este asiento ya está seleccionado por otro usuario');
+        alert("Este asiento ya está seleccionado por otro usuario");
         return;
       }
       const isCurrentlySelected =
         selectedSeats[seatId] && selectedSeats[seatId].selectedBy === sessionId;
-      const newStatus = isCurrentlySelected ? 'available' : 'selected';
+      const newStatus = isCurrentlySelected ? "available" : "selected";
       const { error } = await supabase
-        .from('seats')
+        .from("seats")
         .update({
           status: newStatus,
           selected_by: isCurrentlySelected ? null : sessionId,
           selected_at: isCurrentlySelected ? null : new Date().toISOString(),
         })
-        .eq('id', seatId);
+        .eq("id", seatId);
       if (error) throw error;
 
       if (firebaseEnabled) {
         if (isCurrentlySelected) {
           await unlockSeat(seatId, funcionId);
         } else {
-          await lockSeat(seatId, 'bloqueado', funcionId);
+          await lockSeat(seatId, "bloqueado", funcionId);
         }
       }
     } catch (err) {
-      console.error('Error al seleccionar asiento:', err);
+      console.error("Error al seleccionar asiento:", err);
     }
   };
 
@@ -168,7 +178,7 @@ const SeatMap = ({ funcionId }) => {
               className={`seat ${seat.status}`}
               onClick={() => handleSeatSelect(seat.id)}
               title={
-                seat.status === 'selected'
+                seat.status === "selected"
                   ? `Seleccionado por ${seat.selected_by}`
                   : seat.name
               }
