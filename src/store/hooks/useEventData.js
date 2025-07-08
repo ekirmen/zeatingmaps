@@ -329,7 +329,11 @@ const useEventData = (eventId, seatMapRef) => {
   useEffect(() => { if (eventId) loadEvento(); }, [eventId, loadEvento]);
   useEffect(() => { loadFunciones(); }, [loadFunciones]);
   useEffect(() => { if (funciones.length) loadZonas(); }, [funciones, loadZonas]);
-  useEffect(() => { if (selectedFunctionId) loadMapaYSeats(); }, [selectedFunctionId, loadMapaYSeats]);
+  useEffect(() => {
+    if (selectedFunctionId && funciones.length) {
+      loadMapaYSeats();
+    }
+  }, [selectedFunctionId, funciones, loadMapaYSeats]);
   useEffect(() => { fetchPayments().then(setPagos).catch(() => setPagos([])); }, []);
 
   useFirebaseSeatLocks(selectedFunctionId, zonas, setMapa, cartRef, setCarrito, cartRef, firebaseEnabled);
