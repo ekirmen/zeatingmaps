@@ -1,4 +1,3 @@
-// Mejorado y modularizado: useEventData
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useCart } from '../../contexts/CartContext';
 import { fetchMapa, fetchPlantillaPrecios, getFunciones, getMapaPorEvento } from '../services/apistore';
@@ -18,6 +17,9 @@ import { isFirebaseEnabled } from '../../services/firebaseClient';
 const API_URL = API_BASE_URL;
 
 const normalizeId = (obj) => ({ ...obj, id: obj.id || obj._id });
+
+const LOCAL_STORAGE_CART_PREFIX = 'cart';
+const LOCAL_STORAGE_SEAT_POPUP_PREFIX = 'seat-popup';
 
 const useEventData = (eventId, seatMapRef) => {
   const [evento, setEvento] = useState(null);
@@ -40,8 +42,9 @@ const useEventData = (eventId, seatMapRef) => {
   const cartRef = useRef([]);
   const timerRef = useRef(null);
 
-  // Use a unique localStorage key per user/session to isolate carts
-  const localStorageCartKey = `cart-${eventId}-${selectedFunctionId || 'none'}`;
+  // Compose localStorage keys for cart and seat popup
+  const localStorageCartKey = `${LOCAL_STORAGE_CART_PREFIX}-${eventId}-${selectedFunctionId || 'none'}`;
+  const localStorageSeatPopupKey = `${LOCAL_STORAGE_SEAT_POPUP_PREFIX}-${evento?.id || eventId}`;
 
   // Load cart from localStorage on mount or when eventId or selectedFunctionId changes
   useEffect(() => {
@@ -74,7 +77,7 @@ const useEventData = (eventId, seatMapRef) => {
   const closeSeatPopup = () => {
     setShowSeatPopup(false);
     try {
-      localStorage.setItem(`seat-popup-${evento?.id || eventId}`, '1');
+      localStorage.setItem(localStorageSeatPopupKey, '1');
     } catch (e) {
       console.error('Error saving popup state', e);
     }
@@ -102,7 +105,7 @@ const useEventData = (eventId, seatMapRef) => {
       }
 
       if (evt.otrasOpciones?.popupAntesAsiento?.mostrar) {
-        if (!localStorage.getItem(`seat-popup-${evt.id}`)) {
+        if (!localStorage.getItem(localStorageSeatPopupKey)) {
           setShowSeatPopup(true);
         }
       }
@@ -117,7 +120,7 @@ const useEventData = (eventId, seatMapRef) => {
     } catch (err) {
       console.error('Error fetching event', err);
     }
-  }, [eventId]);
+  }, [eventId, localStorageSeatPopupKey]);
 
   const loadFunciones = useCallback(async () => {
     const id = evento?.id || (isUuid(eventId) ? eventId : parseInt(eventId));
