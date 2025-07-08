@@ -15,7 +15,8 @@ import useFirebaseSeatLocks from './useFirebaseSeatLocks';
 
 // --- Importaciones de Firebase corregidas ---
 import { ref, runTransaction } from 'firebase/database'; // ref y runTransaction son funciones
-import { db, auth, isFirebaseEnabled } from '../../services/firebaseClient'; // db y auth son las instancias inicializadas
+import { db, isFirebaseEnabled } from '../../services/firebaseClient'; // db is the database instance
+import { getAuth, signInAnonymously } from 'firebase/auth'; // Import getAuth and signInAnonymously for modular SDK
 
 // Helper function to await db promise before using
 const getDbInstance = async () => {
@@ -334,7 +335,7 @@ const useEventData = (eventId, seatMapRef) => {
                     } else {
                 // Intenta iniciar sesión de forma anónima para obtener un UID temporal
                 try {
-                    const authInstance = await auth;
+                    const authInstance = getAuth();
                     // Wait for auth state to be ready before signing in anonymously
                     await new Promise((resolve, reject) => {
                         const unsubscribe = authInstance.onAuthStateChanged(user => {
@@ -343,7 +344,7 @@ const useEventData = (eventId, seatMapRef) => {
                         }, reject);
                     });
                     if (!authInstance.currentUser) {
-                        const userCredential = await authInstance.signInAnonymously();
+                        const userCredential = await signInAnonymously(authInstance);
                         userId = userCredential.user.uid;
                         console.log(`Usuario anónimo ${userId} iniciado.`);
                     } else {
@@ -411,7 +412,7 @@ const useEventData = (eventId, seatMapRef) => {
 
             if (firebaseEnabled) {
                 const seatRef = ref(db, `seats/${eventId}/${selectedFunctionId}/${silla._id}`);
-                const authInstance = await auth;
+                const authInstance = getAuth();
                 const userId = authInstance.currentUser ? authInstance.currentUser.uid : null;
 
                 // Si se va a liberar un asiento, necesitamos un userId, real o anónimo.
