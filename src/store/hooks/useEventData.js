@@ -324,7 +324,8 @@ const useEventData = (eventId, seatMapRef) => {
                 const seatRef = await getDbInstance().then(database => ref(database, `seats/${eventId}/${selectedFunctionId}/${silla._id}`));
 
                 // --- INICIO: Lógica para obtener el userId (autenticado o anónimo) ---
-                let userId = auth.currentUser ? auth.currentUser.uid : null;
+                const authInstance = getAuth();
+                let userId = authInstance.currentUser ? authInstance.currentUser.uid : null;
                 const forzarRegistro = evento?.otrasOpciones?.registroObligatorioAntesSeleccion ?? false;
 
                 if (!userId) { // Si no hay un usuario logueado (ni real ni anónimo todavía)
@@ -335,7 +336,6 @@ const useEventData = (eventId, seatMapRef) => {
                     } else {
                 // Intenta iniciar sesión de forma anónima para obtener un UID temporal
                 try {
-                    const authInstance = getAuth();
                     // Wait for auth state to be ready before signing in anonymously
                     await new Promise((resolve, reject) => {
                         const unsubscribe = authInstance.onAuthStateChanged(user => {
@@ -358,6 +358,7 @@ const useEventData = (eventId, seatMapRef) => {
                     }
                 }
                 // --- FIN: Lógica para obtener el userId ---
+
 
                 if (!userId) { // Última verificación por si algo falla
                     console.error("No se pudo obtener un ID de usuario válido para la transacción.");
