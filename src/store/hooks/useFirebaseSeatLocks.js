@@ -14,13 +14,13 @@ const useFirebaseSeatLocks = (
   carritoRef,
   enabled = true
 ) => {
-  const reconnectTimeoutRef = useRef(null);
   const debounceTimeoutRef = useRef(null);
   const lastLocksRef = useRef(null);
 
   useEffect(() => {
+    if (!enabled || !selectedFunctionId) return;
+
     let unsubscribe = () => {};
-    if (!enabled || !selectedFunctionId) return undefined;
 
     const setup = async () => {
       const db = await getDatabaseInstance();
@@ -33,21 +33,18 @@ const useFirebaseSeatLocks = (
           const locks = snapshot.val() || {};
           const sessionId = getCartSessionId();
 
-          // Debounce updates to reduce frequent re-renders
           if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
           debounceTimeoutRef.current = setTimeout(() => {
-            // Avoid updating if locks data is unchanged
             if (JSON.stringify(locks) === JSON.stringify(lastLocksRef.current)) return;
             lastLocksRef.current = locks;
 
             setMapa(prevMapa => {
               if (!prevMapa) return prevMapa;
-              // Optimize by updating only changed seats
               const updatedContenido = prevMapa.contenido.map(elemento => {
                 const updatedSillas = elemento.sillas.map(s => {
                   const keys = [s._id, s.id]
                     .filter(Boolean)
-                    .flatMap((k) => [k, normalizeSeatId(k)]);
+                    .flatMap(k => [k, normalizeSeatId(k)]);
                   const lock = keys.reduce((acc, k) => acc || locks[k], null);
                   const zonaId = s.zona || elemento.zona;
                   const baseColor = getZonaColor(zonaId, zonas) || 'lightblue';
@@ -60,7 +57,6 @@ const useFirebaseSeatLocks = (
                     else if (estado === 'pagado') color = 'gray';
                   }
                   const selected = cartRef.current.some(c => c._id === s._id);
-                  // Only update if changed
                   if (s.estado !== estado || s.color !== color || s.selected !== selected) {
                     return { ...s, estado, color, selected };
                   }
@@ -71,11 +67,9 @@ const useFirebaseSeatLocks = (
               return { ...prevMapa, contenido: updatedContenido };
             });
 
-            // Update carrito based on locks with lock ownership enforcement
             if (setCarrito && carritoRef) {
               const lockedSeatIds = Object.keys(locks);
               const currentCarrito = carritoRef.current || [];
-              // Add locked seats not in carrito and owned by this session
               const newSeats = lockedSeatIds
                 .map(seatId => [seatId, locks[seatId]])
                 .filter(([seatId, lock]) => lock?.session_id === sessionId)
@@ -90,16 +84,14 @@ const useFirebaseSeatLocks = (
                   zonaColor: lock?.seatDetails?.zonaColor || null,
                   tipoPrecio: lock?.seatDetails?.tipoPrecio || null,
                   descuentoNombre: lock?.seatDetails?.descuentoNombre || null,
-                  // Add sessionId of locker for UI distinction
                   lockerSessionId: lock?.session_id || null,
                 }));
-              // Remove seats unlocked or not owned by this session
               const updatedCarrito = currentCarrito.filter(c => lockedSeatIds.includes(c._id) && locks[c._id]?.session_id === sessionId);
               const combinedCarrito = [...updatedCarrito, ...newSeats];
               setCarrito(combinedCarrito);
               carritoRef.current = combinedCarrito;
             }
-          }, 100); // Reduced debounce to 100ms for more responsive UI
+          }, 100);
         } catch (error) {
           console.error('[useFirebaseSeatLocks] Error processing locks:', error);
         }
@@ -113,33 +105,8 @@ const useFirebaseSeatLocks = (
 
     setup();
 
-    // Enhanced reconnect logic with exponential backoff
-    let reconnectAttempts = 0;
-    const maxReconnectAttempts = 5;
-
-    const reconnect = () => {
-      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-      if (reconnectAttempts >= maxReconnectAttempts) {
-        console.error('[useFirebaseSeatLocks] Max reconnect attempts reached');
-        return;
-      }
-      const delay = Math.min(30000, 1000 * 2 ** reconnectAttempts);
-      reconnectTimeoutRef.current = setTimeout(() => {
-        reconnectAttempts++;
-        setup();
-      }, delay);
-    };
-
-    window.addEventListener('online', reconnect);
-    window.addEventListener('offline', () => {
-      console.warn('[useFirebaseSeatLocks] Offline detected');
-    });
-
     return () => {
       unsubscribe();
-      window.removeEventListener('online', reconnect);
-      window.removeEventListener('offline', () => {});
-      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       if (debounceTimeoutRef.current) clearTimeout(debounceTimeoutRef.current);
     };
   }, [selectedFunctionId, zonas, setMapa, cartRef, setCarrito, carritoRef, enabled]);
