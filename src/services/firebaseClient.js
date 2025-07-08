@@ -1,11 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
-import { getAuth } from 'firebase/auth'; // <--- NUEVA IMPORTACIÓN
+import { getAuth } from 'firebase/auth'; // Importamos getAuth
 import { supabase } from '../supabaseClient';
 
 let firebaseApp;
 let database;
-let authInstance; // <--- NUEVA VARIABLE para la instancia de autenticación
+let authInstance; // Variable para la instancia de autenticación
 
 const CONFIG_KEYS = [
     'firebase-use',
@@ -51,7 +51,7 @@ export const getDatabaseInstance = async () => {
     const cfg = await getConfig();
     if (!cfg.useFirebase) return null;
     if (!cfg.apiKey || !cfg.authDomain || !cfg.databaseURL) {
-        console.warn('[firebaseClient] Missing Firebase configuration.');
+        console.warn('[firebaseClient] Missing Firebase configuration. Firebase will not be initialized.');
         return null;
     }
 
@@ -62,25 +62,23 @@ export const getDatabaseInstance = async () => {
             databaseURL: cfg.databaseURL,
         });
         database = getDatabase(firebaseApp);
-        authInstance = getAuth(firebaseApp); // <--- INICIALIZA Y ASIGNA la instancia de autenticación
+        authInstance = getAuth(firebaseApp); // Inicializa y asigna la instancia de autenticación
     }
 
     return database;
 };
 
 // Exporta la instancia de autenticación directamente
-export const getAuthInstance = async () => { // <--- NUEVA FUNCIÓN DE EXPORTACIÓN
+export const getAuthInstance = async () => {
     // Aseguramos que Firebase se haya inicializado al obtener la instancia de la base de datos
     await getDatabaseInstance();
     return authInstance;
 };
 
-
 export const initFirebase = async () => {
     await getDatabaseInstance();
-    // También asegúrate de que la instancia de auth esté disponible después de la inicialización
-    await getAuthInstance();
-    return { firebaseApp, database, auth: authInstance }; // <--- Asegura que 'auth' se retorne aquí
+    await getAuthInstance(); // Asegura que la instancia de auth esté disponible
+    return { firebaseApp, database, auth: authInstance };
 };
 
 let enabledCache;
@@ -94,6 +92,7 @@ export const isFirebaseEnabled = async () => {
 };
 
 // --- Exportaciones finales para usar en otros módulos ---
-// Exportamos las promesas de las instancias para que se resuelvan cuando estén disponibles
-export const db = await getDatabaseInstance(); // Esto hará que 'db' sea la instancia de la DB cuando esté lista
-export const auth = await getAuthInstance();   // Y 'auth' será la instancia de Auth cuando esté lista
+// Usamos IIFE (Immediately Invoked Function Expression) para manejar el await en el top-level
+// Esto permite que 'db' y 'auth' sean las instancias resueltas directamente al importarlas.
+export const db = (async () => await getDatabaseInstance())();
+export const auth = (async () => await getAuthInstance())();

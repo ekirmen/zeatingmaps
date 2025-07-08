@@ -3,7 +3,7 @@ import { useCart } from '../../contexts/CartContext';
 import { fetchMapa, fetchPlantillaPrecios, getFunciones, getMapaPorEvento } from '../services/apistore';
 import { fetchZonasPorSala } from '../../services/supabaseServices';
 import { fetchSeatsByFuncion, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
-import { lockSeat, unlockSeat } from '../../backoffice/services/seatLocks'; // Puede que necesitemos ajustar el uso de estos
+import { lockSeat, unlockSeat } from '../../backoffice/services/seatLocks';
 import { supabase } from '../../supabaseClient';
 import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
@@ -13,9 +13,9 @@ import API_BASE_URL from '../../utils/apiBase';
 import { useSeatRealtime } from './useSeatRealtime';
 import useFirebaseSeatLocks from './useFirebaseSeatLocks';
 
-import { ref, runTransaction } from 'firebase/database';
-// Import the initialized db and auth instances from your firebaseClient
-import { db, auth, isFirebaseEnabled } from '../../services/firebaseClient';
+// --- Importaciones de Firebase corregidas ---
+import { ref, runTransaction } from 'firebase/database'; // ref y runTransaction son funciones
+import { db, auth, isFirebaseEnabled } from '../../services/firebaseClient'; // db y auth son las instancias inicializadas
 
 const API_URL = API_BASE_URL;
 
@@ -316,16 +316,35 @@ const useEventData = (eventId, seatMapRef) => {
             } else {
                 // Lógica con Transacción de Firebase
                 const seatRef = ref(db, `seats/${eventId}/${selectedFunctionId}/${silla._id}`);
-                const userId = auth.currentUser ? auth.currentUser.uid : null;
 
-                // Check if "Forzar el registro" is enabled in evento settings
+                // --- INICIO: Lógica para obtener el userId (autenticado o anónimo) ---
+                let userId = auth.currentUser ? auth.currentUser.uid : null;
                 const forzarRegistro = evento?.otrasOpciones?.registroObligatorioAntesSeleccion ?? false;
-                if (forzarRegistro) {
-                    if (!userId) {
-                        console.error("Usuario no autenticado. No se puede bloquear el asiento.");
-                        alert("Debes iniciar sesión para seleccionar un asiento.");
-                        return;
+
+                if (!userId) { // Si no hay un usuario logueado (ni real ni anónimo todavía)
+                    if (forzarRegistro) {
+                        console.error("Usuario no autenticado. Registro obligatorio antes de seleccionar.");
+                        alert("Debes iniciar sesión o registrarte para seleccionar un asiento.");
+                        return; // Detiene la ejecución si el registro es obligatorio
+                    } else {
+                        // Intenta iniciar sesión de forma anónima para obtener un UID temporal
+                        try {
+                            const userCredential = await auth.signInAnonymously();
+                            userId = userCredential.user.uid;
+                            console.log(`Usuario anónimo ${userId} iniciado.`);
+                        } catch (error) {
+                            console.error("Error al iniciar sesión de forma anónima:", error);
+                            alert("No pudimos preparar tu sesión para seleccionar asientos. Por favor, intenta de nuevo.");
+                            return; // Detiene la ejecución si falla la autenticación anónima
+                        }
                     }
+                }
+                // --- FIN: Lógica para obtener el userId ---
+
+                if (!userId) { // Última verificación por si algo falla
+                    console.error("No se pudo obtener un ID de usuario válido para la transacción.");
+                    alert("Hubo un problema con tu sesión. Por favor, recarga la página e intenta de nuevo.");
+                    return;
                 }
 
                 try {
@@ -335,9 +354,8 @@ const useEventData = (eventId, seatMapRef) => {
                             console.log(`[Firebase Transaction] Intentando ocupar asiento ${silla._id} para ${userId}`);
                             return {
                                 status: "occupied", // Marcamos como 'ocupado' en Firebase
-                                reservedBy: userId,
+                                reservedBy: userId, // Este userId será el UID real o el anónimo
                                 timestamp: Date.now(),
-                                // Puedes guardar más detalles relevantes si Firebase es la fuente de verdad del estado
                                 seatDetails: seatItemData // Guardar detalles del asiento para referencia
                             };
                         } else {
@@ -352,7 +370,6 @@ const useEventData = (eventId, seatMapRef) => {
                         console.log(`¡Asiento ${silla._id} seleccionado exitosamente por ${userId} en Firebase!`);
                         // Opcional: Si Supabase es un "espejo", actualízalo después del éxito en Firebase
                         // await createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'bloqueado' });
-                        // No llamar a lockSeat de Supabase si Firebase ya maneja el bloqueo principal
                     } else {
                         console.log(`Transacción de asiento ${silla._id} abortada. El asiento ya fue tomado.`);
                         alert('Lo siento, el asiento acaba de ser tomado por otra persona. Por favor, elige otro.');
@@ -378,6 +395,15 @@ const useEventData = (eventId, seatMapRef) => {
                 const seatRef = ref(db, `seats/${eventId}/${selectedFunctionId}/${silla._id}`);
                 const userId = auth.currentUser ? auth.currentUser.uid : null;
 
+                // Si se va a liberar un asiento, necesitamos un userId, real o anónimo.
+                // Si 'userId' es null aquí, es un caso edge que no debería pasar si el asiento
+                // fue seleccionado correctamente con un UID previamente.
+                if (!userId) {
+                    console.warn("Intentando liberar un asiento sin un ID de usuario. Podría ser un error.");
+                    // Podrías intentar signInAnonymously aquí también, o simplemente permitirlo si el asiento
+                    // no está marcado con un reservedBy.
+                }
+
                 try {
                     const { committed } = await runTransaction(seatRef, (currentSeatData) => {
                         // Solo si este usuario lo había reservado y el estado es 'occupied', lo liberamos
@@ -402,7 +428,6 @@ const useEventData = (eventId, seatMapRef) => {
                     }
                 } catch (error) {
                     console.error(`Error al liberar asiento en Firebase ${silla._id}:`, error);
-                    // Aquí podrías decidir si quieres notificar al usuario de un fallo en la liberación de Firebase
                 }
             }
 
@@ -410,12 +435,11 @@ const useEventData = (eventId, seatMapRef) => {
             try {
                 await Promise.all([
                     createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'disponible' }),
-                    unlockSeat(silla._id, selectedFunctionId) // Uso de unlockSeat de Supabase
+                    unlockSeat(silla._id, selectedFunctionId)
                 ]);
-                dbOperationSuccess = true; // Considera si quieres que esto marque éxito si Firebase falla pero Supabase no
+                dbOperationSuccess = true;
             } catch (err) {
                 console.error('Error al liberar asiento en Supabase:', err);
-                // Si falla la liberación en Supabase, aún así se intenta actualizar el carrito.
             }
         }
 
@@ -423,7 +447,7 @@ const useEventData = (eventId, seatMapRef) => {
         if (carrito.length === 0 && newCarritoState.length > 0) {
             startTimer();
         }
-        if (newCarritoState.length === 0 && carrito.length > 0) { // Solo si el carrito pasa de tener algo a estar vacío
+        if (newCarritoState.length === 0 && carrito.length > 0) {
             clearInterval(timerRef.current);
             setTimeLeft(0);
         }
@@ -437,7 +461,19 @@ const useEventData = (eventId, seatMapRef) => {
         });
 
         setCarrito(sortedCarrito);
-    }, [carrito, selectedFunctionId, firebaseEnabled, plantillaPrecios, zonas, appliedDiscount, eventId, startTimer, evento?.otrasOpciones?.registroObligatorioAntesSeleccion]);
+    }, [
+        carrito,
+        selectedFunctionId,
+        firebaseEnabled,
+        plantillaPrecios,
+        zonas,
+        appliedDiscount,
+        eventId,
+        startTimer,
+        evento?.otrasOpciones?.registroObligatorioAntesSeleccion, // Dependencia para la opción de registro
+        auth, // Dependencia para el hook useCallback, ya que auth.currentUser se usa dentro
+        db // Dependencia para el hook useCallback, ya que db se usa dentro
+    ]);
 
 
     useEffect(() => {
