@@ -45,6 +45,7 @@ const useEventData = (eventId, seatMapRef) => {
         return savedTime ? parseInt(savedTime, 10) : 0;
     });
     const [firebaseEnabled, setFirebaseEnabled] = useState(false);
+    const [firebaseAuthReady, setFirebaseAuthReady] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null); // Nuevo estado para el userId actual
     const [isAuthReady, setIsAuthReady] = useState(false); // Nuevo estado para indicar si Auth está listo
 

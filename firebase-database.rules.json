@@ -1,80 +1,86 @@
 {
   "rules": {
-    // Regla global que niega el acceso por defecto para mayor seguridad
+    // REGLA GLOBAL: Denegar lectura y escritura por defecto para máxima seguridad.
     ".read": false,
     ".write": false,
 
-    // Colección de asientos principales (donde se guarda el estado real y persistente del asiento)
+    // Colección 'seats': Gestiona los asientos del mapa de eventos.
     "seats": {
-      // Permitir la lectura de los asientos para que todos vean la disponibilidad
-      ".read": true,
-      "$chart_id": { // ID del evento o mapa de asientos
-        "$seat_id": { // ID del asiento individual
-          // Permitir escritura solo si el usuario está autenticado y se cumplen condiciones específicas
-          // NOTA: Esta regla de escritura es COMPLEMENTARIA a la lógica de transacciones en tu código.
-          // Las transacciones manejan la concurrencia, las reglas aquí refuerzan la seguridad.
+      "$eventId": { // ID del evento (p. ej., "10")
+        
+        // Se permite la lectura de todos los asientos de un evento para mostrar el mapa.
+        ".read": true,
+
+        "$seatId": { // ID único del asiento (p. ej., "silla_c0b4c9ea...")
+          
+          // REGLA DE ESCRITURA: Define quién y bajo qué condiciones puede modificar un asiento.
           ".write": "auth != null && (
-                       // 1. Un usuario puede tomar un asiento si está 'available' y se convierte en 'occupied' por ESE USUARIO
-                       (newData.child('status').val() === 'occupied' &&
-                        newData.child('reservedBy').val() === auth.uid &&
-                        data.child('status').val() === 'available') ||
-                       // 2. Un usuario puede liberar UN ASIENTO QUE YA RESERVÓ
-                       (data.child('reservedBy').val() === auth.uid &&
-                        newData.child('status').val() === 'available' &&
-                        newData.child('reservedBy').val() === null) ||
-                       // 3. Un administrador puede modificar el estado
-                       (root.child('admins').hasChild(auth.uid) &&
-                        newData.hasChildren(['status', 'reservedBy']))
-                     )", // <--- ¡Asegúrate que este paréntesis de cierre esté aquí!
-          // Validar la estructura de los datos del asiento al escribir
-          ".validate": "newData.hasChildren(['status', 'reservedBy']) &&
+                      // Escenario 1: Un usuario ocupa un asiento que estaba disponible.
+                      (data.child('status').val() === 'available' &&
+                       newData.child('status').val() === 'occupied' &&
+                       newData.child('reservedBy').val() === auth.uid)
+                    ||
+                      // Escenario 2: Un usuario libera un asiento que había ocupado.
+                      (data.child('status').val() === 'occupied' &&
+                       data.child('reservedBy').val() === auth.uid &&
+                       newData.child('status').val() === 'available' &&
+                       ( !newData.hasChild('reservedBy') || newData.child('reservedBy').val() === null ))
+                    ||
+                      // Escenario 3: Un administrador puede modificar cualquier asiento.
+                      (auth.token.admin === true)
+                    )",
+
+          // REGLA DE VALIDACIÓN: Asegura que los datos del asiento tengan la estructura correcta.
+          ".validate": "newData.hasChildren(['status', 'timestamp', 'seatDetails']) &&
                         newData.child('status').isString() &&
-                        (newData.child('reservedBy').val() === null || newData.child('reservedBy').isString())"
+                        (newData.child('status').val() === 'available' || newData.child('status').val() === 'occupied' || newData.child('status').val() === 'locked') &&
+                        newData.child('timestamp').isNumber() &&
+                        // El campo 'reservedBy' solo debe existir si el asiento está ocupado.
+                        (newData.child('status').val() === 'available' ? (!newData.hasChild('reservedBy') || newData.child('reservedBy').val() === null) : true)"
         }
       }
     },
 
-    // Colección "in-cart" para asientos temporales en el carrito de compra
-    // Estos asientos se bloquean temporalmente para una sesión específica
+    // Colección 'in-cart': Asientos temporales en el carrito de compras.
     "in-cart": {
-      "$chart_id": {
+      "$cart_id": { // Usualmente, este es el UID del usuario (auth.uid).
+        // PERMISOS: Solo el propietario del carrito puede leerlo o escribir en él.
+        ".read": "auth != null && auth.uid === $cart_id",
+        ".write": "auth != null && auth.uid === $cart_id",
+
         "$seat_id": {
           ".indexOn": ["timestamp"],
-          // Permitir lectura SOLO al usuario dueño de la sesión o a un admin
-          ".read": "auth != null && (data.child('session_id').val() === auth.uid || root.child('admins').hasChild(auth.uid))",
-          // Permitir escritura SOLO al usuario dueño de la sesión
-          ".write": "auth != null && (newData.child('session_id').val() === auth.uid)",
-          // Validar los datos al escribir
-          ".validate": "newData.hasChildren(['status', 'timestamp', 'session_id', 'expires', 'seatDetails']) &&
+          // VALIDACIÓN: Asegurar la estructura de los datos del carrito.
+          ".validate": "newData.hasChildren(['status', 'timestamp', 'expires', 'seatDetails']) &&
                         newData.child('status').isString() &&
                         newData.child('timestamp').isNumber() &&
-                        newData.child('session_id').isString() &&
                         newData.child('expires').isNumber() &&
-                        newData.child('seatDetails').hasChildren(['zona', 'precio', 'nombreMesa', 'zonaNombre', 'tipoPrecio', 'descuentoNombre'])"
+                        newData.child('seatDetails').hasChildren(['zona', 'precio', 'nombreMesa'])"
         }
       }
     },
 
-    // Colección "reserved" para guardar información sobre reservas completadas
-    // Si "reserved" solo contiene metadatos de la reserva (y el estado del asiento se maneja en "seats"),
-    // las reglas aquí serían para crear/leer/actualizar esos metadatos.
+    // Colección 'reserved': Reservas confirmadas y pagadas.
     "reserved": {
-      ".read": "auth != null", // Solo usuarios autenticados pueden ver sus reservas
-      "$chart_id": {
-        ".indexOn": ["timestamp"],
-        "$reservation_id": { // ID de la reserva individual
-          // Permitir escritura solo al usuario que posee la reserva o a un admin
-          ".write": "auth != null && (newData.child('userId').val() === auth.uid || root.child('admins').hasChild(auth.uid))",
-          ".validate": "newData.hasChildren(['userId', 'seatId', 'timestamp', 'status'])" // Ejemplo de validación
+      "$userId": { // ID del usuario que realizó la reserva
+        // PERMISOS: Solo el usuario propietario o un admin pueden acceder a estas reservas.
+        ".read": "auth != null && auth.uid === $userId || auth.token.admin === true",
+        ".write": "auth != null && auth.uid === $userId || auth.token.admin === true",
+        
+        "$reservation_id": {
+          ".indexOn": ["timestamp"],
+          // VALIDACIÓN: Asegurar la estructura de la reserva final.
+          ".validate": "newData.hasChildren(['seatId', 'eventId', 'timestamp', 'status', 'purchaseDetails'])"
         }
       }
     },
 
-    // Opcional: una colección de administradores para darles permisos especiales
+    // Opcional: Colección para gestionar roles de administrador.
     "admins": {
-      ".read": "auth != null",
-      ".write": false // Solo los administradores pueden añadir/quitar otros administradores desde un backend seguro
-      // Ejemplo: "auth.uid": true
+      // Solo los administradores pueden ver la lista de otros administradores.
+      ".read": "auth != null && auth.token.admin === true",
+      // La escritura debe hacerse solo desde el backend (servidor o Cloud Function).
+      ".write": false
     }
   }
 }
