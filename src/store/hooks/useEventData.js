@@ -12,13 +12,10 @@ import getZonaColor from '../../utils/getZonaColor';
 import API_BASE_URL from '../../utils/apiBase';
 import { useSeatRealtime } from './useSeatRealtime';
 import useFirebaseSeatLocks from './useFirebaseSeatLocks';
-import { onAuthStateChanged } from 'firebase/auth'; // Importar onAuthStateChanged
-
-// --- Importaciones de Firebase corregidas ---
-import { ref, runTransaction } from 'firebase/database'; // ref y runTransaction son funciones
-// Importamos las instancias 'db' y 'auth' ya inicializadas (promesas)
+import { onAuthStateChanged } from 'firebase/auth';
+import { ref, runTransaction, set } from 'firebase/database';
 import { db, isFirebaseEnabled, auth } from '../../services/firebaseClient';
-import { signInAnonymously } from 'firebase/auth'; // Solo necesitamos signInAnonymously de este paquete
+import { signInAnonymously } from 'firebase/auth';
 
 const API_URL = API_BASE_URL;
 
@@ -46,19 +43,17 @@ const useEventData = (eventId, seatMapRef) => {
     });
     const [firebaseEnabled, setFirebaseEnabled] = useState(false);
     const [firebaseAuthReady, setFirebaseAuthReady] = useState(false);
-    const [currentUserId, setCurrentUserId] = useState(null); // Nuevo estado para el userId actual
-    const [isAuthReady, setIsAuthReady] = useState(false); // Nuevo estado para indicar si Auth está listo
+    const [currentUserId, setCurrentUserId] = useState(null);
+    const [isAuthReady, setIsAuthReady] = useState(false);
 
     const { cart, setCart, duration } = useCart();
     const [carrito, setCarrito] = useState([]);
     const cartRef = useRef([]);
     const timerRef = useRef(null);
 
-    // Compose localStorage keys for cart and seat popup
     const localStorageCartKey = `${LOCAL_STORAGE_CART_PREFIX}-${eventId}-${selectedFunctionId || 'none'}`;
     const localStorageSeatPopupKey = `${LOCAL_STORAGE_SEAT_POPUP_PREFIX}-${evento?.id || eventId}`;
 
-    // Load cart from localStorage on mount or when eventId or selectedFunctionId changes
     useEffect(() => {
         try {
             const savedCart = localStorage.getItem(localStorageCartKey);
@@ -77,10 +72,8 @@ const useEventData = (eventId, seatMapRef) => {
         }
     }, [localStorageCartKey, setCart, selectedFunctionId]);
 
-    // Save cart to localStorage whenever carrito changes
     useEffect(() => {
         try {
-            // Ensure zonaNombre is present in each cart item before saving
             const carritoWithZonaNombre = carrito.map(item => ({
                 ...item,
                 zonaNombre: item.zonaNombre || (item.zona ? zonas.find(z => z.id === item.zona || z._id === item.zona)?.nombre : '') || ''
@@ -177,11 +170,8 @@ const useEventData = (eventId, seatMapRef) => {
 
     const loadMapaYSeats = useCallback(async () => {
         if (mapaLoadedForFunctionId.current === selectedFunctionId) {
-            // Prevent repeated loading if already loaded for this function
             return;
         }
-        console.log('loadMapaYSeats: funciones:', funciones);
-        console.log('loadMapaYSeats: selectedFunctionId:', selectedFunctionId, 'type:', typeof selectedFunctionId);
         const funcion = funciones.find(f => String(f.id) === String(selectedFunctionId));
         if (!funcion) {
             console.warn('loadMapaYSeats: funcion not found for selectedFunctionId:', selectedFunctionId);
@@ -190,12 +180,10 @@ const useEventData = (eventId, seatMapRef) => {
 
         try {
             const salaId = typeof funcion.sala === 'object' ? funcion.sala.id || funcion.sala._id : funcion.sala;
-            console.log('loadMapaYSeats: salaId:', salaId);
             const [mapaSala, seatStates] = await Promise.all([
                 fetchMapa(salaId),
                 fetchSeatsByFuncion(selectedFunctionId),
             ]);
-            console.log('loadMapaYSeats: mapaSala:', mapaSala);
 
             const mapaData = mapaSala || await getMapaPorEvento(evento?.id || funcion.evento);
             const seatMap = Object.fromEntries(seatStates.map(s => [s._id || s.id, s.bloqueado ? 'bloqueado' : s.status]));
@@ -230,10 +218,8 @@ const useEventData = (eventId, seatMapRef) => {
 
     const startTimer = useCallback(() => {
         if (timerRef.current) {
-            console.log('startTimer: timer already running, skipping restart');
             return;
         }
-        console.log('startTimer: starting timer');
         setTimeLeft(duration ? duration * 60 : 900);
         localStorage.setItem(`timer-${eventId}-${selectedFunctionId || 'none'}`, String(duration ? duration * 60 : 900));
         timerRef.current = setInterval(() => {
@@ -252,7 +238,6 @@ const useEventData = (eventId, seatMapRef) => {
         }, 1000);
     }, [duration, eventId, selectedFunctionId]);
 
-
     const applyDiscountCode = async () => {
         if (!discountCode.trim()) return;
         try {
@@ -269,23 +254,15 @@ const useEventData = (eventId, seatMapRef) => {
         }
     };
 
-    // --- Función toggleSillaEnCarrito MODIFICADA para usar transacciones de Firebase ---
     const toggleSillaEnCarrito = useCallback(async (silla, mesa) => {
         const zonaId = silla?.zona || mesa?.zona;
-        // Impedir acción si el asiento ya está en un estado final (reservado, pagado) o bloqueado por otra causa
         if (!zonaId || ['reservado', 'pagado'].includes(silla?.estado) || silla?.bloqueado) {
-            console.log(`Asiento ${silla._id} no disponible para acción. Estado: ${silla?.estado}, Bloqueado: ${silla?.bloqueado}`);
             return;
         }
 
         const index = carrito.findIndex(item => item._id === silla._id);
-        const isAdding = index === -1; // true si estamos añadiendo, false si estamos quitando
-
-        // Fix for seat selection persistence: ensure seat IDs are normalized and unique
-        const normalizedSeatId = silla._id || silla.id || silla.id;
-
-        // Use normalizedSeatId for cart operations to avoid duplicates or overwrites
-
+        const isAdding = index === -1;
+        const normalizedSeatId = silla._id || silla.id;
         const basePrice = plantillaPrecios?.detalles.find(p => p.zonaId === zonaId)?.precio || 100;
         const zonaNombre = zonas.find(z => z.id === zonaId)?.nombre || 'Zona';
         let finalPrice = basePrice;
@@ -303,7 +280,6 @@ const useEventData = (eventId, seatMapRef) => {
             }
         }
 
-        // Datos del asiento a agregar/quitar para el carrito
         const seatItemData = {
             ...silla,
             zona: zonaId,
@@ -315,38 +291,33 @@ const useEventData = (eventId, seatMapRef) => {
         };
 
         let newCarritoState;
-        let dbOperationSuccess = false; // Bandera para saber si la operación en la DB fue exitosa
+        let dbOperationSuccess = false;
 
-        // --- Resolución de instancias de Firebase al inicio de la función ---
         const databaseInstance = await db;
         const authInstanceResolved = await auth;
 
         if (!databaseInstance) {
             console.error("Firebase Database no está inicializado o habilitado. No se puede realizar la operación.");
             alert("Hubo un problema con la conexión a la base de datos. Por favor, recarga la página.");
-            return; // Salir si la base de datos no está disponible
+            return;
         }
 
         if (!authInstanceResolved) {
             console.error("Firebase Auth no está inicializado o habilitado. No se puede obtener el ID de usuario.");
             alert("Hubo un problema con la autenticación. Por favor, recarga la página.");
-            return; // Salir si la autenticación no está disponible
+            return;
         }
 
-        // Asegurarse de que el estado de autenticación esté listo
         if (!isAuthReady) {
             console.warn("Firebase Auth no está listo aún. No se puede proceder con la selección de asiento.");
             alert("La sesión no está lista. Por favor, espera un momento y vuelve a intentarlo.");
             return;
         }
-        // --- Fin de resolución de instancias y verificación de estado ---
 
-        // Ensure user is signed in (anonymous if needed) before modifying cart
         if (!authInstanceResolved.currentUser) {
             try {
                 const userCredential = await signInAnonymously(authInstanceResolved);
                 setCurrentUserId(userCredential.user.uid);
-                console.log("Usuario anónimo autenticado para carrito:", userCredential.user.uid);
             } catch (error) {
                 console.error("Error al iniciar sesión anónimamente para carrito:", error);
                 alert("No pudimos preparar tu sesión para modificar el carrito. Por favor, intenta de nuevo.");
@@ -355,13 +326,11 @@ const useEventData = (eventId, seatMapRef) => {
         }
 
         if (isAdding) {
-            // --- Lógica para AÑADIR (Bloquear asiento con transacción Firebase) ---
             if (!firebaseEnabled) {
-                console.warn("Firebase no está habilitado. El bloqueo de asientos no será atómico (usando Supabase).");
                 try {
                     await Promise.all([
                         createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'bloqueado' }),
-                        lockSeat(silla._id, 'bloqueado', selectedFunctionId, { seatDetails: seatItemData }) // Uso de lockSeat de Supabase
+                        lockSeat(silla._id, 'bloqueado', selectedFunctionId, { seatDetails: seatItemData })
                     ]);
                     dbOperationSuccess = true;
                 } catch (err) {
@@ -369,67 +338,51 @@ const useEventData = (eventId, seatMapRef) => {
                     alert('Lo siento, el asiento ya no está disponible. Por favor, intenta de nuevo.');
                 }
             } else {
-                // Lógica con Transacción de Firebase
-                const seatRef = ref(databaseInstance, `seats/${selectedFunctionId}/${silla._id}`); // Usamos la instancia resuelta
-
-                // --- INICIO: Lógica para obtener el userId (autenticado o anónimo) ---
-                let userId = currentUserId; // Usamos el userId del estado
+                const seatRef = ref(databaseInstance, `seats/${selectedFunctionId}/${silla._id}`);
+                let userId = currentUserId;
                 const forzarRegistro = evento?.otrasOpciones?.registroObligatorioAntesSeleccion ?? false;
 
-                if (!userId) { // Si no hay un usuario logueado (ni real ni anónimo todavía)
+                if (!userId) {
                     if (forzarRegistro) {
-                        console.error("Usuario no autenticado. Registro obligatorio antes de seleccionar.");
                         alert("Debes iniciar sesión o registrarte para seleccionar un asiento.");
-                        return; // Detiene la ejecución si el registro es obligatorio
+                        return;
                     } else {
-                        // Intenta iniciar sesión de forma anónima para obtener un UID temporal
                         try {
-                            const userCredential = await signInAnonymously(authInstanceResolved); // Usa la instancia de auth resuelta
+                            const userCredential = await signInAnonymously(authInstanceResolved);
                             userId = userCredential.user.uid;
-                            console.log("Usuario anónimo:", userId);
-                            setCurrentUserId(userId); // Actualizar el estado con el nuevo userId anónimo
+                            setCurrentUserId(userId);
                         } catch (error) {
                             console.error("Error al iniciar sesión anónimamente:", error.code, error.message);
                             alert("No pudimos preparar tu sesión para seleccionar asientos. Por favor, intenta de nuevo.");
-                            return; // Detiene la ejecución si falla la autenticación anónima
+                            return;
                         }
                     }
                 }
-                // --- FIN: Lógica para obtener el userId ---
 
-
-                if (!userId) { // Última verificación por si algo falla
-                    console.error("No se pudo obtener un ID de usuario válido para la transacción.");
+                if (!userId) {
                     alert("Hubo un problema con tu sesión. Por favor, recarga la página e intenta de nuevo.");
                     return;
                 }
 
                 try {
                     const { committed } = await runTransaction(seatRef, (currentSeatData) => {
-                        // Si el asiento no existe en Firebase o su estado es "available", intentamos ocuparlo
                         if (currentSeatData === null || currentSeatData.status === "available") {
-                            console.log(`[Firebase Transaction] Intentando ocupar asiento ${silla._id} para ${userId}`);
                             return {
-                                status: "occupied", // Marcamos como 'ocupado' en Firebase
-                                reservedBy: userId, // Este userId será el UID real o el anónimo
+                                status: "occupied",
+                                reservedBy: userId,
                                 timestamp: Date.now(),
-                                seatDetails: seatItemData // Guardar detalles del asiento para referencia
+                                seatDetails: seatItemData
                             };
                         } else {
-                            // El asiento no está disponible (ya "occupied", "blocked", etc.)
-                            console.log(`[Firebase Transaction] Asiento ${silla._id} no disponible. Estado actual: ${currentSeatData.status}`, currentSeatData);
-                            return undefined; // Aborta la transacción
+                            return undefined;
                         }
                     });
 
                     if (committed) {
+                        const cartSeatRef = ref(databaseInstance, `in-cart/${userId}/${silla._id}`);
+                        await set(cartSeatRef, seatItemData);
                         dbOperationSuccess = true;
-                        console.log(`¡Asiento ${silla._id} seleccionado exitosamente por ${userId} en Firebase!`);
-                        // Opcional: Si Supabase es un "espejo", actualízalo después del éxito en Firebase
-                        // await createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'bloqueado' });
                     } else {
-                        console.log(`Transacción de asiento ${silla._id} abortada. El asiento ya fue tomado.`);
-
                         alert('Lo siento, el asiento acaba de ser tomado por otra persona. Por favor, elige otro.');
                     }
                 } catch (error) {
@@ -441,55 +394,39 @@ const useEventData = (eventId, seatMapRef) => {
             if (dbOperationSuccess) {
                 newCarritoState = [...carrito, seatItemData];
             } else {
-                // Si la operación de DB falló, no se añade al carrito local
                 newCarritoState = carrito;
             }
 
         } else {
-            // --- Lógica para QUITAR (Liberar asiento) ---
             newCarritoState = carrito.filter(item => item._id !== silla._id);
+            const userId = currentUserId;
 
-            if (firebaseEnabled) {
-                const seatRef = ref(databaseInstance, `seats/${selectedFunctionId}/${silla._id}`); // Usamos la instancia resuelta
-                const userId = currentUserId; // Usamos el userId del estado
-
-                // Si se va a liberar un asiento, necesitamos un userId, real o anónimo.
-                // Si 'userId' es null aquí, es un caso edge que no debería pasar si el asiento
-                // fue seleccionado correctamente con un UID previamente.
-                if (!userId) {
-                    console.warn("Intentando liberar un asiento sin un ID de usuario. Podría ser un error.");
-                    // Podrías intentar signInAnonymously aquí también, o simplemente permitirlo si el asiento
-                    // no está marcado con un reservedBy.
-                }
+            if (firebaseEnabled && userId) {
+                const seatRef = ref(databaseInstance, `seats/${selectedFunctionId}/${silla._id}`);
+                const cartSeatRef = ref(databaseInstance, `in-cart/${userId}/${silla._id}`);
 
                 try {
+                    await set(cartSeatRef, null);
                     const { committed } = await runTransaction(seatRef, (currentSeatData) => {
-                        // Solo si este usuario lo había reservado y el estado es 'occupied', lo liberamos
                         if (currentSeatData && currentSeatData.reservedBy === userId && currentSeatData.status === "occupied") {
-                            console.log(`[Firebase Transaction] Liberando asiento ${silla._id} de ${userId}`);
                             return {
-                                status: "available", // Estado 'disponible' en Firebase
+                                status: "available",
                                 reservedBy: null,
                                 timestamp: Date.now(),
                                 seatDetails: null
                             };
                         } else {
-                            console.log(`[Firebase Transaction] No se libera asiento ${silla._id}. No fue reservado por este usuario o ya está libre.`, currentSeatData);
-                            return undefined; // Aborta la transacción
+                            return undefined;
                         }
                     });
                     if (committed) {
                         dbOperationSuccess = true;
-                        console.log(`¡Asiento ${silla._id} liberado exitosamente en Firebase!`);
-                    } else {
-                        console.warn(`No se confirmó la liberación de asiento ${silla._id} en Firebase. Posiblemente ya lo estaba.`);
                     }
                 } catch (error) {
                     console.error(`Error al liberar asiento en Firebase ${silla._id}:`, error);
                 }
             }
 
-            // Siempre intentar liberar/actualizar en Supabase (o actualizar según tu estrategia)
             try {
                 await Promise.all([
                     createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'disponible' }),
@@ -501,7 +438,6 @@ const useEventData = (eventId, seatMapRef) => {
             }
         }
 
-        // Lógica del temporizador
         if (carrito.length === 0 && newCarritoState.length > 0) {
             startTimer();
         }
@@ -511,7 +447,6 @@ const useEventData = (eventId, seatMapRef) => {
             localStorage.removeItem(`timer-${eventId}-${selectedFunctionId || 'none'}`);
         }
 
-        // Ordenar el carrito y actualizar el estado
         const sortedCarrito = newCarritoState.slice().sort((a, b) => {
             if (a.nombre && b.nombre) {
                 return String(a.nombre).localeCompare(String(b.nombre));
@@ -530,12 +465,11 @@ const useEventData = (eventId, seatMapRef) => {
         eventId,
         startTimer,
         evento?.otrasOpciones?.registroObligatorioAntesSeleccion,
-        db, // Añadimos 'db' como dependencia explícita
-        auth, // Añadimos 'auth' como dependencia explícita
-        currentUserId, // Añadimos currentUserId a las dependencias
-        isAuthReady // Añadimos isAuthReady a las dependencias
+        db,
+        auth,
+        currentUserId,
+        isAuthReady
     ]);
-
 
     useEffect(() => {
         if (JSON.stringify(carrito) !== JSON.stringify(cart)) {
@@ -553,12 +487,11 @@ const useEventData = (eventId, seatMapRef) => {
         cartRef.current = carrito;
     }, [carrito]);
 
-    // Listener de estado de autenticación de Firebase
     useEffect(() => {
         let unsubscribe;
         const setupAuthListener = async () => {
             try {
-                const authInstance = await auth; // Espera a que la promesa de auth se resuelva
+                const authInstance = await auth;
                 if (authInstance) {
                     unsubscribe = onAuthStateChanged(authInstance, (user) => {
                         if (user) {
@@ -566,15 +499,14 @@ const useEventData = (eventId, seatMapRef) => {
                         } else {
                             setCurrentUserId(null);
                         }
-                        setIsAuthReady(true); // El estado de autenticación ha sido verificado
+                        setIsAuthReady(true);
                     });
                 } else {
-                    console.warn("La instancia de Firebase Auth no está disponible. No se puede escuchar los cambios de estado de autenticación.");
-                    setIsAuthReady(true); // Marcar como listo para no bloquear la app
+                    setIsAuthReady(true);
                 }
             } catch (error) {
                 console.error("Error al configurar el listener de Firebase Auth:", error);
-                setIsAuthReady(true); // Marcar como listo incluso en caso de error
+                setIsAuthReady(true);
             }
         };
 
@@ -582,18 +514,19 @@ const useEventData = (eventId, seatMapRef) => {
 
         return () => {
             if (unsubscribe) {
-                unsubscribe(); // Limpiar el listener al desmontar el componente
+                unsubscribe();
             }
         };
-    }, [auth]); // Depende de la promesa 'auth'
+    }, [auth]);
 
-    useEffect(() => { 
+    useEffect(() => {
         let isMounted = true;
         isFirebaseEnabled().then(enabled => {
             if (isMounted) setFirebaseEnabled(enabled);
         });
         return () => { isMounted = false; };
     }, []);
+
     useEffect(() => { if (eventId) loadEvento(); }, [eventId, loadEvento]);
     useEffect(() => { loadFunciones(); }, [loadFunciones]);
     useEffect(() => { if (funciones.length) loadZonas(); }, [funciones, loadZonas]);
@@ -604,10 +537,8 @@ const useEventData = (eventId, seatMapRef) => {
     }, [selectedFunctionId, funciones, loadMapaYSeats]);
     useEffect(() => { fetchPayments().then(setPagos).catch(() => setPagos([])); }, []);
 
-    // Si Firebase está habilitado, useFirebaseSeatLocks escuchará los cambios en Firebase
     useFirebaseSeatLocks(selectedFunctionId, zonas, setMapa, cartRef, setCarrito, firebaseEnabled);
-    // useSeatRealtime (para Supabase) solo se usa si Firebase no está habilitado
-    useSeatRealtime({ funcionId: firebaseEnabled ? null : selectedFunctionId, onSeatUpdate: () => { /* tu lógica de actualización */ } });
+    useSeatRealtime({ funcionId: firebaseEnabled ? null : selectedFunctionId, onSeatUpdate: () => {} });
     useEffect(() => () => clearInterval(timerRef.current), []);
 
     return {
