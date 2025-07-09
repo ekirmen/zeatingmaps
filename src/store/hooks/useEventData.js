@@ -336,6 +336,19 @@ const useEventData = (eventId, seatMapRef) => {
         }
         // --- Fin de resolución de instancias y verificación de estado ---
 
+        // Ensure user is signed in (anonymous if needed) before modifying cart
+        if (!authInstanceResolved.currentUser) {
+            try {
+                const userCredential = await signInAnonymously(authInstanceResolved);
+                setCurrentUserId(userCredential.user.uid);
+                console.log("Usuario anónimo autenticado para carrito:", userCredential.user.uid);
+            } catch (error) {
+                console.error("Error al iniciar sesión anónimamente para carrito:", error);
+                alert("No pudimos preparar tu sesión para modificar el carrito. Por favor, intenta de nuevo.");
+                return;
+            }
+        }
+
         if (isAdding) {
             // --- Lógica para AÑADIR (Bloquear asiento con transacción Firebase) ---
             if (!firebaseEnabled) {

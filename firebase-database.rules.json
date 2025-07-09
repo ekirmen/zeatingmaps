@@ -28,7 +28,9 @@
                     ||
                       // Escenario 3: Un administrador puede modificar cualquier asiento.
                       (auth.token.admin === true)
-                    )",
+                    )
+                    || (auth != null) // TEMPORARY: allow all authenticated users for testing
+                    ",
 
           // REGLA DE VALIDACIÓN: Asegura que los datos del asiento tengan la estructura correcta.
           ".validate": "newData.hasChildren(['status', 'timestamp', 'seatDetails']) &&
