@@ -12,6 +12,7 @@ import getZonaColor from '../../utils/getZonaColor';
 import API_BASE_URL from '../../utils/apiBase';
 import { useSeatRealtime } from './useSeatRealtime';
 import useFirebaseSeatLocks from './useFirebaseSeatLocks';
+import { onAuthStateChanged } from 'firebase/auth'; // Importar onAuthStateChanged
 
 // --- Importaciones de Firebase corregidas ---
 import { ref, runTransaction } from 'firebase/database'; // ref y runTransaction son funciones
@@ -44,6 +45,8 @@ const useEventData = (eventId, seatMapRef) => {
         return savedTime ? parseInt(savedTime, 10) : 0;
     });
     const [firebaseEnabled, setFirebaseEnabled] = useState(false);
+    const [currentUserId, setCurrentUserId] = useState(null); // Nuevo estado para el userId actual
+    const [isAuthReady, setIsAuthReady] = useState(false); // Nuevo estado para indicar si Auth está listo
 
     const { cart, setCart, duration } = useCart();
     const [carrito, setCarrito] = useState([]);
@@ -323,7 +326,14 @@ const useEventData = (eventId, seatMapRef) => {
             alert("Hubo un problema con la autenticación. Por favor, recarga la página.");
             return; // Salir si la autenticación no está disponible
         }
-        // --- Fin de resolución de instancias ---
+
+        // Asegurarse de que el estado de autenticación esté listo
+        if (!isAuthReady) {
+            console.warn("Firebase Auth no está listo aún. No se puede proceder con la selección de asiento.");
+            alert("La sesión no está lista. Por favor, espera un momento y vuelve a intentarlo.");
+            return;
+        }
+        // --- Fin de resolución de instancias y verificación de estado ---
 
         if (isAdding) {
             // --- Lógica para AÑADIR (Bloquear asiento con transacción Firebase) ---
@@ -344,7 +354,7 @@ const useEventData = (eventId, seatMapRef) => {
                 const seatRef = ref(databaseInstance, `seats/${selectedFunctionId}/${silla._id}`); // Usamos la instancia resuelta
 
                 // --- INICIO: Lógica para obtener el userId (autenticado o anónimo) ---
-                let userId = authInstanceResolved.currentUser ? authInstanceResolved.currentUser.uid : null; // Usamos la instancia resuelta
+                let userId = currentUserId; // Usamos el userId del estado
                 const forzarRegistro = evento?.otrasOpciones?.registroObligatorioAntesSeleccion ?? false;
 
                 if (!userId) { // Si no hay un usuario logueado (ni real ni anónimo todavía)
@@ -358,6 +368,7 @@ const useEventData = (eventId, seatMapRef) => {
                             const userCredential = await signInAnonymously(authInstanceResolved); // Usa la instancia de auth resuelta
                             userId = userCredential.user.uid;
                             console.log("Usuario anónimo:", userId);
+                            setCurrentUserId(userId); // Actualizar el estado con el nuevo userId anónimo
                         } catch (error) {
                             console.error("Error al iniciar sesión anónimamente:", error.code, error.message);
                             alert("No pudimos preparar tu sesión para seleccionar asientos. Por favor, intenta de nuevo.");
@@ -421,7 +432,7 @@ const useEventData = (eventId, seatMapRef) => {
 
             if (firebaseEnabled) {
                 const seatRef = ref(databaseInstance, `seats/${selectedFunctionId}/${silla._id}`); // Usamos la instancia resuelta
-                const userId = authInstanceResolved.currentUser ? authInstanceResolved.currentUser.uid : null; // Usamos la instancia resuelta
+                const userId = currentUserId; // Usamos el userId del estado
 
                 // Si se va a liberar un asiento, necesitamos un userId, real o anónimo.
                 // Si 'userId' es null aquí, es un caso edge que no debería pasar si el asiento
@@ -501,7 +512,9 @@ const useEventData = (eventId, seatMapRef) => {
         startTimer,
         evento?.otrasOpciones?.registroObligatorioAntesSeleccion,
         db, // Añadimos 'db' como dependencia explícita
-        auth // Añadimos 'auth' como dependencia explícita
+        auth, // Añadimos 'auth' como dependencia explícita
+        currentUserId, // Añadimos currentUserId a las dependencias
+        isAuthReady // Añadimos isAuthReady a las dependencias
     ]);
 
 
@@ -520,6 +533,40 @@ const useEventData = (eventId, seatMapRef) => {
     useEffect(() => {
         cartRef.current = carrito;
     }, [carrito]);
+
+    // Listener de estado de autenticación de Firebase
+    useEffect(() => {
+        let unsubscribe;
+        const setupAuthListener = async () => {
+            try {
+                const authInstance = await auth; // Espera a que la promesa de auth se resuelva
+                if (authInstance) {
+                    unsubscribe = onAuthStateChanged(authInstance, (user) => {
+                        if (user) {
+                            setCurrentUserId(user.uid);
+                        } else {
+                            setCurrentUserId(null);
+                        }
+                        setIsAuthReady(true); // El estado de autenticación ha sido verificado
+                    });
+                } else {
+                    console.warn("La instancia de Firebase Auth no está disponible. No se puede escuchar los cambios de estado de autenticación.");
+                    setIsAuthReady(true); // Marcar como listo para no bloquear la app
+                }
+            } catch (error) {
+                console.error("Error al configurar el listener de Firebase Auth:", error);
+                setIsAuthReady(true); // Marcar como listo incluso en caso de error
+            }
+        };
+
+        setupAuthListener();
+
+        return () => {
+            if (unsubscribe) {
+                unsubscribe(); // Limpiar el listener al desmontar el componente
+            }
+        };
+    }, [auth]); // Depende de la promesa 'auth'
 
     useEffect(() => { isFirebaseEnabled().then(setFirebaseEnabled); }, []);
     useEffect(() => { if (eventId) loadEvento(); }, [eventId, loadEvento]);
