@@ -43,7 +43,10 @@ const useEventData = (eventId, seatMapRef) => {
     const [showSeatPopup, setShowSeatPopup] = useState(false);
     const [discountCode, setDiscountCode] = useState('');
     const [appliedDiscount, setAppliedDiscount] = useState(null);
-    const [timeLeft, setTimeLeft] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(() => {
+        const savedTime = localStorage.getItem(`timer-${eventId}-${selectedFunctionId || 'none'}`);
+        return savedTime ? parseInt(savedTime, 10) : 0;
+    });
     const [firebaseEnabled, setFirebaseEnabled] = useState(false);
 
     const { cart, setCart, duration } = useCart();
@@ -232,18 +235,22 @@ const useEventData = (eventId, seatMapRef) => {
         }
         console.log('startTimer: starting timer');
         setTimeLeft(duration ? duration * 60 : 900);
+        localStorage.setItem(`timer-${eventId}-${selectedFunctionId || 'none'}`, String(duration ? duration * 60 : 900));
         timerRef.current = setInterval(() => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
                     clearInterval(timerRef.current);
                     timerRef.current = null;
                     setCarrito([]);
+                    localStorage.removeItem(`timer-${eventId}-${selectedFunctionId || 'none'}`);
                     return 0;
                 }
-                return prev - 1;
+                const newTime = prev - 1;
+                localStorage.setItem(`timer-${eventId}-${selectedFunctionId || 'none'}`, String(newTime));
+                return newTime;
             });
         }, 1000);
-    }, [duration]);
+    }, [duration, eventId, selectedFunctionId]);
 
 
     const applyDiscountCode = async () => {
@@ -321,7 +328,7 @@ const useEventData = (eventId, seatMapRef) => {
                 }
             } else {
                 // Lógica con Transacción de Firebase
-                const seatRef = await getDbInstance().then(database => ref(database, `seats/${eventId}/${selectedFunctionId}/${silla._id}`));
+                const seatRef = await getDbInstance().then(database => ref(database, `seats/${selectedFunctionId}/${silla._id}`));
 
                 // --- INICIO: Lógica para obtener el userId (autenticado o anónimo) ---
                 const authInstance = getAuth();
@@ -379,7 +386,7 @@ const useEventData = (eventId, seatMapRef) => {
                             };
                         } else {
                             // El asiento no está disponible (ya "occupied", "blocked", etc.)
-                            console.log(`[Firebase Transaction] Asiento ${silla._id} no disponible. Estado actual: ${currentSeatData.status}`);
+                            console.log(`[Firebase Transaction] Asiento ${silla._id} no disponible. Estado actual: ${currentSeatData.status}`, currentSeatData);
                             return undefined; // Aborta la transacción
                         }
                     });
@@ -412,7 +419,7 @@ const useEventData = (eventId, seatMapRef) => {
             newCarritoState = carrito.filter(item => item._id !== silla._id);
 
             if (firebaseEnabled) {
-                const seatRef = ref(db, `seats/${eventId}/${selectedFunctionId}/${silla._id}`);
+                const seatRef = ref(db, `seats/${selectedFunctionId}/${silla._id}`);
                 const authInstance = getAuth();
                 const userId = authInstance.currentUser ? authInstance.currentUser.uid : null;
 
@@ -437,7 +444,7 @@ const useEventData = (eventId, seatMapRef) => {
                                 seatDetails: null
                             };
                         } else {
-                            console.log(`[Firebase Transaction] No se libera asiento ${silla._id}. No fue reservado por este usuario o ya está libre.`);
+                            console.log(`[Firebase Transaction] No se libera asiento ${silla._id}. No fue reservado por este usuario o ya está libre.`, currentSeatData);
                             return undefined; // Aborta la transacción
                         }
                     });
@@ -471,6 +478,7 @@ const useEventData = (eventId, seatMapRef) => {
         if (newCarritoState.length === 0 && carrito.length > 0) {
             clearInterval(timerRef.current);
             setTimeLeft(0);
+            localStorage.removeItem(`timer-${eventId}-${selectedFunctionId || 'none'}`);
         }
 
         // Ordenar el carrito y actualizar el estado
