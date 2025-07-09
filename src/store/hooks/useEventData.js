@@ -15,12 +15,13 @@ import useFirebaseSeatLocks from './useFirebaseSeatLocks';
 
 // --- Importaciones de Firebase corregidas ---
 import { ref, runTransaction } from 'firebase/database'; // ref y runTransaction son funciones
-import { db, isFirebaseEnabled } from '../../services/firebaseClient'; // db is the database instance
-import { getAuth, signInAnonymously } from 'firebase/auth'; // Import getAuth and signInAnonymously for modular SDK
+// Importamos la instancia 'auth' ya inicializada junto con db e isFirebaseEnabled
+import { db, isFirebaseEnabled, auth } from '../../services/firebaseClient';
+import { signInAnonymously } from 'firebase/auth'; // Solo necesitamos signInAnonymously de este paquete
 
 // Helper function to await db promise before using
 const getDbInstance = async () => {
-  return await db;
+    return await db;
 };
 
 const API_URL = API_BASE_URL;
@@ -331,8 +332,8 @@ const useEventData = (eventId, seatMapRef) => {
                 const seatRef = await getDbInstance().then(database => ref(database, `seats/${selectedFunctionId}/${silla._id}`));
 
                 // --- INICIO: Lógica para obtener el userId (autenticado o anónimo) ---
-                const authInstance = getAuth();
-                let userId = authInstance.currentUser ? authInstance.currentUser.uid : null;
+                const authInstanceResolved = await auth; // Espera a que la instancia de auth se resuelva
+                let userId = authInstanceResolved.currentUser ? authInstanceResolved.currentUser.uid : null;
                 const forzarRegistro = evento?.otrasOpciones?.registroObligatorioAntesSeleccion ?? false;
 
                 if (!userId) { // Si no hay un usuario logueado (ni real ni anónimo todavía)
@@ -342,9 +343,8 @@ const useEventData = (eventId, seatMapRef) => {
                         return; // Detiene la ejecución si el registro es obligatorio
                     } else {
                         // Intenta iniciar sesión de forma anónima para obtener un UID temporal
-                        const auth = getAuth();
                         try {
-                            const userCredential = await signInAnonymously(auth);
+                            const userCredential = await signInAnonymously(authInstanceResolved); // Usa la instancia de auth resuelta
                             userId = userCredential.user.uid;
                             console.log("Usuario anónimo:", userId);
                         } catch (error) {
@@ -410,8 +410,8 @@ const useEventData = (eventId, seatMapRef) => {
 
             if (firebaseEnabled) {
                 const seatRef = ref(db, `seats/${selectedFunctionId}/${silla._id}`);
-                const authInstance = getAuth();
-                const userId = authInstance.currentUser ? authInstance.currentUser.uid : null;
+                const authInstanceResolved = await auth; // Espera a que la instancia de auth se resuelva
+                const userId = authInstanceResolved.currentUser ? authInstanceResolved.currentUser.uid : null;
 
                 // Si se va a liberar un asiento, necesitamos un userId, real o anónimo.
                 // Si 'userId' es null aquí, es un caso edge que no debería pasar si el asiento
@@ -490,7 +490,7 @@ const useEventData = (eventId, seatMapRef) => {
         eventId,
         startTimer,
         evento?.otrasOpciones?.registroObligatorioAntesSeleccion, // Dependencia para la opción de registro
-        // Removed auth and db from dependencies as they are stable and do not cause re-render
+        auth // Añadimos 'auth' como dependencia ya que la usamos directamente ahora.
     ]);
 
 
