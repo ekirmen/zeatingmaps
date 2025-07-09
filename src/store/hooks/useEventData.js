@@ -341,27 +341,17 @@ const useEventData = (eventId, seatMapRef) => {
                         alert("Debes iniciar sesión o registrarte para seleccionar un asiento.");
                         return; // Detiene la ejecución si el registro es obligatorio
                     } else {
-                // Intenta iniciar sesión de forma anónima para obtener un UID temporal
-                try {
-                    // Wait for auth state to be ready before signing in anonymously
-                    await new Promise((resolve, reject) => {
-                        const unsubscribe = authInstance.onAuthStateChanged(user => {
-                            unsubscribe();
-                            resolve(user);
-                        }, reject);
-                    });
-                    if (!authInstance.currentUser) {
-                        const userCredential = await signInAnonymously(authInstance);
-                        userId = userCredential.user.uid;
-                        console.log(`Usuario anónimo ${userId} iniciado.`);
-                    } else {
-                        userId = authInstance.currentUser.uid;
-                    }
-                } catch (error) {
-                    console.error("Error al iniciar sesión de forma anónima:", error);
-                    alert("No pudimos preparar tu sesión para seleccionar asientos. Por favor, intenta de nuevo.");
-                    return; // Detiene la ejecución si falla la autenticación anónima
-                }
+                        // Intenta iniciar sesión de forma anónima para obtener un UID temporal
+                        const auth = getAuth();
+                        try {
+                            const userCredential = await signInAnonymously(auth);
+                            userId = userCredential.user.uid;
+                            console.log("Usuario anónimo:", userId);
+                        } catch (error) {
+                            console.error("Error al iniciar sesión anónimamente:", error.code, error.message);
+                            alert("No pudimos preparar tu sesión para seleccionar asientos. Por favor, intenta de nuevo.");
+                            return; // Detiene la ejecución si falla la autenticación anónima
+                        }
                     }
                 }
                 // --- FIN: Lógica para obtener el userId ---
