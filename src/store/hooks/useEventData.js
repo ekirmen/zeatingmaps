@@ -15,14 +15,9 @@ import useFirebaseSeatLocks from './useFirebaseSeatLocks';
 
 // --- Importaciones de Firebase corregidas ---
 import { ref, runTransaction } from 'firebase/database'; // ref y runTransaction son funciones
-// Importamos la instancia 'auth' ya inicializada junto con db e isFirebaseEnabled
+// Importamos las instancias 'db' y 'auth' ya inicializadas (promesas)
 import { db, isFirebaseEnabled, auth } from '../../services/firebaseClient';
 import { signInAnonymously } from 'firebase/auth'; // Solo necesitamos signInAnonymously de este paquete
-
-// Helper function to await db promise before using
-const getDbInstance = async () => {
-    return await db;
-};
 
 const API_URL = API_BASE_URL;
 
@@ -313,6 +308,23 @@ const useEventData = (eventId, seatMapRef) => {
         let newCarritoState;
         let dbOperationSuccess = false; // Bandera para saber si la operación en la DB fue exitosa
 
+        // --- Resolución de instancias de Firebase al inicio de la función ---
+        const databaseInstance = await db;
+        const authInstanceResolved = await auth;
+
+        if (!databaseInstance) {
+            console.error("Firebase Database no está inicializado o habilitado. No se puede realizar la operación.");
+            alert("Hubo un problema con la conexión a la base de datos. Por favor, recarga la página.");
+            return; // Salir si la base de datos no está disponible
+        }
+
+        if (!authInstanceResolved) {
+            console.error("Firebase Auth no está inicializado o habilitado. No se puede obtener el ID de usuario.");
+            alert("Hubo un problema con la autenticación. Por favor, recarga la página.");
+            return; // Salir si la autenticación no está disponible
+        }
+        // --- Fin de resolución de instancias ---
+
         if (isAdding) {
             // --- Lógica para AÑADIR (Bloquear asiento con transacción Firebase) ---
             if (!firebaseEnabled) {
@@ -329,11 +341,10 @@ const useEventData = (eventId, seatMapRef) => {
                 }
             } else {
                 // Lógica con Transacción de Firebase
-                const seatRef = await getDbInstance().then(database => ref(database, `seats/${selectedFunctionId}/${silla._id}`));
+                const seatRef = ref(databaseInstance, `seats/${selectedFunctionId}/${silla._id}`); // Usamos la instancia resuelta
 
                 // --- INICIO: Lógica para obtener el userId (autenticado o anónimo) ---
-                const authInstanceResolved = await auth; // Espera a que la instancia de auth se resuelva
-                let userId = authInstanceResolved.currentUser ? authInstanceResolved.currentUser.uid : null;
+                let userId = authInstanceResolved.currentUser ? authInstanceResolved.currentUser.uid : null; // Usamos la instancia resuelta
                 const forzarRegistro = evento?.otrasOpciones?.registroObligatorioAntesSeleccion ?? false;
 
                 if (!userId) { // Si no hay un usuario logueado (ni real ni anónimo todavía)
@@ -409,9 +420,8 @@ const useEventData = (eventId, seatMapRef) => {
             newCarritoState = carrito.filter(item => item._id !== silla._id);
 
             if (firebaseEnabled) {
-                const seatRef = ref(db, `seats/${selectedFunctionId}/${silla._id}`);
-                const authInstanceResolved = await auth; // Espera a que la instancia de auth se resuelva
-                const userId = authInstanceResolved.currentUser ? authInstanceResolved.currentUser.uid : null;
+                const seatRef = ref(databaseInstance, `seats/${selectedFunctionId}/${silla._id}`); // Usamos la instancia resuelta
+                const userId = authInstanceResolved.currentUser ? authInstanceResolved.currentUser.uid : null; // Usamos la instancia resuelta
 
                 // Si se va a liberar un asiento, necesitamos un userId, real o anónimo.
                 // Si 'userId' es null aquí, es un caso edge que no debería pasar si el asiento
@@ -489,8 +499,9 @@ const useEventData = (eventId, seatMapRef) => {
         appliedDiscount,
         eventId,
         startTimer,
-        evento?.otrasOpciones?.registroObligatorioAntesSeleccion, // Dependencia para la opción de registro
-        auth // Añadimos 'auth' como dependencia ya que la usamos directamente ahora.
+        evento?.otrasOpciones?.registroObligatorioAntesSeleccion,
+        db, // Añadimos 'db' como dependencia explícita
+        auth // Añadimos 'auth' como dependencia explícita
     ]);
 
 
