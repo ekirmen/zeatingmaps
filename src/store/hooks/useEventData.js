@@ -15,8 +15,7 @@ import useFirebaseSeatLocks from './useFirebaseSeatLocks';
 
 // --- Importaciones de Firebase corregidas ---
 import { ref, runTransaction } from 'firebase/database'; // ref y runTransaction son funciones
-// Importamos 'auth' y 'db' directamente, ya que firebaseClient.js las exporta como promesas resueltas
-import { db, isFirebaseEnabled, auth } from '../../services/firebaseClient';
+import { getDatabaseInstance, isFirebaseEnabled, getAuthInstance } from '../../services/firebaseClient';
 import { signInAnonymously } from 'firebase/auth'; // Solo necesitamos signInAnonymously de este paquete
 
 const API_URL = API_BASE_URL;
@@ -307,3 +306,165 @@ const useEventData = (eventId, seatMapRef) => {
 
         let newCarritoState;
         let dbOperationSuccess = false; //
+        // Firebase transaction logic for seat locking
+        if (firebaseEnabled) {
+            try {
+                const db = getDatabaseInstance();
+                const seatRef = ref(db, `seats/${selectedFunctionId}/${silla._id}`);
+                
+                const result = await runTransaction(seatRef, (currentData) => {
+                    if (currentData === null || currentData.status === 'available') {
+                        return isAdding ? { status: 'locked', timestamp: Date.now() } : null;
+                    }
+                    // Don't update if seat is already locked by someone else
+                    return;
+                });
+
+                if (!result.committed) {
+                    console.log('Transaction failed - seat may be locked by another user');
+                    return;
+                }
+                dbOperationSuccess = true;
+            } catch (error) {
+                console.error('Firebase transaction error:', error);
+                return;
+            }
+        } else {
+            // Fallback to traditional locking mechanism
+            try {
+                if (isAdding) {
+                    await lockSeat(silla._id, selectedFunctionId);
+                } else {
+                    await unlockSeat(silla._id, selectedFunctionId);
+                }
+                dbOperationSuccess = true;
+            } catch (error) {
+                console.error('Seat lock/unlock error:', error);
+                return;
+            }
+        }
+
+        // Only update cart if DB operation succeeded
+        if (dbOperationSuccess) {
+            newCarritoState = isAdding 
+                ? [...carrito, seatItemData]
+                : carrito.filter(item => item._id !== silla._id);
+            
+            setCarrito(newCarritoState);
+            setCart(newCarritoState, selectedFunctionId);
+
+            if (isAdding && !timerRef.current) {
+                startTimer();
+            }
+        }
+        // Update UI state if cart is empty
+        if (newCarritoState?.length === 0) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+            setTimeLeft(0);
+            localStorage.removeItem(`timer-${eventId}-${selectedFunctionId || 'none'}`);
+        }
+
+        // Update seat status in database
+        try {
+            await createOrUpdateSeat({
+                id: silla._id,
+                funcion: selectedFunctionId,
+                status: isAdding ? 'reservado' : 'disponible',
+                bloqueado: isAdding
+            });
+        } catch (error) {
+            console.error('Error updating seat status:', error);
+        }
+    }, [carrito, plantillaPrecios, zonas, appliedDiscount, selectedFunctionId, setCart, startTimer, eventId, firebaseEnabled]);
+    const loadPagos = useCallback(async () => {
+        try {
+            const data = await fetchPayments(eventId);
+            setPagos(data || []);
+        } catch (err) {
+            console.error('Error loading payments', err);
+        }
+    }, [eventId]);
+
+    // Initialize Firebase auth and check if enabled
+    useEffect(() => {
+        const initFirebase = async () => {
+            const enabled = await isFirebaseEnabled();
+            setFirebaseEnabled(enabled);
+            if (enabled) {
+                try {
+                    const auth = getAuthInstance();
+                    await signInAnonymously(auth);
+                } catch (error) {
+                    console.error('Firebase auth error:', error);
+                }
+            }
+        };
+        initFirebase();
+    }, []);
+
+    // Load initial event data
+    useEffect(() => {
+        loadEvento();
+    }, [loadEvento]);
+
+    // Load functions when event changes
+    useEffect(() => {
+        if (evento) loadFunciones();
+    }, [evento, loadFunciones]);
+
+    // Load zones when functions change
+    useEffect(() => {
+        if (funciones.length) loadZonas();
+    }, [funciones, loadZonas]);
+
+    // Load map and seats when function is selected
+    useEffect(() => {
+        if (selectedFunctionId) loadMapaYSeats();
+    }, [selectedFunctionId, loadMapaYSeats]);
+
+    // Load payments periodically
+    useEffect(() => {
+        loadPagos();
+        const interval = setInterval(loadPagos, 30000);
+        return () => clearInterval(interval);
+    }, [loadPagos]);
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) {
+                clearInterval(timerRef.current);
+                timerRef.current = null;
+            }
+        };
+    }, []);
+
+    // Use real-time seat updates
+    useSeatRealtime(selectedFunctionId, setMapa);
+    useFirebaseSeatLocks(selectedFunctionId);
+
+    return {
+        evento,
+        funciones,
+        selectedFunctionId,
+        setSelectedFunctionId,
+        mapa,
+        plantillaPrecios,
+        zonas,
+        pagos,
+        recintoInfo,
+        tagNames,
+        showSeatPopup,
+        closeSeatPopup,
+        carrito,
+        timeLeft,
+        discountCode,
+        setDiscountCode,
+        appliedDiscount,
+        applyDiscountCode,
+        toggleSillaEnCarrito
+    };
+};
+
+export default useEventData;
