@@ -587,7 +587,13 @@ const useEventData = (eventId, seatMapRef) => {
         };
     }, [auth]); // Depende de la promesa 'auth'
 
-    useEffect(() => { isFirebaseEnabled().then(setFirebaseEnabled); }, []);
+    useEffect(() => { 
+        let isMounted = true;
+        isFirebaseEnabled().then(enabled => {
+            if (isMounted) setFirebaseEnabled(enabled);
+        });
+        return () => { isMounted = false; };
+    }, []);
     useEffect(() => { if (eventId) loadEvento(); }, [eventId, loadEvento]);
     useEffect(() => { loadFunciones(); }, [loadFunciones]);
     useEffect(() => { if (funciones.length) loadZonas(); }, [funciones, loadZonas]);
