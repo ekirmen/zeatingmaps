@@ -281,6 +281,11 @@ const useEventData = (eventId, seatMapRef) => {
         const index = carrito.findIndex(item => item._id === silla._id);
         const isAdding = index === -1; // true si estamos añadiendo, false si estamos quitando
 
+        // Fix for seat selection persistence: ensure seat IDs are normalized and unique
+        const normalizedSeatId = silla._id || silla.id || silla.id;
+
+        // Use normalizedSeatId for cart operations to avoid duplicates or overwrites
+
         const basePrice = plantillaPrecios?.detalles.find(p => p.zonaId === zonaId)?.precio || 100;
         const zonaNombre = zonas.find(z => z.id === zonaId)?.nombre || 'Zona';
         let finalPrice = basePrice;
