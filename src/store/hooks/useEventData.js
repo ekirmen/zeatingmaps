@@ -11,7 +11,7 @@ import { isUuid, isNumericId } from '../../utils/isUuid';
 import getZonaColor from '../../utils/getZonaColor';
 import API_BASE_URL from '../../utils/apiBase';
 import { useSeatRealtime } from './useSeatRealtime';
-import useFirebaseSeatLocks from './useFirebaseSeatLocks';
+import { useFirebaseSeatLocks } from './useFirebaseSeatLocks';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ref, runTransaction, set } from 'firebase/database';
 import { db, isFirebaseEnabled, auth } from '../../services/firebaseClient';
