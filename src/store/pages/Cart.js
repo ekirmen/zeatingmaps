@@ -1,170 +1,199 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Input } from 'antd';
-import { AiOutlineClose, AiOutlineSearch } from 'react-icons/ai';
-import { useCart } from '../../contexts/CartContext';
-import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
-import { useRefParam } from '../../contexts/RefContext';
-import { useTranslation } from 'react-i18next';
-import { loadMetaPixel } from '../utils/analytics';
-import { fetchPaymentByLocator } from '../../backoffice/services/apibackoffice';
-import { getFuncion } from '../services/apistore';
+// src/store/pages/Cart.js
 
-// Move formatPrice outside the component to make it reusable
-const formatPrice = (price) => {
-  return typeof price === 'number' ? price.toFixed(2) : '0.00';
-};
+import React, { useState } from 'react';
+import { Button, message } from 'antd';
+import { AiOutlineClose } from 'react-icons/ai';
+import { createOrUpdateSeat, unlockSeat as unlockSupabaseSeat } from '../../backoffice/services/supabaseSeats';
+import { lockSeat, unlockSeat as unlockFirebaseSeat } from '../../backoffice/services/seatLocks';
+import { supabase } from '../../supabaseClient';
 
-const Cart = () => {
-  const navigate = useNavigate();
-  const { refParam } = useRefParam();
-  const { t } = useTranslation();
-  const [searchLocator, setSearchLocator] = useState('');
-  const { cart, clearCart, removeFromCart, setCart, functionId } = useCart();
-  const [functionsInfo, setFunctionsInfo] = useState({});
+const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selectedAffiliate, onSeatsUpdated, children }) => {
+  const currentCart = carrito || []; 
 
-  useEffect(() => {
-    const pixelId = localStorage.getItem('metaPixelId');
-    if (pixelId) {
-      loadMetaPixel(pixelId);
-    }
-  }, []);
+  const [selectedFunctionId, setSelectedFunctionId] = useState('');
 
-  useEffect(() => {
-    const ids = Array.from(new Set(cart.map(i => i.funcionId).filter(Boolean)));
-    if (ids.length === 0 && functionId) ids.push(functionId);
-    if (!ids.length) {
-      setFunctionsInfo({});
-      return;
-    }
-    const fetchData = async () => {
-      const info = {};
-      await Promise.all(ids.map(async id => {
-        try {
-          info[id] = await getFuncion(id);
-        } catch (err) {
-          console.error('Error fetching function details:', err);
-        }
-      }));
-      setFunctionsInfo(info);
-    };
-    fetchData();
-  }, [cart, functionId]);
-  const handleTicketSearch = async (locator) => {
+  // Removed unused handleTicketSearch function
+
+  const handleRemoveSeat = (id) => {
+    setCarrito(
+      currentCart.filter( 
+        (item) => (item.abonoGroup || `${item._id}-${item.funcionId || ''}`) !== id
+      )
+    );
+    message.success('Seat removed from cart');
+  };
+
+  const clearCart = () => {
+    setCarrito([]);
+    message.success('Cart cleared');
+  };
+
+  const handleBlockAction = async () => {
+    const seatsToBlock = currentCart.filter(i => i.action === 'block'); 
+    const seatsToUnblock = currentCart.filter(i => i.action === 'unblock'); 
+
     try {
-      const data = await fetchPaymentByLocator(locator);
-      if (!data) {
-        throw new Error('Ticket not found');
+      if (seatsToBlock.length) {
+        await Promise.all(
+          seatsToBlock.map(async (item) => {
+            const updates = { bloqueado: true, status: 'bloqueado' };
+            await createOrUpdateSeat(item._id, item.funcionId, item.zona, updates);
+            await lockSeat(item._id, 'bloqueado', item.funcionId);
+          })
+        );
+        if (onSeatsUpdated) onSeatsUpdated(seatsToBlock.map(i => i._id), 'bloqueado');
       }
-      setCart(
-        data.seats.map(seat => ({
-          ...seat,
-          locator: data.locator,
-          status: data.status,
-          isPaid: data.status === 'pagado',
-          precio: seat.price || seat.precio || 0,
-          nombreMesa: seat.mesa?.nombre || '',
-          zona: seat.zona?._id || seat.zona,
-          zonaNombre: seat.zona?.nombre || '',
-          funcionId: data.funcion?._id || data.funcion,
-          funcionFecha: data.funcion?.fechaCelebracion
-        })),
-        data.funcion?._id || data.funcion
-      );
-      toast.success('Ticket found and loaded');
+
+      if (seatsToUnblock.length) {
+        await Promise.all(
+          seatsToUnblock.map(async (item) => {
+            await unlockSupabaseSeat(item._id, item.funcionId);
+            await unlockFirebaseSeat(item._id, item.funcionId);
+          })
+        );
+        if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock.map(i => i._id), 'disponible');
+      }
+
+      const hasBlock = seatsToBlock.length > 0;
+      message.success(hasBlock ? 'Seats blocked' : 'Seats unblocked');
+      setCarrito([]);
     } catch (error) {
-      toast.error(error.message);
+      console.error('Error updating seats:', error);
+      message.error('Error updating seats');
     }
   };
 
-  const handleRemoveSeat = (seatId) => {
-    removeFromCart(seatId);
-    toast.success('Seat removed from cart');
-  };
+  const formatPrice = (price) => (typeof price === 'number' ? price.toFixed(2) : '0.00');
+
+  const subtotal = currentCart.reduce((sum, item) => sum + (item.precio || 0), 0); 
+
+  const groupedByFunction = currentCart.reduce((acc, item) => {
+    const key = item.funcionId || 'default';
+    if (!acc[key]) {
+      acc[key] = { fecha: item.funcionFecha, items: [] };
+    }
+    acc[key].items.push(item);
+    return acc;
+  }, {});
+
+  const commission = selectedAffiliate
+    ? (selectedAffiliate.base || 0) + subtotal * ((selectedAffiliate.percentage || 0) / 100)
+    : 0;
+  const total = subtotal - commission;
+
+  const functionsInCart = Object.entries(groupedByFunction).map(([fid, group]) => ({
+    id: fid,
+    fecha: group.fecha
+  }));
+
+  // Show all items regardless of selectedFunctionId
+  const filteredGroup = { items: currentCart };
 
   return (
-    <div className="flex flex-col w-[350px] h-screen max-h-screen bg-white shadow-md p-4 border-l border-gray-200">
-      <div className="flex flex-col gap-2 mb-4 border-b pb-2">
-        <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold">{t('cart.title')}</h3>
-          {cart.length > 0 && (
+    <div className="bg-white shadow-md rounded-md">
+      <div className="flex justify-between items-center mb-4 border-b pb-2">
+        <h3 className="text-lg font-semibold">Shopping Cart</h3>
+        {(currentCart.length > 0 || selectedFunctionId) && ( 
+          <button
+            onClick={clearCart}
+            className="text-red-500 hover:text-red-700 transition"
+            title="Clear cart"
+          >
+            <AiOutlineClose />
+          </button>
+        )}
+      </div>
+
+      {functionsInCart.length > 1 && (
+        <select
+          className="mb-4 p-2 border rounded-md w-full max-w-xs"
+          value={selectedFunctionId}
+          onChange={(e) => setSelectedFunctionId(e.target.value)}
+        >
+          <option value="">Selecciona una función</option>
+          {functionsInCart.map(func => (
+            <option key={func.id} value={func.id}>
+              {func.fecha ? new Date(func.fecha).toLocaleString('es-ES', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : func.id}
+            </option>
+          ))}
+        </select>
+      )}
+
+      <div className="max-h-[430px] overflow-y-auto space-y-2 pr-1">
+      {currentCart.length === 0 ? (
+        <div className="text-center text-gray-500 py-4">No seats selected. Please select a function and seats.</div>
+      ) : (
+        filteredGroup.items.map((item) => (
+          <div
+            key={item.abonoGroup || (item._id && item.funcionId ? `${item._id}-${item.funcionId}` : `${item.nombre}-${item.nombreMesa}-${item.zona}-${item.precio}-${Math.random()}`)}
+            className="flex justify-between items-start bg-gray-100 p-2 rounded shadow-sm text-sm"
+          >
+            <div className="truncate text-xs leading-tight">
+              {item.nombre ? (
+                <>
+                  <strong>Seat:</strong> {item.nombre} &nbsp;|&nbsp;
+                  <strong>Table:</strong> {item.nombreMesa} &nbsp;|&nbsp;
+                  <strong>Zone:</strong> {item.zona}
+                </>
+              ) : (
+                <>
+                  <strong>Zone Ticket:</strong> {item.zona}
+                </>
+              )}
+              {item.action === 'block' && <span className="text-red-600"> &nbsp;|&nbsp; Bloquear</span>}
+              {item.action === 'unblock' && <span className="text-green-600"> &nbsp;|&nbsp; Desbloquear</span>}
+              {!item.action && (
+                <>
+                  &nbsp;|&nbsp; <strong>Price:</strong> ${formatPrice(item.precio || 0)}
+                  {item.tipoPrecio === 'descuento' && (
+                    <span className="text-green-600"> &nbsp;|&nbsp; {item.descuentoNombre}</span>
+                  )}
+                </>
+              )}
+            </div>
             <button
-              onClick={clearCart}
-              className="text-red-500 hover:text-red-700 transition"
-              title={t('cart.clear')}
+              onClick={() => handleRemoveSeat(item.abonoGroup || `${item._id}-${item.funcionId || ''}`)}
+              className="text-gray-400 hover:text-red-500"
             >
               <AiOutlineClose />
             </button>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Input
-            placeholder={t('cart.search_placeholder')}
-            value={searchLocator}
-            onChange={(e) => setSearchLocator(e.target.value)}
-            onPressEnter={() => handleTicketSearch(searchLocator)}
-          />
-          <Button
-            icon={<AiOutlineSearch />}
-            onClick={() => handleTicketSearch(searchLocator)}
-          />
-        </div>
+          </div>
+        ))
+      )}
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-1 space-y-2">
-        {Object.entries(cart.reduce((acc, it) => {
-          const key = it.funcionId || functionId || 'default';
-          if (!acc[key]) acc[key] = { fecha: it.funcionFecha, items: [] };
-          acc[key].items.push(it);
-          return acc;
-        }, {})).map(([fid, group]) => (
-          <div key={fid} className="space-y-1">
-            <div className="text-xs font-medium">
-              {group.fecha
-                ? new Date(group.fecha).toLocaleString()
-                : functionsInfo[fid]
-                ? new Date(functionsInfo[fid].fechaCelebracion).toLocaleString()
-                : ''}
-            </div>
-            {group.items.map(item => (
-              <div key={item._id} className="flex justify-between items-center bg-gray-100 p-2 rounded shadow-sm text-sm">
-                <div className="flex flex-col gap-1 text-xs leading-tight">
-                  <span><strong>Seat:</strong> {item.nombre}</span>
-                  <span><strong>Table/Row:</strong> {item.nombreMesa}</span>
-                  <span><strong>Zone:</strong> {item.zonaNombre}</span>
-                  <span><strong>Price:</strong> ${formatPrice(item.precio)}</span>
+      {(currentCart.length > 0 || selectedFunctionId) && ( 
+        // FIX: Wrap these two conditional blocks in a single React Fragment
+        <> 
+          <div className="mt-4 border-t pt-4 space-y-2">
+            {!currentCart.some(i => i.action) && ( 
+              <>
+                {selectedAffiliate && (
+                  <div className="text-right text-sm">
+                    Com.Ref {selectedAffiliate.user.login}: -${formatPrice(commission)}
+                  </div>
+                )}
+                <div className="text-right font-semibold text-lg">
+                  Total: ${formatPrice(total)}
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleRemoveSeat(item._id)}
-                    className="text-gray-400 hover:text-red-500"
-                  >
-                    <AiOutlineClose />
-                  </button>
-                </div>
-              </div>
-            ))}
+                <Button type="default" variant="outlined" block onClick={onPaymentClick}>
+                  Proceed to Payment
+                </Button>
+              </>
+            )}
+            {currentCart.some(i => i.action) && ( 
+              <Button
+                type="default"
+                danger={currentCart.some(i => i.action === 'block')} 
+                block
+                onClick={handleBlockAction}
+              >
+                {currentCart.some(i => i.action === 'block') ? 'Bloquear' : 'Desbloquear'} 
+              </Button>
+            )}
+            {children}
           </div>
-        ))}
-      </div>
-
-      {cart.length > 0 && (
-        <div className="mt-4 border-t pt-4 space-y-2 bg-white">
-          <div className="text-right font-semibold text-lg">
-            {t('cart.total')}: ${formatPrice(cart.reduce((sum, item) => sum + (item.precio || 0), 0))}
-          </div>
-          <Button
-            type="default"
-            variant="outlined"
-            block
-            onClick={() => {
-              const path = refParam ? `/store/pay?ref=${refParam}` : '/store/pay';
-              navigate(path);
-            }}
-          >
-            {t('button.proceed_payment')}
-          </Button>
-        </div>
+        </>
       )}
     </div>
   );

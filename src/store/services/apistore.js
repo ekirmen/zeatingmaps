@@ -1,183 +1,294 @@
-import { supabase } from '../../supabaseClient';
+// src/store/services/apistore.js
 
-// 🔹 Obtener una página CMS por slug
+// Removed API_BASE_URL as we are now directly using Supabase for these calls
+import { supabase } from '../../supabaseClient'; // Assuming you use Supabase for data
+
+/**
+ * Fetches a CMS page by its slug directly from Supabase.
+ * This is used by EventsVenue to load the home page widgets.
+ *
+ * @param {string} slug - The slug of the CMS page (e.g., 'home').
+ * @returns {Promise<object>} A promise that resolves to the CMS page data.
+ * @throws {Error} If the Supabase query fails.
+ */
 export const getCmsPage = async (slug) => {
-  let { data, error } = await supabase
-    .from('cms_pages')
-    .select('*')
-    .ilike('slug', slug)
-    .maybeSingle();
-
-  if (error || !data) {
-    const fallback = await supabase
-      .from('cms_pages')
-      .select('*')
-      .ilike('nombre', slug)
-      .maybeSingle();
-    data = fallback.data;
-    error = fallback.error;
-  }
-
-  if (error) {
-    console.error('Error al obtener CMS page desde Supabase:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-// 🔹 Obtener un evento por ID
-export const getEvent = async (eventId) => {
-  const { data, error } = await supabase
-    .from('eventos')
-    .select('*')
-    .eq('id', eventId)
-    .single();
-
-  if (error) {
-    console.error('Error al obtener evento:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-// 🔹 Obtener funciones por evento
-export const getFunciones = async (eventId) => {
-  const { data, error } = await supabase
-    .from('funciones')
-    .select(
-      `id, evento, sala, plantilla,
-       fechaCelebracion:fecha_celebracion,
-       inicioVenta:inicio_venta,
-       finVenta:fin_venta,
-       pagoAPlazos:pago_a_plazos,
-       permitirReservasWeb:permitir_reservas_web`
-    )
-    .eq('evento', eventId);
-
-  if (error) {
-    console.error('Error al obtener funciones:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-// 🔹 Obtener una función por ID
-export const getFuncion = async (funcionId) => {
-  const { data, error } = await supabase
-    .from('funciones')
-    .select('*')
-    .eq('id', funcionId)
-    .single();
-
-  if (error) {
-    console.error('Error al obtener función:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-// 🔹 Obtener todas las zonas
-export const getZonas = async () => {
-  const { data, error } = await supabase
-    .from('zonas')
-    .select('*');
-
-  if (error) {
-    console.error('Error al obtener zonas:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-// Alias usado por otros componentes
-export const fetchZonas = () => getZonas();
-
-// 🔹 Obtener pagos por evento
-export const getPagosPorEvento = async (eventId) => {
-  const { data, error } = await supabase
-    .from('payments')
-    .select('*')
-    .eq('evento', eventId);
-
-  if (error) {
-    console.error('Error al obtener pagos:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-// 🔹 Obtener plantilla por ID
-export const getPlantilla = async (plantillaId) => {
-  const { data, error } = await supabase
-    .from('plantillas')
-    .select('*')
-    .eq('id', plantillaId)
-    .single();
-
-  if (error) {
-    console.error('Error al obtener plantilla:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-// 🔹 Obtener mapa por evento
-export const getMapaPorEvento = async (eventId) => {
-  const { data, error } = await supabase
-    .from('mapas')
-    .select('*')
-    .eq('evento', eventId)
-    .single();
-
-  if (error) {
-    console.error('Error al obtener mapa por evento:', error);
-    throw error;
-  }
-
-  return data;
-};
-
-// 🔹 Obtener mapa por sala ID (y opcionalmente función)
-export const fetchMapa = async (salaId) => {
   try {
-    if (!salaId) return null;
-
     const { data, error } = await supabase
+      .from('cms_pages') // Assuming you have a 'cms_pages' table in Supabase
+      .select('widgets') // Select only the 'widgets' column
+      .eq('slug', slug) // Filter by the slug
+      .single(); // Expect a single result
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
+      console.error('Error fetching CMS page from Supabase:', error.message);
+      throw error;
+    }
+    // Supabase returns null if single() finds no row, so return an empty widgets object as fallback
+    return data || { widgets: { content: [] } };
+  } catch (error) {
+    console.error('Unexpected error in getCmsPage:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches functions (specific event occurrences) for a given event ID.
+ *
+ * @param {string|number} eventId - The ID of the event.
+ * @returns {Promise<Array<object>>} A promise that resolves to an array of function objects.
+ * @throws {Error} If the Supabase query fails.
+ */
+export const getFunciones = async (eventId) => {
+  try {
+    const { data, error } = await supabase
+      .from('funciones')
+      .select(`
+        id,
+        fecha_celebracion,
+        plantilla:plantilla (id, nombre, detalles),
+        sala:salas (id, nombre),
+        evento
+      `)
+      .eq('evento', eventId)
+      .order('fecha_celebracion', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching funciones:', error.message);
+      throw error;
+    }
+
+    // Parse detalles JSON string to array if needed
+    if (data && Array.isArray(data)) {
+      data.forEach(funcion => {
+        if (funcion.plantilla && typeof funcion.plantilla.detalles === 'string') {
+          try {
+            funcion.plantilla.detalles = JSON.parse(funcion.plantilla.detalles);
+          } catch (e) {
+            console.error('Error parsing plantilla.detalles JSON:', e);
+            funcion.plantilla.detalles = [];
+          }
+        }
+      });
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Unexpected error in getFunciones:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches a single function (event occurrence) by its ID.
+ *
+ * @param {string|number} functionId - The ID of the function.
+ * @returns {Promise<object|null>} A promise that resolves to a single function object or null if not found.
+ * @throws {Error} If the Supabase query fails.
+ */
+export const getFuncion = async (functionId) => {
+  try {
+    const { data, error } = await supabase
+      .from('funciones')
+      .select(`
+        id,
+        fecha_celebracion,
+      plantilla:plantilla (id, nombre, detalles),
+      sala:salas (id, nombre),
+      evento
+    `)
+      .eq('id', functionId)
+      .single(); // Use .single() to expect one result
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+      console.error('Error fetching single function:', error.message);
+      throw error;
+    }
+    return data; // Will be null if not found
+  } catch (error) {
+    console.error('Unexpected error in getFuncion:', error);
+    throw error;
+  }
+};
+
+
+/**
+ * Fetches a seating map by its ID.
+ *
+ * @param {number} mapId - The ID of the seating map.
+ * @returns {Promise<object>} A promise that resolves to the map data.
+ * @throws {Error} If the Supabase query fails.
+ */
+export const fetchMapa = async (mapId) => {
+  try {
+    const { data, error, status } = await supabase
+      .from('mapas')
+      .select('*')
+      .eq('id', mapId)
+      .single();
+
+    if (error && status !== 406 && error.code !== 'PGRST116') { // Handle 406 separately
+      console.error('Error fetching map:', error.message);
+      throw error;
+    }
+    if (status === 406) {
+      console.error('406 Not Acceptable error fetching map');
+      return null;
+    }
+    return data || null;
+  } catch (error) {
+    console.error('Unexpected error in fetchMapa:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches a seating map associated with an event.
+ * This might be a fallback if a map is not directly linked to a sala.
+ *
+ * @param {string|number} eventId - The ID of the event.
+ * @returns {Promise<object>} A promise that resolves to the map data.
+ * @throws {Error} If the Supabase query fails.
+ */
+export const getMapaPorEvento = async (eventId) => {
+  try {
+    // Fetch the map by joining mapas with salas and eventos via sala_id
+    // First, fetch the sala_id for the given eventId from funciones table
+    const { data: funciones, error: funcError } = await supabase
+      .from('funciones')
+      .select('sala')
+      .eq('evento', eventId)
+      .limit(1)
+      .single();
+
+    if (funcError) {
+      console.error('Error fetching sala for event:', funcError.message);
+      return null;
+    }
+    if (!funciones || !funciones.sala) {
+      console.error('No sala found for event:', eventId);
+      return null;
+    }
+
+    const salaId = funciones.sala;
+
+    // Now fetch the map for the sala_id
+    const { data: mapa, error: mapaError } = await supabase
       .from('mapas')
       .select('*')
       .eq('sala_id', salaId)
-      .maybeSingle();
+      .single();
 
-    if (error && error.code !== 'PGRST116') throw error;
-    return data;
+    if (mapaError) {
+      console.error('Error fetching map for sala:', mapaError.message);
+      return null;
+    }
+
+    return mapa;
   } catch (error) {
-    console.error('Error al obtener el mapa:', error);
+    console.error('Unexpected error in getMapaPorEvento:', error);
     throw error;
   }
 };
 
-// 🔹 Obtener descuento por código
-export const fetchDescuentoPorCodigo = async (codigo) => {
-  const { data, error } = await supabase
-    .from('descuentos')
-    .select('*')
-    .eq('codigo', codigo)
-    .single();
+/**
+ * Fetches a price template by its ID.
+ *
+ * @param {number} plantillaId - The ID of the price template.
+ * @returns {Promise<object>} A promise that resolves to the price template data.
+ * @throws {Error} If the Supabase query fails.
+ */
+export const fetchPlantillaPrecios = async (plantillaId) => {
+  try {
+    const { data, error } = await supabase
+      .from('plantillas')
+      .select('*')
+      .eq('id', plantillaId)
+      .single();
 
-  if (error) {
-    console.error('Código de descuento no válido:', error);
+    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
+      console.error('Error fetching price template:', error.message);
+      throw error;
+    }
+    return data || null;
+  } catch (error) {
+    console.error('Unexpected error in fetchPlantillaPrecios:', error);
     throw error;
   }
-
-  return data;
 };
 
-// 🔹 Obtener plantilla de precios (alias de getPlantilla)
-export const fetchPlantillaPrecios = (id) => getPlantilla(id);
+/**
+ * Fetches discount information by a discount code directly from Supabase.
+ *
+ * @param {string} code - The discount code.
+ * @returns {Promise<object|null>} A promise that resolves to the discount data or null if not found.
+ * @throws {Error} If the Supabase query fails.
+ */
+export const fetchDescuentoPorCodigo = async (code) => {
+  try {
+    const { data, error } = await supabase
+      .from('descuentos') // Assuming you have a 'descuentos' table in Supabase
+      .select('*')
+      .eq('code', code) // Filter by the discount code
+      .single(); // Expect a single result
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
+      console.error('Error fetching discount by code from Supabase:', error.message);
+      throw error;
+    }
+    return data; // Will be null if not found
+  } catch (error) {
+    console.error('Unexpected error in fetchDescuentoPorCodigo:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches an event by its slug from the "eventos" table in Supabase.
+ *
+ * @param {string} slug - The slug of the event.
+ * @returns {Promise<object|null>} A promise that resolves to the event data or null if not found.
+ * @throws {Error} If the Supabase query fails.
+ */
+export const fetchEventoBySlug = async (slug) => {
+  try {
+    const { data, error } = await supabase
+      .from('eventos')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+      console.error('Error fetching event by slug:', error.message);
+      throw error;
+    }
+    return data; // Will be null if not found
+  } catch (error) {
+    console.error('Unexpected error in fetchEventoBySlug:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches zones (zonas) by sala ID.
+ *
+ * @param {string|number} salaId - The ID of the sala.
+ * @returns {Promise<Array<object>>} A promise that resolves to an array of zone objects.
+ * @throws {Error} If the Supabase query fails.
+ */
+export const fetchZonasBySala = async (salaId) => {
+  try {
+    const { data, error } = await supabase
+      .from('zonas')
+      .select('*')
+      .eq('sala_id', salaId);
+
+    if (error) {
+      console.error('Error fetching zonas by sala:', error.message);
+      throw error;
+    }
+    return data || [];
+  } catch (error) {
+    console.error('Unexpected error in fetchZonasBySala:', error);
+    throw error;
+  }
+};

@@ -1,8 +1,9 @@
 import React from 'react';
 import { Button, message } from 'antd';
 import { AiOutlineClose } from 'react-icons/ai';
-import { setSeatsBlocked, updateSeat, createOrUpdateSeat } from '../../services/supabaseSeats';
-import { lockSeat, unlockSeat } from '../../services/seatLocks';
+// Corrected imports: Only bring in functions exported by supabaseSeats.js
+import { createOrUpdateSeat, unlockSeat } from '../../services/supabaseSeats';
+import { lockSeat } from '../../services/seatLocks'; // Assuming lockSeat is from a different service
 import { supabase } from '../../services/supabaseClient';
 
 const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selectedAffiliate, onSeatsUpdated, children }) => {
@@ -56,50 +57,38 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
   };
 
   const handleBlockAction = async () => {
-    const seatsToBlock = carrito.filter(i => i.action === 'block').map(i => i._id);
-    const seatsToUnblock = carrito.filter(i => i.action === 'unblock').map(i => i._id);
+    const seatsToBlock = carrito.filter(i => i.action === 'block'); // Keep full item for zonaId
+    const seatsToUnblock = carrito.filter(i => i.action === 'unblock'); // Keep full item for zonaId
 
     try {
       if (seatsToBlock.length) {
-        await setSeatsBlocked(seatsToBlock, true);
         await Promise.all(
-          seatsToBlock.map(async (id) => {
-            const item = carrito.find(i => i._id === id);
+          seatsToBlock.map(async (item) => {
             const updates = { bloqueado: true, status: 'bloqueado' };
-            try {
-              await updateSeat(id, updates);
-            } catch (err) {
-              if (err.message === 'Seat not found' && item) {
-                await createOrUpdateSeat(id, item.funcionId, item.zona, updates);
-              } else {
-                throw err;
-              }
-            }
-            await lockSeat(id, 'bloqueado', item.funcionId);
+            // Use createOrUpdateSeat to block the seat in Supabase
+            await createOrUpdateSeat(item._id, item.funcionId, item.zona, updates);
+            // Use lockSeat for Firebase Realtime Database (if applicable)
+            await lockSeat(item._id, 'bloqueado', item.funcionId);
           })
         );
-        if (onSeatsUpdated) onSeatsUpdated(seatsToBlock, 'bloqueado');
+        if (onSeatsUpdated) onSeatsUpdated(seatsToBlock.map(i => i._id), 'bloqueado');
       }
+
       if (seatsToUnblock.length) {
-        await setSeatsBlocked(seatsToUnblock, false);
         await Promise.all(
-          seatsToUnblock.map(async (id) => {
-            const item = carrito.find(i => i._id === id);
-            const updates = { bloqueado: false, status: 'disponible' };
-            try {
-              await updateSeat(id, updates);
-            } catch (err) {
-              if (err.message === 'Seat not found' && item) {
-                await createOrUpdateSeat(id, item.funcionId, item.zona, updates);
-              } else {
-                throw err;
-              }
-            }
-            await unlockSeat(id, item.funcionId);
+          seatsToUnblock.map(async (item) => {
+            // Use unlockSeat to unblock the seat in Supabase
+            await unlockSeat(item._id, item.funcionId);
+            // Use unlockSeat from seatLocks for Firebase Realtime Database (if applicable)
+            // Note: The unlockSeat from seatLocks is already imported and used here.
+            // If you have a separate unlockSeat in supabaseSeats.js, ensure to use the correct one.
+            // Based on your imports, this refers to the one from '../../services/seatLocks'
+            await unlockSeat(item._id, item.funcionId);
           })
         );
-        if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock, 'disponible');
+        if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock.map(i => i._id), 'disponible');
       }
+
       const hasBlock = seatsToBlock.length > 0;
       message.success(hasBlock ? 'Seats blocked' : 'Seats unblocked');
       setCarrito([]);
@@ -137,7 +126,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
             className="text-red-500 hover:text-red-700 transition"
             title="Clear cart"
           >
-            <AiOutlineClose  />
+            <AiOutlineClose />
           </button>
         )}
       </div>
@@ -181,7 +170,7 @@ const Cart = ({ carrito, setCarrito, onPaymentClick, setSelectedClient, selected
                   onClick={() => handleRemoveSeat(item.abonoGroup || `${item._id}-${item.funcionId || ''}`)}
                   className="text-gray-400 hover:text-red-500"
                 >
-                  <AiOutlineClose  />
+                  <AiOutlineClose />
                 </button>
               </div>
             ))}

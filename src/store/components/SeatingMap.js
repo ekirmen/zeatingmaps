@@ -52,18 +52,44 @@ const SeatingMap = ({ mapa, zonas = [], onClickSilla }) => {
                 fill="black"
               />
             )}
-            {elemento.sillas.map(silla => (
-              <Circle
-                key={silla._id}
-                x={silla.posicion.x}
-                y={silla.posicion.y}
-                radius={10}
-                fill={silla.color || getZonaColor(silla.zona || elemento.zonaId) || 'gray'}
-                stroke={silla.selected ? '#000' : undefined}
-                strokeWidth={silla.selected ? 2 : 0}
-                onClick={() => onClickSilla(silla, elemento)}
+            {elemento.sillas.map(silla => {
+              let fillColor = silla.color || getZonaColor(silla.zona || elemento.zonaId) || 'gray';
+              if (silla.blocked) {
+                fillColor = '#A9A9A9'; // DarkGray for blocked seats
+              }
+              if (silla.selected) {
+                fillColor = '#4CAF50'; // Green for selected seats
+              }
+              return (
+                <React.Fragment key={silla._id || silla.id || Math.random()}>
+                  <Circle
+                    x={silla.posicion.x}
+                    y={silla.posicion.y}
+                    radius={10}
+                    fill={fillColor}
+                    stroke={silla.selected ? '#000' : undefined}
+                    strokeWidth={silla.selected ? 2 : 0}
+                    onClick={() => onClickSilla(silla, elemento)}
+                  />
+                  <Text
+                    x={silla.posicion.x + 12}
+                    y={silla.posicion.y - 6}
+                    text={silla.nombre || silla.numero || ''}
+                    fontSize={12}
+                    fill="black"
+                  />
+                </React.Fragment>
+              );
+            })}
+            {elemento.sillas.length > 0 && (
+              <Text
+                x={elemento.posicion.x}
+                y={elemento.posicion.y + (elemento.height || 0) + 15}
+                text={elemento.nombre || elemento.id || ''}
+                fontSize={14}
+                fill="black"
               />
-            ))}
+            )}
           </React.Fragment>
         ))}
       </Layer>

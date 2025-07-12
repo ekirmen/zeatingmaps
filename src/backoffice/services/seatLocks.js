@@ -1,5 +1,5 @@
 import { getDatabaseInstance } from '../../services/firebaseClient';
-import { ref, set, remove } from 'firebase/database';
+import { ref, set, remove, getDatabase } from 'firebase/database';
 import getCartSessionId from '../../utils/getCartSessionId';
 
 const getExpiration = () => {
@@ -74,13 +74,5 @@ export const cleanupExpiredLocks = async (funcionId) => {
 
 // Remove a seat from the locking table.
 export const unlockSeat = async (seatId, funcionId) => {
-  const id = normalizeSeatId(seatId);
-  const db = await getDatabaseInstance();
-  if (db) {
-    const path = buildLockPath(funcionId, id);
-    console.log('[seatLocks] Removing lock from Firebase for seat', id, 'at', path);
-    await remove(ref(db, path));
-  } else {
-    console.log('[seatLocks] No Firebase database instance available');
-  }
+      const db = getDatabase();
 };

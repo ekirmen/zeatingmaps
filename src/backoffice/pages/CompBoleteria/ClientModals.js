@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Input, Table, Tag, Tabs, Form, Button, Divider, message } from 'antd';
 import { AiOutlineSearch, AiOutlineUserAdd } from 'react-icons/ai';
 import { supabase } from '../../../supabaseClient';
-import { supabaseAdmin } from '../../services/supabaseClient';
+import { supabaseAdmin } from '../../services/supabaseClient'; // This should be imported from the correct path
 
 const ClientModals = ({
   isSearchModalVisible,
@@ -27,6 +27,10 @@ const ClientModals = ({
     try {
       setSearchLoading(true);
 
+      // IMPORTANT: 'profiles_with_auth' is likely a custom view or function.
+      // Ensure it exists and is accessible via RLS for the 'anon' role
+      // if this search is meant for public or unauthenticated users.
+      // If it requires admin privileges, ensure supabaseAdmin is used and available.
       const { data, error } = await supabase
         .from('profiles_with_auth')
         .select('id, login, nombre, telefono, empresa, email')
@@ -63,6 +67,13 @@ const ClientModals = ({
   };
 
   const handleAddClient = async (values) => {
+    // Check if supabaseAdmin is available before using it
+    if (!supabaseAdmin) {
+      message.error('Admin client not available. Cannot create user.');
+      console.error('Admin client (supabaseAdmin) is not initialized. Ensure Service Role Key is configured.');
+      return;
+    }
+
     try {
       const { data: userResp, error } = await supabaseAdmin.auth.admin.createUser({
         email: values.email,
@@ -73,16 +84,17 @@ const ClientModals = ({
 
       if (error) throw error;
 
+      // Add a small delay to ensure user creation propagates before profile update
       await new Promise((res) => setTimeout(res, 1500));
 
-      const client = supabaseAdmin || supabase;
-      const { data: profileData, error: profileError } = await client
+      // Use supabaseAdmin for updating profiles related to admin operations
+      const { data: profileData, error: profileError } = await supabaseAdmin
         .from('profiles')
         .update({
           login: values.email,
           nombre: values.nombre,
           telefono: values.telefono,
-          permisos: { role: 'usuario' },
+          permisos: { role: 'usuario' }, // Ensure 'permisos' column is JSONB type
         })
         .eq('id', userResp.user.id)
         .select()
@@ -282,7 +294,7 @@ const ClientModals = ({
       width="90vw"
       centered
       styles={{ body: { padding: '1rem 1.5rem' } }}
-      destroyOnClose
+      destroyOnHidden // <-- Replaced destroyOnClose with destroyOnHidden
       className="max-w-3xl mx-auto"
     >
       <Tabs activeKey={activeTab} onChange={setActiveTab} items={items} />

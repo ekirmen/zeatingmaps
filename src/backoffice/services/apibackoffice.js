@@ -1,11 +1,6 @@
 import { supabase } from '../../supabaseClient';
 import { supabaseAdmin } from './supabaseClient';
 
-// Map human readable page identifiers to numeric ids stored in Supabase.
-// The cms_pages table uses an integer primary key, but within the
-// application we refer to pages by a slug such as "home" or "events".
-// This helper allows the UI to keep using slugs while converting them
-// to the numeric ids expected by Supabase.
 const CMS_PAGE_IDS = {
   home: 1,
   events: 2
@@ -113,7 +108,10 @@ export const deleteEvento = async (id) => {
 
 // === FUNCIONES ===
 export const fetchFuncionesPorEvento = async (eventoId) => {
-  const { data, error } = await supabase.from('funciones').select('*').eq('evento', eventoId);
+  const { data, error } = await supabase
+    .from('funciones')
+    .select('id, nombre, fecha_evento, sala, evento')
+    .eq('evento', eventoId);
   handleError(error);
   return data;
 };
@@ -175,10 +173,14 @@ export const syncSeatsForSala = async (salaId) => {
   mapa.contenido.forEach(el => {
     if (el.type === 'mesa') {
       (el.sillas || []).forEach(s => {
-        seatDefs.push({ id: s._id, zona: s.zona || null });
+        if (s._id) {
+          seatDefs.push({ id: s._id, zona: s.zona || null });
+        }
       });
     } else if (el.type === 'silla') {
-      seatDefs.push({ id: el._id, zona: el.zona || null });
+      if (el._id) {
+        seatDefs.push({ id: el._id, zona: el.zona || null });
+      }
     }
   });
 
@@ -199,8 +201,9 @@ export const syncSeatsForSala = async (salaId) => {
         bloqueado: false,
       }));
     if (newSeats.length > 0) {
-      const { error: insertErr } = await supabase.from('seats').insert(newSeats);
-      handleError(insertErr);
+      // Use upsert instead of insert to avoid duplicates and recursion
+      const { error: upsertErr } = await supabase.from('seats').upsert(newSeats, { onConflict: '_id' });
+      handleError(upsertErr);
     }
   }
 };

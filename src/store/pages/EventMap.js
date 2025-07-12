@@ -1,239 +1,97 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useRefParam } from '../../contexts/RefContext';
-import { Modal } from 'antd';
-import SeatingMap from '../components/SeatingMap';
-import { getCmsPage } from '../services/apistore';
-import EventListWidget from '../components/EventListWidget';
-import FaqWidget from '../components/FaqWidget';
-import API_BASE_URL from '../../utils/apiBase';
-import resolveImageUrl from '../../utils/resolveImageUrl';
-import { useTranslation } from 'react-i18next';
-import { QRCodeSVG } from '@rc-component/qrcode';
-import formatDateString from '../../utils/formatDateString';
-import useEventData from '../hooks/useEventData';
+// EventMap.js - Improved Styling and Accessibility
+import React from 'react';
 
-const API_URL = API_BASE_URL;
-
-const EventMap = () => {
-  const { eventId } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { refParam } = useRefParam();
-  const { t } = useTranslation();
-  const [widgets, setWidgets] = useState(null);
-
-  const {
-    evento,
-    funciones,
-    selectedFunctionId,
-    setSelectedFunctionId,
-    mapa,
-    plantillaPrecios,
-    carrito,
-    zonas,
-    pagos,
-    showSeatPopup,
-    setShowSeatPopup,
-    discountCode,
-    setDiscountCode,
-    appliedDiscount,
-    timeLeft,
-    tagNames,
-    recintoInfo,
-    toggleSillaEnCarrito,
-    applyDiscountCode,
-    closeSeatPopup
-  } = useEventData(eventId);
-
-  const params = new URLSearchParams(location.search);
-  const queryFunctionId = params.get('funcion');
-
-  useEffect(() => {
-    if (queryFunctionId) {
-      setSelectedFunctionId(queryFunctionId);
-    }
-  }, [queryFunctionId, setSelectedFunctionId]);
-
-  const getEmbedUrl = (url) => {
-    if (!url) return url;
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/);
-    return match ? `https://www.youtube.com/embed/${match[1]}` : url;
-  };
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await getCmsPage('events');
-        setWidgets(data.widgets);
-        localStorage.setItem('cms-page-events', JSON.stringify(data.widgets));
-      } catch (e) {
-        const saved = localStorage.getItem('cms-page-events');
-        if (saved) {
-          try {
-            setWidgets(JSON.parse(saved));
-          } catch (err) {
-            console.error('Error parsing widgets', err);
-          }
-        }
-      }
-    };
-    load();
-  }, []);
-
-  const renderWidget = (widget) => {
-    switch (widget.type) {
-      case 'Listado de eventos':
-        return <EventListWidget />;
-      case 'Preguntas frecuentes':
-        return <FaqWidget />;
-      default:
-        return null;
-    }
-  };
+function EventMap({ mapa, toggleSillaEnCarrito }) {
+  // Add defensive checks before trying to access nested properties or map over arrays
+  if (!mapa || !mapa.contenido) {
+    // You can render a loading spinner, a placeholder, or just return null
+    return (
+      <div className="flex items-center justify-center h-64 bg-gray-100 rounded-lg shadow-inner text-gray-600">
+        Cargando mapa de asientos...
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4">
-      {timeLeft > 0 && (
-        <div className="fixed top-4 right-4 bg-black bg-opacity-75 text-white px-4 py-2 rounded-lg shadow-lg z-50">
-          <p className="text-sm">Tiempo restante de reserva:</p>
-          <p className="text-xl font-mono">
-            {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
-          </p>
-        </div>
-      )}
-
-      {(evento?.imagenes?.portada || evento?.imagenes?.banner) && (
-        <div className="relative mb-4">
-          <img
-            src={resolveImageUrl(
-              evento?.imagenes?.portada || evento?.imagenes?.banner
-            )}
-            alt={`Imagen de ${evento.nombre}`}
-            className="w-full max-h-[80vh] object-cover rounded"
-          />
-          <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-4 text-white rounded">
-            {tagNames.length > 0 && (
-              <span className="text-sm mb-1">
-                {tagNames.join(', ')}
-              </span>
-            )}
-            <h1 className="text-3xl font-bold">{evento?.nombre}</h1>
-            {recintoInfo?.nombre ? (
-              <p className="text-sm">{recintoInfo.nombre}</p>
-            ) : (
-              typeof evento?.recinto === 'string' && (
-                <p className="text-sm">{evento.recinto}</p>
-              )
-            )}
-          </div>
-        </div>
-      )}
-
-      {evento?.descripcionHTML && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">Diseño del espectáculo</h3>
-          <div
-            className="prose"
-            dangerouslySetInnerHTML={{ __html: evento.descripcionHTML }}
-          />
-          {evento.resumenDescripcion && (
-            <p className="mt-2">{evento.resumenDescripcion}</p>
-          )}
-        </div>
-      )}
-
-      {!queryFunctionId && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">Funciones</h3>
-          <div className="flex flex-col gap-2">
-            {funciones.map(funcion => (
-              <label key={funcion.id || funcion._id} className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="funcion"
-                  value={funcion.id || funcion._id}
-                  onChange={() => setSelectedFunctionId(funcion.id || funcion._id)}
-                />
-                <span>{funcion.evento?.nombre} - {formatDateString(funcion.fechaCelebracion)}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="mb-2 flex gap-2 items-center">
-        <input
-          type="text"
-          value={discountCode}
-          onChange={e => setDiscountCode(e.target.value)}
-          placeholder={t('discount.placeholder')}
-          className="border px-2 py-1 text-sm"
-        />
-        <button
-          onClick={applyDiscountCode}
-          className="px-2 py-1 bg-green-600 text-white rounded text-sm"
+    <div className="p-4 bg-white rounded-lg shadow-lg max-w-full overflow-auto font-inter">
+      {/* Iterate over the main content elements of the map */}
+      {mapa.contenido.map((elemento) => (
+        <div
+          key={elemento.id || elemento._id || elemento.nombre}
+          className="mb-6 p-4 border border-gray-200 rounded-lg shadow-sm bg-gray-50"
         >
-          {t('discount.apply')}
-        </button>
-        {appliedDiscount && (
-          <span className="text-sm text-green-700">{appliedDiscount.nombreCodigo}</span>
-        )}
-      </div>
+          {elemento.nombre && (
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">{elemento.nombre}</h3>
+          )}
 
-      <div className="md:flex md:items-start md:gap-6">
-        <div className="my-6 border rounded shadow-md p-4 flex justify-center bg-gray-100 md:flex-1">
-          <SeatingMap mapa={mapa} zonas={zonas} onClickSilla={toggleSillaEnCarrito} />
-        </div>
+          {/* Ensure 'sillas' array exists before mapping */}
+          {elemento.sillas && elemento.sillas.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-2">
+              {elemento.sillas.map((silla) => {
+                const isUnavailable = ['reservado', 'pagado', 'bloqueado'].includes(silla?.estado);
+                const isSelected = silla.selected;
 
-        <div className="bg-white p-4 rounded shadow-md mt-6 md:mt-6 md:w-80">
-          <h2 className="text-xl font-semibold mb-3">Carrito</h2>
-          {selectedFunctionId && (
-            <div className="mb-2 font-medium">
-              {(() => {
-                const fn = funciones.find(f => (f.id || f._id) === selectedFunctionId);
-                return fn ? formatDateString(fn.fechaCelebracion) : '';
-              })()}
+                let seatClasses = `
+                  relative w-10 h-10 flex items-center justify-center text-sm font-medium rounded-md cursor-pointer
+                  transition-all duration-200 ease-in-out
+                  border-2
+                `;
+                let seatLabel = `Asiento ${silla.numero || 'sin número'}`;
+                let seatColorStyle = {};
+
+                if (isSelected) {
+                  seatClasses += ' bg-blue-600 text-white border-blue-700 shadow-md transform scale-105';
+                  seatLabel += ', seleccionado';
+                } else if (isUnavailable) {
+                  seatClasses += ' bg-gray-300 text-gray-500 border-gray-400 cursor-not-allowed opacity-70';
+                  seatLabel += `, ${silla.estado}`;
+                } else {
+                  seatClasses += ' bg-green-500 text-white border-green-600 hover:bg-green-600 hover:border-green-700';
+                  seatLabel += ', disponible';
+                  seatColorStyle = { backgroundColor: silla.color }; // Apply base color if available and not selected/unavailable
+                }
+
+                return (
+                  <div
+                    key={silla._id || silla.id}
+                    className={seatClasses}
+                    style={seatColorStyle} // Apply dynamic background color
+                    onClick={() => !isUnavailable && toggleSillaEnCarrito(silla, elemento)}
+                    role="button"
+                    aria-label={seatLabel}
+                    title={seatLabel}
+                  >
+                    {silla.numero}
+                    {isSelected && (
+                      <span className="absolute -top-2 -right-2 bg-blue-700 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
-        {carrito.map((item, index) => (
-          <div key={index} className="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded">
-            <span>{item.zonaNombre} - {item.nombreMesa} - Silla {item.nombre || index + 1} - ${item.precio}
-              {item.tipoPrecio === 'descuento' && ` (${item.descuentoNombre})`}
-            </span>
-            <button
-              onClick={() => toggleSillaEnCarrito(item)}
-              className="text-red-500 hover:text-red-700"
-            >
-              ❌
-            </button>
-          </div>
-        ))}
-        <button
-          onClick={() => {
-            const path = refParam ? `/store/pay?ref=${refParam}` : '/store/pay';
-            navigate(path, { state: { carrito, funcionId: selectedFunctionId } });
-          }}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-        >
-          Continuar al carrito
-        </button>
-        </div>
-      </div>
 
-      <Modal
-        open={showSeatPopup}
-        closable={false}
-        maskClosable={true}
-        onOk={closeSeatPopup}
-        onCancel={closeSeatPopup}
-        okText="Continuar"
-        cancelButtonProps={{ style: { display: 'none' } }}
-      >
-        <p>{evento?.otrasOpciones?.popupAntesAsiento?.texto}</p>
-      </Modal>
+          {/* Add other elements like mesas if they exist in your map structure */}
+          {elemento.mesas && elemento.mesas.length > 0 && (
+            <div className="flex flex-wrap justify-center gap-4 mt-6">
+              {elemento.mesas.map((mesa) => (
+                <div
+                  key={mesa.id || mesa._id}
+                  className="p-4 bg-yellow-200 text-yellow-800 rounded-lg shadow-md border border-yellow-300 font-semibold text-center"
+                  role="region"
+                  aria-label={`Mesa ${mesa.nombre || 'sin nombre'}`}
+                >
+                  Mesa {mesa.nombre}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
-};
+}
 
 export default EventMap;

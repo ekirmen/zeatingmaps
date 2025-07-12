@@ -1,6 +1,6 @@
-
 import { useEffect } from 'react';
 import { message } from 'antd';
+import { v4 as uuidv4 } from 'uuid';
 import {
   fetchMapa,
   saveMapa,
@@ -44,8 +44,8 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
             width: silla.width || 20,
             height: silla.height || 20,
             nombre: silla.nombre || '',
-            label: silla.nombre || '',  // Add label for display
-            labelPlacement: 'top',      // Position label above chair
+            label: silla.nombre || '',      // Add label for display
+            labelPlacement: 'top',          // Position label above chair
             labelStyle: {
               textAlign: 'center',
               fontSize: '12px',
@@ -80,20 +80,40 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
     mesas.forEach(mesa => {
       const sillas = elements
         .filter(el => el.type === 'silla' && el.parentId === mesa._id)
-        .map(silla => ({
-          _id: silla._id,
-          type: 'silla',
-          posicion: silla.posicion,
-          width: silla.width || 20,
-          height: silla.height || 20,
-          nombre: silla.nombre || silla.numero || '',
-          zona: silla.zonaId || silla.zona?.id || null,
-          parentId: silla.parentId,
-          mesa_id: mesa._id,
-        }));
+        .map(silla => {
+          const sillaData = {
+            type: 'silla',
+            posicion: silla.posicion,
+            width: silla.width || 20,
+            height: silla.height || 20,
+            nombre: silla.nombre || silla.numero || '',
+            zona: silla.zonaId || silla.zona?.id || null,
+            parentId: silla.parentId,
+            mesa_id: mesa._id,
+            funcion_id: salaId, // Asegúrate de incluir funcion_id para la tabla seats
+            status: silla.status || 'available', // Asegúrate de incluir status
+            bloqueado: silla.bloqueado || false, // Asegúrate de incluir bloqueado
+            fila: silla.fila || null, // Asegúrate de incluir fila si es relevante
+            numero: silla.numero || null, // Asegúrate de incluir numero si es relevante
+            user_id: silla.user_id || null, // Asegúrate de incluir user_id si es relevante
+            price: silla.price || null, // Asegúrate de incluir price si es relevante
+          };
+
+          // Lógica mejorada para manejar el _id de la silla
+          // Si el _id existe, no es nulo/vacío, y NO empieza con "silla_", lo incluimos.
+          // De lo contrario, generamos un UUID nuevo para evitar valores nulos.
+          if (silla._id && String(silla._id).trim() !== '' && !String(silla._id).startsWith('silla_')) {
+            sillaData._id = silla._id;
+          } else {
+            sillaData._id = uuidv4(); // Generate a new UUID if missing or temporary
+          }
+
+          console.log('Silla data being prepared:', sillaData, 'Original silla _id:', silla._id); // LOG DE DEPURACIÓN
+          return sillaData;
+        });
 
       const mesaData = {
-        _id: mesa._id,
+        _id: mesa._id, // Asumiendo que los IDs de las mesas son UUIDs válidos o se manejan de otra forma
         type: 'mesa',
         shape: mesa.shape || 'circle',
         posicion: mesa.posicion || { x: 0, y: 0 },
@@ -130,8 +150,7 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
       e => e.type === 'silla' && !e.parentId
     );
     sillasSueltas.forEach(silla => {
-      resultado.push({
-        _id: silla._id,
+      const sillaData = {
         type: 'silla',
         posicion: silla.posicion,
         width: silla.width || 20,
@@ -139,7 +158,22 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
         nombre: silla.nombre || silla.numero || '',
         zona: silla.zonaId || silla.zona?.id || null,
         parentId: null,
-      });
+        funcion_id: salaId, // Asegúrate de incluir funcion_id para la tabla seats
+        status: silla.status || 'available', // Asegúrate de incluir status
+        bloqueado: silla.bloqueado || false, // Asegúrate de incluir bloqueado
+        fila: silla.fila || null, // Asegúrate de incluir fila si es relevante
+        numero: silla.numero || null, // Asegúrate de incluir numero si es relevante
+        user_id: silla.user_id || null, // Asegúrate de incluir user_id si es relevante
+        price: silla.price || null, // Asegúrate de incluir price si es relevante
+      };
+      // Lógica mejorada para manejar el _id de la silla
+      if (silla._id && String(silla._id).trim() !== '' && !String(silla._id).startsWith('silla_')) {
+        sillaData._id = silla._id;
+      } else {
+        sillaData._id = uuidv4(); // Generate a new UUID if missing or temporary
+      }
+      console.log('Silla suelta data being prepared:', sillaData, 'Original silla _id:', silla._id); // LOG DE DEPURACIÓN
+      resultado.push(sillaData);
     });
 
     const otros = elements.filter(
@@ -147,7 +181,7 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
     );
     otros.forEach(el => {
       const obj = {
-        _id: el._id,
+        _id: el._id, // Asumiendo que otros elementos no se insertan en 'seats' o sus IDs son válidos
         type: el.type,
         posicion: el.posicion,
         zona: el.zonaId || el.zona?.id || null,
@@ -175,9 +209,13 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
     try {
       // Add console.log to check what we're working with
       console.log('Elements before transform:', elements);
-      
+
       const elementosParaGuardar = transformarParaGuardar(elements);
-      
+
+      // --- NUEVO LOG DE DEPURACIÓN CRÍTICO ---
+      console.log('Final elementosParaGuardar (before sending to Supabase):', elementosParaGuardar);
+      // ------------------------------------
+
       // Add console.log to check transformed data
       console.log('Elementos para guardar:', elementosParaGuardar);
       console.log('Zonas para guardar:', zones);

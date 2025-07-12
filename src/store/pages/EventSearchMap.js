@@ -7,9 +7,9 @@ import { fetchMapa, getFunciones } from '../services/apistore';
 const EventSearchMap = () => {
   const [query, setQuery] = useState('');
   const [events, setEvents] = useState([]);
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null); // Used now
   const [functions, setFunctions] = useState([]);
-  const [selectedFunc, setSelectedFunc] = useState(null);
+  const [selectedFunc, setSelectedFunc] = useState(null); // Used now
   const [mapa, setMapa] = useState(null);
 
   const handleSearch = async () => {
@@ -45,29 +45,44 @@ const EventSearchMap = () => {
         />
         <Button onClick={handleSearch}>Buscar</Button>
       </div>
-      <List
-        bordered
-        dataSource={events}
-        renderItem={(item) => (
-          <List.Item onClick={() => selectEvent(item)} className="cursor-pointer">
-            {item.nombre}
-          </List.Item>
-        )}
-      />
-      {functions.length > 0 && (
+
+      {/* Conditionally render the list only if there are events */}
+      {events.length > 0 && (
         <List
           bordered
-          header={<div>Funciones</div>}
+          header={<div>Resultados de la Búsqueda</div>}
+          dataSource={events}
+          renderItem={(item) => (
+            <List.Item onClick={() => selectEvent(item)} className="cursor-pointer hover:bg-gray-100">
+              {item.nombre}
+            </List.Item>
+          )}
+        />
+      )}
+
+      {/* ✨ FIX: Use selectedEvent to show which event is selected */}
+      {selectedEvent && functions.length > 0 && (
+        <List
+          bordered
+          header={<div>Funciones para: <strong>{selectedEvent.nombre}</strong></div>}
           dataSource={functions}
           renderItem={(fn) => (
-            <List.Item onClick={() => selectFunction(fn)} className="cursor-pointer">
+            <List.Item
+              onClick={() => selectFunction(fn)}
+              className="cursor-pointer hover:bg-gray-100"
+              // Highlight the selected function
+              style={{ backgroundColor: selectedFunc?.id === fn.id ? '#e6f7ff' : 'transparent' }}
+            >
               {new Date(fn.fechaCelebracion).toLocaleString()}
             </List.Item>
           )}
         />
       )}
-      {mapa && (
+      
+      {/* ✨ FIX: Use selectedFunc to show details about the selected map */}
+      {mapa && selectedFunc && (
         <div className="border p-4">
+           <h3>Mapa de asientos para la función del {new Date(selectedFunc.fechaCelebracion).toLocaleString()}</h3>
           <SeatingMap mapa={mapa} onClickSilla={() => {}} />
         </div>
       )}

@@ -1,320 +1,497 @@
-// src/pages/Event.jsx
-import React, { useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { useRefParam } from '../../contexts/RefContext';
-import { Modal } from 'antd';
+// src/store/pages/Event.js
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import SeatingMap from '../components/SeatingMap';
-import { getCmsPage } from '../services/apistore';
-import EventListWidget from '../components/EventListWidget';
-import FaqWidget from '../components/FaqWidget';
-import resolveImageUrl from '../../utils/resolveImageUrl';
-import { useTranslation } from 'react-i18next';
-import { QRCodeSVG } from '@rc-component/qrcode';
-import formatDateString from '../../utils/formatDateString';
-import EventMap from '../../components/EventMap';
-import useEventData from '../hooks/useEventData';
+import VenueMap from '../../components/VenueMap';
+import Cart from './Cart';
+// FIX: Added fetchEventoBySlug and getFunciones to the import list
+import { getFuncion, fetchMapa, fetchEventoBySlug, getFunciones, fetchZonasBySala } from '../services/apistore'; 
+import { useAuth } from '../../contexts/AuthContext';
+import { useFirebaseSeatLocks } from '../hooks/useFirebaseSeatLocks';
 
-const Event = () => {
-  const { eventId } = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { refParam } = useRefParam();
-  const { t } = useTranslation();
-  const seatMapRef = useRef(null);
-  const [widgets, setWidgets] = useState(null);
+function EventPage() {
+  const { eventSlug } = useParams();
 
-  const {
-    evento,
-    funciones,
-    selectedFunctionId,
-    setSelectedFunctionId,
-    mapa,
-    carrito,
-    zonas,
-    discountCode,
-    setDiscountCode,
-    appliedDiscount,
-    timeLeft,
-    tagNames,
-    recintoInfo,
-    showSeatPopup,
-    toggleSillaEnCarrito,
-    applyDiscountCode,
-    closeSeatPopup,
-    setCarrito
-  } = useEventData(eventId, seatMapRef);
+  const { user } = useAuth();
+  const userId = user?.id || null;
 
-  // Extract images from evento.imagenes object
-  const images = evento?.imagenes ? Object.entries(evento.imagenes).filter(([key, url]) => url) : [];
+  const [evento, setEvento] = useState(null);
+  const [funciones, setFunciones] = useState([]);
+  const [selectedFunctionId, setSelectedFunctionId] = useState(null);
+  const [mapa, setMapa] = useState(null);
+  const [cart, setCart] = useState([]);
+  const [recintoInfo, setRecintoInfo] = useState(null);
+  const [zonas, setZonas] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Separate portada and banner images
-  const portadaImage = evento?.imagenes?.portada || null;
-  const bannerImage = evento?.imagenes?.banner || null;
+  const [priceTemplate, setPriceTemplate] = React.useState(null);
 
-  // Other images excluding portada and banner
-  const otherImages = images.filter(([key]) => key !== 'portada' && key !== 'banner');
+  const { isSeatLocked, lockSeat, unlockSeat } = useFirebaseSeatLocks(selectedFunctionId, userId);
 
-  // Allow selecting a function via query parameter
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const funcId = params.get('funcion');
-    if (funcId) {
-      setSelectedFunctionId(funcId);
-    }
-  }, [location.search, setSelectedFunctionId]);
+  const toggleSillaEnCarrito = useCallback(async (silla, elemento) => {
+    const sillaId = silla._id || silla.id || null;
+    const zonaId = silla.zona || elemento.zonaId || null;
+    // Removed unused asientoId
 
-  const getEmbedUrl = (url) => {
-    if (!url) return url;
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([\w-]{11})/);
-    return match ? `https://www.youtube.com/embed/${match[1]}` : url;
-  };
+    let precio = 0;
+    let tipoPrecio = null;
+    let descuentoNombre = null;
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const data = await getCmsPage('events');
-        setWidgets(data.widgets);
-        localStorage.setItem('cms-page-events', JSON.stringify(data.widgets));
-      } catch (e) {
-        const saved = localStorage.getItem('cms-page-events');
-        if (saved) {
-          try {
-            setWidgets(JSON.parse(saved));
-          } catch (err) {
-            console.error('Error parsing widgets', err);
-          }
-        }
+    if (priceTemplate && priceTemplate.detalles) {
+      // Assuming priceTemplate.detalles is an array of price details with zona and precio
+      const detalle = priceTemplate.detalles.find(d => String(d.zonaId) === String(zonaId));
+      if (detalle) {
+        precio = detalle.precio || 0;
+        tipoPrecio = detalle.tipoPrecio || null;
+        descuentoNombre = detalle.descuentoNombre || null;
       }
-    };
-    load();
-  }, []);
-
-  const renderWidget = (widget) => {
-    if (eventId && widget.type === 'Listado de eventos') return null;
-    switch (widget.type) {
-      case 'Listado de eventos':
-        return <EventListWidget />;
-      case 'Preguntas frecuentes':
-        return <FaqWidget />;
-      default:
-        return null;
     }
+
+    setCart(prevCart => {
+      if (!prevCart) {
+        return [{
+          sillaId,
+          zonaId,
+          precio,
+          quantity: 1,
+          tipoPrecio,
+          descuentoNombre,
+          nombre: silla.nombre || silla.numero || silla.id || '',
+          nombreMesa: elemento.nombre || '',
+          functionId: selectedFunctionId,
+          functionDate: funciones.find(f => f.id === selectedFunctionId)?.fecha_celebracion || null
+        }];
+      }
+      const existingItemIndex = prevCart.findIndex(item => item.sillaId === sillaId && item.functionId === selectedFunctionId);
+      if (existingItemIndex > -1) {
+        return prevCart.filter(item => !(item.sillaId === sillaId && item.functionId === selectedFunctionId));
+      } else {
+        return [...prevCart, {
+          sillaId,
+          zonaId,
+          precio,
+          quantity: 1,
+          tipoPrecio,
+          descuentoNombre,
+          nombre: silla.nombre || silla.numero || silla.id || '',
+          nombreMesa: elemento.nombre || '',
+          functionId: selectedFunctionId,
+          functionDate: funciones.find(f => f.id === selectedFunctionId)?.fecha_celebracion || null
+        }];
+      }
+    });
+  }, [priceTemplate, selectedFunctionId, funciones, lockSeat, unlockSeat]);
+
+  useEffect(() => {
+    async function fetchEventData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const eventData = await fetchEventoBySlug(eventSlug); 
+        if (!eventData) {
+          setError(new Error('Evento no encontrado'));
+          setEvento(null);
+          setFunciones([]);
+          setRecintoInfo(null);
+          return;
+        }
+        setEvento(eventData);
+
+        const funcionesData = await getFunciones(eventData.id); 
+        setFunciones(funcionesData || []);
+
+        if (eventData.recinto) {
+          setRecintoInfo(eventData.recinto); 
+        } else {
+          setRecintoInfo(null);
+        }
+
+      } catch (err) {
+        setError(err);
+        setEvento(null);
+        setFunciones([]);
+        setRecintoInfo(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchEventData();
+  }, [eventSlug]); // Removed fetchEventoBySlug and getFunciones from dependencies
+
+  useEffect(() => {
+    async function fetchMapAndPriceTemplateForFunction() {
+      if (!selectedFunctionId) {
+        setMapa(null);
+        setPriceTemplate(null);
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const funcion = await getFuncion(selectedFunctionId);
+        if (funcion && funcion.sala && funcion.sala.id) {
+          const mapData = await fetchMapa(funcion.sala.id);
+          setMapa(mapData);
+          const zonasData = await fetchZonasBySala(funcion.sala.id);
+          setZonas(zonasData);
+        } else {
+          setMapa(null);
+          setZonas([]);
+        }
+        if (funcion && funcion.plantilla) {
+          let plantilla = funcion.plantilla;
+          if (plantilla.detalles && typeof plantilla.detalles === 'string') {
+            try {
+              plantilla = {
+                ...plantilla,
+                detalles: JSON.parse(plantilla.detalles)
+              };
+            } catch (e) {
+              console.error('Error parsing plantilla.detalles JSON:', e);
+              plantilla = {
+                ...plantilla,
+                detalles: []
+              };
+            }
+          }
+          setPriceTemplate(plantilla);
+        } else {
+          setPriceTemplate(null);
+        }
+      } catch (err) {
+        setError(err);
+        setMapa(null);
+        setPriceTemplate(null);
+        setZonas([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMapAndPriceTemplateForFunction();
+  }, [selectedFunctionId]); // Removed getFuncion and fetchMapa from dependencies
+
+
+  useEffect(() => {
+    async function fetchEventData() {
+      setLoading(true);
+      setError(null);
+      try {
+        // Now fetchEventoBySlug is correctly imported
+        const eventData = await fetchEventoBySlug(eventSlug); 
+        if (!eventData) {
+          setError(new Error('Evento no encontrado'));
+          setEvento(null);
+          setFunciones([]);
+          setRecintoInfo(null);
+          return;
+        }
+        setEvento(eventData);
+
+        // Now getFunciones is correctly imported
+        const funcionesData = await getFunciones(eventData.id); 
+        setFunciones(funcionesData || []);
+
+        // The 'recinto' information
+        // If 'eventData' comes with 'recinto' as an object, use it directly.
+        // If 'eventData.recinto' is just an ID, you'd need another API call (e.g., fetchRecintoById)
+        // For this example, assuming eventData might have a nested 'recinto' object or you'll fetch it.
+        // If your database 'eventos' table has a foreign key to 'recintos', your fetchEventoBySlug
+        // could select nested 'recinto' data: .select('*, recinto(*)') if Supabase allows it.
+        if (eventData.recinto) {
+          setRecintoInfo(eventData.recinto); 
+        } else {
+          setRecintoInfo(null); // Or default placeholder if no recinto
+        }
+
+      } catch (err) {
+        setError(err);
+        setEvento(null);
+        setFunciones([]);
+        setRecintoInfo(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchEventData();
+  }, [eventSlug]); // Removed fetchEventoBySlug and getFunciones from dependencies
+
+  useEffect(() => {
+    async function fetchMapAndPriceTemplateForFunction() {
+      if (!selectedFunctionId) {
+        setMapa(null);
+        setPriceTemplate(null);
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        const funcion = await getFuncion(selectedFunctionId);
+        if (funcion && funcion.sala && funcion.sala.id) {
+          const mapData = await fetchMapa(funcion.sala.id);
+          setMapa(mapData);
+          // Fetch zonas for the sala
+          const zonasData = await fetchZonasBySala(funcion.sala.id);
+          setZonas(zonasData);
+        } else {
+          setMapa(null);
+          setZonas([]);
+        }
+        if (funcion && funcion.plantilla) {
+          let plantilla = funcion.plantilla;
+          if (plantilla.detalles && typeof plantilla.detalles === 'string') {
+            try {
+              plantilla = {
+                ...plantilla,
+                detalles: JSON.parse(plantilla.detalles)
+              };
+            } catch (e) {
+              console.error('Error parsing plantilla.detalles JSON:', e);
+              plantilla = {
+                ...plantilla,
+                detalles: []
+              };
+            }
+          }
+          setPriceTemplate(plantilla);
+        } else {
+          setPriceTemplate(null);
+        }
+      } catch (err) {
+        setError(err);
+        setMapa(null);
+        setPriceTemplate(null);
+        setZonas([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchMapAndPriceTemplateForFunction();
+  }, [selectedFunctionId]); 
+
+  const getImageUrl = (imageType) => {
+    if (evento?.imagenes) {
+      try {
+        const images = JSON.parse(evento.imagenes);
+        if (!images || typeof images !== 'object') {
+          console.warn("Parsed event images is not an object:", images);
+          return null;
+        }
+        if (!images[imageType]) {
+          console.warn(`Image type "${imageType}" not found in event images.`);
+          return null;
+        }
+        return images[imageType];
+      } catch (e) {
+        console.error("Error parsing event images JSON:", e);
+        return null;
+      }
+    }
+    return null;
   };
+
+  const bannerImageUrl = getImageUrl('banner');
+  const obraImageUrl = getImageUrl('obraImagen');
+  const portadaImageUrl = getImageUrl('portada');
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen text-xl text-gray-700 font-inter">
+        Cargando detalles del evento...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen text-xl text-red-600 font-inter">
+        <p>Error al cargar el evento:</p>
+        <p className="text-base text-gray-700">{error.message}</p>
+        <p className="text-sm text-gray-500 mt-4">Por favor, intenta recargar la página.</p>
+      </div>
+    );
+  }
+
+  if (!evento) {
+    return (
+      <div className="flex items-center justify-center h-screen text-xl text-gray-700 font-inter">
+        Evento no encontrado.
+      </div>
+    );
+  }
+
+  // Determine eventTag based on your actual event data structure.
+  // If 'evento' has a 'pais' or 'tag' property from fetchEventoBySlug:
+  // const eventTag = evento.paisTag || "VE"; 
+  // Otherwise, hardcode or derive from 'recintoInfo' if available.
+  // Removed unused eventTag variable
 
   return (
-    <div className="p-4">
-      {timeLeft > 0 && (
-        <div className="fixed top-4 right-4 bg-black bg-opacity-75 text-white px-4 py-2 rounded-lg shadow-lg z-50">
-          <p className="text-sm">Tiempo restante de reserva:</p>
-          <p className="text-xl font-mono">
-            {String(Math.floor(timeLeft / 60)).padStart(2, '0')}:{String(timeLeft % 60).padStart(2, '0')}
-          </p>
-        </div>
-      )}
-
-      {/* Display portada image as main banner */}
-      {portadaImage && (
-        <div className="relative mb-4">
+    <div className="event-detail-page p-4 font-inter max-w-7xl mx-auto">
+      {/* Event Banner Image */}
+      {bannerImageUrl ? (
+        <div className="mb-8 rounded-lg overflow-hidden shadow-xl">
           <img
-            src={resolveImageUrl(portadaImage)}
-            alt={`Portada de ${evento?.nombre}`}
-            className="w-full max-h-[80vh] object-cover rounded"
-          />
-          <div className="absolute inset-0 bg-black/40 flex flex-col justify-end p-4 text-white rounded">
-            {tagNames.length > 0 && (
-              <span className="text-sm mb-1">
-                {tagNames.join(', ')}
-              </span>
-            )}
-            <h1 className="text-3xl font-bold">{evento?.nombre}</h1>
-            {recintoInfo?.nombre ? (
-              <p className="text-sm">{recintoInfo.nombre}</p>
-            ) : (
-              typeof evento?.recinto === 'string' && (
-                <p className="text-sm">{evento.recinto}</p>
-              )
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Display banner image below portada */}
-      {bannerImage && bannerImage !== portadaImage && (
-        <div className="mb-4">
-          <img
-            src={resolveImageUrl(bannerImage)}
-            alt={`Banner de ${evento?.nombre}`}
-            className="w-full max-h-[40vh] object-cover rounded"
+            src={bannerImageUrl}
+            alt={`${evento.nombre} Banner`}
+            className="w-full h-64 object-cover"
+            onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/1200x300/E0F2F7/000?text=Banner+No+Disponible"; }}
           />
         </div>
+      ) : (
+        <div className="mb-8 rounded-lg overflow-hidden shadow-xl bg-gray-100 flex items-center justify-center h-64 text-gray-400">
+          Banner no disponible
+        </div>
       )}
 
-      {/* Display other images in a gallery */}
-      {otherImages.length > 0 && (
-        <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {otherImages.map(([key, url]) => (
-            <img
-              key={key}
-              src={resolveImageUrl(url)}
-              alt={`${evento?.nombre} - ${key}`}
-              className="rounded shadow-md object-cover w-full h-32"
+      {/* Custom Event Header Section (YOUR DESIRED HEADER) */}
+
+
+      {/* Event Description and Artwork */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Acerca del Evento</h2>
+          {evento.descripcionHTML ? (
+            <div
+              className="prose max-w-none" 
+              dangerouslySetInnerHTML={{ __html: evento.descripcionHTML }}
             />
-          ))}
-        </div>
-      )}
-
-      {evento?.descripcionHTML && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold mb-2">Diseño del espectáculo</h3>
-          <div
-            className="prose"
-            dangerouslySetInnerHTML={{ __html: evento.descripcionHTML }}
-          />
-          {evento.resumenDescripcion && (
-            <p className="mt-2">{evento.resumenDescripcion}</p>
-          )}
-        </div>
-      )}
-
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-2">Funciones</h3>
-        <div className="flex flex-col gap-2">
-          {funciones.map(funcion => (
-            <label key={funcion.id || funcion._id} className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="funcion"
-                value={funcion.id || funcion._id}
-                onChange={() => setSelectedFunctionId(funcion.id || funcion._id)}
-              />
-              <span>{funcion.evento?.nombre} - {formatDateString(funcion.fechaCelebracion)}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <div className="mb-2 flex gap-2 items-center">
-        <input
-          type="text"
-          value={discountCode}
-          onChange={e => setDiscountCode(e.target.value)}
-          placeholder={t('discount.placeholder')}
-          className="border px-2 py-1 text-sm"
-        />
-        <button
-          onClick={applyDiscountCode}
-          className="px-2 py-1 bg-green-600 text-white rounded text-sm"
-        >
-          {t('discount.apply')}
-        </button>
-        {appliedDiscount && (
-          <span className="text-sm text-green-700">{appliedDiscount.nombreCodigo}</span>
-        )}
-      </div>
-
-      <div className="md:flex md:items-start md:gap-6">
-        <div ref={seatMapRef} className="my-6 border rounded shadow-md p-4 flex justify-center bg-gray-100 md:flex-1">
-          {mapa && mapa.contenido && mapa.contenido.length > 0 ? (
-            <SeatingMap mapa={mapa} zonas={zonas} onClickSilla={toggleSillaEnCarrito} />
+          ) : evento.descripcion ? (
+            <p className="text-gray-700 leading-relaxed">
+              {evento.descripcion}
+            </p>
           ) : (
-            <div className="text-gray-500 italic">Mapa no disponible o vacío</div>
+            <p className="text-gray-500">No hay descripción disponible para este evento.</p>
+          )}
+          {evento.resumenDescripcion && (
+            <p className="text-gray-600 mt-4 italic">
+              Resumen: {evento.resumenDescripcion}
+            </p>
           )}
         </div>
-
-        <div className="bg-white p-4 rounded shadow-md mt-6 md:mt-6 md:w-80">
-          <h2 className="text-xl font-semibold mb-3">Carrito</h2>
-          {selectedFunctionId && (
-            <div className="mb-2 font-medium">
-              {(() => {
-                const fn = funciones.find(f => (f.id || f._id) === selectedFunctionId);
-                return fn ? formatDateString(fn.fechaCelebracion) : '';
-              })()}
-            </div>
+        <div className="bg-white rounded-lg shadow-lg p-6 flex items-center justify-center">
+          {obraImageUrl || portadaImageUrl ? (
+            <img
+              src={obraImageUrl || portadaImageUrl}
+              alt={`${evento.nombre} Artwork`}
+              className="max-w-full h-auto rounded-md shadow-md"
+              onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/400x600/E0F2F7/000?text=Imagen+No+Disponible"; }}
+            />
+          ) : (
+            <div className="text-gray-500">No hay imagen de obra disponible.</div>
           )}
-        {carrito.map((item, index) => (
-          <div key={index} className="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded">
-            <span>{item.zonaNombre} - {item.nombreMesa} - Silla {item.nombre || index + 1} - ${item.precio}
-              {item.tipoPrecio === 'descuento' && ` (${item.descuentoNombre})`}
-            </span>
-            <button
-              onClick={() => toggleSillaEnCarrito(item)}
-              className="text-red-500 hover:text-red-700"
-            >
-              ❌
-            </button>
-          </div>
-        ))}
-        <button
-          onClick={() => setCarrito([])}
-          className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition"
-        >
-          Limpiar carrito
-        </button>
-        <button
-          onClick={() => {
-            const path = refParam ? `/store/pay?ref=${refParam}` : '/store/pay';
-            navigate(path, { state: { carrito, funcionId: selectedFunctionId } });
-          }}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-        >
-          Continuar al carrito
-        </button>
         </div>
       </div>
 
-      <Modal
-        open={showSeatPopup}
-        closable={false}
-        maskClosable={true}
-        onOk={closeSeatPopup}
-        onCancel={closeSeatPopup}
-        okText="Continuar"
-        cancelButtonProps={{ style: { display: 'none' } }}
-      >
-        <p>{evento?.otrasOpciones?.popupAntesAsiento?.texto}</p>
-      </Modal>
-
-      {widgets?.content?.length
-        ? widgets.content.map((w, idx) => (
-            <React.Fragment key={idx}>{renderWidget(w)}</React.Fragment>
-          ))
-        : null}
-
-      {evento?.videoURL && (
-        <div className="mt-6">
-          <iframe
-            title="video"
-            src={getEmbedUrl(evento.videoURL)}
-            className="w-full rounded"
-            height="315"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-      )}
-
-      {(recintoInfo?.latitud && recintoInfo.longitud) && (
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold mb-2">¿Cómo llegar?</h2>
-          {recintoInfo.comoLlegar && (
-            <p className="mb-2">{recintoInfo.comoLlegar}</p>
+      {/* Seating Map and Shopping Cart Sections */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 seating-map-section bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Selecciona tus Asientos</h2>
+          {funciones && funciones.length > 0 && (
+            <select
+              value={selectedFunctionId || ''}
+              onChange={(e) => setSelectedFunctionId(e.target.value)}
+              className="mb-4 p-2 border rounded-md w-full max-w-xs"
+            >
+              <option value="">Selecciona una función</option>
+              {funciones.map(func => (
+                <option key={func.id} value={func.id}>
+                  {func.fecha_celebracion ? new Date(func.fecha_celebracion).toLocaleString('es-ES', {
+                    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                  }) : `Función ${func.id}`}
+                  {func.nombre && ` - ${func.nombre}`}
+                </option>
+              ))}
+            </select>
           )}
-          <div className="flex flex-col md:flex-row md:items-start gap-4">
-            <EventMap
-              latitude={recintoInfo.latitud}
-              longitude={recintoInfo.longitud}
-              width="100%"
-              height={300}
-            />
-            <div className="flex flex-col items-center md:w-64">
-              <p className="mb-2 font-medium text-center">Escanea para llegar a tu destino.</p>
-              <QRCodeSVG value={`https://www.google.com/maps?q=${recintoInfo.latitud},${recintoInfo.longitud}`} />
-            </div>
-          </div>
+
+          {mapa && selectedFunctionId ? (
+            <SeatingMap
+          mapa={{
+            ...mapa,
+            contenido: mapa.contenido.map(elemento => ({
+              ...elemento,
+              sillas: elemento.sillas.map(silla => ({
+                ...silla,
+                reserved: isSeatLocked(silla._id || silla.id),
+                selected: cart ? cart.some(item => item.sillaId === (silla._id || silla.id) && item.functionId === selectedFunctionId) : false
+              }))
+            }))
+          }}
+          zonas={zonas}
+          onClickSilla={toggleSillaEnCarrito} 
+        />
+      ) : (
+        <div className="bg-gray-100 p-6 rounded-md text-center text-gray-500 shadow-sm">
+          {funciones && funciones.length === 0 ? (
+            "No hay funciones disponibles para este evento."
+          ) : selectedFunctionId ? (
+            "Cargando mapa de asientos..."
+          ) : (
+            "Por favor, selecciona una función para ver el mapa de asientos."
+          )}
         </div>
       )}
+        </div>
+
+        <div className="lg:col-span-1 shopping-cart-section bg-white rounded-lg shadow-lg p-6">
+        <Cart
+          carrito={cart}
+          setCarrito={setCart}
+          funciones={funciones}
+        />
+        </div>
+      </div>
+
+      {/* About the Venue Section (Expanded) */}
+      {recintoInfo && (
+        <div className="mt-8 bg-white rounded-lg shadow-lg p-6">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Acerca del Recinto: {recintoInfo.nombre}</h2>
+          {recintoInfo.direccion && (
+            <p className="text-gray-700 mb-2">
+              <strong>Dirección:</strong> {recintoInfo.direccion}
+            </p>
+          )}
+          {recintoInfo.capacidad && (
+            <p className="text-gray-700 mb-2">
+              <strong>Capacidad:</strong> {recintoInfo.capacidad} personas
+            </p>
+          )}
+          {recintoInfo.descripcion && (
+            <p className="text-gray-600 leading-relaxed mt-4">
+              {recintoInfo.descripcion}
+            </p>
+          )}
+          <VenueMap recintoInfo={recintoInfo} />
+          {recintoInfo.latitud && recintoInfo.longitud && (
+            <div className="mt-4 w-full h-64 rounded-md overflow-hidden shadow-md">
+              <iframe
+                title="Google Map"
+                width="100%"
+                height="100%"
+                frameBorder="0"
+                style={{ border: 0 }}
+                src={`https://www.google.com/maps/embed/v1/view?key=YOUR_GOOGLE_MAPS_API_KEY&center=${recintoInfo.latitud},${recintoInfo.longitud}&zoom=15`}
+                allowFullScreen
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Contact/Support Section (Example) */}
+      <div className="mt-8 bg-white rounded-lg shadow-lg p-6 text-center">
+        <h2 className="text-2xl font-semibold text-gray-800 mb-4">¿Necesitas Ayuda?</h2>
+        <p className="text-gray-700 mb-4">
+          Si tienes alguna pregunta sobre este evento o la compra de entradas, no dudes en contactarnos.
+        </p>
+        <p className="text-blue-600 hover:underline cursor-pointer">
+          contacto@tudominio.com
+        </p>
+      </div>
     </div>
   );
-};
+}
 
-export default Event;
+export default EventPage;

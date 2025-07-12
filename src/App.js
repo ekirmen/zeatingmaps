@@ -180,6 +180,8 @@ const App = () => {
                         <Route path="/store/search-map" element={<EventSearchMap />} />
                         <Route path="/store/perfil" element={<Profile userData={user} onUpdateProfile={handleUpdateProfile} />} />
 
+                        <Route path="/store/eventos/:eventSlug" element={<Event />} />
+
                         <Route path="/404" element={<NotFoundPage />} />
                         <Route path="*" element={<Navigate to="/404" replace />} />
                       </Routes>
