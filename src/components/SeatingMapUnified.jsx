@@ -38,13 +38,15 @@ const SeatingMapUnified = ({
     [canLockSeats, lockSeat, unlockSeat, isSeatLocked, isSeatLockedByMe, onSeatToggle]
   );
 
-  const zonas = mapa?.contenido?.zonas || [];
-  const allSeats = zonas.flatMap(z => z.asientos || []);
+  // Fetch zones from "mapa". Some backends store the zones inside
+  // "mapa.contenido" while others may return them at the root level.
+  const zonas = mapa?.zonas || mapa?.contenido?.zonas || [];
+  const allSeats = zonas.flatMap((z) => z.asientos || []);
 
-  const maxX = Math.max(...allSeats.map(s => s.x + (s.ancho || 30)), 800);
-  const maxY = Math.max(...allSeats.map(s => s.y + (s.alto || 30)), 600);
+  const maxX = Math.max(...allSeats.map((s) => s.x + (s.ancho || 30)), 800);
+  const maxY = Math.max(...allSeats.map((s) => s.y + (s.alto || 30)), 600);
 
-  if (!mapa || !mapa.zonas) {
+  if (!mapa || zonas.length === 0) {
     return <div>No map data available</div>;
   }
 
@@ -55,7 +57,7 @@ const SeatingMapUnified = ({
       )}
       <Stage width={maxX + 50} height={maxY + 50} style={{ border: '1px solid #ccc' }}>
         <Layer>
-          {mapa.zonas.map(zona => (
+          {zonas.map((zona) => (
             <Group key={zona.id}>
               <Text
                 text={zona.nombre}
