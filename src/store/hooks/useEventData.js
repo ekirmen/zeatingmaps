@@ -296,7 +296,7 @@ const useEventData = (eventIdOrSlug) => {
                         const estado = seatMap[s._id] || 'disponible';
                         const isSelected = selectedIds.includes(s._id);
                         const color = estado === 'reservado'
-                            ? 'red'
+                            ? '#555'
                             : estado === 'pagado'
                             ? 'gray'
                             : estado === 'seleccionado' || estado === 'bloqueado'

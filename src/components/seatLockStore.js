@@ -26,6 +26,20 @@ async function getAuthenticatedUserId() {
   }
 }
 
+async function getSessionId() {
+  const userId = await getAuthenticatedUserId();
+  if (userId) {
+    localStorage.setItem('anonSessionId', userId);
+    return userId;
+  }
+  const stored = getStoredSessionId();
+  if (stored) return stored;
+  const anonId = crypto.randomUUID();
+  localStorage.setItem('anonSessionId', anonId);
+  console.log('[SESSION] Nueva sesión anónima generada:', anonId);
+  return anonId;
+}
+
 async function initializeSession() {
   const userId = await getAuthenticatedUserId();
   if (userId) {
@@ -135,14 +149,7 @@ export const useSeatLockStore = create((set, get) => ({
 
   lockSeat: async (seatId, status = 'seleccionado', overrideFuncionId = null) => {
     const topic = get().channel?.topic;
-    const sessionId = await getAuthenticatedUserId();
-
-    if (!sessionId) {
-      console.warn('[SEAT_LOCK] Se requiere sesión autenticada');
-      return false;
-    }
-
-    localStorage.setItem('anonSessionId', sessionId);
+    const sessionId = await getSessionId();
 
     const funcionId = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
     if (!funcionId) {
@@ -196,14 +203,7 @@ export const useSeatLockStore = create((set, get) => ({
 
   unlockSeat: async (seatId, overrideFuncionId = null) => {
     const topic = get().channel?.topic;
-    const sessionId = await getAuthenticatedUserId();
-
-    if (!sessionId) {
-      console.warn('[SEAT_LOCK] Se requiere sesión autenticada');
-      return false;
-    }
-
-    localStorage.setItem('anonSessionId', sessionId);
+    const sessionId = await getSessionId();
 
     const funcionId = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
     if (!funcionId) {
