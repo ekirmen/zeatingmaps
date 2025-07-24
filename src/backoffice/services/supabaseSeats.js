@@ -56,7 +56,7 @@ export const createOrUpdateSeat = async (seatId, funcionId, zonaId, payload) => 
     // which requires a database constraint that might not be present.
     const { data: existingSeat, error: selectError } = await supabase
       .from('seats')
-      .select('id')
+      .select('_id')
       .eq('_id', seatId)
       .eq('funcion_id', funcionId)
       .single();
