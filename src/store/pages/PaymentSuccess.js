@@ -11,6 +11,7 @@ import downloadTicket from '../../utils/downloadTicket';
 
 const PaymentSuccess = () => {
   const addToCart = useCartStore(state => state.addToCart);
+  const clearCart = useCartStore(state => state.clearCart);
   const params = useParams();
   const location = useLocation();
   const locator = location.state?.locator || params.locator;
@@ -21,6 +22,10 @@ const PaymentSuccess = () => {
   const [eventOptions, setEventOptions] = useState({});
 
   const isReservation = paymentDetails?.status === 'reservado';
+
+  useEffect(() => {
+    clearCart();
+  }, [clearCart]);
 
   useEffect(() => {
     const pixelId = localStorage.getItem('metaPixelId');
