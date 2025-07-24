@@ -8,17 +8,36 @@ function isValidUuid(value) {
   );
 }
 
-function getOrCreateAnonymousSessionId() {
-  let sessionId = localStorage.getItem('anonSessionId');
-  if (!sessionId) {
-    sessionId = crypto.randomUUID();
-    localStorage.setItem('anonSessionId', sessionId);
-    console.log('[SESSION] Nueva sesión anónima generada:', sessionId);
-  } else {
-    console.log('[SESSION] Sesión anónima existente:', sessionId);
-  }
-  return sessionId;
+function getStoredSessionId() {
+  return localStorage.getItem('anonSessionId');
 }
+
+async function getAuthenticatedUserId() {
+  try {
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession();
+    if (error) throw error;
+    return session?.user?.id || null;
+  } catch (err) {
+    console.error('[SEAT_LOCK] Error obteniendo sesión:', err.message);
+    return null;
+  }
+}
+
+async function initializeSession() {
+  const userId = await getAuthenticatedUserId();
+  if (userId) {
+    localStorage.setItem('anonSessionId', userId);
+  } else if (!getStoredSessionId()) {
+    const anonId = crypto.randomUUID();
+    localStorage.setItem('anonSessionId', anonId);
+    console.log('[SESSION] Nueva sesión anónima generada:', anonId);
+  }
+}
+
+initializeSession();
 
 export const useSeatLockStore = create((set, get) => ({
   lockedSeats: [],
@@ -116,7 +135,14 @@ export const useSeatLockStore = create((set, get) => ({
 
   lockSeat: async (seatId) => {
     const topic = get().channel?.topic;
-    const sessionId = getOrCreateAnonymousSessionId();
+    const sessionId = await getAuthenticatedUserId();
+
+    if (!sessionId) {
+      console.warn('[SEAT_LOCK] Se requiere sesión autenticada');
+      return false;
+    }
+
+    localStorage.setItem('anonSessionId', sessionId);
 
     const funcionId = topic?.split('seat-locks-channel-')[1];
     if (!funcionId) {
@@ -161,7 +187,14 @@ export const useSeatLockStore = create((set, get) => ({
 
   unlockSeat: async (seatId) => {
     const topic = get().channel?.topic;
-    const sessionId = getOrCreateAnonymousSessionId();
+    const sessionId = await getAuthenticatedUserId();
+
+    if (!sessionId) {
+      console.warn('[SEAT_LOCK] Se requiere sesión autenticada');
+      return false;
+    }
+
+    localStorage.setItem('anonSessionId', sessionId);
 
     const funcionId = topic?.split('seat-locks-channel-')[1];
     if (!funcionId) {
@@ -205,7 +238,7 @@ export const useSeatLockStore = create((set, get) => ({
   },
 
   isSeatLockedByMe: (seatId) => {
-    const sessionId = getOrCreateAnonymousSessionId();
+    const sessionId = getStoredSessionId();
     const { lockedSeats } = get();
     return lockedSeats.some(
       (s) => s.seat_id === seatId && s.session_id === sessionId
