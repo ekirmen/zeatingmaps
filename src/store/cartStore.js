@@ -44,23 +44,35 @@ export const useCartStore = create(
         cartExpiration: null,
         timeLeft: 0,
 
-        addToCart: async (seats, funcionId) => {
-          const { cart, lockSeat } = get();
-          const newSeats = Array.isArray(seats) ? seats : [seats];
+        toggleSeat: async (seat) => {
+          const seatId = seat.sillaId || seat.id || seat._id;
+          if (!seatId) return;
 
-          try {
-            for (const s of newSeats) {
-              await useSeatLockStore.getState().lockSeat(s._id || s.id);
+          const { cart } = get();
+          const exists = cart.some(
+            (item) => (item.sillaId || item.id || item._id) === seatId
+          );
+
+          if (exists) {
+            const filtered = cart.filter(
+              (item) => (item.sillaId || item.id || item._id) !== seatId
+            );
+            set({ cart: filtered });
+            await useSeatLockStore.getState().unlockSeat(seatId);
+            if (filtered.length === 0) {
+              clearExpirationTimer();
             }
-            const updated = [...cart, ...newSeats];
-            set({ cart: updated, functionId: funcionId });
+            toast.success('Asiento eliminado del carrito');
+          } else {
+            const updated = [...cart, seat];
+            set({
+              cart: updated,
+              functionId: seat.functionId || seat.funcionId || get().functionId,
+            });
             if (cart.length === 0) {
               startExpirationTimer();
             }
-            toast.success('Asientos añadidos al carrito.');
-          } catch (e) {
-            toast.error('Error al bloquear asientos');
-            console.error(e);
+            toast.success('Asiento añadido al carrito');
           }
         },
 
