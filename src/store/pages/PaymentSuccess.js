@@ -86,7 +86,7 @@ const PaymentSuccess = () => {
       })),
       payment.funcion?.id || payment.funcion
     );
-    navigate('/store/pay');
+    navigate('/store/payment');
   };
 
   if (!locator) {

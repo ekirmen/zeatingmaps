@@ -56,7 +56,7 @@ const SelectSeats = () => {
   };
 
   const irAPagar = () => {
-    const path = refParam ? `/store/pay?ref=${refParam}` : '/store/pay';
+    const path = refParam ? `/store/payment?ref=${refParam}` : '/store/payment';
     navigate(path, { state: { carrito: selectedSeats, funcionId } });
   };
 
