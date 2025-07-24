@@ -39,66 +39,34 @@ export const fetchSeatsByFuncion = async (funcionId) => {
  */
 export const createOrUpdateSeat = async (seatId, funcionId, zonaId, payload) => {
   if (!seatId || !funcionId || !zonaId) {
-    console.error('createOrUpdateSeat: Missing required parameters (seatId, funcionId, zonaId).');
+    console.error(
+      'createOrUpdateSeat: Missing required parameters (seatId, funcionId, zonaId).'
+    );
     return null;
   }
 
   try {
-    // Build the payload for insert/update operations
-    const insertPayload = {
+    const upsertPayload = {
       _id: seatId,
       funcion_id: funcionId,
       zona: zonaId,
       ...payload,
     };
 
-    // Check if the seat already exists to avoid relying on ON CONFLICT,
-    // which requires a database constraint that might not be present.
-    const { data: existingSeat, error: selectError } = await supabase
+    // Using upsert with the unique constraint on (funcion_id, _id)
+    const { data, error } = await supabase
       .from('seats')
-      .select('_id')
-      .eq('_id', seatId)
-      .eq('funcion_id', funcionId)
+      .upsert(upsertPayload, { onConflict: 'funcion_id,_id' })
+      .select()
       .single();
 
-    if (selectError && selectError.code !== 'PGRST116') {
-      console.error('Error checking existing seat:', selectError.message);
-      throw selectError;
-    }
-
-    let result;
-    if (existingSeat) {
-      // Seat exists, perform an update
-      const { data, error } = await supabase
-        .from('seats')
-        .update(insertPayload)
-        .eq('_id', seatId)
-        .eq('funcion_id', funcionId)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating seat:', error.message);
-        throw error;
-      }
-      result = data;
-    } else {
-      // Seat does not exist, insert a new row
-      const { data, error } = await supabase
-        .from('seats')
-        .insert(insertPayload)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error inserting seat:', error.message);
-        throw error;
-      }
-      result = data;
+    if (error) {
+      console.error('Error inserting/updating seat:', error.message);
+      throw error;
     }
 
     console.log(`Seat ${seatId} operation successful.`);
-    return result;
+    return data;
   } catch (error) {
     console.error('Error in createOrUpdateSeat:', error.message);
     throw error; // Re-throw to allow calling context to handle
