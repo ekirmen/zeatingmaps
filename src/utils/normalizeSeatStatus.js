@@ -1,6 +1,7 @@
 const STATUS_MAP = {
   disponible: "available",
   bloqueado: "blocked",
+  seleccionado: "selected",
   reservado: "blocked",
   pagado: "blocked",
   vendido: "blocked",

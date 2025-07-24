@@ -295,7 +295,13 @@ const useEventData = (eventIdOrSlug) => {
                         const baseColor = getZonaColor(zonaId) || 'lightblue';
                         const estado = seatMap[s._id] || 'disponible';
                         const isSelected = selectedIds.includes(s._id);
-                        const color = estado === 'reservado' ? 'red' : estado === 'pagado' ? 'gray' : estado === 'bloqueado' ? 'orange' : baseColor;
+                        const color = estado === 'reservado'
+                            ? 'red'
+                            : estado === 'pagado'
+                            ? 'gray'
+                            : estado === 'seleccionado' || estado === 'bloqueado'
+                            ? 'orange'
+                            : baseColor;
                         return { ...s, estado, color, selected: isSelected };
                     })
                 }))
@@ -364,7 +370,7 @@ const useEventData = (eventIdOrSlug) => {
 
     const toggleSillaEnCarrito = useCallback(async (silla, mesa) => {
         const zonaId = silla?.zona || mesa?.zona;
-        if (!zonaId || ['reservado', 'pagado', 'bloqueado'].includes(silla?.estado) || silla?.bloqueado) {
+        if (!zonaId || ['reservado', 'pagado', 'seleccionado', 'bloqueado'].includes(silla?.estado) || silla?.bloqueado) {
             console.warn(`[useEventData DEBUG] Intento de seleccionar silla no disponible: ${silla._id} (estado: ${silla?.estado})`);
             return;
         }
@@ -443,8 +449,8 @@ const useEventData = (eventIdOrSlug) => {
                 console.log(`[useEventData DEBUG] Firebase deshabilitado. Reservando asiento ${silla._id} en Supabase.`);
                 try {
                     await Promise.all([
-                        createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'reservado' }),
-                        lockSeat(silla._id, 'reservado', selectedFunctionId)
+                        createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'seleccionado' }),
+                        lockSeat(silla._id, 'seleccionado', selectedFunctionId)
                     ]);
                     dbOperationSuccess = true;
                     console.log(`[useEventData DEBUG] Asiento ${silla._id} reservado en Supabase.`);
