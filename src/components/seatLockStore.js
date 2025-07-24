@@ -117,9 +117,14 @@ export const useSeatLockStore = create((set, get) => ({
       return false;
     }
 
+    if (!sessionId) {
+      console.warn('[SEAT_LOCK] session_id inválido');
+      return false;
+    }
+
     const lockedAt = new Date().toISOString();
 
-    const { error } = await supabase.from('seat_locks').upsert({
+    const { error } = await supabase.from('seat_locks').insert({
       seat_id: seatId,
       funcion_id: parseInt(funcionId),
       session_id: sessionId,
