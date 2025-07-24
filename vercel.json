@@ -21,6 +21,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/payment-success/:path*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/backoffice/static/:path*",
       "destination": "/static/:path*"
     },
