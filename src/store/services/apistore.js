@@ -92,18 +92,29 @@ export const getFuncion = async (functionId) => {
       .select(`
         id,
         fecha_celebracion,
-      plantilla:plantilla (id, nombre, detalles),
-      sala:salas (id, nombre),
-      evento
-    `)
+        plantilla:plantilla (id, nombre, detalles),
+        sala:salas (id, nombre),
+        evento
+      `)
       .eq('id', functionId)
-      .single(); // Use .single() to expect one result
+      .single();
 
-    if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
+    if (error && error.code !== 'PGRST116') {
       console.error('Error fetching single function:', error.message);
       throw error;
     }
-    return data; // Will be null if not found
+
+    // ✅ Asegurarse de que detalles sea un array
+    if (data?.plantilla && typeof data.plantilla.detalles === 'string') {
+      try {
+        data.plantilla.detalles = JSON.parse(data.plantilla.detalles);
+      } catch (e) {
+        console.error('Error parsing plantilla.detalles JSON:', e);
+        data.plantilla.detalles = [];
+      }
+    }
+
+    return data;
   } catch (error) {
     console.error('Unexpected error in getFuncion:', error);
     throw error;
@@ -118,23 +129,25 @@ export const getFuncion = async (functionId) => {
  * @returns {Promise<object>} A promise that resolves to the map data.
  * @throws {Error} If the Supabase query fails.
  */
-export const fetchMapa = async (mapId) => {
+export const fetchMapa = async (salaId) => {
   try {
     const { data, error, status } = await supabase
       .from('mapas')
-      .select('*')
-      .eq('id', mapId)
+      .select('contenido')
+      .eq('sala_id', salaId)
       .single();
 
-    if (error && status !== 406 && error.code !== 'PGRST116') { // Handle 406 separately
+    if (error && status !== 406 && error.code !== 'PGRST116') {
       console.error('Error fetching map:', error.message);
       throw error;
     }
+
     if (status === 406) {
-      console.error('406 Not Acceptable error fetching map');
+      console.warn('No map found for sala_id:', salaId);
       return null;
     }
-    return data || null;
+
+    return data?.contenido || null;
   } catch (error) {
     console.error('Unexpected error in fetchMapa:', error);
     throw error;

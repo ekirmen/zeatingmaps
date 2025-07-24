@@ -1,20 +1,18 @@
 import { supabase } from '../supabaseClient';
 
+// ✅ fetchMapa SIN usar relaciones automáticas
 export const fetchMapa = async (salaId) => {
-  // Avoid making a request if the sala ID is missing. This prevents
-  // an invalid query like `sala_id=eq.undefined` that results in a
-  // 400 error from Supabase.
   if (!salaId) return null;
 
   const { data, error } = await supabase
     .from('mapas')
-    .select('*')
+    .select('*') // no necesitas joins
     .eq('sala_id', salaId)
     .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') throw error;
+  if (error) throw error;
 
-  return data;
+  return data; // data.contenido ya contiene el JSON embebido
 };
 
 export const fetchZonasPorSala = async (salaId) => {
@@ -44,7 +42,7 @@ export const fetchPlantillaPorFuncion = async (funcionId) => {
   const { data, error } = await supabase
     .from('plantillas')
     .select('*, detalles:jsonb')
-    .eq('id', funcionId); // ajusta según tu esquema
+    .eq('id', funcionId); //  ajusta según tu esquema
   if (error) throw error;
   return data?.[0] ?? null;
 };

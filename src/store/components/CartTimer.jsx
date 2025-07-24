@@ -1,5 +1,4 @@
 import React from 'react';
-import { useCart } from '../../contexts/CartContext';
 
 const CartTimer = () => {
   const { timeLeft, hasActiveTimer } = useCart();

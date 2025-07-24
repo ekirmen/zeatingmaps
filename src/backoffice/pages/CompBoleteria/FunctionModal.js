@@ -7,16 +7,31 @@ const FunctionModal = ({
   funciones,
   onFunctionSelect,
 }) => {
+  // Función para limpiar/normalizar la función antes de enviarla
+  const normalizeFunction = (funcion) => {
+    return {
+      ...funcion,
+      sala: typeof funcion.sala === 'object' && funcion.sala !== null
+        ? funcion.sala.id || funcion.sala._id
+        : funcion.sala,
+    };
+  };
+
   const columns = [
     {
       title: 'Date',
       dataIndex: 'fechaCelebracion',
       render: (date) => new Date(date).toLocaleDateString(),
-      // No ocultar columnas para móvil
     },
     {
       title: 'Room',
       dataIndex: ['sala', 'nombre'],
+      render: (_, record) => {
+        if (typeof record.sala === 'object' && record.sala !== null) {
+          return record.sala.nombre || '—';
+        }
+        return '—';
+      },
     },
     {
       title: 'Sale Period',
@@ -32,13 +47,12 @@ const FunctionModal = ({
       render: (_, record) => (
         <Button
           type="default"
-          variant="outlined"
           block
           onClick={(e) => {
-            e.stopPropagation(); // evita que dispare el click de fila
-            onFunctionSelect(record);
+            e.stopPropagation();
+            onFunctionSelect(normalizeFunction(record));
           }}
-          className="bg-blue-600 hover:bg-blue-700 border-none"
+          className="bg-blue-600 hover:bg-blue-700 border-none text-white"
         >
           Select
         </Button>
@@ -64,12 +78,12 @@ const FunctionModal = ({
           dataSource={funciones}
           columns={columns}
           pagination={false}
-          rowKey={(record) => record._id || record.key}
+          rowKey={(record) => record._id || record.id || record.key}
           size="middle"
           scroll={{ x: 'max-content' }}
           className="min-w-full"
           onRow={(record) => ({
-            onClick: () => onFunctionSelect(record), // click fila selecciona función
+            onClick: () => onFunctionSelect(normalizeFunction(record)),
             style: { cursor: 'pointer' },
           })}
         />

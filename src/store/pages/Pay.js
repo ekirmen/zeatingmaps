@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { useCart } from '../../contexts/CartContext';
+import { useCartStore } from '../../store/cartStore';
 import MetodoPago from '../components/MetodoPago';
 import { Modal } from 'antd';
 import { toast } from 'react-hot-toast';
 import { loadMetaPixel } from '../utils/analytics';
 import { supabase } from '../../supabaseClient';
-import { updateSeat, createOrUpdateSeat, fetchSeatsByFuncion } from '../../backoffice/services/supabaseSeats';
-import { lockSeat } from '../../backoffice/services/seatLocks';
+import { createOrUpdateSeat, fetchSeatsByFuncion } from '../../backoffice/services/supabaseSeats';
+import { useSeatLockStore  } from '../../components/seatLockStore';
 import { isUuid } from '../../utils/isUuid';
 
 const locatorFromId = (id) =>
@@ -21,13 +21,13 @@ const Pay = () => {
   const navigate = useNavigate();
   const { refParam } = useRefParam();
   const { user } = useAuth();
+  const lockSeat = useSeatLockStore(state => state.lockSeat);
 
   // Accede de forma segura a los datos de navegación
   const { carrito: stateCarrito, funcionId: stateFuncionId } = location.state || {};
-  const { cart, functionId: contextFuncionId } = useCart();
+  const { cart } = useCartStore();
   const carrito = stateCarrito || cart;
-  const funcionId = stateFuncionId || contextFuncionId;
-
+  const funcionId = stateFuncionId || null;
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
   const [isObservacionesModalVisible, setIsObservacionesModalVisible] = useState(false);
@@ -135,6 +135,7 @@ const Pay = () => {
   }, [eventOptions]);
 
   const handlePaymentMethodSelect = (method) => {
+    console.log('Selected payment method:', method);
     setSelectedPaymentMethod(method);
   };
 
@@ -204,6 +205,7 @@ const Pay = () => {
   };
   
   const handleProcessPayment = async () => {
+    console.log('Processing payment with method:', selectedPaymentMethod);
     if (!selectedPaymentMethod) {
       toast.error("Por favor selecciona un método de pago");
       return;

@@ -57,14 +57,24 @@ const Funciones = () => {
 
   useEffect(() => {
     const fetchFunciones = async () => {
-      if (eventoSeleccionado) {
+      const eventoId = eventoSeleccionado?.id || eventoSeleccionado?._id;
+  
+      if (eventoId) {
         const { data, error } = await supabase
           .from('funciones')
-          .select(
-            `id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento, sala, plantilla`
-          )
-          .eq('evento', eventoSeleccionado);
-
+          .select(`
+            id,
+            fechaCelebracion:fecha_celebracion,
+            inicioVenta:inicio_venta,
+            finVenta:fin_venta,
+            pagoAPlazos:pago_a_plazos,
+            permitirReservasWeb:permitir_reservas_web,
+            evento,
+            sala(*),
+            plantilla(*)
+          `)
+          .eq('evento', eventoId);
+  
         if (error) {
           console.error('Error al obtener funciones:', error);
         } else {
@@ -74,9 +84,10 @@ const Funciones = () => {
         setFunciones([]);
       }
     };
-
+  
     fetchFunciones();
   }, [eventoSeleccionado]);
+  
 
   useEffect(() => {
     const fetchPlantillas = async () => {

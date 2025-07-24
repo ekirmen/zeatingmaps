@@ -5,14 +5,16 @@ import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
 import ZonesAndPrices from './CompBoleteria/ZonesAndPrices';
+import SeatingMapUnified from '../../components/SeatingMapUnified';
 import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
 import FunctionModal from './CompBoleteria/FunctionModal';
 import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
+
 import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
 import { supabase } from '../services/supabaseClient';
-import { unlockSeat } from '../services/seatLocks';
+import { useSeatLockStore } from '../../components/seatLockStore';
 
 const Boleteria = () => {
   const {
@@ -28,13 +30,15 @@ const Boleteria = () => {
     setSelectedEvent
   } = useBoleteria();
 
+  const seatLockStore = useSeatLockStore();
+
+  const lockSeat = seatLockStore.lockSeat;
+  const unlockSeat = seatLockStore.unlockSeat;
+  const isSeatLocked = seatLockStore.isSeatLocked;
+  const isSeatLockedByMe = seatLockStore.isSeatLockedByMe;
+  const unlockSeatRef = useRef(seatLockStore.unlockSeat);
   const zonesRef = useRef(null);
   const mobileZonesRef = useRef(null);
-
-  const handleSeatsUpdated = (ids, estado) => {
-    zonesRef.current?.onSeatsUpdated(ids, estado);
-    mobileZonesRef.current?.onSeatsUpdated(ids, estado);
-  };
 
   const {
     selectedClient,
@@ -54,6 +58,16 @@ const Boleteria = () => {
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
   const [clientAbonos, setClientAbonos] = useState([]);
 
+  const handleSeatToggle = (seat) => {
+    const exists = carrito.some(item => item._id === seat._id);
+    if (exists) {
+      setCarrito(prev => prev.filter(item => item._id !== seat._id));
+    } else {
+      setCarrito(prev => [...prev, { ...seat, funcionId: selectedFuncion.id || selectedFuncion._id }]);
+    }
+  };
+  
+
   useEffect(() => {
     const loadAbonos = async () => {
       if (selectedClient?.id) {
@@ -65,12 +79,11 @@ const Boleteria = () => {
 
           if (error) throw error;
 
-          const mapped = (data || []).map((a) => ({
+          setClientAbonos((data || []).map(a => ({
             ...a,
             packageType: a.package_type,
-            seat: a.seat_id,
-          }));
-          setClientAbonos(mapped);
+            seat: a.seat_id
+          })));
         } catch (err) {
           console.error('Error loading abonos', err);
           setClientAbonos([]);
@@ -82,32 +95,25 @@ const Boleteria = () => {
     loadAbonos();
   }, [selectedClient]);
 
-  // Liberar asientos bloqueados cuando la página se recarga o el componente se desmonta
   useEffect(() => {
     const cleanupLocks = () => {
-      carrito.forEach(i => {
-        unlockSeat(i._id, i.funcionId).catch(() => {});
-      });
+      unlockSeatRef.current = seatLockStore.unlockSeat;
+      carrito.forEach(i => unlockSeatRef.current(i._id, i.funcionId).catch(() => {}));
     };
-
     window.addEventListener('beforeunload', cleanupLocks);
     return () => {
-      cleanupLocks();
       window.removeEventListener('beforeunload', cleanupLocks);
     };
-  }, [carrito]);
+  }, [carrito, seatLockStore]);
 
-  const handleClientManagement = () => {
-    setIsSearchModalVisible(true);
-  };
+  
+  const handleClientManagement = () => setIsSearchModalVisible(true);
 
   const onEventSelect = async (eventoId) => {
     const { success, funciones: funcs = [] } = await handleEventSelect(eventoId);
     if (success) {
       setIsFunctionsModalVisible(true);
-      if (funcs.length === 1) {
-        await handleFunctionSelect(funcs[0]);
-      }
+      if (funcs.length === 1) await handleFunctionSelect(funcs[0]);
       if (sidebarOpen) setSidebarOpen(false);
     }
   };
@@ -115,6 +121,11 @@ const Boleteria = () => {
   const onFunctionSelect = async (funcion) => {
     const success = await handleFunctionSelect(funcion);
     if (success) setIsFunctionsModalVisible(false);
+  };
+
+  const handleSeatsUpdated = (ids, estado) => {
+    zonesRef.current?.onSeatsUpdated(ids, estado);
+    mobileZonesRef.current?.onSeatsUpdated(ids, estado);
   };
 
   const allTicketsPaid = carrito?.length > 0 && carrito.every(ticket => ticket.status === 'pagado');
@@ -135,10 +146,7 @@ const Boleteria = () => {
     },
     onAddClient: async (values) => {
       try {
-        const newClient = await handleAddClient({
-          ...values,
-          perfil: 'cliente'
-        });
+        const newClient = await handleAddClient({ ...values, perfil: 'cliente' });
         if (newClient) {
           setSelectedClient(newClient);
           setIsSearchModalVisible(false);
@@ -150,10 +158,7 @@ const Boleteria = () => {
       }
     },
     handleUnifiedSearch: async (searchTerm) => {
-      if (!searchTerm?.trim()) {
-        message.warning('Por favor ingrese un término de búsqueda');
-        return;
-      }
+      if (!searchTerm?.trim()) return message.warning('Por favor ingrese un término de búsqueda');
       try {
         await handleUnifiedSearch(searchTerm);
       } catch (error) {
@@ -181,14 +186,10 @@ const Boleteria = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
+      {/* Sidebar desktop */}
       <aside className="hidden md:flex md:w-80 bg-white border-r border-gray-200 flex-col">
-        <button
-          className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-100 border-b border-gray-200"
-          onClick={() => window.history.back()}
-          aria-label="Volver"
-        >
-          <AiOutlineLeft className="text-lg" />
-          <span>Back</span>
+        <button onClick={() => window.history.back()} className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-100 border-b border-gray-200" aria-label="Volver">
+          <AiOutlineLeft className="text-lg" /><span>Back</span>
         </button>
         <div className="flex-grow overflow-auto px-4 py-6 space-y-6">
           <LeftMenu
@@ -204,32 +205,19 @@ const Boleteria = () => {
         </div>
       </aside>
 
+      {/* Toggle sidebar mobile */}
       <div className="md:hidden fixed top-2 left-2 z-50">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 rounded bg-white shadow-md focus:outline-none"
-          aria-label="Toggle menu"
-        >
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded bg-white shadow-md" aria-label="Toggle menu">
           <AiOutlineMenu className="text-xl" />
         </button>
       </div>
 
+      {/* Sidebar mobile */}
       {sidebarOpen && (
         <aside className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setSidebarOpen(false)}>
-          <div
-            className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-xl overflow-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-100 border-b border-gray-200 w-full"
-              onClick={() => {
-                setSidebarOpen(false);
-                window.history.back();
-              }}
-              aria-label="Volver"
-            >
-              <AiOutlineLeft className="text-lg" />
-              <span>Back</span>
+          <div className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-xl overflow-auto" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => { setSidebarOpen(false); window.history.back(); }} className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-100 border-b border-gray-200 w-full" aria-label="Volver">
+              <AiOutlineLeft className="text-lg" /><span>Back</span>
             </button>
             <div className="px-4 py-6 space-y-6">
               <LeftMenu
@@ -247,26 +235,38 @@ const Boleteria = () => {
         </aside>
       )}
 
+      {/* Main content */}
       <main className="flex-1 flex flex-col h-full min-w-0">
         <div className="hidden md:flex flex-grow space-x-6 min-h-0 overflow-hidden">
           <section className="flex-1 h-full min-h-0 bg-white rounded-lg shadow-md overflow-auto">
-            <ZonesAndPrices
-              ref={zonesRef}
-              eventos={eventos}
-              selectedEvent={selectedEvent}
-              onEventSelect={onEventSelect}
-              funciones={funciones}
-              onShowFunctions={() => setIsFunctionsModalVisible(true)}
-              selectedFuncion={selectedFuncion}
-              selectedClient={selectedClient}
-              abonos={clientAbonos}
-              carrito={carrito}
-              setCarrito={setCarrito}
-              selectedPlantilla={selectedPlantilla}
-              selectedAffiliate={selectedAffiliate}
-              setSelectedAffiliate={setSelectedAffiliate}
-              
+          <ZonesAndPrices
+            ref={zonesRef}
+            eventos={eventos}
+            selectedEvent={selectedEvent}
+            onEventSelect={onEventSelect}
+            funciones={funciones}
+            onShowFunctions={() => setIsFunctionsModalVisible(true)}
+            selectedFuncion={selectedFuncion}
+            selectedClient={selectedClient}
+            abonos={clientAbonos}
+            carrito={carrito}
+            setCarrito={setCarrito}
+            selectedPlantilla={selectedPlantilla}
+            selectedAffiliate={selectedAffiliate}
+            setSelectedAffiliate={setSelectedAffiliate}
+          />
+          {/* Add SeatingMapUnified below for better seat rendering */}
+          {selectedFuncion && (
+            <SeatingMapUnified
+              funcionId={selectedFuncion.id || selectedFuncion._id}
+              mapa={selectedFuncion.mapa || { zonas: [] }}
+              lockSeat={lockSeat}
+              unlockSeat={unlockSeat}
+              isSeatLocked={isSeatLocked}
+              isSeatLockedByMe={isSeatLockedByMe}
+              onSeatToggle={handleSeatToggle}
             />
+          )}
           </section>
 
           <aside className="h-full bg-white rounded-lg shadow-md flex flex-col overflow-auto w-96 min-w-[300px]">
@@ -279,13 +279,12 @@ const Boleteria = () => {
               setSelectedClient={setSelectedClient}
               selectedAffiliate={selectedAffiliate}
             >
-              {allTicketsPaid && (
-                <DownloadTicketButton locator={carrito[0].locator} />
-              )}
+              {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
             </Cart>
           </aside>
         </div>
 
+        {/* Mobile layout */}
         <div className="flex flex-col md:hidden flex-grow min-h-0 overflow-auto space-y-6 p-4 bg-white rounded-lg shadow-md">
           <section className="min-h-[300px]">
             <ZonesAndPrices
@@ -316,9 +315,7 @@ const Boleteria = () => {
               setSelectedClient={setSelectedClient}
               selectedAffiliate={selectedAffiliate}
             >
-              {allTicketsPaid && (
-                <DownloadTicketButton locator={carrito[0].locator} />
-              )}
+              {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
             </Cart>
           </section>
         </div>

@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useMemo, useCallback, useImperativeHandle, forwardRef } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useImperativeHandle, forwardRef, useRef } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
 import { fetchMapa, fetchZonasPorSala, fetchAbonoAvailableSeats } from '../../../services/supabaseServices';
 import { fetchSeatsByFuncion } from '../../services/supabaseSeats';
 import { fetchDescuentoPorCodigo } from '../../../store/services/apistore';
-import { unlockSeat } from '../../services/seatLocks';
+import { useSeatLockStore } from '../../../components/seatLockStore'; 
 import API_BASE_URL from '../../../utils/apiBase';
 import resolveImageUrl from '../../../utils/resolveImageUrl';
 
@@ -34,6 +34,44 @@ const [mapa, setMapa] = useState(null);
   const [tempBlocks, setTempBlocks] = useState([]);
   const [abonoMode, setAbonoMode] = useState(false);
   const [abonoSeats, setAbonoSeats] = useState([]);
+  const unlockSeatRef = useRef(useSeatLockStore.getState().unlockSeat);
+
+// Memoize detallesPlantilla to avoid recalculations
+const detallesPlantillaMemo = React.useMemo(() => {
+  if (!selectedPlantilla?.detalles) return [];
+  if (Array.isArray(selectedPlantilla.detalles)) return selectedPlantilla.detalles;
+  try {
+    if (typeof selectedPlantilla.detalles === 'string') {
+      const parsed = JSON.parse(selectedPlantilla.detalles);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+    return Array.isArray(selectedPlantilla.detalles)
+      ? selectedPlantilla.detalles
+      : Object.values(selectedPlantilla.detalles);
+  } catch {
+    return [];
+  }
+}, [selectedPlantilla]);
+
+// Memoize zonePriceRanges to avoid recalculations
+const zonePriceRangesMemo = React.useMemo(() => {
+  const ranges = {};
+  detallesPlantillaMemo.forEach((d) => {
+    const zonaId = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
+    const nombre = d.zona?.nombre || d.zonaId || d.zona;
+    const precio = getPrecioConDescuento(d);
+    if (!ranges[zonaId]) {
+      ranges[zonaId] = { nombre, min: precio, max: precio };
+    } else {
+      ranges[zonaId].min = Math.min(ranges[zonaId].min, precio);
+      ranges[zonaId].max = Math.max(ranges[zonaId].max, precio);
+    }
+  });
+  return ranges;
+}, [detallesPlantillaMemo, appliedDiscount]);
+
+// Replace detallesPlantilla and zonePriceRanges usage with memoized versions in the component
+
 
   const onSeatsUpdated = useCallback((ids, estado) => {
     setMapa((prev) => {
@@ -107,9 +145,12 @@ const [mapa, setMapa] = useState(null);
     return ranges;
   }, [detallesPlantilla, appliedDiscount]);
 
-  useEffect(() => {
+useEffect(() => {
     const loadData = async () => {
-      const salaId = selectedFuncion?.sala?._id || selectedFuncion?.sala;
+      let salaId = selectedFuncion?.sala;
+      if (typeof salaId === 'object' && salaId !== null) {
+        salaId = salaId._id || salaId.id || null;
+      }
       const funcionId = selectedFuncion?.id || selectedFuncion?._id;
       if (salaId) {
         try {
@@ -118,6 +159,7 @@ const [mapa, setMapa] = useState(null);
             fetchZonasPorSala(salaId),
             funcionId ? fetchSeatsByFuncion(funcionId) : Promise.resolve([]),
           ]);
+          console.log('Loaded mapa:', m);
 
           const seatMap = seats.reduce((acc, s) => {
             acc[s.id || s._id] = { estado: s.estado, bloqueado: s.bloqueado };
@@ -126,16 +168,19 @@ const [mapa, setMapa] = useState(null);
 
           const mapped = {
             ...m,
-            contenido: m.contenido.map(el => ({
-              ...el,
-              sillas: el.sillas.map(s => {
-                const st = seatMap[s._id || s.id];
-                if (!st) return s;
-                const estado = st.bloqueado ? 'bloqueado' : st.estado || s.estado;
-                return { ...s, estado };
-              })
-            }))
+            contenido: Array.isArray(m.contenido)
+              ? m.contenido.map(el => ({
+                  ...el,
+                  sillas: el.sillas.map(s => {
+                    const st = seatMap[s._id || s.id];
+                    if (!st) return s;
+                    const estado = st.bloqueado ? 'bloqueado' : st.estado || s.estado;
+                    return { ...s, estado };
+                  })
+                }))
+              : [],
           };
+          
 
           setMapa(mapped);
           setZonas(Array.isArray(zs) ? zs : []);
@@ -292,7 +337,7 @@ const [mapa, setMapa] = useState(null);
   useEffect(() => {
     const cleanupTemp = () => {
       tempBlocks.forEach(id => {
-        unlockSeat(id).catch(() => {});
+        unlockSeatRef.current(id).catch(() => {});
       });
     };
     window.addEventListener('beforeunload', cleanupTemp);
@@ -301,6 +346,7 @@ const [mapa, setMapa] = useState(null);
       window.removeEventListener('beforeunload', cleanupTemp);
     };
   }, [tempBlocks]);
+  
 
   const handleApplyDiscount = async () => {
     if (!discountCode.trim()) return;

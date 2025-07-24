@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { getDatabaseInstance } from "../services/firebaseClient";
-import { ref, onValue, off, update } from "firebase/database";
+/* Removed Firebase imports as per user request */
+// import { getDatabaseInstance } from "../services/firebaseClient";
+// import { ref, onValue, off, update } from "firebase/database";
 import normalizeSeatId from "../utils/normalizeSeatId";
 import useSeatLocksArray from "../store/hooks/useSeatLocksArray";
 import getCartSessionId from "../utils/getCartSessionId";
 import normalizeSeatStatus from "../utils/normalizeSeatStatus";
 import "./SeatMap.css";
 
-const SeatMap = ({ funcionId }) => {
+const SeatMap = ({ funcionId, onSeatToggle }) => {
   const [seats, setSeats] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState({});
   const [loading, setLoading] = useState(true);
@@ -18,114 +19,37 @@ const SeatMap = ({ funcionId }) => {
   useEffect(() => {
     if (!funcionId) return;
 
-    const dbPromise = getDatabaseInstance();
-
-    let seatsRef;
-    let unsubscribe;
-
-    const fetchSeats = async () => {
-      try {
-        setLoading(true);
-        const db = await dbPromise;
-        if (!db) {
-          setLoading(false);
-          return;
-        }
-        seatsRef = ref(db, `seats/${funcionId}`);
-
-        const handler = (snapshot) => {
-          const data = snapshot.val() || {};
-          const seatsArray = Object.entries(data).map(([key, seat]) => ({
-            id: key,
-            ...seat,
-            status: normalizeSeatStatus(seat.status),
-          }));
-
-          const selectedMap = {};
-          seatsArray.forEach((seat) => {
-            if (seat.status === "selected" || seat.status === "blocked" || seat.status === "bloqueado") {
-              selectedMap[seat.id] = {
-                id: seat.id,
-                status: seat.status,
-                selectedBy: seat.selected_by || null,
-              };
-            }
-          });
-
-          setSeats(seatsArray);
-          setSelectedSeats(selectedMap);
-          setLoading(false);
-        };
-
-        onValue(seatsRef, handler);
-        unsubscribe = () => off(seatsRef, "value", handler);
-      } catch (err) {
-        console.error("Error fetching seats from Firebase:", err);
-        setLoading(false);
-      }
-    };
-
-    fetchSeats();
-
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
+    // Removed Firebase fetching logic as per user request
+    setSeats([]);
+    setSelectedSeats({});
+    setLoading(false);
   }, [funcionId]);
 
-  const handleSeatSelect = async (seatId) => {
+  const handleSeatSelect = (seatId) => {
     if (!seatId) return;
-    try {
-      const currentSeat = seats.find((s) => s.id === seatId);
-      const sessionId = getCartSessionId();
+    // Simplified seat selection logic without Firebase
+    const currentSeat = seats.find((s) => s.id === seatId);
+    if (!currentSeat) return;
 
-      if (!currentSeat) return;
+    const isCurrentlySelected = selectedSeats[seatId];
+    const newSelectedSeats = { ...selectedSeats };
 
-      // Check if seat is locked by another session
-      if (
-        (currentSeat.status === "blocked" || currentSeat.status === "bloqueado") ||
-        (currentSeat.status === "selected" && currentSeat.selected_by !== sessionId)
-      ) {
-        alert("Este asiento ya está seleccionado por otro usuario");
-        return;
-      }
+    if (isCurrentlySelected) {
+      delete newSelectedSeats[seatId];
+    } else {
+      newSelectedSeats[seatId] = currentSeat;
+    }
 
-      const isCurrentlySelected =
-        selectedSeats[seatId] && selectedSeats[seatId].selectedBy === sessionId;
-      const newStatus = isCurrentlySelected ? "available" : "selected";
+    setSelectedSeats(newSelectedSeats);
 
-      const db = await getDatabaseInstance();
-      if (!db) return;
-
-      const seatRef = ref(db, `seats/${funcionId}/${seatId}`);
-
-      // Update seat status and selected_by in Firebase Realtime Database
-      await update(seatRef, {
-        status: newStatus,
-        selected_by: isCurrentlySelected ? null : sessionId,
-        selected_at: isCurrentlySelected ? null : new Date().toISOString(),
-      });
-
-      // Lock or unlock seat in Firebase Realtime Database
-      if (firebaseEnabled) {
-        if (isCurrentlySelected) {
-          // Unlock seat
-          const lockRef = ref(db, `in-cart/${funcionId}/${normalizeSeatId(seatId)}`);
-          await update(lockRef, null);
-        } else {
-          // Lock seat
-          const lockRef = ref(db, `in-cart/${funcionId}/${normalizeSeatId(seatId)}`);
-          await update(lockRef, {
-            status: "bloqueado",
-            session_id: sessionId,
-            seatDetails: {
-              // Add any seat details if needed
-            },
-            expires: Date.now() + 10 * 60 * 1000, // 10 minutes lock expiry
-          });
-        }
-      }
-    } catch (err) {
-      console.error("Error al seleccionar asiento:", err);
+    if (onSeatToggle) {
+      const seatData = {
+        id: currentSeat.id,
+        name: currentSeat.name,
+        status: isCurrentlySelected ? 'available' : 'selected',
+        selected_by: null,
+      };
+      onSeatToggle(seatData);
     }
   };
 

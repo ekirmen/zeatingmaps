@@ -9,9 +9,11 @@
     "build": "react-scripts build",
     "preview": "serve -s build",
     "eject": "react-scripts eject",
-    "vercel-build": "npm install && npm run build"
+    "vercel-build": "npm install && npm run build",
+    "test": "react-scripts test"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@rc-component/qrcode": "~1.0.0",
@@ -27,7 +29,6 @@
     "draft-js-import-html": "^1.4.1",
     "eslint-config-react-app": "^7.0.1",
     "fabric": "^6.5.3",
-    "firebase": "^10.14.1",
     "i18next": "^23.8.1",
     "konva": "^9.3.16",
     "leaflet": "^1.9.4",
@@ -47,10 +48,13 @@
     "react-toastify": "^11.0.5",
     "roboto-font": "^0.1.0",
     "uuid": "^11.1.0",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
+    "@testing-library/react-hooks": "^8.0.1",
     "autoprefixer": "^10.4.21",
+    "canvas": "^3.1.2",
     "postcss": "^8.5.4",
     "tailwindcss": "^3.4.1",
     "typescript": "^4.9.5"

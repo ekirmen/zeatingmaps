@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
-import { useCart } from '../../contexts/CartContext';
 import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
 import { loadMetaPixel } from '../utils/analytics';
 import { supabase } from '../../supabaseClient';
+import { useCartStore } from '../../store/cartStore';
 import downloadTicket from '../../utils/downloadTicket';
 
 const PaymentSuccess = () => {
+  const addToCart = useCartStore(state => state.addToCart);
   const params = useParams();
   const location = useLocation();
   const locator = location.state?.locator || params.locator;
   const emailSent = location.state?.emailSent;
   const navigate = useNavigate();
   const { refParam } = useRefParam();
-  const { setCart } = useCart();
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
 
@@ -75,7 +75,7 @@ const PaymentSuccess = () => {
       return;
     }
 
-    setCart(
+    addToCart(
       payment.seats.map(seat => ({
         _id: seat.id,
         nombre: seat.name,

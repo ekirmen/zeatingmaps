@@ -1,7 +1,6 @@
 // src/hooks/useEventData.js
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { useCart } from '../../contexts/CartContext';
 import { fetchMapa, fetchPlantillaPrecios, getFunciones, getMapaPorEvento, fetchDescuentoPorCodigo } from '../services/apistore';
 import { fetchZonasPorSala } from '../../services/supabaseServices';
 import { fetchSeatsByFuncion, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
@@ -15,6 +14,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { ref, runTransaction, set } from 'firebase/database';
 import { db, isFirebaseEnabled, auth } from '../../services/firebaseClient';
 import { signInAnonymously } from 'firebase/auth';
+import { supabase } from '../../supabaseClient';
 
 const normalizeId = (obj) => ({ ...obj, id: obj.id || obj._id });
 
