@@ -197,7 +197,7 @@ const Pay = () => {
           .map(item => lockSeat(item._id, 'reservado', funcionId))
       );
 
-      navigate('/payment-success', { state: { locator, emailSent: false } });
+      navigate(`/payment-success/${locator}`, { state: { locator, emailSent: false } });
     } catch (error) {
       console.error('Reservation error:', error);
       toast.error('Error al procesar la reserva');
@@ -269,7 +269,7 @@ const Pay = () => {
           .map(item => lockSeat(item._id, 'pagado', funcionId))
       );
 
-      navigate('/payment-success', { state: { locator, emailSent: true } });
+      navigate(`/payment-success/${locator}`, { state: { locator, emailSent: true } });
     } catch (error) {
       console.error('Payment error:', error);
       toast.error("Error al procesar el pago");

@@ -29,7 +29,9 @@ const StoreApp = () => {
   const location = useLocation();
   const { user, updateProfile } = useAuth();
 
-  const showHeader = location.pathname.startsWith('/store') || location.pathname === '/payment-success';
+  const showHeader =
+    location.pathname.startsWith('/store') ||
+    location.pathname.startsWith('/payment-success');
   const showFooter = location.pathname.startsWith('/store');
 
   return (
@@ -57,7 +59,7 @@ const StoreApp = () => {
               <Route path="/store/search-map" element={<EventSearchMap />} />
               <Route path="/store/faq" element={<FaqPage />} />
               <Route path="/store/perfil" element={<Profile userData={user} onUpdateProfile={updateProfile} />} />
-              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/payment-success/:locator?" element={<PaymentSuccess />} />
               <Route path="/404" element={<NotFoundPage />} />
               <Route path="*" element={<Navigate to="/404" />} />
             </Routes>
