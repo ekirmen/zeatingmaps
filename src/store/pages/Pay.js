@@ -60,7 +60,10 @@ const Pay = () => {
         acc[s._id] = estado;
         return acc;
       }, {});
-      return !carrito.some(it => ['reservado', 'pagado'].includes(seatMap[it._id]));
+      return !carrito.some(it => {
+        const seatId = it._id || it.sillaId;
+        return ['reservado', 'pagado'].includes(seatMap[seatId]);
+      });
     } catch (err) {
       console.error('Error verifying seat availability', err);
       return false;
@@ -159,10 +162,10 @@ const Pay = () => {
         return;
       }
       const seatsPayload = carrito.map(item => ({
-        id: item._id,
+        id: item._id || item.sillaId,
         name: item.nombre || '',
         price: item.precio,
-        zona: { id: item.zona, nombre: item.zonaNombre },
+        zona: { id: item.zona || item.zonaId, nombre: item.zonaNombre },
         mesa: { nombre: item.nombreMesa }
       }));
       const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
@@ -188,17 +191,20 @@ const Pay = () => {
 
       await Promise.all(
         carrito.map(item => {
-          if (!item._id || !item.zona) {
+          const seatId = item._id || item.sillaId;
+          const zonaId = item.zona || item.zonaId;
+          if (!seatId || !zonaId) {
             console.error('Invalid seat data for reservation:', item);
             return Promise.resolve();
           }
-          return createOrUpdateSeat(item._id, funcionId, item.zona, { status: 'reservado' });
+          return createOrUpdateSeat(seatId, funcionId, zonaId, { status: 'reservado' });
         })
       );
       await Promise.all(
         carrito
-          .filter(item => isUuid(item._id))
-          .map(item => lockSeat(item._id, 'reservado', funcionId))
+          .map(item => item._id || item.sillaId)
+          .filter(isUuid)
+          .map(seatId => lockSeat(seatId, 'reservado', funcionId))
       );
 
       navigate(`/payment-success/${locator}`, { state: { locator, emailSent: false } });
@@ -234,10 +240,10 @@ const Pay = () => {
         return;
       }
       const seatsPayload = carrito.map(item => ({
-        id: item._id,
+        id: item._id || item.sillaId,
         name: item.nombre || '',
         price: item.precio,
-        zona: { id: item.zona, nombre: item.zonaNombre },
+        zona: { id: item.zona || item.zonaId, nombre: item.zonaNombre },
         mesa: { nombre: item.nombreMesa }
       }));
       const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
@@ -264,17 +270,20 @@ const Pay = () => {
 
       await Promise.all(
         carrito.map(item => {
-          if (!item._id || !item.zona) {
+          const seatId = item._id || item.sillaId;
+          const zonaId = item.zona || item.zonaId;
+          if (!seatId || !zonaId) {
             console.error('Invalid seat data for payment:', item);
             return Promise.resolve();
           }
-          return createOrUpdateSeat(item._id, funcionId, item.zona, { status: 'pagado' });
+          return createOrUpdateSeat(seatId, funcionId, zonaId, { status: 'pagado' });
         })
       );
       await Promise.all(
         carrito
-          .filter(item => isUuid(item._id))
-          .map(item => lockSeat(item._id, 'pagado', funcionId))
+          .map(item => item._id || item.sillaId)
+          .filter(isUuid)
+          .map(seatId => lockSeat(seatId, 'pagado', funcionId))
       );
 
       navigate(`/payment-success/${locator}`, { state: { locator, emailSent: true } });
