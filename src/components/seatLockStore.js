@@ -73,7 +73,7 @@ export const useSeatLockStore = create((set, get) => ({
       console.log('[SEAT_LOCK] Cargando bloqueos iniciales para función:', funcionId);
       const { data, error } = await supabase
         .from('seat_locks')
-        .select('*')
+        .select('seat_id, session_id, locked_at, status')
         .eq('funcion_id', funcionId);
 
       if (error) {
@@ -133,7 +133,7 @@ export const useSeatLockStore = create((set, get) => ({
     }
   },
 
-  lockSeat: async (seatId) => {
+  lockSeat: async (seatId, status = 'bloqueado', overrideFuncionId = null) => {
     const topic = get().channel?.topic;
     const sessionId = await getAuthenticatedUserId();
 
@@ -144,7 +144,7 @@ export const useSeatLockStore = create((set, get) => ({
 
     localStorage.setItem('anonSessionId', sessionId);
 
-    const funcionId = topic?.split('seat-locks-channel-')[1];
+    const funcionId = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
     if (!funcionId) {
       console.warn('[SEAT_LOCK] funcion_id inválido');
       return false;
@@ -162,12 +162,15 @@ export const useSeatLockStore = create((set, get) => ({
 
     const lockedAt = new Date().toISOString();
 
-    const { error } = await supabase.from('seat_locks').insert({
-      seat_id: seatId,
-      funcion_id: parseInt(funcionId),
-      session_id: sessionId,
-      locked_at: lockedAt,
-    });
+    const { error } = await supabase
+      .from('seat_locks')
+      .upsert({
+        seat_id: seatId,
+        funcion_id: parseInt(funcionId),
+        session_id: sessionId,
+        locked_at: lockedAt,
+        status,
+      });
 
     if (error) {
       console.error('[SEAT_LOCK] Error al bloquear asiento:', error);
@@ -178,14 +181,20 @@ export const useSeatLockStore = create((set, get) => ({
     set((state) => ({
       lockedSeats: [
         ...state.lockedSeats.filter((s) => s.seat_id !== seatId),
-        { seat_id: seatId, funcion_id: parseInt(funcionId), session_id: sessionId, locked_at: lockedAt },
+        {
+          seat_id: seatId,
+          funcion_id: parseInt(funcionId),
+          session_id: sessionId,
+          locked_at: lockedAt,
+          status,
+        },
       ],
     }));
 
     return true;
   },
 
-  unlockSeat: async (seatId) => {
+  unlockSeat: async (seatId, overrideFuncionId = null) => {
     const topic = get().channel?.topic;
     const sessionId = await getAuthenticatedUserId();
 
@@ -196,7 +205,7 @@ export const useSeatLockStore = create((set, get) => ({
 
     localStorage.setItem('anonSessionId', sessionId);
 
-    const funcionId = topic?.split('seat-locks-channel-')[1];
+    const funcionId = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
     if (!funcionId) {
       console.warn('[SEAT_LOCK] funcion_id inválido');
       return false;

@@ -444,7 +444,7 @@ const useEventData = (eventIdOrSlug) => {
                 try {
                     await Promise.all([
                         createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'reservado' }),
-                        lockSeat(silla._id, 'reservado', selectedFunctionId, { seatDetails: seatItemData })
+                        lockSeat(silla._id, 'reservado', selectedFunctionId)
                     ]);
                     dbOperationSuccess = true;
                     console.log(`[useEventData DEBUG] Asiento ${silla._id} reservado en Supabase.`);

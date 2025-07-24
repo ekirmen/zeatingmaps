@@ -22,7 +22,7 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
     try {
       const { data, error } = await supabase
         .from('seat_locks')
-        .select('seat_id, session_id, locked_at')
+        .select('seat_id, session_id, locked_at, status')
         .eq('funcion_id', funcionId);
 
       if (error) throw error;
