@@ -57,11 +57,15 @@ export const useCartStore = create(
             const filtered = cart.filter(
               (item) => (item.sillaId || item.id || item._id) !== seatId
             );
-            set({ cart: filtered });
-            await useSeatLockStore.getState().unlockSeat(seatId);
+            const newState = { cart: filtered };
             if (filtered.length === 0) {
               clearExpirationTimer();
+              newState.cartExpiration = null;
+              newState.timeLeft = 0;
+              newState.functionId = null;
             }
+            set(newState);
+            await useSeatLockStore.getState().unlockSeat(seatId);
             toast.success('Asiento eliminado del carrito');
           } else {
             const updated = [...cart, seat];
@@ -88,7 +92,14 @@ export const useCartStore = create(
         removeFromCart: async (seatId) => {
           const { cart } = get();
           const filtered = cart.filter(item => (item._id || item.id) !== seatId);
-          set({ cart: filtered });
+          const newState = { cart: filtered };
+          if (filtered.length === 0) {
+            clearExpirationTimer();
+            newState.cartExpiration = null;
+            newState.timeLeft = 0;
+            newState.functionId = null;
+          }
+          set(newState);
           await useSeatLockStore.getState().unlockSeat(seatId);
           toast.success('Asiento eliminado del carrito');
         },

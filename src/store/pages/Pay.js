@@ -187,9 +187,13 @@ const Pay = () => {
       }
 
       await Promise.all(
-        carrito.map(item =>
-          createOrUpdateSeat(item._id, funcionId, item.zona, { status: 'reservado' })
-        )
+        carrito.map(item => {
+          if (!item._id || !item.zona) {
+            console.error('Invalid seat data for reservation:', item);
+            return Promise.resolve();
+          }
+          return createOrUpdateSeat(item._id, funcionId, item.zona, { status: 'reservado' });
+        })
       );
       await Promise.all(
         carrito
@@ -259,9 +263,13 @@ const Pay = () => {
       }
 
       await Promise.all(
-        carrito.map(item =>
-          createOrUpdateSeat(item._id, funcionId, item.zona, { status: 'pagado' })
-        )
+        carrito.map(item => {
+          if (!item._id || !item.zona) {
+            console.error('Invalid seat data for payment:', item);
+            return Promise.resolve();
+          }
+          return createOrUpdateSeat(item._id, funcionId, item.zona, { status: 'pagado' });
+        })
       );
       await Promise.all(
         carrito
