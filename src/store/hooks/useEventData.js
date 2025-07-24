@@ -440,16 +440,16 @@ const useEventData = (eventIdOrSlug) => {
 
         if (isAdding) {
             if (!firebaseEnabled) {
-                console.log(`[useEventData DEBUG] Firebase deshabilitado. Bloqueando asiento ${silla._id} en Supabase.`);
+                console.log(`[useEventData DEBUG] Firebase deshabilitado. Reservando asiento ${silla._id} en Supabase.`);
                 try {
                     await Promise.all([
-                        createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'bloqueado' }),
-                        lockSeat(silla._id, 'bloqueado', selectedFunctionId, { seatDetails: seatItemData })
+                        createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'reservado' }),
+                        lockSeat(silla._id, 'reservado', selectedFunctionId, { seatDetails: seatItemData })
                     ]);
                     dbOperationSuccess = true;
-                    console.log(`[useEventData DEBUG] Asiento ${silla._id} bloqueado en Supabase.`);
+                    console.log(`[useEventData DEBUG] Asiento ${silla._id} reservado en Supabase.`);
                 } catch (err) {
-                    console.error('[useEventData DEBUG] Error al bloquear asiento en Supabase (Firebase deshabilitado):', err);
+                    console.error('[useEventData DEBUG] Error al reservar asiento en Supabase (Firebase deshabilitado):', err);
                     alert('Lo siento, el asiento ya no está disponible. Por favor, intenta de nuevo.');
                 }
             } else {

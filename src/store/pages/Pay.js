@@ -197,14 +197,14 @@ const Pay = () => {
             console.error('Invalid seat data for reservation:', item);
             return Promise.resolve();
           }
-          return createOrUpdateSeat(seatId, funcionId, zonaId, { status: 'reservado' });
+          return createOrUpdateSeat(seatId, funcionId, zonaId, { status: 'bloqueado' });
         })
       );
       await Promise.all(
         carrito
           .map(item => item._id || item.sillaId)
           .filter(isUuid)
-          .map(seatId => lockSeat(seatId, 'reservado', funcionId))
+          .map(seatId => lockSeat(seatId, 'bloqueado', funcionId))
       );
 
       navigate(`/payment-success/${locator}`, { state: { locator, emailSent: false } });
