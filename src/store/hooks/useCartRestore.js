@@ -3,7 +3,7 @@ import { useCartStore } from '../cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 
 const useCartRestore = () => {
-  const { cart, cartExpiration, clearCart } = useCartStore();
+  const { cart, cartExpiration, clearCart, functionId } = useCartStore();
   const { unlockSeat } = useSeatLockStore();
   const ranRef = useRef(false);
 
@@ -15,7 +15,12 @@ const useCartRestore = () => {
 
     if (cartExpiration && cartExpiration < now) {
       cart.forEach((seat) => {
-        if (seat.sillaId) unlockSeat(seat.sillaId);
+        if (seat.sillaId || seat.id || seat._id) {
+          unlockSeat(
+            seat.sillaId || seat.id || seat._id,
+            seat.functionId || seat.funcionId || functionId
+          );
+        }
       });
 
       clearCart();

@@ -107,7 +107,12 @@ export const useCartStore = create(
         clearCart: async () => {
           const { cart } = get();
           for (const s of cart) {
-            await useSeatLockStore.getState().unlockSeat(s._id || s.id);
+            await useSeatLockStore
+              .getState()
+              .unlockSeat(
+                s._id || s.id,
+                s.functionId || s.funcionId || get().functionId
+              );
           }
           set({ cart: [], functionId: null, cartExpiration: null, timeLeft: 0 });
           clearExpirationTimer();
