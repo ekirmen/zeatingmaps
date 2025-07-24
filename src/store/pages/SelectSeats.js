@@ -101,7 +101,7 @@ const SelectSeats = () => {
                       y={y}
                       radius={10}
                       fill={
-                        silla.estado === 'reservado' ? 'red' :
+                        silla.estado === 'reservado' ? '#555' :
                         silla.estado === 'pagado' ? 'gray' :
                         (silla.estado === 'seleccionado' || silla.estado === 'bloqueado') ? 'orange' :
                         selectedSeats.some(s => s._id === silla._id) ? 'blue' :
