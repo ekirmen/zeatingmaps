@@ -221,6 +221,14 @@ export const useSeatLockStore = create((set, get) => ({
       return false;
     }
   
+    const currentLock = get().lockedSeats.find(
+      s => s.seat_id === seatId && s.session_id === sessionId
+    );
+    if (currentLock?.status === 'pagado') {
+      console.warn('[SEAT_LOCK] No se puede desbloquear un asiento pagado');
+      return false;
+    }
+
     const { error } = await supabase
       .from('seat_locks')
       .delete()
