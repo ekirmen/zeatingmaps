@@ -44,57 +44,28 @@ export const createOrUpdateSeat = async (seatId, funcionId, zonaId, payload) => 
   }
 
   try {
-    // Attempt to find the seat by its _id (UUID) and funcion_id
-    const { data: existingSeat, error: fetchError } = await supabase
+    // Use upsert with the composite unique constraint to avoid duplicate
+    // rows and minimize round trips.
+    const insertPayload = {
+      _id: seatId,
+      funcion_id: funcionId,
+      zona: zonaId,
+      ...payload,
+    };
+
+    const { data, error } = await supabase
       .from('seats')
-      .select('*')
-      .eq('_id', seatId) // Use .eq() for exact match on UUID primary key
-      .eq('funcion_id', funcionId)
-      .maybeSingle(); // Use maybeSingle() to get a single record or null
+      .upsert(insertPayload, { onConflict: 'funcion_id,_id' })
+      .select()
+      .single();
 
-    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 indicates no rows found, which is expected for new seats
-      console.error('Error checking for existing seat in Supabase:', fetchError.message);
-      throw fetchError;
-    }
-
-    let result;
-    if (existingSeat) {
-      // If the seat already exists, update its properties
-      console.log(`Updating existing seat: ${seatId} for funcion: ${funcionId}`);
-      const { data, error } = await supabase
-        .from('seats')
-        .update(payload)
-        .eq('_id', seatId) // Crucial fix: Use .eq() for UUID primary key
-        .eq('funcion_id', funcionId) // Also match on funcion_id for safety and specificity
-        .select(); // Return the updated row
-
-      result = { data, error };
-    } else {
-      // If the seat does not exist, insert a new record
-      console.log(`Inserting new seat: ${seatId} for funcion: ${funcionId}`);
-      // Ensure all NOT NULL columns are provided for insertion
-      const insertPayload = {
-        _id: seatId, // Provide the UUID for insertion
-        funcion_id: funcionId,
-        zona: zonaId, // Assuming 'zona' is the correct column name and is NOT NULL
-        ...payload
-      };
-
-      const { data, error } = await supabase
-        .from('seats')
-        .insert([insertPayload])
-        .select(); // Return the inserted row
-
-      result = { data, error };
-    }
-
-    if (result.error) {
-      console.error('Supabase operation failed (createOrUpdateSeat):', result.error.message);
-      throw result.error;
+    if (error) {
+      console.error('Supabase operation failed (createOrUpdateSeat):', error.message);
+      throw error;
     }
 
     console.log(`Seat ${seatId} operation successful.`);
-    return result.data; // Return the first (and only) item if successful
+    return data;
   } catch (error) {
     console.error('Error in createOrUpdateSeat:', error.message);
     throw error; // Re-throw to allow calling context to handle
