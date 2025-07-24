@@ -201,8 +201,10 @@ export const syncSeatsForSala = async (salaId) => {
         bloqueado: false,
       }));
     if (newSeats.length > 0) {
-      // Use upsert instead of insert to avoid duplicates and recursion
-      const { error: upsertErr } = await supabase.from('seats').upsert(newSeats, { onConflict: '_id' });
+      // Use upsert with the composite key to avoid duplicates
+      const { error: upsertErr } = await supabase
+        .from('seats')
+        .upsert(newSeats, { onConflict: 'funcion_id,_id' });
       handleError(upsertErr);
     }
   }
