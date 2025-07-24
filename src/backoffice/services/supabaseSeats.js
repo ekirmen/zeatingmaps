@@ -44,8 +44,7 @@ export const createOrUpdateSeat = async (seatId, funcionId, zonaId, payload) => 
   }
 
   try {
-    // Use upsert with the composite unique constraint to avoid duplicate
-    // rows and minimize round trips.
+    // Build the payload for insert/update operations
     const insertPayload = {
       _id: seatId,
       funcion_id: funcionId,
@@ -53,19 +52,53 @@ export const createOrUpdateSeat = async (seatId, funcionId, zonaId, payload) => 
       ...payload,
     };
 
-    const { data, error } = await supabase
+    // Check if the seat already exists to avoid relying on ON CONFLICT,
+    // which requires a database constraint that might not be present.
+    const { data: existingSeat, error: selectError } = await supabase
       .from('seats')
-      .upsert(insertPayload, { onConflict: 'funcion_id,_id' })
-      .select()
+      .select('id')
+      .eq('_id', seatId)
+      .eq('funcion_id', funcionId)
       .single();
 
-    if (error) {
-      console.error('Supabase operation failed (createOrUpdateSeat):', error.message);
-      throw error;
+    if (selectError && selectError.code !== 'PGRST116') {
+      console.error('Error checking existing seat:', selectError.message);
+      throw selectError;
+    }
+
+    let result;
+    if (existingSeat) {
+      // Seat exists, perform an update
+      const { data, error } = await supabase
+        .from('seats')
+        .update(insertPayload)
+        .eq('_id', seatId)
+        .eq('funcion_id', funcionId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating seat:', error.message);
+        throw error;
+      }
+      result = data;
+    } else {
+      // Seat does not exist, insert a new row
+      const { data, error } = await supabase
+        .from('seats')
+        .insert(insertPayload)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error inserting seat:', error.message);
+        throw error;
+      }
+      result = data;
     }
 
     console.log(`Seat ${seatId} operation successful.`);
-    return data;
+    return result;
   } catch (error) {
     console.error('Error in createOrUpdateSeat:', error.message);
     throw error; // Re-throw to allow calling context to handle
