@@ -1,7 +1,13 @@
--- Migration to add session_id column to seat_locks table and update RLS policies
+-- Migration to add funcion_id and session_id columns to seat_locks table and update RLS policies
 
 ALTER TABLE public.seat_locks
+ADD COLUMN IF NOT EXISTS funcion_id integer REFERENCES funciones(id) ON DELETE CASCADE,
 ADD COLUMN IF NOT EXISTS session_id uuid;
+
+-- Ensure composite primary key on (funcion_id, seat_id)
+ALTER TABLE public.seat_locks
+DROP CONSTRAINT IF EXISTS seat_locks_pkey,
+ADD PRIMARY KEY (funcion_id, seat_id);
 
 -- Drop existing policies to recreate them
 DROP POLICY IF EXISTS "Allow insert with session_id" ON public.seat_locks;
