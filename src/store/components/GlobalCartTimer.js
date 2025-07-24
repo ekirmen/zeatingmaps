@@ -4,7 +4,7 @@ import { useCartStore } from '../cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore'; // el store global
 
 function GlobalCartTimer() {
-  const { cart, cartExpiration, clearCart } = useCartStore();
+  const { cart, cartExpiration, clearCart, functionId } = useCartStore();
   const unlockSeat = useSeatLockStore(state => state.unlockSeat);
 
   useEffect(() => {
@@ -19,7 +19,10 @@ function GlobalCartTimer() {
         });
 
         for (const item of cart) {
-          await unlockSeat(item.sillaId);
+          await unlockSeat(
+            item.sillaId || item.id || item._id,
+            item.functionId || item.funcionId || functionId
+          );
         }
 
         clearCart();
