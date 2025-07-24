@@ -364,7 +364,7 @@ const useEventData = (eventIdOrSlug) => {
 
     const toggleSillaEnCarrito = useCallback(async (silla, mesa) => {
         const zonaId = silla?.zona || mesa?.zona;
-        if (!zonaId || ['reservado', 'pagado'].includes(silla?.estado) || silla?.bloqueado) {
+        if (!zonaId || ['reservado', 'pagado', 'bloqueado'].includes(silla?.estado) || silla?.bloqueado) {
             console.warn(`[useEventData DEBUG] Intento de seleccionar silla no disponible: ${silla._id} (estado: ${silla?.estado})`);
             return;
         }
