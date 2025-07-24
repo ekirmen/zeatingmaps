@@ -133,7 +133,7 @@ export const useSeatLockStore = create((set, get) => ({
     }
   },
 
-  lockSeat: async (seatId, status = 'bloqueado', overrideFuncionId = null) => {
+  lockSeat: async (seatId, status = 'seleccionado', overrideFuncionId = null) => {
     const topic = get().channel?.topic;
     const sessionId = await getAuthenticatedUserId();
 
@@ -224,8 +224,8 @@ export const useSeatLockStore = create((set, get) => ({
     const currentLock = get().lockedSeats.find(
       s => s.seat_id === seatId && s.session_id === sessionId
     );
-    if (currentLock?.status === 'pagado' || currentLock?.status === 'bloqueado') {
-      console.warn('[SEAT_LOCK] No se puede desbloquear un asiento pagado o bloqueado');
+    if (currentLock?.status === 'pagado' || currentLock?.status === 'reservado') {
+      console.warn('[SEAT_LOCK] No se puede desbloquear un asiento pagado o reservado');
       return false;
     }
 

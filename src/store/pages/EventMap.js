@@ -28,7 +28,7 @@ function EventMap({ mapa, toggleSillaEnCarrito }) {
           {elemento.sillas && elemento.sillas.length > 0 && (
             <div className="flex flex-wrap justify-center gap-2">
               {elemento.sillas.map((silla) => {
-                const isUnavailable = ['reservado', 'pagado', 'bloqueado'].includes(silla?.estado);
+                const isUnavailable = ['reservado', 'pagado', 'seleccionado', 'bloqueado'].includes(silla?.estado);
                 const isSelected = silla.selected;
 
                 let seatClasses = `

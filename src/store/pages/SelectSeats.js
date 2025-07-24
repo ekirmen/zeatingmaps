@@ -45,7 +45,7 @@ const SelectSeats = () => {
   }, []);
 
   const toggleSeatSelection = (seat) => {
-    if (['reservado', 'pagado', 'bloqueado'].includes(seat.estado)) {
+    if (['reservado', 'pagado', 'seleccionado', 'bloqueado'].includes(seat.estado)) {
       return;
     }
     if (selectedSeats.some(s => s._id === seat._id)) {
@@ -103,7 +103,7 @@ const SelectSeats = () => {
                       fill={
                         silla.estado === 'reservado' ? 'red' :
                         silla.estado === 'pagado' ? 'gray' :
-                        silla.estado === 'bloqueado' ? 'orange' :
+                        (silla.estado === 'seleccionado' || silla.estado === 'bloqueado') ? 'orange' :
                         selectedSeats.some(s => s._id === silla._id) ? 'blue' :
                         silla.color || 'lightblue'
                       }
