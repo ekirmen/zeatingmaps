@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
 
+function isValidUuid(value) {
+  return (
+    typeof value === 'string' &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
+  );
+}
+
 function getOrCreateAnonymousSessionId() {
   let sessionId = localStorage.getItem('anonSessionId');
   if (!sessionId) {
@@ -117,8 +124,13 @@ export const useSeatLockStore = create((set, get) => ({
       return false;
     }
 
-    if (!sessionId) {
-      console.warn('[SEAT_LOCK] session_id inválido');
+    if (!isValidUuid(sessionId)) {
+      console.warn('[SEAT_LOCK] session_id inválido', sessionId);
+      return false;
+    }
+
+    if (!isValidUuid(seatId)) {
+      console.warn('[SEAT_LOCK] seat_id inválido', seatId);
       return false;
     }
 
@@ -150,10 +162,20 @@ export const useSeatLockStore = create((set, get) => ({
   unlockSeat: async (seatId) => {
     const topic = get().channel?.topic;
     const sessionId = getOrCreateAnonymousSessionId();
-  
+
     const funcionId = topic?.split('seat-locks-channel-')[1];
     if (!funcionId) {
       console.warn('[SEAT_LOCK] funcion_id inválido');
+      return false;
+    }
+
+    if (!isValidUuid(sessionId)) {
+      console.warn('[SEAT_LOCK] session_id inválido', sessionId);
+      return false;
+    }
+
+    if (!isValidUuid(seatId)) {
+      console.warn('[SEAT_LOCK] seat_id inválido', seatId);
       return false;
     }
   
