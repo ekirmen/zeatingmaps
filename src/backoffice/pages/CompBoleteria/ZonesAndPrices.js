@@ -22,12 +22,13 @@ const ZonesAndPrices = ({
   abonos = [],
   selectedAffiliate,
   setSelectedAffiliate,
+  showSeatingMap = true,
 }, ref) => {
 const [mapa, setMapa] = useState(null);
   const [zonas, setZonas] = useState([]);
   const [selectedZonaId, setSelectedZonaId] = useState(null);
   const [zoneQuantities, setZoneQuantities] = useState({});
-  const [viewMode, setViewMode] = useState('map');
+  const [viewMode, setViewMode] = useState(showSeatingMap ? 'map' : 'zonas');
   const [discountCode, setDiscountCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [blockMode, setBlockMode] = useState(false);
@@ -501,22 +502,24 @@ useEffect(() => {
         </div>
       )}
 
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setViewMode('map')}
-          className={`px-3 py-1 rounded ${viewMode === 'map' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-        >
-          Mapa
-        </button>
-        <button
-          type="button"
-          onClick={() => setViewMode('zonas')}
-          className={`px-3 py-1 rounded ${viewMode === 'zonas' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-        >
-          Zonas
-        </button>
-      </div>
+      {showSeatingMap && (
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setViewMode('map')}
+            className={`px-3 py-1 rounded ${viewMode === 'map' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          >
+            Mapa
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('zonas')}
+            className={`px-3 py-1 rounded ${viewMode === 'zonas' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          >
+            Zonas
+          </button>
+        </div>
+      )}
 
       <div className="flex gap-2 items-center">
         <input
@@ -554,7 +557,7 @@ useEffect(() => {
         </label>
       </div>
 
-      {viewMode === 'map' ? (
+      {showSeatingMap && viewMode === 'map' ? (
         mapa ? (
           <>
             {zonas.length > 0 && (

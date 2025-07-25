@@ -255,6 +255,7 @@ const Boleteria = () => {
             selectedPlantilla={selectedPlantilla}
             selectedAffiliate={selectedAffiliate}
             setSelectedAffiliate={setSelectedAffiliate}
+            showSeatingMap={false}
           />
           {/* Add SeatingMapUnified below for better seat rendering */}
           {selectedFuncion && (
@@ -301,9 +302,10 @@ const Boleteria = () => {
               carrito={carrito}
               setCarrito={setCarrito}
               selectedPlantilla={selectedPlantilla}
-              selectedAffiliate={selectedAffiliate}
-              setSelectedAffiliate={setSelectedAffiliate}
-            />
+            selectedAffiliate={selectedAffiliate}
+            setSelectedAffiliate={setSelectedAffiliate}
+            showSeatingMap={false}
+          />
           </section>
 
           <section>
