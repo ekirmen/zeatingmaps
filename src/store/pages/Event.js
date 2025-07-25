@@ -130,6 +130,7 @@ function EventPage() {
               isSeatLocked={isSeatLocked}
               isSeatLockedByMe={isSeatLockedByMe}
               onSeatToggle={handleSeatToggle}
+              onSeatInfo={() => {}}
             />
           ) : (
             <div className="text-gray-500 text-center py-6">
