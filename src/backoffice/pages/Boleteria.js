@@ -37,6 +37,8 @@ const Boleteria = () => {
   const unlockSeat = seatLockStore.unlockSeat;
   const isSeatLocked = seatLockStore.isSeatLocked;
   const isSeatLockedByMe = seatLockStore.isSeatLockedByMe;
+  const subscribeToFunction = seatLockStore.subscribeToFunction;
+  const unsubscribe = seatLockStore.unsubscribe;
   const unlockSeatRef = useRef(seatLockStore.unlockSeat);
   const zonesRef = useRef(null);
   const mobileZonesRef = useRef(null);
@@ -58,6 +60,17 @@ const Boleteria = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
   const [clientAbonos, setClientAbonos] = useState([]);
+
+  useEffect(() => {
+    if (!selectedFuncion) return;
+    const id = selectedFuncion.id || selectedFuncion._id;
+    if (id) {
+      subscribeToFunction(id);
+    }
+    return () => {
+      unsubscribe();
+    };
+  }, [selectedFuncion, subscribeToFunction, unsubscribe]);
 
   const handleSeatToggle = (seat) => {
     const exists = carrito.some(item => item._id === seat._id);
