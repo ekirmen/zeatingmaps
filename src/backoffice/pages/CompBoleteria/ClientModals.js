@@ -31,12 +31,21 @@ const ClientModals = ({
       // Ensure it exists and is accessible via RLS for the 'anon' role
       // if this search is meant for public or unauthenticated users.
       // If it requires admin privileges, ensure supabaseAdmin is used and available.
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('profiles_with_auth')
         .select('id, login, nombre, telefono, empresa, email')
         .or(
           `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
         );
+
+      if (error && error.code === '42P01') {
+        ({ data, error } = await supabase
+          .from('profile_view')
+          .select('id, login, nombre, telefono, empresa, email')
+          .or(
+            `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
+          ));
+      }
 
       if (error) throw error;
 

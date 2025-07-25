@@ -13,12 +13,22 @@ export const useClientManagement = (setCarrito) => {
   const handleClientSearch = async (searchTerm) => {
     setSearchLoading(true);
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('profiles_with_auth')
         .select('id, login, nombre, apellido, telefono, empresa, email')
         .or(
           `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
         );
+
+      if (error && error.code === '42P01') {
+        // relation does not exist, try profile_view instead
+        ({ data, error } = await supabase
+          .from('profile_view')
+          .select('id, login, nombre, apellido, telefono, empresa, email')
+          .or(
+            `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
+          ));
+      }
 
       if (error) throw error;
       return data.map((p) => ({
