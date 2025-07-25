@@ -40,6 +40,7 @@ export default async function handler(req, res) {
     const pdfBytes = await pdfDoc.save();
 
     res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="ticket-${locator}.pdf"`);
     return res.status(200).send(Buffer.from(pdfBytes));
   } catch (err) {
     console.error('Error generating ticket:', err);

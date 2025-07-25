@@ -6,12 +6,29 @@ export default async function downloadTicket(locator) {
   const url = `${API_BASE_URL}/api/payments/${locator}/download`;
   try {
     const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Debe iniciar sesi\u00f3n para descargar el ticket');
+      throw new Error('Missing auth token');
+    }
+
     const response = await fetch(url, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     const contentType = response.headers.get('Content-Type');
-    if (!response.ok) throw new Error('Failed to download ticket');
+    if (!response.ok) {
+      let errorMessage = 'Failed to download ticket';
+      if (contentType?.includes('application/json')) {
+        try {
+          const data = await response.json();
+          errorMessage = data?.error || errorMessage;
+        } catch {
+          // ignore JSON parse errors
+        }
+      }
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
+    }
     if (!contentType?.includes('application/pdf')) {
       toast.error('No se pudo descargar el ticket');
       throw new Error('Invalid content type');
