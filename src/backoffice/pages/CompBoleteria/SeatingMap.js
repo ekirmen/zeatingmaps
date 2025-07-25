@@ -10,6 +10,7 @@ const SeatingMap = ({
   abonoMode = false,
   abonoSeats = [],
   tempBlocks = [],
+  containerRef,
 }) => {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(1);
@@ -141,7 +142,10 @@ const SeatingMap = ({
   const stageHeight = window.innerWidth < 640 ? window.innerHeight * 0.6 : window.innerHeight * 0.7;
 
   return (
-    <div className="seating-map mx-auto p-2 bg-white rounded-lg shadow-md w-full max-w-screen-lg h-[60vh] sm:h-[70vh]">
+    <div
+      ref={containerRef}
+      className="seating-map mx-auto p-2 bg-white rounded-lg shadow-md w-full max-w-screen-lg h-[60vh] sm:h-[70vh]"
+    >
       <Stage
         ref={stageRef}
         width={stageWidth}

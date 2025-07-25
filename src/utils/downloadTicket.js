@@ -11,7 +11,8 @@ export default async function downloadTicket(locator) {
 
     if (!response.ok) throw new Error('Failed to download ticket');
 
-    const blob = await response.blob();
+    const arrayBuffer = await response.arrayBuffer();
+    const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
     const blobUrl = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = blobUrl;
