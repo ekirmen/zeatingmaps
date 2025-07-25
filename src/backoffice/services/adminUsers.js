@@ -15,11 +15,24 @@ export const getUserByEmail = async (email) => {
   }
 
   // Fallback for libraries that removed getUserByEmail.
-  const { data, error } = await client
+  // Try querying the expected `profiles_with_auth` view first. If it doesn't
+  // exist (returns 404) or any other error occurs, fall back to a more generic
+  // `profile_view` if available. This helps installations that renamed the view
+  // or already expose the necessary join under a different name.
+  let { data, error } = await client
     .from('profiles_with_auth')
     .select('id, email')
     .eq('email', email)
-    .single();
+    .maybeSingle();
+
+  if (error && error.code === '42P01') {
+    // relation does not exist: attempt profile_view instead
+    ({ data, error } = await client
+      .from('profile_view')
+      .select('id, email')
+      .eq('email', email)
+      .maybeSingle());
+  }
 
   if (error || !data) {
     return { data: null, error: error || new Error('User not found') };
