@@ -1,4 +1,5 @@
 import API_BASE_URL from './apiBase';
+import { toast } from 'react-hot-toast';
 
 export default async function downloadTicket(locator) {
   if (!locator) throw new Error('Invalid locator');
@@ -9,9 +10,18 @@ export default async function downloadTicket(locator) {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
 
+    const contentType = response.headers.get('Content-Type');
     if (!response.ok) throw new Error('Failed to download ticket');
+    if (!contentType?.includes('application/pdf')) {
+      toast.error('No se pudo descargar el ticket');
+      throw new Error('Invalid content type');
+    }
 
     const arrayBuffer = await response.arrayBuffer();
+    if (!arrayBuffer.byteLength) {
+      toast.error('No se pudo descargar el ticket');
+      throw new Error('Empty PDF');
+    }
     const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
     const blobUrl = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
