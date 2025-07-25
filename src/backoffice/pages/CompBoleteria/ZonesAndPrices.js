@@ -36,6 +36,7 @@ const [mapa, setMapa] = useState(null);
   const [abonoMode, setAbonoMode] = useState(false);
   const [abonoSeats, setAbonoSeats] = useState([]);
   const unlockSeatRef = useRef(useSeatLockStore.getState().unlockSeat);
+  const mapContainerRef = useRef(null);
 
 // Memoize detallesPlantilla to avoid recalculations
 const detallesPlantillaMemo = React.useMemo(() => {
@@ -407,6 +408,14 @@ useEffect(() => {
     setZoneQuantities(prev => ({ ...prev, [zonaId]: '' }));
   };
 
+  const handleSelectZoneForMap = (zonaId) => {
+    setViewMode('map');
+    setSelectedZonaId(zonaId);
+    setTimeout(() => {
+      mapContainerRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 0);
+  };
+
   const handleAddSingleZoneTicket = (zona) => {
     const zonaId = zona.id || zona._id;
     const zonaNombre = zona.nombre;
@@ -607,6 +616,7 @@ useEffect(() => {
               tempBlocks={tempBlocks}
               abonoMode={abonoMode}
               abonoSeats={abonoSeats}
+              containerRef={mapContainerRef}
             />
           </>
         ) : (
@@ -646,6 +656,13 @@ useEffect(() => {
                           className="px-2 py-1 bg-blue-600 text-white rounded"
                         >
                           Añadir
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectZoneForMap(zonaId)}
+                          className="ml-2 px-2 py-1 bg-yellow-600 text-white rounded"
+                        >
+                          Seleccionar
                         </button>
                       </td>
                     </tr>
