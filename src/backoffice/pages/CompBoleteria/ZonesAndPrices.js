@@ -54,24 +54,7 @@ const detallesPlantillaMemo = React.useMemo(() => {
   }
 }, [selectedPlantilla]);
 
-// Memoize zonePriceRanges to avoid recalculations
-const zonePriceRangesMemo = React.useMemo(() => {
-  const ranges = {};
-  detallesPlantillaMemo.forEach((d) => {
-    const zonaId = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
-    const nombre = d.zona?.nombre || d.zonaId || d.zona;
-    const precio = getPrecioConDescuento(d);
-    if (!ranges[zonaId]) {
-      ranges[zonaId] = { nombre, min: precio, max: precio };
-    } else {
-      ranges[zonaId].min = Math.min(ranges[zonaId].min, precio);
-      ranges[zonaId].max = Math.max(ranges[zonaId].max, precio);
-    }
-  });
-  return ranges;
-}, [detallesPlantillaMemo, appliedDiscount]);
-
-// Replace detallesPlantilla and zonePriceRanges usage with memoized versions in the component
+// Replace detallesPlantilla usage with memoized versions in the component
 
 
   const onSeatsUpdated = useCallback((ids, estado) => {
@@ -133,17 +116,17 @@ const zonePriceRangesMemo = React.useMemo(() => {
   const zonePriceRanges = useMemo(() => {
     const ranges = {};
     detallesPlantilla.forEach((d) => {
-      const zonaId = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
       const nombre = d.zona?.nombre || d.zonaId || d.zona;
       const precio = getPrecioConDescuento(d);
-      if (!ranges[zonaId]) {
-        ranges[zonaId] = { nombre, min: precio, max: precio };
+      if (!ranges[nombre]) {
+        ranges[nombre] = { nombre, min: precio, max: precio };
       } else {
-        ranges[zonaId].min = Math.min(ranges[zonaId].min, precio);
-        ranges[zonaId].max = Math.max(ranges[zonaId].max, precio);
+        ranges[nombre].min = Math.min(ranges[nombre].min, precio);
+        ranges[nombre].max = Math.max(ranges[nombre].max, precio);
       }
     });
-    return ranges;
+    // Sort ranges by minimum price
+    return Object.values(ranges).sort((a, b) => a.min - b.min);
   }, [detallesPlantilla, appliedDiscount]);
 
 useEffect(() => {
@@ -209,6 +192,10 @@ useEffect(() => {
     const zonaId = seat.zona;
     const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
 
+    if (!selectedClient) {
+      message.info('Seleccione un cliente antes de agregar asientos');
+    }
+
     if (blockMode) {
       const action = seat.estado === 'bloqueado' ? 'unblock' : 'block';
       if (exists) {
@@ -241,7 +228,12 @@ useEffect(() => {
       const id = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
       return id === zonaId;
     });
-    const basePrice = detalle?.precio || 0;
+    if (!detalle) {
+      message.error('Zona sin precio configurado');
+      return;
+    }
+
+    const basePrice = detalle.precio || 0;
 
     let finalPrice = basePrice;
     let tipoPrecio = 'normal';
@@ -378,6 +370,10 @@ useEffect(() => {
     const qty = parseInt(zoneQuantities[zonaId], 10);
     if (!qty || qty <= 0) return;
 
+    if (!selectedClient) {
+      message.info('Seleccione un cliente antes de agregar asientos');
+    }
+
     const zonaNombre = detalle.zona?.nombre || detalle.zonaId || detalle.zona;
     const precio = getPrecioConDescuento(detalle);
     let tipoPrecio = 'normal';
@@ -418,7 +414,14 @@ useEffect(() => {
       const id = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
       return id === zonaId;
     });
-    if (!detalle) return;
+    if (!detalle) {
+      message.error('Zona sin precio configurado');
+      return;
+    }
+
+    if (!selectedClient) {
+      message.info('Seleccione un cliente antes de agregar asientos');
+    }
 
     const precio = getPrecioConDescuento(detalle);
     let tipoPrecio = 'normal';
@@ -585,9 +588,9 @@ useEffect(() => {
                 })}
               </div>
             )}
-            {Object.keys(zonePriceRanges).length > 0 && (
+            {zonePriceRanges.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2">
-                {Object.values(zonePriceRanges).map(zr => (
+                {zonePriceRanges.map(zr => (
                   <div key={zr.nombre} className="text-xs bg-gray-100 rounded px-2 py-1">
                     <strong>{zr.nombre}</strong>{' '}
                     {zr.min === zr.max ? `$${zr.min.toFixed(2)}` : `$${zr.min.toFixed(2)} - $${zr.max.toFixed(2)}`}
