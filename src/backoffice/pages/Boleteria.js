@@ -23,6 +23,7 @@ const Boleteria = () => {
     selectedFuncion,
     selectedEvent,
     selectedPlantilla,
+    mapa,
     carrito,
     setCarrito,
     handleEventSelect,
@@ -259,7 +260,7 @@ const Boleteria = () => {
           {selectedFuncion && (
             <SeatingMapUnified
               funcionId={selectedFuncion.id || selectedFuncion._id}
-              mapa={selectedFuncion.mapa || { zonas: [] }}
+              mapa={mapa || { zonas: [] }}
               lockSeat={lockSeat}
               unlockSeat={unlockSeat}
               isSeatLocked={isSeatLocked}
