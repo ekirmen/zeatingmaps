@@ -77,6 +77,9 @@ const Boleteria = () => {
     if (exists) {
       setCarrito(prev => prev.filter(item => item._id !== seat._id));
     } else {
+      if (!selectedClient) {
+        message.info('Seleccione un cliente antes de agregar asientos');
+      }
       setCarrito(prev => [...prev, { ...seat, funcionId: selectedFuncion.id || selectedFuncion._id }]);
     }
   };
