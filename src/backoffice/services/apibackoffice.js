@@ -382,4 +382,16 @@ export const fetchPaymentByLocator = async (locator) => {
   handleError(error);
   return data;
 };
+
+export const fetchPaymentBySeat = async (funcionId, seatId) => {
+  const client = supabaseAdmin || supabase;
+  const { data, error } = await client
+    .from('payments')
+    .select('*, seats, funcion, event:eventos(*), user:profiles!usuario_id(*)')
+    .eq('funcion', funcionId)
+    .contains('seats', [{ id: seatId }])
+    .single();
+  handleError(error);
+  return data;
+};
 // Puedes seguir migrando más entidades según este mismo patrón.

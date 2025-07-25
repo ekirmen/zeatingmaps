@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { message } from 'antd';
+import { message, Modal, Button } from 'antd';
 import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
 
 import LeftMenu from './CompBoleteria/LeftMenu';
@@ -15,6 +15,8 @@ import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
 import { supabase } from '../services/supabaseClient';
 import { useSeatLockStore } from '../../components/seatLockStore';
+import { fetchPaymentBySeat } from '../services/apibackoffice';
+import downloadTicket from '../../utils/downloadTicket';
 
 const Boleteria = () => {
   const {
@@ -60,6 +62,8 @@ const Boleteria = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
   const [clientAbonos, setClientAbonos] = useState([]);
+  const [seatPayment, setSeatPayment] = useState(null);
+  const [isSeatModalVisible, setIsSeatModalVisible] = useState(false);
 
   useEffect(() => {
     if (!selectedFuncion) return;
@@ -81,6 +85,58 @@ const Boleteria = () => {
         message.info('Seleccione un cliente antes de agregar asientos');
       }
       setCarrito(prev => [...prev, { ...seat, funcionId: selectedFuncion.id || selectedFuncion._id }]);
+    }
+  };
+
+  const handleSeatInfo = async (seat) => {
+    if (!selectedFuncion) return;
+    try {
+      const data = await fetchPaymentBySeat(selectedFuncion.id || selectedFuncion._id, seat._id);
+      if (data) {
+        setSeatPayment(data);
+        setIsSeatModalVisible(true);
+      } else {
+        message.error('Ticket no encontrado');
+      }
+    } catch (err) {
+      console.error('Seat info error:', err);
+      message.error('Error al buscar ticket');
+    }
+  };
+
+  const loadPaymentIntoPOS = async (payment) => {
+    if (!payment) return;
+    if (payment.user) {
+      setSelectedClient(payment.user);
+    }
+    if (payment.seats) {
+      setCarrito(
+        payment.seats.map(seat => ({
+          _id: seat.id || seat._id,
+          nombre: seat.name,
+          precio: seat.price || 0,
+          nombreMesa: seat.mesa?.nombre || '',
+          zona: seat.zona?.nombre || 'General',
+          status: payment.status,
+          paymentId: payment.id,
+          locator: payment.locator,
+          funcionId: payment.funcion?.id || payment.funcion,
+          funcionFecha: payment.funcion?.fechaCelebracion,
+        }))
+      );
+    }
+    if (payment.event) setSelectedEvent(payment.event);
+    if (payment.funcion) await handleFunctionSelect(payment.funcion);
+    setIsSeatModalVisible(false);
+    message.success('Ticket cargado correctamente');
+  };
+
+  const handleDownloadSeatTicket = async () => {
+    if (!seatPayment?.locator) return;
+    try {
+      await downloadTicket(seatPayment.locator);
+    } catch {
+      message.error('Error al descargar ticket');
     }
   };
   
@@ -283,6 +339,7 @@ const Boleteria = () => {
               isSeatLocked={isSeatLocked}
               isSeatLockedByMe={isSeatLockedByMe}
               onSeatToggle={handleSeatToggle}
+              onSeatInfo={handleSeatInfo}
             />
           )}
           </section>
@@ -343,6 +400,23 @@ const Boleteria = () => {
       <ClientModals {...clientModalsProps} />
       <FunctionModal {...functionModalProps} />
       <PaymentModal {...paymentModalProps} />
+      <Modal
+        open={isSeatModalVisible}
+        onCancel={() => setIsSeatModalVisible(false)}
+        footer={[
+          <Button key="load" type="primary" onClick={() => loadPaymentIntoPOS(seatPayment)}>Cargar en POS</Button>,
+          seatPayment?.status === 'pagado' ? (
+            <Button key="dl" onClick={handleDownloadSeatTicket}>Descargar Ticket</Button>
+          ) : null
+        ]}
+      >
+        {seatPayment && (
+          <div className="space-y-2">
+            <p><strong>Localizador:</strong> {seatPayment.locator}</p>
+            <p><strong>Estado:</strong> {seatPayment.status}</p>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

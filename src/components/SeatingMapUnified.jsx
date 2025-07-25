@@ -10,6 +10,7 @@ const SeatingMapUnified = ({
   isSeatLocked,
   isSeatLockedByMe,
   onSeatToggle,
+  onSeatInfo,
 }) => {
   const channel = useSeatLockStore(state => state.channel);
   const canLockSeats = !!channel;
@@ -29,13 +30,18 @@ const SeatingMapUnified = ({
         return;
       }
 
+      if (['reservado', 'pagado'].includes(seat.estado)) {
+        if (onSeatInfo) onSeatInfo(seat);
+        return;
+      }
+
       const result = isSeatLocked(seatId)
         ? await unlockSeat(seatId)
         : await lockSeat(seatId);
 
       if (result) onSeatToggle(seat);
     },
-    [canLockSeats, lockSeat, unlockSeat, isSeatLocked, isSeatLockedByMe, onSeatToggle]
+    [canLockSeats, lockSeat, unlockSeat, isSeatLocked, isSeatLockedByMe, onSeatToggle, onSeatInfo]
   );
 
   // Fetch zones from "mapa". Some backends store the zones inside
