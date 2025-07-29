@@ -29,7 +29,11 @@ export default async function downloadTicket(locator) {
       toast.error(errorMessage);
       throw new Error(errorMessage);
     }
-    if (!contentType?.includes('application/pdf')) {
+    const validContent = contentType &&
+      (contentType.includes('application/pdf') ||
+       contentType.includes('application/octet-stream'));
+
+    if (!validContent) {
       toast.error('No se pudo descargar el ticket');
       throw new Error('Invalid content type');
     }
