@@ -106,6 +106,8 @@ const Boleteria = () => {
 
   const loadPaymentIntoPOS = async (payment) => {
     if (!payment) return;
+    if (payment.event) setSelectedEvent(payment.event);
+    if (payment.funcion) await handleFunctionSelect(payment.funcion);
     if (payment.user) {
       setSelectedClient(payment.user);
     }
@@ -125,8 +127,6 @@ const Boleteria = () => {
         }))
       );
     }
-    if (payment.event) setSelectedEvent(payment.event);
-    if (payment.funcion) await handleFunctionSelect(payment.funcion);
     setIsSeatModalVisible(false);
     message.success('Ticket cargado correctamente');
   };
