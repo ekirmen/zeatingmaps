@@ -11,6 +11,7 @@ const SeatingMapUnified = ({
   isSeatLockedByMe,
   onSeatToggle,
   onSeatInfo,
+  foundSeats = []
 }) => {
   const channel = useSeatLockStore(state => state.channel);
   const canLockSeats = !!channel;
@@ -56,6 +57,9 @@ const SeatingMapUnified = ({
     return <div>No map data available</div>;
   }
 
+  // Create a set of found seat IDs for quick lookup
+  const foundSeatIds = new Set(foundSeats.map(seat => seat._id));
+
   return (
     <>
       {!canLockSeats && (
@@ -76,9 +80,15 @@ const SeatingMapUnified = ({
                 const locked = isSeatLocked(seat._id);
                 const mine = isSeatLockedByMe(seat._id);
 
+                // Default fill colors
                 let fill = '#9ae6b4'; // Verde libre
                 if (locked && mine) fill = '#f6ad55'; // Naranja
                 else if (locked) fill = '#fc8181'; // Rojo
+
+                // Override fill if seat is found by locator search
+                if (foundSeatIds.has(seat._id)) {
+                  fill = '#38a169'; // Verde oscuro (darker green)
+                }
 
                 return (
                   <Group key={seat._id} x={seat.x} y={seat.y} onClick={() => handleSeatClick(seat)}>

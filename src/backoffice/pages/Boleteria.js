@@ -33,6 +33,23 @@ const Boleteria = () => {
     setSelectedEvent
   } = useBoleteria();
 
+  const [foundSeats, setFoundSeats] = React.useState([]);
+
+  const {
+    selectedClient,
+    setSelectedClient,
+    searchResults,
+    paymentResults,
+    searchLoading,
+    handleAddClient,
+    handleUnifiedSearch,
+    clearSearchResults,
+    handleLocatorSearch
+  } = useClientManagement((seats) => {
+    setCarrito(seats);
+    setFoundSeats(seats);
+  });
+
   const seatLockStore = useSeatLockStore();
 
   const lockSeat = seatLockStore.lockSeat;
@@ -44,17 +61,6 @@ const Boleteria = () => {
   const unlockSeatRef = useRef(seatLockStore.unlockSeat);
   const zonesRef = useRef(null);
   const mobileZonesRef = useRef(null);
-
-  const {
-    selectedClient,
-    setSelectedClient,
-    searchResults,
-    paymentResults,
-    searchLoading,
-    handleAddClient,
-    handleUnifiedSearch,
-    clearSearchResults
-  } = useClientManagement(setCarrito);
 
   const [isFunctionsModalVisible, setIsFunctionsModalVisible] = useState(false);
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
@@ -340,6 +346,7 @@ const Boleteria = () => {
               isSeatLockedByMe={isSeatLockedByMe}
               onSeatToggle={handleSeatToggle}
               onSeatInfo={handleSeatInfo}
+              foundSeats={foundSeats}
             />
           )}
           </section>

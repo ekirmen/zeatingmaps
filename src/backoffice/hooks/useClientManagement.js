@@ -98,7 +98,21 @@ export const useClientManagement = (setCarrito) => {
       if (error) throw error;
       if (!data.user) throw new Error('Client information not found in ticket');
 
-      setCarrito([data]);
+      // Map seats to cart items
+      const seatsForCart = (data.seats || []).map(seat => ({
+        _id: seat.id || seat._id,
+        nombre: seat.name || seat.nombre,
+        precio: seat.price || 0,
+        nombreMesa: seat.mesa?.nombre || '',
+        zona: seat.zona?.nombre || 'General',
+        status: data.status || 'unknown',
+        paymentId: data.id,
+        locator: data.locator,
+        funcionId: data.funcion?.id || data.funcion,
+        funcionFecha: data.funcion?.fechaCelebracion,
+      }));
+
+      setCarrito(seatsForCart);
       setSelectedClient(data.user);
       setSearchResults([data.user]);
       setClientError(null);
