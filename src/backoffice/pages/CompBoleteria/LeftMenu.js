@@ -101,9 +101,12 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
   const handleDownloadTicket = async (locator) => {
     try {
+      console.log('Attempting to download ticket for locator:', locator);
       await downloadTicket(locator);
-    } catch {
-      message.error('Error al descargar ticket');
+      message.success('Ticket descargado correctamente');
+    } catch (error) {
+      console.error('Error downloading ticket:', error);
+      message.error(`Error al descargar ticket: ${error.message}`);
     }
   };
 

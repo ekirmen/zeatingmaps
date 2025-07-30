@@ -51,5 +51,10 @@
       "destination": "/index.html",
       "statusCode": 404
     }
-  ]
+  ],
+  "functions": {
+    "api/payments/[locator]/download.js": {
+      "maxDuration": 30
+    }
+  }
 }
