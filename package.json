@@ -2,6 +2,9 @@
   "name": "ekirmen",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "homepage": "/store",
   "scripts": {
     "start": "react-scripts start",
