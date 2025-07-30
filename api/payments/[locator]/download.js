@@ -4,6 +4,15 @@ import QRCode from 'qrcode';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseAdmin =
+  supabaseUrl && supabaseServiceKey
+    ? createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      })
+    : null;
 
 console.log('Supabase URL:', supabaseUrl ? 'defined' : 'undefined');
 console.log('Supabase Service Role Key:', supabaseServiceKey ? 'defined' : 'undefined');
