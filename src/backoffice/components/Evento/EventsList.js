@@ -1,5 +1,4 @@
 import React from 'react';
-import API_BASE_URL from '../../../utils/apiBase';
 import resolveImageUrl from '../../../utils/resolveImageUrl';
 
 const EventsList = ({ 

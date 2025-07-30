@@ -17,11 +17,17 @@ const FunctionModal = ({
     };
   };
 
+  const formatFecha = (date) => {
+    if (!date) return '—';
+    const d = new Date(date);
+    return isNaN(d) ? '—' : d.toLocaleDateString('es-ES');
+  };
+
   const columns = [
     {
       title: 'Date',
       dataIndex: 'fechaCelebracion',
-      render: (date) => new Date(date).toLocaleDateString(),
+      render: (date) => formatFecha(date),
     },
     {
       title: 'Room',
@@ -37,8 +43,8 @@ const FunctionModal = ({
       title: 'Sale Period',
       render: (_, record) => (
         <span className="whitespace-nowrap">
-          {new Date(record.inicioVenta).toLocaleDateString()} to{' '}
-          {new Date(record.finVenta).toLocaleDateString()}
+          {formatFecha(record.inicioVenta)} to{' '}
+          {formatFecha(record.finVenta)}
         </span>
       ),
     },

@@ -3,41 +3,32 @@ import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
 import { useSeatLockStore } from '../components/seatLockStore';
 
-const LOCK_EXPIRATION_TIME_MS = 15 * 60 * 1000; // 15 minutos
+const LOCK_EXPIRATION_TIME_MS = 10 * 60 * 1000;
+let timer = null;
+
+const startExpirationTimer = () => {
+  clearExpirationTimer();
+  timer = setInterval(() => {
+    const { cartExpiration } = get();
+    const timeLeft = Math.max(0, Math.floor((cartExpiration - Date.now()) / 1000));
+    set({ timeLeft });
+    if (timeLeft <= 0) {
+      clearExpirationTimer();
+      set({ cart: [], cartExpiration: null, timeLeft: 0, functionId: null });
+      toast.error('Tu reserva ha expirado');
+      // Aquí puedes llamar a una función para refrescar locks
+    }
+  }, 1000);
+};
+
+const clearExpirationTimer = () => {
+  if (timer) clearInterval(timer);
+  timer = null;
+};
 
 export const useCartStore = create(
   persist(
     (set, get) => {
-      let timer = null;
-
-      const clearExpirationTimer = () => {
-        if (timer) {
-          clearInterval(timer);
-          timer = null;
-        }
-      };
-
-      const startExpirationTimer = () => {
-        clearExpirationTimer();
-        const expiration = Date.now() + LOCK_EXPIRATION_TIME_MS;
-        set({ cartExpiration: expiration });
-
-        timer = setInterval(() => {
-          const { cartExpiration, clearCart } = get();
-          if (!cartExpiration) return;
-
-          const remaining = cartExpiration - Date.now();
-          if (remaining <= 0) {
-            clearCart();
-            toast.error('Tu carrito ha expirado.');
-            clearInterval(timer);
-            timer = null;
-          } else {
-            set({ timeLeft: Math.floor(remaining / 1000) });
-          }
-        }, 1000);
-      };
-
       return {
         cart: [],
         functionId: null,
@@ -85,7 +76,10 @@ export const useCartStore = create(
           set({
             cart: seats,
             cartExpiration: newExpiration,
+            timeLeft: Math.floor(LOCK_EXPIRATION_TIME_MS / 1000),
+            functionId: funcionId,
           });
+          startExpirationTimer();
         },
 
         

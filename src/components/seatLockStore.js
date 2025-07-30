@@ -168,6 +168,7 @@ export const useSeatLockStore = create((set, get) => ({
     }
 
     const lockedAt = new Date().toISOString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
     const { error } = await supabase
       .from('seat_locks')
@@ -176,6 +177,7 @@ export const useSeatLockStore = create((set, get) => ({
         funcion_id: parseInt(funcionId),
         session_id: sessionId,
         locked_at: lockedAt,
+        expires_at: expiresAt,
         status,
       });
 
@@ -193,6 +195,7 @@ export const useSeatLockStore = create((set, get) => ({
           funcion_id: parseInt(funcionId),
           session_id: sessionId,
           locked_at: lockedAt,
+          expires_at: expiresAt,
           status,
         },
       ],

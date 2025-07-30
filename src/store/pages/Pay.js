@@ -22,6 +22,7 @@ const Pay = () => {
   const { refParam } = useRefParam();
   const { user } = useAuth();
   const lockSeat = useSeatLockStore(state => state.lockSeat);
+  const { clearCart } = useCartStore();
 
   // Accede de forma segura a los datos de navegación
   const { carrito: stateCarrito, funcionId: stateFuncionId } = location.state || {};
@@ -224,7 +225,8 @@ const Pay = () => {
     try {
       const available = await verifySeatsAvailable();
       if (!available) {
-        toast.error('Alguno de los asientos ya no está disponible');
+        toast.error('Alguno de los asientos ya no está disponible. Se liberó tu carrito.');
+        await clearCart();
         return;
       }
       if (!isUuid(user?.id)) {
@@ -289,7 +291,8 @@ const Pay = () => {
       navigate(`/payment-success/${locator}`, { state: { locator, emailSent: true } });
     } catch (error) {
       console.error('Payment error:', error);
-      toast.error("Error al procesar el pago");
+      toast.error("Error al procesar el pago. Se liberó tu carrito.");
+      await clearCart();
     }
   };
   

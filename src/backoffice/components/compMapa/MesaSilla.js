@@ -25,9 +25,6 @@ export const Mesa = ({
     posicion = { x: 0, y: 0 };
   }
 
-  // Fixed position for chair layout (140,140)
-  const chairLayoutPosition = { x: 140, y: 140 };
-
   const zona = zonas.find((z) => z.id === zonaId);
   const strokeColor = selected ? 'blue' : zona?.color || 'black';
   const fillColor = zona?.color || '#ccc';
@@ -145,9 +142,6 @@ export const Silla = ({
   const zona = zonas.find((z) => z.id === zonaId);
   const strokeColor = selected ? 'blue' : zona?.color || 'black';
   const fillColor = zona?.color || '#48bb78';
-
-  const textColor = '#fff';
-  const textSize = 12;
 
   return (
     <>

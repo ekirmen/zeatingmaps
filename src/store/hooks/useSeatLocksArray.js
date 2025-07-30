@@ -1,6 +1,8 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../supabaseClient';
 import { useSeatLockStore } from '../../components/seatLockStore';
+import { useCartStore } from '../cartStore';
+import { toast } from 'react-hot-toast';
 
 const LOCK_EXPIRATION_MINUTES = 15;
 
@@ -12,6 +14,7 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
     lockSeat,
     unlockSeat
   } = useSeatLockStore();
+  const { cart, removeFromCart } = useCartStore();
 
   const fetchLockedSeats = useCallback(async () => {
     if (!funcionId) {
@@ -22,15 +25,15 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
     try {
       const { data, error } = await supabase
         .from('seat_locks')
-        .select('seat_id, session_id, locked_at, status')
+        .select('seat_id, session_id, locked_at, status, expires_at')
         .eq('funcion_id', funcionId);
 
       if (error) throw error;
 
       const now = new Date();
       const validSeats = data.filter(item => {
-        const ageMinutes = (now - new Date(item.locked_at)) / 60000;
-        return ageMinutes <= LOCK_EXPIRATION_MINUTES;
+        if (!item.expires_at) return false;
+        return new Date(item.expires_at) > now;
       });
 
       console.log('[SEAT_LOCK_HOOK] Cargando asientos bloqueados:', validSeats);
@@ -81,6 +84,20 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
           } else if (payload.eventType === 'DELETE') {
             updatedSeats = updatedSeats.filter(s => s.seat_id !== payload.old.seat_id);
           }
+
+          // --- NUEVO: Si algún asiento del carrito ya no está disponible, avisar y eliminarlo ---
+          if (cart && cart.length > 0) {
+            const lockedIds = updatedSeats.map(s => s.seat_id);
+            cart.forEach(item => {
+              const seatId = item.sillaId || item.id || item._id;
+              if (!lockedIds.includes(seatId)) {
+                toast.error('Un asiento de tu carrito fue bloqueado o comprado por otro usuario.');
+                removeFromCart(seatId);
+              }
+            });
+          }
+          // --- FIN NUEVO ---
+
           return updatedSeats;
         });
       }
@@ -93,7 +110,7 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
         console.log('[SEAT_LOCK_HOOK] Canal eliminado en limpieza de efecto');
       }
     };
-  }, [funcionId, enabled, fetchLockedSeats, setLockedSeats]);
+  }, [funcionId, enabled, fetchLockedSeats, setLockedSeats, cart, removeFromCart]);
 
   const isSeatLocked = useCallback((seatId) => {
     return lockedSeats.some(s => s.seat_id === seatId);

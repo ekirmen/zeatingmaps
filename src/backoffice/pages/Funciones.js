@@ -31,6 +31,12 @@ const Funciones = () => {
     return plantilla ? plantilla.nombre : 'Plantilla eliminada';
   };
 
+  const formatFecha = (date) => {
+    if (!date) return '—';
+    const d = new Date(date);
+    return isNaN(d) ? '—' : d.toLocaleDateString('es-ES');
+  };
+
   // Fetch eventos when sala changes
   useEffect(() => {
     const fetchEventos = async () => {
@@ -333,12 +339,12 @@ const Funciones = () => {
         <tbody>
           {funciones.map(funcion => (
             <tr key={funcion.id}>
-              <td>{new Date(funcion.fechaCelebracion).toLocaleDateString()}</td>
+              <td>{formatFecha(funcion.fechaCelebracion)}</td>
               <td>{getEventoNombre(funcion.evento)}</td>
               <td>{salaSeleccionada?.nombre}</td>
               <td>{getPlantillaNombre(funcion.plantilla)}</td>
-              <td>{new Date(funcion.inicioVenta).toLocaleDateString()}</td>
-              <td>{new Date(funcion.finVenta).toLocaleDateString()}</td>
+              <td>{formatFecha(funcion.inicioVenta)}</td>
+              <td>{formatFecha(funcion.finVenta)}</td>
               <td>{funcion.pagoAPlazos ? 'Sí' : 'No'}</td>
               <td>{funcion.permitirReservasWeb ? 'Sí' : 'No'}</td>
               <td className="space-x-2">

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import API_BASE_URL from '../../../utils/apiBase';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { FaFacebookF } from 'react-icons/fa';
 
 /**
@@ -73,7 +72,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
       }
     };
     fetchMetodos();
-  }, []);
+  }, [setEventoData]);
 
   // When the selected event changes, update local form state
   useEffect(() => {

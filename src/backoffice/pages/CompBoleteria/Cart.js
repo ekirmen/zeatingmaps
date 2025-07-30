@@ -1,9 +1,10 @@
-import React, { useMemo, useCallback } from 'react';
-import { Button, message } from 'antd';
-import { AiOutlineClose } from 'react-icons/ai';
+import React, { useMemo, useCallback, useState } from 'react';
+import { Button, message, Dropdown, Menu, Modal } from 'antd';
+import { AiOutlineClose, AiOutlineMore } from 'react-icons/ai';
 import { createOrUpdateSeat, unlockSeat as updateSeatStatusInDB } from '../../services/supabaseSeats';
 import { useSeatLockStore } from '../../../components/seatLockStore';
 import { supabase } from '../../services/supabaseClient';
+import downloadTicket from '../../../utils/downloadTicket';
 
 const Cart = ({
   carrito,
@@ -15,7 +16,10 @@ const Cart = ({
   children,
 }) => {
   const addRealtimeLock = useSeatLockStore(state => state.lockSeat);
-const removeRealtimeLock = useSeatLockStore(state => state.unlockSeat);
+  const removeRealtimeLock = useSeatLockStore(state => state.unlockSeat);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const [selectedSeat, setSelectedSeat] = useState(null);
+  const [downloadingAll, setDownloadingAll] = useState(false);
 
   const subtotal = useMemo(
     () => carrito.reduce((sum, item) => sum + (item.precio || 0), 0),
@@ -93,19 +97,67 @@ const removeRealtimeLock = useSeatLockStore(state => state.unlockSeat);
     typeof price === 'number' ? price.toFixed(2) : '0.00'
   ), []);
 
+  // --- MENU DE DESCARGA ---
+  const handleDownloadSelected = async () => {
+    if (!selectedSeat) {
+      message.info('Selecciona un asiento para descargar su ticket');
+      return;
+    }
+    await downloadTicket(selectedSeat.locator);
+  };
+
+  const handleDownloadAll = async () => {
+    setDownloadingAll(true);
+    try {
+      // Descargar todos los tickets y combinarlos en un solo PDF
+      // Por simplicidad, descarga uno a uno (puedes mejorar con merge real de PDFs)
+      for (const item of carrito) {
+        await downloadTicket(item.locator);
+      }
+      message.success('Todos los tickets descargados');
+    } catch (err) {
+      message.error('Error al descargar los tickets');
+    }
+    setDownloadingAll(false);
+  };
+
+  const menu = (
+    <Menu onClick={({ key }) => {
+      setMenuVisible(false);
+      if (key === 'downloadSelected') handleDownloadSelected();
+      if (key === 'downloadAll') handleDownloadAll();
+    }}>
+      <Menu.Item key="downloadSelected" disabled={!selectedSeat}>
+        Descargar ticket seleccionado
+      </Menu.Item>
+      <Menu.Item key="downloadAll" disabled={carrito.length === 0 || downloadingAll}>
+        Descargar todos los tickets
+      </Menu.Item>
+    </Menu>
+  );
+
   return (
     <div className="bg-white shadow-md rounded-md p-4">
       <div className="flex justify-between items-center mb-4 border-b pb-2">
         <h3 className="text-lg font-semibold">Carrito de Compras</h3>
-        {carrito.length > 0 && (
-          <button
-            onClick={clearCart}
-            className="text-red-500 hover:text-red-700 transition"
-            title="Limpiar carrito"
-          >
-            <AiOutlineClose />
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {carrito.length > 0 && (
+            <Dropdown overlay={menu} trigger={["click"]} visible={menuVisible} onVisibleChange={setMenuVisible} placement="bottomRight">
+              <button className="text-gray-500 hover:text-gray-800" title="Opciones">
+                <AiOutlineMore size={20} />
+              </button>
+            </Dropdown>
+          )}
+          {carrito.length > 0 && (
+            <button
+              onClick={clearCart}
+              className="text-red-500 hover:text-red-700 transition"
+              title="Limpiar carrito"
+            >
+              <AiOutlineClose />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="max-h-[430px] overflow-y-auto space-y-2 pr-1">
@@ -118,7 +170,9 @@ const removeRealtimeLock = useSeatLockStore(state => state.unlockSeat);
             {group.items.map((item) => (
               <div
                 key={item.abonoGroup || `${item._id}-${item.funcionId || ''}`}
-                className="flex justify-between items-start bg-gray-50 p-2 rounded shadow-sm text-sm"
+                className={`flex justify-between items-start bg-gray-50 p-2 rounded shadow-sm text-sm ${selectedSeat && selectedSeat._id === item._id ? 'ring-2 ring-blue-400' : ''}`}
+                onClick={() => setSelectedSeat(item)}
+                style={{ cursor: 'pointer' }}
               >
                 <div className="truncate text-xs leading-tight">
                   {item.nombreMesa || item.nombre || 'Asiento'}
@@ -126,9 +180,10 @@ const removeRealtimeLock = useSeatLockStore(state => state.unlockSeat);
                   <div>${formatPrice(item.precio)}</div>
                 </div>
                 <button
-                  onClick={() =>
-                    handleRemoveSeat(item.abonoGroup || `${item._id}-${item.funcionId || ''}`)
-                  }
+                  onClick={e => {
+                    e.stopPropagation();
+                    handleRemoveSeat(item.abonoGroup || `${item._id}-${item.funcionId || ''}`);
+                  }}
                   className="text-gray-400 hover:text-red-500"
                 >
                   <AiOutlineClose />

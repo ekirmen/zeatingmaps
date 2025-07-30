@@ -4,7 +4,6 @@ import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit } from
 import { supabase } from '../../../supabaseClient';
 import { supabaseAdmin } from '../../services/supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
-import API_BASE_URL from '../../../utils/apiBase';
 import downloadTicket from '../../../utils/downloadTicket';
 
 const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito, setSelectedClient, onFunctionSelect, setSelectedEvent }) => {
