@@ -6,29 +6,31 @@ import { useSeatLockStore } from '../components/seatLockStore';
 const LOCK_EXPIRATION_TIME_MS = 10 * 60 * 1000;
 let timer = null;
 
-const startExpirationTimer = () => {
-  clearExpirationTimer();
-  timer = setInterval(() => {
-    const { cartExpiration } = get();
-    const timeLeft = Math.max(0, Math.floor((cartExpiration - Date.now()) / 1000));
-    set({ timeLeft });
-    if (timeLeft <= 0) {
-      clearExpirationTimer();
-      set({ cart: [], cartExpiration: null, timeLeft: 0, functionId: null });
-      toast.error('Tu reserva ha expirado');
-      // Aquí puedes llamar a una función para refrescar locks
-    }
-  }, 1000);
-};
-
-const clearExpirationTimer = () => {
-  if (timer) clearInterval(timer);
-  timer = null;
-};
-
 export const useCartStore = create(
   persist(
     (set, get) => {
+      const clearExpirationTimer = () => {
+        if (timer) clearInterval(timer);
+        timer = null;
+      };
+
+      const startExpirationTimer = () => {
+        clearExpirationTimer();
+        timer = setInterval(() => {
+          const { cartExpiration } = get();
+          const timeLeft = Math.max(
+            0,
+            Math.floor((cartExpiration - Date.now()) / 1000)
+          );
+          set({ timeLeft });
+          if (timeLeft <= 0) {
+            clearExpirationTimer();
+            set({ cart: [], cartExpiration: null, timeLeft: 0, functionId: null });
+            toast.error('Tu reserva ha expirado');
+          }
+        }, 1000);
+      };
+
       return {
         cart: [],
         functionId: null,
