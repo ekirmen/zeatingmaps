@@ -2,16 +2,16 @@ import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, rgb } from 'pdf-lib';
 import QRCode from 'qrcode';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseServiceKey =
-  process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.REACT_SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+console.log('Supabase URL:', supabaseUrl ? 'defined' : 'undefined');
+console.log('Supabase Service Role Key:', supabaseServiceKey ? 'defined' : 'undefined');
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Supabase environment variables are not defined');
 }
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 export default async function handler(req, res) {
   if (!supabaseUrl || !supabaseServiceKey) {
