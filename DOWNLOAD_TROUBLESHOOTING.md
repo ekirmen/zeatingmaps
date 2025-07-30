@@ -37,8 +37,8 @@ Se actualizó `vercel.json` para incluir:
 Asegúrate de tener estas variables configuradas en Vercel:
 
 ```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+REACT_SUPABASE_URL=your_supabase_url
+REACT_VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 

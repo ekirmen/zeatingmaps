@@ -3,7 +3,9 @@ import { PDFDocument, rgb } from 'pdf-lib';
 import QRCode from 'qrcode';
 
 const supabaseUrl =
-  process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  process.env.REACT_SUPABASE_URL ||
+  process.env.VITE_SUPABASE_URL ||
+  process.env.SUPABASE_URL;
 const supabaseServiceKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
 
