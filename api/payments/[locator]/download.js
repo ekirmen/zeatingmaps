@@ -2,18 +2,23 @@ import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, rgb } from 'pdf-lib';
 import QRCode from 'qrcode';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseServiceKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-console.log('Supabase URL:', supabaseUrl ? 'defined' : 'undefined');
-console.log('Supabase Service Role Key:', supabaseServiceKey ? 'defined' : 'undefined');
+console.log('Environment variables check:');
+console.log('- SUPABASE_URL:', process.env.SUPABASE_URL ? 'defined' : 'undefined');
+console.log('- REACT_APP_SUPABASE_URL:', process.env.REACT_APP_SUPABASE_URL ? 'defined' : 'undefined');
+console.log('- SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'defined' : 'undefined');
+console.log('- REACT_APP_SUPABASE_SERVICE_ROLE_KEY:', process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ? 'defined' : 'undefined');
+console.log('Final values:');
+console.log('- supabaseUrl:', supabaseUrl ? 'defined' : 'undefined');
+console.log('- supabaseServiceKey:', supabaseServiceKey ? 'defined' : 'undefined');
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Supabase environment variables are not defined');
 }
-
 
 export default async function handler(req, res) {
   console.log('Download endpoint called with method:', req.method);
@@ -98,13 +103,13 @@ export default async function handler(req, res) {
 
     // Datos principales
     let y = height - 90;
-    page.drawText(\`Localizador: \${payment.locator}\`, { x: 50, y, size: 13, color: rgb(0,0,0) });
+    page.drawText(`Localizador: ${payment.locator}`, { x: 50, y, size: 13, color: rgb(0,0,0) });
     y -= 25;
     if (payment.funcion) {
-      page.drawText(\`Función ID: \${payment.funcion}\`, { x: 50, y, size: 13, color: rgb(0,0,0) });
+      page.drawText(`Función ID: ${payment.funcion}`, { x: 50, y, size: 13, color: rgb(0,0,0) });
       y -= 25;
     }
-    page.drawText(\`Estado: \${payment.status}\`, { x: 50, y, size: 13, color: rgb(0,0,0) });
+    page.drawText(`Estado: ${payment.status}`, { x: 50, y, size: 13, color: rgb(0,0,0) });
     y -= 30;
 
     // Asientos
@@ -112,7 +117,7 @@ export default async function handler(req, res) {
       page.drawText('Asientos:', { x: 50, y, size: 14, color: rgb(0,0,0) });
       y -= 20;
       payment.seats.forEach((seat, index) => {
-        const seatText = \`\${seat.name || seat.nombre} - \${seat.zona?.nombre || 'General'} - $\${seat.price || 0}\`;
+        const seatText = `${seat.name || seat.nombre} - ${seat.zona?.nombre || 'General'} - $${seat.price || 0}`;
         page.drawText(seatText, { x: 70, y: y - (index * 18), size: 11, color: rgb(0.2,0.2,0.2) });
       });
       y -= payment.seats.length * 18 + 10;
@@ -120,7 +125,7 @@ export default async function handler(req, res) {
 
     // Fecha de compra
     const fechaCreacion = new Date(payment.created_at).toLocaleString('es-ES');
-    page.drawText(\`Fecha de compra: \${fechaCreacion}\`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4) });
+    page.drawText(`Fecha de compra: ${fechaCreacion}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4) });
 
     // --- Insertar QR ---
     const qrImage = await pdfDoc.embedPng(qrImageBytes);
@@ -147,7 +152,7 @@ export default async function handler(req, res) {
     const pdfBytes = await pdfDoc.save();
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', \`attachment; filename="ticket-\${locator}.pdf"\`);
+    res.setHeader('Content-Disposition', `attachment; filename="ticket-${locator}.pdf"`);
     return res.status(200).send(Buffer.from(pdfBytes));
   } catch (err) {
     console.error('Error generating ticket:', err);
