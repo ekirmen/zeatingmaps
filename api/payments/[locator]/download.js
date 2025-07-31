@@ -2,8 +2,8 @@ import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, rgb } from 'pdf-lib';
 import QRCode from 'qrcode';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+const supabaseServiceKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -16,7 +16,12 @@ if (!supabaseUrl || !supabaseServiceKey) {
 
 
 export default async function handler(req, res) {
+  console.log('Download endpoint called with method:', req.method);
+  console.log('Query params:', req.query);
+  console.log('Headers:', req.headers);
+  
   if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing Supabase environment variables');
     return res.status(500).json({ error: 'Server configuration error' });
   }
   if (req.method !== 'GET') {
@@ -26,41 +31,50 @@ export default async function handler(req, res) {
 
   const { locator } = req.query;
   if (!locator) {
+    console.error('Missing locator in query params');
     return res.status(400).json({ error: 'Missing locator' });
   }
 
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
   if (!token) {
+    console.error('Missing auth token in headers');
     return res.status(401).json({ error: 'Missing auth token' });
   }
 
   try {
-    // Verify the user token
+    // Verify the user token using the access token
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
     if (userError || !user) {
+      console.error('Auth error:', userError);
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
     // Get payment data
+    console.log('Searching for payment with locator:', locator);
     const { data: payment, error } = await supabaseAdmin
       .from('payments')
-    .select(`
+      .select(`
         locator, 
         seats, 
         status,
         created_at,
-        funcion:funciones(
-          fecha_celebracion,
-          evento:eventos(nombre)
-        )
+        funcion
       `)
       .eq('locator', locator)
       .single();
 
-    if (error || !payment) {
+    if (error) {
+      console.error('Database error:', error);
+      return res.status(500).json({ error: 'Database error' });
+    }
+    
+    if (!payment) {
+      console.error('Payment not found for locator:', locator);
       return res.status(404).json({ error: 'Payment not found' });
     }
+    
+    console.log('Payment found:', payment);
 
     // --- GENERAR QR ---
     // El QR puede ser el locator o una URL de validación
@@ -86,13 +100,8 @@ export default async function handler(req, res) {
     let y = height - 90;
     page.drawText(\`Localizador: \${payment.locator}\`, { x: 50, y, size: 13, color: rgb(0,0,0) });
     y -= 25;
-    if (payment.funcion?.evento?.nombre) {
-      page.drawText(\`Evento: \${payment.funcion.evento.nombre}\`, { x: 50, y, size: 13, color: rgb(0,0,0) });
-      y -= 25;
-    }
-    if (payment.funcion?.fecha_celebracion) {
-      const fecha = new Date(payment.funcion.fecha_celebracion).toLocaleString('es-ES');
-      page.drawText(\`Función: \${fecha}\`, { x: 50, y, size: 13, color: rgb(0,0,0) });
+    if (payment.funcion) {
+      page.drawText(\`Función ID: \${payment.funcion}\`, { x: 50, y, size: 13, color: rgb(0,0,0) });
       y -= 25;
     }
     page.drawText(\`Estado: \${payment.status}\`, { x: 50, y, size: 13, color: rgb(0,0,0) });
