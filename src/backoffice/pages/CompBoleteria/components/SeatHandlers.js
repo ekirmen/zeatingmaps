@@ -20,11 +20,6 @@ export const createSeatHandlers = ({
 }) => {
   const handleSeatClick = (seat, table) => {
     const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
-    const exists = carrito.find(
-      (i) =>
-        i._id === seat._id &&
-        (abonoMode ? i.abonoGroup : i.funcionId === currentFuncId)
-    );
     const zonaId = seat.zona;
     const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
 
@@ -47,9 +42,9 @@ export const createSeatHandlers = ({
         return;
       }
 
-      const exists = carrito.find(i => i._id === seat._id && i.isBlocked);
+      const blockedExists = carrito.find(i => i._id === seat._id && i.isBlocked);
       
-      if (exists) {
+      if (blockedExists) {
         // Desbloquear asiento
         setCarrito(carrito.filter(i => !(i._id === seat._id && i.isBlocked)));
         unlockSeat(seat._id, currentFuncId).catch(console.error);
@@ -78,6 +73,13 @@ export const createSeatHandlers = ({
       }
       return;
     }
+
+    // Verificar si el asiento ya existe en el carrito (modo normal)
+    const exists = carrito.find(
+      (i) =>
+        i._id === seat._id &&
+        (abonoMode ? i.abonoGroup : i.funcionId === currentFuncId)
+    );
 
     // Determine pricing from the selected plantilla
     const detalle = detallesPlantilla.find(d => {
@@ -112,6 +114,7 @@ export const createSeatHandlers = ({
     }
 
     if (exists) {
+      console.log('Removiendo asiento del carrito:', seat._id);
       if (abonoMode) {
         const groupId = `abono-${seat._id}`;
         setCarrito(carrito.filter(i => i.abonoGroup !== groupId));
@@ -123,6 +126,7 @@ export const createSeatHandlers = ({
         );
       }
     } else {
+      console.log('Agregando asiento al carrito:', seat._id, seat.nombre);
       if (abonoMode) {
         const groupId = `abono-${seat._id}`;
         const items = funciones.map(f => ({
@@ -152,6 +156,7 @@ export const createSeatHandlers = ({
         };
         
         setCarrito([...carrito, newSeat]);
+        console.log('Asiento agregado exitosamente. Carrito actual:', [...carrito, newSeat].length, 'elementos');
         
         // Trigger animation
         handleSeatAnimation(newSeat);

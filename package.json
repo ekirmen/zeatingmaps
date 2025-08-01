@@ -7,13 +7,15 @@
   },
   "homepage": "/store",
   "scripts": {
-    "start": "react-scripts start",
-    "dev": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "craco start",
+    "dev": "craco start",
+    "build": "GENERATE_SOURCEMAP=false craco build",
+    "build:fast": "GENERATE_SOURCEMAP=false CI=false DISABLE_ESLINT_PLUGIN=true SKIP_PREFLIGHT_CHECK=true craco build",
     "preview": "serve -s build",
     "eject": "react-scripts eject",
-    "vercel-build": "npm install && CI=false npm run build",
-    "test": "react-scripts test"
+    "vercel-build": "npm ci --prefer-offline --no-audit --no-fund --silent && GENERATE_SOURCEMAP=false CI=false DISABLE_ESLINT_PLUGIN=true SKIP_PREFLIGHT_CHECK=true npm run build",
+    "test": "craco test",
+    "analyze": "npm run build && npx serve -s build"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
@@ -58,8 +60,11 @@
     "framer-motion": "^11.0.0"
   },
   "devDependencies": {
+    "@craco/craco": "^7.1.0",
+    "@babel/plugin-import": "^1.7.0",
     "autoprefixer": "^10.4.21",
     "canvas": "^2.11.2",
+    "core-js": "^3.35.0",
     "postcss": "^8.5.4",
     "tailwindcss": "^3.4.1",
     "typescript": "^4.9.5"

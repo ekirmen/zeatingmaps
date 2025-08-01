@@ -83,6 +83,7 @@ const BackofficeApp = () => {
                     <Route path="plantillaPrecios" element={<PlantillaPrecios />} />
                     <Route path="descuentos" element={<Descuentos />} />
                     <Route path="funciones" element={<Funciones />} />
+                    <Route path="Boleteria" element={<BoleteriaMain />} />
                     <Route path="boleteria" element={<Boleteria setSidebarCollapsed={setSidebarCollapsed} />} />
                     <Route path="boleteria-main" element={<BoleteriaMain />} />
                     <Route path="crear-iva" element={<CreateIva />} />

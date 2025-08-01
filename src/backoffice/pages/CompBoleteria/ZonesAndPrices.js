@@ -3,6 +3,7 @@ import { message } from 'antd';
 import SeatingMap from './SeatingMap';
 import CartWithTimer from '../../components/CartWithTimer';
 import SeatAnimation from '../../components/SeatAnimation';
+import CartDebug from './components/CartDebug';
 
 // Importar hooks personalizados
 import {
@@ -256,6 +257,9 @@ const ZonesAndPrices = ({
         selectedClient={selectedClient}
         selectedAffiliate={selectedAffiliate}
       />
+      
+      {/* Debug del carrito (solo en desarrollo) */}
+      <CartDebug carrito={carrito} setCarrito={setCarrito} />
       
       {/* Animaciones de asientos */}
       {animatingSeats.map((seat) => (

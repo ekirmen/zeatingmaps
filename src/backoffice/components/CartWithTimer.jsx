@@ -46,8 +46,10 @@ const CartWithTimer = ({
     if (carrito.length > 0) {
       setIsVisible(true);
       setTimeLeft(15 * 60); // Reset timer when cart has items
+      console.log('Carrito actualizado. Elementos:', carrito.length);
     } else {
       setIsVisible(false);
+      console.log('Carrito vacío. Ocultando componente.');
     }
   }, [carrito.length]);
 
@@ -57,6 +59,7 @@ const CartWithTimer = ({
         setTimeLeft(prev => {
           if (prev <= 1) {
             // Tiempo agotado - limpiar carrito
+            console.log('Tiempo agotado. Limpiando carrito automáticamente.');
             setCarrito([]);
             message.warning('Tiempo agotado. Los asientos han sido liberados.');
             return 0;

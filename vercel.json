@@ -1,4 +1,22 @@
 {
+  "buildCommand": "npm run build:fast",
+  "outputDirectory": "build",
+  "installCommand": "npm ci --prefer-offline --no-audit --no-fund --silent",
+  "framework": "create-react-app",
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "build": {
+    "env": {
+      "CI": "false",
+      "GENERATE_SOURCEMAP": "false",
+      "DISABLE_ESLINT_PLUGIN": "true",
+      "SKIP_PREFLIGHT_CHECK": "true",
+      "NODE_ENV": "production"
+    }
+  },
   "rewrites": [
     {
       "source": "/store/static/:path*",
@@ -52,9 +70,32 @@
       "statusCode": 404
     }
   ],
-  "functions": {
-    "api/payments/[locator]/download.js": {
-      "maxDuration": 30
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
     }
-  }
+  ]
 }
