@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { AiOutlinePlus, AiOutlineEdit, AiOutlineDelete, AiOutlineEye } from 'react-icons/ai';
+import { AiOutlinePlus, AiOutlineEdit, AiOutlineDelete, AiOutlineEye, AiOutlineMail } from 'react-icons/ai';
 import { emailCampaignService } from '../services/emailCampaignService';
 
 const CRM = ({ setSidebarCollapsed }) => {
