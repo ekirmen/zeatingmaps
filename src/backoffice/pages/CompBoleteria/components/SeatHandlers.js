@@ -15,7 +15,8 @@ export const createSeatHandlers = ({
   unlockSeat,
   isSeatLocked,
   isSeatLockedByMe,
-  handleSeatAnimation
+  handleSeatAnimation,
+  abonoSeats
 }) => {
   const handleSeatClick = (seat, table) => {
     const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;

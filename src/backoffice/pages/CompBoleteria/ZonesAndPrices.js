@@ -62,6 +62,7 @@ const ZonesAndPrices = ({
     blockMode,
     setBlockMode,
     tempBlocks,
+    setTempBlocks,
     abonoSeats,
     animatingSeats,
     lockSeat,

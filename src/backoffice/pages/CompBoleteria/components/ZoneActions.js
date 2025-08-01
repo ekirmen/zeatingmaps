@@ -8,7 +8,8 @@ export const createZoneActions = ({
   zoneQuantities,
   setZoneQuantities,
   appliedDiscount,
-  getPrecioConDescuento
+  getPrecioConDescuento,
+  detallesPlantilla
 }) => {
   const handleAddZoneToCart = (detalle) => {
     const zonaId = detalle.zonaId || (typeof detalle.zona === 'object' ? detalle.zona._id : detalle.zona);
