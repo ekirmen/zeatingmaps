@@ -685,23 +685,26 @@ useEffect(() => {
         {appliedDiscount && (
           <span className="text-green-700 text-sm">{appliedDiscount.nombreCodigo}</span>
         )}
-                 <label className="ml-4 text-sm flex items-center gap-1">
-           <input
-             type="checkbox"
-             checked={blockMode}
-             onChange={e => {
-               setBlockMode(e.target.checked);
-               if (e.target.checked) {
-                 message.info('Modo bloqueo activado: Selecciona asientos para bloquearlos');
-               } else {
-                 // Limpiar asientos bloqueados del carrito al desactivar
-                 setCarrito(prev => prev.filter(item => !item.isBlocked));
-                 message.info('Modo bloqueo desactivado');
-               }
-             }}
-           />
-           🔒 Bloquear asientos
-         </label>
+      </div>
+
+      <div className="flex gap-2 items-center mb-4">
+        <label className="text-sm flex items-center gap-1">
+          <input
+            type="checkbox"
+            checked={blockMode}
+            onChange={e => {
+              setBlockMode(e.target.checked);
+              if (e.target.checked) {
+                message.info('Modo bloqueo activado: Selecciona asientos para bloquearlos');
+              } else {
+                // Limpiar asientos bloqueados del carrito al desactivar
+                setCarrito(prev => prev.filter(item => !item.isBlocked));
+                message.info('Modo bloqueo desactivado');
+              }
+            }}
+          />
+          🔒 Bloquear asientos
+        </label>
         <label className="ml-4 text-sm flex items-center gap-1">
           <input
             type="checkbox"
@@ -759,21 +762,6 @@ useEffect(() => {
                     </p>
                   </div>
                 )}
-              </div>
-            )}
-                      >
-                        {z.nombre}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleAddSingleZoneTicket(z)}
-                        className="px-2 py-1 bg-green-600 text-white text-sm"
-                      >
-                        +
-                      </button>
-                    </div>
-                  );
-                })}
               </div>
             )}
             {zonePriceRanges.length > 0 && (
