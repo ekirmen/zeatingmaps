@@ -13,7 +13,7 @@
     "build:fast": "cross-env GENERATE_SOURCEMAP=false CI=false DISABLE_ESLINT_PLUGIN=true SKIP_PREFLIGHT_CHECK=true craco build",
     "preview": "serve -s build",
     "eject": "react-scripts eject",
-    "vercel-build": "npm ci --prefer-offline --no-audit --no-fund --silent && craco build",
+    "vercel-build": "npm ci --prefer-offline --no-audit --no-fund --silent && GENERATE_SOURCEMAP=false CI=false DISABLE_ESLINT_PLUGIN=true SKIP_PREFLIGHT_CHECK=true react-scripts build",
     "test": "craco test",
     "analyze": "npm run build && npx serve -s build"
   },
