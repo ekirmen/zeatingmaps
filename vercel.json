@@ -8,17 +8,6 @@
       "runtime": "@vercel/node@3.0.0"
     }
   },
-  "build": {
-    "env": {
-      "CI": "false",
-      "GENERATE_SOURCEMAP": "false",
-      "DISABLE_ESLINT_PLUGIN": "true",
-      "SKIP_PREFLIGHT_CHECK": "true",
-      "NODE_ENV": "production",
-      "INLINE_RUNTIME_CHUNK": "false",
-      "POSTCSS_CONFIG": "postcss.config.js"
-    }
-  },
   "rewrites": [
     {
       "source": "/store/static/:path*",
