@@ -7,7 +7,8 @@ const CartWithTimer = ({
   setCarrito, 
   onPaymentClick, 
   selectedClient,
-  selectedAffiliate 
+  selectedAffiliate,
+  fixed = false
 }) => {
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutos en segundos
   const [isVisible, setIsVisible] = useState(false);
@@ -95,8 +96,12 @@ const CartWithTimer = ({
     return null;
   }
 
+  const containerClasses = fixed 
+    ? "w-full h-full bg-white border border-gray-200 overflow-hidden"
+    : "fixed top-4 right-4 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[calc(100vh-2rem)] overflow-hidden";
+
   return (
-    <div className="fixed top-4 right-4 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-[calc(100vh-2rem)] overflow-hidden">
+    <div className={containerClasses}>
       {/* Header */}
       <div className="bg-purple-600 text-white px-4 py-3 flex items-center justify-between">
         <h3 className="font-semibold text-lg">Carrito</h3>

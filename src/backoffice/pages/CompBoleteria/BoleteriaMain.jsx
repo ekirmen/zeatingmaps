@@ -1,10 +1,15 @@
-import React, { useState } from 'react';
-import { message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { message, Input, Button, Modal, Select, Card, Avatar, Badge } from 'antd';
+import { SearchOutlined, UserOutlined, QrcodeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import CartWithTimer from '../../components/CartWithTimer';
 import SeatAnimation from '../../components/SeatAnimation';
 import ZonesAndPrices from './ZonesAndPrices';
+import SimpleSeatingMap from './components/SimpleSeatingMap';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
+
+const { Search } = Input;
+const { Option } = Select;
 
 const BoleteriaMain = () => {
   // Usar los hooks existentes
@@ -36,12 +41,16 @@ const BoleteriaMain = () => {
     setCarrito(seats);
   });
 
-  // Estados locales adicionales
+  // Estados locales
   const [animatingSeats, setAnimatingSeats] = useState([]);
   const [showFunctions, setShowFunctions] = useState(false);
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
-
-  // Los datos ahora vienen de los hooks
+  const [locatorValue, setLocatorValue] = useState('');
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [showLocatorModal, setShowLocatorModal] = useState(false);
+  const [selectedSeats, setSelectedSeats] = useState([]);
+  const [blockedSeats, setBlockedSeats] = useState([]);
+  const [blockMode, setBlockMode] = useState(false);
 
   const handlePaymentClick = () => {
     if (!selectedClient) {
@@ -59,73 +68,339 @@ const BoleteriaMain = () => {
     setAnimatingSeats(prev => prev.filter(seat => seat._id !== seatId));
   };
 
+  const handleLocatorSearchSubmit = () => {
+    if (!locatorValue.trim()) {
+      message.warning('Ingresa un localizador válido');
+      return;
+    }
+    // Aquí implementarías la búsqueda por localizador
+    message.info(`Buscando localizador: ${locatorValue}`);
+    setShowLocatorModal(false);
+  };
+
+  const handleClientSearch = (value) => {
+    if (value.trim()) {
+      handleUnifiedSearch(value);
+    } else {
+      clearSearchResults();
+    }
+  };
+
+  const handleSelectClient = (client) => {
+    setSelectedClient(client);
+    setShowClientModal(false);
+    message.success(`Cliente seleccionado: ${client.nombre}`);
+  };
+
+  const handleSeatClick = (seat) => {
+    if (blockMode) {
+      // Modo bloqueo
+      const isBlocked = blockedSeats.some(s => s._id === seat._id);
+      if (isBlocked) {
+        setBlockedSeats(prev => prev.filter(s => s._id !== seat._id));
+      } else {
+        setBlockedSeats(prev => [...prev, seat]);
+      }
+    } else {
+      // Modo selección normal
+      const isSelected = selectedSeats.some(s => s._id === seat._id);
+      if (isSelected) {
+        setSelectedSeats(prev => prev.filter(s => s._id !== seat._id));
+        setCarrito(prev => prev.filter(s => s._id !== seat._id));
+      } else {
+        setSelectedSeats(prev => [...prev, seat]);
+        setCarrito(prev => [...prev, {
+          ...seat,
+          funcionId: selectedFuncion?.id,
+          zona: seat.zona,
+          precio: seat.precio
+        }]);
+      }
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Boletería</h1>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-                <span className="text-sm text-gray-600">Usuario</span>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar izquierda */}
+      <div className="w-80 bg-white shadow-lg border-r border-gray-200 flex flex-col">
+        {/* Header del sidebar */}
+        <div className="p-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Boletería</h2>
+          
+          {/* Búsqueda de cliente */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Buscar Cliente
+            </label>
+            <Search
+              placeholder="Nombre, email o teléfono"
+              onSearch={handleClientSearch}
+              loading={searchLoading}
+              enterButton={<SearchOutlined />}
+            />
+          </div>
+
+          {/* Cliente seleccionado */}
+          {selectedClient && (
+            <Card size="small" className="mb-4">
+              <div className="flex items-center">
+                <Avatar icon={<UserOutlined />} className="mr-2" />
+                <div className="flex-1">
+                  <div className="font-medium text-sm">{selectedClient.nombre}</div>
+                  <div className="text-xs text-gray-500">{selectedClient.email}</div>
+                </div>
+                <Button 
+                  size="small" 
+                  type="text" 
+                  onClick={() => setSelectedClient(null)}
+                >
+                  ✕
+                </Button>
               </div>
-              <div className="w-6 h-6 text-gray-400">⭐</div>
-              <div className="w-6 h-6 text-gray-400">ℹ️</div>
+            </Card>
+          )}
+
+          {/* Localizador */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Localizador
+            </label>
+            <Button 
+              icon={<QrcodeOutlined />} 
+              block 
+              onClick={() => setShowLocatorModal(true)}
+            >
+              Buscar por Localizador
+            </Button>
+          </div>
+
+          {/* Resultados de búsqueda */}
+          {searchResults.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Resultados</h3>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {searchResults.map((client) => (
+                  <Card 
+                    key={client.id} 
+                    size="small" 
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleSelectClient(client)}
+                  >
+                    <div className="flex items-center">
+                      <Avatar icon={<UserOutlined />} size="small" className="mr-2" />
+                      <div className="flex-1">
+                        <div className="font-medium text-sm">{client.nombre}</div>
+                        <div className="text-xs text-gray-500">{client.email}</div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Funciones disponibles */}
+          {funciones.length > 0 && (
+            <div className="mb-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Funciones</h3>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {funciones.map((funcion) => (
+                  <Card 
+                    key={funcion.id} 
+                    size="small" 
+                    className={`cursor-pointer hover:bg-gray-50 ${
+                      selectedFuncion?.id === funcion.id ? 'border-purple-500 bg-purple-50' : ''
+                    }`}
+                    onClick={() => handleFunctionSelect(funcion)}
+                  >
+                    <div className="text-sm">
+                      <div className="font-medium">
+                        {new Date(funcion.fechaCelebracion).toLocaleDateString('es-ES', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Sala: {funcion.sala?.nombre || 'N/A'}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Contenido del sidebar */}
+        <div className="flex-1 p-4">
+          <ZonesAndPrices
+            eventos={eventos}
+            selectedEvent={selectedEvent}
+            onEventSelect={handleEventSelect}
+            funciones={funciones}
+            onShowFunctions={() => setShowFunctions(true)}
+            selectedFuncion={selectedFuncion}
+            carrito={carrito}
+            setCarrito={setCarrito}
+            selectedPlantilla={selectedPlantilla}
+            selectedClient={selectedClient}
+            abonos={[]}
+            selectedAffiliate={selectedAffiliate}
+            setSelectedAffiliate={setSelectedAffiliate}
+            showSeatingMap={true}
+            compact={true}
+          />
+        </div>
+      </div>
+
+      {/* Contenido principal */}
+      <div className="flex-1 flex flex-col">
+        {/* Header principal */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {selectedEvent ? selectedEvent.nombre : 'Seleccionar Evento'}
+                </h1>
+                {selectedFuncion && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    {new Date(selectedFuncion.fechaCelebracion).toLocaleDateString('es-ES', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-4">
+                <Badge count={carrito.length} showZero={false}>
+                  <Button 
+                    icon={<ShoppingCartOutlined />} 
+                    type="primary"
+                    onClick={handlePaymentClick}
+                    disabled={carrito.length === 0}
+                  >
+                    Pagar
+                  </Button>
+                </Badge>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex space-x-8">
-            <button className="py-4 px-2 border-b-2 border-purple-600 text-purple-600 font-medium">
-              Mapa
-            </button>
-            <button className="py-4 px-2 text-gray-500 hover:text-gray-700">
-              Zonas
-            </button>
-            <button className="py-4 px-2 text-gray-500 hover:text-gray-700">
-              Productos
-            </button>
-            <button className="py-4 px-2 text-gray-500 hover:text-gray-700">
-              Otros
-            </button>
+        {/* Área del mapa de asientos */}
+        <div className="flex-1 p-6">
+          <div className="bg-white rounded-lg shadow-sm p-6 h-full">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Mapa de Asientos</h2>
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={blockMode}
+                    onChange={(e) => setBlockMode(e.target.checked)}
+                    className="rounded"
+                  />
+                  <span className="text-sm">🔒 Modo bloqueo</span>
+                </label>
+              </div>
+            </div>
+            <SimpleSeatingMap
+              selectedFuncion={selectedFuncion}
+              onSeatClick={handleSeatClick}
+              selectedSeats={selectedSeats}
+              blockedSeats={blockedSeats}
+              blockMode={blockMode}
+            />
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <ZonesAndPrices
-          eventos={eventos}
-          selectedEvent={selectedEvent}
-          onEventSelect={handleEventSelect}
-          funciones={funciones}
-          onShowFunctions={() => setShowFunctions(true)}
-          selectedFuncion={selectedFuncion}
-          carrito={carrito}
-          setCarrito={setCarrito}
-          selectedPlantilla={selectedPlantilla}
-          selectedClient={selectedClient}
-          abonos={[]}
-          selectedAffiliate={selectedAffiliate}
-          setSelectedAffiliate={setSelectedAffiliate}
-          showSeatingMap={true}
-        />
+      {/* Carrito fijo a la derecha */}
+      <div className="w-96 bg-white shadow-lg border-l border-gray-200">
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Carrito</h3>
+        </div>
+        <div className="flex-1 p-4">
+          <CartWithTimer
+            carrito={carrito}
+            setCarrito={setCarrito}
+            onPaymentClick={handlePaymentClick}
+            selectedClient={selectedClient}
+            selectedAffiliate={selectedAffiliate}
+            fixed={true}
+          />
+        </div>
       </div>
 
-      {/* Carrito con temporizador */}
-      <CartWithTimer
-        carrito={carrito}
-        setCarrito={setCarrito}
-        onPaymentClick={handlePaymentClick}
-        selectedClient={selectedClient}
-        selectedAffiliate={selectedAffiliate}
-      />
+      {/* Modal de búsqueda de cliente */}
+      <Modal
+        title="Buscar Cliente"
+        open={showClientModal}
+        onCancel={() => setShowClientModal(false)}
+        footer={null}
+        width={600}
+      >
+        <div className="space-y-4">
+          <Search
+            placeholder="Nombre, email o teléfono"
+            onSearch={handleClientSearch}
+            loading={searchLoading}
+            enterButton={<SearchOutlined />}
+          />
+          {searchResults.length > 0 && (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {searchResults.map((client) => (
+                <Card 
+                  key={client.id} 
+                  size="small" 
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleSelectClient(client)}
+                >
+                  <div className="flex items-center">
+                    <Avatar icon={<UserOutlined />} size="small" className="mr-2" />
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{client.nombre}</div>
+                      <div className="text-xs text-gray-500">{client.email}</div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Modal de localizador */}
+      <Modal
+        title="Buscar por Localizador"
+        open={showLocatorModal}
+        onCancel={() => setShowLocatorModal(false)}
+        onOk={handleLocatorSearchSubmit}
+        okText="Buscar"
+        cancelText="Cancelar"
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Localizador
+            </label>
+            <Input
+              placeholder="Ingresa el localizador"
+              value={locatorValue}
+              onChange={(e) => setLocatorValue(e.target.value)}
+              onPressEnter={handleLocatorSearchSubmit}
+            />
+          </div>
+        </div>
+      </Modal>
 
       {/* Animaciones de asientos */}
       {animatingSeats.map((seat) => (
