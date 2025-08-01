@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "build",
   "installCommand": "npm ci --prefer-offline --no-audit --no-fund --silent",
   "framework": "create-react-app",
@@ -14,7 +14,8 @@
       "GENERATE_SOURCEMAP": "false",
       "DISABLE_ESLINT_PLUGIN": "true",
       "SKIP_PREFLIGHT_CHECK": "true",
-      "NODE_ENV": "production"
+      "NODE_ENV": "production",
+      "INLINE_RUNTIME_CHUNK": "false"
     }
   },
   "rewrites": [

@@ -5,8 +5,10 @@ module.exports = {
     configure: (webpackConfig) => {
       // Optimizar para producción
       if (process.env.NODE_ENV === 'production') {
-        // Deshabilitar source maps en producción
-        webpackConfig.devtool = false;
+        // Deshabilitar source maps en producción si no se especifica GENERATE_SOURCEMAP
+        if (process.env.GENERATE_SOURCEMAP !== 'true') {
+          webpackConfig.devtool = false;
+        }
         
         // Optimizar chunks más agresivamente
         webpackConfig.optimization = {

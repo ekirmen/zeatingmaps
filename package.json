@@ -9,11 +9,11 @@
   "scripts": {
     "start": "craco start",
     "dev": "craco start",
-    "build": "cross-env GENERATE_SOURCEMAP=false craco build",
+    "build": "craco build",
     "build:fast": "cross-env GENERATE_SOURCEMAP=false CI=false DISABLE_ESLINT_PLUGIN=true SKIP_PREFLIGHT_CHECK=true craco build",
     "preview": "serve -s build",
     "eject": "react-scripts eject",
-    "vercel-build": "npm ci --prefer-offline --no-audit --no-fund --silent && npm run build",
+    "vercel-build": "npm ci --prefer-offline --no-audit --no-fund --silent && craco build",
     "test": "craco test",
     "analyze": "npm run build && npx serve -s build"
   },
