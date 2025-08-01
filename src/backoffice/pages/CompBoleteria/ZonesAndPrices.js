@@ -38,6 +38,9 @@ const [mapa, setMapa] = useState(null);
   const [abonoSeats, setAbonoSeats] = useState([]);
   const unlockSeatRef = useRef(useSeatLockStore.getState().unlockSeat);
   const mapContainerRef = useRef(null);
+  
+  // Extraer funciones del seat lock store
+  const { lockSeat, unlockSeat, isSeatLocked, isSeatLockedByMe } = useSeatLockStore();
 
 // Memoize detallesPlantilla to avoid recalculations
 const detallesPlantillaMemo = React.useMemo(() => {
