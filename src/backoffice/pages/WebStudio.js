@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { AiOutlineLeft } from 'react-icons/ai';
-import { AiOutlineSetting, AiOutlineArrowUp, AiOutlineArrowDown, AiOutlineCopy } from 'react-icons/ai';
+import { AiOutlineLeft, AiOutlinePlus, AiOutlineMinus, AiOutlineEdit, AiOutlineDelete, AiOutlineCopy, AiOutlineUp, AiOutlineDown } from 'react-icons/ai';
+import { AiOutlineSetting } from 'react-icons/ai';
 import EmailWidgetRenderer from '../components/EmailWidgets/EmailWidgetRenderer';
 import EmailTestPanel from '../components/EmailTestPanel';
+import EmailPageCreator from './EmailPageCreator';
+import SiteMap from '../components/SiteMap';
 import { fetchCmsPage, saveCmsPage } from '../services/apibackoffice';
 
 // Datos de ejemplo para las nuevas secciones
@@ -299,6 +301,25 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   const [pagesExpanded, setPagesExpanded] = useState(false);
   const [componentsExpanded, setComponentsExpanded] = useState(false);
   const [emailsExpanded, setEmailsExpanded] = useState(false);
+  const [showEmailCreator, setShowEmailCreator] = useState(false);
+  const [showSiteMap, setShowSiteMap] = useState(false);
+  const [showNewPageModal, setShowNewPageModal] = useState(false);
+  const [newPageData, setNewPageData] = useState({
+    name: '',
+    url: '',
+    title: '',
+    description: '',
+    keywords: '',
+    css: '',
+    hideFromSEO: false
+  });
+  const [contextMenu, setContextMenu] = useState({
+    show: false,
+    x: 0,
+    y: 0,
+    item: null,
+    type: null
+  });
 
   useEffect(() => {
     if (setSidebarCollapsed) setSidebarCollapsed(true);
@@ -336,6 +357,22 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     };
     autoSave();
   }, [widgets, selectedPage, pageLoaded]);
+
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        closeContextMenu();
+      }
+    };
+
+    if (contextMenu.show) {
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [contextMenu.show]);
 
   const addWidget = (area, type, config = {}) => {
     setWidgets(prev => ({
@@ -442,6 +479,134 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     }
   };
 
+  const handleNewEmail = () => {
+    setShowEmailCreator(true);
+  };
+
+  const handleCloseEmailCreator = () => {
+    setShowEmailCreator(false);
+  };
+
+  const handleSiteMap = () => {
+    setShowSiteMap(true);
+  };
+
+  const handleCloseSiteMap = () => {
+    setShowSiteMap(false);
+  };
+
+  const handleNewPage = () => {
+    setShowNewPageModal(true);
+  };
+
+  const handleCloseNewPage = () => {
+    setShowNewPageModal(false);
+    setNewPageData({
+      name: '',
+      url: '',
+      title: '',
+      description: '',
+      keywords: '',
+      css: '',
+      hideFromSEO: false
+    });
+  };
+
+  const handleCreateNewPage = async () => {
+    if (!newPageData.name || !newPageData.url) {
+      toast.error('Por favor completa los campos obligatorios');
+      return;
+    }
+
+    try {
+      // Aquí implementarías la lógica para crear la página en Supabase
+      const newPage = {
+        id: Date.now(),
+        name: newPageData.name,
+        url: newPageData.url,
+        title: newPageData.title,
+        description: newPageData.description,
+        keywords: newPageData.keywords,
+        css: newPageData.css,
+        hideFromSEO: newPageData.hideFromSEO,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Agregar a la lista de páginas de usuario
+      userPages.push(newPage);
+      
+      toast.success('Página creada exitosamente');
+      handleCloseNewPage();
+    } catch (error) {
+      console.error('Error creating page:', error);
+      toast.error('Error al crear la página');
+    }
+  };
+
+  const handleContextMenu = (e, item, type) => {
+    e.preventDefault();
+    setContextMenu({
+      show: true,
+      x: e.clientX,
+      y: e.clientY,
+      item,
+      type
+    });
+  };
+
+  const closeContextMenu = () => {
+    setContextMenu({
+      show: false,
+      x: 0,
+      y: 0,
+      item: null,
+      type: null
+    });
+  };
+
+  const handleContextMenuAction = (action) => {
+    const { item, type } = contextMenu;
+    
+    switch (action) {
+      case 'edit':
+        if (type === 'page') {
+          // Implementar edición de página
+          toast.info('Funcionalidad de edición en desarrollo');
+        } else if (type === 'component') {
+          // Implementar edición de componente
+          toast.info('Funcionalidad de edición de componente en desarrollo');
+        }
+        break;
+      case 'duplicate':
+        if (type === 'page') {
+          // Implementar duplicación de página
+          toast.info('Funcionalidad de duplicación en desarrollo');
+        } else if (type === 'component') {
+          // Implementar duplicación de componente
+          toast.info('Funcionalidad de duplicación de componente en desarrollo');
+        }
+        break;
+      case 'delete':
+        if (type === 'page') {
+          if (window.confirm(`¿Estás seguro de que quieres eliminar la página "${item.name}"?`)) {
+            // Implementar eliminación de página
+            toast.success('Página eliminada');
+          }
+        } else if (type === 'component') {
+          if (window.confirm(`¿Estás seguro de que quieres eliminar el componente "${item.name}"?`)) {
+            // Implementar eliminación de componente
+            toast.success('Componente eliminado');
+          }
+        }
+        break;
+      default:
+        break;
+    }
+    
+    closeContextMenu();
+  };
+
   const renderWidget = (area, widget, idx) => {
     const totalWidgets = widgets[area].length;
     const canMoveUp = idx > 0;
@@ -464,7 +629,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             title="Mover arriba"
             disabled={!canMoveUp}
           >
-            <AiOutlineArrowUp className="w-4 h-4" />
+            <AiOutlineUp className="w-4 h-4" />
           </button>
 
           {/* Move Down Button */}
@@ -474,7 +639,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             title="Mover abajo"
             disabled={!canMoveDown}
           >
-            <AiOutlineArrowDown className="w-4 h-4" />
+            <AiOutlineDown className="w-4 h-4" />
           </button>
 
           {/* Duplicate Button */}
@@ -992,6 +1157,230 @@ const WebStudio = ({ setSidebarCollapsed }) => {
       
       {/* Email Test Panel */}
       <EmailTestPanel />
+
+      {/* Email Creator Modal */}
+      {showEmailCreator && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-[90vh] mx-4 overflow-hidden">
+            <div className="bg-gray-100 px-6 py-4 border-b">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Creador de Páginas de Email
+                </h3>
+                <button
+                  onClick={handleCloseEmailCreator}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="h-full overflow-hidden">
+              <EmailPageCreator setSidebarCollapsed={() => {}} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Site Map Modal */}
+      {showSiteMap && (
+        <SiteMap onClose={handleCloseSiteMap} />
+      )}
+
+      {/* New Page Modal */}
+      {showNewPageModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden">
+            <div className="bg-gray-100 px-6 py-4 border-b">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Crear Nueva Página
+                </h3>
+                <button
+                  onClick={handleCloseNewPage}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+              <div className="grid grid-cols-1 gap-6">
+                {/* Nombre */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nombre de la página *
+                  </label>
+                  <input
+                    type="text"
+                    value={newPageData.name}
+                    onChange={(e) => setNewPageData({ ...newPageData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Nombre de la página"
+                  />
+                </div>
+
+                {/* URL */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    URL *
+                  </label>
+                  <div className="flex items-center">
+                    <span className="text-gray-500 mr-2">/</span>
+                    <input
+                      type="text"
+                      value={newPageData.url}
+                      onChange={(e) => setNewPageData({ ...newPageData, url: e.target.value })}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="my-new-page"
+                    />
+                  </div>
+                </div>
+
+                {/* Título */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Título de la página
+                  </label>
+                  <input
+                    type="text"
+                    value={newPageData.title}
+                    onChange={(e) => setNewPageData({ ...newPageData, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Título que aparecerá en el navegador"
+                  />
+                </div>
+
+                {/* Descripción */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descripción de la página
+                    <span className="text-xs text-gray-500 ml-1">(aparecerá en los buscadores)</span>
+                  </label>
+                  <textarea
+                    value={newPageData.description}
+                    onChange={(e) => setNewPageData({ ...newPageData, description: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                    placeholder="Descripción de la página"
+                  />
+                </div>
+
+                {/* Palabras clave */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Palabras clave
+                    <span className="text-xs text-gray-500 ml-1">(separadas por comas)</span>
+                  </label>
+                  <textarea
+                    value={newPageData.keywords}
+                    onChange={(e) => setNewPageData({ ...newPageData, keywords: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={2}
+                    placeholder="palabra1, palabra2, palabra3"
+                  />
+                </div>
+
+                {/* CSS */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    CSS personalizado
+                  </label>
+                  <textarea
+                    value={newPageData.css}
+                    onChange={(e) => setNewPageData({ ...newPageData, css: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    rows={4}
+                    placeholder="/* Tu CSS personalizado aquí */"
+                  />
+                </div>
+
+                {/* Ocultar de SEO */}
+                <div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="hideFromSEO"
+                      checked={newPageData.hideFromSEO}
+                      onChange={(e) => setNewPageData({ ...newPageData, hideFromSEO: e.target.checked })}
+                      className="mr-2"
+                    />
+                    <label htmlFor="hideFromSEO" className="text-sm font-medium text-gray-700">
+                      Ocultar para los robots de búsqueda
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-100 px-6 py-4 border-t">
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={handleCloseNewPage}
+                  className="px-4 py-2 text-gray-700 bg-gray-300 rounded-md hover:bg-gray-400 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleCreateNewPage}
+                  className="px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Crear Página
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu.show && (
+        <div 
+          className="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg py-1 min-w-[150px]"
+          style={{ 
+            left: contextMenu.x, 
+            top: contextMenu.y,
+            transform: 'translate(-50%, -100%)'
+          }}
+        >
+          <button
+            onClick={() => handleContextMenuAction('edit')}
+            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+          >
+            <AiOutlineEdit className="w-4 h-4" />
+            Editar
+          </button>
+          <button
+            onClick={() => handleContextMenuAction('duplicate')}
+            className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100 flex items-center gap-2"
+          >
+            <AiOutlineCopy className="w-4 h-4" />
+            Duplicar
+          </button>
+          <div className="border-t border-gray-200 my-1"></div>
+          <button
+            onClick={() => handleContextMenuAction('delete')}
+            className="w-full text-left px-4 py-2 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+          >
+            <AiOutlineDelete className="w-4 h-4" />
+            Eliminar
+          </button>
+        </div>
+      )}
+
+      {/* Click outside to close context menu */}
+      {contextMenu.show && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={closeContextMenu}
+        />
+      )}
     </div>
   );
 };
@@ -1017,7 +1406,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         <div className="mb-6">
           <button 
             className="w-full text-left p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            onClick={() => {/* TODO: Implementar mapa del sitio */}}
+            onClick={handleSiteMap}
           >
             Mapa del sitio
           </button>
@@ -1065,23 +1454,26 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                   <div className="space-y-1 max-h-40 overflow-y-auto">
                     <div
                       className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer text-blue-600"
-                      onClick={() => {/* TODO: Implementar nueva página */}}
+                      onClick={handleNewPage}
                     >
                       <i className="fas fa-plus-circle"></i>
                       <span className="text-sm">Nueva página</span>
                     </div>
-                    {userPages.map(page => (
-                      <div
-                        key={page.id}
-                        className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
-                        onClick={() => setSelectedPage(page)}
-                      >
-                        <span className="text-sm">{page.name}</span>
-                        <button className="text-gray-400 hover:text-gray-600">
-                          <i className="fas fa-ellipsis-v text-xs"></i>
-                        </button>
-                      </div>
-                    ))}
+                                         {userPages.map(page => (
+                       <div
+                         key={page.id}
+                         className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                         onClick={() => setSelectedPage(page)}
+                       >
+                         <span className="text-sm">{page.name}</span>
+                         <button 
+                           className="text-gray-400 hover:text-gray-600"
+                           onClick={(e) => handleContextMenu(e, page, 'page')}
+                         >
+                           <i className="fas fa-ellipsis-v text-xs"></i>
+                         </button>
+                       </div>
+                     ))}
                   </div>
                 </div>
               </div>
@@ -1106,20 +1498,23 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                     Cabeceras
                   </div>
                   <div className="space-y-1">
-                    {headerComponents.map(component => (
-                      <div
-                        key={component.id}
-                        className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${component.selected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                          <span className="text-sm">{component.name}</span>
-                        </div>
-                        <button className="text-gray-400 hover:text-gray-600">
-                          <i className="fas fa-ellipsis-v text-xs"></i>
-                        </button>
-                      </div>
-                    ))}
+                                         {headerComponents.map(component => (
+                       <div
+                         key={component.id}
+                         className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                       >
+                         <div className="flex items-center gap-2">
+                           <div className={`w-3 h-3 rounded-full ${component.selected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                           <span className="text-sm">{component.name}</span>
+                         </div>
+                         <button 
+                           className="text-gray-400 hover:text-gray-600"
+                           onClick={(e) => handleContextMenu(e, component, 'component')}
+                         >
+                           <i className="fas fa-ellipsis-v text-xs"></i>
+                         </button>
+                       </div>
+                     ))}
                   </div>
                 </div>
 
@@ -1130,20 +1525,23 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                     Pies
                   </div>
                   <div className="space-y-1">
-                    {footerComponents.map(component => (
-                      <div
-                        key={component.id}
-                        className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className={`w-3 h-3 rounded-full ${component.selected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                          <span className="text-sm">{component.name}</span>
-                        </div>
-                        <button className="text-gray-400 hover:text-gray-600">
-                          <i className="fas fa-ellipsis-v text-xs"></i>
-                        </button>
-                      </div>
-                    ))}
+                                         {footerComponents.map(component => (
+                       <div
+                         key={component.id}
+                         className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                       >
+                         <div className="flex items-center gap-2">
+                           <div className={`w-3 h-3 rounded-full ${component.selected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                           <span className="text-sm">{component.name}</span>
+                         </div>
+                         <button 
+                           className="text-gray-400 hover:text-gray-600"
+                           onClick={(e) => handleContextMenu(e, component, 'component')}
+                         >
+                           <i className="fas fa-ellipsis-v text-xs"></i>
+                         </button>
+                       </div>
+                     ))}
                   </div>
                 </div>
               </div>
@@ -1164,7 +1562,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                 <div className="space-y-1 max-h-60 overflow-y-auto">
                   <div
                     className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer text-blue-600"
-                    onClick={() => {/* TODO: Implementar nuevo correo */}}
+                    onClick={handleNewEmail}
                   >
                     <i className="fas fa-plus-circle"></i>
                     <span className="text-sm">Nuevo correo electrónico</span>
