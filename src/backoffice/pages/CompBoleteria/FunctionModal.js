@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Table, Button } from 'antd';
+import formatDateString from '../../../utils/formatDateString';
 
 const FunctionModal = ({
   visible,
@@ -18,9 +19,7 @@ const FunctionModal = ({
   };
 
   const formatFecha = (date) => {
-    if (!date) return '—';
-    const d = new Date(date);
-    return isNaN(d) ? '—' : d.toLocaleDateString('es-ES');
+    return formatDateString(date);
   };
 
   const columns = [

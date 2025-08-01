@@ -9,7 +9,8 @@ import {
   faTicketAlt,
   faChevronDown,
   faChevronUp,
-  faShoppingCart
+  faShoppingCart,
+  faEnvelope
 } from '@fortawesome/free-solid-svg-icons';
 
 const SidebarMenu = () => {
@@ -94,6 +95,23 @@ const SidebarMenu = () => {
               <li><Link to="/dashboard/abonos" className="block p-2 rounded hover:bg-gray-700">Abonos</Link></li>
             </ul>
           )}
+        </li>
+
+        {/* CRM */}
+        <li>
+          <div onClick={() => toggleMenu('crm')} className="flex justify-between items-center p-2 rounded hover:bg-gray-700 cursor-pointer">
+            <span className="flex items-center gap-2">
+              <FontAwesomeIcon icon={faEnvelope} />
+              CRM
+            </span>
+            <FontAwesomeIcon icon={openMenu === 'crm' ? faChevronUp : faChevronDown} />
+          </div>
+                      {openMenu === 'crm' && (
+              <ul className="ml-4 mt-1 space-y-1">
+                <li><Link to="/dashboard/crm" className="block p-2 rounded hover:bg-gray-700">Campaña Email</Link></li>
+                <li><Link to="/dashboard/email-campaigns" className="block p-2 rounded hover:bg-gray-700">Campañas de Mailing</Link></li>
+              </ul>
+            )}
         </li>
 
         {/* Personalización */}

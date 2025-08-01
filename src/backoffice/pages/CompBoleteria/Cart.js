@@ -39,18 +39,56 @@ const Cart = ({
       if (!acc[key]) {
         acc[key] = { fecha: item.funcionFecha, items: [] };
       }
-      acc[key].items.push(item);
+      
+      // Agrupar por zona y precio
+      const existingGroup = acc[key].items.find(group => 
+        group.zona === item.zona && 
+        group.precio === item.precio &&
+        group.tipoPrecio === item.tipoPrecio &&
+        group.descuentoNombre === item.descuentoNombre
+      );
+      
+      if (existingGroup) {
+        existingGroup.cantidad += 1;
+        existingGroup.asientos.push({
+          _id: item._id,
+          nombre: item.nombre,
+          nombreMesa: item.nombreMesa
+        });
+      } else {
+        acc[key].items.push({
+          zona: item.zona,
+          precio: item.precio,
+          tipoPrecio: item.tipoPrecio,
+          descuentoNombre: item.descuentoNombre,
+          cantidad: 1,
+          asientos: [{
+            _id: item._id,
+            nombre: item.nombre,
+            nombreMesa: item.nombreMesa
+          }]
+        });
+      }
+      
       return acc;
     }, {});
   }, [carrito]);
 
-  const handleRemoveSeat = useCallback((id) => {
+  const handleRemoveSeat = useCallback((groupKey) => {
+    // groupKey es una combinación de zona, precio y tipo
+    const [zona, precio, tipoPrecio, descuentoNombre] = groupKey.split('|');
+    
     setCarrito(
       carrito.filter(
-        (item) => (item.abonoGroup || `${item._id}-${item.funcionId || ''}`) !== id
+        (item) => !(
+          item.zona === zona && 
+          item.precio === parseFloat(precio) &&
+          item.tipoPrecio === tipoPrecio &&
+          item.descuentoNombre === descuentoNombre
+        )
       )
     );
-    message.success('Asiento eliminado del carrito');
+    message.success('Asientos eliminados del carrito');
   }, [carrito, setCarrito]);
 
   const clearCart = useCallback(() => {
@@ -59,39 +97,33 @@ const Cart = ({
   }, [setCarrito]);
 
   const handleBlockAction = useCallback(async () => {
-    const seatsToBlock = carrito.filter(i => i.action === 'block');
-    const seatsToUnblock = carrito.filter(i => i.action === 'unblock');
+    const seatsToBlock = carrito.filter(i => i.isBlocked);
 
     try {
       if (seatsToBlock.length) {
+        // Los asientos ya están bloqueados en tiempo real, solo actualizar en BD
         await Promise.all(
           seatsToBlock.map(async (item) => {
-            const updates = { bloqueado: true, status: 'bloqueado' };
+            const updates = { 
+              bloqueado: true, 
+              status: 'bloqueado',
+              updated_at: new Date().toISOString()
+            };
             await createOrUpdateSeat(item._id, item.funcionId, item.zona, updates);
-            await addRealtimeLock(item._id);
           })
         );
+        
         if (onSeatsUpdated) onSeatsUpdated(seatsToBlock.map(i => i._id), 'bloqueado');
+        message.success(`${seatsToBlock.length} asientos bloqueados permanentemente`);
+        setCarrito([]);
+      } else {
+        message.info('No hay asientos para bloquear');
       }
-
-      if (seatsToUnblock.length) {
-        await Promise.all(
-          seatsToUnblock.map(async (item) => {
-            await updateSeatStatusInDB(item._id, item.funcionId);
-            await removeRealtimeLock(item._id);
-          })
-        );
-        if (onSeatsUpdated) onSeatsUpdated(seatsToUnblock.map(i => i._id), 'disponible');
-      }
-
-      const hasBlock = seatsToBlock.length > 0;
-      message.success(hasBlock ? 'Asientos bloqueados' : 'Asientos desbloqueados');
-      setCarrito([]);
     } catch (error) {
-      console.error('Error actualizando asientos:', error);
-      message.error('Error al actualizar los asientos');
+      console.error('Error bloqueando asientos:', error);
+      message.error('Error al bloquear los asientos');
     }
-  }, [carrito, addRealtimeLock, removeRealtimeLock, onSeatsUpdated, setCarrito]);
+  }, [carrito, onSeatsUpdated, setCarrito]);
 
   const formatPrice = useCallback((price) => (
     typeof price === 'number' ? price.toFixed(2) : '0.00'
@@ -167,36 +199,67 @@ const Cart = ({
               {`Función ${idx + 1}: `}
               {group.fecha ? new Date(group.fecha).toLocaleString() : ''}
             </div>
-            {group.items.map((item) => (
-              <div
-                key={item.abonoGroup || `${item._id}-${item.funcionId || ''}`}
-                className={`flex justify-between items-start bg-gray-50 p-2 rounded shadow-sm text-sm ${selectedSeat && selectedSeat._id === item._id ? 'ring-2 ring-blue-400' : ''}`}
-                onClick={() => setSelectedSeat(item)}
-                style={{ cursor: 'pointer' }}
-              >
-                <div className="truncate text-xs leading-tight">
-                  {item.nombreMesa || item.nombre || 'Asiento'}
-                  <div className="text-gray-500">{item.zona}</div>
-                  <div>${formatPrice(item.precio)}</div>
-                </div>
-                <button
-                  onClick={e => {
-                    e.stopPropagation();
-                    handleRemoveSeat(item.abonoGroup || `${item._id}-${item.funcionId || ''}`);
-                  }}
-                  className="text-gray-400 hover:text-red-500"
+            {group.items.map((item) => {
+              const groupKey = `${item.zona}|${item.precio}|${item.tipoPrecio}|${item.descuentoNombre}`;
+              const isBlocked = item.isBlocked;
+              
+              return (
+                <div
+                  key={groupKey}
+                  className={`flex justify-between items-start p-3 rounded shadow-sm text-sm transition-colors ${
+                    isBlocked 
+                      ? 'bg-red-50 border border-red-200' 
+                      : 'bg-gray-50 hover:bg-gray-100'
+                  }`}
                 >
-                  <AiOutlineClose />
-                </button>
-              </div>
-            ))}
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-900">
+                      {isBlocked && '🔒 '}
+                      {item.cantidad} {item.cantidad === 1 ? 'asiento' : 'asientos'} - {item.zona}
+                      {isBlocked && ' (BLOQUEADO)'}
+                    </div>
+                    <div className="text-gray-500 text-xs mt-1">
+                      {item.asientos.map((asiento, idx) => (
+                        <span key={asiento._id} className="inline-block mr-2">
+                          {asiento.nombreMesa || asiento.nombre || 'Asiento'}
+                        </span>
+                      ))}
+                    </div>
+                    {!isBlocked ? (
+                      <div className="text-green-600 font-semibold mt-1">
+                        ${formatPrice(item.precio)} {item.cantidad > 1 && `× ${item.cantidad} = $${formatPrice(item.precio * item.cantidad)}`}
+                      </div>
+                    ) : (
+                      <div className="text-red-600 font-semibold mt-1">
+                        🔒 Bloqueado permanentemente
+                      </div>
+                    )}
+                    {item.tipoPrecio === 'descuento' && !isBlocked && (
+                      <div className="text-orange-600 text-xs mt-1">
+                        Descuento: {item.descuentoNombre}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleRemoveSeat(groupKey);
+                    }}
+                    className="text-gray-400 hover:text-red-500 ml-2 p-1"
+                    title={isBlocked ? "Eliminar bloqueo" : "Eliminar grupo"}
+                  >
+                    <AiOutlineClose />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         ))}
       </div>
 
       {carrito.length > 0 && (
         <div className="mt-4 border-t pt-4 space-y-2">
-          {!carrito.some(i => i.action) ? (
+          {!carrito.some(i => i.isBlocked) ? (
             <>
               {selectedAffiliate && (
                 <div className="text-right text-sm">
@@ -213,13 +276,11 @@ const Cart = ({
           ) : (
             <Button
               type="default"
-              danger={carrito.some(i => i.action === 'block')}
+              danger
               block
               onClick={handleBlockAction}
             >
-              {carrito.some(i => i.action === 'block')
-                ? 'Confirmar Bloqueo'
-                : 'Confirmar Desbloqueo'}
+              🔒 Bloquear Asientos ({carrito.filter(i => i.isBlocked).length})
             </Button>
           )}
           {children}

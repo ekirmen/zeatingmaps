@@ -34,6 +34,8 @@ import WebColors from './pages/WebColors';
 import WebFooter from './pages/WebFooter';
 import WebHeader from './pages/WebHeader';
 import Abonos from './pages/Abonos';
+import CRM from './pages/CRM';
+import EmailCampaigns from './pages/EmailCampaigns';
 
 const BackofficeApp = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -88,8 +90,10 @@ const BackofficeApp = () => {
                     <Route path="web-studio" element={<WebStudio />} />
                     <Route path="colores-web" element={<WebColors />} />
                     <Route path="sitio-web" element={<WebFooter />} />
-                    <Route path="cabecera" element={<WebHeader />} />
-                    <Route path="formato-entrada" element={<FormatoEntrada />} />
+                                                  <Route path="cabecera" element={<WebHeader />} />
+                              <Route path="formato-entrada" element={<FormatoEntrada />} />
+                              <Route path="crm" element={<CRM setSidebarCollapsed={setSidebarCollapsed} />} />
+                              <Route path="email-campaigns" element={<EmailCampaigns setSidebarCollapsed={setSidebarCollapsed} />} />
                   </Route>
 
                   {/* Catch-all para rutas erróneas del backoffice */}

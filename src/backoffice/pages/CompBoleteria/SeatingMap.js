@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Stage, Layer, Circle, Rect, Text, Label, Tag } from "react-konva";
+import { useSeatLockStore } from "../../../components/seatLockStore";
 
 const SeatingMap = ({
   mapa,
@@ -11,11 +12,16 @@ const SeatingMap = ({
   abonoSeats = [],
   tempBlocks = [],
   containerRef,
+  onSelectCompleteTable, // Nueva prop para seleccionar mesa completa
 }) => {
   const stageRef = useRef(null);
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: "" });
+  const [hoveredTable, setHoveredTable] = useState(null);
+  
+  // Obtener funciones de seat lock
+  const { isSeatLocked, isSeatLockedByMe } = useSeatLockStore();
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -61,21 +67,34 @@ const SeatingMap = ({
     const selectedZonaId = selectedZona ? selectedZona._id || selectedZona.id : null;
     const isSelected = selectedZonaId && selectedZonaId === seatZonaId;
 
+    // Mejorar la lógica de colores para mostrar claramente los asientos disponibles
     const colorMap = {
       pagado: "#9ca3af",
       reservado: "#ef4444",
-      bloqueado: blockMode ? "red" : "#9ca3af",
+      anulado: "#9ca3af",
+      bloqueado: "#dc2626", // Rojo para asientos bloqueados
       disponible: silla.color || "#60a5fa",
     };
 
     const isTempBlock = tempBlocks.includes(silla._id);
-    const baseFill = isTempBlock ? "red" : colorMap[silla.estado] || colorMap["disponible"];
+    let baseFill = isTempBlock ? "red" : colorMap[silla.estado] || colorMap["disponible"];
+    
+    // Si hay una zona seleccionada, mostrar en gris los asientos de otras zonas
+    if (selectedZonaId && seatZonaId !== selectedZonaId && silla.estado === "disponible") {
+      baseFill = "#d1d5db"; // Gris claro para asientos no disponibles
+    }
+    
     const fill = isSelected && silla.estado === "disponible" && !isTempBlock ? "#facc15" : baseFill;
+    
     // When blockMode is active allow selecting any seat regardless of zone
     // When abonoMode is active but the list of available seats failed to load
     // allow selection by default. Only restrict when abonoSeats has entries.
     const abonoRestriction = abonoMode && abonoSeats.length > 0 ? isAbono : true;
-    const canSelect = blockMode || ((isAvailable || isSelected) && silla.estado !== "bloqueado" && abonoRestriction);
+    
+    // En modo bloqueo, solo permitir seleccionar asientos disponibles (no vendidos, reservados o anulados)
+    const canSelect = blockMode 
+      ? silla.estado === 'disponible' || silla.estado === 'bloqueado'
+      : ((isAvailable || isSelected) && silla.estado !== "bloqueado" && abonoRestriction);
 
     return (
       <Circle
@@ -95,12 +114,19 @@ const SeatingMap = ({
         onMouseEnter={(e) => {
           const stage = e.target.getStage();
           stage.container().style.cursor = canSelect ? "pointer" : "not-allowed";
-          setTooltip({
-            visible: true,
-            x: silla.posicion.x + 10,
-            y: silla.posicion.y - 10,
-            text: `${silla.nombre} (${silla.estado || "disponible"})`,
-          });
+          
+                     // Mejorar el tooltip con información de zona y bloqueo
+           const zonaInfo = typeof silla.zona === "object" ? silla.zona.nombre : silla.zona;
+           const statusInfo = silla.estado || "disponible";
+           const availabilityInfo = canSelect ? "Disponible" : "No disponible";
+           const lockInfo = isSeatLocked(silla._id) ? "\n🔒 Bloqueado por otro usuario" : "";
+           
+           setTooltip({
+             visible: true,
+             x: silla.posicion.x + 10,
+             y: silla.posicion.y - 10,
+             text: `${silla.nombre}\nZona: ${zonaInfo}\nEstado: ${statusInfo}\n${availabilityInfo}${lockInfo}`,
+           });
         }}
         onMouseLeave={(e) => {
           const stage = e.target.getStage();
@@ -113,6 +139,14 @@ const SeatingMap = ({
 
   const renderTable = (mesa) => {
     const TableShape = mesa.type === "circle" ? Circle : Rect;
+    const availableSeats = mesa.sillas.filter(silla => {
+      const seatZonaId = typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
+      const isAvailable = availableZonas?.includes(seatZonaId) || !availableZonas;
+      const isAbono = abonoMode && abonoSeats.includes(silla._id);
+      const abonoRestriction = abonoMode && abonoSeats.length > 0 ? isAbono : true;
+      return silla.estado === 'disponible' && isAvailable && abonoRestriction;
+    });
+
     return (
       <React.Fragment key={mesa._id}>
         <TableShape
@@ -121,9 +155,11 @@ const SeatingMap = ({
           width={mesa.width}
           height={mesa.height}
           radius={mesa.type === "circle" ? mesa.width / 2 : 0}
-          fill="#ffffff"
-          stroke="#4b5563"
-          strokeWidth={2}
+          fill={hoveredTable === mesa._id ? "#f3f4f6" : "#ffffff"}
+          stroke={hoveredTable === mesa._id ? "#3b82f6" : "#4b5563"}
+          strokeWidth={hoveredTable === mesa._id ? 3 : 2}
+          onMouseEnter={() => setHoveredTable(mesa._id)}
+          onMouseLeave={() => setHoveredTable(null)}
         />
         <Text
           x={mesa.posicion.x - 20}
@@ -134,6 +170,29 @@ const SeatingMap = ({
           fontStyle="bold"
         />
         {mesa.sillas.map((silla) => renderSeat(silla, mesa))}
+        
+        {/* Botón "Mesa completa" */}
+        {hoveredTable === mesa._id && availableSeats.length > 0 && onSelectCompleteTable && (
+          <Label
+            x={mesa.posicion.x + mesa.width / 2 - 40}
+            y={mesa.posicion.y - 30}
+          >
+            <Tag
+              fill="#3b82f6"
+              opacity={0.9}
+              cornerRadius={4}
+              padding={4}
+            />
+            <Text
+              text="Mesa completa"
+              fontSize={10}
+              fill="white"
+              padding={4}
+              onClick={() => onSelectCompleteTable(mesa)}
+              onTap={() => onSelectCompleteTable(mesa)}
+            />
+          </Label>
+        )}
       </React.Fragment>
     );
   };

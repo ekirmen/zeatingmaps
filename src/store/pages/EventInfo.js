@@ -15,11 +15,25 @@ const EventInfo = () => {
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
   const [selectedFunctionId, setSelectedFunctionId] = useState(null);
+  const [venueInfo, setVenueInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchEvento = async () => {
       try {
-        const query = supabase.from('eventos').select('*');
+        setLoading(true);
+        const query = supabase
+          .from('eventos')
+          .select(`
+            *,
+            recintos (
+              id,
+              nombre,
+              direccion,
+              capacidad
+            )
+          `);
+        
         const { data, error } = await (
           isUuid(eventId)
             ? query.eq('id', eventId)
@@ -27,10 +41,14 @@ const EventInfo = () => {
               ? query.eq('id', parseInt(eventId, 10))
               : query.ilike('slug', eventId)
         ).maybeSingle();
+        
         if (error) throw error;
         setEvento(data);
+        setVenueInfo(data?.recintos);
       } catch (err) {
         console.error('Error fetching evento:', err);
+      } finally {
+        setLoading(false);
       }
     };
     if (eventId) fetchEvento();
@@ -61,47 +79,207 @@ const EventInfo = () => {
     }
   };
 
-  return (
-    <div className="p-4 max-w-3xl mx-auto">
-      {(evento?.imagenes?.portada || evento?.imagenes?.banner) && (
-        <img
-          src={resolveImageUrl(evento.imagenes.portada || evento.imagenes.banner)}
-          alt={evento?.nombre || ''}
-          className="w-full rounded mb-6"
-        />
-      )}
-      <h1 className="text-3xl font-bold mb-4">{evento?.nombre}</h1>
+  const getEventImages = () => {
+    if (!evento?.imagenes) return {};
+    
+    try {
+      if (typeof evento.imagenes === 'string') {
+        return JSON.parse(evento.imagenes);
+      }
+      return evento.imagenes;
+    } catch (e) {
+      console.error('Error parsing event images:', e);
+      return {};
+    }
+  };
 
-      {evento?.descripcionHTML && (
-        <div
-          className="prose mb-6"
-          dangerouslySetInnerHTML={{ __html: evento.descripcionHTML }}
-        />
-      )}
+  const images = getEventImages();
+  const bannerImage = images.banner || images.portada || images.obraImagen;
+  const thumbnailImage = images.portada || images.obraImagen || images.banner;
 
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold mb-3">{t('functions')}</h3>
-        {funciones.map((f) => (
-          <label key={f.id || f._id} className="flex items-center gap-2 mb-1">
-            <input
-              type="radio"
-              name="funcion"
-              value={f.id || f._id}
-              checked={selectedFunctionId === (f.id || f._id)}
-              onChange={() => setSelectedFunctionId(f.id || f._id)}
-            />
-            <span>{formatDateString(f.fechaCelebracion)}</span>
-          </label>
-        ))}
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
+    );
+  }
 
-      <button
-        onClick={handleSelect}
-        disabled={!selectedFunctionId}
-        className="bg-blue-600 text-white px-5 py-2 rounded disabled:opacity-50"
-      >
-        {t('select_seats')}
-      </button>
+  if (!evento) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Evento no encontrado</h1>
+          <p className="text-gray-600">El evento que buscas no existe o no está disponible.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Banner Section */}
+      {bannerImage && (
+        <div className="relative h-64 md:h-80 lg:h-96 overflow-hidden">
+          <img
+            src={resolveImageUrl(bannerImage)}
+            alt={evento.nombre}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = `https://placehold.co/1200x400/E0F2F7/000?text=${evento.nombre}`;
+            }}
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+            <h1 className="text-3xl md:text-4xl font-bold mb-2">{evento.nombre}</h1>
+            {venueInfo && (
+              <p className="text-lg opacity-90">{venueInfo.nombre}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-4xl mx-auto p-6">
+        {/* Event Header (when no banner) */}
+        {!bannerImage && (
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-4">{evento.nombre}</h1>
+            {venueInfo && (
+              <p className="text-xl text-gray-600">{venueInfo.nombre}</p>
+            )}
+          </div>
+        )}
+
+        {/* Event Details Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {/* Thumbnail Image */}
+            {thumbnailImage && !bannerImage && (
+              <div className="mb-6">
+                <img
+                  src={resolveImageUrl(thumbnailImage)}
+                  alt={evento.nombre}
+                  className="w-full h-64 object-cover rounded-lg shadow-lg"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://placehold.co/600x400/E0F2F7/000?text=${evento.nombre}`;
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Event Description */}
+            {evento.descripcionHTML && (
+              <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">Descripción del Evento</h2>
+                <div
+                  className="prose prose-lg max-w-none"
+                  dangerouslySetInnerHTML={{ __html: evento.descripcionHTML }}
+                />
+              </div>
+            )}
+
+            {/* Functions Selection */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Funciones Disponibles</h2>
+              {funciones.length > 0 ? (
+                <div className="space-y-3">
+                  {funciones.map((f) => (
+                    <label key={f.id || f._id} className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                      <input
+                        type="radio"
+                        name="funcion"
+                        value={f.id || f._id}
+                        checked={selectedFunctionId === (f.id || f._id)}
+                        onChange={() => setSelectedFunctionId(f.id || f._id)}
+                        className="mr-3"
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">
+                          {formatDateString(f.fechaCelebracion)}
+                        </div>
+                        {f.sala && (
+                          <div className="text-sm text-gray-600">
+                            Sala: {f.sala.nombre}
+                          </div>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-600">No hay funciones disponibles para este evento.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Venue Information */}
+            {venueInfo && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Información del Recinto</h3>
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="font-medium text-gray-900">{venueInfo.nombre}</h4>
+                    {venueInfo.direccion && (
+                      <p className="text-sm text-gray-600">{venueInfo.direccion}</p>
+                    )}
+                  </div>
+                  {venueInfo.capacidad && (
+                    <div className="text-sm text-gray-600">
+                      Capacidad: {venueInfo.capacidad} personas
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Event Details */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Detalles del Evento</h3>
+              <div className="space-y-3 text-sm">
+                {evento.fecha_evento && (
+                  <div>
+                    <span className="font-medium text-gray-700">Fecha:</span>
+                    <div className="text-gray-600">
+                      {new Date(evento.fecha_evento).toLocaleDateString('es-ES', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </div>
+                  </div>
+                )}
+                {evento.estadoVenta && (
+                  <div>
+                    <span className="font-medium text-gray-700">Estado:</span>
+                    <div className="text-gray-600 capitalize">
+                      {evento.estadoVenta.replace(/-/g, ' ')}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <button
+                onClick={handleSelect}
+                disabled={!selectedFunctionId}
+                className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {selectedFunctionId ? 'Seleccionar Asientos' : 'Selecciona una función'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

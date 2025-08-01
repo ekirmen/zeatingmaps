@@ -3,6 +3,7 @@ import Modal from 'react-modal';
 import { useRecinto } from '../contexts/RecintoContext';
 import { supabase } from '../services/supabaseClient';
 import { syncSeatsForSala } from '../services/apibackoffice';
+import formatDateString from '../../utils/formatDateString';
 
 const Funciones = () => {
   const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
@@ -32,9 +33,7 @@ const Funciones = () => {
   };
 
   const formatFecha = (date) => {
-    if (!date) return '—';
-    const d = new Date(date);
-    return isNaN(d) ? '—' : d.toLocaleDateString('es-ES');
+    return formatDateString(date);
   };
 
   // Fetch eventos when sala changes

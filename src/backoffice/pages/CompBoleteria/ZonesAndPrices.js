@@ -7,6 +7,7 @@ import { fetchDescuentoPorCodigo } from '../../../store/services/apistore';
 import { useSeatLockStore } from '../../../components/seatLockStore'; 
 import API_BASE_URL from '../../../utils/apiBase';
 import resolveImageUrl from '../../../utils/resolveImageUrl';
+import formatDateString from '../../../utils/formatDateString';
 
 const ZonesAndPrices = ({
   eventos = [],
@@ -183,6 +184,23 @@ useEffect(() => {
     loadData();
   }, [selectedFuncion]);
 
+  const handleSelectZoneForMap = (zonaId) => {
+    setViewMode('map');
+    setSelectedZonaId(zonaId);
+    // Limpiar cantidades cuando se cambia a modo mapa
+    setZoneQuantities({});
+    setTimeout(() => {
+      mapContainerRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 0);
+  };
+
+  // Nueva función para limpiar selección de zona
+  const handleClearZoneSelection = () => {
+    setSelectedZonaId(null);
+    setZoneQuantities({});
+  };
+
+  // Mejorar la lógica de handleSeatClick para cortesías
   const handleSeatClick = (seat, table) => {
     const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
     const exists = carrito.find(
@@ -195,32 +213,61 @@ useEffect(() => {
 
     if (!selectedClient) {
       message.info('Seleccione un cliente antes de agregar asientos');
+      return;
     }
 
+    // Modo bloqueo - permite seleccionar asientos para bloquearlos
     if (blockMode) {
-      const action = seat.estado === 'bloqueado' ? 'unblock' : 'block';
-      if (exists) {
-        setCarrito(
-          carrito.filter(
-            i => !(i._id === seat._id && i.funcionId === currentFuncId)
-          )
-        );
-        setTempBlocks(tempBlocks.filter(id => id !== seat._id));
-      } else {
-        setCarrito([
-          ...carrito,
-          {
-            _id: seat._id,
-            nombre: seat.nombre,
-            nombreMesa: table.nombre,
-            zona: zonaObj?.nombre || seat.zona,
-            action,
-            funcionId: currentFuncId,
-            funcionFecha: selectedFuncion?.fechaCelebracion,
-          },
-        ]);
-        setTempBlocks([...tempBlocks, seat._id]);
+      // Verificar que el asiento no esté vendido, reservado o anulado
+      if (seat.estado === 'pagado' || seat.estado === 'reservado' || seat.estado === 'anulado') {
+        message.warning(`No se puede bloquear un asiento ${seat.estado}`);
+        return;
       }
+
+      // Verificar si ya está bloqueado por otro usuario
+      if (isSeatLocked(seat._id) && !isSeatLockedByMe(seat._id)) {
+        message.warning('Este asiento ya está siendo seleccionado por otro usuario');
+        return;
+      }
+
+      const exists = carrito.find(i => i._id === seat._id && i.isBlocked);
+      
+      if (exists) {
+        // Desbloquear asiento
+        setCarrito(carrito.filter(i => !(i._id === seat._id && i.isBlocked)));
+        unlockSeat(seat._id, currentFuncId).catch(console.error);
+        message.success('Asiento desbloqueado');
+      } else {
+        // Bloquear asiento
+        lockSeat(seat._id, currentFuncId).then(() => {
+          setCarrito([
+            ...carrito,
+            {
+              _id: seat._id,
+              nombre: seat.nombre,
+              nombreMesa: table.nombre,
+              zona: zonaObj?.nombre || seat.zona,
+              isBlocked: true,
+              funcionId: currentFuncId,
+              funcionFecha: selectedFuncion?.fechaCelebracion,
+              precio: 0, // Los asientos bloqueados no tienen precio
+            },
+          ]);
+          message.success('Asiento bloqueado correctamente');
+        }).catch(err => {
+          message.error('Error al bloquear el asiento');
+          console.error('Error locking seat:', err);
+        });
+      }
+      return;
+    }
+
+    // Verificar si el asiento está disponible para la zona seleccionada
+    const seatZonaId = typeof seat.zona === "object" ? seat.zona._id || seat.zona.id : seat.zona;
+    const isAvailable = selectedZonaId ? selectedZonaId === seatZonaId : true;
+    
+    if (!isAvailable && !blockMode) {
+      message.warning('Este asiento no está disponible para la zona seleccionada');
       return;
     }
 
@@ -229,13 +276,13 @@ useEffect(() => {
       const id = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
       return id === zonaId;
     });
+    
     if (!detalle) {
       message.error('Zona sin precio configurado');
       return;
     }
 
     const basePrice = detalle.precio || 0;
-
     let finalPrice = basePrice;
     let tipoPrecio = 'normal';
     let descuentoNombre = '';
@@ -408,14 +455,6 @@ useEffect(() => {
     setZoneQuantities(prev => ({ ...prev, [zonaId]: '' }));
   };
 
-  const handleSelectZoneForMap = (zonaId) => {
-    setViewMode('map');
-    setSelectedZonaId(zonaId);
-    setTimeout(() => {
-      mapContainerRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 0);
-  };
-
   const handleAddSingleZoneTicket = (zona) => {
     const zonaId = zona.id || zona._id;
     const zonaNombre = zona.nombre;
@@ -463,30 +502,108 @@ useEffect(() => {
     setCarrito([...carrito, item]);
   };
 
+  // Nueva función para seleccionar mesa completa
+  const handleSelectCompleteTable = (table) => {
+    if (!selectedClient) {
+      message.info('Seleccione un cliente antes de agregar asientos');
+      return;
+    }
+
+    const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
+    const availableZonas = zonas.map(z => z.id || z._id);
+    const availableSeats = table.sillas.filter(silla => {
+      const seatZonaId = typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
+      const isAvailable = availableZonas?.includes(seatZonaId) || !availableZonas;
+      const isAbono = abonoMode && abonoSeats.includes(silla._id);
+      const abonoRestriction = abonoMode && abonoSeats.length > 0 ? isAbono : true;
+      return silla.estado === 'disponible' && isAvailable && abonoRestriction;
+    });
+
+    if (availableSeats.length === 0) {
+      message.warning('No hay asientos disponibles en esta mesa');
+      return;
+    }
+
+    const seatsToAdd = [];
+    availableSeats.forEach(seat => {
+      const zonaId = seat.zona;
+      const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
+      
+      // Determine pricing from the selected plantilla
+      const detalle = detallesPlantilla.find(d => {
+        const id = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
+        return id === zonaId;
+      });
+      
+      if (!detalle) {
+        message.error(`Zona ${zonaObj?.nombre || zonaId} sin precio configurado`);
+        return;
+      }
+
+      const basePrice = detalle.precio || 0;
+      let finalPrice = basePrice;
+      let tipoPrecio = 'normal';
+      let descuentoNombre = '';
+
+      if (appliedDiscount?.detalles) {
+        const d = appliedDiscount.detalles.find(dt => {
+          const id = typeof dt.zona === 'object' ? dt.zona._id : dt.zona;
+          return id === zonaId;
+        });
+        if (d) {
+          if (d.tipo === 'porcentaje') {
+            finalPrice = Math.max(0, basePrice - (basePrice * d.valor) / 100);
+          } else {
+            finalPrice = Math.max(0, basePrice - d.valor);
+          }
+          tipoPrecio = 'descuento';
+          descuentoNombre = appliedDiscount.nombreCodigo;
+        }
+      }
+
+      seatsToAdd.push({
+        _id: seat._id,
+        nombre: seat.nombre,
+        nombreMesa: table.nombre,
+        zona: zonaObj?.nombre || seat.zona,
+        precio: finalPrice,
+        tipoPrecio,
+        descuentoNombre,
+        funcionId: currentFuncId,
+        funcionFecha: selectedFuncion?.fechaCelebracion,
+      });
+    });
+
+    setCarrito([...carrito, ...seatsToAdd]);
+    message.success(`${seatsToAdd.length} asientos de la mesa "${table.nombre}" agregados al carrito`);
+  };
+
   return (
     <div className="space-y-4 p-4">
       <div className="flex items-center gap-2">
-        <select
-          className="border p-2 rounded text-sm"
-          value={selectedEvent?.id || selectedEvent?._id || ''}
-          onChange={(e) => onEventSelect(e.target.value)}
-        >
-          <option value="" disabled>
-            Seleccionar evento
-          </option>
-          {eventos.map((ev) => (
-            <option key={ev.id || ev._id} value={ev.id || ev._id}>
-              {ev.nombre}
+        <div className="relative">
+          <select
+            className="border p-2 rounded text-sm pr-8"
+            value={selectedEvent?.id || selectedEvent?._id || ''}
+            onChange={(e) => onEventSelect(e.target.value)}
+          >
+            <option value="" disabled>
+              Seleccionar evento
             </option>
-          ))}
-        </select>
-        {selectedEvent?.imagenes?.logoCuadrado && (
-          <img
-            src={resolveImageUrl(selectedEvent.imagenes.logoCuadrado)}
-            alt="Evento"
-            className="w-10 h-10 object-cover rounded"
-          />
-        )}
+            {eventos.map((ev) => (
+              <option key={ev.id || ev._id} value={ev.id || ev._id}>
+                {ev.nombre}
+              </option>
+            ))}
+          </select>
+          {selectedEvent?.imagenes?.logoCuadrado && (
+            <img
+              src={resolveImageUrl(selectedEvent.imagenes.logoCuadrado)}
+              alt="Evento"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 w-6 h-6 object-cover rounded"
+            />
+          )}
+        </div>
         {funciones.length >= 2 && !selectedFuncion && (
           <button
             onClick={onShowFunctions}
@@ -500,7 +617,7 @@ useEffect(() => {
       {selectedFuncion && (
         <div className="flex items-center gap-2">
           <span className="text-sm">
-            {new Date(selectedFuncion.fechaCelebracion).toLocaleString()}
+            {formatDateString(selectedFuncion.fechaCelebracion)}
           </span>
           {typeof onShowFunctions === 'function' && (
             <button
@@ -515,21 +632,38 @@ useEffect(() => {
       )}
 
       {showSeatingMap && (
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setViewMode('map')}
-            className={`px-3 py-1 rounded ${viewMode === 'map' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-          >
-            Mapa
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('zonas')}
-            className={`px-3 py-1 rounded ${viewMode === 'zonas' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
-          >
-            Zonas
-          </button>
+        <div className="bg-gray-100 p-3 rounded-lg">
+          <div className="text-sm font-medium mb-2">Tipo de vista:</div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setViewMode('map')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                viewMode === 'map' 
+                  ? 'bg-blue-600 text-white shadow-md' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+              }`}
+            >
+              🗺️ Mapa
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('zonas')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                viewMode === 'zonas' 
+                  ? 'bg-blue-600 text-white shadow-md' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+              }`}
+            >
+              📋 Zonas
+            </button>
+          </div>
+          <div className="text-xs text-gray-600 mt-2">
+            {viewMode === 'map' 
+              ? 'Selecciona asientos individuales o usa "Mesa completa" para seleccionar toda la mesa'
+              : 'Selecciona zonas y cantidades para agregar al carrito'
+            }
+          </div>
         </div>
       )}
 
@@ -551,14 +685,23 @@ useEffect(() => {
         {appliedDiscount && (
           <span className="text-green-700 text-sm">{appliedDiscount.nombreCodigo}</span>
         )}
-        <label className="ml-4 text-sm flex items-center gap-1">
-          <input
-            type="checkbox"
-            checked={blockMode}
-            onChange={e => setBlockMode(e.target.checked)}
-          />
-          Bloquear asientos
-        </label>
+                 <label className="ml-4 text-sm flex items-center gap-1">
+           <input
+             type="checkbox"
+             checked={blockMode}
+             onChange={e => {
+               setBlockMode(e.target.checked);
+               if (e.target.checked) {
+                 message.info('Modo bloqueo activado: Selecciona asientos para bloquearlos');
+               } else {
+                 // Limpiar asientos bloqueados del carrito al desactivar
+                 setCarrito(prev => prev.filter(item => !item.isBlocked));
+                 message.info('Modo bloqueo desactivado');
+               }
+             }}
+           />
+           🔒 Bloquear asientos
+         </label>
         <label className="ml-4 text-sm flex items-center gap-1">
           <input
             type="checkbox"
@@ -573,15 +716,51 @@ useEffect(() => {
         mapa ? (
           <>
             {zonas.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-2">
-                {zonas.map(z => {
-                  const id = z.id || z._id;
-                  return (
-                    <div key={id} className="flex rounded overflow-hidden">
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-gray-700">Zonas disponibles:</h3>
+                  {selectedZonaId && (
+                    <button
+                      type="button"
+                      onClick={handleClearZoneSelection}
+                      className="text-xs text-red-600 hover:text-red-800 underline"
+                    >
+                      Limpiar selección
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {zonas.map(z => {
+                    const id = z.id || z._id;
+                    const isSelected = selectedZonaId === id;
+                    return (
                       <button
+                        key={id}
                         type="button"
-                        onClick={() => setSelectedZonaId(id === selectedZonaId ? null : id)}
-                        className={`px-2 py-1 text-sm ${selectedZonaId === id ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+                        onClick={() => setSelectedZonaId(isSelected ? null : id)}
+                        className={`px-3 py-2 text-sm rounded-lg font-medium transition-colors ${
+                          isSelected 
+                            ? 'bg-blue-600 text-white shadow-md' 
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {z.nombre}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedZonaId && (
+                  <div className="mt-2 p-2 bg-blue-50 rounded-lg">
+                    <p className="text-xs text-blue-700">
+                      ✅ Zona seleccionada: <strong>{zonas.find(z => (z.id || z._id) === selectedZonaId)?.nombre}</strong>
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      Solo los asientos de esta zona estarán disponibles para selección
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
                       >
                         {z.nombre}
                       </button>
@@ -617,6 +796,7 @@ useEffect(() => {
               abonoMode={abonoMode}
               abonoSeats={abonoSeats}
               containerRef={mapContainerRef}
+              onSelectCompleteTable={handleSelectCompleteTable}
             />
           </>
         ) : (
@@ -625,53 +805,68 @@ useEffect(() => {
       ) : (
         <div className="overflow-x-auto">
           {detallesPlantilla.length ? (
-            <table className="min-w-full text-sm border">
-              <thead>
-                <tr>
-                  <th className="border px-2 py-1 text-left">Zona</th>
-                  <th className="border px-2 py-1 text-right">Precio</th>
-                  <th className="border px-2 py-1 text-center">Cantidad</th>
-                </tr>
-              </thead>
-              <tbody>
-                {detallesPlantilla.map((d) => {
-                  const zonaId = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
-                  const zonaNombre = d.zona?.nombre || d.zonaId || d.zona;
-                  const precio = getPrecioConDescuento(d);
-                  return (
-                    <tr key={zonaId}>
-                      <td className="border px-2 py-1">{zonaNombre}</td>
-                      <td className="border px-2 py-1 text-right">${precio.toFixed(2)}</td>
-                      <td className="border px-2 py-1 text-center">
-                        <input
-                          type="number"
-                          min="1"
-                          className="border p-1 w-16 mr-2"
-                          value={zoneQuantities[zonaId] || ''}
-                          onChange={(e) => handleQuantityChange(zonaId, e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleAddZoneToCart(d)}
-                          className="px-2 py-1 bg-blue-600 text-white rounded"
-                        >
-                          Añadir
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleSelectZoneForMap(zonaId)}
-                          className="ml-2 px-2 py-1 bg-yellow-600 text-white rounded"
-                        >
-                          Seleccionar
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <div className="bg-gray-50 px-4 py-3 border-b">
+                <h3 className="text-lg font-semibold text-gray-800">Zonas y Precios</h3>
+                <p className="text-sm text-gray-600">Selecciona la cantidad de asientos por zona</p>
+              </div>
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-medium text-gray-700">Zona</th>
+                    <th className="px-4 py-3 text-right font-medium text-gray-700">Precio</th>
+                    <th className="px-4 py-3 text-center font-medium text-gray-700">Cantidad</th>
+                    <th className="px-4 py-3 text-center font-medium text-gray-700">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {detallesPlantilla.map((d) => {
+                    const zonaId = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
+                    const zonaNombre = d.zona?.nombre || d.zonaId || d.zona;
+                    const precio = getPrecioConDescuento(d);
+                    return (
+                      <tr key={zonaId} className="hover:bg-gray-50">
+                        <td className="px-4 py-3 font-medium text-gray-900">{zonaNombre}</td>
+                        <td className="px-4 py-3 text-right font-semibold text-green-600">${precio.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-center">
+                          <input
+                            type="number"
+                            min="1"
+                            className="border border-gray-300 rounded px-3 py-2 w-20 text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            value={zoneQuantities[zonaId] || ''}
+                            onChange={(e) => handleQuantityChange(zonaId, e.target.value)}
+                            placeholder="0"
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => handleAddZoneToCart(d)}
+                            disabled={!zoneQuantities[zonaId] || zoneQuantities[zonaId] <= 0}
+                            className="px-3 py-1 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Añadir
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectZoneForMap(zonaId)}
+                            className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+                          >
+                            Seleccionar
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           ) : (
-            <p className="text-center text-gray-500">No hay plantilla de precios</p>
+            <div className="text-center py-8">
+              <div className="text-gray-400 text-6xl mb-4">📋</div>
+              <p className="text-gray-500 text-lg">No hay plantilla de precios configurada</p>
+              <p className="text-gray-400 text-sm">Configura los precios por zona para continuar</p>
+            </div>
           )}
 
           {abonos.length > 0 && (

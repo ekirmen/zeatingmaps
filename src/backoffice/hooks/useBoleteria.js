@@ -46,7 +46,17 @@ export const useBoleteria = () => {
         return false;
       }
   
-      setSelectedFuncion(funcionData);
+      // Mapear los campos para que coincidan con lo que espera el frontend
+      const funcionMapeada = {
+        ...funcionData,
+        fechaCelebracion: funcionData.fecha_celebracion,
+        inicioVenta: funcionData.inicio_venta,
+        finVenta: funcionData.fin_venta,
+        pagoAPlazos: funcionData.pago_a_plazos,
+        permitirReservasWeb: funcionData.permitir_reservas_web
+      };
+  
+      setSelectedFuncion(funcionMapeada);
       localStorage.setItem(FUNC_KEY, functionId);
   
       // Procesar plantilla
@@ -128,7 +138,17 @@ export const useBoleteria = () => {
 
       if (funcionesError) throw funcionesError;
 
-      setFunciones(funcionesData || []);
+      // Mapear los campos para que coincidan con lo que espera el frontend
+      const funcionesMapeadas = (funcionesData || []).map(funcion => ({
+        ...funcion,
+        fechaCelebracion: funcion.fecha_celebracion,
+        inicioVenta: funcion.inicio_venta,
+        finVenta: funcion.fin_venta,
+        pagoAPlazos: funcion.pago_a_plazos,
+        permitirReservasWeb: funcion.permitir_reservas_web
+      }));
+
+      setFunciones(funcionesMapeadas);
 
       if (funcionesData && funcionesData.length > 0) {
         const funcToSelect = initialFuncId && funcionesData.find(f => f.id === initialFuncId)

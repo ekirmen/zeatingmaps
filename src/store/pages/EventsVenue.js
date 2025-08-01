@@ -3,6 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import EventListWidget from '../components/EventListWidget'; // Your EventListWidget component
 import FaqWidget from '../components/FaqWidget'; // Your FaqWidget component
+import VenueInfoWidget from '../components/VenueInfoWidget'; // New venue info widget
+import FunctionInfoWidget from '../components/FunctionInfoWidget'; // New function info widget
+import FeaturedEventsWidget from '../components/FeaturedEventsWidget'; // New featured events widget
 import { getCmsPage } from '../services/apistore'; // Service to fetch CMS page data
 import { useEventsList } from '../hooks/useEventsList'; // <-- Corrected import path for useEventsList
 
@@ -43,19 +46,31 @@ const EventsVenue = ({ groupByTags = true }) => {
   // Display loading or error states for both CMS widgets and events
   if (loadingCms || loadingEvents) {
     return (
-      <div className="flex items-center justify-center h-screen text-xl text-gray-700 font-inter">
-        Cargando contenido...
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center h-screen text-xl text-gray-700 font-inter">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>Cargando contenido...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (errorCms || errorEvents) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen text-xl text-red-600 font-inter">
-        <p>Error al cargar la página:</p>
-        {errorCms && <p>{errorCms.message}</p>}
-        {errorEvents && <p>{errorEvents.message}</p>}
-        <p className="text-sm text-gray-500 mt-4">Por favor, intenta recargar la página.</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error al cargar la página</h2>
+          {errorCms && <p className="text-red-600 mb-2">{errorCms.message}</p>}
+          {errorEvents && <p className="text-red-600 mb-2">{errorEvents.message}</p>}
+          <p className="text-sm text-gray-500">Por favor, intenta recargar la página.</p>
+        </div>
       </div>
     );
   }
@@ -65,8 +80,31 @@ const EventsVenue = ({ groupByTags = true }) => {
       case 'Listado de eventos':
         // Pass the fetched 'events' to EventListWidget
         return <EventListWidget events={events} groupByTags={groupByTags} />;
+      
+      case 'Eventos Destacados':
+        return <FeaturedEventsWidget 
+          maxEvents={widget.config?.maxEvents || 6}
+          showStatus={true}
+          showVenue={true}
+        />;
+      
+      case 'Información de Recinto':
+        return <VenueInfoWidget 
+          venueId={widget.config?.venueId}
+          showEvents={true}
+          maxEvents={6}
+        />;
+      
+      case 'Información de Función':
+        return <FunctionInfoWidget 
+          functionId={widget.config?.functionId}
+          showPricing={true}
+          showVenueInfo={true}
+        />;
+      
       case 'Preguntas frecuentes':
         return <FaqWidget />;
+      
       default:
         return null;
     }
@@ -81,20 +119,127 @@ const EventsVenue = ({ groupByTags = true }) => {
     : null; // If no widgets or content, return null
 
   return (
-    <>
-      <div className="event-container p-4">
-        {content}
-        {/* Fallback if CMS content is empty but events are loaded */}
-        {!content && events.length > 0 && (
-          <EventListWidget events={events} groupByTags={groupByTags} />
-        )}
-        {!content && events.length === 0 && (
-          <div className="p-6 bg-white rounded-lg shadow-md text-center text-gray-600 font-inter">
-            No hay contenido CMS configurado y no se encontraron eventos.
+    <div className="min-h-screen bg-gray-50">
+      {/* Hero Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div className="max-w-6xl mx-auto px-6 py-16">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              Próximos Eventos
+            </h1>
+            <p className="text-xl md:text-2xl opacity-90 mb-8">
+              Descubre los mejores espectáculos y eventos en tu ciudad
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="bg-white bg-opacity-20 rounded-lg p-4">
+                <div className="text-2xl font-bold">{events.length}</div>
+                <div className="text-sm opacity-90">Eventos Disponibles</div>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-lg p-4">
+                <div className="text-2xl font-bold">
+                  {events.filter(e => e.estadoVenta === 'a-la-venta').length}
+                </div>
+                <div className="text-sm opacity-90">A la Venta</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-6 py-8">
+        {/* CMS Content */}
+        {content && (
+          <div className="mb-8">
+            {content}
           </div>
         )}
+
+        {/* Fallback Events Section */}
+        {!content && events.length > 0 && (
+          <div className="mb-8">
+            <EventListWidget events={events} groupByTags={groupByTags} />
+          </div>
+        )}
+
+        {/* No Content Message */}
+        {!content && events.length === 0 && (
+          <div className="text-center py-12">
+            <div className="bg-white rounded-lg shadow-md p-8 max-w-md mx-auto">
+              <div className="text-gray-400 mb-4">
+                <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">No hay eventos disponibles</h3>
+              <p className="text-gray-600">
+                No hay contenido CMS configurado y no se encontraron eventos en este momento.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Additional Information Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+          {/* How to Buy */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-blue-600 mb-4">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Cómo Comprar</h3>
+            <p className="text-gray-600 text-sm">
+              Selecciona tu evento, elige tus asientos y completa tu compra de forma segura.
+            </p>
+          </div>
+
+          {/* Secure Payment */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-green-600 mb-4">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Pago Seguro</h3>
+            <p className="text-gray-600 text-sm">
+              Tus datos están protegidos con la más alta seguridad en todas las transacciones.
+            </p>
+          </div>
+
+          {/* Customer Support */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-purple-600 mb-4">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192L5.636 18.364M12 2.25a9.75 9.75 0 109.75 9.75A9.75 9.75 0 0012 2.25z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Soporte 24/7</h3>
+            <p className="text-gray-600 text-sm">
+              Nuestro equipo está disponible para ayudarte con cualquier consulta.
+            </p>
+          </div>
+        </div>
+
+        {/* Newsletter Signup */}
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg shadow-lg p-8 mt-12 text-white text-center">
+          <h3 className="text-2xl font-bold mb-4">¡No te pierdas ningún evento!</h3>
+          <p className="text-lg opacity-90 mb-6">
+            Suscríbete para recibir notificaciones de nuevos eventos y ofertas especiales.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+            <input
+              type="email"
+              placeholder="Tu email"
+              className="flex-1 px-4 py-3 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-white"
+            />
+            <button className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+              Suscribirse
+            </button>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 };
 
