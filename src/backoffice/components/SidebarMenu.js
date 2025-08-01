@@ -93,6 +93,7 @@ const SidebarMenu = () => {
               <li><Link to="/dashboard/descuentos" className="block p-2 rounded hover:bg-gray-700">Descuentos</Link></li>
               <li><Link to="/dashboard/funciones" className="block p-2 rounded hover:bg-gray-700">Funciones</Link></li>
               <li><Link to="/dashboard/abonos" className="block p-2 rounded hover:bg-gray-700">Abonos</Link></li>
+              <li><Link to="/dashboard/boleteria-main" className="block p-2 rounded hover:bg-gray-700">Boletería Nueva</Link></li>
             </ul>
           )}
         </li>
@@ -110,6 +111,7 @@ const SidebarMenu = () => {
               <ul className="ml-4 mt-1 space-y-1">
                 <li><Link to="/dashboard/crm" className="block p-2 rounded hover:bg-gray-700">Campaña Email</Link></li>
                 <li><Link to="/dashboard/email-campaigns" className="block p-2 rounded hover:bg-gray-700">Campañas de Mailing</Link></li>
+                <li><Link to="/dashboard/email-pages" className="block p-2 rounded hover:bg-gray-700">Páginas de Email</Link></li>
               </ul>
             )}
         </li>
@@ -133,7 +135,6 @@ const SidebarMenu = () => {
               <li><Link to="/dashboard/colores-web" className="block p-2 rounded hover:bg-gray-700">Colores Web</Link></li>
               <li><Link to="/dashboard/cabecera" className="block p-2 rounded hover:bg-gray-700">Cabecera</Link></li>
               <li><Link to="/dashboard/sitio-web" className="block p-2 rounded hover:bg-gray-700">Sitio web</Link></li>
-              <li><Link to="/dashboard/firebase-config" className="block p-2 rounded hover:bg-gray-700">Firebase configuración</Link></li>
             </ul>
           )}
         </li>

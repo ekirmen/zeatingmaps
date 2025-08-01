@@ -36,6 +36,8 @@ import WebHeader from './pages/WebHeader';
 import Abonos from './pages/Abonos';
 import CRM from './pages/CRM';
 import EmailCampaigns from './pages/EmailCampaigns';
+import BoleteriaMain from './pages/CompBoleteria/BoleteriaMain';
+import EmailPageCreator from './pages/EmailPageCreator';
 
 const BackofficeApp = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -82,6 +84,7 @@ const BackofficeApp = () => {
                     <Route path="descuentos" element={<Descuentos />} />
                     <Route path="funciones" element={<Funciones />} />
                     <Route path="boleteria" element={<Boleteria setSidebarCollapsed={setSidebarCollapsed} />} />
+                    <Route path="boleteria-main" element={<BoleteriaMain />} />
                     <Route path="crear-iva" element={<CreateIva />} />
                     <Route path="abonos" element={<Abonos />} />
                     <Route path="tags" element={<Tags />} />
@@ -94,6 +97,7 @@ const BackofficeApp = () => {
                               <Route path="formato-entrada" element={<FormatoEntrada />} />
                               <Route path="crm" element={<CRM setSidebarCollapsed={setSidebarCollapsed} />} />
                               <Route path="email-campaigns" element={<EmailCampaigns setSidebarCollapsed={setSidebarCollapsed} />} />
+                              <Route path="email-pages" element={<EmailPageCreator setSidebarCollapsed={setSidebarCollapsed} />} />
                   </Route>
 
                   {/* Catch-all para rutas erróneas del backoffice */}

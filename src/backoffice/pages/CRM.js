@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { AiOutlineMail, AiOutlinePlus, AiOutlineEdit, AiOutlineDelete, AiOutlineEye } from 'react-icons/ai';
+import { AiOutlinePlus, AiOutlineEdit, AiOutlineDelete, AiOutlineEye } from 'react-icons/ai';
+import { emailCampaignService } from '../services/emailCampaignService';
 
 const CRM = ({ setSidebarCollapsed }) => {
   const [campaigns, setCampaigns] = useState([]);
@@ -81,6 +82,71 @@ const CRM = ({ setSidebarCollapsed }) => {
         return 'Pausada';
       default:
         return 'Desconocido';
+    }
+  };
+
+  // Función para enviar email de prueba
+  const handleSendTest = async (testEmail) => {
+    if (!selectedCampaign) {
+      toast.error('No hay campaña seleccionada');
+      return;
+    }
+    
+    if (!testEmail || !testEmail.includes('@')) {
+      toast.error('Por favor ingresa un email válido');
+      return;
+    }
+
+    try {
+      const success = await emailCampaignService.sendTestEmail(selectedCampaign.id, testEmail);
+      if (success) {
+        toast.success('Email de prueba enviado exitosamente');
+      }
+    } catch (error) {
+      console.error('Error sending test email:', error);
+      toast.error('Error al enviar email de prueba');
+    }
+  };
+
+  // Función para guardar campaña
+  const handleSaveCampaign = async () => {
+    if (!selectedCampaign) {
+      toast.error('No hay campaña seleccionada');
+      return;
+    }
+
+    try {
+      const success = await emailCampaignService.saveCampaign(selectedCampaign.id, selectedCampaign);
+      if (success) {
+        toast.success('Campaña guardada exitosamente');
+        setShowCreateModal(false);
+        setSelectedCampaign(null);
+      }
+    } catch (error) {
+      console.error('Error saving campaign:', error);
+      toast.error('Error al guardar la campaña');
+    }
+  };
+
+  // Función para lanzar campaña
+  const handleLaunchCampaign = async () => {
+    if (!selectedCampaign) {
+      toast.error('No hay campaña seleccionada');
+      return;
+    }
+
+    if (window.confirm('¿Estás seguro de que quieres lanzar esta campaña? Esta acción no se puede deshacer.')) {
+      try {
+        const success = await emailCampaignService.launchCampaign(selectedCampaign.id);
+        if (success) {
+          toast.success('Campaña lanzada exitosamente');
+          setShowCreateModal(false);
+          setSelectedCampaign(null);
+        }
+      } catch (error) {
+        console.error('Error launching campaign:', error);
+        toast.error('Error al lanzar la campaña');
+      }
     }
   };
 
@@ -391,10 +457,17 @@ const CRM = ({ setSidebarCollapsed }) => {
                     </p>
                     <input
                       type="email"
+                      id="testEmail"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="correo@ejemplo.com"
                     />
-                    <button className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                    <button 
+                      className="mt-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                      onClick={() => {
+                        const testEmail = document.getElementById('testEmail').value;
+                        handleSendTest(testEmail);
+                      }}
+                    >
                       Enviar prueba
                     </button>
                   </div>
@@ -434,10 +507,16 @@ const CRM = ({ setSidebarCollapsed }) => {
                   Cancelar
                 </button>
                 <div className="flex gap-2">
-                  <button className="px-4 py-2 text-gray-700 bg-gray-300 rounded-md hover:bg-gray-400 transition-colors">
+                  <button 
+                    className="px-4 py-2 text-gray-700 bg-gray-300 rounded-md hover:bg-gray-400 transition-colors"
+                    onClick={handleSaveCampaign}
+                  >
                     Guardar
                   </button>
-                  <button className="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors">
+                  <button 
+                    className="px-4 py-2 text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
+                    onClick={handleLaunchCampaign}
+                  >
                     Lanzar campaña
                   </button>
                 </div>

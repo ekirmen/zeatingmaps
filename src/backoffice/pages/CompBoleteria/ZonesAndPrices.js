@@ -8,6 +8,8 @@ import { useSeatLockStore } from '../../../components/seatLockStore';
 import API_BASE_URL from '../../../utils/apiBase';
 import resolveImageUrl from '../../../utils/resolveImageUrl';
 import formatDateString from '../../../utils/formatDateString';
+import CartWithTimer from '../../components/CartWithTimer';
+import SeatAnimation from '../../components/SeatAnimation';
 
 const ZonesAndPrices = ({
   eventos = [],
@@ -36,6 +38,7 @@ const [mapa, setMapa] = useState(null);
   const [tempBlocks, setTempBlocks] = useState([]);
   const [abonoMode, setAbonoMode] = useState(false);
   const [abonoSeats, setAbonoSeats] = useState([]);
+  const [animatingSeats, setAnimatingSeats] = useState([]);
   const unlockSeatRef = useRef(useSeatLockStore.getState().unlockSeat);
   const mapContainerRef = useRef(null);
   
@@ -333,22 +336,24 @@ useEffect(() => {
           abonoGroup: groupId,
         }));
         setCarrito([...carrito, ...items]);
-      } else {
-        setCarrito([
-          ...carrito,
-          {
-            _id: seat._id,
-            nombre: seat.nombre,
-            nombreMesa: table.nombre,
-            zona: zonaObj?.nombre || seat.zona,
-            precio: finalPrice,
-            tipoPrecio,
-            descuentoNombre,
-            funcionId: currentFuncId,
-            funcionFecha: selectedFuncion?.fechaCelebracion,
-          },
-        ]);
-      }
+             } else {
+         const newSeat = {
+           _id: seat._id,
+           nombre: seat.nombre,
+           nombreMesa: table.nombre,
+           zona: zonaObj?.nombre || seat.zona,
+           precio: finalPrice,
+           tipoPrecio,
+           descuentoNombre,
+           funcionId: currentFuncId,
+           funcionFecha: selectedFuncion?.fechaCelebracion,
+         };
+         
+         setCarrito([...carrito, newSeat]);
+         
+         // Trigger animation
+         handleSeatAnimation(newSeat);
+       }
     }
   };
 
@@ -503,6 +508,16 @@ useEffect(() => {
       funcionFecha: funcFecha,
     };
     setCarrito([...carrito, item]);
+  };
+
+  // Función para manejar animación de asiento
+  const handleSeatAnimation = (seat) => {
+    setAnimatingSeats(prev => [...prev, seat]);
+  };
+
+  // Función para completar animación
+  const handleAnimationComplete = (seatId) => {
+    setAnimatingSeats(prev => prev.filter(seat => seat._id !== seatId));
   };
 
   // Nueva función para seleccionar mesa completa
@@ -870,10 +885,32 @@ useEffect(() => {
               </ul>
             </div>
           )}
-        </div>
-      )}
-    </div>
-  );
+                 </div>
+       )}
+     </div>
+     
+     {/* Carrito con temporizador */}
+     <CartWithTimer
+       carrito={carrito}
+       setCarrito={setCarrito}
+       onPaymentClick={() => {
+         // Aquí puedes agregar la lógica para ir a la página de pagos
+         message.info('Redirigiendo a pagos...');
+       }}
+       selectedClient={selectedClient}
+       selectedAffiliate={selectedAffiliate}
+     />
+     
+     {/* Animaciones de asientos */}
+     {animatingSeats.map((seat) => (
+       <SeatAnimation
+         key={`${seat._id}-${Date.now()}`}
+         seat={seat}
+         onAnimationComplete={handleAnimationComplete}
+       />
+     ))}
+   </div>
+ );
 };
 
 export default forwardRef(ZonesAndPrices);

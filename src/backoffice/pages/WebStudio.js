@@ -6,27 +6,119 @@ import EmailWidgetRenderer from '../components/EmailWidgets/EmailWidgetRenderer'
 import EmailTestPanel from '../components/EmailTestPanel';
 import { fetchCmsPage, saveCmsPage } from '../services/apibackoffice';
 
-const pagesData = [
-  { id: 'home', name: 'Home', url: '/store' },
-  { id: 'events', name: 'Eventos', url: '/store/event' },
-  { id: 'about', name: 'Acerca de', url: '/store/about' },
-  { id: 'contact', name: 'Contacto', url: '/store/contact' },
-  { id: 'faq', name: 'Preguntas Frecuentes', url: '/store/faq' },
-  { id: 'terms', name: 'Términos y Condiciones', url: '/store/terms' },
-  { id: 'privacy', name: 'Política de Privacidad', url: '/store/privacy' },
-  { id: 'help', name: 'Ayuda', url: '/store/help' },
-  { id: 'venue-info', name: 'Información de Recintos', url: '/store/venue-info' },
-  { id: 'function-info', name: 'Información de Funciones', url: '/store/function-info' },
-  { id: 'search', name: 'Búsqueda', url: '/store/search' },
-  { id: 'calendar', name: 'Calendario', url: '/store/calendar' },
-  { id: 'newsletter', name: 'Newsletter', url: '/store/newsletter' },
-  { id: 'blog', name: 'Blog', url: '/store/blog' },
-  { id: 'gallery', name: 'Galería', url: '/store/gallery' },
-  { id: 'testimonials', name: 'Testimonios', url: '/store/testimonials' },
-  { id: 'partners', name: 'Socios', url: '/store/partners' },
-  { id: 'careers', name: 'Carreras', url: '/store/careers' },
-  { id: 'press', name: 'Prensa', url: '/store/press' },
-  { id: 'sitemap', name: 'Mapa del Sitio', url: '/store/sitemap' }
+// Datos de ejemplo para las nuevas secciones
+const systemPages = [
+  { id: 1, name: 'Booking confirmation', url: '/booking-confirmation' },
+  { id: 2, name: "Ticket's purchase flow", url: '/purchase-flow' },
+  { id: 3, name: "Product's checkout", url: '/checkout' },
+  { id: 4, name: 'User control panel', url: '/user-panel' },
+  { id: 5, name: 'Edit profile', url: '/edit-profile' },
+  { id: 6, name: 'Error page', url: '/error' },
+  { id: 7, name: 'Event landing', url: '/event-landing' },
+  { id: 8, name: "Company's event list", url: '/company-events' },
+  { id: 9, name: 'Events venue grid', url: '/venue-events' },
+  { id: 10, name: 'Contact us', url: '/contact' },
+  { id: 11, name: 'Legal terms', url: '/legal' },
+  { id: 12, name: 'Checkout page', url: '/checkout-page' },
+  { id: 13, name: 'Search', url: '/search' },
+  { id: 14, name: 'Events venue date schedule', url: '/schedule' },
+  { id: 15, name: 'Sign up', url: '/signup' },
+  { id: 16, name: 'Thank you page', url: '/thank-you' },
+  { id: 17, name: 'Tour event landing', url: '/tour-landing' },
+  { id: 18, name: 'Your tickets', url: '/your-tickets' }
+];
+
+const userPages = [
+  { id: 101, name: 'Astrid_Carolina_Herrera_,_LO_QUE_NO_TE_DIJERON_DEL_SEXO (Copiar)' },
+  { id: 102, name: 'DÍA DE LAS MADRES PIMPINELA' },
+  { id: 103, name: 'Felipe_Pelaez' },
+  { id: 104, name: 'Karina' },
+  { id: 105, name: 'Oktober_beer_fest_2024' },
+  { id: 106, name: 'PROMOCIÓN -20% POR EL DIA DEL PADRE - MERENGAZO VALENCIA' },
+  { id: 107, name: 'PROMOCIÓN 20% POR EL DIA DEL PADRE - MERENGAZO VALENCIA' },
+  { id: 108, name: 'Proximos_Eventos (Copiar)' },
+  { id: 109, name: 'Sin_Bandera_30_de_Abril (Copiar)' },
+  { id: 110, name: 'Teatro_Negro_de_Praga_' },
+  { id: 111, name: 'oasis' },
+  { id: 112, name: 'Republica Dominicana' },
+  { id: 113, name: 'usa' },
+  { id: 114, name: 'Venezuela' }
+];
+
+const headerComponents = [
+  { id: 1, name: 'Classic con buscador', selected: false },
+  { id: 2, name: 'Classic', selected: true },
+  { id: 3, name: 'ON search', selected: true },
+  { id: 4, name: 'Default', selected: false },
+  { id: 5, name: 'Search minimalist', selected: true },
+  { id: 6, name: 'Default search', selected: false }
+];
+
+const footerComponents = [
+  { id: 1, name: 'compact', selected: false },
+  { id: 2, name: 'Default', selected: false },
+  { id: 3, name: 'Default centered company logo', selected: false },
+  { id: 4, name: 'Default company logo', selected: true },
+  { id: 5, name: 'Default no logo', selected: false }
+];
+
+const emailTemplates = [
+  { id: 1, name: '15$_DESCUENTO__en_tus_entradas_solo_por_7_dias_Amigos_Invisibles' },
+  { id: 2, name: '2x1' },
+  { id: 3, name: 'ALL_STAR_2023' },
+  { id: 4, name: 'AMIGOS' },
+  { id: 5, name: 'CAMPAÑA OMAR COURTZ' },
+  { id: 6, name: 'DIA_DE_LAS_MADRES' },
+  { id: 7, name: 'DIA_DE_LAS_MADRES_CON_PIMPINELA' },
+  { id: 8, name: 'DIMENSION_LATINA_HOUSTON' },
+  { id: 9, name: 'DIMENSION_LATINA_ORLANDO' },
+  { id: 10, name: 'FASNET_FEST' },
+  { id: 11, name: 'Finaliza_etapa_de_Preventa_Sin_Bandera_el_28_de_Febrero_' },
+  { id: 12, name: 'Gran_amanecer_llanero' },
+  { id: 13, name: 'Ismael_Cala' },
+  { id: 14, name: 'Karina' },
+  { id: 15, name: 'Katie_Angel_' },
+  { id: 16, name: 'LA_COMEDIA_DEL_AnO' },
+  { id: 17, name: 'La_Casita_de_Dios_en_Valencia' },
+  { id: 18, name: 'MAGIC_KIDS_$EL_MUSICAL_DE_TUS_SUEnOS$_21_DE_JULIO' },
+  { id: 19, name: 'MARKO_DIRECCION' },
+  { id: 20, name: 'MENSAJE_PARA_GENTE_DE_MELENDI' },
+  { id: 21, name: 'MORA' },
+  { id: 22, name: 'MOTO' },
+  { id: 23, name: 'MOTOFEST' },
+  { id: 24, name: 'MOTO_DESCUENTO_40' },
+  { id: 25, name: 'Marko_Dallas_2023' },
+  { id: 26, name: 'NELSON_VELASQUEZ_CHICHIRIVICHE_' },
+  { id: 27, name: 'OKTOBER_BEER_FEST_' },
+  { id: 28, name: 'OKTOBER_BEER_FEST_.' },
+  { id: 29, name: 'OKTOBER_BEER_FEST_2024' },
+  { id: 30, name: 'OMAR_COURTZ_22_DE_NOVIEMBRE' },
+  { id: 31, name: 'OMAR_COURTZ_22_DE_NOVIEMBRE_2024.' },
+  { id: 32, name: 'OMAR_COURTZ_22_DE_NOVIEMBRE_DEL_2024...' },
+  { id: 33, name: 'PLANO_Y_CONTRAPLANO_VALENCIA' },
+  { id: 34, name: 'PROFESOR_BROCEnO_PRECIOS_NUEVOS' },
+  { id: 35, name: 'PROMOCION_-20$_AMANECER_VALLENATO_' },
+  { id: 36, name: 'PROMOCION_-20$_POR_EL_DIA_DEL_PADRE_-_MERENGAZO_VALENCIA' },
+  { id: 37, name: 'PROMO_-20$_POR_EL_DIA_DEL_PADRE_-_MERENGAZO_VALENCIA' },
+  { id: 38, name: 'Preventa_MORA_$Estela__TOUR$' },
+  { id: 39, name: 'Promo_Cuotas_Sin_Bandera' },
+  { id: 40, name: 'Promo_Sin_Bandera' },
+  { id: 41, name: 'Promocion_Ismael_Cala' },
+  { id: 42, name: 'Promocion_Karina' },
+  { id: 43, name: 'Proximos_Eventos' },
+  { id: 44, name: 'Proximos_eventos' },
+  { id: 45, name: 'Proximos_eventos_' },
+  { id: 46, name: 'Proximos_eventos_2023' },
+  { id: 47, name: 'Recomendaciones_Kany_Garcia' },
+  { id: 48, name: 'Sin_Bandera_30_de_Abril' },
+  { id: 49, name: 'VENEZUELA_ES_MUJER' },
+  { id: 50, name: 'VENTAS' },
+  { id: 51, name: 'VOZ_VEIS_NUEVO_FLAYER' },
+  { id: 52, name: '_DESCUENTO__en_tus_entradas_solo_por_7_dias_Laura_Chimaras' },
+  { id: 53, name: 'descuento_todos_los_clentes_de_kreatickets_15$_Laura_Chimaras' },
+  { id: 54, name: 'melendi/sin_bandera' },
+  { id: 55, name: 'plano_y_contra_plano' },
+  { id: 56, name: 'voz_veis' }
 ];
 
 const defaultWidgets = { header: [], content: [], footer: [] };
@@ -203,6 +295,10 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   const [editingWidget, setEditingWidget] = useState(null);
   const [editingArea, setEditingArea] = useState(null);
   const [editingIndex, setEditingIndex] = useState(null);
+  const [widgetsExpanded, setWidgetsExpanded] = useState(false);
+  const [pagesExpanded, setPagesExpanded] = useState(false);
+  const [componentsExpanded, setComponentsExpanded] = useState(false);
+  const [emailsExpanded, setEmailsExpanded] = useState(false);
 
   useEffect(() => {
     if (setSidebarCollapsed) setSidebarCollapsed(true);
@@ -309,11 +405,13 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
   const handleSave = async () => {
     try {
+      console.log('Guardando página...', selectedPage.id, widgets);
       await saveCmsPage(selectedPage.id, widgets);
       localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
-      toast.success('Página guardada');
+      toast.success('Página guardada exitosamente');
     } catch (error) {
-      toast.error('Error al guardar la página');
+      console.error('Error al guardar la página:', error);
+      toast.error(`Error al guardar la página: ${error.message}`);
     }
   };
 
@@ -910,47 +1008,290 @@ const WebStudio = ({ setSidebarCollapsed }) => {
           <span>Volver</span>
         </button>
 
-        <h3 className="font-bold mb-2">Páginas</h3>
-        <ul className="space-y-1 mb-6 max-h-60 overflow-y-auto">
-          {pagesData.map(p => (
-            <li
-              key={p.id}
-              onClick={() => setSelectedPage(p)}
-              className={`cursor-pointer p-2 rounded ${
-                selectedPage.id === p.id ? 'bg-blue-200 font-semibold' : 'hover:bg-gray-200'
-              }`}
-            >
-              {p.name}
-            </li>
-          ))}
-        </ul>
+        {/* WEB STUDIO Header */}
+        <div className="mb-4">
+          <h3 className="font-bold text-lg text-gray-800">WEB STUDIO</h3>
+        </div>
 
+        {/* Mapa del sitio */}
         <div className="mb-6">
-          <h4 className="font-semibold mb-3">Widgets disponibles</h4>
-          <div className="space-y-3">
-            {availableWidgets.map(widget => (
-              <div
-                key={widget.id}
-                className="bg-white rounded-lg shadow-sm p-3 cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => addWidget('content', widget.type, widget.config)}
-              >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={widget.preview}
-                    alt={widget.name}
-                    className="w-16 h-16 object-cover rounded"
-                  />
-                  <div className="flex-1">
-                    <h5 className="font-medium text-gray-900">{widget.name}</h5>
-                    <p className="text-xs text-gray-600">{widget.description}</p>
+          <button 
+            className="w-full text-left p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={() => {/* TODO: Implementar mapa del sitio */}}
+          >
+            Mapa del sitio
+          </button>
+        </div>
+
+        {/* Accordion Menu */}
+        <div className="space-y-2">
+          {/* Páginas */}
+          <div className="border border-gray-300 rounded-lg">
+            <button
+              className="w-full text-left p-3 bg-gray-200 hover:bg-gray-300 transition-colors font-medium"
+              onClick={() => setPagesExpanded(!pagesExpanded)}
+            >
+              Páginas {pagesExpanded ? '▼' : '▶'}
+            </button>
+            
+            {pagesExpanded && (
+              <div className="p-3 bg-white border-t border-gray-300">
+                {/* Páginas del sistema */}
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
+                    <i className="fas fa-folder"></i>
+                    Páginas del sistema
+                  </div>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    {systemPages.map(page => (
+                      <div
+                        key={page.id}
+                        className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                        onClick={() => setSelectedPage(page)}
+                      >
+                        <span className="text-sm">{page.name}</span>
+                        <span className="text-xs text-gray-500">{page.id}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tus páginas */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
+                    <i className="fas fa-folder"></i>
+                    Tus páginas
+                  </div>
+                  <div className="space-y-1 max-h-40 overflow-y-auto">
+                    <div
+                      className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer text-blue-600"
+                      onClick={() => {/* TODO: Implementar nueva página */}}
+                    >
+                      <i className="fas fa-plus-circle"></i>
+                      <span className="text-sm">Nueva página</span>
+                    </div>
+                    {userPages.map(page => (
+                      <div
+                        key={page.id}
+                        className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                        onClick={() => setSelectedPage(page)}
+                      >
+                        <span className="text-sm">{page.name}</span>
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <i className="fas fa-ellipsis-v text-xs"></i>
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            ))}
+            )}
+          </div>
+
+          {/* Componentes */}
+          <div className="border border-gray-300 rounded-lg">
+            <button
+              className="w-full text-left p-3 bg-gray-200 hover:bg-gray-300 transition-colors font-medium"
+              onClick={() => setComponentsExpanded(!componentsExpanded)}
+            >
+              Componentes {componentsExpanded ? '▼' : '▶'}
+            </button>
+            
+            {componentsExpanded && (
+              <div className="p-3 bg-white border-t border-gray-300">
+                {/* Cabeceras */}
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
+                    <i className="fas fa-folder"></i>
+                    Cabeceras
+                  </div>
+                  <div className="space-y-1">
+                    {headerComponents.map(component => (
+                      <div
+                        key={component.id}
+                        className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${component.selected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                          <span className="text-sm">{component.name}</span>
+                        </div>
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <i className="fas fa-ellipsis-v text-xs"></i>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pies */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
+                    <i className="fas fa-folder"></i>
+                    Pies
+                  </div>
+                  <div className="space-y-1">
+                    {footerComponents.map(component => (
+                      <div
+                        key={component.id}
+                        className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-3 h-3 rounded-full ${component.selected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                          <span className="text-sm">{component.name}</span>
+                        </div>
+                        <button className="text-gray-400 hover:text-gray-600">
+                          <i className="fas fa-ellipsis-v text-xs"></i>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Correos electrónicos */}
+          <div className="border border-gray-300 rounded-lg">
+            <button
+              className="w-full text-left p-3 bg-gray-200 hover:bg-gray-300 transition-colors font-medium"
+              onClick={() => setEmailsExpanded(!emailsExpanded)}
+            >
+              Correos electrónicos {emailsExpanded ? '▼' : '▶'}
+            </button>
+            
+            {emailsExpanded && (
+              <div className="p-3 bg-white border-t border-gray-300">
+                <div className="space-y-1 max-h-60 overflow-y-auto">
+                  <div
+                    className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer text-blue-600"
+                    onClick={() => {/* TODO: Implementar nuevo correo */}}
+                  >
+                    <i className="fas fa-plus-circle"></i>
+                    <span className="text-sm">Nuevo correo electrónico</span>
+                  </div>
+                  {emailTemplates.map(template => (
+                    <div
+                      key={template.id}
+                      className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <i className="fas fa-envelope text-gray-400"></i>
+                        <span className="text-sm">{template.name}</span>
+                      </div>
+                      <button className="text-gray-400 hover:text-gray-600">
+                        <i className="fas fa-ellipsis-v text-xs"></i>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="space-y-2 text-sm">
+        {/* Widgets disponibles */}
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-semibold">Widgets disponibles</h4>
+            <button
+              onClick={() => setWidgetsExpanded(!widgetsExpanded)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              {widgetsExpanded ? '▼' : '▶'}
+            </button>
+          </div>
+          
+          {widgetsExpanded && (
+            <div className="space-y-4">
+              {/* Categoría: Widgets de Eventos */}
+              <div>
+                <h5 className="text-sm font-medium text-gray-700 mb-2 border-b pb-1">📅 Widgets de Eventos</h5>
+                <div className="space-y-2">
+                  {availableWidgets
+                    .filter(widget => widget.type.includes('evento') || widget.type.includes('Evento') || widget.type.includes('eventos') || widget.type.includes('Eventos'))
+                    .map(widget => (
+                      <div
+                        key={widget.id}
+                        className="bg-white rounded-lg shadow-sm p-3 cursor-pointer hover:shadow-md transition-shadow border border-gray-200"
+                        onClick={() => addWidget('content', widget.type, widget.config)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={widget.preview}
+                            alt={widget.name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                          <div className="flex-1">
+                            <h6 className="font-medium text-gray-900 text-sm">{widget.name}</h6>
+                            <p className="text-xs text-gray-600">{widget.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Categoría: Widgets de Email */}
+              <div>
+                <h5 className="text-sm font-medium text-gray-700 mb-2 border-b pb-1">📧 Widgets de Email</h5>
+                <div className="space-y-2">
+                  {availableWidgets
+                    .filter(widget => widget.type.includes('email') || widget.type.includes('Email') || widget.type.includes('Banner') || widget.type.includes('Botón') || widget.type.includes('Título') || widget.type.includes('Subtítulo') || widget.type.includes('Paragraph') || widget.type.includes('HTML'))
+                    .map(widget => (
+                      <div
+                        key={widget.id}
+                        className="bg-white rounded-lg shadow-sm p-3 cursor-pointer hover:shadow-md transition-shadow border border-gray-200"
+                        onClick={() => addWidget('content', widget.type, widget.config)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={widget.preview}
+                            alt={widget.name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                          <div className="flex-1">
+                            <h6 className="font-medium text-gray-900 text-sm">{widget.name}</h6>
+                            <p className="text-xs text-gray-600">{widget.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Categoría: Widgets de Información */}
+              <div>
+                <h5 className="text-sm font-medium text-gray-700 mb-2 border-b pb-1">ℹ️ Widgets de Información</h5>
+                <div className="space-y-2">
+                  {availableWidgets
+                    .filter(widget => widget.type.includes('Información') || widget.type.includes('Preguntas') || widget.type.includes('FAQ'))
+                    .map(widget => (
+                      <div
+                        key={widget.id}
+                        className="bg-white rounded-lg shadow-sm p-3 cursor-pointer hover:shadow-md transition-shadow border border-gray-200"
+                        onClick={() => addWidget('content', widget.type, widget.config)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={widget.preview}
+                            alt={widget.name}
+                            className="w-12 h-12 object-cover rounded"
+                          />
+                          <div className="flex-1">
+                            <h6 className="font-medium text-gray-900 text-sm">{widget.name}</h6>
+                            <p className="text-xs text-gray-600">{widget.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Page Info */}
+        <div className="mt-6 space-y-2 text-sm">
           <div>
             <label className="block text-gray-600">Nombre</label>
             <input className="border w-full px-2 py-1 rounded" value={selectedPage.name} readOnly />

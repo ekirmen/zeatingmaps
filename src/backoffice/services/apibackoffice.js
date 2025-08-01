@@ -258,47 +258,140 @@ export const deleteEntrada = async (id) => {
 
 // Obtener página CMS por slug
 export const fetchCmsPage = async (slug) => {
-  let { data, error } = await supabase
-    .from('cms_pages')
-    .select('*')
-    .ilike('slug', slug)
-    .single();
-
-  if (error || !data) {
-    const fallback = await supabase
+  try {
+    // Primero intentar buscar por slug
+    let { data, error } = await supabase
       .from('cms_pages')
       .select('*')
-      .ilike('nombre', slug)
-      .single();
-    data = fallback.data;
-    error = fallback.error;
-  }
+      .ilike('slug', slug)
+      .maybeSingle();
 
-  if (error) {
-    console.error('Supabase error:', error);
-    throw error;
-  }
+    // Si no se encuentra por slug, buscar por nombre
+    if (!data && !error) {
+      const fallback = await supabase
+        .from('cms_pages')
+        .select('*')
+        .ilike('nombre', slug)
+        .maybeSingle();
+      data = fallback.data;
+      error = fallback.error;
+    }
 
-  return data;
+    // Si aún no se encuentra, crear una página por defecto
+    if (!data && !error) {
+      console.log('Página no encontrada, creando página por defecto');
+      const defaultPage = {
+        id: slug,
+        nombre: slug,
+        slug: slug,
+        widgets: {
+          header: [],
+          content: [],
+          footer: []
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      // Intentar insertar la página por defecto
+      const { data: newPage, error: insertError } = await supabase
+        .from('cms_pages')
+        .insert([defaultPage])
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('Error creating default page:', insertError);
+        // Si no se puede insertar, devolver la página por defecto sin guardar
+        return defaultPage;
+      }
+      
+      return newPage;
+    }
+
+    if (error) {
+      console.error('Supabase error:', error);
+      // Devolver página por defecto en caso de error
+      return {
+        id: slug,
+        nombre: slug,
+        slug: slug,
+        widgets: {
+          header: [],
+          content: [],
+          footer: []
+        },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in fetchCmsPage:', error);
+    // Devolver página por defecto en caso de error
+    return {
+      id: slug,
+      nombre: slug,
+      slug: slug,
+      widgets: {
+        header: [],
+        content: [],
+        footer: []
+      },
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+  }
 };
 
 // Guardar widgets en una página CMS por slug
 export const saveCmsPage = async (slug, widgets) => {
-  let { error } = await supabase
-    .from('cms_pages')
-    .update({ widgets })
-    .ilike('slug', slug);
-
-  if (error) {
-    const fallback = await supabase
+  try {
+    // Primero verificar si la página existe
+    let { data: existingPage, error: checkError } = await supabase
       .from('cms_pages')
-      .update({ widgets })
-      .ilike('nombre', slug);
-    error = fallback.error;
-  }
+      .select('id')
+      .ilike('slug', slug)
+      .maybeSingle();
 
-  if (error) {
-    console.error('Error al guardar página CMS:', error);
+    if (checkError) {
+      console.error('Error checking page existence:', checkError);
+      throw new Error('Error al verificar la página');
+    }
+
+    let result;
+    
+    if (existingPage) {
+      // Actualizar página existente
+      result = await supabase
+        .from('cms_pages')
+        .update({ 
+          widgets,
+          updated_at: new Date().toISOString()
+        })
+        .ilike('slug', slug);
+    } else {
+      // Crear nueva página
+      result = await supabase
+        .from('cms_pages')
+        .insert([{
+          slug: slug,
+          nombre: slug,
+          widgets: widgets,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]);
+    }
+
+    if (result.error) {
+      console.error('Error al guardar página CMS:', result.error);
+      throw new Error('Error al guardar la página');
+    }
+
+    return result.data;
+  } catch (error) {
+    console.error('Error in saveCmsPage:', error);
     throw error;
   }
 };

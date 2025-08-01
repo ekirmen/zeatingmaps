@@ -413,6 +413,71 @@ export const emailCampaignService = {
       console.error('Error fetching campaign stats:', error);
       return null;
     }
+  },
+
+  // Enviar email de prueba
+  async sendTestEmail(campaignId, testEmail) {
+    try {
+      // Obtener datos de la campaña
+      const campaign = await this.getCampaign(campaignId);
+      if (!campaign) throw new Error('Campaña no encontrada');
+
+      // Generar HTML del email
+      const emailHtml = await this.generateEmailHtml(campaign);
+
+      // Enviar email de prueba
+      const emailServiceInstance = new emailService();
+      await emailServiceInstance.sendEmail(
+        testEmail,
+        `[PRUEBA] ${campaign.nombre}`,
+        emailHtml
+      );
+
+      toast.success('Email de prueba enviado exitosamente');
+      return true;
+    } catch (error) {
+      console.error('Error sending test email:', error);
+      toast.error('Error al enviar email de prueba');
+      return false;
+    }
+  },
+
+  // Lanzar campaña
+  async launchCampaign(campaignId) {
+    try {
+      // Obtener destinatarios de la campaña
+      const { data: recipients, error } = await supabaseClient
+        .from('campaign_recipients')
+        .select('*')
+        .eq('campaign_id', campaignId);
+
+      if (error) throw error;
+
+      if (!recipients || recipients.length === 0) {
+        toast.error('No hay destinatarios para esta campaña');
+        return false;
+      }
+
+      // Enviar la campaña
+      const result = await this.sendCampaign(campaignId, recipients);
+      return result.sent > 0;
+    } catch (error) {
+      console.error('Error launching campaign:', error);
+      toast.error('Error al lanzar la campaña');
+      return false;
+    }
+  },
+
+  // Guardar campaña
+  async saveCampaign(campaignId, campaignData) {
+    try {
+      const result = await this.updateCampaign(campaignId, campaignData);
+      return result !== null;
+    } catch (error) {
+      console.error('Error saving campaign:', error);
+      toast.error('Error al guardar la campaña');
+      return false;
+    }
   }
 };
 
