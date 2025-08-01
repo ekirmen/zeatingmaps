@@ -9,11 +9,11 @@
   "scripts": {
     "start": "craco start",
     "dev": "craco start",
-    "build": "GENERATE_SOURCEMAP=false craco build",
-    "build:fast": "GENERATE_SOURCEMAP=false CI=false DISABLE_ESLINT_PLUGIN=true SKIP_PREFLIGHT_CHECK=true craco build",
+    "build": "cross-env GENERATE_SOURCEMAP=false craco build",
+    "build:fast": "cross-env GENERATE_SOURCEMAP=false CI=false DISABLE_ESLINT_PLUGIN=true SKIP_PREFLIGHT_CHECK=true craco build",
     "preview": "serve -s build",
     "eject": "react-scripts eject",
-    "vercel-build": "npm ci --prefer-offline --no-audit --no-fund --silent && GENERATE_SOURCEMAP=false CI=false DISABLE_ESLINT_PLUGIN=true SKIP_PREFLIGHT_CHECK=true npm run build",
+    "vercel-build": "npm ci --prefer-offline --no-audit --no-fund --silent && npm run build",
     "test": "craco test",
     "analyze": "npm run build && npx serve -s build"
   },
@@ -34,11 +34,13 @@
     "draft-js-import-html": "^1.4.1",
     "eslint-config-react-app": "^7.0.1",
     "fabric": "^6.5.3",
+    "framer-motion": "^11.0.0",
     "i18next": "^23.8.1",
     "konva": "^9.3.16",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.513.0",
     "moment": "^2.30.1",
+    "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -55,16 +57,14 @@
     "roboto-font": "^0.1.0",
     "uuid": "^11.1.0",
     "web-vitals": "^2.1.4",
-    "zustand": "^5.0.6",
-    "pdf-lib": "^1.17.1",
-    "framer-motion": "^11.0.0"
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
-    "@babel/plugin-import": "^1.7.0",
     "autoprefixer": "^10.4.21",
-    "canvas": "^2.11.2",
+    "babel-plugin-import": "^1.13.8",
     "core-js": "^3.35.0",
+    "cross-env": "^10.0.0",
     "postcss": "^8.5.4",
     "tailwindcss": "^3.4.1",
     "typescript": "^4.9.5"

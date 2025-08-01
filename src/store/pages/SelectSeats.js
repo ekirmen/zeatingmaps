@@ -2,9 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Stage, Layer, Circle, Text } from 'react-konva';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRefParam } from '../../contexts/RefContext';
-// Remove unused import
-// import { Rect } from 'react-konva';
-import { fetchMapa }  from '../services/apistore'; // Asegúrate de importar fetchMapa
+import { fetchMapa }  from '../services/apistore';
+import SeatSelectionTimer from '../components/SeatSelectionTimer';
 const SelectSeats = () => {
   const { salaId, funcionId } = useParams();
   const navigate = useNavigate();
@@ -60,11 +59,25 @@ const SelectSeats = () => {
     navigate(path, { state: { carrito: selectedSeats, funcionId } });
   };
 
+  const handleSeatsCleared = () => {
+    setSelectedSeats([]);
+  };
+
+  const handleTimeExpired = () => {
+    // Opcional: realizar acciones adicionales cuando se agota el tiempo
+    console.log('Tiempo agotado - asientos liberados automáticamente');
+  };
+
   if (loading) return <p>Cargando asientos...</p>;
   if (error) return <p>Error: {error}</p>;
 
   return (
     <div>
+      <SeatSelectionTimer 
+        selectedSeats={selectedSeats}
+        onSeatsCleared={handleSeatsCleared}
+        onTimeExpired={handleTimeExpired}
+      />
       <h1>Seleccionar Asientos - Sala {salaId}</h1>
       <Stage width={stageSize.width} height={stageSize.height}>
         <Layer>
