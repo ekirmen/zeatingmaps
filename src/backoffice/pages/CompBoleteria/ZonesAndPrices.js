@@ -888,7 +888,6 @@ useEffect(() => {
         </div>
       )}
     </div>
-    )}
      
      {/* Carrito con temporizador */}
      <CartWithTimer
