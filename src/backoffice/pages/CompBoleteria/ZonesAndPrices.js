@@ -885,9 +885,9 @@ useEffect(() => {
               </ul>
             </div>
           )}
-                 </div>
-       )}
-     </div>
+        </div>
+      )}
+    </div>
      
      {/* Carrito con temporizador */}
      <CartWithTimer

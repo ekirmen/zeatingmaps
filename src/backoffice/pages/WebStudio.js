@@ -288,7 +288,7 @@ const tagCategories = [
 ];
 
 const WebStudio = ({ setSidebarCollapsed }) => {
-  const [selectedPage, setSelectedPage] = useState(pagesData[0]);
+  const [selectedPage, setSelectedPage] = useState(systemPages[0]);
   const [widgets, setWidgets] = useState(defaultWidgets);
   const [draggingIdx, setDraggingIdx] = useState(null);
   const [pageLoaded, setPageLoaded] = useState(false);
