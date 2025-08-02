@@ -6,6 +6,7 @@ import ConfiguracionBoletas from './ConfiguracionBoletas';
 import API_BASE_URL from '../../../utils/apiBase';
 import resolveImageUrl from '../../../utils/resolveImageUrl';
 import OpcionesAvanzadas from './OpcionesAvanzadas';
+import FacebookPixelConfig from './FacebookPixelConfig';
 import './EditForm.css';
 
 const EditForm = ({
@@ -90,6 +91,12 @@ const EditForm = ({
           >
             Opciones avanzadas
           </button>
+          <button 
+            className={activeTab === 'facebook' ? 'active' : ''} 
+            onClick={() => setActiveTab('facebook')}
+          >
+            Píxel Facebook
+          </button>
         </div>
 
         <div className="tab-content">
@@ -146,6 +153,13 @@ const EditForm = ({
           )}
           {activeTab === 'avanzadas' && (
             <OpcionesAvanzadas 
+              eventoData={eventoData} 
+              setEventoData={setEventoData}
+              handleChange={handleChange}
+            />
+          )}
+          {activeTab === 'facebook' && (
+            <FacebookPixelConfig 
               eventoData={eventoData} 
               setEventoData={setEventoData}
               handleChange={handleChange}

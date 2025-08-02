@@ -11,6 +11,8 @@ import {
 import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
+import FacebookPixel from '../components/FacebookPixel';
+import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../services/facebookPixelService';
 
 function EventPage() {
     useCartRestore();
@@ -22,6 +24,7 @@ function EventPage() {
   const [mapa, setMapa] = useState(null);
   const [priceTemplate, setPriceTemplate] = useState(null);
   const [error, setError] = useState(null);
+  const [facebookPixel, setFacebookPixel] = useState(null);
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const {
@@ -75,6 +78,20 @@ function EventPage() {
     if (selectedFunctionId) fetchMap();
   }, [selectedFunctionId]);
 
+  useEffect(() => {
+    const loadFacebookPixel = async () => {
+      try {
+        if (evento?.id) {
+          const pixel = await getFacebookPixelByEvent(evento.id);
+          setFacebookPixel(pixel);
+        }
+      } catch (error) {
+        console.error('Error loading Facebook pixel:', error);
+      }
+    };
+    if (evento?.id) loadFacebookPixel();
+  }, [evento?.id]);
+
   const handleSeatToggle = useCallback(
     (silla) => {
       const sillaId = silla._id || silla.id;
@@ -104,6 +121,22 @@ function EventPage() {
 
   return (
     <div className="p-4 max-w-7xl mx-auto">
+      {/* Píxel de Facebook para ViewContent */}
+      {facebookPixel && shouldTrackOnPage(facebookPixel, 'event_page') && (
+        <FacebookPixel
+          pixelId={facebookPixel.pixel_id}
+          pixelScript={facebookPixel.pixel_script}
+          eventName={FACEBOOK_EVENTS.VIEW_CONTENT}
+          eventData={{
+            content_name: evento?.nombre,
+            content_category: 'Evento',
+            content_ids: [evento?.id],
+            value: evento?.precio_base,
+            currency: 'USD'
+          }}
+        />
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="lg:col-span-2 bg-white p-6 rounded shadow">
           <h2 className="text-2xl font-bold mb-4">{evento?.nombre}</h2>

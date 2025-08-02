@@ -6,6 +6,8 @@ import { useCartStore } from '../store/cartStore';
 import { getActivePaymentGateways, validateGatewayConfig } from '../services/paymentGatewaysService';
 import { processPayment } from '../services/paymentProcessors';
 import { createPaymentSuccessNotification, createPaymentFailureNotification } from '../services/paymentNotifications';
+import FacebookPixel from '../components/FacebookPixel';
+import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../services/facebookPixelService';
 
 const Pay = () => {
   const navigate = useNavigate();
@@ -15,6 +17,7 @@ const Pay = () => {
   const [loadingGateways, setLoadingGateways] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentResult, setPaymentResult] = useState(null);
+  const [facebookPixel, setFacebookPixel] = useState(null);
 
   useEffect(() => {
     const loadGateways = async () => {
@@ -34,7 +37,23 @@ const Pay = () => {
       }
     };
     loadGateways();
-  }, []);
+    loadFacebookPixel();
+  }, [cartItems]);
+
+  const loadFacebookPixel = async () => {
+    try {
+      if (cartItems.length > 0) {
+        // Obtener el píxel del primer evento en el carrito
+        const firstEventId = cartItems[0]?.eventId;
+        if (firstEventId) {
+          const pixel = await getFacebookPixelByEvent(firstEventId);
+          setFacebookPixel(pixel);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading Facebook pixel:', error);
+    }
+  };
 
   const handlePaymentMethodSelect = (gateway) => {
     setSelectedGateway(gateway);
@@ -84,8 +103,18 @@ const Pay = () => {
           // Para transferencias, mostrar información
           navigate('/payment/manual', { state: { result } });
         } else {
-          // Pago completado
-          navigate('/payment/success', { state: { result } });
+                           // Pago completado
+                 navigate('/thank-you', { 
+                   state: { 
+                     purchaseData: {
+                       eventId: cartItems[0]?.eventId,
+                       eventName: cartItems[0]?.nombreEvento,
+                       amount: total,
+                       ticketCount: cartItems.length,
+                       transactionId: result.transactionId
+                     }
+                   } 
+                 });
         }
       }
     } catch (error) {
@@ -176,6 +205,22 @@ const Pay = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      {/* Píxel de Facebook para InitiateCheckout */}
+      {facebookPixel && shouldTrackOnPage(facebookPixel, 'payment_page') && (
+        <FacebookPixel
+          pixelId={facebookPixel.pixel_id}
+          pixelScript={facebookPixel.pixel_script}
+          eventName={FACEBOOK_EVENTS.INITIATE_CHECKOUT}
+          eventData={{
+            content_name: cartItems.map(item => item.nombreEvento).join(', '),
+            content_category: 'Eventos',
+            content_ids: cartItems.map(item => item.eventId),
+            value: total,
+            currency: 'USD',
+            num_items: cartItems.length
+          }}
+        />
+      )}
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Header */}

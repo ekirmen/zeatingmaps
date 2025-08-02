@@ -13,6 +13,8 @@ import RefundManagement from './pages/RefundManagement';
 import Reports from './pages/Reports';
 import SystemSettings from './pages/SystemSettings';
 import AuditLogs from './pages/AuditLogs';
+import PrinterSettings from './pages/PrinterSettings';
+import FormatoEntrada from './pages/FormatoEntrada';
 
 const BackofficeApp = () => {
   return (
@@ -31,6 +33,8 @@ const BackofficeApp = () => {
           <Route path="reembolsos" element={<RefundManagement />} />
           <Route path="settings" element={<SystemSettings />} />
           <Route path="logs" element={<AuditLogs />} />
+          <Route path="printer" element={<PrinterSettings />} />
+          <Route path="formato-entrada" element={<FormatoEntrada />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

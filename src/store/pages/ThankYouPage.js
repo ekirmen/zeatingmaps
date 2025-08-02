@@ -1,35 +1,153 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useRefParam } from '../../contexts/RefContext';
-import { FaHeart } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { 
+  Card, 
+  Button, 
+  Typography, 
+  Space, 
+  Divider,
+  Alert,
+  CheckCircleOutlined,
+  HomeOutlined,
+  ShoppingOutlined
+} from 'antd';
+import FacebookPixel from '../components/FacebookPixel';
+import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../services/facebookPixelService';
+
+const { Title, Text } = Typography;
 
 const ThankYouPage = () => {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { refParam } = useRefParam();
+  const [facebookPixel, setFacebookPixel] = useState(null);
+  const [purchaseData, setPurchaseData] = useState(null);
+
+  useEffect(() => {
+    // Obtener datos de la compra desde el estado de navegación
+    if (location.state?.purchaseData) {
+      setPurchaseData(location.state.purchaseData);
+      loadFacebookPixel(location.state.purchaseData);
+    }
+  }, [location.state]);
+
+  const loadFacebookPixel = async (purchaseData) => {
+    try {
+      if (purchaseData?.eventId) {
+        const pixel = await getFacebookPixelByEvent(purchaseData.eventId);
+        setFacebookPixel(pixel);
+      }
+    } catch (error) {
+      console.error('Error loading Facebook pixel:', error);
+    }
+  };
+
+  const handleContinueShopping = () => {
+    navigate('/store');
+  };
+
+  const handleGoHome = () => {
+    navigate('/');
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-      <div className="max-w-2xl mx-auto text-center bg-white rounded-lg shadow-lg p-8">
-        <FaHeart className="mx-auto h-16 w-16 text-red-500 mb-6" />
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">¡Gracias por tu Compra!</h1>
-        <p className="text-lg text-gray-600 mb-8">
-          Esperamos que disfrutes del evento. No olvides llevar tus entradas contigo.
-        </p>
-        
-        <div className="space-y-4">
-          <p className="text-gray-600">
-            Si necesitas ayuda o tienes alguna pregunta, no dudes en contactarnos.
-          </p>
-          <button
-            onClick={() => {
-              const path = refParam ? `/store?ref=${refParam}` : '/store';
-              navigate(path);
-            }}
-            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Explorar más eventos
-          </button>
-        </div>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-8">
+      {/* Píxel de Facebook para Purchase */}
+      {facebookPixel && shouldTrackOnPage(facebookPixel, 'thank_you_page') && purchaseData && (
+        <FacebookPixel
+          pixelId={facebookPixel.pixel_id}
+          pixelScript={facebookPixel.pixel_script}
+          eventName={FACEBOOK_EVENTS.PURCHASE}
+          eventData={{
+            content_name: purchaseData.eventName,
+            content_category: 'Evento',
+            content_ids: [purchaseData.eventId],
+            value: purchaseData.amount,
+            currency: 'USD',
+            num_items: purchaseData.ticketCount,
+            transaction_id: purchaseData.transactionId
+          }}
+        />
+      )}
+
+      <div className="max-w-2xl mx-auto px-4">
+        <Card className="text-center">
+          <div className="mb-6">
+            <CheckCircleOutlined 
+              style={{ fontSize: '64px', color: '#52c41a' }} 
+              className="mb-4"
+            />
+            <Title level={2} className="text-green-600">
+              ¡Gracias por tu Compra!
+            </Title>
+            <Text type="secondary" className="text-lg">
+              Tu transacción ha sido procesada exitosamente
+            </Text>
+          </div>
+
+          <Divider />
+
+          {purchaseData && (
+            <div className="mb-6 text-left">
+              <Title level={4}>Detalles de la Compra</Title>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <Text strong>Evento:</Text>
+                  <Text>{purchaseData.eventName}</Text>
+                </div>
+                <div className="flex justify-between">
+                  <Text strong>Número de Tickets:</Text>
+                  <Text>{purchaseData.ticketCount}</Text>
+                </div>
+                <div className="flex justify-between">
+                  <Text strong>Total:</Text>
+                  <Text strong className="text-green-600">
+                    ${purchaseData.amount.toFixed(2)}
+                  </Text>
+                </div>
+                {purchaseData.transactionId && (
+                  <div className="flex justify-between">
+                    <Text strong>ID de Transacción:</Text>
+                    <Text code>{purchaseData.transactionId}</Text>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <Alert
+            message="Confirmación Enviada"
+            description="Hemos enviado un email de confirmación con los detalles de tu compra. Revisa tu bandeja de entrada."
+            type="success"
+            showIcon
+            className="mb-6"
+          />
+
+          <Space size="large">
+            <Button 
+              type="primary" 
+              size="large"
+              icon={<ShoppingOutlined />}
+              onClick={handleContinueShopping}
+            >
+              Continuar Comprando
+            </Button>
+            <Button 
+              size="large"
+              icon={<HomeOutlined />}
+              onClick={handleGoHome}
+            >
+              Ir al Inicio
+            </Button>
+          </Space>
+
+          <Divider />
+
+          <div className="text-sm text-gray-500">
+            <Text type="secondary">
+              Si tienes alguna pregunta sobre tu compra, no dudes en contactarnos.
+            </Text>
+          </div>
+        </Card>
       </div>
     </div>
   );

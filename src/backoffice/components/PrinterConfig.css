@@ -1,0 +1,43 @@
+.template-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid #f0f0f0;
+}
+
+.template-card:hover {
+  border-color: #1890ff;
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.template-card:active {
+  transform: translateY(0);
+}
+
+.printer-config {
+  padding: 20px;
+}
+
+.printer-config .ant-card {
+  margin-bottom: 16px;
+}
+
+.printer-config .ant-alert {
+  margin-bottom: 16px;
+}
+
+.printer-config .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.printer-config .ant-space {
+  width: 100%;
+}
+
+.printer-config .ant-row {
+  margin-bottom: 16px;
+}
+
+.printer-config .ant-col {
+  margin-bottom: 16px;
+} 

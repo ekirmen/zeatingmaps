@@ -25,6 +25,7 @@ import PaymentSuccess from './pages/PaymentSuccess';
 import Profile from './pages/profile';
 import EventosPage from './pages/EventosPage';
 import EventosMapPage from './pages/EventosMapPage';
+import ThankYouPage from './pages/ThankYouPage';
 import { useAuth } from '../contexts/AuthContext'; // para perfil
 
 const StoreApp = () => {
@@ -63,6 +64,7 @@ const StoreApp = () => {
               <Route path="/store/faq" element={<FaqPage />} />
               <Route path="/store/perfil" element={<Profile userData={user} onUpdateProfile={updateProfile} />} />
               <Route path="/payment-success/:locator?" element={<PaymentSuccess />} />
+              <Route path="/thank-you" element={<ThankYouPage />} />
               <Route path="/404" element={<NotFoundPage />} />
               <Route path="*" element={<Navigate to="/404" />} />
             </Routes>

@@ -23,7 +23,8 @@ import {
   faDatabase,
   faChartLine,
   faCogs,
-  faClipboardList
+  faClipboardList,
+  faPrint
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -87,6 +88,16 @@ const SidebarMenu = ({ collapsed }) => {
       title: 'Logs de Auditoría',
       path: '/dashboard/logs',
       icon: faClipboardList
+    },
+    {
+      title: 'Impresora Boca',
+      path: '/dashboard/printer',
+      icon: faPrint
+    },
+    {
+      title: 'Formato de Entrada',
+      path: '/dashboard/formato-entrada',
+      icon: faFileAlt
     }
   ];
 

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from 'antd';
 import { AiOutlineClose } from 'react-icons/ai';
 import { useCartStore } from '../cartStore';
+import FacebookPixel from '../components/FacebookPixel';
+import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../services/facebookPixelService';
 
 // Temporizador para expiración del carrito
 const Timer = ({ expiresAt }) => {
@@ -37,14 +39,51 @@ const Timer = ({ expiresAt }) => {
 const Cart = () => {
     const navigate = useNavigate();
     const { cart, cartExpiration, toggleSeat, clearCart } = useCartStore();
+    const [facebookPixel, setFacebookPixel] = useState(null);
 
     const formatPrice = (price) =>
         typeof price === 'number' ? price.toFixed(2) : '0.00';
 
     const subtotal = cart.reduce((sum, item) => sum + (item.precio || 0), 0);
 
+    useEffect(() => {
+        loadFacebookPixel();
+    }, [cart]);
+
+    const loadFacebookPixel = async () => {
+        try {
+            if (cart.length > 0) {
+                // Obtener el píxel del primer evento en el carrito
+                const firstEventId = cart[0]?.eventId;
+                if (firstEventId) {
+                    const pixel = await getFacebookPixelByEvent(firstEventId);
+                    setFacebookPixel(pixel);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading Facebook pixel:', error);
+        }
+    };
+
     return (
         <div className="bg-white shadow-md rounded-md p-4">
+            {/* Píxel de Facebook para AddToCart */}
+            {facebookPixel && shouldTrackOnPage(facebookPixel, 'cart_page') && (
+                <FacebookPixel
+                    pixelId={facebookPixel.pixel_id}
+                    pixelScript={facebookPixel.pixel_script}
+                    eventName={FACEBOOK_EVENTS.ADD_TO_CART}
+                    eventData={{
+                        content_name: cart.map(item => item.nombreEvento).join(', '),
+                        content_category: 'Eventos',
+                        content_ids: cart.map(item => item.eventId),
+                        value: subtotal,
+                        currency: 'USD',
+                        num_items: cart.length
+                    }}
+                />
+            )}
+
             <div className="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 className="text-lg font-semibold">Shopping Cart</h3>
                 <Timer expiresAt={cartExpiration} />

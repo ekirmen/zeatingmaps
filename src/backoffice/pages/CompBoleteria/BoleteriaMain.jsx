@@ -5,6 +5,7 @@ import CartWithTimer from '../../components/CartWithTimer';
 import SeatAnimation from '../../components/SeatAnimation';
 import ZonesAndPrices from './ZonesAndPrices';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
+import PrintTicketButton from '../../components/PrintTicketButton';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 
@@ -337,6 +338,27 @@ const BoleteriaMain = () => {
             selectedAffiliate={selectedAffiliate}
             fixed={true}
           />
+          
+          {/* Botón de impresión Boca */}
+          {carrito.length > 0 && (
+            <div className="mt-4 p-4 border-t border-gray-200">
+              <PrintTicketButton
+                ticketData={{
+                  eventName: selectedEvent?.nombre || 'Evento',
+                  eventDate: selectedFuncion?.fecha || new Date().toLocaleDateString(),
+                  eventTime: selectedFuncion?.hora || '20:00',
+                  seatNumber: carrito.map(seat => seat.numero_asiento).join(', '),
+                  zoneName: carrito[0]?.zona_nombre || 'General',
+                  price: carrito.reduce((sum, seat) => sum + (seat.precio || 0), 0).toFixed(2),
+                  ticketNumber: `TKT-${Date.now()}`,
+                  qrCode: `TICKET-${Date.now()}`
+                }}
+                onPrintComplete={() => {
+                  message.success('Ticket impreso exitosamente');
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 

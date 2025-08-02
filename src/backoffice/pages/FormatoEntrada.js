@@ -1,234 +1,381 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Card, 
+  Form, 
+  Input, 
+  Button, 
+  Select, 
+  Switch, 
+  InputNumber, 
+  Upload, 
+  message, 
+  Space, 
+  Typography,
+  Divider,
+  Row,
+  Col,
+  Alert,
+  Tabs
+} from 'antd';
+import { 
+  SaveOutlined,
+  PrinterOutlined,
+  FileTextOutlined,
+  PictureOutlined,
+  SettingOutlined
+} from '@ant-design/icons';
+import { saveFormatConfig, getFormatConfig, DEFAULT_FORMAT_CONFIG } from '../services/bocaPrinterService';
+
+const { Title, Text } = Typography;
+const { TextArea } = Input;
+const { Option } = Select;
+const { TabPane } = Tabs;
 
 const FormatoEntrada = () => {
-  const [selectedFormat, setSelectedFormat] = useState('printAtHome');
-  const [pdfPreview, setPdfPreview] = useState(null);
+  const [form] = Form.useForm();
+  const [formatConfig, setFormatConfig] = useState(DEFAULT_FORMAT_CONFIG);
+  const [loading, setLoading] = useState(false);
+  const [previewData, setPreviewData] = useState(null);
 
-  const handleImageUpload = async (e, imageType) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  useEffect(() => {
+    loadFormatConfig();
+  }, []);
 
-    // Handle image upload logic here
-    console.log(`Uploading ${imageType} image:`, file);
+  const loadFormatConfig = async () => {
+    try {
+      const config = await getFormatConfig();
+      setFormatConfig(config);
+      form.setFieldsValue(config);
+    } catch (error) {
+      console.error('Error loading format config:', error);
+      message.error('Error al cargar la configuración');
+    }
   };
 
-  const handlePdfUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPdfPreview(e.target.result);
-    };
-    reader.readAsDataURL(file);
+  const handleSave = async (values) => {
+    try {
+      setLoading(true);
+      await saveFormatConfig(values);
+      setFormatConfig(values);
+      message.success('Configuración guardada exitosamente');
+    } catch (error) {
+      console.error('Error saving format config:', error);
+      message.error('Error al guardar la configuración');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSave = () => {
-    // Add save logic here
-    console.log('Saving configuration...');
+  const handlePreview = () => {
+    const values = form.getFieldsValue();
+    setPreviewData({
+      eventName: 'EVENTO DE PRUEBA',
+      eventDate: new Date().toLocaleDateString(),
+      eventTime: '20:00',
+      seatNumber: 'A1',
+      zoneName: 'GENERAL',
+      price: '25.00',
+      ticketNumber: 'TKT-001',
+      qrCode: 'TEST-TICKET-001'
+    });
+  };
+
+  const generatePreviewText = () => {
+    if (!previewData) return '';
+
+    const values = form.getFieldsValue();
+    let preview = '';
+
+    // Encabezado
+    if (values.header) {
+      preview += `${values.header}\n`;
+    }
+
+    // Datos del ticket
+    preview += `Evento: ${previewData.eventName}\n`;
+    preview += `Fecha: ${previewData.eventDate}\n`;
+    preview += `Hora: ${previewData.eventTime}\n`;
+    preview += `Asiento: ${previewData.seatNumber}\n`;
+    preview += `Zona: ${previewData.zoneName}\n`;
+    preview += `Precio: $${previewData.price}\n`;
+    preview += `Ticket #: ${previewData.ticketNumber}\n`;
+
+    // Pie de página
+    if (values.footer) {
+      preview += `${values.footer}\n`;
+    }
+
+    return preview;
   };
 
   return (
-    <div className="formato-entrada-container">
-      <h2>Configuración de formatos de impresión</h2>
-      
-      <div className="large-12 columns" id="format-list-configurable">
-        {/* Print At Home Format */}
-        <div className="ticket-format-element format_pah">
-          <div className="format-element-cont">
-            <div className="element-info">
-              <span>Formato Print At Home</span>
-              <h4>DIN-A4</h4>
-            </div>
-            <div className="default-format">
-              <div className="default-format-select">
-                <label>
-                  Se ha seleccionado el diseño de formato
-                  <input 
-                    type="text" 
-                    id="inputDesignPaper-1" 
-                    value="Print at home entrada" 
-                    disabled 
-                  />
-                </label>
-              </div>
-              <div className="default-format-options">
-                <button className="btn-option-ball">
-                  <i className="palco4icon palco4icon-edit"></i>
-                </button>
-                <button className="btn-option-ball">
-                  <i className="palco4icon palco4icon-eye"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="formato-entrada-page">
+      <Title level={2}>
+        <FileTextOutlined /> Configuración de Formato de Entrada
+      </Title>
 
-        {/* Passbook Format */}
-        <div className="ticket-format-element format_passbook">
-          <div className="format-element-cont">
-            <div className="element-info">
-              <span>Formato Passbook</span>
-              <h4>Passbook</h4>
-            </div>
-            <div className="default-format">
-              <div className="default-format-select">
-                <label>
-                  Se ha seleccionado el diseño de formato
-                  <input 
-                    type="text" 
-                    id="inputDesignPaper-3" 
-                    value="Sports passbook" 
-                    disabled 
-                  />
-                </label>
-              </div>
-              <div className="default-format-options">
-                <button className="btn-option-ball">
-                  <i className="palco4icon palco4icon-edit"></i>
-                </button>
-                <button className="btn-option-ball">
-                  <i className="palco4icon palco4icon-eye"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <Alert
+        message="Configuración de Impresora Boca"
+        description="Configura el formato de los tickets que se imprimirán en la impresora Boca. Ajusta el tamaño del papel, márgenes, fuentes y contenido."
+        type="info"
+        showIcon
+        className="mb-6"
+      />
 
-        {/* Box Office Format 1 */}
-        <div className="ticket-format-element format_boxoffice">
-          <div className="format-element-cont">
-            <div className="element-info">
-              <span>Formato de taquilla</span>
-              <h4>80mm continuos</h4>
-            </div>
-            <div className="default-format">
-              <div className="default-format-select">
-                <label>
-                  Se ha seleccionado el diseño de formato
-                  <input 
-                    type="text" 
-                    id="inputDesignPaper-2" 
-                    value="Continuo 80mm entrada" 
-                    disabled 
-                  />
-                </label>
-              </div>
-              <div className="default-format-options">
-                <button className="btn-option-ball">
-                  <i className="palco4icon palco4icon-edit"></i>
-                </button>
-                <button className="btn-option-ball">
-                  <i className="palco4icon palco4icon-eye"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      <Tabs defaultActiveKey="1">
+        <TabPane 
+          tab={
+            <span>
+              <SettingOutlined />
+              Configuración Básica
+            </span>
+          } 
+          key="1"
+        >
+          <Card title="Configuración de Papel" className="mb-4">
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={handleSave}
+              initialValues={formatConfig}
+            >
+              <Row gutter={[16, 16]}>
+                <Col span={12}>
+                  <Form.Item
+                    label="Ancho del Papel (mm)"
+                    name="paperWidth"
+                    rules={[{ required: true, message: 'Ingresa el ancho del papel' }]}
+                  >
+                    <InputNumber
+                      min={58}
+                      max={112}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    label="Alto del Papel (mm)"
+                    name="paperHeight"
+                    rules={[{ required: true, message: 'Ingresa el alto del papel' }]}
+                  >
+                    <InputNumber
+                      min={100}
+                      max={500}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
 
-        {/* Box Office Format 2 */}
-        <div className="ticket-format-element format_boxoffice">
-          <div className="format-element-cont">
-            <div className="element-info">
-              <span>Formato de taquilla</span>
-              <h4>139x50</h4>
-            </div>
-            <div className="default-format">
-              <div className="default-format-select">
-                <label>
-                  Se ha seleccionado el diseño de formato
-                  <input 
-                    type="text" 
-                    id="inputDesignPaper-28" 
-                    value="139x50_BMT_IMAGE" 
-                    disabled 
-                  />
-                </label>
-              </div>
-              <div className="default-format-options">
-                <button className="btn-option-ball">
-                  <i className="palco4icon palco4icon-edit"></i>
-                </button>
-                <button className="btn-option-ball">
-                  <i className="palco4icon palco4icon-eye"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+              <Row gutter={[16, 16]}>
+                <Col span={6}>
+                  <Form.Item
+                    label="Margen Superior (mm)"
+                    name="marginTop"
+                  >
+                    <InputNumber
+                      min={0}
+                      max={20}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label="Margen Inferior (mm)"
+                    name="marginBottom"
+                  >
+                    <InputNumber
+                      min={0}
+                      max={20}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label="Margen Izquierdo (mm)"
+                    name="marginLeft"
+                  >
+                    <InputNumber
+                      min={0}
+                      max={20}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item
+                    label="Margen Derecho (mm)"
+                    name="marginRight"
+                  >
+                    <InputNumber
+                      min={0}
+                      max={20}
+                      style={{ width: '100%' }}
+                    />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Form>
+          </Card>
 
-      {/* Save Button */}
-      <div className="save-section">
-        <button className="save-button" onClick={handleSave}>
+          <Card title="Configuración de Texto" className="mb-4">
+            <Row gutter={[16, 16]}>
+              <Col span={12}>
+                <Form.Item
+                  label="Tamaño de Fuente"
+                  name="fontSize"
+                >
+                  <Select>
+                    <Option value="00">Normal</Option>
+                    <Option value="01">Doble Alto</Option>
+                    <Option value="02">Doble Ancho</Option>
+                    <Option value="03">Doble Tamaño</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Alineación"
+                  name="alignment"
+                >
+                  <Select>
+                    <Option value="0">Izquierda</Option>
+                    <Option value="1">Centro</Option>
+                    <Option value="2">Derecha</Option>
+                  </Select>
+                </Form.Item>
+              </Col>
+            </Row>
+          </Card>
+        </TabPane>
+
+        <TabPane 
+          tab={
+            <span>
+              <FileTextOutlined />
+              Contenido del Ticket
+            </span>
+          } 
+          key="2"
+        >
+          <Card title="Encabezado y Pie de Página" className="mb-4">
+            <Form.Item
+              label="Encabezado del Ticket"
+              name="header"
+              help="Texto que aparecerá al inicio del ticket"
+            >
+              <TextArea
+                rows={4}
+                placeholder="Ejemplo: BOLETERÍA SISTEMA&#10;Dirección: Calle Principal #123&#10;Teléfono: (555) 123-4567"
+              />
+            </Form.Item>
+
+            <Form.Item
+              label="Pie de Página del Ticket"
+              name="footer"
+              help="Texto que aparecerá al final del ticket"
+            >
+              <TextArea
+                rows={4}
+                placeholder="Ejemplo: Gracias por su compra&#10;Disfrute del evento&#10;No se permiten devoluciones"
+              />
+            </Form.Item>
+          </Card>
+
+          <Card title="Elementos Adicionales" className="mb-4">
+            <Row gutter={[16, 16]}>
+              <Col span={12}>
+                <Form.Item
+                  label="Mostrar Código QR"
+                  name="showQRCode"
+                  valuePropName="checked"
+                >
+                  <Switch />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  label="Mostrar Código de Barras"
+                  name="showBarcode"
+                  valuePropName="checked"
+                >
+                  <Switch />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Card>
+        </TabPane>
+
+        <TabPane 
+          tab={
+            <span>
+              <PrinterOutlined />
+              Vista Previa
+            </span>
+          } 
+          key="3"
+        >
+          <Card title="Vista Previa del Ticket" className="mb-4">
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Button 
+                type="primary" 
+                onClick={handlePreview}
+                icon={<PrinterOutlined />}
+              >
+                Generar Vista Previa
+              </Button>
+
+              {previewData && (
+                <div className="preview-container">
+                  <div className="preview-ticket">
+                    <pre className="preview-text">
+                      {generatePreviewText()}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </Space>
+          </Card>
+        </TabPane>
+      </Tabs>
+
+      <div className="mt-6">
+        <Button 
+          type="primary" 
+          size="large"
+          onClick={() => form.submit()}
+          loading={loading}
+          icon={<SaveOutlined />}
+        >
           Guardar Configuración
-        </button>
+        </Button>
       </div>
 
-      <section className="pdf-upload">
-        <h3>Formato de Tickets PDF</h3>
-        <div className="pdf-preview">
-          {pdfPreview ? (
-            <iframe 
-              src={pdfPreview} 
-              width="100%" 
-              height="500px"
-              title="PDF Preview"
-            />
-          ) : (
-            <p>No se ha cargado ningún PDF</p>
-          )}
-        </div>
-        <input
-          type="file"
-          accept=".pdf"
-          onChange={handlePdfUpload}
-        />
-      </section>
-
-      <section className="images-upload">
-        <h3>Imágenes de los formatos de impresión</h3>
-        <p>Las imágenes para los formatos de ticket deben ir en formato PNG y pueden tener el fondo transparente.</p>
+      <style jsx>{`
+        .preview-container {
+          margin-top: 16px;
+        }
         
-        <div className="image-upload-grid">
-          {[
-            { type: 'logoHorizontal', label: 'Logo horizontal (640x200)' },
-            { type: 'banner', label: 'Banner (750x196)' },
-            { type: 'logoVertical', label: 'Logo vertical (400x600)' },
-            { type: 'bannerPublicidad', label: 'Banner publicidad (500x700)' },
-            { type: 'logoCuadrado', label: 'Logo cuadrado (600x600)' }
-          ].map((image) => (
-            <div key={image.type} className="image-upload-item">
-              <h5>{image.label}</h5>
-              <div className="image-preview">
-                <p>.jpg .png</p>
-              </div>
-              <div className="upload-buttons">
-                <input
-                  type="file"
-                  accept=".jpg,.png"
-                  onChange={(e) => handleImageUpload(e, image.type)}
-                />
-                <button>Modificar</button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="legal-terms">
-        <h3>TÉRMINOS Y CONDICIONES</h3>
-        <div className="terms-container">
-          <div className="term">
-            <label>Términos legales 1</label>
-            <textarea rows={6} />
-          </div>
-          <div className="term">
-            <label>Términos legales 2</label>
-            <textarea rows={6} />
-          </div>
-        </div>
-      </section>
+        .preview-ticket {
+          background: #f5f5f5;
+          border: 1px solid #d9d9d9;
+          border-radius: 8px;
+          padding: 16px;
+          max-width: 400px;
+          margin: 0 auto;
+        }
+        
+        .preview-text {
+          font-family: 'Courier New', monospace;
+          font-size: 12px;
+          line-height: 1.4;
+          margin: 0;
+          white-space: pre-wrap;
+        }
+      `}</style>
     </div>
   );
 };
