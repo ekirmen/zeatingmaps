@@ -1,395 +1,300 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Navigate, useNavigate } from 'react-router-dom';
-import { useRefParam } from '../../contexts/RefContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { useCartStore } from '../../store/cartStore';
-import MetodoPago from '../components/MetodoPago';
-import { Modal } from 'antd';
-import { toast } from 'react-hot-toast';
-import { loadMetaPixel } from '../utils/analytics';
-import { supabase } from '../../supabaseClient';
-import { createOrUpdateSeat, fetchSeatsByFuncion } from '../../backoffice/services/supabaseSeats';
-import { useSeatLockStore  } from '../../components/seatLockStore';
-import { isUuid } from '../../utils/isUuid';
-
-const locatorFromId = (id) =>
-  typeof id === 'string' ? id.replace(/-/g, '').slice(-6).toUpperCase() : '';
-
+import { useNavigate } from 'react-router-dom';
+import { Modal, Card, Button, Space, Alert, Spin, Divider } from 'antd';
+import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { useCartStore } from '../store/cartStore';
+import { getActivePaymentGateways, validateGatewayConfig } from '../services/paymentGatewaysService';
+import { processPayment } from '../services/paymentProcessors';
+import { createPaymentSuccessNotification, createPaymentFailureNotification } from '../services/paymentNotifications';
 
 const Pay = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { refParam } = useRefParam();
-  const { user } = useAuth();
-  const lockSeat = useSeatLockStore(state => state.lockSeat);
-  const { clearCart } = useCartStore();
-
-  // Accede de forma segura a los datos de navegación
-  const { carrito: stateCarrito, funcionId: stateFuncionId } = location.state || {};
-  const { cart } = useCartStore();
-  const carrito = stateCarrito || cart;
-  const funcionId = stateFuncionId || null;
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
-  const [eventOptions, setEventOptions] = useState({});
-  const [isObservacionesModalVisible, setIsObservacionesModalVisible] = useState(false);
-  const [availableMethods, setAvailableMethods] = useState(["stripe", "paypal", "transferencia"]);
-  const [allowReservation, setAllowReservation] = useState(false);
-  const [currentEventId, setCurrentEventId] = useState(null);
-  const [funcionDetails, setFuncionDetails] = useState(null);
-  const [affiliate, setAffiliate] = useState(null);
+  const { cartItems, clearCart, total } = useCartStore();
+  const [selectedGateway, setSelectedGateway] = useState(null);
+  const [availableGateways, setAvailableGateways] = useState([]);
+  const [loadingGateways, setLoadingGateways] = useState(true);
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [paymentResult, setPaymentResult] = useState(null);
 
   useEffect(() => {
-    const pixelId = localStorage.getItem('metaPixelId');
-    if (pixelId) {
-      loadMetaPixel(pixelId);
-    }
+    const loadGateways = async () => {
+      try {
+        setLoadingGateways(true);
+        const gateways = await getActivePaymentGateways();
+        const validGateways = gateways.filter(gateway => {
+          const validation = validateGatewayConfig(gateway);
+          return validation.valid;
+        });
+        setAvailableGateways(validGateways);
+      } catch (error) {
+        console.error('Error loading payment gateways:', error);
+        toast.error('Error al cargar métodos de pago');
+      } finally {
+        setLoadingGateways(false);
+      }
+    };
+    loadGateways();
   }, []);
 
-  const subtotal = carrito?.reduce((sum, item) => sum + item.precio, 0) || 0;
-  const commission = affiliate ? (affiliate.base || 0) + subtotal * ((affiliate.percentage || 0) / 100) : 0;
-  const subtotalAfter = subtotal - commission;
-  const impuestos = subtotalAfter * 0.16;
-  const total = subtotalAfter + impuestos;
-
-  // Verifica que los asientos del carrito sigan disponibles antes de procesar
-  const verifySeatsAvailable = async () => {
-    try {
-      if (!funcionId || !Array.isArray(carrito) || carrito.length === 0) return true;
-      const seatStates = await fetchSeatsByFuncion(funcionId);
-      const seatMap = seatStates.reduce((acc, s) => {
-        const estado = s.bloqueado ? 'bloqueado' : s.status;
-        acc[s._id] = estado;
-        return acc;
-      }, {});
-      return !carrito.some(it => {
-        const seatId = it._id || it.sillaId;
-        return ['reservado', 'pagado'].includes(seatMap[seatId]);
-      });
-    } catch (err) {
-      console.error('Error verifying seat availability', err);
-      return false;
-    }
+  const handlePaymentMethodSelect = (gateway) => {
+    setSelectedGateway(gateway);
   };
 
-  useEffect(() => {
-    if (!funcionId) return;
-
-    const fetchOptions = async () => {
-      try {
-        const { data: funcData, error: funcErr } = await supabase
-          .from('funciones')
-          .select('*, permitirReservasWeb:permitir_reservas_web')
-          .eq('id', funcionId)
-          .single();
-        if (funcErr) throw funcErr;
-        setFuncionDetails(funcData);
-        const eventId =
-          typeof funcData.evento === 'object'
-            ? funcData.evento.id || funcData.evento._id
-            : funcData.evento;
-        setAllowReservation(!!funcData.permitirReservasWeb);
-        setCurrentEventId(eventId);
-
-        if (eventId) {
-          const { data: eventData, error: evErr } = await supabase
-            .from('eventos')
-            .select('*')
-            .eq('id', eventId)
-            .single();
-          if (evErr) throw evErr;
-          setEventOptions(eventData.otrasOpciones || {});
-          if (eventData.otrasOpciones?.metodosPagoPermitidos?.length) {
-            setAvailableMethods(eventData.otrasOpciones.metodosPagoPermitidos);
-          }
-        }
-      } catch (error) {
-        console.error('Error cargando opciones del evento:', error);
-      }
-    };
-
-    fetchOptions();
-  }, [funcionId]);
-
-  useEffect(() => {
-    const fetchAffiliate = async () => {
-      if (!refParam) {
-        setAffiliate(null);
-        return;
-      }
-      try {
-        const { data, error } = await supabase
-          .from('affiliate_users')
-          .select('*')
-          .eq('login', refParam)
-          .single();
-        if (error) throw error;
-        setAffiliate(data);
-      } catch (err) {
-        console.error('Error fetching affiliate', err);
-        setAffiliate(null);
-      }
-    };
-    fetchAffiliate();
-  }, [refParam]);
-
-  useEffect(() => {
-    if (eventOptions.observacionesCompra?.mostrar) {
-      setIsObservacionesModalVisible(true);
-    }
-  }, [eventOptions]);
-
-  const handlePaymentMethodSelect = (method) => {
-    console.log('Selected payment method:', method);
-    setSelectedPaymentMethod(method);
-  };
-
-  const handleProcessReservation = async () => {
-    try {
-      const available = await verifySeatsAvailable();
-      if (!available) {
-        toast.error('Alguno de los asientos ya no está disponible');
-        return;
-      }
-      if (!isUuid(user?.id)) {
-        toast.error('Debes iniciar sesión para reservar');
-        navigate('/store/login');
-        return;
-      }
-      const isValidFuncionId = Number.isInteger(Number(funcionId)) && Number(funcionId) > 0;
-      const isValidEventId = isUuid(currentEventId) || typeof currentEventId === 'string';
-      if (!isValidEventId || !isValidFuncionId) {
-        console.error('Invalid IDs provided for reservation');
-        toast.error('Error al procesar la reserva');
-        return;
-      }
-      const seatsPayload = carrito.map(item => ({
-        id: item._id || item.sillaId,
-        name: item.nombre || '',
-        price: item.precio,
-        zona: { id: item.zona || item.zonaId, nombre: item.zonaNombre },
-        mesa: { nombre: item.nombreMesa }
-      }));
-      const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
-  
-      const { data, error } = await supabase.from('payments').insert([{
-        usuario_id: user.id,
-        event: currentEventId,
-        funcion: funcionId,
-        seats: seatsPayload,
-        status: 'reservado',
-        referrer: refParam || null,
-        discountCode: discountCode || null,
-        created_at: new Date().toISOString()
-      }]).select().single();
-
-      if (error) throw error;
-
-      let locator = data.locator;
-      if (!locator) {
-        locator = locatorFromId(data.id);
-        await supabase.from('payments').update({ locator }).eq('id', data.id);
-      }
-
-      await Promise.all(
-        carrito.map(item => {
-          const seatId = item._id || item.sillaId;
-          const zonaId = item.zona || item.zonaId;
-          if (!seatId || !zonaId) {
-            console.error('Invalid seat data for reservation:', item);
-            return Promise.resolve();
-          }
-          return createOrUpdateSeat(seatId, funcionId, zonaId, { status: 'reservado' });
-        })
-      );
-      await Promise.all(
-        carrito
-          .map(item => item._id || item.sillaId)
-          .filter(isUuid)
-          .map(seatId => lockSeat(seatId, 'reservado', funcionId))
-      );
-
-      navigate(`/payment-success/${locator}`, { state: { locator, emailSent: false } });
-    } catch (error) {
-      console.error('Reservation error:', error);
-      toast.error('Error al procesar la reserva');
-    }
-  };
-  
   const handleProcessPayment = async () => {
-    console.log('Processing payment with method:', selectedPaymentMethod);
-    if (!selectedPaymentMethod) {
-      toast.error("Por favor selecciona un método de pago");
+    if (!selectedGateway) {
+      toast.error('Por favor selecciona un método de pago');
       return;
     }
 
     try {
-      const available = await verifySeatsAvailable();
-      if (!available) {
-        toast.error('Alguno de los asientos ya no está disponible. Se liberó tu carrito.');
-        await clearCart();
-        return;
-      }
-      if (!isUuid(user?.id)) {
-        toast.error('Debes iniciar sesión para comprar');
-        navigate('/store/login');
-        return;
-      }
-      const isValidFuncionId = Number.isInteger(Number(funcionId)) && Number(funcionId) > 0;
-      const isValidEventId = isUuid(currentEventId) || typeof currentEventId === 'string';
-      if (!isValidEventId || !isValidFuncionId) {
-        console.error('Invalid IDs provided for payment');
-        toast.error('Error al procesar el pago');
-        return;
-      }
-      const seatsPayload = carrito.map(item => ({
-        id: item._id || item.sillaId,
-        name: item.nombre || '',
-        price: item.precio,
-        zona: { id: item.zona || item.zonaId, nombre: item.zonaNombre },
-        mesa: { nombre: item.nombreMesa }
-      }));
-      const discountCode = carrito.find(it => it.descuentoNombre)?.descuentoNombre;
-  
-      const { data, error } = await supabase.from('payments').insert([{
-        usuario_id: user.id,
-        event: currentEventId,
-        funcion: funcionId,
-        seats: seatsPayload,
-        status: 'pagado',
-        payments: [{ method: selectedPaymentMethod, amount: total }],
-        referrer: refParam || null,
-        discountCode: discountCode || null,
-        created_at: new Date().toISOString()
-      }]).select().single();
+      setProcessingPayment(true);
+      
+      const paymentData = {
+        orderId: `ORDER-${Date.now()}`,
+        amount: total,
+        currency: 'USD',
+        items: cartItems,
+        user: {
+          id: 'user-id', // Obtener del contexto de autenticación
+          email: 'user@example.com'
+        }
+      };
 
-      if (error) throw error;
+      const result = await processPayment(selectedGateway, paymentData);
+      setPaymentResult(result);
 
-      let locator = data.locator;
-      if (!locator) {
-        locator = locatorFromId(data.id);
-        await supabase.from('payments').update({ locator }).eq('id', data.id);
+      if (result.success) {
+        // Enviar notificación de éxito
+        await createPaymentSuccessNotification({
+          id: result.transactionId,
+          amount: total,
+          payment_gateways: { name: selectedGateway.name }
+        });
+
+        // Limpiar carrito
+        clearCart();
+        
+        // Redirigir según el tipo de pago
+        if (result.requiresRedirect) {
+          window.location.href = result.approvalUrl;
+        } else if (result.requiresAction) {
+          // Para Stripe, mostrar formulario de tarjeta
+          navigate('/payment/confirm', { state: { result } });
+        } else if (result.requiresManualConfirmation) {
+          // Para transferencias, mostrar información
+          navigate('/payment/manual', { state: { result } });
+        } else {
+          // Pago completado
+          navigate('/payment/success', { state: { result } });
+        }
       }
-
-      await Promise.all(
-        carrito.map(item => {
-          const seatId = item._id || item.sillaId;
-          const zonaId = item.zona || item.zonaId;
-          if (!seatId || !zonaId) {
-            console.error('Invalid seat data for payment:', item);
-            return Promise.resolve();
-          }
-          return createOrUpdateSeat(seatId, funcionId, zonaId, { status: 'pagado' });
-        })
-      );
-      await Promise.all(
-        carrito
-          .map(item => item._id || item.sillaId)
-          .filter(isUuid)
-          .map(seatId => lockSeat(seatId, 'pagado', funcionId))
-      );
-
-      navigate(`/payment-success/${locator}`, { state: { locator, emailSent: true } });
     } catch (error) {
-      console.error('Payment error:', error);
-      toast.error("Error al procesar el pago. Se liberó tu carrito.");
-      await clearCart();
+      console.error('Error processing payment:', error);
+      
+      // Enviar notificación de fallo
+      await createPaymentFailureNotification({
+        id: 'temp-id',
+        amount: total,
+        payment_gateways: { name: selectedGateway.name }
+      });
+
+      toast.error('Error al procesar el pago. Por favor, intenta nuevamente.');
+    } finally {
+      setProcessingPayment(false);
     }
   };
-  
 
-  // ✅ Render condicional después de los hooks
-  if (!carrito || !funcionId) {
-    const path = refParam ? `/store?ref=${refParam}` : '/store';
-    return <Navigate to={path} replace />;
+  const handleProcessReservation = async () => {
+    if (!selectedGateway) {
+      toast.error('Por favor selecciona un método de pago');
+      return;
+    }
+
+    try {
+      setProcessingPayment(true);
+      
+      const reservationData = {
+        orderId: `RESERVATION-${Date.now()}`,
+        amount: total,
+        currency: 'USD',
+        items: cartItems,
+        type: 'reservation'
+      };
+
+      const result = await processPayment(selectedGateway, reservationData);
+      setPaymentResult(result);
+
+      if (result.success) {
+        clearCart();
+        navigate('/reservation/success', { state: { result } });
+      }
+    } catch (error) {
+      console.error('Error processing reservation:', error);
+      toast.error('Error al procesar la reserva');
+    } finally {
+      setProcessingPayment(false);
+    }
+  };
+
+  const getGatewayIcon = (type) => {
+    const icons = {
+      stripe: <CreditCardOutlined style={{ color: '#6772e5' }} />,
+      paypal: <DollarOutlined style={{ color: '#0070ba' }} />,
+      transfer: <BankOutlined style={{ color: '#52c41a' }} />,
+      mobile_payment: <MobileOutlined style={{ color: '#1890ff' }} />,
+      zelle: <DollarOutlined style={{ color: '#6f42c1' }} />,
+      reservation: <ClockCircleOutlined style={{ color: '#fa8c16' }} />
+    };
+    return icons[type] || <DollarOutlined />;
+  };
+
+  const getGatewayDescription = (type) => {
+    const descriptions = {
+      stripe: 'Pago seguro con tarjeta de crédito o débito',
+      paypal: 'Pago rápido y seguro con PayPal',
+      transfer: 'Transferencia bancaria directa',
+      mobile_payment: 'Pago móvil (MercadoPago, etc.)',
+      zelle: 'Transferencia Zelle instantánea',
+      reservation: 'Reserva sin pago inmediato'
+    };
+    return descriptions[type] || '';
+  };
+
+  if (cartItems.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Carrito Vacío</h2>
+          <p className="text-gray-600 mb-6">No hay productos en tu carrito</p>
+          <Button type="primary" onClick={() => navigate('/store')}>
+            Continuar Comprando
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Finalizar Compra</h1>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          {/* Header */}
+          <div className="bg-blue-600 text-white px-6 py-4">
+            <h1 className="text-2xl font-bold">Finalizar Compra</h1>
+            <p className="text-blue-100">Selecciona tu método de pago</p>
+          </div>
 
-      {/* Cart Summary */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Resumen del Carrito</h2>
-        {funcionDetails && (
-          <div className="mb-2 font-medium">
-            {new Date(funcionDetails.fechaCelebracion).toLocaleString()}
-          </div>
-        )}
-        {carrito.map((item, index) => (
-          <div key={index} className="flex justify-between py-2 border-b">
-            <span>{item.zonaNombre} - {item.nombreMesa}</span>
-            <span>${item.precio}</span>
-          </div>
-        ))}
-        <div className="mt-4">
-          <div className="flex justify-between py-2">
-            <span>Subtotal:</span>
-            <span>${subtotal.toFixed(2)}</span>
-          </div>
-          {affiliate && (
-            <>
-              <div className="flex justify-between py-2 text-sm text-gray-600">
-                <span>Comisión {affiliate.user.login} ({Number(affiliate.base || 0).toFixed(2)} + {affiliate.percentage}%):</span>
-                <span>- ${commission.toFixed(2)}</span>
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Métodos de Pago */}
+              <div className="lg:col-span-2">
+                <h2 className="text-xl font-semibold mb-4">Métodos de Pago</h2>
+                
+                {loadingGateways ? (
+                  <div className="text-center py-8">
+                    <Spin size="large" />
+                    <p className="mt-4 text-gray-600">Cargando métodos de pago...</p>
+                  </div>
+                ) : availableGateways.length === 0 ? (
+                  <Alert
+                    message="No hay métodos de pago disponibles"
+                    description="Por favor, contacta al administrador para configurar los métodos de pago."
+                    type="warning"
+                    showIcon
+                  />
+                ) : (
+                  <div className="space-y-4">
+                    {availableGateways.map((gateway) => (
+                      <Card
+                        key={gateway.id}
+                        className={`cursor-pointer transition-all duration-200 ${
+                          selectedGateway?.id === gateway.id
+                            ? 'ring-2 ring-blue-500 border-blue-500'
+                            : 'hover:shadow-md'
+                        }`}
+                        onClick={() => handlePaymentMethodSelect(gateway)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="text-2xl">
+                              {getGatewayIcon(gateway.type)}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-lg">{gateway.name}</h3>
+                              <p className="text-gray-600 text-sm">
+                                {getGatewayDescription(gateway.type)}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm text-gray-500">Seleccionado</div>
+                            <div className="text-lg font-bold text-green-600">
+                              {selectedGateway?.id === gateway.id ? '✓' : ''}
+                            </div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div className="flex justify-between py-2">
-                <span>Subtotal con descuento:</span>
-                <span>${subtotalAfter.toFixed(2)}</span>
+
+              {/* Resumen del Carrito */}
+              <div className="lg:col-span-1">
+                <Card title="Resumen de Compra" className="sticky top-4">
+                  <div className="space-y-4">
+                    {/* Items del carrito */}
+                    <div>
+                      <h4 className="font-semibold mb-2">Productos</h4>
+                      <div className="space-y-2">
+                        {cartItems.map((item, index) => (
+                          <div key={index} className="flex justify-between text-sm">
+                            <span>{item.nombreZona} - {item.nombreAsiento}</span>
+                            <span>${item.precio}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <Divider />
+
+                    {/* Total */}
+                    <div className="flex justify-between items-center text-lg font-bold">
+                      <span>Total</span>
+                      <span>${total.toFixed(2)}</span>
+                    </div>
+
+                    {/* Botón de Pago */}
+                    <Button
+                      type="primary"
+                      size="large"
+                      block
+                      loading={processingPayment}
+                      disabled={!selectedGateway || processingPayment}
+                      onClick={
+                        selectedGateway?.type === 'reservation' 
+                          ? handleProcessReservation 
+                          : handleProcessPayment
+                      }
+                    >
+                      {processingPayment ? 'Procesando...' : 
+                       selectedGateway?.type === 'reservation' 
+                         ? 'Hacer Reserva' 
+                         : 'Procesar Pago'}
+                    </Button>
+
+                    {selectedGateway && (
+                      <div className="text-xs text-gray-500 text-center">
+                        Pagando con {selectedGateway.name}
+                      </div>
+                    )}
+                  </div>
+                </Card>
               </div>
-            </>
-          )}
-          <div className="flex justify-between py-2">
-            <span>Impuestos (16%):</span>
-            <span>${impuestos.toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between py-2 font-bold">
-            <span>Total:</span>
-            <span>${total.toFixed(2)}</span>
+            </div>
           </div>
         </div>
       </div>
-
-
-      {/* Payment Methods */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <h2 className="text-xl font-semibold mb-4">Método de Pago</h2>
-        <MetodoPago
-          metodosDisponibles={availableMethods}
-          onSelect={handlePaymentMethodSelect}
-          selected={selectedPaymentMethod}
-        />
-      </div>
-
-      {/* Process Payment / Reservation Buttons */}
-      {allowReservation && (
-        <button
-          onClick={handleProcessReservation}
-          className="w-full mb-4 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition"
-        >
-          Reservar
-        </button>
-      )}
-      <button
-        onClick={handleProcessPayment}
-        className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition"
-        disabled={!selectedPaymentMethod}
-      >
-        Proceder al Pago
-      </button>
-
-      {eventOptions.observacionesCompra?.mostrar && (
-        <Modal
-          open={isObservacionesModalVisible}
-          closable={false}
-          maskClosable={true}
-          onOk={() => setIsObservacionesModalVisible(false)}
-          onCancel={() => setIsObservacionesModalVisible(false)}
-          okText="Continuar"
-          cancelButtonProps={{ style: { display: 'none' } }}
-        >
-          <p>{eventOptions.observacionesCompra.texto}</p>
-        </Modal>
-      )}
     </div>
   );
 };

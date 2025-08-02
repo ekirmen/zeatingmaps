@@ -23,6 +23,8 @@ import ResetPassword from './pages/ResetPassword';
 import EventSearchMap from './pages/EventSearchMap';
 import PaymentSuccess from './pages/PaymentSuccess';
 import Profile from './pages/profile';
+import EventosPage from './pages/EventosPage';
+import EventosMapPage from './pages/EventosMapPage';
 import { useAuth } from '../contexts/AuthContext'; // para perfil
 
 const StoreApp = () => {
@@ -42,7 +44,8 @@ const StoreApp = () => {
             <Routes>
               <Route path="/store" element={<EventsVenue groupByTags={false} />} />
               <Route path="/store/tag/:tagSlug?" element={<EventsVenue groupByTags />} />
-              <Route path="/store/eventos/:eventSlug" element={<Event />} />
+              <Route path="/store/eventos/:eventSlug" element={<EventosPage />} />
+              <Route path="/store/eventos/:eventSlug/map" element={<EventosMapPage />} />
               <Route path="/store/event/:eventId" element={<EventInfo />} />
               <Route path="/store/event/:eventId/map" element={<EventMap />} />
               <Route path="/store/event/:eventId/full" element={<Event />} />

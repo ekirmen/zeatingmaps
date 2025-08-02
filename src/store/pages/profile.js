@@ -1,340 +1,638 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Input, Button, Modal, message, Table } from 'antd';
-import { AiOutlineDownload } from 'react-icons/ai'; // Ant Design icon set (AI)
-import { useAuth } from '../../contexts/AuthContext';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect } from 'react';
+import {
+  Card,
+  Tabs,
+  Form,
+  Input,
+  Button,
+  message,
+  Avatar,
+  Upload,
+  Divider,
+  List,
+  Tag,
+  Modal,
+  Alert,
+  Spin,
+  Space,
+  Typography,
+  Badge
+} from 'antd';
+import {
+  UserOutlined,
+  LockOutlined,
+  CreditCardOutlined,
+  HistoryOutlined,
+  BellOutlined,
+  SecurityScanOutlined,
+  EditOutlined,
+  CameraOutlined,
+  SaveOutlined,
+  KeyOutlined
+} from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
-import downloadTicket from '../../utils/downloadTicket';
+import { getPaymentTransactionsByOrder } from '../services/paymentGatewaysService';
 
-const Profile = ({ userData, onUpdateProfile }) => {
-  const [formData, setFormData] = useState({
-    login: '',
-    email: '',
-    telefono: '',
-    empresa: '',
-    perfil: '',
-  });
+const { Title, Text } = Typography;
+const { TabPane } = Tabs;
 
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-  });
-
-  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
-
-  const { user } = useAuth();
-  const { t } = useTranslation();
+const Profile = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [profileForm] = Form.useForm();
+  const [passwordForm] = Form.useForm();
+  const [transactions, setTransactions] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
-    if (userData) {
-      setFormData({
-        login: userData.login || '',
-        email: userData.email || '',
-        telefono: userData.telefono || '',
-        empresa: userData.empresa || '',
-        perfil: userData.perfil || '',
-      });
-    }
-  }, [userData]);
+    loadUserProfile();
+    loadUserTransactions();
+    loadUserNotifications();
+  }, []);
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-    setPasswordData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSaveChanges = async () => {
-    if (!user?.id) {
-      message.error("Usuario no autenticado");
-      return;
-    }
-  
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        login: formData.login,
-        email: formData.email,
-        telefono: formData.telefono,
-        empresa: formData.empresa,
-        perfil: formData.perfil
-      })
-      .eq('id', user.id);
-  
-    if (error) {
-      console.error(error);
-      message.error("Error al actualizar el perfil");
-    } else {
-      message.success("Perfil actualizado correctamente");
-    }
-  };
-  
-
-  const handleChangePassword = async () => {
-    if (!passwordData.newPassword?.trim()) {
-      message.warning('Por favor ingresa la nueva contraseña');
-      return;
-    }
-  
+  const loadUserProfile = async () => {
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: passwordData.newPassword.trim()
-      });
-  
-      if (error) throw error;
-  
-      setIsPasswordModalVisible(false);
-      setPasswordData({ currentPassword: '', newPassword: '' });
-      message.success('Contraseña actualizada exitosamente');
-    } catch (error) {
-      console.error(error);
-      message.error(error.message || 'Error al actualizar la contraseña');
-    }
-  };
-  
-  const [purchaseHistory, setPurchaseHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
 
+      if (user) {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
 
-  const fetchPurchaseHistory = useCallback(async () => {
-    if (!user?.id) return;
-  
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('payments')
-        .select('*, event:eventos(*)')
-        .eq('usuario_id', user.id)
-        .order('created_at', { ascending: false });
-  
-      if (error) throw error;
-      setPurchaseHistory(data || []);
+        if (error && error.code !== 'PGRST116') throw error;
+
+        const userData = {
+          ...user,
+          ...profile
+        };
+        setUser(userData);
+        profileForm.setFieldsValue(userData);
+      }
     } catch (error) {
-      message.error('Error al cargar el historial de compras');
-      setPurchaseHistory([]);
+      console.error('Error loading user profile:', error);
+      message.error('Error al cargar el perfil');
     } finally {
       setLoading(false);
     }
-  }, [user]);
-  
+  };
 
-  useEffect(() => {
-    if (user?.id) {
-      fetchPurchaseHistory();
-    }
-  }, [user, fetchPurchaseHistory]);
-
-  const columns = [
-    {
-      title: t('profile.date'),
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date) => date ? new Date(date).toLocaleDateString() : '-'
-    },
-    {
-      title: t('profile.locator'),
-      dataIndex: 'locator',
-      key: 'locator'
-    },
-    {
-      title: t('profile.event'),
-      dataIndex: ['event', 'nombre'],
-      key: 'event',
-      render: (text, record) => record.event?.nombre || '-'
-    },
-    {
-      title: t('profile.status'),
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => status || '-'
-    },
-    {
-      title: t('profile.total'),
-      key: 'total',
-      render: (_, record) => {
-        const totalAmount = record.seats
-          ? record.seats.reduce((sum, seat) => sum + (seat.price || 0), 0)
-          : 0;
-        return `$${totalAmount.toFixed(2)}`;
-      }
-    },
-    {
-      title: t('profile.actions'),
-      key: 'actions',
-      render: (_, record) => (
-        record.status === 'pagado' && (
-          <Button
-            type="default"
-            variant="outlined"
-            block
-            icon={<AiOutlineDownload />}
-            onClick={() => handleDownloadTicket(record.locator)}
-          >
-            {t('button.download_ticket')}
-          </Button>
-        )
-      )
-    }
-  ];
-
-  const reservedPayments = purchaseHistory.filter(p => p.status === 'reservado');
-  const paidPayments = purchaseHistory.filter(p => p.status === 'pagado');
-
-  const handleDownloadTicket = async (locator) => {
+  const loadUserTransactions = async () => {
     try {
-      await downloadTicket(locator);
-      message.success('Ticket descargado exitosamente');
-    } catch {
-      message.error('Error al descargar el ticket');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('payment_transactions')
+          .select(`
+            *,
+            payment_gateways (name, type)
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setTransactions(data || []);
+      }
+    } catch (error) {
+      console.error('Error loading transactions:', error);
     }
   };
 
+  const loadUserNotifications = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error) throw error;
+        setNotifications(data || []);
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
+
+  const handleProfileUpdate = async (values) => {
+    try {
+      setSaving(true);
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const { error } = await supabase
+          .from('profiles')
+          .upsert({
+            id: user.id,
+            ...values,
+            updated_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+
+        message.success('Perfil actualizado correctamente');
+        loadUserProfile();
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      message.error('Error al actualizar el perfil');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePasswordReset = async (values) => {
+    try {
+      setSaving(true);
+      const { error } = await supabase.auth.updateUser({
+        password: values.newPassword
+      });
+
+      if (error) throw error;
+
+      message.success('Contraseña actualizada correctamente');
+      setShowPasswordModal(false);
+      passwordForm.resetFields();
+    } catch (error) {
+      console.error('Error updating password:', error);
+      message.error('Error al actualizar la contraseña');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (file) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/avatar.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      // Actualizar perfil con nueva URL de avatar
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      message.success('Avatar actualizado correctamente');
+      loadUserProfile();
+      return false; // Prevenir upload automático
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      message.error('Error al subir el avatar');
+      return false;
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      setSaving(true);
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        // Eliminar datos del usuario
+        await supabase.from('profiles').delete().eq('id', user.id);
+        await supabase.from('notifications').delete().eq('user_id', user.id);
+
+        // Eliminar cuenta de autenticación
+        const { error } = await supabase.auth.admin.deleteUser(user.id);
+
+        if (error) throw error;
+
+        message.success('Cuenta eliminada correctamente');
+        // Redirigir al login
+        window.location.href = '/login';
+      }
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      message.error('Error al eliminar la cuenta');
+    } finally {
+      setSaving(false);
+      setShowDeleteModal(false);
+    }
+  };
+
+  const getTransactionStatusColor = (status) => {
+    const colors = {
+      completed: 'green',
+      pending: 'orange',
+      failed: 'red',
+      cancelled: 'gray'
+    };
+    return colors[status] || 'blue';
+  };
+
+  const getNotificationIcon = (type) => {
+    const icons = {
+      payment: <CreditCardOutlined />,
+      refund: <HistoryOutlined />,
+      system: <BellOutlined />
+    };
+    return icons[type] || <BellOutlined />;
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  }
+
   return (
-    <>
-      <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">{t('profile.title')}</h1>
-        <Button
-          onClick={() => window.history.back()}
-          className="hover:bg-gray-100 transition-colors"
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="mb-8">
+          <Title level={2}>Mi Perfil</Title>
+          <Text type="secondary">Gestiona tu información personal y preferencias</Text>
+        </div>
+
+        <Tabs defaultActiveKey="profile" size="large">
+          {/* Perfil Personal */}
+          <TabPane
+            tab={<span><UserOutlined />Perfil Personal</span>}
+            key="profile"
+          >
+            <Card>
+              <div className="flex items-center space-x-6 mb-6">
+                <div className="text-center">
+                  <Upload
+                    name="avatar"
+                    showUploadList={false}
+                    beforeUpload={handleAvatarUpload}
+                    accept="image/*"
+                  >
+                    <div className="relative">
+                      <Avatar
+                        size={100}
+                        src={user?.avatar_url}
+                        icon={<UserOutlined />}
+                        className="cursor-pointer"
+                      />
+                      <div className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-1">
+                        <CameraOutlined className="text-white text-sm" />
+                      </div>
+                    </div>
+                  </Upload>
+                  <Text className="text-sm text-gray-500 mt-2">Haz clic para cambiar</Text>
+                </div>
+
+                <div className="flex-1">
+                  <Title level={4}>{user?.full_name || 'Usuario'}</Title>
+                  <Text type="secondary">{user?.email}</Text>
+                  <div className="mt-2">
+                    <Tag color="blue">Cliente Activo</Tag>
+                    <Tag color="green">Verificado</Tag>
+                  </div>
+                </div>
+              </div>
+
+              <Form
+                form={profileForm}
+                layout="vertical"
+                onFinish={handleProfileUpdate}
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Form.Item
+                    name="full_name"
+                    label="Nombre Completo"
+                    rules={[{ required: true, message: 'Por favor ingresa tu nombre' }]}
+                  >
+                    <Input prefix={<UserOutlined />} />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="email"
+                    label="Email"
+                    rules={[
+                      { required: true, message: 'Por favor ingresa tu email' },
+                      { type: 'email', message: 'Email inválido' }
+                    ]}
+                  >
+                    <Input disabled />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="phone"
+                    label="Teléfono"
+                  >
+                    <Input />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="birth_date"
+                    label="Fecha de Nacimiento"
+                  >
+                    <Input type="date" />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="address"
+                    label="Dirección"
+                  >
+                    <Input.TextArea rows={2} />
+                  </Form.Item>
+
+                  <Form.Item
+                    name="city"
+                    label="Ciudad"
+                  >
+                    <Input />
+                  </Form.Item>
+                </div>
+
+                <Form.Item>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={saving}
+                    icon={<SaveOutlined />}
+                  >
+                    Guardar Cambios
+                  </Button>
+                </Form.Item>
+              </Form>
+            </Card>
+          </TabPane>
+
+          {/* Seguridad */}
+          <TabPane
+            tab={<span><SecurityScanOutlined />Seguridad</span>}
+            key="security"
+          >
+            <Card>
+              <div className="space-y-6">
+                {/* Cambiar Contraseña */}
+                <div>
+                  <Title level={4}>Cambiar Contraseña</Title>
+                  <Button
+                    type="primary"
+                    icon={<KeyOutlined />}
+                    onClick={() => setShowPasswordModal(true)}
+                  >
+                    Cambiar Contraseña
+                  </Button>
+                </div>
+
+                <Divider />
+
+                {/* Autenticación de Dos Factores */}
+                <div>
+                  <Title level={4}>Autenticación de Dos Factores</Title>
+                  <Alert
+                    message="Protege tu cuenta con autenticación de dos factores"
+                    description="Recibirás un código por SMS o email cada vez que inicies sesión"
+                    type="info"
+                    showIcon
+                    className="mb-4"
+                  />
+                  <Button>Configurar 2FA</Button>
+                </div>
+
+                <Divider />
+
+                {/* Sesiones Activas */}
+                <div>
+                  <Title level={4}>Sesiones Activas</Title>
+                  <List
+                    size="small"
+                    dataSource={[
+                      { device: 'Chrome en Windows', location: 'Madrid, España', lastActive: 'Hace 2 horas' },
+                      { device: 'Safari en iPhone', location: 'Barcelona, España', lastActive: 'Hace 1 día' }
+                    ]}
+                    renderItem={(item) => (
+                      <List.Item>
+                        <List.Item.Meta
+                          title={item.device}
+                          description={`${item.location} • ${item.lastActive}`}
+                        />
+                        <Button size="small" danger>Cerrar Sesión</Button>
+                      </List.Item>
+                    )}
+                  />
+                </div>
+
+                <Divider />
+
+                {/* Eliminar Cuenta */}
+                <div>
+                  <Title level={4} className="text-red-600">Zona de Peligro</Title>
+                  <Alert
+                    message="Eliminar cuenta permanentemente"
+                    description="Esta acción no se puede deshacer. Se eliminarán todos tus datos, transacciones y configuraciones."
+                    type="error"
+                    showIcon
+                    className="mb-4"
+                  />
+                  <Button
+                    danger
+                    onClick={() => setShowDeleteModal(true)}
+                  >
+                    Eliminar Cuenta
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </TabPane>
+
+          {/* Historial de Transacciones */}
+          <TabPane
+            tab={<span><HistoryOutlined />Historial</span>}
+            key="history"
+          >
+            <Card>
+              <List
+                dataSource={transactions}
+                renderItem={(transaction) => (
+                  <List.Item>
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar icon={<CreditCardOutlined />} />
+                      }
+                      title={`Transacción ${transaction.id.slice(0, 8)}`}
+                      description={
+                        <div>
+                          <div>Pasarela: {transaction.payment_gateways?.name}</div>
+                          <div>Fecha: {new Date(transaction.created_at).toLocaleString()}</div>
+                        </div>
+                      }
+                    />
+                    <div className="text-right">
+                      <div className="text-lg font-bold">${transaction.amount}</div>
+                      <Tag color={getTransactionStatusColor(transaction.status)}>
+                        {transaction.status.toUpperCase()}
+                      </Tag>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            </Card>
+          </TabPane>
+
+          {/* Notificaciones */}
+          <TabPane
+            tab={
+              <span>
+                <BellOutlined />
+                Notificaciones
+                {notifications.filter(n => !n.read).length > 0 && (
+                  <Badge count={notifications.filter(n => !n.read).length} className="ml-2" />
+                )}
+              </span>
+            }
+            key="notifications"
+          >
+            <Card>
+              <List
+                dataSource={notifications}
+                renderItem={(notification) => (
+                  <List.Item>
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar icon={getNotificationIcon(notification.type)} />
+                      }
+                      title={notification.title}
+                      description={
+                        <div>
+                          <div>{notification.message}</div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(notification.created_at).toLocaleString()}
+                          </div>
+                        </div>
+                      }
+                    />
+                    {!notification.read && (
+                      <Tag color="blue">Nueva</Tag>
+                    )}
+                  </List.Item>
+                )}
+              />
+            </Card>
+          </TabPane>
+        </Tabs>
+
+        {/* Modal de Cambio de Contraseña */}
+        <Modal
+          title="Cambiar Contraseña"
+          open={showPasswordModal}
+          onCancel={() => {
+            setShowPasswordModal(false);
+            passwordForm.resetFields();
+          }}
+          footer={null}
         >
-          {t('profile.back')}
-        </Button>
-      </div>
-      {user && (
-        <div className="text-sm text-gray-600 mb-4">
-          {t('profile.account_locator', 'Localizador de Cuenta')}: <span className="font-mono">{user.id}</span>
-        </div>
-      )}
-
-      <div className="grid gap-6">
-          <Input
-            placeholder={t('header.login')}
-            value={formData.login}
-            name="login"
-            onChange={handleInputChange}
-            disabled={!userData}
-            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-          <Input
-            placeholder="Email"
-            value={formData.email}
-            name="email"
-            onChange={handleInputChange}
-            disabled={!userData}
-            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-          <Input
-            placeholder={t('profile.phone', 'Teléfono')}
-            value={formData.telefono}
-            name="telefono"
-            onChange={handleInputChange}
-            disabled={!userData}
-            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-          <Input
-            placeholder={t('profile.company', 'Empresa')}
-            value={formData.empresa}
-            name="empresa"
-            onChange={handleInputChange}
-            disabled={!userData}
-            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-          <Input
-            placeholder={t('profile.role', 'Perfil')}
-            value={formData.perfil}
-            name="perfil"
-            onChange={handleInputChange}
-            disabled={!userData}
-            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-
-          <div className="flex gap-4">
-            <Button
-              onClick={() => setIsPasswordModalVisible(true)}
-              disabled={!userData}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 transition-colors rounded-lg"
+          <Form
+            form={passwordForm}
+            layout="vertical"
+            onFinish={handlePasswordReset}
+          >
+            <Form.Item
+              name="currentPassword"
+              label="Contraseña Actual"
+              rules={[{ required: true, message: 'Por favor ingresa tu contraseña actual' }]}
             >
-              {t('profile.change_password')}
-            </Button>
-            <Button
-              type="default"
-              variant="outlined"
-              block
-              onClick={handleSaveChanges}
-              disabled={!userData}
-              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white transition-colors rounded-lg"
+              <Input.Password prefix={<LockOutlined />} />
+            </Form.Item>
+
+            <Form.Item
+              name="newPassword"
+              label="Nueva Contraseña"
+              rules={[
+                { required: true, message: 'Por favor ingresa la nueva contraseña' },
+                { min: 8, message: 'La contraseña debe tener al menos 8 caracteres' }
+              ]}
             >
-              {t('profile.save_changes')}
+              <Input.Password prefix={<LockOutlined />} />
+            </Form.Item>
+
+            <Form.Item
+              name="confirmPassword"
+              label="Confirmar Nueva Contraseña"
+              dependencies={['newPassword']}
+              rules={[
+                { required: true, message: 'Por favor confirma la nueva contraseña' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('newPassword') === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('Las contraseñas no coinciden'));
+                  },
+                }),
+              ]}
+            >
+              <Input.Password prefix={<LockOutlined />} />
+            </Form.Item>
+
+            <Form.Item>
+              <Space>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={saving}
+                >
+                  Cambiar Contraseña
+                </Button>
+                <Button onClick={() => {
+                  setShowPasswordModal(false);
+                  passwordForm.resetFields();
+                }}>
+                  Cancelar
+                </Button>
+              </Space>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        {/* Modal de Eliminar Cuenta */}
+        <Modal
+          title="Eliminar Cuenta"
+          open={showDeleteModal}
+          onCancel={() => setShowDeleteModal(false)}
+          footer={[
+            <Button key="cancel" onClick={() => setShowDeleteModal(false)}>
+              Cancelar
+            </Button>,
+            <Button
+              key="delete"
+              danger
+              loading={saving}
+              onClick={handleDeleteAccount}
+            >
+              Eliminar Permanentemente
             </Button>
-          </div>
-        </div>
-
-        <div className="mt-12">
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">{t('profile.reservations')}</h2>
-          <div className="overflow-hidden rounded-lg border border-gray-200 mb-10">
-            <Table
-              columns={columns}
-              dataSource={reservedPayments}
-              rowKey="id"
-              loading={loading}
-              pagination={{
-                pageSize: 5,
-                className: "p-4"
-              }}
-              locale={{ emptyText: t('profile.no_reservations') }}
-              className="w-full"
-            />
-          </div>
-
-          <h2 className="text-2xl font-semibold mb-6 text-gray-800">{t('profile.payments')}</h2>
-          <div className="overflow-hidden rounded-lg border border-gray-200">
-            <Table
-              columns={columns}
-              dataSource={paidPayments}
-              rowKey="id"
-              loading={loading}
-              pagination={{
-                pageSize: 5,
-                className: "p-4"
-              }}
-              locale={{ emptyText: t('profile.no_payments') }}
-              className="w-full"
-            />
-          </div>
-        </div>
+          ]}
+        >
+          <Alert
+            message="¿Estás seguro?"
+            description="Esta acción eliminará permanentemente tu cuenta y todos los datos asociados. Esta acción no se puede deshacer."
+            type="warning"
+            showIcon
+          />
+        </Modal>
       </div>
-
-      <Modal
-        title={t('profile.change_password')}
-        open={isPasswordModalVisible}
-        onOk={handleChangePassword}
-        onCancel={() => setIsPasswordModalVisible(false)}
-        cancelButtonProps={{ style: { display: 'none' } }}
-        okText={t('button.save')}
-        className="rounded-lg"
-      >
-        <div className="space-y-4">
-          <Input.Password
-            placeholder={t('profile.current_password', 'Contraseña Actual')}
-            value={passwordData.currentPassword}
-            name="currentPassword"
-            onChange={handlePasswordChange}
-            className="rounded-lg"
-          />
-          <Input.Password
-            placeholder={t('profile.new_password', 'Nueva Contraseña')}
-            value={passwordData.newPassword}
-            name="newPassword"
-            onChange={handlePasswordChange}
-            className="rounded-lg"
-          />
-        </div>
-      </Modal>
-    </>
+    </div>
   );
 };
 
