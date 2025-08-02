@@ -36,7 +36,7 @@ import WebHeader from './pages/WebHeader';
 import Abonos from './pages/Abonos';
 import CRM from './pages/CRM';
 import EmailCampaigns from './pages/EmailCampaigns';
-import BoleteriaMain from './pages/CompBoleteria/BoleteriaMain';
+
 import EmailPageCreator from './pages/EmailPageCreator';
 
 const BackofficeApp = () => {
@@ -83,9 +83,8 @@ const BackofficeApp = () => {
                     <Route path="plantillaPrecios" element={<PlantillaPrecios />} />
                     <Route path="descuentos" element={<Descuentos />} />
                     <Route path="funciones" element={<Funciones />} />
-                    <Route path="Boleteria" element={<BoleteriaMain />} />
+                    <Route path="Boleteria" element={<Boleteria setSidebarCollapsed={setSidebarCollapsed} />} />
                     <Route path="boleteria" element={<Boleteria setSidebarCollapsed={setSidebarCollapsed} />} />
-                    <Route path="boleteria-main" element={<BoleteriaMain />} />
                     <Route path="crear-iva" element={<CreateIva />} />
                     <Route path="abonos" element={<Abonos />} />
                     <Route path="tags" element={<Tags />} />

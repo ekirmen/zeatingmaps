@@ -149,30 +149,37 @@ const SeatingMap = ({
 
     return (
       <React.Fragment key={mesa._id}>
-        <TableShape
-          x={mesa.posicion.x}
-          y={mesa.posicion.y}
-          width={mesa.width}
-          height={mesa.height}
-          radius={mesa.type === "circle" ? mesa.width / 2 : 0}
-          fill={hoveredTable === mesa._id ? "#f3f4f6" : "#ffffff"}
-          stroke={hoveredTable === mesa._id ? "#3b82f6" : "#4b5563"}
-          strokeWidth={hoveredTable === mesa._id ? 3 : 2}
-          onMouseEnter={() => setHoveredTable(mesa._id)}
-          onMouseLeave={() => setHoveredTable(null)}
-        />
-        <Text
-          x={mesa.posicion.x - 20}
-          y={mesa.posicion.y - 10}
-          text={mesa.nombre}
-          fontSize={scale < 1 ? 10 : 12}
-          fill="#374151"
-          fontStyle="bold"
-        />
+        {/* Renderizar mesa/zona solo si no es tipo 'zona' */}
+        {mesa.type !== 'zona' && (
+          <>
+            <TableShape
+              x={mesa.posicion.x}
+              y={mesa.posicion.y}
+              width={mesa.width}
+              height={mesa.height}
+              radius={mesa.type === "circle" ? mesa.width / 2 : 0}
+              fill={hoveredTable === mesa._id ? "#f3f4f6" : "#ffffff"}
+              stroke={hoveredTable === mesa._id ? "#3b82f6" : "#4b5563"}
+              strokeWidth={hoveredTable === mesa._id ? 3 : 2}
+              onMouseEnter={() => setHoveredTable(mesa._id)}
+              onMouseLeave={() => setHoveredTable(null)}
+            />
+            <Text
+              x={mesa.posicion.x - 20}
+              y={mesa.posicion.y - 10}
+              text={mesa.nombre}
+              fontSize={scale < 1 ? 10 : 12}
+              fill="#374151"
+              fontStyle="bold"
+            />
+          </>
+        )}
+        
+        {/* Renderizar asientos */}
         {mesa.sillas.map((silla) => renderSeat(silla, mesa))}
         
-        {/* Botón "Mesa completa" */}
-        {hoveredTable === mesa._id && availableSeats.length > 0 && onSelectCompleteTable && (
+        {/* Botón "Mesa completa" solo para mesas */}
+        {mesa.type !== 'zona' && hoveredTable === mesa._id && availableSeats.length > 0 && onSelectCompleteTable && (
           <Label
             x={mesa.posicion.x + mesa.width / 2 - 40}
             y={mesa.posicion.y - 30}
