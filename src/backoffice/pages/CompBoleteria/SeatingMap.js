@@ -60,6 +60,15 @@ const SeatingMap = ({
   };
 
   const renderSeat = (silla, mesa) => {
+    // Debug: Log de cada asiento que se intenta renderizar
+    console.log('🪑 Renderizando asiento:', {
+      id: silla._id,
+      nombre: silla.nombre,
+      posicion: silla.posicion,
+      zona: silla.zona,
+      estado: silla.estado
+    });
+    
     const seatZonaId =
       typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
     const isAvailable = availableZonas?.includes(seatZonaId);
@@ -206,6 +215,17 @@ const SeatingMap = ({
 
   const stageWidth = window.innerWidth < 640 ? window.innerWidth * 0.95 : window.innerWidth * 0.6;
   const stageHeight = window.innerWidth < 640 ? window.innerHeight * 0.6 : window.innerHeight * 0.7;
+
+  // Debug: Log del mapa recibido
+  console.log('🎨 SeatingMap recibió:', {
+    mapa: mapa ? 'Sí' : 'No',
+    contenido: mapa?.contenido?.length || 0,
+    zonas: mapa?.contenido?.map(z => ({
+      id: z._id,
+      nombre: z.nombre,
+      asientos: z.sillas?.length || 0
+    })) || []
+  });
 
   return (
     <div
