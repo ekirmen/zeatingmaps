@@ -1,7 +1,6 @@
 // src/backoffice/services/supabaseClient.js
 /* global globalThis */
 import { createClient } from '@supabase/supabase-js';
-import { supabase } from '../../supabaseClient'; // Assuming this imports the public client
 
 // Only these variables should be available for frontend
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
@@ -13,16 +12,17 @@ const serviceRoleKey =
   process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ||
   process.env.REACT_SUPABASE_SERVICE_ROLE_KEY;
 
-// Removed the console.warn for serviceRoleKey not defined.
-// If you need to ensure admin operations are functional,
-// you must set REACT_APP_SUPABASE_SERVICE_ROLE_KEY in a secure backend environment.
-
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('❌ Supabase URL o Anon Key no están definidas.');
 }
 
+// Create a single instance for the public client
+const supabase = globalThis.supabase || createClient(supabaseUrl, supabaseAnonKey);
+if (!globalThis.supabase) {
+  globalThis.supabase = supabase;
+}
+
 // Public client (safe for frontend)
-// Reuses the single instance exported from src/supabaseClient.js
 export { supabase };
 
 // Administrative client (only use in backend: API Routes, Edge Functions)
@@ -35,6 +35,7 @@ export const supabaseAdmin = serviceRoleKey
       },
     })
   : null;
+
 if (serviceRoleKey && !globalThis.supabaseAdmin) {
   globalThis.supabaseAdmin = supabaseAdmin;
 }

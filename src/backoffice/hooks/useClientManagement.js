@@ -16,22 +16,22 @@ export const useClientManagement = (setCarrito) => {
       let { data, error } = await supabase
         .from('profiles_with_auth')
         .select('id, login, nombre, apellido, telefono, empresa, email')
-        .or(
-          `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
-        );
+        .or(`login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
 
       if (error && error.code === '42P01') {
-        // relation does not exist, try profile_view instead
+        // relation does not exist, try profiles instead
         ({ data, error } = await supabase
-          .from('profile_view')
+          .from('profiles')
           .select('id, login, nombre, apellido, telefono, empresa, email')
-          .or(
-            `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
-          ));
+          .or(`login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`));
       }
 
-      if (error) throw error;
-      return data.map((p) => ({
+      if (error) {
+        console.error('Search error:', error);
+        throw error;
+      }
+      
+      return (data || []).map((p) => ({
         id: p.id,
         login: p.login,
         nombre: p.nombre,
