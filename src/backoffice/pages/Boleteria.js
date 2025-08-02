@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { message, Modal, Button } from 'antd';
 import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
 
@@ -79,7 +79,7 @@ const Boleteria = () => {
     };
   }, [selectedFuncion, subscribeToFunction, unsubscribe]);
 
-  const handleSeatToggle = (seat) => {
+  const handleSeatToggle = useCallback((seat) => {
     const exists = carrito.some(item => item._id === seat._id);
     if (exists) {
       setCarrito(prev => prev.filter(item => item._id !== seat._id));
@@ -89,9 +89,9 @@ const Boleteria = () => {
       }
       setCarrito(prev => [...prev, { ...seat, funcionId: selectedFuncion.id || selectedFuncion._id }]);
     }
-  };
+  }, [carrito, selectedClient, selectedFuncion]);
 
-  const handleSeatInfo = async (seat) => {
+  const handleSeatInfo = useCallback(async (seat) => {
     if (!selectedFuncion) return;
     try {
       const data = await fetchPaymentBySeat(selectedFuncion.id || selectedFuncion._id, seat._id);
@@ -105,9 +105,9 @@ const Boleteria = () => {
       console.error('Seat info error:', err);
       message.error('Error al buscar ticket');
     }
-  };
+  }, [selectedFuncion]);
 
-  const loadPaymentIntoPOS = async (payment) => {
+  const loadPaymentIntoPOS = useCallback(async (payment) => {
     if (!payment) return;
     if (payment.event) setSelectedEvent(payment.event);
     if (payment.funcion) await handleFunctionSelect(payment.funcion);
@@ -132,16 +132,16 @@ const Boleteria = () => {
     }
     setIsSeatModalVisible(false);
     message.success('Ticket cargado correctamente');
-  };
+  }, [setSelectedEvent, handleFunctionSelect, setSelectedClient, setCarrito]);
 
-  const handleDownloadSeatTicket = async () => {
+  const handleDownloadSeatTicket = useCallback(async () => {
     if (!seatPayment?.locator) return;
     try {
       await downloadTicket(seatPayment.locator);
     } catch {
       message.error('Error al descargar ticket');
     }
-  };
+  }, [seatPayment]);
   
 
   useEffect(() => {
@@ -183,29 +183,31 @@ const Boleteria = () => {
   }, [carrito, seatLockStore]);
 
   
-  const handleClientManagement = () => setIsSearchModalVisible(true);
+  const handleClientManagement = useCallback(() => setIsSearchModalVisible(true), []);
 
-  const onEventSelect = async (eventoId) => {
+  const onEventSelect = useCallback(async (eventoId) => {
     const { success, funciones: funcs = [] } = await handleEventSelect(eventoId);
     if (success) {
       setIsFunctionsModalVisible(true);
       if (funcs.length === 1) await handleFunctionSelect(funcs[0]);
-      if (sidebarOpen) setSidebarOpen(false);
     }
-  };
+  }, [handleEventSelect, handleFunctionSelect]);
 
-  const onFunctionSelect = async (funcion) => {
+  const onFunctionSelect = useCallback(async (funcion) => {
     const success = await handleFunctionSelect(funcion);
     if (success) setIsFunctionsModalVisible(false);
-  };
+  }, [handleFunctionSelect]);
 
-  const handleSeatsUpdated = (ids, estado) => {
+  const handleSeatsUpdated = useCallback((ids, estado) => {
     zonesRef.current?.onSeatsUpdated(ids, estado);
-  };
+  }, []);
 
-  const allTicketsPaid = carrito?.length > 0 && carrito.every(ticket => ticket.status === 'pagado');
+  const allTicketsPaid = useMemo(() => 
+    carrito?.length > 0 && carrito.every(ticket => ticket.status === 'pagado'), 
+    [carrito]
+  );
 
-  const clientModalsProps = {
+  const clientModalsProps = useMemo(() => ({
     isSearchModalVisible,
     searchLoading,
     searchResults,
@@ -241,23 +243,78 @@ const Boleteria = () => {
         message.error('Error en la búsqueda');
       }
     }
-  };
+  }), [isSearchModalVisible, searchLoading, searchResults, paymentResults, clearSearchResults, setSelectedClient, handleAddClient, handleUnifiedSearch]);
 
-  const functionModalProps = {
+  const functionModalProps = useMemo(() => ({
     visible: isFunctionsModalVisible,
     onCancel: () => setIsFunctionsModalVisible(false),
     funciones,
     onFunctionSelect
-  };
+  }), [isFunctionsModalVisible, funciones, onFunctionSelect]);
 
-  const paymentModalProps = {
+  const paymentModalProps = useMemo(() => ({
     open: isPaymentModalVisible,
     onCancel: () => setIsPaymentModalVisible(false),
     carrito,
     selectedClient,
     selectedFuncion,
     selectedAffiliate
-  };
+  }), [isPaymentModalVisible, carrito, selectedClient, selectedFuncion, selectedAffiliate]);
+
+  // Memoizar las props de ZonesAndPrices para evitar re-renderizados
+  const zonesAndPricesProps = useMemo(() => ({
+    ref: zonesRef,
+    eventos,
+    selectedEvent,
+    onEventSelect,
+    funciones,
+    onShowFunctions: () => setIsFunctionsModalVisible(true),
+    selectedFuncion,
+    selectedClient,
+    abonos: clientAbonos,
+    carrito,
+    setCarrito,
+    selectedPlantilla,
+    selectedAffiliate,
+    setSelectedAffiliate,
+    showSeatingMap: true
+  }), [
+    eventos,
+    selectedEvent,
+    onEventSelect,
+    funciones,
+    selectedFuncion,
+    selectedClient,
+    clientAbonos,
+    carrito,
+    setCarrito,
+    selectedPlantilla,
+    selectedAffiliate,
+    setSelectedAffiliate
+  ]);
+
+  // Memoizar las props del Cart
+  const cartProps = useMemo(() => ({
+    carrito,
+    setCarrito,
+    onSeatsUpdated: handleSeatsUpdated,
+    selectedClient,
+    onPaymentClick: () => setIsPaymentModalVisible(true),
+    setSelectedClient,
+    selectedAffiliate
+  }), [carrito, setCarrito, handleSeatsUpdated, selectedClient, setSelectedClient, selectedAffiliate]);
+
+  // Memoizar las props del LeftMenu
+  const leftMenuProps = useMemo(() => ({
+    onSearchClick: handleClientManagement,
+    onAddClientClick: handleClientManagement,
+    selectedClient,
+    onClientRemove: () => setSelectedClient(null),
+    setCarrito,
+    setSelectedClient,
+    onFunctionSelect: handleFunctionSelect,
+    setSelectedEvent
+  }), [handleClientManagement, selectedClient, setCarrito, setSelectedClient, handleFunctionSelect, setSelectedEvent]);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -274,16 +331,7 @@ const Boleteria = () => {
         </div>
         
         <div className="flex-1 overflow-auto p-4">
-          <LeftMenu
-            onSearchClick={handleClientManagement}
-            onAddClientClick={handleClientManagement}
-            selectedClient={selectedClient}
-            onClientRemove={() => setSelectedClient(null)}
-            setCarrito={setCarrito}
-            setSelectedClient={setSelectedClient}
-            onFunctionSelect={handleFunctionSelect}
-            setSelectedEvent={setSelectedEvent}
-          />
+          <LeftMenu {...leftMenuProps} />
         </div>
       </div>
 
@@ -293,36 +341,12 @@ const Boleteria = () => {
         <div className="flex-1 flex">
           {/* Panel izquierdo - Zonas y precios */}
           <div className="flex-1 bg-white border-r border-gray-200 overflow-auto">
-            <ZonesAndPrices
-              ref={zonesRef}
-              eventos={eventos}
-              selectedEvent={selectedEvent}
-              onEventSelect={onEventSelect}
-              funciones={funciones}
-              onShowFunctions={() => setIsFunctionsModalVisible(true)}
-              selectedFuncion={selectedFuncion}
-              selectedClient={selectedClient}
-              abonos={clientAbonos}
-              carrito={carrito}
-              setCarrito={setCarrito}
-              selectedPlantilla={selectedPlantilla}
-              selectedAffiliate={selectedAffiliate}
-              setSelectedAffiliate={setSelectedAffiliate}
-              showSeatingMap={true}
-            />
+            <ZonesAndPrices {...zonesAndPricesProps} />
           </div>
 
           {/* Panel derecho - Carrito */}
           <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
-            <Cart
-              carrito={carrito}
-              setCarrito={setCarrito}
-              onSeatsUpdated={handleSeatsUpdated}
-              selectedClient={selectedClient}
-              onPaymentClick={() => setIsPaymentModalVisible(true)}
-              setSelectedClient={setSelectedClient}
-              selectedAffiliate={selectedAffiliate}
-            >
+            <Cart {...cartProps}>
               {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
             </Cart>
           </div>

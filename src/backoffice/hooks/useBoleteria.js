@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { message } from 'antd';
 import { supabase } from '../services/supabaseClient';
 import { fetchMapa, fetchZonasPorSala } from '../../services/supabaseServices';
@@ -17,6 +17,16 @@ export const useBoleteria = () => {
   const [carrito, setCarrito] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Memoizar el setCarrito para evitar re-renderizados
+  const setCarritoMemo = useCallback((newCarrito) => {
+    setCarrito(newCarrito);
+  }, []);
+
+  // Memoizar el setSelectedEvent para evitar re-renderizados
+  const setSelectedEventMemo = useCallback((newEvent) => {
+    setSelectedEvent(newEvent);
+  }, []);
 
   // Manejar la selección de una función
   const handleFunctionSelect = useCallback(async (functionId) => {
@@ -100,46 +110,44 @@ export const useBoleteria = () => {
       setLoading(false);
     }
   }, []);
-  
 
-  // Manejar la selección de un evento
-  const handleEventSelect = useCallback(async (eventId, initialFuncId = null) => {
+  // Memoizar el handleEventSelect para evitar re-renderizados
+  const handleEventSelect = useCallback(async (eventoId) => {
     setLoading(true);
     setError(null);
     setSelectedEvent(null);
-    setFunciones([]);
     setSelectedFuncion(null);
+    setSelectedPlantilla(null);
     setMapa(null);
     setZonas([]);
     setCarrito([]);
-    localStorage.removeItem(FUNC_KEY);
 
     try {
-      const { data: eventData, error: eventError } = await supabase
+      const { data: eventoData, error: eventoError } = await supabase
         .from('eventos')
         .select('*')
-        .eq('id', eventId)
+        .eq('id', eventoId)
         .single();
 
-      if (eventError) throw eventError;
-      if (!eventData) {
+      if (eventoError) throw eventoError;
+      if (!eventoData) {
         message.warning('Evento no encontrado.');
-        return { success: false, funciones: [] };
+        return { success: false };
       }
 
-      setSelectedEvent(eventData);
-      localStorage.setItem(EVENT_KEY, eventId);
+      setSelectedEvent(eventoData);
+      localStorage.setItem(EVENT_KEY, eventoId);
 
+      // Cargar funciones del evento
       const { data: funcionesData, error: funcionesError } = await supabase
         .from('funciones')
-        .select('*')
-        .eq('evento', eventId)
+        .select('*, sala(*), plantilla(*)')
+        .eq('evento_id', eventoId)
         .order('fecha_celebracion', { ascending: true });
 
       if (funcionesError) throw funcionesError;
 
-      // Mapear los campos para que coincidan con lo que espera el frontend
-      const funcionesMapeadas = (funcionesData || []).map(funcion => ({
+      const funcionesMapeadas = funcionesData.map(funcion => ({
         ...funcion,
         fechaCelebracion: funcion.fecha_celebracion,
         inicioVenta: funcion.inicio_venta,
@@ -150,25 +158,44 @@ export const useBoleteria = () => {
 
       setFunciones(funcionesMapeadas);
 
-      if (funcionesData && funcionesData.length > 0) {
-        const funcToSelect = initialFuncId && funcionesData.find(f => f.id === initialFuncId)
-          ? initialFuncId
-          : funcionesData[0].id;
-
-        await handleFunctionSelect(funcToSelect);
-      }
-
-      return { success: true, funciones: funcionesData || [] };
+      return { success: true, funciones: funcionesMapeadas };
 
     } catch (err) {
       console.error("Error al seleccionar evento:", err);
       message.error(`Error al seleccionar evento: ${err.message}`);
       setError(err);
-      return { success: false, funciones: [] };
+      return { success: false };
     } finally {
       setLoading(false);
     }
-  }, [handleFunctionSelect]);
+  }, []);
+
+  // Memoizar el valor de retorno para evitar re-renderizados
+  const returnValue = useMemo(() => ({
+    eventos,
+    funciones,
+    selectedFuncion,
+    selectedEvent,
+    selectedPlantilla,
+    mapa,
+    carrito,
+    setCarrito: setCarritoMemo,
+    handleEventSelect,
+    handleFunctionSelect,
+    setSelectedEvent: setSelectedEventMemo
+  }), [
+    eventos,
+    funciones,
+    selectedFuncion,
+    selectedEvent,
+    selectedPlantilla,
+    mapa,
+    carrito,
+    setCarritoMemo,
+    handleEventSelect,
+    handleFunctionSelect,
+    setSelectedEventMemo
+  ]);
 
   // Cargar eventos al inicio
   useEffect(() => {
@@ -191,7 +218,7 @@ export const useBoleteria = () => {
         if (storedEventId) {
           const initialEvent = data.find(e => e.id === storedEventId);
           if (initialEvent) {
-            await handleEventSelect(storedEventId, storedFuncId);
+            await handleEventSelect(storedEventId);
           }
         }
 
@@ -207,20 +234,5 @@ export const useBoleteria = () => {
     fetchEventos();
   }, [handleEventSelect]);
 
-  return {
-    eventos,
-    funciones,
-    selectedFuncion,
-    selectedEvent,
-    selectedPlantilla,
-    mapa,
-    zonas,
-    carrito,
-    setCarrito,
-    setSelectedEvent,
-    handleEventSelect,
-    handleFunctionSelect,
-    loading,
-    error
-  };
+  return returnValue;
 };

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef } from 'react';
+import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef, useMemo } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
 import SeatAnimation from '../../components/SeatAnimation';
@@ -75,8 +75,8 @@ const ZonesAndPrices = ({
     handleClearZoneSelection
   } = useZoneManagement(selectedPlantilla, getPrecioConDescuento);
 
-  // Handlers
-  const seatHandlers = createSeatHandlers({
+  // Handlers - Memoizar para evitar re-creación
+  const seatHandlers = useMemo(() => createSeatHandlers({
     selectedFuncion,
     carrito,
     setCarrito,
@@ -93,9 +93,24 @@ const ZonesAndPrices = ({
     isSeatLockedByMe,
     handleSeatAnimation,
     abonoSeats
-  });
-
-
+  }), [
+    selectedFuncion,
+    carrito,
+    setCarrito,
+    selectedClient,
+    blockMode,
+    abonoMode,
+    zonas,
+    detallesPlantilla,
+    appliedDiscount,
+    funciones,
+    lockSeat,
+    unlockSeat,
+    isSeatLocked,
+    isSeatLockedByMe,
+    handleSeatAnimation,
+    abonoSeats
+  ]);
 
   // Callbacks
   const onSeatsUpdated = useCallback((ids, estado) => {
@@ -120,8 +135,6 @@ const ZonesAndPrices = ({
 
   useImperativeHandle(ref, () => ({ onSeatsUpdated }));
 
-
-
   // Efectos
   React.useEffect(() => {
     if (!blockMode) {
@@ -130,70 +143,106 @@ const ZonesAndPrices = ({
     }
   }, [blockMode, carrito, setCarrito]);
 
+  // Memoizar props de los componentes para evitar re-renderizados
+  const eventSelectorProps = useMemo(() => ({
+    eventos,
+    selectedEvent,
+    onEventSelect,
+    funciones,
+    onShowFunctions,
+    selectedFuncion
+  }), [eventos, selectedEvent, onEventSelect, funciones, onShowFunctions, selectedFuncion]);
+
+  const functionSelectorProps = useMemo(() => ({
+    selectedFuncion,
+    onShowFunctions
+  }), [selectedFuncion, onShowFunctions]);
+
+  const discountCodeInputProps = useMemo(() => ({
+    discountCode,
+    setDiscountCode,
+    handleApplyDiscount,
+    appliedDiscount
+  }), [discountCode, setDiscountCode, handleApplyDiscount, appliedDiscount]);
+
+  const modeControlsProps = useMemo(() => ({
+    blockMode,
+    setBlockMode,
+    abonoMode,
+    setAbonoMode,
+    setCarrito,
+    carrito
+  }), [blockMode, setBlockMode, abonoMode, setAbonoMode, setCarrito, carrito]);
+
+  const zoneSelectorProps = useMemo(() => ({
+    zonas,
+    selectedZonaId,
+    setSelectedZonaId,
+    handleClearZoneSelection,
+    zonePriceRanges
+  }), [zonas, selectedZonaId, setSelectedZonaId, handleClearZoneSelection, zonePriceRanges]);
+
+  // Memoizar la zona seleccionada
+  const selectedZona = useMemo(() => 
+    zonas.find(z => (z.id || z._id) === selectedZonaId) || null,
+    [zonas, selectedZonaId]
+  );
+
+  // Memoizar las zonas disponibles
+  const availableZonas = useMemo(() => 
+    selectedZonaId ? [selectedZonaId] : zonas.map(z => z.id || z._id),
+    [selectedZonaId, zonas]
+  );
+
+  // Memoizar las props del SeatingMap
+  const seatingMapProps = useMemo(() => ({
+    mapa,
+    onSeatClick: seatHandlers.handleSeatClick,
+    selectedZona,
+    availableZonas,
+    blockMode,
+    tempBlocks,
+    abonoMode,
+    abonoSeats,
+    containerRef: mapContainerRef,
+    onSelectCompleteTable: seatHandlers.handleSelectCompleteTable
+  }), [
+    mapa,
+    seatHandlers.handleSeatClick,
+    selectedZona,
+    availableZonas,
+    blockMode,
+    tempBlocks,
+    abonoMode,
+    abonoSeats,
+    seatHandlers.handleSelectCompleteTable
+  ]);
+
   return (
     <div className="h-full flex flex-col">
       {/* Header con controles */}
       <div className="p-4 border-b border-gray-200 space-y-4">
         {/* Event Selector */}
-        <EventSelector
-          eventos={eventos}
-          selectedEvent={selectedEvent}
-          onEventSelect={onEventSelect}
-          funciones={funciones}
-          onShowFunctions={onShowFunctions}
-          selectedFuncion={selectedFuncion}
-        />
+        <EventSelector {...eventSelectorProps} />
 
         {/* Function Selector */}
-        <FunctionSelector
-          selectedFuncion={selectedFuncion}
-          onShowFunctions={onShowFunctions}
-        />
+        <FunctionSelector {...functionSelectorProps} />
 
         {/* Discount Code Input */}
-        <DiscountCodeInput
-          discountCode={discountCode}
-          setDiscountCode={setDiscountCode}
-          handleApplyDiscount={handleApplyDiscount}
-          appliedDiscount={appliedDiscount}
-        />
+        <DiscountCodeInput {...discountCodeInputProps} />
 
         {/* Mode Controls */}
-        <ModeControls
-          blockMode={blockMode}
-          setBlockMode={setBlockMode}
-          abonoMode={abonoMode}
-          setAbonoMode={setAbonoMode}
-          setCarrito={setCarrito}
-          carrito={carrito}
-        />
+        <ModeControls {...modeControlsProps} />
 
         {/* Zone Selector */}
-        <ZoneSelector
-          zonas={zonas}
-          selectedZonaId={selectedZonaId}
-          setSelectedZonaId={setSelectedZonaId}
-          handleClearZoneSelection={handleClearZoneSelection}
-          zonePriceRanges={zonePriceRanges}
-        />
+        <ZoneSelector {...zoneSelectorProps} />
       </div>
 
       {/* Área principal del mapa */}
       <div className="flex-1 overflow-auto">
         {mapa ? (
           <div className="h-full">
-            <SeatingMap
-              mapa={mapa}
-              onSeatClick={seatHandlers.handleSeatClick}
-              selectedZona={zonas.find(z => (z.id || z._id) === selectedZonaId) || null}
-              availableZonas={selectedZonaId ? [selectedZonaId] : zonas.map(z => z.id || z._id)}
-              blockMode={blockMode}
-              tempBlocks={tempBlocks}
-              abonoMode={abonoMode}
-              abonoSeats={abonoSeats}
-              containerRef={mapContainerRef}
-              onSelectCompleteTable={seatHandlers.handleSelectCompleteTable}
-            />
+            <SeatingMap {...seatingMapProps} />
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">

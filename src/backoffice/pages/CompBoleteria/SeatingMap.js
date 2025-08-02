@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { Stage, Layer, Circle, Rect, Text, Label, Tag } from "react-konva";
 import { useSeatLockStore } from "../../../components/seatLockStore";
+import { message } from "antd"; // Added message import
 
 const SeatingMap = ({
   mapa,
@@ -22,6 +23,21 @@ const SeatingMap = ({
   
   // Obtener funciones de seat lock
   const { isSeatLocked, isSeatLockedByMe } = useSeatLockStore();
+
+  // Memoizar el mapa de colores para evitar re-creación
+  const colorMap = useMemo(() => ({
+    pagado: "#9ca3af",
+    reservado: "#ef4444",
+    anulado: "#9ca3af",
+    bloqueado: "#dc2626", // Rojo para asientos bloqueados
+    disponible: "#60a5fa",
+  }), []);
+
+  // Memoizar el ID de la zona seleccionada
+  const selectedZonaId = useMemo(() => 
+    selectedZona ? selectedZona._id || selectedZona.id : null,
+    [selectedZona]
+  );
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -55,11 +71,11 @@ const SeatingMap = ({
     };
   }, [scale, position]);
 
-  const handleDragEnd = (e) => {
+  const handleDragEnd = useCallback((e) => {
     setPosition(e.target.position());
-  };
+  }, []);
 
-  const renderSeat = (silla, mesa) => {
+  const renderSeat = useCallback((silla, mesa) => {
     // Debug: Log de cada asiento que se intenta renderizar
     console.log('🪑 Renderizando asiento:', {
       id: silla._id,
@@ -73,18 +89,9 @@ const SeatingMap = ({
       typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
     const isAvailable = availableZonas?.includes(seatZonaId);
     const isAbono = abonoMode && abonoSeats.includes(silla._id);
-    const selectedZonaId = selectedZona ? selectedZona._id || selectedZona.id : null;
     const isSelected = selectedZonaId && selectedZonaId === seatZonaId;
 
     // Mejorar la lógica de colores para mostrar claramente los asientos disponibles
-    const colorMap = {
-      pagado: "#9ca3af",
-      reservado: "#ef4444",
-      anulado: "#9ca3af",
-      bloqueado: "#dc2626", // Rojo para asientos bloqueados
-      disponible: silla.color || "#60a5fa",
-    };
-
     const isTempBlock = tempBlocks.includes(silla._id);
     let baseFill = isTempBlock ? "red" : colorMap[silla.estado] || colorMap["disponible"];
     
@@ -99,54 +106,65 @@ const SeatingMap = ({
     // When abonoMode is active but the list of available seats failed to load
     // allow selection by default. Only restrict when abonoSeats has entries.
     const abonoRestriction = abonoMode && abonoSeats.length > 0 ? isAbono : true;
-    
-    // En modo bloqueo, solo permitir seleccionar asientos disponibles (no vendidos, reservados o anulados)
-    const canSelect = blockMode 
-      ? silla.estado === 'disponible' || silla.estado === 'bloqueado'
-      : ((isAvailable || isSelected) && silla.estado !== "bloqueado" && abonoRestriction);
+    const canSelect = silla.estado === "disponible" && (isAvailable || !availableZonas) && abonoRestriction;
+
+    const isLocked = isSeatLocked(silla._id);
+    const isLockedByMe = isSeatLockedByMe(silla._id);
+
+    const handleClick = () => {
+      if (!canSelect) return;
+      
+      // Verificar si el asiento está bloqueado por otro usuario
+      if (isLocked && !isLockedByMe) {
+        console.log("Asiento bloqueado por otro usuario");
+        message.warning('Este asiento está bloqueado por otro usuario');
+        return;
+      }
+      
+      // Verificar si el asiento está vendido o reservado
+      if (silla.estado === 'pagado' || silla.estado === 'reservado') {
+        console.log("Asiento ya vendido o reservado");
+        message.warning('Este asiento ya está vendido o reservado');
+        return;
+      }
+      
+      onSeatClick(silla, mesa);
+    };
+
+    const handleMouseEnter = () => {
+      if (canSelect) {
+        setTooltip({
+          visible: true,
+          x: silla.posicion.x + 20,
+          y: silla.posicion.y - 10,
+          text: `${silla.nombre} - ${silla.estado}`,
+        });
+      }
+    };
+
+    const handleMouseLeave = () => {
+      setTooltip({ visible: false, x: 0, y: 0, text: "" });
+    };
 
     return (
       <Circle
         key={silla._id}
         x={silla.posicion.x}
         y={silla.posicion.y}
-        radius={scale < 1 ? 6 : 10}
+        radius={silla.width ? silla.width / 2 : 10}
         fill={fill}
-        stroke={isAbono ? "#4ade80" : isSelected ? "#f97316" : "#1f2937"}
-        strokeWidth={isSelected || isAbono ? 2 : 1}
-        onClick={() => {
-          if (canSelect) onSeatClick(silla, mesa);
-        }}
-        onTap={() => {
-          if (canSelect) onSeatClick(silla, mesa);
-        }}
-        onMouseEnter={(e) => {
-          const stage = e.target.getStage();
-          stage.container().style.cursor = canSelect ? "pointer" : "not-allowed";
-          
-                     // Mejorar el tooltip con información de zona y bloqueo
-           const zonaInfo = typeof silla.zona === "object" ? silla.zona.nombre : silla.zona;
-           const statusInfo = silla.estado || "disponible";
-           const availabilityInfo = canSelect ? "Disponible" : "No disponible";
-           const lockInfo = isSeatLocked(silla._id) ? "\n🔒 Bloqueado por otro usuario" : "";
-           
-           setTooltip({
-             visible: true,
-             x: silla.posicion.x + 10,
-             y: silla.posicion.y - 10,
-             text: `${silla.nombre}\nZona: ${zonaInfo}\nEstado: ${statusInfo}\n${availabilityInfo}${lockInfo}`,
-           });
-        }}
-        onMouseLeave={(e) => {
-          const stage = e.target.getStage();
-          stage.container().style.cursor = "default";
-          setTooltip({ ...tooltip, visible: false });
-        }}
+        stroke={isLocked ? "#dc2626" : "#374151"}
+        strokeWidth={isLocked ? 3 : 1}
+        opacity={canSelect ? 1 : 0.5}
+        onClick={handleClick}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onTap={handleClick}
       />
     );
-  };
+  }, [availableZonas, abonoMode, abonoSeats, selectedZonaId, tempBlocks, colorMap, isSeatLocked, isSeatLockedByMe, onSeatClick]);
 
-  const renderTable = (mesa) => {
+  const renderTable = useCallback((mesa) => {
     const TableShape = mesa.type === "circle" ? Circle : Rect;
     const availableSeats = mesa.sillas.filter(silla => {
       const seatZonaId = typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
@@ -191,30 +209,21 @@ const SeatingMap = ({
         {mesa.type !== 'zona' && hoveredTable === mesa._id && availableSeats.length > 0 && onSelectCompleteTable && (
           <Label
             x={mesa.posicion.x + mesa.width / 2 - 40}
-            y={mesa.posicion.y - 30}
+            y={mesa.posicion.y + mesa.height + 5}
           >
-            <Tag
-              fill="#3b82f6"
-              opacity={0.9}
-              cornerRadius={4}
-              padding={4}
-            />
+            <Tag fill="#3b82f6" opacity={0.9} />
             <Text
               text="Mesa completa"
               fontSize={10}
               fill="white"
-              padding={4}
+              padding={5}
               onClick={() => onSelectCompleteTable(mesa)}
-              onTap={() => onSelectCompleteTable(mesa)}
             />
           </Label>
         )}
       </React.Fragment>
     );
-  };
-
-  const stageWidth = window.innerWidth < 640 ? window.innerWidth * 0.95 : window.innerWidth * 0.6;
-  const stageHeight = window.innerWidth < 640 ? window.innerHeight * 0.6 : window.innerHeight * 0.7;
+  }, [availableZonas, abonoMode, abonoSeats, hoveredTable, scale, renderSeat, onSelectCompleteTable]);
 
   // Debug: Log del mapa recibido
   console.log('🎨 SeatingMap recibió:', {
@@ -227,27 +236,87 @@ const SeatingMap = ({
     })) || []
   });
 
+  // Debug adicional para verificar si el mapa tiene contenido válido
+  if (mapa?.contenido) {
+    console.log('🔍 Detalle del contenido del mapa:', {
+      tipo: typeof mapa.contenido,
+      esArray: Array.isArray(mapa.contenido),
+      longitud: mapa.contenido.length,
+      primerElemento: mapa.contenido[0] ? {
+        id: mapa.contenido[0]._id,
+        nombre: mapa.contenido[0].nombre,
+        tipo: mapa.contenido[0].type,
+        sillas: mapa.contenido[0].sillas?.length || 0
+      } : null
+    });
+  }
+
+  const stageWidth = window.innerWidth < 640 ? window.innerWidth * 0.95 : window.innerWidth * 0.6;
+  const stageHeight = window.innerWidth < 640 ? window.innerHeight * 0.6 : window.innerHeight * 0.7;
+
   return (
     <div
       ref={containerRef}
-      className="seating-map mx-auto p-2 bg-white rounded-lg shadow-md w-full max-w-screen-lg h-[60vh] sm:h-[70vh]"
+      className="w-full h-full overflow-hidden"
+      style={{ backgroundColor: "#f9fafb" }}
     >
+      {/* Debug temporal - mostrar datos del mapa */}
+      {mapa && (
+        <div style={{ 
+          position: 'absolute', 
+          top: 10, 
+          left: 10, 
+          background: 'rgba(0,0,0,0.8)', 
+          color: 'white', 
+          padding: '10px', 
+          borderRadius: '5px', 
+          fontSize: '12px',
+          maxWidth: '300px',
+          maxHeight: '200px',
+          overflow: 'auto',
+          zIndex: 1000
+        }}>
+          <div><strong>Debug - Datos del mapa:</strong></div>
+          <div>Contenido: {mapa.contenido?.length || 0} elementos</div>
+          {mapa.contenido?.[0] && (
+            <div>
+              <div>Primer elemento: {mapa.contenido[0].nombre}</div>
+              <div>Asientos: {mapa.contenido[0].sillas?.length || 0}</div>
+              {mapa.contenido[0].sillas?.[0] && (
+                <div>
+                  <div>Primer asiento: {mapa.contenido[0].sillas[0].nombre}</div>
+                  <div>Posición: ({mapa.contenido[0].sillas[0].posicion?.x}, {mapa.contenido[0].sillas[0].posicion?.y})</div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       <Stage
         ref={stageRef}
         width={stageWidth}
         height={stageHeight}
+        scaleX={scale}
+        scaleY={scale}
+        x={position.x}
+        y={position.y}
         draggable
         onDragEnd={handleDragEnd}
-        scale={{ x: scale, y: scale }}
-        position={position}
-        style={{ touchAction: "none" }}
       >
         <Layer>
-          {mapa?.contenido.map(renderTable)}
+          {mapa?.contenido?.map(renderTable)}
+          
+          {/* Tooltip */}
           {tooltip.visible && (
             <Label x={tooltip.x} y={tooltip.y}>
-              <Tag fill="black" opacity={0.75} cornerRadius={4} />
-              <Text text={tooltip.text} fontSize={12} fill="white" padding={4} />
+              <Tag fill="#1f2937" opacity={0.9} />
+              <Text
+                text={tooltip.text}
+                fontSize={12}
+                fill="white"
+                padding={5}
+              />
             </Label>
           )}
         </Layer>
