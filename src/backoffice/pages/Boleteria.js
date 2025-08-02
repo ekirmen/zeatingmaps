@@ -58,14 +58,11 @@ const Boleteria = () => {
   const isSeatLockedByMe = seatLockStore.isSeatLockedByMe;
   const subscribeToFunction = seatLockStore.subscribeToFunction;
   const unsubscribe = seatLockStore.unsubscribe;
-  const unlockSeatRef = useRef(seatLockStore.unlockSeat);
   const zonesRef = useRef(null);
-  const mobileZonesRef = useRef(null);
 
   const [isFunctionsModalVisible, setIsFunctionsModalVisible] = useState(false);
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [selectedAffiliate, setSelectedAffiliate] = useState(null);
   const [clientAbonos, setClientAbonos] = useState([]);
   const [seatPayment, setSeatPayment] = useState(null);
@@ -204,7 +201,6 @@ const Boleteria = () => {
 
   const handleSeatsUpdated = (ids, estado) => {
     zonesRef.current?.onSeatsUpdated(ids, estado);
-    mobileZonesRef.current?.onSeatsUpdated(ids, estado);
   };
 
   const allTicketsPaid = carrito?.length > 0 && carrito.every(ticket => ticket.status === 'pagado');
@@ -264,13 +260,20 @@ const Boleteria = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* Sidebar desktop */}
-      <aside className="hidden md:flex md:w-80 bg-white border-r border-gray-200 flex-col">
-        <button onClick={() => window.history.back()} className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-100 border-b border-gray-200" aria-label="Volver">
-          <AiOutlineLeft className="text-lg" /><span>Back</span>
-        </button>
-        <div className="flex-grow overflow-auto px-4 py-6 space-y-6">
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar izquierdo */}
+      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <button 
+            onClick={() => window.history.back()} 
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+          >
+            <AiOutlineLeft className="text-lg" />
+            <span>Volver</span>
+          </button>
+        </div>
+        
+        <div className="flex-1 overflow-auto p-4">
           <LeftMenu
             onSearchClick={handleClientManagement}
             onAddClientClick={handleClientManagement}
@@ -282,95 +285,16 @@ const Boleteria = () => {
             setSelectedEvent={setSelectedEvent}
           />
         </div>
-      </aside>
-
-      {/* Toggle sidebar mobile */}
-      <div className="md:hidden fixed top-2 left-2 z-50">
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded bg-white shadow-md" aria-label="Toggle menu">
-          <AiOutlineMenu className="text-xl" />
-        </button>
       </div>
 
-      {/* Sidebar mobile */}
-      {sidebarOpen && (
-        <aside className="fixed inset-0 bg-black bg-opacity-50 z-40" onClick={() => setSidebarOpen(false)}>
-          <div className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-xl overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => { setSidebarOpen(false); window.history.back(); }} className="flex items-center gap-2 px-4 py-3 text-gray-700 hover:bg-gray-100 border-b border-gray-200 w-full" aria-label="Volver">
-              <AiOutlineLeft className="text-lg" /><span>Back</span>
-            </button>
-            <div className="px-4 py-6 space-y-6">
-              <LeftMenu
-                onSearchClick={handleClientManagement}
-                onAddClientClick={handleClientManagement}
-                selectedClient={selectedClient}
-                onClientRemove={() => setSelectedClient(null)}
-                setCarrito={setCarrito}
-                setSelectedClient={setSelectedClient}
-                onFunctionSelect={handleFunctionSelect}
-                setSelectedEvent={setSelectedEvent}
-              />
-            </div>
-          </div>
-        </aside>
-      )}
-
-      {/* Main content */}
-      <main className="flex-1 flex flex-col h-full min-w-0">
-        <div className="hidden md:flex flex-grow space-x-6 min-h-0 overflow-hidden">
-          <section className="flex-1 h-full min-h-0 bg-white rounded-lg shadow-md overflow-auto">
-          <ZonesAndPrices
-            ref={zonesRef}
-            eventos={eventos}
-            selectedEvent={selectedEvent}
-            onEventSelect={onEventSelect}
-            funciones={funciones}
-            onShowFunctions={() => setIsFunctionsModalVisible(true)}
-            selectedFuncion={selectedFuncion}
-            selectedClient={selectedClient}
-            abonos={clientAbonos}
-            carrito={carrito}
-            setCarrito={setCarrito}
-            selectedPlantilla={selectedPlantilla}
-            selectedAffiliate={selectedAffiliate}
-            setSelectedAffiliate={setSelectedAffiliate}
-            showSeatingMap={false}
-          />
-          {/* Add SeatingMapUnified below for better seat rendering */}
-          {selectedFuncion && (
-            <SeatingMapUnified
-              funcionId={selectedFuncion.id || selectedFuncion._id}
-              mapa={mapa || { zonas: [] }}
-              lockSeat={lockSeat}
-              unlockSeat={unlockSeat}
-              isSeatLocked={isSeatLocked}
-              isSeatLockedByMe={isSeatLockedByMe}
-              onSeatToggle={handleSeatToggle}
-              onSeatInfo={handleSeatInfo}
-              foundSeats={foundSeats}
-            />
-          )}
-          </section>
-
-          <aside className="h-full bg-white rounded-lg shadow-md flex flex-col overflow-auto w-96 min-w-[300px]">
-            <Cart
-              carrito={carrito}
-              setCarrito={setCarrito}
-              onSeatsUpdated={handleSeatsUpdated}
-              selectedClient={selectedClient}
-              onPaymentClick={() => setIsPaymentModalVisible(true)}
-              setSelectedClient={setSelectedClient}
-              selectedAffiliate={selectedAffiliate}
-            >
-              {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
-            </Cart>
-          </aside>
-        </div>
-
-        {/* Mobile layout */}
-        <div className="flex flex-col md:hidden flex-grow min-h-0 overflow-auto space-y-6 p-4 bg-white rounded-lg shadow-md">
-          <section className="min-h-[300px]">
+      {/* Contenido principal */}
+      <div className="flex-1 flex flex-col">
+        {/* Área de trabajo principal */}
+        <div className="flex-1 flex">
+          {/* Panel izquierdo - Zonas y precios */}
+          <div className="flex-1 bg-white border-r border-gray-200 overflow-auto">
             <ZonesAndPrices
-              ref={mobileZonesRef}
+              ref={zonesRef}
               eventos={eventos}
               selectedEvent={selectedEvent}
               onEventSelect={onEventSelect}
@@ -382,13 +306,14 @@ const Boleteria = () => {
               carrito={carrito}
               setCarrito={setCarrito}
               selectedPlantilla={selectedPlantilla}
-            selectedAffiliate={selectedAffiliate}
-            setSelectedAffiliate={setSelectedAffiliate}
-            showSeatingMap={false}
-          />
-          </section>
+              selectedAffiliate={selectedAffiliate}
+              setSelectedAffiliate={setSelectedAffiliate}
+              showSeatingMap={true}
+            />
+          </div>
 
-          <section>
+          {/* Panel derecho - Carrito */}
+          <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
             <Cart
               carrito={carrito}
               setCarrito={setCarrito}
@@ -400,9 +325,9 @@ const Boleteria = () => {
             >
               {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
             </Cart>
-          </section>
+          </div>
         </div>
-      </main>
+      </div>
 
       <ClientModals {...clientModalsProps} />
       <FunctionModal {...functionModalProps} />

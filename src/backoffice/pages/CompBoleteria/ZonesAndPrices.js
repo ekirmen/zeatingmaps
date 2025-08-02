@@ -1,9 +1,7 @@
 import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
-import CartWithTimer from '../../components/CartWithTimer';
 import SeatAnimation from '../../components/SeatAnimation';
-import CartDebug from './components/CartDebug';
 
 // Importar hooks personalizados
 import {
@@ -17,17 +15,13 @@ import {
 import {
   EventSelector,
   FunctionSelector,
-  ViewModeSelector,
   DiscountCodeInput,
   ModeControls,
-  ZoneSelector,
-  ZonesTable,
-  AbonosList
+  ZoneSelector
 } from './components';
 
 // Importar handlers
 import { createSeatHandlers } from './components/SeatHandlers';
-import { createZoneActions } from './components/ZoneActions';
 
 const ZonesAndPrices = ({
   eventos = [],
@@ -46,7 +40,7 @@ const ZonesAndPrices = ({
   showSeatingMap = true,
 }, ref) => {
   // Estados locales
-  const [viewMode, setViewMode] = useState(showSeatingMap ? 'map' : 'zonas');
+  const [viewMode, setViewMode] = useState('map'); // Siempre mostrar el mapa por defecto
   const [abonoMode, setAbonoMode] = useState(false);
   const mapContainerRef = useRef(null);
 
@@ -76,12 +70,9 @@ const ZonesAndPrices = ({
   const {
     selectedZonaId,
     setSelectedZonaId,
-    zoneQuantities,
-    setZoneQuantities,
     detallesPlantilla,
     zonePriceRanges,
-    handleClearZoneSelection,
-    handleQuantityChange
+    handleClearZoneSelection
   } = useZoneManagement(selectedPlantilla, getPrecioConDescuento);
 
   // Handlers
@@ -104,17 +95,7 @@ const ZonesAndPrices = ({
     abonoSeats
   });
 
-  const zoneActions = createZoneActions({
-    selectedFuncion,
-    carrito,
-    setCarrito,
-    selectedClient,
-    zoneQuantities,
-    setZoneQuantities,
-    appliedDiscount,
-    getPrecioConDescuento,
-    detallesPlantilla
-  });
+
 
   // Callbacks
   const onSeatsUpdated = useCallback((ids, estado) => {
@@ -139,15 +120,7 @@ const ZonesAndPrices = ({
 
   useImperativeHandle(ref, () => ({ onSeatsUpdated }));
 
-  // Handlers adicionales
-  const handleSelectZoneForMap = (zonaId) => {
-    setViewMode('map');
-    setSelectedZonaId(zonaId);
-    setZoneQuantities({});
-    setTimeout(() => {
-      mapContainerRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, 0);
-  };
+
 
   // Efectos
   React.useEffect(() => {
@@ -158,62 +131,57 @@ const ZonesAndPrices = ({
   }, [blockMode, carrito, setCarrito]);
 
   return (
-    <div className="space-y-4 p-4">
-      {/* Event Selector */}
-      <EventSelector
-        eventos={eventos}
-        selectedEvent={selectedEvent}
-        onEventSelect={onEventSelect}
-        funciones={funciones}
-        onShowFunctions={onShowFunctions}
-        selectedFuncion={selectedFuncion}
-      />
+    <div className="h-full flex flex-col">
+      {/* Header con controles */}
+      <div className="p-4 border-b border-gray-200 space-y-4">
+        {/* Event Selector */}
+        <EventSelector
+          eventos={eventos}
+          selectedEvent={selectedEvent}
+          onEventSelect={onEventSelect}
+          funciones={funciones}
+          onShowFunctions={onShowFunctions}
+          selectedFuncion={selectedFuncion}
+        />
 
-      {/* Function Selector */}
-      <FunctionSelector
-        selectedFuncion={selectedFuncion}
-        onShowFunctions={onShowFunctions}
-      />
+        {/* Function Selector */}
+        <FunctionSelector
+          selectedFuncion={selectedFuncion}
+          onShowFunctions={onShowFunctions}
+        />
 
-      {/* View Mode Selector */}
-      <ViewModeSelector
-        showSeatingMap={showSeatingMap}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-      />
+        {/* Discount Code Input */}
+        <DiscountCodeInput
+          discountCode={discountCode}
+          setDiscountCode={setDiscountCode}
+          handleApplyDiscount={handleApplyDiscount}
+          appliedDiscount={appliedDiscount}
+        />
 
-      {/* Discount Code Input */}
-      <DiscountCodeInput
-        discountCode={discountCode}
-        setDiscountCode={setDiscountCode}
-        handleApplyDiscount={handleApplyDiscount}
-        appliedDiscount={appliedDiscount}
-      />
+        {/* Mode Controls */}
+        <ModeControls
+          blockMode={blockMode}
+          setBlockMode={setBlockMode}
+          abonoMode={abonoMode}
+          setAbonoMode={setAbonoMode}
+          setCarrito={setCarrito}
+          carrito={carrito}
+        />
 
-      {/* Mode Controls */}
-      <ModeControls
-        blockMode={blockMode}
-        setBlockMode={setBlockMode}
-        abonoMode={abonoMode}
-        setAbonoMode={setAbonoMode}
-        setCarrito={setCarrito}
-        carrito={carrito}
-      />
+        {/* Zone Selector */}
+        <ZoneSelector
+          zonas={zonas}
+          selectedZonaId={selectedZonaId}
+          setSelectedZonaId={setSelectedZonaId}
+          handleClearZoneSelection={handleClearZoneSelection}
+          zonePriceRanges={zonePriceRanges}
+        />
+      </div>
 
-      {/* Conditional Rendering for Map or Zones */}
-      {showSeatingMap && viewMode === 'map' ? (
-        mapa ? (
-          <>
-            {/* Zone Selector */}
-            <ZoneSelector
-              zonas={zonas}
-              selectedZonaId={selectedZonaId}
-              setSelectedZonaId={setSelectedZonaId}
-              handleClearZoneSelection={handleClearZoneSelection}
-              zonePriceRanges={zonePriceRanges}
-            />
-            
-            {/* Seating Map */}
+      {/* Área principal del mapa */}
+      <div className="flex-1 overflow-auto">
+        {mapa ? (
+          <div className="h-full">
             <SeatingMap
               mapa={mapa}
               onSeatClick={seatHandlers.handleSeatClick}
@@ -226,41 +194,17 @@ const ZonesAndPrices = ({
               containerRef={mapContainerRef}
               onSelectCompleteTable={seatHandlers.handleSelectCompleteTable}
             />
-          </>
+          </div>
         ) : (
-          <p className="text-center text-gray-500">No hay mapa disponible</p>
-        )
-      ) : (
-        <div className="overflow-x-auto">
-          {/* Zones Table */}
-          <ZonesTable
-            detallesPlantilla={detallesPlantilla}
-            zoneQuantities={zoneQuantities}
-            handleQuantityChange={handleQuantityChange}
-            handleAddZoneToCart={zoneActions.handleAddZoneToCart}
-            handleSelectZoneForMap={handleSelectZoneForMap}
-            getPrecioConDescuento={getPrecioConDescuento}
-          />
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <p className="text-gray-500 text-lg mb-2">No hay mapa disponible</p>
+              <p className="text-gray-400 text-sm">Selecciona un evento y función para ver el mapa de asientos</p>
+            </div>
+          </div>
+        )}
+      </div>
 
-          {/* Abonos List */}
-          <AbonosList abonos={abonos} />
-        </div>
-      )}
-      
-      {/* Carrito con temporizador */}
-      <CartWithTimer
-        carrito={carrito}
-        setCarrito={setCarrito}
-        onPaymentClick={() => {
-          message.info('Redirigiendo a pagos...');
-        }}
-        selectedClient={selectedClient}
-        selectedAffiliate={selectedAffiliate}
-      />
-      
-      {/* Debug del carrito (solo en desarrollo) */}
-      <CartDebug carrito={carrito} setCarrito={setCarrito} />
-      
       {/* Animaciones de asientos */}
       {animatingSeats.map((seat) => (
         <SeatAnimation
