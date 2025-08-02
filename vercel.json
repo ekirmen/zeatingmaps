@@ -3,6 +3,15 @@
   "outputDirectory": "build",
   "installCommand": "npm ci --prefer-offline --no-audit --no-fund --silent",
   "framework": "create-react-app",
+  "build": {
+    "env": {
+      "CI": "false",
+      "GENERATE_SOURCEMAP": "false",
+      "DISABLE_ESLINT_PLUGIN": "true",
+      "SKIP_PREFLIGHT_CHECK": "true",
+      "NODE_ENV": "production"
+    }
+  },
   "functions": {
     "api/**/*.js": {
       "runtime": "@vercel/node@3.0.0"
