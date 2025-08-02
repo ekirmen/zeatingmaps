@@ -1,7 +1,6 @@
 {
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "build",
-  "installCommand": "npm ci --prefer-offline --no-audit --no-fund --silent",
   "framework": "create-react-app",
   "build": {
     "env": {
