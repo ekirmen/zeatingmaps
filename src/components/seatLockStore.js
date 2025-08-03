@@ -72,15 +72,23 @@ export const useSeatLockStore = create((set, get) => ({
       return;
     }
 
+    // Limpiar todas las suscripciones existentes primero
+    get().unsubscribe();
+
     const currentChannel = get().channel;
     if (currentChannel && currentChannel.topic === `seat-locks-channel-${funcionId}`) {
       console.log('[SEAT_LOCK] Ya suscrito a esta función.');
       return;
     }
 
+    // Asegurar que no hay canales activos antes de crear uno nuevo
     if (currentChannel) {
       console.log('[SEAT_LOCK] Desuscribiendo canal anterior:', currentChannel.topic);
-      currentChannel.unsubscribe();
+      try {
+        currentChannel.unsubscribe();
+      } catch (error) {
+        console.warn('[SEAT_LOCK] Error al desuscribir canal anterior:', error);
+      }
     }
 
     const fetchInitialLocks = async () => {
@@ -142,8 +150,12 @@ export const useSeatLockStore = create((set, get) => ({
     const { channel } = get();
     if (channel) {
       console.log('[SEAT_LOCK] Desuscribiendo canal:', channel.topic);
-      channel.unsubscribe();
-      set({ channel: null });
+      try {
+        channel.unsubscribe();
+      } catch (error) {
+        console.warn('[SEAT_LOCK] Error al desuscribir canal:', error);
+      }
+      set({ channel: null, lockedSeats: [] });
     }
   },
 

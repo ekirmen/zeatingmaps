@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useRecintoSala } from '../contexts/RecintoSalaContext';
 import { fetchZonasPorSala, createZona, updateZona, deleteZona, fetchMapa } from '../services/apibackoffice';
+import { supabase } from '../../supabaseClient';
 import Modal from 'react-modal';
 
 if (typeof document !== 'undefined' && document.getElementById('root')) {
@@ -18,6 +19,34 @@ const Plano = () => {
   const [editingZona, setEditingZona] = useState(null);
   const numeradaBloqueada = editingZona?.numerada && editingZona.aforo > 0;
   const navigate = useNavigate();
+
+  // Limpiar todas las suscripciones de tiempo real al montar el componente
+  useEffect(() => {
+    console.log('[PLANO] Limpiando suscripciones de tiempo real...');
+    
+    // Remover todos los canales activos
+    const channels = supabase.getChannels();
+    channels.forEach(channel => {
+      try {
+        console.log('[PLANO] Desuscribiendo canal:', channel.topic);
+        channel.unsubscribe();
+      } catch (error) {
+        console.warn('[PLANO] Error al desuscribir canal:', error);
+      }
+    });
+
+    return () => {
+      console.log('[PLANO] Componente desmontado, limpiando suscripciones...');
+      const channels = supabase.getChannels();
+      channels.forEach(channel => {
+        try {
+          channel.unsubscribe();
+        } catch (error) {
+          console.warn('[PLANO] Error al desuscribir canal en cleanup:', error);
+        }
+      });
+    };
+  }, []);
 
   useEffect(() => {
     const loadRecintos = async () => {
