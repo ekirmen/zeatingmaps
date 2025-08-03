@@ -3,8 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import BackofficeLayout from './components/BackofficeLayout';
 import Dashboard from './pages/Dashboard';
 import BoleteriaMain from './pages/CompBoleteria/BoleteriaMain';
-import EventosMain from './pages/EventosMain';
-import Clientes from './pages/Clientes';
+import Evento from './pages/Evento';
+import Usuarios from './pages/Usuarios';
 import PaymentGateways from './pages/PaymentGateways';
 import PaymentAnalytics from './pages/PaymentAnalytics';
 import RefundManagement from './pages/RefundManagement';
@@ -22,9 +22,9 @@ const BackofficeApp = () => {
           <Route index element={<Dashboard />} />
           <Route path="boleteria" element={<BoleteriaMain />} />
           <Route path="boleteria-main" element={<BoleteriaMain />} />
-          <Route path="eventos" element={<EventosMain />} />
-          <Route path="eventos-main" element={<EventosMain />} />
-          <Route path="clientes" element={<Clientes />} />
+          <Route path="eventos" element={<Evento />} />
+          <Route path="eventos-main" element={<Evento />} />
+          <Route path="clientes" element={<Usuarios />} />
           <Route path="pasarelas" element={<PaymentGateways />} />
           <Route path="analytics" element={<PaymentAnalytics />} />
           <Route path="reports" element={<Reports />} />
