@@ -1,11 +1,16 @@
 // src/pages/CrearMapaPage.js
 import React from 'react';
-import CrearMapa from '../components/CrearMapa';
+import { Card, Typography } from 'antd';
+
+const { Title } = Typography;
 
 const CrearMapaPage = () => {
   return (
-    <div className="crear-mapa-page">
-      <CrearMapa />
+    <div className="p-6">
+      <Card>
+        <Title level={2}>Crear Mapa</Title>
+        <p>Funcionalidad para crear mapas de asientos en desarrollo.</p>
+      </Card>
     </div>
   );
 };

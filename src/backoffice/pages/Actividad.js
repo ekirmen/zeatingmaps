@@ -1,11 +1,16 @@
 // Actividad.js
 import React from 'react';
+import { Card, Typography } from 'antd';
+
+const { Title } = Typography;
 
 const Actividad = () => {
   return (
-    <div>
-      <h2>Actividad</h2>
-      <p>Contenido de la página de Actividad.</p>
+    <div className="p-6">
+      <Card>
+        <Title level={2}>Actividad</Title>
+        <p>Panel de actividad del sistema en desarrollo.</p>
+      </Card>
     </div>
   );
 };
