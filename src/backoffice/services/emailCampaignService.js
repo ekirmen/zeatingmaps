@@ -155,9 +155,9 @@ export const emailCampaignService = {
     try {
       const { data, error } = await supabaseClient
         .from('eventos')
-        .select('id, nombre, fecha_inicio, fecha_fin')
+        .select('id, nombre, fecha_evento')
         .eq('activo', true)
-        .order('fecha_inicio', { ascending: true });
+        .order('fecha_evento', { ascending: true });
 
       if (error) throw error;
       return data || [];

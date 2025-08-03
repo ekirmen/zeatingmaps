@@ -14,14 +14,18 @@ import {
   Select,
   Switch,
   Image,
-  Tag
+  Tag,
+  Row,
+  Col
 } from 'antd';
 import { 
   PlusOutlined, 
   EditOutlined, 
   DeleteOutlined, 
   UploadOutlined,
-  CopyOutlined
+  CopyOutlined,
+  EnvironmentOutlined,
+  HomeOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
@@ -31,6 +35,8 @@ const { Option } = Select;
 
 const PlantillasProductos = () => {
   const [plantillas, setPlantillas] = useState([]);
+  const [recintos, setRecintos] = useState([]);
+  const [salas, setSalas] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingPlantilla, setEditingPlantilla] = useState(null);
@@ -39,7 +45,47 @@ const PlantillasProductos = () => {
 
   useEffect(() => {
     loadPlantillas();
+    loadRecintos();
   }, []);
+
+  const loadRecintos = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('recintos')
+        .select('*')
+        .order('nombre');
+
+      if (error) {
+        console.warn('Error loading recintos:', error);
+        setRecintos([]);
+        return;
+      }
+
+      setRecintos(data || []);
+    } catch (error) {
+      console.error('Error loading recintos:', error);
+    }
+  };
+
+  const loadSalas = async (recintoId) => {
+    try {
+      const { data, error } = await supabase
+        .from('salas')
+        .select('*')
+        .eq('recinto_id', recintoId)
+        .order('nombre');
+
+      if (error) {
+        console.warn('Error loading salas:', error);
+        setSalas([]);
+        return;
+      }
+
+      setSalas(data || []);
+    } catch (error) {
+      console.error('Error loading salas:', error);
+    }
+  };
 
   const loadPlantillas = async () => {
     try {
@@ -207,6 +253,34 @@ const PlantillasProductos = () => {
       render: (precio) => `$${parseFloat(precio).toFixed(2)}`
     },
     {
+      title: 'Recinto',
+      dataIndex: 'recinto_id',
+      key: 'recinto',
+      render: (recintoId) => {
+        const recinto = recintos.find(r => r.id === recintoId);
+        return recinto ? (
+          <div className="flex items-center">
+            <HomeOutlined className="mr-1" />
+            {recinto.nombre}
+          </div>
+        ) : 'N/A';
+      }
+    },
+    {
+      title: 'Sala',
+      dataIndex: 'sala_id',
+      key: 'sala',
+      render: (salaId) => {
+        const sala = salas.find(s => s.id === salaId);
+        return sala ? (
+          <div className="flex items-center">
+            <EnvironmentOutlined className="mr-1" />
+            {sala.nombre}
+          </div>
+        ) : 'N/A';
+      }
+    },
+    {
       title: 'Categoría',
       dataIndex: 'categoria',
       key: 'categoria',
@@ -333,6 +407,45 @@ const PlantillasProductos = () => {
               placeholder="0.00"
             />
           </Form.Item>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="recinto_id"
+                label="Recinto"
+                rules={[{ required: true, message: 'Por favor selecciona un recinto' }]}
+              >
+                <Select 
+                  placeholder="Selecciona un recinto"
+                  onChange={(value) => {
+                    loadSalas(value);
+                    form.setFieldsValue({ sala_id: undefined });
+                  }}
+                >
+                  {recintos.map(recinto => (
+                    <Option key={recinto.id} value={recinto.id}>
+                      {recinto.nombre}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="sala_id"
+                label="Sala"
+                rules={[{ required: true, message: 'Por favor selecciona una sala' }]}
+              >
+                <Select placeholder="Selecciona una sala">
+                  {salas.map(sala => (
+                    <Option key={sala.id} value={sala.id}>
+                      {sala.nombre}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item
             name="categoria"

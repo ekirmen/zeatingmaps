@@ -276,6 +276,35 @@ const BoleteriaMain = () => {
 
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col">
+        {/* Plantillas de Precios */}
+        {selectedEvent && (
+          <div className="bg-gray-50 border-b px-6 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-medium text-gray-700">Plantillas de Precios:</span>
+                <div className="flex space-x-2">
+                  {selectedPlantilla ? (
+                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                      {selectedPlantilla.nombre}
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">
+                      Sin plantilla seleccionada
+                    </span>
+                  )}
+                </div>
+              </div>
+              <Button 
+                size="small" 
+                type="primary"
+                onClick={() => message.info('Funcionalidad de plantillas en desarrollo')}
+              >
+                Cambiar Plantilla
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Header principal */}
         <div className="bg-white shadow-sm border-b">
           <div className="px-6 py-4">

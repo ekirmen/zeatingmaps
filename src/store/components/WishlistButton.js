@@ -49,8 +49,7 @@ const WishlistButton = ({ event, size = 'default' }) => {
             nombre,
             descripcion,
             imagen_url,
-            fecha_inicio,
-            fecha_fin
+            fecha_evento
           )
         `)
         .eq('user_id', user.id)
@@ -181,7 +180,7 @@ const WishlistButton = ({ event, size = 'default' }) => {
                       {item.eventos?.descripcion?.slice(0, 50)}...
                     </Text>
                     <div className="text-xs text-gray-500 mt-1">
-                      {new Date(item.eventos?.fecha_inicio).toLocaleDateString()}
+                      {new Date(item.eventos?.fecha_evento).toLocaleDateString()}
                     </div>
                   </div>
                 }

@@ -264,14 +264,11 @@ const EventosPage = () => {
               )}
 
               {/* Fechas del evento */}
-              {evento.fecha_inicio && (
+              {evento.fecha_evento && (
                 <div className="flex items-center text-gray-600 mb-4">
                   <CalendarOutlined className="mr-2" />
                   <span>
-                    {formatDateString(evento.fecha_inicio)}
-                    {evento.fecha_fin && evento.fecha_fin !== evento.fecha_inicio && (
-                      <span> - {formatDateString(evento.fecha_fin)}</span>
-                    )}
+                    {formatDateString(evento.fecha_evento)}
                   </span>
                 </div>
               )}

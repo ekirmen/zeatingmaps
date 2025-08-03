@@ -155,8 +155,7 @@ const SidebarMenu = ({ collapsed }) => {
         { title: 'Fan ID', path: '/dashboard/fanid', icon: faIdCard },
         { title: 'Encuestas', path: '/dashboard/encuestas', icon: faPoll },
         { title: 'Campañas de mailing', path: '/dashboard/email-campaigns', icon: faEnvelope },
-        { title: 'Etiquetas de evento', path: '/dashboard/tags?type=event', icon: faTag },
-        { title: 'Etiquetas de usuario', path: '/dashboard/tags?type=user', icon: faTag }
+        { title: 'Etiquetas', path: '/dashboard/tags', icon: faTag }
       ]
     },
     {

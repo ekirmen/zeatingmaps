@@ -133,11 +133,11 @@ const Reports = () => {
 
       if (filters.dateRange) {
         query = query
-          .gte('fecha_inicio', filters.dateRange[0].toISOString())
-          .lte('fecha_fin', filters.dateRange[1].toISOString());
+          .gte('fecha_evento', filters.dateRange[0].toISOString())
+          .lte('fecha_evento', filters.dateRange[1].toISOString());
       }
 
-      const { data, error } = await query.order('fecha_inicio', { ascending: false });
+      const { data, error } = await query.order('fecha_evento', { ascending: false });
 
       if (error) throw error;
 
@@ -260,9 +260,9 @@ const Reports = () => {
       key: 'nombre'
     },
     {
-      title: 'Fecha Inicio',
-      dataIndex: 'fecha_inicio',
-      key: 'fecha_inicio',
+      title: 'Fecha Evento',
+      dataIndex: 'fecha_evento',
+      key: 'fecha_evento',
       render: (date) => new Date(date).toLocaleDateString()
     },
     {

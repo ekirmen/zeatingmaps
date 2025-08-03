@@ -228,8 +228,8 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from('eventos')
         .select('*')
-        .gte('fecha_inicio', new Date().toISOString())
-        .order('fecha_inicio', { ascending: true })
+        .gte('fecha_evento', new Date().toISOString())
+        .order('fecha_evento', { ascending: true })
         .limit(5);
 
       if (error) throw error;
@@ -515,7 +515,7 @@ const Dashboard = () => {
                       <div>
                         <Text type="secondary">{event.descripcion?.slice(0, 50)}...</Text>
                         <div className="text-xs text-gray-500 mt-1">
-                          {new Date(event.fecha_inicio).toLocaleDateString()}
+                          {new Date(event.fecha_evento).toLocaleDateString()}
                         </div>
                       </div>
                     }
@@ -555,7 +555,7 @@ const Dashboard = () => {
               )}
               dateCellRender={(date) => {
                 const eventsOnDate = upcomingEvents.filter(event => {
-                  const eventDate = new Date(event.fecha_inicio);
+                  const eventDate = new Date(event.fecha_evento);
                   return eventDate.toDateString() === date.toDate().toDateString();
                 });
 
