@@ -174,12 +174,22 @@ export const syncSeatsForSala = async (salaId) => {
     if (el.type === 'mesa') {
       (el.sillas || []).forEach(s => {
         if (s._id) {
-          seatDefs.push({ id: s._id, zona: s.zona || null });
+          // Limpiar funcion_id del mapa si existe para evitar conflictos
+          const cleanSeat = { ...s };
+          if (cleanSeat.funcion_id) {
+            delete cleanSeat.funcion_id;
+          }
+          seatDefs.push({ id: s._id, zona: s.zona || null, cleanData: cleanSeat });
         }
       });
     } else if (el.type === 'silla') {
       if (el._id) {
-        seatDefs.push({ id: el._id, zona: el.zona || null });
+        // Limpiar funcion_id del mapa si existe para evitar conflictos
+        const cleanSeat = { ...el };
+        if (cleanSeat.funcion_id) {
+          delete cleanSeat.funcion_id;
+        }
+        seatDefs.push({ id: el._id, zona: el.zona || null, cleanData: cleanSeat });
       }
     }
   });
@@ -216,6 +226,15 @@ export const syncSeatsForSala = async (salaId) => {
         zona: s.zona,
         status: 'disponible',
         bloqueado: false,
+        // Incluir datos adicionales del mapa si existen
+        ...(s.cleanData && {
+          fila: s.cleanData.fila,
+          numero: s.cleanData.numero,
+          nombre: s.cleanData.nombre,
+          width: s.cleanData.width,
+          height: s.cleanData.height,
+          posicion: s.cleanData.posicion
+        })
       }));
     
     if (newSeats.length > 0) {
@@ -238,6 +257,23 @@ export const syncSeatsForSala = async (salaId) => {
             
             if (upsertErr) {
               console.error('Error en upsert de seats:', upsertErr);
+              
+              // Si aún hay error, intentar insertar uno por uno
+              console.log('Intentando inserción individual...');
+              for (const seat of newSeats) {
+                try {
+                  const { error: singleInsertErr } = await supabase
+                    .from('seats')
+                    .insert(seat)
+                    .select();
+                  
+                  if (singleInsertErr) {
+                    console.warn(`Error al insertar asiento ${seat._id}:`, singleInsertErr);
+                  }
+                } catch (error) {
+                  console.warn(`Error inesperado al insertar asiento ${seat._id}:`, error);
+                }
+              }
             } else {
               console.log('Upsert completado exitosamente');
             }

@@ -43,6 +43,17 @@
 - ✅ Mejorado el manejo de errores en `SimpleSeatingMap.jsx`
 - ✅ Agregada validación más robusta para la selección de sala
 
+### 5. **Conflicto de funcion_id en mapa** ⚠️ **NUEVO**
+**Error:** `Key (_id)=(af5d1548-f256-45ce-b809-4e77a91e144f) already exists`
+
+**Causa:** El mapa contiene asientos con `funcion_id: "7"` pero el sistema intenta sincronizar para `funcion_id: 10`, causando conflictos de clave primaria.
+
+**Soluciones Aplicadas:**
+- ✅ Mejorada función `syncSeatsForSala` para limpiar `funcion_id` del mapa
+- ✅ Agregada inserción individual como fallback
+- ✅ Creado script de análisis: `scripts/fixMapaSeatsConflict.mjs`
+- ✅ Creado script SQL de limpieza: `sql/clean_map_funcion_id.sql`
+
 ## Pasos para Aplicar las Soluciones
 
 ### 1. Limpiar Duplicados en la Base de Datos
@@ -52,14 +63,28 @@
 node scripts/cleanDuplicateSeats.mjs
 ```
 
-### 2. Verificar Estructura de la Tabla
+### 2. Limpiar Conflicto de funcion_id en Mapa
+
+```bash
+# Ejecutar el script de análisis y limpieza
+node scripts/fixMapaSeatsConflict.mjs
+```
+
+### 3. Limpiar funcion_id del Mapa (SQL)
+
+```sql
+-- Ejecutar en el SQL Editor de Supabase
+-- Copiar y pegar el contenido de sql/clean_map_funcion_id.sql
+```
+
+### 4. Verificar Estructura de la Tabla
 
 ```sql
 -- Ejecutar en el SQL Editor de Supabase
 -- Copiar y pegar el contenido de sql/fix_seats_table_constraints.sql
 ```
 
-### 3. Reiniciar la Aplicación
+### 5. Reiniciar la Aplicación
 
 ```bash
 # Detener el servidor de desarrollo
@@ -106,6 +131,12 @@ console.log('Supabase client:', supabase);
 - Implementar fallbacks para imágenes que no cargan
 - Usar CDN confiable para imágenes externas
 
+### 4. Para Evitar Conflictos de funcion_id ⚠️ **NUEVO**
+- Nunca incluir `funcion_id` en el contenido del mapa
+- El mapa debe ser genérico y reutilizable para todas las funciones
+- Limpiar automáticamente `funcion_id` al guardar mapas
+- Usar inserción individual como fallback cuando hay conflictos
+
 ## Monitoreo
 
 ### Logs a Observar
@@ -113,12 +144,14 @@ console.log('Supabase client:', supabase);
 - ✅ `duplicate key value violates unique constraint` - Ya solucionado
 - ✅ `via.placeholder.com` - Ya solucionado
 - ✅ `No hay sala seleccionada` - Mejorado el manejo
+- ⚠️ `Key (_id)=... already exists` - Nuevo script de limpieza
 
 ### Métricas de Éxito
 - No más errores 409 (Conflict) en la tabla seats
 - No más errores de múltiples instancias de GoTrueClient
 - Carga correcta de imágenes
 - Sincronización exitosa de asientos
+- Mapa limpio sin funcion_id
 
 ## Contacto
 Si persisten los problemas después de aplicar estas soluciones, revisa:
