@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs } from 'antd';
-import { SearchOutlined, UserOutlined, QrcodeOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined } from '@ant-design/icons';
+import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography } from 'antd';
+import { SearchOutlined, UserOutlined, QrcodeOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined } from '@ant-design/icons';
 import CartWithTimer from '../../components/CartWithTimer';
 import SeatAnimation from '../../components/SeatAnimation';
 import ZonesAndPrices from './ZonesAndPrices';
@@ -9,9 +9,11 @@ import PrintTicketButton from '../../components/PrintTicketButton';
 import ProductosWidget from '../../../store/components/ProductosWidget';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
+import { supabase } from '../../../supabaseClient';
 
 const { Search } = Input;
 const { Option } = Select;
+const { Title, Text } = Typography;
 
 const BoleteriaMain = () => {
   // Usar los hooks existentes
@@ -56,6 +58,82 @@ const BoleteriaMain = () => {
   const [productosCarrito, setProductosCarrito] = useState([]);
   const [activeTab, setActiveTab] = useState('mapa');
   const [selectedPriceType, setSelectedPriceType] = useState('regular');
+  
+  // Nuevos estados para funcionalidades
+  const [showEventSearch, setShowEventSearch] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
+  const [showProducts, setShowProducts] = useState(false);
+  const [showBox, setShowBox] = useState(false);
+  const [availableEvents, setAvailableEvents] = useState([]);
+  const [availableFunctions, setAvailableFunctions] = useState([]);
+  const [selectedEventForSearch, setSelectedEventForSearch] = useState(null);
+  const [selectedFunctionForSearch, setSelectedFunctionForSearch] = useState(null);
+  const [plantillasPrecios, setPlantillasPrecios] = useState([]);
+  const [selectedPlantillaPrecio, setSelectedPlantillaPrecio] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    loadAvailableEvents();
+    loadPlantillasPrecios();
+  }, []);
+
+  const loadAvailableEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('eventos')
+        .select('*')
+        .eq('activo', true)
+        .order('fecha_evento', { ascending: true });
+
+      if (error) {
+        console.error('Error loading events:', error);
+        return;
+      }
+
+      setAvailableEvents(data || []);
+    } catch (error) {
+      console.error('Error loading events:', error);
+    }
+  };
+
+  const loadFunctionsForEvent = async (eventId) => {
+    try {
+      const { data, error } = await supabase
+        .from('funciones')
+        .select('*, salas(*)')
+        .eq('evento_id', eventId)
+        .order('fechaCelebracion', { ascending: true });
+
+      if (error) {
+        console.error('Error loading functions:', error);
+        return;
+      }
+
+      setAvailableFunctions(data || []);
+    } catch (error) {
+      console.error('Error loading functions:', error);
+    }
+  };
+
+  const loadPlantillasPrecios = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('plantillas_precios')
+        .select('*')
+        .eq('activo', true)
+        .order('nombre', { ascending: true });
+
+      if (error) {
+        console.error('Error loading price templates:', error);
+        return;
+      }
+
+      setPlantillasPrecios(data || []);
+    } catch (error) {
+      console.error('Error loading price templates:', error);
+    }
+  };
 
   const handlePaymentClick = () => {
     if (!selectedClient) {
@@ -78,7 +156,6 @@ const BoleteriaMain = () => {
       message.warning('Ingresa un localizador válido');
       return;
     }
-    // Aquí implementarías la búsqueda por localizador
     message.info(`Buscando localizador: ${locatorValue}`);
     setShowLocatorModal(false);
   };
@@ -139,6 +216,75 @@ const BoleteriaMain = () => {
     return seatsTotal + productsTotal;
   };
 
+  // Funciones para los botones del sidebar
+  const handleSearchClick = () => {
+    setShowEventSearch(true);
+  };
+
+  const handleConfigClick = () => {
+    setShowConfig(true);
+  };
+
+  const handleProductsClick = () => {
+    setShowProducts(true);
+  };
+
+  const handleBoxClick = () => {
+    setShowBox(true);
+  };
+
+  // Funciones para los botones del header
+  const handleGridClick = () => {
+    message.info('Vista de cuadrícula activada');
+  };
+
+  const handleUploadClick = () => {
+    message.info('Función de subida activada');
+  };
+
+  const handleEyeClick = () => {
+    message.info('Vista previa activada');
+  };
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.2, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.2, 0.5));
+  };
+
+  const handleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+    message.info(isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa activada');
+  };
+
+  const handleRefresh = () => {
+    loadAvailableEvents();
+    loadPlantillasPrecios();
+    message.success('Datos actualizados');
+  };
+
+  const handleClose = () => {
+    message.info('Cerrando aplicación');
+  };
+
+  const handleEventSelectForSearch = (eventId) => {
+    const event = availableEvents.find(e => e.id === eventId);
+    setSelectedEventForSearch(event);
+    setSelectedFunctionForSearch(null);
+    loadFunctionsForEvent(eventId);
+  };
+
+  const handleFunctionSelectForSearch = (functionId) => {
+    const func = availableFunctions.find(f => f.id === functionId);
+    setSelectedFunctionForSearch(func);
+    setSelectedEvent(selectedEventForSearch);
+    setSelectedFuncion(func);
+    setShowEventSearch(false);
+    message.success(`Evento seleccionado: ${selectedEventForSearch?.nombre} - ${func?.sala?.nombre}`);
+  };
+
   const tabItems = [
     {
       key: 'zonas',
@@ -166,13 +312,13 @@ const BoleteriaMain = () => {
         <div className="relative">
           {/* Controles de zoom */}
           <div className="absolute bottom-4 left-4 z-10 flex space-x-2">
-            <Button size="small" icon={<ZoomInOutlined />} />
-            <Button size="small" icon={<FullscreenOutlined />} />
-            <Button size="small" icon={<ZoomOutOutlined />} />
+            <Button size="small" icon={<ZoomInOutlined />} onClick={handleZoomIn} />
+            <Button size="small" icon={<FullscreenOutlined />} onClick={handleFullscreen} />
+            <Button size="small" icon={<ZoomOutOutlined />} onClick={handleZoomOut} />
           </div>
           
           {/* Mapa de asientos */}
-          <div className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="bg-white p-6 rounded-lg shadow-sm" style={{ transform: `scale(${zoomLevel})` }}>
             {/* Bloques de escenario */}
             <div className="text-center mb-4">
               <div className="bg-black text-white py-2 px-4 rounded inline-block">
@@ -251,19 +397,19 @@ const BoleteriaMain = () => {
     <div className="h-screen flex bg-gray-100">
       {/* Sidebar izquierda */}
       <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
-        <div className="text-white text-xs text-center">
+        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleSearchClick}>
           <SearchOutlined className="text-xl mb-1" />
           <div>Buscar</div>
         </div>
-        <div className="text-white text-xs text-center">
-          <UserOutlined className="text-xl mb-1" />
+        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleConfigClick}>
+          <SettingOutlined className="text-xl mb-1" />
           <div>Config</div>
         </div>
-        <div className="text-white text-xs text-center">
+        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleProductsClick}>
           <GiftOutlined className="text-xl mb-1" />
           <div>Productos</div>
         </div>
-        <div className="bg-green-500 text-white text-xs text-center px-2 py-1 rounded">
+        <div className="bg-green-500 text-white text-xs text-center px-2 py-1 rounded cursor-pointer hover:bg-green-600" onClick={handleBoxClick}>
           <ShoppingCartOutlined className="text-xl mb-1" />
           <div>BOX</div>
         </div>
@@ -285,40 +431,33 @@ const BoleteriaMain = () => {
                 <span className="text-sm font-medium">chichiriviche</span>
               </div>
               <div className="text-sm">
-                <div className="font-medium">CHICHIRIVICHE FESTIVAL MUSICAL 2025 CON NELSON VÉLAZQUEZ 14 DE AGOSTO PARQUE FERIAL LOS CAPRILES CHICHIRIVICHE</div>
+                <div className="font-medium">
+                  {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
+                </div>
                 <div className="text-gray-600">
-                  <span>Fecha: jueves 14/08/2025</span>
-                  <span className="ml-4">Hora: 23:30</span>
+                  <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
+                  <span className="ml-4">Hora: {selectedFuncion ? new Date(selectedFuncion.fechaCelebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <button className="p-1 text-gray-600">
+              <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" onClick={handleGridClick}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
-              <button className="p-1 text-gray-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
+              <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" onClick={handleUploadClick}>
+                <UploadOutlined className="w-4 h-4" />
               </button>
-              <button className="p-1 text-gray-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
+              <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" onClick={handleEyeClick}>
+                <EyeOutlined className="w-4 h-4" />
               </button>
-              <span className="text-xs text-gray-500">1X</span>
-              <button className="p-1 text-gray-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
+              <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
+              <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" onClick={handleRefresh}>
+                <ReloadOutlined className="w-4 h-4" />
               </button>
-              <button className="p-1 text-gray-600">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" onClick={handleClose}>
+                <CloseOutlined className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -410,6 +549,144 @@ const BoleteriaMain = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de búsqueda de eventos */}
+      <Modal
+        title="Seleccionar Evento y Función"
+        open={showEventSearch}
+        onCancel={() => setShowEventSearch(false)}
+        footer={null}
+        width={600}
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Evento</label>
+                         <Select
+               placeholder="Selecciona un evento"
+               style={{ width: '100%' }}
+               onChange={handleEventSelectForSearch}
+               value={selectedEventForSearch?.id}
+             >
+              {availableEvents.map(event => (
+                <Option key={event.id} value={event.id}>
+                  {event.nombre} - {new Date(event.fecha_evento).toLocaleDateString('es-ES')}
+                </Option>
+              ))}
+            </Select>
+          </div>
+          
+          {selectedEventForSearch && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Función</label>
+                             <Select
+                 placeholder="Selecciona una función"
+                 style={{ width: '100%' }}
+                 onChange={handleFunctionSelectForSearch}
+                 value={selectedFunctionForSearch?.id}
+               >
+                {availableFunctions.map(func => (
+                  <Option key={func.id} value={func.id}>
+                    {func.sala?.nombre} - {new Date(func.fechaCelebracion).toLocaleString('es-ES')}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Drawer de configuración */}
+      <Drawer
+        title="Configuración"
+        placement="right"
+        onClose={() => setShowConfig(false)}
+        open={showConfig}
+        width={400}
+      >
+        <div className="space-y-4">
+          <Card title="Plantillas de Precios">
+            <Select
+              placeholder="Selecciona una plantilla"
+              style={{ width: '100%' }}
+              onChange={(value) => setSelectedPlantillaPrecio(value)}
+            >
+              {plantillasPrecios.map(plantilla => (
+                <Option key={plantilla.id} value={plantilla.id}>
+                  {plantilla.nombre}
+                </Option>
+              ))}
+            </Select>
+          </Card>
+          
+          <Card title="Configuración General">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span>Modo bloqueo</span>
+                <input
+                  type="checkbox"
+                  checked={blockMode}
+                  onChange={(e) => setBlockMode(e.target.checked)}
+                  className="rounded"
+                />
+              </div>
+            </div>
+          </Card>
+        </div>
+      </Drawer>
+
+      {/* Drawer de productos */}
+      <Drawer
+        title="Gestión de Productos"
+        placement="right"
+        onClose={() => setShowProducts(false)}
+        open={showProducts}
+        width={600}
+      >
+        <ProductosWidget onProductAdded={handleProductAdded} />
+      </Drawer>
+
+      {/* Drawer de BOX */}
+      <Drawer
+        title="BOX - Gestión de Ventas"
+        placement="right"
+        onClose={() => setShowBox(false)}
+        open={showBox}
+        width={500}
+      >
+        <div className="space-y-4">
+          <Card title="Carrito Actual">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Asientos seleccionados:</span>
+                <span>{selectedSeats.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Productos:</span>
+                <span>{productosCarrito.reduce((sum, p) => sum + p.cantidad, 0)}</span>
+              </div>
+              <div className="flex justify-between font-bold">
+                <span>Total:</span>
+                <span>${calculateTotal().toFixed(2)}</span>
+              </div>
+            </div>
+          </Card>
+          
+          <Card title="Acciones">
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Button type="primary" block onClick={handlePaymentClick}>
+                Procesar Pago
+              </Button>
+              <Button block onClick={() => {
+                setSelectedSeats([]);
+                setProductosCarrito([]);
+                message.success('Carrito limpiado');
+              }}>
+                Limpiar Carrito
+              </Button>
+            </Space>
+          </Card>
+        </div>
+      </Drawer>
     </div>
   );
 };
