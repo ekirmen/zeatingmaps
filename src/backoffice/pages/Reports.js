@@ -23,8 +23,6 @@ import {
   DownloadOutlined, 
   EyeOutlined,
   BarChartOutlined,
-  PieChartOutlined,
-  LineChartOutlined,
   DollarOutlined,
   UserOutlined,
   FileTextOutlined,

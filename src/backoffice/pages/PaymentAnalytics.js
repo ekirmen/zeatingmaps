@@ -20,11 +20,11 @@ import {
   CreditCardOutlined, 
   BankOutlined, 
   MobileOutlined, 
-  TrendingUpOutlined, 
+  RiseOutlined, 
   BarChartOutlined,
-  PieChartOutlined,
-  LineChartOutlined,
-  AreaChartOutlined
+  // PieChartOutlined,
+  // LineChartOutlined,
+  // AreaChartOutlined
 } from '@ant-design/icons';
 import { 
   LineChart, 
@@ -282,7 +282,7 @@ const PaymentAnalytics = () => {
       transfer: <BankOutlined />,
       mobile_payment: <MobileOutlined />,
       zelle: <DollarOutlined />,
-      reservation: <TrendingUpOutlined />
+      reservation: <RiseOutlined />
     };
     return icons[type] || <CreditCardOutlined />;
   };
@@ -396,7 +396,7 @@ const PaymentAnalytics = () => {
       <Row gutter={[16, 16]} className="mb-8">
         {/* Ventas Diarias */}
         <Col xs={24} lg={12}>
-          <Card title="Ventas Diarias" extra={<LineChartOutlined />}>
+          <Card title="Ventas Diarias" extra={<BarChartOutlined />}>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={analyticsData.dailySales}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -418,7 +418,7 @@ const PaymentAnalytics = () => {
 
         {/* Distribución por Pasarela */}
         <Col xs={24} lg={12}>
-          <Card title="Distribución por Pasarela" extra={<PieChartOutlined />}>
+          <Card title="Distribución por Pasarela" extra={<BarChartOutlined />}>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -445,7 +445,7 @@ const PaymentAnalytics = () => {
       {/* Tendencias Mensuales */}
       <Row gutter={[16, 16]} className="mb-8">
         <Col xs={24}>
-          <Card title="Tendencias Mensuales" extra={<AreaChartOutlined />}>
+          <Card title="Tendencias Mensuales" extra={<BarChartOutlined />}>
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={analyticsData.monthlyTrends}>
                 <CartesianGrid strokeDasharray="3 3" />
