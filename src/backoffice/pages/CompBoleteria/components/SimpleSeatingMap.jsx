@@ -24,13 +24,12 @@ const SimpleSeatingMap = ({
     setError(null);
 
     try {
-      // Cargar asientos de la sala
-      const { data: seatsData, error: seatsError } = await supabase
-        .from('asientos')
-        .select('*')
-        .eq('sala_id', selectedFuncion.sala.id)
-        .order('fila', { ascending: true })
-        .order('columna', { ascending: true });
+             // Cargar asientos de la función
+       const { data: seatsData, error: seatsError } = await supabase
+         .from('seats')
+         .select('*')
+         .eq('funcion_id', selectedFuncion.id)
+         .order('_id', { ascending: true });
 
       if (seatsError) {
         console.error('Error loading seats:', seatsError);
@@ -38,33 +37,31 @@ const SimpleSeatingMap = ({
         return;
       }
 
-      // Cargar bloqueos de asientos si existen
-      const { data: blockedSeatsData, error: blockedError } = await supabase
-        .from('asientos_bloqueados')
-        .select('*')
-        .eq('funcion_id', selectedFuncion.id);
+             // Los asientos bloqueados están en la misma tabla con el campo 'bloqueado'
+       const blockedSeatsData = seatsData?.filter(seat => seat.bloqueado) || [];
 
-      if (blockedError) {
-        console.error('Error loading blocked seats:', blockedError);
-      }
-
-      // Mapear los asientos con su estado
-      const mappedSeats = (seatsData || []).map(seat => {
-        const isSelected = selectedSeats.some(s => s.id === seat.id);
-        const isBlocked = (blockedSeatsData || []).some(b => b.asiento_id === seat.id);
-        
-        return {
-          id: seat.id,
-          _id: seat.id, // Para compatibilidad
-          nombre: `${seat.fila}${seat.columna}`,
-          fila: seat.fila,
-          columna: seat.columna,
-          precio: seat.precio || 0,
-          zona: seat.zona || 'General',
-          estado: isBlocked ? 'blocked' : isSelected ? 'selected' : 'available',
-          tipo: seat.tipo || 'silla'
-        };
-      });
+             // Mapear los asientos con su estado
+       const mappedSeats = (seatsData || []).map(seat => {
+         const isSelected = selectedSeats.some(s => s._id === seat._id);
+         const isBlocked = seat.bloqueado || seat.status === 'bloqueado';
+         
+         // Extraer información de fila y columna del _id (asumiendo formato como "A1", "B2", etc.)
+         const seatId = seat._id;
+         const fila = seatId.charAt(0);
+         const columna = parseInt(seatId.substring(1)) || 0;
+         
+         return {
+           id: seat.id,
+           _id: seat._id,
+           nombre: seatId,
+           fila: fila,
+           columna: columna,
+           precio: 0, // Los precios se manejan por zonas
+           zona: seat.zona || 'General',
+           estado: isBlocked ? 'blocked' : isSelected ? 'selected' : seat.status || 'available',
+           tipo: 'silla'
+         };
+       });
 
       setSeats(mappedSeats);
     } catch (error) {
