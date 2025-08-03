@@ -111,6 +111,7 @@ const BackofficeApp = () => {
         <Route path="iva" element={<CreateIva />} />
         <Route path="correo" element={<Correo />} />
         <Route path="crear-mapa" element={<CrearMapaPage />} />
+        <Route path="crear-mapa/:salaId" element={<CrearMapaPage />} />
         <Route path="web-header" element={<WebHeader />} />
         <Route path="web-footer" element={<WebFooter />} />
         <Route path="web-colors" element={<WebColors />} />

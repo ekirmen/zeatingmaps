@@ -8,12 +8,13 @@ import { IvaProvider } from '../contexts/IvaContext';
 import { TagProvider } from '../contexts/TagContext';
 
 const BackofficeLayout = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Comenzar cerrado
   const location = useLocation();
+  const isBoleteriaRoute = location.pathname.includes('/dashboard/boleteria');
+  
+  // El sidebar estará abierto por defecto, pero cerrado solo en boletería
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(isBoleteriaRoute);
   
   // Si estamos en la ruta de boletería, mostrar solo el contenido sin el panel admin
-  const isBoleteriaRoute = location.pathname.includes('/dashboard/boleteria');
-
   if (isBoleteriaRoute) {
     return (
       <RecintoProvider>
