@@ -1,5 +1,6 @@
-import React from 'react';
-import { Card, Button, Badge } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Card, Button, Badge, Spin } from 'antd';
+import { supabase } from '../../../../supabaseClient';
 
 const SimpleSeatingMap = ({ 
   selectedFuncion, 
@@ -8,34 +9,75 @@ const SimpleSeatingMap = ({
   blockedSeats = [],
   blockMode = false 
 }) => {
-  // Generar asientos de ejemplo
-  const generateSeats = () => {
-    const seats = [];
-    const rows = ['A', 'B', 'C', 'D', 'E', 'F'];
-    const cols = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    
-    rows.forEach((row, rowIndex) => {
-      cols.forEach((col, colIndex) => {
-        const seatId = `${row}${col}`;
-        const isSelected = selectedSeats.some(s => s._id === seatId);
-        const isBlocked = blockedSeats.some(s => s._id === seatId);
+  const [seats, setSeats] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Cargar asientos reales desde la base de datos
+  const loadSeats = async () => {
+    if (!selectedFuncion?.sala?.id) {
+      setSeats([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Cargar asientos de la sala
+      const { data: seatsData, error: seatsError } = await supabase
+        .from('asientos')
+        .select('*')
+        .eq('sala_id', selectedFuncion.sala.id)
+        .order('fila', { ascending: true })
+        .order('columna', { ascending: true });
+
+      if (seatsError) {
+        console.error('Error loading seats:', seatsError);
+        setError(seatsError.message);
+        return;
+      }
+
+      // Cargar bloqueos de asientos si existen
+      const { data: blockedSeatsData, error: blockedError } = await supabase
+        .from('asientos_bloqueados')
+        .select('*')
+        .eq('funcion_id', selectedFuncion.id);
+
+      if (blockedError) {
+        console.error('Error loading blocked seats:', blockedError);
+      }
+
+      // Mapear los asientos con su estado
+      const mappedSeats = (seatsData || []).map(seat => {
+        const isSelected = selectedSeats.some(s => s.id === seat.id);
+        const isBlocked = (blockedSeatsData || []).some(b => b.asiento_id === seat.id);
         
-        seats.push({
-          _id: seatId,
-          nombre: seatId,
-          row,
-          col,
-          precio: Math.floor(Math.random() * 50) + 20,
-          zona: rowIndex < 3 ? 'VIP' : 'Regular',
-          estado: isBlocked ? 'blocked' : isSelected ? 'selected' : 'available'
-        });
+        return {
+          id: seat.id,
+          _id: seat.id, // Para compatibilidad
+          nombre: `${seat.fila}${seat.columna}`,
+          fila: seat.fila,
+          columna: seat.columna,
+          precio: seat.precio || 0,
+          zona: seat.zona || 'General',
+          estado: isBlocked ? 'blocked' : isSelected ? 'selected' : 'available',
+          tipo: seat.tipo || 'silla'
+        };
       });
-    });
-    
-    return seats;
+
+      setSeats(mappedSeats);
+    } catch (error) {
+      console.error('Error loading seats:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const seats = generateSeats();
+  useEffect(() => {
+    loadSeats();
+  }, [selectedFuncion?.sala?.id, selectedFuncion?.id]);
 
   const getSeatColor = (seat) => {
     switch (seat.estado) {
@@ -66,6 +108,28 @@ const SimpleSeatingMap = ({
     );
   }
 
+  if (loading) {
+    return (
+      <div className="border-2 border-dashed border-gray-300 rounded-lg h-96 flex items-center justify-center">
+        <div className="text-center">
+          <Spin size="large" />
+          <p className="text-gray-500 mt-4">Cargando mapa de asientos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="border-2 border-dashed border-gray-300 rounded-lg h-96 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Error al cargar el mapa</p>
+          <p className="text-sm text-gray-400">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {/* Leyenda */}
@@ -90,31 +154,72 @@ const SimpleSeatingMap = ({
           <h3 className="text-lg font-semibold">Escenario</h3>
         </div>
         
-        <div className="grid grid-cols-10 gap-1 max-w-4xl mx-auto">
-          {seats.map((seat) => (
-            <Button
-              key={seat._id}
-              size="small"
-              className={`w-8 h-8 p-0 text-xs font-medium ${getSeatColor(seat)}`}
-              onClick={() => handleSeatClick(seat)}
-              disabled={seat.estado === 'blocked'}
-            >
-              {seat.nombre}
-            </Button>
-          ))}
-        </div>
+        {seats.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500">No hay asientos configurados para esta sala</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {/* Agrupar asientos por fila */}
+            {(() => {
+              const rows = {};
+              seats.forEach(seat => {
+                if (!rows[seat.fila]) {
+                  rows[seat.fila] = [];
+                }
+                rows[seat.fila].push(seat);
+              });
+
+              return Object.keys(rows).sort().map(fila => (
+                <div key={fila} className="flex justify-center gap-1">
+                  <div className="w-8 h-8 flex items-center justify-center text-xs font-medium text-gray-600">
+                    {fila}
+                  </div>
+                  {rows[fila].sort((a, b) => a.columna - b.columna).map((seat) => (
+                    <Button
+                      key={seat.id}
+                      size="small"
+                      className={`w-8 h-8 p-0 text-xs font-medium ${getSeatColor(seat)}`}
+                      onClick={() => handleSeatClick(seat)}
+                      disabled={seat.estado === 'blocked'}
+                      title={`${seat.nombre} - $${seat.precio} - ${seat.zona}`}
+                    >
+                      {seat.columna}
+                    </Button>
+                  ))}
+                </div>
+              ));
+            })()}
+          </div>
+        )}
 
         {/* Información de zonas */}
-        <div className="mt-6 grid grid-cols-2 gap-4">
-          <Card size="small" title="Zona VIP" className="text-center">
-            <div className="text-2xl font-bold text-purple-600">$50-70</div>
-            <div className="text-xs text-gray-500">Filas A-C</div>
-          </Card>
-          <Card size="small" title="Zona Regular" className="text-center">
-            <div className="text-2xl font-bold text-blue-600">$20-40</div>
-            <div className="text-xs text-gray-500">Filas D-F</div>
-          </Card>
-        </div>
+        {(() => {
+          const zonas = {};
+          seats.forEach(seat => {
+            if (!zonas[seat.zona]) {
+              zonas[seat.zona] = { min: seat.precio, max: seat.precio, count: 0 };
+            }
+            zonas[seat.zona].min = Math.min(zonas[seat.zona].min, seat.precio);
+            zonas[seat.zona].max = Math.max(zonas[seat.zona].max, seat.precio);
+            zonas[seat.zona].count++;
+          });
+
+          return (
+            <div className="mt-6 grid grid-cols-2 gap-4">
+              {Object.keys(zonas).map(zona => (
+                <Card key={zona} size="small" title={`Zona ${zona}`} className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">
+                    ${zonas[zona].min}-{zonas[zona].max}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {zonas[zona].count} asientos
+                  </div>
+                </Card>
+              ))}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Controles */}
