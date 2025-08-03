@@ -302,8 +302,7 @@ const Productos = () => {
 
           <Form.Item
             name="precio"
-            label="Precio"
-            rules={[{ required: true, message: 'Por favor ingresa el precio' }]}
+            label="Precio (Opcional)"
           >
             <InputNumber
               min={0}
@@ -329,8 +328,7 @@ const Productos = () => {
 
           <Form.Item
             name="stock_disponible"
-            label="Stock Disponible"
-            rules={[{ required: true, message: 'Por favor ingresa el stock disponible' }]}
+            label="Stock Disponible (Opcional)"
           >
             <InputNumber
               min={0}
