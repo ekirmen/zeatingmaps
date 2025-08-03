@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Modal, Card, Button, Space, Alert, Spin, Divider } from 'antd';
+import { Modal, Card, Button, Space, Alert, Spin, Divider, message } from 'antd';
 import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { getActivePaymentGateways, validateGatewayConfig } from '../services/paymentGatewaysService';
@@ -8,6 +8,8 @@ import { processPayment } from '../services/paymentProcessors';
 import { createPaymentSuccessNotification, createPaymentFailureNotification } from '../services/paymentNotifications';
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../services/facebookPixelService';
+
+
 
 const Pay = () => {
   const navigate = useNavigate();
@@ -31,7 +33,7 @@ const Pay = () => {
         setAvailableGateways(validGateways);
       } catch (error) {
         console.error('Error loading payment gateways:', error);
-        toast.error('Error al cargar métodos de pago');
+        message.error('Error al cargar métodos de pago');
       } finally {
         setLoadingGateways(false);
       }
@@ -61,7 +63,7 @@ const Pay = () => {
 
   const handleProcessPayment = async () => {
     if (!selectedGateway) {
-      toast.error('Por favor selecciona un método de pago');
+      message.error('Por favor selecciona un método de pago');
       return;
     }
 
@@ -127,7 +129,7 @@ const Pay = () => {
         payment_gateways: { name: selectedGateway.name }
       });
 
-      toast.error('Error al procesar el pago. Por favor, intenta nuevamente.');
+              message.error('Error al procesar el pago. Por favor, intenta nuevamente.');
     } finally {
       setProcessingPayment(false);
     }
@@ -135,7 +137,7 @@ const Pay = () => {
 
   const handleProcessReservation = async () => {
     if (!selectedGateway) {
-      toast.error('Por favor selecciona un método de pago');
+              message.error('Por favor selecciona un método de pago');
       return;
     }
 
@@ -159,7 +161,7 @@ const Pay = () => {
       }
     } catch (error) {
       console.error('Error processing reservation:', error);
-      toast.error('Error al procesar la reserva');
+              message.error('Error al procesar la reserva');
     } finally {
       setProcessingPayment(false);
     }
