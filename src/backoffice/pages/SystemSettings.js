@@ -26,7 +26,6 @@ import {
   SafetyOutlined,
   CloudOutlined,
   BellOutlined,
-  SafetyOutlined
 } from '@ant-design/icons';
 import { supabase } from '../services/supabaseClient';
 
