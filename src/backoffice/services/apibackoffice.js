@@ -1,5 +1,5 @@
 import { supabase } from '../../supabaseClient';
-import { supabaseAdmin } from './supabaseClient';
+import { supabaseAdmin } from '../../supabaseClient';
 
 const CMS_PAGE_IDS = {
   home: 1,
