@@ -28,7 +28,8 @@ const BoleteriaMain = () => {
     setCarrito,
     handleEventSelect,
     handleFunctionSelect,
-    setSelectedEvent
+    setSelectedEvent,
+    setSelectedFuncion
   } = useBoleteria();
 
   const {
@@ -474,7 +475,7 @@ const BoleteriaMain = () => {
                 </svg>
               </button>
               <div className="flex items-center space-x-3">
-                <Avatar size="small" src="https://via.placeholder.com/32x32" />
+                                 <Avatar size="small" src="https://via.placeholder.com/32x32" alt="User" />
                 <span className="text-sm font-medium">chichiriviche</span>
               </div>
               <div className="text-sm">

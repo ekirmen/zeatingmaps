@@ -182,7 +182,8 @@ export const useBoleteria = () => {
     setCarrito: setCarritoMemo,
     handleEventSelect,
     handleFunctionSelect,
-    setSelectedEvent: setSelectedEventMemo
+    setSelectedEvent: setSelectedEventMemo,
+    setSelectedFuncion
   }), [
     eventos,
     funciones,
@@ -194,7 +195,8 @@ export const useBoleteria = () => {
     setCarritoMemo,
     handleEventSelect,
     handleFunctionSelect,
-    setSelectedEventMemo
+    setSelectedEventMemo,
+    setSelectedFuncion
   ]);
 
   // Cargar eventos al inicio
