@@ -21,7 +21,7 @@ import {
 import { 
   DollarOutlined, 
   UserOutlined, 
-  TicketOutlined, 
+  FileTextOutlined, 
   ShoppingCartOutlined,
   TrendingUpOutlined,
   TrendingDownOutlined,
@@ -330,7 +330,7 @@ const Dashboard = () => {
               title="Tickets Vendidos"
               value={stats.soldTickets}
               valueStyle={{ color: '#1890ff' }}
-              prefix={<TicketOutlined />}
+              prefix={<FileTextOutlined />}
             />
             <Progress 
               percent={Math.min(100, (stats.soldTickets / stats.totalTickets) * 100)} 

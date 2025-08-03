@@ -27,7 +27,7 @@ import {
   LineChartOutlined,
   DollarOutlined,
   UserOutlined,
-  TicketOutlined,
+  FileTextOutlined,
   CalendarOutlined
 } from '@ant-design/icons';
 import { supabase } from '../services/supabaseClient';
@@ -499,7 +499,7 @@ const Reports = () => {
                 <Statistic
                   title="Total de Ventas"
                   value={stats.total}
-                  prefix={<TicketOutlined />}
+                  prefix={<FileTextOutlined />}
                   valueStyle={{ color: '#1890ff' }}
                 />
               </Card>

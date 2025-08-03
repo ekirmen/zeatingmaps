@@ -21,7 +21,7 @@ import {
   HistoryOutlined,
   ExclamationCircleOutlined,
   UserOutlined,
-  TicketOutlined,
+  FileTextOutlined,
   DollarOutlined,
   WarningOutlined,
   InfoCircleOutlined
@@ -171,7 +171,7 @@ const AdminNotificationCenter = () => {
     const icons = {
       payment: <CreditCardOutlined style={{ color: '#52c41a' }} />,
       user: <UserOutlined style={{ color: '#1890ff' }} />,
-      ticket: <TicketOutlined style={{ color: '#722ed1' }} />,
+      ticket: <FileTextOutlined style={{ color: '#722ed1' }} />,
       system: <ExclamationCircleOutlined style={{ color: '#faad14' }} />,
       error: <WarningOutlined style={{ color: '#ff4d4f' }} />,
       info: <InfoCircleOutlined style={{ color: '#1890ff' }} />
