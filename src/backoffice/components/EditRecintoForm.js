@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NotificationManager } from 'react-notifications';
 import { geocodeAddress } from '../../utils/geocode';
 import buildAddress from '../../utils/address';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
   const [formData, setFormData] = useState({

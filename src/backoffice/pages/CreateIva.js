@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { useIva } from '../contexts/IvaContext';
 
 const CreateIva = () => {

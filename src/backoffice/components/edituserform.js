@@ -1,6 +1,6 @@
 // EditUserForm.js
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const EditUserForm = ({ user, onUpdateUser, onCancel }) => {
   const [formData, setFormData] = useState({

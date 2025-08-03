@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Modal from 'react-modal';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 if (typeof document !== 'undefined' && document.getElementById('root')) {
   Modal.setAppElement('#root');

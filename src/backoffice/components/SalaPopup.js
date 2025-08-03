@@ -1,7 +1,7 @@
 // src/components/SalaPopup.js
 import React, { useState } from 'react';
 // Use the shared Supabase client to avoid creating multiple instances
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const SalaPopup = ({ recintoId, onClose }) => {
   const [newSala, setNewSala] = useState({ nombre: '' });

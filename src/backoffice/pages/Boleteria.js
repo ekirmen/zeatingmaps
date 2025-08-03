@@ -13,7 +13,7 @@ import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
 
 import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import { fetchPaymentBySeat } from '../services/apibackoffice';
 import downloadTicket from '../../utils/downloadTicket';

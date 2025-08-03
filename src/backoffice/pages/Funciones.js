@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import { useRecinto } from '../contexts/RecintoContext';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { syncSeatsForSala } from '../services/apibackoffice';
 import formatDateString from '../../utils/formatDateString';
 

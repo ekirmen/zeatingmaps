@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useFooter } from '../../contexts/FooterContext';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const SOCIAL_FIELDS = [
   { key: 'facebook', label: 'Facebook' },

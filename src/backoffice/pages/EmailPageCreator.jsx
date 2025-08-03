@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { AiOutlinePlus, AiOutlineSave, AiOutlineEye, AiOutlineSend } from 'react-icons/ai';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const EmailPageCreator = ({ setSidebarCollapsed }) => {
   const [emailPages, setEmailPages] = useState([]);

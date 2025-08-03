@@ -5,7 +5,7 @@ import RecintoSelector from "./CompPlantillaPrecio/RecintoSelector";
 import TicketsList from "./CompPlantillaPrecio/TicketsList";
 import PopupCrearEntrada from "./CompPlantillaPrecio/PopupCrearEntrada";
 import PopupEditarEntrada from "./CompPlantillaPrecio/PopupEditarEntrada";
-import { supabase } from "../services/supabaseClient";
+import { supabase } from "../../supabaseClient";
 
 const tiposDeProducto = [
   { label: "General", description: "Precio general.", value: "General" },

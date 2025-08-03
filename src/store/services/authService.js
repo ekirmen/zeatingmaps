@@ -1,6 +1,6 @@
 // src/backoffice/services/authService.js
 import { supabase } from '../../supabaseClient';
-import { supabaseAdmin } from '../../backoffice/services/supabaseClient';
+import { supabaseAdmin } from '../../supabaseClient';
 import { SITE_URL } from '../../utils/siteUrl';
 
 // Registro (sign up) con creación de perfil

@@ -20,10 +20,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Use the main supabase instance to avoid multiple GoTrueClient instances
 const supabase = mainSupabase;
 
-// Public client (safe for frontend)
+// Public client (safe for frontend) - use the main instance
 export { supabase };
 
 // Administrative client (only use in backend: API Routes, Edge Functions)
+// Create this only if serviceRoleKey is available and not already created
 export const supabaseAdmin = serviceRoleKey
   ? globalThis.supabaseAdmin ||
     createClient(supabaseUrl, serviceRoleKey, {

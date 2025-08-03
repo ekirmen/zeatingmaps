@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Input, Card, Table, Tag, Form, Button, message } from 'antd';
 import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit } from 'react-icons/ai';
 import { supabase } from '../../../supabaseClient';
-import { supabaseAdmin } from '../../services/supabaseClient';
+import { supabaseAdmin } from '../../../supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
 import downloadTicket from '../../../utils/downloadTicket';
 

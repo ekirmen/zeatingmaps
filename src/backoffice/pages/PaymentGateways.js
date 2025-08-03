@@ -24,7 +24,7 @@ import {
   EyeOutlined,
   EyeInvisibleOutlined
 } from '@ant-design/icons';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;

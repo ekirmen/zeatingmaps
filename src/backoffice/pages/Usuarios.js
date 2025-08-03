@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import CreateUserForm from '../components/CreateUserForm';
 import EditUserForm from '../components/edituserform';
 import { toast } from 'react-hot-toast';

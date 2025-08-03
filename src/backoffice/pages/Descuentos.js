@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient'; // Assuming this path is correct for your public client
+import { supabase } from '../../supabaseClient'; // Assuming this path is correct for your public client
 import { Input, Button, DatePicker, Select, Form, Table, Space, Tag, message } from 'antd';
 import moment from 'moment'; // For date handling with Ant Design DatePicker
 
