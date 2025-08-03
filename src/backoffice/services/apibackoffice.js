@@ -190,7 +190,24 @@ export const syncSeatsForSala = async (salaId) => {
       .select('_id')
       .eq('funcion_id', func.id);
     handleError(exErr);
+    
     const existingIds = new Set((existing || []).map(s => s._id));
+    const newSeatIds = new Set(seatDefs.map(s => s.id));
+    
+    // Eliminar asientos que ya no existen en el mapa
+    const seatsToDelete = Array.from(existingIds).filter(id => !newSeatIds.has(id));
+    if (seatsToDelete.length > 0) {
+      const { error: deleteErr } = await supabase
+        .from('seats')
+        .delete()
+        .eq('funcion_id', func.id)
+        .in('_id', seatsToDelete);
+      if (deleteErr) {
+        console.warn('Error al eliminar seats obsoletos:', deleteErr);
+      }
+    }
+    
+    // Insertar solo los asientos nuevos
     const newSeats = seatDefs
       .filter(s => !existingIds.has(s.id))
       .map(s => ({
@@ -205,7 +222,17 @@ export const syncSeatsForSala = async (salaId) => {
       const { error: upsertErr } = await supabase
         .from('seats')
         .upsert(newSeats, { onConflict: 'funcion_id,_id' });
-      handleError(upsertErr);
+      if (upsertErr) {
+        console.warn('Error en upsert de seats:', upsertErr);
+        // Si hay error, intentar insertar solo los que no existen
+        const { error: insertErr } = await supabase
+          .from('seats')
+          .insert(newSeats)
+          .select();
+        if (insertErr) {
+          console.error('Error al insertar seats:', insertErr);
+        }
+      }
     }
   }
 };

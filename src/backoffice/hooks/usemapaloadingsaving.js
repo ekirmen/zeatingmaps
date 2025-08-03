@@ -18,7 +18,7 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
 
         const zonasCargadas = data?.zonas || [];
 
-        const elementosCrudos = (data.contenido || []).flatMap(mesa => {
+        const elementosCrudos = (data.contenido || []).reduce((acc, mesa) => {
           // Create mesa with all necessary properties
           const mesaConZona = {
             ...mesa,
@@ -60,8 +60,8 @@ export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZo
               : silla.zona?.id || null,
           }));
 
-          return [mesaConZona, ...sillas];
-        });
+          return [...acc, mesaConZona, ...sillas];
+        }, []);
 
         setZones(zonasCargadas);
         setElements(elementosCrudos);
