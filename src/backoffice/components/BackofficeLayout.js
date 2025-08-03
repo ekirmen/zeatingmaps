@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import SidebarMenu from './SidebarMenu';
 import AdminNotificationCenter from './AdminNotificationCenter';
 import { RecintoProvider } from '../contexts/RecintoContext';
@@ -9,6 +9,24 @@ import { TagProvider } from '../contexts/TagContext';
 
 const BackofficeLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const location = useLocation();
+  
+  // Si estamos en la ruta de boletería, mostrar solo el contenido sin el panel admin
+  const isBoleteriaRoute = location.pathname.includes('/dashboard/boleteria');
+
+  if (isBoleteriaRoute) {
+    return (
+      <RecintoProvider>
+        <RecintoSalaProvider>
+          <IvaProvider>
+            <TagProvider>
+              <Outlet />
+            </TagProvider>
+          </IvaProvider>
+        </RecintoSalaProvider>
+      </RecintoProvider>
+    );
+  }
 
   return (
     <RecintoProvider>

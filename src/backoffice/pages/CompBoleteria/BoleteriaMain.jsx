@@ -99,14 +99,43 @@ const BoleteriaMain = () => {
 
   const loadFunctionsForEvent = async (eventId) => {
     try {
-      const { data, error } = await supabase
+      // Intentar con diferentes nombres de columna
+      let { data, error } = await supabase
         .from('funciones')
         .select('*, salas(*)')
         .eq('evento_id', eventId)
         .order('fechaCelebracion', { ascending: true });
 
       if (error) {
-        console.error('Error loading functions:', error);
+        console.error('Error with evento_id:', error);
+        
+        // Intentar con event_id
+        const { data: data2, error: error2 } = await supabase
+          .from('funciones')
+          .select('*, salas(*)')
+          .eq('event_id', eventId)
+          .order('fechaCelebracion', { ascending: true });
+
+        if (error2) {
+          console.error('Error with event_id:', error2);
+          
+          // Intentar sin filtro para ver qué columnas existen
+          const { data: data3, error: error3 } = await supabase
+            .from('funciones')
+            .select('*')
+            .limit(1);
+
+          if (error3) {
+            console.error('Error loading funciones table:', error3);
+            return;
+          }
+
+          console.log('Funciones table structure:', data3);
+          setAvailableFunctions([]);
+          return;
+        }
+
+        setAvailableFunctions(data2 || []);
         return;
       }
 
@@ -317,49 +346,18 @@ const BoleteriaMain = () => {
             <Button size="small" icon={<ZoomOutOutlined />} onClick={handleZoomOut} />
           </div>
           
-          {/* Mapa de asientos */}
-          <div className="bg-white p-6 rounded-lg shadow-sm" style={{ transform: `scale(${zoomLevel})` }}>
-            {/* Bloques de escenario */}
-            <div className="text-center mb-4">
-              <div className="bg-black text-white py-2 px-4 rounded inline-block">
-                ESCENARIO
-              </div>
-            </div>
-            
-            {/* Asientos */}
-            <div className="grid grid-cols-10 gap-1 mb-4">
-              {Array.from({ length: 80 }, (_, i) => (
-                <div
-                  key={i + 1}
-                  className={`
-                    w-8 h-8 rounded-full flex items-center justify-center text-xs cursor-pointer
-                    ${selectedSeats.find(s => s.id === i + 1) 
-                      ? 'bg-blue-500 text-white' 
-                      : blockedSeats.find(s => s.id === i + 1)
-                      ? 'bg-gray-400 text-white'
-                      : 'bg-orange-300 hover:bg-orange-400'
-                    }
-                  `}
-                  onClick={() => handleSeatClick({ id: i + 1, precio: 17 + (i % 3) * 20 })}
-                >
-                  {String(i + 1).padStart(2, '0')}
-                </div>
-              ))}
-            </div>
-            
-            {/* Segundo bloque de escenario */}
-            <div className="text-center mb-4">
-              <div className="bg-black text-white py-2 px-4 rounded inline-block">
-                ESCENARIO
-              </div>
-            </div>
-            
-            {/* Área General */}
-            <div className="bg-blue-500 text-white py-8 text-center rounded">
-              <h3 className="text-lg font-semibold">GENERAL</h3>
-              <p className="text-sm">Área de pie</p>
-            </div>
-          </div>
+                                {/* Mapa de asientos */}
+           <div className="bg-white p-6 rounded-lg shadow-sm overflow-hidden">
+             <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}>
+               <SimpleSeatingMap
+                 selectedFuncion={selectedFuncion}
+                 onSeatClick={handleSeatClick}
+                 selectedSeats={selectedSeats}
+                 blockedSeats={blockedSeats}
+                 blockMode={blockMode}
+               />
+             </div>
+           </div>
         </div>
       )
     },
