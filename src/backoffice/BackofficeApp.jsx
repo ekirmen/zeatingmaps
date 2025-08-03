@@ -33,46 +33,94 @@ import Actividad from './pages/Actividad';
 import Referidos from './pages/Referidos';
 import CompaniasPage from './pages/CompaniasPage';
 import SelectRecintoSala from './pages/SelectRecintoSala';
+import Plano from './pages/Plano';
+import CRM from './pages/CRM';
 
 const BackofficeApp = () => {
   return (
     <Routes>
       <Route path="/dashboard" element={<BackofficeLayout />}>
         <Route index element={<Dashboard />} />
-        <Route path="boleteria" element={<BoleteriaMain />} />
-        <Route path="boleteria-main" element={<BoleteriaMain />} />
-        <Route path="eventos" element={<Evento />} />
-        <Route path="eventos-main" element={<Evento />} />
+        
+        {/* Actividad */}
+        <Route path="actividad" element={<Actividad />} />
+        
+        {/* Administración */}
         <Route path="recintos" element={<Recinto />} />
-        <Route path="salas" element={<Recinto />} />
+        <Route path="plano" element={<Plano />} />
+        <Route path="usuarios" element={<Usuarios />} />
+        <Route path="liquidaciones" element={<PaymentAnalytics />} />
+        
+        {/* Programación */}
+        <Route path="entradas" element={<Entrada />} />
+        <Route path="productos" element={<Entrada />} />
+        <Route path="donaciones" element={<Entrada />} />
+        <Route path="comisiones" element={<PaymentGateways />} />
+        <Route path="seguros" element={<PaymentGateways />} />
+        <Route path="envio" element={<PaymentGateways />} />
+        <Route path="eventos" element={<Evento />} />
         <Route path="plantillas-precios" element={<PlantillaPrecios />} />
         <Route path="funciones" element={<Funciones />} />
-        <Route path="entradas" element={<Entrada />} />
+        <Route path="cupos" element={<Funciones />} />
+        <Route path="plantillas-cupos" element={<PlantillaPrecios />} />
+        <Route path="filas-virtuales" element={<Funciones />} />
+        <Route path="paquetes" element={<Abonos />} />
+        <Route path="multipase" element={<Abonos />} />
+        <Route path="abonos" element={<Abonos />} />
+        
+        {/* CRM */}
+        <Route path="clientes" element={<Usuarios />} />
+        <Route path="fanid" element={<CRM />} />
+        <Route path="encuestas" element={<CRM />} />
+        <Route path="email-campaigns" element={<EmailCampaigns />} />
+        <Route path="tags" element={<Tags />} />
+        
+        {/* Acreditaciones */}
+        <Route path="accreditation-management" element={<CRM />} />
+        <Route path="accreditations" element={<CRM />} />
+        
+        {/* Promociones */}
+        <Route path="promos" element={<PaymentGateways />} />
+        <Route path="gift-cards" element={<PaymentGateways />} />
+        <Route path="invitations" element={<PaymentGateways />} />
+        <Route path="loyalty-clubs" element={<PaymentGateways />} />
+        <Route path="group-promotions" element={<PaymentGateways />} />
+        
+        {/* Informes */}
+        <Route path="reports" element={<Reports />} />
+        
+        {/* Personalización */}
+        <Route path="sites" element={<WebStudio />} />
+        <Route path="formato-entrada" element={<FormatoEntrada />} />
+        <Route path="banner-ads" element={<WebStudio />} />
+        <Route path="legal-texts" element={<WebStudio />} />
+        <Route path="webstudio" element={<WebStudio />} />
+        <Route path="pages" element={<WebStudio />} />
         <Route path="galeria" element={<Galeria />} />
+        
+        {/* Boletería */}
+        <Route path="boleteria" element={<BoleteriaMain />} />
+        
+        {/* Rutas adicionales para compatibilidad */}
+        <Route path="boleteria-main" element={<BoleteriaMain />} />
+        <Route path="eventos-main" element={<Evento />} />
+        <Route path="salas" element={<Recinto />} />
+        <Route path="iva" element={<CreateIva />} />
         <Route path="correo" element={<Correo />} />
         <Route path="crear-mapa" element={<CrearMapaPage />} />
-        <Route path="iva" element={<CreateIva />} />
-        <Route path="tags" element={<Tags />} />
-        <Route path="webstudio" element={<WebStudio />} />
         <Route path="web-header" element={<WebHeader />} />
         <Route path="web-footer" element={<WebFooter />} />
         <Route path="web-colors" element={<WebColors />} />
-        <Route path="email-campaigns" element={<EmailCampaigns />} />
         <Route path="email-page-creator" element={<EmailPageCreator />} />
-        <Route path="abonos" element={<Abonos />} />
-        <Route path="actividad" element={<Actividad />} />
         <Route path="referidos" element={<Referidos />} />
         <Route path="companias" element={<CompaniasPage />} />
         <Route path="select-recinto-sala" element={<SelectRecintoSala />} />
-        <Route path="clientes" element={<Usuarios />} />
         <Route path="pasarelas" element={<PaymentGateways />} />
         <Route path="analytics" element={<PaymentAnalytics />} />
-        <Route path="reports" element={<Reports />} />
         <Route path="reembolsos" element={<RefundManagement />} />
         <Route path="settings" element={<SystemSettings />} />
         <Route path="logs" element={<AuditLogs />} />
         <Route path="printer" element={<PrinterSettings />} />
-        <Route path="formato-entrada" element={<FormatoEntrada />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   faHome,
@@ -24,229 +24,269 @@ import {
   faChartLine,
   faCogs,
   faClipboardList,
-  faPrint
+  faPrint,
+  faCrown,
+  faGift,
+  faQrcode,
+  faClipboardCheck,
+  faIdCard,
+  faPoll,
+  faBullhorn,
+  faShieldAlt,
+  faTruck,
+  faBox,
+  faTicketStar,
+  faCalendar,
+  faUsersCog,
+  faCog as faSettings,
+  faFileInvoice,
+  faMoneyBillWave,
+  faChartPie,
+  faFileAlt as faReports,
+  faPalette as faPersonalization,
+  faAd,
+  faCookie,
+  faSparkles,
+  faLegal,
+  faGiftCard,
+  faInvitation,
+  faLoyalty,
+  faGroup,
+  faFanId,
+  faSurvey,
+  faCampaign,
+  faTag,
+  faVerified,
+  faAccreditation,
+  faQueue,
+  faPackage,
+  faMultipass,
+  faSeasonTicket,
+  faHeart,
+  faShield,
+  faTruck as faShipping,
+  faCreditCard as faFee,
+  faChartBar as faQuota,
+  faFileAlt as faQuotaTemplate,
+  faBox as faBundle,
+  faTicketAlt as faMultiPass,
+  faCalendarAlt as faSeasonTickets,
+  faHandHoldingHeart,
+  faShieldAlt as faInsurance,
+  faTruck as faShippingIcon,
+  faCreditCard as faFeeIcon,
+  faChartBar as faQuotaIcon,
+  faFileAlt as faQuotaTemplateIcon,
+  faBox as faBundleIcon,
+  faTicketAlt as faMultiPassIcon,
+  faCalendarAlt as faSeasonTicketsIcon,
+  faCheckCircle
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const SidebarMenu = ({ collapsed }) => {
   const location = useLocation();
+  const [activeSubmenu, setActiveSubmenu] = useState(null);
 
   const isActive = (path) => {
     return location.pathname.includes(path);
   };
 
-  const menuItems = [
+  const toggleSubmenu = (submenuId) => {
+    setActiveSubmenu(activeSubmenu === submenuId ? null : submenuId);
+  };
+
+  const mainMenuItems = [
     {
       title: 'Dashboard',
       path: '/dashboard',
-      icon: faHome
-    },
-    {
-      title: 'Boletería',
-      path: '/dashboard/boleteria',
-      icon: faTicketAlt
-    },
-    {
-      title: 'Eventos',
-      path: '/dashboard/eventos',
-      icon: faCalendarAlt
-    },
-    {
-      title: 'Recintos',
-      path: '/dashboard/recintos',
-      icon: faBuilding
-    },
-    {
-      title: 'Plantillas de Precios',
-      path: '/dashboard/plantillas-precios',
-      icon: faPercent
-    },
-    {
-      title: 'Funciones',
-      path: '/dashboard/funciones',
-      icon: faCalendarAlt
-    },
-    {
-      title: 'Entradas',
-      path: '/dashboard/entradas',
-      icon: faTicketAlt
-    },
-    {
-      title: 'Galería',
-      path: '/dashboard/galeria',
-      icon: faImage
-    },
-    {
-      title: 'Correo',
-      path: '/dashboard/correo',
-      icon: faEnvelope
-    },
-    {
-      title: 'Crear Mapa',
-      path: '/dashboard/crear-mapa',
-      icon: faMap
-    },
-    {
-      title: 'IVA',
-      path: '/dashboard/iva',
-      icon: faPercent
-    },
-    {
-      title: 'Tags',
-      path: '/dashboard/tags',
-      icon: faTags
-    },
-    {
-      title: 'Web Studio',
-      path: '/dashboard/webstudio',
-      icon: faGlobe
-    },
-    {
-      title: 'Web Header',
-      path: '/dashboard/web-header',
-      icon: faGlobe
-    },
-    {
-      title: 'Web Footer',
-      path: '/dashboard/web-footer',
-      icon: faGlobe
-    },
-    {
-      title: 'Web Colors',
-      path: '/dashboard/web-colors',
-      icon: faPalette
-    },
-    {
-      title: 'Email Campaigns',
-      path: '/dashboard/email-campaigns',
-      icon: faEnvelope
-    },
-    {
-      title: 'Email Page Creator',
-      path: '/dashboard/email-page-creator',
-      icon: faEnvelope
-    },
-    {
-      title: 'Abonos',
-      path: '/dashboard/abonos',
-      icon: faHandshake
+      icon: faHome,
+      type: 'link'
     },
     {
       title: 'Actividad',
       path: '/dashboard/actividad',
-      icon: faChartLine
+      icon: faChartLine,
+      type: 'link'
     },
     {
-      title: 'Referidos',
-      path: '/dashboard/referidos',
-      icon: faUserPlus
+      title: 'Administración',
+      icon: faCogs,
+      type: 'submenu',
+      submenuId: 'admin',
+      items: [
+        { title: 'Recintos', path: '/dashboard/recintos', icon: faBuilding },
+        { title: 'Plano', path: '/dashboard/plano', icon: faMap },
+        { title: 'Usuarios', path: '/dashboard/usuarios', icon: faUsers },
+        { title: 'Liquidaciones', path: '/dashboard/liquidaciones', icon: faMoneyBillWave }
+      ]
     },
     {
-      title: 'Compañías',
-      path: '/dashboard/companias',
-      icon: faBuilding
+      title: 'Programación',
+      icon: faCalendarAlt,
+      type: 'submenu',
+      submenuId: 'scheduling',
+      items: [
+        { title: 'Entradas', path: '/dashboard/entradas', icon: faTicketAlt },
+        { title: 'Productos', path: '/dashboard/productos', icon: faBox },
+        { title: 'Donaciones', path: '/dashboard/donaciones', icon: faHandHoldingHeart },
+        { title: 'Comisiones y tasas', path: '/dashboard/comisiones', icon: faCreditCard },
+        { title: 'Seguros', path: '/dashboard/seguros', icon: faShieldAlt },
+        { title: 'Envío a domicilio', path: '/dashboard/envio', icon: faTruck },
+        { title: 'Eventos', path: '/dashboard/eventos', icon: faTicketAlt },
+        { title: 'Plantillas de precios', path: '/dashboard/plantillas-precios', icon: faPercent },
+        { title: 'Funciones', path: '/dashboard/funciones', icon: faCalendar },
+        { title: 'Cupos', path: '/dashboard/cupos', icon: faChartBar },
+        { title: 'Plantillas de cupos', path: '/dashboard/plantillas-cupos', icon: faFileAlt },
+        { title: 'Filas virtuales', path: '/dashboard/filas-virtuales', icon: faUsers },
+        { title: 'Paquetes', path: '/dashboard/paquetes', icon: faBox },
+        { title: 'Multipase', path: '/dashboard/multipase', icon: faTicketAlt },
+        { title: 'Abonos', path: '/dashboard/abonos', icon: faCalendarAlt }
+      ]
     },
     {
-      title: 'Clientes',
-      path: '/dashboard/clientes',
-      icon: faUsers
+      title: 'CRM',
+      icon: faUsersCog,
+      type: 'submenu',
+      submenuId: 'crm',
+      items: [
+        { title: 'Clientes', path: '/dashboard/clientes', icon: faUsers },
+        { title: 'Fan ID', path: '/dashboard/fanid', icon: faIdCard },
+        { title: 'Encuestas', path: '/dashboard/encuestas', icon: faPoll },
+        { title: 'Campañas de mailing', path: '/dashboard/email-campaigns', icon: faEnvelope },
+        { title: 'Etiquetas de evento', path: '/dashboard/tags?type=event', icon: faTag },
+        { title: 'Etiquetas de usuario', path: '/dashboard/tags?type=user', icon: faTag }
+      ]
     },
     {
-      title: 'Pasarelas',
-      path: '/dashboard/pasarelas',
-      icon: faCreditCard
+      title: 'Acreditaciones',
+      icon: faIdCard,
+      type: 'submenu',
+      submenuId: 'accreditations',
+      items: [
+        { title: 'Eventos de acreditación', path: '/dashboard/accreditation-management', icon: faClipboardCheck },
+        { title: 'Acreditaciones', path: '/dashboard/accreditations', icon: faCheckCircle }
+      ]
     },
     {
-      title: 'Análisis',
-      path: '/dashboard/analytics',
-      icon: faChartBar
+      title: 'Promociones',
+      icon: faGift,
+      type: 'submenu',
+      submenuId: 'promos',
+      items: [
+        { title: 'Códigos promocionales', path: '/dashboard/promos', icon: faTicketAlt },
+        { title: 'Tarjetas regalo', path: '/dashboard/gift-cards', icon: faGift },
+        { title: 'Invitaciones', path: '/dashboard/invitations', icon: faEnvelope },
+        { title: 'Programas de fidelización', path: '/dashboard/loyalty-clubs', icon: faCrown },
+        { title: 'Compra compartida', path: '/dashboard/group-promotions', icon: faUsers }
+      ]
     },
     {
-      title: 'Reportes',
+      title: 'Informes',
       path: '/dashboard/reports',
-      icon: faChartLine
+      icon: faFileAlt,
+      type: 'link'
     },
     {
-      title: 'Reembolsos',
-      path: '/dashboard/reembolsos',
-      icon: faUndo
+      title: 'Personalización',
+      icon: faPalette,
+      type: 'submenu',
+      submenuId: 'personalization',
+      items: [
+        { title: 'Sitios web', path: '/dashboard/sites', icon: faGlobe },
+        { title: 'Formatos de entrada', path: '/dashboard/formato-entrada', icon: faTicketAlt },
+        { title: 'Banners de publicidad', path: '/dashboard/banner-ads', icon: faImage },
+        { title: 'Textos legales', path: '/dashboard/legal-texts', icon: faFileAlt },
+        { title: 'Web Studio', path: '/dashboard/webstudio', icon: faPalette },
+        { title: 'Páginas', path: '/dashboard/pages', icon: faFileAlt },
+        { title: 'Repositorio de imágenes', path: '/dashboard/galeria', icon: faImage }
+      ]
+    },
+    {
+      title: 'Boletería',
+      path: '/dashboard/boleteria',
+      icon: faTicketAlt,
+      type: 'link'
     }
   ];
 
-  const configItems = [
-    {
-      title: 'Configuración',
-      path: '/dashboard/settings',
-      icon: faCogs
-    },
-    {
-      title: 'Logs de Auditoría',
-      path: '/dashboard/logs',
-      icon: faClipboardList
-    },
-    {
-      title: 'Impresora Boca',
-      path: '/dashboard/printer',
-      icon: faPrint
-    },
-    {
-      title: 'Formato de Entrada',
-      path: '/dashboard/formato-entrada',
-      icon: faFileAlt
+  const renderMenuItem = (item) => {
+    if (item.type === 'link') {
+      return (
+        <Link
+          key={item.title}
+          to={item.path}
+          className={`flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
+            isActive(item.path) ? 'bg-blue-100 text-blue-600 border-r-2 border-blue-600' : ''
+          }`}
+        >
+          <FontAwesomeIcon icon={item.icon} className="w-5 h-5 mr-3" />
+          {!collapsed && <span>{item.title}</span>}
+        </Link>
+      );
     }
-  ];
 
-  return (
-    <div className={`bg-gray-800 text-white ${collapsed ? 'w-16' : 'w-64'} transition-all duration-300`}>
-      <div className="p-4">
-        <h2 className={`text-xl font-bold ${collapsed ? 'hidden' : 'block'}`}>
-          Admin Panel
-        </h2>
-      </div>
-      
-      <nav className="mt-8">
-        <ul className="space-y-2">
-          {menuItems.map((item) => (
-            <li key={item.path}>
-              <Link
-                to={item.path}
-                className={`flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
-                  isActive(item.path)
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                }`}
-              >
-                <FontAwesomeIcon icon={item.icon} className="w-4 h-4 mr-3" />
-                {!collapsed && <span>{item.title}</span>}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      {/* Sección de Configuración */}
-      {!collapsed && (
-        <div className="mt-8 px-4">
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-            Sistema
-          </h3>
-          <ul className="mt-2 space-y-1">
-            {configItems.map((item) => (
-              <li key={item.path}>
+    if (item.type === 'submenu') {
+      return (
+        <div key={item.title}>
+          <button
+            onClick={() => toggleSubmenu(item.submenuId)}
+            className={`w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
+              activeSubmenu === item.submenuId ? 'bg-blue-100 text-blue-600' : ''
+            }`}
+          >
+            <div className="flex items-center">
+              <FontAwesomeIcon icon={item.icon} className="w-5 h-5 mr-3" />
+              {!collapsed && <span>{item.title}</span>}
+            </div>
+            {!collapsed && (
+              <FontAwesomeIcon 
+                icon={activeSubmenu === item.submenuId ? 'chevron-down' : 'chevron-right'} 
+                className="w-4 h-4 transition-transform"
+              />
+            )}
+          </button>
+          
+          {activeSubmenu === item.submenuId && !collapsed && (
+            <div className="bg-gray-50">
+              {item.items.map((subItem) => (
                 <Link
-                  to={item.path}
-                  className={`flex items-center px-2 py-1 text-sm rounded hover:bg-gray-700 ${
-                    isActive(item.path) ? 'bg-gray-700 text-white' : 'text-gray-300'
+                  key={subItem.title}
+                  to={subItem.path}
+                  className={`flex items-center px-8 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
+                    isActive(subItem.path) ? 'bg-blue-100 text-blue-600' : ''
                   }`}
                 >
-                  <FontAwesomeIcon icon={item.icon} className="w-3 h-3 mr-2" />
-                  {item.title}
+                  <FontAwesomeIcon icon={subItem.icon} className="w-4 h-4 mr-3" />
+                  <span>{subItem.title}</span>
                 </Link>
-              </li>
-            ))}
-          </ul>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      );
+    }
+
+    return null;
+  };
+
+  return (
+    <div className={`bg-white shadow-lg ${collapsed ? 'w-16' : 'w-64'} transition-all duration-300`}>
+      {/* Logo */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center justify-center">
+          {!collapsed && (
+            <div className="text-xl font-bold text-blue-600">
+              Panel Admin
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Menu Items */}
+      <nav className="py-4">
+        {mainMenuItems.map(renderMenuItem)}
+      </nav>
     </div>
   );
 };
