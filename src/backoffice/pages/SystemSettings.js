@@ -20,13 +20,13 @@ import {
 } from 'antd';
 import { 
   SettingOutlined,
-  CloudUploadOutlined,
+  UploadOutlined,
   DownloadOutlined,
-  SyncOutlined,
+  ReloadOutlined,
   SafetyOutlined,
-  DatabaseOutlined,
+  CloudOutlined,
   BellOutlined,
-  SecurityScanOutlined
+  SafetyOutlined
 } from '@ant-design/icons';
 import { supabase } from '../services/supabaseClient';
 
@@ -210,7 +210,7 @@ const SystemSettings = () => {
   };
 
   const getBackupTypeIcon = (type) => {
-    return type === 'automated' ? <SyncOutlined /> : <CloudUploadOutlined />;
+    return type === 'automated' ? <ReloadOutlined /> : <UploadOutlined />;
   };
 
   if (loading) {
@@ -284,7 +284,7 @@ const SystemSettings = () => {
           <Space>
             <Button 
               type="primary" 
-              icon={<CloudUploadOutlined />}
+                              icon={<UploadOutlined />}
               onClick={() => setShowBackupModal(true)}
             >
               Crear Backup Manual
@@ -495,7 +495,7 @@ const SystemSettings = () => {
                 type="primary" 
                 htmlType="submit" 
                 loading={loading}
-                icon={<CloudUploadOutlined />}
+                icon={<UploadOutlined />}
               >
                 Crear Backup
               </Button>

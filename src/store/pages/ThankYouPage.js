@@ -6,11 +6,9 @@ import {
   Typography, 
   Space, 
   Divider,
-  Alert,
-  CheckCircleOutlined,
-  HomeOutlined,
-  ShoppingOutlined
+  Alert
 } from 'antd';
+import { CheckCircleOutlined, HomeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../services/facebookPixelService';
 
@@ -126,7 +124,7 @@ const ThankYouPage = () => {
             <Button 
               type="primary" 
               size="large"
-              icon={<ShoppingOutlined />}
+                              icon={<ShoppingCartOutlined />}
               onClick={handleContinueShopping}
             >
               Continuar Comprando

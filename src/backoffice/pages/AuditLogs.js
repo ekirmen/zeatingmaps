@@ -27,8 +27,8 @@ import {
   FilterOutlined,
   ClockCircleOutlined,
   UserOutlined,
-  DatabaseOutlined,
-  SecurityScanOutlined
+  CloudOutlined,
+  SafetyOutlined
 } from '@ant-design/icons';
 import { supabase } from '../services/supabaseClient';
 
@@ -228,11 +228,11 @@ const AuditLogs = () => {
     const icons = {
       login: <UserOutlined />,
       logout: <UserOutlined />,
-      payment_update: <DatabaseOutlined />,
-      ticket_purchase: <SecurityScanOutlined />,
-      user_delete: <SecurityScanOutlined />,
-      backup_created: <ClockCircleOutlined />,
-      system: <DatabaseOutlined />
+          payment_update: <CloudOutlined />,
+    ticket_purchase: <SafetyOutlined />,
+    user_delete: <SafetyOutlined />,
+    backup_created: <ClockCircleOutlined />,
+    system: <CloudOutlined />
     };
     return icons[action] || <ClockCircleOutlined />;
   };

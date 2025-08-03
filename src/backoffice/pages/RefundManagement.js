@@ -18,7 +18,7 @@ import {
 import { 
   DollarOutlined, 
   CheckCircleOutlined,
-  CloseCircleOutlined,
+  CloseOutlined,
   ClockCircleOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons';
@@ -129,10 +129,10 @@ const RefundManagement = () => {
     const icons = {
       pending: <ClockCircleOutlined />,
       completed: <CheckCircleOutlined />,
-      failed: <CloseCircleOutlined />,
-      cancelled: <CloseCircleOutlined />,
+      failed: <CloseOutlined />,
+      cancelled: <CloseOutlined />,
       pending_manual: <ExclamationCircleOutlined />,
-      rejected: <CloseCircleOutlined />
+      rejected: <CloseOutlined />
     };
     return icons[status] || <ClockCircleOutlined />;
   };

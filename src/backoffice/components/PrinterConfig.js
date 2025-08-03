@@ -21,7 +21,7 @@ import {
 import { 
   PrinterOutlined,
   SettingOutlined,
-  TestTubeOutlined,
+  ExperimentOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   UploadOutlined,
@@ -271,7 +271,7 @@ const PrinterConfig = () => {
               <Button 
                 onClick={testPrinter}
                 loading={loading}
-                icon={<TestTubeOutlined />}
+                icon={<ExperimentOutlined />}
               >
                 Probar Conexión
               </Button>

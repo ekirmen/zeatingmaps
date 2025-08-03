@@ -13,7 +13,7 @@ import {
 } from 'antd';
 import { 
   BellOutlined, 
-  CheckOutlined,
+  CheckCircleOutlined,
   CloseOutlined,
   CreditCardOutlined,
   HistoryOutlined,
