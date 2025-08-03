@@ -106,17 +106,25 @@ const BoleteriaMain = () => {
 
   const loadFunctionsForEvent = async (eventId) => {
     try {
+      console.log('Loading functions for event:', eventId);
+      
       const { data, error } = await supabase
         .from('funciones')
-        .select('*, salas(*)')
+        .select('*, sala(*)')
         .eq('evento', eventId)
         .order('fecha_celebracion', { ascending: true });
 
       if (error) {
         console.error('Error loading functions:', error);
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          code: error.code
+        });
         return;
       }
 
+      console.log('Functions loaded successfully:', data);
       setAvailableFunctions(data || []);
     } catch (error) {
       console.error('Error loading functions:', error);
@@ -348,7 +356,7 @@ const BoleteriaMain = () => {
     setSelectedEvent(selectedEventForSearch);
     setSelectedFuncion(func);
     setShowEventSearch(false);
-    message.success(`Evento seleccionado: ${selectedEventForSearch?.nombre} - ${func?.sala?.nombre}`);
+         message.success(`Evento seleccionado: ${selectedEventForSearch?.nombre} - ${func?.sala?.nombre || 'Sala sin nombre'}`);
   };
 
   const tabItems = [
@@ -625,7 +633,7 @@ const BoleteriaMain = () => {
                >
                                  {availableFunctions.map(func => (
                    <Option key={func.id} value={func.id}>
-                     {func.sala?.nombre} - {new Date(func.fecha_celebracion).toLocaleString('es-ES')}
+                     {func.sala?.nombre || 'Sala sin nombre'} - {new Date(func.fecha_celebracion).toLocaleString('es-ES')}
                    </Option>
                  ))}
               </Select>
