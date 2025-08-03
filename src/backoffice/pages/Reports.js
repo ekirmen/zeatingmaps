@@ -28,7 +28,10 @@ import {
   DollarOutlined,
   UserOutlined,
   FileTextOutlined,
-  CalendarOutlined
+  CalendarOutlined,
+  CloseOutlined,
+  CheckCircleOutlined,
+  CreditCardOutlined
 } from '@ant-design/icons';
 import { supabase } from '../services/supabaseClient';
 
