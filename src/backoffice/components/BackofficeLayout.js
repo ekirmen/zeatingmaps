@@ -8,7 +8,7 @@ import { IvaProvider } from '../contexts/IvaContext';
 import { TagProvider } from '../contexts/TagContext';
 
 const BackofficeLayout = () => {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true); // Comenzar cerrado
   const location = useLocation();
   
   // Si estamos en la ruta de boletería, mostrar solo el contenido sin el panel admin

@@ -70,8 +70,15 @@ const BoleteriaMain = () => {
   const [selectedFunctionForSearch, setSelectedFunctionForSearch] = useState(null);
   const [plantillasPrecios, setPlantillasPrecios] = useState([]);
   const [selectedPlantillaPrecio, setSelectedPlantillaPrecio] = useState(null);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+     const [zoomLevel, setZoomLevel] = useState(1);
+   const [isFullscreen, setIsFullscreen] = useState(false);
+   
+   // Estados para búsqueda de usuarios
+   const [showUserSearch, setShowUserSearch] = useState(false);
+   const [userSearchValue, setUserSearchValue] = useState('');
+   const [userSearchResults, setUserSearchResults] = useState([]);
+   const [userSearchLoading, setUserSearchLoading] = useState(false);
+   const [showCreateUser, setShowCreateUser] = useState(false);
 
   useEffect(() => {
     loadAvailableEvents();
@@ -99,43 +106,14 @@ const BoleteriaMain = () => {
 
   const loadFunctionsForEvent = async (eventId) => {
     try {
-      // Intentar con diferentes nombres de columna
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('funciones')
         .select('*, salas(*)')
-        .eq('evento_id', eventId)
-        .order('fechaCelebracion', { ascending: true });
+        .eq('evento', eventId)
+        .order('fecha_celebracion', { ascending: true });
 
       if (error) {
-        console.error('Error with evento_id:', error);
-        
-        // Intentar con event_id
-        const { data: data2, error: error2 } = await supabase
-          .from('funciones')
-          .select('*, salas(*)')
-          .eq('event_id', eventId)
-          .order('fechaCelebracion', { ascending: true });
-
-        if (error2) {
-          console.error('Error with event_id:', error2);
-          
-          // Intentar sin filtro para ver qué columnas existen
-          const { data: data3, error: error3 } = await supabase
-            .from('funciones')
-            .select('*')
-            .limit(1);
-
-          if (error3) {
-            console.error('Error loading funciones table:', error3);
-            return;
-          }
-
-          console.log('Funciones table structure:', data3);
-          setAvailableFunctions([]);
-          return;
-        }
-
-        setAvailableFunctions(data2 || []);
+        console.error('Error loading functions:', error);
         return;
       }
 
@@ -294,9 +272,68 @@ const BoleteriaMain = () => {
     message.success('Datos actualizados');
   };
 
-  const handleClose = () => {
-    message.info('Cerrando aplicación');
-  };
+     const handleClose = () => {
+     message.info('Cerrando aplicación');
+   };
+
+   // Funciones para búsqueda de usuarios
+   const handleUserSearch = async (value) => {
+     if (!value.trim()) {
+       setUserSearchResults([]);
+       return;
+     }
+
+     setUserSearchLoading(true);
+     try {
+       const { data, error } = await supabase
+         .from('profiles')
+         .select('*')
+         .or(`nombre.ilike.%${value}%,email.ilike.%${value}%,telefono.ilike.%${value}%`)
+         .limit(10);
+
+       if (error) {
+         console.error('Error searching users:', error);
+         message.error('Error al buscar usuarios');
+         return;
+       }
+
+       setUserSearchResults(data || []);
+     } catch (error) {
+       console.error('Error searching users:', error);
+       message.error('Error al buscar usuarios');
+     } finally {
+       setUserSearchLoading(false);
+     }
+   };
+
+   const handleCreateUser = async (userData) => {
+     try {
+       const { data, error } = await supabase
+         .from('profiles')
+         .insert([userData])
+         .select()
+         .single();
+
+       if (error) {
+         console.error('Error creating user:', error);
+         message.error('Error al crear usuario');
+         return;
+       }
+
+       message.success('Usuario creado exitosamente');
+       setShowCreateUser(false);
+       setSelectedClient(data);
+     } catch (error) {
+       console.error('Error creating user:', error);
+       message.error('Error al crear usuario');
+     }
+   };
+
+   const handleSelectUser = (user) => {
+     setSelectedClient(user);
+     setShowUserSearch(false);
+     message.success(`Usuario seleccionado: ${user.nombre}`);
+   };
 
   const handleEventSelectForSearch = (eventId) => {
     const event = availableEvents.find(e => e.id === eventId);
@@ -395,10 +432,14 @@ const BoleteriaMain = () => {
     <div className="h-screen flex bg-gray-100">
       {/* Sidebar izquierda */}
       <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
-        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleSearchClick}>
-          <SearchOutlined className="text-xl mb-1" />
-          <div>Buscar</div>
-        </div>
+                 <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleSearchClick}>
+           <SearchOutlined className="text-xl mb-1" />
+           <div>Eventos</div>
+         </div>
+         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowUserSearch(true)}>
+           <UserOutlined className="text-xl mb-1" />
+           <div>Usuarios</div>
+         </div>
         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleConfigClick}>
           <SettingOutlined className="text-xl mb-1" />
           <div>Config</div>
@@ -432,10 +473,10 @@ const BoleteriaMain = () => {
                 <div className="font-medium">
                   {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
                 </div>
-                <div className="text-gray-600">
-                  <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
-                  <span className="ml-4">Hora: {selectedFuncion ? new Date(selectedFuncion.fechaCelebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
-                </div>
+                                 <div className="text-gray-600">
+                   <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
+                   <span className="ml-4">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
+                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -582,11 +623,11 @@ const BoleteriaMain = () => {
                  onChange={handleFunctionSelectForSearch}
                  value={selectedFunctionForSearch?.id}
                >
-                {availableFunctions.map(func => (
-                  <Option key={func.id} value={func.id}>
-                    {func.sala?.nombre} - {new Date(func.fechaCelebracion).toLocaleString('es-ES')}
-                  </Option>
-                ))}
+                                 {availableFunctions.map(func => (
+                   <Option key={func.id} value={func.id}>
+                     {func.sala?.nombre} - {new Date(func.fecha_celebracion).toLocaleString('es-ES')}
+                   </Option>
+                 ))}
               </Select>
             </div>
           )}
@@ -684,9 +725,112 @@ const BoleteriaMain = () => {
             </Space>
           </Card>
         </div>
-      </Drawer>
-    </div>
-  );
-};
+             </Drawer>
+
+       {/* Modal de búsqueda de usuarios */}
+       <Modal
+         title="Buscar o Crear Usuario"
+         open={showUserSearch}
+         onCancel={() => setShowUserSearch(false)}
+         footer={null}
+         width={600}
+       >
+         <div className="space-y-4">
+           <div>
+             <label className="block text-sm font-medium text-gray-700 mb-2">Buscar Usuario</label>
+             <Search
+               placeholder="Buscar por nombre, email o teléfono"
+               value={userSearchValue}
+               onChange={(e) => {
+                 setUserSearchValue(e.target.value);
+                 handleUserSearch(e.target.value);
+               }}
+               loading={userSearchLoading}
+               onSearch={handleUserSearch}
+             />
+           </div>
+
+           {userSearchResults.length > 0 && (
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">Resultados</label>
+               <div className="max-h-60 overflow-y-auto space-y-2">
+                 {userSearchResults.map(user => (
+                   <div
+                     key={user.id}
+                     className="p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                     onClick={() => handleSelectUser(user)}
+                   >
+                     <div className="font-medium">{user.nombre}</div>
+                     <div className="text-sm text-gray-600">{user.email}</div>
+                     {user.telefono && (
+                       <div className="text-sm text-gray-500">{user.telefono}</div>
+                     )}
+                   </div>
+                 ))}
+               </div>
+             </div>
+           )}
+
+           <div className="border-t pt-4">
+             <Button
+               type="primary"
+               block
+               onClick={() => setShowCreateUser(true)}
+               icon={<UserOutlined />}
+             >
+               Crear Nuevo Usuario
+             </Button>
+           </div>
+         </div>
+       </Modal>
+
+       {/* Modal de creación de usuario */}
+       <Modal
+         title="Crear Nuevo Usuario"
+         open={showCreateUser}
+         onCancel={() => setShowCreateUser(false)}
+         footer={null}
+         width={500}
+       >
+         <Form
+           layout="vertical"
+           onFinish={handleCreateUser}
+         >
+           <Form.Item
+             name="nombre"
+             label="Nombre Completo"
+             rules={[{ required: true, message: 'Por favor ingresa el nombre' }]}
+           >
+             <Input placeholder="Nombre completo" />
+           </Form.Item>
+
+           <Form.Item
+             name="email"
+             label="Email"
+             rules={[
+               { required: true, message: 'Por favor ingresa el email' },
+               { type: 'email', message: 'Por favor ingresa un email válido' }
+             ]}
+           >
+             <Input placeholder="email@ejemplo.com" />
+           </Form.Item>
+
+           <Form.Item
+             name="telefono"
+             label="Teléfono"
+           >
+             <Input placeholder="+1234567890" />
+           </Form.Item>
+
+           <Form.Item>
+             <Button type="primary" htmlType="submit" block>
+               Crear Usuario
+             </Button>
+           </Form.Item>
+         </Form>
+       </Modal>
+     </div>
+   );
+ };
 
 export default BoleteriaMain; 
