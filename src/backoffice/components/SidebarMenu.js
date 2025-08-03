@@ -52,6 +52,101 @@ const SidebarMenu = ({ collapsed }) => {
       icon: faCalendarAlt
     },
     {
+      title: 'Recintos',
+      path: '/dashboard/recintos',
+      icon: faBuilding
+    },
+    {
+      title: 'Plantillas de Precios',
+      path: '/dashboard/plantillas-precios',
+      icon: faPercent
+    },
+    {
+      title: 'Funciones',
+      path: '/dashboard/funciones',
+      icon: faCalendarAlt
+    },
+    {
+      title: 'Entradas',
+      path: '/dashboard/entradas',
+      icon: faTicketAlt
+    },
+    {
+      title: 'Galería',
+      path: '/dashboard/galeria',
+      icon: faImage
+    },
+    {
+      title: 'Correo',
+      path: '/dashboard/correo',
+      icon: faEnvelope
+    },
+    {
+      title: 'Crear Mapa',
+      path: '/dashboard/crear-mapa',
+      icon: faMap
+    },
+    {
+      title: 'IVA',
+      path: '/dashboard/iva',
+      icon: faPercent
+    },
+    {
+      title: 'Tags',
+      path: '/dashboard/tags',
+      icon: faTags
+    },
+    {
+      title: 'Web Studio',
+      path: '/dashboard/webstudio',
+      icon: faGlobe
+    },
+    {
+      title: 'Web Header',
+      path: '/dashboard/web-header',
+      icon: faGlobe
+    },
+    {
+      title: 'Web Footer',
+      path: '/dashboard/web-footer',
+      icon: faGlobe
+    },
+    {
+      title: 'Web Colors',
+      path: '/dashboard/web-colors',
+      icon: faPalette
+    },
+    {
+      title: 'Email Campaigns',
+      path: '/dashboard/email-campaigns',
+      icon: faEnvelope
+    },
+    {
+      title: 'Email Page Creator',
+      path: '/dashboard/email-page-creator',
+      icon: faEnvelope
+    },
+    {
+      title: 'Abonos',
+      path: '/dashboard/abonos',
+      icon: faHandshake
+    },
+    {
+      title: 'Actividad',
+      path: '/dashboard/actividad',
+      icon: faChartLine
+    },
+    {
+      title: 'Referidos',
+      path: '/dashboard/referidos',
+      icon: faUserPlus
+    },
+    {
+      title: 'Compañías',
+      path: '/dashboard/companias',
+      icon: faBuilding
+    },
+    {
       title: 'Clientes',
       path: '/dashboard/clientes',
       icon: faUsers

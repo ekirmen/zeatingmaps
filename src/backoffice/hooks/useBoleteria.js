@@ -142,7 +142,7 @@ export const useBoleteria = () => {
       const { data: funcionesData, error: funcionesError } = await supabase
         .from('funciones')
         .select('*, sala(*), plantilla(*)')
-        .eq('evento_id', eventoId)
+        .eq('event_id', eventoId)
         .order('fecha_celebracion', { ascending: true });
 
       if (funcionesError) throw funcionesError;
