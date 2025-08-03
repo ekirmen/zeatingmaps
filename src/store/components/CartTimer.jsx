@@ -1,7 +1,8 @@
 import React from 'react';
+import { useCartStore } from '../cartStore';
 
 const CartTimer = () => {
-  const { timeLeft, hasActiveTimer } = useCart();
+  const { timeLeft, hasActiveTimer } = useCartStore();
 
   if (!hasActiveTimer) return null;
 

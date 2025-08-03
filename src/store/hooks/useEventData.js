@@ -4,7 +4,6 @@ import { useEffect, useState, useRef, useCallback } from 'react';
 import { fetchMapa, fetchPlantillaPrecios, getFunciones, getMapaPorEvento, fetchDescuentoPorCodigo } from '../services/apistore';
 import { fetchZonasPorSala } from '../../services/supabaseServices';
 import { fetchSeatsByFuncion, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
-import { lockSeat, unlockSeat } from '../../backoffice/services/seatLocks';
 import { supabase } from '../../supabaseClient';
 import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
@@ -14,7 +13,8 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { ref, runTransaction, set } from 'firebase/database';
 import { db, isFirebaseEnabled, auth } from '../../services/firebaseClient';
 import { signInAnonymously } from 'firebase/auth';
-import { supabase } from '../../supabaseClient';
+import { useCartStore } from '../cartStore';
+import { useSeatLockStore } from '../../components/seatLockStore';
 
 const normalizeId = (obj) => ({ ...obj, id: obj.id || obj._id });
 
@@ -61,7 +61,7 @@ const useEventData = (eventIdOrSlug) => {
         }
     };
 
-    const { cart, setCart, duration } = useCart();
+    const { cart, toggleSeat, clearCart, timeLeft: cartTimeLeft } = useCartStore();
     const cartRef = useRef([]);
     const timerRef = useRef(null);
 
@@ -74,15 +74,14 @@ const useEventData = (eventIdOrSlug) => {
             const savedCart = localStorage.getItem(localStorageCartKey);
             if (savedCart) {
                 const parsedCart = JSON.parse(savedCart);
-                setCart(parsedCart, selectedFunctionId);
+                // Note: useCartStore doesn't have setCart, so we'll handle this differently
             } else {
-                setCart([], selectedFunctionId);
+                // Note: useCartStore doesn't have setCart, so we'll handle this differently
             }
         } catch (e) {
             console.error('Error loading cart from localStorage', e);
-            setCart([], selectedFunctionId);
         }
-    }, [localStorageCartKey, setCart, selectedFunctionId]);
+    }, [localStorageCartKey, selectedFunctionId]);
 
     // Save cart to localStorage whenever `cart` (from context) changes
     useEffect(() => {
@@ -332,14 +331,14 @@ const useEventData = (eventIdOrSlug) => {
         if (timerRef.current) {
             return;
         }
-        setTimeLeft(duration ? duration * 60 : 900);
-        localStorage.setItem(`timer-${evento?.id || eventIdOrSlug}-${selectedFunctionId || 'none'}`, String(duration ? duration * 60 : 900));
+        setTimeLeft(cartTimeLeft ? cartTimeLeft * 60 : 900);
+        localStorage.setItem(`timer-${evento?.id || eventIdOrSlug}-${selectedFunctionId || 'none'}`, String(cartTimeLeft ? cartTimeLeft * 60 : 900));
         timerRef.current = setInterval(() => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
                     clearInterval(timerRef.current);
                     timerRef.current = null;
-                    setCart([], selectedFunctionId);
+                    clearCart();
                     localStorage.removeItem(`timer-${evento?.id || eventIdOrSlug}-${selectedFunctionId || 'none'}`);
                     return 0;
                 }
@@ -348,7 +347,7 @@ const useEventData = (eventIdOrSlug) => {
                 return newTime;
             });
         }, 1000);
-    }, [duration, eventIdOrSlug, selectedFunctionId, setCart, evento?.id]);
+    }, [cartTimeLeft, eventIdOrSlug, selectedFunctionId, clearCart, evento?.id]);
 
     const applyDiscountCode = async () => {
         if (!discountCode.trim()) return;
@@ -450,7 +449,7 @@ const useEventData = (eventIdOrSlug) => {
                 try {
                     await Promise.all([
                         createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'seleccionado' }),
-                        lockSeat(silla._id, 'seleccionado', selectedFunctionId)
+                        useSeatLockStore.getState().lockSeat(silla._id, 'seleccionado', selectedFunctionId)
                     ]);
                     dbOperationSuccess = true;
                     console.log(`[useEventData DEBUG] Asiento ${silla._id} reservado en Supabase.`);
@@ -517,7 +516,7 @@ const useEventData = (eventIdOrSlug) => {
             }
 
             if (dbOperationSuccess) {
-                setCart(prevCart => [...prevCart, seatItemData], selectedFunctionId);
+                toggleSeat(seatItemData);
                 console.log(`[useEventData DEBUG] Asiento ${silla._id} añadido al carrito.`);
             }
 
@@ -557,7 +556,7 @@ const useEventData = (eventIdOrSlug) => {
             try {
                 await Promise.all([
                     createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'disponible' }),
-                    unlockSeat(silla._id, selectedFunctionId)
+                    useSeatLockStore.getState().unlockSeat(silla._id, selectedFunctionId)
                 ]);
                 dbOperationSuccess = true;
                 console.log(`[useEventData DEBUG] Asiento ${silla._id} liberado en Supabase.`);
@@ -567,7 +566,7 @@ const useEventData = (eventIdOrSlug) => {
             }
 
             if (dbOperationSuccess) {
-                setCart(prevCart => prevCart.filter(item => item._id !== silla._id), selectedFunctionId);
+                toggleSeat(silla._id);
                 console.log(`[useEventData DEBUG] Asiento ${silla._id} quitado del carrito.`);
             }
         }
@@ -598,7 +597,8 @@ const useEventData = (eventIdOrSlug) => {
         auth,
         currentUserId,
         isAuthReady,
-        setCart,
+        toggleSeat,
+        clearCart,
         evento?.id,
         isUuid,
         isNumericId

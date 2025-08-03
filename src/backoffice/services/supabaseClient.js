@@ -1,6 +1,7 @@
 // src/backoffice/services/supabaseClient.js
 /* global globalThis */
 import { createClient } from '@supabase/supabase-js';
+import { supabase as mainSupabase } from '../../supabaseClient';
 
 // Only these variables should be available for frontend
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
@@ -16,11 +17,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('❌ Supabase URL o Anon Key no están definidas.');
 }
 
-// Create a single instance for the public client
-const supabase = globalThis.supabase || createClient(supabaseUrl, supabaseAnonKey);
-if (!globalThis.supabase) {
-  globalThis.supabase = supabase;
-}
+// Use the main supabase instance to avoid multiple GoTrueClient instances
+const supabase = mainSupabase;
 
 // Public client (safe for frontend)
 export { supabase };
