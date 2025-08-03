@@ -26,7 +26,7 @@ export const fetchAbonoAvailableSeats = async (eventId) => {
     .from('abonos')
     .select('seat_id')
     .eq('package_type', 'evento')
-    .eq('event_id', eventId)
+            .eq('evento', eventId)
     .eq('status', 'activo');
   if (error) throw error;
   return data.map(a => a.seat_id);

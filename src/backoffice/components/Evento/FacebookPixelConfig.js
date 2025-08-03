@@ -75,7 +75,7 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
       
       if (facebookPixel.pixel_id || facebookPixel.pixel_script) {
         await upsertFacebookPixel({
-          event_id: eventoData.id,
+          evento: eventoData.id,
           pixel_id: facebookPixel.pixel_id,
           pixel_script: facebookPixel.pixel_script,
           is_active: facebookPixel.is_active,

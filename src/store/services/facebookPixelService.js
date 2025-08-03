@@ -6,7 +6,7 @@ export const getFacebookPixelByEvent = async (eventId) => {
     const { data, error } = await supabase
       .from('facebook_pixels')
       .select('*')
-      .eq('event_id', eventId)
+      .eq('evento', eventId)
       .eq('is_active', true)
       .single();
 

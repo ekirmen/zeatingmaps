@@ -25,7 +25,7 @@ const WishlistButton = ({ event, size = 'default' }) => {
         .from('wishlist')
         .select('*')
         .eq('user_id', user.id)
-        .eq('event_id', event.id)
+        .eq('evento', event.id)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
@@ -78,7 +78,7 @@ const WishlistButton = ({ event, size = 'default' }) => {
           .from('wishlist')
           .delete()
           .eq('user_id', user.id)
-          .eq('event_id', event.id);
+          .eq('evento', event.id);
 
         if (error) throw error;
 
@@ -90,7 +90,7 @@ const WishlistButton = ({ event, size = 'default' }) => {
           .from('wishlist')
           .insert({
             user_id: user.id,
-            event_id: event.id,
+            evento: event.id,
             created_at: new Date().toISOString()
           });
 
