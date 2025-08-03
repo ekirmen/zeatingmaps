@@ -207,7 +207,7 @@ export const syncSeatsForSala = async (salaId) => {
       }
     }
     
-    // Insertar solo los asientos nuevos
+    // Insertar solo los asientos nuevos que no existen
     const newSeats = seatDefs
       .filter(s => !existingIds.has(s.id))
       .map(s => ({
@@ -217,21 +217,36 @@ export const syncSeatsForSala = async (salaId) => {
         status: 'disponible',
         bloqueado: false,
       }));
+    
     if (newSeats.length > 0) {
-      // Use upsert with the composite key to avoid duplicates
-      const { error: upsertErr } = await supabase
-        .from('seats')
-        .upsert(newSeats, { onConflict: 'funcion_id,_id' });
-      if (upsertErr) {
-        console.warn('Error en upsert de seats:', upsertErr);
-        // Si hay error, intentar insertar solo los que no existen
+      try {
+        // Intentar inserción directa primero
         const { error: insertErr } = await supabase
           .from('seats')
           .insert(newSeats)
           .select();
+        
         if (insertErr) {
-          console.error('Error al insertar seats:', insertErr);
+          console.warn('Error en inserción directa de seats:', insertErr);
+          
+          // Si hay error de clave duplicada, intentar upsert
+          if (insertErr.code === '23505') {
+            console.log('Intentando upsert para evitar duplicados...');
+            const { error: upsertErr } = await supabase
+              .from('seats')
+              .upsert(newSeats, { onConflict: 'funcion_id,_id' });
+            
+            if (upsertErr) {
+              console.error('Error en upsert de seats:', upsertErr);
+            } else {
+              console.log('Upsert completado exitosamente');
+            }
+          }
+        } else {
+          console.log(`${newSeats.length} asientos insertados exitosamente`);
         }
+      } catch (error) {
+        console.error('Error inesperado al sincronizar seats:', error);
       }
     }
   }

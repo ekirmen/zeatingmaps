@@ -8,15 +8,28 @@ const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY
 let supabase = null
 let supabaseAdmin = null
 
+// Función para crear cliente con configuración optimizada
+const createOptimizedClient = (url, key, options = {}) => {
+  return createClient(url, key, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      ...options.auth
+    },
+    ...options
+  })
+}
+
 if (typeof window !== 'undefined') {
-  // Browser environment
+  // Browser environment - usar singleton pattern
   if (!window.__supabaseClient) {
-    window.__supabaseClient = createClient(supabaseUrl, supabaseAnonKey)
+    window.__supabaseClient = createOptimizedClient(supabaseUrl, supabaseAnonKey)
   }
   supabase = window.__supabaseClient
 } else {
   // Server environment
-  supabase = createClient(supabaseUrl, supabaseAnonKey)
+  supabase = createOptimizedClient(supabaseUrl, supabaseAnonKey)
 }
 
 // Administrative client (only use in backend: API Routes, Edge Functions)
@@ -24,9 +37,9 @@ const serviceRoleKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || proces
 
 if (serviceRoleKey) {
   if (typeof window !== 'undefined') {
-    // Browser environment
+    // Browser environment - usar singleton pattern
     if (!window.__supabaseAdminClient) {
-      window.__supabaseAdminClient = createClient(supabaseUrl, serviceRoleKey, {
+      window.__supabaseAdminClient = createOptimizedClient(supabaseUrl, serviceRoleKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false,
@@ -36,7 +49,7 @@ if (serviceRoleKey) {
     supabaseAdmin = window.__supabaseAdminClient
   } else {
     // Server environment
-    supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+    supabaseAdmin = createOptimizedClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

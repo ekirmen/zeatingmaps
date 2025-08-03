@@ -15,7 +15,7 @@ const BoleteriaDemo = () => {
       id: '1',
       nombre: 'Concierto de Rock',
       imagenes: {
-        logoCuadrado: 'https://via.placeholder.com/100x100'
+        logoCuadrado: '/assets/logo.png'
       }
     }
   ];

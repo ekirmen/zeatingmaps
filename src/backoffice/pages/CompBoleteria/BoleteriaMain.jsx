@@ -475,7 +475,7 @@ const BoleteriaMain = () => {
                 </svg>
               </button>
               <div className="flex items-center space-x-3">
-                                 <Avatar size="small" src="https://via.placeholder.com/32x32" alt="User" />
+                                 <Avatar size="small" src="/assets/logo.png" alt="User" />
                 <span className="text-sm font-medium">chichiriviche</span>
               </div>
               <div className="text-sm">
