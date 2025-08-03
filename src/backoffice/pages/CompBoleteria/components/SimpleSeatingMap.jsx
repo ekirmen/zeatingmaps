@@ -29,7 +29,8 @@ const SimpleSeatingMap = ({
          .from('seats')
          .select('*')
          .eq('funcion_id', selectedFuncion.id)
-         .order('_id', { ascending: true });
+         .order('fila', { ascending: true })
+         .order('numero', { ascending: true });
 
       if (seatsError) {
         console.error('Error loading seats:', seatsError);
@@ -45,18 +46,13 @@ const SimpleSeatingMap = ({
          const isSelected = selectedSeats.some(s => s._id === seat._id);
          const isBlocked = seat.bloqueado || seat.status === 'bloqueado';
          
-         // Extraer información de fila y columna del _id (asumiendo formato como "A1", "B2", etc.)
-         const seatId = seat._id;
-         const fila = seatId.charAt(0);
-         const columna = parseInt(seatId.substring(1)) || 0;
-         
          return {
-           id: seat.id,
+           id: seat._id,
            _id: seat._id,
-           nombre: seatId,
-           fila: fila,
-           columna: columna,
-           precio: 0, // Los precios se manejan por zonas
+           nombre: `${seat.fila}${seat.numero}`,
+           fila: seat.fila || 'A',
+           columna: parseInt(seat.numero) || 0,
+           precio: seat.price || 0,
            zona: seat.zona || 'General',
            estado: isBlocked ? 'blocked' : isSelected ? 'selected' : seat.status || 'available',
            tipo: 'silla'
@@ -173,16 +169,16 @@ const SimpleSeatingMap = ({
                     {fila}
                   </div>
                   {rows[fila].sort((a, b) => a.columna - b.columna).map((seat) => (
-                    <Button
-                      key={seat.id}
-                      size="small"
-                      className={`w-8 h-8 p-0 text-xs font-medium ${getSeatColor(seat)}`}
-                      onClick={() => handleSeatClick(seat)}
-                      disabled={seat.estado === 'blocked'}
-                      title={`${seat.nombre} - $${seat.precio} - ${seat.zona}`}
-                    >
-                      {seat.columna}
-                    </Button>
+                                         <Button
+                       key={seat.id}
+                       size="small"
+                       className={`w-8 h-8 p-0 text-xs font-medium ${getSeatColor(seat)}`}
+                       onClick={() => handleSeatClick(seat)}
+                       disabled={seat.estado === 'blocked'}
+                       title={`${seat.nombre} - $${seat.precio.toFixed(2)} - ${seat.zona}`}
+                     >
+                       {seat.columna}
+                     </Button>
                   ))}
                 </div>
               ));
@@ -190,33 +186,33 @@ const SimpleSeatingMap = ({
           </div>
         )}
 
-        {/* Información de zonas */}
-        {(() => {
-          const zonas = {};
-          seats.forEach(seat => {
-            if (!zonas[seat.zona]) {
-              zonas[seat.zona] = { min: seat.precio, max: seat.precio, count: 0 };
-            }
-            zonas[seat.zona].min = Math.min(zonas[seat.zona].min, seat.precio);
-            zonas[seat.zona].max = Math.max(zonas[seat.zona].max, seat.precio);
-            zonas[seat.zona].count++;
-          });
+                 {/* Información de zonas */}
+         {(() => {
+           const zonas = {};
+           seats.forEach(seat => {
+             if (!zonas[seat.zona]) {
+               zonas[seat.zona] = { min: seat.precio, max: seat.precio, count: 0 };
+             }
+             zonas[seat.zona].min = Math.min(zonas[seat.zona].min, seat.precio);
+             zonas[seat.zona].max = Math.max(zonas[seat.zona].max, seat.precio);
+             zonas[seat.zona].count++;
+           });
 
-          return (
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              {Object.keys(zonas).map(zona => (
-                <Card key={zona} size="small" title={`Zona ${zona}`} className="text-center">
-                  <div className="text-2xl font-bold text-purple-600">
-                    ${zonas[zona].min}-{zonas[zona].max}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {zonas[zona].count} asientos
-                  </div>
-                </Card>
-              ))}
-            </div>
-          );
-        })()}
+           return (
+             <div className="mt-6 grid grid-cols-2 gap-4">
+               {Object.keys(zonas).map(zona => (
+                 <Card key={zona} size="small" title={`Zona ${zona}`} className="text-center">
+                   <div className="text-2xl font-bold text-purple-600">
+                     ${zonas[zona].min.toFixed(2)}-${zonas[zona].max.toFixed(2)}
+                   </div>
+                   <div className="text-xs text-gray-500">
+                     {zonas[zona].count} asientos
+                   </div>
+                 </Card>
+               ))}
+             </div>
+           );
+         })()}
       </div>
 
       {/* Controles */}
