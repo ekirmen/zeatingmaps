@@ -16,26 +16,83 @@ const SimpleSeatingMap = ({
   // Cargar asientos reales desde la base de datos
   const loadSeats = async () => {
     if (!selectedFuncion?.sala?.id) {
+      console.log('No hay sala seleccionada');
       setSeats([]);
       return;
     }
 
+    console.log('Cargando asientos para función:', selectedFuncion.id, 'sala:', selectedFuncion.sala.id);
     setLoading(true);
     setError(null);
 
     try {
       // Cargar asientos de la función
-      const { data: seatsData, error: seatsError } = await supabase
+      let { data: seatsData, error: seatsError } = await supabase
         .from('seats')
         .select('*')
         .eq('funcion_id', selectedFuncion.id)
         .order('fila', { ascending: true })
         .order('numero', { ascending: true });
 
+      console.log('Asientos encontrados:', seatsData?.length || 0);
+
       if (seatsError) {
         console.error('Error loading seats:', seatsError);
         setError(seatsError.message);
         return;
+      }
+
+      // Si no hay asientos, intentar sincronizar desde el mapa
+      if (!seatsData || seatsData.length === 0) {
+        console.log('No hay asientos configurados, intentando sincronizar...');
+        try {
+          // Primero verificar si existe un mapa para la sala
+          const { data: mapaData, error: mapaError } = await supabase
+            .from('mapas')
+            .select('*')
+            .eq('sala_id', selectedFuncion.sala.id)
+            .single();
+
+          console.log('Mapa encontrado:', mapaData);
+
+          if (mapaError || !mapaData) {
+            console.log('No hay mapa configurado para esta sala');
+            setError('No hay mapa configurado para esta sala. Contacta al administrador.');
+            return;
+          }
+
+          // Importar la función de sincronización
+          const { syncSeatsForSala } = await import('../../../services/apibackoffice');
+          await syncSeatsForSala(selectedFuncion.sala.id);
+          
+          // Intentar cargar de nuevo
+          const { data: newSeatsData, error: newSeatsError } = await supabase
+            .from('seats')
+            .select('*')
+            .eq('funcion_id', selectedFuncion.id)
+            .order('fila', { ascending: true })
+            .order('numero', { ascending: true });
+
+          console.log('Asientos después de sincronización:', newSeatsData?.length || 0);
+
+          if (newSeatsError) {
+            console.error('Error loading seats after sync:', newSeatsError);
+            setError('Error al sincronizar asientos');
+            return;
+          }
+
+          if (newSeatsData && newSeatsData.length > 0) {
+            seatsData = newSeatsData;
+          } else {
+            console.log('No se encontraron asientos después de la sincronización');
+            setError('No se pudieron sincronizar los asientos. Verifica que el mapa esté configurado correctamente.');
+            return;
+          }
+        } catch (syncError) {
+          console.error('Error en sincronización:', syncError);
+          setError('Error al sincronizar asientos');
+          return;
+        }
       }
 
       // Los asientos bloqueados están en la misma tabla con el campo 'bloqueado'
@@ -59,6 +116,7 @@ const SimpleSeatingMap = ({
         };
       });
 
+      console.log('Asientos mapeados:', mappedSeats.length);
       setSeats(mappedSeats);
     } catch (error) {
       console.error('Error loading seats:', error);
