@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const RecintoSalaContext = createContext();
 

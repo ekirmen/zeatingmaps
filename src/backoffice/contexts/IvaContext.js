@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient'; // Ajusta la ruta si es necesario
+import { supabase } from '../../supabaseClient';
 
 const IvaContext = createContext();
 

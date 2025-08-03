@@ -31,7 +31,7 @@ import {
   CheckCircleOutlined,
   CreditCardOutlined
 } from '@ant-design/icons';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;

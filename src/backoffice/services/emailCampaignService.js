@@ -1,4 +1,4 @@
-import { supabase as supabaseClient } from './supabaseClient';
+import { supabase as supabaseClient } from '../../supabaseClient';
 import { toast } from 'react-hot-toast';
 import emailService from './emailService';
 

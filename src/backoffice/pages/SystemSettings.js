@@ -27,7 +27,7 @@ import {
   CloudOutlined,
   BellOutlined,
 } from '@ant-design/icons';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { Option } = Select;

@@ -43,7 +43,7 @@ import {
   Legend, 
   ResponsiveContainer 
 } from 'recharts';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;

@@ -11,7 +11,7 @@ import OpcionesAvanzadas from '../components/Evento/OpcionesAvanzadas';
 import EventsList from '../components/Evento/EventsList';
 import SearchBar from '../components/Evento/SearchBar';
 import VenueSelectors from '../components/Evento/VenueSelectors';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
 
 // Bucket where event related images are stored

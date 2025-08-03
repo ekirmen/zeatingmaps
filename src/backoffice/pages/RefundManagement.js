@@ -22,7 +22,7 @@ import {
   ClockCircleOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { 
   getAllRefunds, 
   approveManualRefund, 

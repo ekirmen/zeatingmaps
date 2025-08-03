@@ -1,4 +1,4 @@
-import { supabase, supabaseAdmin } from './supabaseClient';
+import { supabase, supabaseAdmin } from '../../supabaseClient';
 
 /**
  * Retrieve a user by email using the available admin API.

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { message } from 'antd';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { fetchMapa, fetchZonasPorSala } from '../../services/supabaseServices';
 
 const EVENT_KEY = 'boleteriaEventId';

@@ -26,7 +26,7 @@ import {
   WarningOutlined,
   InfoCircleOutlined
 } from '@ant-design/icons';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const { Text, Title } = Typography;
 
