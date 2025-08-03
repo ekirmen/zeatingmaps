@@ -36,6 +36,7 @@ const FormatoEntrada = () => {
   const [formatConfig, setFormatConfig] = useState(DEFAULT_FORMAT_CONFIG);
   const [loading, setLoading] = useState(false);
   const [previewData, setPreviewData] = useState(null);
+  const [currentValues, setCurrentValues] = useState(DEFAULT_FORMAT_CONFIG);
 
   useEffect(() => {
     loadFormatConfig();
@@ -45,6 +46,7 @@ const FormatoEntrada = () => {
     try {
       const config = await getFormatConfig();
       setFormatConfig(config);
+      setCurrentValues(config);
       form.setFieldsValue(config);
     } catch (error) {
       console.error('Error loading format config:', error);
@@ -52,11 +54,15 @@ const FormatoEntrada = () => {
     }
   };
 
-  const handleSave = async (values) => {
+  const handleSave = async () => {
     try {
       setLoading(true);
+      const values = form.getFieldsValue();
+      console.log('Saving values:', values);
+      
       await saveFormatConfig(values);
       setFormatConfig(values);
+      setCurrentValues(values);
       message.success('Configuración guardada exitosamente');
     } catch (error) {
       console.error('Error saving format config:', error);
@@ -66,8 +72,16 @@ const FormatoEntrada = () => {
     }
   };
 
+  const handleFormChange = (changedFields, allFields) => {
+    const values = form.getFieldsValue();
+    setCurrentValues(values);
+    console.log('Form changed:', values);
+  };
+
   const handlePreview = () => {
     const values = form.getFieldsValue();
+    console.log('Generating preview with values:', values);
+    
     setPreviewData({
       eventName: 'EVENTO DE PRUEBA',
       eventDate: new Date().toLocaleDateString(),
@@ -83,13 +97,25 @@ const FormatoEntrada = () => {
   const generatePreviewText = () => {
     if (!previewData) return '';
 
-    const values = form.getFieldsValue();
+    const values = currentValues; // Usar los valores actuales del formulario
     let preview = '';
+
+    // Aplicar configuración de alineación
+    const alignmentClass = values.alignment === '0' ? 'text-left' : 
+                          values.alignment === '1' ? 'text-center' : 'text-right';
+
+    // Aplicar configuración de tamaño de fuente
+    const fontSizeClass = values.fontSize === '00' ? 'text-sm' :
+                         values.fontSize === '01' ? 'text-lg' :
+                         values.fontSize === '02' ? 'text-xl' : 'text-2xl';
 
     // Encabezado
     if (values.header) {
       preview += `${values.header}\n`;
     }
+
+    // Separador
+    preview += `${'─'.repeat(40)}\n`;
 
     // Datos del ticket
     preview += `Evento: ${previewData.eventName}\n`;
@@ -99,6 +125,19 @@ const FormatoEntrada = () => {
     preview += `Zona: ${previewData.zoneName}\n`;
     preview += `Precio: $${previewData.price}\n`;
     preview += `Ticket #: ${previewData.ticketNumber}\n`;
+
+    // Código QR si está habilitado
+    if (values.showQRCode) {
+      preview += `\nQR Code: ${previewData.qrCode}\n`;
+    }
+
+    // Código de barras si está habilitado
+    if (values.showBarcode) {
+      preview += `Barcode: ||||| ||||| ||||| |||||\n`;
+    }
+
+    // Separador
+    preview += `${'─'.repeat(40)}\n`;
 
     // Pie de página
     if (values.footer) {
@@ -122,23 +161,24 @@ const FormatoEntrada = () => {
         className="mb-6"
       />
 
-      <Tabs defaultActiveKey="1">
-        <TabPane 
-          tab={
-            <span>
-              <SettingOutlined />
-              Configuración Básica
-            </span>
-          } 
-          key="1"
-        >
-          <Card title="Configuración de Papel" className="mb-4">
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={handleSave}
-              initialValues={formatConfig}
-            >
+      <Form
+        form={form}
+        layout="vertical"
+        onFinish={handleSave}
+        onValuesChange={handleFormChange}
+        initialValues={formatConfig}
+      >
+        <Tabs defaultActiveKey="1">
+          <TabPane 
+            tab={
+              <span>
+                <SettingOutlined />
+                Configuración Básica
+              </span>
+            } 
+            key="1"
+          >
+            <Card title="Configuración de Papel" className="mb-4">
               <Row gutter={[16, 16]}>
                 <Col span={12}>
                   <Form.Item
@@ -218,141 +258,141 @@ const FormatoEntrada = () => {
                   </Form.Item>
                 </Col>
               </Row>
-            </Form>
-          </Card>
+            </Card>
 
-          <Card title="Configuración de Texto" className="mb-4">
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Form.Item
-                  label="Tamaño de Fuente"
-                  name="fontSize"
-                >
-                  <Select>
-                    <Option value="00">Normal</Option>
-                    <Option value="01">Doble Alto</Option>
-                    <Option value="02">Doble Ancho</Option>
-                    <Option value="03">Doble Tamaño</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Alineación"
-                  name="alignment"
-                >
-                  <Select>
-                    <Option value="0">Izquierda</Option>
-                    <Option value="1">Centro</Option>
-                    <Option value="2">Derecha</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-            </Row>
-          </Card>
-        </TabPane>
+            <Card title="Configuración de Texto" className="mb-4">
+              <Row gutter={[16, 16]}>
+                <Col span={12}>
+                  <Form.Item
+                    label="Tamaño de Fuente"
+                    name="fontSize"
+                  >
+                    <Select>
+                      <Option value="00">Normal</Option>
+                      <Option value="01">Doble Alto</Option>
+                      <Option value="02">Doble Ancho</Option>
+                      <Option value="03">Doble Tamaño</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    label="Alineación"
+                    name="alignment"
+                  >
+                    <Select>
+                      <Option value="0">Izquierda</Option>
+                      <Option value="1">Centro</Option>
+                      <Option value="2">Derecha</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Card>
+          </TabPane>
 
-        <TabPane 
-          tab={
-            <span>
-              <FileTextOutlined />
-              Contenido del Ticket
-            </span>
-          } 
-          key="2"
-        >
-          <Card title="Encabezado y Pie de Página" className="mb-4">
-            <Form.Item
-              label="Encabezado del Ticket"
-              name="header"
-              help="Texto que aparecerá al inicio del ticket"
-            >
-              <TextArea
-                rows={4}
-                placeholder="Ejemplo: BOLETERÍA SISTEMA&#10;Dirección: Calle Principal #123&#10;Teléfono: (555) 123-4567"
-              />
-            </Form.Item>
-
-            <Form.Item
-              label="Pie de Página del Ticket"
-              name="footer"
-              help="Texto que aparecerá al final del ticket"
-            >
-              <TextArea
-                rows={4}
-                placeholder="Ejemplo: Gracias por su compra&#10;Disfrute del evento&#10;No se permiten devoluciones"
-              />
-            </Form.Item>
-          </Card>
-
-          <Card title="Elementos Adicionales" className="mb-4">
-            <Row gutter={[16, 16]}>
-              <Col span={12}>
-                <Form.Item
-                  label="Mostrar Código QR"
-                  name="showQRCode"
-                  valuePropName="checked"
-                >
-                  <Switch />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Mostrar Código de Barras"
-                  name="showBarcode"
-                  valuePropName="checked"
-                >
-                  <Switch />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Card>
-        </TabPane>
-
-        <TabPane 
-          tab={
-            <span>
-              <PrinterOutlined />
-              Vista Previa
-            </span>
-          } 
-          key="3"
-        >
-          <Card title="Vista Previa del Ticket" className="mb-4">
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Button 
-                type="primary" 
-                onClick={handlePreview}
-                icon={<PrinterOutlined />}
+          <TabPane 
+            tab={
+              <span>
+                <FileTextOutlined />
+                Contenido del Ticket
+              </span>
+            } 
+            key="2"
+          >
+            <Card title="Encabezado y Pie de Página" className="mb-4">
+              <Form.Item
+                label="Encabezado del Ticket"
+                name="header"
+                help="Texto que aparecerá al inicio del ticket"
               >
-                Generar Vista Previa
-              </Button>
+                <TextArea
+                  rows={4}
+                  placeholder="Ejemplo: BOLETERÍA SISTEMA&#10;Dirección: Calle Principal #123&#10;Teléfono: (555) 123-4567"
+                />
+              </Form.Item>
 
-              {previewData && (
-                <div className="preview-container">
-                  <div className="preview-ticket">
-                    <pre className="preview-text">
-                      {generatePreviewText()}
-                    </pre>
+              <Form.Item
+                label="Pie de Página del Ticket"
+                name="footer"
+                help="Texto que aparecerá al final del ticket"
+              >
+                <TextArea
+                  rows={4}
+                  placeholder="Ejemplo: Gracias por su compra&#10;Disfrute del evento&#10;No se permiten devoluciones"
+                />
+              </Form.Item>
+            </Card>
+
+            <Card title="Elementos Adicionales" className="mb-4">
+              <Row gutter={[16, 16]}>
+                <Col span={12}>
+                  <Form.Item
+                    label="Mostrar Código QR"
+                    name="showQRCode"
+                    valuePropName="checked"
+                  >
+                    <Switch />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    label="Mostrar Código de Barras"
+                    name="showBarcode"
+                    valuePropName="checked"
+                  >
+                    <Switch />
+                  </Form.Item>
+                </Col>
+              </Row>
+            </Card>
+          </TabPane>
+
+          <TabPane 
+            tab={
+              <span>
+                <PrinterOutlined />
+                Vista Previa
+              </span>
+            } 
+            key="3"
+          >
+            <Card title="Vista Previa del Ticket" className="mb-4">
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <Button 
+                  type="primary" 
+                  onClick={handlePreview}
+                  icon={<PrinterOutlined />}
+                >
+                  Generar Vista Previa
+                </Button>
+
+                {previewData && (
+                  <div className="preview-container">
+                    <div className="preview-ticket">
+                      <pre className="preview-text">
+                        {generatePreviewText()}
+                      </pre>
+                    </div>
                   </div>
-                </div>
-              )}
-            </Space>
-          </Card>
-        </TabPane>
-      </Tabs>
+                )}
+              </Space>
+            </Card>
+          </TabPane>
+        </Tabs>
 
-      <div className="mt-6">
-        <Button 
-          type="primary" 
-          size="large"
-          onClick={() => form.submit()}
-          loading={loading}
-          icon={<SaveOutlined />}
-        >
-          Guardar Configuración
-        </Button>
-      </div>
+        <div className="mt-6">
+          <Button 
+            type="primary" 
+            size="large"
+            onClick={handleSave}
+            loading={loading}
+            icon={<SaveOutlined />}
+          >
+            Guardar Configuración
+          </Button>
+        </div>
+      </Form>
 
       <style jsx>{`
         .preview-container {

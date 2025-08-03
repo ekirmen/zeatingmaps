@@ -35,6 +35,8 @@ import CompaniasPage from './pages/CompaniasPage';
 import SelectRecintoSala from './pages/SelectRecintoSala';
 import Plano from './pages/Plano';
 import CRM from './pages/CRM';
+import Productos from './pages/Productos';
+import PlantillasProductos from './pages/PlantillasProductos';
 
 const BackofficeApp = () => {
   return (
@@ -53,7 +55,8 @@ const BackofficeApp = () => {
         
         {/* Programación */}
         <Route path="entradas" element={<Entrada />} />
-        <Route path="productos" element={<Entrada />} />
+        <Route path="productos" element={<Productos />} />
+        <Route path="plantillas-productos" element={<PlantillasProductos />} />
         <Route path="donaciones" element={<Entrada />} />
         <Route path="comisiones" element={<PaymentGateways />} />
         <Route path="seguros" element={<PaymentGateways />} />

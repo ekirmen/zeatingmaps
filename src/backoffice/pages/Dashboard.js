@@ -87,7 +87,17 @@ const Dashboard = () => {
         .select('amount, status, created_at')
         .eq('status', 'completed');
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Error loading revenue stats:', error);
+        setStats(prev => ({
+          ...prev,
+          totalRevenue: 0,
+          todaySales: 0,
+          thisWeekSales: 0,
+          thisMonthSales: 0
+        }));
+        return;
+      }
 
       const totalRevenue = transactions.reduce((sum, t) => sum + parseFloat(t.amount), 0);
       const today = new Date();
@@ -114,6 +124,13 @@ const Dashboard = () => {
       }));
     } catch (error) {
       console.error('Error loading revenue stats:', error);
+      setStats(prev => ({
+        ...prev,
+        totalRevenue: 0,
+        todaySales: 0,
+        thisWeekSales: 0,
+        thisMonthSales: 0
+      }));
     }
   };
 
@@ -178,10 +195,16 @@ const Dashboard = () => {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (error) throw error;
+      if (error) {
+        console.warn('Error loading recent transactions:', error);
+        setRecentTransactions([]);
+        return;
+      }
+
       setRecentTransactions(data || []);
     } catch (error) {
       console.error('Error loading recent transactions:', error);
+      setRecentTransactions([]);
     }
   };
 
@@ -311,7 +334,6 @@ const Dashboard = () => {
               title="Ingresos Totales"
               value={stats.totalRevenue}
               precision={2}
-              prefix="$"
               valueStyle={{ color: '#3f8600' }}
               prefix={<DollarOutlined />}
             />

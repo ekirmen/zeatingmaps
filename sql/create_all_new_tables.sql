@@ -430,4 +430,74 @@ FROM webstudio_pages;
 -- MENSAJE DE CONFIRMACIÓN
 -- =====================================================
 
+-- Crear tabla para tags de usuarios
+CREATE TABLE IF NOT EXISTS user_tags (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    color VARCHAR(7) DEFAULT '#1890ff',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Crear tabla para relación usuario-tags
+CREATE TABLE IF NOT EXISTS user_tag_relations (
+    id SERIAL PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    tag_id INTEGER REFERENCES user_tags(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id, tag_id)
+);
+
+-- Crear tabla para admin_notifications
+CREATE TABLE IF NOT EXISTS admin_notifications (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(50) DEFAULT 'info',
+    read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Insertar algunos tags de usuario por defecto
+INSERT INTO user_tags (name, description, color) VALUES 
+    ('VIP', 'Clientes VIP', '#ff4d4f'),
+    ('Frecuente', 'Compradores frecuentes', '#52c41a'),
+    ('Nuevo', 'Clientes nuevos', '#1890ff'),
+    ('Premium', 'Clientes premium', '#722ed1'),
+    ('Inactivo', 'Clientes inactivos', '#faad14')
+ON CONFLICT DO NOTHING;
+
+-- Crear tabla para configuraciones de formato de impresora
+CREATE TABLE IF NOT EXISTS printer_formats (
+    id SERIAL PRIMARY KEY,
+    config JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Insertar configuración por defecto
+INSERT INTO printer_formats (id, config) VALUES (
+    1, 
+    '{
+        "paperWidth": 80,
+        "paperHeight": 297,
+        "marginTop": 5,
+        "marginBottom": 5,
+        "marginLeft": 5,
+        "marginRight": 5,
+        "fontSize": "00",
+        "alignment": "1",
+        "header": "BOLETERÍA SISTEMA\n",
+        "footer": "Gracias por su compra\n",
+        "showQRCode": true,
+        "showBarcode": false,
+        "logo": null
+    }'
+) ON CONFLICT (id) DO NOTHING;
+
+-- Crear índice para mejorar el rendimiento
+CREATE INDEX IF NOT EXISTS idx_printer_formats_id ON printer_formats(id);
+
 SELECT 'Todas las tablas han sido creadas exitosamente!' as mensaje; 

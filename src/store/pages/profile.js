@@ -20,15 +20,27 @@ import {
 } from 'antd';
 import {
   UserOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  CalendarOutlined,
+  EnvironmentOutlined,
+  EditOutlined,
+  SaveOutlined,
   LockOutlined,
-  CreditCardOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined,
+  UploadOutlined,
   HistoryOutlined,
   BellOutlined,
-  SecurityScanOutlined,
-  EditOutlined,
-  CameraOutlined,
+  SafetyOutlined,
+  FormOutlined,
+  PictureOutlined,
   SaveOutlined,
-  KeyOutlined
+  LockOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import { getPaymentTransactionsByOrder } from '../services/paymentGatewaysService';
@@ -86,20 +98,24 @@ const Profile = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        // Primero verificamos si la tabla existe
         const { data, error } = await supabase
           .from('payment_transactions')
-          .select(`
-            *,
-            payment_gateways (name, type)
-          `)
+          .select('*')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-        if (error) throw error;
+        if (error) {
+          console.warn('Tabla payment_transactions no disponible:', error.message);
+          setTransactions([]);
+          return;
+        }
         setTransactions(data || []);
       }
     } catch (error) {
       console.error('Error loading transactions:', error);
+      setTransactions([]);
     }
   };
 
@@ -107,6 +123,7 @@ const Profile = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        // Primero verificamos si la tabla existe
         const { data, error } = await supabase
           .from('notifications')
           .select('*')
@@ -114,11 +131,18 @@ const Profile = () => {
           .order('created_at', { ascending: false })
           .limit(10);
 
-        if (error) throw error;
+        if (error) {
+          // Si la tabla no existe, simplemente establecer un array vacío
+          console.warn('Tabla notifications no disponible:', error.message);
+          setNotifications([]);
+          return;
+        }
         setNotifications(data || []);
       }
     } catch (error) {
-      console.error('Error loading notifications:', error);
+      // Manejar cualquier otro error de manera silenciosa
+      console.warn('Error loading notifications:', error);
+      setNotifications([]);
     }
   };
 
@@ -291,7 +315,7 @@ const Profile = () => {
                         className="cursor-pointer"
                       />
                       <div className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-1">
-                        <CameraOutlined className="text-white text-sm" />
+                        <PictureOutlined className="text-white text-sm" />
                       </div>
                     </div>
                   </Upload>
@@ -378,7 +402,7 @@ const Profile = () => {
 
           {/* Seguridad */}
           <TabPane
-            tab={<span><SecurityScanOutlined />Seguridad</span>}
+                            tab={<span><SafetyOutlined />Seguridad</span>}
             key="security"
           >
             <Card>
@@ -388,7 +412,7 @@ const Profile = () => {
                   <Title level={4}>Cambiar Contraseña</Title>
                   <Button
                     type="primary"
-                    icon={<KeyOutlined />}
+                    icon={<LockOutlined />}
                     onClick={() => setShowPasswordModal(true)}
                   >
                     Cambiar Contraseña

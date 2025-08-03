@@ -31,7 +31,16 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
     });
   }, [eventoData]);
 
-  const { tags } = useTags();
+  // Manejo seguro de useTags
+  let tags = [];
+  try {
+    const tagsContext = useTags();
+    tags = tagsContext.tags || [];
+  } catch (error) {
+    console.warn('TagProvider no disponible, usando tags vacíos');
+    tags = [];
+  }
+  
   const [selectedTag, setSelectedTag] = useState('');
 
   const handleChange = (e) => {

@@ -48,9 +48,14 @@ const Evento = () => {
   }, [recintoSeleccionado, salaSeleccionada, eventos]);
 
   const fetchEventos = useCallback(async () => {
-    if (!recintoSeleccionado || !salaSeleccionada) return;
+    if (!recintoSeleccionado || !salaSeleccionada) {
+      console.log('No recinto or sala selected');
+      return;
+    }
   
     try {
+      console.log('Fetching eventos for recinto:', recintoSeleccionado.id, 'sala:', salaSeleccionada.id);
+      
       const { data, error } = await supabase
         .from('eventos')
         .select('*')
@@ -58,7 +63,12 @@ const Evento = () => {
         .eq('sala', salaSeleccionada.id)
         .order('created_at', { ascending: false });
   
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching eventos:', error);
+        throw error;
+      }
+      
+      console.log('Eventos loaded:', data);
       setEventos(data || []);
     } catch (error) {
       console.error('Error cargando eventos:', error);
@@ -166,7 +176,12 @@ const Evento = () => {
   }, [recintoSeleccionado, salaSeleccionada]);
 
   const handleEdit = useCallback((eventoId) => {
+    console.log('handleEdit called with eventoId:', eventoId);
+    console.log('eventos disponibles:', eventos);
+    
     const eventoParaEditar = eventos.find((evento) => evento.id === eventoId);
+    console.log('eventoParaEditar found:', eventoParaEditar);
+    
     if (eventoParaEditar) {
       const normalizeTags = (val) => {
         if (!val) return [];
@@ -214,6 +229,9 @@ const Evento = () => {
         tags: normalizeTags(eventoParaEditar.tags),
         imagenes: parsedImages,
       });
+      console.log('Evento data set successfully');
+    } else {
+      console.error('Evento no encontrado con ID:', eventoId);
     }
     setMenuVisible(true);
   }, [eventos]);

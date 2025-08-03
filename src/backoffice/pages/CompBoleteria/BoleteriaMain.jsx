@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { message, Input, Button, Modal, Select, Card, Avatar, Badge } from 'antd';
-import { SearchOutlined, UserOutlined, QrcodeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
+import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs } from 'antd';
+import { SearchOutlined, UserOutlined, QrcodeOutlined, ShoppingCartOutlined, GiftOutlined } from '@ant-design/icons';
 import CartWithTimer from '../../components/CartWithTimer';
 import SeatAnimation from '../../components/SeatAnimation';
 import ZonesAndPrices from './ZonesAndPrices';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import PrintTicketButton from '../../components/PrintTicketButton';
+import ProductosWidget from '../../../store/components/ProductosWidget';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 
@@ -52,6 +53,7 @@ const BoleteriaMain = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [blockedSeats, setBlockedSeats] = useState([]);
   const [blockMode, setBlockMode] = useState(false);
+  const [productosCarrito, setProductosCarrito] = useState([]);
 
   const handlePaymentClick = () => {
     if (!selectedClient) {
@@ -91,6 +93,21 @@ const BoleteriaMain = () => {
     setSelectedClient(client);
     setShowClientModal(false);
     message.success(`Cliente seleccionado: ${client.nombre}`);
+  };
+
+  const handleProductAdded = (producto) => {
+    setProductosCarrito(prev => {
+      const existingProduct = prev.find(p => p.id === producto.id);
+      if (existingProduct) {
+        return prev.map(p => 
+          p.id === producto.id 
+            ? { ...p, cantidad: p.cantidad + producto.cantidad, precio_total: (p.cantidad + producto.cantidad) * p.precio }
+            : p
+        );
+      } else {
+        return [...prev, producto];
+      }
+    });
   };
 
   const handleSeatClick = (seat) => {
@@ -296,29 +313,59 @@ const BoleteriaMain = () => {
           </div>
         </div>
 
-        {/* Área del mapa de asientos */}
+        {/* Área principal con pestañas */}
         <div className="flex-1 p-6">
           <div className="bg-white rounded-lg shadow-sm p-6 h-full">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Mapa de Asientos</h2>
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={blockMode}
-                    onChange={(e) => setBlockMode(e.target.checked)}
-                    className="rounded"
-                  />
-                  <span className="text-sm">🔒 Modo bloqueo</span>
-                </label>
-              </div>
-            </div>
-            <SimpleSeatingMap
-              selectedFuncion={selectedFuncion}
-              onSeatClick={handleSeatClick}
-              selectedSeats={selectedSeats}
-              blockedSeats={blockedSeats}
-              blockMode={blockMode}
+            <Tabs
+              defaultActiveKey="asientos"
+              items={[
+                {
+                  key: 'asientos',
+                  label: 'Asientos',
+                  children: (
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold">Mapa de Asientos</h2>
+                        <div className="flex items-center gap-2">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={blockMode}
+                              onChange={(e) => setBlockMode(e.target.checked)}
+                              className="rounded"
+                            />
+                            <span className="text-sm">🔒 Modo bloqueo</span>
+                          </label>
+                        </div>
+                      </div>
+                      <SimpleSeatingMap
+                        selectedFuncion={selectedFuncion}
+                        onSeatClick={handleSeatClick}
+                        selectedSeats={selectedSeats}
+                        blockedSeats={blockedSeats}
+                        blockMode={blockMode}
+                      />
+                    </div>
+                  ),
+                },
+                {
+                  key: 'productos',
+                  label: (
+                    <span>
+                      <GiftOutlined className="mr-2" />
+                      Productos
+                    </span>
+                  ),
+                  children: (
+                    <div>
+                      <ProductosWidget
+                        eventoId={selectedEvent?.id}
+                        onProductAdded={handleProductAdded}
+                      />
+                    </div>
+                  ),
+                },
+              ]}
             />
           </div>
         </div>
@@ -338,6 +385,34 @@ const BoleteriaMain = () => {
             selectedAffiliate={selectedAffiliate}
             fixed={true}
           />
+          
+          {/* Productos en el carrito */}
+          {productosCarrito.length > 0 && (
+            <div className="mt-4 p-4 border-t border-gray-200">
+              <h4 className="text-sm font-medium text-gray-900 mb-3">Productos</h4>
+              <div className="space-y-2">
+                {productosCarrito.map((producto) => (
+                  <div key={producto.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div className="flex-1">
+                      <div className="text-sm font-medium">{producto.nombre}</div>
+                      <div className="text-xs text-gray-500">
+                        Cantidad: {producto.cantidad} x ${parseFloat(producto.precio).toFixed(2)}
+                      </div>
+                    </div>
+                    <div className="text-sm font-medium">
+                      ${parseFloat(producto.precio_total).toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                  <span className="text-sm font-medium">Total Productos:</span>
+                  <span className="text-sm font-bold">
+                    ${productosCarrito.reduce((sum, p) => sum + parseFloat(p.precio_total), 0).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Botón de impresión Boca */}
           {carrito.length > 0 && (

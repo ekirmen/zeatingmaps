@@ -46,20 +46,27 @@ const AdminNotificationCenter = () => {
   const loadNotifications = async () => {
     try {
       setLoading(true);
-      
-      // Cargar notificaciones del sistema
       const { data, error } = await supabase
         .from('admin_notifications')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(20);
 
-      if (error) throw error;
+      if (error) {
+        // Si la tabla no existe, simplemente establecer un array vacío
+        console.warn('Tabla admin_notifications no disponible:', error.message);
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
 
       setNotifications(data || []);
       setUnreadCount(data?.filter(n => !n.read).length || 0);
     } catch (error) {
-      console.error('Error loading notifications:', error);
+      // Manejar cualquier otro error de manera silenciosa
+      console.warn('Error loading notifications:', error);
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }
