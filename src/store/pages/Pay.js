@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Modal, Card, Button, Space, Alert, Spin, Divider } from 'antd';
 import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { useCartStore } from '../store/cartStore';
+import { useCartStore } from '../cartStore';
 import { getActivePaymentGateways, validateGatewayConfig } from '../services/paymentGatewaysService';
 import { processPayment } from '../services/paymentProcessors';
 import { createPaymentSuccessNotification, createPaymentFailureNotification } from '../services/paymentNotifications';
