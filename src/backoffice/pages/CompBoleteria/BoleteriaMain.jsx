@@ -437,6 +437,36 @@ const BoleteriaMain = () => {
     }
   ];
 
+  const [loading, setLoading] = useState(false);
+
+  const handleFixSeatConflicts = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/fixSeatConflicts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        message.success('Limpieza completada exitosamente');
+        console.log('Resultado de limpieza:', result);
+        // Recargar la página para ver los cambios
+        window.location.reload();
+      } else {
+        message.error('Error en la limpieza: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error al ejecutar limpieza:', error);
+      message.error('Error al ejecutar la limpieza');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="h-screen flex bg-gray-100">
       {/* Sidebar izquierda */}
@@ -489,6 +519,13 @@ const BoleteriaMain = () => {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <button 
+                className="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600" 
+                onClick={handleFixSeatConflicts}
+                disabled={loading}
+              >
+                {loading ? 'Limpiando...' : '🔧 Limpiar Conflictos'}
+              </button>
               <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" onClick={handleGridClick}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
