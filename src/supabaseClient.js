@@ -15,47 +15,70 @@ const createOptimizedClient = (url, key, options = {}) => {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
+      storageKey: 'supabase-auth-token', // Asegurar clave única
       ...options.auth
     },
     ...options
   })
 }
 
-if (typeof window !== 'undefined') {
-  // Browser environment - usar singleton pattern
-  if (!window.__supabaseClient) {
-    window.__supabaseClient = createOptimizedClient(supabaseUrl, supabaseAnonKey)
+// Singleton pattern mejorado
+const getSupabaseClient = () => {
+  if (typeof window !== 'undefined') {
+    // Browser environment - usar singleton pattern
+    if (!window.__supabaseClient) {
+      console.log('[SUPABASE] Creando nueva instancia del cliente');
+      window.__supabaseClient = createOptimizedClient(supabaseUrl, supabaseAnonKey)
+    }
+    return window.__supabaseClient
+  } else {
+    // Server environment
+    if (!supabase) {
+      console.log('[SUPABASE] Creando nueva instancia del cliente (servidor)');
+      supabase = createOptimizedClient(supabaseUrl, supabaseAnonKey)
+    }
+    return supabase
   }
-  supabase = window.__supabaseClient
-} else {
-  // Server environment
-  supabase = createOptimizedClient(supabaseUrl, supabaseAnonKey)
 }
 
-// Administrative client (only use in backend: API Routes, Edge Functions)
-const serviceRoleKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_SUPABASE_SERVICE_ROLE_KEY
+const getSupabaseAdminClient = () => {
+  const serviceRoleKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_SUPABASE_SERVICE_ROLE_KEY
+  
+  if (!serviceRoleKey) {
+    console.warn('[SUPABASE] Service role key no encontrada');
+    return null
+  }
 
-if (serviceRoleKey) {
   if (typeof window !== 'undefined') {
     // Browser environment - usar singleton pattern
     if (!window.__supabaseAdminClient) {
+      console.log('[SUPABASE] Creando nueva instancia del cliente admin');
       window.__supabaseAdminClient = createOptimizedClient(supabaseUrl, serviceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+          storageKey: 'supabase-admin-token', // Clave única para admin
+        },
+      })
+    }
+    return window.__supabaseAdminClient
+  } else {
+    // Server environment
+    if (!supabaseAdmin) {
+      console.log('[SUPABASE] Creando nueva instancia del cliente admin (servidor)');
+      supabaseAdmin = createOptimizedClient(supabaseUrl, serviceRoleKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false,
         },
       })
     }
-    supabaseAdmin = window.__supabaseAdminClient
-  } else {
-    // Server environment
-    supabaseAdmin = createOptimizedClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    })
+    return supabaseAdmin
   }
 }
+
+// Inicializar clientes
+supabase = getSupabaseClient()
+supabaseAdmin = getSupabaseAdminClient()
 
 export { supabase, supabaseAdmin }

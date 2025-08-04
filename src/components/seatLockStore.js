@@ -169,6 +169,13 @@ export const useSeatLockStore = create((set, get) => ({
       return false;
     }
 
+    // Validar que funcionId sea un número válido
+    const funcionIdNum = parseInt(funcionId);
+    if (isNaN(funcionIdNum) || funcionIdNum <= 0) {
+      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionId);
+      return false;
+    }
+
     if (!isValidUuid(sessionId)) {
       console.warn('[SEAT_LOCK] session_id inválido', sessionId);
       return false;
@@ -182,11 +189,18 @@ export const useSeatLockStore = create((set, get) => ({
     const lockedAt = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
+    console.log('[SEAT_LOCK] Intentando bloquear asiento:', {
+      seat_id: seatId,
+      funcion_id: funcionIdNum,
+      session_id: sessionId,
+      status
+    });
+
     const { error } = await supabase
       .from('seat_locks')
       .upsert({
         seat_id: seatId,
-        funcion_id: parseInt(funcionId),
+        funcion_id: funcionIdNum,
         session_id: sessionId,
         locked_at: lockedAt,
         expires_at: expiresAt,
@@ -204,7 +218,7 @@ export const useSeatLockStore = create((set, get) => ({
         ...state.lockedSeats.filter((s) => s.seat_id !== seatId),
         {
           seat_id: seatId,
-          funcion_id: parseInt(funcionId),
+          funcion_id: funcionIdNum,
           session_id: sessionId,
           locked_at: lockedAt,
           expires_at: expiresAt,
@@ -226,6 +240,13 @@ export const useSeatLockStore = create((set, get) => ({
       return false;
     }
 
+    // Validar que funcionId sea un número válido
+    const funcionIdNum = parseInt(funcionId);
+    if (isNaN(funcionIdNum) || funcionIdNum <= 0) {
+      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionId);
+      return false;
+    }
+
     if (!isValidUuid(sessionId)) {
       console.warn('[SEAT_LOCK] session_id inválido', sessionId);
       return false;
@@ -244,11 +265,17 @@ export const useSeatLockStore = create((set, get) => ({
       return false;
     }
 
+    console.log('[SEAT_LOCK] Intentando desbloquear asiento:', {
+      seat_id: seatId,
+      funcion_id: funcionIdNum,
+      session_id: sessionId
+    });
+
     const { error } = await supabase
       .from('seat_locks')
       .delete()
       .eq('seat_id', seatId)
-      .eq('funcion_id', parseInt(funcionId))
+      .eq('funcion_id', funcionIdNum)
       .eq('session_id', sessionId);
   
     if (error) {

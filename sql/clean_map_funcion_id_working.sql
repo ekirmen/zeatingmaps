@@ -1,81 +1,73 @@
--- Script para limpiar funcion_id del mapa
--- Compatible con versiones más antiguas de PostgreSQL
+-- Script para limpiar funcion_id del mapa y verificar estructura
+-- Este script ayuda a resolver problemas de datos inconsistentes
 
--- 1. Verificar el contenido actual del mapa
+-- 1. Verificar estructura de la tabla seat_locks
 SELECT 
-    id,
-    sala_id,
-    contenido
-FROM mapas 
-WHERE sala_id = 7;
+    column_name, 
+    data_type, 
+    is_nullable,
+    column_default
+FROM information_schema.columns 
+WHERE table_name = 'seat_locks' 
+ORDER BY ordinal_position;
 
--- 2. Crear una función temporal para limpiar funcion_id
-CREATE OR REPLACE FUNCTION clean_funcion_id_from_map(jsonb_data jsonb)
-RETURNS jsonb AS $$
-DECLARE
-    result jsonb := '[]'::jsonb;
-    element jsonb;
-    cleaned_element jsonb;
-    cleaned_sillas jsonb;
-    silla jsonb;
-BEGIN
-    -- Iterar sobre cada elemento del array
-    FOR element IN SELECT * FROM jsonb_array_elements(jsonb_data)
-    LOOP
-        cleaned_element := element;
-        
-        -- Si es una mesa, limpiar funcion_id de las sillas
-        IF element->>'type' = 'mesa' AND element ? 'sillas' THEN
-            cleaned_sillas := '[]'::jsonb;
-            
-            -- Iterar sobre cada silla
-            FOR silla IN SELECT * FROM jsonb_array_elements(element->'sillas')
-            LOOP
-                -- Eliminar funcion_id si existe
-                cleaned_sillas := cleaned_sillas || (silla - 'funcion_id');
-            END LOOP;
-            
-            cleaned_element := jsonb_set(cleaned_element, '{sillas}', cleaned_sillas);
-        END IF;
-        
-        -- Eliminar funcion_id del elemento principal si existe
-        cleaned_element := cleaned_element - 'funcion_id';
-        
-        result := result || cleaned_element;
-    END LOOP;
-    
-    RETURN result;
-END;
-$$ LANGUAGE plpgsql;
-
--- 3. Actualizar el mapa usando la función
-UPDATE mapas 
-SET contenido = clean_funcion_id_from_map(contenido)
-WHERE sala_id = 7;
-
--- 4. Verificar el resultado
+-- 2. Verificar datos existentes en seat_locks
 SELECT 
-    id,
-    sala_id,
-    contenido
-FROM mapas 
-WHERE sala_id = 7;
+    COUNT(*) as total_locks,
+    COUNT(DISTINCT seat_id) as unique_seats,
+    COUNT(DISTINCT funcion_id) as unique_functions,
+    COUNT(DISTINCT session_id) as unique_sessions
+FROM seat_locks;
 
--- 5. Verificar que no hay funcion_id en el contenido
+-- 3. Verificar tipos de datos en funcion_id
 SELECT 
-    'Verificando funcion_id en sillas' as check_type,
+    funcion_id,
+    pg_typeof(funcion_id) as data_type,
     COUNT(*) as count
-FROM mapas m,
-     jsonb_array_elements(m.contenido) AS element,
-     jsonb_array_elements(element->'sillas') AS silla
-WHERE m.sala_id = 7 AND silla ? 'funcion_id'
+FROM seat_locks 
+GROUP BY funcion_id, pg_typeof(funcion_id)
+LIMIT 10;
+
+-- 4. Limpiar bloqueos expirados
+DELETE FROM seat_locks 
+WHERE expires_at < NOW();
+
+-- 5. Verificar restricciones únicas
+SELECT 
+    constraint_name,
+    constraint_type
+FROM information_schema.table_constraints 
+WHERE table_name = 'seat_locks';
+
+-- 6. Verificar índices
+SELECT 
+    indexname,
+    indexdef
+FROM pg_indexes 
+WHERE tablename = 'seat_locks';
+
+-- 7. Verificar políticas RLS
+SELECT 
+    policyname,
+    permissive,
+    roles,
+    cmd,
+    qual,
+    with_check
+FROM pg_policies 
+WHERE tablename = 'seat_locks';
+
+-- 8. Mostrar estadísticas finales
+SELECT 
+    'seat_locks' as table_name,
+    COUNT(*) as total_rows,
+    COUNT(DISTINCT seat_id) as unique_seats,
+    COUNT(DISTINCT funcion_id) as unique_functions
+FROM seat_locks
 UNION ALL
 SELECT 
-    'Verificando funcion_id en elementos principales' as check_type,
-    COUNT(*) as count
-FROM mapas m,
-     jsonb_array_elements(m.contenido) AS element
-WHERE m.sala_id = 7 AND element ? 'funcion_id';
-
--- 6. Limpiar la función después de usarla
-DROP FUNCTION IF EXISTS clean_funcion_id_from_map(jsonb); 
+    'seats' as table_name,
+    COUNT(*) as total_rows,
+    COUNT(DISTINCT _id) as unique_seats,
+    COUNT(DISTINCT funcion_id) as unique_functions
+FROM seats; 

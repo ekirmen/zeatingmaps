@@ -49,7 +49,7 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
 
       const nuevos = prev.filter(el => el.type !== 'silla' || el.parentId !== mesaId);
       const TAMAÑO_SILLA = 20;
-      const MARGEN_SILLA = 10;
+      const MARGEN_SILLA = 15; // Aumentado el margen para mejor separación
       const nuevasSillas = [];
 
       const mesaWidth = mesa.shape === 'rect' ? Math.max(mesa.width || 120, 30) : null;
@@ -59,13 +59,22 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
       const mesaY = mesa.posicion?.y || 0;
 
       if (mesa.shape === 'circle') {
+        // Mejorar el cálculo para mesas circulares
         const radioSillas = mesaRadius + MARGEN_SILLA + TAMAÑO_SILLA / 2;
+        
+        // Distribuir las sillas de manera más uniforme
         for (let i = 0; i < cantidad; i++) {
-          const angulo = (i * 2 * Math.PI) / cantidad;
+          // Ajustar el ángulo para que las sillas se distribuyan mejor
+          const angulo = (i * 2 * Math.PI) / cantidad - Math.PI / 2; // Empezar desde arriba
+          
+          // Calcular posición con mejor precisión
           const x = mesaX + radioSillas * Math.cos(angulo) - TAMAÑO_SILLA / 2;
           const y = mesaY + radioSillas * Math.sin(angulo) - TAMAÑO_SILLA / 2;
+          
           nuevasSillas.push(crearSilla({
-            mesaId, x, y,
+            mesaId, 
+            x: Math.round(x * 100) / 100, 
+            y: Math.round(y * 100) / 100,
             numero: i + 1,
             sillaShape,
             zonaId: selectedZone?.id || mesa.zonaId
