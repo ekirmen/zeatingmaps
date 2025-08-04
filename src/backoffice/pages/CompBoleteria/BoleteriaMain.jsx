@@ -6,6 +6,7 @@ import CartWithTimer from '../../components/CartWithTimer';
 import SeatAnimation from '../../components/SeatAnimation';
 import ZonesAndPrices from './ZonesAndPrices';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
+import DynamicPriceSelector from './components/DynamicPriceSelector';
 import PrintTicketButton from '../../components/PrintTicketButton';
 import ProductosWidget from '../../../store/components/ProductosWidget';
 import { useBoleteria } from '../../hooks/useBoleteria';
@@ -75,6 +76,7 @@ const BoleteriaMain = () => {
   const [selectedFunctionForSearch, setSelectedFunctionForSearch] = useState(null);
   const [plantillasPrecios, setPlantillasPrecios] = useState([]);
   const [selectedPlantillaPrecio, setSelectedPlantillaPrecio] = useState(null);
+  const [selectedPriceOption, setSelectedPriceOption] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
@@ -437,6 +439,11 @@ const BoleteriaMain = () => {
     message.success(`Evento seleccionado: ${selectedEventForSearch?.nombre} - ${func?.sala?.nombre || 'Sala sin nombre'}`);
   };
 
+  const handlePriceOptionSelect = (priceOption) => {
+    setSelectedPriceOption(priceOption);
+    message.success(`Precio seleccionado: ${priceOption.nombre} - $${priceOption.precio.toFixed(2)}`);
+  };
+
   const tabItems = [
     {
       key: 'zonas',
@@ -641,41 +648,13 @@ const BoleteriaMain = () => {
         <div className="flex-1 flex">
           {/* Contenido central */}
           <div className="flex-1 p-6">
-            {/* Selección de precios */}
-            <div className="mb-6">
-              <div className="flex space-x-4">
-                <button
-                  className={`px-6 py-3 rounded-lg border-2 font-medium ${
-                    selectedPriceType === 'regular' 
-                      ? 'border-orange-500 bg-orange-50' 
-                      : 'border-gray-300'
-                  }`}
-                  onClick={() => setSelectedPriceType('regular')}
-                >
-                  <div className="text-left">
-                    <div className="font-semibold">PRECIO REGULAR</div>
-                    <div className="bg-purple-500 text-white px-3 py-1 rounded text-sm mt-1">
-                      $17.00 - $77.00
-                    </div>
-                  </div>
-                </button>
-                <button
-                  className={`px-6 py-3 rounded-lg border-2 font-medium ${
-                    selectedPriceType === 'vip' 
-                      ? 'border-orange-500 bg-orange-50' 
-                      : 'border-gray-300'
-                  }`}
-                  onClick={() => setSelectedPriceType('vip')}
-                >
-                  <div className="text-left">
-                    <div className="font-semibold">VIP REGULAR</div>
-                    <div className="bg-purple-500 text-white px-3 py-1 rounded text-sm mt-1">
-                      $77.00
-                    </div>
-                  </div>
-                </button>
-              </div>
-            </div>
+            {/* Selección de precios dinámica */}
+            <DynamicPriceSelector
+              selectedFuncion={selectedFuncion}
+              selectedPlantilla={selectedPlantilla}
+              onPriceSelect={handlePriceOptionSelect}
+              selectedPriceId={selectedPriceOption?.id}
+            />
 
             {/* Pestañas */}
             <Tabs
@@ -690,6 +669,20 @@ const BoleteriaMain = () => {
           <div className="w-80 bg-white shadow-lg">
             <div className="p-6">
               <h3 className="text-lg font-semibold mb-4">Resumen de Compra</h3>
+              
+              {selectedPriceOption && (
+                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">Precio Seleccionado</h4>
+                  <div className="text-sm space-y-1">
+                    <div><span className="font-medium">Entrada:</span> {selectedPriceOption.entrada.nombre}</div>
+                    <div><span className="font-medium">Zona:</span> {selectedPriceOption.zona.nombre}</div>
+                    <div><span className="font-medium">Precio:</span> ${selectedPriceOption.precio.toFixed(2)}</div>
+                    {selectedPriceOption.comision > 0 && (
+                      <div><span className="font-medium">Comisión:</span> ${selectedPriceOption.comision.toFixed(2)}</div>
+                    )}
+                  </div>
+                </div>
+              )}
               
               <div className="space-y-4">
                 <div className="flex justify-between">
@@ -715,8 +708,9 @@ const BoleteriaMain = () => {
                   block
                   className="bg-purple-600 hover:bg-purple-700"
                   onClick={handlePaymentClick}
+                  disabled={!selectedPriceOption}
                 >
-                  Pagos/Detalles
+                  {selectedPriceOption ? 'Pagos/Detalles' : 'Selecciona un precio'}
                 </Button>
               </div>
             </div>
@@ -769,44 +763,61 @@ const BoleteriaMain = () => {
         </div>
       </Modal>
 
-      {/* Drawer de configuración */}
-      <Drawer
-        title="Configuración"
-        placement="right"
-        onClose={() => setShowConfig(false)}
-        open={showConfig}
-        width={400}
-      >
-        <div className="space-y-4">
-          <Card title="Plantillas de Precios">
-            <Select
-              placeholder="Selecciona una plantilla"
-              style={{ width: '100%' }}
-              onChange={(value) => setSelectedPlantillaPrecio(value)}
-            >
-              {plantillasPrecios.map(plantilla => (
-                <Option key={plantilla.id} value={plantilla.id}>
-                  {plantilla.nombre}
-                </Option>
-              ))}
-            </Select>
-          </Card>
-          
-          <Card title="Configuración General">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span>Modo bloqueo</span>
-                <input
-                  type="checkbox"
-                  checked={blockMode}
-                  onChange={(e) => setBlockMode(e.target.checked)}
-                  className="rounded"
-                />
-              </div>
-            </div>
-          </Card>
-        </div>
-      </Drawer>
+             {/* Drawer de configuración */}
+       <Drawer
+         title="Configuración"
+         placement="right"
+         onClose={() => setShowConfig(false)}
+         open={showConfig}
+         width={400}
+       >
+         <div className="space-y-4">
+           <Card title="Plantillas de Precios">
+             <div className="space-y-3">
+               <Select
+                 placeholder="Selecciona una plantilla"
+                 style={{ width: '100%' }}
+                 onChange={(value) => {
+                   const plantilla = plantillasPrecios.find(p => p.id === value);
+                   setSelectedPlantilla(plantilla);
+                   setSelectedPriceOption(null);
+                   message.success(`Plantilla seleccionada: ${plantilla?.nombre}`);
+                 }}
+                 value={selectedPlantilla?.id}
+               >
+                 {plantillasPrecios.map(plantilla => (
+                   <Option key={plantilla.id} value={plantilla.id}>
+                     {plantilla.nombre}
+                   </Option>
+                 ))}
+               </Select>
+               
+               {selectedPlantilla && (
+                 <div className="p-3 bg-gray-50 rounded-lg">
+                   <h4 className="font-medium text-gray-900 mb-2">Plantilla: {selectedPlantilla.nombre}</h4>
+                   <p className="text-sm text-gray-600">Tipo: {selectedPlantilla.tipo}</p>
+                   <p className="text-sm text-gray-600">Color: {selectedPlantilla.color}</p>
+                   <p className="text-sm text-gray-600">Estado: {selectedPlantilla.activo ? 'Activa' : 'Inactiva'}</p>
+                 </div>
+               )}
+             </div>
+           </Card>
+           
+           <Card title="Configuración General">
+             <div className="space-y-2">
+               <div className="flex items-center justify-between">
+                 <span>Modo bloqueo</span>
+                 <input
+                   type="checkbox"
+                   checked={blockMode}
+                   onChange={(e) => setBlockMode(e.target.checked)}
+                   className="rounded"
+                 />
+               </div>
+             </div>
+           </Card>
+         </div>
+       </Drawer>
 
       {/* Drawer de productos */}
       <Drawer
