@@ -147,7 +147,24 @@ export const fetchMapa = async (salaId) => {
       return null;
     }
 
-    return data?.contenido || null;
+    // Devolver la estructura que espera SeatingMapUnified
+    // El componente espera: mapa.contenido.zonas o mapa.zonas
+    const contenido = data?.contenido || null;
+    if (!contenido) return null;
+
+    // Si el contenido es un array, convertirlo a la estructura esperada
+    if (Array.isArray(contenido)) {
+      return {
+        contenido: {
+          zonas: contenido
+        }
+      };
+    }
+
+    // Si ya es un objeto con zonas, devolverlo tal como está
+    return {
+      contenido: contenido
+    };
   } catch (error) {
     console.error('Unexpected error in fetchMapa:', error);
     throw error;

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Pago - Tasa BCV</title>
+  
+    <style>
+        /* Estilos optimizados para iframe */
+        html, body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+        }
+        .form-container {
+            padding: 20px;
+            box-sizing: border-box;
+            width: 100%;
+        }
+        h2, h3 {
+            text-align: center;
+            margin-top: 0;
+            color: #333;
+        }
+        .bank-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            font-size: 16px;
+            background-color: white;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            flex: 1;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+        }
+        button {
+            padding: 12px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 48%;
+        }
+        .btn-enviar {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-borrar {
+            background-color: #6c757d;
+            color: white;
+        }
+        #tasa-bcv-container {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 2px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #tasa-USD {
+            font-weight: bold;
+            color: #d63384;
+            font-size: 18px;
+            margin: 5px 0;
+        }
+        .loading {
+            color: #6c757d;
+            font-style: italic;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .tasa-info {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: underline;
+            margin-top: 5px;
+        }
+        .refresh-btn:hover {
+            color: #0056b3;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="form-container">
+        <h3>Datos para el pago con Pago Móvil</h3>
+        <div class="bank-info">
+            <div>BANESCO</div>
+            <div>RIF: J-50224897-8</div>
+            <div>Teléfono: 0414-407-11-26</div>
+        </div>
+        
+        <div id="tasa-bcv-container">
+            <div>Tasa de cambio oficial BCV (USD):</div>
+            <div id="tasa-USD" class="loading">Cargando tasa BCV...</div>
+            <div class="tasa-info">Actualización diaria según Banco Central de Venezuela</div>
+            <button type="button" class="refresh-btn" onclick="cargarTasaBCV()">Actualizar tasa</button>
+        </div>
+
+        <form action="guardar_pago.php" method="POST">
+            <input type="hidden" id="tasa_cambio" name="tasa_cambio">
+            
+            <label for="referencia">NÚMERO DE REFERENCIA *</label>
+            <input type="text" id="referencia" name="numero_referencia" required>
+
+            <label for="banco">BANCO RECEPTOR *</label>
+            <select id="banco" name="banco_receptor" required>
+                <option value="">-- Seleccione un banco --</option>
+                <option value="Banco de Venezuela">Banco de Venezuela</option>
+                <option value="Banesco">Banesco</option>
+                <option value="Mercantil Banco">Mercantil Banco</option>
+                <option value="BBVA Provincial">BBVA Provincial</option>
+                <option value="Banco Nacional de Credito">Banco Nacional de Credito</option>
+                <option value="Banco Exterior">Banco Exterior</option>
+                <option value="Banco Caroni">Banco Caroni</option>
+                <option value="Bancaribe">Bancaribe</option>
+                <option value="Banco Fondo Comun">Banco Fondo Comun</option>
+                <option value="Banco del Tesoro">Banco del Tesoro</option>
+                <option value="Banco Agricola de Venezuela">Banco Agricola de Venezuela</option>
+                <option value="Banplus">Banplus</option>
+                <option value="Banco Activo">Banco Activo</option>
+                <option value="Bancamiga">Bancamiga</option>
+                <option value="Mi Banco">Mi Banco</option>
+                <option value="Banco Occidental de Descuento">Banco Occidental de Descuento</option>
+                <option value="Banco Plaza">Banco Plaza</option>
+            </select>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="monto">MONTO PAGADO EN Bs. *</label>
+                    <input type="number" id="monto" name="monto_pagado" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label for="fecha">FECHA DEL PAGO *</label>
+                    <input type="date" id="fecha" name="fecha_pago" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="localizador">LOCALIZADOR DE RESERVA *</label>
+                    <input type="text" id="localizador" name="localizador_reserva" placeholder="ABC123" required>
+                </div>
+                <div class="form-group">
+                    <label for="telefono">TELÉFONO *</label>
+                    <input type="tel" id="telefono" name="telefono" required>
+                </div>
+            </div>
+            
+            <label for="correo">CORREO ELECTRÓNICO *</label>
+            <input type="email" id="correo" name="correo" required>
+            
+            <div class="button-group">
+                <button type="reset" class="btn-borrar">Borrar</button>
+                <button type="submit" class="btn-enviar">Enviar Pago</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        let tasaBCVUSD = 0;
+
+        // Función para obtener datos del cache
+        const getCache = (key) => {
+            const cached = localStorage.getItem(key);
+            if (!cached) return null;
+            try {
+                const data = JSON.parse(cached);
+                // Cache válido por 1 hora
+                if (Date.now() - data.timestamp < 3600000) {
+                    return data.value;
+                }
+                localStorage.removeItem(key);
+            } catch {
+                localStorage.removeItem(key);
+            }
+            return null;
+        };
+
+        // Función para guardar datos en cache
+        const setCache = (key, value) => {
+            localStorage.setItem(key, JSON.stringify({ 
+                value, 
+                timestamp: Date.now() 
+            }));
+        };
+
+        // Función para obtener las tasas BCV
+        const obtenerTasasBCV = async () => {
+            // Intentar obtener del cache primero
+            const cache = getCache('tasasBCV');
+            if (cache) {
+                return cache;
+            }
+
+            try {
+                const response = await fetch('https://pydolarve.org/api/v1/dollar?page=bcv');
+                const data = await response.json();
+                
+                const usd = data.monitors?.usd?.price ?? 0;
+                
+                const rates = { usd };
+                
+                // Guardar en cache solo si la tasa es válida
+                if (usd > 0) {
+                    setCache('tasasBCV', rates);
+                }
+                
+                return rates;
+            } catch (error) {
+                console.error('Error obteniendo tasas BCV:', error);
+                return { usd: 0 };
+            }
+        };
+
+        // Función para actualizar la visualización de la tasa
+        const actualizarTasaDisplay = async () => {
+            const tasaElement = document.getElementById('tasa-USD');
+            
+            if (!tasaElement) return;
+            
+            try {
+                tasaElement.innerHTML = 'Cargando tasa BCV...';
+                tasaElement.className = 'loading';
+                
+                const rates = await obtenerTasasBCV();
+                tasaBCVUSD = rates.usd;
+                
+                if (tasaBCVUSD > 0) {
+                    tasaElement.innerHTML = `$${tasaBCVUSD.toLocaleString('es-VE', { 
+                        minimumFractionDigits: 2, 
+                        maximumFractionDigits: 2 
+                    })} USD`;
+                    tasaElement.className = '';
+                    
+                    // Actualizar el campo oculto
+                    document.getElementById('tasa_cambio').value = tasaBCVUSD;
+                } else {
+                    tasaElement.innerHTML = 'Error al cargar tasa BCV';
+                    tasaElement.className = 'error';
+                }
+            } catch (error) {
+                tasaElement.innerHTML = 'Error al cargar tasa BCV';
+                tasaElement.className = 'error';
+            }
+        };
+
+        // Función para recargar la tasa (botón de actualizar)
+        const cargarTasaBCV = async () => {
+            // Limpiar cache para forzar nueva consulta
+            localStorage.removeItem('tasasBCV');
+            await actualizarTasaDisplay();
+        };
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cargar tasa BCV al inicio
+            actualizarTasaDisplay();
+            
+            // Actualizar cada hora
+            setInterval(actualizarTasaDisplay, 3600000);
+        });
+    </script>
+</body>
+</html> 
