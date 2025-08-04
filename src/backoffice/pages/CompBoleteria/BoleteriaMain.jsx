@@ -24,6 +24,7 @@ const BoleteriaMain = () => {
     selectedEvent,
     selectedPlantilla,
     mapa,
+    zonas,
     carrito,
     setCarrito,
     handleEventSelect,
@@ -401,6 +402,8 @@ const BoleteriaMain = () => {
                  selectedSeats={selectedSeats}
                  blockedSeats={blockedSeats}
                  blockMode={blockMode}
+                 zonas={zonas}
+                 selectedPlantilla={selectedPlantilla}
                />
              </div>
            </div>
