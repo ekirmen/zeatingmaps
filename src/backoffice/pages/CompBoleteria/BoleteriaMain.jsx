@@ -469,7 +469,7 @@ const BoleteriaMain = () => {
             <Button size="small" icon={<ZoomOutOutlined />} onClick={handleZoomOut} />
           </div>
           
-                                {/* Mapa de asientos */}
+                                           {/* Mapa de asientos */}
            <div className="bg-white p-6 rounded-lg shadow-sm overflow-hidden">
              <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}>
                <SimpleSeatingMap
@@ -550,7 +550,7 @@ const BoleteriaMain = () => {
     <div className="h-screen flex bg-gray-100">
       {/* Sidebar izquierda */}
       <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
-                 <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleSearchClick}>
+                          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleSearchClick}>
            <SearchOutlined className="text-xl mb-1" />
            <div>Eventos</div>
          </div>
@@ -558,18 +558,18 @@ const BoleteriaMain = () => {
            <UserOutlined className="text-xl mb-1" />
            <div>Usuarios</div>
          </div>
-        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleConfigClick}>
-          <SettingOutlined className="text-xl mb-1" />
-          <div>Config</div>
-        </div>
-        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleProductsClick}>
-          <GiftOutlined className="text-xl mb-1" />
-          <div>Productos</div>
-        </div>
-        <div className="bg-green-500 text-white text-xs text-center px-2 py-1 rounded cursor-pointer hover:bg-green-600" onClick={handleBoxClick}>
-          <ShoppingCartOutlined className="text-xl mb-1" />
-          <div>BOX</div>
-        </div>
+         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleConfigClick}>
+           <SettingOutlined className="text-xl mb-1" />
+           <div>Config</div>
+         </div>
+         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleProductsClick}>
+           <GiftOutlined className="text-xl mb-1" />
+           <div>Productos</div>
+         </div>
+         <div className="bg-green-500 text-white text-xs text-center px-2 py-1 rounded cursor-pointer hover:bg-green-600" onClick={handleBoxClick}>
+           <ShoppingCartOutlined className="text-xl mb-1" />
+           <div>BOX</div>
+         </div>
       </div>
 
       {/* Contenido principal */}
@@ -583,29 +583,29 @@ const BoleteriaMain = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-                             <div className="flex items-center space-x-3">
-                 {selectedEvent && selectedEvent.imagen_url ? (
-                   <img 
-                     src={selectedEvent.imagen_url} 
-                     alt={selectedEvent.nombre}
-                     className="w-8 h-8 rounded-lg object-cover"
-                     onError={(e) => {
-                       e.target.src = '/assets/logo.png';
-                     }}
-                   />
-                 ) : (
-                   <Avatar size="small" src="/assets/logo.png" alt="Event" />
-                 )}
-                 <div className="text-sm">
-                   <div className="font-medium">
-                     {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
-                   </div>
-                   <div className="text-gray-600">
-                     <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
-                     <span className="ml-4">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
-                   </div>
+                                          <div className="flex items-center space-x-3">
+               {selectedEvent && selectedEvent.imagen_url ? (
+                 <img 
+                   src={selectedEvent.imagen_url} 
+                   alt={selectedEvent.nombre}
+                   className="w-8 h-8 rounded-lg object-cover"
+                   onError={(e) => {
+                     e.target.src = '/assets/logo.png';
+                   }}
+                 />
+               ) : (
+                 <Avatar size="small" src="/assets/logo.png" alt="Event" />
+               )}
+               <div className="text-sm">
+                 <div className="font-medium">
+                   {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
+                 </div>
+                 <div className="text-gray-600">
+                   <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
+                   <span className="ml-4">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
                  </div>
                </div>
+             </div>
             </div>
             <div className="flex items-center space-x-2">
               <button 
@@ -735,7 +735,7 @@ const BoleteriaMain = () => {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Evento</label>
-                         <Select
+                                      <Select
                placeholder="Selecciona un evento"
                style={{ width: '100%' }}
                onChange={handleEventSelectForSearch}
@@ -752,18 +752,18 @@ const BoleteriaMain = () => {
           {selectedEventForSearch && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Función</label>
-                             <Select
+                                            <Select
                  placeholder="Selecciona una función"
                  style={{ width: '100%' }}
                  onChange={handleFunctionSelectForSearch}
                  value={selectedFunctionForSearch?.id}
                >
-                                 {availableFunctions.map(func => (
+                 {availableFunctions.map(func => (
                    <Option key={func.id} value={func.id}>
                      {func.sala?.nombre || 'Sala sin nombre'} - {new Date(func.fecha_celebracion).toLocaleString('es-ES')}
                    </Option>
                  ))}
-              </Select>
+               </Select>
             </div>
           )}
         </div>

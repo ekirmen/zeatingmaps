@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import SidebarMenu from './SidebarMenu';
 import AdminNotificationCenter from './AdminNotificationCenter';
@@ -12,11 +12,9 @@ const BackofficeLayout = () => {
   const isBoleteriaRoute = location.pathname.includes('/dashboard/boleteria');
   const isCrearMapaRoute = location.pathname.includes('/dashboard/crear-mapa');
   
-  // El sidebar estará cerrado por defecto en boletería y crear-mapa
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   
-  // Si estamos en la ruta de boletería o crear-mapa, mostrar solo el contenido sin el panel admin
   if (isBoleteriaRoute || isCrearMapaRoute) {
     return (
       <RecintoProvider>
@@ -24,16 +22,13 @@ const BackofficeLayout = () => {
           <IvaProvider>
             <TagProvider>
               <div className="flex h-screen bg-gray-100">
-                {/* Panel Admin (oculto por defecto, se puede mostrar) */}
                 {showAdminPanel && (
                   <div className="w-64 bg-white shadow-lg">
                     <SidebarMenu collapsed={false} />
                   </div>
                 )}
                 
-                {/* Main Content */}
                 <div className="flex-1 flex flex-col overflow-hidden">
-                  {/* Header */}
                   <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
@@ -49,10 +44,8 @@ const BackofficeLayout = () => {
                       </div>
                       
                       <div className="flex items-center space-x-4">
-                        {/* Notificaciones */}
                         <AdminNotificationCenter />
                         
-                        {/* Usuario */}
                         <div className="flex items-center space-x-3">
                           <div className="text-sm text-gray-500">
                             Bienvenido, Administrador
@@ -65,7 +58,6 @@ const BackofficeLayout = () => {
                     </div>
                   </header>
 
-                  {/* Page Content */}
                   <main className="flex-1 overflow-auto">
                     <Outlet />
                   </main>
@@ -84,12 +76,9 @@ const BackofficeLayout = () => {
         <IvaProvider>
           <TagProvider>
             <div className="flex h-screen bg-gray-100">
-              {/* Sidebar */}
               <SidebarMenu collapsed={sidebarCollapsed} />
               
-              {/* Main Content */}
               <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Header */}
                 <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
@@ -105,10 +94,8 @@ const BackofficeLayout = () => {
                     </div>
                     
                     <div className="flex items-center space-x-4">
-                      {/* Notificaciones */}
                       <AdminNotificationCenter />
                       
-                      {/* Usuario */}
                       <div className="flex items-center space-x-3">
                         <div className="text-sm text-gray-500">
                           Bienvenido, Administrador
@@ -120,7 +107,6 @@ const BackofficeLayout = () => {
                     </div>
                   </header>
 
-                  {/* Page Content */}
                   <main className="flex-1 overflow-auto">
                     <Outlet />
                   </main>
