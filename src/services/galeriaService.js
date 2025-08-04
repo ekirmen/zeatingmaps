@@ -12,9 +12,11 @@ export const fetchImagenes = async (token) => {
   return res.json();
 };
 
-export const uploadImagen = async (file, token) => {
+export const uploadImagen = async (file, token, categoria = 'productos') => {
   const formData = new FormData();
   formData.append('image', file);
+  formData.append('categoria', categoria);
+  
   const authHeader = token && !token.startsWith('Bearer ')
     ? `Bearer ${token}`
     : token;

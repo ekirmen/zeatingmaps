@@ -130,18 +130,11 @@ const SidebarMenu = ({ collapsed }) => {
         { title: 'Entradas', path: '/dashboard/entradas', icon: faTicketAlt },
         { title: 'Productos', path: '/dashboard/productos', icon: faBox },
         { title: 'Plantillas de Productos', path: '/dashboard/plantillas-productos', icon: faBox },
-        { title: 'Donaciones', path: '/dashboard/donaciones', icon: faHandHoldingHeart },
         { title: 'Comisiones y tasas', path: '/dashboard/comisiones', icon: faCreditCard },
-        { title: 'Seguros', path: '/dashboard/seguros', icon: faShieldAlt },
         { title: 'Envío a domicilio', path: '/dashboard/envio', icon: faTruck },
         { title: 'Eventos', path: '/dashboard/eventos', icon: faTicketAlt },
         { title: 'Plantillas de precios', path: '/dashboard/plantillas-precios', icon: faPercent },
         { title: 'Funciones', path: '/dashboard/funciones', icon: faCalendar },
-        { title: 'Cupos', path: '/dashboard/cupos', icon: faChartBar },
-        { title: 'Plantillas de cupos', path: '/dashboard/plantillas-cupos', icon: faFileAlt },
-        { title: 'Filas virtuales', path: '/dashboard/filas-virtuales', icon: faUsers },
-        { title: 'Paquetes', path: '/dashboard/paquetes', icon: faBox },
-        { title: 'Multipase', path: '/dashboard/multipase', icon: faTicketAlt },
         { title: 'Abonos', path: '/dashboard/abonos', icon: faCalendarAlt }
       ]
     },
@@ -152,33 +145,9 @@ const SidebarMenu = ({ collapsed }) => {
       submenuId: 'crm',
       items: [
         { title: 'Clientes', path: '/dashboard/clientes', icon: faUsers },
-        { title: 'Fan ID', path: '/dashboard/fanid', icon: faIdCard },
         { title: 'Encuestas', path: '/dashboard/encuestas', icon: faPoll },
         { title: 'Campañas de mailing', path: '/dashboard/email-campaigns', icon: faEnvelope },
         { title: 'Etiquetas', path: '/dashboard/tags', icon: faTag }
-      ]
-    },
-    {
-      title: 'Acreditaciones',
-      icon: faIdCard,
-      type: 'submenu',
-      submenuId: 'accreditations',
-      items: [
-        { title: 'Eventos de acreditación', path: '/dashboard/accreditation-management', icon: faClipboardCheck },
-        { title: 'Acreditaciones', path: '/dashboard/accreditations', icon: faCheckCircle }
-      ]
-    },
-    {
-      title: 'Promociones',
-      icon: faGift,
-      type: 'submenu',
-      submenuId: 'promos',
-      items: [
-        { title: 'Códigos promocionales', path: '/dashboard/promos', icon: faTicketAlt },
-        { title: 'Tarjetas regalo', path: '/dashboard/gift-cards', icon: faGift },
-        { title: 'Invitaciones', path: '/dashboard/invitations', icon: faEnvelope },
-        { title: 'Programas de fidelización', path: '/dashboard/loyalty-clubs', icon: faCrown },
-        { title: 'Compra compartida', path: '/dashboard/group-promotions', icon: faUsers }
       ]
     },
     {
@@ -193,13 +162,10 @@ const SidebarMenu = ({ collapsed }) => {
       type: 'submenu',
       submenuId: 'personalization',
       items: [
-        { title: 'Sitios web', path: '/dashboard/sites', icon: faGlobe },
         { title: 'Formatos de entrada', path: '/dashboard/formato-entrada', icon: faTicketAlt },
-        { title: 'Banners de publicidad', path: '/dashboard/banner-ads', icon: faImage },
         { title: 'Textos legales', path: '/dashboard/legal-texts', icon: faFileAlt },
         { title: 'Web Studio', path: '/dashboard/webstudio', icon: faPalette },
-        { title: 'Páginas', path: '/dashboard/pages', icon: faFileAlt },
-        { title: 'Repositorio de imágenes', path: '/dashboard/galeria', icon: faImage }
+        { title: 'Páginas', path: '/dashboard/pages', icon: faFileAlt }
       ]
     },
     {

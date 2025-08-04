@@ -26,6 +26,9 @@ import Profile from './pages/profile';
 import EventosPage from './pages/EventosPage';
 import EventosMapPage from './pages/EventosMapPage';
 import ThankYouPage from './pages/ThankYouPage';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import CookiesPolicy from './pages/CookiesPolicy';
+import LegalTerms from './pages/LegalTerms';
 import { useAuth } from '../contexts/AuthContext'; // para perfil
 
 const StoreApp = () => {
@@ -63,6 +66,9 @@ const StoreApp = () => {
               <Route path="/store/search-map" element={<EventSearchMap />} />
               <Route path="/store/faq" element={<FaqPage />} />
               <Route path="/store/perfil" element={<Profile userData={user} onUpdateProfile={updateProfile} />} />
+              <Route path="/store/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/store/cookies-policy" element={<CookiesPolicy />} />
+              <Route path="/store/legal-terms" element={<LegalTerms />} />
               <Route path="/payment-success/:locator?" element={<PaymentSuccess />} />
               <Route path="/thank-you" element={<ThankYouPage />} />
               <Route path="/404" element={<NotFoundPage />} />
