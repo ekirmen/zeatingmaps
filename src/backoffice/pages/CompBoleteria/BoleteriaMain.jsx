@@ -117,7 +117,7 @@ const BoleteriaMain = () => {
       const { data: functionsData, error: functionsError } = await supabase
         .from('funciones')
         .select('*')
-        .eq('evento_id', eventId)
+        .eq('evento', eventId)
         .order('fecha', { ascending: true });
 
       if (functionsError) {

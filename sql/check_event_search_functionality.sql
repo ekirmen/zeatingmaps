@@ -8,15 +8,14 @@ SELECT
     COUNT(CASE WHEN activo = true THEN 1 END) as active_events,
     COUNT(CASE WHEN activo = false THEN 1 END) as inactive_events,
     COUNT(CASE WHEN nombre IS NOT NULL AND nombre != '' THEN 1 END) as events_with_name,
-    COUNT(CASE WHEN fecha_inicio IS NOT NULL THEN 1 END) as events_with_start_date,
-    COUNT(CASE WHEN fecha_fin IS NOT NULL THEN 1 END) as events_with_end_date
+    COUNT(CASE WHEN fecha_evento IS NOT NULL THEN 1 END) as events_with_date
 FROM eventos;
 
 -- 2. Verificar funciones disponibles para búsqueda
 SELECT 
     'funciones' as table_name,
     COUNT(*) as total_functions,
-    COUNT(CASE WHEN evento_id IS NOT NULL THEN 1 END) as functions_with_event,
+    COUNT(CASE WHEN evento IS NOT NULL THEN 1 END) as functions_with_event,
     COUNT(CASE WHEN nombre IS NOT NULL AND nombre != '' THEN 1 END) as functions_with_name,
     COUNT(CASE WHEN fecha IS NOT NULL THEN 1 END) as functions_with_date,
     COUNT(CASE WHEN hora_inicio IS NOT NULL THEN 1 END) as functions_with_time
@@ -30,7 +29,7 @@ SELECT
     MIN(f.fecha) as earliest_function,
     MAX(f.fecha) as latest_function
 FROM eventos e
-LEFT JOIN funciones f ON e.id = f.evento_id
+LEFT JOIN funciones f ON e.id = f.evento
 WHERE e.activo = true
 GROUP BY e.id, e.nombre
 ORDER BY function_count DESC
@@ -39,15 +38,14 @@ LIMIT 10;
 -- 4. Verificar eventos con funciones para búsqueda
 SELECT 
     e.nombre as event_name,
-    e.fecha_inicio,
-    e.fecha_fin,
+    e.fecha_evento,
     f.nombre as function_name,
     f.fecha as function_date,
     f.hora_inicio
 FROM eventos e
-INNER JOIN funciones f ON e.id = f.evento_id
+INNER JOIN funciones f ON e.id = f.evento
 WHERE e.activo = true
-ORDER BY e.fecha_inicio DESC, f.fecha DESC
+ORDER BY e.fecha_evento DESC, f.fecha DESC
 LIMIT 20;
 
 -- 5. Verificar datos de ejemplo para testing
@@ -60,21 +58,31 @@ SELECT
     f.fecha as function_date,
     f.hora_inicio
 FROM eventos e
-INNER JOIN funciones f ON e.id = f.evento_id
+INNER JOIN funciones f ON e.id = f.evento
 WHERE e.activo = true
-ORDER BY e.fecha_inicio DESC
+ORDER BY e.fecha_evento DESC
 LIMIT 5;
 
--- 6. Verificar índices para búsqueda eficiente
+-- 6. Verificar estructura de las tablas
+SELECT 
+    table_name,
+    column_name,
+    data_type,
+    is_nullable
+FROM information_schema.columns 
+WHERE table_name IN ('eventos', 'funciones')
+ORDER BY table_name, ordinal_position;
+
+-- 7. Verificar índices para búsqueda eficiente
 SELECT 
     indexname,
     tablename,
     indexdef
 FROM pg_indexes 
 WHERE tablename IN ('eventos', 'funciones')
-AND indexname LIKE '%nombre%' OR indexname LIKE '%fecha%';
+AND (indexname LIKE '%nombre%' OR indexname LIKE '%fecha%');
 
--- 7. Verificar permisos de lectura
+-- 8. Verificar permisos de lectura
 SELECT 
     table_name,
     privilege_type

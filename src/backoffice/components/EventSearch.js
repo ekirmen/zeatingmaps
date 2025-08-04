@@ -46,8 +46,9 @@ const EventSearch = () => {
       // Buscar eventos
       const { data: eventsData, error: eventsError } = await supabase
         .from('eventos')
-        .select('id, nombre, fecha_inicio, fecha_fin')
+        .select('id, nombre, fecha_evento')
         .ilike('nombre', `%${term}%`)
+        .eq('activo', true)
         .limit(5);
 
       if (eventsError) throw eventsError;
@@ -162,7 +163,7 @@ const EventSearch = () => {
                 >
                   <div className="font-medium text-sm">{event.nombre}</div>
                   <div className="text-xs text-gray-500">
-                    {formatDate(event.fecha_inicio)} - {formatDate(event.fecha_fin)}
+                    {formatDate(event.fecha_evento)}
                   </div>
                 </div>
               ))}
