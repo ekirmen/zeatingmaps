@@ -218,6 +218,8 @@ export const syncSeatsForSala = async (salaId) => {
     }
     
     // Insertar solo los asientos nuevos que no existen
+    // Basándome en los índices encontrados, la tabla tiene estas columnas:
+    // _id, funcion_id, zona, status, bloqueado, user_id, locked_by, lock_expires_at, etc.
     const newSeats = seatDefs
       .filter(s => !existingIds.has(s.id))
       .map(s => ({
@@ -225,16 +227,9 @@ export const syncSeatsForSala = async (salaId) => {
         funcion_id: func.id,
         zona: s.zona,
         status: 'disponible',
-        bloqueado: false,
-        // Incluir datos adicionales del mapa si existen
-        ...(s.cleanData && {
-          fila: s.cleanData.fila,
-          numero: s.cleanData.numero,
-          nombre: s.cleanData.nombre,
-          width: s.cleanData.width,
-          height: s.cleanData.height,
-          posicion: s.cleanData.posicion
-        })
+        bloqueado: false
+        // NO incluir columnas que no existen en la tabla seats
+        // Las columnas adicionales como user_id, locked_by, etc. se manejan por separado
       }));
     
     if (newSeats.length > 0) {

@@ -52,39 +52,56 @@
 - ✅ Mejorada función `syncSeatsForSala` para limpiar `funcion_id` del mapa
 - ✅ Agregada inserción individual como fallback
 - ✅ Creado script de análisis: `scripts/fixMapaSeatsConflict.mjs`
-- ✅ Creado script SQL de limpieza: `sql/clean_map_funcion_id.sql`
+- ✅ Creado script SQL de limpieza: `sql/clean_map_funcion_id_alternative.sql`
+
+### 6. **Error de columnas inexistentes en tabla seats** ⚠️ **NUEVO**
+**Error:** `Could not find the 'height' column of 'seats' in the schema cache`
+
+**Causa:** La función `syncSeatsForSala` intenta insertar columnas que no existen en la tabla `seats`.
+
+**Solución Aplicada:**
+- ✅ Corregida función `syncSeatsForSala` para solo insertar columnas existentes
+- ✅ Removidas columnas inexistentes: `height`, `width`, `posicion`, `fila`, `numero`, `nombre`
+- ✅ Creado script de verificación: `sql/check_seats_table_structure.sql`
 
 ## Pasos para Aplicar las Soluciones
 
-### 1. Limpiar Duplicados en la Base de Datos
+### 1. Verificar Estructura de la Tabla Seats
+
+```sql
+-- Ejecutar en el SQL Editor de Supabase
+-- Copiar y pegar el contenido de sql/check_seats_table_structure.sql
+```
+
+### 2. Limpiar Duplicados en la Base de Datos
 
 ```bash
 # Ejecutar el script de limpieza
 node scripts/cleanDuplicateSeats.mjs
 ```
 
-### 2. Limpiar Conflicto de funcion_id en Mapa
+### 3. Limpiar Conflicto de funcion_id en Mapa
 
 ```bash
 # Ejecutar el script de análisis y limpieza
 node scripts/fixMapaSeatsConflict.mjs
 ```
 
-### 3. Limpiar funcion_id del Mapa (SQL)
+### 4. Limpiar funcion_id del Mapa (SQL)
 
 ```sql
 -- Ejecutar en el SQL Editor de Supabase
--- Copiar y pegar el contenido de sql/clean_map_funcion_id.sql
+-- Copiar y pegar el contenido de sql/clean_map_funcion_id_alternative.sql
 ```
 
-### 4. Verificar Estructura de la Tabla
+### 5. Verificar Estructura de la Tabla
 
 ```sql
 -- Ejecutar en el SQL Editor de Supabase
 -- Copiar y pegar el contenido de sql/fix_seats_table_constraints.sql
 ```
 
-### 5. Reiniciar la Aplicación
+### 6. Reiniciar la Aplicación
 
 ```bash
 # Detener el servidor de desarrollo
@@ -137,6 +154,11 @@ console.log('Supabase client:', supabase);
 - Limpiar automáticamente `funcion_id` al guardar mapas
 - Usar inserción individual como fallback cuando hay conflictos
 
+### 5. Para Evitar Errores de Columnas ⚠️ **NUEVO**
+- Solo insertar columnas que existen en la tabla `seats`
+- Verificar la estructura de la tabla antes de insertar
+- Usar scripts de verificación para validar la estructura
+
 ## Monitoreo
 
 ### Logs a Observar
@@ -145,6 +167,7 @@ console.log('Supabase client:', supabase);
 - ✅ `via.placeholder.com` - Ya solucionado
 - ✅ `No hay sala seleccionada` - Mejorado el manejo
 - ⚠️ `Key (_id)=... already exists` - Nuevo script de limpieza
+- ⚠️ `Could not find the 'height' column` - Corregido en syncSeatsForSala
 
 ### Métricas de Éxito
 - No más errores 409 (Conflict) en la tabla seats
@@ -152,6 +175,7 @@ console.log('Supabase client:', supabase);
 - Carga correcta de imágenes
 - Sincronización exitosa de asientos
 - Mapa limpio sin funcion_id
+- Solo columnas existentes en inserción de seats
 
 ## Contacto
 Si persisten los problemas después de aplicar estas soluciones, revisa:
