@@ -223,9 +223,15 @@ const SimpleSeatingMap = ({
         return;
       }
 
+      // Generar session ID
+      const sessionId = localStorage.getItem('anonSessionId') || crypto.randomUUID();
+      if (!localStorage.getItem('anonSessionId')) {
+        localStorage.setItem('anonSessionId', sessionId);
+      }
+
       // Verificar si está bloqueado por otro usuario
       const isLockedByOther = lockedSeats.some(ls => 
-        ls.seat_id === seat._id && ls.status === 'locked'
+        ls.seat_id === seat._id && ls.status === 'locked' && ls.session_id !== sessionId
       );
       
       if (isLockedByOther) {
@@ -233,10 +239,29 @@ const SimpleSeatingMap = ({
         return;
       }
 
-      // Generar session ID
-      const sessionId = localStorage.getItem('anonSessionId') || crypto.randomUUID();
-      if (!localStorage.getItem('anonSessionId')) {
-        localStorage.setItem('anonSessionId', sessionId);
+      // Verificar si ya está seleccionado por el usuario actual
+      const isAlreadySelected = selectedSeats.some(s => s._id === seat._id);
+      const isLockedByMe = lockedSeats.some(ls => 
+        ls.seat_id === seat._id && ls.session_id === sessionId
+      );
+
+      if (isAlreadySelected || isLockedByMe) {
+        // Desbloquear el asiento
+        const { error: unlockError } = await supabase
+          .from('seat_locks')
+          .delete()
+          .eq('seat_id', seat._id)
+          .eq('funcion_id', selectedFuncion.id)
+          .eq('session_id', sessionId);
+
+        if (unlockError) {
+          console.error('Error al desbloquear asiento:', unlockError);
+          message.error('Error al deseleccionar el asiento');
+          return;
+        }
+
+        message.success('Asiento deseleccionado');
+        return;
       }
 
       // Bloquear asiento en la base de datos

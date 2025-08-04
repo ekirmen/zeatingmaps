@@ -10,12 +10,13 @@ import { TagProvider } from '../contexts/TagContext';
 const BackofficeLayout = () => {
   const location = useLocation();
   const isBoleteriaRoute = location.pathname.includes('/dashboard/boleteria');
+  const isCrearMapaRoute = location.pathname.includes('/dashboard/crear-mapa');
   
-  // El sidebar estará abierto por defecto, pero cerrado solo en boletería
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(isBoleteriaRoute);
+  // El sidebar estará abierto por defecto, pero cerrado en boletería y crear-mapa
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(isBoleteriaRoute || isCrearMapaRoute);
   
-  // Si estamos en la ruta de boletería, mostrar solo el contenido sin el panel admin
-  if (isBoleteriaRoute) {
+  // Si estamos en la ruta de boletería o crear-mapa, mostrar solo el contenido sin el panel admin
+  if (isBoleteriaRoute || isCrearMapaRoute) {
     return (
       <RecintoProvider>
         <RecintoSalaProvider>
