@@ -358,7 +358,7 @@ const BoleteriaMain = () => {
     message.success('Datos actualizados');
   };
 
-       const handleClose = () => {
+         const handleClose = () => {
     message.info('Cerrando aplicación');
   };
 
@@ -469,7 +469,7 @@ const BoleteriaMain = () => {
             <Button size="small" icon={<ZoomOutOutlined />} onClick={handleZoomOut} />
           </div>
           
-                                           {/* Mapa de asientos */}
+                                                      {/* Mapa de asientos */}
            <div className="bg-white p-6 rounded-lg shadow-sm overflow-hidden">
              <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}>
                <SimpleSeatingMap
@@ -550,7 +550,7 @@ const BoleteriaMain = () => {
     <div className="h-screen flex bg-gray-100">
       {/* Sidebar izquierda */}
       <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
-                          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleSearchClick}>
+                                   <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleSearchClick}>
            <SearchOutlined className="text-xl mb-1" />
            <div>Eventos</div>
          </div>
@@ -583,7 +583,7 @@ const BoleteriaMain = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-                                          <div className="flex items-center space-x-3">
+                                                       <div className="flex items-center space-x-3">
                {selectedEvent && selectedEvent.imagen_url ? (
                  <img 
                    src={selectedEvent.imagen_url} 
@@ -735,7 +735,7 @@ const BoleteriaMain = () => {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Evento</label>
-                                      <Select
+                                                   <Select
                placeholder="Selecciona un evento"
                style={{ width: '100%' }}
                onChange={handleEventSelectForSearch}
@@ -752,7 +752,7 @@ const BoleteriaMain = () => {
           {selectedEventForSearch && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Función</label>
-                                            <Select
+                                                           <Select
                  placeholder="Selecciona una función"
                  style={{ width: '100%' }}
                  onChange={handleFunctionSelectForSearch}
@@ -927,7 +927,7 @@ const BoleteriaMain = () => {
          footer={null}
          width={500}
        >
-             <Form
+                          <Form
                layout="vertical"
                onFinish={handleCreateUser}
              >
