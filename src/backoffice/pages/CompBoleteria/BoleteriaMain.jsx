@@ -75,15 +75,15 @@ const BoleteriaMain = () => {
   const [selectedFunctionForSearch, setSelectedFunctionForSearch] = useState(null);
   const [plantillasPrecios, setPlantillasPrecios] = useState([]);
   const [selectedPlantillaPrecio, setSelectedPlantillaPrecio] = useState(null);
-     const [zoomLevel, setZoomLevel] = useState(1);
-   const [isFullscreen, setIsFullscreen] = useState(false);
-   
-   // Estados para búsqueda de usuarios
-   const [showUserSearch, setShowUserSearch] = useState(false);
-   const [userSearchValue, setUserSearchValue] = useState('');
-   const [userSearchResults, setUserSearchResults] = useState([]);
-   const [userSearchLoading, setUserSearchLoading] = useState(false);
-   const [showCreateUser, setShowCreateUser] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
+  // Estados para búsqueda de usuarios
+  const [showUserSearch, setShowUserSearch] = useState(false);
+  const [userSearchValue, setUserSearchValue] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState([]);
+  const [userSearchLoading, setUserSearchLoading] = useState(false);
+  const [showCreateUser, setShowCreateUser] = useState(false);
 
   useEffect(() => {
     loadAvailableEvents();
@@ -358,68 +358,68 @@ const BoleteriaMain = () => {
     message.success('Datos actualizados');
   };
 
-     const handleClose = () => {
-     message.info('Cerrando aplicación');
-   };
+       const handleClose = () => {
+    message.info('Cerrando aplicación');
+  };
 
-   // Funciones para búsqueda de usuarios
-       const handleUserSearch = async (value) => {
-      if (!value.trim()) {
-        setUserSearchResults([]);
+  // Funciones para búsqueda de usuarios
+  const handleUserSearch = async (value) => {
+    if (!value.trim()) {
+      setUserSearchResults([]);
+      return;
+    }
+
+    setUserSearchLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`full_name.ilike.%${value}%,login.ilike.%${value}%,telefono.ilike.%${value}%`)
+        .limit(10);
+
+      if (error) {
+        console.error('Error searching users:', error);
+        message.error('Error al buscar usuarios');
         return;
       }
 
-      setUserSearchLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .or(`full_name.ilike.%${value}%,login.ilike.%${value}%,telefono.ilike.%${value}%`)
-          .limit(10);
+      setUserSearchResults(data || []);
+    } catch (error) {
+      console.error('Error searching users:', error);
+      message.error('Error al buscar usuarios');
+    } finally {
+      setUserSearchLoading(false);
+    }
+  };
 
-        if (error) {
-          console.error('Error searching users:', error);
-          message.error('Error al buscar usuarios');
-          return;
-        }
+  const handleCreateUser = async (userData) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert([userData])
+        .select()
+        .single();
 
-        setUserSearchResults(data || []);
-      } catch (error) {
-        console.error('Error searching users:', error);
-        message.error('Error al buscar usuarios');
-      } finally {
-        setUserSearchLoading(false);
-      }
-    };
-
-       const handleCreateUser = async (userData) => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .insert([userData])
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Error creating user:', error);
-          message.error('Error al crear usuario');
-          return;
-        }
-
-        message.success('Usuario creado exitosamente');
-        setShowCreateUser(false);
-        setSelectedClient(data);
-      } catch (error) {
+      if (error) {
         console.error('Error creating user:', error);
         message.error('Error al crear usuario');
+        return;
       }
-    };
 
-    const handleSelectUser = (user) => {
-      setSelectedClient(user);
-      setShowUserSearch(false);
-      message.success(`Usuario seleccionado: ${user.full_name || user.login}`);
-    };
+      message.success('Usuario creado exitosamente');
+      setShowCreateUser(false);
+      setSelectedClient(data);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      message.error('Error al crear usuario');
+    }
+  };
+
+  const handleSelectUser = (user) => {
+    setSelectedClient(user);
+    setShowUserSearch(false);
+    message.success(`Usuario seleccionado: ${user.full_name || user.login}`);
+  };
 
   const handleEventSelectForSearch = (eventId) => {
     const event = availableEvents.find(e => e.id === eventId);
@@ -873,35 +873,35 @@ const BoleteriaMain = () => {
          <div className="space-y-4">
            <div>
              <label className="block text-sm font-medium text-gray-700 mb-2">Buscar Usuario</label>
-                           <Search
-                placeholder="Buscar por nombre, login o teléfono"
-                value={userSearchValue}
-                onChange={(e) => {
-                  setUserSearchValue(e.target.value);
-                  handleUserSearch(e.target.value);
-                }}
-                loading={userSearchLoading}
-                onSearch={handleUserSearch}
-              />
+             <Search
+               placeholder="Buscar por nombre, login o teléfono"
+               value={userSearchValue}
+               onChange={(e) => {
+                 setUserSearchValue(e.target.value);
+                 handleUserSearch(e.target.value);
+               }}
+               loading={userSearchLoading}
+               onSearch={handleUserSearch}
+             />
            </div>
 
            {userSearchResults.length > 0 && (
              <div>
                <label className="block text-sm font-medium text-gray-700 mb-2">Resultados</label>
                <div className="max-h-60 overflow-y-auto space-y-2">
-                                   {userSearchResults.map(user => (
-                    <div
-                      key={user.id}
-                      className="p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleSelectUser(user)}
-                    >
-                      <div className="font-medium">{user.full_name || user.login}</div>
-                      <div className="text-sm text-gray-600">{user.login}</div>
-                      {user.telefono && (
-                        <div className="text-sm text-gray-500">{user.telefono}</div>
-                      )}
-                    </div>
-                  ))}
+                 {userSearchResults.map(user => (
+                   <div
+                     key={user.id}
+                     className="p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                     onClick={() => handleSelectUser(user)}
+                   >
+                     <div className="font-medium">{user.full_name || user.login}</div>
+                     <div className="text-sm text-gray-600">{user.login}</div>
+                     {user.telefono && (
+                       <div className="text-sm text-gray-500">{user.telefono}</div>
+                     )}
+                   </div>
+                 ))}
                </div>
              </div>
            )}
@@ -927,10 +927,10 @@ const BoleteriaMain = () => {
          footer={null}
          width={500}
        >
-                   <Form
-            layout="vertical"
-            onFinish={handleCreateUser}
-          >
+             <Form
+               layout="vertical"
+               onFinish={handleCreateUser}
+             >
             <Form.Item
               name="full_name"
               label="Nombre Completo"
