@@ -99,78 +99,63 @@ const SimpleSeatingMap = ({
 
       if (error) throw error;
 
+      // Filtrar asientos que no han expirado
       const now = new Date();
-      const validSeats = data.filter(item => {
-        if (!item.expires_at) return false;
-        return new Date(item.expires_at) > now;
+      const validLocks = data.filter(lock => {
+        const expiresAt = new Date(lock.expires_at);
+        return expiresAt > now && lock.status === 'locked';
       });
 
-      console.log('[BOLETERIA] Asientos bloqueados cargados:', validSeats);
-      setLockedSeats(validSeats);
-    } catch (e) {
-      console.error('[BOLETERIA] Error al obtener asientos bloqueados:', e);
-      setLockedSeats([]);
+      setLockedSeats(validLocks);
+      console.log('Asientos bloqueados cargados:', validLocks);
+    } catch (error) {
+      console.error('Error loading locked seats:', error);
     }
   };
 
-  // Suscribirse a cambios en tiempo real
+  // Suscribirse a cambios en seat_locks
   useEffect(() => {
-    if (!selectedFuncion?.id) {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-      return;
-    }
+    if (!selectedFuncion?.id) return;
 
-    // Cargar asientos bloqueados inicialmente
-    loadLockedSeats();
-
-    // Configurar suscripción en tiempo real
-    const channelName = `boleteria-seat-locks-${selectedFuncion.id}`;
-    const channel = supabase.channel(channelName);
-    channelRef.current = channel;
-
-    channel.on(
-      'postgres_changes',
-      {
+    const channel = supabase
+      .channel(`boleteria-seat-locks-${selectedFuncion.id}`)
+      .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'seat_locks',
         filter: `funcion_id=eq.${selectedFuncion.id}`
-      },
-      (payload) => {
-        console.log('✅ [BOLETERIA] Suscrito a canal', channelName);
-        console.log('[BOLETERIA] Evento realtime recibido:', payload);
+      }, (payload) => {
+        console.log('[BOLETERIA] Cambio en seat_locks:', payload);
         
-        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-          setLockedSeats(prev => {
-            const filtered = prev.filter(s => s.seat_id !== payload.new.seat_id);
-            return [...filtered, payload.new];
-          });
+        if (payload.eventType === 'INSERT') {
+          setLockedSeats(prev => [...prev, payload.new]);
         } else if (payload.eventType === 'DELETE') {
-          setLockedSeats(prev => prev.filter(s => s.seat_id !== payload.old.seat_id));
+          setLockedSeats(prev => prev.filter(lock => lock.seat_id !== payload.old.seat_id));
+        } else if (payload.eventType === 'UPDATE') {
+          setLockedSeats(prev => prev.map(lock => 
+            lock.seat_id === payload.new.seat_id ? payload.new : lock
+          ));
         }
-      }
-    ).subscribe();
+      })
+      .subscribe();
+
+    channelRef.current = channel;
 
     return () => {
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
       }
     };
   }, [selectedFuncion?.id]);
 
-  // Cargar mapa cuando cambie la función
+  // Cargar datos cuando cambie la función
   useEffect(() => {
-    loadMapa();
-  }, [selectedFuncion?.sala?.id]);
-
-  // Cargar precios cuando cambie la plantilla
-  useEffect(() => {
-    loadZonePrices();
-  }, [selectedPlantilla]);
+    if (selectedFuncion?.id) {
+      loadMapa();
+      loadZonePrices();
+      loadLockedSeats();
+    }
+  }, [selectedFuncion?.id, selectedPlantilla]);
 
   const getSeatColor = (seat) => {
     // Verificar si está bloqueado por otro usuario
@@ -350,6 +335,11 @@ const SimpleSeatingMap = ({
             {/* Sillas */}
             {elemento.sillas && elemento.sillas.map(silla => {
               const zoneInfo = getZoneInfo(silla);
+              const isSelected = selectedSeats.some(s => s._id === silla._id);
+              const isLockedByMe = lockedSeats.some(ls => 
+                ls.seat_id === silla._id && ls.session_id === (localStorage.getItem('anonSessionId') || '')
+              );
+              
               return (
                 <Tooltip
                   key={silla._id}
@@ -359,19 +349,20 @@ const SimpleSeatingMap = ({
                   <div
                     className="absolute cursor-pointer hover:scale-110 transition-transform"
                     style={{
-                      left: silla.posicion.x - 10,
-                      top: silla.posicion.y - 10,
-                      width: 20,
-                      height: 20,
+                      left: silla.posicion.x - 15,
+                      top: silla.posicion.y - 15,
+                      width: 30,
+                      height: 30,
                       borderRadius: '50%',
                       backgroundColor: getSeatColor(silla),
-                      border: selectedSeats.some(s => s._id === silla._id) ? '2px solid #000' : '1px solid #666',
+                      border: isSelected ? '3px solid #000' : isLockedByMe ? '2px solid #f59e0b' : '1px solid #666',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '10px',
+                      fontSize: '12px',
                       color: 'white',
-                      fontWeight: 'bold'
+                      fontWeight: 'bold',
+                      boxShadow: isSelected ? '0 0 10px rgba(0,0,0,0.5)' : 'none'
                     }}
                     onClick={() => handleSeatClick(silla, elemento)}
                   >

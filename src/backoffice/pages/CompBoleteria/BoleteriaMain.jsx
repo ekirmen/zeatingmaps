@@ -97,6 +97,17 @@ const BoleteriaMain = () => {
         loadEventAndFunctions(selectedEventId, selectedFunctionId);
       }
     }
+
+    // Cargar asientos seleccionados del localStorage
+    const savedSelectedSeats = localStorage.getItem('selectedSeats');
+    if (savedSelectedSeats) {
+      try {
+        const parsedSeats = JSON.parse(savedSelectedSeats);
+        setSelectedSeats(parsedSeats);
+      } catch (error) {
+        console.error('Error parsing saved seats:', error);
+      }
+    }
   }, [location.state]);
 
   const loadEventAndFunctions = async (eventId, functionId = null) => {
@@ -268,21 +279,26 @@ const BoleteriaMain = () => {
   const handleSeatClick = (seat) => {
     if (blockMode) {
       setBlockedSeats(prev => {
-        const isBlocked = prev.find(s => s.id === seat.id);
+        const isBlocked = prev.find(s => s._id === seat._id);
         if (isBlocked) {
-          return prev.filter(s => s.id !== seat.id);
+          return prev.filter(s => s._id !== seat._id);
         } else {
           return [...prev, seat];
         }
       });
     } else {
       setSelectedSeats(prev => {
-        const isSelected = prev.find(s => s.id === seat.id);
+        const isSelected = prev.find(s => s._id === seat._id);
+        let newSeats;
         if (isSelected) {
-          return prev.filter(s => s.id !== seat.id);
+          newSeats = prev.filter(s => s._id !== seat._id);
         } else {
-          return [...prev, seat];
+          newSeats = [...prev, seat];
         }
+        
+        // Guardar en localStorage
+        localStorage.setItem('selectedSeats', JSON.stringify(newSeats));
+        return newSeats;
       });
     }
   };
@@ -567,19 +583,29 @@ const BoleteriaMain = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <div className="flex items-center space-x-3">
-                                 <Avatar size="small" src="/assets/logo.png" alt="User" />
-                <span className="text-sm font-medium">chichiriviche</span>
-              </div>
-              <div className="text-sm">
-                <div className="font-medium">
-                  {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
-                </div>
-                                 <div className="text-gray-600">
-                   <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
-                   <span className="ml-4">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
+                             <div className="flex items-center space-x-3">
+                 {selectedEvent && selectedEvent.imagen_url ? (
+                   <img 
+                     src={selectedEvent.imagen_url} 
+                     alt={selectedEvent.nombre}
+                     className="w-8 h-8 rounded-lg object-cover"
+                     onError={(e) => {
+                       e.target.src = '/assets/logo.png';
+                     }}
+                   />
+                 ) : (
+                   <Avatar size="small" src="/assets/logo.png" alt="Event" />
+                 )}
+                 <div className="text-sm">
+                   <div className="font-medium">
+                     {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
+                   </div>
+                   <div className="text-gray-600">
+                     <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
+                     <span className="ml-4">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
+                   </div>
                  </div>
-              </div>
+               </div>
             </div>
             <div className="flex items-center space-x-2">
               <button 
