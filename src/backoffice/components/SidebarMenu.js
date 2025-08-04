@@ -80,13 +80,16 @@ import {
   faBox as faBundleIcon,
   faTicketAlt as faMultiPassIcon,
   faCalendarAlt as faSeasonTicketsIcon,
-  faCheckCircle
+  faCheckCircle,
+  faSearch
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import EventSearch from './EventSearch';
 
 const SidebarMenu = ({ collapsed }) => {
   const location = useLocation();
   const [activeSubmenu, setActiveSubmenu] = useState(null);
+  const [showEventSearch, setShowEventSearch] = useState(false);
 
   const isActive = (path) => {
     return location.pathname.includes(path);
@@ -130,11 +133,18 @@ const SidebarMenu = ({ collapsed }) => {
         { title: 'Entradas', path: '/dashboard/entradas', icon: faTicketAlt },
         { title: 'Productos', path: '/dashboard/productos', icon: faBox },
         { title: 'Plantillas de Productos', path: '/dashboard/plantillas-productos', icon: faBox },
+        // { title: 'Donaciones', path: '/dashboard/donaciones', icon: faHandHoldingHeart }, // OCULTO
         { title: 'Comisiones y tasas', path: '/dashboard/comisiones', icon: faCreditCard },
+        // { title: 'Seguros', path: '/dashboard/seguros', icon: faShieldAlt }, // OCULTO
         { title: 'Envío a domicilio', path: '/dashboard/envio', icon: faTruck },
         { title: 'Eventos', path: '/dashboard/eventos', icon: faTicketAlt },
         { title: 'Plantillas de precios', path: '/dashboard/plantillas-precios', icon: faPercent },
         { title: 'Funciones', path: '/dashboard/funciones', icon: faCalendar },
+        // { title: 'Cupos', path: '/dashboard/cupos', icon: faChartBar }, // OCULTO
+        // { title: 'Plantillas de cupos', path: '/dashboard/plantillas-cupos', icon: faFileAlt }, // OCULTO
+        // { title: 'Filas virtuales', path: '/dashboard/filas-virtuales', icon: faUsers }, // OCULTO
+        // { title: 'Paquetes', path: '/dashboard/paquetes', icon: faBox }, // OCULTO
+        // { title: 'Multipase', path: '/dashboard/multipase', icon: faTicketAlt }, // OCULTO
         { title: 'Abonos', path: '/dashboard/abonos', icon: faCalendarAlt }
       ]
     },
@@ -145,11 +155,35 @@ const SidebarMenu = ({ collapsed }) => {
       submenuId: 'crm',
       items: [
         { title: 'Clientes', path: '/dashboard/clientes', icon: faUsers },
+        // { title: 'Fan ID', path: '/dashboard/fanid', icon: faIdCard }, // OCULTO
         { title: 'Encuestas', path: '/dashboard/encuestas', icon: faPoll },
         { title: 'Campañas de mailing', path: '/dashboard/email-campaigns', icon: faEnvelope },
         { title: 'Etiquetas', path: '/dashboard/tags', icon: faTag }
       ]
     },
+    // {
+    //   title: 'Acreditaciones',
+    //   icon: faIdCard,
+    //   type: 'submenu',
+    //   submenuId: 'accreditations',
+    //   items: [
+    //     { title: 'Eventos de acreditación', path: '/dashboard/accreditation-management', icon: faClipboardCheck },
+    //     { title: 'Acreditaciones', path: '/dashboard/accreditations', icon: faCheckCircle }
+    //   ]
+    // }, // OCULTO
+    // {
+    //   title: 'Promociones',
+    //   icon: faGift,
+    //   type: 'submenu',
+    //   submenuId: 'promos',
+    //   items: [
+    //     { title: 'Códigos promocionales', path: '/dashboard/promos', icon: faTicketAlt },
+    //     { title: 'Tarjetas regalo', path: '/dashboard/gift-cards', icon: faGift },
+    //     { title: 'Invitaciones', path: '/dashboard/invitations', icon: faEnvelope },
+    //     { title: 'Programas de fidelización', path: '/dashboard/loyalty-clubs', icon: faCrown },
+    //     { title: 'Compra compartida', path: '/dashboard/group-promotions', icon: faUsers }
+    //   ]
+    // }, // OCULTO
     {
       title: 'Informes',
       path: '/dashboard/reports',
@@ -162,10 +196,13 @@ const SidebarMenu = ({ collapsed }) => {
       type: 'submenu',
       submenuId: 'personalization',
       items: [
+        // { title: 'Sitios web', path: '/dashboard/sites', icon: faGlobe }, // OCULTO
         { title: 'Formatos de entrada', path: '/dashboard/formato-entrada', icon: faTicketAlt },
+        // { title: 'Banners de publicidad', path: '/dashboard/banner-ads', icon: faImage }, // OCULTO
         { title: 'Textos legales', path: '/dashboard/legal-texts', icon: faFileAlt },
         { title: 'Web Studio', path: '/dashboard/webstudio', icon: faPalette },
         { title: 'Páginas', path: '/dashboard/pages', icon: faFileAlt }
+        // { title: 'Repositorio de imágenes', path: '/dashboard/galeria', icon: faImage } // OCULTO
       ]
     },
     {
@@ -236,6 +273,9 @@ const SidebarMenu = ({ collapsed }) => {
     return null;
   };
 
+  // Si estamos en boletería y el menú no está colapsado, mostrar el buscador
+  const isBoleteriaActive = isActive('/dashboard/boleteria');
+
   return (
     <div className={`bg-white shadow-lg ${collapsed ? 'w-16' : 'w-64'} transition-all duration-300`}>
       {/* Logo */}
@@ -248,6 +288,13 @@ const SidebarMenu = ({ collapsed }) => {
           )}
         </div>
       </div>
+
+      {/* Buscador de eventos (solo en boletería) */}
+      {isBoleteriaActive && !collapsed && (
+        <div className="p-4 border-b border-gray-200">
+          <EventSearch />
+        </div>
+      )}
 
       {/* Menu Items */}
       <nav className="py-4">

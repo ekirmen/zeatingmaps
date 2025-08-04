@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography } from 'antd';
 import { SearchOutlined, UserOutlined, QrcodeOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined } from '@ant-design/icons';
 import CartWithTimer from '../../components/CartWithTimer';
@@ -16,6 +17,8 @@ const { Option } = Select;
 const { Title, Text } = Typography;
 
 const BoleteriaMain = () => {
+  const location = useLocation();
+  
   // Usar los hooks existentes
   const {
     eventos,
@@ -85,7 +88,64 @@ const BoleteriaMain = () => {
   useEffect(() => {
     loadAvailableEvents();
     loadPlantillasPrecios();
-  }, []);
+    
+    // Cargar parámetros del buscador si existen
+    if (location.state) {
+      const { selectedEventId, selectedFunctionId } = location.state;
+      
+      if (selectedEventId) {
+        loadEventAndFunctions(selectedEventId, selectedFunctionId);
+      }
+    }
+  }, [location.state]);
+
+  const loadEventAndFunctions = async (eventId, functionId = null) => {
+    try {
+      // Cargar el evento
+      const { data: eventData, error: eventError } = await supabase
+        .from('eventos')
+        .select('*')
+        .eq('id', eventId)
+        .single();
+
+      if (eventError) {
+        console.error('Error loading event:', eventError);
+        return;
+      }
+
+      // Cargar las funciones del evento
+      const { data: functionsData, error: functionsError } = await supabase
+        .from('funciones')
+        .select('*')
+        .eq('evento_id', eventId)
+        .order('fecha', { ascending: true });
+
+      if (functionsError) {
+        console.error('Error loading functions:', eventError);
+        return;
+      }
+
+      // Actualizar el estado
+      setSelectedEvent(eventData);
+      setAvailableFunctions(functionsData);
+
+      // Si hay una función específica seleccionada, seleccionarla
+      if (functionId && functionsData.length > 0) {
+        const selectedFunc = functionsData.find(f => f.id === functionId);
+        if (selectedFunc) {
+          setSelectedFuncion(selectedFunc);
+        }
+      } else if (functionsData.length > 0) {
+        // Si no hay función específica, seleccionar la primera
+        setSelectedFuncion(functionsData[0]);
+      }
+
+      message.success(`Evento cargado: ${eventData.nombre}`);
+    } catch (error) {
+      console.error('Error loading event and functions:', error);
+      message.error('Error al cargar el evento');
+    }
+  };
 
   const loadAvailableEvents = async () => {
     try {
