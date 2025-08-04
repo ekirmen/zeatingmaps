@@ -358,7 +358,7 @@ const BoleteriaMain = () => {
     message.success('Datos actualizados');
   };
 
-         const handleClose = () => {
+  const handleClose = () => {
     message.info('Cerrando aplicación');
   };
 
@@ -434,7 +434,7 @@ const BoleteriaMain = () => {
     setSelectedEvent(selectedEventForSearch);
     setSelectedFuncion(func);
     setShowEventSearch(false);
-         message.success(`Evento seleccionado: ${selectedEventForSearch?.nombre} - ${func?.sala?.nombre || 'Sala sin nombre'}`);
+    message.success(`Evento seleccionado: ${selectedEventForSearch?.nombre} - ${func?.sala?.nombre || 'Sala sin nombre'}`);
   };
 
   const tabItems = [
