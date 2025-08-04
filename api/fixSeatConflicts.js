@@ -1,7 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-const supabaseKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
+// Usar las variables de entorno correctas para Vercel
+const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL;
+const supabaseKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Error: Faltan las variables de entorno de Supabase');
+  console.error('SUPABASE_URL:', !!supabaseUrl);
+  console.error('SUPABASE_SERVICE_ROLE_KEY:', !!supabaseKey);
+}
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -12,6 +19,17 @@ export default async function handler(req, res) {
 
   try {
     console.log('🔍 Iniciando limpieza de conflictos de asientos...');
+    
+    // Verificar conexión a Supabase
+    if (!supabaseUrl || !supabaseKey) {
+      return res.status(500).json({ 
+        error: 'Configuración de Supabase incompleta',
+        details: {
+          hasUrl: !!supabaseUrl,
+          hasKey: !!supabaseKey
+        }
+      });
+    }
     
     // 1. Obtener todos los asientos
     const { data: allSeats, error: fetchError } = await supabase
@@ -150,6 +168,9 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Error inesperado:', error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ 
+      error: error.message,
+      stack: error.stack 
+    });
   }
 } 
