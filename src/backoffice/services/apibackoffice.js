@@ -195,6 +195,9 @@ export const syncSeatsForSala = async (salaId) => {
   });
 
   for (const func of funciones) {
+    console.log(`Sincronizando asientos para función ${func.id}...`);
+    
+    // Verificar asientos existentes para esta función
     const { data: existing, error: exErr } = await supabase
       .from('seats')
       .select('_id')
@@ -207,6 +210,7 @@ export const syncSeatsForSala = async (salaId) => {
     // Eliminar asientos que ya no existen en el mapa
     const seatsToDelete = Array.from(existingIds).filter(id => !newSeatIds.has(id));
     if (seatsToDelete.length > 0) {
+      console.log(`Eliminando ${seatsToDelete.length} asientos obsoletos...`);
       const { error: deleteErr } = await supabase
         .from('seats')
         .delete()
@@ -218,8 +222,6 @@ export const syncSeatsForSala = async (salaId) => {
     }
     
     // Insertar solo los asientos nuevos que no existen
-    // Basándome en los índices encontrados, la tabla tiene estas columnas:
-    // _id, funcion_id, zona, status, bloqueado, user_id, locked_by, lock_expires_at, etc.
     const newSeats = seatDefs
       .filter(s => !existingIds.has(s.id))
       .map(s => ({
@@ -228,57 +230,60 @@ export const syncSeatsForSala = async (salaId) => {
         zona: s.zona,
         status: 'disponible',
         bloqueado: false
-        // NO incluir columnas que no existen en la tabla seats
-        // Las columnas adicionales como user_id, locked_by, etc. se manejan por separado
       }));
     
     if (newSeats.length > 0) {
+      console.log(`Insertando ${newSeats.length} nuevos asientos...`);
+      
       try {
-        // Intentar inserción directa primero
-        const { error: insertErr } = await supabase
+        // Usar upsert con conflicto en funcion_id,_id para evitar duplicados
+        const { error: upsertErr } = await supabase
           .from('seats')
-          .insert(newSeats)
-          .select();
+          .upsert(newSeats, { 
+            onConflict: 'funcion_id,_id',
+            ignoreDuplicates: false 
+          });
         
-        if (insertErr) {
-          console.warn('Error en inserción directa de seats:', insertErr);
+        if (upsertErr) {
+          console.error('Error en upsert de seats:', upsertErr);
           
-          // Si hay error de clave duplicada, intentar upsert
-          if (insertErr.code === '23505') {
-            console.log('Intentando upsert para evitar duplicados...');
-            const { error: upsertErr } = await supabase
-              .from('seats')
-              .upsert(newSeats, { onConflict: 'funcion_id,_id' });
-            
-            if (upsertErr) {
-              console.error('Error en upsert de seats:', upsertErr);
+          // Si hay error, intentar inserción individual con manejo de errores
+          console.log('Intentando inserción individual...');
+          let successCount = 0;
+          let errorCount = 0;
+          
+          for (const seat of newSeats) {
+            try {
+              const { error: singleInsertErr } = await supabase
+                .from('seats')
+                .insert(seat)
+                .select();
               
-              // Si aún hay error, intentar insertar uno por uno
-              console.log('Intentando inserción individual...');
-              for (const seat of newSeats) {
-                try {
-                  const { error: singleInsertErr } = await supabase
-                    .from('seats')
-                    .insert(seat)
-                    .select();
-                  
-                  if (singleInsertErr) {
-                    console.warn(`Error al insertar asiento ${seat._id}:`, singleInsertErr);
-                  }
-                } catch (error) {
-                  console.warn(`Error inesperado al insertar asiento ${seat._id}:`, error);
+              if (singleInsertErr) {
+                if (singleInsertErr.code === '23505') {
+                  console.warn(`Asiento ${seat._id} ya existe, omitiendo...`);
+                } else {
+                  console.warn(`Error al insertar asiento ${seat._id}:`, singleInsertErr);
+                  errorCount++;
                 }
+              } else {
+                successCount++;
               }
-            } else {
-              console.log('Upsert completado exitosamente');
+            } catch (error) {
+              console.warn(`Error inesperado al insertar asiento ${seat._id}:`, error);
+              errorCount++;
             }
           }
+          
+          console.log(`Inserción individual completada: ${successCount} exitosos, ${errorCount} errores`);
         } else {
-          console.log(`${newSeats.length} asientos insertados exitosamente`);
+          console.log(`${newSeats.length} asientos sincronizados exitosamente`);
         }
       } catch (error) {
         console.error('Error inesperado al sincronizar seats:', error);
       }
+    } else {
+      console.log('No hay nuevos asientos para insertar');
     }
   }
 };
