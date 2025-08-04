@@ -35,6 +35,7 @@ const SimpleSeatingMap = ({
         .order('numero', { ascending: true });
 
       console.log('Asientos encontrados:', seatsData?.length || 0);
+      console.log('Datos de asientos:', seatsData);
 
       if (seatsError) {
         console.error('Error loading seats:', seatsError);
@@ -74,6 +75,7 @@ const SimpleSeatingMap = ({
             .order('numero', { ascending: true });
 
           console.log('Asientos después de sincronización:', newSeatsData?.length || 0);
+          console.log('Datos de asientos después de sincronización:', newSeatsData);
 
           if (newSeatsError) {
             console.error('Error loading seats after sync:', newSeatsError);
@@ -85,6 +87,15 @@ const SimpleSeatingMap = ({
             seatsData = newSeatsData;
           } else {
             console.log('No se encontraron asientos después de la sincronización');
+            
+            // Verificar si hay asientos para otras funciones
+            const { data: allSeats, error: allSeatsError } = await supabase
+              .from('seats')
+              .select('funcion_id, COUNT(*)')
+              .group('funcion_id');
+            
+            console.log('Asientos por función:', allSeats);
+            
             setError('No se pudieron sincronizar los asientos. Verifica que el mapa esté configurado correctamente.');
             return;
           }

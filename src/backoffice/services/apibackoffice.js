@@ -233,24 +233,25 @@ export const syncSeatsForSala = async (salaId) => {
       }));
     
     if (newSeats.length > 0) {
-      console.log(`Insertando ${newSeats.length} nuevos asientos...`);
+      console.log(`Insertando ${newSeats.length} nuevos asientos para función ${func.id}...`);
       
       try {
-        // Verificar si los asientos ya existen globalmente (por _id)
-        const { data: globalSeats, error: globalErr } = await supabase
+        // Verificar si los asientos ya existen para esta función específica
+        const { data: existingForFunction, error: existingErr } = await supabase
           .from('seats')
-          .select('_id, funcion_id')
+          .select('_id')
+          .eq('funcion_id', func.id)
           .in('_id', newSeats.map(s => s._id));
         
-        if (globalErr) {
-          console.error('Error al verificar asientos globales:', globalErr);
+        if (existingErr) {
+          console.error('Error al verificar asientos existentes para función:', existingErr);
         } else {
-          // Filtrar asientos que ya existen globalmente
-          const existingGlobalIds = new Set(globalSeats.map(s => s._id));
-          const trulyNewSeats = newSeats.filter(s => !existingGlobalIds.has(s._id));
+          // Filtrar asientos que ya existen para esta función específica
+          const existingForFunctionIds = new Set(existingForFunction.map(s => s._id));
+          const trulyNewSeats = newSeats.filter(s => !existingForFunctionIds.has(s._id));
           
           if (trulyNewSeats.length > 0) {
-            console.log(`Insertando ${trulyNewSeats.length} asientos realmente nuevos...`);
+            console.log(`Insertando ${trulyNewSeats.length} asientos realmente nuevos para función ${func.id}...`);
             
             // Usar upsert con conflicto en funcion_id,_id para evitar duplicados
             const { error: upsertErr } = await supabase
@@ -277,7 +278,7 @@ export const syncSeatsForSala = async (salaId) => {
                   
                   if (singleInsertErr) {
                     if (singleInsertErr.code === '23505') {
-                      console.warn(`Asiento ${seat._id} ya existe, omitiendo...`);
+                      console.warn(`Asiento ${seat._id} ya existe para función ${func.id}, omitiendo...`);
                     } else {
                       console.warn(`Error al insertar asiento ${seat._id}:`, singleInsertErr);
                       errorCount++;
@@ -293,17 +294,17 @@ export const syncSeatsForSala = async (salaId) => {
               
               console.log(`Inserción individual completada: ${successCount} exitosos, ${errorCount} errores`);
             } else {
-              console.log(`${trulyNewSeats.length} asientos sincronizados exitosamente`);
+              console.log(`${trulyNewSeats.length} asientos sincronizados exitosamente para función ${func.id}`);
             }
           } else {
-            console.log('Todos los asientos ya existen globalmente, omitiendo inserción');
+            console.log(`Todos los asientos ya existen para función ${func.id}, omitiendo inserción`);
           }
         }
       } catch (error) {
         console.error('Error inesperado al sincronizar seats:', error);
       }
     } else {
-      console.log('No hay nuevos asientos para insertar');
+      console.log(`No hay nuevos asientos para insertar para función ${func.id}`);
     }
   }
 };
