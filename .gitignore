@@ -29,3 +29,77 @@ tmp/
 
 # Custom local directory
 Escaner/
+
+# ===== SEGURIDAD - ARCHIVOS SENSIBLES =====
+
+# Scripts SQL con datos específicos (peligrosos para subir)
+sql/fix_*.sql
+sql/insert_*.sql
+sql/update_*.sql
+sql/delete_*.sql
+sql/*_final.sql
+sql/*_real.sql
+sql/*_auto*.sql
+
+# Scripts SQL de diagnóstico con datos reales
+sql/diagnose_*.sql
+sql/check_*.sql
+sql/verify_*.sql
+
+# Archivos con datos específicos de producción
+sql/*_functions_*.sql
+sql/*_sala_*.sql
+sql/*_evento_*.sql
+
+# Archivos de configuración de base de datos
+database.sql
+*.sql.backup
+*.sql.bak
+
+# Archivos con credenciales o conexiones
+*connection*.js
+*config*.js
+*secret*.js
+*password*.js
+*credential*.js
+
+# Archivos de API keys y tokens
+*api_key*
+*token*
+*secret*
+*password*
+
+# Archivos de datos de prueba con información real
+*test_data*
+*sample_data*
+*production_data*
+
+# Archivos de logs de base de datos
+db_logs/
+database_logs/
+
+# Archivos de respaldo
+*.backup
+*.bak
+*.old
+
+# Archivos temporales de desarrollo
+temp/
+tmp/
+temp_*
+tmp_*
+
+# Archivos con información de clientes/usuarios
+*customer*
+*user_data*
+*personal_data*
+
+# Archivos de configuración local
+local.config.js
+local.settings.json
+local.env
+
+# Archivos de desarrollo específicos
+dev_*
+debug_*
+test_*
