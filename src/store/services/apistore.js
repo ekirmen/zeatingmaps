@@ -152,16 +152,8 @@ export const fetchMapa = async (salaId) => {
     const contenido = data?.contenido || null;
     if (!contenido) return null;
 
-    // Si el contenido es un array, convertirlo a la estructura esperada
-    if (Array.isArray(contenido)) {
-      return {
-        contenido: {
-          zonas: contenido
-        }
-      };
-    }
-
-    // Si ya es un objeto con zonas, devolverlo tal como está
+    // Ahora el contenido ya es un objeto con la propiedad 'zonas'
+    // Simplemente devolverlo tal como está
     return {
       contenido: contenido
     };
