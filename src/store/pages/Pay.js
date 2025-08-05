@@ -44,7 +44,7 @@ const Pay = () => {
 
   const loadFacebookPixel = async () => {
     try {
-      if (cartItems.length > 0) {
+      if (cartItems && cartItems.length > 0) {
         // Obtener el píxel del primer evento en el carrito
         const firstEventId = cartItems[0]?.eventId;
         if (firstEventId) {
@@ -112,7 +112,7 @@ const Pay = () => {
                        eventId: cartItems[0]?.eventId,
                        eventName: cartItems[0]?.nombreEvento,
                        amount: total,
-                       ticketCount: cartItems.length,
+                       ticketCount: cartItems ? cartItems.length : 0,
                        transactionId: result.transactionId
                      }
                    } 
@@ -191,7 +191,7 @@ const Pay = () => {
     return descriptions[type] || '';
   };
 
-  if (cartItems.length === 0) {
+  if (!cartItems || cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -219,7 +219,7 @@ const Pay = () => {
             content_ids: cartItems.map(item => item.eventId),
             value: total,
             currency: 'USD',
-            num_items: cartItems.length
+            num_items: cartItems ? cartItems.length : 0
           }}
         />
       )}

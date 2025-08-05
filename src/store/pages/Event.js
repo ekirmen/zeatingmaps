@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import Cart from './Cart';
 import {
@@ -17,6 +17,8 @@ import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../
 function EventPage() {
     useCartRestore();
   const { eventSlug } = useParams();
+  const [searchParams] = useSearchParams();
+  const funcionParam = searchParams.get('funcion');
 
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
@@ -58,6 +60,16 @@ function EventPage() {
     };
     if (eventSlug) fetchData();
   }, [eventSlug]);
+
+  // Preseleccionar función basada en el parámetro URL
+  useEffect(() => {
+    if (funciones.length > 0 && funcionParam) {
+      const funcion = funciones.find(f => f.id === parseInt(funcionParam));
+      if (funcion) {
+        setSelectedFunctionId(funcion.id);
+      }
+    }
+  }, [funciones, funcionParam]);
 
   // Cargar mapa y plantilla de precios
   useEffect(() => {
@@ -160,9 +172,28 @@ function EventPage() {
               mapa={mapa}
               lockSeat={lockSeat}
               unlockSeat={unlockSeat}
+              lockTable={lockSeat} // Usar lockSeat para mesas también
+              unlockTable={unlockSeat} // Usar unlockSeat para mesas también
               isSeatLocked={isSeatLocked}
               isSeatLockedByMe={isSeatLockedByMe}
+              isTableLocked={isSeatLocked} // Usar isSeatLocked para mesas
+              isTableLockedByMe={isSeatLockedByMe} // Usar isSeatLockedByMe para mesas
+              isAnySeatInTableLocked={(tableId, allSeats) => {
+                // Verificar si algún asiento de la mesa está bloqueado
+                return allSeats.some(seat => 
+                  seat.mesaId === tableId && isSeatLocked(seat._id)
+                );
+              }}
+              areAllSeatsInTableLockedByMe={(tableId, allSeats) => {
+                // Verificar si todos los asientos de la mesa están bloqueados por mí
+                const tableSeats = allSeats.filter(seat => seat.mesaId === tableId);
+                return tableSeats.length > 0 && tableSeats.every(seat => isSeatLockedByMe(seat._id));
+              }}
               onSeatToggle={handleSeatToggle}
+              onTableToggle={(table) => {
+                // Manejar clic en mesa - por ahora solo mostrar info
+                console.log('Mesa clickeada:', table);
+              }}
               onSeatInfo={() => {}}
             />
           ) : (

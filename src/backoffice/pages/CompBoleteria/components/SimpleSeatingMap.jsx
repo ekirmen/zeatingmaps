@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Button, Badge, Spin, message, Tooltip } from 'antd';
+import { Card, Button, Badge, Spin, message, Tooltip, Typography } from 'antd';
 import { supabase } from '../../../../supabaseClient';
+
+const { Text, Title } = Typography;
 
 const SimpleSeatingMap = ({ 
   selectedFuncion, 
@@ -9,7 +11,8 @@ const SimpleSeatingMap = ({
   blockedSeats = [],
   blockMode = false,
   zonas = [], // Agregar prop para zonas
-  selectedPlantilla = null // Agregar prop para plantilla de precios
+  selectedPlantilla = null, // Agregar prop para plantilla de precios
+  selectedPriceOption = null // Nuevo prop para el precio seleccionado
 }) => {
   const [mapa, setMapa] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -99,112 +102,132 @@ const SimpleSeatingMap = ({
 
       if (error) throw error;
 
-      // Filtrar asientos que no han expirado
-      const now = new Date();
-      const validLocks = data.filter(lock => {
-        const expiresAt = new Date(lock.expires_at);
-        return expiresAt > now && lock.status === 'locked';
-      });
-
-      setLockedSeats(validLocks);
-      console.log('Asientos bloqueados cargados:', validLocks);
+      console.log('Asientos bloqueados cargados:', data);
+      setLockedSeats(data || []);
     } catch (error) {
       console.error('Error loading locked seats:', error);
     }
   };
 
-  // Suscribirse a cambios en seat_locks
-  useEffect(() => {
+  // Suscribirse a cambios en tiempo real
+  const subscribeToRealtime = () => {
     if (!selectedFuncion?.id) return;
 
     const channel = supabase
-      .channel(`boleteria-seat-locks-${selectedFuncion.id}`)
+      .channel(`seat-locks-${selectedFuncion.id}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
         table: 'seat_locks',
         filter: `funcion_id=eq.${selectedFuncion.id}`
       }, (payload) => {
-        console.log('[BOLETERIA] Cambio en seat_locks:', payload);
+        console.log('Cambio en tiempo real:', payload);
         
         if (payload.eventType === 'INSERT') {
           setLockedSeats(prev => [...prev, payload.new]);
         } else if (payload.eventType === 'DELETE') {
-          setLockedSeats(prev => prev.filter(lock => lock.seat_id !== payload.old.seat_id));
+          setLockedSeats(prev => prev.filter(seat => seat.seat_id !== payload.old.seat_id));
         } else if (payload.eventType === 'UPDATE') {
-          setLockedSeats(prev => prev.map(lock => 
-            lock.seat_id === payload.new.seat_id ? payload.new : lock
-          ));
+          setLockedSeats(prev => 
+            prev.map(seat => 
+              seat.seat_id === payload.new.seat_id ? payload.new : seat
+            )
+          );
         }
       })
       .subscribe();
 
     channelRef.current = channel;
+  };
+
+  useEffect(() => {
+    loadMapa();
+    loadZonePrices();
+    loadLockedSeats();
+    subscribeToRealtime();
 
     return () => {
       if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
+        channelRef.current.unsubscribe();
       }
     };
-  }, [selectedFuncion?.id]);
+  }, [selectedFuncion]);
 
-  // Cargar datos cuando cambie la función
   useEffect(() => {
-    if (selectedFuncion?.id) {
-      loadMapa();
-      loadZonePrices();
-      loadLockedSeats();
-    }
-  }, [selectedFuncion?.id, selectedPlantilla]);
+    loadZonePrices();
+  }, [selectedPlantilla]);
 
   const getSeatColor = (seat) => {
-    // Verificar si está bloqueado por otro usuario
-    const isLockedByOther = lockedSeats.some(ls => 
-      ls.seat_id === seat._id && ls.status === 'locked'
-    );
-    
-    // Verificar si está seleccionado
-    const isSelected = selectedSeats.some(s => s._id === seat._id);
-    
-    // Verificar si está bloqueado manualmente
-    const isBlocked = blockedSeats.includes(seat._id);
-    
-    if (isSelected) return '#facc15'; // Amarillo para seleccionado
-    if (isLockedByOther) return '#ef4444'; // Rojo para bloqueado por otro
-    if (isBlocked) return '#9ca3af'; // Gris para bloqueado manual
-    if (seat.estado === 'pagado') return '#9ca3af'; // Gris para pagado
-    if (seat.estado === 'reservado') return '#ef4444'; // Rojo para reservado
-    if (seat.estado === 'bloqueado') return '#dc2626'; // Rojo para bloqueado
-    
-    // Color por zona
-    const zonaId = seat.zona;
-    if (zonePrices[zonaId]) {
-      // Usar color basado en el precio de la zona
-      const precio = zonePrices[zonaId].precio;
-      if (precio > 100) return '#dc2626'; // Rojo para precios altos
-      if (precio > 50) return '#f59e0b'; // Naranja para precios medios
-      return '#10b981'; // Verde para precios bajos
+    // Si está seleccionado por el usuario actual
+    if (selectedSeats.some(s => s._id === seat._id)) {
+      return '#52c41a'; // Verde para seleccionado
     }
     
-    return '#60a5fa'; // Azul por defecto
+    // Si está bloqueado por otro usuario
+    const sessionId = localStorage.getItem('anonSessionId');
+    const isLockedByOther = lockedSeats.some(ls => 
+      ls.seat_id === seat._id && ls.session_id !== sessionId
+    );
+    if (isLockedByOther) {
+      return '#ff4d4f'; // Rojo para bloqueado por otro
+    }
+    
+    // Si está bloqueado por el usuario actual
+    const isLockedByMe = lockedSeats.some(ls => 
+      ls.seat_id === seat._id && ls.session_id === sessionId
+    );
+    if (isLockedByMe) {
+      return '#1890ff'; // Azul para bloqueado por mí
+    }
+    
+    // Si está vendido o reservado
+    if (seat.estado === 'pagado' || seat.estado === 'reservado') {
+      return '#d9d9d9'; // Gris para vendido
+    }
+    
+    // Color por defecto basado en la zona
+    const zoneInfo = getZoneInfo(seat);
+    return zoneInfo.color || '#f0f0f0';
   };
 
   const getZoneInfo = (seat) => {
-    const zonaId = seat.zona;
-    if (zonePrices[zonaId]) {
+    const zonaId = seat.zona || seat.zonaId;
+    if (!zonaId) return { nombre: 'Sin zona', precio: 0, color: '#f0f0f0' };
+    
+    const zonePrice = zonePrices[zonaId];
+    if (zonePrice) {
       return {
-        nombre: zonePrices[zonaId].nombre,
-        precio: zonePrices[zonaId].precio
+        nombre: zonePrice.nombre,
+        precio: zonePrice.precio,
+        color: zonePrice.color || '#5C1473'
       };
     }
-    return { nombre: `Zona ${zonaId}`, precio: 0 };
+    
+    return { nombre: `Zona ${zonaId}`, precio: 0, color: '#f0f0f0' };
   };
 
   const handleSeatClick = async (seat, mesa = null) => {
     try {
+      // Verificar si hay un precio seleccionado
+      if (!selectedPriceOption) {
+        message.warning('Primero selecciona una zona y precio antes de elegir asientos');
+        return;
+      }
+
       // Verificar si el asiento está disponible
       if (seat.estado === 'pagado' || seat.estado === 'reservado') {
         message.warning('Este asiento ya está vendido o reservado');
+        return;
+      }
+
+      // Verificar que tenemos los datos necesarios
+      if (!selectedFuncion?.id) {
+        message.error('No hay función seleccionada');
+        return;
+      }
+
+      if (!seat._id) {
+        message.error('Asiento sin ID válido');
         return;
       }
 
@@ -236,8 +259,9 @@ const SimpleSeatingMap = ({
           .from('seat_locks')
           .delete()
           .eq('seat_id', seat._id)
-          .eq('funcion_id', selectedFuncion.id)
-          .eq('session_id', sessionId);
+          .eq('funcion_id', parseInt(selectedFuncion.id))
+          .eq('session_id', sessionId)
+          .eq('lock_type', 'seat');
 
         if (unlockError) {
           console.error('Error al desbloquear asiento:', unlockError);
@@ -250,31 +274,46 @@ const SimpleSeatingMap = ({
       }
 
       // Bloquear asiento en la base de datos
+      const lockData = {
+        seat_id: seat._id,
+        funcion_id: parseInt(selectedFuncion.id), // Asegurar que sea número
+        session_id: sessionId,
+        locked_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutos
+        status: 'locked',
+        lock_type: 'seat' // Agregar el tipo de bloqueo requerido por las políticas
+      };
+
+      console.log('Intentando bloquear asiento con datos:', lockData);
+
       const { error: lockError } = await supabase
         .from('seat_locks')
-        .upsert({
-          seat_id: seat._id,
-          funcion_id: selectedFuncion.id,
-          session_id: sessionId,
-          locked_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutos
-          status: 'locked'
-        });
+        .upsert(lockData);
 
       if (lockError) {
         console.error('Error al bloquear asiento:', lockError);
+        console.error('Datos enviados:', lockData);
         message.error('Error al seleccionar el asiento');
         return;
       }
 
-      const seatWithMesa = {
+      // Crear objeto de asiento con precio y información del precio seleccionado
+      const seatWithPrice = {
         ...seat,
         mesa: mesa,
-        funcion_id: selectedFuncion?.id
+        funcion_id: selectedFuncion?.id,
+        precio: selectedPriceOption.precio,
+        precioInfo: {
+          entrada: selectedPriceOption.entrada,
+          zona: selectedPriceOption.zona,
+          comision: selectedPriceOption.comision,
+          precioOriginal: selectedPriceOption.precioOriginal,
+          category: selectedPriceOption.category
+        }
       };
       
-      onSeatClick(seatWithMesa);
-      message.success('Asiento seleccionado');
+      onSeatClick(seatWithPrice);
+      message.success(`Asiento seleccionado - ${selectedPriceOption.entrada.nombre} - $${selectedPriceOption.precio.toFixed(2)}`);
       
     } catch (error) {
       console.error('Error al manejar selección de asiento:', error);
@@ -309,70 +348,146 @@ const SimpleSeatingMap = ({
 
   return (
     <div className="relative overflow-auto" style={{ width: '100%', height: '600px' }}>
-      <div className="relative" style={{ width: '800px', height: '500px' }}>
-        {mapa.contenido.map(elemento => (
-          <div key={elemento._id} className="absolute">
-            {/* Mesa */}
-            {elemento.type === 'mesa' && (
-              <div
-                className={`absolute border-2 border-gray-300 ${
-                  elemento.shape === 'rect' ? 'rounded-lg' : 'rounded-full'
-                }`}
-                style={{
-                  left: elemento.posicion.x,
-                  top: elemento.posicion.y,
-                  width: elemento.width,
-                  height: elemento.height,
-                  backgroundColor: 'lightblue'
-                }}
-              >
-                <div className="text-center text-sm font-medium mt-1">
-                  {elemento.nombre}
-                </div>
-              </div>
-            )}
-            
-            {/* Sillas */}
-            {elemento.sillas && elemento.sillas.map(silla => {
-              const zoneInfo = getZoneInfo(silla);
-              const isSelected = selectedSeats.some(s => s._id === silla._id);
-              const isLockedByMe = lockedSeats.some(ls => 
-                ls.seat_id === silla._id && ls.session_id === (localStorage.getItem('anonSessionId') || '')
-              );
-              
-              return (
-                <Tooltip
-                  key={silla._id}
-                  title={`${silla.nombre || silla.numero} - ${zoneInfo.nombre} - $${zoneInfo.precio}`}
-                  placement="top"
-                >
-                  <div
-                    className="absolute cursor-pointer hover:scale-110 transition-transform"
-                    style={{
-                      left: silla.posicion.x - 15,
-                      top: silla.posicion.y - 15,
-                      width: 30,
-                      height: 30,
-                      borderRadius: '50%',
-                      backgroundColor: getSeatColor(silla),
-                      border: isSelected ? '3px solid #000' : isLockedByMe ? '2px solid #f59e0b' : '1px solid #666',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '12px',
-                      color: 'white',
-                      fontWeight: 'bold',
-                      boxShadow: isSelected ? '0 0 10px rgba(0,0,0,0.5)' : 'none'
-                    }}
-                    onClick={() => handleSeatClick(silla, elemento)}
-                  >
-                    {silla.nombre || silla.numero}
-                  </div>
-                </Tooltip>
-              );
-            })}
+      {/* Overlay cuando no hay precio seleccionado */}
+      {!selectedPriceOption && (
+        <div className="absolute inset-0 bg-blue-50 bg-opacity-90 flex items-center justify-center z-20">
+          <div className="text-center p-6 bg-white rounded-lg shadow-lg border border-blue-200">
+            <div className="text-blue-600 mb-4">
+              <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-blue-900 mb-2">Selecciona una Zona y Precio</h3>
+            <p className="text-blue-700 mb-4">
+              Primero debes seleccionar una zona y tipo de entrada antes de elegir asientos
+            </p>
+            <div className="text-sm text-blue-600">
+              <p>• Ve a la sección de "Selecciona Zona y Precio" arriba</p>
+              <p>• Elige el tipo de entrada (Regular, VIP, Cortesía)</p>
+              <p>• Luego podrás seleccionar asientos en el mapa</p>
+            </div>
           </div>
-        ))}
+        </div>
+      )}
+      
+      <div className="relative" style={{ width: '800px', height: '500px' }}>
+        {/* Manejar diferentes estructuras de mapa.contenido */}
+        {Array.isArray(mapa.contenido) ? (
+          // Si mapa.contenido es un array
+          mapa.contenido.map(elemento => (
+            <div key={elemento._id} className="absolute">
+              {/* Mesa */}
+              {elemento.type === 'mesa' && (
+                <div
+                  className={`absolute border-2 border-gray-300 ${
+                    elemento.shape === 'rect' ? 'rounded-lg' : 'rounded-full'
+                  }`}
+                  style={{
+                    left: elemento.posicion.x,
+                    top: elemento.posicion.y,
+                    width: elemento.width,
+                    height: elemento.height,
+                    backgroundColor: 'lightblue'
+                  }}
+                >
+                  <div className="text-center text-sm font-medium mt-1">
+                    {elemento.nombre}
+                  </div>
+                </div>
+              )}
+              
+              {/* Sillas */}
+              {elemento.sillas && elemento.sillas.map(silla => {
+                const zoneInfo = getZoneInfo(silla);
+                const isSelected = selectedSeats.some(s => s._id === silla._id);
+                const isLockedByMe = lockedSeats.some(ls => 
+                  ls.seat_id === silla._id && ls.session_id === (localStorage.getItem('anonSessionId') || '')
+                );
+                
+                return (
+                  <Tooltip
+                    key={silla._id}
+                    title={`${silla.nombre || silla.numero} - ${zoneInfo.nombre} - $${zoneInfo.precio}`}
+                    placement="top"
+                  >
+                    <div
+                      className="absolute cursor-pointer hover:scale-110 transition-transform"
+                      style={{
+                        left: silla.posicion.x - 15,
+                        top: silla.posicion.y - 15,
+                        width: 30,
+                        height: 30,
+                        borderRadius: '50%',
+                        backgroundColor: getSeatColor(silla),
+                        border: isSelected ? '3px solid #000' : isLockedByMe ? '2px solid #f59e0b' : '1px solid #666',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        boxShadow: isSelected ? '0 0 10px rgba(0,0,0,0.5)' : 'none'
+                      }}
+                      onClick={() => handleSeatClick(silla, elemento)}
+                    >
+                      {silla.nombre || silla.numero}
+                    </div>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          ))
+        ) : mapa.contenido?.zonas ? (
+          // Si mapa.contenido es un objeto con zonas
+          mapa.contenido.zonas.map(zona => (
+            <div key={zona.id || zona._id}>
+              {/* Renderizar asientos de la zona */}
+              {zona.asientos && zona.asientos.map(silla => {
+                const zoneInfo = getZoneInfo(silla);
+                const isSelected = selectedSeats.some(s => s._id === silla._id);
+                const isLockedByMe = lockedSeats.some(ls => 
+                  ls.seat_id === silla._id && ls.session_id === (localStorage.getItem('anonSessionId') || '')
+                );
+                
+                return (
+                  <Tooltip
+                    key={silla._id}
+                    title={`${silla.nombre || silla.numero} - ${zoneInfo.nombre} - $${zoneInfo.precio}`}
+                    placement="top"
+                  >
+                    <div
+                      className="absolute cursor-pointer hover:scale-110 transition-transform"
+                      style={{
+                        left: silla.x - 15,
+                        top: silla.y - 15,
+                        width: 30,
+                        height: 30,
+                        borderRadius: '50%',
+                        backgroundColor: getSeatColor(silla),
+                        border: isSelected ? '3px solid #000' : isLockedByMe ? '2px solid #f59e0b' : '1px solid #666',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        boxShadow: isSelected ? '0 0 10px rgba(0,0,0,0.5)' : 'none'
+                      }}
+                      onClick={() => handleSeatClick(silla)}
+                    >
+                      {silla.nombre || silla.numero}
+                    </div>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          ))
+        ) : (
+          // Si no hay estructura reconocible
+          <div className="text-center text-gray-500 mt-8">
+            Estructura de mapa no reconocida
+          </div>
+        )}
       </div>
       
       {/* Leyenda mejorada con zonas */}

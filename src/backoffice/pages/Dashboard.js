@@ -55,7 +55,16 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadDashboardData();
-    subscribeToRealtimeUpdates();
+    
+    // Suscribirse a actualizaciones en tiempo real y retornar función de limpieza
+    const cleanup = subscribeToRealtimeUpdates();
+    
+    // Retornar función de limpieza
+    return () => {
+      if (cleanup) {
+        cleanup();
+      }
+    };
   }, []);
 
   const loadDashboardData = async () => {
@@ -272,6 +281,18 @@ const Dashboard = () => {
   };
 
   const subscribeToRealtimeUpdates = () => {
+    // Verificar si ya existe un canal con el mismo topic
+    const existingChannels = supabase.getChannels();
+    const existingChannel = existingChannels.find(ch => ch.topic === 'dashboard_updates');
+    
+    if (existingChannel) {
+      console.log('[DASHBOARD] Canal ya existe, reutilizando');
+      return () => {
+        // No desuscribirse si el canal es compartido
+        console.log('[DASHBOARD] No desuscribiendo canal compartido');
+      };
+    }
+
     // Suscribirse a cambios en transacciones
     const subscription = supabase
       .channel('dashboard_updates')
@@ -286,9 +307,18 @@ const Dashboard = () => {
           loadDashboardData();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[DASHBOARD] Estado de suscripción:', status);
+      });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      try {
+        subscription.unsubscribe();
+        console.log('[DASHBOARD] Canal desuscrito exitosamente');
+      } catch (error) {
+        console.warn('[DASHBOARD] Error al desuscribir canal:', error);
+      }
+    };
   };
 
   const getStatusColor = (status) => {

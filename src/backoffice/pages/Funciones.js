@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Modal from 'react-modal';
 import { useRecinto } from '../contexts/RecintoContext';
 import { supabase } from '../../supabaseClient';
@@ -23,8 +23,12 @@ const Funciones = () => {
   });
 
   const getEventoNombre = (eventoId) => {
+    // Buscar en la lista de eventos cargados
     const evento = eventos.find((e) => e.id === eventoId);
-    return evento ? evento.nombre : 'Evento eliminado';
+    if (evento) return evento.nombre;
+    
+    // Si no está en la lista, mostrar el ID del evento
+    return eventoId ? `Evento ${eventoId}` : 'Evento desconocido';
   };
 
   const getPlantillaNombre = (plantillaId) => {
@@ -60,11 +64,61 @@ const Funciones = () => {
     fetchEventos();
   }, [recintoSeleccionado, salaSeleccionada]);
 
+    const fetchFunciones = useCallback(async () => {
+    let query = supabase
+      .from('funciones')
+      .select(`
+        id,
+        fechaCelebracion:fecha_celebracion,
+        inicioVenta:inicio_venta,
+        finVenta:fin_venta,
+        pagoAPlazos:pago_a_plazos,
+        permitirReservasWeb:permitir_reservas_web,
+        evento,
+        sala(*),
+        plantilla(*)
+      `);
+
+    // Si hay un evento seleccionado, filtrar por ese evento
+    if (eventoSeleccionado) {
+      const eventoId = eventoSeleccionado?.id || eventoSeleccionado?._id || eventoSeleccionado;
+      console.log('Filtrando por evento:', eventoId);
+      query = query.eq('evento', eventoId);
+    }
+    // Si hay una sala seleccionada, filtrar por esa sala
+    else if (salaSeleccionada) {
+      query = query.eq('sala', salaSeleccionada.id);
+    }
+    // Si hay un recinto seleccionado, filtrar por las salas de ese recinto
+    else if (recintoSeleccionado) {
+      const salaIds = recintoSeleccionado.salas.map(s => s.id);
+      query = query.in('sala', salaIds);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error al obtener funciones:', error);
+      console.error('Query details:', {
+        recintoSeleccionado: recintoSeleccionado?.id,
+        salaSeleccionada: salaSeleccionada?.id,
+        eventoSeleccionado: eventoSeleccionado
+      });
+    } else {
+      console.log('Funciones cargadas:', data?.length || 0);
+      console.log('Primera función:', data?.[0]);
+      setFunciones(data || []);
+    }
+  }, [eventoSeleccionado, salaSeleccionada, recintoSeleccionado]);
+
   useEffect(() => {
-    const fetchFunciones = async () => {
-      const eventoId = eventoSeleccionado?.id || eventoSeleccionado?._id;
-  
-      if (eventoId) {
+    fetchFunciones();
+  }, [fetchFunciones]);
+
+    // Cargar todas las funciones al inicio si no hay filtros
+  useEffect(() => {
+    if (!recintoSeleccionado && !salaSeleccionada && !eventoSeleccionado) {
+      const fetchAllFunciones = async () => {
         const { data, error } = await supabase
           .from('funciones')
           .select(`
@@ -77,21 +131,19 @@ const Funciones = () => {
             evento,
             sala(*),
             plantilla(*)
-          `)
-          .eq('evento', eventoId);
-  
+          `);
+
         if (error) {
-          console.error('Error al obtener funciones:', error);
+          console.error('Error al obtener todas las funciones:', error);
         } else {
-          setFunciones(data);
+          console.log('Todas las funciones cargadas:', data?.length || 0);
+          setFunciones(data || []);
         }
-      } else {
-        setFunciones([]);
-      }
-    };
-  
-    fetchFunciones();
-  }, [eventoSeleccionado]);
+      };
+
+      fetchAllFunciones();
+    }
+  }, [recintoSeleccionado, salaSeleccionada, eventoSeleccionado]);
   
 
   useEffect(() => {
@@ -116,7 +168,8 @@ const Funciones = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { evento, sala, plantilla, ...rest } = nuevaFuncion;
+    // Destructuring para evitar warnings de variables no utilizadas
+    // const { evento, sala, plantilla } = nuevaFuncion;
     const funcionData = {
       fecha_celebracion: nuevaFuncion.fechaCelebracion,
       inicio_venta: nuevaFuncion.inicioVenta,
@@ -129,14 +182,21 @@ const Funciones = () => {
     };
   
     try {
-      const {
-        data: userData,
-        error: userError
-      } = await supabase.auth.getUser();
+      // Intentar obtener el usuario autenticado, pero no fallar si no está disponible
+      let creadopor = null;
+      try {
+        const {
+          data: userData,
+          error: userError
+        } = await supabase.auth.getUser();
   
-      if (userError || !userData?.user?.id) throw new Error('No se pudo obtener el usuario autenticado');
-  
-      const creadopor = userData.user.id;
+        if (!userError && userData?.user?.id) {
+          creadopor = userData.user.id;
+        }
+      } catch (authError) {
+        console.warn('No se pudo obtener el usuario autenticado:', authError);
+        // Continuar sin el usuario autenticado
+      }
   
         if (editingFuncion) {
           const { error } = await supabase
@@ -150,12 +210,12 @@ const Funciones = () => {
           await syncSeatsForSala(salaSeleccionada.id);
         }
       } else {
-        const { error } = await supabase.from('funciones').insert([
-          {
-            ...funcionData,
-            creadopor, // 👈 insertamos el creador
-          },
-        ]);
+        const insertData = { ...funcionData };
+        if (creadopor) {
+          insertData.creadopor = creadopor;
+        }
+        
+        const { error } = await supabase.from('funciones').insert([insertData]);
         if (error) throw error;
         alert('Función creada');
         if (salaSeleccionada?.id) {
@@ -175,13 +235,8 @@ const Funciones = () => {
         permitirReservasWeb: false,
       });
   
-        const { data: refreshed, error: err2 } = await supabase
-          .from('funciones')
-          .select(
-            `id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento, sala, plantilla`
-          )
-          .eq('evento', eventoSeleccionado);
-      if (!err2) setFunciones(refreshed);
+                 // Recargar las funciones con los filtros actuales
+         fetchFunciones();
     } catch (error) {
       console.error('Error al guardar función:', error);
       alert('Ocurrió un error');
@@ -209,13 +264,8 @@ const Funciones = () => {
     if (error) {
       alert('Error al eliminar');
     } else {
-      const { data } = await supabase
-        .from('funciones')
-        .select(
-          `id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento, sala, plantilla`
-        )
-        .eq('evento', eventoSeleccionado);
-      setFunciones(data);
+             // Recargar las funciones con los filtros actuales
+       fetchFunciones();
     }
   };
 
@@ -234,13 +284,8 @@ const Funciones = () => {
       if (duplicatedData.sala) {
         await syncSeatsForSala(duplicatedData.sala);
       }
-      const { data: refreshed } = await supabase
-        .from('funciones')
-        .select(
-          `id, fechaCelebracion:fecha_celebracion, inicioVenta:inicio_venta, finVenta:fin_venta, pagoAPlazos:pago_a_plazos, permitirReservasWeb:permitir_reservas_web, evento, sala, plantilla`
-        )
-        .eq('evento', eventoSeleccionado);
-      setFunciones(refreshed);
+             // Recargar las funciones con los filtros actuales
+       fetchFunciones();
     }
   };
 
@@ -290,7 +335,7 @@ const Funciones = () => {
 
         {!salaSeleccionada && (
           <p className="text-sm text-gray-600">
-            Seleccione un recinto y una sala para cargar los eventos
+            Seleccione un recinto y una sala para filtrar las funciones, o deje sin seleccionar para ver todas las funciones
           </p>
         )}
 
@@ -336,29 +381,40 @@ const Funciones = () => {
           </tr>
         </thead>
         <tbody>
-          {funciones.map(funcion => (
-            <tr key={funcion.id}>
-              <td>{formatFecha(funcion.fechaCelebracion)}</td>
-              <td>{getEventoNombre(funcion.evento)}</td>
-              <td>{salaSeleccionada?.nombre}</td>
-              <td>{getPlantillaNombre(funcion.plantilla)}</td>
-              <td>{formatFecha(funcion.inicioVenta)}</td>
-              <td>{formatFecha(funcion.finVenta)}</td>
-              <td>{funcion.pagoAPlazos ? 'Sí' : 'No'}</td>
-              <td>{funcion.permitirReservasWeb ? 'Sí' : 'No'}</td>
-              <td className="space-x-2">
-                <button className="text-blue-600 hover:underline" onClick={() => handleEdit(funcion)}>
-                  Editar
-                </button>
-                <button className="text-red-600 hover:underline" onClick={() => handleDelete(funcion.id)}>
-                  Eliminar
-                </button>
-                <button className="text-gray-600 hover:underline" onClick={() => handleDuplicate(funcion.id)}>
-                  Duplicar
-                </button>
+          {funciones.length === 0 ? (
+            <tr>
+              <td colSpan="9" className="text-center py-4 text-gray-500">
+                {recintoSeleccionado || salaSeleccionada || eventoSeleccionado 
+                  ? 'No se encontraron funciones con los filtros seleccionados'
+                  : 'No hay funciones creadas. Crea una nueva función para comenzar.'
+                }
               </td>
             </tr>
-          ))}
+          ) : (
+            funciones.map(funcion => (
+              <tr key={funcion.id}>
+                <td>{formatFecha(funcion.fechaCelebracion)}</td>
+                <td>{getEventoNombre(funcion.evento)}</td>
+                <td>{funcion.sala?.nombre || 'Sala desconocida'}</td>
+                <td>{getPlantillaNombre(funcion.plantilla)}</td>
+                <td>{formatFecha(funcion.inicioVenta)}</td>
+                <td>{formatFecha(funcion.finVenta)}</td>
+                <td>{funcion.pagoAPlazos ? 'Sí' : 'No'}</td>
+                <td>{funcion.permitirReservasWeb ? 'Sí' : 'No'}</td>
+                <td className="space-x-2">
+                  <button className="text-blue-600 hover:underline" onClick={() => handleEdit(funcion)}>
+                    Editar
+                  </button>
+                  <button className="text-red-600 hover:underline" onClick={() => handleDelete(funcion.id)}>
+                    Eliminar
+                  </button>
+                  <button className="text-gray-600 hover:underline" onClick={() => handleDuplicate(funcion.id)}>
+                    Duplicar
+                  </button>
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
 

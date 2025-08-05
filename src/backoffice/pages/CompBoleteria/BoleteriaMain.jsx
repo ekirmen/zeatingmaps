@@ -1,13 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography } from 'antd';
-import { SearchOutlined, UserOutlined, QrcodeOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined } from '@ant-design/icons';
-import CartWithTimer from '../../components/CartWithTimer';
-import SeatAnimation from '../../components/SeatAnimation';
-import ZonesAndPrices from './ZonesAndPrices';
+import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined } from '@ant-design/icons';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
-import PrintTicketButton from '../../components/PrintTicketButton';
 import ProductosWidget from '../../../store/components/ProductosWidget';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
@@ -22,50 +18,29 @@ const BoleteriaMain = () => {
   
   // Usar los hooks existentes
   const {
-    eventos,
-    funciones,
     selectedFuncion,
     selectedEvent,
     selectedPlantilla,
-    mapa,
-    zonas,
-    carrito,
-    setCarrito,
-    handleEventSelect,
-    handleFunctionSelect,
+    setSelectedPlantilla,
     setSelectedEvent,
     setSelectedFuncion
   } = useBoleteria();
 
   const {
     selectedClient,
-    setSelectedClient,
-    searchResults,
-    paymentResults,
-    searchLoading,
-    handleAddClient,
-    handleUnifiedSearch,
-    clearSearchResults,
-    handleLocatorSearch
-  } = useClientManagement((seats) => {
-    setCarrito(seats);
-  });
+    setSelectedClient
+  } = useClientManagement();
 
   // Estados locales
-  const [animatingSeats, setAnimatingSeats] = useState([]);
-  const [showFunctions, setShowFunctions] = useState(false);
-  const [selectedAffiliate, setSelectedAffiliate] = useState(null);
-  const [locatorValue, setLocatorValue] = useState('');
-  const [showClientModal, setShowClientModal] = useState(false);
-  const [showLocatorModal, setShowLocatorModal] = useState(false);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [blockedSeats, setBlockedSeats] = useState([]);
   const [blockMode, setBlockMode] = useState(false);
   const [productosCarrito, setProductosCarrito] = useState([]);
   const [activeTab, setActiveTab] = useState('mapa');
-  const [selectedPriceType, setSelectedPriceType] = useState('regular');
+  const [selectedPriceOption, setSelectedPriceOption] = useState(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
   
-  // Nuevos estados para funcionalidades
+  // Estados para funcionalidades
   const [showEventSearch, setShowEventSearch] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
@@ -75,10 +50,6 @@ const BoleteriaMain = () => {
   const [selectedEventForSearch, setSelectedEventForSearch] = useState(null);
   const [selectedFunctionForSearch, setSelectedFunctionForSearch] = useState(null);
   const [plantillasPrecios, setPlantillasPrecios] = useState([]);
-  const [selectedPlantillaPrecio, setSelectedPlantillaPrecio] = useState(null);
-  const [selectedPriceOption, setSelectedPriceOption] = useState(null);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [isFullscreen, setIsFullscreen] = useState(false);
   
   // Estados para búsqueda de usuarios
   const [showUserSearch, setShowUserSearch] = useState(false);
@@ -90,75 +61,7 @@ const BoleteriaMain = () => {
   useEffect(() => {
     loadAvailableEvents();
     loadPlantillasPrecios();
-    
-    // Cargar parámetros del buscador si existen
-    if (location.state) {
-      const { selectedEventId, selectedFunctionId } = location.state;
-      
-      if (selectedEventId) {
-        loadEventAndFunctions(selectedEventId, selectedFunctionId);
-      }
-    }
-
-    // Cargar asientos seleccionados del localStorage
-    const savedSelectedSeats = localStorage.getItem('selectedSeats');
-    if (savedSelectedSeats) {
-      try {
-        const parsedSeats = JSON.parse(savedSelectedSeats);
-        setSelectedSeats(parsedSeats);
-      } catch (error) {
-        console.error('Error parsing saved seats:', error);
-      }
-    }
-  }, [location.state]);
-
-  const loadEventAndFunctions = async (eventId, functionId = null) => {
-    try {
-      // Cargar el evento
-      const { data: eventData, error: eventError } = await supabase
-        .from('eventos')
-        .select('*')
-        .eq('id', eventId)
-        .single();
-
-      if (eventError) {
-        console.error('Error loading event:', eventError);
-        return;
-      }
-
-      // Cargar las funciones del evento
-      const { data: functionsData, error: functionsError } = await supabase
-        .from('funciones')
-        .select('*')
-        .eq('evento', eventId)
-        .order('fecha', { ascending: true });
-
-      if (functionsError) {
-        console.error('Error loading functions:', eventError);
-        return;
-      }
-
-      // Actualizar el estado
-      setSelectedEvent(eventData);
-      setAvailableFunctions(functionsData);
-
-      // Si hay una función específica seleccionada, seleccionarla
-      if (functionId && functionsData.length > 0) {
-        const selectedFunc = functionsData.find(f => f.id === functionId);
-        if (selectedFunc) {
-          setSelectedFuncion(selectedFunc);
-        }
-      } else if (functionsData.length > 0) {
-        // Si no hay función específica, seleccionar la primera
-        setSelectedFuncion(functionsData[0]);
-      }
-
-      message.success(`Evento cargado: ${eventData.nombre}`);
-    } catch (error) {
-      console.error('Error loading event and functions:', error);
-      message.error('Error al cargar el evento');
-    }
-  };
+  }, []);
 
   const loadAvailableEvents = async () => {
     try {
@@ -181,8 +84,6 @@ const BoleteriaMain = () => {
 
   const loadFunctionsForEvent = async (eventId) => {
     try {
-      console.log('Loading functions for event:', eventId);
-      
       const { data, error } = await supabase
         .from('funciones')
         .select('*, sala(*)')
@@ -191,15 +92,9 @@ const BoleteriaMain = () => {
 
       if (error) {
         console.error('Error loading functions:', error);
-        console.error('Error details:', {
-          message: error.message,
-          details: error.details,
-          code: error.code
-        });
         return;
       }
 
-      console.log('Functions loaded successfully:', data);
       setAvailableFunctions(data || []);
     } catch (error) {
       console.error('Error loading functions:', error);
@@ -209,7 +104,7 @@ const BoleteriaMain = () => {
   const loadPlantillasPrecios = async () => {
     try {
       const { data, error } = await supabase
-        .from('plantillas_precios')
+        .from('plantillas')
         .select('*')
         .eq('activo', true)
         .order('nombre', { ascending: true });
@@ -233,51 +128,6 @@ const BoleteriaMain = () => {
     message.success('Redirigiendo a pagos...');
   };
 
-  const handleSeatAnimation = (seat) => {
-    setAnimatingSeats(prev => [...prev, seat]);
-  };
-
-  const handleAnimationComplete = (seatId) => {
-    setAnimatingSeats(prev => prev.filter(seat => seat._id !== seatId));
-  };
-
-  const handleLocatorSearchSubmit = () => {
-    if (!locatorValue.trim()) {
-      message.warning('Ingresa un localizador válido');
-      return;
-    }
-    message.info(`Buscando localizador: ${locatorValue}`);
-    setShowLocatorModal(false);
-  };
-
-  const handleClientSearch = (value) => {
-    if (value.trim()) {
-      handleUnifiedSearch(value);
-    } else {
-      clearSearchResults();
-    }
-  };
-
-  const handleSelectClient = (client) => {
-    setSelectedClient(client);
-    setShowClientModal(false);
-    message.success(`Cliente seleccionado: ${client.nombre}`);
-  };
-
-  const handleProductAdded = (producto) => {
-    setProductosCarrito(prev => {
-      const existingProduct = prev.find(p => p.id === producto.id);
-      if (existingProduct) {
-        return prev.map(p => 
-          p.id === producto.id 
-            ? { ...p, cantidad: p.cantidad + 1 }
-            : p
-        );
-      }
-      return [...prev, { ...producto, cantidad: 1 }];
-    });
-  };
-
   const handleSeatClick = (seat) => {
     if (blockMode) {
       setBlockedSeats(prev => {
@@ -295,7 +145,19 @@ const BoleteriaMain = () => {
         if (isSelected) {
           newSeats = prev.filter(s => s._id !== seat._id);
         } else {
-          newSeats = [...prev, seat];
+          // Asegurar que el asiento tenga el precio correcto
+          const seatWithPrice = {
+            ...seat,
+            precio: selectedPriceOption?.precio || 0,
+            precioInfo: selectedPriceOption ? {
+              entrada: selectedPriceOption.entrada,
+              zona: selectedPriceOption.zona,
+              comision: selectedPriceOption.comision,
+              precioOriginal: selectedPriceOption.precioOriginal,
+              category: selectedPriceOption.category
+            } : null
+          };
+          newSeats = [...prev, seatWithPrice];
         }
         
         // Guardar en localStorage
@@ -306,121 +168,31 @@ const BoleteriaMain = () => {
   };
 
   const calculateTotal = () => {
-    const seatsTotal = selectedSeats.reduce((sum, seat) => sum + (seat.precio || 0), 0);
+    const seatsTotal = selectedSeats.reduce((sum, seat) => {
+      const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
+      return sum + seatPrice;
+    }, 0);
     const productsTotal = productosCarrito.reduce((sum, product) => sum + (product.precio * product.cantidad), 0);
     return seatsTotal + productsTotal;
   };
 
-  // Funciones para los botones del sidebar
-  const handleSearchClick = () => {
-    setShowEventSearch(true);
-  };
-
-  const handleConfigClick = () => {
-    setShowConfig(true);
-  };
-
-  const handleProductsClick = () => {
-    setShowProducts(true);
-  };
-
-  const handleBoxClick = () => {
-    setShowBox(true);
-  };
-
-  // Funciones para los botones del header
-  const handleGridClick = () => {
-    message.info('Vista de cuadrícula activada');
-  };
-
-  const handleUploadClick = () => {
-    message.info('Función de subida activada');
-  };
-
-  const handleEyeClick = () => {
-    message.info('Vista previa activada');
-  };
-
-  const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 0.2, 3));
-  };
-
-  const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 0.2, 0.5));
-  };
-
-  const handleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-    message.info(isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa activada');
-  };
-
-  const handleRefresh = () => {
-    loadAvailableEvents();
-    loadPlantillasPrecios();
-    message.success('Datos actualizados');
-  };
-
-  const handleClose = () => {
-    message.info('Cerrando aplicación');
-  };
-
-  // Funciones para búsqueda de usuarios
-  const handleUserSearch = async (value) => {
-    if (!value.trim()) {
-      setUserSearchResults([]);
-      return;
-    }
-
-    setUserSearchLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .or(`full_name.ilike.%${value}%,login.ilike.%${value}%,telefono.ilike.%${value}%`)
-        .limit(10);
-
-      if (error) {
-        console.error('Error searching users:', error);
-        message.error('Error al buscar usuarios');
-        return;
+  const handleProductAdded = (producto) => {
+    setProductosCarrito(prev => {
+      const existingProduct = prev.find(p => p.id === producto.id);
+      if (existingProduct) {
+        return prev.map(p => 
+          p.id === producto.id 
+            ? { ...p, cantidad: p.cantidad + 1 }
+            : p
+        );
       }
-
-      setUserSearchResults(data || []);
-    } catch (error) {
-      console.error('Error searching users:', error);
-      message.error('Error al buscar usuarios');
-    } finally {
-      setUserSearchLoading(false);
-    }
+      return [...prev, { ...producto, cantidad: 1 }];
+    });
   };
 
-  const handleCreateUser = async (userData) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert([userData])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating user:', error);
-        message.error('Error al crear usuario');
-        return;
-      }
-
-      message.success('Usuario creado exitosamente');
-      setShowCreateUser(false);
-      setSelectedClient(data);
-    } catch (error) {
-      console.error('Error creating user:', error);
-      message.error('Error al crear usuario');
-    }
-  };
-
-  const handleSelectUser = (user) => {
-    setSelectedClient(user);
-    setShowUserSearch(false);
-    message.success(`Usuario seleccionado: ${user.full_name || user.login}`);
+  const handlePriceOptionSelect = (priceOption) => {
+    setSelectedPriceOption(priceOption);
+    message.success(`Precio seleccionado: ${priceOption.nombre} - $${priceOption.precio.toFixed(2)}`);
   };
 
   const handleEventSelectForSearch = (eventId) => {
@@ -439,57 +211,30 @@ const BoleteriaMain = () => {
     message.success(`Evento seleccionado: ${selectedEventForSearch?.nombre} - ${func?.sala?.nombre || 'Sala sin nombre'}`);
   };
 
-  const handlePriceOptionSelect = (priceOption) => {
-    setSelectedPriceOption(priceOption);
-    message.success(`Precio seleccionado: ${priceOption.nombre} - $${priceOption.precio.toFixed(2)}`);
-  };
-
   const tabItems = [
-    {
-      key: 'zonas',
-      label: 'Zonas',
-      children: (
-        <div className="p-4">
-          <h3 className="text-lg font-semibold mb-4">Zonas del Evento</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="text-center">
-              <h4 className="font-medium">General</h4>
-              <p className="text-sm text-gray-600">$17.00 - $77.00</p>
-            </Card>
-            <Card className="text-center">
-              <h4 className="font-medium">VIP</h4>
-              <p className="text-sm text-gray-600">$77.00</p>
-            </Card>
-          </div>
-        </div>
-      )
-    },
     {
       key: 'mapa',
       label: 'Mapa',
       children: (
         <div className="relative">
-          {/* Controles de zoom */}
           <div className="absolute bottom-4 left-4 z-10 flex space-x-2">
-            <Button size="small" icon={<ZoomInOutlined />} onClick={handleZoomIn} />
-            <Button size="small" icon={<FullscreenOutlined />} onClick={handleFullscreen} />
-            <Button size="small" icon={<ZoomOutOutlined />} onClick={handleZoomOut} />
+            <Button size="small" icon={<ZoomInOutlined />} onClick={() => setZoomLevel(prev => Math.min(prev + 0.2, 3))} />
+            <Button size="small" icon={<ZoomOutOutlined />} onClick={() => setZoomLevel(prev => Math.max(prev - 0.2, 0.5))} />
           </div>
           
-                                                      {/* Mapa de asientos */}
-           <div className="bg-white p-6 rounded-lg shadow-sm overflow-hidden">
-             <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}>
-               <SimpleSeatingMap
-                 selectedFuncion={selectedFuncion}
-                 onSeatClick={handleSeatClick}
-                 selectedSeats={selectedSeats}
-                 blockedSeats={blockedSeats}
-                 blockMode={blockMode}
-                 zonas={zonas}
-                 selectedPlantilla={selectedPlantilla}
-               />
-             </div>
-           </div>
+          <div className="bg-white p-6 rounded-lg shadow-sm overflow-hidden">
+            <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}>
+              <SimpleSeatingMap
+                selectedFuncion={selectedFuncion}
+                onSeatClick={handleSeatClick}
+                selectedSeats={selectedSeats}
+                blockedSeats={blockedSeats}
+                blockMode={blockMode}
+                selectedPlantilla={selectedPlantilla}
+                selectedPriceOption={selectedPriceOption}
+              />
+            </div>
+          </div>
         </div>
       )
     },
@@ -501,82 +246,33 @@ const BoleteriaMain = () => {
           <ProductosWidget onProductAdded={handleProductAdded} />
         </div>
       )
-    },
-    {
-      key: 'otros',
-      label: 'Otros',
-      children: (
-        <div className="p-4">
-          <h3 className="text-lg font-semibold mb-4">Otras Opciones</h3>
-          <div className="space-y-4">
-            <Card>
-              <h4 className="font-medium">Descuentos</h4>
-              <p className="text-sm text-gray-600">Aplicar códigos de descuento</p>
-            </Card>
-            <Card>
-              <h4 className="font-medium">Abonos</h4>
-              <p className="text-sm text-gray-600">Configurar abonos</p>
-            </Card>
-          </div>
-        </div>
-      )
     }
   ];
-
-  const [loading, setLoading] = useState(false);
-
-  const handleFixSeatConflicts = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/fixSeatConflicts', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        message.success('Limpieza completada exitosamente');
-        console.log('Resultado de limpieza:', result);
-        // Recargar la página para ver los cambios
-        window.location.reload();
-      } else {
-        message.error('Error en la limpieza: ' + result.error);
-      }
-    } catch (error) {
-      console.error('Error al ejecutar limpieza:', error);
-      message.error('Error al ejecutar la limpieza');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="h-screen flex bg-gray-100">
       {/* Sidebar izquierda */}
       <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
-                                   <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleSearchClick}>
-           <SearchOutlined className="text-xl mb-1" />
-           <div>Eventos</div>
-         </div>
-         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowUserSearch(true)}>
-           <UserOutlined className="text-xl mb-1" />
-           <div>Usuarios</div>
-         </div>
-         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleConfigClick}>
-           <SettingOutlined className="text-xl mb-1" />
-           <div>Config</div>
-         </div>
-         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={handleProductsClick}>
-           <GiftOutlined className="text-xl mb-1" />
-           <div>Productos</div>
-         </div>
-         <div className="bg-green-500 text-white text-xs text-center px-2 py-1 rounded cursor-pointer hover:bg-green-600" onClick={handleBoxClick}>
-           <ShoppingCartOutlined className="text-xl mb-1" />
-           <div>BOX</div>
-         </div>
+        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowEventSearch(true)}>
+          <SearchOutlined className="text-xl mb-1" />
+          <div>Eventos</div>
+        </div>
+        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowUserSearch(true)}>
+          <UserOutlined className="text-xl mb-1" />
+          <div>Usuarios</div>
+        </div>
+        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowConfig(true)}>
+          <SettingOutlined className="text-xl mb-1" />
+          <div>Config</div>
+        </div>
+        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowProducts(true)}>
+          <GiftOutlined className="text-xl mb-1" />
+          <div>Productos</div>
+        </div>
+        <div className="bg-green-500 text-white text-xs text-center px-2 py-1 rounded cursor-pointer hover:bg-green-600" onClick={() => setShowBox(true)}>
+          <ShoppingCartOutlined className="text-xl mb-1" />
+          <div>BOX</div>
+        </div>
       </div>
 
       {/* Contenido principal */}
@@ -585,61 +281,42 @@ const BoleteriaMain = () => {
         <div className="bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <button className="text-gray-600">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-                                                       <div className="flex items-center space-x-3">
-               {selectedEvent && selectedEvent.imagen_url ? (
-                 <img 
-                   src={selectedEvent.imagen_url} 
-                   alt={selectedEvent.nombre}
-                   className="w-8 h-8 rounded-lg object-cover"
-                   onError={(e) => {
-                     e.target.src = '/assets/logo.png';
-                   }}
-                 />
-               ) : (
-                 <Avatar size="small" src="/assets/logo.png" alt="Event" />
-               )}
-               <div className="text-sm">
-                 <div className="font-medium">
-                   {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
+              <div className="flex items-center space-x-3">
+                {selectedEvent && selectedEvent.imagen_url ? (
+                  <img 
+                    src={selectedEvent.imagen_url} 
+                    alt={selectedEvent.nombre}
+                    className="w-8 h-8 rounded-lg object-cover"
+                    onError={(e) => {
+                      e.target.src = '/assets/logo.png';
+                    }}
+                  />
+                ) : (
+                  <Avatar size="small" src="/assets/logo.png" alt="Event" />
+                )}
+                                 <div className="text-sm">
+                   <div className="font-medium">
+                     {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
+                   </div>
+                   <div className="text-gray-600">
+                     <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
+                     <span className="ml-4">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
+                   </div>
+                                       {selectedFuncion?.plantilla && (
+                      <div className="text-xs text-green-600 mt-1">
+                        ✓ Plantilla: {selectedFuncion.plantilla.nombre}
+                      </div>
+                    )}
+                   {selectedPriceOption && (
+                     <div className="text-xs text-blue-600 mt-1">
+                       ✓ Precio: {selectedPriceOption.entrada.nombre_entrada} - {selectedPriceOption.zona.nombre}
+                     </div>
+                   )}
                  </div>
-                 <div className="text-gray-600">
-                   <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
-                   <span className="ml-4">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
-                 </div>
-               </div>
-             </div>
+              </div>
             </div>
             <div className="flex items-center space-x-2">
-              <button 
-                className="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600" 
-                onClick={handleFixSeatConflicts}
-                disabled={loading}
-              >
-                {loading ? 'Limpiando...' : '🔧 Limpiar Conflictos'}
-              </button>
-              <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" onClick={handleGridClick}>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-              <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" onClick={handleUploadClick}>
-                <UploadOutlined className="w-4 h-4" />
-              </button>
-              <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" onClick={handleEyeClick}>
-                <EyeOutlined className="w-4 h-4" />
-              </button>
               <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
-              <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" onClick={handleRefresh}>
-                <ReloadOutlined className="w-4 h-4" />
-              </button>
-              <button className="p-1 text-gray-600 hover:bg-gray-100 rounded" onClick={handleClose}>
-                <CloseOutlined className="w-4 h-4" />
-              </button>
             </div>
           </div>
         </div>
@@ -649,12 +326,27 @@ const BoleteriaMain = () => {
           {/* Contenido central */}
           <div className="flex-1 p-6">
             {/* Selección de precios dinámica */}
-            <DynamicPriceSelector
-              selectedFuncion={selectedFuncion}
-              selectedPlantilla={selectedPlantilla}
-              onPriceSelect={handlePriceOptionSelect}
-              selectedPriceId={selectedPriceOption?.id}
-            />
+            {!selectedFuncion ? (
+              <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-blue-900 mb-2">Paso 1: Selecciona un Evento</h3>
+                  <p className="text-blue-700 mb-4">Primero debes seleccionar un evento y función para ver las opciones de precio</p>
+                  <Button 
+                    type="primary" 
+                    onClick={() => setShowEventSearch(true)}
+                    icon={<SearchOutlined />}
+                  >
+                    Seleccionar Evento
+                  </Button>
+                </div>
+              </div>
+                         ) : (
+               <DynamicPriceSelector
+                 selectedFuncion={selectedFuncion}
+                 onPriceSelect={handlePriceOptionSelect}
+                 selectedPriceId={selectedPriceOption?.id}
+               />
+             )}
 
             {/* Pestañas */}
             <Tabs
@@ -674,12 +366,62 @@ const BoleteriaMain = () => {
                 <div className="mb-4 p-3 bg-gray-50 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2">Precio Seleccionado</h4>
                   <div className="text-sm space-y-1">
-                    <div><span className="font-medium">Entrada:</span> {selectedPriceOption.entrada.nombre}</div>
+                                         <div><span className="font-medium">Entrada:</span> {selectedPriceOption.entrada.nombre_entrada}</div>
                     <div><span className="font-medium">Zona:</span> {selectedPriceOption.zona.nombre}</div>
                     <div><span className="font-medium">Precio:</span> ${selectedPriceOption.precio.toFixed(2)}</div>
                     {selectedPriceOption.comision > 0 && (
                       <div><span className="font-medium">Comisión:</span> ${selectedPriceOption.comision.toFixed(2)}</div>
                     )}
+                    <div className="mt-2">
+                      <Badge 
+                        count={selectedPriceOption.category === 'cortesia' ? 'Cortesía' : 
+                               selectedPriceOption.category === 'vip' ? 'VIP' : 
+                               selectedPriceOption.category === 'premium' ? 'Premium' : 'Regular'} 
+                        style={{ 
+                          backgroundColor: selectedPriceOption.category === 'cortesia' ? '#52c41a' : 
+                                         selectedPriceOption.category === 'vip' ? '#faad14' : 
+                                         selectedPriceOption.category === 'premium' ? '#722ed1' : '#1890ff'
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Asientos seleccionados */}
+              {selectedSeats.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="font-medium text-gray-900 mb-2">Asientos Seleccionados</h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {selectedSeats.map((seat, index) => (
+                      <div key={seat._id || index} className="flex items-center justify-between p-2 bg-blue-50 rounded">
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">
+                            {seat.nombre || `Asiento ${seat._id}`}
+                          </div>
+                          {seat.precioInfo && (
+                                                         <div className="text-xs text-gray-600">
+                               {seat.precioInfo.entrada.nombre_entrada} - {seat.precioInfo.zona.nombre}
+                             </div>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-sm">
+                            ${(seat.precio || selectedPriceOption?.precio || 0).toFixed(2)}
+                          </div>
+                          <Button 
+                            size="small" 
+                            type="text" 
+                            danger
+                            onClick={() => {
+                              setSelectedSeats(prev => prev.filter(s => s._id !== seat._id));
+                            }}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -687,7 +429,10 @@ const BoleteriaMain = () => {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span>Boletos:</span>
-                  <span>{selectedSeats.length}, ${selectedSeats.reduce((sum, seat) => sum + (seat.precio || 0), 0).toFixed(2)}</span>
+                  <span>{selectedSeats.length}, ${selectedSeats.reduce((sum, seat) => {
+                    const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
+                    return sum + seatPrice;
+                  }, 0).toFixed(2)}</span>
                 </div>
                 
                 <div className="flex justify-between">
@@ -695,9 +440,11 @@ const BoleteriaMain = () => {
                   <span>{productosCarrito.reduce((sum, p) => sum + p.cantidad, 0)}, ${productosCarrito.reduce((sum, product) => sum + (product.precio * product.cantidad), 0).toFixed(2)}</span>
                 </div>
                 
-                <div className="flex justify-between">
-                  <span>Comisiones de transacción:</span>
-                  <span>0, $0.00</span>
+                <div className="border-t pt-2">
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total:</span>
+                    <span>${calculateTotal().toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
               
@@ -708,9 +455,12 @@ const BoleteriaMain = () => {
                   block
                   className="bg-purple-600 hover:bg-purple-700"
                   onClick={handlePaymentClick}
-                  disabled={!selectedPriceOption}
+                  disabled={!selectedFuncion || !selectedPriceOption || selectedSeats.length === 0}
                 >
-                  {selectedPriceOption ? 'Pagos/Detalles' : 'Selecciona un precio'}
+                  {!selectedFuncion ? 'Selecciona un evento' :
+                   !selectedPriceOption ? 'Selecciona una zona y precio' : 
+                   selectedSeats.length === 0 ? 'Selecciona asientos' : 
+                   `Pagar $${calculateTotal().toFixed(2)}`}
                 </Button>
               </div>
             </div>
@@ -729,12 +479,12 @@ const BoleteriaMain = () => {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Evento</label>
-                                                   <Select
-               placeholder="Selecciona un evento"
-               style={{ width: '100%' }}
-               onChange={handleEventSelectForSearch}
-               value={selectedEventForSearch?.id}
-             >
+            <Select
+              placeholder="Selecciona un evento"
+              style={{ width: '100%' }}
+              onChange={handleEventSelectForSearch}
+              value={selectedEventForSearch?.id}
+            >
               {availableEvents.map(event => (
                 <Option key={event.id} value={event.id}>
                   {event.nombre} - {new Date(event.fecha_evento).toLocaleDateString('es-ES')}
@@ -746,78 +496,69 @@ const BoleteriaMain = () => {
           {selectedEventForSearch && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Función</label>
-                                                           <Select
-                 placeholder="Selecciona una función"
-                 style={{ width: '100%' }}
-                 onChange={handleFunctionSelectForSearch}
-                 value={selectedFunctionForSearch?.id}
-               >
-                 {availableFunctions.map(func => (
-                   <Option key={func.id} value={func.id}>
-                     {func.sala?.nombre || 'Sala sin nombre'} - {new Date(func.fecha_celebracion).toLocaleString('es-ES')}
-                   </Option>
-                 ))}
-               </Select>
+              <Select
+                placeholder="Selecciona una función"
+                style={{ width: '100%' }}
+                onChange={handleFunctionSelectForSearch}
+                value={selectedFunctionForSearch?.id}
+              >
+                {availableFunctions.map(func => (
+                  <Option key={func.id} value={func.id}>
+                    {func.sala?.nombre || 'Sala sin nombre'} - {new Date(func.fecha_celebracion).toLocaleString('es-ES')}
+                  </Option>
+                ))}
+              </Select>
             </div>
           )}
         </div>
       </Modal>
 
-             {/* Drawer de configuración */}
-       <Drawer
-         title="Configuración"
-         placement="right"
-         onClose={() => setShowConfig(false)}
-         open={showConfig}
-         width={400}
-       >
-         <div className="space-y-4">
-           <Card title="Plantillas de Precios">
-             <div className="space-y-3">
-               <Select
-                 placeholder="Selecciona una plantilla"
-                 style={{ width: '100%' }}
-                 onChange={(value) => {
-                   const plantilla = plantillasPrecios.find(p => p.id === value);
-                   setSelectedPlantilla(plantilla);
-                   setSelectedPriceOption(null);
-                   message.success(`Plantilla seleccionada: ${plantilla?.nombre}`);
-                 }}
-                 value={selectedPlantilla?.id}
-               >
-                 {plantillasPrecios.map(plantilla => (
-                   <Option key={plantilla.id} value={plantilla.id}>
-                     {plantilla.nombre}
-                   </Option>
-                 ))}
-               </Select>
-               
-               {selectedPlantilla && (
-                 <div className="p-3 bg-gray-50 rounded-lg">
-                   <h4 className="font-medium text-gray-900 mb-2">Plantilla: {selectedPlantilla.nombre}</h4>
-                   <p className="text-sm text-gray-600">Tipo: {selectedPlantilla.tipo}</p>
-                   <p className="text-sm text-gray-600">Color: {selectedPlantilla.color}</p>
-                   <p className="text-sm text-gray-600">Estado: {selectedPlantilla.activo ? 'Activa' : 'Inactiva'}</p>
-                 </div>
-               )}
-             </div>
-           </Card>
-           
-           <Card title="Configuración General">
-             <div className="space-y-2">
-               <div className="flex items-center justify-between">
-                 <span>Modo bloqueo</span>
-                 <input
-                   type="checkbox"
-                   checked={blockMode}
-                   onChange={(e) => setBlockMode(e.target.checked)}
-                   className="rounded"
-                 />
-               </div>
-             </div>
-           </Card>
-         </div>
-       </Drawer>
+      {/* Drawer de configuración */}
+      <Drawer
+        title="Configuración"
+        placement="right"
+        onClose={() => setShowConfig(false)}
+        open={showConfig}
+        width={400}
+      >
+        <div className="space-y-4">
+          <Card title="Plantillas de Precios">
+            <div className="space-y-3">
+              <Select
+                placeholder="Selecciona una plantilla"
+                style={{ width: '100%' }}
+                onChange={(value) => {
+                  const plantilla = plantillasPrecios.find(p => p.id === value);
+                  setSelectedPlantilla(plantilla);
+                  setSelectedPriceOption(null);
+                  message.success(`Plantilla seleccionada: ${plantilla?.nombre}`);
+                }}
+                value={selectedPlantilla?.id}
+              >
+                {plantillasPrecios.map(plantilla => (
+                  <Option key={plantilla.id} value={plantilla.id}>
+                    {plantilla.nombre}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          </Card>
+          
+          <Card title="Configuración General">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span>Modo bloqueo</span>
+                <input
+                  type="checkbox"
+                  checked={blockMode}
+                  onChange={(e) => setBlockMode(e.target.checked)}
+                  className="rounded"
+                />
+              </div>
+            </div>
+          </Card>
+        </div>
+      </Drawer>
 
       {/* Drawer de productos */}
       <Drawer
@@ -871,112 +612,9 @@ const BoleteriaMain = () => {
             </Space>
           </Card>
         </div>
-             </Drawer>
-
-       {/* Modal de búsqueda de usuarios */}
-       <Modal
-         title="Buscar o Crear Usuario"
-         open={showUserSearch}
-         onCancel={() => setShowUserSearch(false)}
-         footer={null}
-         width={600}
-       >
-         <div className="space-y-4">
-           <div>
-             <label className="block text-sm font-medium text-gray-700 mb-2">Buscar Usuario</label>
-             <Search
-               placeholder="Buscar por nombre, login o teléfono"
-               value={userSearchValue}
-               onChange={(e) => {
-                 setUserSearchValue(e.target.value);
-                 handleUserSearch(e.target.value);
-               }}
-               loading={userSearchLoading}
-               onSearch={handleUserSearch}
-             />
-           </div>
-
-           {userSearchResults.length > 0 && (
-             <div>
-               <label className="block text-sm font-medium text-gray-700 mb-2">Resultados</label>
-               <div className="max-h-60 overflow-y-auto space-y-2">
-                 {userSearchResults.map(user => (
-                   <div
-                     key={user.id}
-                     className="p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
-                     onClick={() => handleSelectUser(user)}
-                   >
-                     <div className="font-medium">{user.full_name || user.login}</div>
-                     <div className="text-sm text-gray-600">{user.login}</div>
-                     {user.telefono && (
-                       <div className="text-sm text-gray-500">{user.telefono}</div>
-                     )}
-                   </div>
-                 ))}
-               </div>
-             </div>
-           )}
-
-           <div className="border-t pt-4">
-             <Button
-               type="primary"
-               block
-               onClick={() => setShowCreateUser(true)}
-               icon={<UserOutlined />}
-             >
-               Crear Nuevo Usuario
-             </Button>
-           </div>
-         </div>
-       </Modal>
-
-       {/* Modal de creación de usuario */}
-       <Modal
-         title="Crear Nuevo Usuario"
-         open={showCreateUser}
-         onCancel={() => setShowCreateUser(false)}
-         footer={null}
-         width={500}
-       >
-                          <Form
-               layout="vertical"
-               onFinish={handleCreateUser}
-             >
-            <Form.Item
-              name="full_name"
-              label="Nombre Completo"
-              rules={[{ required: true, message: 'Por favor ingresa el nombre completo' }]}
-            >
-              <Input placeholder="Nombre completo" />
-            </Form.Item>
-
-            <Form.Item
-              name="login"
-              label="Login/Email"
-              rules={[
-                { required: true, message: 'Por favor ingresa el login' },
-                { type: 'email', message: 'Por favor ingresa un email válido' }
-              ]}
-            >
-              <Input placeholder="usuario@ejemplo.com" />
-            </Form.Item>
-
-            <Form.Item
-              name="telefono"
-              label="Teléfono"
-            >
-              <Input placeholder="+1234567890" />
-            </Form.Item>
-
-            <Form.Item>
-              <Button type="primary" htmlType="submit" block>
-                Crear Usuario
-              </Button>
-            </Form.Item>
-          </Form>
-       </Modal>
-     </div>
-   );
- };
+      </Drawer>
+    </div>
+  );
+};
 
 export default BoleteriaMain; 

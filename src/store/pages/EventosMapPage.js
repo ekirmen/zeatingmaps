@@ -31,8 +31,14 @@ const EventosMapPage = () => {
   const {
     isSeatLocked,
     isSeatLockedByMe,
+    isTableLocked,
+    isTableLockedByMe,
+    isAnySeatInTableLocked,
+    areAllSeatsInTableLockedByMe,
     lockSeat,
     unlockSeat,
+    lockTable,
+    unlockTable,
     subscribeToFunction,
     unsubscribe
   } = useSeatLockStore();
@@ -42,7 +48,7 @@ const EventosMapPage = () => {
     if (!funcionParam) return;
     subscribeToFunction(funcionParam);
     return () => unsubscribe();
-  }, [funcionParam, subscribeToFunction, unsubscribe]);
+  }, [funcionParam]);
 
   // Cargar datos del evento y función
   useEffect(() => {
@@ -127,7 +133,7 @@ const EventosMapPage = () => {
   };
 
   const handleProceedToCart = () => {
-    if (cartItems.length === 0) {
+    if (!cartItems || cartItems.length === 0) {
       message.warning('No hay asientos seleccionados');
       return;
     }
@@ -208,13 +214,13 @@ const EventosMapPage = () => {
             <div className="flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-sm text-gray-600">Asientos seleccionados</p>
-                <p className="text-lg font-bold text-blue-600">{cartItems.length}</p>
+                <p className="text-lg font-bold text-blue-600">{cartItems ? cartItems.length : 0}</p>
               </div>
               <Button 
                 type="primary" 
                 icon={<ShoppingCartOutlined />}
                 onClick={handleProceedToCart}
-                disabled={cartItems.length === 0}
+                disabled={!cartItems || cartItems.length === 0}
               >
                 Ver Carrito
               </Button>
@@ -252,9 +258,22 @@ const EventosMapPage = () => {
                   <SeatingMapUnified
                     mapa={mapa}
                     onSeatClick={handleSeatToggle}
-                    selectedSeats={cartItems.map(item => item.sillaId)}
+                    onTableToggle={(table) => {
+                      // Manejar selección de mesa completa
+                      console.log('Mesa seleccionada:', table);
+                      // Aquí puedes implementar la lógica para seleccionar todos los asientos de la mesa
+                    }}
+                    selectedSeats={cartItems ? cartItems.map(item => item.sillaId) : []}
                     isSeatLocked={isSeatLocked}
                     isSeatLockedByMe={isSeatLockedByMe}
+                    isTableLocked={isTableLocked}
+                    isTableLockedByMe={isTableLockedByMe}
+                    isAnySeatInTableLocked={isAnySeatInTableLocked}
+                    areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
+                    lockSeat={lockSeat}
+                    unlockSeat={unlockSeat}
+                    lockTable={lockTable}
+                    unlockTable={unlockTable}
                   />
                 </div>
               ) : (

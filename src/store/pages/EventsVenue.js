@@ -132,12 +132,12 @@ const EventsVenue = ({ groupByTags = true }) => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <div className="bg-white bg-opacity-20 rounded-lg p-4">
-                <div className="text-2xl font-bold">{events.length}</div>
+                <div className="text-2xl font-bold">{events ? events.length : 0}</div>
                 <div className="text-sm opacity-90">Eventos Disponibles</div>
               </div>
               <div className="bg-white bg-opacity-20 rounded-lg p-4">
                 <div className="text-2xl font-bold">
-                  {events.filter(e => e.estadoVenta === 'a-la-venta').length}
+                  {events ? events.filter(e => e.estadoVenta === 'a-la-venta').length : 0}
                 </div>
                 <div className="text-sm opacity-90">A la Venta</div>
               </div>
@@ -156,14 +156,14 @@ const EventsVenue = ({ groupByTags = true }) => {
         )}
 
         {/* Fallback Events Section */}
-        {!content && events.length > 0 && (
+        {!content && events && events.length > 0 && (
           <div className="mb-8">
             <EventListWidget events={events} groupByTags={groupByTags} />
           </div>
         )}
 
         {/* No Content Message */}
-        {!content && events.length === 0 && (
+        {!content && (!events || events.length === 0) && (
           <div className="text-center py-12">
             <div className="bg-white rounded-lg shadow-md p-8 max-w-md mx-auto">
               <div className="text-gray-400 mb-4">

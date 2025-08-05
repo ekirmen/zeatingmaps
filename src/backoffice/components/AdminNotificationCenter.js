@@ -40,7 +40,16 @@ const AdminNotificationCenter = () => {
   useEffect(() => {
     loadNotifications();
     loadSystemAlerts();
-    subscribeToNotifications();
+    
+    // Suscribirse a notificaciones y retornar función de limpieza
+    const cleanup = subscribeToNotifications();
+    
+    // Retornar función de limpieza
+    return () => {
+      if (cleanup) {
+        cleanup();
+      }
+    };
   }, []);
 
   const loadNotifications = async () => {
@@ -116,6 +125,18 @@ const AdminNotificationCenter = () => {
   };
 
   const subscribeToNotifications = () => {
+    // Verificar si ya existe un canal con el mismo topic
+    const existingChannels = supabase.getChannels();
+    const existingChannel = existingChannels.find(ch => ch.topic === 'admin_notifications');
+    
+    if (existingChannel) {
+      console.log('[NOTIFICATIONS] Canal ya existe, reutilizando');
+      return () => {
+        // No desuscribirse si el canal es compartido
+        console.log('[NOTIFICATIONS] No desuscribiendo canal compartido');
+      };
+    }
+
     // Suscribirse a cambios en notificaciones
     const subscription = supabase
       .channel('admin_notifications')
@@ -131,9 +152,18 @@ const AdminNotificationCenter = () => {
           setUnreadCount(prev => prev + 1);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[NOTIFICATIONS] Estado de suscripción:', status);
+      });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      try {
+        subscription.unsubscribe();
+        console.log('[NOTIFICATIONS] Canal desuscrito exitosamente');
+      } catch (error) {
+        console.warn('[NOTIFICATIONS] Error al desuscribir canal:', error);
+      }
+    };
   };
 
   const markAsRead = async (notificationId) => {

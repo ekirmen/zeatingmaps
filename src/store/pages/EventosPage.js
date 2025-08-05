@@ -334,7 +334,7 @@ const EventosPage = () => {
                   </div>
                 )}
 
-                {funciones.length > 0 && (
+                {funciones && funciones.length > 0 && (
                   <div className="flex items-center">
                     <span className="font-semibold mr-2">Funciones:</span>
                     <span>{funciones.length}</span>
