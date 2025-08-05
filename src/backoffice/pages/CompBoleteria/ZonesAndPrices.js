@@ -117,9 +117,15 @@ const ZonesAndPrices = ({
     setMapa((prev) => {
       if (!prev) return prev;
       const blocked = estado === 'bloqueado';
+      
+      // Handle new structure where contenido is an object with zonas property
+      const elementos = Array.isArray(prev.contenido) 
+        ? prev.contenido 
+        : prev.contenido.zonas || [];
+      
       return {
         ...prev,
-        contenido: prev.contenido.map((mesa) => ({
+        contenido: elementos.map((mesa) => ({
           ...mesa,
           sillas: mesa.sillas.map((s) => {
             const sid = s._id || s.id;

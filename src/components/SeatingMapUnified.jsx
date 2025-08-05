@@ -48,12 +48,14 @@ const SeatingMapUnified = ({
   // Fetch zones from "mapa". Some backends store the zones inside
   // "mapa.contenido" while others may return them at the root level.
   const zonas = mapa?.zonas || mapa?.contenido?.zonas || [];
-  const allSeats = zonas.flatMap((z) => z.asientos || []);
+  const allSeats = zonas?.flatMap((z) => z.asientos || []) || [];
+
+
 
   const maxX = Math.max(...allSeats.map((s) => s.x + (s.ancho || 30)), 800);
   const maxY = Math.max(...allSeats.map((s) => s.y + (s.alto || 30)), 600);
 
-  if (!mapa || zonas.length === 0) {
+  if (!mapa || !zonas || zonas.length === 0) {
     return <div>No map data available</div>;
   }
 

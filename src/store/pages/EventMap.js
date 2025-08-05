@@ -12,10 +12,15 @@ function EventMap({ mapa, toggleSillaEnCarrito }) {
     );
   }
 
+  // Handle new structure where contenido is an object with zonas property
+  const elementos = Array.isArray(mapa.contenido) 
+    ? mapa.contenido 
+    : mapa.contenido.zonas || [];
+
   return (
     <div className="p-4 bg-white rounded-lg shadow-lg max-w-full overflow-auto font-inter">
       {/* Iterate over the main content elements of the map */}
-      {mapa.contenido.map((elemento) => (
+      {elementos.map((elemento) => (
         <div
           key={elemento.id || elemento._id || elemento.nombre}
           className="mb-6 p-4 border border-gray-200 rounded-lg shadow-sm bg-gray-50"

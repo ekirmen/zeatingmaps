@@ -285,9 +285,14 @@ const useEventData = (eventIdOrSlug) => {
             const seatMap = Object.fromEntries(seatStates.map(s => [s._id || s.id, s.bloqueado ? 'bloqueado' : s.status]));
             const selectedIds = cart.map(c => c._id);
 
+            // Handle new structure where contenido is an object with zonas property
+            const elementos = Array.isArray(mapaData.contenido) 
+                ? mapaData.contenido 
+                : mapaData.contenido.zonas || [];
+
             const actualizado = {
                 ...mapaData,
-                contenido: mapaData.contenido.map(elemento => ({
+                contenido: elementos.map(elemento => ({
                     ...elemento,
                     sillas: elemento.sillas.map(s => {
                         const zonaId = s.zona || elemento.zona;

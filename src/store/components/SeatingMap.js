@@ -19,10 +19,15 @@ const SeatingMap = ({ mapa, zonas = [], onClickSilla }) => {
     return zona ? zona.color : undefined;
   };
 
+  // Handle new structure where contenido is an object with zonas property
+  const elementos = Array.isArray(mapa.contenido) 
+    ? mapa.contenido 
+    : mapa.contenido.zonas || [];
+
   return (
     <Stage width={800} height={500}>
       <Layer>
-        {mapa.contenido.map(elemento => (
+        {elementos.map(elemento => (
           <React.Fragment key={elemento._id}>
             {elemento.type === 'mesa' && (
               elemento.shape === 'rect' ? (
