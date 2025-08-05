@@ -12,7 +12,7 @@ const DynamicPriceSelector = ({
 }) => {
   const [priceOptions, setPriceOptions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState('regular');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const loadPriceOptions = useCallback(async () => {
     console.log('loadPriceOptions called with:', { selectedFuncion });
@@ -161,8 +161,6 @@ const DynamicPriceSelector = ({
     }
   }, [selectedFuncion, loadPriceOptions]);
 
-
-
   const handlePriceSelect = (priceOption) => {
     onPriceSelect(priceOption);
   };
@@ -180,19 +178,6 @@ const DynamicPriceSelector = ({
     }
   };
 
-  // const getCategoryColor = (category) => {
-  //   switch (category) {
-  //     case 'cortesia':
-  //       return 'border-green-500 bg-green-50';
-  //     case 'vip':
-  //       return 'border-yellow-500 bg-yellow-50';
-  //     case 'premium':
-  //       return 'border-purple-500 bg-purple-50';
-  //     default:
-  //       return 'border-gray-300 bg-white';
-  //   }
-  // };
-
   const getCategoryLabel = (category) => {
     switch (category) {
       case 'cortesia':
@@ -206,9 +191,63 @@ const DynamicPriceSelector = ({
     }
   };
 
+  // Función auxiliar para determinar categoría basada en nombre de entrada
+  const getCategoryFromEntrada = (entradaNombre) => {
+    if (!entradaNombre) return 'regular';
+    const nombre = entradaNombre.toLowerCase();
+    if (nombre.includes('cortesía') || nombre.includes('cortesia')) {
+      return 'cortesia';
+    } else if (nombre.includes('vip')) {
+      return 'vip';
+    } else if (nombre.includes('premium')) {
+      return 'premium';
+    }
+    return 'regular';
+  };
+
+  // Generar botones dinámicos basados en zonas
+  const generateZonaButtons = () => {
+    if (!priceOptions.length) return [];
+    
+    // Obtener zonas únicas de la base de datos
+    const uniqueZonas = [...new Set(priceOptions.map(opt => opt.zona.nombre))];
+    
+    const buttons = [];
+    
+    // Botón "Todas"
+    buttons.push(
+      <Button 
+        key="all"
+        type={selectedCategory === 'all' ? 'primary' : 'default'}
+        onClick={() => setSelectedCategory('all')}
+      >
+        Todas
+      </Button>
+    );
+
+    // Botones por cada zona única
+    uniqueZonas.forEach(zonaNombre => {
+      const count = priceOptions.filter(opt => opt.zona.nombre === zonaNombre).length;
+      
+      buttons.push(
+        <Button 
+          key={zonaNombre}
+          type={selectedCategory === zonaNombre ? 'primary' : 'default'}
+          icon={getCategoryIcon(getCategoryFromEntrada(priceOptions.find(opt => opt.zona.nombre === zonaNombre)?.entrada.nombre_entrada))}
+          onClick={() => setSelectedCategory(zonaNombre)}
+        >
+          {zonaNombre} ({count})
+        </Button>
+      );
+    });
+
+    return buttons;
+  };
+
+  // Filtrar opciones por zona seleccionada
   const filteredOptions = selectedCategory === 'all' 
     ? priceOptions 
-    : priceOptions.filter(option => option.category === selectedCategory);
+    : priceOptions.filter(option => option.zona.nombre === selectedCategory);
 
   if (loading) {
     return (
@@ -238,35 +277,10 @@ const DynamicPriceSelector = ({
         <Text type="secondary">Paso 1: Elige la zona y tipo de entrada</Text>
       </div>
 
-      {/* Filtros por categoría */}
+      {/* Filtros por zona - DINÁMICOS */}
       <div className="mb-4">
-        <Space>
-          <Button 
-            type={selectedCategory === 'all' ? 'primary' : 'default'}
-            onClick={() => setSelectedCategory('all')}
-          >
-            Todas
-          </Button>
-          <Button 
-            type={selectedCategory === 'regular' ? 'primary' : 'default'}
-            onClick={() => setSelectedCategory('regular')}
-          >
-            Regular
-          </Button>
-          <Button 
-            type={selectedCategory === 'vip' ? 'primary' : 'default'}
-            icon={<CrownOutlined />}
-            onClick={() => setSelectedCategory('vip')}
-          >
-            VIP
-          </Button>
-          <Button 
-            type={selectedCategory === 'cortesia' ? 'primary' : 'default'}
-            icon={<GiftOutlined />}
-            onClick={() => setSelectedCategory('cortesia')}
-          >
-            Cortesía
-          </Button>
+        <Space wrap>
+          {generateZonaButtons()}
         </Space>
       </div>
 
@@ -296,11 +310,11 @@ const DynamicPriceSelector = ({
             </div>
 
             <div className="space-y-2">
-                             <div>
-                 <Text strong className="text-lg">
-                   {option.entrada.nombre_entrada}
-                 </Text>
-               </div>
+              <div>
+                <Text strong className="text-lg">
+                  {option.entrada.nombre_entrada}
+                </Text>
+              </div>
               
               <div>
                 <Text type="secondary">
@@ -350,22 +364,22 @@ const DynamicPriceSelector = ({
             <p className="text-yellow-700 mb-4">
               {selectedCategory === 'all' 
                 ? 'No se encontraron opciones de precio para esta función y plantilla.'
-                : `No hay opciones de precio de tipo "${getCategoryLabel(selectedCategory)}" disponibles.`
+                : `No hay opciones de precio para la zona "${selectedCategory}" disponibles.`
               }
             </p>
             <div className="text-sm text-yellow-600">
               <p>• Verifica que la plantilla de precios tenga configurados los precios</p>
               <p>• Asegúrate de que las entradas y zonas estén activas</p>
-              <p>• Intenta cambiar la categoría de filtro</p>
+              <p>• Intenta cambiar la zona de filtro</p>
               <p>• Revisa la consola del navegador para más detalles de depuración</p>
             </div>
-                         <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
-               <p><strong>Información de depuración:</strong></p>
-               <p>• Función seleccionada: {selectedFuncion?.id || 'Ninguna'} - {selectedFuncion?.sala?.nombre || 'Sin sala'}</p>
-               <p>• Plantilla asignada: {selectedFuncion?.plantilla?.id || 'Ninguna'} - {selectedFuncion?.plantilla?.nombre || 'Sin plantilla'}</p>
-               <p>• Opciones de precio cargadas: {priceOptions.length}</p>
-               <p>• Categoría filtrada: {getCategoryLabel(selectedCategory)}</p>
-             </div>
+            <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
+              <p><strong>Información de depuración:</strong></p>
+              <p>• Función seleccionada: {selectedFuncion?.id || 'Ninguna'} - {selectedFuncion?.sala?.nombre || 'Sin sala'}</p>
+              <p>• Plantilla asignada: {selectedFuncion?.plantilla?.id || 'Ninguna'} - {selectedFuncion?.plantilla?.nombre || 'Sin plantilla'}</p>
+              <p>• Opciones de precio cargadas: {priceOptions.length}</p>
+              <p>• Zona filtrada: {selectedCategory === 'all' ? 'Todas' : selectedCategory}</p>
+            </div>
           </div>
         </div>
       )}
