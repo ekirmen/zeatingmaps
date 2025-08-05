@@ -32,8 +32,17 @@ const Funciones = () => {
   };
 
   const getPlantillaNombre = (plantillaId) => {
+    // Si la función ya tiene la plantilla cargada, usar esa
+    if (plantillaId && typeof plantillaId === 'object' && plantillaId.nombre) {
+      return plantillaId.nombre;
+    }
+    
+    // Buscar en el array local de plantillas
     const plantilla = plantillas.find((p) => p.id === plantillaId);
-    return plantilla ? plantilla.nombre : 'Plantilla eliminada';
+    if (plantilla) return plantilla.nombre;
+    
+    // Si no se encuentra, mostrar el ID
+    return plantillaId ? `Plantilla ${plantillaId}` : 'Sin plantilla';
   };
 
   const formatFecha = (date) => {
@@ -148,23 +157,21 @@ const Funciones = () => {
 
   useEffect(() => {
     const fetchPlantillas = async () => {
-      if (recintoSeleccionado && salaSeleccionada) {
-        const { data, error } = await supabase
-          .from('plantillas')
-          .select('*')
-          .eq('recinto', recintoSeleccionado.id)
-          .eq('sala', salaSeleccionada.id);
+      // Cargar todas las plantillas disponibles para mostrar en el modal
+      const { data, error } = await supabase
+        .from('plantillas')
+        .select('*')
+        .order('nombre');
 
-        if (error) {
-          console.error('Error al obtener plantillas:', error);
-        } else {
-          setPlantillas(data);
-        }
+      if (error) {
+        console.error('Error al obtener plantillas:', error);
+      } else {
+        setPlantillas(data || []);
       }
     };
 
     fetchPlantillas();
-  }, [recintoSeleccionado, salaSeleccionada]);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -180,6 +187,12 @@ const Funciones = () => {
       sala: salaSeleccionada.id,
       plantilla: nuevaFuncion.plantilla,
     };
+    
+    console.log('Guardando función con datos:', {
+      ...funcionData,
+      plantillaSeleccionada: nuevaFuncion.plantilla,
+      plantillaEncontrada: plantillas.find(p => p.id === nuevaFuncion.plantilla)?.nombre
+    });
   
     try {
       // Intentar obtener el usuario autenticado, pero no fallar si no está disponible
@@ -226,14 +239,7 @@ const Funciones = () => {
       // limpiar
       setModalIsOpen(false);
       setEditingFuncion(null);
-      setNuevaFuncion({
-        fechaCelebracion: '',
-        plantilla: '',
-        inicioVenta: '',
-        finVenta: '',
-        pagoAPlazos: false,
-        permitirReservasWeb: false,
-      });
+      // No resetear el formulario para mantener la plantilla seleccionada
   
                  // Recargar las funciones con los filtros actuales
          fetchFunciones();
@@ -246,9 +252,22 @@ const Funciones = () => {
 
   const handleEdit = (funcion) => {
     setEditingFuncion(funcion);
+    
+    // Obtener el ID de la plantilla correctamente
+    let plantillaId = '';
+    if (funcion.plantilla) {
+      // Si plantilla es un objeto (con nombre, id, etc.), usar su id
+      if (typeof funcion.plantilla === 'object' && funcion.plantilla.id) {
+        plantillaId = funcion.plantilla.id;
+      } else {
+        // Si es solo el ID
+        plantillaId = funcion.plantilla;
+      }
+    }
+    
     setNuevaFuncion({
       fechaCelebracion: funcion.fechaCelebracion?.split('T')[0] || '',
-      plantilla: funcion.plantilla || '',
+      plantilla: plantillaId,
       inicioVenta: funcion.inicioVenta?.split('T')[0] || '',
       finVenta: funcion.finVenta?.split('T')[0] || '',
       pagoAPlazos: funcion.pagoAPlazos || false,
@@ -361,7 +380,18 @@ const Funciones = () => {
           </div>
         )}
 
-        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={() => setModalIsOpen(true)}>
+        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={() => {
+          setEditingFuncion(null);
+          setNuevaFuncion({
+            fechaCelebracion: '',
+            plantilla: '',
+            inicioVenta: '',
+            finVenta: '',
+            pagoAPlazos: false,
+            permitirReservasWeb: false,
+          });
+          setModalIsOpen(true);
+        }}>
           Nueva Función
         </button>
       </div>
@@ -423,14 +453,7 @@ const Funciones = () => {
         onRequestClose={() => {
           setModalIsOpen(false);
           setEditingFuncion(null);
-          setNuevaFuncion({
-            fechaCelebracion: '',
-            plantilla: '',
-            inicioVenta: '',
-            finVenta: '',
-            pagoAPlazos: false,
-            permitirReservasWeb: false,
-          });
+          // No resetear el estado para mantener la plantilla seleccionada
         }}
         className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto focus:outline-none"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
@@ -509,13 +532,31 @@ const Funciones = () => {
             <label>Permite reservas a clientes web</label>
           </div>
 
-          <div className="flex justify-end gap-2 mt-4">
-            <button type="button" className="text-red-600 hover:underline" onClick={() => setModalIsOpen(false)}>
-              Cancelar
+          <div className="flex justify-between gap-2 mt-4">
+            <button 
+              type="button" 
+              className="text-gray-600 hover:underline text-sm" 
+              onClick={() => {
+                setNuevaFuncion({
+                  fechaCelebracion: '',
+                  plantilla: '',
+                  inicioVenta: '',
+                  finVenta: '',
+                  pagoAPlazos: false,
+                  permitirReservasWeb: false,
+                });
+              }}
+            >
+              Limpiar Formulario
             </button>
-            <button type="submit" className="bg-blue-500 text-white px-4 py-1 rounded">
-              {editingFuncion ? 'Actualizar' : 'Crear'}
-            </button>
+            <div className="flex gap-2">
+              <button type="button" className="text-red-600 hover:underline" onClick={() => setModalIsOpen(false)}>
+                Cancelar
+              </button>
+              <button type="submit" className="bg-blue-500 text-white px-4 py-1 rounded">
+                {editingFuncion ? 'Actualizar' : 'Crear'}
+              </button>
+            </div>
           </div>
         </form>
       </Modal>

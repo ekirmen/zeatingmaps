@@ -249,7 +249,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       <Button
         icon={<AiOutlineUserAdd />}
-        onClick={() => setIsAccountModalVisible(true)}
+        onClick={() => setIsSearchModalVisible(true)}
         block
       >
         Buscar/Añadir Cuenta

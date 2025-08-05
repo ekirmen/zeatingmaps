@@ -2,8 +2,29 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Badge, Button, Space, Typography, Divider } from 'antd';
 import { GiftOutlined, CrownOutlined, DollarOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { supabase } from '../../../../supabaseClient';
+import { message } from 'antd'; // Added message import
 
 const { Text, Title } = Typography;
+
+// ==========================
+// 1. CONFIGURACIÓN GLOBAL
+// ==========================
+
+// Aquí defines los eventos especiales. Puedes agregar o quitar IDs fácilmente:
+const eventosOcultarIVA = ['4218', '4249', '4250', '4299', '4064','4371'];   // IDs que ocultarán el IVA
+const eventosOcultarBs = ['4249', '4250'];            // IDs que ocultarán bolívares
+const eventoEspecialEUR = ['4289', '4299','4371'];                    // Evento que usa tasa EUR
+const eventosOcultarPrecioBase = ['4218', '4249', '4250', '4299', '4064', '4371']; // IDs que ocultarán precio base y cargos
+
+// Obtener el ID del evento desde la URL:
+const urlParams = new URLSearchParams(window.location.search);
+const idEventoActual = urlParams.get('idEvento');
+
+// Flags globales
+const debeOcultarIVA = eventosOcultarIVA.includes(idEventoActual);
+const debeOcultarBs = eventosOcultarBs.includes(idEventoActual);
+const esEventoEspecial = eventoEspecialEUR.includes(idEventoActual);
+const debeOcultarPrecioBase = eventosOcultarPrecioBase.includes(idEventoActual);
 
 const DynamicPriceSelector = ({ 
   selectedFuncion, 
@@ -24,6 +45,7 @@ const DynamicPriceSelector = ({
     setLoading(true);
     try {
       // Obtener la función con su plantilla asignada
+      console.log('Fetching funcion with ID:', selectedFuncion.id);
       const { data: funcion, error: funcionError } = await supabase
         .from('funciones')
         .select('*, plantilla(*)')
@@ -32,11 +54,19 @@ const DynamicPriceSelector = ({
 
       if (funcionError) {
         console.error('Error loading funcion:', funcionError);
+        message.error('Error al cargar la función');
+        return;
+      }
+
+      if (!funcion) {
+        console.error('No se encontró la función');
+        message.error('No se encontró la función');
         return;
       }
 
       if (!funcion.plantilla) {
         console.error('La función no tiene plantilla asignada');
+        message.error('La función no tiene plantilla de precios asignada');
         return;
       }
 
@@ -44,6 +74,7 @@ const DynamicPriceSelector = ({
       console.log('Plantilla asignada:', funcion.plantilla);
 
       // Cargar las entradas disponibles para este evento
+      console.log('Fetching entradas...');
       const { data: entradas, error: entradasError } = await supabase
         .from('entradas')
         .select('*')
@@ -51,10 +82,12 @@ const DynamicPriceSelector = ({
 
       if (entradasError) {
         console.error('Error loading entradas:', entradasError);
+        message.error('Error al cargar entradas');
         return;
       }
 
       // Cargar las zonas del mapa (filtrar por la sala de la función)
+      console.log('Fetching zonas for sala:', funcion.sala);
       const { data: zonas, error: zonasError } = await supabase
         .from('zonas')
         .select('*')
@@ -63,6 +96,7 @@ const DynamicPriceSelector = ({
 
       if (zonasError) {
         console.error('Error loading zonas:', zonasError);
+        message.error('Error al cargar zonas');
         return;
       }
 
@@ -149,6 +183,7 @@ const DynamicPriceSelector = ({
       setPriceOptions(options);
     } catch (error) {
       console.error('Error loading price options:', error);
+      message.error('Error al cargar opciones de precio');
     } finally {
       setLoading(false);
     }

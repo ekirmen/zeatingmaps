@@ -2,10 +2,8 @@ import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
 
 function isValidUuid(value) {
-  return (
-    typeof value === 'string' &&
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)
-  );
+  // Aceptar cualquier string no vacío, no solo UUIDs
+  return typeof value === 'string' && value.trim() !== '';
 }
 
 function getStoredSessionId() {
@@ -500,8 +498,10 @@ export const useSeatLockStore = create((set, get) => ({
       // Actualización local inmediata
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
+        const updatedSeats = currentSeats.filter((s) => s.seat_id !== seatId);
+        console.log('[SEAT_LOCK] Asiento desbloqueado localmente:', seatId, 'Asientos restantes:', updatedSeats.length);
         return {
-          lockedSeats: currentSeats.filter((s) => s.seat_id !== seatId),
+          lockedSeats: updatedSeats,
         };
       });
     
@@ -579,8 +579,10 @@ export const useSeatLockStore = create((set, get) => ({
       // Actualización local inmediata
       set((state) => {
         const currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
+        const updatedTables = currentTables.filter((t) => t.table_id !== tableId);
+        console.log('[SEAT_LOCK] Mesa desbloqueada localmente:', tableId, 'Mesas restantes:', updatedTables.length);
         return {
-          lockedTables: currentTables.filter((t) => t.table_id !== tableId),
+          lockedTables: updatedTables,
         };
       });
     
