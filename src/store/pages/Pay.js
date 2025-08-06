@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Modal, Card, Button, Space, Alert, Spin, Divider, message } from 'antd';
 import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { useCart } from '../hooks/useCart';
+import { useCartStore } from '../cartStore';
 import { getActivePaymentGateways, validateGatewayConfig, calculatePriceWithFees } from '../services/paymentGatewaysService';
-import { processPayment } from '../services/paymentService';
+import { processPayment } from '../services/paymentProcessors';
 import { createPaymentSuccessNotification } from '../services/paymentNotifications';
 import FacebookPixel from '../components/FacebookPixel';
-import { getFacebookPixelByEvent } from '../services/analyticsService';
+import { getFacebookPixelByEvent } from '../services/facebookPixelService';
 
 
 const Pay = () => {
   const navigate = useNavigate();
-  const { cartItems, total, clearCart } = useCart();
+  const { cart: cartItems, clearCart } = useCartStore();
+  const total = cartItems.reduce((sum, item) => sum + (item.precio || 0), 0);
   const [selectedGateway, setSelectedGateway] = useState(null);
   const [availableGateways, setAvailableGateways] = useState([]);
   const [loadingGateways, setLoadingGateways] = useState(true);
