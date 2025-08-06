@@ -11,6 +11,7 @@ const Funciones = () => {
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const [plantillas, setPlantillas] = useState([]);
   const [plantillasComisiones, setPlantillasComisiones] = useState([]);
+  const [plantillasProductos, setPlantillasProductos] = useState([]);
   const [funciones, setFunciones] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingFuncion, setEditingFuncion] = useState(null);
@@ -18,11 +19,12 @@ const Funciones = () => {
     fechaCelebracion: '',
     plantilla: '',
     plantillaComisiones: '',
+    plantillaProducto: '',
     inicioVenta: '',
     finVenta: '',
     pagoAPlazos: false,
     permitirReservasWeb: false,
-    menosCupos: false,
+    tiempoCaducidadReservas: -120, // 2 horas por defecto
   });
 
   const getEventoNombre = (eventoId) => {
@@ -49,8 +51,34 @@ const Funciones = () => {
     return plantillaId ? `Plantilla ${plantillaId}` : 'Sin plantilla';
   };
 
+  const getPlantillaProductoNombre = (plantillaId) => {
+    if (plantillaId && typeof plantillaId === 'object' && plantillaId.nombre) {
+      return plantillaId.nombre;
+    }
+    const plantilla = plantillasProductos.find((p) => p.id === plantillaId);
+    if (plantilla) return plantilla.nombre;
+    return plantillaId ? `Plantilla ${plantillaId}` : 'Sin plantilla';
+  };
+
   const formatFecha = (date) => {
     return formatDateString(date);
+  };
+
+  const getTiempoCaducidadText = (minutos) => {
+    if (minutos === 0) return 'En la fecha de celebración';
+    if (minutos < 0) {
+      const horas = Math.abs(minutos) / 60;
+      const dias = horas / 24;
+      if (dias >= 1) return `${Math.floor(dias)} días`;
+      if (horas >= 1) return `${Math.floor(horas)} horas`;
+      return `${Math.abs(minutos)} minutos`;
+    } else {
+      const horas = minutos / 60;
+      const dias = horas / 24;
+      if (dias >= 1) return `${Math.floor(dias)} días`;
+      if (horas >= 1) return `${Math.floor(horas)} horas`;
+      return `${minutos} minutos`;
+    }
   };
 
   // Fetch eventos when sala changes
@@ -87,11 +115,13 @@ const Funciones = () => {
         finVenta:fin_venta,
         pagoAPlazos:pago_a_plazos,
         permitirReservasWeb:permitir_reservas_web,
-        menosCupos:menos_cupos,
+        tiempoCaducidadReservas:tiempo_caducidad_reservas,
+        fechaLiberacionReservas:fecha_liberacion_reservas,
         evento,
         sala(*),
         plantilla(*),
-        plantillaComisiones:plantilla_comisiones(*)
+        plantillaComisiones:plantilla_comisiones(*),
+        plantillaProducto:plantilla_producto(*)
       `);
 
     if (eventoSeleccionado) {
@@ -129,11 +159,13 @@ const Funciones = () => {
             finVenta:fin_venta,
             pagoAPlazos:pago_a_plazos,
             permitirReservasWeb:permitir_reservas_web,
-            menosCupos:menos_cupos,
+            tiempoCaducidadReservas:tiempo_caducidad_reservas,
+            fechaLiberacionReservas:fecha_liberacion_reservas,
             evento,
             sala(*),
             plantilla(*),
-            plantillaComisiones:plantilla_comisiones(*)
+            plantillaComisiones:plantilla_comisiones(*),
+            plantillaProducto:plantilla_producto(*)
           `);
 
         if (error) {
@@ -181,19 +213,48 @@ const Funciones = () => {
     fetchPlantillasComisiones();
   }, []);
 
+  useEffect(() => {
+    const fetchPlantillasProductos = async () => {
+      const { data, error } = await supabase
+        .from('plantillas_productos')
+        .select('*')
+        .eq('activo', true)
+        .order('nombre');
+
+      if (error) {
+        console.error('Error al obtener plantillas de productos:', error);
+      } else {
+        setPlantillasProductos(data || []);
+      }
+    };
+
+    fetchPlantillasProductos();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Calcular fecha de liberación de reservas
+    let fechaLiberacionReservas = null;
+    if (nuevaFuncion.fechaCelebracion && nuevaFuncion.tiempoCaducidadReservas !== null) {
+      const fechaCelebracion = new Date(nuevaFuncion.fechaCelebracion);
+      const minutos = nuevaFuncion.tiempoCaducidadReservas;
+      fechaLiberacionReservas = new Date(fechaCelebracion.getTime() + (minutos * 60 * 1000));
+    }
+
     const funcionData = {
       fecha_celebracion: nuevaFuncion.fechaCelebracion,
       inicio_venta: nuevaFuncion.inicioVenta,
       fin_venta: nuevaFuncion.finVenta,
       pago_a_plazos: nuevaFuncion.pagoAPlazos,
       permitir_reservas_web: nuevaFuncion.permitirReservasWeb,
-      menos_cupos: nuevaFuncion.menosCupos,
+      tiempo_caducidad_reservas: nuevaFuncion.tiempoCaducidadReservas,
+      fecha_liberacion_reservas: fechaLiberacionReservas,
       evento: eventoSeleccionado,
       sala: salaSeleccionada.id,
       plantilla: nuevaFuncion.plantilla,
-      plantilla_comisiones: nuevaFuncion.plantillaComisiones,
+      plantilla_comisiones: nuevaFuncion.plantillaComisiones || null,
+      plantilla_producto: nuevaFuncion.plantillaProducto || null,
     };
 
     try {
@@ -262,15 +323,25 @@ const Funciones = () => {
       }
     }
 
+    let plantillaProductoId = '';
+    if (funcion.plantillaProducto) {
+      if (typeof funcion.plantillaProducto === 'object' && funcion.plantillaProducto.id) {
+        plantillaProductoId = funcion.plantillaProducto.id;
+      } else {
+        plantillaProductoId = funcion.plantillaProducto;
+      }
+    }
+
     setNuevaFuncion({
       fechaCelebracion: funcion.fechaCelebracion?.split('T')[0] || '',
       plantilla: plantillaId,
       plantillaComisiones: plantillaComisionesId,
+      plantillaProducto: plantillaProductoId,
       inicioVenta: funcion.inicioVenta?.split('T')[0] || '',
       finVenta: funcion.finVenta?.split('T')[0] || '',
       pagoAPlazos: funcion.pagoAPlazos || false,
       permitirReservasWeb: funcion.permitirReservasWeb || false,
-      menosCupos: funcion.menosCupos || false,
+      tiempoCaducidadReservas: funcion.tiempoCaducidadReservas || -120,
     });
     setModalIsOpen(true);
   };
@@ -323,11 +394,12 @@ const Funciones = () => {
                     fechaCelebracion: '',
                     plantilla: '',
                     plantillaComisiones: '',
+                    plantillaProducto: '',
                     inicioVenta: '',
                     finVenta: '',
                     pagoAPlazos: false,
                     permitirReservasWeb: false,
-                    menosCupos: false,
+                    tiempoCaducidadReservas: -120,
                   });
                   setModalIsOpen(true);
                 }}
@@ -436,10 +508,16 @@ const Funciones = () => {
                     Plantilla Comisiones
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Plantilla Producto
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Inicio Venta
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Fin Venta
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Liberación Reservas
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Opciones
@@ -452,7 +530,7 @@ const Funciones = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {funciones.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan="11" className="px-6 py-4 text-center text-gray-500">
                       {recintoSeleccionado || salaSeleccionada || eventoSeleccionado 
                         ? 'No se encontraron funciones con los filtros seleccionados'
                         : 'No hay funciones creadas. Crea una nueva función para comenzar.'
@@ -478,10 +556,19 @@ const Funciones = () => {
                         {getPlantillaComisionesNombre(funcion.plantillaComisiones)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {getPlantillaProductoNombre(funcion.plantillaProducto)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatFecha(funcion.inicioVenta)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatFecha(funcion.finVenta)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {funcion.tiempoCaducidadReservas !== null 
+                          ? getTiempoCaducidadText(funcion.tiempoCaducidadReservas)
+                          : 'No configurado'
+                        }
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div className="flex flex-col space-y-1">
@@ -493,11 +580,6 @@ const Funciones = () => {
                           {funcion.permitirReservasWeb && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               Reservas web
-                            </span>
-                          )}
-                          {funcion.menosCupos && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                              Menos cupos
                             </span>
                           )}
                         </div>
@@ -540,7 +622,7 @@ const Funciones = () => {
           setModalIsOpen(false);
           setEditingFuncion(null);
         }}
-        className="bg-white rounded-lg shadow-xl max-w-2xl mx-auto focus:outline-none"
+        className="bg-white rounded-lg shadow-xl max-w-4xl mx-auto focus:outline-none"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       >
         <div className="p-6">
@@ -627,6 +709,74 @@ const Funciones = () => {
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Plantilla de Producto
+                </label>
+                <select
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={nuevaFuncion.plantillaProducto}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, plantillaProducto: e.target.value })}
+                >
+                  <option value="">Seleccionar Plantilla</option>
+                  {plantillasProductos.map(plantilla => (
+                    <option key={plantilla.id} value={plantilla.id}>
+                      {plantilla.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Fecha de liberación de reservas */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Fecha de liberación de reservas
+                <span className="ml-1 text-gray-500">
+                  <i className="fas fa-question-circle" title="Tiempo antes o después de la fecha de celebración para liberar reservas"></i>
+                </span>
+              </label>
+              <select
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={nuevaFuncion.tiempoCaducidadReservas}
+                onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, tiempoCaducidadReservas: parseInt(e.target.value) })}
+                required
+              >
+                <optgroup label="Antes de la fecha de celebración">
+                  <option value="0">En la fecha de celebración</option>
+                  <option value="-5">5 minutos</option>
+                  <option value="-10">10 minutos</option>
+                  <option value="-15">15 minutos</option>
+                  <option value="-30">30 minutos</option>
+                  <option value="-45">45 minutos</option>
+                  <option value="-60">60 minutos</option>
+                  <option value="-90">90 minutos</option>
+                  <option value="-120">2 horas</option>
+                  <option value="-180">3 horas</option>
+                  <option value="-240">4 horas</option>
+                  <option value="-360">6 horas</option>
+                  <option value="-480">8 horas</option>
+                  <option value="-720">12 horas</option>
+                  <option value="-1440">1 día</option>
+                  <option value="-2880">2 días</option>
+                  <option value="-4320">3 días</option>
+                  <option value="-5760">4 días</option>
+                  <option value="-7200">5 días</option>
+                  <option value="-10080">7 días</option>
+                  <option value="-14400">10 días</option>
+                  <option value="-28800">20 días</option>
+                </optgroup>
+                <optgroup label="Después de la fecha de compra">
+                  <option value="1440">1 día</option>
+                  <option value="2880">2 días</option>
+                  <option value="4320">3 días</option>
+                  <option value="5760">4 días</option>
+                  <option value="7200">5 días</option>
+                  <option value="10080">7 días</option>
+                  <option value="14400">10 días</option>
+                </optgroup>
+              </select>
             </div>
 
             <div className="space-y-4">
@@ -653,19 +803,6 @@ const Funciones = () => {
                 />
                 <label htmlFor="permitirReservasWeb" className="ml-2 block text-sm text-gray-900">
                   Permite reservas a clientes web
-                </label>
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="menosCupos"
-                  checked={nuevaFuncion.menosCupos}
-                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, menosCupos: e.target.checked })}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="menosCupos" className="ml-2 block text-sm text-gray-900">
-                  Menos cupos
                 </label>
               </div>
             </div>
