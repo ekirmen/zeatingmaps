@@ -1,7 +1,7 @@
 import React from 'react';
 import resolveImageUrl from '../../../utils/resolveImageUrl';
 import { Card, Tag, Button, Space, Avatar } from 'antd';
-import { EditOutlined, DeleteOutlined, CopyOutlined, CalendarOutlined, MapPinOutlined } from '@ant-design/icons';
+import { EditOutlined, DeleteOutlined, CopyOutlined, CalendarOutlined, EnvironmentOutlined } from '@ant-design/icons';
 
 const EventsList = ({ 
   eventosFiltrados, 
@@ -122,7 +122,7 @@ const EventsList = ({
               description={
                 <div className="space-y-2">
                   <div className="flex items-center text-gray-600">
-                    <MapPinOutlined className="mr-2" />
+                    <EnvironmentOutlined className="mr-2" />
                     <span className="text-sm">{recintoSeleccionado?.nombre || 'Sin recinto'}</span>
                   </div>
                   {evento.fecha_evento && (

@@ -24,8 +24,7 @@ import {
   DollarOutlined,
   SettingOutlined,
   EyeOutlined,
-  EyeInvisibleOutlined,
-  PercentageOutlined
+  EyeInvisibleOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
@@ -345,7 +344,7 @@ const PaymentGateways = () => {
               
               <Col span={12}>
                 <Title level={4}>
-                  <PercentageOutlined style={{ marginRight: 8 }} />
+                  <DollarOutlined style={{ marginRight: 8 }} />
                   Configuración de Tasas
                 </Title>
                 <Alert
