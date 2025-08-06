@@ -185,8 +185,9 @@ const ZonesAndPrices = ({
     selectedZonaId,
     setSelectedZonaId,
     handleClearZoneSelection,
-    zonePriceRanges
-  }), [zonas, selectedZonaId, setSelectedZonaId, handleClearZoneSelection, zonePriceRanges]);
+    zonePriceRanges,
+    detallesPlantilla
+  }), [zonas, selectedZonaId, setSelectedZonaId, handleClearZoneSelection, zonePriceRanges, detallesPlantilla]);
 
   // Memoizar la zona seleccionada
   const selectedZona = useMemo(() => 

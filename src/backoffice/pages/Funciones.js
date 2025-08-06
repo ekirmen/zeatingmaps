@@ -10,38 +10,42 @@ const Funciones = () => {
   const [eventos, setEventos] = useState([]);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const [plantillas, setPlantillas] = useState([]);
+  const [plantillasComisiones, setPlantillasComisiones] = useState([]);
   const [funciones, setFunciones] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingFuncion, setEditingFuncion] = useState(null);
   const [nuevaFuncion, setNuevaFuncion] = useState({
     fechaCelebracion: '',
     plantilla: '',
+    plantillaComisiones: '',
     inicioVenta: '',
     finVenta: '',
     pagoAPlazos: false,
     permitirReservasWeb: false,
+    menosCupos: false,
   });
 
   const getEventoNombre = (eventoId) => {
-    // Buscar en la lista de eventos cargados
     const evento = eventos.find((e) => e.id === eventoId);
     if (evento) return evento.nombre;
-    
-    // Si no está en la lista, mostrar el ID del evento
     return eventoId ? `Evento ${eventoId}` : 'Evento desconocido';
   };
 
   const getPlantillaNombre = (plantillaId) => {
-    // Si la función ya tiene la plantilla cargada, usar esa
     if (plantillaId && typeof plantillaId === 'object' && plantillaId.nombre) {
       return plantillaId.nombre;
     }
-    
-    // Buscar en el array local de plantillas
     const plantilla = plantillas.find((p) => p.id === plantillaId);
     if (plantilla) return plantilla.nombre;
-    
-    // Si no se encuentra, mostrar el ID
+    return plantillaId ? `Plantilla ${plantillaId}` : 'Sin plantilla';
+  };
+
+  const getPlantillaComisionesNombre = (plantillaId) => {
+    if (plantillaId && typeof plantillaId === 'object' && plantillaId.nombre) {
+      return plantillaId.nombre;
+    }
+    const plantilla = plantillasComisiones.find((p) => p.id === plantillaId);
+    if (plantilla) return plantilla.nombre;
     return plantillaId ? `Plantilla ${plantillaId}` : 'Sin plantilla';
   };
 
@@ -73,7 +77,7 @@ const Funciones = () => {
     fetchEventos();
   }, [recintoSeleccionado, salaSeleccionada]);
 
-    const fetchFunciones = useCallback(async () => {
+  const fetchFunciones = useCallback(async () => {
     let query = supabase
       .from('funciones')
       .select(`
@@ -83,23 +87,19 @@ const Funciones = () => {
         finVenta:fin_venta,
         pagoAPlazos:pago_a_plazos,
         permitirReservasWeb:permitir_reservas_web,
+        menosCupos:menos_cupos,
         evento,
         sala(*),
-        plantilla(*)
+        plantilla(*),
+        plantillaComisiones:plantilla_comisiones(*)
       `);
 
-    // Si hay un evento seleccionado, filtrar por ese evento
     if (eventoSeleccionado) {
       const eventoId = eventoSeleccionado?.id || eventoSeleccionado?._id || eventoSeleccionado;
-      console.log('Filtrando por evento:', eventoId);
       query = query.eq('evento', eventoId);
-    }
-    // Si hay una sala seleccionada, filtrar por esa sala
-    else if (salaSeleccionada) {
+    } else if (salaSeleccionada) {
       query = query.eq('sala', salaSeleccionada.id);
-    }
-    // Si hay un recinto seleccionado, filtrar por las salas de ese recinto
-    else if (recintoSeleccionado) {
+    } else if (recintoSeleccionado) {
       const salaIds = recintoSeleccionado.salas.map(s => s.id);
       query = query.in('sala', salaIds);
     }
@@ -108,14 +108,7 @@ const Funciones = () => {
 
     if (error) {
       console.error('Error al obtener funciones:', error);
-      console.error('Query details:', {
-        recintoSeleccionado: recintoSeleccionado?.id,
-        salaSeleccionada: salaSeleccionada?.id,
-        eventoSeleccionado: eventoSeleccionado
-      });
     } else {
-      console.log('Funciones cargadas:', data?.length || 0);
-      console.log('Primera función:', data?.[0]);
       setFunciones(data || []);
     }
   }, [eventoSeleccionado, salaSeleccionada, recintoSeleccionado]);
@@ -124,7 +117,6 @@ const Funciones = () => {
     fetchFunciones();
   }, [fetchFunciones]);
 
-    // Cargar todas las funciones al inicio si no hay filtros
   useEffect(() => {
     if (!recintoSeleccionado && !salaSeleccionada && !eventoSeleccionado) {
       const fetchAllFunciones = async () => {
@@ -137,15 +129,16 @@ const Funciones = () => {
             finVenta:fin_venta,
             pagoAPlazos:pago_a_plazos,
             permitirReservasWeb:permitir_reservas_web,
+            menosCupos:menos_cupos,
             evento,
             sala(*),
-            plantilla(*)
+            plantilla(*),
+            plantillaComisiones:plantilla_comisiones(*)
           `);
 
         if (error) {
           console.error('Error al obtener todas las funciones:', error);
         } else {
-          console.log('Todas las funciones cargadas:', data?.length || 0);
           setFunciones(data || []);
         }
       };
@@ -153,11 +146,9 @@ const Funciones = () => {
       fetchAllFunciones();
     }
   }, [recintoSeleccionado, salaSeleccionada, eventoSeleccionado]);
-  
 
   useEffect(() => {
     const fetchPlantillas = async () => {
-      // Cargar todas las plantillas disponibles para mostrar en el modal
       const { data, error } = await supabase
         .from('plantillas')
         .select('*')
@@ -173,50 +164,55 @@ const Funciones = () => {
     fetchPlantillas();
   }, []);
 
+  useEffect(() => {
+    const fetchPlantillasComisiones = async () => {
+      const { data, error } = await supabase
+        .from('plantillas_comisiones')
+        .select('*')
+        .order('nombre');
+
+      if (error) {
+        console.error('Error al obtener plantillas de comisiones:', error);
+      } else {
+        setPlantillasComisiones(data || []);
+      }
+    };
+
+    fetchPlantillasComisiones();
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Destructuring para evitar warnings de variables no utilizadas
-    // const { evento, sala, plantilla } = nuevaFuncion;
     const funcionData = {
       fecha_celebracion: nuevaFuncion.fechaCelebracion,
       inicio_venta: nuevaFuncion.inicioVenta,
       fin_venta: nuevaFuncion.finVenta,
       pago_a_plazos: nuevaFuncion.pagoAPlazos,
       permitir_reservas_web: nuevaFuncion.permitirReservasWeb,
+      menos_cupos: nuevaFuncion.menosCupos,
       evento: eventoSeleccionado,
       sala: salaSeleccionada.id,
       plantilla: nuevaFuncion.plantilla,
+      plantilla_comisiones: nuevaFuncion.plantillaComisiones,
     };
-    
-    console.log('Guardando función con datos:', {
-      ...funcionData,
-      plantillaSeleccionada: nuevaFuncion.plantilla,
-      plantillaEncontrada: plantillas.find(p => p.id === nuevaFuncion.plantilla)?.nombre
-    });
-  
+
     try {
-      // Intentar obtener el usuario autenticado, pero no fallar si no está disponible
       let creadopor = null;
       try {
-        const {
-          data: userData,
-          error: userError
-        } = await supabase.auth.getUser();
-  
+        const { data: userData, error: userError } = await supabase.auth.getUser();
         if (!userError && userData?.user?.id) {
           creadopor = userData.user.id;
         }
       } catch (authError) {
         console.warn('No se pudo obtener el usuario autenticado:', authError);
-        // Continuar sin el usuario autenticado
       }
-  
-        if (editingFuncion) {
-          const { error } = await supabase
-            .from('funciones')
-            .update(funcionData)
-            .eq('id', editingFuncion.id);
-  
+
+      if (editingFuncion) {
+        const { error } = await supabase
+          .from('funciones')
+          .update(funcionData)
+          .eq('id', editingFuncion.id);
+
         if (error) throw error;
         alert('Función actualizada');
         if (salaSeleccionada?.id) {
@@ -227,7 +223,7 @@ const Funciones = () => {
         if (creadopor) {
           insertData.creadopor = creadopor;
         }
-        
+
         const { error } = await supabase.from('funciones').insert([insertData]);
         if (error) throw error;
         alert('Función creada');
@@ -235,43 +231,46 @@ const Funciones = () => {
           await syncSeatsForSala(salaSeleccionada.id);
         }
       }
-  
-      // limpiar
+
       setModalIsOpen(false);
       setEditingFuncion(null);
-      // No resetear el formulario para mantener la plantilla seleccionada
-  
-                 // Recargar las funciones con los filtros actuales
-         fetchFunciones();
+      fetchFunciones();
     } catch (error) {
       console.error('Error al guardar función:', error);
       alert('Ocurrió un error');
     }
   };
-  
 
   const handleEdit = (funcion) => {
     setEditingFuncion(funcion);
-    
-    // Obtener el ID de la plantilla correctamente
+
     let plantillaId = '';
     if (funcion.plantilla) {
-      // Si plantilla es un objeto (con nombre, id, etc.), usar su id
       if (typeof funcion.plantilla === 'object' && funcion.plantilla.id) {
         plantillaId = funcion.plantilla.id;
       } else {
-        // Si es solo el ID
         plantillaId = funcion.plantilla;
       }
     }
-    
+
+    let plantillaComisionesId = '';
+    if (funcion.plantillaComisiones) {
+      if (typeof funcion.plantillaComisiones === 'object' && funcion.plantillaComisiones.id) {
+        plantillaComisionesId = funcion.plantillaComisiones.id;
+      } else {
+        plantillaComisionesId = funcion.plantillaComisiones;
+      }
+    }
+
     setNuevaFuncion({
       fechaCelebracion: funcion.fechaCelebracion?.split('T')[0] || '',
       plantilla: plantillaId,
+      plantillaComisiones: plantillaComisionesId,
       inicioVenta: funcion.inicioVenta?.split('T')[0] || '',
       finVenta: funcion.finVenta?.split('T')[0] || '',
       pagoAPlazos: funcion.pagoAPlazos || false,
       permitirReservasWeb: funcion.permitirReservasWeb || false,
+      menosCupos: funcion.menosCupos || false,
     });
     setModalIsOpen(true);
   };
@@ -283,8 +282,7 @@ const Funciones = () => {
     if (error) {
       alert('Error al eliminar');
     } else {
-             // Recargar las funciones con los filtros actuales
-       fetchFunciones();
+      fetchFunciones();
     }
   };
 
@@ -303,262 +301,392 @@ const Funciones = () => {
       if (duplicatedData.sala) {
         await syncSeatsForSala(duplicatedData.sala);
       }
-             // Recargar las funciones con los filtros actuales
-       fetchFunciones();
+      fetchFunciones();
     }
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <h2 className="text-2xl font-semibold">Gestión de Funciones</h2>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          {/* Header */}
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Gestión de Funciones</h1>
+                <p className="text-sm text-gray-600 mt-1">Administra las funciones de tus eventos</p>
+              </div>
+              <button 
+                onClick={() => {
+                  setEditingFuncion(null);
+                  setNuevaFuncion({
+                    fechaCelebracion: '',
+                    plantilla: '',
+                    plantillaComisiones: '',
+                    inicioVenta: '',
+                    finVenta: '',
+                    pagoAPlazos: false,
+                    permitirReservasWeb: false,
+                    menosCupos: false,
+                  });
+                  setModalIsOpen(true);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                + Nueva Función
+              </button>
+            </div>
+          </div>
 
-      <div className="flex flex-wrap items-end gap-4 mb-4">
-        <div className="flex flex-col">
-          <label>Recinto</label>
-          <select
-            value={recintoSeleccionado ? recintoSeleccionado.id : ''}
-            onChange={(e) => {
-              const recinto = recintos.find(r => String(r.id) === e.target.value);
-              setRecintoSeleccionado(recinto);
-              setSalaSeleccionada(null);
-            }}
-          >
-            <option value="">Seleccionar Recinto</option>
-            {recintos.map(recinto => (
-              <option key={recinto.id} value={recinto.id}>
-                {recinto.nombre}
-              </option>
-            ))}
-          </select>
+          {/* Filtros */}
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Recinto</label>
+                <select
+                  value={recintoSeleccionado ? recintoSeleccionado.id : ''}
+                  onChange={(e) => {
+                    const recinto = recintos.find(r => String(r.id) === e.target.value);
+                    setRecintoSeleccionado(recinto);
+                    setSalaSeleccionada(null);
+                  }}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Seleccionar Recinto</option>
+                  {recintos.map(recinto => (
+                    <option key={recinto.id} value={recinto.id}>
+                      {recinto.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {recintoSeleccionado && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Sala</label>
+                  <select
+                    value={salaSeleccionada ? salaSeleccionada.id : ''}
+                    onChange={(e) => {
+                      const sala = recintoSeleccionado.salas.find(s => String(s.id) === e.target.value);
+                      setSalaSeleccionada(sala);
+                    }}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Seleccionar Sala</option>
+                    {recintoSeleccionado.salas.map(sala => (
+                      <option key={sala.id} value={sala.id}>
+                        {sala.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {salaSeleccionada && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Evento</label>
+                  <select
+                    value={eventoSeleccionado || ''}
+                    onChange={(e) => setEventoSeleccionado(e.target.value)}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Seleccionar Evento</option>
+                    {eventos.map(evento => (
+                      <option key={evento.id} value={evento.id}>
+                        {evento.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex items-end">
+                <button 
+                  onClick={() => {
+                    setRecintoSeleccionado(null);
+                    setSalaSeleccionada(null);
+                    setEventoSeleccionado(null);
+                  }}
+                  className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md font-medium transition-colors"
+                >
+                  Limpiar Filtros
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Tabla */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Fecha Celebración
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Evento
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Sala
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Plantilla Precios
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Plantilla Comisiones
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Inicio Venta
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Fin Venta
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Opciones
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {funciones.length === 0 ? (
+                  <tr>
+                    <td colSpan="9" className="px-6 py-4 text-center text-gray-500">
+                      {recintoSeleccionado || salaSeleccionada || eventoSeleccionado 
+                        ? 'No se encontraron funciones con los filtros seleccionados'
+                        : 'No hay funciones creadas. Crea una nueva función para comenzar.'
+                      }
+                    </td>
+                  </tr>
+                ) : (
+                  funciones.map(funcion => (
+                    <tr key={funcion.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatFecha(funcion.fechaCelebracion)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {getEventoNombre(funcion.evento)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {funcion.sala?.nombre || 'Sala desconocida'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {getPlantillaNombre(funcion.plantilla)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {getPlantillaComisionesNombre(funcion.plantillaComisiones)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatFecha(funcion.inicioVenta)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatFecha(funcion.finVenta)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <div className="flex flex-col space-y-1">
+                          {funcion.pagoAPlazos && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              Pago a plazos
+                            </span>
+                          )}
+                          {funcion.permitirReservasWeb && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Reservas web
+                            </span>
+                          )}
+                          {funcion.menosCupos && (
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              Menos cupos
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button 
+                            onClick={() => handleEdit(funcion)}
+                            className="text-blue-600 hover:text-blue-900 font-medium"
+                          >
+                            Editar
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(funcion.id)}
+                            className="text-red-600 hover:text-red-900 font-medium"
+                          >
+                            Eliminar
+                          </button>
+                          <button 
+                            onClick={() => handleDuplicate(funcion.id)}
+                            className="text-gray-600 hover:text-gray-900 font-medium"
+                          >
+                            Duplicar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-
-        {recintoSeleccionado && (
-          <div className="flex flex-col">
-            <label>Sala</label>
-            <select
-              value={salaSeleccionada ? salaSeleccionada.id : ''}
-              onChange={(e) => {
-                const sala = recintoSeleccionado.salas.find(s => String(s.id) === e.target.value);
-                setSalaSeleccionada(sala);
-              }}
-            >
-              <option value="">Seleccionar Sala</option>
-              {recintoSeleccionado.salas.map(sala => (
-                <option key={sala.id} value={sala.id}>
-                  {sala.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {!salaSeleccionada && (
-          <p className="text-sm text-gray-600">
-            Seleccione un recinto y una sala para filtrar las funciones, o deje sin seleccionar para ver todas las funciones
-          </p>
-        )}
-
-        {salaSeleccionada && (
-          <div className="flex flex-col">
-            <label>Evento</label>
-            <select
-              value={eventoSeleccionado || ''}
-              onChange={(e) => setEventoSeleccionado(e.target.value)}
-            >
-              <option value="">Seleccionar Evento</option>
-              {eventos.map(evento => (
-                <option key={evento.id} value={evento.id}>
-                  {evento.nombre}
-                </option>
-              ))}
-            </select>
-            {eventos.length === 0 && (
-              <span className="text-sm text-gray-500 mt-1">
-                No hay eventos para la sala seleccionada
-              </span>
-            )}
-          </div>
-        )}
-
-        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={() => {
-          setEditingFuncion(null);
-          setNuevaFuncion({
-            fechaCelebracion: '',
-            plantilla: '',
-            inicioVenta: '',
-            finVenta: '',
-            pagoAPlazos: false,
-            permitirReservasWeb: false,
-          });
-          setModalIsOpen(true);
-        }}>
-          Nueva Función
-        </button>
       </div>
 
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-100">
-          <tr>
-            <th>Fecha Celebración</th>
-            <th>Evento</th>
-            <th>Sala</th>
-            <th>Plantilla</th>
-            <th>Inicio Venta</th>
-            <th>Fin Venta</th>
-            <th>Pago a plazos</th>
-            <th>Reservas web</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {funciones.length === 0 ? (
-            <tr>
-              <td colSpan="9" className="text-center py-4 text-gray-500">
-                {recintoSeleccionado || salaSeleccionada || eventoSeleccionado 
-                  ? 'No se encontraron funciones con los filtros seleccionados'
-                  : 'No hay funciones creadas. Crea una nueva función para comenzar.'
-                }
-              </td>
-            </tr>
-          ) : (
-            funciones.map(funcion => (
-              <tr key={funcion.id}>
-                <td>{formatFecha(funcion.fechaCelebracion)}</td>
-                <td>{getEventoNombre(funcion.evento)}</td>
-                <td>{funcion.sala?.nombre || 'Sala desconocida'}</td>
-                <td>{getPlantillaNombre(funcion.plantilla)}</td>
-                <td>{formatFecha(funcion.inicioVenta)}</td>
-                <td>{formatFecha(funcion.finVenta)}</td>
-                <td>{funcion.pagoAPlazos ? 'Sí' : 'No'}</td>
-                <td>{funcion.permitirReservasWeb ? 'Sí' : 'No'}</td>
-                <td className="space-x-2">
-                  <button className="text-blue-600 hover:underline" onClick={() => handleEdit(funcion)}>
-                    Editar
-                  </button>
-                  <button className="text-red-600 hover:underline" onClick={() => handleDelete(funcion.id)}>
-                    Eliminar
-                  </button>
-                  <button className="text-gray-600 hover:underline" onClick={() => handleDuplicate(funcion.id)}>
-                    Duplicar
-                  </button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-
+      {/* Modal */}
       <Modal
         isOpen={modalIsOpen}
         onRequestClose={() => {
           setModalIsOpen(false);
           setEditingFuncion(null);
-          // No resetear el estado para mantener la plantilla seleccionada
         }}
-        className="bg-white p-6 rounded-lg shadow-lg max-w-md mx-auto focus:outline-none"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+        className="bg-white rounded-lg shadow-xl max-w-2xl mx-auto focus:outline-none"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       >
-        <h2 className="text-xl font-semibold mb-4 text-center">
-          {editingFuncion ? 'Editar Función' : 'Nueva Función'}
-        </h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex flex-col space-y-1">
-            <label>Fecha Celebración</label>
-            <input
-              type="date"
-              className="border rounded p-2"
-              value={nuevaFuncion.fechaCelebracion}
-              onChange={(e) =>
-                setNuevaFuncion({ ...nuevaFuncion, fechaCelebracion: e.target.value })
-              }
-              required
-            />
-          </div>
+        <div className="p-6">
+          <h2 className="text-xl font-semibold mb-6 text-center">
+            {editingFuncion ? 'Editar Función' : 'Nueva Función'}
+          </h2>
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fecha Celebración *
+                </label>
+                <input
+                  type="date"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={nuevaFuncion.fechaCelebracion}
+                  onChange={(e) =>
+                    setNuevaFuncion({ ...nuevaFuncion, fechaCelebracion: e.target.value })
+                  }
+                  required
+                />
+              </div>
 
-          <div className="flex flex-col space-y-1">
-            <label>Plantilla</label>
-            <select
-              className="border rounded p-2"
-              value={nuevaFuncion.plantilla}
-              onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, plantilla: e.target.value })}
-              required
-            >
-              <option value="">Seleccionar Plantilla</option>
-              {plantillas.map(plantilla => (
-                <option key={plantilla.id} value={plantilla.id}>
-                  {plantilla.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Inicio Venta *
+                </label>
+                <input
+                  type="date"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={nuevaFuncion.inicioVenta}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, inicioVenta: e.target.value })}
+                  required
+                />
+              </div>
 
-          <div className="flex flex-col space-y-1">
-            <label>Inicio Venta</label>
-            <input
-              type="date"
-              className="border rounded p-2"
-              value={nuevaFuncion.inicioVenta}
-              onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, inicioVenta: e.target.value })}
-              required
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fin Venta *
+                </label>
+                <input
+                  type="date"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={nuevaFuncion.finVenta}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, finVenta: e.target.value })}
+                  required
+                />
+              </div>
 
-          <div className="flex flex-col space-y-1">
-            <label>Fin Venta</label>
-            <input
-              type="date"
-              className="border rounded p-2"
-              value={nuevaFuncion.finVenta}
-              onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, finVenta: e.target.value })}
-              required
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Plantilla de Precios *
+                </label>
+                <select
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={nuevaFuncion.plantilla}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, plantilla: e.target.value })}
+                  required
+                >
+                  <option value="">Seleccionar Plantilla</option>
+                  {plantillas.map(plantilla => (
+                    <option key={plantilla.id} value={plantilla.id}>
+                      {plantilla.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={nuevaFuncion.pagoAPlazos}
-              onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, pagoAPlazos: e.target.checked })}
-            />
-            <label>Pago a plazos</label>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Plantilla de Comisiones
+                </label>
+                <select
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={nuevaFuncion.plantillaComisiones}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, plantillaComisiones: e.target.value })}
+                >
+                  <option value="">Seleccionar Plantilla</option>
+                  {plantillasComisiones.map(plantilla => (
+                    <option key={plantilla.id} value={plantilla.id}>
+                      {plantilla.nombre}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={nuevaFuncion.permitirReservasWeb}
-              onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, permitirReservasWeb: e.target.checked })}
-            />
-            <label>Permite reservas a clientes web</label>
-          </div>
+            <div className="space-y-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="pagoAPlazos"
+                  checked={nuevaFuncion.pagoAPlazos}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, pagoAPlazos: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="pagoAPlazos" className="ml-2 block text-sm text-gray-900">
+                  Pago a plazos
+                </label>
+              </div>
 
-          <div className="flex justify-between gap-2 mt-4">
-            <button 
-              type="button" 
-              className="text-gray-600 hover:underline text-sm" 
-              onClick={() => {
-                setNuevaFuncion({
-                  fechaCelebracion: '',
-                  plantilla: '',
-                  inicioVenta: '',
-                  finVenta: '',
-                  pagoAPlazos: false,
-                  permitirReservasWeb: false,
-                });
-              }}
-            >
-              Limpiar Formulario
-            </button>
-            <div className="flex gap-2">
-              <button type="button" className="text-red-600 hover:underline" onClick={() => setModalIsOpen(false)}>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="permitirReservasWeb"
+                  checked={nuevaFuncion.permitirReservasWeb}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, permitirReservasWeb: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="permitirReservasWeb" className="ml-2 block text-sm text-gray-900">
+                  Permite reservas a clientes web
+                </label>
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="menosCupos"
+                  checked={nuevaFuncion.menosCupos}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, menosCupos: e.target.checked })}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="menosCupos" className="ml-2 block text-sm text-gray-900">
+                  Menos cupos
+                </label>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+              <button 
+                type="button" 
+                onClick={() => setModalIsOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
                 Cancelar
               </button>
-              <button type="submit" className="bg-blue-500 text-white px-4 py-1 rounded">
+              <button 
+                type="submit"
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
                 {editingFuncion ? 'Actualizar' : 'Crear'}
               </button>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </Modal>
     </div>
   );

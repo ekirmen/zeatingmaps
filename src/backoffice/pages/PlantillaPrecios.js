@@ -86,54 +86,123 @@ const PlantillaPrecios = () => {
 
   /* -------------------- HANDLERS INPUTS DETALLE --------------------- */
   const handleInputChange = (zonaId, productoId, field, value) => {
+    console.log('Input change:', { zonaId, productoId, field, value });
+    
     const updated = [...detallesPrecios];
     const idx = updated.findIndex(d => d.zonaId === zonaId && d.productoId === productoId);
+    
+    // Determinar el tipo de valor y convertirlo apropiadamente
     const numeric = ['precio', 'comision', 'precioGeneral', 'orden'];
-    let v = numeric.includes(field) ? Number(value) : value;
-    if (numeric.includes(field) && v < 0) v = 0;
-
-    if (idx !== -1) {
-      if (value === '') delete updated[idx][field];
-      else updated[idx] = { ...updated[idx], [field]: v };
-    } else if (value !== '') {
-      updated.push({ zonaId, productoId, [field]: v });
+    let v;
+    
+    if (numeric.includes(field)) {
+      // Para campos numéricos, convertir a número y establecer 0 si está vacío
+      v = value === '' ? 0 : Number(value);
+      if (isNaN(v)) v = 0;
+      if (v < 0) v = 0;
+    } else {
+      // Para campos de texto, usar el valor tal como está
+      v = value;
     }
 
+    if (idx !== -1) {
+      // Actualizar registro existente
+      updated[idx] = { ...updated[idx], [field]: v };
+    } else {
+      // Crear nuevo registro
+      updated.push({ 
+        zonaId, 
+        productoId, 
+        [field]: v,
+        // Establecer valores por defecto para campos numéricos
+        precio: field === 'precio' ? v : 0,
+        comision: field === 'comision' ? v : 0,
+        precioGeneral: field === 'precioGeneral' ? v : 0,
+        orden: field === 'orden' ? v : 0,
+        canales: field === 'canales' ? v : '',
+        tipoEntrada: field === 'tipoEntrada' ? v : 'regular'
+      });
+    }
+
+    console.log('Detalles actualizados:', updated);
     setDetallesPrecios(updated);
   };
 
   /* ----------------------- SUBMIT PLANTILLA ------------------------- */
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const detallesValidos = detallesPrecios.filter(d => d.precio !== undefined);
-    if (!detallesValidos.length) {
-      alert('Debe asignar al menos un precio');
+    
+    // Validar que se haya ingresado un nombre
+    if (!nombrePlantilla.trim()) {
+      alert('Debe ingresar un nombre para la plantilla');
       return;
     }
-    const payload = {
+
+    // Validar que se haya seleccionado recinto y sala
+    if (!recinto || !sala) {
+      alert('Debe seleccionar un recinto y una sala');
+      return;
+    }
+
+    const detallesValidos = detallesPrecios.filter(d => 
+      d.precio !== undefined && 
+      d.precio !== null && 
+      d.precio !== '' && 
+      d.zonaId && 
+      d.productoId
+    );
+
+    if (!detallesValidos.length) {
+      alert('Debe asignar al menos un precio válido');
+      return;
+    }
+
+    console.log('Guardando plantilla con datos:', {
       nombre: nombrePlantilla,
+      recinto: recinto.id,
+      sala: sala.id,
+      detalles: detallesValidos,
+    });
+
+    const payload = {
+      nombre: nombrePlantilla.trim(),
       recinto: recinto.id,
       sala: sala.id,
       detalles: detallesValidos,
     };
 
-    let res;
-    if (editingPlantilla) {
-      res = await supabase
-        .from('plantillas')
-        .update(payload)
-        .eq('id', editingPlantilla.id)
-        .select()
-        .single();
-    } else {
-      res = await supabase.from('plantillas').insert(payload);
-    }
+    try {
+      let res;
+      if (editingPlantilla) {
+        console.log('Actualizando plantilla:', editingPlantilla.id);
+        res = await supabase
+          .from('plantillas')
+          .update(payload)
+          .eq('id', editingPlantilla.id)
+          .select()
+          .single();
+      } else {
+        console.log('Creando nueva plantilla');
+        res = await supabase
+          .from('plantillas')
+          .insert(payload)
+          .select()
+          .single();
+      }
 
-    if (res.error) alert(res.error.message);
-    else {
-      alert(editingPlantilla ? 'Actualizada' : 'Creada');
+      if (res.error) {
+        console.error('Error al guardar plantilla:', res.error);
+        alert(`Error al guardar: ${res.error.message}`);
+        return;
+      }
+
+      console.log('Plantilla guardada exitosamente:', res.data);
+      alert(`${editingPlantilla ? 'Plantilla actualizada' : 'Plantilla creada'} exitosamente con ${detallesValidos.length} configuraciones de precio`);
       closeModal();
       cargarPlantillas();
+    } catch (error) {
+      console.error('Error inesperado al guardar plantilla:', error);
+      alert(`Error inesperado: ${error.message}`);
     }
   };
 
@@ -183,22 +252,86 @@ const PlantillaPrecios = () => {
     setDetallesPrecios([]);
   };
 
+  const openModal = () => {
+    // Inicializar detalles con valores por defecto para todas las combinaciones zona-producto
+    const initialDetalles = zonas.flatMap(z => 
+      entradas.map(e => ({
+        zonaId: z.id,
+        productoId: e.id,
+        precio: 0,
+        comision: 0,
+        precioGeneral: 0,
+        canales: '',
+        orden: 0,
+        tipoEntrada: 'regular'
+      }))
+    );
+    setDetallesPrecios(initialDetalles);
+    setModalIsOpen(true);
+  };
+
   const renderTableRows = () => {
     if (!zonas.length || !entradas.length) return (
-      <tr><td colSpan="7" className="py-4 text-center">Debes crear zonas y entradas</td></tr>
+      <tr><td colSpan="8" className="py-4 text-center">Debes crear zonas y entradas</td></tr>
     );
 
     return currentItems.map((item, idx) => {
       const detalle = detallesPrecios.find(d => d.zonaId === item.zonaId && d.productoId === item.productoId) || {};
       return (
         <tr key={idx} className="hover:bg-gray-50">
-          <td className="px-6 py-3">{item.zona}</td>
-          <td className="px-6 py-3">{item.producto}</td>
+          <td className="px-6 py-3 font-medium">{item.zona}</td>
+          <td className="px-6 py-3">
+            <div>
+              <div className="font-medium">{item.producto}</div>
+              <div className="text-xs text-gray-500">
+                {detalle.tipoEntrada || 'Regular'}
+              </div>
+            </div>
+          </td>
           {['precio', 'comision', 'precioGeneral'].map(f => (
-            <td key={f} className="px-6 py-3"><input type="number" className="w-full border px-2 py-1" value={detalle[f] ?? ''} onChange={e => handleInputChange(item.zonaId, item.productoId, f, e.target.value)} /></td>
+            <td key={f} className="px-6 py-3">
+              <input 
+                type="number" 
+                className="w-full border px-2 py-1 rounded" 
+                value={detalle[f] ?? ''} 
+                onChange={e => handleInputChange(item.zonaId, item.productoId, f, e.target.value)}
+                placeholder={f === 'precio' ? '0.00' : '0'}
+                min="0"
+                step={f === 'precio' ? '0.01' : '1'}
+              />
+            </td>
           ))}
-          <td className="px-6 py-3"><input type="text" className="w-full border px-2 py-1" value={detalle.canales ?? ''} onChange={e => handleInputChange(item.zonaId, item.productoId, 'canales', e.target.value)} /></td>
-          <td className="px-6 py-3"><input type="number" className="w-full border px-2 py-1" value={detalle.orden ?? ''} onChange={e => handleInputChange(item.zonaId, item.productoId, 'orden', e.target.value)} /></td>
+          <td className="px-6 py-3">
+            <input 
+              type="text" 
+              className="w-full border px-2 py-1 rounded" 
+              value={detalle.canales ?? ''} 
+              onChange={e => handleInputChange(item.zonaId, item.productoId, 'canales', e.target.value)}
+              placeholder="1"
+            />
+          </td>
+          <td className="px-6 py-3">
+            <input 
+              type="number" 
+              className="w-full border px-2 py-1 rounded" 
+              value={detalle.orden ?? ''} 
+              onChange={e => handleInputChange(item.zonaId, item.productoId, 'orden', e.target.value)}
+              placeholder="1"
+              min="0"
+            />
+          </td>
+          <td className="px-6 py-3">
+            <select 
+              className="w-full border px-2 py-1 rounded"
+              value={detalle.tipoEntrada || 'regular'}
+              onChange={e => handleInputChange(item.zonaId, item.productoId, 'tipoEntrada', e.target.value)}
+            >
+              <option value="regular">Regular</option>
+              <option value="cortesia">Cortesía</option>
+              <option value="descuento">Descuento</option>
+              <option value="vip">VIP</option>
+            </select>
+          </td>
         </tr>
       );
     });
@@ -224,7 +357,7 @@ const PlantillaPrecios = () => {
               {salas.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
             </select>
           )}
-          <button className="bg-blue-600 text-white px-4 py-2 rounded" disabled={!recinto || !sala} onClick={() => setModalIsOpen(true)}>Añadir Plantilla</button>
+                     <button className="bg-blue-600 text-white px-4 py-2 rounded" disabled={!recinto || !sala} onClick={openModal}>Añadir Plantilla</button>
         </div>
 
         <h3 className="font-semibold mb-2">Plantillas Guardadas</h3>
@@ -249,11 +382,19 @@ const PlantillaPrecios = () => {
           <h2 className="text-xl font-bold mb-4">{editingPlantilla ? 'Editar' : 'Crear'} Plantilla</h2>
           <form onSubmit={handleSubmit} className="space-y-6">
             <input type="text" className="border p-2 w-full" placeholder="Nombre" value={nombrePlantilla} onChange={e => setNombrePlantilla(e.target.value)} required />
+            
+            {/* Información de debug */}
+            <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+              <div>Total de combinaciones zona-producto: {combinedItems.length}</div>
+              <div>Detalles configurados: {detallesPrecios.length}</div>
+              <div>Detalles con precio: {detallesPrecios.filter(d => d.precio > 0).length}</div>
+            </div>
+            
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50">
-                  <tr>{['Zona','Producto','Precio','Comisión','Precio Gen','Canales','Orden'].map(h => <th key={h} className="px-4 py-2 text-left">{h}</th>)}</tr>
-                </thead>
+                             <table className="min-w-full text-sm">
+                 <thead className="bg-gray-50">
+                   <tr>{['Zona','Producto','Precio','Comisión','Precio Gen','Canales','Orden','Tipo'].map(h => <th key={h} className="px-4 py-2 text-left">{h}</th>)}</tr>
+                 </thead>
                 <tbody>{renderTableRows()}</tbody>
               </table>
             </div>

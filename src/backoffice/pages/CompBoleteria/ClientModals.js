@@ -6,17 +6,18 @@ import { supabaseAdmin } from '../../../supabaseClient';
 
 const ClientModals = ({
   isSearchModalVisible,
+  searchResults,
   paymentResults,
+  searchLoading,
   onSearchCancel,
   onClientSelect,
   onAddClient,
+  handleUnifiedSearch,
   clearSearchResults,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('search');
   const [form] = Form.useForm();
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
@@ -25,99 +26,101 @@ const ClientModals = ({
     }
 
     try {
-      setSearchLoading(true);
-
-      // IMPORTANT: 'profiles_with_auth' is likely a custom view or function.
-      // Ensure it exists and is accessible via RLS for the 'anon' role
-      // if this search is meant for public or unauthenticated users.
-      // If it requires admin privileges, ensure supabaseAdmin is used and available.
-      let { data, error } = await supabase
-        .from('profiles_with_auth')
-        .select('id, login, nombre, telefono, empresa, email')
-        .or(
-          `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
-        );
-
-      if (error && error.code === '42P01') {
-        ({ data, error } = await supabase
-          .from('profile_view')
+      if (handleUnifiedSearch) {
+        await handleUnifiedSearch(searchTerm);
+      } else {
+        // Fallback to direct search if handleUnifiedSearch is not provided
+        let { data, error } = await supabase
+          .from('profiles_with_auth')
           .select('id, login, nombre, telefono, empresa, email')
           .or(
             `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
-          ));
-      }
+          );
 
-      if (error) throw error;
+        if (error && error.code === '42P01') {
+          ({ data, error } = await supabase
+            .from('profile_view')
+            .select('id, login, nombre, telefono, empresa, email')
+            .or(
+              `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
+            ));
+        }
 
-      const mappedResults = data.map((p) => ({
-        _id: p.id,
-        nombre: p.login,
-        email: p.email || '',
-        telefono: p.telefono,
-      }));
+        if (error) throw error;
 
-      setSearchResults(mappedResults);
+        const mappedResults = data.map((p) => ({
+          _id: p.id,
+          nombre: p.login,
+          email: p.email || '',
+          telefono: p.telefono,
+        }));
 
-      if (mappedResults.length === 0) {
-        message.info('No clients found with that criteria');
+        if (mappedResults.length === 0) {
+          message.info('No clients found with that criteria');
+        }
       }
     } catch (error) {
       console.error('Search error:', error);
       message.error(error.message || 'Search error');
-    } finally {
-      setSearchLoading(false);
     }
   };
 
   const resetSearch = () => {
     setSearchTerm('');
-    setSearchResults([]);
     if (typeof clearSearchResults === 'function') clearSearchResults();
   };
 
   const handleAddClient = async (values) => {
-    // Check if supabaseAdmin is available before using it
-    if (!supabaseAdmin) {
-      message.error('Admin client not available. Cannot create user.');
-      console.error('Admin client (supabaseAdmin) is not initialized. Ensure Service Role Key is configured.');
-      return;
-    }
+    if (onAddClient) {
+      try {
+        await onAddClient(values);
+        form.resetFields();
+        setActiveTab('search');
+      } catch (error) {
+        console.error('Error creating client:', error);
+        message.error(`Error al crear el usuario: ${error.message}`);
+      }
+    } else {
+      // Fallback to direct creation if onAddClient is not provided
+      if (!supabaseAdmin) {
+        message.error('Admin client not available. Cannot create user.');
+        console.error('Admin client (supabaseAdmin) is not initialized. Ensure Service Role Key is configured.');
+        return;
+      }
 
-    try {
-      const { data: userResp, error } = await supabaseAdmin.auth.admin.createUser({
-        email: values.email,
-        password: values.password || 'defaultPassword',
-        email_confirm: true,
-        user_metadata: { password_set: !!values.password },
-      });
+      try {
+        const { data: userResp, error } = await supabaseAdmin.auth.admin.createUser({
+          email: values.email,
+          password: values.password || 'defaultPassword',
+          email_confirm: true,
+          user_metadata: { password_set: !!values.password },
+        });
 
-      if (error) throw error;
+        if (error) throw error;
 
-      // Add a small delay to ensure user creation propagates before profile update
-      await new Promise((res) => setTimeout(res, 1500));
+        await new Promise((res) => setTimeout(res, 1500));
 
-      // Use supabaseAdmin for updating profiles related to admin operations
-      const { data: profileData, error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .update({
-          login: values.email,
-          nombre: values.nombre,
-          telefono: values.telefono,
-          permisos: { role: 'usuario' }, // Ensure 'permisos' column is JSONB type
-        })
-        .eq('id', userResp.user.id)
-        .select()
-        .single();
+        const { data: profileData, error: profileError } = await supabaseAdmin
+          .from('profiles')
+          .update({
+            login: values.email,
+            nombre: values.nombre,
+            telefono: values.telefono,
+            permisos: { role: 'usuario' },
+          })
+          .eq('id', userResp.user.id)
+          .select()
+          .single();
 
-      if (profileError) throw profileError;
+        if (profileError) throw profileError;
 
-      message.success('Usuario creado con éxito');
-      form.resetFields();
-      setActiveTab('search');
-      if (typeof onAddClient === 'function') onAddClient(profileData);
-    } catch (error) {
-      console.error('Error creating client:', error);
-      message.error(`Error al crear el usuario: ${error.message}`);
+        message.success('Usuario creado con éxito');
+        form.resetFields();
+        setActiveTab('search');
+      } catch (error) {
+        console.error('Error creating client:', error);
+        message.error(`Error al crear el usuario: ${error.message}`);
+      }
     }
   };
 

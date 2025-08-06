@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { Button, message, Dropdown, Menu, Modal } from 'antd';
-import { AiOutlineClose, AiOutlineMore } from 'react-icons/ai';
+import { Button, message, Dropdown, Menu, Modal, Card, Avatar } from 'antd';
+import { AiOutlineClose, AiOutlineMore, AiOutlineUser } from 'react-icons/ai';
 import { createOrUpdateSeat, unlockSeat as updateSeatStatusInDB } from '../../services/supabaseSeats';
 import { useSeatLockStore } from '../../../components/seatLockStore';
 import { supabase } from '../../../supabaseClient';
@@ -11,6 +11,7 @@ const Cart = ({
   setCarrito,
   onPaymentClick,
   setSelectedClient,
+  selectedClient,
   selectedAffiliate,
   onSeatsUpdated,
   children,
@@ -170,6 +171,31 @@ const Cart = ({
 
   return (
     <div className="bg-white shadow-md rounded-md p-4">
+      {/* Información del usuario seleccionado */}
+      {selectedClient && (
+        <Card size="small" className="mb-4 border border-blue-200 bg-blue-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Avatar icon={<AiOutlineUser />} className="bg-blue-500" />
+              <div>
+                <div className="font-semibold text-blue-900">{selectedClient.login}</div>
+                <div className="text-sm text-blue-700">{selectedClient.email}</div>
+                {selectedClient.empresa && (
+                  <div className="text-xs text-blue-600">{selectedClient.empresa}</div>
+                )}
+              </div>
+            </div>
+            <Button 
+              size="small" 
+              icon={<AiOutlineClose />} 
+              onClick={() => setSelectedClient(null)}
+              type="text"
+              className="text-blue-600 hover:text-blue-800"
+            />
+          </div>
+        </Card>
+      )}
+
       <div className="flex justify-between items-center mb-4 border-b pb-2">
         <h3 className="text-lg font-semibold">Carrito de Compras</h3>
         <div className="flex items-center gap-2">

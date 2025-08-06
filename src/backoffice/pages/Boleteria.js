@@ -237,13 +237,19 @@ const Boleteria = () => {
     handleUnifiedSearch: async (searchTerm) => {
       if (!searchTerm?.trim()) return message.warning('Por favor ingrese un término de búsqueda');
       try {
-        await handleUnifiedSearch(searchTerm);
+        const result = await handleUnifiedSearch(searchTerm);
+        console.log('Search result:', result);
+        if (result?.type === 'clients') {
+          setSearchResults(result.data);
+        } else if (result?.type === 'payments') {
+          setPaymentResults(result.data);
+        }
       } catch (error) {
         console.error('Search error:', error);
         message.error('Error en la búsqueda');
       }
     }
-  }), [isSearchModalVisible, searchLoading, searchResults, paymentResults, clearSearchResults, setSelectedClient, handleAddClient, handleUnifiedSearch]);
+  }), [isSearchModalVisible, searchLoading, searchResults, paymentResults, clearSearchResults, setSelectedClient, handleAddClient, handleUnifiedSearch, setSearchResults, setPaymentResults]);
 
   const functionModalProps = useMemo(() => ({
     visible: isFunctionsModalVisible,
