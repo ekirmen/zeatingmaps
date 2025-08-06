@@ -2,24 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Modal, Card, Button, Space, Alert, Spin, Divider, message } from 'antd';
 import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { useCartStore } from '../cartStore';
-import { getActivePaymentGateways, validateGatewayConfig } from '../services/paymentGatewaysService';
-import { processPayment } from '../services/paymentProcessors';
-import { createPaymentSuccessNotification, createPaymentFailureNotification } from '../services/paymentNotifications';
+import { useCart } from '../hooks/useCart';
+import { getActivePaymentGateways, validateGatewayConfig, calculatePriceWithFees } from '../services/paymentGatewaysService';
+import { processPayment } from '../services/paymentService';
+import { createPaymentSuccessNotification } from '../services/paymentNotifications';
 import FacebookPixel from '../components/FacebookPixel';
-import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../services/facebookPixelService';
-
+import { getFacebookPixelByEvent } from '../services/analyticsService';
 
 
 const Pay = () => {
   const navigate = useNavigate();
-  const { cartItems, clearCart, total } = useCartStore();
+  const { cartItems, total, clearCart } = useCart();
   const [selectedGateway, setSelectedGateway] = useState(null);
   const [availableGateways, setAvailableGateways] = useState([]);
   const [loadingGateways, setLoadingGateways] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentResult, setPaymentResult] = useState(null);
   const [facebookPixel, setFacebookPixel] = useState(null);
+  const [pricesWithFees, setPricesWithFees] = useState({});
 
   useEffect(() => {
     const loadGateways = async () => {
@@ -31,6 +31,19 @@ const Pay = () => {
           return validation.valid;
         });
         setAvailableGateways(validGateways);
+        
+        // Calcular precios con comisiones para cada pasarela
+        const feesPromises = validGateways.map(async (gateway) => {
+          const priceWithFees = await calculatePriceWithFees(total, gateway.id);
+          return { gatewayId: gateway.id, ...priceWithFees };
+        });
+        
+        const feesResults = await Promise.all(feesPromises);
+        const feesMap = {};
+        feesResults.forEach(result => {
+          feesMap[result.gatewayId] = result;
+        });
+        setPricesWithFees(feesMap);
       } catch (error) {
         console.error('Error loading payment gateways:', error);
         message.error('Error al cargar métodos de pago');
@@ -40,7 +53,7 @@ const Pay = () => {
     };
     loadGateways();
     loadFacebookPixel();
-  }, [cartItems]);
+  }, [cartItems, total]);
 
   const loadFacebookPixel = async () => {
     try {
@@ -70,15 +83,20 @@ const Pay = () => {
     try {
       setProcessingPayment(true);
       
+      // Obtener precio con comisiones
+      const priceWithFees = pricesWithFees[selectedGateway.id];
+      const finalAmount = priceWithFees ? priceWithFees.precioTotal : total;
+      
       const paymentData = {
         orderId: `ORDER-${Date.now()}`,
-        amount: total,
+        amount: finalAmount,
         currency: 'USD',
         items: cartItems,
         user: {
           id: 'user-id', // Obtener del contexto de autenticación
           email: 'user@example.com'
-        }
+        },
+        gatewayFees: priceWithFees
       };
 
       const result = await processPayment(selectedGateway, paymentData);
@@ -88,7 +106,7 @@ const Pay = () => {
         // Enviar notificación de éxito
         await createPaymentSuccessNotification({
           id: result.transactionId,
-          amount: total,
+          amount: finalAmount,
           payment_gateways: { name: selectedGateway.name }
         });
 
@@ -105,31 +123,12 @@ const Pay = () => {
           // Para transferencias, mostrar información
           navigate('/payment/manual', { state: { result } });
         } else {
-                           // Pago completado
-                 navigate('/thank-you', { 
-                   state: { 
-                     purchaseData: {
-                       eventId: cartItems[0]?.eventId,
-                       eventName: cartItems[0]?.nombreEvento,
-                       amount: total,
-                       ticketCount: cartItems ? cartItems.length : 0,
-                       transactionId: result.transactionId
-                     }
-                   } 
-                 });
+          navigate('/payment/success', { state: { result } });
         }
       }
     } catch (error) {
       console.error('Error processing payment:', error);
-      
-      // Enviar notificación de fallo
-      await createPaymentFailureNotification({
-        id: 'temp-id',
-        amount: total,
-        payment_gateways: { name: selectedGateway.name }
-      });
-
-              message.error('Error al procesar el pago. Por favor, intenta nuevamente.');
+      message.error('Error al procesar el pago');
     } finally {
       setProcessingPayment(false);
     }
@@ -137,7 +136,7 @@ const Pay = () => {
 
   const handleProcessReservation = async () => {
     if (!selectedGateway) {
-              message.error('Por favor selecciona un método de pago');
+      message.error('Por favor selecciona un método de pago');
       return;
     }
 
@@ -161,7 +160,7 @@ const Pay = () => {
       }
     } catch (error) {
       console.error('Error processing reservation:', error);
-              message.error('Error al procesar la reserva');
+      message.error('Error al procesar la reserva');
     } finally {
       setProcessingPayment(false);
     }
@@ -191,6 +190,18 @@ const Pay = () => {
     return descriptions[type] || '';
   };
 
+  const getPriceWithFees = (gateway) => {
+    const priceWithFees = pricesWithFees[gateway.id];
+    if (!priceWithFees) return total;
+    
+    return {
+      originalPrice: priceWithFees.precioBase,
+      fees: priceWithFees.comision,
+      finalPrice: priceWithFees.precioTotal,
+      hasFees: priceWithFees.comision > 0
+    };
+  };
+
   if (!cartItems || cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -207,12 +218,9 @@ const Pay = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      {/* Píxel de Facebook para InitiateCheckout */}
-      {facebookPixel && shouldTrackOnPage(facebookPixel, 'payment_page') && (
+      {facebookPixel && (
         <FacebookPixel
-          pixelId={facebookPixel.pixel_id}
-          pixelScript={facebookPixel.pixel_script}
-          eventName={FACEBOOK_EVENTS.INITIATE_CHECKOUT}
+          pixelId={facebookPixel}
           eventData={{
             content_name: cartItems.map(item => item.nombreEvento).join(', '),
             content_category: 'Eventos',
@@ -251,65 +259,85 @@ const Pay = () => {
                   />
                 ) : (
                   <div className="space-y-4">
-                    {availableGateways.map((gateway) => (
-                      <Card
-                        key={gateway.id}
-                        className={`cursor-pointer transition-all duration-200 ${
-                          selectedGateway?.id === gateway.id
-                            ? 'ring-2 ring-blue-500 border-blue-500'
-                            : 'hover:shadow-md'
-                        }`}
-                        onClick={() => handlePaymentMethodSelect(gateway)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="text-2xl">
-                              {getGatewayIcon(gateway.type)}
+                    {availableGateways.map((gateway) => {
+                      const priceInfo = getPriceWithFees(gateway);
+                      const isSelected = selectedGateway?.id === gateway.id;
+                      
+                      return (
+                        <Card
+                          key={gateway.id}
+                          className={`cursor-pointer transition-all duration-200 ${
+                            isSelected
+                              ? 'ring-2 ring-blue-500 border-blue-500'
+                              : 'hover:shadow-md'
+                          }`}
+                          onClick={() => handlePaymentMethodSelect(gateway)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="text-2xl">
+                                {getGatewayIcon(gateway.type)}
+                              </div>
+                              <div>
+                                <h3 className="font-semibold text-lg">{gateway.name}</h3>
+                                <p className="text-gray-600 text-sm">
+                                  {getGatewayDescription(gateway.type)}
+                                </p>
+                                {priceInfo.hasFees && (
+                                  <div className="text-xs text-gray-500 mt-1">
+                                    Comisión: ${priceInfo.fees.toFixed(2)}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            <div>
-                              <h3 className="font-semibold text-lg">{gateway.name}</h3>
-                              <p className="text-gray-600 text-sm">
-                                {getGatewayDescription(gateway.type)}
-                              </p>
+                            <div className="text-right">
+                              <div className="text-lg font-semibold">
+                                ${priceInfo.finalPrice.toFixed(2)}
+                              </div>
+                              {priceInfo.hasFees && (
+                                <div className="text-xs text-gray-500 line-through">
+                                  ${priceInfo.originalPrice.toFixed(2)}
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-sm text-gray-500">Seleccionado</div>
-                            <div className="text-lg font-bold text-green-600">
-                              {selectedGateway?.id === gateway.id ? '✓' : ''}
-                            </div>
-                          </div>
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </div>
 
-              {/* Resumen del Carrito */}
+              {/* Resumen de Compra */}
               <div className="lg:col-span-1">
                 <Card title="Resumen de Compra" className="sticky top-4">
-                  <div className="space-y-4">
-                    {/* Items del carrito */}
-                    <div>
-                      <h4 className="font-semibold mb-2">Productos</h4>
-                      <div className="space-y-2">
-                        {cartItems.map((item, index) => (
-                          <div key={index} className="flex justify-between text-sm">
-                            <span>{item.nombreZona} - {item.nombreAsiento}</span>
-                            <span>${item.precio}</span>
-                          </div>
-                        ))}
+                  <div className="space-y-3">
+                    {cartItems.map((item, index) => (
+                      <div key={index} className="flex justify-between text-sm">
+                        <span>{item.nombreEvento}</span>
+                        <span>${item.precio.toFixed(2)}</span>
                       </div>
-                    </div>
+                    ))}
 
                     <Divider />
 
-                    {/* Total */}
                     <div className="flex justify-between items-center text-lg font-bold">
                       <span>Total</span>
                       <span>${total.toFixed(2)}</span>
                     </div>
+
+                    {selectedGateway && pricesWithFees[selectedGateway.id]?.hasFees && (
+                      <>
+                        <div className="flex justify-between text-sm text-gray-600">
+                          <span>Comisión ({selectedGateway.name})</span>
+                          <span>+${pricesWithFees[selectedGateway.id].comision.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-lg font-bold text-blue-600">
+                          <span>Total Final</span>
+                          <span>${pricesWithFees[selectedGateway.id].precioTotal.toFixed(2)}</span>
+                        </div>
+                      </>
+                    )}
 
                     {/* Botón de Pago */}
                     <Button

@@ -1,6 +1,6 @@
 import React, { useMemo, useCallback, useState } from 'react';
 import { Button, message, Dropdown, Menu, Modal, Card, Avatar } from 'antd';
-import { AiOutlineClose, AiOutlineMore, AiOutlineUser } from 'react-icons/ai';
+import { AiOutlineClose, AiOutlineMore } from 'react-icons/ai';
 import { createOrUpdateSeat, unlockSeat as updateSeatStatusInDB } from '../../services/supabaseSeats';
 import { useSeatLockStore } from '../../../components/seatLockStore';
 import { supabase } from '../../../supabaseClient';
@@ -104,98 +104,51 @@ const Cart = ({
       if (seatsToBlock.length) {
         // Los asientos ya están bloqueados en tiempo real, solo actualizar en BD
         await Promise.all(
-          seatsToBlock.map(async (item) => {
-            const updates = { 
-              bloqueado: true, 
-              status: 'bloqueado',
-              updated_at: new Date().toISOString()
-            };
-            await createOrUpdateSeat(item._id, item.funcionId, item.zona, updates);
-          })
+          seatsToBlock.map(seat => 
+            createOrUpdateSeat(seat._id, { estado: 'bloqueado' })
+          )
         );
-        
-        if (onSeatsUpdated) onSeatsUpdated(seatsToBlock.map(i => i._id), 'bloqueado');
-        message.success(`${seatsToBlock.length} asientos bloqueados permanentemente`);
-        setCarrito([]);
-      } else {
-        message.info('No hay asientos para bloquear');
+        message.success('Asientos bloqueados correctamente');
       }
     } catch (error) {
-      console.error('Error bloqueando asientos:', error);
-      message.error('Error al bloquear los asientos');
+      console.error('Error blocking seats:', error);
+      message.error('Error al bloquear asientos');
     }
-  }, [carrito, onSeatsUpdated, setCarrito]);
+  }, [carrito]);
 
-  const formatPrice = useCallback((price) => (
-    typeof price === 'number' ? price.toFixed(2) : '0.00'
-  ), []);
-
-  // --- MENU DE DESCARGA ---
-  const handleDownloadSelected = async () => {
-    if (!selectedSeat) {
-      message.info('Selecciona un asiento para descargar su ticket');
-      return;
-    }
-    await downloadTicket(selectedSeat.locator);
-  };
-
-  const handleDownloadAll = async () => {
+  const handleDownloadAllTickets = useCallback(async () => {
+    if (!carrito.length) return;
+    
     setDownloadingAll(true);
     try {
-      // Descargar todos los tickets y combinarlos en un solo PDF
-      // Por simplicidad, descarga uno a uno (puedes mejorar con merge real de PDFs)
-      for (const item of carrito) {
-        await downloadTicket(item.locator);
+      const locators = [...new Set(carrito.map(item => item.locator).filter(Boolean))];
+      
+      for (const locator of locators) {
+        await downloadTicket(locator);
       }
-      message.success('Todos los tickets descargados');
-    } catch (err) {
-      message.error('Error al descargar los tickets');
+      
+      message.success('Tickets descargados correctamente');
+    } catch (error) {
+      console.error('Error downloading tickets:', error);
+      message.error('Error al descargar tickets');
+    } finally {
+      setDownloadingAll(false);
     }
-    setDownloadingAll(false);
-  };
+  }, [carrito]);
 
   const menu = (
-    <Menu onClick={({ key }) => {
-      setMenuVisible(false);
-      if (key === 'downloadSelected') handleDownloadSelected();
-      if (key === 'downloadAll') handleDownloadAll();
-    }}>
-      <Menu.Item key="downloadSelected" disabled={!selectedSeat}>
-        Descargar ticket seleccionado
+    <Menu>
+      <Menu.Item key="block" onClick={handleBlockAction}>
+        Bloquear Asientos
       </Menu.Item>
-      <Menu.Item key="downloadAll" disabled={carrito.length === 0 || downloadingAll}>
-        Descargar todos los tickets
+      <Menu.Item key="download" onClick={handleDownloadAllTickets}>
+        Descargar Todos los Tickets
       </Menu.Item>
     </Menu>
   );
 
   return (
-    <div className="bg-white shadow-md rounded-md p-4">
-      {/* Información del usuario seleccionado */}
-      {selectedClient && (
-        <Card size="small" className="mb-4 border border-blue-200 bg-blue-50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Avatar icon={<AiOutlineUser />} className="bg-blue-500" />
-              <div>
-                <div className="font-semibold text-blue-900">{selectedClient.login}</div>
-                <div className="text-sm text-blue-700">{selectedClient.email}</div>
-                {selectedClient.empresa && (
-                  <div className="text-xs text-blue-600">{selectedClient.empresa}</div>
-                )}
-              </div>
-            </div>
-            <Button 
-              size="small" 
-              icon={<AiOutlineClose />} 
-              onClick={() => setSelectedClient(null)}
-              type="text"
-              className="text-blue-600 hover:text-blue-800"
-            />
-          </div>
-        </Card>
-      )}
-
+    <div className="h-full flex flex-col bg-white">
       <div className="flex justify-between items-center mb-4 border-b pb-2">
         <h3 className="text-lg font-semibold">Carrito de Compras</h3>
         <div className="flex items-center gap-2">
@@ -227,56 +180,34 @@ const Cart = ({
             </div>
             {group.items.map((item) => {
               const groupKey = `${item.zona}|${item.precio}|${item.tipoPrecio}|${item.descuentoNombre}`;
-              const isBlocked = item.isBlocked;
               
               return (
-                <div
-                  key={groupKey}
-                  className={`flex justify-between items-start p-3 rounded shadow-sm text-sm transition-colors ${
-                    isBlocked 
-                      ? 'bg-red-50 border border-red-200' 
-                      : 'bg-gray-50 hover:bg-gray-100'
-                  }`}
-                >
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">
-                      {isBlocked && '🔒 '}
-                      {item.cantidad} {item.cantidad === 1 ? 'asiento' : 'asientos'} - {item.zona}
-                      {isBlocked && ' (BLOQUEADO)'}
+                <Card key={groupKey} size="small" className="mb-2">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">
+                        {item.zona} - ${item.precio.toFixed(2)}
+                      </div>
+                      {item.tipoPrecio === 'descuento' && (
+                        <div className="text-xs text-green-600">
+                          Descuento: {item.descuentoNombre}
+                        </div>
+                      )}
+                      <div className="text-xs text-gray-500">
+                        Cantidad: {item.cantidad}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {item.asientos.map(seat => seat.nombre).join(', ')}
+                      </div>
                     </div>
-                    <div className="text-gray-500 text-xs mt-1">
-                      {item.asientos.map((asiento, idx) => (
-                        <span key={asiento._id} className="inline-block mr-2">
-                          {asiento.nombreMesa || asiento.nombre || 'Asiento'}
-                        </span>
-                      ))}
-                    </div>
-                    {!isBlocked ? (
-                      <div className="text-green-600 font-semibold mt-1">
-                        ${formatPrice(item.precio)} {item.cantidad > 1 && `× ${item.cantidad} = $${formatPrice(item.precio * item.cantidad)}`}
-                      </div>
-                    ) : (
-                      <div className="text-red-600 font-semibold mt-1">
-                        🔒 Bloqueado permanentemente
-                      </div>
-                    )}
-                    {item.tipoPrecio === 'descuento' && !isBlocked && (
-                      <div className="text-orange-600 text-xs mt-1">
-                        Descuento: {item.descuentoNombre}
-                      </div>
-                    )}
+                    <button
+                      onClick={() => handleRemoveSeat(groupKey)}
+                      className="text-red-500 hover:text-red-700 text-xs"
+                    >
+                      ×
+                    </button>
                   </div>
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleRemoveSeat(groupKey);
-                    }}
-                    className="text-gray-400 hover:text-red-500 ml-2 p-1"
-                    title={isBlocked ? "Eliminar bloqueo" : "Eliminar grupo"}
-                  >
-                    <AiOutlineClose />
-                  </button>
-                </div>
+                </Card>
               );
             })}
           </div>
@@ -284,34 +215,37 @@ const Cart = ({
       </div>
 
       {carrito.length > 0 && (
-        <div className="mt-4 border-t pt-4 space-y-2">
-          {!carrito.some(i => i.isBlocked) ? (
-            <>
-              {selectedAffiliate && (
-                <div className="text-right text-sm">
-                  Com. Ref {selectedAffiliate.user.login}: -${formatPrice(total - subtotal)}
-                </div>
-              )}
-              <div className="text-right font-semibold text-lg">
-                Total: ${formatPrice(total)}
+        <div className="mt-auto border-t pt-4">
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span>Subtotal:</span>
+              <span>${subtotal.toFixed(2)}</span>
+            </div>
+            {selectedAffiliate && (
+              <div className="flex justify-between text-sm text-gray-600">
+                <span>Comisión ({selectedAffiliate.percentage}%):</span>
+                <span>-${(subtotal * (selectedAffiliate.percentage / 100)).toFixed(2)}</span>
               </div>
-              <Button type="primary" block onClick={onPaymentClick}>
-                Proceder al Pago
-              </Button>
-            </>
-          ) : (
-            <Button
-              type="default"
-              danger
-              block
-              onClick={handleBlockAction}
-            >
-              🔒 Bloquear Asientos ({carrito.filter(i => i.isBlocked).length})
-            </Button>
-          )}
-          {children}
+            )}
+            <div className="flex justify-between font-semibold border-t pt-2">
+              <span>Total:</span>
+              <span>${total.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <Button
+            type="primary"
+            block
+            className="mt-4"
+            onClick={onPaymentClick}
+            disabled={!selectedClient}
+          >
+            {selectedClient ? 'Procesar Pago' : 'Seleccionar Cliente'}
+          </Button>
         </div>
       )}
+
+      {children}
     </div>
   );
 };

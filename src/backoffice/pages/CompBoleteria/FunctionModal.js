@@ -1,5 +1,5 @@
 import React from 'react';
-import { Modal, Table, Button } from 'antd';
+import { Modal, Table, Button, Tag } from 'antd';
 import formatDateString from '../../../utils/formatDateString';
 
 const FunctionModal = ({
@@ -22,61 +22,92 @@ const FunctionModal = ({
     return formatDateString(date);
   };
 
+  const getPlantillaInfo = (funcion) => {
+    if (funcion.plantilla?.nombre) {
+      return funcion.plantilla.nombre;
+    }
+    return 'Sin plantilla';
+  };
+
+  const getSalaInfo = (funcion) => {
+    if (typeof funcion.sala === 'object' && funcion.sala?.nombre) {
+      return funcion.sala.nombre;
+    }
+    return '—';
+  };
+
   const columns = [
     {
-      title: 'Date',
+      title: 'Fecha',
       dataIndex: 'fechaCelebracion',
       render: (date) => formatFecha(date),
+      width: 120,
     },
     {
-      title: 'Room',
-      dataIndex: ['sala', 'nombre'],
+      title: 'Sala',
+      dataIndex: 'sala',
+      render: (_, record) => getSalaInfo(record),
+      width: 100,
+    },
+    {
+      title: 'Plantilla',
+      dataIndex: 'plantilla',
+      render: (_, record) => getPlantillaInfo(record),
+      width: 150,
+    },
+    {
+      title: 'Estado',
       render: (_, record) => {
-        if (typeof record.sala === 'object' && record.sala !== null) {
-          return record.sala.nombre || '—';
+        const now = new Date();
+        const fechaCelebracion = new Date(record.fechaCelebracion);
+        const inicioVenta = record.inicioVenta ? new Date(record.inicioVenta) : null;
+        const finVenta = record.finVenta ? new Date(record.finVenta) : null;
+
+        if (fechaCelebracion < now) {
+          return <Tag color="red">Finalizada</Tag>;
         }
-        return '—';
+        
+        if (inicioVenta && now < inicioVenta) {
+          return <Tag color="orange">Próximamente</Tag>;
+        }
+        
+        if (finVenta && now > finVenta) {
+          return <Tag color="red">Venta Cerrada</Tag>;
+        }
+        
+        return <Tag color="green">En Venta</Tag>;
       },
+      width: 100,
     },
     {
-      title: 'Sale Period',
-      render: (_, record) => (
-        <span className="whitespace-nowrap">
-          {formatFecha(record.inicioVenta)} to{' '}
-          {formatFecha(record.finVenta)}
-        </span>
-      ),
-    },
-    {
-      title: 'Actions',
+      title: 'Acciones',
       render: (_, record) => (
         <Button
-          type="default"
-          block
+          type="primary"
+          size="small"
           onClick={(e) => {
             e.stopPropagation();
             onFunctionSelect(normalizeFunction(record));
           }}
-          className="bg-blue-600 hover:bg-blue-700 border-none text-white"
         >
-          Select
+          Seleccionar
         </Button>
       ),
       fixed: 'right',
-      width: 100,
+      width: 120,
     },
   ];
 
   return (
     <Modal
-      title="Select Function"
+      title="Seleccionar Función"
       open={visible}
       onCancel={onCancel}
       footer={null}
-      width="90vw"
+      width="80vw"
       styles={{ body: { padding: 0 } }}
       centered
-      className="max-w-3xl mx-auto"
+      className="max-w-4xl mx-auto"
     >
       <div className="overflow-x-auto p-4">
         <Table

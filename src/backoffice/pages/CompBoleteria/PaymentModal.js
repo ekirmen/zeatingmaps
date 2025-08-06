@@ -8,13 +8,14 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { isUuid } from '../../../utils/isUuid';
 import API_BASE_URL from '../../../utils/apiBase';
 import downloadTicket from '../../../utils/downloadTicket';
+import { supabase } from '../../../supabaseClient';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
 
 const { Text } = Typography;
 
-const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion, selectedAffiliate }) => {
+const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion, selectedAffiliate, selectedEvent }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('1');
   const [reservationType, setReservationType] = useState('1');
@@ -45,6 +46,49 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
 
   const existingPaymentId = carrito?.[0]?.paymentId;
   const existingLocator = carrito?.[0]?.locator;
+
+  // Función para asignar tags del evento al comprador
+  const assignEventTagsToUser = async (userId, eventTags) => {
+    if (!eventTags || eventTags.length === 0) return;
+    
+    try {
+      // Obtener el perfil actual del usuario
+      const { data: currentProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('tags')
+        .eq('id', userId)
+        .single();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error fetching user profile:', fetchError);
+        return;
+      }
+
+      // Combinar tags existentes con los nuevos tags del evento
+      const existingTags = currentProfile?.tags || [];
+      const newTags = Array.isArray(eventTags) ? eventTags : [eventTags];
+      
+      // Filtrar tags duplicados
+      const uniqueTags = [...new Set([...existingTags, ...newTags])];
+
+      // Actualizar el perfil del usuario con los nuevos tags
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ 
+          tags: uniqueTags,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('Error updating user tags:', updateError);
+      } else {
+        console.log(`Tags del evento asignados al usuario ${userId}:`, newTags);
+      }
+    } catch (error) {
+      console.error('Error assigning event tags to user:', error);
+    }
+  };
 
   const handleEmailTicket = async () => {
     if (!locator || !emailToSend) return;
@@ -180,60 +224,35 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
 
   const handlePaymentOrReservation = async () => {
     if (!selectedClient) {
-      message.error('Por favor seleccione un cliente');
+      message.error('Debe seleccionar un cliente');
       return;
     }
 
-    if (!selectedFuncion) {
-      message.error('Por favor seleccione una función');
+    if (paymentEntries.length === 0) {
+      message.error('Debe agregar al menos un método de pago');
+      return;
+    }
+
+    if (diferencia > 0) {
+      message.error(`Falta pagar $${diferencia.toFixed(2)}`);
       return;
     }
 
     setIsProcessing(true);
+
     try {
-      if (existingPaymentId) {
-        const newStatus = diferencia > 0 ? 'reservado' : 'pagado';
-        const data = await updatePayment(existingPaymentId, {
-          status: newStatus,
-          payments: paymentEntries.map(entry => ({
-            method: entry.formaPago,
-            amount: entry.importe
-          }))
-        });
-        setLocator(data.locator || existingLocator);
-        setShowConfirmation(true);
-        message.success('Pago actualizado');
-        onCancel();
-      } else {
-        // Group seats by event
-        const seatsByEvent = carrito.reduce((acc, item) => {
-          // Some seats only contain the raw event ID rather than an object.
-          // `selectedFuncion.evento` can also be either a UUID value or an
-          // object. Normalise these cases to reliably obtain the identifier.
-          const eventId =
-            item.evento?.id ||
-            item.evento?._id ||
-            item.evento ||
-            selectedFuncion.evento?.id ||
-            selectedFuncion.evento?._id ||
-            selectedFuncion.evento;
+      // Agrupar asientos por evento
+      const seatsByEvent = carrito.reduce((acc, item) => {
+        const eventId = item.eventId || selectedEvent?.id;
+        if (!acc[eventId]) {
+          acc[eventId] = [];
+        }
+        acc[eventId].push(item);
+        return acc;
+      }, {});
 
-          // Event IDs may be numeric or UUID. Only skip if the value is null or
-          // undefined to allow both formats.
-          if (eventId === null || eventId === undefined) {
-            console.error('Missing event ID for seat:', item);
-            return acc;
-          }
-
-          if (!acc[eventId]) {
-            acc[eventId] = [];
-          }
-          acc[eventId].push(item);
-          return acc;
-        }, {});
-
-        // Create a payment for each event
-        const paymentPromises = Object.entries(seatsByEvent).map(([eventId, seats]) => {
+      // Create a payment for each event
+      const paymentPromises = Object.entries(seatsByEvent).map(([eventId, seats]) => {
         const paymentData = {
           user: selectedClient.id || selectedClient._id,
           event: eventId,
@@ -272,6 +291,12 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
         if (results && results.length > 0 && results[0]) {
           setLocator(results[0].locator);
         }
+
+        // Asignar tags del evento al comprador si el pago fue exitoso
+        if (selectedEvent?.tags && selectedClient?.id) {
+          await assignEventTagsToUser(selectedClient.id, selectedEvent.tags);
+        }
+
         setShowConfirmation(true);
         message.success('Pago procesado exitosamente');
         onCancel();

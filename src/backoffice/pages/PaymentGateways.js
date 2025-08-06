@@ -13,7 +13,9 @@ import {
   Typography,
   Divider,
   Alert,
-  Tooltip
+  Tooltip,
+  Row,
+  Col
 } from 'antd';
 import { 
   CreditCardOutlined, 
@@ -22,7 +24,8 @@ import {
   DollarOutlined,
   SettingOutlined,
   EyeOutlined,
-  EyeInvisibleOutlined
+  EyeInvisibleOutlined,
+  PercentageOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
@@ -42,31 +45,43 @@ const PaymentGateways = () => {
     stripe: [
       { key: 'publishable_key', label: 'Clave Pública', required: true },
       { key: 'secret_key', label: 'Clave Secreta', required: true, secret: true },
-      { key: 'webhook_secret', label: 'Webhook Secret', required: false, secret: true }
+      { key: 'webhook_secret', label: 'Webhook Secret', required: false, secret: true },
+      { key: 'tasa_fija', label: 'Tasa Fija ($)', required: false, type: 'number', placeholder: '0.30' },
+      { key: 'porcentaje', label: 'Porcentaje (%)', required: false, type: 'number', placeholder: '2.9' }
     ],
     paypal: [
       { key: 'client_id', label: 'Client ID', required: true },
       { key: 'client_secret', label: 'Client Secret', required: true, secret: true },
-      { key: 'mode', label: 'Modo (sandbox/live)', required: true }
+      { key: 'mode', label: 'Modo (sandbox/live)', required: true },
+      { key: 'tasa_fija', label: 'Tasa Fija ($)', required: false, type: 'number', placeholder: '0.30' },
+      { key: 'porcentaje', label: 'Porcentaje (%)', required: false, type: 'number', placeholder: '2.9' }
     ],
     transfer: [
       { key: 'bank_name', label: 'Nombre del Banco', required: true },
       { key: 'account_number', label: 'Número de Cuenta', required: true },
       { key: 'account_holder', label: 'Titular de la Cuenta', required: true },
-      { key: 'routing_number', label: 'Número de Routing', required: false }
+      { key: 'routing_number', label: 'Número de Routing', required: false },
+      { key: 'tasa_fija', label: 'Tasa Fija ($)', required: false, type: 'number', placeholder: '0.00' },
+      { key: 'porcentaje', label: 'Porcentaje (%)', required: false, type: 'number', placeholder: '0.00' }
     ],
     mobile_payment: [
       { key: 'phone_number', label: 'Número de Teléfono', required: true },
       { key: 'provider', label: 'Proveedor (MP, etc.)', required: true },
-      { key: 'account_name', label: 'Nombre de la Cuenta', required: true }
+      { key: 'account_name', label: 'Nombre de la Cuenta', required: true },
+      { key: 'tasa_fija', label: 'Tasa Fija ($)', required: false, type: 'number', placeholder: '0.50' },
+      { key: 'porcentaje', label: 'Porcentaje (%)', required: false, type: 'number', placeholder: '3.5' }
     ],
     zelle: [
       { key: 'email', label: 'Email de Zelle', required: true },
-      { key: 'account_name', label: 'Nombre de la Cuenta', required: true }
+      { key: 'account_name', label: 'Nombre de la Cuenta', required: true },
+      { key: 'tasa_fija', label: 'Tasa Fija ($)', required: false, type: 'number', placeholder: '0.00' },
+      { key: 'porcentaje', label: 'Porcentaje (%)', required: false, type: 'number', placeholder: '0.00' }
     ],
     reservation: [
       { key: 'reservation_time', label: 'Tiempo de Reserva (minutos)', required: true },
-      { key: 'max_reservation_amount', label: 'Monto Máximo de Reserva', required: true }
+      { key: 'max_reservation_amount', label: 'Monto Máximo de Reserva', required: true },
+      { key: 'tasa_fija', label: 'Tasa Fija ($)', required: false, type: 'number', placeholder: '0.00' },
+      { key: 'porcentaje', label: 'Porcentaje (%)', required: false, type: 'number', placeholder: '0.00' }
     ]
   };
 
@@ -252,7 +267,7 @@ const PaymentGateways = () => {
 
       <Alert
         message="Información Importante"
-        description="Las pasarelas activadas aparecerán automáticamente en el carrito de compras y en la página de pago del store."
+        description="Las pasarelas activadas aparecerán automáticamente en el carrito de compras y en la página de pago del store. Las tasas y porcentajes se aplicarán automáticamente al calcular los precios."
         type="info"
         showIcon
         className="mb-6"
@@ -277,7 +292,7 @@ const PaymentGateways = () => {
           configForm.resetFields();
         }}
         footer={null}
-        width={600}
+        width={700}
       >
         {selectedGateway && (
           <Form
@@ -293,36 +308,83 @@ const PaymentGateways = () => {
               className="mb-4"
             />
 
-            {defaultConfigs[selectedGateway.type]?.map(config => (
-              <Form.Item
-                key={config.key}
-                label={config.label}
-                name={config.key}
-                rules={[
-                  {
-                    required: config.required,
-                    message: `Por favor ingresa ${config.label.toLowerCase()}`
-                  }
-                ]}
-              >
-                {config.secret ? (
-                  <Input.Password
-                    placeholder={`Ingresa ${config.label.toLowerCase()}`}
-                    iconRender={(visible) => 
-                      visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
-                    }
-                  />
-                ) : config.key === 'mode' ? (
-                  <Input placeholder="sandbox o live" />
-                ) : config.key === 'reservation_time' ? (
-                  <Input placeholder="30" addonAfter="minutos" />
-                ) : config.key === 'max_reservation_amount' ? (
-                  <Input placeholder="100" addonAfter="USD" />
-                ) : (
-                  <Input placeholder={`Ingresa ${config.label.toLowerCase()}`} />
-                )}
-              </Form.Item>
-            ))}
+            <Row gutter={16}>
+              <Col span={12}>
+                <Title level={4}>Configuración Básica</Title>
+                {defaultConfigs[selectedGateway.type]?.filter(config => !config.key.includes('tasa') && !config.key.includes('porcentaje')).map(config => (
+                  <Form.Item
+                    key={config.key}
+                    label={config.label}
+                    name={config.key}
+                    rules={[
+                      {
+                        required: config.required,
+                        message: `Por favor ingresa ${config.label.toLowerCase()}`
+                      }
+                    ]}
+                  >
+                    {config.secret ? (
+                      <Input.Password
+                        placeholder={`Ingresa ${config.label.toLowerCase()}`}
+                        iconRender={(visible) => 
+                          visible ? <EyeOutlined /> : <EyeInvisibleOutlined />
+                        }
+                      />
+                    ) : config.key === 'mode' ? (
+                      <Input placeholder="sandbox o live" />
+                    ) : config.key === 'reservation_time' ? (
+                      <Input placeholder="30" addonAfter="minutos" />
+                    ) : config.key === 'max_reservation_amount' ? (
+                      <Input placeholder="100" addonAfter="USD" />
+                    ) : (
+                      <Input placeholder={`Ingresa ${config.label.toLowerCase()}`} />
+                    )}
+                  </Form.Item>
+                ))}
+              </Col>
+              
+              <Col span={12}>
+                <Title level={4}>
+                  <PercentageOutlined style={{ marginRight: 8 }} />
+                  Configuración de Tasas
+                </Title>
+                <Alert
+                  message="Tasas y Comisiones"
+                  description="Estas tasas se aplicarán automáticamente al calcular los precios finales en el store y boletería."
+                  type="info"
+                  showIcon
+                  className="mb-4"
+                />
+                
+                {defaultConfigs[selectedGateway.type]?.filter(config => config.key.includes('tasa') || config.key.includes('porcentaje')).map(config => (
+                  <Form.Item
+                    key={config.key}
+                    label={config.label}
+                    name={config.key}
+                    rules={[
+                      {
+                        required: config.required,
+                        message: `Por favor ingresa ${config.label.toLowerCase()}`
+                      },
+                      {
+                        type: 'number',
+                        min: 0,
+                        message: 'El valor debe ser mayor o igual a 0'
+                      }
+                    ]}
+                  >
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder={config.placeholder || `Ingresa ${config.label.toLowerCase()}`}
+                      addonAfter={config.key.includes('porcentaje') ? '%' : '$'}
+                    />
+                  </Form.Item>
+                ))}
+              </Col>
+            </Row>
+
+            <Divider />
 
             <Form.Item>
               <Space>

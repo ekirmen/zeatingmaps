@@ -90,6 +90,7 @@ const SidebarMenu = ({ collapsed }) => {
   const location = useLocation();
   const [activeSubmenu, setActiveSubmenu] = useState(null);
   const [showEventSearch, setShowEventSearch] = useState(false);
+  const [temporaryExpanded, setTemporaryExpanded] = useState(false);
 
   const isActive = (path) => {
     return location.pathname.includes(path);
@@ -136,7 +137,7 @@ const SidebarMenu = ({ collapsed }) => {
         // { title: 'Donaciones', path: '/dashboard/donaciones', icon: faHandHoldingHeart }, // OCULTO
         { title: 'Comisiones y tasas', path: '/dashboard/comisiones', icon: faCreditCard },
         // { title: 'Seguros', path: '/dashboard/seguros', icon: faShieldAlt }, // OCULTO
-        { title: 'Envío a domicilio', path: '/dashboard/envio', icon: faTruck },
+        // { title: 'Envío a domicilio', path: '/dashboard/envio', icon: faTruck }, // OCULTO
         { title: 'Eventos', path: '/dashboard/eventos', icon: faTicketAlt },
         { title: 'Plantillas de precios', path: '/dashboard/plantillas-precios', icon: faPercent },
         { title: 'Funciones', path: '/dashboard/funciones', icon: faCalendar },
@@ -222,9 +223,15 @@ const SidebarMenu = ({ collapsed }) => {
           className={`flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
             isActive(item.path) ? 'bg-blue-100 text-blue-600 border-r-2 border-blue-600' : ''
           }`}
+          onClick={() => {
+            if (collapsed) {
+              setTemporaryExpanded(true);
+              setTimeout(() => setTemporaryExpanded(false), 3000);
+            }
+          }}
         >
           <FontAwesomeIcon icon={item.icon} className="w-5 h-5 mr-3" />
-          {!collapsed && <span>{item.title}</span>}
+          {(!collapsed || temporaryExpanded) && <span>{item.title}</span>}
         </Link>
       );
     }
@@ -233,16 +240,22 @@ const SidebarMenu = ({ collapsed }) => {
       return (
         <div key={item.title}>
           <button
-            onClick={() => toggleSubmenu(item.submenuId)}
+            onClick={() => {
+              if (collapsed) {
+                setTemporaryExpanded(true);
+                setTimeout(() => setTemporaryExpanded(false), 3000);
+              }
+              toggleSubmenu(item.submenuId);
+            }}
             className={`w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
               activeSubmenu === item.submenuId ? 'bg-blue-100 text-blue-600' : ''
             }`}
           >
             <div className="flex items-center">
               <FontAwesomeIcon icon={item.icon} className="w-5 h-5 mr-3" />
-              {!collapsed && <span>{item.title}</span>}
+              {(!collapsed || temporaryExpanded) && <span>{item.title}</span>}
             </div>
-            {!collapsed && (
+            {(!collapsed || temporaryExpanded) && (
               <FontAwesomeIcon 
                 icon={activeSubmenu === item.submenuId ? 'chevron-down' : 'chevron-right'} 
                 className="w-4 h-4 transition-transform"
@@ -250,7 +263,7 @@ const SidebarMenu = ({ collapsed }) => {
             )}
           </button>
           
-          {activeSubmenu === item.submenuId && !collapsed && (
+          {activeSubmenu === item.submenuId && (!collapsed || temporaryExpanded) && (
             <div className="bg-gray-50">
               {item.items.map((subItem) => (
                 <Link
@@ -259,6 +272,12 @@ const SidebarMenu = ({ collapsed }) => {
                   className={`flex items-center px-8 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
                     isActive(subItem.path) ? 'bg-blue-100 text-blue-600' : ''
                   }`}
+                  onClick={() => {
+                    if (collapsed) {
+                      setTemporaryExpanded(true);
+                      setTimeout(() => setTemporaryExpanded(false), 3000);
+                    }
+                  }}
                 >
                   <FontAwesomeIcon icon={subItem.icon} className="w-4 h-4 mr-3" />
                   <span>{subItem.title}</span>
@@ -277,11 +296,11 @@ const SidebarMenu = ({ collapsed }) => {
   const isBoleteriaActive = isActive('/dashboard/boleteria');
 
   return (
-    <div className={`bg-white shadow-lg ${collapsed ? 'w-16' : 'w-64'} transition-all duration-300`}>
+    <div className={`bg-white shadow-lg ${(collapsed && !temporaryExpanded) ? 'w-16' : 'w-64'} transition-all duration-300`}>
       {/* Logo */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-center">
-          {!collapsed && (
+          {(!collapsed || temporaryExpanded) && (
             <div className="text-xl font-bold text-blue-600">
               Panel Admin
             </div>
@@ -290,7 +309,7 @@ const SidebarMenu = ({ collapsed }) => {
       </div>
 
       {/* Buscador de eventos (solo en boletería) */}
-      {isBoleteriaActive && !collapsed && (
+      {isBoleteriaActive && (!collapsed || temporaryExpanded) && (
         <div className="p-4 border-b border-gray-200">
           <EventSearch />
         </div>

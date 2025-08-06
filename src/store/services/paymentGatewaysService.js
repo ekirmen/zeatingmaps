@@ -7,31 +7,214 @@ export const getActivePaymentGateways = async () => {
   try {
     const { data, error } = await supabase
       .from('payment_gateways')
-      .select(`
-        *,
-        payment_gateway_configs (*)
-      `)
+      .select('*')
       .eq('is_active', true)
       .order('name');
 
     if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching active payment gateways:', error);
+    throw error;
+  }
+};
 
-    // Procesar configuraciones
-    const processedGateways = data.map(gateway => {
-      const configs = {};
-      gateway.payment_gateway_configs.forEach(config => {
-        configs[config.key_name] = config.key_value;
+/**
+ * Obtiene todas las pasarelas de pago (activas e inactivas)
+ */
+export const getAllPaymentGateways = async () => {
+  try {
+    const { data, error } = await supabase
+      .from('payment_gateways')
+      .select('*')
+      .order('name');
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching all payment gateways:', error);
+    throw error;
+  }
+};
+
+/**
+ * Obtiene la configuración de una pasarela específica
+ */
+export const getGatewayConfig = async (gatewayId) => {
+  try {
+    const { data, error } = await supabase
+      .from('payment_gateway_configs')
+      .select('*')
+      .eq('gateway_id', gatewayId);
+
+    if (error) throw error;
+    
+    // Convertir array de configuraciones a objeto
+    const config = {};
+    data.forEach(item => {
+      config[item.key_name] = item.key_value;
+    });
+    
+    return config;
+  } catch (error) {
+    console.error('Error fetching gateway config:', error);
+    throw error;
+  }
+};
+
+/**
+ * Obtiene las tasas de una pasarela específica
+ */
+export const getGatewayFees = async (gatewayId) => {
+  try {
+    const config = await getGatewayConfig(gatewayId);
+    return {
+      tasa_fija: parseFloat(config.tasa_fija) || 0,
+      porcentaje: parseFloat(config.porcentaje) || 0
+    };
+  } catch (error) {
+    console.error('Error fetching gateway fees:', error);
+    return { tasa_fija: 0, porcentaje: 0 };
+  }
+};
+
+/**
+ * Calcula el precio con comisiones de una pasarela
+ */
+export const calculatePriceWithFees = (basePrice, gatewayId) => {
+  return new Promise(async (resolve) => {
+    try {
+      const fees = await getGatewayFees(gatewayId);
+      const comision = fees.tasa_fija + (basePrice * fees.porcentaje / 100);
+      const totalPrice = basePrice + comision;
+      
+      resolve({
+        precioBase: basePrice,
+        comision: comision,
+        precioTotal: totalPrice,
+        tasa_fija: fees.tasa_fija,
+        porcentaje: fees.porcentaje
       });
+    } catch (error) {
+      console.error('Error calculating price with fees:', error);
+      resolve({
+        precioBase: basePrice,
+        comision: 0,
+        precioTotal: basePrice,
+        tasa_fija: 0,
+        porcentaje: 0
+      });
+    }
+  });
+};
+
+/**
+ * Obtiene las tasas de todas las pasarelas activas
+ */
+export const getAllActiveGatewayFees = async () => {
+  try {
+    const gateways = await getActivePaymentGateways();
+    const feesPromises = gateways.map(async (gateway) => {
+      const fees = await getGatewayFees(gateway.id);
       return {
         ...gateway,
-        config: configs
+        fees
       };
     });
-
-    return processedGateways;
+    
+    return await Promise.all(feesPromises);
   } catch (error) {
-    console.error('Error loading payment gateways:', error);
+    console.error('Error fetching all gateway fees:', error);
     return [];
+  }
+};
+
+/**
+ * Valida la configuración de una pasarela
+ */
+export const validateGatewayConfig = (gateway) => {
+  const validations = {
+    stripe: ['publishable_key', 'secret_key'],
+    paypal: ['client_id', 'client_secret', 'mode'],
+    transfer: ['bank_name', 'account_number', 'account_holder'],
+    mobile_payment: ['phone_number', 'provider', 'account_name'],
+    zelle: ['email', 'account_name'],
+    reservation: ['reservation_time', 'max_reservation_amount']
+  };
+
+  const requiredFields = validations[gateway.type] || [];
+  const missingFields = [];
+
+  // Verificar campos requeridos
+  for (const field of requiredFields) {
+    if (!gateway.config || !gateway.config[field]) {
+      missingFields.push(field);
+    }
+  }
+
+  return {
+    valid: missingFields.length === 0,
+    missingFields,
+    message: missingFields.length > 0 
+      ? `Campos faltantes: ${missingFields.join(', ')}`
+      : 'Configuración válida'
+  };
+};
+
+/**
+ * Crea una nueva pasarela de pago
+ */
+export const createPaymentGateway = async (gatewayData) => {
+  try {
+    const { data, error } = await supabase
+      .from('payment_gateways')
+      .insert([gatewayData])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error creating payment gateway:', error);
+    throw error;
+  }
+};
+
+/**
+ * Actualiza una pasarela de pago existente
+ */
+export const updatePaymentGateway = async (gatewayId, updates) => {
+  try {
+    const { data, error } = await supabase
+      .from('payment_gateways')
+      .update(updates)
+      .eq('id', gatewayId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating payment gateway:', error);
+    throw error;
+  }
+};
+
+/**
+ * Elimina una pasarela de pago
+ */
+export const deletePaymentGateway = async (gatewayId) => {
+  try {
+    const { error } = await supabase
+      .from('payment_gateways')
+      .delete()
+      .eq('id', gatewayId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error deleting payment gateway:', error);
+    throw error;
   }
 };
 
@@ -142,34 +325,4 @@ export const getPaymentTransactionsByOrder = async (orderId) => {
     console.error('Error loading payment transactions:', error);
     return [];
   }
-};
-
-/**
- * Valida si una pasarela está configurada correctamente
- */
-export const validateGatewayConfig = (gateway) => {
-  if (!gateway || !gateway.is_active) {
-    return { valid: false, message: 'Pasarela no activa' };
-  }
-
-  const requiredConfigs = {
-    stripe: ['publishable_key', 'secret_key'],
-    paypal: ['client_id', 'client_secret', 'mode'],
-    transfer: ['bank_name', 'account_number', 'account_holder'],
-    mobile_payment: ['phone_number', 'provider', 'account_name'],
-    zelle: ['email', 'account_name'],
-    reservation: ['reservation_time', 'max_reservation_amount']
-  };
-
-  const required = requiredConfigs[gateway.type] || [];
-  const missing = required.filter(key => !gateway.config[key]);
-
-  if (missing.length > 0) {
-    return { 
-      valid: false, 
-      message: `Configuración incompleta: ${missing.join(', ')}` 
-    };
-  }
-
-  return { valid: true };
 }; 

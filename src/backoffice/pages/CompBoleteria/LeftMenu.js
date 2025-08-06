@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Input, Card, Table, Tag, Form, Button, message } from 'antd';
-import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit } from 'react-icons/ai';
+import { Modal, Input, Card, Table, Tag, Form, Button, message, Select, Checkbox } from 'antd';
+import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit, AiOutlineSetting } from 'react-icons/ai';
 import { supabase } from '../../../supabaseClient';
 import { supabaseAdmin } from '../../../supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
@@ -20,6 +20,8 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const [isAccountModalVisible, setIsAccountModalVisible] = useState(false);
   const [accountSearchResults, setAccountSearchResults] = useState([]);
   const [isAddingAccount, setIsAddingAccount] = useState(false);
+  const [isConfigModalVisible, setIsConfigModalVisible] = useState(false);
+  const [configForm] = Form.useForm();
   const [form] = Form.useForm();
 
   const handleTicketSearch = async (locator) => {
@@ -255,6 +257,14 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         Buscar/Añadir Cuenta
       </Button>
 
+      <Button
+        icon={<AiOutlineSetting />}
+        onClick={() => setIsConfigModalVisible(true)}
+        block
+      >
+        Configuración
+      </Button>
+
       {userData && (
         <Card size="small" className="border border-gray-200">
           <div className="flex justify-between items-center">
@@ -441,6 +451,80 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             )}
           </>
         )}
+      </Modal>
+
+      {/* MODAL Configuración */}
+      <Modal
+        open={isConfigModalVisible}
+        title="Configuración de Impresión"
+        onCancel={() => setIsConfigModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setIsConfigModalVisible(false)}>
+            Cancelar
+          </Button>,
+          <Button key="save" type="primary" onClick={() => configForm.submit()}>
+            Guardar
+          </Button>
+        ]}
+        width={600}
+      >
+        <Form
+          form={configForm}
+          layout="vertical"
+          onFinish={(values) => {
+            console.log('Configuración guardada:', values);
+            message.success('Configuración guardada exitosamente');
+            setIsConfigModalVisible(false);
+          }}
+          initialValues={{
+            ticketPaperType: '1',
+            automaticTicketPrint: false,
+            receiptPaperType: '2',
+            automaticReceiptPrint: false
+          }}
+        >
+          <div className="space-y-6">
+            {/* Configuración de Tickets */}
+            <div>
+              <h4 className="font-semibold mb-4">Entradas</h4>
+              <Form.Item
+                name="ticketPaperType"
+                label="Tipo de papel de tickets"
+              >
+                <Select>
+                  <Select.Option value="1">DIN-A4</Select.Option>
+                  <Select.Option value="2">80mm continuos</Select.Option>
+                  <Select.Option value="28">139x50</Select.Option>
+                </Select>
+              </Form.Item>
+              <Form.Item
+                name="automaticTicketPrint"
+                valuePropName="checked"
+              >
+                <Checkbox>Impresión automática de tickets</Checkbox>
+              </Form.Item>
+            </div>
+
+            {/* Configuración de Recibos */}
+            <div>
+              <h4 className="font-semibold mb-4">Recibo</h4>
+              <Form.Item
+                name="receiptPaperType"
+                label="Tipo de papel de recibos"
+              >
+                <Select>
+                  <Select.Option value="2">80mm continuos</Select.Option>
+                </Select>
+              </Form.Item>
+              <Form.Item
+                name="automaticReceiptPrint"
+                valuePropName="checked"
+              >
+                <Checkbox>Impresión automática de recibos</Checkbox>
+              </Form.Item>
+            </div>
+          </div>
+        </Form>
       </Modal>
     </div>
   );

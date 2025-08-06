@@ -264,8 +264,9 @@ const Boleteria = () => {
     carrito,
     selectedClient,
     selectedFuncion,
-    selectedAffiliate
-  }), [isPaymentModalVisible, carrito, selectedClient, selectedFuncion, selectedAffiliate]);
+    selectedAffiliate,
+    selectedEvent
+  }), [isPaymentModalVisible, carrito, selectedClient, selectedFuncion, selectedAffiliate, selectedEvent]);
 
   // Memoizar las props de ZonesAndPrices para evitar re-renderizados
   const zonesAndPricesProps = useMemo(() => ({

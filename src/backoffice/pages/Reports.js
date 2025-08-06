@@ -200,12 +200,155 @@ const Reports = () => {
     }
   };
 
+  const exportToCSV = (data, filename) => {
+    if (!data || data.length === 0) {
+      message.warning('No hay datos para exportar');
+      return;
+    }
+
+    const columns = getReportColumns();
+    const headers = columns.map(col => col.title).join(',');
+    const rows = data.map(row => {
+      return columns.map(col => {
+        let value = row[col.dataIndex];
+        if (col.render) {
+          // Crear un elemento temporal para obtener el texto renderizado
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = col.render(value, row);
+          value = tempDiv.textContent || tempDiv.innerText || '';
+        }
+        // Escapar comillas y envolver en comillas si contiene coma
+        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+          value = `"${value.replace(/"/g, '""')}"`;
+        }
+        return value || '';
+      }).join(',');
+    }).join('\n');
+
+    const csvContent = `${headers}\n${rows}`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToExcel = (data, filename) => {
+    if (!data || data.length === 0) {
+      message.warning('No hay datos para exportar');
+      return;
+    }
+
+    const columns = getReportColumns();
+    const headers = columns.map(col => col.title);
+    const rows = data.map(row => {
+      return columns.map(col => {
+        let value = row[col.dataIndex];
+        if (col.render) {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = col.render(value, row);
+          value = tempDiv.textContent || tempDiv.innerText || '';
+        }
+        return value || '';
+      });
+    });
+
+    // Crear contenido HTML para Excel
+    let html = '<table>';
+    html += '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+    rows.forEach(row => {
+      html += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+    });
+    html += '</table>';
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}.xls`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToPDF = (data, filename) => {
+    if (!data || data.length === 0) {
+      message.warning('No hay datos para exportar');
+      return;
+    }
+
+    const columns = getReportColumns();
+    const headers = columns.map(col => col.title);
+    const rows = data.map(row => {
+      return columns.map(col => {
+        let value = row[col.dataIndex];
+        if (col.render) {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = col.render(value, row);
+          value = tempDiv.textContent || tempDiv.innerText || '';
+        }
+        return value || '';
+      });
+    });
+
+    // Crear contenido HTML para PDF
+    let html = `
+      <html>
+        <head>
+          <style>
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            h1 { color: #1890ff; }
+          </style>
+        </head>
+        <body>
+          <h1>Reporte de ${selectedReport.charAt(0).toUpperCase() + selectedReport.slice(1)}</h1>
+          <table>
+            <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
+            ${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}
+          </table>
+        </body>
+      </html>
+    `;
+
+    const blob = new Blob([html], { type: 'application/pdf' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}.pdf`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleExport = async (values) => {
     try {
       setLoading(true);
       
-      // Simular exportación
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const data = getReportData();
+      const filename = values.filename || `reporte_${selectedReport}`;
+      
+      switch (values.format) {
+        case 'csv':
+          exportToCSV(data, filename);
+          break;
+        case 'excel':
+          exportToExcel(data, filename);
+          break;
+        case 'pdf':
+          exportToPDF(data, filename);
+          break;
+        default:
+          message.error('Formato no soportado');
+          return;
+      }
       
       message.success(`Reporte exportado como ${values.format.toUpperCase()}`);
       setExportModalVisible(false);
