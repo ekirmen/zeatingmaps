@@ -9,18 +9,16 @@ import {
   message, 
   Select, 
   InputNumber,
-  Upload,
-  Image,
   Space,
   Tag,
-  Tooltip
+  Tooltip,
+  Divider
 } from 'antd';
 import { 
   PlusOutlined, 
   EditOutlined, 
   DeleteOutlined, 
   SearchOutlined,
-  UploadOutlined,
   EyeOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
@@ -28,12 +26,13 @@ import { supabase } from '../../supabaseClient';
 const { Option } = Select;
 const { TextArea } = Input;
 
-const Productos = () => {
-  const [productos, setProductos] = useState([]);
+const PlantillaProductos = () => {
+  const [plantillas, setPlantillas] = useState([]);
   const [eventos, setEventos] = useState([]);
+  const [productos, setProductos] = useState([]);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingProducto, setEditingProducto] = useState(null);
+  const [editingPlantilla, setEditingPlantilla] = useState(null);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
@@ -61,15 +60,16 @@ const Productos = () => {
   useEffect(() => {
     if (eventoSeleccionado) {
       loadProductos();
+      loadPlantillas();
     } else {
       setProductos([]);
+      setPlantillas([]);
     }
   }, [eventoSeleccionado]);
 
   const loadProductos = async () => {
     if (!eventoSeleccionado) return;
 
-    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('plantillas_productos')
@@ -83,6 +83,26 @@ const Productos = () => {
     } catch (error) {
       console.error('Error cargando productos:', error);
       message.error('Error al cargar productos');
+    }
+  };
+
+  const loadPlantillas = async () => {
+    if (!eventoSeleccionado) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('plantillas_productos_template')
+        .select('*')
+        .eq('evento_id', eventoSeleccionado)
+        .eq('activo', true)
+        .order('nombre', { ascending: true });
+
+      if (error) throw error;
+      setPlantillas(data || []);
+    } catch (error) {
+      console.error('Error cargando plantillas:', error);
+      message.error('Error al cargar plantillas');
     } finally {
       setLoading(false);
     }
@@ -92,91 +112,75 @@ const Productos = () => {
     setEventoSeleccionado(eventId);
   };
 
-  const handleCreateProduct = () => {
-    setEditingProducto(null);
+  const handleCreatePlantilla = () => {
+    setEditingPlantilla(null);
     form.resetFields();
     setModalVisible(true);
   };
 
-  const handleEditProduct = (producto) => {
-    setEditingProducto(producto);
+  const handleEditPlantilla = (plantilla) => {
+    setEditingPlantilla(plantilla);
     form.setFieldsValue({
-      nombre: producto.nombre,
-      descripcion: producto.descripcion,
-      precio_base: producto.precio_base,
-      categoria: producto.categoria,
-      activo: producto.activo
+      nombre: plantilla.nombre,
+      descripcion: plantilla.descripcion,
+      activo: plantilla.activo,
+      productos: plantilla.productos || []
     });
     setModalVisible(true);
   };
 
-  const handleDeleteProduct = async (producto) => {
+  const handleDeletePlantilla = async (plantilla) => {
     try {
       const { error } = await supabase
-        .from('plantillas_productos')
+        .from('plantillas_productos_template')
         .update({ activo: false })
-        .eq('id', producto.id);
+        .eq('id', plantilla.id);
 
       if (error) throw error;
-      message.success('Producto eliminado correctamente');
-      loadProductos();
+      message.success('Plantilla eliminada correctamente');
+      loadPlantillas();
     } catch (error) {
-      console.error('Error eliminando producto:', error);
-      message.error('Error al eliminar producto');
+      console.error('Error eliminando plantilla:', error);
+      message.error('Error al eliminar plantilla');
     }
   };
 
   const handleSubmit = async (values) => {
     try {
-      const productoData = {
+      const plantillaData = {
         ...values,
         evento_id: eventoSeleccionado,
         activo: true
       };
 
-      if (editingProducto) {
-        // Actualizar producto existente
+      if (editingPlantilla) {
+        // Actualizar plantilla existente
         const { error } = await supabase
-          .from('plantillas_productos')
-          .update(productoData)
-          .eq('id', editingProducto.id);
+          .from('plantillas_productos_template')
+          .update(plantillaData)
+          .eq('id', editingPlantilla.id);
 
         if (error) throw error;
-        message.success('Producto actualizado correctamente');
+        message.success('Plantilla actualizada correctamente');
       } else {
-        // Crear nuevo producto
+        // Crear nueva plantilla
         const { error } = await supabase
-          .from('plantillas_productos')
-          .insert([productoData]);
+          .from('plantillas_productos_template')
+          .insert([plantillaData]);
 
         if (error) throw error;
-        message.success('Producto creado correctamente');
+        message.success('Plantilla creada correctamente');
       }
 
       setModalVisible(false);
-      loadProductos();
+      loadPlantillas();
     } catch (error) {
-      console.error('Error guardando producto:', error);
-      message.error('Error al guardar producto');
+      console.error('Error guardando plantilla:', error);
+      message.error('Error al guardar plantilla');
     }
   };
 
   const columns = [
-    {
-      title: 'Imagen',
-      dataIndex: 'imagen_url',
-      key: 'imagen_url',
-      width: 80,
-      render: (imagen_url) => (
-        <Image
-          width={50}
-          height={50}
-          src={imagen_url || 'https://via.placeholder.com/50'}
-          fallback="https://via.placeholder.com/50"
-          style={{ objectFit: 'cover', borderRadius: '4px' }}
-        />
-      ),
-    },
     {
       title: 'Nombre',
       dataIndex: 'nombre',
@@ -195,18 +199,21 @@ const Productos = () => {
       ),
     },
     {
-      title: 'Precio Base',
-      dataIndex: 'precio_base',
-      key: 'precio_base',
-      render: (precio) => `$${precio?.toFixed(2) || '0.00'}`,
-    },
-    {
-      title: 'Categoría',
-      dataIndex: 'categoria',
-      key: 'categoria',
-      render: (categoria) => (
-        <Tag color="blue">{categoria || 'Sin categoría'}</Tag>
-      ),
+      title: 'Productos',
+      dataIndex: 'productos',
+      key: 'productos',
+      render: (productos) => {
+        if (!productos || !Array.isArray(productos)) return '-';
+        return (
+          <div>
+            {productos.map((prod, index) => (
+              <Tag key={index} color="blue" className="mb-1">
+                {prod.nombre} - ${prod.precio?.toFixed(2) || '0.00'}
+              </Tag>
+            ))}
+          </div>
+        );
+      },
     },
     {
       title: 'Estado',
@@ -227,7 +234,7 @@ const Productos = () => {
             type="primary"
             icon={<EditOutlined />}
             size="small"
-            onClick={() => handleEditProduct(record)}
+            onClick={() => handleEditPlantilla(record)}
           >
             Editar
           </Button>
@@ -235,7 +242,7 @@ const Productos = () => {
             danger
             icon={<DeleteOutlined />}
             size="small"
-            onClick={() => handleDeleteProduct(record)}
+            onClick={() => handleDeletePlantilla(record)}
           >
             Eliminar
           </Button>
@@ -250,10 +257,10 @@ const Productos = () => {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Gestión de Productos
+            Plantillas de Productos
           </h1>
           <p className="text-gray-600">
-            Crea y gestiona productos para tus eventos
+            Crea plantillas de productos para asignar a funciones
           </p>
         </div>
 
@@ -290,31 +297,31 @@ const Productos = () => {
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
-                onClick={handleCreateProduct}
+                onClick={handleCreatePlantilla}
               >
-                Crear Producto
+                Crear Plantilla
               </Button>
             )}
           </div>
         </Card>
 
-        {/* Lista de Productos */}
+        {/* Lista de Plantillas */}
         {eventoSeleccionado && (
           <Card>
             <div className="mb-4">
               <h2 className="text-xl font-semibold text-gray-900">
-                Productos Disponibles
+                Plantillas Disponibles
               </h2>
-              {productos.length === 0 && !loading && (
+              {plantillas.length === 0 && !loading && (
                 <p className="text-gray-500 mt-2">
-                  No hay productos disponibles para este evento
+                  No hay plantillas disponibles para este evento
                 </p>
               )}
             </div>
 
             <Table
               columns={columns}
-              dataSource={productos}
+              dataSource={plantillas}
               rowKey="id"
               loading={loading}
               pagination={{
@@ -322,19 +329,19 @@ const Productos = () => {
                 showSizeChanger: true,
                 showQuickJumper: true,
                 showTotal: (total, range) =>
-                  `${range[0]}-${range[1]} de ${total} productos`,
+                  `${range[0]}-${range[1]} de ${total} plantillas`,
               }}
             />
           </Card>
         )}
 
-        {/* Modal para Crear/Editar Producto */}
+        {/* Modal para Crear/Editar Plantilla */}
         <Modal
-          title={editingProducto ? 'Editar Producto' : 'Crear Nuevo Producto'}
+          title={editingPlantilla ? 'Editar Plantilla' : 'Crear Nueva Plantilla'}
           open={modalVisible}
           onCancel={() => setModalVisible(false)}
           footer={null}
-          width={600}
+          width={800}
         >
           <Form
             form={form}
@@ -342,15 +349,15 @@ const Productos = () => {
             onFinish={handleSubmit}
             initialValues={{
               activo: true,
-              precio_base: 0,
+              productos: []
             }}
           >
             <Form.Item
               name="nombre"
-              label="Nombre del Producto"
+              label="Nombre de la Plantilla"
               rules={[{ required: true, message: 'Por favor ingresa el nombre' }]}
             >
-              <Input placeholder="Ej: Camiseta del evento" />
+              <Input placeholder="Ej: Plantilla Básica" />
             </Form.Item>
 
             <Form.Item
@@ -360,36 +367,88 @@ const Productos = () => {
             >
               <TextArea
                 rows={3}
-                placeholder="Describe el producto..."
+                placeholder="Describe la plantilla..."
               />
             </Form.Item>
 
-            <Form.Item
-              name="precio_base"
-              label="Precio Base"
-              rules={[{ required: true, message: 'Por favor ingresa el precio' }]}
-            >
-              <InputNumber
-                min={0}
-                step={0.01}
-                style={{ width: '100%' }}
-                formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-                placeholder="0.00"
-              />
-            </Form.Item>
+            <Divider>Productos de la Plantilla</Divider>
 
-            <Form.Item
-              name="categoria"
-              label="Categoría"
-            >
-              <Select placeholder="Selecciona una categoría">
-                <Option value="merchandising">Merchandising</Option>
-                <Option value="alimentos">Alimentos y Bebidas</Option>
-                <Option value="servicios">Servicios</Option>
-                <Option value="otros">Otros</Option>
-              </Select>
-            </Form.Item>
+            <Form.List name="productos">
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map(({ key, name, ...restField }) => (
+                    <div key={key} className="border p-4 rounded mb-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'producto_id']}
+                          label="Producto"
+                          rules={[{ required: true, message: 'Selecciona un producto' }]}
+                        >
+                          <Select placeholder="Selecciona un producto">
+                            {productos.map((producto) => (
+                              <Option key={producto.id} value={producto.id}>
+                                {producto.nombre} - ${producto.precio_base?.toFixed(2) || '0.00'}
+                              </Option>
+                            ))}
+                          </Select>
+                        </Form.Item>
+
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'precio']}
+                          label="Precio"
+                          rules={[{ required: true, message: 'Ingresa el precio' }]}
+                        >
+                          <InputNumber
+                            min={0}
+                            step={0.01}
+                            style={{ width: '100%' }}
+                            formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                            parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+                            placeholder="0.00"
+                          />
+                        </Form.Item>
+
+                        <Form.Item
+                          {...restField}
+                          name={[name, 'impuesto']}
+                          label="Impuesto (%)"
+                        >
+                          <InputNumber
+                            min={0}
+                            max={100}
+                            step={0.01}
+                            style={{ width: '100%' }}
+                            placeholder="0.00"
+                          />
+                        </Form.Item>
+                      </div>
+
+                      <Button
+                        type="link"
+                        danger
+                        onClick={() => remove(name)}
+                        className="mt-2"
+                      >
+                        Eliminar Producto
+                      </Button>
+                    </div>
+                  ))}
+
+                  <Form.Item>
+                    <Button
+                      type="dashed"
+                      onClick={() => add()}
+                      block
+                      icon={<PlusOutlined />}
+                    >
+                      Agregar Producto
+                    </Button>
+                  </Form.Item>
+                </>
+              )}
+            </Form.List>
 
             <Form.Item
               name="activo"
@@ -407,7 +466,7 @@ const Productos = () => {
                 Cancelar
               </Button>
               <Button type="primary" htmlType="submit">
-                {editingProducto ? 'Actualizar' : 'Crear'} Producto
+                {editingPlantilla ? 'Actualizar' : 'Crear'} Plantilla
               </Button>
             </div>
           </Form>
@@ -417,4 +476,4 @@ const Productos = () => {
   );
 };
 
-export default Productos; 
+export default PlantillaProductos; 

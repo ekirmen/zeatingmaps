@@ -106,7 +106,6 @@ const BoleteriaMain = () => {
       const { data, error } = await supabase
         .from('plantillas')
         .select('*')
-        .eq('activo', true)
         .order('nombre', { ascending: true });
 
       if (error) {

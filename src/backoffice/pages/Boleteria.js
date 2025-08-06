@@ -312,15 +312,13 @@ const Boleteria = () => {
 
   // Memoizar las props del LeftMenu
   const leftMenuProps = useMemo(() => ({
-    onSearchClick: handleClientManagement,
-    onAddClientClick: handleClientManagement,
     selectedClient,
     onClientRemove: () => setSelectedClient(null),
     setCarrito,
     setSelectedClient,
     onFunctionSelect: handleFunctionSelect,
     setSelectedEvent
-  }), [handleClientManagement, selectedClient, setCarrito, setSelectedClient, handleFunctionSelect, setSelectedEvent]);
+  }), [selectedClient, setCarrito, setSelectedClient, handleFunctionSelect, setSelectedEvent]);
 
   return (
     <div className="flex h-screen bg-gray-50">

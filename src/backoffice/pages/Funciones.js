@@ -216,7 +216,7 @@ const Funciones = () => {
   useEffect(() => {
     const fetchPlantillasProductos = async () => {
       const { data, error } = await supabase
-        .from('plantillas_productos')
+        .from('plantillas_productos_template')
         .select('*')
         .eq('activo', true)
         .order('nombre');
