@@ -35,6 +35,11 @@ const createOptimizedClient = (url, key, options = {}) => {
       storageKey: 'supabase-auth-token',
       ...options.auth
     },
+    global: {
+      headers: {
+        'X-Client-Info': 'zeatingmaps-web'
+      }
+    },
     ...options
   })
 }
@@ -107,8 +112,12 @@ export const getSupabaseAdminClient = () => {
 
 // Inicializar clientes solo si las variables de entorno están disponibles
 if (supabaseUrl && supabaseAnonKey) {
-  supabaseClient = getSupabaseClient();
-  supabaseAdminClient = getSupabaseAdminClient();
+  try {
+    supabaseClient = getSupabaseClient();
+    supabaseAdminClient = getSupabaseAdminClient();
+  } catch (error) {
+    console.error('[SUPABASE CONFIG] Error inicializando clientes:', error);
+  }
 } else {
   console.error('[SUPABASE CONFIG] No se pueden inicializar los clientes: variables de entorno faltantes');
 }

@@ -44,7 +44,7 @@ const BoleteriaMain = () => {
   const [showEventSearch, setShowEventSearch] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
-  const [showBox, setShowBox] = useState(false);
+
   const [availableEvents, setAvailableEvents] = useState([]);
   const [availableFunctions, setAvailableFunctions] = useState([]);
   const [selectedEventForSearch, setSelectedEventForSearch] = useState(null);
@@ -57,10 +57,87 @@ const BoleteriaMain = () => {
   const [userSearchResults, setUserSearchResults] = useState([]);
   const [userSearchLoading, setUserSearchLoading] = useState(false);
   const [showCreateUser, setShowCreateUser] = useState(false);
+  const [newUserData, setNewUserData] = useState({
+    email: '',
+    empresa: '',
+    telefono: ''
+  });
+  
+  // Estados para estadísticas
+  const [eventStats, setEventStats] = useState({
+    totalSeats: 0,
+    availableSeats: 0,
+    soldSeats: 0,
+    reservedSeats: 0
+  });
+
+  // Estados para descuentos
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [discounts, setDiscounts] = useState([]);
+  const [selectedDiscount, setSelectedDiscount] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [discountType, setDiscountType] = useState('percentage'); // 'percentage' o 'fixed'
+
+  // Estados para búsqueda avanzada
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
+  const [searchFilters, setSearchFilters] = useState({
+    zona: '',
+    precioMin: '',
+    precioMax: '',
+    tipoEntrada: '',
+    disponibilidad: 'all' // 'all', 'available', 'sold', 'reserved'
+  });
 
   useEffect(() => {
     loadAvailableEvents();
     loadPlantillasPrecios();
+  }, []);
+
+  // Atajos de teclado
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      // Ctrl/Cmd + E: Buscar eventos
+      if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
+        event.preventDefault();
+        setShowEventSearch(true);
+      }
+      // Ctrl/Cmd + U: Buscar usuarios
+      if ((event.ctrlKey || event.metaKey) && event.key === 'u') {
+        event.preventDefault();
+        setShowUserSearch(true);
+      }
+      // Ctrl/Cmd + P: Productos
+      if ((event.ctrlKey || event.metaKey) && event.key === 'p') {
+        event.preventDefault();
+        setShowProducts(true);
+      }
+      // Ctrl/Cmd + D: Descuentos
+      if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
+        event.preventDefault();
+        setShowDiscountModal(true);
+      }
+      // Ctrl/Cmd + F: Búsqueda avanzada
+      if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
+        event.preventDefault();
+        setShowAdvancedSearch(true);
+      }
+      // Ctrl/Cmd + X: Exportar datos
+      if ((event.ctrlKey || event.metaKey) && event.key === 'x') {
+        event.preventDefault();
+        exportEventData();
+      }
+      // Escape: Cerrar modales
+      if (event.key === 'Escape') {
+        setShowEventSearch(false);
+        setShowUserSearch(false);
+        setShowProducts(false);
+        setShowDiscountModal(false);
+        setShowAdvancedSearch(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
   }, []);
 
   const loadAvailableEvents = async () => {
@@ -119,9 +196,129 @@ const BoleteriaMain = () => {
     }
   };
 
+  const loadEventStats = async (funcionId) => {
+    if (!funcionId) return;
+    
+    try {
+      // Cargar estadísticas del evento
+      const { data: seats, error: seatsError } = await supabase
+        .from('asientos')
+        .select('*')
+        .eq('funcion_id', funcionId);
+
+      if (seatsError) {
+        console.error('Error loading seats:', seatsError);
+        return;
+      }
+
+      const totalSeats = seats?.length || 0;
+      const soldSeats = seats?.filter(seat => seat.estado === 'vendido').length || 0;
+      const reservedSeats = seats?.filter(seat => seat.estado === 'reservado').length || 0;
+      const availableSeats = totalSeats - soldSeats - reservedSeats;
+
+      setEventStats({
+        totalSeats,
+        availableSeats,
+        soldSeats,
+        reservedSeats
+      });
+
+      // Notificaciones de disponibilidad
+      if (availableSeats <= 5 && availableSeats > 0) {
+        message.warning(`⚠️ Solo quedan ${availableSeats} asientos disponibles`);
+      } else if (availableSeats === 0) {
+        message.error('❌ No hay asientos disponibles');
+      } else if (availableSeats <= 10) {
+        message.info(`ℹ️ Quedan ${availableSeats} asientos disponibles`);
+      }
+    } catch (error) {
+      console.error('Error loading event stats:', error);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!newUserData.email) {
+      message.error('El email es obligatorio');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert([{
+          login: newUserData.email,
+          empresa: newUserData.empresa,
+          telefono: newUserData.telefono,
+          created_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setSelectedClient(data);
+      setNewUserData({ email: '', empresa: '', telefono: '' });
+      setShowCreateUser(false);
+      message.success('Usuario creado y seleccionado correctamente');
+    } catch (error) {
+      console.error('Error creating user:', error);
+      message.error('Error al crear el usuario');
+    }
+  };
+
+  const exportEventData = () => {
+    if (!selectedEvent || !selectedFuncion) {
+      message.warning('Selecciona un evento para exportar');
+      return;
+    }
+
+    const exportData = {
+      evento: selectedEvent,
+      funcion: selectedFuncion,
+      estadisticas: eventStats,
+      cliente: selectedClient,
+      asientosSeleccionados: selectedSeats,
+      productos: productosCarrito,
+      precioSeleccionado: selectedPriceOption,
+      subtotal: calculateSubtotal(),
+      descuento: selectedDiscount ? {
+        tipo: discountType,
+        cantidad: discountAmount,
+        valor: discountType === 'percentage' ? 
+          (calculateSubtotal() * discountAmount) / 100 : 
+          discountAmount
+      } : null,
+      total: calculateTotal(),
+      fechaExportacion: new Date().toISOString()
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `evento_${selectedEvent.nombre}_${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    message.success('Datos exportados correctamente');
+  };
+
   const handlePaymentClick = () => {
     if (!selectedClient) {
       message.warning('Selecciona un cliente antes de continuar');
+      return;
+    }
+    if (!selectedFuncion) {
+      message.warning('Selecciona un evento antes de continuar');
+      return;
+    }
+    if (!selectedPriceOption) {
+      message.warning('Selecciona una zona y precio antes de continuar');
+      return;
+    }
+    if (selectedSeats.length === 0) {
+      message.warning('Selecciona al menos un asiento antes de continuar');
       return;
     }
     message.success('Redirigiendo a pagos...');
@@ -172,6 +369,27 @@ const BoleteriaMain = () => {
       return sum + seatPrice;
     }, 0);
     const productsTotal = productosCarrito.reduce((sum, product) => sum + (product.precio * product.cantidad), 0);
+    const subtotal = seatsTotal + productsTotal;
+    
+    // Aplicar descuento
+    let discount = 0;
+    if (selectedDiscount) {
+      if (discountType === 'percentage') {
+        discount = (subtotal * discountAmount) / 100;
+      } else {
+        discount = discountAmount;
+      }
+    }
+    
+    return Math.max(0, subtotal - discount);
+  };
+
+  const calculateSubtotal = () => {
+    const seatsTotal = selectedSeats.reduce((sum, seat) => {
+      const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
+      return sum + seatPrice;
+    }, 0);
+    const productsTotal = productosCarrito.reduce((sum, product) => sum + (product.precio * product.cantidad), 0);
     return seatsTotal + productsTotal;
   };
 
@@ -207,6 +425,7 @@ const BoleteriaMain = () => {
     setSelectedEvent(selectedEventForSearch);
     setSelectedFuncion(func);
     setShowEventSearch(false);
+    loadEventStats(functionId);
     message.success(`Evento seleccionado: ${selectedEventForSearch?.nombre} - ${func?.sala?.nombre || 'Sala sin nombre'}`);
   };
 
@@ -264,14 +483,23 @@ const BoleteriaMain = () => {
           <SettingOutlined className="text-xl mb-1" />
           <div>Config</div>
         </div>
-        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowProducts(true)}>
-          <GiftOutlined className="text-xl mb-1" />
-          <div>Productos</div>
-        </div>
-        <div className="bg-green-500 text-white text-xs text-center px-2 py-1 rounded cursor-pointer hover:bg-green-600" onClick={() => setShowBox(true)}>
-          <ShoppingCartOutlined className="text-xl mb-1" />
-          <div>BOX</div>
-        </div>
+                 <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowProducts(true)}>
+           <GiftOutlined className="text-xl mb-1" />
+           <div>Productos</div>
+         </div>
+         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowDiscountModal(true)}>
+           <DollarOutlined className="text-xl mb-1" />
+           <div>Descuentos</div>
+         </div>
+         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowAdvancedSearch(true)}>
+           <SearchOutlined className="text-xl mb-1" />
+           <div>Búsqueda</div>
+         </div>
+         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={exportEventData}>
+           <UploadOutlined className="text-xl mb-1" />
+           <div>Exportar</div>
+         </div>
+
       </div>
 
       {/* Contenido principal */}
@@ -314,9 +542,12 @@ const BoleteriaMain = () => {
                  </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
-            </div>
+                         <div className="flex items-center space-x-2">
+               <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
+               <div className="text-xs text-gray-400">
+                 <span className="hidden md:inline">Atajos: Ctrl+E (Eventos) | Ctrl+U (Usuarios) | Ctrl+D (Descuentos) | Ctrl+X (Exportar)</span>
+               </div>
+             </div>
           </div>
         </div>
 
@@ -360,6 +591,73 @@ const BoleteriaMain = () => {
           <div className="w-80 bg-white shadow-lg">
             <div className="p-6">
               <h3 className="text-lg font-semibold mb-4">Resumen de Compra</h3>
+              
+              {/* Información del Cliente */}
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <h4 className="font-medium text-gray-900 mb-2">Cliente</h4>
+                {selectedClient ? (
+                  <div className="text-sm space-y-1">
+                    <div><span className="font-medium">Email:</span> {selectedClient.login}</div>
+                    <div><span className="font-medium">Empresa:</span> {selectedClient.empresa || 'Sin empresa'}</div>
+                    <div><span className="font-medium">Teléfono:</span> {selectedClient.telefono || 'No especificado'}</div>
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      danger
+                      onClick={() => setSelectedClient(null)}
+                    >
+                      Cambiar Cliente
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-sm">
+                    <div className="text-gray-500 mb-2">No hay cliente seleccionado</div>
+                    <Button 
+                      size="small" 
+                      type="primary"
+                      onClick={() => setShowUserSearch(true)}
+                    >
+                      Seleccionar Cliente
+                    </Button>
+                  </div>
+                )}
+              </div>
+              
+              {/* Estadísticas del Evento */}
+              {selectedFuncion && (
+                <div className="mb-4 p-3 bg-green-50 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">Estadísticas del Evento</h4>
+                  <div className="text-sm space-y-1">
+                    <div className="flex justify-between">
+                      <span>Total Asientos:</span>
+                      <span className="font-medium">{eventStats.totalSeats}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Disponibles:</span>
+                      <span className="font-medium text-green-600">{eventStats.availableSeats}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Vendidos:</span>
+                      <span className="font-medium text-red-600">{eventStats.soldSeats}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Reservados:</span>
+                      <span className="font-medium text-orange-600">{eventStats.reservedSeats}</span>
+                    </div>
+                    <div className="mt-2 pt-2 border-t">
+                      <div className="flex justify-between">
+                        <span>Ocupación:</span>
+                        <span className="font-medium">
+                          {eventStats.totalSeats > 0 
+                            ? `${Math.round(((eventStats.soldSeats + eventStats.reservedSeats) / eventStats.totalSeats) * 100)}%`
+                            : '0%'
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {selectedPriceOption && (
                 <div className="mb-4 p-3 bg-gray-50 rounded-lg">
@@ -425,27 +723,43 @@ const BoleteriaMain = () => {
                 </div>
               )}
               
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Boletos:</span>
-                  <span>{selectedSeats.length}, ${selectedSeats.reduce((sum, seat) => {
-                    const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
-                    return sum + seatPrice;
-                  }, 0).toFixed(2)}</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span>Productos:</span>
-                  <span>{productosCarrito.reduce((sum, p) => sum + p.cantidad, 0)}, ${productosCarrito.reduce((sum, product) => sum + (product.precio * product.cantidad), 0).toFixed(2)}</span>
-                </div>
-                
-                <div className="border-t pt-2">
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total:</span>
-                    <span>${calculateTotal().toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
+                             <div className="space-y-4">
+                 <div className="flex justify-between">
+                   <span>Boletos:</span>
+                   <span>{selectedSeats.length}, ${selectedSeats.reduce((sum, seat) => {
+                     const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
+                     return sum + seatPrice;
+                   }, 0).toFixed(2)}</span>
+                 </div>
+                 
+                 <div className="flex justify-between">
+                   <span>Productos:</span>
+                   <span>{productosCarrito.reduce((sum, p) => sum + p.cantidad, 0)}, ${productosCarrito.reduce((sum, product) => sum + (product.precio * product.cantidad), 0).toFixed(2)}</span>
+                 </div>
+                 
+                 <div className="border-t pt-2">
+                   <div className="flex justify-between">
+                     <span>Subtotal:</span>
+                     <span>${calculateSubtotal().toFixed(2)}</span>
+                   </div>
+                 </div>
+                 
+                 {selectedDiscount && (
+                   <div className="flex justify-between text-green-600">
+                     <span>Descuento ({discountType === 'percentage' ? `${discountAmount}%` : `$${discountAmount}`}):</span>
+                     <span>-${discountType === 'percentage' ? 
+                       ((calculateSubtotal() * discountAmount) / 100).toFixed(2) : 
+                       discountAmount.toFixed(2)}</span>
+                   </div>
+                 )}
+                 
+                 <div className="border-t pt-2">
+                   <div className="flex justify-between font-bold text-lg">
+                     <span>Total:</span>
+                     <span>${calculateTotal().toFixed(2)}</span>
+                   </div>
+                 </div>
+               </div>
               
               <div className="mt-6">
                 <Button 
@@ -570,48 +884,311 @@ const BoleteriaMain = () => {
         <ProductosWidget onProductAdded={handleProductAdded} />
       </Drawer>
 
-      {/* Drawer de BOX */}
-      <Drawer
-        title="BOX - Gestión de Ventas"
-        placement="right"
-        onClose={() => setShowBox(false)}
-        open={showBox}
-        width={500}
+      {/* Modal de búsqueda de usuarios */}
+      <Modal
+        title="Buscar/Agregar Usuario"
+        open={showUserSearch}
+        onCancel={() => setShowUserSearch(false)}
+        footer={null}
+        width={600}
       >
         <div className="space-y-4">
-          <Card title="Carrito Actual">
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Asientos seleccionados:</span>
-                <span>{selectedSeats.length}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Productos:</span>
-                <span>{productosCarrito.reduce((sum, p) => sum + p.cantidad, 0)}</span>
-              </div>
-              <div className="flex justify-between font-bold">
-                <span>Total:</span>
-                <span>${calculateTotal().toFixed(2)}</span>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Buscar por email</label>
+            <Input.Search
+              placeholder="Ingresa el email del usuario"
+              value={userSearchValue}
+              onChange={(e) => setUserSearchValue(e.target.value)}
+              onSearch={async (value) => {
+                if (!value) return;
+                setUserSearchLoading(true);
+                try {
+                  const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .ilike('login', `%${value}%`)
+                    .limit(10);
+                  
+                  if (error) throw error;
+                  setUserSearchResults(data || []);
+                } catch (error) {
+                  console.error('Error searching users:', error);
+                  message.error('Error al buscar usuarios');
+                } finally {
+                  setUserSearchLoading(false);
+                }
+              }}
+              loading={userSearchLoading}
+            />
+          </div>
+          
+          {userSearchResults.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Resultados</label>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {userSearchResults.map(user => (
+                  <div key={user.id} className="flex items-center justify-between p-3 border rounded">
+                    <div>
+                      <div className="font-medium">{user.login}</div>
+                      <div className="text-sm text-gray-500">{user.empresa || 'Sin empresa'}</div>
+                    </div>
+                                         <Button 
+                       size="small" 
+                       type="primary"
+                       onClick={() => {
+                         setSelectedClient(user);
+                         message.success(`Usuario seleccionado: ${user.login}`);
+                         setShowUserSearch(false);
+                       }}
+                     >
+                       Seleccionar
+                     </Button>
+                  </div>
+                ))}
               </div>
             </div>
-          </Card>
+          )}
           
-          <Card title="Acciones">
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <Button type="primary" block onClick={handlePaymentClick}>
-                Procesar Pago
-              </Button>
-              <Button block onClick={() => {
-                setSelectedSeats([]);
-                setProductosCarrito([]);
-                message.success('Carrito limpiado');
-              }}>
-                Limpiar Carrito
-              </Button>
-            </Space>
-          </Card>
+          <div className="border-t pt-4">
+            <Button 
+              type="dashed" 
+              block
+              onClick={() => setShowCreateUser(true)}
+            >
+              Crear Nuevo Usuario
+            </Button>
+          </div>
         </div>
-      </Drawer>
+      </Modal>
+
+             {/* Modal para crear usuario */}
+       <Modal
+         title="Crear Nuevo Usuario"
+         open={showCreateUser}
+         onCancel={() => setShowCreateUser(false)}
+         footer={null}
+         width={500}
+       >
+         <div className="space-y-4">
+           <div>
+             <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+             <Input 
+               placeholder="usuario@ejemplo.com"
+               value={newUserData.email}
+               onChange={(e) => setNewUserData(prev => ({ ...prev, email: e.target.value }))}
+             />
+           </div>
+           <div>
+             <label className="block text-sm font-medium text-gray-700 mb-2">Empresa (opcional)</label>
+             <Input 
+               placeholder="Nombre de la empresa"
+               value={newUserData.empresa}
+               onChange={(e) => setNewUserData(prev => ({ ...prev, empresa: e.target.value }))}
+             />
+           </div>
+           <div>
+             <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono (opcional)</label>
+             <Input 
+               placeholder="+1 234 567 8900"
+               value={newUserData.telefono}
+               onChange={(e) => setNewUserData(prev => ({ ...prev, telefono: e.target.value }))}
+             />
+           </div>
+           <div className="flex space-x-2">
+             <Button 
+               type="primary"
+               onClick={handleCreateUser}
+             >
+               Crear Usuario
+             </Button>
+             <Button onClick={() => setShowCreateUser(false)}>
+               Cancelar
+             </Button>
+           </div>
+         </div>
+               </Modal>
+
+        {/* Modal de Descuentos */}
+        <Modal
+          title="Aplicar Descuento"
+          open={showDiscountModal}
+          onCancel={() => setShowDiscountModal(false)}
+          footer={null}
+          width={500}
+        >
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Descuento</label>
+              <Select
+                value={discountType}
+                onChange={setDiscountType}
+                style={{ width: '100%' }}
+              >
+                <Option value="percentage">Porcentaje (%)</Option>
+                <Option value="fixed">Monto Fijo ($)</Option>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {discountType === 'percentage' ? 'Porcentaje de Descuento' : 'Monto de Descuento'}
+              </label>
+              <Input
+                type="number"
+                placeholder={discountType === 'percentage' ? '10' : '50.00'}
+                value={discountAmount}
+                onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
+                addonAfter={discountType === 'percentage' ? '%' : '$'}
+              />
+            </div>
+            
+            {discountAmount > 0 && (
+              <div className="p-3 bg-blue-50 rounded-lg">
+                <div className="text-sm">
+                  <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>${calculateSubtotal().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-green-600">
+                    <span>Descuento:</span>
+                    <span>-${discountType === 'percentage' ? 
+                      ((calculateSubtotal() * discountAmount) / 100).toFixed(2) : 
+                      discountAmount.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold">
+                    <span>Total:</span>
+                    <span>${calculateTotal().toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className="flex space-x-2">
+              <Button 
+                type="primary"
+                onClick={() => {
+                  if (discountAmount > 0) {
+                    setSelectedDiscount(true);
+                    message.success('Descuento aplicado correctamente');
+                    setShowDiscountModal(false);
+                  } else {
+                    message.error('Ingresa un valor válido para el descuento');
+                  }
+                }}
+              >
+                Aplicar Descuento
+              </Button>
+              <Button 
+                onClick={() => {
+                  setSelectedDiscount(null);
+                  setDiscountAmount(0);
+                  setShowDiscountModal(false);
+                }}
+              >
+                Remover Descuento
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
+        {/* Modal de Búsqueda Avanzada */}
+        <Modal
+          title="Búsqueda Avanzada"
+          open={showAdvancedSearch}
+          onCancel={() => setShowAdvancedSearch(false)}
+          footer={null}
+          width={600}
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Zona</label>
+                <Input
+                  placeholder="Filtrar por zona"
+                  value={searchFilters.zona}
+                  onChange={(e) => setSearchFilters(prev => ({ ...prev, zona: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Entrada</label>
+                <Select
+                  placeholder="Seleccionar tipo"
+                  value={searchFilters.tipoEntrada}
+                  onChange={(value) => setSearchFilters(prev => ({ ...prev, tipoEntrada: value }))}
+                  style={{ width: '100%' }}
+                >
+                  <Option value="">Todos</Option>
+                  <Option value="regular">Regular</Option>
+                  <Option value="vip">VIP</Option>
+                  <Option value="cortesia">Cortesía</Option>
+                  <Option value="premium">Premium</Option>
+                </Select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Precio Mínimo</label>
+                <Input
+                  type="number"
+                  placeholder="0.00"
+                  value={searchFilters.precioMin}
+                  onChange={(e) => setSearchFilters(prev => ({ ...prev, precioMin: e.target.value }))}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Precio Máximo</label>
+                <Input
+                  type="number"
+                  placeholder="1000.00"
+                  value={searchFilters.precioMax}
+                  onChange={(e) => setSearchFilters(prev => ({ ...prev, precioMax: e.target.value }))}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Disponibilidad</label>
+              <Select
+                value={searchFilters.disponibilidad}
+                onChange={(value) => setSearchFilters(prev => ({ ...prev, disponibilidad: value }))}
+                style={{ width: '100%' }}
+              >
+                <Option value="all">Todos los asientos</Option>
+                <Option value="available">Solo disponibles</Option>
+                <Option value="sold">Solo vendidos</Option>
+                <Option value="reserved">Solo reservados</Option>
+              </Select>
+            </div>
+            
+            <div className="flex space-x-2">
+              <Button 
+                type="primary"
+                onClick={() => {
+                  message.success('Filtros aplicados');
+                  setShowAdvancedSearch(false);
+                }}
+              >
+                Aplicar Filtros
+              </Button>
+              <Button 
+                onClick={() => {
+                  setSearchFilters({
+                    zona: '',
+                    precioMin: '',
+                    precioMax: '',
+                    tipoEntrada: '',
+                    disponibilidad: 'all'
+                  });
+                  message.info('Filtros limpiados');
+                }}
+              >
+                Limpiar Filtros
+              </Button>
+            </div>
+          </div>
+        </Modal>
+
     </div>
   );
 };
