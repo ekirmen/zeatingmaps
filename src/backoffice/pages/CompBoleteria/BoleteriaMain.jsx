@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber } from 'antd';
-import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ProductosWidget from '../../../store/components/ProductosWidget';
@@ -778,9 +778,31 @@ const BoleteriaMain = () => {
                 />
               </div>
               <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
-              <div className="text-xs text-gray-400">
-                <span className="hidden md:inline">Atajos: Ctrl+E (Eventos) | Ctrl+U (Usuarios) | Ctrl+L (Localizador) | Ctrl+X (Exportar)</span>
-              </div>
+              <Tooltip 
+                title={
+                  <div className="text-xs">
+                    <div className="font-medium mb-2">Atajos de Teclado:</div>
+                    <div>• <strong>Ctrl+E:</strong> Buscar eventos</div>
+                    <div>• <strong>Ctrl+U:</strong> Buscar usuarios</div>
+                    <div>• <strong>Ctrl+L:</strong> Búsqueda por localizador</div>
+                    <div>• <strong>Ctrl+X:</strong> Exportar datos</div>
+                    <div>• <strong>Escape:</strong> Cerrar modales</div>
+                  </div>
+                }
+                placement="bottom"
+              >
+                <QuestionCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help text-sm ml-2" />
+              </Tooltip>
+            </div>
+          </div>
+        </div>
+
+        {/* Resumen de Compra - Movido arriba */}
+        <div className="bg-white shadow-sm border-b px-4 py-2">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold">Resumen de Compra</h3>
+            <div className="text-sm text-gray-500">
+              {selectedSeats.length > 0 && `${selectedSeats.length} asiento(s) seleccionado(s)`}
             </div>
           </div>
         </div>
@@ -810,7 +832,6 @@ const BoleteriaMain = () => {
                      {/* Panel lateral derecho */}
            <div className="w-80 bg-white shadow-lg">
              <div className="p-4">
-                             <h3 className="text-lg font-semibold mb-2">Resumen de Compra</h3>
               
                              {/* Información del Cliente */}
                <div className="mb-2 p-2 bg-blue-50 rounded-lg">
@@ -917,7 +938,7 @@ const BoleteriaMain = () => {
                            <div className="text-xs text-gray-600">
                              {selectedPriceOption ? 
                                `${selectedPriceOption.entrada.nombre_entrada} - ${selectedPriceOption.zona.nombre}` : 
-                               'Zona no seleccionada'
+                               'Selecciona zona y precio'
                              }
                            </div>
                          </div>
