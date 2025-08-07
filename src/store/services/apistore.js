@@ -133,7 +133,7 @@ export const fetchMapa = async (salaId) => {
   try {
     const { data, error, status } = await supabase
       .from('mapas')
-      .select('contenido')
+      .select('*')
       .eq('sala_id', salaId)
       .single();
 
@@ -147,38 +147,8 @@ export const fetchMapa = async (salaId) => {
       return null;
     }
 
-    // Devolver la estructura que espera SeatingMapUnified
-    // El componente espera: mapa.contenido.zonas o mapa.zonas
-    const contenido = data?.contenido || null;
-    if (!contenido) return null;
-
-    // Manejar diferentes estructuras de datos del mapa
-    let mapaFinal;
-    
-    // Si el contenido es un string, parsearlo
-    if (typeof contenido === 'string') {
-      try {
-        mapaFinal = JSON.parse(contenido);
-      } catch (e) {
-        console.error('Error parsing mapa contenido:', e);
-        return null;
-      }
-    } else {
-      mapaFinal = contenido;
-    }
-
-    // Si el mapa tiene zonas directamente en el array 'zonas', 
-    // envolverlo en la estructura esperada
-    if (mapaFinal.zonas && Array.isArray(mapaFinal.zonas)) {
-      return {
-        contenido: mapaFinal
-      };
-    }
-
-    // Si ya tiene la estructura correcta, devolverlo tal como está
-    return {
-      contenido: mapaFinal
-    };
+    // Return the raw data like boleteria does
+    return data;
   } catch (error) {
     console.error('Unexpected error in fetchMapa:', error);
     throw error;

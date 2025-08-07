@@ -119,7 +119,67 @@ const EventosPage = () => {
         const funcion = await getFuncion(selectedFunctionId);
         if (funcion?.sala?.id) {
           const mapData = await fetchMapa(funcion.sala.id);
-          setMapa(mapData);
+          
+          // Transform the map data to match SeatingMapUnified expectations
+          if (mapData && mapData.contenido) {
+            // If contenido is a string, parse it
+            let contenido = mapData.contenido;
+            if (typeof contenido === 'string') {
+              try {
+                contenido = JSON.parse(contenido);
+              } catch (e) {
+                console.error('Error parsing mapa contenido:', e);
+                setMapa(null);
+                return;
+              }
+            }
+            
+            // Transform the data structure to match SeatingMapUnified expectations
+            // The map data contains mesas with sillas, we need to extract all seats
+            const allSeats = [];
+            const mesas = [];
+            
+            (Array.isArray(contenido) ? contenido : [contenido]).forEach(item => {
+              if (item.type === 'mesa' && item.sillas) {
+                mesas.push(item);
+                // Extract seats from this mesa
+                item.sillas.forEach(silla => {
+                  allSeats.push({
+                    ...silla,
+                    x: silla.posicion?.x || silla.x || 0,
+                    y: silla.posicion?.y || silla.y || 0,
+                    ancho: silla.width || silla.ancho || 30,
+                    alto: silla.height || silla.alto || 30,
+                    nombre: silla.nombre || silla.numero || silla._id || 'Asiento'
+                  });
+                });
+              }
+            });
+            
+            // Create a single zone with all seats
+            const transformedZonas = [{
+              id: 'zona_principal',
+              nombre: 'Zona Principal',
+              asientos: allSeats
+            }];
+            
+            const transformedMap = {
+              ...mapData,
+              zonas: transformedZonas,
+              contenido: {
+                zonas: transformedZonas,
+                mesas: mesas
+              }
+            };
+            
+            console.log('Original map data:', mapData);
+            console.log('Parsed contenido:', contenido);
+            console.log('Extracted seats:', allSeats);
+            console.log('Transformed map data:', transformedMap);
+            setMapa(transformedMap);
+          } else {
+            setMapa(mapData);
+          }
         }
         if (funcion?.plantilla) {
           setPriceTemplate(funcion.plantilla);
