@@ -308,18 +308,10 @@ const DynamicPriceSelector = ({
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-4">
-        <Title level={4} style={{ margin: 0 }}>Selecciona Zona y Precio</Title>
-        <Text type="secondary">Paso 1: Elige la zona y tipo de entrada</Text>
+        <h4 className="ant-typography" style={{ margin: 0 }}>Precios Disponibles</h4>
       </div>
 
-      {/* Filtros por zona - DINÁMICOS */}
-      <div className="mb-4">
-        <Space wrap>
-          {generateZonaButtons()}
-        </Space>
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
         {filteredOptions.map((option) => (
           <Card
             key={option.id}
@@ -331,62 +323,42 @@ const DynamicPriceSelector = ({
             }`}
             onClick={() => handlePriceSelect(option)}
           >
-            <div className="flex items-start justify-between mb-2">
+            <div className="flex items-start justify-between mb-1">
               <div className="flex items-center space-x-1">
                 {getCategoryIcon(option.category)}
                 <Badge 
-                  count={getCategoryLabel(option.category)} 
+                  count={option.category === 'cortesia' ? 'Cortesía' : 
+                         option.category === 'vip' ? 'VIP' : 
+                         option.category === 'premium' ? 'Premium' : 'Regular'} 
                   size="small"
                   style={{ 
                     backgroundColor: option.category === 'cortesia' ? '#52c41a' : 
-                               option.category === 'vip' ? '#faad14' : 
-                               option.category === 'premium' ? '#722ed1' : '#1890ff'
+                                   option.category === 'vip' ? '#faad14' : 
+                                   option.category === 'premium' ? '#722ed1' : '#1890ff'
                   }}
                 />
               </div>
             </div>
-
             <div className="space-y-1">
               <div>
-                <Text strong className="text-sm">
-                  {option.entrada.nombre_entrada}
-                </Text>
+                <span className="ant-typography text-xs">
+                  <strong>{option.entrada.nombre_entrada}</strong>
+                </span>
               </div>
-              
               <div>
-                <Text type="secondary" className="text-xs">
-                  Zona: {option.zona.nombre}
-                </Text>
+                <span className="ant-typography ant-typography-secondary text-xs">
+                  {option.zona.nombre}
+                </span>
               </div>
-
-              {option.descripcion && (
-                <div>
-                  <Text type="secondary" className="text-xs">
-                    {option.descripcion}
-                  </Text>
-                </div>
-              )}
-
-              <Divider style={{ margin: '4px 0' }} />
-
+              <div className="ant-divider ant-divider-horizontal" role="separator" style={{ margin: 2 }}></div>
               <div className="text-center">
-                <div 
-                  className="text-white px-2 py-1 rounded text-sm font-bold"
-                  style={{ backgroundColor: option.color }}
-                >
+                <div className="text-white px-2 py-1 rounded text-xs font-bold" style={{ backgroundColor: '#5c1473' }}>
                   ${option.precio.toFixed(2)}
                 </div>
-                
                 {option.comision > 0 && (
-                  <Text type="secondary" className="text-xs">
+                  <span className="ant-typography ant-typography-secondary text-xs">
                     +${option.comision.toFixed(2)} comisión
-                  </Text>
-                )}
-                
-                {option.precioOriginal !== option.precio && (
-                  <Text delete className="text-xs">
-                    ${option.precioOriginal.toFixed(2)}
-                  </Text>
+                  </span>
                 )}
               </div>
             </div>

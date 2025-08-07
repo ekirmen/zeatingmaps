@@ -254,7 +254,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
       // Create a payment for each event
       const paymentPromises = Object.entries(seatsByEvent).map(([eventId, seats]) => {
         const paymentData = {
-          user: selectedClient.id || selectedClient._id,
+          user_id: selectedClient.id || selectedClient._id,
           event: eventId,
           funcion: selectedFuncion.id || selectedFuncion._id,
           processed_by: isUuid(user?.id) ? user.id : null,

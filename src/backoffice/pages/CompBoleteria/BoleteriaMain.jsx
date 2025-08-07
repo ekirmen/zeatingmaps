@@ -43,7 +43,6 @@ const BoleteriaMain = () => {
   
   // Estados para funcionalidades
   const [showEventSearch, setShowEventSearch] = useState(false);
-  const [showConfig, setShowConfig] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
 
@@ -80,15 +79,10 @@ const BoleteriaMain = () => {
   const [discountAmount, setDiscountAmount] = useState(0);
   const [discountType, setDiscountType] = useState('percentage'); // 'percentage' o 'fixed'
 
-  // Estados para búsqueda avanzada
-  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
-  const [searchFilters, setSearchFilters] = useState({
-    zona: '',
-    precioMin: '',
-    precioMax: '',
-    tipoEntrada: '',
-    disponibilidad: 'all' // 'all', 'available', 'sold', 'reserved'
-  });
+  // Estados para búsqueda por localizador
+  const [showLocatorSearch, setShowLocatorSearch] = useState(false);
+  const [locatorSearchValue, setLocatorSearchValue] = useState('');
+  const [locatorSearchLoading, setLocatorSearchLoading] = useState(false);
 
   useEffect(() => {
     loadAvailableEvents();
@@ -118,24 +112,24 @@ const BoleteriaMain = () => {
         event.preventDefault();
         setShowDiscountModal(true);
       }
-      // Ctrl/Cmd + F: Búsqueda avanzada
-      if ((event.ctrlKey || event.metaKey) && event.key === 'f') {
-        event.preventDefault();
-        setShowAdvancedSearch(true);
-      }
+             // Ctrl/Cmd + L: Búsqueda por localizador
+       if ((event.ctrlKey || event.metaKey) && event.key === 'l') {
+         event.preventDefault();
+         setShowLocatorSearch(true);
+       }
       // Ctrl/Cmd + X: Exportar datos
       if ((event.ctrlKey || event.metaKey) && event.key === 'x') {
         event.preventDefault();
         exportEventData();
       }
-      // Escape: Cerrar modales
-      if (event.key === 'Escape') {
-        setShowEventSearch(false);
-        setShowUserSearch(false);
-        setShowProducts(false);
-        setShowDiscountModal(false);
-        setShowAdvancedSearch(false);
-      }
+             // Escape: Cerrar modales
+       if (event.key === 'Escape') {
+         setShowEventSearch(false);
+         setShowUserSearch(false);
+         setShowProducts(false);
+         setShowDiscountModal(false);
+         setShowLocatorSearch(false);
+       }
     };
 
     document.addEventListener('keydown', handleKeyPress);
@@ -235,6 +229,57 @@ const BoleteriaMain = () => {
       }
     } catch (error) {
       console.error('Error loading event stats:', error);
+    }
+  };
+
+  const handleLocatorSearch = async () => {
+    if (!locatorSearchValue) {
+      message.error('Ingresa un localizador');
+      return;
+    }
+
+    setLocatorSearchLoading(true);
+    try {
+      // Buscar el pago por localizador
+      const { data: payments, error } = await supabase
+        .from('payments')
+        .select(`
+          *,
+          user:profiles!user_id(*),
+          event:eventos(*),
+          funcion:funciones(*)
+        `)
+        .eq('locator', locatorSearchValue)
+        .single();
+
+      if (error) {
+        message.error('Localizador no encontrado');
+        return;
+      }
+
+      // Cargar los datos del pago
+      setSelectedClient(payments.user);
+      setSelectedEvent(payments.event);
+      setSelectedFuncion(payments.funcion);
+      
+      // Cargar los asientos del pago
+      const { data: seats, error: seatsError } = await supabase
+        .from('asientos')
+        .select('*')
+        .eq('payment_id', payments.id);
+
+      if (!seatsError && seats) {
+        setSelectedSeats(seats);
+        message.success(`Pago encontrado: ${payments.event.nombre}`);
+      }
+
+      setShowLocatorSearch(false);
+      setLocatorSearchValue('');
+    } catch (error) {
+      console.error('Error searching by locator:', error);
+      message.error('Error al buscar por localizador');
+    } finally {
+      setLocatorSearchLoading(false);
     }
   };
 
@@ -419,7 +464,6 @@ const BoleteriaMain = () => {
 
   const handlePriceOptionSelect = (priceOption) => {
     setSelectedPriceOption(priceOption);
-    message.success(`Precio seleccionado: ${priceOption.nombre} - $${priceOption.precio.toFixed(2)}`);
   };
 
   const handleEventSelectForSearch = (eventId) => {
@@ -493,12 +537,6 @@ const BoleteriaMain = () => {
             <div>Usuarios</div>
           </div>
         </Tooltip>
-        <Tooltip title="Paso 3: Seleccionar cliente para la venta" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowConfig(true)}>
-            <SettingOutlined className="text-xl mb-1" />
-            <div>Config</div>
-          </div>
-        </Tooltip>
         <Tooltip title="Agregar productos adicionales" placement="right">
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowProducts(true)}>
             <GiftOutlined className="text-xl mb-1" />
@@ -511,10 +549,10 @@ const BoleteriaMain = () => {
             <div>Descuentos</div>
           </div>
         </Tooltip>
-        <Tooltip title="Búsqueda avanzada de asientos" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowAdvancedSearch(true)}>
+        <Tooltip title="Buscar por localizador" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowLocatorSearch(true)}>
             <SearchOutlined className="text-xl mb-1" />
-            <div>Búsqueda</div>
+            <div>Localizador</div>
           </div>
         </Tooltip>
         <Tooltip title="Exportar datos del evento" placement="right">
@@ -552,23 +590,22 @@ const BoleteriaMain = () => {
                     <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
                     <span className="ml-2">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
                   </div>
-                  {selectedFuncion?.plantilla && (
-                    <div className="text-xs text-green-600">
-                      ✓ Plantilla: {selectedFuncion.plantilla.nombre}
-                    </div>
-                  )}
-                  {selectedPriceOption && (
-                    <div className="text-xs text-blue-600">
-                      ✓ Precio: {selectedPriceOption.entrada.nombre_entrada} - {selectedPriceOption.zona.nombre}
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
+                <span className="text-xs text-gray-500">Modo bloqueo:</span>
+                <input
+                  type="checkbox"
+                  checked={blockMode}
+                  onChange={(e) => setBlockMode(e.target.checked)}
+                  className="rounded"
+                />
+              </div>
               <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
               <div className="text-xs text-gray-400">
-                <span className="hidden md:inline">Atajos: Ctrl+E (Eventos) | Ctrl+U (Usuarios) | Ctrl+D (Descuentos) | Ctrl+X (Exportar)</span>
+                <span className="hidden md:inline">Atajos: Ctrl+E (Eventos) | Ctrl+U (Usuarios) | Ctrl+L (Localizador) | Ctrl+X (Exportar)</span>
               </div>
             </div>
           </div>
@@ -604,13 +641,13 @@ const BoleteriaMain = () => {
               {/* Información del Cliente */}
               <div className="mb-4 p-3 bg-blue-50 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-2">Cliente</h4>
-                {selectedClient ? (
-                  <div className="text-sm space-y-1">
-                    <div><span className="font-medium">Nombre:</span> {selectedClient.nombre}</div>
-                    <div><span className="font-medium">Email:</span> {selectedClient.email}</div>
-                    <div><span className="font-medium">Teléfono:</span> {selectedClient.telefono}</div>
-                  </div>
-                ) : (
+                                 {selectedClient ? (
+                   <div className="text-sm space-y-1">
+                     <div><span className="font-medium">Nombre:</span> {selectedClient.nombre || selectedClient.login || 'N/A'}</div>
+                     <div><span className="font-medium">Email:</span> {selectedClient.email || selectedClient.login || 'N/A'}</div>
+                     <div><span className="font-medium">Teléfono:</span> {selectedClient.telefono || 'N/A'}</div>
+                   </div>
+                 ) : (
                                      <div className="text-center">
                      <Tooltip title="Paso 2: Buscar o crear cliente para continuar">
                        <Button 
@@ -851,52 +888,7 @@ const BoleteriaMain = () => {
         </div>
       </Modal>
 
-      {/* Drawer de configuración */}
-      <Drawer
-        title="Configuración"
-        placement="right"
-        onClose={() => setShowConfig(false)}
-        open={showConfig}
-        width={400}
-      >
-        <div className="space-y-4">
-          <Card title="Plantillas de Precios">
-            <div className="space-y-3">
-              <Select
-                placeholder="Selecciona una plantilla"
-                style={{ width: '100%' }}
-                onChange={(value) => {
-                  const plantilla = plantillasPrecios.find(p => p.id === value);
-                  setSelectedPlantilla(plantilla);
-                  setSelectedPriceOption(null);
-                  message.success(`Plantilla seleccionada: ${plantilla?.nombre}`);
-                }}
-                value={selectedPlantilla?.id}
-              >
-                {plantillasPrecios.map(plantilla => (
-                  <Option key={plantilla.id} value={plantilla.id}>
-                    {plantilla.nombre}
-                  </Option>
-                ))}
-              </Select>
-            </div>
-          </Card>
-          
-          <Card title="Configuración General">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span>Modo bloqueo</span>
-                <input
-                  type="checkbox"
-                  checked={blockMode}
-                  onChange={(e) => setBlockMode(e.target.checked)}
-                  className="rounded"
-                />
-              </div>
-            </div>
-          </Card>
-        </div>
-      </Drawer>
+      
 
       {/* Drawer de productos */}
       <Drawer
@@ -1116,103 +1108,34 @@ const BoleteriaMain = () => {
           </div>
         </Modal>
 
-        {/* Modal de Búsqueda Avanzada */}
-        <Modal
-          title="Búsqueda Avanzada"
-          open={showAdvancedSearch}
-          onCancel={() => setShowAdvancedSearch(false)}
-          footer={null}
-          width={600}
-        >
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Zona</label>
-                <Input
-                  placeholder="Filtrar por zona"
-                  value={searchFilters.zona}
-                  onChange={(e) => setSearchFilters(prev => ({ ...prev, zona: e.target.value }))}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Entrada</label>
-                <Select
-                  placeholder="Seleccionar tipo"
-                  value={searchFilters.tipoEntrada}
-                  onChange={(value) => setSearchFilters(prev => ({ ...prev, tipoEntrada: value }))}
-                  style={{ width: '100%' }}
-                >
-                  <Option value="">Todos</Option>
-                  <Option value="regular">Regular</Option>
-                  <Option value="vip">VIP</Option>
-                  <Option value="cortesia">Cortesía</Option>
-                  <Option value="premium">Premium</Option>
-                </Select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Precio Mínimo</label>
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={searchFilters.precioMin}
-                  onChange={(e) => setSearchFilters(prev => ({ ...prev, precioMin: e.target.value }))}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Precio Máximo</label>
-                <Input
-                  type="number"
-                  placeholder="1000.00"
-                  value={searchFilters.precioMax}
-                  onChange={(e) => setSearchFilters(prev => ({ ...prev, precioMax: e.target.value }))}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Disponibilidad</label>
-              <Select
-                value={searchFilters.disponibilidad}
-                onChange={(value) => setSearchFilters(prev => ({ ...prev, disponibilidad: value }))}
-                style={{ width: '100%' }}
-              >
-                <Option value="all">Todos los asientos</Option>
-                <Option value="available">Solo disponibles</Option>
-                <Option value="sold">Solo vendidos</Option>
-                <Option value="reserved">Solo reservados</Option>
-              </Select>
-            </div>
-            
-            <div className="flex space-x-2">
-              <Button 
-                type="primary"
-                onClick={() => {
-                  message.success('Filtros aplicados');
-                  setShowAdvancedSearch(false);
-                }}
-              >
-                Aplicar Filtros
-              </Button>
-              <Button 
-                onClick={() => {
-                  setSearchFilters({
-                    zona: '',
-                    precioMin: '',
-                    precioMax: '',
-                    tipoEntrada: '',
-                    disponibilidad: 'all'
-                  });
-                  message.info('Filtros limpiados');
-                }}
-              >
-                Limpiar Filtros
-              </Button>
-            </div>
-          </div>
-        </Modal>
+                 {/* Modal de Búsqueda por Localizador */}
+         <Modal
+           title="Buscar por Localizador"
+           open={showLocatorSearch}
+           onCancel={() => setShowLocatorSearch(false)}
+           footer={null}
+           width={500}
+         >
+           <div className="space-y-4">
+             <div>
+               <label className="block text-sm font-medium text-gray-700 mb-2">Localizador</label>
+               <Input.Search
+                 placeholder="Ingresa el localizador del pago"
+                 value={locatorSearchValue}
+                 onChange={(e) => setLocatorSearchValue(e.target.value)}
+                 onSearch={handleLocatorSearch}
+                 loading={locatorSearchLoading}
+                 enterButton="Buscar"
+               />
+             </div>
+             
+             <div className="text-sm text-gray-600">
+               <p>• Busca pagos existentes por su localizador</p>
+               <p>• Carga automáticamente el evento, cliente y asientos</p>
+               <p>• Útil para consultas y modificaciones</p>
+             </div>
+           </div>
+         </Modal>
 
       {/* PaymentModal */}
       <PaymentModal
