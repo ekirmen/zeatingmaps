@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip } from 'antd';
+import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber } from 'antd';
 import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
@@ -84,6 +84,10 @@ const BoleteriaMain = () => {
   const [locatorSearchValue, setLocatorSearchValue] = useState('');
   const [locatorSearchLoading, setLocatorSearchLoading] = useState(false);
 
+  // Estados para gestión de carritos
+  const [showCartManagement, setShowCartManagement] = useState(false);
+  const [savedCarts, setSavedCarts] = useState([]);
+
   // Función para obtener las imágenes del evento
   const getEventImages = () => {
     if (!selectedEvent?.imagenes) return {};
@@ -106,6 +110,7 @@ const BoleteriaMain = () => {
     loadAvailableEvents();
     loadPlantillasPrecios();
     loadPersistedData();
+    loadSavedCarts();
   }, []);
 
   // Cargar datos persistidos
