@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography } from 'antd';
-import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined } from '@ant-design/icons';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ProductosWidget from '../../../store/components/ProductosWidget';
@@ -488,7 +488,7 @@ const BoleteriaMain = () => {
            <div>Productos</div>
          </div>
          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowDiscountModal(true)}>
-           <DollarOutlined className="text-xl mb-1" />
+           <MoneyCollectOutlined className="text-xl mb-1" />
            <div>Descuentos</div>
          </div>
          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowAdvancedSearch(true)}>

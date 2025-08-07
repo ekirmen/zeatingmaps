@@ -55,33 +55,81 @@ const EventosMapPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
+        console.log('[EventosMapPage] Cargando datos para:', { eventSlug, funcionParam });
         
         if (!funcionParam) {
           throw new Error('No se especificó una función');
         }
 
-        // Obtener evento por slug
-        const { data: eventData, error: eventError } = await supabase
+        // Obtener evento por slug - intentar múltiples métodos
+        let eventData = null;
+        let eventError = null;
+
+        // Método 1: Búsqueda exacta por slug
+        const { data: exactMatch, error: exactError } = await supabase
           .from('eventos')
           .select('*')
-          .ilike('slug', eventSlug)
+          .eq('slug', eventSlug)
           .maybeSingle();
 
+        if (exactMatch && !exactError) {
+          eventData = exactMatch;
+          console.log('[EventosMapPage] Evento encontrado por slug exacto:', eventData);
+        } else {
+          // Método 2: Búsqueda por nombre similar
+          const { data: similarMatch, error: similarError } = await supabase
+            .from('eventos')
+            .select('*')
+            .ilike('nombre', `%${eventSlug}%`)
+            .maybeSingle();
+
+          if (similarMatch && !similarError) {
+            eventData = similarMatch;
+            console.log('[EventosMapPage] Evento encontrado por nombre similar:', eventData);
+          } else {
+            // Método 3: Búsqueda por ID si es numérico
+            if (!isNaN(eventSlug)) {
+              const { data: idMatch, error: idError } = await supabase
+                .from('eventos')
+                .select('*')
+                .eq('id', parseInt(eventSlug))
+                .maybeSingle();
+
+              if (idMatch && !idError) {
+                eventData = idMatch;
+                console.log('[EventosMapPage] Evento encontrado por ID:', eventData);
+              } else {
+                eventError = idError;
+              }
+            } else {
+              eventError = new Error('Evento no encontrado');
+            }
+          }
+        }
+
         if (eventError) throw eventError;
-        if (!eventData) throw new Error('Evento no encontrado');
+        if (!eventData) throw new Error(`Evento no encontrado para slug: ${eventSlug}`);
         
         setEvento(eventData);
 
         // Obtener función específica
+        console.log('[EventosMapPage] Obteniendo función:', funcionParam);
         const funcionData = await getFuncion(funcionParam);
-        if (!funcionData) throw new Error('Función no encontrada');
+        if (!funcionData) throw new Error(`Función no encontrada para ID: ${funcionParam}`);
         
+        console.log('[EventosMapPage] Función encontrada:', funcionData);
         setFuncion(funcionData);
 
         // Cargar mapa si la función tiene sala
         if (funcionData?.sala?.id) {
+          console.log('[EventosMapPage] Cargando mapa para sala:', funcionData.sala.id);
           const mapData = await fetchMapa(funcionData.sala.id);
+          console.log('[EventosMapPage] Datos del mapa:', mapData);
           setMapa(mapData);
+        } else {
+          console.warn('[EventosMapPage] Función no tiene sala asociada');
         }
 
         // Cargar plantilla de precios
@@ -90,9 +138,9 @@ const EventosMapPage = () => {
         }
 
       } catch (err) {
-        console.error('Error loading data:', err);
+        console.error('[EventosMapPage] Error loading data:', err);
         setError(err);
-        message.error('Error al cargar los datos');
+        message.error(`Error al cargar los datos: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -143,7 +191,10 @@ const EventosMapPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Spin size="large" />
+        <div className="text-center">
+          <Spin size="large" />
+          <p className="mt-4 text-gray-600">Cargando mapa de asientos...</p>
+        </div>
       </div>
     );
   }
@@ -176,6 +227,9 @@ const EventosMapPage = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-600 mb-4">Datos no encontrados</h2>
+          <p className="text-gray-500 mb-4">
+            No se pudo encontrar el evento "{eventSlug}" o la función "{funcionParam}"
+          </p>
           <Button 
             type="primary" 
             onClick={handleBackToEvent}
@@ -206,7 +260,7 @@ const EventosMapPage = () => {
               <div>
                 <h1 className="text-xl font-bold text-gray-900">{evento.nombre}</h1>
                 <p className="text-sm text-gray-600">
-                  {funcion.nombre || 'Función'} - {funcion.fecha_celebracion}
+                  {funcion.nombre || 'Función'} - {new Date(funcion.fecha_celebracion).toLocaleString('es-ES')}
                 </p>
               </div>
             </div>
@@ -278,7 +332,10 @@ const EventosMapPage = () => {
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-96 text-gray-500">
-                  No hay mapa disponible para esta función
+                  <div className="text-center">
+                    <p className="text-lg font-semibold mb-2">No hay mapa disponible</p>
+                    <p className="text-sm">No se encontró un mapa de asientos para esta función</p>
+                  </div>
                 </div>
               )}
             </Card>
@@ -298,13 +355,13 @@ const EventosMapPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <h4 className="font-semibold text-gray-900">Detalles del evento</h4>
-                <p className="text-gray-600">{evento.descripcion}</p>
+                <p className="text-gray-600">{evento.descripcion || 'Sin descripción'}</p>
               </div>
               <div>
                 <h4 className="font-semibold text-gray-900">Información de la función</h4>
                 <p className="text-gray-600">
-                  <strong>Fecha:</strong> {funcion.fecha_celebracion}<br />
-                  <strong>Hora:</strong> {funcion.hora}<br />
+                  <strong>Fecha:</strong> {new Date(funcion.fecha_celebracion).toLocaleDateString('es-ES')}<br />
+                  <strong>Hora:</strong> {new Date(funcion.fecha_celebracion).toLocaleTimeString('es-ES')}<br />
                   {funcion.sala && (
                     <>
                       <strong>Sala:</strong> {funcion.sala.nombre}<br />
