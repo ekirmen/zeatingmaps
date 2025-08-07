@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography } from 'antd';
-import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined } from '@ant-design/icons';
+import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip } from 'antd';
+import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ProductosWidget from '../../../store/components/ProductosWidget';
+import PaymentModal from './PaymentModal';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 import { supabase } from '../../../supabaseClient';
@@ -44,6 +45,7 @@ const BoleteriaMain = () => {
   const [showEventSearch, setShowEventSearch] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
   const [showProducts, setShowProducts] = useState(false);
+  const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
 
   const [availableEvents, setAvailableEvents] = useState([]);
   const [availableFunctions, setAvailableFunctions] = useState([]);
@@ -305,6 +307,13 @@ const BoleteriaMain = () => {
   };
 
   const handlePaymentClick = () => {
+    console.log('handlePaymentClick called', {
+      selectedClient,
+      selectedFuncion,
+      selectedPriceOption,
+      selectedSeats: selectedSeats.length
+    });
+    
     if (!selectedClient) {
       message.warning('Selecciona un cliente antes de continuar');
       return;
@@ -321,7 +330,8 @@ const BoleteriaMain = () => {
       message.warning('Selecciona al menos un asiento antes de continuar');
       return;
     }
-    message.success('Redirigiendo a pagos...');
+    console.log('Opening payment modal');
+    setIsPaymentModalVisible(true);
   };
 
   const handleSeatClick = (seat) => {
@@ -471,49 +481,62 @@ const BoleteriaMain = () => {
     <div className="h-screen flex bg-gray-100">
       {/* Sidebar izquierda */}
       <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
-        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowEventSearch(true)}>
-          <SearchOutlined className="text-xl mb-1" />
-          <div>Eventos</div>
-        </div>
-        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowUserSearch(true)}>
-          <UserOutlined className="text-xl mb-1" />
-          <div>Usuarios</div>
-        </div>
-        <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowConfig(true)}>
-          <SettingOutlined className="text-xl mb-1" />
-          <div>Config</div>
-        </div>
-                 <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowProducts(true)}>
-           <GiftOutlined className="text-xl mb-1" />
-           <div>Productos</div>
-         </div>
-         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowDiscountModal(true)}>
-           <MoneyCollectOutlined className="text-xl mb-1" />
-           <div>Descuentos</div>
-         </div>
-         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowAdvancedSearch(true)}>
-           <SearchOutlined className="text-xl mb-1" />
-           <div>Búsqueda</div>
-         </div>
-         <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={exportEventData}>
-           <UploadOutlined className="text-xl mb-1" />
-           <div>Exportar</div>
-         </div>
-
+        <Tooltip title="Paso 1: Buscar y seleccionar evento" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowEventSearch(true)}>
+            <SearchOutlined className="text-xl mb-1" />
+            <div>Eventos</div>
+          </div>
+        </Tooltip>
+        <Tooltip title="Paso 2: Buscar o crear cliente" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowUserSearch(true)}>
+            <UserOutlined className="text-xl mb-1" />
+            <div>Usuarios</div>
+          </div>
+        </Tooltip>
+        <Tooltip title="Paso 3: Seleccionar cliente para la venta" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowConfig(true)}>
+            <SettingOutlined className="text-xl mb-1" />
+            <div>Config</div>
+          </div>
+        </Tooltip>
+        <Tooltip title="Agregar productos adicionales" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowProducts(true)}>
+            <GiftOutlined className="text-xl mb-1" />
+            <div>Productos</div>
+          </div>
+        </Tooltip>
+        <Tooltip title="Aplicar descuentos y códigos" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowDiscountModal(true)}>
+            <MoneyCollectOutlined className="text-xl mb-1" />
+            <div>Descuentos</div>
+          </div>
+        </Tooltip>
+        <Tooltip title="Búsqueda avanzada de asientos" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowAdvancedSearch(true)}>
+            <SearchOutlined className="text-xl mb-1" />
+            <div>Búsqueda</div>
+          </div>
+        </Tooltip>
+        <Tooltip title="Exportar datos del evento" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={exportEventData}>
+            <UploadOutlined className="text-xl mb-1" />
+            <div>Exportar</div>
+          </div>
+        </Tooltip>
       </div>
 
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b px-6 py-4">
+        <div className="bg-white shadow-sm border-b px-4 py-2">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
                 {selectedEvent && selectedEvent.imagen_url ? (
                   <img 
                     src={selectedEvent.imagen_url} 
                     alt={selectedEvent.nombre}
-                    className="w-8 h-8 rounded-lg object-cover"
+                    className="w-6 h-6 rounded object-cover"
                     onError={(e) => {
                       e.target.src = '/assets/logo.png';
                     }}
@@ -521,33 +544,33 @@ const BoleteriaMain = () => {
                 ) : (
                   <Avatar size="small" src="/assets/logo.png" alt="Event" />
                 )}
-                                 <div className="text-sm">
-                   <div className="font-medium">
-                     {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
-                   </div>
-                   <div className="text-gray-600">
-                     <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
-                     <span className="ml-4">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
-                   </div>
-                                       {selectedFuncion?.plantilla && (
-                      <div className="text-xs text-green-600 mt-1">
-                        ✓ Plantilla: {selectedFuncion.plantilla.nombre}
-                      </div>
-                    )}
-                   {selectedPriceOption && (
-                     <div className="text-xs text-blue-600 mt-1">
-                       ✓ Precio: {selectedPriceOption.entrada.nombre_entrada} - {selectedPriceOption.zona.nombre}
-                     </div>
-                   )}
-                 </div>
+                <div className="text-xs">
+                  <div className="font-medium">
+                    {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
+                  </div>
+                  <div className="text-gray-600">
+                    <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
+                    <span className="ml-2">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
+                  </div>
+                  {selectedFuncion?.plantilla && (
+                    <div className="text-xs text-green-600">
+                      ✓ Plantilla: {selectedFuncion.plantilla.nombre}
+                    </div>
+                  )}
+                  {selectedPriceOption && (
+                    <div className="text-xs text-blue-600">
+                      ✓ Precio: {selectedPriceOption.entrada.nombre_entrada} - {selectedPriceOption.zona.nombre}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-                         <div className="flex items-center space-x-2">
-               <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
-               <div className="text-xs text-gray-400">
-                 <span className="hidden md:inline">Atajos: Ctrl+E (Eventos) | Ctrl+U (Usuarios) | Ctrl+D (Descuentos) | Ctrl+X (Exportar)</span>
-               </div>
-             </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
+              <div className="text-xs text-gray-400">
+                <span className="hidden md:inline">Atajos: Ctrl+E (Eventos) | Ctrl+U (Usuarios) | Ctrl+D (Descuentos) | Ctrl+X (Exportar)</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -556,27 +579,13 @@ const BoleteriaMain = () => {
           {/* Contenido central */}
           <div className="flex-1 p-6">
             {/* Selección de precios dinámica */}
-            {!selectedFuncion ? (
-              <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-blue-900 mb-2">Paso 1: Selecciona un Evento</h3>
-                  <p className="text-blue-700 mb-4">Primero debes seleccionar un evento y función para ver las opciones de precio</p>
-                  <Button 
-                    type="primary" 
-                    onClick={() => setShowEventSearch(true)}
-                    icon={<SearchOutlined />}
-                  >
-                    Seleccionar Evento
-                  </Button>
-                </div>
-              </div>
-                         ) : (
-               <DynamicPriceSelector
-                 selectedFuncion={selectedFuncion}
-                 onPriceSelect={handlePriceOptionSelect}
-                 selectedPriceId={selectedPriceOption?.id}
-               />
-             )}
+            {selectedFuncion && (
+              <DynamicPriceSelector
+                selectedFuncion={selectedFuncion}
+                onPriceSelect={handlePriceOptionSelect}
+                selectedPriceId={selectedPriceOption?.id}
+              />
+            )}
 
             {/* Pestañas */}
             <Tabs
@@ -597,65 +606,78 @@ const BoleteriaMain = () => {
                 <h4 className="font-medium text-gray-900 mb-2">Cliente</h4>
                 {selectedClient ? (
                   <div className="text-sm space-y-1">
-                    <div><span className="font-medium">Email:</span> {selectedClient.login}</div>
-                    <div><span className="font-medium">Empresa:</span> {selectedClient.empresa || 'Sin empresa'}</div>
-                    <div><span className="font-medium">Teléfono:</span> {selectedClient.telefono || 'No especificado'}</div>
-                    <Button 
-                      size="small" 
-                      type="text" 
-                      danger
-                      onClick={() => setSelectedClient(null)}
-                    >
-                      Cambiar Cliente
-                    </Button>
+                    <div><span className="font-medium">Nombre:</span> {selectedClient.nombre}</div>
+                    <div><span className="font-medium">Email:</span> {selectedClient.email}</div>
+                    <div><span className="font-medium">Teléfono:</span> {selectedClient.telefono}</div>
                   </div>
                 ) : (
-                  <div className="text-sm">
-                    <div className="text-gray-500 mb-2">No hay cliente seleccionado</div>
-                    <Button 
-                      size="small" 
-                      type="primary"
-                      onClick={() => setShowUserSearch(true)}
-                    >
-                      Seleccionar Cliente
-                    </Button>
-                  </div>
+                                     <div className="text-center">
+                     <Tooltip title="Paso 2: Buscar o crear cliente para continuar">
+                       <Button 
+                         type="primary" 
+                         size="small"
+                         icon={<UserOutlined />}
+                         onClick={() => setShowUserSearch(true)}
+                       >
+                         Seleccionar Cliente
+                       </Button>
+                     </Tooltip>
+                     <div className="text-xs text-gray-500 mt-1">
+                       Cliente requerido para continuar
+                     </div>
+                   </div>
                 )}
               </div>
               
-              {/* Estadísticas del Evento */}
+              {/* Estadísticas del Evento - Ahora en botón */}
               {selectedFuncion && (
-                <div className="mb-4 p-3 bg-green-50 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">Estadísticas del Evento</h4>
-                  <div className="text-sm space-y-1">
-                    <div className="flex justify-between">
-                      <span>Total Asientos:</span>
-                      <span className="font-medium">{eventStats.totalSeats}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Disponibles:</span>
-                      <span className="font-medium text-green-600">{eventStats.availableSeats}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Vendidos:</span>
-                      <span className="font-medium text-red-600">{eventStats.soldSeats}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Reservados:</span>
-                      <span className="font-medium text-orange-600">{eventStats.reservedSeats}</span>
-                    </div>
-                    <div className="mt-2 pt-2 border-t">
-                      <div className="flex justify-between">
-                        <span>Ocupación:</span>
-                        <span className="font-medium">
-                          {eventStats.totalSeats > 0 
-                            ? `${Math.round(((eventStats.soldSeats + eventStats.reservedSeats) / eventStats.totalSeats) * 100)}%`
-                            : '0%'
-                          }
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="mb-4">
+                  <Tooltip title="Ver estadísticas detalladas del evento">
+                    <Button 
+                      type="default" 
+                      size="small"
+                      icon={<InfoCircleOutlined />}
+                      onClick={() => {
+                        Modal.info({
+                          title: 'Estadísticas del Evento',
+                          content: (
+                            <div className="text-sm space-y-2">
+                              <div className="flex justify-between">
+                                <span>Total Asientos:</span>
+                                <span className="font-medium">{eventStats.totalSeats}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Disponibles:</span>
+                                <span className="font-medium text-green-600">{eventStats.availableSeats}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Vendidos:</span>
+                                <span className="font-medium text-red-600">{eventStats.soldSeats}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Reservados:</span>
+                                <span className="font-medium text-orange-600">{eventStats.reservedSeats}</span>
+                              </div>
+                              <div className="pt-2 border-t">
+                                <div className="flex justify-between">
+                                  <span>Ocupación:</span>
+                                  <span className="font-medium">
+                                    {eventStats.totalSeats > 0 
+                                      ? `${Math.round(((eventStats.soldSeats + eventStats.reservedSeats) / eventStats.totalSeats) * 100)}%`
+                                      : '0%'
+                                    }
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ),
+                          width: 400,
+                        });
+                      }}
+                    >
+                      Info Evento
+                    </Button>
+                  </Tooltip>
                 </div>
               )}
               
@@ -761,21 +783,24 @@ const BoleteriaMain = () => {
                  </div>
                </div>
               
-              <div className="mt-6">
-                <Button 
-                  type="primary" 
-                  size="large" 
-                  block
-                  className="bg-purple-600 hover:bg-purple-700"
-                  onClick={handlePaymentClick}
-                  disabled={!selectedFuncion || !selectedPriceOption || selectedSeats.length === 0}
-                >
-                  {!selectedFuncion ? 'Selecciona un evento' :
-                   !selectedPriceOption ? 'Selecciona una zona y precio' : 
-                   selectedSeats.length === 0 ? 'Selecciona asientos' : 
-                   `Pagar $${calculateTotal().toFixed(2)}`}
-                </Button>
-              </div>
+                             <div className="mt-6">
+                 <Tooltip title="Paso 6: Procesar pago y completar venta">
+                   <Button 
+                     type="primary" 
+                     size="large" 
+                     block
+                     className="bg-purple-600 hover:bg-purple-700"
+                     onClick={handlePaymentClick}
+                     disabled={!selectedFuncion || !selectedPriceOption || selectedSeats.length === 0 || !selectedClient}
+                   >
+                     {!selectedFuncion ? 'Selecciona un evento' :
+                      !selectedClient ? 'Selecciona un cliente' :
+                      !selectedPriceOption ? 'Selecciona una zona y precio' : 
+                      selectedSeats.length === 0 ? 'Selecciona asientos' : 
+                      `Pagar $${calculateTotal().toFixed(2)}`}
+                   </Button>
+                 </Tooltip>
+               </div>
             </div>
           </div>
         </div>
@@ -1188,6 +1213,17 @@ const BoleteriaMain = () => {
             </div>
           </div>
         </Modal>
+
+      {/* PaymentModal */}
+      <PaymentModal
+        open={isPaymentModalVisible}
+        onCancel={() => setIsPaymentModalVisible(false)}
+        carrito={selectedSeats}
+        selectedClient={selectedClient}
+        selectedFuncion={selectedFuncion}
+        selectedEvent={selectedEvent}
+        selectedAffiliate={null}
+      />
 
     </div>
   );

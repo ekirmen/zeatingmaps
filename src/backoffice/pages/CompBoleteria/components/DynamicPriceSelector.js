@@ -319,10 +319,11 @@ const DynamicPriceSelector = ({
         </Space>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
         {filteredOptions.map((option) => (
           <Card
             key={option.id}
+            size="small"
             className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
               selectedPriceId === option.id
                 ? 'ring-2 ring-orange-500 shadow-lg'
@@ -330,11 +331,12 @@ const DynamicPriceSelector = ({
             }`}
             onClick={() => handlePriceSelect(option)}
           >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-2">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex items-center space-x-1">
                 {getCategoryIcon(option.category)}
                 <Badge 
                   count={getCategoryLabel(option.category)} 
+                  size="small"
                   style={{ 
                     backgroundColor: option.category === 'cortesia' ? '#52c41a' : 
                                option.category === 'vip' ? '#faad14' : 
@@ -344,45 +346,45 @@ const DynamicPriceSelector = ({
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1">
               <div>
-                <Text strong className="text-lg">
+                <Text strong className="text-sm">
                   {option.entrada.nombre_entrada}
                 </Text>
               </div>
               
               <div>
-                <Text type="secondary">
+                <Text type="secondary" className="text-xs">
                   Zona: {option.zona.nombre}
                 </Text>
               </div>
 
               {option.descripcion && (
                 <div>
-                  <Text type="secondary" className="text-sm">
+                  <Text type="secondary" className="text-xs">
                     {option.descripcion}
                   </Text>
                 </div>
               )}
 
-              <Divider style={{ margin: '8px 0' }} />
+              <Divider style={{ margin: '4px 0' }} />
 
               <div className="text-center">
                 <div 
-                  className="text-white px-4 py-2 rounded-lg text-lg font-bold"
+                  className="text-white px-2 py-1 rounded text-sm font-bold"
                   style={{ backgroundColor: option.color }}
                 >
                   ${option.precio.toFixed(2)}
                 </div>
                 
                 {option.comision > 0 && (
-                  <Text type="secondary" className="text-sm">
+                  <Text type="secondary" className="text-xs">
                     +${option.comision.toFixed(2)} comisión
                   </Text>
                 )}
                 
                 {option.precioOriginal !== option.precio && (
-                  <Text delete className="text-sm">
+                  <Text delete className="text-xs">
                     ${option.precioOriginal.toFixed(2)}
                   </Text>
                 )}

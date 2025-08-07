@@ -85,14 +85,14 @@ const Cart = () => {
             )}
 
             <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 className="text-lg font-semibold">Shopping Cart</h3>
+                <h3 className="text-lg font-semibold">Carrito de Compras</h3>
                 <Timer expiresAt={cartExpiration} />
             </div>
 
             <div className="max-h-[430px] overflow-y-auto space-y-2 pr-1">
                 {cart.length === 0 ? (
                     <div className="text-center text-gray-500 py-4">
-                        No seats selected.
+                        No hay asientos seleccionados.
                     </div>
                 ) : (
                     cart.map((item) => (
@@ -140,7 +140,7 @@ const Cart = () => {
                                 });
                             }}
                         >
-                            Proceed to Payment
+                            Redirigiendo a pagos...
                         </Button>
 
                         <Button
