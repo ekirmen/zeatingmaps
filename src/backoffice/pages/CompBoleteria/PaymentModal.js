@@ -300,7 +300,6 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
         setShowConfirmation(true);
         message.success('Pago procesado exitosamente');
         onCancel();
-      }
     } catch (error) {
       console.error('Payment error:', error);
       message.error(error.message || 'Error al procesar el pago');
