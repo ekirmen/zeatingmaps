@@ -347,10 +347,10 @@ const SimpleSeatingMap = ({
   }
 
   return (
-    <div className="relative overflow-auto" style={{ width: '100%', height: '600px' }}>
+    <div className="relative overflow-auto" style={{ width: '100%', height: '400px' }}>
 
       
-      <div className="relative" style={{ width: '800px', height: '500px' }}>
+      <div className="relative" style={{ width: '600px', height: '350px' }}>
         {/* Manejar diferentes estructuras de mapa.contenido */}
         {Array.isArray(mapa.contenido) ? (
           // Si mapa.contenido es un array

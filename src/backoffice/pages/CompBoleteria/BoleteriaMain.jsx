@@ -219,6 +219,8 @@ const BoleteriaMain = () => {
         reservedSeats
       });
 
+      console.log('Event stats loaded:', { totalSeats, availableSeats, soldSeats, reservedSeats });
+
       // Notificaciones de disponibilidad
       if (availableSeats <= 5 && availableSeats > 0) {
         message.warning(`⚠️ Solo quedan ${availableSeats} asientos disponibles`);
@@ -566,7 +568,7 @@ const BoleteriaMain = () => {
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b px-4 py-2">
+        <div className="bg-white shadow-sm border-b px-4 py-1">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
@@ -611,41 +613,50 @@ const BoleteriaMain = () => {
           </div>
         </div>
 
-        {/* Área principal */}
-        <div className="flex-1 flex">
-          {/* Contenido central */}
-          <div className="flex-1 p-6">
-            {/* Selección de precios dinámica */}
-            {selectedFuncion && (
-              <DynamicPriceSelector
-                selectedFuncion={selectedFuncion}
-                onPriceSelect={handlePriceOptionSelect}
-                selectedPriceId={selectedPriceOption?.id}
-              />
-            )}
+                 {/* Área principal */}
+         <div className="flex-1 flex">
+           {/* Contenido central */}
+           <div className="flex-1 p-4">
+             {/* Selección de precios dinámica */}
+             {selectedFuncion && (
+               <DynamicPriceSelector
+                 selectedFuncion={selectedFuncion}
+                 onPriceSelect={handlePriceOptionSelect}
+                 selectedPriceId={selectedPriceOption?.id}
+               />
+             )}
 
-            {/* Pestañas */}
-            <Tabs
-              activeKey={activeTab}
-              onChange={setActiveTab}
-              items={tabItems}
-              className="bg-white rounded-lg shadow-sm"
-            />
-          </div>
+             {/* Pestañas */}
+             <Tabs
+               activeKey={activeTab}
+               onChange={setActiveTab}
+               items={tabItems}
+               className="bg-white rounded-lg shadow-sm"
+             />
+           </div>
 
-          {/* Panel lateral derecho */}
-          <div className="w-80 bg-white shadow-lg">
-            <div className="p-6">
-              <h3 className="text-lg font-semibold mb-4">Resumen de Compra</h3>
+                     {/* Panel lateral derecho */}
+           <div className="w-80 bg-white shadow-lg">
+             <div className="p-4">
+                             <h3 className="text-lg font-semibold mb-2">Resumen de Compra</h3>
               
-              {/* Información del Cliente */}
-              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                             {/* Información del Cliente */}
+               <div className="mb-2 p-2 bg-blue-50 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-2">Cliente</h4>
                                  {selectedClient ? (
                    <div className="text-sm space-y-1">
                      <div><span className="font-medium">Nombre:</span> {selectedClient.nombre || selectedClient.login || 'N/A'}</div>
                      <div><span className="font-medium">Email:</span> {selectedClient.email || selectedClient.login || 'N/A'}</div>
                      <div><span className="font-medium">Teléfono:</span> {selectedClient.telefono || 'N/A'}</div>
+                     <div className="mt-2">
+                       <Button 
+                         size="small" 
+                         type="default"
+                         onClick={() => setShowUserSearch(true)}
+                       >
+                         Cambiar Usuario
+                       </Button>
+                     </div>
                    </div>
                  ) : (
                                      <div className="text-center">
@@ -666,9 +677,9 @@ const BoleteriaMain = () => {
                 )}
               </div>
               
-              {/* Estadísticas del Evento - Ahora en botón */}
-              {selectedFuncion && (
-                <div className="mb-4">
+                             {/* Estadísticas del Evento - Ahora en botón */}
+               {selectedFuncion && (
+                 <div className="mb-2">
                   <Tooltip title="Ver estadísticas detalladas del evento">
                     <Button 
                       type="default" 
@@ -718,8 +729,8 @@ const BoleteriaMain = () => {
                 </div>
               )}
               
-              {selectedPriceOption && (
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                             {selectedPriceOption && (
+                 <div className="mb-2 p-2 bg-gray-50 rounded-lg">
                   <h4 className="font-medium text-gray-900 mb-2">Precio Seleccionado</h4>
                   <div className="text-sm space-y-1">
                                          <div><span className="font-medium">Entrada:</span> {selectedPriceOption.entrada.nombre_entrada}</div>
@@ -744,40 +755,41 @@ const BoleteriaMain = () => {
                 </div>
               )}
               
-              {/* Asientos seleccionados */}
-              {selectedSeats.length > 0 && (
-                <div className="mb-4">
+                             {/* Asientos seleccionados */}
+               {selectedSeats.length > 0 && (
+                 <div className="mb-2">
                   <h4 className="font-medium text-gray-900 mb-2">Asientos Seleccionados</h4>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {selectedSeats.map((seat, index) => (
-                      <div key={seat._id || index} className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">
-                            {seat.nombre || `Asiento ${seat._id}`}
-                          </div>
-                          {seat.precioInfo && (
-                                                         <div className="text-xs text-gray-600">
-                               {seat.precioInfo.entrada.nombre_entrada} - {seat.precioInfo.zona.nombre}
-                             </div>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-sm">
-                            ${(seat.precio || selectedPriceOption?.precio || 0).toFixed(2)}
-                          </div>
-                          <Button 
-                            size="small" 
-                            type="text" 
-                            danger
-                            onClick={() => {
-                              setSelectedSeats(prev => prev.filter(s => s._id !== seat._id));
-                            }}
-                          >
-                            ×
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                                         {selectedSeats.map((seat, index) => (
+                       <div key={seat._id || index} className="flex items-center justify-between p-2 bg-blue-50 rounded">
+                         <div className="flex-1">
+                           <div className="font-medium text-sm">
+                             {seat.nombre || `Asiento ${seat._id}`}
+                           </div>
+                           <div className="text-xs text-gray-600">
+                             {selectedPriceOption ? 
+                               `${selectedPriceOption.entrada.nombre_entrada} - ${selectedPriceOption.zona.nombre}` : 
+                               'Zona no seleccionada'
+                             }
+                           </div>
+                         </div>
+                         <div className="text-right">
+                           <div className="font-bold text-sm">
+                             ${(seat.precio || selectedPriceOption?.precio || 0).toFixed(2)}
+                           </div>
+                           <Button 
+                             size="small" 
+                             type="text" 
+                             danger
+                             onClick={() => {
+                               setSelectedSeats(prev => prev.filter(s => s._id !== seat._id));
+                             }}
+                           >
+                             ×
+                           </Button>
+                         </div>
+                       </div>
+                     ))}
                   </div>
                 </div>
               )}

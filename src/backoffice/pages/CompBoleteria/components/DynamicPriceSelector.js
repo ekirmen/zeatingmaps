@@ -306,11 +306,7 @@ const DynamicPriceSelector = ({
   }
 
   return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="ant-typography" style={{ margin: 0 }}>Precios Disponibles</h4>
-      </div>
-
+    <div className="mb-2">
       <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
         {filteredOptions.map((option) => (
           <Card
@@ -323,22 +319,6 @@ const DynamicPriceSelector = ({
             }`}
             onClick={() => handlePriceSelect(option)}
           >
-            <div className="flex items-start justify-between mb-1">
-              <div className="flex items-center space-x-1">
-                {getCategoryIcon(option.category)}
-                <Badge 
-                  count={option.category === 'cortesia' ? 'Cortesía' : 
-                         option.category === 'vip' ? 'VIP' : 
-                         option.category === 'premium' ? 'Premium' : 'Regular'} 
-                  size="small"
-                  style={{ 
-                    backgroundColor: option.category === 'cortesia' ? '#52c41a' : 
-                                   option.category === 'vip' ? '#faad14' : 
-                                   option.category === 'premium' ? '#722ed1' : '#1890ff'
-                  }}
-                />
-              </div>
-            </div>
             <div className="space-y-1">
               <div>
                 <span className="ant-typography text-xs">
