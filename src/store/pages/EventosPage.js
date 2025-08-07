@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Select, message, Spin } from 'antd';
-import { CalendarOutlined, EnvironmentOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { Button, Card, Select, message, Spin, Alert, Tabs } from 'antd';
+import { CalendarOutlined, EnvironmentOutlined, ClockCircleOutlined, ArrowLeftOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 import { supabase } from '../../supabaseClient';
 import { isUuid, isNumericId } from '../../utils/isUuid';
@@ -11,8 +11,12 @@ import formatDateString from '../../utils/formatDateString';
 import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
+import SeatingMapUnified from '../../components/SeatingMapUnified';
+import Cart from './Cart';
+import ProductosWidget from '../components/ProductosWidget';
 
 const { Option } = Select;
+const { TabPane } = Tabs;
 
 const EventosPage = () => {
   useCartRestore();
@@ -29,8 +33,12 @@ const EventosPage = () => {
   const [venueInfo, setVenueInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showMap, setShowMap] = useState(false);
+  const [activeTab, setActiveTab] = useState('seats');
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
+  const cartItems = useCartStore((state) => state.items);
+  const getItemCount = useCartStore((state) => state.getItemCount);
   const {
     isSeatLocked,
     isSeatLockedByMe,
@@ -83,12 +91,15 @@ const EventosPage = () => {
         if (funcionParam && funcionesData) {
           const funcion = funcionesData.find(f => f.id == funcionParam || f._id == funcionParam);
           if (funcion) {
-            setSelectedFunctionId(funcion.id || funcion._id);
+            const fid = funcion.id || funcion._id;
+            setSelectedFunctionId(fid);
+            setShowMap(true);
           }
         } else if (funcionesData && funcionesData.length === 1) {
-          // Si solo hay una función, seleccionarla automáticamente
+          // Si solo hay una función, seleccionarla automáticamente y mostrar el mapa
           const fid = funcionesData[0].id || funcionesData[0]._id;
           setSelectedFunctionId(fid);
+          setShowMap(true);
         }
       } catch (err) {
         console.error('Error fetching evento:', err);
@@ -148,8 +159,20 @@ const EventosPage = () => {
 
   const handleFunctionSelect = (functionId) => {
     setSelectedFunctionId(functionId);
-    // Navegar a la página del mapa con la función seleccionada
-    navigate(`/store/eventos/${eventSlug}/map?funcion=${functionId}`);
+    setShowMap(true);
+  };
+
+  const handleBackToSelection = () => {
+    setShowMap(false);
+    setSelectedFunctionId(null);
+  };
+
+  const handleProceedToCart = () => {
+    if (getItemCount() === 0) {
+      message.warning('No hay items en el carrito');
+      return;
+    }
+    navigate('/store/cart');
   };
 
   const getEventImages = () => {
@@ -213,6 +236,142 @@ const EventosPage = () => {
     );
   }
 
+  // Si estamos mostrando el mapa de asientos
+  if (showMap && selectedFunctionId) {
+    const selectedFuncion = funciones.find(f => (f.id || f._id) === selectedFunctionId);
+    
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <Button 
+                  type="text" 
+                  icon={<ArrowLeftOutlined />}
+                  onClick={handleBackToSelection}
+                  className="flex items-center"
+                >
+                  Volver
+                </Button>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900">{evento.nombre}</h1>
+                  <p className="text-sm text-gray-600">
+                    {selectedFuncion?.nombre || 'Función'} - {selectedFuncion?.fecha_celebracion && formatDateString(selectedFuncion.fecha_celebracion)}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <p className="text-sm text-gray-600">Items en carrito</p>
+                  <p className="text-lg font-bold text-blue-600">{getItemCount()}</p>
+                </div>
+                <Button 
+                  type="primary" 
+                  icon={<ClockCircleOutlined />}
+                  onClick={handleProceedToCart}
+                  disabled={getItemCount() === 0}
+                >
+                  Ver Carrito
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Contenido principal */}
+            <div className="lg:col-span-3">
+              <Tabs 
+                activeKey={activeTab} 
+                onChange={setActiveTab}
+                className="mb-6"
+              >
+                <TabPane 
+                  tab={
+                    <span>
+                      <CalendarOutlined />
+                      Asientos
+                    </span>
+                  } 
+                  key="seats"
+                >
+                  <Card 
+                    title="Selecciona tus asientos" 
+                    className="h-full"
+                    extra={
+                      <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 bg-green-500 rounded"></div>
+                          <span className="text-sm">Disponible</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                          <span className="text-sm">Seleccionado</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-4 h-4 bg-gray-400 rounded"></div>
+                          <span className="text-sm">Ocupado</span>
+                        </div>
+                      </div>
+                    }
+                  >
+                    {mapa ? (
+                      <div className="h-96 overflow-auto">
+                        <SeatingMapUnified
+                          mapa={mapa}
+                          onSeatClick={handleSeatToggle}
+                          onTableToggle={(table) => {
+                            console.log('Mesa seleccionada:', table);
+                          }}
+                          selectedSeats={cartItems ? cartItems.map(item => item.sillaId) : []}
+                          isSeatLocked={isSeatLocked}
+                          isSeatLockedByMe={isSeatLockedByMe}
+                          lockSeat={lockSeat}
+                          unlockSeat={unlockSeat}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-96 text-gray-500">
+                        <div className="text-center">
+                          <p className="text-lg font-semibold mb-2">No hay mapa disponible</p>
+                          <p className="text-sm">No se encontró un mapa de asientos para esta función</p>
+                        </div>
+                      </div>
+                    )}
+                  </Card>
+                </TabPane>
+
+                <TabPane 
+                  tab={
+                    <span>
+                      <ShoppingCartOutlined />
+                      Productos
+                    </span>
+                  } 
+                  key="products"
+                >
+                  <ProductosWidget eventoId={evento.id} />
+                </TabPane>
+              </Tabs>
+            </div>
+
+            {/* Panel lateral - Carrito */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-4">
+                <Cart />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Página principal del evento
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Banner del evento */}
@@ -276,39 +435,48 @@ const EventosPage = () => {
 
             {/* Selección de función */}
             <Card title="Seleccionar Función" className="mb-6">
-              <div className="space-y-4">
-                <Select
-                  placeholder="Selecciona una función"
-                  value={selectedFunctionId}
-                  onChange={handleFunctionSelect}
-                  className="w-full"
-                  size="large"
-                >
-                  {funciones.map((funcion) => (
-                    <Option key={funcion.id || funcion._id} value={funcion.id || funcion._id}>
-                      <div className="flex items-center justify-between">
-                        <span>{funcion.nombre || 'Función'}</span>
-                        <span className="text-gray-500">
-                          {formatDateString(funcion.fecha_celebracion)}
-                        </span>
-                      </div>
-                    </Option>
-                  ))}
-                </Select>
+              {funciones.length === 0 ? (
+                <Alert
+                  message="No hay funciones disponibles"
+                  description="Este evento no tiene funciones programadas."
+                  type="warning"
+                  showIcon
+                />
+              ) : (
+                <div className="space-y-4">
+                  <Select
+                    placeholder="Selecciona una función"
+                    value={selectedFunctionId}
+                    onChange={handleFunctionSelect}
+                    className="w-full"
+                    size="large"
+                  >
+                    {funciones.map((funcion) => (
+                      <Option key={funcion.id || funcion._id} value={funcion.id || funcion._id}>
+                        <div className="flex items-center justify-between">
+                          <span>{funcion.nombre || 'Función'}</span>
+                          <span className="text-gray-500">
+                            {formatDateString(funcion.fecha_celebracion)}
+                          </span>
+                        </div>
+                      </Option>
+                    ))}
+                  </Select>
 
-                {selectedFunctionId && (
-                  <div className="mt-4">
-                    <Button 
-                      type="primary" 
-                      size="large"
-                      onClick={() => navigate(`/store/eventos/${eventSlug}/map?funcion=${selectedFunctionId}`)}
-                      className="w-full"
-                    >
-                      Ver Mapa de Asientos
-                    </Button>
-                  </div>
-                )}
-              </div>
+                  {selectedFunctionId && (
+                    <div className="mt-4">
+                      <Button 
+                        type="primary" 
+                        size="large"
+                        onClick={() => setShowMap(true)}
+                        className="w-full"
+                      >
+                        Ver Mapa de Asientos
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           </div>
 
@@ -349,7 +517,7 @@ const EventosPage = () => {
                 <Button 
                   type="primary" 
                   size="large"
-                  onClick={() => navigate(`/store/eventos/${eventSlug}/map?funcion=${selectedFunctionId}`)}
+                  onClick={() => setShowMap(true)}
                   className="w-full"
                   icon={<ClockCircleOutlined />}
                 >

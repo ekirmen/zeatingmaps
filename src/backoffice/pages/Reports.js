@@ -17,7 +17,11 @@ import {
   Form,
   Input,
   message,
-  Spin
+  Spin,
+  Tabs,
+  Badge,
+  Tooltip,
+  Alert
 } from 'antd';
 import { 
   DownloadOutlined, 
@@ -29,13 +33,19 @@ import {
   CalendarOutlined,
   CloseOutlined,
   CheckCircleOutlined,
-  CreditCardOutlined
+  CreditCardOutlined,
+  TrendingUpOutlined,
+  GiftOutlined,
+  ShoppingCartOutlined,
+  StarOutlined,
+  InfoCircleOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
+const { TabPane } = Tabs;
 
 const Reports = () => {
   const [loading, setLoading] = useState(false);
@@ -43,7 +53,10 @@ const Reports = () => {
     sales: [],
     events: [],
     users: [],
-    payments: []
+    payments: [],
+    products: [],
+    promociones: [],
+    carritos: []
   });
   const [filters, setFilters] = useState({
     dateRange: null,
@@ -54,6 +67,7 @@ const Reports = () => {
   const [selectedReport, setSelectedReport] = useState('sales');
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [exportForm] = Form.useForm();
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     loadReportData();
@@ -76,6 +90,15 @@ const Reports = () => {
         case 'payments':
           await loadPaymentsReport();
           break;
+        case 'products':
+          await loadProductsReport();
+          break;
+        case 'promociones':
+          await loadPromocionesReport();
+          break;
+        case 'carritos':
+          await loadCarritosReport();
+          break;
         default:
           break;
       }
@@ -90,11 +113,11 @@ const Reports = () => {
   const loadSalesReport = async () => {
     try {
       let query = supabase
-        .from('payment_transactions')
+        .from('payments')
         .select(`
           *,
-          payment_gateways (name),
-          eventos (nombre)
+          user:profiles!user_id(*),
+          event:eventos(*)
         `)
         .eq('status', 'completed');
 
@@ -102,10 +125,6 @@ const Reports = () => {
         query = query
           .gte('created_at', filters.dateRange[0].toISOString())
           .lte('created_at', filters.dateRange[1].toISOString());
-      }
-
-      if (filters.paymentMethod !== 'all') {
-        query = query.eq('payment_gateways.type', filters.paymentMethod);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -171,10 +190,11 @@ const Reports = () => {
   const loadPaymentsReport = async () => {
     try {
       let query = supabase
-        .from('payment_transactions')
+        .from('payments')
         .select(`
           *,
-          payment_gateways (name, type)
+          user:profiles!user_id(*),
+          event:eventos(*)
         `);
 
       if (filters.status !== 'all') {
@@ -200,6 +220,60 @@ const Reports = () => {
     }
   };
 
+  const loadProductsReport = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('productos')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setReportData(prev => ({
+        ...prev,
+        products: data || []
+      }));
+    } catch (error) {
+      console.error('Error loading products report:', error);
+    }
+  };
+
+  const loadPromocionesReport = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('promociones')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setReportData(prev => ({
+        ...prev,
+        promociones: data || []
+      }));
+    } catch (error) {
+      console.error('Error loading promociones report:', error);
+    }
+  };
+
+  const loadCarritosReport = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('saved_carts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setReportData(prev => ({
+        ...prev,
+        carritos: data || []
+      }));
+    } catch (error) {
+      console.error('Error loading carritos report:', error);
+    }
+  };
+
   const exportToCSV = (data, filename) => {
     if (!data || data.length === 0) {
       message.warning('No hay datos para exportar');
@@ -212,12 +286,10 @@ const Reports = () => {
       return columns.map(col => {
         let value = row[col.dataIndex];
         if (col.render) {
-          // Crear un elemento temporal para obtener el texto renderizado
           const tempDiv = document.createElement('div');
           tempDiv.innerHTML = col.render(value, row);
           value = tempDiv.textContent || tempDiv.innerText || '';
         }
-        // Escapar comillas y envolver en comillas si contiene coma
         if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
           value = `"${value.replace(/"/g, '""')}"`;
         }
@@ -257,7 +329,6 @@ const Reports = () => {
       });
     });
 
-    // Crear contenido HTML para Excel
     let html = '<table>';
     html += '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
     rows.forEach(row => {
@@ -296,7 +367,6 @@ const Reports = () => {
       });
     });
 
-    // Crear contenido HTML para PDF
     let html = `
       <html>
         <head>
@@ -369,20 +439,22 @@ const Reports = () => {
       render: (date) => new Date(date).toLocaleDateString()
     },
     {
+      title: 'Cliente',
+      dataIndex: ['user', 'login'],
+      key: 'client',
+      render: (login) => login || 'N/A'
+    },
+    {
       title: 'Evento',
-      dataIndex: ['eventos', 'nombre'],
-      key: 'event'
+      dataIndex: ['event', 'nombre'],
+      key: 'event',
+      render: (nombre) => nombre || 'N/A'
     },
     {
       title: 'Monto',
       dataIndex: 'amount',
       key: 'amount',
-      render: (amount) => `$${parseFloat(amount).toFixed(2)}`
-    },
-    {
-      title: 'Pasarela',
-      dataIndex: ['payment_gateways', 'name'],
-      key: 'gateway'
+      render: (amount) => `$${parseFloat(amount || 0).toFixed(2)}`
     },
     {
       title: 'Estado',
@@ -390,7 +462,7 @@ const Reports = () => {
       key: 'status',
       render: (status) => (
         <Tag color={status === 'completed' ? 'green' : 'orange'}>
-          {status.toUpperCase()}
+          {status?.toUpperCase() || 'N/A'}
         </Tag>
       )
     }
@@ -415,18 +487,12 @@ const Reports = () => {
       render: (funciones) => funciones?.length || 0
     },
     {
-      title: 'Tickets Vendidos',
-      dataIndex: 'entradas',
-      key: 'entradas',
-      render: (entradas) => entradas?.filter(e => e.status === 'vendido').length || 0
-    },
-    {
       title: 'Estado',
-      dataIndex: 'estado',
-      key: 'estado',
-      render: (estado) => (
-        <Tag color={estado === 'activo' ? 'green' : 'gray'}>
-          {estado?.toUpperCase()}
+      dataIndex: 'activo',
+      key: 'activo',
+      render: (activo) => (
+        <Tag color={activo ? 'green' : 'gray'}>
+          {activo ? 'ACTIVO' : 'INACTIVO'}
         </Tag>
       )
     }
@@ -435,8 +501,8 @@ const Reports = () => {
   const getUsersColumns = () => [
     {
       title: 'Usuario',
-      dataIndex: 'full_name',
-      key: 'full_name'
+      dataIndex: 'login',
+      key: 'login'
     },
     {
       title: 'Email',
@@ -445,19 +511,21 @@ const Reports = () => {
     },
     {
       title: 'Teléfono',
-      dataIndex: 'phone',
-      key: 'phone'
+      dataIndex: 'telefono',
+      key: 'telefono',
+      render: (telefono) => telefono || 'N/A'
+    },
+    {
+      title: 'Empresa',
+      dataIndex: 'empresa',
+      key: 'empresa',
+      render: (empresa) => empresa || 'N/A'
     },
     {
       title: 'Fecha Registro',
       dataIndex: 'created_at',
       key: 'created_at',
       render: (date) => new Date(date).toLocaleDateString()
-    },
-    {
-      title: 'Estado',
-      key: 'status',
-      render: () => <Tag color="green">ACTIVO</Tag>
     }
   ];
 
@@ -466,18 +534,19 @@ const Reports = () => {
       title: 'ID Transacción',
       dataIndex: 'id',
       key: 'id',
-      render: (id) => id.slice(0, 8) + '...'
+      render: (id) => id?.slice(0, 8) + '...' || 'N/A'
+    },
+    {
+      title: 'Cliente',
+      dataIndex: ['user', 'login'],
+      key: 'client',
+      render: (login) => login || 'N/A'
     },
     {
       title: 'Monto',
       dataIndex: 'amount',
       key: 'amount',
-      render: (amount) => `$${parseFloat(amount).toFixed(2)}`
-    },
-    {
-      title: 'Pasarela',
-      dataIndex: ['payment_gateways', 'name'],
-      key: 'gateway'
+      render: (amount) => `$${parseFloat(amount || 0).toFixed(2)}`
     },
     {
       title: 'Estado',
@@ -489,9 +558,129 @@ const Reports = () => {
           status === 'pending' ? 'orange' : 
           status === 'failed' ? 'red' : 'gray'
         }>
-          {status.toUpperCase()}
+          {status?.toUpperCase() || 'N/A'}
         </Tag>
       )
+    },
+    {
+      title: 'Fecha',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (date) => new Date(date).toLocaleString()
+    }
+  ];
+
+  const getProductsColumns = () => [
+    {
+      title: 'Producto',
+      dataIndex: 'nombre',
+      key: 'nombre'
+    },
+    {
+      title: 'Precio',
+      dataIndex: 'precio',
+      key: 'precio',
+      render: (precio) => `$${parseFloat(precio || 0).toFixed(2)}`
+    },
+    {
+      title: 'Categoría',
+      dataIndex: 'categoria',
+      key: 'categoria',
+      render: (categoria) => categoria || 'Sin categoría'
+    },
+    {
+      title: 'Stock',
+      dataIndex: 'stock',
+      key: 'stock',
+      render: (stock) => stock || 0
+    },
+    {
+      title: 'Estado',
+      dataIndex: 'activo',
+      key: 'activo',
+      render: (activo) => (
+        <Tag color={activo ? 'green' : 'gray'}>
+          {activo ? 'ACTIVO' : 'INACTIVO'}
+        </Tag>
+      )
+    }
+  ];
+
+  const getPromocionesColumns = () => [
+    {
+      title: 'Código',
+      dataIndex: 'codigo',
+      key: 'codigo',
+      render: (codigo) => <Text code>{codigo}</Text>
+    },
+    {
+      title: 'Descripción',
+      dataIndex: 'descripcion',
+      key: 'descripcion',
+      ellipsis: true
+    },
+    {
+      title: 'Tipo',
+      dataIndex: 'tipo',
+      key: 'tipo',
+      render: (tipo) => (
+        <Tag color={tipo === 'porcentaje' ? 'blue' : 'purple'}>
+          {tipo === 'porcentaje' ? 'Porcentaje' : 'Monto Fijo'}
+        </Tag>
+      )
+    },
+    {
+      title: 'Valor',
+      dataIndex: 'valor',
+      key: 'valor',
+      render: (valor, record) => (
+        <Text strong>
+          {record.tipo === 'porcentaje' ? `${valor}%` : `$${valor}`}
+        </Text>
+      )
+    },
+    {
+      title: 'Estado',
+      dataIndex: 'activo',
+      key: 'activo',
+      render: (activo) => (
+        <Tag color={activo ? 'green' : 'red'}>
+          {activo ? 'ACTIVA' : 'INACTIVA'}
+        </Tag>
+      )
+    }
+  ];
+
+  const getCarritosColumns = () => [
+    {
+      title: 'Cliente ID',
+      dataIndex: 'client_id',
+      key: 'client_id',
+      render: (id) => id || 'N/A'
+    },
+    {
+      title: 'Evento ID',
+      dataIndex: 'event_id',
+      key: 'event_id',
+      render: (id) => id || 'N/A'
+    },
+    {
+      title: 'Asientos',
+      dataIndex: 'seats',
+      key: 'seats',
+      render: (seats) => seats?.length || 0
+    },
+    {
+      title: 'Productos',
+      dataIndex: 'products',
+      key: 'products',
+      render: (products) => products?.length || 0
+    },
+    {
+      title: 'Total',
+      dataIndex: 'total',
+      key: 'total',
+      render: (total) => `$${parseFloat(total || 0).toFixed(2)}`
     },
     {
       title: 'Fecha',
@@ -511,6 +700,12 @@ const Reports = () => {
         return getUsersColumns();
       case 'payments':
         return getPaymentsColumns();
+      case 'products':
+        return getProductsColumns();
+      case 'promociones':
+        return getPromocionesColumns();
+      case 'carritos':
+        return getCarritosColumns();
       default:
         return [];
     }
@@ -533,7 +728,7 @@ const Reports = () => {
           average: avgSale
         };
       case 'events':
-        const activeEvents = data.filter(e => e.estado === 'activo').length;
+        const activeEvents = data.filter(e => e.activo).length;
         return {
           total: data.length,
           active: activeEvents,
@@ -557,6 +752,28 @@ const Reports = () => {
           completed: completedPayments,
           amount: totalAmount
         };
+      case 'products':
+        const activeProducts = data.filter(p => p.activo).length;
+        const totalValue = data.reduce((sum, p) => sum + parseFloat(p.precio || 0), 0);
+        return {
+          total: data.length,
+          active: activeProducts,
+          totalValue: totalValue
+        };
+      case 'promociones':
+        const activePromociones = data.filter(p => p.activo).length;
+        return {
+          total: data.length,
+          active: activePromociones,
+          inactive: data.length - activePromociones
+        };
+      case 'carritos':
+        const totalValueCarritos = data.reduce((sum, c) => sum + parseFloat(c.total || 0), 0);
+        return {
+          total: data.length,
+          totalValue: totalValueCarritos,
+          average: data.length > 0 ? totalValueCarritos / data.length : 0
+        };
       default:
         return {};
     }
@@ -564,228 +781,413 @@ const Reports = () => {
 
   const stats = getReportStats();
 
+  const reportOptions = [
+    { value: 'sales', label: 'Ventas', icon: <DollarOutlined /> },
+    { value: 'events', label: 'Eventos', icon: <CalendarOutlined /> },
+    { value: 'users', label: 'Usuarios', icon: <UserOutlined /> },
+    { value: 'payments', label: 'Pagos', icon: <CreditCardOutlined /> },
+    { value: 'products', label: 'Productos', icon: <ShoppingCartOutlined /> },
+    { value: 'promociones', label: 'Promociones', icon: <GiftOutlined /> },
+    { value: 'carritos', label: 'Carritos', icon: <ShoppingCartOutlined /> }
+  ];
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <Title level={2}>Reportes</Title>
+        <Title level={2}>
+          <BarChartOutlined className="mr-2" />
+          Reportes y Analytics
+        </Title>
         <Text type="secondary">Análisis detallado de datos del sistema</Text>
       </div>
 
-      {/* Filtros */}
-      <Card className="mb-6">
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={6}>
-            <Text strong>Tipo de Reporte:</Text>
-            <Select
-              value={selectedReport}
-              onChange={setSelectedReport}
-              style={{ width: '100%', marginTop: 8 }}
-            >
-              <Option value="sales">Ventas</Option>
-              <Option value="events">Eventos</Option>
-              <Option value="users">Usuarios</Option>
-              <Option value="payments">Pagos</Option>
-            </Select>
-          </Col>
-
-          <Col xs={24} sm={12} md={6}>
-            <Text strong>Rango de Fechas:</Text>
-            <RangePicker
-              style={{ width: '100%', marginTop: 8 }}
-              onChange={(dates) => setFilters(prev => ({ ...prev, dateRange: dates }))}
-            />
-          </Col>
-
-          {selectedReport === 'payments' && (
+      <Tabs activeKey={activeTab} onChange={setActiveTab}>
+        <TabPane tab="Vista General" key="overview">
+          <Row gutter={[16, 16]} className="mb-6">
             <Col xs={24} sm={12} md={6}>
-              <Text strong>Estado:</Text>
-              <Select
-                value={filters.status}
-                onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
-                style={{ width: '100%', marginTop: 8 }}
-              >
-                <Option value="all">Todos</Option>
-                <Option value="completed">Completados</Option>
-                <Option value="pending">Pendientes</Option>
-                <Option value="failed">Fallidos</Option>
-              </Select>
-            </Col>
-          )}
-
-          <Col xs={24} sm={12} md={6}>
-            <Space>
-              <Button 
-                type="primary" 
-                icon={<EyeOutlined />}
-                onClick={loadReportData}
-                loading={loading}
-              >
-                Generar Reporte
-              </Button>
-              <Button 
-                icon={<DownloadOutlined />}
-                onClick={() => setExportModalVisible(true)}
-              >
-                Exportar
-              </Button>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* Estadísticas */}
-      <Row gutter={[16, 16]} className="mb-6">
-        {selectedReport === 'sales' && (
-          <>
-            <Col xs={24} sm={8}>
               <Card>
                 <Statistic
-                  title="Total de Ventas"
-                  value={stats.total}
-                  prefix={<FileTextOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Ingresos Totales"
-                  value={stats.amount}
+                  title="Total Ventas"
+                  value={stats.amount || 0}
                   precision={2}
                   prefix="$"
                   valueStyle={{ color: '#3f8600' }}
+                  suffix={<DollarOutlined />}
                 />
               </Card>
             </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Venta Promedio"
-                  value={stats.average}
-                  precision={2}
-                  prefix="$"
-                  valueStyle={{ color: '#722ed1' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-
-        {selectedReport === 'events' && (
-          <>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Total de Eventos"
-                  value={stats.total}
-                  prefix={<CalendarOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
+            <Col xs={24} sm={12} md={6}>
               <Card>
                 <Statistic
                   title="Eventos Activos"
-                  value={stats.active}
-                  prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Eventos Inactivos"
-                  value={stats.inactive}
-                  prefix={<CloseOutlined />}
-                  valueStyle={{ color: '#faad14' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-
-        {selectedReport === 'users' && (
-          <>
-            <Col xs={24} sm={12}>
-              <Card>
-                <Statistic
-                  title="Total de Usuarios"
-                  value={stats.total}
-                  prefix={<UserOutlined />}
+                  value={reportData.events?.filter(e => e.activo).length || 0}
                   valueStyle={{ color: '#1890ff' }}
+                  suffix={<CalendarOutlined />}
                 />
               </Card>
             </Col>
-            <Col xs={24} sm={12}>
+            <Col xs={24} sm={12} md={6}>
               <Card>
                 <Statistic
-                  title="Nuevos Esta Semana"
-                  value={stats.newThisWeek}
-                  prefix={<UserOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-          </>
-        )}
-
-        {selectedReport === 'payments' && (
-          <>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Total de Transacciones"
-                  value={stats.total}
-                  prefix={<CreditCardOutlined />}
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Completadas"
-                  value={stats.completed}
-                  prefix={<CheckCircleOutlined />}
-                  valueStyle={{ color: '#3f8600' }}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={8}>
-              <Card>
-                <Statistic
-                  title="Monto Total"
-                  value={stats.amount}
-                  precision={2}
-                  prefix="$"
+                  title="Usuarios Registrados"
+                  value={reportData.users?.length || 0}
                   valueStyle={{ color: '#722ed1' }}
+                  suffix={<UserOutlined />}
                 />
               </Card>
             </Col>
-          </>
-        )}
-      </Row>
+            <Col xs={24} sm={12} md={6}>
+              <Card>
+                <Statistic
+                  title="Productos Disponibles"
+                  value={reportData.products?.filter(p => p.activo).length || 0}
+                  valueStyle={{ color: '#faad14' }}
+                  suffix={<ShoppingCartOutlined />}
+                />
+              </Card>
+            </Col>
+          </Row>
 
-      {/* Tabla de Datos */}
-      <Card title={`Reporte de ${selectedReport.charAt(0).toUpperCase() + selectedReport.slice(1)}`}>
-        <Table
-          columns={getReportColumns()}
-          dataSource={getReportData()}
-          loading={loading}
-          rowKey="id"
-          pagination={{
-            pageSize: 10,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => 
-              `${range[0]}-${range[1]} de ${total} registros`
-          }}
-        />
-      </Card>
+          <Alert
+            message="Resumen del Sistema"
+            description="Aquí puedes ver un resumen general de las métricas más importantes del sistema."
+            type="info"
+            showIcon
+            icon={<InfoCircleOutlined />}
+            className="mb-6"
+          />
+        </TabPane>
+
+        <TabPane tab="Reportes Detallados" key="detailed">
+          {/* Filtros */}
+          <Card className="mb-6">
+            <Row gutter={[16, 16]} align="middle">
+              <Col xs={24} sm={12} md={6}>
+                <Text strong>Tipo de Reporte:</Text>
+                <Select
+                  value={selectedReport}
+                  onChange={setSelectedReport}
+                  style={{ width: '100%', marginTop: 8 }}
+                >
+                  {reportOptions.map(option => (
+                    <Option key={option.value} value={option.value}>
+                      <Space>
+                        {option.icon}
+                        {option.label}
+                      </Space>
+                    </Option>
+                  ))}
+                </Select>
+              </Col>
+
+              <Col xs={24} sm={12} md={6}>
+                <Text strong>Rango de Fechas:</Text>
+                <RangePicker
+                  style={{ width: '100%', marginTop: 8 }}
+                  onChange={(dates) => setFilters(prev => ({ ...prev, dateRange: dates }))}
+                />
+              </Col>
+
+              {selectedReport === 'payments' && (
+                <Col xs={24} sm={12} md={6}>
+                  <Text strong>Estado:</Text>
+                  <Select
+                    value={filters.status}
+                    onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                    style={{ width: '100%', marginTop: 8 }}
+                  >
+                    <Option value="all">Todos</Option>
+                    <Option value="completed">Completados</Option>
+                    <Option value="pending">Pendientes</Option>
+                    <Option value="failed">Fallidos</Option>
+                  </Select>
+                </Col>
+              )}
+
+              <Col xs={24} sm={12} md={6}>
+                <Space>
+                  <Button 
+                    type="primary" 
+                    icon={<EyeOutlined />}
+                    onClick={loadReportData}
+                    loading={loading}
+                  >
+                    Generar Reporte
+                  </Button>
+                  <Button 
+                    icon={<DownloadOutlined />}
+                    onClick={() => setExportModalVisible(true)}
+                  >
+                    Exportar
+                  </Button>
+                </Space>
+              </Col>
+            </Row>
+          </Card>
+
+          {/* Estadísticas */}
+          <Row gutter={[16, 16]} className="mb-6">
+            {selectedReport === 'sales' && (
+              <>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Total de Ventas"
+                      value={stats.total}
+                      prefix={<FileTextOutlined />}
+                      valueStyle={{ color: '#1890ff' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Ingresos Totales"
+                      value={stats.amount}
+                      precision={2}
+                      prefix="$"
+                      valueStyle={{ color: '#3f8600' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Venta Promedio"
+                      value={stats.average}
+                      precision={2}
+                      prefix="$"
+                      valueStyle={{ color: '#722ed1' }}
+                    />
+                  </Card>
+                </Col>
+              </>
+            )}
+
+            {selectedReport === 'events' && (
+              <>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Total de Eventos"
+                      value={stats.total}
+                      prefix={<CalendarOutlined />}
+                      valueStyle={{ color: '#1890ff' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Eventos Activos"
+                      value={stats.active}
+                      prefix={<CheckCircleOutlined />}
+                      valueStyle={{ color: '#3f8600' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Eventos Inactivos"
+                      value={stats.inactive}
+                      prefix={<CloseOutlined />}
+                      valueStyle={{ color: '#faad14' }}
+                    />
+                  </Card>
+                </Col>
+              </>
+            )}
+
+            {selectedReport === 'users' && (
+              <>
+                <Col xs={24} sm={12}>
+                  <Card>
+                    <Statistic
+                      title="Total de Usuarios"
+                      value={stats.total}
+                      prefix={<UserOutlined />}
+                      valueStyle={{ color: '#1890ff' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Card>
+                    <Statistic
+                      title="Nuevos Esta Semana"
+                      value={stats.newThisWeek}
+                      prefix={<UserOutlined />}
+                      valueStyle={{ color: '#3f8600' }}
+                    />
+                  </Card>
+                </Col>
+              </>
+            )}
+
+            {selectedReport === 'payments' && (
+              <>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Total de Transacciones"
+                      value={stats.total}
+                      prefix={<CreditCardOutlined />}
+                      valueStyle={{ color: '#1890ff' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Completadas"
+                      value={stats.completed}
+                      prefix={<CheckCircleOutlined />}
+                      valueStyle={{ color: '#3f8600' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Monto Total"
+                      value={stats.amount}
+                      precision={2}
+                      prefix="$"
+                      valueStyle={{ color: '#722ed1' }}
+                    />
+                  </Card>
+                </Col>
+              </>
+            )}
+
+            {selectedReport === 'products' && (
+              <>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Total de Productos"
+                      value={stats.total}
+                      prefix={<ShoppingCartOutlined />}
+                      valueStyle={{ color: '#1890ff' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Productos Activos"
+                      value={stats.active}
+                      prefix={<CheckCircleOutlined />}
+                      valueStyle={{ color: '#3f8600' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Valor Total"
+                      value={stats.totalValue}
+                      precision={2}
+                      prefix="$"
+                      valueStyle={{ color: '#722ed1' }}
+                    />
+                  </Card>
+                </Col>
+              </>
+            )}
+
+            {selectedReport === 'promociones' && (
+              <>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Total de Promociones"
+                      value={stats.total}
+                      prefix={<GiftOutlined />}
+                      valueStyle={{ color: '#1890ff' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Promociones Activas"
+                      value={stats.active}
+                      prefix={<CheckCircleOutlined />}
+                      valueStyle={{ color: '#3f8600' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Promociones Inactivas"
+                      value={stats.inactive}
+                      prefix={<CloseOutlined />}
+                      valueStyle={{ color: '#faad14' }}
+                    />
+                  </Card>
+                </Col>
+              </>
+            )}
+
+            {selectedReport === 'carritos' && (
+              <>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Total de Carritos"
+                      value={stats.total}
+                      prefix={<ShoppingCartOutlined />}
+                      valueStyle={{ color: '#1890ff' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Valor Total"
+                      value={stats.totalValue}
+                      precision={2}
+                      prefix="$"
+                      valueStyle={{ color: '#3f8600' }}
+                    />
+                  </Card>
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Card>
+                    <Statistic
+                      title="Valor Promedio"
+                      value={stats.average}
+                      precision={2}
+                      prefix="$"
+                      valueStyle={{ color: '#722ed1' }}
+                    />
+                  </Card>
+                </Col>
+              </>
+            )}
+          </Row>
+
+          {/* Tabla de Datos */}
+          <Card title={`Reporte de ${selectedReport.charAt(0).toUpperCase() + selectedReport.slice(1)}`}>
+            <Table
+              columns={getReportColumns()}
+              dataSource={getReportData()}
+              loading={loading}
+              rowKey="id"
+              pagination={{
+                pageSize: 10,
+                showSizeChanger: true,
+                showQuickJumper: true,
+                showTotal: (total, range) => 
+                  `${range[0]}-${range[1]} de ${total} registros`
+              }}
+            />
+          </Card>
+        </TabPane>
+      </Tabs>
 
       {/* Modal de Exportación */}
       <Modal

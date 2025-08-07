@@ -26,7 +26,9 @@ const EventosMapPage = () => {
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const cartItems = useCartStore((state) => state.items);
+  const cartProducts = useCartStore((state) => state.products);
   const clearCart = useCartStore((state) => state.clearCart);
+  const getItemCount = useCartStore((state) => state.getItemCount);
   
   const {
     isSeatLocked,
@@ -181,8 +183,8 @@ const EventosMapPage = () => {
   };
 
   const handleProceedToCart = () => {
-    if (!cartItems || cartItems.length === 0) {
-      message.warning('No hay asientos seleccionados');
+    if (getItemCount() === 0) {
+      message.warning('No hay items en el carrito');
       return;
     }
     navigate('/store/cart');
@@ -265,20 +267,20 @@ const EventosMapPage = () => {
               </div>
             </div>
             
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-sm text-gray-600">Asientos seleccionados</p>
-                <p className="text-lg font-bold text-blue-600">{cartItems ? cartItems.length : 0}</p>
+                          <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <p className="text-sm text-gray-600">Items en carrito</p>
+                  <p className="text-lg font-bold text-blue-600">{getItemCount()}</p>
+                </div>
+                <Button 
+                  type="primary" 
+                  icon={<ShoppingCartOutlined />}
+                  onClick={handleProceedToCart}
+                  disabled={getItemCount() === 0}
+                >
+                  Ver Carrito
+                </Button>
               </div>
-              <Button 
-                type="primary" 
-                icon={<ShoppingCartOutlined />}
-                onClick={handleProceedToCart}
-                disabled={!cartItems || cartItems.length === 0}
-              >
-                Ver Carrito
-              </Button>
-            </div>
           </div>
         </div>
       </div>

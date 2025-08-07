@@ -9,6 +9,7 @@ import PaymentModal from './PaymentModal';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 import { supabase } from '../../../supabaseClient';
+import resolveImageUrl from '../../../utils/resolveImageUrl';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -43,7 +44,6 @@ const BoleteriaMain = () => {
   
   // Estados para funcionalidades
   const [showEventSearch, setShowEventSearch] = useState(false);
-  const [showProducts, setShowProducts] = useState(false);
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);
 
   const [availableEvents, setAvailableEvents] = useState([]);
@@ -84,10 +84,165 @@ const BoleteriaMain = () => {
   const [locatorSearchValue, setLocatorSearchValue] = useState('');
   const [locatorSearchLoading, setLocatorSearchLoading] = useState(false);
 
+  // Función para obtener las imágenes del evento
+  const getEventImages = () => {
+    if (!selectedEvent?.imagenes) return {};
+    
+    try {
+      if (typeof selectedEvent.imagenes === 'string') {
+        return JSON.parse(selectedEvent.imagenes);
+      }
+      return selectedEvent.imagenes;
+    } catch (e) {
+      console.error('Error parsing event images:', e);
+      return {};
+    }
+  };
+
+  const images = getEventImages();
+  const thumbnailImage = images.portada || images.obraImagen || images.banner;
+
   useEffect(() => {
     loadAvailableEvents();
     loadPlantillasPrecios();
+    loadPersistedData();
   }, []);
+
+  // Cargar datos persistidos
+  const loadPersistedData = () => {
+    try {
+      const savedSeats = localStorage.getItem('selectedSeats');
+      if (savedSeats) {
+        setSelectedSeats(JSON.parse(savedSeats));
+      }
+      
+      const savedProducts = localStorage.getItem('productosCarrito');
+      if (savedProducts) {
+        setProductosCarrito(JSON.parse(savedProducts));
+      }
+    } catch (error) {
+      console.error('Error loading persisted data:', error);
+    }
+  };
+
+  // Guardar datos en localStorage
+  useEffect(() => {
+    localStorage.setItem('selectedSeats', JSON.stringify(selectedSeats));
+  }, [selectedSeats]);
+
+  useEffect(() => {
+    localStorage.setItem('productosCarrito', JSON.stringify(productosCarrito));
+  }, [productosCarrito]);
+
+  const loadSavedCarts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('saved_carts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading saved carts:', error);
+        return;
+      }
+
+      setSavedCarts(data || []);
+    } catch (error) {
+      console.error('Error loading saved carts:', error);
+    }
+  };
+
+  const saveCurrentCart = async () => {
+    if (!selectedClient) {
+      message.error('Selecciona un cliente antes de guardar el carrito');
+      return;
+    }
+
+    try {
+      const cartData = {
+        client_id: selectedClient.id,
+        event_id: selectedEvent?.id,
+        function_id: selectedFuncion?.id,
+        seats: selectedSeats,
+        products: productosCarrito,
+        total: calculateTotal(),
+        created_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('saved_carts')
+        .insert([cartData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      message.success('Carrito guardado correctamente');
+      loadSavedCarts();
+    } catch (error) {
+      console.error('Error saving cart:', error);
+      message.error('Error al guardar el carrito');
+    }
+  };
+
+  const loadSavedCart = async (cartId) => {
+    try {
+      const { data, error } = await supabase
+        .from('saved_carts')
+        .select('*')
+        .eq('id', cartId)
+        .single();
+
+      if (error) throw error;
+
+      // Cargar cliente
+      if (data.client_id) {
+        const { data: client } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.client_id)
+          .single();
+        setSelectedClient(client);
+      }
+
+      // Cargar evento y función
+      if (data.event_id) {
+        const { data: event } = await supabase
+          .from('eventos')
+          .select('*')
+          .eq('id', data.event_id)
+          .single();
+        setSelectedEvent(event);
+      }
+
+      if (data.function_id) {
+        const { data: func } = await supabase
+          .from('funciones')
+          .select('*, sala(*)')
+          .eq('id', data.function_id)
+          .single();
+        setSelectedFuncion(func);
+      }
+
+      // Cargar asientos y productos
+      setSelectedSeats(data.seats || []);
+      setProductosCarrito(data.products || []);
+
+      message.success('Carrito cargado correctamente');
+    } catch (error) {
+      console.error('Error loading saved cart:', error);
+      message.error('Error al cargar el carrito');
+    }
+  };
+
+  const clearCart = () => {
+    setSelectedSeats([]);
+    setProductosCarrito([]);
+    setSelectedPriceOption(null);
+    setSelectedDiscount(null);
+    setDiscountAmount(0);
+    message.success('Carrito limpiado');
+  };
 
   // Atajos de teclado
   useEffect(() => {
@@ -102,11 +257,7 @@ const BoleteriaMain = () => {
         event.preventDefault();
         setShowUserSearch(true);
       }
-      // Ctrl/Cmd + P: Productos
-      if ((event.ctrlKey || event.metaKey) && event.key === 'p') {
-        event.preventDefault();
-        setShowProducts(true);
-      }
+      
       // Ctrl/Cmd + D: Descuentos
       if ((event.ctrlKey || event.metaKey) && event.key === 'd') {
         event.preventDefault();
@@ -122,14 +273,13 @@ const BoleteriaMain = () => {
         event.preventDefault();
         exportEventData();
       }
-             // Escape: Cerrar modales
-       if (event.key === 'Escape') {
-         setShowEventSearch(false);
-         setShowUserSearch(false);
-         setShowProducts(false);
-         setShowDiscountModal(false);
-         setShowLocatorSearch(false);
-       }
+                     // Escape: Cerrar modales
+        if (event.key === 'Escape') {
+          setShowEventSearch(false);
+          setShowUserSearch(false);
+          setShowDiscountModal(false);
+          setShowLocatorSearch(false);
+        }
     };
 
     document.addEventListener('keydown', handleKeyPress);
@@ -446,7 +596,8 @@ const BoleteriaMain = () => {
       const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
       return sum + seatPrice;
     }, 0);
-    const productsTotal = productosCarrito.reduce((sum, product) => sum + (product.precio * product.cantidad), 0);
+    const productsTotal = productosCarrito.reduce((sum, product) => 
+      sum + ((product.precio_especial || product.precio) * product.cantidad), 0);
     return seatsTotal + productsTotal;
   };
 
@@ -456,12 +607,29 @@ const BoleteriaMain = () => {
       if (existingProduct) {
         return prev.map(p => 
           p.id === producto.id 
-            ? { ...p, cantidad: p.cantidad + 1 }
+            ? { ...p, cantidad: p.cantidad + producto.cantidad }
             : p
         );
       }
-      return [...prev, { ...producto, cantidad: 1 }];
+      return [...prev, { ...producto, cantidad: producto.cantidad }];
     });
+  };
+
+  const handleProductQuantityChange = (productId, newQuantity) => {
+    if (newQuantity <= 0) {
+      setProductosCarrito(prev => prev.filter(p => p.id !== productId));
+    } else {
+      setProductosCarrito(prev => prev.map(p => 
+        p.id === productId 
+          ? { ...p, cantidad: newQuantity }
+          : p
+      ));
+    }
+  };
+
+  const handleProductRemove = (productId) => {
+    setProductosCarrito(prev => prev.filter(p => p.id !== productId));
+    message.success('Producto removido del carrito');
   };
 
   const handlePriceOptionSelect = (priceOption) => {
@@ -517,7 +685,10 @@ const BoleteriaMain = () => {
       label: 'Productos',
       children: (
         <div className="p-4">
-          <ProductosWidget onProductAdded={handleProductAdded} />
+          <ProductosWidget 
+            eventoId={selectedEvent?.id} 
+            onProductAdded={handleProductAdded} 
+          />
         </div>
       )
     }
@@ -533,18 +704,8 @@ const BoleteriaMain = () => {
             <div>Eventos</div>
           </div>
         </Tooltip>
-        <Tooltip title="Paso 2: Buscar o crear cliente" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowUserSearch(true)}>
-            <UserOutlined className="text-xl mb-1" />
-            <div>Usuarios</div>
-          </div>
-        </Tooltip>
-        <Tooltip title="Agregar productos adicionales" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowProducts(true)}>
-            <GiftOutlined className="text-xl mb-1" />
-            <div>Productos</div>
-          </div>
-        </Tooltip>
+
+
         <Tooltip title="Aplicar descuentos y códigos" placement="right">
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowDiscountModal(true)}>
             <MoneyCollectOutlined className="text-xl mb-1" />
@@ -555,6 +716,12 @@ const BoleteriaMain = () => {
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowLocatorSearch(true)}>
             <SearchOutlined className="text-xl mb-1" />
             <div>Localizador</div>
+          </div>
+        </Tooltip>
+        <Tooltip title="Gestionar carritos guardados" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowCartManagement(true)}>
+            <ShoppingCartOutlined className="text-xl mb-1" />
+            <div>Carritos</div>
           </div>
         </Tooltip>
         <Tooltip title="Exportar datos del evento" placement="right">
@@ -572,17 +739,17 @@ const BoleteriaMain = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
-                {selectedEvent && selectedEvent.imagen_url ? (
+                {selectedEvent && (thumbnailImage || selectedEvent.imagen_url) ? (
                   <img 
-                    src={selectedEvent.imagen_url} 
+                    src={thumbnailImage ? resolveImageUrl(thumbnailImage) : selectedEvent.imagen_url} 
                     alt={selectedEvent.nombre}
-                    className="w-6 h-6 rounded object-cover"
+                    className="w-16 h-16 object-cover rounded-lg mr-3"
                     onError={(e) => {
                       e.target.src = '/assets/logo.png';
                     }}
                   />
                 ) : (
-                  <Avatar size="small" src="/assets/logo.png" alt="Event" />
+                  <Avatar size="large" src="/assets/logo.png" alt="Event" />
                 )}
                 <div className="text-xs">
                   <div className="font-medium">
@@ -729,31 +896,7 @@ const BoleteriaMain = () => {
                 </div>
               )}
               
-                             {selectedPriceOption && (
-                 <div className="mb-2 p-2 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">Precio Seleccionado</h4>
-                  <div className="text-sm space-y-1">
-                                         <div><span className="font-medium">Entrada:</span> {selectedPriceOption.entrada.nombre_entrada}</div>
-                    <div><span className="font-medium">Zona:</span> {selectedPriceOption.zona.nombre}</div>
-                    <div><span className="font-medium">Precio:</span> ${selectedPriceOption.precio.toFixed(2)}</div>
-                    {selectedPriceOption.comision > 0 && (
-                      <div><span className="font-medium">Comisión:</span> ${selectedPriceOption.comision.toFixed(2)}</div>
-                    )}
-                    <div className="mt-2">
-                      <Badge 
-                        count={selectedPriceOption.category === 'cortesia' ? 'Cortesía' : 
-                               selectedPriceOption.category === 'vip' ? 'VIP' : 
-                               selectedPriceOption.category === 'premium' ? 'Premium' : 'Regular'} 
-                        style={{ 
-                          backgroundColor: selectedPriceOption.category === 'cortesia' ? '#52c41a' : 
-                                         selectedPriceOption.category === 'vip' ? '#faad14' : 
-                                         selectedPriceOption.category === 'premium' ? '#722ed1' : '#1890ff'
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+                             
               
                              {/* Asientos seleccionados */}
                {selectedSeats.length > 0 && (
@@ -803,10 +946,45 @@ const BoleteriaMain = () => {
                    }, 0).toFixed(2)}</span>
                  </div>
                  
-                 <div className="flex justify-between">
-                   <span>Productos:</span>
-                   <span>{productosCarrito.reduce((sum, p) => sum + p.cantidad, 0)}, ${productosCarrito.reduce((sum, product) => sum + (product.precio * product.cantidad), 0).toFixed(2)}</span>
-                 </div>
+                                   {productosCarrito.length > 0 && (
+                    <div className="mb-2">
+                      <h4 className="font-medium text-gray-900 mb-2">Productos en Carrito</h4>
+                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                        {productosCarrito.map((producto) => (
+                          <div key={producto.id} className="flex items-center justify-between p-2 bg-green-50 rounded">
+                            <div className="flex-1">
+                              <div className="font-medium text-sm">{producto.nombre}</div>
+                              <div className="text-xs text-gray-600">
+                                ${(producto.precio_especial || producto.precio).toFixed(2)} c/u
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <InputNumber
+                                size="small"
+                                min={1}
+                                value={producto.cantidad}
+                                onChange={(value) => handleProductQuantityChange(producto.id, value)}
+                                style={{ width: 60 }}
+                              />
+                              <Button 
+                                size="small" 
+                                type="text" 
+                                danger
+                                onClick={() => handleProductRemove(producto.id)}
+                              >
+                                ×
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between">
+                    <span>Productos:</span>
+                    <span>{productosCarrito.reduce((sum, p) => sum + p.cantidad, 0)}, ${productosCarrito.reduce((sum, product) => sum + ((product.precio_especial || product.precio) * product.cantidad), 0).toFixed(2)}</span>
+                  </div>
                  
                  <div className="border-t pt-2">
                    <div className="flex justify-between">
@@ -832,24 +1010,41 @@ const BoleteriaMain = () => {
                  </div>
                </div>
               
-                             <div className="mt-6">
-                 <Tooltip title="Paso 6: Procesar pago y completar venta">
-                   <Button 
-                     type="primary" 
-                     size="large" 
-                     block
-                     className="bg-purple-600 hover:bg-purple-700"
-                     onClick={handlePaymentClick}
-                     disabled={!selectedFuncion || !selectedPriceOption || selectedSeats.length === 0 || !selectedClient}
-                   >
-                     {!selectedFuncion ? 'Selecciona un evento' :
-                      !selectedClient ? 'Selecciona un cliente' :
-                      !selectedPriceOption ? 'Selecciona una zona y precio' : 
-                      selectedSeats.length === 0 ? 'Selecciona asientos' : 
-                      `Pagar $${calculateTotal().toFixed(2)}`}
-                   </Button>
-                 </Tooltip>
-               </div>
+                                                           <div className="mt-6 space-y-2">
+                  <div className="flex space-x-2">
+                    <Button 
+                      size="small"
+                      onClick={saveCurrentCart}
+                      disabled={!selectedClient || (selectedSeats.length === 0 && productosCarrito.length === 0)}
+                    >
+                      Guardar Carrito
+                    </Button>
+                    <Button 
+                      size="small"
+                      onClick={clearCart}
+                      disabled={selectedSeats.length === 0 && productosCarrito.length === 0}
+                    >
+                      Limpiar
+                    </Button>
+                  </div>
+                  
+                  <Tooltip title="Paso 6: Procesar pago y completar venta">
+                    <Button 
+                      type="primary" 
+                      size="large" 
+                      block
+                      className="bg-purple-600 hover:bg-purple-700"
+                      onClick={handlePaymentClick}
+                      disabled={!selectedFuncion || !selectedPriceOption || selectedSeats.length === 0 || !selectedClient}
+                    >
+                      {!selectedFuncion ? 'Selecciona un evento' :
+                       !selectedClient ? 'Selecciona un cliente' :
+                       !selectedPriceOption ? 'Selecciona una zona y precio' : 
+                       selectedSeats.length === 0 ? 'Selecciona asientos' : 
+                       `Pagar $${calculateTotal().toFixed(2)}`}
+                    </Button>
+                  </Tooltip>
+                </div>
             </div>
           </div>
         </div>
@@ -902,16 +1097,7 @@ const BoleteriaMain = () => {
 
       
 
-      {/* Drawer de productos */}
-      <Drawer
-        title="Gestión de Productos"
-        placement="right"
-        onClose={() => setShowProducts(false)}
-        open={showProducts}
-        width={600}
-      >
-        <ProductosWidget onProductAdded={handleProductAdded} />
-      </Drawer>
+
 
       {/* Modal de búsqueda de usuarios */}
       <Modal
@@ -1149,19 +1335,100 @@ const BoleteriaMain = () => {
            </div>
          </Modal>
 
-      {/* PaymentModal */}
-      <PaymentModal
-        open={isPaymentModalVisible}
-        onCancel={() => setIsPaymentModalVisible(false)}
-        carrito={selectedSeats}
-        selectedClient={selectedClient}
-        selectedFuncion={selectedFuncion}
-        selectedEvent={selectedEvent}
-        selectedAffiliate={null}
-      />
+             {/* Modal de Gestión de Carritos */}
+       <Modal
+         title="Gestión de Carritos Guardados"
+         open={showCartManagement}
+         onCancel={() => setShowCartManagement(false)}
+         footer={null}
+         width={800}
+       >
+         <div className="space-y-4">
+           <div className="flex justify-between items-center">
+             <h3 className="text-lg font-medium">Carritos Guardados</h3>
+             <Button 
+               type="primary" 
+               onClick={saveCurrentCart}
+               disabled={!selectedClient || (selectedSeats.length === 0 && productosCarrito.length === 0)}
+             >
+               Guardar Carrito Actual
+             </Button>
+           </div>
+           
+           {savedCarts.length === 0 ? (
+             <div className="text-center py-8">
+               <Text type="secondary">No hay carritos guardados</Text>
+             </div>
+           ) : (
+             <div className="space-y-3 max-h-96 overflow-y-auto">
+               {savedCarts.map((cart) => (
+                 <div key={cart.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                   <div className="flex justify-between items-start">
+                     <div className="flex-1">
+                       <div className="font-medium">
+                         Cliente: {cart.client_id ? `ID: ${cart.client_id}` : 'N/A'}
+                       </div>
+                       <div className="text-sm text-gray-600">
+                         Evento: {cart.event_id ? `ID: ${cart.event_id}` : 'N/A'}
+                       </div>
+                       <div className="text-sm text-gray-600">
+                         Asientos: {cart.seats?.length || 0} | Productos: {cart.products?.length || 0}
+                       </div>
+                       <div className="text-sm font-medium text-green-600">
+                         Total: ${cart.total?.toFixed(2) || '0.00'}
+                       </div>
+                       <div className="text-xs text-gray-500">
+                         {new Date(cart.created_at).toLocaleString('es-ES')}
+                       </div>
+                     </div>
+                     <div className="flex space-x-2">
+                       <Button 
+                         size="small" 
+                         type="primary"
+                         onClick={() => loadSavedCart(cart.id)}
+                       >
+                         Cargar
+                       </Button>
+                       <Button 
+                         size="small" 
+                         danger
+                         onClick={async () => {
+                           try {
+                             await supabase
+                               .from('saved_carts')
+                               .delete()
+                               .eq('id', cart.id);
+                             message.success('Carrito eliminado');
+                             loadSavedCarts();
+                           } catch (error) {
+                             message.error('Error al eliminar el carrito');
+                           }
+                         }}
+                       >
+                         Eliminar
+                       </Button>
+                     </div>
+                   </div>
+                 </div>
+               ))}
+             </div>
+           )}
+         </div>
+       </Modal>
 
-    </div>
-  );
-};
+       {/* PaymentModal */}
+       <PaymentModal
+         open={isPaymentModalVisible}
+         onCancel={() => setIsPaymentModalVisible(false)}
+         carrito={selectedSeats}
+         selectedClient={selectedClient}
+         selectedFuncion={selectedFuncion}
+         selectedEvent={selectedEvent}
+         selectedAffiliate={null}
+       />
+
+     </div>
+   );
+ };
 
 export default BoleteriaMain; 

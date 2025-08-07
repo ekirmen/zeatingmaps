@@ -4,16 +4,13 @@ import { ClockCircleOutlined, ShoppingCartOutlined, CloseOutlined } from '@ant-d
 import { useCartStore } from '../cartStore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { notification } from 'antd';
-import { useSeatLockStore } from '../../components/seatLockStore';
 
-const GlobalCartTimer = () => {
+const FloatingTimer = () => {
   const [showTimer, setShowTimer] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const { timeLeft, getItemCount, calculateTotal, items, products, clearCart, cartExpiration } = useCartStore();
+  const { timeLeft, getItemCount, calculateTotal, items, products } = useCartStore();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const unlockSeat = useSeatLockStore(state => state.unlockSeat);
 
   const itemCount = getItemCount();
   const total = calculateTotal();
@@ -22,34 +19,6 @@ const GlobalCartTimer = () => {
   useEffect(() => {
     setShowTimer(itemCount > 0);
   }, [itemCount]);
-
-  // Verificar expiración del carrito
-  useEffect(() => {
-    if (!cartExpiration) return;
-
-    const checkExpiration = async () => {
-      if (Date.now() > cartExpiration) {
-        notification.warning({
-          message: 'Tu selección ha expirado',
-          description: 'Hemos liberado los asientos de tu carrito por inactividad.',
-          placement: 'topRight',
-        });
-
-        // Liberar asientos
-        for (const item of items) {
-          await unlockSeat(
-            item.sillaId || item.id || item._id,
-            item.functionId || item.funcionId
-          );
-        }
-
-        clearCart();
-      }
-    };
-
-    const timeoutId = setTimeout(checkExpiration, cartExpiration - Date.now() + 1000);
-    return () => clearTimeout(timeoutId);
-  }, [cartExpiration, items, unlockSeat, clearCart]);
 
   // Formatear el tiempo restante
   const formatTime = (seconds) => {
@@ -190,4 +159,4 @@ const GlobalCartTimer = () => {
   );
 };
 
-export default GlobalCartTimer;
+export default FloatingTimer;

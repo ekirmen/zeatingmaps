@@ -4,6 +4,7 @@ import { RefProvider } from '../contexts/RefContext'; // 👈 IMPORTANTE
 import Header from './components/StoreHeader';
 import BasicFooter from '../components/BasicFooter';
 import GlobalCartTimer from './components/GlobalCartTimer';
+import ProtectedRoute from './components/ProtectedRoute';
 
 import Event from './pages/Event';
 import EventsVenue from './pages/EventsVenue';
@@ -58,7 +59,11 @@ const StoreApp = () => {
               <Route path="/store/select-seats/:salaId/:funcionId" element={<SelectSeats />} />
               <Route path="/store/seat-selection/:funcionId" element={<SeatSelectionPage />} />
               <Route path="/store/cart" element={<CartPage />} />
-              <Route path="/store/payment" element={<Pay />} />
+              <Route path="/store/payment" element={
+                <ProtectedRoute>
+                  <Pay />
+                </ProtectedRoute>
+              } />
               <Route path="/store/login" element={<StoreLogin />} />
               <Route path="/store/register" element={<Register />} />
               <Route path="/store/forgot-password" element={<ForgotPassword />} />
