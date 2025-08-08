@@ -40,6 +40,8 @@ export const getCmsPage = async (slug) => {
  */
 export const getFunciones = async (eventId) => {
   try {
+    console.log('[getFunciones DEBUG] Iniciando búsqueda de funciones para evento:', eventId);
+    
     // Primero obtener el evento para obtener su tenant_id
     const { data: eventoData, error: eventoError } = await supabase
       .from('eventos')
@@ -48,14 +50,16 @@ export const getFunciones = async (eventId) => {
       .single();
 
     if (eventoError) {
-      console.error('Error fetching evento tenant:', eventoError.message);
+      console.error('[getFunciones DEBUG] Error fetching evento tenant:', eventoError.message);
       throw eventoError;
     }
 
     if (!eventoData) {
-      console.error('Evento no encontrado');
+      console.error('[getFunciones DEBUG] Evento no encontrado');
       return [];
     }
+
+    console.log('[getFunciones DEBUG] Evento encontrado, tenant_id:', eventoData.tenant_id);
 
     // Ahora obtener las funciones filtrando por tenant_id
     const { data, error } = await supabase
@@ -75,9 +79,11 @@ export const getFunciones = async (eventId) => {
       .order('fecha_celebracion', { ascending: true });
 
     if (error) {
-      console.error('Error fetching funciones:', error.message);
+      console.error('[getFunciones DEBUG] Error fetching funciones:', error.message);
       throw error;
     }
+
+    console.log('[getFunciones DEBUG] Funciones encontradas:', data?.length || 0, 'funciones');
 
     // Transformar datos al formato esperado por el frontend
     const transformedData = (data || []).map(funcion => ({
@@ -94,9 +100,10 @@ export const getFunciones = async (eventId) => {
       }
     }));
 
+    console.log('[getFunciones DEBUG] Datos transformados:', transformedData);
     return transformedData;
   } catch (error) {
-    console.error('Unexpected error in getFunciones:', error);
+    console.error('[getFunciones DEBUG] Unexpected error in getFunciones:', error);
     throw error;
   }
 };
