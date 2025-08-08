@@ -1,52 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Progress, Alert, Tabs, Badge, Tooltip, Avatar, Switch, message, notification, Descriptions, Divider, List, Timeline, Drawer, TreeSelect, Dropdown, Menu, BellOutlined, ExclamationCircleOutlined, CheckCircleOutlined, ClockCircleOutlined } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Alert, Tabs, Badge, Avatar, message, Descriptions, Divider, List, Drawer, Dropdown, Menu } from 'antd';
 import { 
   UserOutlined, 
   BankOutlined, 
   DollarOutlined, 
   CheckCircleOutlined, 
-  ExclamationCircleOutlined, 
   PlusOutlined, 
   EditOutlined, 
   DeleteOutlined, 
   EyeOutlined,
   SettingOutlined,
   BarChartOutlined,
-  TeamOutlined,
   GlobalOutlined,
-  SafetyCertificateOutlined,
   CustomerServiceOutlined,
   ToolOutlined,
   DatabaseOutlined,
   KeyOutlined,
-  MailOutlined,
-  PhoneOutlined,
   CalendarOutlined,
   ShoppingOutlined,
-  SearchOutlined,
   FilterOutlined,
   ReloadOutlined,
   ExportOutlined,
-  ImportOutlined,
-  CopyOutlined,
-  LinkOutlined,
   FileTextOutlined,
   CreditCardOutlined,
-  ClockCircleOutlined,
-  CheckCircleFilled,
-  CloseCircleFilled,
-  WarningFilled,
-  NotificationOutlined,
-  HistoryOutlined,
-  BackupOutlined,
-  RestoreOutlined,
+  CloudUploadOutlined,
   AuditOutlined,
-  TemplateOutlined,
-  SupportOutlined
+  BellOutlined,
+  ExclamationCircleOutlined,
+  DownOutlined,
+  RiseOutlined,
+  FallOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 const { TabPane } = Tabs;
 const { Search } = Input;
@@ -65,10 +52,6 @@ const SaasDashboard = () => {
   
   // Nuevos estados para funcionalidades mejoradas
   const [notifications, setNotifications] = useState([]);
-  const [supportTickets, setSupportTickets] = useState([]);
-  const [auditLogs, setAuditLogs] = useState([]);
-  const [backupHistory, setBackupHistory] = useState([]);
-  const [templates, setTemplates] = useState([]);
   const [filters, setFilters] = useState({
     status: 'all',
     plan: 'all',
@@ -96,19 +79,8 @@ const SaasDashboard = () => {
     criticalAlerts: 0
   });
 
-  // Cargar datos iniciales
-  useEffect(() => {
-    loadTenants();
-    loadStats();
-    loadNotifications();
-    loadSupportTickets();
-    loadAuditLogs();
-    loadAdvancedMetrics();
-    loadTemplates();
-  }, []);
-
   // Cargar notificaciones
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('notifications')
@@ -122,41 +94,10 @@ const SaasDashboard = () => {
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
-  };
-
-  // Cargar tickets de soporte
-  const loadSupportTickets = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .select('*, tenants(company_name)')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setSupportTickets(data || []);
-    } catch (error) {
-      console.error('Error loading support tickets:', error);
-    }
-  };
-
-  // Cargar logs de auditoría
-  const loadAuditLogs = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('audit_logs')
-        .select('*, tenants(company_name)')
-        .order('created_at', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-      setAuditLogs(data || []);
-    } catch (error) {
-      console.error('Error loading audit logs:', error);
-    }
-  };
+  }, []);
 
   // Cargar métricas avanzadas
-  const loadAdvancedMetrics = async () => {
+  const loadAdvancedMetrics = useCallback(async () => {
     try {
       // Cálculo de crecimiento mensual
       const lastMonth = new Date();
@@ -188,92 +129,46 @@ const SaasDashboard = () => {
     } catch (error) {
       console.error('Error loading advanced metrics:', error);
     }
-  };
+  }, []);
 
-  // Cargar templates
-  const loadTemplates = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('support_templates')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setTemplates(data || []);
-    } catch (error) {
-      console.error('Error loading templates:', error);
-    }
-  };
-
-  // Función para registrar auditoría
   const logAuditAction = async (action, details, tenantId = null) => {
     try {
-      await supabase
-        .from('audit_logs')
-        .insert([{
-          action,
-          details,
-          tenant_id: tenantId,
-          admin_user_id: (await supabase.auth.getUser()).data.user?.id,
-          ip_address: 'system',
-          user_agent: 'admin-panel'
-        }]);
+      await supabase.from('audit_logs').insert({
+        action,
+        details,
+        tenant_id: tenantId,
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('Error logging audit action:', error);
     }
   };
 
-  // Función para crear backup
   const createBackup = async (tenantId) => {
     try {
-      const { data, error } = await supabase
-        .from('backups')
-        .insert([{
-          tenant_id: tenantId,
-          backup_type: 'manual',
-          status: 'completed',
-          file_size: '2.5MB',
-          backup_data: { message: 'Backup created successfully' }
-        }]);
+      const { error } = await supabase.from('backups').insert({
+        tenant_id: tenantId,
+        backup_type: 'manual',
+        status: 'completed',
+        created_at: new Date().toISOString()
+      });
 
       if (error) throw error;
-      
       message.success('Backup creado exitosamente');
-      logAuditAction('backup_created', `Backup created for tenant ${tenantId}`, tenantId);
+      await logAuditAction('backup_created', { tenant_id: tenantId });
     } catch (error) {
       console.error('Error creating backup:', error);
       message.error('Error al crear backup');
     }
   };
 
-  // Función para restaurar backup
-  const restoreBackup = async (backupId, tenantId) => {
-    try {
-      const { error } = await supabase
-        .from('backups')
-        .update({ status: 'restored' })
-        .eq('id', backupId);
-
-      if (error) throw error;
-      
-      message.success('Backup restaurado exitosamente');
-      logAuditAction('backup_restored', `Backup ${backupId} restored for tenant ${tenantId}`, tenantId);
-    } catch (error) {
-      console.error('Error restoring backup:', error);
-      message.error('Error al restaurar backup');
-    }
-  };
-
-  // Cargar tenants con filtros
-  const loadTenants = async () => {
+  const loadTenants = useCallback(async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('tenants')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      // Aplicar filtros
+      let query = supabase.from('tenants').select('*');
+      
+      // Aplicar filtros avanzados
       if (filters.status !== 'all') {
         query = query.eq('status', filters.status);
       }
@@ -281,61 +176,71 @@ const SaasDashboard = () => {
         query = query.eq('plan_type', filters.plan);
       }
       if (filters.searchTerm) {
-        query = query.or(`company_name.ilike.%${filters.searchTerm}%,contact_email.ilike.%${filters.searchTerm}%`);
+        query = query.or(`company_name.ilike.%${filters.searchTerm}%,email.ilike.%${filters.searchTerm}%`);
       }
-
-      const { data, error } = await query;
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
       if (error) throw error;
       setTenants(data || []);
     } catch (error) {
       console.error('Error loading tenants:', error);
-      message.error('Error al cargar empresas');
+      message.error('Error al cargar tenants');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
-      // Estadísticas básicas
-      const [tenantsData, invoicesData, eventsData, usersData, productsData, salesData, ticketsData, alertsData] = await Promise.all([
-        supabase.from('tenants').select('status, plan_type'),
-        supabase.from('invoices').select('amount, status'),
-        supabase.from('eventos').select('id'),
-        supabase.from('usuarios').select('id'),
-        supabase.from('productos').select('id'),
-        supabase.from('ventas').select('id, monto'),
-        supabase.from('support_tickets').select('status'),
-        supabase.from('notifications').select('priority')
+      const [
+        { count: totalTenants },
+        { count: activeTenants },
+        { data: revenueData },
+        { count: totalEvents },
+        { count: totalUsers },
+        { count: totalProducts },
+        { count: totalSales },
+        { count: pendingTickets },
+        { count: criticalAlerts }
+      ] = await Promise.all([
+        supabase.from('tenants').select('*', { count: 'exact', head: true }),
+        supabase.from('tenants').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+        supabase.from('tenants').select('total_revenue'),
+        supabase.from('eventos').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('productos').select('*', { count: 'exact', head: true }),
+        supabase.from('ventas').select('*', { count: 'exact', head: true }),
+        supabase.from('support_tickets').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('system_alerts').select('*', { count: 'exact', head: true }).eq('priority', 'critical')
       ]);
 
-      const totalTenants = tenantsData.data?.length || 0;
-      const activeTenants = tenantsData.data?.filter(t => t.status === 'active').length || 0;
-      const totalRevenue = invoicesData.data?.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.amount || 0), 0) || 0;
-      const pendingInvoices = invoicesData.data?.filter(i => i.status === 'pending').length || 0;
-      const totalEvents = eventsData.data?.length || 0;
-      const totalUsers = usersData.data?.length || 0;
-      const totalProducts = productsData.data?.length || 0;
-      const totalSales = salesData.data?.length || 0;
-      const pendingTickets = ticketsData.data?.filter(t => t.status === 'open').length || 0;
-      const criticalAlerts = alertsData.data?.filter(a => a.priority === 'critical').length || 0;
+      const totalRevenue = revenueData?.reduce((sum, tenant) => sum + (tenant.total_revenue || 0), 0) || 0;
 
       setStats({
-        totalTenants,
-        activeTenants,
+        totalTenants: totalTenants || 0,
+        activeTenants: activeTenants || 0,
         totalRevenue,
-        pendingInvoices,
-        totalEvents,
-        totalUsers,
-        totalProducts,
-        totalSales,
-        pendingSupportTickets: pendingTickets,
-        criticalAlerts
+        pendingInvoices: 0, // Placeholder
+        totalEvents: totalEvents || 0,
+        totalUsers: totalUsers || 0,
+        totalProducts: totalProducts || 0,
+        totalSales: totalSales || 0,
+        pendingSupportTickets: pendingTickets || 0,
+        criticalAlerts: criticalAlerts || 0
       });
     } catch (error) {
       console.error('Error loading stats:', error);
     }
-  };
+  }, []);
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    loadTenants();
+    loadStats();
+    loadNotifications();
+    loadAdvancedMetrics();
+  }, [loadTenants, loadStats, loadNotifications, loadAdvancedMetrics]);
 
   const handleAddTenant = () => {
     setEditingTenant(null);
@@ -346,14 +251,12 @@ const SaasDashboard = () => {
   const handleEditTenant = (tenant) => {
     setEditingTenant(tenant);
     form.setFieldsValue({
-      subdomain: tenant.subdomain,
       company_name: tenant.company_name,
-      contact_email: tenant.contact_email,
-      contact_phone: tenant.contact_phone,
+      email: tenant.email,
       plan_type: tenant.plan_type,
       status: tenant.status,
-      primary_color: tenant.primary_color,
-      logo_url: tenant.logo_url
+      max_users: tenant.max_users,
+      max_events: tenant.max_events
     });
     setModalVisible(true);
   };
@@ -370,37 +273,37 @@ const SaasDashboard = () => {
 
   const handleViewClientData = async (tenant, dataType) => {
     setSelectedTenant(tenant);
-    setSelectedClientData({ type: dataType, tenant });
+    setSelectedClientData({ tenant, dataType });
     setClientDataDrawerVisible(true);
   };
 
   const handleSaveTenant = async (values) => {
     try {
       if (editingTenant) {
-        // Actualizar tenant existente
         const { error } = await supabase
           .from('tenants')
           .update(values)
           .eq('id', editingTenant.id);
-
+        
         if (error) throw error;
-        message.success('Empresa actualizada correctamente');
+        message.success('Tenant actualizado exitosamente');
+        await logAuditAction('tenant_updated', { tenant_id: editingTenant.id, changes: values });
       } else {
-        // Crear nuevo tenant
         const { error } = await supabase
           .from('tenants')
           .insert([values]);
-
+        
         if (error) throw error;
-        message.success('Empresa creada correctamente');
+        message.success('Tenant creado exitosamente');
+        await logAuditAction('tenant_created', { tenant_data: values });
       }
-
+      
       setModalVisible(false);
       loadTenants();
       loadStats();
     } catch (error) {
       console.error('Error saving tenant:', error);
-      message.error('Error al guardar empresa');
+      message.error('Error al guardar tenant');
     }
   };
 
@@ -410,120 +313,19 @@ const SaasDashboard = () => {
         .from('tenants')
         .delete()
         .eq('id', tenantId);
-
+      
       if (error) throw error;
-      message.success('Empresa eliminada correctamente');
+      message.success('Tenant eliminado exitosamente');
+      await logAuditAction('tenant_deleted', { tenant_id: tenantId });
       loadTenants();
       loadStats();
     } catch (error) {
       console.error('Error deleting tenant:', error);
-      message.error('Error al eliminar empresa');
+      message.error('Error al eliminar tenant');
     }
   };
 
-  const handleSupportActionAsync = async (action, data) => {
-    try {
-      let query;
-      
-      switch (action) {
-        case 'update_event':
-          query = supabase
-            .from('eventos')
-            .update(data)
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        case 'update_user':
-          query = supabase
-            .from('usuarios')
-            .update(data)
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        case 'update_product':
-          query = supabase
-            .from('productos')
-            .update(data)
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        case 'delete_event':
-          query = supabase
-            .from('eventos')
-            .delete()
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        case 'update_ticket':
-          query = supabase
-            .from('entradas')
-            .update(data)
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        case 'update_function':
-          query = supabase
-            .from('funciones')
-            .update(data)
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        case 'update_venue':
-          query = supabase
-            .from('recintos')
-            .update(data)
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        case 'update_commission':
-          query = supabase
-            .from('comisiones')
-            .update(data)
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        case 'update_zone':
-          query = supabase
-            .from('zonas')
-            .update(data)
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        case 'update_customization':
-          query = supabase
-            .from('personalizacion')
-            .update(data)
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        case 'update_sale':
-          query = supabase
-            .from('ventas')
-            .update(data)
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        case 'update_report':
-          query = supabase
-            .from('reportes')
-            .update(data)
-            .eq('id', data.id)
-            .eq('tenant_id', selectedTenant.id);
-          break;
-        default:
-          throw new Error('Acción no válida');
-      }
 
-      const { error } = await query;
-      if (error) throw error;
-
-      message.success('Acción realizada correctamente');
-      setSupportModalVisible(false);
-    } catch (error) {
-      console.error('Error in support action:', error);
-      message.error('Error al realizar la acción');
-    }
-  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -617,13 +419,13 @@ const SaasDashboard = () => {
               <Menu.Item key="support" icon={<CustomerServiceOutlined />} onClick={() => handleSupportAction(record)}>
                 Soporte
               </Menu.Item>
-              <Menu.Item key="backup" icon={<BackupOutlined />} onClick={() => createBackup(record.id)}>
+              <Menu.Item key="backup" icon={<CloudUploadOutlined />} onClick={() => createBackup(record.id)}>
                 Crear Backup
               </Menu.Item>
               <Menu.Item key="audit" icon={<AuditOutlined />} onClick={() => message.info(`Ver logs de ${record.company_name}`)}>
                 Ver Auditoría
               </Menu.Item>
-              <Menu.Item key="templates" icon={<TemplateOutlined />} onClick={() => message.info(`Templates para ${record.company_name}`)}>
+              <Menu.Item key="templates" icon={<FileTextOutlined />} onClick={() => message.info(`Templates para ${record.company_name}`)}>
                 Templates
               </Menu.Item>
               <Menu.Divider />
@@ -676,7 +478,7 @@ const SaasDashboard = () => {
             
             <Dropdown overlay={
               <Menu>
-                <Menu.Item key="tickets" icon={<SupportOutlined />}>
+                <Menu.Item key="tickets" icon={<CustomerServiceOutlined />}>
                   Tickets de Soporte ({stats.pendingSupportTickets})
                 </Menu.Item>
                 <Menu.Item key="alerts" icon={<ExclamationCircleOutlined />}>
@@ -685,7 +487,7 @@ const SaasDashboard = () => {
                 <Menu.Item key="audit" icon={<AuditOutlined />}>
                   Logs de Auditoría
                 </Menu.Item>
-                <Menu.Item key="backup" icon={<BackupOutlined />}>
+                <Menu.Item key="backup" icon={<CloudUploadOutlined />}>
                   Gestión de Backups
                 </Menu.Item>
               </Menu>
@@ -807,7 +609,7 @@ const SaasDashboard = () => {
             <Statistic
               title="Tickets Pendientes"
               value={stats.pendingSupportTickets}
-              prefix={<SupportOutlined />}
+              prefix={<CustomerServiceOutlined />}
               valueStyle={{ color: '#fa8c16' }}
             />
           </Card>
@@ -947,10 +749,10 @@ const SaasDashboard = () => {
             <Button icon={<AuditOutlined />} onClick={() => message.info('Ver logs de auditoría')}>
               Auditoría
             </Button>
-            <Button icon={<BackupOutlined />} onClick={() => message.info('Gestión de backups')}>
+            <Button icon={<CloudUploadOutlined />} onClick={() => message.info('Gestión de backups')}>
               Backups
             </Button>
-            <Button icon={<TemplateOutlined />} onClick={() => message.info('Templates de soporte')}>
+            <Button icon={<FileTextOutlined />} onClick={() => message.info('Templates de soporte')}>
               Templates
             </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTenant}>
@@ -989,15 +791,6 @@ const SaasDashboard = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="subdomain"
-                label="Subdominio"
-                rules={[{ required: true, message: 'Subdominio requerido' }]}
-              >
-                <Input addonAfter=".ticketera.com" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
                 name="company_name"
                 label="Nombre de la Empresa"
                 rules={[{ required: true, message: 'Nombre requerido' }]}
@@ -1005,22 +798,11 @@ const SaasDashboard = () => {
                 <Input />
               </Form.Item>
             </Col>
-          </Row>
-
-          <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="contact_email"
+                name="email"
                 label="Email de Contacto"
                 rules={[{ required: true, type: 'email', message: 'Email válido requerido' }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="contact_phone"
-                label="Teléfono"
               >
                 <Input />
               </Form.Item>
@@ -1049,8 +831,8 @@ const SaasDashboard = () => {
               >
                 <Select>
                   <Option value="active">Activo</Option>
-                  <Option value="inactive">Inactivo</Option>
                   <Option value="suspended">Suspendido</Option>
+                  <Option value="inactive">Inactivo</Option>
                   <Option value="pending">Pendiente</Option>
                 </Select>
               </Form.Item>
@@ -1060,18 +842,18 @@ const SaasDashboard = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name="primary_color"
-                label="Color Principal"
+                name="max_users"
+                label="Usuarios Máximos"
               >
-                <Input type="color" />
+                <Input type="number" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
-                name="logo_url"
-                label="URL del Logo"
+                name="max_events"
+                label="Eventos Máximos"
               >
-                <Input />
+                <Input type="number" />
               </Form.Item>
             </Col>
           </Row>
@@ -1102,7 +884,7 @@ const SaasDashboard = () => {
             <Descriptions bordered column={2}>
               <Descriptions.Item label="Empresa">{selectedTenant.company_name}</Descriptions.Item>
               <Descriptions.Item label="Subdominio">{selectedTenant.subdomain}.ticketera.com</Descriptions.Item>
-              <Descriptions.Item label="Email">{selectedTenant.contact_email}</Descriptions.Item>
+              <Descriptions.Item label="Email">{selectedTenant.email}</Descriptions.Item>
               <Descriptions.Item label="Teléfono">{selectedTenant.contact_phone}</Descriptions.Item>
               <Descriptions.Item label="Plan">
                 <Tag color={getPlanColor(selectedTenant.plan_type)}>
@@ -1311,11 +1093,7 @@ const TenantEventsSupport = ({ tenant, onAction }) => {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadEvents();
-  }, [tenant]);
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('eventos')
@@ -1330,7 +1108,11 @@ const TenantEventsSupport = ({ tenant, onAction }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenant]);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   const handleUpdateEvent = async (eventId, updates) => {
     await onAction('update_event', { id: eventId, ...updates });
@@ -1376,14 +1158,10 @@ const TenantUsersSupport = ({ tenant, onAction }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadUsers();
-  }, [tenant]);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       const { data, error } = await supabase
-        .from('usuarios')
+        .from('profiles')
         .select('*')
         .eq('tenant_id', tenant.id)
         .order('created_at', { ascending: false });
@@ -1395,7 +1173,11 @@ const TenantUsersSupport = ({ tenant, onAction }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenant]);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const handleUpdateUser = async (userId, updates) => {
     await onAction('update_user', { id: userId, ...updates });
@@ -1433,11 +1215,7 @@ const TenantProductsSupport = ({ tenant, onAction }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadProducts();
-  }, [tenant]);
-
-  const loadProducts = async () => {
+  const loadProducts = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('productos')
@@ -1452,7 +1230,11 @@ const TenantProductsSupport = ({ tenant, onAction }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenant]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   const handleUpdateProduct = async (productId, updates) => {
     await onAction('update_product', { id: productId, ...updates });
@@ -1531,11 +1313,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, [tenant, dataType]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       let query;
       switch (dataType) {
@@ -1543,7 +1321,7 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
           query = supabase.from('eventos').select('*').eq('tenant_id', tenant.id);
           break;
         case 'users':
-          query = supabase.from('usuarios').select('*').eq('tenant_id', tenant.id);
+          query = supabase.from('profiles').select('*').eq('tenant_id', tenant.id);
           break;
         case 'products':
           query = supabase.from('productos').select('*').eq('tenant_id', tenant.id);
@@ -1584,9 +1362,13 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenant, dataType]);
 
-  const renderDataItem = (item) => {
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+    const renderDataItem = (item) => {
     switch (dataType) {
       case 'events':
         return (
