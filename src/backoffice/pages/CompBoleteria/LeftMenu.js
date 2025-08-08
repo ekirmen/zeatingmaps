@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Input, Card, Table, Tag, Form, Button, message, Select, Checkbox } from 'antd';
-import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit, AiOutlineSetting } from 'react-icons/ai';
+import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit, AiOutlineSetting, AiOutlineMenu, AiOutlineDown, AiOutlineUp } from 'react-icons/ai';
 import { supabase } from '../../../supabaseClient';
 import { supabaseAdmin } from '../../../supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
@@ -12,6 +12,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const [searchTerm, setSearchTerm] = useState('');
   const [emailSearchResults, setEmailSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
   const [userData, setUserData] = useState(null);
   const [ticketData, setTicketData] = useState(null);
@@ -243,42 +244,64 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     if (typeof onClientRemove === 'function') onClientRemove();
   };
 
+  const toggleMenu = () => {
+    setIsMenuCollapsed(!isMenuCollapsed);
+  };
+
   return (
-    <div className="p-4 space-y-4 bg-white shadow rounded">
-      <Button icon={<AiOutlineSearch />} onClick={() => setIsSearchModalVisible(true)} block>
-        Buscar Tickets
-      </Button>
+    <div className="relative">
+      {/* Botón para mostrar/ocultar menú */}
+      <div className="absolute top-0 right-0 z-10">
+        <Button
+          type="text"
+          icon={isMenuCollapsed ? <AiOutlineDown /> : <AiOutlineUp />}
+          onClick={toggleMenu}
+          className="bg-white shadow-md rounded-full w-8 h-8 flex items-center justify-center"
+          title={isMenuCollapsed ? "Mostrar menú" : "Ocultar menú"}
+        />
+      </div>
 
-      <Button
-        icon={<AiOutlineUserAdd />}
-        onClick={() => setIsAccountModalVisible(true)}
-        block
-      >
-        Buscar/Añadir Cuenta
-      </Button>
+      {/* Menú colapsible */}
+      <div className={`transition-all duration-300 ease-in-out ${
+        isMenuCollapsed ? 'h-0 opacity-0 overflow-hidden' : 'h-auto opacity-100'
+      }`}>
+        <div className="p-4 space-y-4 bg-white shadow rounded">
+          <Button icon={<AiOutlineSearch />} onClick={() => setIsSearchModalVisible(true)} block>
+            Buscar Tickets
+          </Button>
 
-      <Button
-        icon={<AiOutlineSetting />}
-        onClick={() => setIsConfigModalVisible(true)}
-        block
-      >
-        Configuración
-      </Button>
+          <Button
+            icon={<AiOutlineUserAdd />}
+            onClick={() => setIsAccountModalVisible(true)}
+            block
+          >
+            Buscar/Añadir Cuenta
+          </Button>
 
-      {userData && (
-        <Card size="small" className="border border-gray-200">
-          <div className="flex justify-between items-center">
-            <div>
-              <div className="font-semibold">{userData.login}</div>
-              <div className="text-sm text-gray-500">{userData.empresa || 'Sin empresa'}</div>
-            </div>
-            <div className="flex gap-2">
-              <Button size="small" icon={<AiOutlineEdit />} onClick={() => setIsAccountModalVisible(true)} />
-              <Button size="small" icon={<AiOutlineClose />} danger onClick={handleClearClient} />
-            </div>
-          </div>
-        </Card>
-      )}
+          <Button
+            icon={<AiOutlineSetting />}
+            onClick={() => setIsConfigModalVisible(true)}
+            block
+          >
+            Configuración
+          </Button>
+
+          {userData && (
+            <Card size="small" className="border border-gray-200">
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="font-semibold">{userData.login}</div>
+                  <div className="text-sm text-gray-500">{userData.empresa || 'Sin empresa'}</div>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="small" icon={<AiOutlineEdit />} onClick={() => setIsAccountModalVisible(true)} />
+                  <Button size="small" icon={<AiOutlineClose />} danger onClick={handleClearClient} />
+                </div>
+              </div>
+            </Card>
+          )}
+        </div>
+      </div>
 
       {/* MODAL búsqueda */}
       <Modal
@@ -338,14 +361,14 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
               </Button>
               {ticketData.status === 'pagado' && (
                 <Button type="default" onClick={() => handleDownloadTicket(ticketData.locator)} block>
-                  Descargar
+                  Descargar Ticket
                 </Button>
               )}
             </div>
           </div>
         )}
 
-        {searchMode === 'email' && emailSearchResults.length > 0 && (
+        {emailSearchResults.length > 0 && (
           <Table
             dataSource={emailSearchResults}
             rowKey="locator"
@@ -353,32 +376,14 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             className="mt-4"
             columns={[
               { title: 'Localizador', dataIndex: 'locator' },
-              { title: 'Evento', dataIndex: ['event', 'nombre'] },
+              { title: 'Estado', dataIndex: 'status' },
+              { title: 'Fecha', dataIndex: 'created_at', render: (date) => new Date(date).toLocaleDateString() },
               {
-                title: 'Función',
-                dataIndex: ['funcion', 'fecha'],
-                render: date => new Date(date).toLocaleString(),
-              },
-              {
-                title: 'Estado',
-                dataIndex: 'status',
-                render: status => (
-                  <Tag color={status === 'pagado' ? 'green' : 'orange'}>{status}</Tag>
-                )
-              },
-              {
-                title: 'Acciones',
+                title: 'Acción',
                 render: (_, record) => (
-                  <>
-                    <Button type="link" onClick={() => handleTicketSearch(record.locator)}>
-                      Ver
-                    </Button>
-                    {record.status === 'pagado' && (
-                      <Button type="link" onClick={() => handleDownloadTicket(record.locator)}>
-                        Descargar
-                      </Button>
-                    )}
-                  </>
+                  <Button type="link" onClick={() => handleTicketSearch(record.locator)}>
+                    Ver
+                  </Button>
                 )
               }
             ]}
@@ -394,12 +399,12 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           setIsAccountModalVisible(false);
           setIsAddingAccount(false);
           setAccountSearchResults([]);
-          form.resetFields();
+          configForm.resetFields();
         }}
         footer={null}
       >
         {isAddingAccount ? (
-          <Form layout="vertical" form={form} onFinish={handleAddAccount}>
+          <Form layout="vertical" form={configForm} onFinish={handleAddAccount}>
             <Form.Item name="login" label="Nombre" rules={[{ required: true }]}>
               <Input />
             </Form.Item>

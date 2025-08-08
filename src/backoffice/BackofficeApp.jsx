@@ -35,6 +35,8 @@ import CompaniasPage from './pages/CompaniasPage';
 import SelectRecintoSala from './pages/SelectRecintoSala';
 import Plano from './pages/Plano';
 import CRM from './pages/CRM';
+import Mailchimp from './pages/Mailchimp';
+import Formularios from './pages/Formularios';
 import Productos from './pages/Productos';
 import PlantillasProductos from './pages/PlantillasProductos';
 import SaasDashboard from './pages/SaasDashboard';
@@ -76,6 +78,9 @@ const BackofficeApp = () => {
         
         {/* CRM */}
         <Route path="clientes" element={<Usuarios />} />
+        <Route path="mailchimp" element={<Mailchimp />} />
+        <Route path="formularios" element={<Formularios />} />
+        <Route path="notificaciones" element={<CRM />} />
         <Route path="fanid" element={<CRM />} />
         <Route path="encuestas" element={<CRM />} />
         <Route path="email-campaigns" element={<EmailCampaigns />} />
@@ -107,34 +112,22 @@ const BackofficeApp = () => {
         {/* Boletería */}
         <Route path="boleteria" element={<BoleteriaMain />} />
         
-        {/* Rutas adicionales para compatibilidad */}
-        <Route path="boleteria-main" element={<BoleteriaMain />} />
-        <Route path="eventos-main" element={<Evento />} />
-        <Route path="salas" element={<Recinto />} />
-        <Route path="iva" element={<CreateIva />} />
-        <Route path="correo" element={<Correo />} />
-        <Route path="crear-mapa" element={<CrearMapaPage />} />
-        <Route path="crear-mapa/:salaId" element={<CrearMapaPage />} />
-        <Route path="web-header" element={<WebHeader />} />
-        <Route path="web-footer" element={<WebFooter />} />
-        <Route path="web-colors" element={<WebColors />} />
-        <Route path="email-page-creator" element={<EmailPageCreator />} />
-        <Route path="referidos" element={<Referidos />} />
-        <Route path="companias" element={<CompaniasPage />} />
-        <Route path="select-recinto-sala" element={<SelectRecintoSala />} />
-        <Route path="pasarelas" element={<PaymentGateways />} />
-        <Route path="analytics" element={<PaymentAnalytics />} />
-        <Route path="reembolsos" element={<RefundManagement />} />
-        <Route path="settings" element={<SystemSettings />} />
-        <Route path="logs" element={<AuditLogs />} />
-        <Route path="printer" element={<PrinterSettings />} />
-        
         {/* Panel SaaS */}
         <Route path="saas" element={<SaasDashboard />} />
-        <Route path="saas/tenant/:tenantId" element={<TenantDetail />} />
         <Route path="saas/settings" element={<SaasSettings />} />
+        <Route path="tenant/:id" element={<TenantDetail />} />
+        
+        {/* Configuración */}
+        <Route path="settings" element={<SystemSettings />} />
+        <Route path="printer-settings" element={<PrinterSettings />} />
+        <Route path="audit-logs" element={<AuditLogs />} />
+        <Route path="refund-management" element={<RefundManagement />} />
+        <Route path="payment-analytics" element={<PaymentAnalytics />} />
+        <Route path="payment-gateways" element={<PaymentGateways />} />
+        
+        {/* Redirecciones */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 };

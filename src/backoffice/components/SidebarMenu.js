@@ -82,6 +82,7 @@ import {
   faCalendarAlt as faSeasonTicketsIcon,
   faCheckCircle,
   faSearch,
+  faBell,
   
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -157,6 +158,9 @@ const SidebarMenu = ({ collapsed }) => {
       submenuId: 'crm',
       items: [
         { title: 'Clientes', path: '/dashboard/clientes', icon: faUsers },
+        { title: 'Mailchimp', path: '/dashboard/mailchimp', icon: faEnvelope },
+        { title: 'Formularios', path: '/dashboard/formularios', icon: faFileAlt },
+        { title: 'Notificaciones', path: '/dashboard/notificaciones', icon: faBell },
         // { title: 'Fan ID', path: '/dashboard/fanid', icon: faIdCard }, // OCULTO
         { title: 'Encuestas', path: '/dashboard/encuestas', icon: faPoll },
         { title: 'Campañas de mailing', path: '/dashboard/email-campaigns', icon: faEnvelope },

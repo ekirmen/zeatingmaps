@@ -263,6 +263,58 @@ const SaasDashboard = () => {
 
   const handleViewTenant = async (tenant) => {
     setSelectedTenant(tenant);
+    
+    // Cargar datos específicos del tenant
+    try {
+      // Cargar eventos del tenant
+      const { data: eventosData } = await supabase
+        .from('eventos')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: false });
+
+      // Cargar usuarios del tenant
+      const { data: usuariosData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: false });
+
+      // Cargar productos del tenant
+      const { data: productosData } = await supabase
+        .from('productos')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: false });
+
+      // Cargar funciones del tenant
+      const { data: funcionesData } = await supabase
+        .from('funciones')
+        .select('*, eventos!inner(*)')
+        .eq('eventos.tenant_id', tenant.id)
+        .order('fecha_celebracion', { ascending: false });
+
+      // Cargar recintos del tenant
+      const { data: recintosData } = await supabase
+        .from('recintos')
+        .select('*')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: false });
+
+      // Actualizar el tenant con los datos cargados
+      setSelectedTenant({
+        ...tenant,
+        eventos: eventosData || [],
+        usuarios: usuariosData || [],
+        productos: productosData || [],
+        funciones: funcionesData || [],
+        recintos: recintosData || []
+      });
+    } catch (error) {
+      console.error('Error loading tenant data:', error);
+      message.error('Error al cargar datos del tenant');
+    }
+    
     setTenantDetailVisible(true);
   };
 
@@ -289,13 +341,23 @@ const SaasDashboard = () => {
         message.success('Tenant actualizado exitosamente');
         await logAuditAction('tenant_updated', { tenant_id: editingTenant.id, changes: values });
       } else {
+        // Para nuevos tenants, no incluir subdomain - se generará automáticamente
+        const tenantData = {
+          ...values,
+          // El trigger en la base de datos generará el subdominio automáticamente
+          status: values.status || 'active',
+          plan_type: values.plan_type || 'basic',
+          max_users: values.max_users || 10,
+          max_events: values.max_events || 50
+        };
+        
         const { error } = await supabase
           .from('tenants')
-          .insert([values]);
+          .insert([tenantData]);
         
         if (error) throw error;
         message.success('Tenant creado exitosamente');
-        await logAuditAction('tenant_created', { tenant_data: values });
+        await logAuditAction('tenant_created', { tenant_data: tenantData });
       }
       
       setModalVisible(false);
