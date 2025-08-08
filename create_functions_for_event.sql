@@ -1,122 +1,77 @@
--- 🚀 Crear Funciones para el Evento
--- Este script crea funciones para el evento existente
+-- 🚀 Crear Funciones para el Evento Específico
+-- Este script crea funciones para el evento c84baabd-c424-407f-b6c3-2051062237b7
 
 -- =====================================================
--- VERIFICAR DATOS EXISTENTES
+-- VERIFICAR SALAS DISPONIBLES
 -- =====================================================
 
--- Verificar evento existente
+-- Mostrar salas del tenant
 SELECT 
-    'EVENTO EXISTENTE' as tipo,
-    id,
-    nombre,
-    slug,
-    fecha_evento,
-    recinto
-FROM eventos 
-WHERE slug = 'evento-prueba-zeatingmaps';
-
--- Verificar recinto existente
-SELECT 
-    'RECINTO EXISTENTE' as tipo,
-    id,
-    nombre,
-    capacidad
-FROM recintos 
-WHERE nombre = 'Estadio de Prueba';
+    'SALAS DISPONIBLES' as tipo,
+    s.id,
+    s.nombre,
+    s.tenant_id
+FROM salas s
+WHERE s.tenant_id = '2b86dc35-49ad-43ea-a50d-a14c55a327cc'
+ORDER BY s.nombre;
 
 -- =====================================================
--- CREAR SALA PARA EL RECINTO
--- =====================================================
-
--- Crear sala si no existe
-INSERT INTO salas (
-    nombre,
-    capacidad,
-    recinto_id
-)
-SELECT 
-    'Sala Principal',
-    2000,
-    r.id
-FROM recintos r
-WHERE r.nombre = 'Estadio de Prueba'
-AND NOT EXISTS (
-    SELECT 1 FROM salas s 
-    WHERE s.nombre = 'Sala Principal' 
-    AND s.recinto_id = r.id
-);
-
--- =====================================================
--- CREAR FUNCIONES PARA EL EVENTO
+-- CREAR FUNCIONES DE EJEMPLO
 -- =====================================================
 
 -- Crear función principal
-INSERT INTO funciones (
-    nombre,
-    fecha,
-    hora,
-    evento_id,
-    sala_id
-)
+INSERT INTO funciones (evento, sala, fecha_celebracion, tenant_id)
 SELECT 
-    'Función Principal',
-    e.fecha_evento,
-    '20:00:00',
-    e.id,
-    s.id
-FROM eventos e
-JOIN salas s ON s.recinto_id = e.recinto
-WHERE e.slug = 'evento-prueba-zeatingmaps'
-AND s.nombre = 'Sala Principal'
-AND NOT EXISTS (
-    SELECT 1 FROM funciones f 
-    WHERE f.evento_id = e.id 
-    AND f.nombre = 'Función Principal'
-);
+    'c84baabd-c424-407f-b6c3-2051062237b7' as evento,
+    s.id as sala,
+    CURRENT_DATE + INTERVAL '30 days' as fecha_celebracion,
+    '2b86dc35-49ad-43ea-a50d-a14c55a327cc' as tenant_id
+FROM salas s
+WHERE s.tenant_id = '2b86dc35-49ad-43ea-a50d-a14c55a327cc'
+LIMIT 1;
 
 -- Crear función adicional
-INSERT INTO funciones (
-    nombre,
-    fecha,
-    hora,
-    evento_id,
-    sala_id
-)
+INSERT INTO funciones (evento, sala, fecha_celebracion, tenant_id)
 SELECT 
-    'Función Matiné',
-    e.fecha_evento,
-    '16:00:00',
-    e.id,
-    s.id
-FROM eventos e
-JOIN salas s ON s.recinto_id = e.recinto
-WHERE e.slug = 'evento-prueba-zeatingmaps'
-AND s.nombre = 'Sala Principal'
-AND NOT EXISTS (
-    SELECT 1 FROM funciones f 
-    WHERE f.evento_id = e.id 
-    AND f.nombre = 'Función Matiné'
-);
+    'c84baabd-c424-407f-b6c3-2051062237b7' as evento,
+    s.id as sala,
+    CURRENT_DATE + INTERVAL '45 days' as fecha_celebracion,
+    '2b86dc35-49ad-43ea-a50d-a14c55a327cc' as tenant_id
+FROM salas s
+WHERE s.tenant_id = '2b86dc35-49ad-43ea-a50d-a14c55a327cc'
+LIMIT 1;
 
 -- =====================================================
 -- VERIFICAR FUNCIONES CREADAS
 -- =====================================================
 
--- Verificar funciones creadas
+-- Mostrar funciones creadas
 SELECT 
     'FUNCIONES CREADAS' as tipo,
     f.id,
-    f.nombre,
-    f.fecha,
-    f.hora,
-    e.nombre as evento,
-    s.nombre as sala
+    f.evento,
+    f.tenant_id,
+    f.fecha_celebracion,
+    e.nombre as evento_nombre,
+    s.nombre as sala_nombre
 FROM funciones f
-JOIN eventos e ON f.evento_id = e.id
-JOIN salas s ON f.sala_id = s.id
-WHERE e.slug = 'evento-prueba-zeatingmaps'
-ORDER BY f.hora;
+LEFT JOIN eventos e ON f.evento = e.id
+LEFT JOIN salas s ON f.sala = s.id
+WHERE f.evento = 'c84baabd-c424-407f-b6c3-2051062237b7'
+AND f.tenant_id = '2b86dc35-49ad-43ea-a50d-a14c55a327cc'
+ORDER BY f.fecha_celebracion;
+
+-- =====================================================
+-- VERIFICAR CONTEO FINAL
+-- =====================================================
+
+-- Contar funciones del evento
+SELECT 
+    'CONTEO FINAL' as tipo,
+    COUNT(*) as total_funciones,
+    COUNT(CASE WHEN tenant_id = '2b86dc35-49ad-43ea-a50d-a14c55a327cc' THEN 1 END) as funciones_correctas
+FROM funciones 
+WHERE evento = 'c84baabd-c424-407f-b6c3-2051062237b7';
 
 -- =====================================================
 -- COMENTARIOS FINALES
@@ -125,15 +80,11 @@ ORDER BY f.hora;
 /*
 INSTRUCCIONES:
 1. Ejecuta este script en el SQL Editor de Supabase
-2. Esto creará funciones para el evento existente
-3. Verifica que puedas ver las funciones en el store
+2. Esto creará 2 funciones para el evento específico
+3. Después, prueba nuevamente en el store
 
-FUNCIONES CREADAS:
-- Función Principal (20:00)
-- Función Matiné (16:00)
-
-PARA VERIFICAR QUE FUNCIONA:
-- Ve a https://zeatingmaps-ekirmens-projects.vercel.app/store
-- Haz clic en el evento
-- Deberías ver las funciones disponibles
+RESULTADO ESPERADO:
+- El evento debe tener 2 funciones
+- Las funciones deben tener el tenant_id correcto
+- Las funciones deberían aparecer en el store
 */

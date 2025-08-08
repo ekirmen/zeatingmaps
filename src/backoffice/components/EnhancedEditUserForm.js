@@ -23,41 +23,56 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
       test: false
     },
     
-    // Permissions
+    // Permissions for SaaS multi-tenant system
     permisos: {
-      // Administración
-      ADMIN: false,
-      SUPER: false,
-      MG_USERS: false,
-      MG_ORGS: false,
-      MG_VENUES: false,
-      MG_USER_FEES: false,
-      MG_SELLER_FEES: false,
-      MG_SETTLEMENTS: false,
-      CUSTOMIZATION: false,
-      CRM: false,
-      ACCREDITATIONS: false,
-      REPORTS: false,
+      // System Administration
+      SYSTEM_ADMIN: false,
+      TENANT_MANAGEMENT: false,
+      USER_MANAGEMENT: false,
+      BILLING_MANAGEMENT: false,
+      SYSTEM_CONFIGURATION: false,
       
-      // Programación
-      PROGRAMMING: false,
-      MG_EVENTS: false,
-      PR_USER_FEES: false,
-      MG_QUOTAS: false,
-      MG_PROMO: false,
-      MG_SURVEYS: false,
-      MG_VIRTUAL_QUEUES: false,
+      // Tenant Administration
+      TENANT_ADMIN: false,
+      TENANT_USERS: false,
+      TENANT_SETTINGS: false,
+      TENANT_BILLING: false,
       
-      // Venta
-      SELL: false,
-      CANCEL: false,
-      REFUND: false,
-      REPRINT: false,
-      SEARCH_ORDERS: false,
-      UNPAID_BOOKINGS: false,
-      MULTI_EVENT_ORDER: false,
-      BLOCK: false,
-      SHOW_EVENT_ACTIVITY: false
+      // Event Management
+      EVENT_CREATE: false,
+      EVENT_EDIT: false,
+      EVENT_DELETE: false,
+      EVENT_PUBLISH: false,
+      VENUE_MANAGEMENT: false,
+      
+      // Sales Management
+      SALES_VIEW: false,
+      SALES_CREATE: false,
+      SALES_EDIT: false,
+      SALES_CANCEL: false,
+      SALES_REFUND: false,
+      SALES_REPORTS: false,
+      
+      // Customer Support
+      SUPPORT_TICKETS: false,
+      CUSTOMER_DATA: false,
+      SUPPORT_REPORTS: false,
+      
+      // Marketing
+      MARKETING_CAMPAIGNS: false,
+      EMAIL_MARKETING: false,
+      ANALYTICS: false,
+      
+      // Finance
+      FINANCE_VIEW: false,
+      FINANCE_EDIT: false,
+      INVOICE_MANAGEMENT: false,
+      PAYMENT_PROCESSING: false,
+      
+      // Technical
+      TECHNICAL_SUPPORT: false,
+      API_ACCESS: false,
+      SYSTEM_LOGS: false
     },
     
     // Payment methods
@@ -78,16 +93,18 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
   const [loading, setLoading] = useState(false);
   const [selectAllVenues, setSelectAllVenues] = useState(false);
 
-  // User profile options
+  // User profile options for SaaS multi-tenant system
   const profileOptions = [
-    { value: '3', label: 'Gerente' },
-    { value: '2', label: 'Taquilla' },
-    { value: '5', label: 'Agencias' },
-    { value: '4', label: 'Call Center' },
-    { value: '12', label: 'Contenido/Marketing' },
-    { value: '7', label: 'Atención al cliente' },
-    { value: '11', label: 'Vendedor externo' },
-    { value: '6', label: 'Reportes' }
+    { value: 'super_admin', label: 'Super Administrador' },
+    { value: 'tenant_admin', label: 'Administrador de Tenant' },
+    { value: 'event_manager', label: 'Gestor de Eventos' },
+    { value: 'sales_manager', label: 'Gestor de Ventas' },
+    { value: 'box_office', label: 'Taquilla' },
+    { value: 'customer_support', label: 'Soporte al Cliente' },
+    { value: 'marketing', label: 'Marketing' },
+    { value: 'reports', label: 'Reportes y Analytics' },
+    { value: 'finance', label: 'Finanzas y Facturación' },
+    { value: 'technical', label: 'Soporte Técnico' }
   ];
 
   useEffect(() => {
@@ -107,17 +124,36 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
           test: false
         },
         permisos: user.permisos || {
-          ADMIN: false, SUPER: false, MG_USERS: false, MG_ORGS: false,
-          MG_VENUES: false, MG_USER_FEES: false, MG_SELLER_FEES: false,
-          MG_SETTLEMENTS: false, CUSTOMIZATION: false, CRM: false,
-          ACCREDITATIONS: false, REPORTS: false, PROGRAMMING: false,
-          MG_EVENTS: false, PR_USER_FEES: false, MG_QUOTAS: false,
-          MG_PROMO: false, MG_SURVEYS: false, MG_VIRTUAL_QUEUES: false,
-          SELL: false, CANCEL: false, REFUND: false, REPRINT: false,
-          SEARCH_ORDERS: false, UNPAID_BOOKINGS: false, MULTI_EVENT_ORDER: false,
-          BLOCK: false, SHOW_EVENT_ACTIVITY: false
+          // System Administration
+          SYSTEM_ADMIN: false, TENANT_MANAGEMENT: false, USER_MANAGEMENT: false,
+          BILLING_MANAGEMENT: false, SYSTEM_CONFIGURATION: false,
+          
+          // Tenant Administration
+          TENANT_ADMIN: false, TENANT_USERS: false, TENANT_SETTINGS: false,
+          TENANT_BILLING: false,
+          
+          // Event Management
+          EVENT_CREATE: false, EVENT_EDIT: false, EVENT_DELETE: false,
+          EVENT_PUBLISH: false, VENUE_MANAGEMENT: false,
+          
+          // Sales Management
+          SALES_VIEW: false, SALES_CREATE: false, SALES_EDIT: false,
+          SALES_CANCEL: false, SALES_REFUND: false, SALES_REPORTS: false,
+          
+          // Customer Support
+          SUPPORT_TICKETS: false, CUSTOMER_DATA: false, SUPPORT_REPORTS: false,
+          
+          // Marketing
+          MARKETING_CAMPAIGNS: false, EMAIL_MARKETING: false, ANALYTICS: false,
+          
+          // Finance
+          FINANCE_VIEW: false, FINANCE_EDIT: false, INVOICE_MANAGEMENT: false,
+          PAYMENT_PROCESSING: false,
+          
+          // Technical
+          TECHNICAL_SUPPORT: false, API_ACCESS: false, SYSTEM_LOGS: false
         },
-        metodosPago: user.metodosPago || {
+        metodosPago: user.metodospago || {
           efectivo: false, zelle: false, pagoMovil: false, paypal: false,
           puntoVenta: false, procesadorPago: false
         },
@@ -126,6 +162,20 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
     }
     loadVenues();
   }, [user]);
+
+  // Función para obtener email del usuario desde auth.users
+  const getUserEmail = async (userId) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_user_email', { user_id: userId });
+      
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('Error getting user email:', error);
+      return null;
+    }
+  };
 
   const loadVenues = async () => {
     try {
@@ -242,7 +292,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
           activo: formData.activo,
           canales: formData.canales,
           permisos: formData.permisos,
-          metodosPago: formData.metodosPago,
+          metodospago: formData.metodosPago,
           recintos: formData.recintos
         })
         .eq('id', user.id)
@@ -462,23 +512,16 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
           </div>
         </div>
 
-        {/* Administration Permissions */}
+        {/* System Administration Permissions */}
         <div className="mb-6">
-          <h5 className="text-md font-medium text-gray-800 mb-3">Permisos de administración</h5>
+          <h5 className="text-md font-medium text-gray-800 mb-3">Administración del Sistema</h5>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { key: 'ADMIN', label: 'Administración' },
-              { key: 'SUPER', label: 'Administración de sistema' },
-              { key: 'MG_USERS', label: 'Administración de usuarios' },
-              { key: 'MG_ORGS', label: 'Gestión de empresas' },
-              { key: 'MG_VENUES', label: 'Gestión de recintos' },
-              { key: 'MG_USER_FEES', label: 'Gestión de comisión de usuarios' },
-              { key: 'MG_SELLER_FEES', label: 'Gestión de comisiones' },
-              { key: 'MG_SETTLEMENTS', label: 'Gestión de liquidaciones' },
-              { key: 'CUSTOMIZATION', label: 'Personalización' },
-              { key: 'CRM', label: 'CRM' },
-              { key: 'ACCREDITATIONS', label: 'Acreditaciones' },
-              { key: 'REPORTS', label: 'Permiso de informes' }
+              { key: 'SYSTEM_ADMIN', label: 'Super Administrador' },
+              { key: 'TENANT_MANAGEMENT', label: 'Gestión de Tenants' },
+              { key: 'USER_MANAGEMENT', label: 'Gestión de Usuarios' },
+              { key: 'BILLING_MANAGEMENT', label: 'Gestión de Facturación' },
+              { key: 'SYSTEM_CONFIGURATION', label: 'Configuración del Sistema' }
             ].map(permission => (
               <div key={permission.key} className="flex items-center">
                 <input
@@ -496,18 +539,15 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
           </div>
         </div>
 
-        {/* Programming Permissions */}
+        {/* Tenant Administration Permissions */}
         <div className="mb-6">
-          <h5 className="text-md font-medium text-gray-800 mb-3">Permisos de programación</h5>
+          <h5 className="text-md font-medium text-gray-800 mb-3">Administración de Tenant</h5>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { key: 'PROGRAMMING', label: 'Administración de funciones' },
-              { key: 'MG_EVENTS', label: 'Gestión de eventos' },
-              { key: 'PR_USER_FEES', label: 'Modificar comisiones del usuario' },
-              { key: 'MG_QUOTAS', label: 'Gestión de cupos' },
-              { key: 'MG_PROMO', label: 'Gestión de fidelizaciones y promociones' },
-              { key: 'MG_SURVEYS', label: 'Gestión de encuestas' },
-              { key: 'MG_VIRTUAL_QUEUES', label: 'Gestión de filas virtuales' }
+              { key: 'TENANT_ADMIN', label: 'Administrador de Tenant' },
+              { key: 'TENANT_USERS', label: 'Usuarios del Tenant' },
+              { key: 'TENANT_SETTINGS', label: 'Configuración del Tenant' },
+              { key: 'TENANT_BILLING', label: 'Facturación del Tenant' }
             ].map(permission => (
               <div key={permission.key} className="flex items-center">
                 <input
@@ -525,20 +565,145 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
           </div>
         </div>
 
-        {/* Sales Permissions */}
+        {/* Event Management Permissions */}
+        <div className="mb-6">
+          <h5 className="text-md font-medium text-gray-800 mb-3">Gestión de Eventos</h5>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { key: 'EVENT_CREATE', label: 'Crear Eventos' },
+              { key: 'EVENT_EDIT', label: 'Editar Eventos' },
+              { key: 'EVENT_DELETE', label: 'Eliminar Eventos' },
+              { key: 'EVENT_PUBLISH', label: 'Publicar Eventos' },
+              { key: 'VENUE_MANAGEMENT', label: 'Gestión de Recintos' }
+            ].map(permission => (
+              <div key={permission.key} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={permission.key}
+                  checked={formData.permisos[permission.key]}
+                  onChange={(e) => handlePermissionChange(permission.key, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor={permission.key} className="ml-2 text-sm text-gray-700">
+                  {permission.label}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sales Management Permissions */}
+        <div className="mb-6">
+          <h5 className="text-md font-medium text-gray-800 mb-3">Gestión de Ventas</h5>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { key: 'SALES_VIEW', label: 'Ver Ventas' },
+              { key: 'SALES_CREATE', label: 'Crear Ventas' },
+              { key: 'SALES_EDIT', label: 'Editar Ventas' },
+              { key: 'SALES_CANCEL', label: 'Cancelar Ventas' },
+              { key: 'SALES_REFUND', label: 'Reembolsos' },
+              { key: 'SALES_REPORTS', label: 'Reportes de Ventas' }
+            ].map(permission => (
+              <div key={permission.key} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={permission.key}
+                  checked={formData.permisos[permission.key]}
+                  onChange={(e) => handlePermissionChange(permission.key, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor={permission.key} className="ml-2 text-sm text-gray-700">
+                  {permission.label}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Customer Support Permissions */}
+        <div className="mb-6">
+          <h5 className="text-md font-medium text-gray-800 mb-3">Soporte al Cliente</h5>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { key: 'SUPPORT_TICKETS', label: 'Tickets de Soporte' },
+              { key: 'CUSTOMER_DATA', label: 'Datos de Clientes' },
+              { key: 'SUPPORT_REPORTS', label: 'Reportes de Soporte' }
+            ].map(permission => (
+              <div key={permission.key} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={permission.key}
+                  checked={formData.permisos[permission.key]}
+                  onChange={(e) => handlePermissionChange(permission.key, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor={permission.key} className="ml-2 text-sm text-gray-700">
+                  {permission.label}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Marketing Permissions */}
+        <div className="mb-6">
+          <h5 className="text-md font-medium text-gray-800 mb-3">Marketing</h5>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { key: 'MARKETING_CAMPAIGNS', label: 'Campañas de Marketing' },
+              { key: 'EMAIL_MARKETING', label: 'Email Marketing' },
+              { key: 'ANALYTICS', label: 'Analytics' }
+            ].map(permission => (
+              <div key={permission.key} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={permission.key}
+                  checked={formData.permisos[permission.key]}
+                  onChange={(e) => handlePermissionChange(permission.key, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor={permission.key} className="ml-2 text-sm text-gray-700">
+                  {permission.label}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Finance Permissions */}
+        <div className="mb-6">
+          <h5 className="text-md font-medium text-gray-800 mb-3">Finanzas</h5>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              { key: 'FINANCE_VIEW', label: 'Ver Finanzas' },
+              { key: 'FINANCE_EDIT', label: 'Editar Finanzas' },
+              { key: 'INVOICE_MANAGEMENT', label: 'Gestión de Facturas' },
+              { key: 'PAYMENT_PROCESSING', label: 'Procesamiento de Pagos' }
+            ].map(permission => (
+              <div key={permission.key} className="flex items-center">
+                <input
+                  type="checkbox"
+                  id={permission.key}
+                  checked={formData.permisos[permission.key]}
+                  onChange={(e) => handlePermissionChange(permission.key, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor={permission.key} className="ml-2 text-sm text-gray-700">
+                  {permission.label}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Technical Permissions */}
         <div>
-          <h5 className="text-md font-medium text-gray-800 mb-3">Permisos de venta</h5>
+          <h5 className="text-md font-medium text-gray-800 mb-3">Soporte Técnico</h5>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
-              { key: 'SELL', label: 'Venta' },
-              { key: 'CANCEL', label: 'Cancelación' },
-              { key: 'REFUND', label: 'Devolución' },
-              { key: 'REPRINT', label: 'Reimpresión' },
-              { key: 'SEARCH_ORDERS', label: 'Buscar ventas' },
-              { key: 'UNPAID_BOOKINGS', label: 'Reservas' },
-              { key: 'MULTI_EVENT_ORDER', label: 'Venta acumulada' },
-              { key: 'BLOCK', label: 'Bloqueos' },
-              { key: 'SHOW_EVENT_ACTIVITY', label: 'Mostrar actividad de evento' }
+              { key: 'TECHNICAL_SUPPORT', label: 'Soporte Técnico' },
+              { key: 'API_ACCESS', label: 'Acceso a API' },
+              { key: 'SYSTEM_LOGS', label: 'Logs del Sistema' }
             ].map(permission => (
               <div key={permission.key} className="flex items-center">
                 <input
