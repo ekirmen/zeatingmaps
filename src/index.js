@@ -5,6 +5,7 @@ import 'antd/dist/reset.css';
 import App from './App';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { TenantProvider } from './contexts/TenantContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { FooterProvider } from './contexts/FooterContext';
 import { HeaderProvider } from './contexts/HeaderContext';
@@ -19,14 +20,16 @@ root.render(
     <I18nextProvider i18n={i18n}>
       <Router>
         <AuthProvider>
-          <ThemeProvider>
-            <HeaderProvider>
-              <FooterProvider>
-                <App />
-                <SpeedInsights />
-              </FooterProvider>
-            </HeaderProvider>
-          </ThemeProvider>
+          <TenantProvider>
+            <ThemeProvider>
+              <HeaderProvider>
+                <FooterProvider>
+                  <App />
+                  <SpeedInsights />
+                </FooterProvider>
+              </HeaderProvider>
+            </ThemeProvider>
+          </TenantProvider>
         </AuthProvider>
       </Router>
     </I18nextProvider>

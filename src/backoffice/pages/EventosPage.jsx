@@ -13,6 +13,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import DataTable from '../components/DataTable';
 import { supabase } from '../../supabaseClient';
 import { resolveImageUrl } from '../../utils/resolveImageUrl';
+import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const EventosPage = () => {
   const [eventos, setEventos] = useState([]);
@@ -20,6 +21,7 @@ const EventosPage = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
+  const { addTenantFilter } = useTenantFilter();
 
   useEffect(() => {
     loadEventos();
@@ -28,10 +30,12 @@ const EventosPage = () => {
   const loadEventos = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('eventos')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await addTenantFilter(
+        supabase
+          .from('eventos')
+          .select('*')
+          .order('created_at', { ascending: false })
+      );
 
       if (error) throw error;
       setEventos(data || []);
@@ -98,9 +102,9 @@ const EventosPage = () => {
             icon={<CalendarOutlined />}
           />
           <div>
-            <div style={{ fontWeight: '500', color: '#1e293b' }}>{text}</div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>
-              {record.fecha ? new Date(record.fecha).toLocaleDateString() : 'Sin fecha'}
+            <div style={{ fontWeight: '500' }}>{text}</div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              {record.fecha} • {record.ubicacion}
             </div>
           </div>
         </div>
@@ -108,19 +112,13 @@ const EventosPage = () => {
     },
     {
       title: 'Estado',
-      dataIndex: 'status',
-      key: 'status',
+      dataIndex: 'estado',
+      key: 'estado',
       render: (status) => (
         <Tag color={getStatusColor(status)}>
           {getStatusText(status)}
         </Tag>
       ),
-    },
-    {
-      title: 'Ubicación',
-      dataIndex: 'ubicacion',
-      key: 'ubicacion',
-      render: (text) => text || 'No especificada',
     },
     {
       title: 'Precio',
@@ -133,27 +131,23 @@ const EventosPage = () => {
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Button
-            type="link"
-            icon={<EyeOutlined />}
-            size="small"
+          <Button 
+            type="link" 
+            icon={<EyeOutlined />} 
             onClick={() => setSelectedEvent(record)}
           >
             Ver
           </Button>
-          <Button
-            type="link"
+          <Button 
+            type="link" 
             icon={<EditOutlined />}
-            size="small"
-            onClick={() => window.open(`/backoffice/eventos/${record.id}`, '_blank')}
           >
             Editar
           </Button>
-          <Button
-            type="link"
-            danger
+          <Button 
+            type="link" 
+            danger 
             icon={<DeleteOutlined />}
-            size="small"
             onClick={() => handleDelete(record)}
           >
             Eliminar
@@ -165,114 +159,69 @@ const EventosPage = () => {
 
   return (
     <DashboardLayout
-      title="Eventos"
-      subtitle="Gestiona todos tus eventos"
-      actions={
-        <Space>
-          <Button type="primary" icon={<PlusOutlined />}>
-            Crear Evento
-          </Button>
-        </Space>
-      }
+      title="Gestión de Eventos"
+      subtitle="Administra todos los eventos del sistema"
     >
       <DataTable
-        title="Lista de Eventos"
+        title="Eventos"
         dataSource={eventos}
         columns={columns}
         loading={loading}
         onRefresh={loadEventos}
-        onAdd={() => window.open('/backoffice/eventos/nuevo', '_blank')}
+        showSearch={true}
         searchPlaceholder="Buscar eventos..."
         addButtonText="Crear Evento"
+        onAdd={() => console.log('Crear evento')}
       />
 
-      {/* Modal de Detalles del Evento */}
+      {/* Modal para ver detalles del evento */}
       <Modal
         title="Detalles del Evento"
-        open={!!selectedEvent}
+        visible={!!selectedEvent}
         onCancel={() => setSelectedEvent(null)}
-        footer={[
-          <Button key="close" onClick={() => setSelectedEvent(null)}>
-            Cerrar
-          </Button>,
-          <Button 
-            key="edit" 
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => {
-              window.open(`/backoffice/eventos/${selectedEvent?.id}`, '_blank');
-              setSelectedEvent(null);
-            }}
-          >
-            Editar
-          </Button>,
-        ]}
+        footer={null}
         width={600}
       >
         {selectedEvent && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
             {selectedEvent.imagen && (
-              <Image
-                src={resolveImageUrl(selectedEvent.imagen)}
-                alt={selectedEvent.nombre}
-                style={{ borderRadius: '8px', maxHeight: '200px', objectFit: 'cover' }}
-              />
+              <div style={{ marginBottom: '16px' }}>
+                <Image
+                  src={resolveImageUrl(selectedEvent.imagen)}
+                  alt={selectedEvent.nombre}
+                  style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
+                />
+              </div>
             )}
-            
-            <div>
-              <h3 style={{ margin: '0 0 8px 0', color: '#1e293b' }}>
-                {selectedEvent.nombre}
-              </h3>
-              <p style={{ color: '#64748b', margin: '0 0 16px 0' }}>
-                {selectedEvent.descripcion || 'Sin descripción'}
-              </p>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Nombre:</strong> {selectedEvent.nombre}
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  Fecha
-                </div>
-                <div style={{ fontWeight: '500' }}>
-                  {selectedEvent.fecha ? new Date(selectedEvent.fecha).toLocaleDateString() : 'No especificada'}
-                </div>
-              </div>
-              
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  Ubicación
-                </div>
-                <div style={{ fontWeight: '500' }}>
-                  {selectedEvent.ubicacion || 'No especificada'}
-                </div>
-              </div>
-              
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  Precio
-                </div>
-                <div style={{ fontWeight: '500' }}>
-                  {selectedEvent.precio ? `$${selectedEvent.precio}` : 'Gratis'}
-                </div>
-              </div>
-              
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  Estado
-                </div>
-                <Tag color={getStatusColor(selectedEvent.status)}>
-                  {getStatusText(selectedEvent.status)}
-                </Tag>
-              </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Descripción:</strong> {selectedEvent.descripcion}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Fecha:</strong> {selectedEvent.fecha}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Ubicación:</strong> {selectedEvent.ubicacion}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Precio:</strong> {selectedEvent.precio ? `$${selectedEvent.precio}` : 'Gratis'}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Estado:</strong> 
+              <Tag color={getStatusColor(selectedEvent.estado)} style={{ marginLeft: '8px' }}>
+                {getStatusText(selectedEvent.estado)}
+              </Tag>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Modal de Confirmación de Eliminación */}
+      {/* Modal de confirmación de eliminación */}
       <Modal
         title="Confirmar Eliminación"
-        open={deleteModalVisible}
+        visible={deleteModalVisible}
         onOk={confirmDelete}
         onCancel={() => {
           setDeleteModalVisible(false);
@@ -282,10 +231,8 @@ const EventosPage = () => {
         cancelText="Cancelar"
         okButtonProps={{ danger: true }}
       >
-        <p>
-          ¿Estás seguro de que quieres eliminar el evento "{eventToDelete?.nombre}"?
-          Esta acción no se puede deshacer.
-        </p>
+        <p>¿Estás seguro de que quieres eliminar el evento "{eventToDelete?.nombre}"?</p>
+        <p>Esta acción no se puede deshacer.</p>
       </Modal>
     </DashboardLayout>
   );

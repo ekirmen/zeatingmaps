@@ -13,6 +13,7 @@ import DashboardLayout from '../components/DashboardLayout';
 import DataTable from '../components/DataTable';
 import { supabase } from '../../supabaseClient';
 import { resolveImageUrl } from '../../utils/resolveImageUrl';
+import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const { Text } = Typography;
 
@@ -22,6 +23,7 @@ const ProductosPage = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const { addTenantFilter } = useTenantFilter();
 
   useEffect(() => {
     loadProductos();
@@ -30,10 +32,12 @@ const ProductosPage = () => {
   const loadProductos = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('productos')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await addTenantFilter(
+        supabase
+          .from('productos')
+          .select('*')
+          .order('created_at', { ascending: false })
+      );
 
       if (error) throw error;
       setProductos(data || []);
@@ -104,9 +108,9 @@ const ProductosPage = () => {
             icon={<ShoppingOutlined />}
           />
           <div>
-            <div style={{ fontWeight: '500', color: '#1e293b' }}>{text}</div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>
-              {record.descripcion?.substring(0, 50)}...
+            <div style={{ fontWeight: '500' }}>{text}</div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              {record.descripcion}
             </div>
           </div>
         </div>
@@ -116,11 +120,7 @@ const ProductosPage = () => {
       title: 'Precio',
       dataIndex: 'precio',
       key: 'precio',
-      render: (precio) => (
-        <div style={{ fontWeight: '600', color: '#059669' }}>
-          ${precio?.toFixed(2) || '0.00'}
-        </div>
-      ),
+      render: (precio) => `$${precio}`,
     },
     {
       title: 'Categoría',
@@ -128,7 +128,7 @@ const ProductosPage = () => {
       key: 'categoria',
       render: (categoria) => (
         <Tag color={getCategoryColor(categoria)}>
-          {categoria?.charAt(0).toUpperCase() + categoria?.slice(1)}
+          {categoria}
         </Tag>
       ),
     },
@@ -138,7 +138,7 @@ const ProductosPage = () => {
       key: 'stock',
       render: (stock) => (
         <Tag color={getStockColor(stock)}>
-          {getStockText(stock)} ({stock || 0})
+          {getStockText(stock)} ({stock})
         </Tag>
       ),
     },
@@ -147,27 +147,23 @@ const ProductosPage = () => {
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Button
-            type="link"
-            icon={<EyeOutlined />}
-            size="small"
+          <Button 
+            type="link" 
+            icon={<EyeOutlined />} 
             onClick={() => setSelectedProduct(record)}
           >
             Ver
           </Button>
-          <Button
-            type="link"
+          <Button 
+            type="link" 
             icon={<EditOutlined />}
-            size="small"
-            onClick={() => window.open(`/backoffice/productos/${record.id}`, '_blank')}
           >
             Editar
           </Button>
-          <Button
-            type="link"
-            danger
+          <Button 
+            type="link" 
+            danger 
             icon={<DeleteOutlined />}
-            size="small"
             onClick={() => handleDelete(record)}
           >
             Eliminar
@@ -179,137 +175,69 @@ const ProductosPage = () => {
 
   return (
     <DashboardLayout
-      title="Productos"
-      subtitle="Gestiona el inventario de productos"
-      actions={
-        <Space>
-          <Button type="primary" icon={<PlusOutlined />}>
-            Crear Producto
-          </Button>
-        </Space>
-      }
+      title="Gestión de Productos"
+      subtitle="Administra todos los productos del sistema"
     >
       <DataTable
-        title="Lista de Productos"
+        title="Productos"
         dataSource={productos}
         columns={columns}
         loading={loading}
         onRefresh={loadProductos}
-        onAdd={() => window.open('/backoffice/productos/nuevo', '_blank')}
+        showSearch={true}
         searchPlaceholder="Buscar productos..."
         addButtonText="Crear Producto"
+        onAdd={() => console.log('Crear producto')}
       />
 
-      {/* Modal de Detalles del Producto */}
+      {/* Modal para ver detalles del producto */}
       <Modal
         title="Detalles del Producto"
-        open={!!selectedProduct}
+        visible={!!selectedProduct}
         onCancel={() => setSelectedProduct(null)}
-        footer={[
-          <Button key="close" onClick={() => setSelectedProduct(null)}>
-            Cerrar
-          </Button>,
-          <Button 
-            key="edit" 
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => {
-              window.open(`/backoffice/productos/${selectedProduct?.id}`, '_blank');
-              setSelectedProduct(null);
-            }}
-          >
-            Editar
-          </Button>,
-        ]}
+        footer={null}
         width={600}
       >
         {selectedProduct && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
             {selectedProduct.imagen && (
-              <Image
-                src={resolveImageUrl(selectedProduct.imagen)}
-                alt={selectedProduct.nombre}
-                style={{ borderRadius: '8px', maxHeight: '200px', objectFit: 'cover' }}
-              />
-            )}
-            
-            <div>
-              <h3 style={{ margin: '0 0 8px 0', color: '#1e293b' }}>
-                {selectedProduct.nombre}
-              </h3>
-              <p style={{ color: '#64748b', margin: '0 0 16px 0' }}>
-                {selectedProduct.descripcion || 'Sin descripción'}
-              </p>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  <DollarOutlined style={{ marginRight: '4px' }} />
-                  Precio
-                </div>
-                <div style={{ fontWeight: '600', color: '#059669', fontSize: '18px' }}>
-                  ${selectedProduct.precio?.toFixed(2) || '0.00'}
-                </div>
-              </div>
-              
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  <TagOutlined style={{ marginRight: '4px' }} />
-                  Categoría
-                </div>
-                <Tag color={getCategoryColor(selectedProduct.categoria)}>
-                  {selectedProduct.categoria?.charAt(0).toUpperCase() + selectedProduct.categoria?.slice(1)}
-                </Tag>
-              </div>
-              
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  <ShoppingOutlined style={{ marginRight: '4px' }} />
-                  Stock
-                </div>
-                <Tag color={getStockColor(selectedProduct.stock)}>
-                  {getStockText(selectedProduct.stock)} ({selectedProduct.stock || 0})
-                </Tag>
-              </div>
-              
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  Estado
-                </div>
-                <Tag color={selectedProduct.activo ? 'green' : 'red'}>
-                  {selectedProduct.activo ? 'Activo' : 'Inactivo'}
-                </Tag>
-              </div>
-            </div>
-
-            {selectedProduct.sku && (
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  SKU
-                </div>
-                <div style={{ fontWeight: '500' }}>
-                  {selectedProduct.sku}
-                </div>
+              <div style={{ marginBottom: '16px' }}>
+                <Image
+                  src={resolveImageUrl(selectedProduct.imagen)}
+                  alt={selectedProduct.nombre}
+                  style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
+                />
               </div>
             )}
-
-            <div>
-              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                Fecha de Creación
-              </div>
-              <div style={{ fontWeight: '500' }}>
-                {selectedProduct.created_at ? new Date(selectedProduct.created_at).toLocaleDateString() : 'No disponible'}
-              </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Nombre:</strong> {selectedProduct.nombre}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Descripción:</strong> {selectedProduct.descripcion}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Precio:</strong> ${selectedProduct.precio}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Categoría:</strong> 
+              <Tag color={getCategoryColor(selectedProduct.categoria)} style={{ marginLeft: '8px' }}>
+                {selectedProduct.categoria}
+              </Tag>
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Stock:</strong> 
+              <Tag color={getStockColor(selectedProduct.stock)} style={{ marginLeft: '8px' }}>
+                {getStockText(selectedProduct.stock)} ({selectedProduct.stock})
+              </Tag>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Modal de Confirmación de Eliminación */}
+      {/* Modal de confirmación de eliminación */}
       <Modal
         title="Confirmar Eliminación"
-        open={deleteModalVisible}
+        visible={deleteModalVisible}
         onOk={confirmDelete}
         onCancel={() => {
           setDeleteModalVisible(false);
@@ -319,10 +247,8 @@ const ProductosPage = () => {
         cancelText="Cancelar"
         okButtonProps={{ danger: true }}
       >
-        <p>
-          ¿Estás seguro de que quieres eliminar el producto "{productToDelete?.nombre}"?
-          Esta acción no se puede deshacer.
-        </p>
+        <p>¿Estás seguro de que quieres eliminar el producto "{productToDelete?.nombre}"?</p>
+        <p>Esta acción no se puede deshacer.</p>
       </Modal>
     </DashboardLayout>
   );

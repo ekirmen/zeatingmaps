@@ -12,6 +12,7 @@ import {
 import DashboardLayout from '../components/DashboardLayout';
 import DataTable from '../components/DataTable';
 import { supabase } from '../../supabaseClient';
+import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const { Text } = Typography;
 
@@ -21,6 +22,7 @@ const UsuariosPage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const { addTenantFilter } = useTenantFilter();
 
   useEffect(() => {
     loadUsuarios();
@@ -29,10 +31,12 @@ const UsuariosPage = () => {
   const loadUsuarios = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('usuarios')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const { data, error } = await addTenantFilter(
+        supabase
+          .from('usuarios')
+          .select('*')
+          .order('created_at', { ascending: false })
+      );
 
       if (error) throw error;
       setUsuarios(data || []);
@@ -113,14 +117,12 @@ const UsuariosPage = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Avatar
             size={40}
-            src={record.avatar}
+            src={record.avatar_url}
             icon={<UserOutlined />}
           />
           <div>
-            <div style={{ fontWeight: '500', color: '#1e293b' }}>
-              {text || record.email}
-            </div>
-            <div style={{ fontSize: '12px', color: '#64748b' }}>
+            <div style={{ fontWeight: '500' }}>{text}</div>
+            <div style={{ fontSize: '12px', color: '#666' }}>
               {record.email}
             </div>
           </div>
@@ -131,9 +133,9 @@ const UsuariosPage = () => {
       title: 'Rol',
       dataIndex: 'rol',
       key: 'rol',
-      render: (rol) => (
-        <Tag color={getRoleColor(rol)}>
-          {getRoleText(rol)}
+      render: (role) => (
+        <Tag color={getRoleColor(role)}>
+          {getRoleText(role)}
         </Tag>
       ),
     },
@@ -141,9 +143,9 @@ const UsuariosPage = () => {
       title: 'Estado',
       dataIndex: 'estado',
       key: 'estado',
-      render: (estado) => (
-        <Tag color={getStatusColor(estado)}>
-          {getStatusText(estado)}
+      render: (status) => (
+        <Tag color={getStatusColor(status)}>
+          {getStatusText(status)}
         </Tag>
       ),
     },
@@ -151,34 +153,30 @@ const UsuariosPage = () => {
       title: 'Teléfono',
       dataIndex: 'telefono',
       key: 'telefono',
-      render: (text) => text || 'No especificado',
+      render: (telefono) => telefono || 'No especificado',
     },
     {
       title: 'Acciones',
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Button
-            type="link"
-            icon={<EyeOutlined />}
-            size="small"
+          <Button 
+            type="link" 
+            icon={<EyeOutlined />} 
             onClick={() => setSelectedUser(record)}
           >
             Ver
           </Button>
-          <Button
-            type="link"
+          <Button 
+            type="link" 
             icon={<EditOutlined />}
-            size="small"
-            onClick={() => window.open(`/backoffice/usuarios/${record.id}`, '_blank')}
           >
             Editar
           </Button>
-          <Button
-            type="link"
-            danger
+          <Button 
+            type="link" 
+            danger 
             icon={<DeleteOutlined />}
-            size="small"
             onClick={() => handleDelete(record)}
           >
             Eliminar
@@ -190,134 +188,72 @@ const UsuariosPage = () => {
 
   return (
     <DashboardLayout
-      title="Usuarios"
-      subtitle="Gestiona todos los usuarios del sistema"
-      actions={
-        <Space>
-          <Button type="primary" icon={<PlusOutlined />}>
-            Crear Usuario
-          </Button>
-        </Space>
-      }
+      title="Gestión de Usuarios"
+      subtitle="Administra todos los usuarios del sistema"
     >
       <DataTable
-        title="Lista de Usuarios"
+        title="Usuarios"
         dataSource={usuarios}
         columns={columns}
         loading={loading}
         onRefresh={loadUsuarios}
-        onAdd={() => window.open('/backoffice/usuarios/nuevo', '_blank')}
+        showSearch={true}
         searchPlaceholder="Buscar usuarios..."
         addButtonText="Crear Usuario"
+        onAdd={() => console.log('Crear usuario')}
       />
 
-      {/* Modal de Detalles del Usuario */}
+      {/* Modal para ver detalles del usuario */}
       <Modal
         title="Detalles del Usuario"
-        open={!!selectedUser}
+        visible={!!selectedUser}
         onCancel={() => setSelectedUser(null)}
-        footer={[
-          <Button key="close" onClick={() => setSelectedUser(null)}>
-            Cerrar
-          </Button>,
-          <Button 
-            key="edit" 
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => {
-              window.open(`/backoffice/usuarios/${selectedUser?.id}`, '_blank');
-              setSelectedUser(null);
-            }}
-          >
-            Editar
-          </Button>,
-        ]}
+        footer={null}
         width={600}
       >
         {selectedUser && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
               <Avatar
                 size={64}
-                src={selectedUser.avatar}
+                src={selectedUser.avatar_url}
                 icon={<UserOutlined />}
               />
-              <div>
-                <h3 style={{ margin: '0 0 4px 0', color: '#1e293b' }}>
-                  {selectedUser.nombre || selectedUser.email}
-                </h3>
+              <div style={{ marginLeft: '16px' }}>
+                <h3 style={{ margin: 0 }}>{selectedUser.nombre}</h3>
                 <Text type="secondary">{selectedUser.email}</Text>
               </div>
             </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  <MailOutlined style={{ marginRight: '4px' }} />
-                  Email
-                </div>
-                <div style={{ fontWeight: '500' }}>
-                  {selectedUser.email}
-                </div>
-              </div>
-              
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  <PhoneOutlined style={{ marginRight: '4px' }} />
-                  Teléfono
-                </div>
-                <div style={{ fontWeight: '500' }}>
-                  {selectedUser.telefono || 'No especificado'}
-                </div>
-              </div>
-              
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  <UserOutlined style={{ marginRight: '4px' }} />
-                  Rol
-                </div>
-                <Tag color={getRoleColor(selectedUser.rol)}>
-                  {getRoleText(selectedUser.rol)}
-                </Tag>
-              </div>
-              
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  Estado
-                </div>
-                <Tag color={getStatusColor(selectedUser.estado)}>
-                  {getStatusText(selectedUser.estado)}
-                </Tag>
-              </div>
+            
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Email:</strong> {selectedUser.email}
             </div>
-
-            {selectedUser.direccion && (
-              <div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                  Dirección
-                </div>
-                <div style={{ fontWeight: '500' }}>
-                  {selectedUser.direccion}
-                </div>
-              </div>
-            )}
-
-            <div>
-              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>
-                Fecha de Registro
-              </div>
-              <div style={{ fontWeight: '500' }}>
-                {selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString() : 'No disponible'}
-              </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Rol:</strong> 
+              <Tag color={getRoleColor(selectedUser.rol)} style={{ marginLeft: '8px' }}>
+                {getRoleText(selectedUser.rol)}
+              </Tag>
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Teléfono:</strong> {selectedUser.telefono || 'No especificado'}
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Estado:</strong> 
+              <Tag color={getStatusColor(selectedUser.estado)} style={{ marginLeft: '8px' }}>
+                {getStatusText(selectedUser.estado)}
+              </Tag>
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <strong>Fecha de registro:</strong> {new Date(selectedUser.created_at).toLocaleDateString()}
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Modal de Confirmación de Eliminación */}
+      {/* Modal de confirmación de eliminación */}
       <Modal
         title="Confirmar Eliminación"
-        open={deleteModalVisible}
+        visible={deleteModalVisible}
         onOk={confirmDelete}
         onCancel={() => {
           setDeleteModalVisible(false);
@@ -327,10 +263,8 @@ const UsuariosPage = () => {
         cancelText="Cancelar"
         okButtonProps={{ danger: true }}
       >
-        <p>
-          ¿Estás seguro de que quieres eliminar al usuario "{userToDelete?.nombre || userToDelete?.email}"?
-          Esta acción no se puede deshacer.
-        </p>
+        <p>¿Estás seguro de que quieres eliminar al usuario "{userToDelete?.nombre}"?</p>
+        <p>Esta acción no se puede deshacer.</p>
       </Modal>
     </DashboardLayout>
   );
