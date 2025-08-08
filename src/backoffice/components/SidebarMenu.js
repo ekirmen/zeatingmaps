@@ -81,7 +81,11 @@ import {
   faTicketAlt as faMultiPassIcon,
   faCalendarAlt as faSeasonTicketsIcon,
   faCheckCircle,
-  faSearch
+  faSearch,
+  faGlobe,
+  faBuilding,
+  faCog,
+  faUsers
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import EventSearch from './EventSearch';
@@ -211,6 +215,16 @@ const SidebarMenu = ({ collapsed }) => {
       path: '/dashboard/boleteria',
       icon: faTicketAlt,
       type: 'link'
+    },
+    {
+      title: 'Panel SaaS',
+      icon: faGlobe,
+      type: 'submenu',
+      submenuId: 'saas',
+      items: [
+        { title: 'Dashboard SaaS', path: '/dashboard/saas', icon: faChartBar },
+        { title: 'Configuración', path: '/dashboard/saas/settings', icon: faCog }
+      ]
     }
   ];
 

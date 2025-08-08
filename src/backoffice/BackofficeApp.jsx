@@ -37,6 +37,9 @@ import Plano from './pages/Plano';
 import CRM from './pages/CRM';
 import Productos from './pages/Productos';
 import PlantillasProductos from './pages/PlantillasProductos';
+import SaasDashboard from './pages/SaasDashboard';
+import TenantDetail from './pages/TenantDetail';
+import SaasSettings from './pages/SaasSettings';
 
 const BackofficeApp = () => {
   return (
@@ -125,6 +128,11 @@ const BackofficeApp = () => {
         <Route path="settings" element={<SystemSettings />} />
         <Route path="logs" element={<AuditLogs />} />
         <Route path="printer" element={<PrinterSettings />} />
+        
+        {/* Panel SaaS */}
+        <Route path="saas" element={<SaasDashboard />} />
+        <Route path="saas/tenant/:tenantId" element={<TenantDetail />} />
+        <Route path="saas/settings" element={<SaasSettings />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
