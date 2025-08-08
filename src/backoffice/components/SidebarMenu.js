@@ -82,10 +82,7 @@ import {
   faCalendarAlt as faSeasonTicketsIcon,
   faCheckCircle,
   faSearch,
-  faGlobe,
-  faBuilding,
-  faCog,
-  faUsers
+  
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import EventSearch from './EventSearch';

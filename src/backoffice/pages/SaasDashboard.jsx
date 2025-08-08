@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Progress, Alert, Tabs, Badge, Tooltip, Avatar, Switch, message, notification } from 'antd';
 import { 
   UserOutlined, 
-  BuildingOutlined, 
+  BankOutlined, 
   DollarOutlined, 
   CheckCircleOutlined, 
   ExclamationCircleOutlined, 
@@ -188,7 +188,7 @@ const SaasDashboard = () => {
         <Space>
           <Avatar 
             src={record.logo_url} 
-            icon={<BuildingOutlined />}
+            icon={<BankOutlined />}
             style={{ backgroundColor: record.primary_color }}
           />
           <div>
@@ -305,7 +305,7 @@ const SaasDashboard = () => {
             <Statistic
               title="Total Empresas"
               value={stats.totalTenants}
-              prefix={<BuildingOutlined />}
+              prefix={<BankOutlined />}
               valueStyle={{ color: '#1890ff' }}
             />
           </Card>

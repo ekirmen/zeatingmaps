@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Progress, Alert, Tabs, Badge, Tooltip, Avatar, Switch, message, notification, Timeline, Descriptions, Divider } from 'antd';
 import { 
   UserOutlined, 
-  BuildingOutlined, 
+  BankOutlined, 
   DollarOutlined, 
   CheckCircleOutlined, 
   ExclamationCircleOutlined, 
@@ -268,7 +268,7 @@ const TenantDetail = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <Title level={2}>
-              <BuildingOutlined style={{ marginRight: '8px' }} />
+              <BankOutlined style={{ marginRight: '8px' }} />
               {tenant.company_name}
             </Title>
             <Text type="secondary">
