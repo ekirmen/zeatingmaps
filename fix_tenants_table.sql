@@ -6,7 +6,7 @@
 -- =====================================================
 
 -- Agregar columnas faltantes a la tabla tenants
-ALTER TABLE tenants ADD COLUMN IF NOT EXISTS email VARCHAR(255);
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS contact_email VARCHAR(255);
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS max_users INTEGER DEFAULT 10;
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS max_events INTEGER DEFAULT 50;
 ALTER TABLE tenants ADD COLUMN IF NOT EXISTS plan_type VARCHAR(50) DEFAULT 'basic';
@@ -19,7 +19,7 @@ ALTER TABLE tenants ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'active'
 -- Actualizar tenants existentes con datos por defecto
 UPDATE tenants 
 SET 
-    email = COALESCE(email, 'admin@empresa.com'),
+    contact_email = COALESCE(contact_email, 'admin@empresa.com'),
     max_users = COALESCE(max_users, 10),
     max_events = COALESCE(max_events, 50),
     plan_type = COALESCE(plan_type, 'basic'),
@@ -32,13 +32,13 @@ SET
             ELSE subdomain 
         END
     )
-WHERE email IS NULL OR max_users IS NULL OR max_events IS NULL OR plan_type IS NULL OR status IS NULL OR subdomain IS NULL;
+WHERE contact_email IS NULL OR max_users IS NULL OR max_events IS NULL OR plan_type IS NULL OR status IS NULL OR subdomain IS NULL;
 
 -- =====================================================
 -- CREAR ÍNDICES PARA MEJOR RENDIMIENTO
 -- =====================================================
 
-CREATE INDEX IF NOT EXISTS idx_tenants_email ON tenants(email);
+CREATE INDEX IF NOT EXISTS idx_tenants_contact_email ON tenants(contact_email);
 CREATE INDEX IF NOT EXISTS idx_tenants_status ON tenants(status);
 CREATE INDEX IF NOT EXISTS idx_tenants_plan_type ON tenants(plan_type);
 CREATE INDEX IF NOT EXISTS idx_tenants_subdomain ON tenants(subdomain);
@@ -62,7 +62,7 @@ ORDER BY ordinal_position;
 -- =====================================================
 
 -- Insertar tenant de ejemplo si no existe
-INSERT INTO tenants (id, company_name, subdomain, email, plan_type, status, max_users, max_events, created_at, updated_at)
+INSERT INTO tenants (id, company_name, subdomain, contact_email, plan_type, status, max_users, max_events, created_at, updated_at)
 VALUES (
     gen_random_uuid(),
     'Empresa Demo',

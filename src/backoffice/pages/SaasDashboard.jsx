@@ -176,7 +176,7 @@ const SaasDashboard = () => {
         query = query.eq('plan_type', filters.plan);
       }
       if (filters.searchTerm) {
-        query = query.or(`company_name.ilike.%${filters.searchTerm}%,email.ilike.%${filters.searchTerm}%`);
+        query = query.or(`company_name.ilike.%${filters.searchTerm}%,contact_email.ilike.%${filters.searchTerm}%`);
       }
       
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -252,7 +252,7 @@ const SaasDashboard = () => {
     setEditingTenant(tenant);
     form.setFieldsValue({
       company_name: tenant.company_name,
-      email: tenant.email,
+      contact_email: tenant.contact_email,
       plan_type: tenant.plan_type,
       status: tenant.status,
       max_users: tenant.max_users,
@@ -862,7 +862,7 @@ const SaasDashboard = () => {
             </Col>
             <Col span={12}>
               <Form.Item
-                name="email"
+                name="contact_email"
                 label="Email de Contacto"
                 rules={[{ required: true, type: 'email', message: 'Email válido requerido' }]}
               >
@@ -946,7 +946,7 @@ const SaasDashboard = () => {
             <Descriptions bordered column={2}>
               <Descriptions.Item label="Empresa">{selectedTenant.company_name}</Descriptions.Item>
               <Descriptions.Item label="Subdominio">{selectedTenant.subdomain}.ticketera.com</Descriptions.Item>
-              <Descriptions.Item label="Email">{selectedTenant.email}</Descriptions.Item>
+              <Descriptions.Item label="Email">{selectedTenant.contact_email}</Descriptions.Item>
               <Descriptions.Item label="Teléfono">{selectedTenant.contact_phone}</Descriptions.Item>
               <Descriptions.Item label="Plan">
                 <Tag color={getPlanColor(selectedTenant.plan_type)}>
