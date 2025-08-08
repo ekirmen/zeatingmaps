@@ -40,16 +40,38 @@ export const getCmsPage = async (slug) => {
  */
 export const getFunciones = async (eventId) => {
   try {
+    // Primero obtener el evento para obtener su tenant_id
+    const { data: eventoData, error: eventoError } = await supabase
+      .from('eventos')
+      .select('tenant_id')
+      .eq('id', eventId)
+      .single();
+
+    if (eventoError) {
+      console.error('Error fetching evento tenant:', eventoError.message);
+      throw eventoError;
+    }
+
+    if (!eventoData) {
+      console.error('Evento no encontrado');
+      return [];
+    }
+
+    // Ahora obtener las funciones filtrando por tenant_id
     const { data, error } = await supabase
       .from('funciones')
       .select(`
         id,
         fecha_celebracion,
-        plantilla:plantilla (id, nombre, detalles),
-        sala:salas (id, nombre),
-        evento
+        evento,
+        sala,
+        salas (
+          id,
+          nombre
+        )
       `)
       .eq('evento', eventId)
+      .eq('tenant_id', eventoData.tenant_id)
       .order('fecha_celebracion', { ascending: true });
 
     if (error) {
@@ -57,21 +79,22 @@ export const getFunciones = async (eventId) => {
       throw error;
     }
 
-    // Parse detalles JSON string to array if needed
-    if (data && Array.isArray(data)) {
-      data.forEach(funcion => {
-        if (funcion.plantilla && typeof funcion.plantilla.detalles === 'string') {
-          try {
-            funcion.plantilla.detalles = JSON.parse(funcion.plantilla.detalles);
-          } catch (e) {
-            console.error('Error parsing plantilla.detalles JSON:', e);
-            funcion.plantilla.detalles = [];
-          }
-        }
-      });
-    }
+    // Transformar datos al formato esperado por el frontend
+    const transformedData = (data || []).map(funcion => ({
+      id: funcion.id,
+      fecha_celebracion: funcion.fecha_celebracion,
+      evento: funcion.evento,
+      sala: funcion.sala,
+      sala_nombre: funcion.salas?.nombre || 'Sala sin nombre',
+      // Crear un objeto plantilla básico si no existe
+      plantilla: {
+        id: null,
+        nombre: 'Plantilla Básica',
+        detalles: []
+      }
+    }));
 
-    return data;
+    return transformedData;
   } catch (error) {
     console.error('Unexpected error in getFunciones:', error);
     throw error;
@@ -87,16 +110,37 @@ export const getFunciones = async (eventId) => {
  */
 export const getFuncion = async (functionId) => {
   try {
+    // Primero obtener la función para obtener su tenant_id
+    const { data: funcionData, error: funcionError } = await supabase
+      .from('funciones')
+      .select('tenant_id, evento')
+      .eq('id', functionId)
+      .single();
+
+    if (funcionError && funcionError.code !== 'PGRST116') {
+      console.error('Error fetching funcion tenant:', funcionError.message);
+      throw funcionError;
+    }
+
+    if (!funcionData) {
+      return null;
+    }
+
+    // Ahora obtener la función completa filtrando por tenant_id
     const { data, error } = await supabase
       .from('funciones')
       .select(`
         id,
         fecha_celebracion,
-        plantilla:plantilla (id, nombre, detalles),
-        sala:salas (id, nombre),
-        evento
+        evento,
+        sala,
+        salas (
+          id,
+          nombre
+        )
       `)
       .eq('id', functionId)
+      .eq('tenant_id', funcionData.tenant_id)
       .single();
 
     if (error && error.code !== 'PGRST116') {
@@ -104,17 +148,24 @@ export const getFuncion = async (functionId) => {
       throw error;
     }
 
-    // ✅ Asegurarse de que detalles sea un array
-    if (data?.plantilla && typeof data.plantilla.detalles === 'string') {
-      try {
-        data.plantilla.detalles = JSON.parse(data.plantilla.detalles);
-      } catch (e) {
-        console.error('Error parsing plantilla.detalles JSON:', e);
-        data.plantilla.detalles = [];
-      }
-    }
+    if (!data) return null;
 
-    return data;
+    // Transformar datos al formato esperado por el frontend
+    const transformedData = {
+      id: data.id,
+      fecha_celebracion: data.fecha_celebracion,
+      evento: data.evento,
+      sala: data.sala,
+      sala_nombre: data.salas?.nombre || 'Sala sin nombre',
+      // Crear un objeto plantilla básico si no existe
+      plantilla: {
+        id: null,
+        nombre: 'Plantilla Básica',
+        detalles: []
+      }
+    };
+
+    return transformedData;
   } catch (error) {
     console.error('Unexpected error in getFuncion:', error);
     throw error;
