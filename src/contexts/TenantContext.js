@@ -11,16 +11,52 @@ export const TenantProvider = ({ children }) => {
   const detectTenant = async () => {
     try {
       const hostname = window.location.hostname;
-      const subdomain = hostname.split('.')[0];
+      console.log('🔍 Detectando tenant para hostname:', hostname);
       
-      // Si no hay subdominio o es www, usar tenant por defecto
+      // Extraer subdominio de diferentes formatos de hostname
+      let subdomain = null;
+      
+      // Caso 1: localhost (desarrollo)
+      if (hostname === 'localhost' || hostname.includes('localhost')) {
+        console.log('📍 Entorno de desarrollo detectado');
+        setCurrentTenant(null);
+        setLoading(false);
+        return;
+      }
+      
+      // Caso 2: Vercel preview deployments (ej: zeatingmaps-ekirmens-projects.vercel.app)
+      if (hostname.includes('.vercel.app')) {
+        const parts = hostname.split('.');
+        if (parts.length >= 3) {
+          // Tomar solo la primera parte antes del primer guión
+          const firstPart = parts[0];
+          if (firstPart.includes('-')) {
+            subdomain = firstPart.split('-')[0];
+          } else {
+            subdomain = firstPart;
+          }
+        }
+      }
+      // Caso 3: Dominio personalizado (ej: empresa.ticketera.com)
+      else if (hostname.includes('.')) {
+        const parts = hostname.split('.');
+        if (parts.length >= 2) {
+          subdomain = parts[0];
+        }
+      }
+      
+      console.log('🔍 Subdominio extraído:', subdomain);
+      
+      // Si no hay subdominio válido o es www, usar tenant por defecto
       if (!subdomain || subdomain === 'www' || subdomain === 'localhost') {
+        console.log('📍 No se detectó subdominio válido, usando tenant por defecto');
         setCurrentTenant(null);
         setLoading(false);
         return;
       }
 
       // Buscar tenant por subdominio
+      console.log('🔍 Buscando tenant con subdominio:', subdomain);
       const { data: tenant, error } = await supabase
         .from('tenants')
         .select('*')
@@ -28,13 +64,15 @@ export const TenantProvider = ({ children }) => {
         .single();
 
       if (error) {
-        console.error('Error detecting tenant:', error);
+        console.error('❌ Error detecting tenant:', error);
+        console.log('📍 No se encontró tenant, usando configuración por defecto');
         setCurrentTenant(null);
       } else {
+        console.log('✅ Tenant encontrado:', tenant);
         setCurrentTenant(tenant);
       }
     } catch (error) {
-      console.error('Error in tenant detection:', error);
+      console.error('❌ Error in tenant detection:', error);
       setCurrentTenant(null);
     } finally {
       setLoading(false);
