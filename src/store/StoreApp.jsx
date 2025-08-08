@@ -12,7 +12,7 @@ import EventInfo from './pages/EventInfo';
 import EventMap from './pages/EventMap';
 import BuyEvent from './pages/BuyEvent';
 import SelectSeats from './pages/SelectSeats';
-import CartPage from './pages/CartPage'; // 👈 agrega esta línea arriba
+import CartPage from './pages/Cart';
 import Pay from './pages/Pay';
 import FaqPage from './pages/FaqPage';
 import SeatSelectionPage from './pages/SeatSelectionPage';

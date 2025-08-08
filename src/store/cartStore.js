@@ -78,13 +78,20 @@ export const useCartStore = create(
             toast.success('Asiento eliminado del carrito');
           } else {
             const updated = [...items, seat];
-            set({
+            const newState = {
               items: updated,
               functionId: seat.functionId || seat.funcionId || get().functionId,
-            });
+            };
+            
+            // Solo iniciar el temporizador si es el primer item
             if (items.length === 0 && get().products.length === 0) {
+              const newExpiration = Date.now() + LOCK_EXPIRATION_TIME_MS;
+              newState.cartExpiration = newExpiration;
+              newState.timeLeft = Math.floor(LOCK_EXPIRATION_TIME_MS / 1000);
               startExpirationTimer();
             }
+            
+            set(newState);
             toast.success('Asiento añadido al carrito');
           }
         },

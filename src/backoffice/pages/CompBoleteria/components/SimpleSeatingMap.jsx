@@ -158,7 +158,12 @@ const SimpleSeatingMap = ({
   }, [selectedPlantilla]);
 
   const getSeatColor = (seat) => {
-    // Si está seleccionado por el usuario actual
+    // Si está en modo bloqueo y está seleccionado para bloquear
+    if (blockMode && blockedSeats.some(s => s._id === seat._id)) {
+      return '#ff4d4f'; // Rojo para asientos seleccionados en modo bloqueo
+    }
+    
+    // Si está seleccionado por el usuario actual (modo normal)
     if (selectedSeats.some(s => s._id === seat._id)) {
       return '#52c41a'; // Verde para seleccionado
     }

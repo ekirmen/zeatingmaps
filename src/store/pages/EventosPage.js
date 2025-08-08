@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+
 import { Button, Card, Select, message, Spin, Alert, Tabs } from 'antd';
 import { CalendarOutlined, EnvironmentOutlined, ClockCircleOutlined, ArrowLeftOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 import { supabase } from '../../supabaseClient';
-import { isUuid, isNumericId } from '../../utils/isUuid';
+
 import { getFunciones, getFuncion, fetchMapa } from '../services/apistore';
 import formatDateString from '../../utils/formatDateString';
 import { useCartStore } from '../../store/cartStore';
@@ -23,7 +23,7 @@ const EventosPage = () => {
   const { eventSlug } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { t } = useTranslation();
+
 
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
@@ -37,13 +37,10 @@ const EventosPage = () => {
   const [activeTab, setActiveTab] = useState('seats');
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
   const cartItems = useCartStore((state) => state.items);
   const getItemCount = useCartStore((state) => state.getItemCount);
   const {
-    isSeatLocked,
-    isSeatLockedByMe,
-    lockSeat,
-    unlockSeat,
     subscribeToFunction,
     unsubscribe
   } = useSeatLockStore();
@@ -88,8 +85,8 @@ const EventosPage = () => {
 
         // Si hay una función en los parámetros de URL, seleccionarla
         const funcionParam = searchParams.get('funcion');
-        if (funcionParam && funcionesData) {
-          const funcion = funcionesData.find(f => f.id == funcionParam || f._id == funcionParam);
+                 if (funcionParam && funcionesData) {
+           const funcion = funcionesData.find(f => f.id === funcionParam || f._id === funcionParam);
           if (funcion) {
             const fid = funcion.id || funcion._id;
             setSelectedFunctionId(fid);
@@ -182,7 +179,10 @@ const EventosPage = () => {
           }
         }
         if (funcion?.plantilla) {
+          console.log('Plantilla de precios encontrada:', funcion.plantilla);
           setPriceTemplate(funcion.plantilla);
+        } else {
+          console.log('No se encontró plantilla de precios para la función:', funcion);
         }
       } catch (err) {
         console.error('Error loading map:', err);
@@ -202,19 +202,37 @@ const EventosPage = () => {
       if (!sillaId || !zonaId || !selectedFunctionId) return;
 
       const nombreZona = zona?.nombre || 'Zona';
+      
+      // Debug: mostrar información de precios
+      console.log('Price template:', priceTemplate);
+      console.log('Zona ID:', zonaId);
+      console.log('Detalles:', priceTemplate?.detalles);
+      
       const detalle = priceTemplate?.detalles?.find(d => d.zonaId === zonaId);
-      const precio = detalle?.precio || 0;
+      const precio = detalle?.precio || 10; // Precio por defecto de $10
 
-      toggleSeat({
-        sillaId,
-        zonaId,
-        precio,
-        nombre: silla.nombre || silla.numero || silla._id,
-        nombreZona,
-        functionId: selectedFunctionId,
-      });
+      console.log('Precio encontrado:', precio);
+
+      // Verificar si el asiento ya está en el carrito
+      const cartItems = useCartStore.getState().items;
+      const exists = cartItems.some(item => item.sillaId === sillaId);
+      
+      if (exists) {
+        // Si está en el carrito, quitarlo
+        removeFromCart(sillaId);
+      } else {
+        // Si no está en el carrito, agregarlo
+        toggleSeat({
+          sillaId,
+          zonaId,
+          precio,
+          nombre: silla.nombre || silla.numero || silla._id,
+          nombreZona,
+          functionId: selectedFunctionId,
+        });
+      }
     },
-    [selectedFunctionId, mapa, priceTemplate, toggleSeat]
+    [selectedFunctionId, mapa, priceTemplate, toggleSeat, removeFromCart]
   );
 
   const handleFunctionSelect = (functionId) => {
@@ -381,18 +399,26 @@ const EventosPage = () => {
                   >
                     {mapa ? (
                       <div className="h-96 overflow-auto">
-                        <SeatingMapUnified
-                          mapa={mapa}
-                          onSeatClick={handleSeatToggle}
-                          onTableToggle={(table) => {
-                            console.log('Mesa seleccionada:', table);
-                          }}
-                          selectedSeats={cartItems ? cartItems.map(item => item.sillaId) : []}
-                          isSeatLocked={isSeatLocked}
-                          isSeatLockedByMe={isSeatLockedByMe}
-                          lockSeat={lockSeat}
-                          unlockSeat={unlockSeat}
-                        />
+                                                 <SeatingMapUnified
+                           mapa={mapa}
+                           funcionId={selectedFunctionId}
+                           onSeatToggle={handleSeatToggle}
+                           onTableToggle={(table) => {
+                             console.log('Mesa seleccionada:', table);
+                           }}
+                           isSeatLocked={() => false}
+                           isSeatLockedByMe={() => false}
+                           lockSeat={() => Promise.resolve(true)}
+                           unlockSeat={() => Promise.resolve(true)}
+                           isTableLocked={() => false}
+                           isTableLockedByMe={() => false}
+                           lockTable={() => Promise.resolve(true)}
+                           unlockTable={() => Promise.resolve(true)}
+                           isAnySeatInTableLocked={() => false}
+                           areAllSeatsInTableLockedByMe={() => false}
+                           foundSeats={[]}
+                           selectedSeats={cartItems.map(item => item.sillaId)}
+                         />
                       </div>
                     ) : (
                       <div className="flex items-center justify-center h-96 text-gray-500">

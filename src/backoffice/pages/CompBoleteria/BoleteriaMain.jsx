@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber } from 'antd';
-import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined } from '@ant-design/icons';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ProductosWidget from '../../../store/components/ProductosWidget';
 import PaymentModal from './PaymentModal';
+import CustomFormBuilder from './components/CustomFormBuilder';
+import MailChimpIntegration from './components/MailChimpIntegration';
+import PushNotifications from './components/PushNotifications';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 import { supabase } from '../../../supabaseClient';
@@ -87,6 +90,11 @@ const BoleteriaMain = () => {
   // Estados para gestión de carritos
   const [showCartManagement, setShowCartManagement] = useState(false);
   const [savedCarts, setSavedCarts] = useState([]);
+
+  // Estados para formularios personalizados y MailChimp
+  const [showCustomForms, setShowCustomForms] = useState(false);
+  const [showMailChimp, setShowMailChimp] = useState(false);
+  const [showPushNotifications, setShowPushNotifications] = useState(false);
 
   // Función para obtener las imágenes del evento
   const getEventImages = () => {
@@ -575,6 +583,61 @@ const BoleteriaMain = () => {
     }
   };
 
+  // Función para manejar el bloqueo de asientos
+  const handleBlockSeats = async () => {
+    if (blockedSeats.length === 0) {
+      message.warning('No hay asientos seleccionados para bloquear');
+      return;
+    }
+
+    try {
+      // Marcar asientos como reservados en la base de datos
+      for (const seat of blockedSeats) {
+        const { error } = await supabase
+          .from('sillas')
+          .update({ 
+            estado: 'reservado',
+            user_id: selectedClient?.id || null,
+            bloqueado: true
+          })
+          .eq('_id', seat._id);
+
+        if (error) {
+          console.error('Error al bloquear asiento:', error);
+          message.error(`Error al bloquear asiento ${seat.nombre}`);
+        }
+      }
+
+      message.success(`${blockedSeats.length} asiento(s) bloqueado(s) correctamente. Los asientos ahora están reservados y no pueden ser seleccionados por otros usuarios.`);
+      
+      // Limpiar asientos bloqueados y desactivar modo bloqueo
+      setBlockedSeats([]);
+      setBlockMode(false);
+      
+      // Recargar el mapa para mostrar los cambios
+      if (selectedFuncion?.sala?.id) {
+        // Aquí podrías recargar el mapa si es necesario
+        console.log('Asientos bloqueados exitosamente');
+      }
+      
+    } catch (error) {
+      console.error('Error al bloquear asientos:', error);
+      message.error('Error al bloquear asientos');
+    }
+  };
+
+  // Función para activar modo bloqueo solo cuando el carrito está vacío
+  const handleBlockModeToggle = (checked) => {
+    if (checked && (selectedSeats.length > 0 || productosCarrito.length > 0)) {
+      message.warning('El modo bloqueo solo se puede activar cuando el carrito está vacío');
+      return;
+    }
+    setBlockMode(checked);
+    if (!checked) {
+      setBlockedSeats([]); // Limpiar asientos bloqueados al desactivar
+    }
+  };
+
   const calculateTotal = () => {
     const seatsTotal = selectedSeats.reduce((sum, seat) => {
       const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
@@ -670,6 +733,17 @@ const BoleteriaMain = () => {
           </div>
           
           <div className="bg-white p-6 rounded-lg shadow-sm overflow-hidden">
+            {blockMode && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-red-800">Modo Bloqueo Activo</span>
+                </div>
+                <p className="text-xs text-red-600 mt-1">
+                  Haz clic en los asientos para seleccionarlos para bloquear. Los asientos seleccionados aparecerán en rojo.
+                </p>
+              </div>
+            )}
             <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}>
               <SimpleSeatingMap
                 selectedFuncion={selectedFuncion}
@@ -729,6 +803,24 @@ const BoleteriaMain = () => {
             <div>Carritos</div>
           </div>
         </Tooltip>
+        <Tooltip title="Formularios personalizados" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowCustomForms(true)}>
+            <FormOutlined className="text-xl mb-1" />
+            <div>Formularios</div>
+          </div>
+        </Tooltip>
+        <Tooltip title="Integración MailChimp" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowMailChimp(true)}>
+            <MailOutlined className="text-xl mb-1" />
+            <div>MailChimp</div>
+          </div>
+        </Tooltip>
+        <Tooltip title="Notificaciones Push" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowPushNotifications(true)}>
+            <BellOutlined className="text-xl mb-1" />
+            <div>Notificaciones</div>
+          </div>
+        </Tooltip>
         <Tooltip title="Exportar datos del evento" placement="right">
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={exportEventData}>
             <UploadOutlined className="text-xl mb-1" />
@@ -773,7 +865,7 @@ const BoleteriaMain = () => {
                 <input
                   type="checkbox"
                   checked={blockMode}
-                  onChange={(e) => setBlockMode(e.target.checked)}
+                  onChange={(e) => handleBlockModeToggle(e.target.checked)}
                   className="rounded"
                 />
               </div>
@@ -1028,12 +1120,29 @@ const BoleteriaMain = () => {
                    </div>
                  )}
                  
-                 <div className="border-t pt-2">
-                   <div className="flex justify-between font-bold text-lg">
-                     <span>Total:</span>
-                     <span>${calculateTotal().toFixed(2)}</span>
-                   </div>
+                                <div className="border-t pt-2">
+                 <div className="flex justify-between font-bold text-lg">
+                   <span>Total:</span>
+                   <span>${calculateTotal().toFixed(2)}</span>
                  </div>
+               </div>
+               
+               {blockMode && (
+                 <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                   <div className="flex items-center space-x-2 mb-2">
+                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                     <span className="text-sm font-medium text-red-800">Modo Bloqueo Activo</span>
+                   </div>
+                   <p className="text-xs text-red-600">
+                     Selecciona asientos en el mapa para bloquearlos. Los asientos bloqueados se marcarán como reservados.
+                   </p>
+                   {blockedSeats.length > 0 && (
+                     <div className="mt-2 text-xs text-red-700">
+                       <strong>{blockedSeats.length} asiento(s) seleccionado(s) para bloquear</strong>
+                     </div>
+                   )}
+                 </div>
+               )}
                </div>
               
                                                            <div className="mt-6 space-y-2">
@@ -1052,6 +1161,16 @@ const BoleteriaMain = () => {
                     >
                       Limpiar
                     </Button>
+                    {blockMode && blockedSeats.length > 0 && (
+                      <Button 
+                        size="small"
+                        type="primary"
+                        danger
+                        onClick={handleBlockSeats}
+                      >
+                        Bloquear ({blockedSeats.length})
+                      </Button>
+                    )}
                   </div>
                   
                   <Tooltip title="Paso 6: Procesar pago y completar venta">
@@ -1440,6 +1559,46 @@ const BoleteriaMain = () => {
              </div>
            )}
          </div>
+       </Modal>
+
+       {/* Modal de formularios personalizados */}
+       <Modal
+         title="Formularios Personalizados"
+         open={showCustomForms}
+         onCancel={() => setShowCustomForms(false)}
+         footer={null}
+         width={1200}
+         style={{ top: 20 }}
+       >
+         <CustomFormBuilder 
+           eventId={selectedEvent?.id}
+           onSave={(form) => {
+             message.success('Formulario guardado correctamente');
+             setShowCustomForms(false);
+           }}
+         />
+       </Modal>
+
+       {/* Modal de integración MailChimp */}
+       <Modal
+         title="Integración con MailChimp"
+         open={showMailChimp}
+         onCancel={() => setShowMailChimp(false)}
+         footer={null}
+         width={800}
+       >
+         <MailChimpIntegration eventId={selectedEvent?.id} />
+       </Modal>
+
+       {/* Modal de notificaciones push */}
+       <Modal
+         title="Notificaciones Push"
+         open={showPushNotifications}
+         onCancel={() => setShowPushNotifications(false)}
+         footer={null}
+         width={800}
+       >
+         <PushNotifications eventId={selectedEvent?.id} />
        </Modal>
 
        {/* PaymentModal */}

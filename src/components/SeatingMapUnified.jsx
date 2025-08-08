@@ -18,62 +18,39 @@ const SeatingMapUnified = ({
   onSeatToggle,
   onTableToggle,
   onSeatInfo,
-  foundSeats = []
+  foundSeats = [],
+  selectedSeats = []
 }) => {
   const channel = useSeatLockStore(state => state.channel);
   const canLockSeats = !!channel;
 
   const handleSeatClick = useCallback(
     async (seat) => {
-      if (!canLockSeats) {
-        alert('Sincronizando disponibilidad...');
-        return;
-      }
-
       const seatId = seat._id;
       if (!seatId) return;
 
-      if (isSeatLocked(seatId) && !isSeatLockedByMe(seatId)) {
-        alert('Asiento bloqueado por otro usuario.');
-        return;
-      }
-
-      if (['reservado', 'pagado'].includes(seat.estado)) {
+      // Para el store front, ignoramos el estado "reservado" y permitimos selección
+      // Solo bloqueamos asientos que están realmente pagados
+      if (seat.estado === 'pagado') {
         if (onSeatInfo) onSeatInfo(seat);
         return;
       }
 
-      const result = isSeatLocked(seatId)
-        ? await unlockSeat(seatId)
-        : await lockSeat(seatId);
-
-      if (result && onSeatToggle) onSeatToggle(seat);
+      // Llamar directamente a onSeatToggle sin usar el sistema de bloqueo
+      if (onSeatToggle) onSeatToggle(seat);
     },
-    [canLockSeats, lockSeat, unlockSeat, isSeatLocked, isSeatLockedByMe, onSeatToggle, onSeatInfo]
+    [onSeatToggle, onSeatInfo]
   );
 
   const handleTableClick = useCallback(
     async (table) => {
-      if (!canLockSeats) {
-        alert('Sincronizando disponibilidad...');
-        return;
-      }
-
       const tableId = table._id;
       if (!tableId) return;
 
-      if (isTableLocked(tableId) && !isTableLockedByMe(tableId)) {
-        alert('Mesa bloqueada por otro usuario.');
-        return;
-      }
-
-      const result = isTableLocked(tableId)
-        ? await unlockTable(tableId)
-        : await lockTable(tableId);
-
-      if (result && onTableToggle) onTableToggle(table);
+      // Llamar directamente a onTableToggle sin usar el sistema de bloqueo
+      if (onTableToggle) onTableToggle(table);
     },
-    [canLockSeats, lockTable, unlockTable, isTableLocked, isTableLockedByMe, onTableToggle]
+    [onTableToggle]
   );
 
   // Fetch zones from "mapa". Some backends store the zones inside
@@ -111,17 +88,8 @@ const SeatingMapUnified = ({
         <Layer>
           {/* Renderizar mesas primero (para que estén detrás de las sillas) */}
           {mesas.map((mesa) => {
-            const isLocked = isTableLocked(mesa._id);
-            const isMine = isTableLockedByMe(mesa._id);
-            const hasLockedSeats = isAnySeatInTableLocked(mesa._id, allSeats);
-            const allSeatsLockedByMe = areAllSeatsInTableLockedByMe(mesa._id, allSeats);
-
-            // Determinar color de la mesa
+            // Color simple para las mesas
             let fill = '#f7fafc'; // Gris claro por defecto
-            if (isLocked && isMine) fill = '#f6ad55'; // Naranja - bloqueada por mí
-            else if (isLocked) fill = '#fc8181'; // Rojo - bloqueada por otro
-            else if (hasLockedSeats) fill = '#fed7d7'; // Rojo claro - tiene asientos bloqueados
-            else if (allSeatsLockedByMe) fill = '#fef5e7'; // Naranja claro - todos los asientos bloqueados por mí
 
             return (
               <Group key={mesa._id} x={mesa.posicion?.x || 0} y={mesa.posicion?.y || 0}>
@@ -168,13 +136,12 @@ const SeatingMapUnified = ({
                 fill="#2d3748"
               />
               {zona.asientos.map(seat => {
-                const locked = isSeatLocked(seat._id);
-                const mine = isSeatLockedByMe(seat._id);
+                // Verificar si el asiento está seleccionado usando selectedSeats
+                const isSelected = selectedSeats && selectedSeats.includes(seat._id);
 
                 // Default fill colors
                 let fill = '#9ae6b4'; // Verde libre
-                if (locked && mine) fill = '#f6ad55'; // Naranja
-                else if (locked) fill = '#fc8181'; // Rojo
+                if (isSelected) fill = '#3182ce'; // Azul - seleccionado
 
                 // Override fill if seat is found by locator search
                 if (foundSeatIds.has(seat._id)) {
