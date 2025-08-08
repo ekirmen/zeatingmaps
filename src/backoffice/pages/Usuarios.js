@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
 import CreateUserForm from '../components/CreateUserForm';
-import EditUserForm from '../components/edituserform';
+import EnhancedEditUserForm from '../components/EnhancedEditUserForm';
 import { toast } from 'react-hot-toast';
 import { AiOutlineEdit, AiOutlineDelete, AiOutlineKey, AiOutlineMail, AiOutlinePhone, AiOutlineUser } from 'react-icons/ai';
 
@@ -304,7 +304,7 @@ const Usuarios = () => {
       {/* Edit User Modal */}
       {editingUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-xl relative">
+          <div className="bg-white p-6 rounded-lg w-full max-w-6xl max-h-screen overflow-y-auto relative">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Editar Usuario</h2>
               <button
@@ -314,7 +314,7 @@ const Usuarios = () => {
                 &times;
               </button>
             </div>
-            <EditUserForm
+            <EnhancedEditUserForm
               user={editingUser}
               onUpdateUser={handleUpdateUser}
               onCancel={() => setEditingUser(null)}

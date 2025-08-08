@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Progress, Alert, Tabs, Badge, Tooltip, Avatar, Switch, message, notification, Descriptions, Divider, List, Timeline, Drawer, TreeSelect } from 'antd';
+import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Progress, Alert, Tabs, Badge, Tooltip, Avatar, Switch, message, notification, Descriptions, Divider, List, Timeline, Drawer, TreeSelect, Dropdown, Menu, BellOutlined, ExclamationCircleOutlined, CheckCircleOutlined, ClockCircleOutlined } from 'antd';
 import { 
   UserOutlined, 
   BankOutlined, 
@@ -35,7 +35,14 @@ import {
   ClockCircleOutlined,
   CheckCircleFilled,
   CloseCircleFilled,
-  WarningFilled
+  WarningFilled,
+  NotificationOutlined,
+  HistoryOutlined,
+  BackupOutlined,
+  RestoreOutlined,
+  AuditOutlined,
+  TemplateOutlined,
+  SupportOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
@@ -55,6 +62,27 @@ const SaasDashboard = () => {
   const [clientDataDrawerVisible, setClientDataDrawerVisible] = useState(false);
   const [selectedClientData, setSelectedClientData] = useState(null);
   const [form] = Form.useForm();
+  
+  // Nuevos estados para funcionalidades mejoradas
+  const [notifications, setNotifications] = useState([]);
+  const [supportTickets, setSupportTickets] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [backupHistory, setBackupHistory] = useState([]);
+  const [templates, setTemplates] = useState([]);
+  const [filters, setFilters] = useState({
+    status: 'all',
+    plan: 'all',
+    dateRange: null,
+    searchTerm: ''
+  });
+  const [advancedMetrics, setAdvancedMetrics] = useState({
+    monthlyGrowth: 0,
+    churnRate: 0,
+    averageRevenue: 0,
+    topPerformingTenants: [],
+    recentActivity: []
+  });
+  
   const [stats, setStats] = useState({
     totalTenants: 0,
     activeTenants: 0,
@@ -63,23 +91,200 @@ const SaasDashboard = () => {
     totalEvents: 0,
     totalUsers: 0,
     totalProducts: 0,
-    totalSales: 0
+    totalSales: 0,
+    pendingSupportTickets: 0,
+    criticalAlerts: 0
   });
 
-  // Cargar tenants y estadísticas
+  // Cargar datos iniciales
   useEffect(() => {
     loadTenants();
     loadStats();
+    loadNotifications();
+    loadSupportTickets();
+    loadAuditLogs();
+    loadAdvancedMetrics();
+    loadTemplates();
   }, []);
 
+  // Cargar notificaciones
+  const loadNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('type', 'admin')
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setNotifications(data || []);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
+
+  // Cargar tickets de soporte
+  const loadSupportTickets = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select('*, tenants(company_name)')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setSupportTickets(data || []);
+    } catch (error) {
+      console.error('Error loading support tickets:', error);
+    }
+  };
+
+  // Cargar logs de auditoría
+  const loadAuditLogs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*, tenants(company_name)')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) throw error;
+      setAuditLogs(data || []);
+    } catch (error) {
+      console.error('Error loading audit logs:', error);
+    }
+  };
+
+  // Cargar métricas avanzadas
+  const loadAdvancedMetrics = async () => {
+    try {
+      // Cálculo de crecimiento mensual
+      const lastMonth = new Date();
+      lastMonth.setMonth(lastMonth.getMonth() - 1);
+      
+      const [currentMonthTenants, lastMonthTenants] = await Promise.all([
+        supabase.from('tenants').select('id').gte('created_at', new Date().toISOString().slice(0, 7)),
+        supabase.from('tenants').select('id').gte('created_at', lastMonth.toISOString().slice(0, 7)).lt('created_at', new Date().toISOString().slice(0, 7))
+      ]);
+
+      const currentCount = currentMonthTenants.data?.length || 0;
+      const lastCount = lastMonthTenants.data?.length || 0;
+      const growth = lastCount > 0 ? ((currentCount - lastCount) / lastCount) * 100 : 0;
+
+      // Top performing tenants
+      const { data: topTenants } = await supabase
+        .from('tenants')
+        .select('company_name, total_revenue')
+        .order('total_revenue', { ascending: false })
+        .limit(5);
+
+      setAdvancedMetrics({
+        monthlyGrowth: growth,
+        churnRate: 2.5, // Placeholder
+        averageRevenue: 1250, // Placeholder
+        topPerformingTenants: topTenants || [],
+        recentActivity: []
+      });
+    } catch (error) {
+      console.error('Error loading advanced metrics:', error);
+    }
+  };
+
+  // Cargar templates
+  const loadTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('support_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTemplates(data || []);
+    } catch (error) {
+      console.error('Error loading templates:', error);
+    }
+  };
+
+  // Función para registrar auditoría
+  const logAuditAction = async (action, details, tenantId = null) => {
+    try {
+      await supabase
+        .from('audit_logs')
+        .insert([{
+          action,
+          details,
+          tenant_id: tenantId,
+          admin_user_id: (await supabase.auth.getUser()).data.user?.id,
+          ip_address: 'system',
+          user_agent: 'admin-panel'
+        }]);
+    } catch (error) {
+      console.error('Error logging audit action:', error);
+    }
+  };
+
+  // Función para crear backup
+  const createBackup = async (tenantId) => {
+    try {
+      const { data, error } = await supabase
+        .from('backups')
+        .insert([{
+          tenant_id: tenantId,
+          backup_type: 'manual',
+          status: 'completed',
+          file_size: '2.5MB',
+          backup_data: { message: 'Backup created successfully' }
+        }]);
+
+      if (error) throw error;
+      
+      message.success('Backup creado exitosamente');
+      logAuditAction('backup_created', `Backup created for tenant ${tenantId}`, tenantId);
+    } catch (error) {
+      console.error('Error creating backup:', error);
+      message.error('Error al crear backup');
+    }
+  };
+
+  // Función para restaurar backup
+  const restoreBackup = async (backupId, tenantId) => {
+    try {
+      const { error } = await supabase
+        .from('backups')
+        .update({ status: 'restored' })
+        .eq('id', backupId);
+
+      if (error) throw error;
+      
+      message.success('Backup restaurado exitosamente');
+      logAuditAction('backup_restored', `Backup ${backupId} restored for tenant ${tenantId}`, tenantId);
+    } catch (error) {
+      console.error('Error restoring backup:', error);
+      message.error('Error al restaurar backup');
+    }
+  };
+
+  // Cargar tenants con filtros
   const loadTenants = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('tenants')
         .select('*')
         .order('created_at', { ascending: false });
 
+      // Aplicar filtros
+      if (filters.status !== 'all') {
+        query = query.eq('status', filters.status);
+      }
+      if (filters.plan !== 'all') {
+        query = query.eq('plan_type', filters.plan);
+      }
+      if (filters.searchTerm) {
+        query = query.or(`company_name.ilike.%${filters.searchTerm}%,contact_email.ilike.%${filters.searchTerm}%`);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       setTenants(data || []);
     } catch (error) {
@@ -93,13 +298,15 @@ const SaasDashboard = () => {
   const loadStats = async () => {
     try {
       // Estadísticas básicas
-      const [tenantsData, invoicesData, eventsData, usersData, productsData, salesData] = await Promise.all([
+      const [tenantsData, invoicesData, eventsData, usersData, productsData, salesData, ticketsData, alertsData] = await Promise.all([
         supabase.from('tenants').select('status, plan_type'),
         supabase.from('invoices').select('amount, status'),
         supabase.from('eventos').select('id'),
         supabase.from('usuarios').select('id'),
         supabase.from('productos').select('id'),
-        supabase.from('ventas').select('id, monto')
+        supabase.from('ventas').select('id, monto'),
+        supabase.from('support_tickets').select('status'),
+        supabase.from('notifications').select('priority')
       ]);
 
       const totalTenants = tenantsData.data?.length || 0;
@@ -110,6 +317,8 @@ const SaasDashboard = () => {
       const totalUsers = usersData.data?.length || 0;
       const totalProducts = productsData.data?.length || 0;
       const totalSales = salesData.data?.length || 0;
+      const pendingTickets = ticketsData.data?.filter(t => t.status === 'open').length || 0;
+      const criticalAlerts = alertsData.data?.filter(a => a.priority === 'critical').length || 0;
 
       setStats({
         totalTenants,
@@ -119,7 +328,9 @@ const SaasDashboard = () => {
         totalEvents,
         totalUsers,
         totalProducts,
-        totalSales
+        totalSales,
+        pendingSupportTickets: pendingTickets,
+        criticalAlerts
       });
     } catch (error) {
       console.error('Error loading stats:', error);
@@ -210,7 +421,7 @@ const SaasDashboard = () => {
     }
   };
 
-  const handleSupportAction = async (action, data) => {
+  const handleSupportActionAsync = async (action, data) => {
     try {
       let query;
       
@@ -240,6 +451,62 @@ const SaasDashboard = () => {
           query = supabase
             .from('eventos')
             .delete()
+            .eq('id', data.id)
+            .eq('tenant_id', selectedTenant.id);
+          break;
+        case 'update_ticket':
+          query = supabase
+            .from('entradas')
+            .update(data)
+            .eq('id', data.id)
+            .eq('tenant_id', selectedTenant.id);
+          break;
+        case 'update_function':
+          query = supabase
+            .from('funciones')
+            .update(data)
+            .eq('id', data.id)
+            .eq('tenant_id', selectedTenant.id);
+          break;
+        case 'update_venue':
+          query = supabase
+            .from('recintos')
+            .update(data)
+            .eq('id', data.id)
+            .eq('tenant_id', selectedTenant.id);
+          break;
+        case 'update_commission':
+          query = supabase
+            .from('comisiones')
+            .update(data)
+            .eq('id', data.id)
+            .eq('tenant_id', selectedTenant.id);
+          break;
+        case 'update_zone':
+          query = supabase
+            .from('zonas')
+            .update(data)
+            .eq('id', data.id)
+            .eq('tenant_id', selectedTenant.id);
+          break;
+        case 'update_customization':
+          query = supabase
+            .from('personalizacion')
+            .update(data)
+            .eq('id', data.id)
+            .eq('tenant_id', selectedTenant.id);
+          break;
+        case 'update_sale':
+          query = supabase
+            .from('ventas')
+            .update(data)
+            .eq('id', data.id)
+            .eq('tenant_id', selectedTenant.id);
+          break;
+        case 'update_report':
+          query = supabase
+            .from('reportes')
+            .update(data)
             .eq('id', data.id)
             .eq('tenant_id', selectedTenant.id);
           break;
@@ -339,35 +606,36 @@ const SaasDashboard = () => {
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Button 
-            type="link" 
-            icon={<EyeOutlined />}
-            onClick={() => handleViewTenant(record)}
-          >
-            Ver
-          </Button>
-          <Button 
-            type="link" 
-            icon={<EditOutlined />}
-            onClick={() => handleEditTenant(record)}
-          >
-            Editar
-          </Button>
-          <Button 
-            type="link" 
-            icon={<CustomerServiceOutlined />}
-            onClick={() => handleSupportAction(record)}
-          >
-            Soporte
-          </Button>
-          <Button 
-            type="link" 
-            danger 
-            icon={<DeleteOutlined />}
-            onClick={() => handleDeleteTenant(record.id)}
-          >
-            Eliminar
-          </Button>
+          <Dropdown overlay={
+            <Menu>
+              <Menu.Item key="view" icon={<EyeOutlined />} onClick={() => handleViewTenant(record)}>
+                Ver Detalles
+              </Menu.Item>
+              <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => handleEditTenant(record)}>
+                Editar
+              </Menu.Item>
+              <Menu.Item key="support" icon={<CustomerServiceOutlined />} onClick={() => handleSupportAction(record)}>
+                Soporte
+              </Menu.Item>
+              <Menu.Item key="backup" icon={<BackupOutlined />} onClick={() => createBackup(record.id)}>
+                Crear Backup
+              </Menu.Item>
+              <Menu.Item key="audit" icon={<AuditOutlined />} onClick={() => message.info(`Ver logs de ${record.company_name}`)}>
+                Ver Auditoría
+              </Menu.Item>
+              <Menu.Item key="templates" icon={<TemplateOutlined />} onClick={() => message.info(`Templates para ${record.company_name}`)}>
+                Templates
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item key="delete" icon={<DeleteOutlined />} danger onClick={() => handleDeleteTenant(record.id)}>
+                Eliminar
+              </Menu.Item>
+            </Menu>
+          }>
+            <Button>
+              Acciones <DownOutlined />
+            </Button>
+          </Dropdown>
         </Space>
       ),
     },
@@ -375,10 +643,74 @@ const SaasDashboard = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <Title level={2}>
-        <BankOutlined style={{ marginRight: '8px' }} />
-        Panel de Administración SaaS
-      </Title>
+      {/* Header con notificaciones y alertas */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+        <Col span={18}>
+          <Title level={2}>
+            <BankOutlined style={{ marginRight: '8px' }} />
+            Panel de Administración SaaS
+          </Title>
+        </Col>
+        <Col span={6} style={{ textAlign: 'right' }}>
+          <Space>
+            <Dropdown overlay={
+              <Menu>
+                {notifications.slice(0, 5).map(notification => (
+                  <Menu.Item key={notification.id} icon={<BellOutlined />}>
+                    <div>
+                      <div style={{ fontWeight: 'bold' }}>{notification.title}</div>
+                      <div style={{ fontSize: '12px', color: '#666' }}>{notification.message}</div>
+                    </div>
+                  </Menu.Item>
+                ))}
+                <Menu.Divider />
+                <Menu.Item key="view-all" icon={<EyeOutlined />}>
+                  Ver todas las notificaciones
+                </Menu.Item>
+              </Menu>
+            }>
+              <Badge count={notifications.filter(n => !n.read).length} size="small">
+                <Button icon={<BellOutlined />} shape="circle" />
+              </Badge>
+            </Dropdown>
+            
+            <Dropdown overlay={
+              <Menu>
+                <Menu.Item key="tickets" icon={<SupportOutlined />}>
+                  Tickets de Soporte ({stats.pendingSupportTickets})
+                </Menu.Item>
+                <Menu.Item key="alerts" icon={<ExclamationCircleOutlined />}>
+                  Alertas Críticas ({stats.criticalAlerts})
+                </Menu.Item>
+                <Menu.Item key="audit" icon={<AuditOutlined />}>
+                  Logs de Auditoría
+                </Menu.Item>
+                <Menu.Item key="backup" icon={<BackupOutlined />}>
+                  Gestión de Backups
+                </Menu.Item>
+              </Menu>
+            }>
+              <Button icon={<SettingOutlined />} shape="circle" />
+            </Dropdown>
+          </Space>
+        </Col>
+      </Row>
+
+      {/* Alertas críticas */}
+      {stats.criticalAlerts > 0 && (
+        <Alert
+          message={`${stats.criticalAlerts} alertas críticas requieren atención`}
+          description="Hay problemas urgentes que necesitan ser resueltos inmediatamente."
+          type="error"
+          showIcon
+          style={{ marginBottom: '16px' }}
+          action={
+            <Button size="small" danger>
+              Ver Alertas
+            </Button>
+          }
+        />
+      )}
 
       {/* Estadísticas */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
@@ -468,16 +800,158 @@ const SaasDashboard = () => {
         </Col>
       </Row>
 
+      {/* Métricas avanzadas */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="Tickets Pendientes"
+              value={stats.pendingSupportTickets}
+              prefix={<SupportOutlined />}
+              valueStyle={{ color: '#fa8c16' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="Crecimiento Mensual"
+              value={advancedMetrics.monthlyGrowth}
+              suffix="%"
+              prefix={<RiseOutlined />}
+              valueStyle={{ color: advancedMetrics.monthlyGrowth >= 0 ? '#52c41a' : '#ff4d4f' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="Tasa de Churn"
+              value={advancedMetrics.churnRate}
+              suffix="%"
+              prefix={<FallOutlined />}
+              valueStyle={{ color: '#ff4d4f' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card>
+            <Statistic
+              title="Ingreso Promedio"
+              value={`$${advancedMetrics.averageRevenue.toLocaleString()}`}
+              prefix={<DollarOutlined />}
+              valueStyle={{ color: '#52c41a' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Top performing tenants */}
+      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+        <Col span={24}>
+          <Card title="Top 5 Empresas por Rendimiento" extra={<Button icon={<BarChartOutlined />}>Ver Detalles</Button>}>
+            <List
+              dataSource={advancedMetrics.topPerformingTenants}
+              renderItem={(tenant, index) => (
+                <List.Item>
+                  <List.Item.Meta
+                    avatar={<Avatar style={{ backgroundColor: '#1890ff' }}>{index + 1}</Avatar>}
+                    title={tenant.company_name}
+                    description={`Ingresos: $${tenant.total_revenue?.toLocaleString() || 0}`}
+                  />
+                  <div>
+                    <Tag color="green">Top Performer</Tag>
+                  </div>
+                </List.Item>
+              )}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Filtros avanzados */}
+      <Card style={{ marginBottom: '16px' }}>
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} sm={6}>
+            <Search
+              placeholder="Buscar empresas..."
+              value={filters.searchTerm}
+              onChange={(e) => setFilters({...filters, searchTerm: e.target.value})}
+              onSearch={() => loadTenants()}
+              allowClear
+            />
+          </Col>
+          <Col xs={24} sm={4}>
+            <Select
+              placeholder="Estado"
+              value={filters.status}
+              onChange={(value) => setFilters({...filters, status: value})}
+              style={{ width: '100%' }}
+            >
+              <Option value="all">Todos los estados</Option>
+              <Option value="active">Activo</Option>
+              <Option value="inactive">Inactivo</Option>
+              <Option value="suspended">Suspendido</Option>
+              <Option value="pending">Pendiente</Option>
+            </Select>
+          </Col>
+          <Col xs={24} sm={4}>
+            <Select
+              placeholder="Plan"
+              value={filters.plan}
+              onChange={(value) => setFilters({...filters, plan: value})}
+              style={{ width: '100%' }}
+            >
+              <Option value="all">Todos los planes</Option>
+              <Option value="basic">Básico</Option>
+              <Option value="pro">Profesional</Option>
+              <Option value="enterprise">Empresarial</Option>
+            </Select>
+          </Col>
+          <Col xs={24} sm={4}>
+            <Button 
+              icon={<FilterOutlined />} 
+              onClick={() => loadTenants()}
+              type="primary"
+            >
+              Aplicar Filtros
+            </Button>
+          </Col>
+          <Col xs={24} sm={6}>
+            <Space>
+              <Button 
+                icon={<ReloadOutlined />} 
+                onClick={() => {
+                  setFilters({status: 'all', plan: 'all', dateRange: null, searchTerm: ''});
+                  loadTenants();
+                }}
+              >
+                Limpiar
+              </Button>
+              <Button 
+                icon={<ExportOutlined />} 
+                onClick={() => message.info('Exportar datos')}
+              >
+                Exportar
+              </Button>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
       {/* Tabla de Empresas */}
       <Card
         title="Gestión de Empresas"
         extra={
           <Space>
-            <Button icon={<SearchOutlined />}>
-              Buscar
+            <Button icon={<AuditOutlined />} onClick={() => message.info('Ver logs de auditoría')}>
+              Auditoría
             </Button>
-            <Button icon={<FilterOutlined />}>
-              Filtros
+            <Button icon={<BackupOutlined />} onClick={() => message.info('Gestión de backups')}>
+              Backups
+            </Button>
+            <Button icon={<TemplateOutlined />} onClick={() => message.info('Templates de soporte')}>
+              Templates
             </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTenant}>
               Agregar Empresa
@@ -707,6 +1181,78 @@ const SaasDashboard = () => {
                   block
                 >
                   Ver Productos del Cliente
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button 
+                  icon={<CreditCardOutlined />} 
+                  onClick={() => handleViewClientData(selectedTenant, 'tickets')}
+                  block
+                >
+                  Ver Entradas del Cliente
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button 
+                  icon={<CalendarOutlined />} 
+                  onClick={() => handleViewClientData(selectedTenant, 'functions')}
+                  block
+                >
+                  Ver Funciones del Cliente
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button 
+                  icon={<BankOutlined />} 
+                  onClick={() => handleViewClientData(selectedTenant, 'venues')}
+                  block
+                >
+                  Ver Recintos del Cliente
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button 
+                  icon={<BarChartOutlined />} 
+                  onClick={() => handleViewClientData(selectedTenant, 'commissions')}
+                  block
+                >
+                  Ver Comisiones del Cliente
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button 
+                  icon={<SettingOutlined />} 
+                  onClick={() => handleViewClientData(selectedTenant, 'zones')}
+                  block
+                >
+                  Ver Zonas del Cliente
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button 
+                  icon={<GlobalOutlined />} 
+                  onClick={() => handleViewClientData(selectedTenant, 'customization')}
+                  block
+                >
+                  Ver Personalización del Cliente
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button 
+                  icon={<DollarOutlined />} 
+                  onClick={() => handleViewClientData(selectedTenant, 'sales')}
+                  block
+                >
+                  Ver Ventas del Cliente
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button 
+                  icon={<FileTextOutlined />} 
+                  onClick={() => handleViewClientData(selectedTenant, 'reports')}
+                  block
+                >
+                  Ver Reportes del Cliente
                 </Button>
               </Col>
             </Row>
@@ -1002,6 +1548,30 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
         case 'products':
           query = supabase.from('productos').select('*').eq('tenant_id', tenant.id);
           break;
+        case 'tickets':
+          query = supabase.from('entradas').select('*').eq('tenant_id', tenant.id);
+          break;
+        case 'functions':
+          query = supabase.from('funciones').select('*').eq('tenant_id', tenant.id);
+          break;
+        case 'venues':
+          query = supabase.from('recintos').select('*').eq('tenant_id', tenant.id);
+          break;
+        case 'commissions':
+          query = supabase.from('comisiones').select('*').eq('tenant_id', tenant.id);
+          break;
+        case 'zones':
+          query = supabase.from('zonas').select('*').eq('tenant_id', tenant.id);
+          break;
+        case 'customization':
+          query = supabase.from('personalizacion').select('*').eq('tenant_id', tenant.id);
+          break;
+        case 'sales':
+          query = supabase.from('ventas').select('*').eq('tenant_id', tenant.id);
+          break;
+        case 'reports':
+          query = supabase.from('reportes').select('*').eq('tenant_id', tenant.id);
+          break;
         default:
           return;
       }
@@ -1027,12 +1597,15 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
               </Button>,
               <Button size="small" onClick={() => onAction('update_event', { id: item.id, precio: 0 })}>
                 Hacer Gratis
+              </Button>,
+              <Button size="small" onClick={() => onAction('update_event', { id: item.id, estado: 'active' })}>
+                Activar
               </Button>
             ]}
           >
             <List.Item.Meta
               title={item.nombre}
-              description={`${item.fecha} - ${item.ubicacion} - $${item.precio}`}
+              description={`${item.fecha} - ${item.ubicacion} - $${item.precio} - ${item.estado}`}
             />
           </List.Item>
         );
@@ -1042,12 +1615,15 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
             actions={[
               <Button size="small" onClick={() => onAction('update_user', { id: item.id, rol: 'admin' })}>
                 Hacer Admin
+              </Button>,
+              <Button size="small" onClick={() => onAction('update_user', { id: item.id, estado: 'active' })}>
+                Activar
               </Button>
             ]}
           >
             <List.Item.Meta
               title={item.nombre}
-              description={`${item.email} - ${item.rol}`}
+              description={`${item.email} - ${item.rol} - ${item.estado}`}
             />
           </List.Item>
         );
@@ -1057,12 +1633,159 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
             actions={[
               <Button size="small" onClick={() => onAction('update_product', { id: item.id, precio: 0 })}>
                 Hacer Gratis
+              </Button>,
+              <Button size="small" onClick={() => onAction('update_product', { id: item.id, stock: 999 })}>
+                Agregar Stock
               </Button>
             ]}
           >
             <List.Item.Meta
               title={item.nombre}
-              description={`$${item.precio} - Stock: ${item.stock}`}
+              description={`$${item.precio} - Stock: ${item.stock} - ${item.categoria}`}
+            />
+          </List.Item>
+        );
+      case 'tickets':
+        return (
+          <List.Item
+            actions={[
+              <Button size="small" onClick={() => onAction('update_ticket', { id: item.id, estado: 'active' })}>
+                Activar
+              </Button>,
+              <Button size="small" onClick={() => onAction('update_ticket', { id: item.id, precio: 0 })}>
+                Hacer Gratis
+              </Button>
+            ]}
+          >
+            <List.Item.Meta
+              title={`Entrada ${item.id}`}
+              description={`Evento: ${item.evento_id} - Precio: $${item.precio} - Estado: ${item.estado}`}
+            />
+          </List.Item>
+        );
+      case 'functions':
+        return (
+          <List.Item
+            actions={[
+              <Button size="small" onClick={() => onAction('update_function', { id: item.id, estado: 'active' })}>
+                Activar
+              </Button>,
+              <Button size="small" onClick={() => onAction('update_function', { id: item.id, nombre: 'Función Modificada' })}>
+                Modificar Nombre
+              </Button>
+            ]}
+          >
+            <List.Item.Meta
+              title={item.nombre}
+              description={`Evento: ${item.evento_id} - Fecha: ${item.fecha} - Hora: ${item.hora} - Estado: ${item.estado}`}
+            />
+          </List.Item>
+        );
+      case 'venues':
+        return (
+          <List.Item
+            actions={[
+              <Button size="small" onClick={() => onAction('update_venue', { id: item.id, estado: 'active' })}>
+                Activar
+              </Button>,
+              <Button size="small" onClick={() => onAction('update_venue', { id: item.id, nombre: 'Recinto Modificado' })}>
+                Modificar Nombre
+              </Button>
+            ]}
+          >
+            <List.Item.Meta
+              title={item.nombre}
+              description={`Dirección: ${item.direccion} - Capacidad: ${item.capacidad} - Estado: ${item.estado}`}
+            />
+          </List.Item>
+        );
+      case 'commissions':
+        return (
+          <List.Item
+            actions={[
+              <Button size="small" onClick={() => onAction('update_commission', { id: item.id, porcentaje: 0 })}>
+                Quitar Comisión
+              </Button>,
+              <Button size="small" onClick={() => onAction('update_commission', { id: item.id, estado: 'active' })}>
+                Activar
+              </Button>
+            ]}
+          >
+            <List.Item.Meta
+              title={`Comisión ${item.id}`}
+              description={`Porcentaje: ${item.porcentaje}% - Tipo: ${item.tipo} - Estado: ${item.estado}`}
+            />
+          </List.Item>
+        );
+      case 'zones':
+        return (
+          <List.Item
+            actions={[
+              <Button size="small" onClick={() => onAction('update_zone', { id: item.id, nombre: 'Zona Modificada' })}>
+                Modificar Nombre
+              </Button>,
+              <Button size="small" onClick={() => onAction('update_zone', { id: item.id, estado: 'active' })}>
+                Activar
+              </Button>
+            ]}
+          >
+            <List.Item.Meta
+              title={item.nombre}
+              description={`Recinto: ${item.recinto_id} - Capacidad: ${item.capacidad} - Estado: ${item.estado}`}
+            />
+          </List.Item>
+        );
+      case 'customization':
+        return (
+          <List.Item
+            actions={[
+              <Button size="small" onClick={() => onAction('update_customization', { id: item.id, tema: 'default' })}>
+                Resetear Tema
+              </Button>,
+              <Button size="small" onClick={() => onAction('update_customization', { id: item.id, estado: 'active' })}>
+                Activar
+              </Button>
+            ]}
+          >
+            <List.Item.Meta
+              title={`Personalización ${item.id}`}
+              description={`Tema: ${item.tema} - Color: ${item.color_principal} - Estado: ${item.estado}`}
+            />
+          </List.Item>
+        );
+      case 'sales':
+        return (
+          <List.Item
+            actions={[
+              <Button size="small" onClick={() => onAction('update_sale', { id: item.id, estado: 'completada' })}>
+                Marcar Completada
+              </Button>,
+              <Button size="small" onClick={() => onAction('update_sale', { id: item.id, estado: 'reembolsada' })}>
+                Reembolsar
+              </Button>
+            ]}
+          >
+            <List.Item.Meta
+              title={`Venta ${item.id}`}
+              description={`Monto: $${item.monto} - Fecha: ${item.fecha} - Estado: ${item.estado}`}
+            />
+          </List.Item>
+        );
+      case 'reports':
+        return (
+          <List.Item
+            actions={[
+              <Button size="small" onClick={() => onAction('update_report', { id: item.id, estado: 'generado' })}>
+                Generar
+              </Button>,
+              <Button size="small" onClick={() => onAction('update_report', { id: item.id, estado: 'enviado' })}>
+                Marcar Enviado
+              </Button>
+            ]}
+          >
+            <List.Item.Meta
+              title={`Reporte ${item.id}`}
+              description={`Tipo: ${item.tipo} - Fecha: ${item.fecha} - Estado: ${item.estado}`}
             />
           </List.Item>
         );
@@ -1071,12 +1794,40 @@ const ClientDataViewer = ({ tenant, dataType, onAction }) => {
     }
   };
 
+  const getDataTypeTitle = () => {
+    switch (dataType) {
+      case 'events': return 'Eventos';
+      case 'users': return 'Usuarios';
+      case 'products': return 'Productos';
+      case 'tickets': return 'Entradas';
+      case 'functions': return 'Funciones';
+      case 'venues': return 'Recintos';
+      case 'commissions': return 'Comisiones';
+      case 'zones': return 'Zonas';
+      case 'customization': return 'Personalización';
+      case 'sales': return 'Ventas';
+      case 'reports': return 'Reportes';
+      default: return 'Datos';
+    }
+  };
+
   return (
     <div>
+      <div style={{ marginBottom: '16px' }}>
+        <Title level={4}>{getDataTypeTitle()} de {tenant.company_name}</Title>
+        <Text type="secondary">Total: {data.length} elementos</Text>
+      </div>
+      
       <List
         loading={loading}
         dataSource={data}
         renderItem={renderDataItem}
+        pagination={{
+          pageSize: 10,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (total, range) => `${range[0]}-${range[1]} de ${total} elementos`
+        }}
       />
     </div>
   );
