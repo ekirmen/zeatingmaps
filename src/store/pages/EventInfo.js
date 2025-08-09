@@ -64,7 +64,8 @@ const EventInfo = () => {
         if (Array.isArray(data) && data.length === 1) {
           const fid = data[0].id || data[0]._id;
           setSelectedFunctionId(fid);
-          navigate(`/store/event/${eventId}/map?funcion=${fid}`, { replace: true });
+          const eventPath = (evento && evento.slug) ? evento.slug : eventId;
+          navigate(`/store/event/${eventPath}/map?funcion=${fid}`, { replace: true });
         }
       } catch (err) {
         console.error('Error fetching funciones:', err);
@@ -75,7 +76,8 @@ const EventInfo = () => {
 
   const handleSelect = () => {
     if (selectedFunctionId) {
-      navigate(`/store/event/${eventId}/map?funcion=${selectedFunctionId}`);
+      const eventPath = (evento && evento.slug) ? evento.slug : eventId;
+      navigate(`/store/event/${eventPath}/map?funcion=${selectedFunctionId}`);
     }
   };
 

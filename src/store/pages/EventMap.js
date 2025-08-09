@@ -8,6 +8,7 @@ function EventMap() {
   const { eventId } = useParams();
   const [searchParams] = useSearchParams();
   const funcionParam = searchParams.get('funcion');
+  const mapaParam = searchParams.get('mapa');
   
   const [mapa, setMapa] = useState(null);
   const [funcion, setFuncion] = useState(null);
@@ -31,11 +32,19 @@ function EventMap() {
         }
         setFuncion(funcionData);
 
-        // Obtener el mapa si hay sala
-        if (funcionData.sala?.id) {
+        // Obtener el mapa: si viene mapa en query úsalo, si no deriva por sala
+        if (mapaParam) {
+          const mapaId = isNaN(Number(mapaParam)) ? null : Number(mapaParam);
+          if (mapaId) {
+            const mapaData = await fetchMapa(mapaId); // adaptado a función que recibe salaId; abajo corregimos
+            setMapa(mapaData);
+          }
+        }
+        if (!mapaParam && funcionData.sala?.id) {
           const mapaData = await fetchMapa(funcionData.sala.id);
           setMapa(mapaData);
-        } else {
+        }
+        if (!mapaParam && !funcionData.sala?.id) {
           throw new Error('Sala no encontrada para esta función');
         }
 
@@ -50,7 +59,7 @@ function EventMap() {
     if (funcionParam) {
       loadMapData();
     }
-  }, [funcionParam]);
+  }, [funcionParam, mapaParam]);
 
   const toggleSillaEnCarrito = (silla, elemento) => {
     // Implementar lógica de carrito aquí

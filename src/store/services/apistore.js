@@ -187,13 +187,13 @@ export const getFuncion = async (functionId) => {
  * @returns {Promise<object>} A promise that resolves to the map data.
  * @throws {Error} If the Supabase query fails.
  */
-export const fetchMapa = async (salaId) => {
+export const fetchMapa = async (salaIdOrMapId, by = 'sala') => {
   try {
-    const { data, error, status } = await supabase
-      .from('mapas')
-      .select('*')
-      .eq('sala_id', salaId)
-      .single();
+    const query = supabase.from('mapas').select('*');
+    const finalQuery = by === 'id'
+      ? query.eq('id', salaIdOrMapId).single()
+      : query.eq('sala_id', salaIdOrMapId).single();
+    const { data, error, status } = await finalQuery;
 
     if (error && status !== 406 && error.code !== 'PGRST116') {
       console.error('Error fetching map:', error.message);
@@ -212,6 +212,9 @@ export const fetchMapa = async (salaId) => {
     throw error;
   }
 };
+
+// Helper explícito por id de mapa
+export const fetchMapaById = async (mapaId) => fetchMapa(mapaId, 'id');
 
 /**
  * Fetches a seating map associated with an event.
