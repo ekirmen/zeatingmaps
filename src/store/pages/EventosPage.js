@@ -58,18 +58,10 @@ const EventosPage = () => {
       try {
         setLoading(true);
         
-        // Buscar evento por slug
+        // Buscar evento por slug (sin embeds para evitar ambigüedad de FK)
         const { data: eventData, error: eventError } = await supabase
           .from('eventos')
-          .select(`
-            *,
-            recintos (
-              id,
-              nombre,
-              direccion,
-              capacidad
-            )
-          `)
+          .select('*')
           .ilike('slug', eventSlug)
           .maybeSingle();
 
@@ -77,9 +69,19 @@ const EventosPage = () => {
         if (!eventData) throw new Error('Evento no encontrado');
         
         setEvento(eventData);
-        setVenueInfo(eventData?.recintos);
 
-        // Obtener funciones del evento
+        // Cargar recinto de forma explícita usando recinto_id o recinto
+        const recintoId = eventData.recinto_id || eventData.recinto || null;
+        if (recintoId) {
+          const { data: recData, error: recErr } = await supabase
+            .from('recintos')
+            .select('id, nombre, direccion, capacidad')
+            .eq('id', recintoId)
+            .maybeSingle();
+          if (!recErr) setVenueInfo(recData || null);
+        }
+
+        // Obtener funciones del evento (ya filtra es_principal si existe)
         const funcionesData = await getFunciones(eventData.id);
         setFunciones(funcionesData || []);
 

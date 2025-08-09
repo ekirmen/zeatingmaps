@@ -46,7 +46,7 @@ export const useBoleteria = () => {
     try {
       const { data: funcionData, error: funcionError } = await supabase
         .from('funciones')
-        .select('*, sala(*), plantilla(*)')
+        .select('*')
         .eq('id', functionId)
         .single();
   
@@ -57,8 +57,14 @@ export const useBoleteria = () => {
       }
   
       // Mapear los campos para que coincidan con lo que espera el frontend
+      const salaField = funcionData.sala;
+      const mappedSala = typeof salaField === 'object' && salaField !== null
+        ? salaField
+        : (salaField ? { id: salaField } : null);
+
       const funcionMapeada = {
         ...funcionData,
+        sala: mappedSala,
         fechaCelebracion: funcionData.fecha_celebracion,
         inicioVenta: funcionData.inicio_venta,
         finVenta: funcionData.fin_venta,
@@ -69,30 +75,16 @@ export const useBoleteria = () => {
       setSelectedFuncion(funcionMapeada);
       localStorage.setItem(FUNC_KEY, functionId);
   
-      // Procesar plantilla
-      let plantilla = funcionData.plantilla;
-      if (plantilla && plantilla.detalles && typeof plantilla.detalles === 'string') {
-        try {
-          plantilla = {
-            ...plantilla,
-            detalles: JSON.parse(plantilla.detalles)
-          };
-        } catch (e) {
-          console.error('Error parsing plantilla.detalles JSON:', e);
-          plantilla = {
-            ...plantilla,
-            detalles: []
-          };
-        }
-      }
-      setSelectedPlantilla(plantilla);
+      // Plantilla opcional: si tienes un id de plantilla en la función, podrías cargarla aquí.
+      setSelectedPlantilla(null);
   
-      // Cargar mapa y zonas
-      if (funcionData.sala?.id) {
-        const mapData = await fetchMapa(funcionData.sala.id);
+      // Cargar mapa y zonas usando salaId robusto
+      const salaId = mappedSala?.id || mappedSala?._id || salaField || null;
+      if (salaId) {
+        const mapData = await fetchMapa(salaId);
         setMapa(mapData);
   
-        const zonasData = await fetchZonasPorSala(funcionData.sala.id);
+        const zonasData = await fetchZonasPorSala(salaId);
         setZonas(zonasData);
       } else {
         setMapa(null);
@@ -138,17 +130,18 @@ export const useBoleteria = () => {
       setSelectedEvent(eventoData);
       localStorage.setItem(EVENT_KEY, eventoId);
 
-      // Cargar funciones del evento
+      // Cargar funciones del evento (sin embeds)
       const { data: funcionesData, error: funcionesError } = await supabase
         .from('funciones')
-        .select('*, sala(*), plantilla(*)')
+        .select('*')
         .eq('evento', eventoId)
         .order('fecha_celebracion', { ascending: true });
 
       if (funcionesError) throw funcionesError;
 
-      const funcionesMapeadas = funcionesData.map(funcion => ({
+      const funcionesMapeadas = (funcionesData || []).map(funcion => ({
         ...funcion,
+        sala: (typeof funcion.sala === 'object' && funcion.sala !== null) ? funcion.sala : (funcion.sala ? { id: funcion.sala } : null),
         fechaCelebracion: funcion.fecha_celebracion,
         inicioVenta: funcion.inicio_venta,
         finVenta: funcion.fin_venta,
