@@ -145,7 +145,6 @@ export const fetchMapa = async (salaId) => {
 };
 
 export const saveMapa = async (salaId, data) => {
-  // En cliente usamos endpoint serverless; en server (tests/scripts) usamos admin directo
   if (!supabaseAdmin) {
     const resp = await fetch(`/api/mapas/${salaId}/save`, {
       method: 'POST',
@@ -165,15 +164,18 @@ export const saveMapa = async (salaId, data) => {
   handleError(error);
 };
 
-export const syncSeatsForSala = async (salaId) => {
+export const syncSeatsForSala = async (salaId, options = {}) => {
+  const deleteMissing = !!options.deleteMissing;
   if (!supabaseAdmin) {
-    const resp = await fetch(`/api/mapas/${salaId}/save?syncOnly=1`, { method: 'POST' });
+    const query = deleteMissing ? '?syncOnly=1&deleteMissing=1' : '?syncOnly=1';
+    const resp = await fetch(`/api/mapas/${salaId}/save${query}`, { method: 'POST' });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
       throw new Error(err.error || 'Error al sincronizar seats');
     }
     return;
   }
+  // Rama admin directa: mantener comportamiento existente (inserciones básicas)
   const client = supabaseAdmin;
   const { data: mapa, error: mapaErr } = await client
     .from('mapas')
@@ -209,7 +211,13 @@ export const syncSeatsForSala = async (salaId) => {
     const existingIds = new Set((existing || []).map(s => s._id));
     const toInsert = seatDefs
       .filter(s => !existingIds.has(s.id))
-      .map(s => ({ _id: s.id, funcion_id: func.id, zona: s.zona, status: 'disponible', bloqueado: false }));
+      .map(s => ({
+        _id: `${s.id}::${func.id}`,
+        funcion_id: func.id,
+        zona: s.zona,
+        status: 'disponible',
+        bloqueado: false,
+      }));
 
     if (toInsert.length > 0) {
       const { error: insErr } = await client

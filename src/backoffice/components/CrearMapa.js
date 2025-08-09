@@ -10,6 +10,8 @@ import FilaPopup from './compMapa/FilaPopup';
 import { useCrearMapa } from '../hooks/useCrearMapa';
 import { useMapaZoomStage } from '../hooks/useMapaZoomStage';
 import { fetchZonasPorSala } from '../services/apibackoffice';
+import { message, Switch, Button } from 'antd';
+import { syncSeatsForSala } from '../services/apibackoffice';
 
 const CrearMapa = () => {
   const { salaId } = useParams();
@@ -51,11 +53,11 @@ const CrearMapa = () => {
 
   const [sillaShape, setSillaShape] = useState('rect');
   const [loadedZonas, setLoadedZonas] = useState([]);
-
   const [showNumeracion, setShowNumeracion] = useState(false);
-
   const [addingChairRow, setAddingChairRow] = useState(false);
   const [rowStart, setRowStart] = useState(null);
+  const [deleteMissing, setDeleteMissing] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
 
   useEffect(() => {
     if (!salaId) return;
@@ -104,24 +106,19 @@ const CrearMapa = () => {
     const newX = newPos?.x ?? e.target.x();
     const newY = newPos?.y ?? e.target.y();
 
-    // Si el elemento forma parte de la selección, mover todos los seleccionados
     if (selectedIds.includes(id)) {
       const deltaX = newX - dragged.posicion.x;
       const deltaY = newY - dragged.posicion.y;
       moverElementosSeleccionados(deltaX, deltaY);
     } else {
-      // Si no está seleccionado, solo actualizamos su posición
       updateElementProperty(id, 'posicion', { x: newX, y: newY });
     }
 
-    // Actualizar posiciones de sillas si se proporcionaron
     if (chairUpdates.length > 0) {
       chairUpdates.forEach(ch =>
         updateElementProperty(ch._id, 'posicion', ch.posicion)
       );
     }
-
-    // La posición se guardará al presionar el botón de guardar
   };
 
   const startChairRowMode = () => {
@@ -158,6 +155,20 @@ const CrearMapa = () => {
     handleMouseUp(e);
   };
 
+  const handleSync = async () => {
+    if (!salaId) return;
+    try {
+      setSyncLoading(true);
+      await syncSeatsForSala(salaId, { deleteMissing });
+      message.success('Seats sincronizados correctamente');
+    } catch (e) {
+      console.error('Sync error', e);
+      message.error(e.message || 'Error al sincronizar');
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
   return (
     <div className="flex h-screen">
       <Menu
@@ -186,12 +197,20 @@ const CrearMapa = () => {
         addRectangleElement={addRectangleElement}
         addEllipseElement={addEllipseElement}
         addLineElement={addLineElement}
-        startChairRowMode={startChairRowMode}
+        addChairRow={addChairRow}
         snapToGrid={snapToGrid}
-        toggleNumeracion={() => setShowNumeracion(true)}
       />
 
       <div className="flex-1 relative">
+        {/* Barra de acciones de sincronización */}
+        <div className="absolute top-2 right-2 z-10 bg-white border rounded shadow px-3 py-2 flex items-center gap-3">
+          <span>Eliminar obsoletos</span>
+          <Switch checked={deleteMissing} onChange={setDeleteMissing} />
+          <Button type="primary" loading={syncLoading} onClick={handleSync}>
+            Sincronizar seats
+          </Button>
+        </div>
+
         <Stage
           ref={stageRef}
           width={stageSize.width}

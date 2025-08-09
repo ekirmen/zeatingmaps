@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
@@ -23,6 +24,7 @@ export default async function handler(req, res) {
 
   const { salaId } = req.query;
   const syncOnly = req.query.syncOnly === '1' || req.query.syncOnly === 'true';
+  const deleteMissing = req.query.deleteMissing === '1' || req.query.deleteMissing === 'true';
 
   if (!salaId) return res.status(400).json({ error: 'Missing salaId' });
 
@@ -74,26 +76,113 @@ export default async function handler(req, res) {
       }
     });
 
+    // Helper: UUID v5 (SHA-1) a partir de name + namespace
+    const NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8'; // namespace DNS estándar
+    const uuidv5 = (name, namespace) => {
+      const ns = Buffer.from(namespace.replace(/-/g, ''), 'hex');
+      const nm = Buffer.from(String(name));
+      const sha1 = crypto.createHash('sha1');
+      sha1.update(ns);
+      sha1.update(nm);
+      const hash = sha1.digest();
+      // Ajustar a UUID v5 (version y variant)
+      hash[6] = (hash[6] & 0x0f) | 0x50; // version 5
+      hash[8] = (hash[8] & 0x3f) | 0x80; // variant RFC4122
+      const hex = hash.toString('hex').slice(0, 32);
+      return (
+        hex.substring(0, 8) + '-' +
+        hex.substring(8, 12) + '-' +
+        hex.substring(12, 16) + '-' +
+        hex.substring(16, 20) + '-' +
+        hex.substring(20, 32)
+      );
+    };
+
     let totalInserted = 0;
     for (const func of funciones || []) {
+      // Traer asientos existentes con info necesaria para diff
       const { data: existing, error: exErr } = await admin
         .from('seats')
-        .select('_id')
+        .select('_id, base_id, zona, status')
         .eq('funcion_id', func.id);
       if (exErr) throw exErr;
-      const existingIds = new Set((existing || []).map((s) => s._id));
 
-      const toInsert = seatDefs
-        .filter((s) => !existingIds.has(s.id))
-        .map((s) => ({ _id: s.id, funcion_id: func.id, zona: s.zona, status: 'disponible', bloqueado: false }));
+      const existingById = new Map((existing || []).map((s) => [s._id, s]));
+      const existingByBase = new Map((existing || []).filter(s => s.base_id).map((s) => [s.base_id, s]));
+
+      const generated = seatDefs.map((s) => ({
+        genId: uuidv5(`${s.id}::${func.id}`, NAMESPACE),
+        baseId: s.id,
+        zona: s.zona,
+      }));
+
+      // Inserciones y actualizaciones de zona
+      const toInsert = [];
+      const toUpdate = [];
+
+      for (const g of generated) {
+        const byId = existingById.get(g.genId);
+        const byBase = existingByBase.get(g.baseId);
+        const found = byId || byBase;
+        if (!found) {
+          toInsert.push({
+            _id: g.genId,
+            base_id: g.baseId,
+            funcion_id: func.id,
+            zona: g.zona,
+            status: 'disponible',
+            bloqueado: false,
+          });
+        } else if (found.zona !== g.zona) {
+          toUpdate.push({ id: found._id, zona: g.zona });
+        }
+      }
 
       if (toInsert.length > 0) {
-        const { error: insErr } = await admin.from('seats').upsert(toInsert, {
-          onConflict: 'funcion_id,_id',
-          ignoreDuplicates: false,
-        });
+        const { error: insErr } = await admin
+          .from('seats')
+          .upsert(toInsert, { onConflict: 'funcion_id,_id', ignoreDuplicates: false });
         if (insErr) throw insErr;
         totalInserted += toInsert.length;
+      }
+
+      if (toUpdate.length > 0) {
+        // Actualizar zona para cada seat que cambió
+        for (const u of toUpdate) {
+          const { error: upErr } = await admin
+            .from('seats')
+            .update({ zona: u.zona })
+            .eq('_id', u.id)
+            .eq('funcion_id', func.id);
+          if (upErr) throw upErr;
+        }
+      }
+
+      if (deleteMissing) {
+        // Seats existentes que no están en el mapa ahora
+        const generatedIds = new Set(generated.map((g) => g.genId));
+        const toMaybeDelete = (existing || [])
+          .map((s) => s._id)
+          .filter((eid) => !generatedIds.has(eid));
+        if (toMaybeDelete.length > 0) {
+          // No eliminar si tienen locks activos
+          const { data: locked, error: lockErr } = await admin
+            .from('seat_locks')
+            .select('seat_id')
+            .eq('funcion_id', func.id)
+            .in('seat_id', toMaybeDelete);
+          if (lockErr) throw lockErr;
+          const lockedSet = new Set((locked || []).map((l) => l.seat_id));
+          const deletable = toMaybeDelete.filter((id) => !lockedSet.has(id));
+          if (deletable.length > 0) {
+            const { error: delErr } = await admin
+              .from('seats')
+              .delete()
+              .eq('funcion_id', func.id)
+              .in('_id', deletable);
+            if (delErr) throw delErr;
+          }
+        }
       }
     }
 
