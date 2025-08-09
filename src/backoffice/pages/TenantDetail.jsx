@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Alert, Tabs, message, Timeline, Descriptions } from 'antd';
+import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Alert, Tabs, message, Timeline, Descriptions, Statistic } from 'antd';
 import { 
   BankOutlined, 
   DollarOutlined, 
@@ -7,7 +7,13 @@ import {
   EyeOutlined,
   SettingOutlined,
   GlobalOutlined,
-  PlusOutlined
+  PlusOutlined,
+  CalendarOutlined,
+  CheckCircleOutlined,
+  TeamOutlined,
+  BarChartOutlined,
+  BellOutlined,
+  CreditCardOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../config/supabase';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -96,7 +102,7 @@ const TenantDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantId]);
 
   const handleEditTenant = () => {
     form.setFieldsValue({

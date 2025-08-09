@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Alert, Tabs, message, InputNumber } from 'antd';
+import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Alert, Tabs, message, InputNumber, Tooltip, Switch } from 'antd';
 import { 
   SettingOutlined,
   DollarOutlined,
@@ -9,7 +9,8 @@ import {
   DeleteOutlined,
   GlobalOutlined,
   SafetyCertificateOutlined,
-  CreditCardOutlined
+  CreditCardOutlined,
+  DatabaseOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../config/supabase';
 

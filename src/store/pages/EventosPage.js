@@ -211,13 +211,7 @@ const EventosPage = () => {
 
       const nombreZona = zona?.nombre || 'Zona';
       
-      // Debug: mostrar información de precios
-      console.log('Price template:', priceTemplate);
-      console.log('Zona ID:', zonaId);
-      console.log('Detalles:', priceTemplate?.detalles);
-      
-      const detalle = priceTemplate?.detalles?.find(d => d.zonaId === zonaId);
-      const precio = detalle?.precio || 10; // Precio por defecto de $10
+      const precio = 10; // Precio por defecto de $10
 
       console.log('Precio encontrado:', precio);
 
@@ -240,7 +234,7 @@ const EventosPage = () => {
         });
       }
     },
-    [selectedFunctionId, mapa, priceTemplate, toggleSeat, removeFromCart]
+    [selectedFunctionId, mapa, toggleSeat, removeFromCart]
   );
 
   const handleFunctionSelect = (functionId) => {

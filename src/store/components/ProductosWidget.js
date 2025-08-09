@@ -110,7 +110,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [eventoId]);
 
   const filterProductos = useCallback(() => {
     let filtered = [...productos];
@@ -163,7 +163,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
     }
 
     setFilteredProductos(filtered);
-  };
+  }, [productos, searchTerm, categoryFilter, priceFilter, stockFilter]);
 
   const handleQuantityChange = (productoId, value) => {
     setQuantities(prev => ({

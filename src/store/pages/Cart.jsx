@@ -207,7 +207,7 @@ const Cart = () => {
         } catch (error) {
             console.error('Error loading Facebook pixel:', error);
         }
-    };
+    }, [items]);
 
     const handleProceedToPayment = () => {
         if (itemCount === 0) {

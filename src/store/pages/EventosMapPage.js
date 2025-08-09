@@ -132,10 +132,7 @@ const EventosMapPage = () => {
           console.warn('[EventosMapPage] Función no tiene sala asociada');
         }
 
-        // Cargar plantilla de precios
-        if (funcionData?.plantilla) {
-          setPriceTemplate(funcionData.plantilla);
-        }
+
 
       } catch (err) {
         console.error('[EventosMapPage] Error loading data:', err);
@@ -161,8 +158,7 @@ const EventosMapPage = () => {
       if (!sillaId || !zonaId || !funcionParam) return;
 
       const nombreZona = zona?.nombre || 'Zona';
-      const detalle = priceTemplate?.detalles?.find(d => d.zonaId === zonaId);
-      const precio = detalle?.precio || 0;
+      const precio = 0; // Precio por defecto
 
       toggleSeat({
         sillaId,
@@ -173,7 +169,7 @@ const EventosMapPage = () => {
         functionId: funcionParam,
       });
     },
-    [funcionParam, mapa, priceTemplate, toggleSeat]
+    [funcionParam, mapa, toggleSeat]
   );
 
   const handleBackToEvent = () => {
