@@ -55,6 +55,8 @@ const BackofficeApp = () => {
         {/* Administración */}
         <Route path="recintos" element={<Recinto />} />
         <Route path="plano" element={<Plano />} />
+        {/* Ruta para crear/editar mapa por sala */}
+        <Route path="crear-mapa/:salaId" element={<CrearMapaPage />} />
         <Route path="usuarios" element={<Usuarios />} />
         <Route path="liquidaciones" element={<PaymentAnalytics />} />
         
