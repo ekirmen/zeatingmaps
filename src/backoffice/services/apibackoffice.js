@@ -29,19 +29,22 @@ export const fetchZonasPorSala = async (salaId) => {
 };
 
 export const createZona = async (data) => {
-  const { data: result, error } = await supabase.from('zonas').insert(data).single();
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('zonas').insert(data).single();
   handleError(error);
   return result;
 };
 
 export const updateZona = async (id, data) => {
-  const { data: result, error } = await supabase.from('zonas').update(data).eq('id', id).single();
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('zonas').update(data).eq('id', id).single();
   handleError(error);
   return result;
 };
 
 export const deleteZona = async (id) => {
-  const { error } = await supabase.from('zonas').delete().eq('id', id);
+  const client = supabaseAdmin || supabase;
+  const { error } = await client.from('zonas').delete().eq('id', id);
   handleError(error);
 };
 
@@ -53,7 +56,8 @@ export const fetchRecintos = async () => {
 };
 
 export const createRecinto = async (data) => {
-  const { data: result, error } = await supabase.from('recintos').insert(data).single();
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('recintos').insert(data).single();
   handleError(error);
   return result;
 };
@@ -71,7 +75,8 @@ export const fetchSalasPorRecinto = async (recintoId) => {
 };
 
 export const createSala = async (data) => {
-  const { data: result, error } = await supabase.from('salas').insert(data).single();
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('salas').insert(data).single();
   handleError(error);
   return result;
 };
@@ -90,19 +95,22 @@ export const fetchEventoById = async (id) => {
 };
 
 export const createEvento = async (data) => {
-  const { data: result, error } = await supabase.from('eventos').insert(data).single();
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('eventos').insert(data).single();
   handleError(error);
   return result;
 };
 
 export const updateEvento = async (id, data) => {
-  const { data: result, error } = await supabase.from('eventos').update(data).eq('id', id).single();
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('eventos').update(data).eq('id', id).single();
   handleError(error);
   return result;
 };
 
 export const deleteEvento = async (id) => {
-  const { error } = await supabase.from('eventos').delete().eq('id', id);
+  const client = supabaseAdmin || supabase;
+  const { error } = await client.from('eventos').delete().eq('id', id);
   handleError(error);
 };
 
@@ -117,7 +125,8 @@ export const fetchFuncionesPorEvento = async (eventoId) => {
 };
 
 export const createFuncion = async (data) => {
-  const { data: result, error } = await supabase.from('funciones').insert(data).single();
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('funciones').insert(data).single();
   handleError(error);
   return result;
 };
@@ -136,175 +145,77 @@ export const fetchMapa = async (salaId) => {
 };
 
 export const saveMapa = async (salaId, data) => {
-  const { error } = await supabase
-    .from('mapas')
-    .upsert(
-      {
-        sala_id: salaId,
-        contenido: data.contenido || [],
-      },
-      {
-        onConflict: 'sala_id',
-      }
-    );
-
-  if (error) {
-    console.error('❌ Supabase error:', error);
-    throw new Error(error.message);
+  // En cliente usamos endpoint serverless; en server (tests/scripts) usamos admin directo
+  if (!supabaseAdmin) {
+    const resp = await fetch(`/api/mapas/${salaId}/save`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contenido: data.contenido || [] })
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || 'Error al guardar mapa');
+    }
+    return;
   }
+  const client = supabaseAdmin;
+  const { error } = await client
+    .from('mapas')
+    .upsert({ sala_id: salaId, contenido: data.contenido || [] }, { onConflict: 'sala_id' });
+  handleError(error);
 };
 
-// After saving the base map we may need to replicate the seat
-// layout to every function associated with the same sala. This
-// helper ensures each function has the seats defined in the map so
-// tickets can be sold independently per function.
 export const syncSeatsForSala = async (salaId) => {
-  const mapa = await fetchMapa(salaId);
+  if (!supabaseAdmin) {
+    const resp = await fetch(`/api/mapas/${salaId}/save?syncOnly=1`, { method: 'POST' });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || 'Error al sincronizar seats');
+    }
+    return;
+  }
+  const client = supabaseAdmin;
+  const { data: mapa, error: mapaErr } = await client
+    .from('mapas')
+    .select('*')
+    .eq('sala_id', salaId)
+    .maybeSingle();
+  handleError(mapaErr);
   if (!mapa || !Array.isArray(mapa.contenido)) return;
 
-  const { data: funciones, error: funcError } = await supabase
+  const { data: funciones, error: funcErr } = await client
     .from('funciones')
     .select('id')
     .eq('sala', salaId);
-  handleError(funcError);
+  handleError(funcErr);
   if (!funciones || funciones.length === 0) return;
 
   const seatDefs = [];
   mapa.contenido.forEach(el => {
     if (el.type === 'mesa') {
-      (el.sillas || []).forEach(s => {
-        if (s._id) {
-          // Limpiar funcion_id del mapa si existe para evitar conflictos
-          const cleanSeat = { ...s };
-          if (cleanSeat.funcion_id) {
-            delete cleanSeat.funcion_id;
-          }
-          seatDefs.push({ id: s._id, zona: s.zona || null, cleanData: cleanSeat });
-        }
-      });
+      (el.sillas || []).forEach(s => { if (s && s._id) seatDefs.push({ id: s._id, zona: s.zona || null }); });
     } else if (el.type === 'silla') {
-      if (el._id) {
-        // Limpiar funcion_id del mapa si existe para evitar conflictos
-        const cleanSeat = { ...el };
-        if (cleanSeat.funcion_id) {
-          delete cleanSeat.funcion_id;
-        }
-        seatDefs.push({ id: el._id, zona: el.zona || null, cleanData: cleanSeat });
-      }
+      if (el && el._id) seatDefs.push({ id: el._id, zona: el.zona || null });
     }
   });
 
   for (const func of funciones) {
-    console.log(`Sincronizando asientos para función ${func.id}...`);
-    
-    // Verificar asientos existentes para esta función
-    const { data: existing, error: exErr } = await supabase
+    const { data: existing, error: exErr } = await client
       .from('seats')
       .select('_id')
       .eq('funcion_id', func.id);
     handleError(exErr);
-    
+
     const existingIds = new Set((existing || []).map(s => s._id));
-    const newSeatIds = new Set(seatDefs.map(s => s.id));
-    
-    // Eliminar asientos que ya no existen en el mapa
-    const seatsToDelete = Array.from(existingIds).filter(id => !newSeatIds.has(id));
-    if (seatsToDelete.length > 0) {
-      console.log(`Eliminando ${seatsToDelete.length} asientos obsoletos...`);
-      const { error: deleteErr } = await supabase
-        .from('seats')
-        .delete()
-        .eq('funcion_id', func.id)
-        .in('_id', seatsToDelete);
-      if (deleteErr) {
-        console.warn('Error al eliminar seats obsoletos:', deleteErr);
-      }
-    }
-    
-    // Insertar solo los asientos nuevos que no existen
-    const newSeats = seatDefs
+    const toInsert = seatDefs
       .filter(s => !existingIds.has(s.id))
-      .map(s => ({
-        _id: s.id,
-        funcion_id: func.id,
-        zona: s.zona,
-        status: 'disponible',
-        bloqueado: false
-      }));
-    
-    if (newSeats.length > 0) {
-      console.log(`Insertando ${newSeats.length} nuevos asientos para función ${func.id}...`);
-      
-      try {
-        // Verificar si los asientos ya existen para esta función específica
-        const { data: existingForFunction, error: existingErr } = await supabase
-          .from('seats')
-          .select('_id')
-          .eq('funcion_id', func.id)
-          .in('_id', newSeats.map(s => s._id));
-        
-        if (existingErr) {
-          console.error('Error al verificar asientos existentes para función:', existingErr);
-        } else {
-          // Filtrar asientos que ya existen para esta función específica
-          const existingForFunctionIds = new Set(existingForFunction.map(s => s._id));
-          const trulyNewSeats = newSeats.filter(s => !existingForFunctionIds.has(s._id));
-          
-          if (trulyNewSeats.length > 0) {
-            console.log(`Insertando ${trulyNewSeats.length} asientos realmente nuevos para función ${func.id}...`);
-            
-            // Usar upsert con conflicto en funcion_id,_id para evitar duplicados
-            const { error: upsertErr } = await supabase
-              .from('seats')
-              .upsert(trulyNewSeats, { 
-                onConflict: 'funcion_id,_id',
-                ignoreDuplicates: false 
-              });
-            
-            if (upsertErr) {
-              console.error('Error en upsert de seats:', upsertErr);
-              
-              // Si hay error, intentar inserción individual con manejo de errores
-              console.log('Intentando inserción individual...');
-              let successCount = 0;
-              let errorCount = 0;
-              
-              for (const seat of trulyNewSeats) {
-                try {
-                  const { error: singleInsertErr } = await supabase
-                    .from('seats')
-                    .insert(seat)
-                    .select();
-                  
-                  if (singleInsertErr) {
-                    if (singleInsertErr.code === '23505') {
-                      console.warn(`Asiento ${seat._id} ya existe para función ${func.id}, omitiendo...`);
-                    } else {
-                      console.warn(`Error al insertar asiento ${seat._id}:`, singleInsertErr);
-                      errorCount++;
-                    }
-                  } else {
-                    successCount++;
-                  }
-                } catch (error) {
-                  console.warn(`Error inesperado al insertar asiento ${seat._id}:`, error);
-                  errorCount++;
-                }
-              }
-              
-              console.log(`Inserción individual completada: ${successCount} exitosos, ${errorCount} errores`);
-            } else {
-              console.log(`${trulyNewSeats.length} asientos sincronizados exitosamente para función ${func.id}`);
-            }
-          } else {
-            console.log(`Todos los asientos ya existen para función ${func.id}, omitiendo inserción`);
-          }
-        }
-      } catch (error) {
-        console.error('Error inesperado al sincronizar seats:', error);
-      }
-    } else {
-      console.log(`No hay nuevos asientos para insertar para función ${func.id}`);
+      .map(s => ({ _id: s.id, funcion_id: func.id, zona: s.zona, status: 'disponible', bloqueado: false }));
+
+    if (toInsert.length > 0) {
+      const { error: insErr } = await client
+        .from('seats')
+        .upsert(toInsert, { onConflict: 'funcion_id,_id', ignoreDuplicates: false });
+      handleError(insErr);
     }
   }
 };
@@ -338,22 +249,24 @@ export const fetchEntradaById = async (id) => {
 };
 
 export const createEntrada = async (data) => {
-  const { data: result, error } = await supabase.from('entradas').insert(data).single();
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('entradas').insert(data).single();
   handleError(error);
   return result;
 };
 
 export const updateEntrada = async (id, data) => {
-  const { data: result, error } = await supabase.from('entradas').update(data).eq('id', id).single();
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('entradas').update(data).eq('id', id).single();
   handleError(error);
   return result;
 };
 
 export const deleteEntrada = async (id) => {
-  const { error } = await supabase.from('entradas').delete().eq('id', id);
+  const client = supabaseAdmin || supabase;
+  const { error } = await client.from('entradas').delete().eq('id', id);
   handleError(error);
 };
-
 
 // Obtener página CMS por slug
 export const fetchCmsPage = async (slug) => {
@@ -495,7 +408,6 @@ export const saveCmsPage = async (slug, widgets) => {
   }
 };
 
-
 // === ABONOS ===
 export const fetchAbonosByUser = async (userId) => {
   const { data, error } = await supabase
@@ -507,13 +419,15 @@ export const fetchAbonosByUser = async (userId) => {
 };
 
 export const createAbono = async (data) => {
-  const { data: result, error } = await supabase.from('abonos').insert(data).single();
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('abonos').insert(data).single();
   handleError(error);
   return result;
 };
 
 export const renewAbono = async (id, data) => {
-  const { data: result, error } = await supabase.from('abonos').update(data).eq('id', id).single();
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client.from('abonos').update(data).eq('id', id).single();
   handleError(error);
   return result;
 };
@@ -535,8 +449,9 @@ export const fetchPlantillasPorRecintoYSala = async (recintoId, salaId) => {
 
 // === PAYMENTS ===
 export const createPayment = async (data) => {
+  const client = supabaseAdmin || supabase;
   console.log('createPayment request:', data);
-  const { data: result, error } = await supabase
+  const { data: result, error } = await client
     .from('payments')
     .insert(data)
     .select()
@@ -547,7 +462,8 @@ export const createPayment = async (data) => {
 };
 
 export const updatePayment = async (id, data) => {
-  const { data: result, error } = await supabase
+  const client = supabaseAdmin || supabase;
+  const { data: result, error } = await client
     .from('payments')
     .update(data)
     .eq('id', id)
