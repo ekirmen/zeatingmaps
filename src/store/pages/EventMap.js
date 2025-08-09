@@ -1,11 +1,10 @@
 // EventMap.js - Contenedor que carga datos del mapa
 import React, { useState, useEffect } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { fetchMapa, getFuncion } from '../services/apistore';
 import EventMapDisplay from '../components/EventMapDisplay';
 
 function EventMap() {
-  const { eventId } = useParams();
   const [searchParams] = useSearchParams();
   const funcionParam = searchParams.get('funcion');
   const mapaParam = searchParams.get('mapa');

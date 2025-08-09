@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Table, Button, Tag, Modal, Form, Input, message, Badge, Tabs, Switch } from 'antd';
-import { MailOutlined, UserAddOutlined, SyncOutlined, EyeOutlined } from '@ant-design/icons';
+import { MailOutlined, SyncOutlined, EyeOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
 const { TabPane } = Tabs;

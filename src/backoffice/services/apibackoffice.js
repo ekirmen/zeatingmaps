@@ -110,7 +110,7 @@ export const deleteEvento = async (id) => {
 export const fetchFuncionesPorEvento = async (eventoId) => {
   const { data, error } = await supabase
     .from('funciones')
-    .select('id, nombre, fecha_evento, sala, evento')
+    .select('id, fecha_celebracion, inicio_venta, fin_venta, sala, evento')
     .eq('evento', eventoId);
   handleError(error);
   return data;

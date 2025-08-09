@@ -3,9 +3,11 @@ import Modal from 'react-modal';
 import { useRecinto } from '../contexts/RecintoContext';
 import { supabase } from '../../supabaseClient';
 import { syncSeatsForSala } from '../services/apibackoffice';
+import { useTenant } from '../../contexts/TenantContext';
 import formatDateString from '../../utils/formatDateString';
 
 const Funciones = () => {
+  const { currentTenant } = useTenant();
   const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
   const [eventos, setEventos] = useState([]);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
@@ -255,6 +257,7 @@ const Funciones = () => {
       plantilla: nuevaFuncion.plantilla,
       plantilla_comisiones: nuevaFuncion.plantillaComisiones || null,
       plantilla_producto: nuevaFuncion.plantillaProducto || null,
+      ...(currentTenant?.id ? { tenant_id: currentTenant.id } : {}),
     };
 
     try {

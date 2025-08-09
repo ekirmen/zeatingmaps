@@ -12,6 +12,7 @@ import EventsList from '../components/Evento/EventsList';
 import SearchBar from '../components/Evento/SearchBar';
 import VenueSelectors from '../components/Evento/VenueSelectors';
 import { supabase } from '../../supabaseClient';
+import { useTenant } from '../../contexts/TenantContext';
 import { v4 as uuidv4 } from 'uuid';
 
 // Bucket where event related images are stored
@@ -22,6 +23,7 @@ const rawEventFolder = process.env.REACT_APP_EVENT_FOLDER || '';
 const EVENT_FOLDER = rawEventFolder.replace(/^\/+|\/+$/g, '');
 
 const Evento = () => {
+  const { currentTenant } = useTenant();
   const [viewMode, setViewMode] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -338,7 +340,8 @@ const Evento = () => {
             uploaded[key] = value;
           }
         }
-        cleanData.imagenes = uploaded;
+        // Guardar como JSON string en la columna text
+        cleanData.imagenes = JSON.stringify(uploaded);
         setIsUploading(false);
       }
 
@@ -347,8 +350,16 @@ const Evento = () => {
       delete cleanData.__v;
       delete cleanData.createdAt;
       delete cleanData.updatedAt;
-      if (cleanData.fecha === '' || cleanData.fecha == null) {
-        delete cleanData.fecha;
+      // Mapear fecha -> fecha_evento (timestamp)
+      if (cleanData.fecha && typeof cleanData.fecha === 'string' && cleanData.fecha.trim() !== '') {
+        // Mantener como ISO o YYYY-MM-DD; la columna es timestamp
+        cleanData.fecha_evento = cleanData.fecha;
+      }
+      delete cleanData.fecha;
+
+      // Asegurar tenant_id
+      if (currentTenant?.id) {
+        cleanData.tenant_id = currentTenant.id;
       }
 
       let response;

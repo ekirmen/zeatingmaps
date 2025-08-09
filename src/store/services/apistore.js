@@ -201,7 +201,7 @@ export const fetchMapa = async (salaIdOrMapId, by = 'sala') => {
     }
 
     if (status === 406) {
-      console.warn('No map found for sala_id:', salaId);
+      console.warn('No map found for', by === 'id' ? 'map id' : 'sala_id', salaIdOrMapId);
       return null;
     }
 

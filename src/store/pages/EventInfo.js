@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 import { supabase } from '../../supabaseClient';
 import { isUuid, isNumericId } from '../../utils/isUuid';
@@ -10,7 +9,6 @@ import formatDateString from '../../utils/formatDateString';
 const EventInfo = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
-  const { t } = useTranslation();
 
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
@@ -72,7 +70,7 @@ const EventInfo = () => {
       }
     };
     if (evento) fetchFuncionesData();
-  }, [evento, eventId]);
+  }, [evento, eventId, navigate]);
 
   const handleSelect = () => {
     if (selectedFunctionId) {
