@@ -114,79 +114,85 @@ const EventosPage = () => {
     const fetchMap = async () => {
       try {
         const funcion = await getFuncion(selectedFunctionId);
-        if (funcion?.sala?.id) {
-          const mapData = await fetchMapa(funcion.sala.id);
-          
-          // Transform the map data to match SeatingMapUnified expectations
-          if (mapData && mapData.contenido) {
-            // If contenido is a string, parse it
-            let contenido = mapData.contenido;
-            if (typeof contenido === 'string') {
-              try {
-                contenido = JSON.parse(contenido);
-              } catch (e) {
-                console.error('Error parsing mapa contenido:', e);
-                setMapa(null);
-                return;
-              }
-            }
-            
-            // Transform the data structure to match SeatingMapUnified expectations
-            // The map data contains mesas with sillas, we need to extract all seats
-            const allSeats = [];
-            const mesas = [];
-            
-            (Array.isArray(contenido) ? contenido : [contenido]).forEach(item => {
-              if (item.type === 'mesa' && item.sillas) {
-                mesas.push(item);
-                // Extract seats from this mesa
-                item.sillas.forEach(silla => {
-                  allSeats.push({
-                    ...silla,
-                    x: silla.posicion?.x || silla.x || 0,
-                    y: silla.posicion?.y || silla.y || 0,
-                    ancho: silla.width || silla.ancho || 30,
-                    alto: silla.height || silla.alto || 30,
-                    nombre: silla.nombre || silla.numero || silla._id || 'Asiento'
-                  });
-                });
-              }
-            });
-            
-            // Create a single zone with all seats
-            const transformedZonas = [{
-              id: 'zona_principal',
-              nombre: 'Zona Principal',
-              asientos: allSeats
-            }];
-            
-            const transformedMap = {
-              ...mapData,
-              zonas: transformedZonas,
-              contenido: {
-                zonas: transformedZonas,
-                mesas: mesas
-              }
-            };
-            
-            console.log('Original map data:', mapData);
-            console.log('Parsed contenido:', contenido);
-            console.log('Extracted seats:', allSeats);
-            console.log('Transformed map data:', transformedMap);
-            setMapa(transformedMap);
-          } else {
-            setMapa(mapData);
-          }
+        // Obtener salaId de forma robusta (acepta numero/uuid o objeto)
+        const salaId = (funcion?.sala && typeof funcion.sala === 'object')
+          ? (funcion.sala.id || funcion.sala._id)
+          : funcion?.sala;
+
+        if (!salaId) {
+          console.warn('[MAPA] No se encontró salaId en la función', funcion);
+          setMapa(null);
+          return;
         }
-        if (funcion?.plantilla) {
-          console.log('Plantilla de precios encontrada:', funcion.plantilla);
-          setPriceTemplate(funcion.plantilla);
+
+        const mapData = await fetchMapa(salaId);
+        if (!mapData) {
+          console.warn('[MAPA] No se encontró mapa para salaId=', salaId);
+          setMapa(null);
+          return;
+        }
+        
+        // Transform the map data to match SeatingMapUnified expectations
+        if (mapData && mapData.contenido) {
+          // If contenido is a string, parse it
+          let contenido = mapData.contenido;
+          if (typeof contenido === 'string') {
+            try {
+              contenido = JSON.parse(contenido);
+            } catch (e) {
+              console.error('Error parsing mapa contenido:', e);
+              setMapa(null);
+              return;
+            }
+          }
+          
+          // Transform the data structure to match SeatingMapUnified expectations
+          const allSeats = [];
+          const mesas = [];
+          
+          (Array.isArray(contenido) ? contenido : [contenido]).forEach(item => {
+            if (item.type === 'mesa' && item.sillas) {
+              mesas.push(item);
+              item.sillas.forEach(silla => {
+                allSeats.push({
+                  ...silla,
+                  x: silla.posicion?.x || silla.x || 0,
+                  y: silla.posicion?.y || silla.y || 0,
+                  ancho: silla.width || silla.ancho || 30,
+                  alto: silla.height || silla.alto || 30,
+                  nombre: silla.nombre || silla.numero || silla._id || 'Asiento'
+                });
+              });
+            }
+          });
+          
+          const transformedZonas = [{
+            id: 'zona_principal',
+            nombre: 'Zona Principal',
+            asientos: allSeats
+          }];
+          
+          const transformedMap = {
+            ...mapData,
+            zonas: transformedZonas,
+            contenido: {
+              zonas: transformedZonas,
+              mesas: mesas
+            }
+          };
+          
+          console.log('Original map data:', mapData);
+          console.log('Parsed contenido:', contenido);
+          console.log('Extracted seats:', allSeats);
+          console.log('Transformed map data:', transformedMap);
+          setMapa(transformedMap);
         } else {
-          console.log('No se encontró plantilla de precios para la función:', funcion);
+          setMapa(mapData);
         }
       } catch (err) {
         console.error('Error loading map:', err);
         setError(err);
+        setMapa(null);
       }
     };
     if (selectedFunctionId) fetchMap();
@@ -399,26 +405,26 @@ const EventosPage = () => {
                   >
                     {mapa ? (
                       <div className="h-96 overflow-auto">
-                                                 <SeatingMapUnified
-                           mapa={mapa}
-                           funcionId={selectedFunctionId}
-                           onSeatToggle={handleSeatToggle}
-                           onTableToggle={(table) => {
-                             console.log('Mesa seleccionada:', table);
-                           }}
-                           isSeatLocked={() => false}
-                           isSeatLockedByMe={() => false}
-                           lockSeat={() => Promise.resolve(true)}
-                           unlockSeat={() => Promise.resolve(true)}
-                           isTableLocked={() => false}
-                           isTableLockedByMe={() => false}
-                           lockTable={() => Promise.resolve(true)}
-                           unlockTable={() => Promise.resolve(true)}
-                           isAnySeatInTableLocked={() => false}
-                           areAllSeatsInTableLockedByMe={() => false}
-                           foundSeats={[]}
-                           selectedSeats={cartItems.map(item => item.sillaId)}
-                         />
+                                               <SeatingMapUnified
+                         mapa={mapa}
+                         funcionId={selectedFunctionId}
+                         onSeatToggle={handleSeatToggle}
+                         onTableToggle={(table) => {
+                           console.log('Mesa seleccionada:', table);
+                         }}
+                         isSeatLocked={() => false}
+                         isSeatLockedByMe={() => false}
+                         lockSeat={() => Promise.resolve(true)}
+                         unlockSeat={() => Promise.resolve(true)}
+                         isTableLocked={() => false}
+                         isTableLockedByMe={() => false}
+                         lockTable={() => Promise.resolve(true)}
+                         unlockTable={() => Promise.resolve(true)}
+                         isAnySeatInTableLocked={() => false}
+                         areAllSeatsInTableLockedByMe={() => false}
+                         foundSeats={[]}
+                         selectedSeats={cartItems.map(item => item.sillaId)}
+                       />
                       </div>
                     ) : (
                       <div className="flex items-center justify-center h-96 text-gray-500">

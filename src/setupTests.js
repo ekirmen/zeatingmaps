@@ -20,3 +20,21 @@ if (typeof global.ReadableStream === 'undefined') {
   }
   global.ReadableStream = ReadableStream;
 }
+
+// Mock react-konva/canvas-heavy deps to avoid requiring native modules in Jest
+jest.mock('react-konva', () => ({
+  Stage: () => null,
+  Layer: () => null,
+  Rect: () => null,
+  Text: () => null,
+  Group: () => null,
+  Circle: () => null
+}), { virtual: true });
+
+jest.mock('konva', () => ({}), { virtual: true });
+
+// Polyfill mínimo para crypto.randomUUID en entorno Jest
+if (typeof global.crypto === 'undefined') {
+  // eslint-disable-next-line no-undef
+  global.crypto = { randomUUID: () => 'test-uuid' };
+}

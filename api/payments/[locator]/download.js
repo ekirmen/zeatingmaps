@@ -48,8 +48,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Verify the user token using the access token
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    // Verify the user token using the access token (tolerante a mocks)
+    const userResp = await supabaseAdmin?.auth?.getUser?.(token);
+    const user = userResp?.data?.user || null;
+    const userError = userResp?.error || null;
     if (userError || !user) {
       console.error('Auth error:', userError);
       return res.status(403).json({ error: 'Unauthorized' });

@@ -151,29 +151,18 @@ const Recinto = () => {
   };
 
   const handleDeleteRecinto = async (recintoId) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este recinto y todas sus salas?')) return;
-  
+    if (!window.confirm('¿Estás seguro de que deseas eliminar este recinto y TODO lo relacionado (salas, mapas, eventos, funciones, plantillas, etc.)? Esta acción no se puede deshacer.')) return;
+
     try {
-      // Eliminar salas primero
-      const { error: errorSalas } = await supabase
-        .from('salas')
-        .delete()
-        .eq('recinto_id', recintoId); // corregido
-  
-      if (errorSalas) throw errorSalas;
-  
-      // Luego eliminar el recinto
-      const { error: errorRecinto } = await supabase
-        .from('recintos')
-        .delete()
-        .eq('id', recintoId);
-  
-      if (errorRecinto) throw errorRecinto;
-  
+      const response = await fetch(`/api/recintos/${recintoId}/delete`, { method: 'DELETE' });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result?.error || 'Error eliminando el recinto');
+      }
       await fetchRecintos();
-      alert('Recinto y sus salas eliminados con éxito');
+      alert('Recinto y datos relacionados eliminados con éxito');
     } catch (error) {
-      console.error('Error al eliminar recinto y salas:', error.message);
+      console.error('Error al eliminar recinto:', error);
       alert(error.message);
     }
   };

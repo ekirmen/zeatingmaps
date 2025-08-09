@@ -15,6 +15,11 @@
     "eject": "react-scripts eject",
     "vercel-build": "react-scripts build",
     "test": "craco test",
+    "test:ci": "cross-env CI=true craco test --watchAll=false --passWithNoTests",
+    "test:db": "node scripts/db-check.js",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "e2e:install": "playwright install && playwright install-deps",
     "analyze": "npm run build && npx serve -s build"
   },
   "dependencies": {
@@ -71,6 +76,7 @@
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
+    "@playwright/test": "^1.46.0",
     "babel-plugin-import": "^1.13.8",
     "core-js": "^3.35.0",
     "cross-env": "^10.0.0",

@@ -3,6 +3,33 @@
 // Removed API_BASE_URL as we are now directly using Supabase for these calls
 import { supabase } from '../../supabaseClient'; // Assuming you use Supabase for data
 
+// Helper: verifica si una columna existe intentando un select del esquema PostgREST
+async function hasColumn(tableName, columnName) {
+  try {
+    const { error } = await supabase.from(tableName).select(columnName).limit(0);
+    if (error) {
+      const msg = `${error.message || ''}`;
+      const code = `${error.code || ''}`;
+      if (
+        code === '42703' ||
+        /column .* does not exist/i.test(msg) ||
+        /Could not find the '.*' column/i.test(msg)
+      ) {
+        return false;
+      }
+      if (code === '42P01' || /relation ".*" does not exist/i.test(msg)) return false;
+      throw error;
+    }
+    return true;
+  } catch (err) {
+    const msg = `${err.message || ''}`;
+    const code = `${err.code || ''}`;
+    if (code === '42P01' || /relation ".*" does not exist/i.test(msg)) return false;
+    if (/Could not find the '.*' column/i.test(msg)) return false;
+    return false;
+  }
+}
+
 /**
  * Fetches a CMS page by its slug directly from Supabase.
  * This is used by EventsVenue to load the home page widgets.
@@ -61,8 +88,8 @@ export const getFunciones = async (eventId) => {
 
     console.log('[getFunciones DEBUG] Evento encontrado, tenant_id:', eventoData.tenant_id);
 
-    // Ahora obtener las funciones filtrando por tenant_id
-    const { data, error } = await supabase
+    // Construir query base
+    let query = supabase
       .from('funciones')
       .select(`
         id,
@@ -77,6 +104,13 @@ export const getFunciones = async (eventId) => {
       .eq('evento', eventId)
       .eq('tenant_id', eventoData.tenant_id)
       .order('fecha_celebracion', { ascending: true });
+
+    // Si existe es_principal, filtrar por principales
+    if (await hasColumn('funciones', 'es_principal')) {
+      query = query.eq('es_principal', true);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error('[getFunciones DEBUG] Error fetching funciones:', error.message);
