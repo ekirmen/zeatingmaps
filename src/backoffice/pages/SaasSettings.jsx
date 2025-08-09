@@ -1,23 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Progress, Alert, Tabs, Badge, Tooltip, Avatar, Switch, message, notification, InputNumber, Divider } from 'antd';
+import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Alert, Tabs, message, InputNumber } from 'antd';
 import { 
   SettingOutlined,
   DollarOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
   EditOutlined,
   SaveOutlined,
   PlusOutlined,
   DeleteOutlined,
   GlobalOutlined,
   SafetyCertificateOutlined,
-  CreditCardOutlined,
-  BarChartOutlined,
-  TeamOutlined,
-  CalendarOutlined,
-  DatabaseOutlined,
-  CloudOutlined,
-  LockOutlined
+  CreditCardOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../config/supabase';
 

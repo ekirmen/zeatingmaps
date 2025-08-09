@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { AiOutlineLeft, AiOutlinePlus, AiOutlineMinus, AiOutlineEdit, AiOutlineDelete, AiOutlineCopy, AiOutlineUp, AiOutlineDown } from 'react-icons/ai';
+import { AiOutlineLeft, AiOutlineEdit, AiOutlineDelete, AiOutlineCopy, AiOutlineUp, AiOutlineDown } from 'react-icons/ai';
 import { AiOutlineSetting } from 'react-icons/ai';
 import EmailWidgetRenderer from '../components/EmailWidgets/EmailWidgetRenderer';
 import EmailTestPanel from '../components/EmailTestPanel';
@@ -292,7 +292,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   const [widgets, setWidgets] = useState(defaultWidgets);
   const [draggingIdx, setDraggingIdx] = useState(null);
   const [pageLoaded, setPageLoaded] = useState(false);
-  const [selectedWidget, setSelectedWidget] = useState(null);
+
   const [showSettings, setShowSettings] = useState(false);
   const [editingWidget, setEditingWidget] = useState(null);
   const [editingArea, setEditingArea] = useState(null);
@@ -681,31 +681,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     );
   };
 
-  const renderWidgetPreview = (widget) => (
-    <div
-      key={widget.id}
-      className="element-widget owner-page-widget cursor-pointer"
-      draggable="true"
-      title={widget.name}
-      onClick={() => setSelectedWidget(widget)}
-    >
-      <div className="preview-widget">
-        <div className="layer"></div>
-        <div className="preview-over">
-          <i className="palco4icon palco4icon-plus-circle-o"></i>
-        </div>
-        <img 
-          src={widget.preview} 
-          draggable="false"
-          alt={widget.name}
-          className="w-full h-full object-cover"
-        />
-      </div>
-      <div className="label-type-widget full">
-        <label>{widget.name}</label>
-      </div>
-    </div>
-  );
+
 
   const renderSettingsPanel = () => {
     if (!editingWidget) return null;

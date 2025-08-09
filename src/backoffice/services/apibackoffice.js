@@ -1,12 +1,13 @@
 import { supabase } from '../../supabaseClient';
 import { supabaseAdmin } from '../../supabaseClient';
+import { v5 as uuidv5 } from 'uuid';
 
 const CMS_PAGE_IDS = {
   home: 1,
   events: 2
 };
 
-const resolveCmsId = (pageId) => CMS_PAGE_IDS[pageId] || pageId;
+
 
 const handleError = (error) => {
   if (error) {
@@ -212,7 +213,7 @@ export const syncSeatsForSala = async (salaId, options = {}) => {
     const toInsert = seatDefs
       .filter(s => !existingIds.has(s.id))
       .map(s => ({
-        _id: `${s.id}::${func.id}`,
+        _id: uuidv5(`${s.id}::${func.id}`, uuidv5.URL), // Generar UUID v5 válido
         funcion_id: func.id,
         zona: s.zona,
         status: 'disponible',

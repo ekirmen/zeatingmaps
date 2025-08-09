@@ -25,7 +25,7 @@ const useCartRestore = () => {
 
       clearCart();
     }
-  }, [cartExpiration, cart, clearCart, unlockSeat]);
+  }, [cartExpiration, cart, clearCart, unlockSeat, functionId]);
 };
 
 export default useCartRestore;

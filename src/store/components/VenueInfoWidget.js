@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
-import resolveImageUrl from '../../utils/resolveImageUrl';
+
 
 const VenueInfoWidget = ({ venueId, showEvents = true, maxEvents = 6 }) => {
   const navigate = useNavigate();

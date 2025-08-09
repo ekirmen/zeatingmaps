@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 
 const AuthContext = createContext();
@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const validateSession = async () => {
+  const validateSession = useCallback(async () => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error) throw error;
@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     validateSession();
-  }, []);
+  }, [validateSession]);
 
   const value = {
     user,

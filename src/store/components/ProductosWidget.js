@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Image, Typography, Space, InputNumber, message, Input, Select, Tag, Badge, Tooltip, Alert } from 'antd';
 import { 
   ShoppingCartOutlined, 
@@ -6,9 +6,7 @@ import {
   MinusOutlined, 
   SearchOutlined, 
   FilterOutlined,
-  InfoCircleOutlined,
-  FireOutlined,
-  StarOutlined
+  FireOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import { useCartStore } from '../cartStore';
@@ -39,13 +37,13 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
       setFilteredProductos([]);
       setQuantities({});
     }
-  }, [eventoId]);
+  }, [eventoId, loadProductos]);
 
   useEffect(() => {
     filterProductos();
-  }, [productos, searchTerm, categoryFilter, priceFilter, stockFilter]);
+  }, [productos, searchTerm, categoryFilter, priceFilter, stockFilter, filterProductos]);
 
-  const loadProductos = async () => {
+  const loadProductos = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -114,7 +112,7 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
     }
   };
 
-  const filterProductos = () => {
+  const filterProductos = useCallback(() => {
     let filtered = [...productos];
 
     // Filtro por búsqueda

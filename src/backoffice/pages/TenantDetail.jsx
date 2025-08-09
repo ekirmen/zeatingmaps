@@ -1,24 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Statistic, Progress, Alert, Tabs, Badge, Tooltip, Avatar, Switch, message, notification, Timeline, Descriptions, Divider } from 'antd';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Alert, Tabs, message, Timeline, Descriptions } from 'antd';
 import { 
-  UserOutlined, 
   BankOutlined, 
   DollarOutlined, 
-  CheckCircleOutlined, 
-  ExclamationCircleOutlined, 
   EditOutlined, 
   EyeOutlined,
   SettingOutlined,
-  BarChartOutlined,
-  TeamOutlined,
   GlobalOutlined,
-  SafetyCertificateOutlined,
-  CalendarOutlined,
-  FileTextOutlined,
-  CreditCardOutlined,
-  BellOutlined,
-  DatabaseOutlined,
-  CloudOutlined,
   PlusOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../config/supabase';
@@ -48,9 +36,9 @@ const TenantDetail = () => {
     if (tenantId) {
       loadTenantData();
     }
-  }, [tenantId]);
+  }, [tenantId, loadTenantData]);
 
-  const loadTenantData = async () => {
+  const loadTenantData = useCallback(async () => {
     setLoading(true);
     try {
       // Cargar datos del tenant

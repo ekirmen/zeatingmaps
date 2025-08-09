@@ -29,7 +29,7 @@ const EventosPage = () => {
   const [funciones, setFunciones] = useState([]);
   const [selectedFunctionId, setSelectedFunctionId] = useState(null);
   const [mapa, setMapa] = useState(null);
-  const [priceTemplate, setPriceTemplate] = useState(null);
+
   const [venueInfo, setVenueInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

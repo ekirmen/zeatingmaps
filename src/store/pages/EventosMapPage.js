@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Card, message, Spin, Alert } from 'antd';
 import { ArrowLeftOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
-import { getFuncion, fetchMapa, getFunciones } from '../services/apistore';
+import { getFuncion, fetchMapa } from '../services/apistore';
 import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
@@ -20,14 +20,12 @@ const EventosMapPage = () => {
   const [evento, setEvento] = useState(null);
   const [funcion, setFuncion] = useState(null);
   const [mapa, setMapa] = useState(null);
-  const [priceTemplate, setPriceTemplate] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const cartItems = useCartStore((state) => state.items);
-  const cartProducts = useCartStore((state) => state.products);
-  const clearCart = useCartStore((state) => state.clearCart);
   const getItemCount = useCartStore((state) => state.getItemCount);
   
   const {
@@ -50,7 +48,7 @@ const EventosMapPage = () => {
     if (!funcionParam) return;
     subscribeToFunction(funcionParam);
     return () => unsubscribe();
-  }, [funcionParam]);
+  }, [funcionParam, subscribeToFunction, unsubscribe]);
 
   // Cargar datos del evento y función
   useEffect(() => {

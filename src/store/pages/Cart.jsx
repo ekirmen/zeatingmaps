@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, InputNumber, Modal, Input, List, Tag, Space, Typography, Divider, Badge, Alert } from 'antd';
 import { 
@@ -9,7 +9,7 @@ import {
   MinusOutlined,
   ClockCircleOutlined,
   UserOutlined,
-  CalendarOutlined,
+
   LockOutlined
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
@@ -193,9 +193,9 @@ const Cart = () => {
     useEffect(() => {
         loadFacebookPixel();
         loadSavedCarts();
-    }, [items, products]);
+    }, [items, products, loadFacebookPixel, loadSavedCarts]);
 
-    const loadFacebookPixel = async () => {
+    const loadFacebookPixel = useCallback(async () => {
         try {
             if (items.length > 0) {
                 const firstEventId = items[0]?.eventId;

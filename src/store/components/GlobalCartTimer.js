@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Badge, Button, Tooltip, Modal, message } from 'antd';
-import { ClockCircleOutlined, ShoppingCartOutlined, CloseOutlined } from '@ant-design/icons';
+import { ClockCircleOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';

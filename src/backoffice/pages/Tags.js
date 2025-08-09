@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useTags } from '../contexts/TagContext';
-import { Card, Button, Input, Modal, Form, Select, ColorPicker, message, Space, Tag, Typography, Tabs } from 'antd';
+import { Card, Button, Input, Modal, Form, Select, message, Space, Typography, Tabs } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined, CalendarOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
+
 const { TabPane } = Tabs;
 
 const Tags = () => {

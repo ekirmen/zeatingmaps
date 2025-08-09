@@ -88,18 +88,14 @@ export const getFunciones = async (eventId) => {
 
     console.log('[getFunciones DEBUG] Evento encontrado, tenant_id:', eventoData.tenant_id);
 
-    // Construir query base
+    // Construir query base - SIN JOIN para evitar conflictos de relaciones
     let query = supabase
       .from('funciones')
       .select(`
         id,
         fecha_celebracion,
         evento,
-        sala,
-        salas (
-          id,
-          nombre
-        )
+        sala
       `)
       .eq('evento', eventId)
       .eq('tenant_id', eventoData.tenant_id)
@@ -119,13 +115,31 @@ export const getFunciones = async (eventId) => {
 
     console.log('[getFunciones DEBUG] Funciones encontradas:', data?.length || 0, 'funciones');
 
+    // Obtener información de salas por separado para evitar conflictos de relaciones
+    const salasIds = [...new Set((data || []).map(f => f.sala).filter(Boolean))];
+    let salasData = {};
+    
+    if (salasIds.length > 0) {
+      const { data: salas, error: salasError } = await supabase
+        .from('salas')
+        .select('id, nombre')
+        .in('id', salasIds);
+      
+      if (!salasError && salas) {
+        salasData = salas.reduce((acc, sala) => {
+          acc[sala.id] = sala;
+          return acc;
+        }, {});
+      }
+    }
+
     // Transformar datos al formato esperado por el frontend
     const transformedData = (data || []).map(funcion => ({
       id: funcion.id,
       fecha_celebracion: funcion.fecha_celebracion,
       evento: funcion.evento,
       sala: funcion.sala,
-      sala_nombre: funcion.salas?.nombre || 'Sala sin nombre',
+      sala_nombre: salasData[funcion.sala]?.nombre || 'Sala sin nombre',
       // Crear un objeto plantilla básico si no existe
       plantilla: {
         id: null,

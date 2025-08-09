@@ -22,10 +22,7 @@ import {
   SettingOutlined,
   UploadOutlined,
   DownloadOutlined,
-  ReloadOutlined,
-  SafetyOutlined,
-  CloudOutlined,
-  BellOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 

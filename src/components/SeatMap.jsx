@@ -2,17 +2,15 @@ import React, { useState, useEffect } from "react";
 /* Removed Firebase imports as per user request */
 // import { getDatabaseInstance } from "../services/firebaseClient";
 // import { ref, onValue, off, update } from "firebase/database";
-import normalizeSeatId from "../utils/normalizeSeatId";
 import useSeatLocksArray from "../store/hooks/useSeatLocksArray";
 import getCartSessionId from "../utils/getCartSessionId";
-import normalizeSeatStatus from "../utils/normalizeSeatStatus";
 import "./SeatMap.css";
 
 const SeatMap = ({ funcionId, onSeatToggle }) => {
   const [seats, setSeats] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState({});
   const [loading, setLoading] = useState(true);
-  const [firebaseEnabled, setFirebaseEnabled] = useState(true); // Assume Firebase enabled
+  const [firebaseEnabled] = useState(true); // Assume Firebase enabled
 
   useSeatLocksArray(funcionId, setSeats, getCartSessionId, firebaseEnabled);
 

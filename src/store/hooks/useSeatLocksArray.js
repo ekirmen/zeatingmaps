@@ -4,7 +4,7 @@ import { useSeatLockStore } from '../../components/seatLockStore';
 import { useCartStore } from '../cartStore';
 import { toast } from 'react-hot-toast';
 
-const LOCK_EXPIRATION_MINUTES = 15;
+
 
 const useSeatLocksArray = (funcionId, userId, enabled = false) => {
   const channelRef = useRef(null);
