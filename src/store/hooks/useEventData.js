@@ -119,7 +119,7 @@ const useEventData = (eventIdOrSlug) => {
 
             const query = supabase.from('eventos').select(`
                 *,
-                recintos (
+                recintos!recinto_id (
                     nombre
                 )
             `);

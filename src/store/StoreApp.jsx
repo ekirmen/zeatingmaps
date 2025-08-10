@@ -26,6 +26,7 @@ import PaymentSuccess from './pages/PaymentSuccess';
 import Profile from './pages/profile';
 import EventosPage from './pages/EventosPage';
 import EventosMapPage from './pages/EventosMapPage';
+import EventMapPage from './pages/EventMapPage';
 import ThankYouPage from './pages/ThankYouPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiesPolicy from './pages/CookiesPolicy';
@@ -51,6 +52,7 @@ const StoreApp = () => {
               <Route path="/store/tag/:tagSlug?" element={<EventsVenue groupByTags />} />
               <Route path="/store/eventos/:eventSlug" element={<EventosPage />} />
               <Route path="/store/eventos/:eventSlug/map" element={<EventosMapPage />} />
+              <Route path="/store/eventos/:eventSlug/mapa" element={<EventMapPage />} />
               <Route path="/store/event/:eventId" element={<EventInfo />} />
               <Route path="/store/event/:eventId/map" element={<EventMap />} />
               <Route path="/store/event/:eventId/full" element={<Event />} />

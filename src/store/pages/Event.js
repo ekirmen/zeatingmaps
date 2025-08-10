@@ -90,17 +90,18 @@ function EventPage() {
     if (selectedFunctionId) fetchMap();
   }, [selectedFunctionId]);
 
-  useEffect(() => {
-    const loadFacebookPixel = async () => {
-      try {
-        if (evento?.id) {
-          const pixel = await getFacebookPixelByEvent(evento.id);
-          setFacebookPixel(pixel);
-        }
-      } catch (error) {
-        console.error('Error loading Facebook pixel:', error);
+  const loadFacebookPixel = async () => {
+    try {
+      if (evento?.id) {
+        const pixel = await getFacebookPixelByEvent(evento.id);
+        setFacebookPixel(pixel);
       }
-    };
+    } catch (error) {
+      console.error('Error loading Facebook pixel:', error);
+    }
+  };
+
+  useEffect(() => {
     if (evento?.id) loadFacebookPixel();
   }, [evento?.id]);
 

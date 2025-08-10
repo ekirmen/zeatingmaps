@@ -136,13 +136,35 @@ export const createFuncion = async (data) => {
 export const fetchMapa = async (salaId) => {
   if (!salaId) return null;
 
-  const { data, error } = await supabase
-    .from('mapas')
-    .select('*')
-    .eq('sala_id', salaId)
-    .maybeSingle();
-  handleError(error);
-  return data;
+  try {
+    // Cargar el mapa
+    const { data: mapa, error: mapaError } = await supabase
+      .from('mapas')
+      .select('*')
+      .eq('sala_id', salaId)
+      .maybeSingle();
+    
+    if (mapaError) throw mapaError;
+    
+    // Cargar las zonas de la sala
+    const { data: zonas, error: zonasError } = await supabase
+      .from('zonas')
+      .select('*')
+      .eq('sala_id', salaId);
+    
+    if (zonasError) {
+      console.warn('Error al cargar zonas, continuando sin zonas:', zonasError);
+    }
+    
+    // Retornar mapa con zonas incluidas
+    return {
+      ...mapa,
+      zonas: zonas || []
+    };
+  } catch (error) {
+    console.error('Error en fetchMapa:', error);
+    throw error;
+  }
 };
 
 export const saveMapa = async (salaId, data) => {

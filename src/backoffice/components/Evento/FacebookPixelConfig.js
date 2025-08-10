@@ -39,13 +39,35 @@ const FacebookPixelConfig = ({ eventoData, setEventoData, handleChange }) => {
   });
   const [loading, setLoading] = useState(false);
 
+  const loadFacebookPixel = async () => {
+    try {
+      setLoading(true);
+      const pixel = await getFacebookPixelByEvent(eventoData.id);
+      if (pixel) {
+        setFacebookPixel({
+          pixel_id: pixel.pixel_id || '',
+          pixel_script: pixel.pixel_script || '',
+          is_active: pixel.is_active || false,
+          tracking_pages: pixel.tracking_pages || {
+            event_page: true,
+            cart_page: true,
+            payment_page: true,
+            thank_you_page: true
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading Facebook pixel:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (eventoData?.id) {
       loadFacebookPixel();
     }
   }, [eventoData?.id]);
-
-  const loadFacebookPixel = async () => {
     try {
       setLoading(true);
       const pixel = await getFacebookPixelByEvent(eventoData.id);

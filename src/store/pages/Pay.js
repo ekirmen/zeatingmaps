@@ -52,24 +52,24 @@ const Pay = () => {
         setLoadingGateways(false);
       }
     };
+    const loadFacebookPixel = async () => {
+      try {
+        if (cartItems && cartItems.length > 0) {
+          // Obtener el píxel del primer evento en el carrito
+          const firstEventId = cartItems[0]?.eventId;
+          if (firstEventId) {
+            const pixel = await getFacebookPixelByEvent(firstEventId);
+            setFacebookPixel(pixel);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading Facebook pixel:', error);
+      }
+    };
+
     loadGateways();
     loadFacebookPixel();
   }, [cartItems, total]);
-
-  const loadFacebookPixel = async () => {
-    try {
-      if (cartItems && cartItems.length > 0) {
-        // Obtener el píxel del primer evento en el carrito
-        const firstEventId = cartItems[0]?.eventId;
-        if (firstEventId) {
-          const pixel = await getFacebookPixelByEvent(firstEventId);
-          setFacebookPixel(pixel);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading Facebook pixel:', error);
-    }
-  };
 
   const handlePaymentMethodSelect = (gateway) => {
     setSelectedGateway(gateway);

@@ -24,7 +24,7 @@ const EventInfo = () => {
           .from('eventos')
           .select(`
             *,
-            recintos (
+            recintos!recinto_id (
               id,
               nombre,
               direccion,

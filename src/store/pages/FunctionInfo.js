@@ -35,7 +35,7 @@ const FunctionInfo = () => {
             sala:salas (
               id,
               nombre,
-              recinto:recintos (
+              recinto:recintos!recinto_id (
                 id,
                 nombre,
                 direccion,

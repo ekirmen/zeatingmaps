@@ -1,276 +1,232 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useParams } from 'react-router-dom';
 import { message } from 'antd';
-import { v4 as uuidv4 } from 'uuid';
-import {
-  fetchMapa,
-  saveMapa,
-  updateZona,
-  syncSeatsForSala,
-} from '../services/apibackoffice';
+import realtimeService from '../services/realtimeService';
+import { saveMapa, fetchMapa } from '../services/apibackoffice';
+import { syncSeatsForSala } from '../services/apibackoffice';
 
-export const useMapaLoadingSaving = (salaId, elements, zones, setElements, setZones) => {
+export const useMapaLoadingSaving = () => {
+  const { salaId } = useParams();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const lastSavedElements = useRef(null); // Referencia para evitar recargas innecesarias
+
+  // Configurar Realtime usando Edge Functions
   useEffect(() => {
-    const loadMapa = async () => {
-      if (!salaId) return;
-      try {
-        const data = await fetchMapa(salaId);
-        if (!data) return;
+    if (!salaId) return;
 
-        const zonasCargadas = data?.zonas || [];
+    console.log('[RealtimeService] Configurando suscripción para sala:', salaId);
 
-        const elementosCrudos = (data.contenido || []).reduce((acc, mesa) => {
-          // Create mesa with all necessary properties
-          const mesaConZona = {
-            ...mesa,
-            type: 'mesa',
-            shape: mesa.shape || (mesa.radius ? 'circle' : 'rect'),
-            radius: mesa.radius || mesa.width / 2,
-            width: mesa.width || mesa.radius * 2,
-            height: mesa.height || mesa.radius * 2,
-            posicion: mesa.posicion || { x: 0, y: 0 },
-            zona: ['string', 'number'].includes(typeof mesa.zona)
-              ? zonasCargadas.find(z => z.id === mesa.zona)
-              : mesa.zona,
-            zonaId: ['string', 'number'].includes(typeof mesa.zona)
-              ? mesa.zona
-              : mesa.zona?.id || null,
-          };
-
-          // Transform sillas array
-          const sillas = (mesa.sillas || []).map(silla => ({
-            ...silla,
-            type: 'silla',
-            parentId: mesa._id,
-            width: silla.width || 20,
-            height: silla.height || 20,
-            nombre: silla.nombre || '',
-            label: silla.nombre || '',      // Add label for display
-            labelPlacement: 'top',          // Position label above chair
-            labelStyle: {
-              textAlign: 'center',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              marginBottom: '5px'
-            },
-            zona: ['string', 'number'].includes(typeof silla.zona)
-              ? zonasCargadas.find(z => z.id === silla.zona)
-              : silla.zona,
-            zonaId: ['string', 'number'].includes(typeof silla.zona)
-              ? silla.zona
-              : silla.zona?.id || null,
-          }));
-
-          return [...acc, mesaConZona, ...sillas];
-        }, []);
-
-        setZones(zonasCargadas);
-        setElements(elementosCrudos);
-      } catch (error) {
-        console.error('Error al cargar el mapa:', error);
+    // Suscribirse a cambios usando el servicio personalizado
+    realtimeService.subscribeToSala(salaId, (updatedData) => {
+      console.log('[RealtimeService] Cambio detectado en mapas:', updatedData);
+      
+      // Solo procesar si no es nuestro propio cambio
+      if (updatedData && updatedData.updated_at !== lastSavedAt) {
+        console.log('[RealtimeService] Cambio externo detectado, considerando recarga...');
+        // Aquí podrías implementar la lógica para recargar el mapa
+        // Por ahora, solo notificamos el cambio
+        message.info('El mapa ha sido actualizado por otro usuario');
       }
-    };
+    });
 
-    loadMapa();
-  }, [salaId, setElements, setZones]);
+    // Cleanup al desmontar
+    return () => {
+      console.log('[RealtimeService] Desuscribiendo de sala:', salaId);
+      realtimeService.unsubscribeFromSala(salaId);
+    };
+  }, [salaId, lastSavedAt]);
 
   const transformarParaGuardar = (elements) => {
-    const resultado = [];
-
-    const mesas = elements.filter(e => e.type === 'mesa');
-    mesas.forEach(mesa => {
+    console.log('[transformarParaGuardar] Elementos recibidos:', elements);
+    
+    const mesas = elements.filter(el => el.type === 'mesa');
+    console.log('[transformarParaGuardar] Mesas encontradas:', mesas.length);
+    
+    const contenido = mesas.map(mesa => {
+      console.log('[transformarParaGuardar] Procesando mesa:', mesa);
+      
       const sillas = elements
         .filter(el => el.type === 'silla' && el.parentId === mesa._id)
-        .map(silla => {
-          const sillaData = {
-            type: 'silla',
-            posicion: silla.posicion,
-            width: silla.width || 20,
-            height: silla.height || 20,
-            nombre: silla.nombre || silla.numero || '',
-            zona: silla.zonaId || silla.zona?.id || null,
-            parentId: silla.parentId,
-            mesa_id: mesa._id,
-            funcion_id: salaId, // Asegúrate de incluir funcion_id para la tabla seats
-            status: silla.status || 'available', // Asegúrate de incluir status
-            bloqueado: silla.bloqueado || false, // Asegúrate de incluir bloqueado
-            fila: silla.fila || null, // Asegúrate de incluir fila si es relevante
-            numero: silla.numero || null, // Asegúrate de incluir numero si es relevante
-            user_id: silla.user_id || null, // Asegúrate de incluir user_id si es relevante
-            price: silla.price || null, // Asegúrate de incluir price si es relevante
-          };
-
-          // Lógica mejorada para manejar el _id de la silla
-          // Si el _id existe, no es nulo/vacío, y NO empieza con "silla_", lo incluimos.
-          // De lo contrario, generamos un UUID nuevo para evitar valores nulos.
-          if (silla._id && String(silla._id).trim() !== '' && !String(silla._id).startsWith('silla_')) {
-            sillaData._id = silla._id;
-          } else {
-            sillaData._id = uuidv4(); // Generate a new UUID if missing or temporary
-          }
-
-          console.log('Silla data being prepared:', sillaData, 'Original silla _id:', silla._id); // LOG DE DEPURACIÓN
-          return sillaData;
-        });
-
-      const mesaData = {
-        _id: mesa._id, // Asumiendo que los IDs de las mesas son UUIDs válidos o se manejan de otra forma
-        type: 'mesa',
-        shape: mesa.shape || 'circle',
-        posicion: mesa.posicion || { x: 0, y: 0 },
-        width:
-          mesa.shape === 'circle'
-            ? mesa.radius * 2
-            : mesa.width || 100,
-        height:
-          mesa.shape === 'circle'
-            ? mesa.radius * 2
-            : mesa.height || 100,
-        radius: mesa.radius || 50,
+        .map(silla => ({
+          _id: silla._id,
+          nombre: silla.nombre || '',
+          posicion: silla.posicion || { x: 0, y: 0 },
+          width: silla.width || 20,
+          height: silla.height || 20,
+          zona: silla.zonaId || silla.zona?.id || null,
+          estado: silla.estado || 'disponible'
+        }));
+      
+      console.log('[transformarParaGuardar] Sillas de la mesa:', sillas.length);
+      
+      return {
+        _id: mesa._id,
         nombre: mesa.nombre || '',
+        posicion: mesa.posicion || { x: 0, y: 0 },
+        width: mesa.width || 100,
+        height: mesa.height || 100,
+        radius: mesa.radius || null,
+        shape: mesa.shape || 'rect',
         zona: mesa.zonaId || mesa.zona?.id || null,
-        sillas,
+        sillas: sillas
       };
-
-      Object.entries(mesaData).forEach(([key, value]) => {
-        if (value === undefined || value === null) {
-          if (key === 'sillas') {
-            mesaData[key] = [];
-          } else if (key === 'zona') {
-            mesaData[key] = null;
-          } else {
-            delete mesaData[key];
-          }
-        }
-      });
-
-      resultado.push(mesaData);
     });
 
-    const sillasSueltas = elements.filter(
-      e => e.type === 'silla' && !e.parentId
-    );
-    sillasSueltas.forEach(silla => {
-      const sillaData = {
-        type: 'silla',
-        posicion: silla.posicion,
-        width: silla.width || 20,
-        height: silla.height || 20,
-        nombre: silla.nombre || silla.numero || '',
-        zona: silla.zonaId || silla.zona?.id || null,
-        parentId: null,
-        funcion_id: salaId, // Asegúrate de incluir funcion_id para la tabla seats
-        status: silla.status || 'available', // Asegúrate de incluir status
-        bloqueado: silla.bloqueado || false, // Asegúrate de incluir bloqueado
-        fila: silla.fila || null, // Asegúrate de incluir fila si es relevante
-        numero: silla.numero || null, // Asegúrate de incluir numero si es relevante
-        user_id: silla.user_id || null, // Asegúrate de incluir user_id si es relevante
-        price: silla.price || null, // Asegúrate de incluir price si es relevante
-      };
-      // Lógica mejorada para manejar el _id de la silla
-      if (silla._id && String(silla._id).trim() !== '' && !String(silla._id).startsWith('silla_')) {
-        sillaData._id = silla._id;
-      } else {
-        sillaData._id = uuidv4(); // Generate a new UUID if missing or temporary
-      }
-      console.log('Silla suelta data being prepared:', sillaData, 'Original silla _id:', silla._id); // LOG DE DEPURACIÓN
-      resultado.push(sillaData);
-    });
-
-    const otros = elements.filter(
-      el => !['mesa', 'silla'].includes(el.type)
-    );
-    otros.forEach(el => {
-      const obj = {
-        _id: el._id, // Asumiendo que otros elementos no se insertan en 'seats' o sus IDs son válidos
-        type: el.type,
-        posicion: el.posicion,
-        zona: el.zonaId || el.zona?.id || null,
-      };
-      if (el.width !== undefined) obj.width = el.width;
-      if (el.height !== undefined) obj.height = el.height;
-      if (el.radius !== undefined) obj.radius = el.radius;
-      if (el.shape) obj.shape = el.shape;
-      if (el.text) obj.text = el.text;
-      if (el.fontSize) obj.fontSize = el.fontSize;
-      if (el.fill) obj.fill = el.fill;
-      if (el.points) obj.points = el.points;
-      if (el.rotation !== undefined) obj.rotation = el.rotation;
-      resultado.push(obj);
-    });
-
-    return resultado;
+    console.log('[transformarParaGuardar] Contenido final:', contenido);
+    return contenido;
   };
 
-  const handleSave = async () => {
-    if (!salaId) {
-      console.error('No hay sala seleccionada');
-      return false;
-    }
+  const loadMapa = useCallback(async (salaId, setElements, setZones) => {
+    if (!salaId) return;
+    
+    console.log('[loadMapa] Cargando mapa para sala:', salaId);
+    setIsLoading(true);
+    
     try {
-      // Add console.log to check what we're working with
-      console.log('Elements before transform:', elements);
-
-      const elementosParaGuardar = transformarParaGuardar(elements);
-
-      // --- NUEVO LOG DE DEPURACIÓN CRÍTICO ---
-      console.log('Final elementosParaGuardar (before sending to Supabase):', elementosParaGuardar);
-      // ------------------------------------
-
-      // Add console.log to check transformed data
-      console.log('Elementos para guardar:', elementosParaGuardar);
-      console.log('Zonas para guardar:', zones);
-
-      // Verify that we have actual data before saving
-      if (!elementosParaGuardar.length) {
-        console.warn('No hay elementos para guardar');
+      const data = await fetchMapa(salaId);
+      console.log('[loadMapa] Datos recibidos:', data);
+      
+      if (!data || !data.contenido) {
+        console.log('[loadMapa] No hay datos de mapa, inicializando vacío');
+        setElements([]);
+        setZones([]);
+        return;
       }
 
-      if (!zones || !zones.length) {
-        console.warn('No hay zonas para guardar');
-      }
-
-      // Calcular aforo para zonas numeradas basado en las sillas asignadas
-      const seatCounts = elements.reduce((acc, el) => {
-        if (el.type === 'silla') {
-          const zId = el.zonaId || el.zona?.id;
-          if (zId) acc[zId] = (acc[zId] || 0) + 1;
+      // Cargar zonas si no están disponibles
+      let zonasCargadas = data.zonas || [];
+      if (zonasCargadas.length === 0) {
+        try {
+          const zonasResponse = await fetch(`/api/zonas?salaId=${salaId}`);
+          if (zonasResponse.ok) {
+            zonasCargadas = await zonasResponse.json();
+          }
+        } catch (error) {
+          console.warn('[loadMapa] Error cargando zonas:', error);
         }
-        return acc;
-      }, {});
-
-      const updatedZones = zones.map(z =>
-        z.numerada ? { ...z, aforo: seatCounts[z.id] || 0 } : z
-      );
-
-      // Actualizar backend con nuevos aforos
-      try {
-        await Promise.all(updatedZones.map(z => updateZona(z.id, { aforo: z.aforo })));
-        setZones(updatedZones);
-      } catch (e) {
-        console.error('Error actualizando aforo de zonas', e);
       }
 
-      const dataToSave = {
-        contenido: elementosParaGuardar.length ? elementosParaGuardar : [],
-      };
+      // Transformar elementos del mapa
+      const elementosCrudos = (data.contenido || []).reduce((acc, mesa) => {
+        // Create mesa with all necessary properties
+        const mesaConZona = {
+          ...mesa,
+          type: 'mesa',
+          shape: mesa.shape || (mesa.radius ? 'circle' : 'rect'),
+          radius: mesa.radius || mesa.width / 2,
+          width: mesa.width || mesa.radius * 2,
+          height: mesa.height || mesa.radius * 2,
+          posicion: mesa.posicion || { x: 0, y: 0 },
+          zona: ['string', 'number'].includes(typeof mesa.zona)
+            ? zonasCargadas.find(z => z.id === mesa.zona)
+            : mesa.zona,
+          zonaId: ['string', 'number'].includes(typeof mesa.zona)
+            ? mesa.zona
+            : mesa.zona?.id || null,
+        };
 
-      // Final check of what we're sending
-      console.log('Data being sent to server:', dataToSave);
+        // Transform sillas array
+        const sillas = (mesa.sillas || []).map(silla => ({
+          ...silla,
+          type: 'silla',
+          parentId: mesa._id,
+          width: silla.width || 20,
+          height: silla.height || 20,
+          nombre: silla.nombre || '',
+          label: silla.nombre || '',      // Add label for display
+          labelPlacement: 'top',          // Position label above chair
+          labelStyle: {
+            textAlign: 'center',
+            fontSize: '12px',
+            fontWeight: 'bold',
+            marginBottom: '5px'
+          },
+          zona: ['string', 'number'].includes(typeof silla.zona)
+            ? zonasCargadas.find(z => z.id === silla.zona)
+            : silla.zona,
+          zonaId: ['string', 'number'].includes(typeof silla.zona)
+            ? silla.zona
+            : silla.zona?.id || null,
+        }));
 
-      await saveMapa(salaId, dataToSave);
-      // Ensure all functions have the updated seat layout
-      await syncSeatsForSala(salaId);
-      console.log('Mapa guardado correctamente');
-      message.success('Mapa guardado correctamente');
-      return true;
+        return [...acc, mesaConZona, ...sillas];
+      }, []);
+
+      console.log('[loadMapa] Elementos transformados:', elementosCrudos.length);
+      
+      // Guardar referencia de los elementos cargados para evitar recargas innecesarias
+      lastSavedElements.current = JSON.stringify(elementosCrudos);
+      
+      setZones(zonasCargadas);
+      setElements(elementosCrudos);
     } catch (error) {
-      console.error('Error al guardar el mapa:', error);
-      message.error('Error al guardar el mapa');
-      return false;
+      console.error('Error al cargar el mapa:', error);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, []);
+
+  const handleSave = useCallback(async (salaId, elements, zones) => {
+    if (!salaId || !elements) {
+      console.error('[handleSave] Datos insuficientes para guardar');
+      return;
+    }
+
+    // Verificar si realmente hay cambios que guardar
+    const currentElementsString = JSON.stringify(elements);
+    if (lastSavedElements.current === currentElementsString) {
+      console.log('[handleSave] No hay cambios que guardar, saltando guardado');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      console.log('[handleSave] Iniciando guardado para sala:', salaId);
+      
+      const dataToSave = {
+        contenido: transformarParaGuardar(elements),
+        zonas: zones || []
+      };
+      
+      console.log('[handleSave] Datos a guardar:', dataToSave);
+      
+      await saveMapa(salaId, dataToSave);
+      
+      // Sincronizar seats después de guardar el mapa
+      await syncSeatsForSala(salaId);
+      
+      const now = new Date().toISOString();
+      setLastSavedAt(now);
+      
+      // Actualizar referencia de elementos guardados
+      lastSavedElements.current = currentElementsString;
+      
+      // Notificar el cambio a otros clientes usando el servicio de Realtime
+      await realtimeService.notifyChange(salaId, {
+        action: 'mapa_updated',
+        timestamp: now,
+        salaId: salaId
+      });
+      
+      console.log('[handleSave] Mapa guardado correctamente');
+      message.success('Mapa guardado correctamente');
+      
+    } catch (error) {
+      console.error('[handleSave] Error al guardar:', error);
+      message.error('Error al guardar el mapa');
+    } finally {
+      setIsSaving(false);
+    }
+  }, []);
 
   return {
+    isLoading,
+    isSaving,
+    lastSavedAt,
+    loadMapa,
     handleSave,
+    transformarParaGuardar
   };
 };

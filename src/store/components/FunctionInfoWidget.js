@@ -33,7 +33,7 @@ const FunctionInfoWidget = ({ functionId, showPricing = true, showVenueInfo = tr
             sala:salas (
               id,
               nombre,
-              recinto:recintos (
+              recinto:recintos!recinto_id (
                 id,
                 nombre,
                 direccion,

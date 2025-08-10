@@ -237,26 +237,125 @@ export const getFuncion = async (functionId) => {
  */
 export const fetchMapa = async (salaIdOrMapId, by = 'sala') => {
   try {
-    const query = supabase.from('mapas').select('*');
+    console.log(`[fetchMapa] Intentando obtener mapa para ${by === 'id' ? 'map id' : 'sala_id'}:`, salaIdOrMapId);
+    
+    // Verificar si el cliente Supabase está disponible
+    if (!supabase) {
+      console.error('[fetchMapa] Error: Cliente Supabase no disponible');
+      throw new Error('Cliente Supabase no disponible');
+    }
+
+    // Verificar autenticación del usuario
+    const { data: { session }, error: authError } = await supabase.auth.getSession();
+    if (authError) {
+      console.error('[fetchMapa] Error de autenticación:', authError.message);
+      throw new Error(`Error de autenticación: ${authError.message}`);
+    }
+
+    if (!session) {
+      console.warn('[fetchMapa] Usuario no autenticado, intentando acceso anónimo');
+      console.log('[fetchMapa] Nota: Las políticas RLS deben permitir acceso anónimo de lectura');
+    } else {
+      console.log('[fetchMapa] Usuario autenticado:', session.user.id);
+    }
+
+    // Construir la consulta con mejor manejo de errores
+    let query;
+    try {
+      query = supabase.from('mapas').select('*');
+      console.log('[fetchMapa] Query base construida correctamente');
+    } catch (queryError) {
+      console.error('[fetchMapa] Error al construir query base:', queryError);
+      throw new Error(`Error al construir query: ${queryError.message}`);
+    }
+
     const finalQuery = by === 'id'
       ? query.eq('id', salaIdOrMapId).single()
       : query.eq('sala_id', salaIdOrMapId).single();
+    
+    console.log('[fetchMapa] Ejecutando query para:', by === 'id' ? 'ID de mapa' : 'ID de sala', salaIdOrMapId);
+    console.log('[fetchMapa] Tipo de query:', typeof finalQuery);
+    console.log('[fetchMapa] Query object:', finalQuery);
+    
     const { data, error, status } = await finalQuery;
 
-    if (error && status !== 406 && error.code !== 'PGRST116') {
-      console.error('Error fetching map:', error.message);
+    console.log('[fetchMapa] Respuesta de Supabase:', { data, error, status });
+
+    if (error) {
+      console.error('[fetchMapa] Error de Supabase:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        status: status
+      });
+      
+      // Si es un error 406, puede ser un problema de RLS o permisos
+      if (status === 406) {
+        console.warn('[fetchMapa] Error 406 - Posibles causas:');
+        console.warn('1. Políticas RLS bloqueando el acceso');
+        console.warn('2. Usuario no tiene permisos para esta tabla');
+        console.warn('3. La tabla no existe o no es accesible');
+        console.warn('4. Problema con el tenant_id o filtros de seguridad');
+        console.warn('5. Políticas RLS no permiten acceso anónimo');
+        
+        // Intentar obtener más información sobre el error
+        try {
+          console.log('[fetchMapa] Probando acceso básico a tabla mapas...');
+          const { data: testData, error: testError } = await supabase
+            .from('mapas')
+            .select('count')
+            .limit(1);
+          
+          if (testError) {
+            console.error('[fetchMapa] Error al verificar acceso a tabla mapas:', testError);
+            console.error('[fetchMapa] Código de error:', testError.code);
+            console.error('[fetchMapa] Mensaje:', testError.message);
+          } else {
+            console.log('[fetchMapa] Acceso básico a tabla mapas OK');
+          }
+        } catch (testErr) {
+          console.error('[fetchMapa] Error en prueba de acceso:', testErr);
+        }
+        
+        // Intentar con una consulta más simple
+        try {
+          console.log('[fetchMapa] Probando consulta simple sin filtros...');
+          const { data: simpleData, error: simpleError } = await supabase
+            .from('mapas')
+            .select('id, sala_id')
+            .limit(1);
+          
+          if (simpleError) {
+            console.error('[fetchMapa] Error en consulta simple:', simpleError);
+          } else {
+            console.log('[fetchMapa] Consulta simple exitosa, datos:', simpleData);
+          }
+        } catch (simpleErr) {
+          console.error('[fetchMapa] Error en consulta simple:', simpleErr);
+        }
+        
+        return null;
+      }
+      
+      // Para otros errores, verificar si es "no encontrado" o un error real
+      if (error.code === 'PGRST116') {
+        console.log('[fetchMapa] No se encontró mapa (PGRST116)');
+        return null;
+      }
+      
       throw error;
     }
 
-    if (status === 406) {
-      console.warn('No map found for', by === 'id' ? 'map id' : 'sala_id', salaIdOrMapId);
+    if (!data) {
+      console.log('[fetchMapa] No se encontraron datos');
       return null;
     }
 
-    // Return the raw data like boleteria does
+    console.log('[fetchMapa] Mapa encontrado exitosamente:', data);
     return data;
   } catch (error) {
-    console.error('Unexpected error in fetchMapa:', error);
+    console.error('[fetchMapa] Error inesperado:', error);
     throw error;
   }
 };

@@ -119,6 +119,12 @@ const CrearMapa = () => {
         updateElementProperty(ch._id, 'posicion', ch.posicion)
       );
     }
+
+    // Guardar automáticamente después del arrastre
+    console.log('[onDragEndElement] Guardando automáticamente después del arrastre...');
+    setTimeout(() => {
+      handleSave();
+    }, 500); // Pequeño delay para evitar múltiples guardados
   };
 
   const startChairRowMode = () => {
@@ -170,7 +176,7 @@ const CrearMapa = () => {
   };
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen" data-testid="crear-mapa">
       <Menu
         addMesa={addMesa}
         addSillasToMesa={addSillasToMesa}

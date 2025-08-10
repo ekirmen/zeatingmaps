@@ -190,11 +190,6 @@ const Cart = () => {
     const total = calculateTotal();
     const itemCount = getItemCount();
 
-    useEffect(() => {
-        loadFacebookPixel();
-        loadSavedCarts();
-    }, [items, products, loadFacebookPixel, loadSavedCarts]);
-
     const loadFacebookPixel = useCallback(async () => {
         try {
             if (items.length > 0) {
@@ -208,6 +203,11 @@ const Cart = () => {
             console.error('Error loading Facebook pixel:', error);
         }
     }, [items]);
+
+    useEffect(() => {
+        loadFacebookPixel();
+        loadSavedCarts();
+    }, [items, products, loadFacebookPixel, loadSavedCarts]);
 
     const handleProceedToPayment = () => {
         if (itemCount === 0) {

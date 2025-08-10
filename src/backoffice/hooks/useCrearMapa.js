@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useMapaState } from './useMapaState';
 import { useMapaLoadingSaving } from './usemapaloadingsaving';
@@ -12,6 +12,7 @@ import { fetchZonasPorSala } from '../services/apibackoffice';
 
 export const useCrearMapa = () => {
   const { salaId } = useParams();
+  const hasLoadedInitialData = useRef(false); // Referencia para evitar recargas múltiples
 
   // Estado global
   const {
@@ -101,19 +102,44 @@ export const useCrearMapa = () => {
     assignZoneToSelected,
   } = useMapaZones(elements, setElements, selectedIds, selectedZone);
 
-  // Zoom y tamaño
+  // Zoom y stage
   const {
     stageRef,
     stageSize,
-    handleWheelZoom,
     zoomIn,
     zoomOut,
-  } = useMapaZoomStage(zoom, setZoom);
+    handleWheelZoom,
+  } = useMapaZoomStage();
 
-  // Guardar y cargar mapa
+  // Carga y guardado del mapa
   const {
-    handleSave,
-  } = useMapaLoadingSaving(salaId, elements, zones, setElements, setZones);
+    isLoading,
+    isSaving,
+    lastSavedAt,
+    loadMapa,
+    handleSave: baseHandleSave,
+    transformarParaGuardar
+  } = useMapaLoadingSaving();
+
+  // Wrapper para handleSave que incluye los parámetros necesarios
+  const handleSave = () => {
+    if (!salaId) {
+      console.error('No hay sala seleccionada');
+      return false;
+    }
+    console.log('[useCrearMapa] Ejecutando handleSave para sala:', salaId);
+    return baseHandleSave(salaId, elements, zones);
+  };
+
+  // Cargar mapa al iniciar SOLO cuando cambia salaId o cuando no hay elementos
+  // Y solo una vez para evitar recargas múltiples
+  useEffect(() => {
+    if (salaId && (!hasLoadedInitialData.current || (!elements || elements.length === 0))) {
+      console.log('[useCrearMapa] Cargando mapa inicial para sala:', salaId);
+      hasLoadedInitialData.current = true;
+      loadMapa(salaId, setElements, setZones);
+    }
+  }, [salaId, setElements, setZones, loadMapa]); // Removido 'elements' de las dependencias
 
   // Función para eliminar elementos seleccionados
   const eliminarElementoSeleccionado = () => deleteSelectedElements();

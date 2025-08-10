@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Button, Card, Select, message, Spin, Alert, Tabs } from 'antd';
+import { Button, Card, Select, message, Spin, Alert, Tabs, Row, Col } from 'antd';
 import { CalendarOutlined, EnvironmentOutlined, ClockCircleOutlined, ArrowLeftOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 import { supabase } from '../../supabaseClient';
@@ -14,6 +14,7 @@ import useCartRestore from '../../store/hooks/useCartRestore';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import Cart from './Cart';
 import ProductosWidget from '../components/ProductosWidget';
+import { diagnoseMapaAccess, testMapaQuery, generateDiagnosticReport } from '../../utils/databaseDiagnostics';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -29,12 +30,14 @@ const EventosPage = () => {
   const [funciones, setFunciones] = useState([]);
   const [selectedFunctionId, setSelectedFunctionId] = useState(null);
   const [mapa, setMapa] = useState(null);
-
-  const [venueInfo, setVenueInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [diagnosticReport, setDiagnosticReport] = useState(null);
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [activeTab, setActiveTab] = useState('seats');
+
+  const [venueInfo, setVenueInfo] = useState(null);
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
@@ -115,8 +118,23 @@ const EventosPage = () => {
   useEffect(() => {
     const fetchMap = async () => {
       try {
-        const funcion = await getFuncion(selectedFunctionId);
-        // Obtener salaId de forma robusta (acepta numero/uuid o objeto)
+        console.log('[MAPA] Iniciando carga de mapa para función:', selectedFunctionId);
+        
+        if (!selectedFunctionId) {
+          console.warn('[MAPA] No hay función seleccionada');
+          setMapa(null);
+          return;
+        }
+
+        const funcion = funciones.find(f => f.id === selectedFunctionId);
+        if (!funcion) {
+          console.warn('[MAPA] No se encontró la función:', selectedFunctionId);
+          setMapa(null);
+          return;
+        }
+
+        console.log('[MAPA] Función encontrada:', funcion);
+        
         const salaId = (funcion?.sala && typeof funcion.sala === 'object')
           ? (funcion.sala.id || funcion.sala._id)
           : funcion?.sala;
@@ -127,12 +145,42 @@ const EventosPage = () => {
           return;
         }
 
+        console.log('[MAPA] Intentando cargar mapa para salaId:', salaId);
+        
         const mapData = await fetchMapa(salaId);
         if (!mapData) {
           console.warn('[MAPA] No se encontró mapa para salaId=', salaId);
+          console.warn('[MAPA] Esto puede indicar:');
+          console.warn('1. La sala no tiene un mapa configurado');
+          console.warn('2. Problemas de permisos o RLS');
+          console.warn('3. La tabla mapas no existe o no es accesible');
+          
+          // Ejecutar diagnóstico automático
+          console.log('[MAPA] Ejecutando diagnóstico automático...');
+          try {
+            const diagnosis = await diagnoseMapaAccess(salaId);
+            const tests = await testMapaQuery(salaId);
+            const report = generateDiagnosticReport(diagnosis, tests);
+            
+            console.log('[MAPA] 🔍 REPORTE DE DIAGNÓSTICO:', report);
+            console.log('[MAPA] 📋 RESUMEN:', report.summary);
+            console.log('[MAPA] 💡 RECOMENDACIONES:', report.recommendations);
+            
+            // Mostrar alerta al usuario con información del diagnóstico
+            if (report.summary.hasErrors) {
+              message.error(`Error al cargar mapa: ${report.summary.errorCount} problema(s) detectado(s). Revisar consola para detalles.`);
+            } else if (!report.summary.mapaExists) {
+              message.warning('No existe un mapa para esta sala. Contactar al administrador.');
+            }
+          } catch (diagnosticError) {
+            console.error('[MAPA] Error durante el diagnóstico:', diagnosticError);
+          }
+          
           setMapa(null);
           return;
         }
+        
+        console.log('[MAPA] Mapa cargado exitosamente:', mapData);
         
         // Transform the map data to match SeatingMapUnified expectations
         if (mapData && mapData.contenido) {
@@ -189,16 +237,18 @@ const EventosPage = () => {
           console.log('Transformed map data:', transformedMap);
           setMapa(transformedMap);
         } else {
+          console.log('[MAPA] Usando mapa sin transformar:', mapData);
           setMapa(mapData);
         }
       } catch (err) {
-        console.error('Error loading map:', err);
+        console.error('[MAPA] Error loading map:', err);
+        console.error('[MAPA] Stack trace:', err.stack);
         setError(err);
         setMapa(null);
       }
     };
     if (selectedFunctionId) fetchMap();
-  }, [selectedFunctionId]);
+  }, [selectedFunctionId, funciones]); // Added funciones to dependency array
 
   const handleSeatToggle = useCallback(
     (silla) => {
@@ -243,8 +293,55 @@ const EventosPage = () => {
   };
 
   const handleBackToSelection = () => {
-    setShowMap(false);
     setSelectedFunctionId(null);
+    setMapa(null);
+    setError(null);
+    setDiagnosticReport(null);
+    setShowMap(false);
+  };
+
+  const runManualDiagnostic = async () => {
+    if (!selectedFunctionId) {
+      message.warning('Selecciona una función primero');
+      return;
+    }
+
+    const funcion = funciones.find(f => f.id === selectedFunctionId);
+    if (!funcion) {
+      message.error('No se encontró la función seleccionada');
+      return;
+    }
+
+    const salaId = (funcion?.sala && typeof funcion.sala === 'object')
+      ? (funcion.sala.id || funcion.sala._id)
+      : funcion?.sala;
+
+    if (!salaId) {
+      message.error('No se pudo obtener el ID de la sala');
+      return;
+    }
+
+    setIsDiagnosing(true);
+    setDiagnosticReport(null);
+    
+    try {
+      console.log('[DIAGNÓSTICO MANUAL] Iniciando para salaId:', salaId);
+      
+      const diagnosis = await diagnoseMapaAccess(salaId);
+      const tests = await testMapaQuery(salaId);
+      const report = generateDiagnosticReport(diagnosis, tests);
+      
+      setDiagnosticReport(report);
+      
+      console.log('[DIAGNÓSTICO MANUAL] Completado:', report);
+      message.success('Diagnóstico completado. Revisar consola para detalles.');
+      
+    } catch (error) {
+      console.error('[DIAGNÓSTICO MANUAL] Error:', error);
+      message.error('Error durante el diagnóstico: ' + error.message);
+    } finally {
+      setIsDiagnosing(false);
+    }
   };
 
   const handleProceedToCart = () => {
@@ -455,6 +552,72 @@ const EventosPage = () => {
             </div>
           </div>
         </div>
+        {selectedFunctionId && (
+          <div style={{ marginBottom: 16 }}>
+            <Row gutter={16} align="middle">
+              <Col>
+                <Button 
+                  icon={<ArrowLeftOutlined />} 
+                  onClick={handleBackToSelection}
+                >
+                  Volver a selección
+                </Button>
+              </Col>
+              <Col>
+                <Button 
+                  type="primary" 
+                  icon={<ShoppingCartOutlined />} 
+                  onClick={() => setShowMap(false)}
+                  disabled={!mapa}
+                >
+                  Ver carrito
+                </Button>
+              </Col>
+              <Col>
+                <Button 
+                  onClick={runManualDiagnostic}
+                  loading={isDiagnosing}
+                  type="dashed"
+                >
+                  🔍 Diagnóstico
+                </Button>
+              </Col>
+            </Row>
+          </div>
+        )}
+
+        {diagnosticReport && (
+          <Alert
+            message="Reporte de Diagnóstico"
+            description={
+              <div>
+                <p><strong>Resumen:</strong></p>
+                <ul>
+                  <li>Errores: {diagnosticReport.summary.errorCount}</li>
+                  <li>Acceso a tabla: {diagnosticReport.summary.canAccess ? '✅' : '❌'}</li>
+                  <li>Sala existe: {diagnosticReport.summary.salaExists ? '✅' : '❌'}</li>
+                  <li>Mapa existe: {diagnosticReport.summary.mapaExists ? '✅' : '❌'}</li>
+                  <li>Autenticado: {diagnosticReport.summary.isAuthenticated ? '✅' : '❌'}</li>
+                </ul>
+                {diagnosticReport.recommendations.length > 0 && (
+                  <>
+                    <p><strong>Recomendaciones:</strong></p>
+                    <ul>
+                      {diagnosticReport.recommendations.map((rec, index) => (
+                        <li key={index}>{rec}</li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+              </div>
+            }
+            type={diagnosticReport.summary.hasErrors ? "error" : "info"}
+            showIcon
+            closable
+            onClose={() => setDiagnosticReport(null)}
+            style={{ marginBottom: 16 }}
+          />
+        )}
       </div>
     );
   }
@@ -552,7 +715,7 @@ const EventosPage = () => {
                   </Select>
 
                   {selectedFunctionId && (
-                    <div className="mt-4">
+                    <div className="mt-4 space-y-2">
                       <Button 
                         type="primary" 
                         size="large"
@@ -560,6 +723,14 @@ const EventosPage = () => {
                         className="w-full"
                       >
                         Ver Mapa de Asientos
+                      </Button>
+                      <Button 
+                        type="default" 
+                        size="large"
+                        onClick={() => navigate(`/store/eventos/${eventSlug}/mapa?funcion=${selectedFunctionId}`)}
+                        className="w-full"
+                      >
+                        Ver Mapa Completo
                       </Button>
                     </div>
                   )}

@@ -46,6 +46,7 @@ export const useEventsList = () => {
     setError(null);
     try {
       // Fetch all active events
+      // Use explicit foreign key relationship to avoid ambiguity
       const { data, error: supabaseError } = await supabase
         .from('eventos')
         .select(`
@@ -55,10 +56,10 @@ export const useEventsList = () => {
           recinto,
           imagenes,
           slug,
-          recintos (
+          recintos!recinto_id (
             nombre
           )
-        `) // Removed comments from inside the select string
+        `) // Specify the foreign key relationship explicitly
         .eq('activo', true) // Only fetch active events
         .eq('oculto', false) // Only fetch events that are not hidden
         .order('fecha_evento', { ascending: true }); // Order by date

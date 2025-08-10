@@ -20,14 +20,6 @@ const ThankYouPage = () => {
   const [facebookPixel, setFacebookPixel] = useState(null);
   const [purchaseData, setPurchaseData] = useState(null);
 
-  useEffect(() => {
-    // Obtener datos de la compra desde el estado de navegación
-    if (location.state?.purchaseData) {
-      setPurchaseData(location.state.purchaseData);
-      loadFacebookPixel(location.state.purchaseData);
-    }
-  }, [location.state]);
-
   const loadFacebookPixel = async (purchaseData) => {
     try {
       if (purchaseData?.eventId) {
@@ -38,6 +30,14 @@ const ThankYouPage = () => {
       console.error('Error loading Facebook pixel:', error);
     }
   };
+
+  useEffect(() => {
+    // Obtener datos de la compra desde el estado de navegación
+    if (location.state?.purchaseData) {
+      setPurchaseData(location.state.purchaseData);
+      loadFacebookPixel(location.state.purchaseData);
+    }
+  }, [location.state]);
 
   const handleContinueShopping = () => {
     navigate('/store');
