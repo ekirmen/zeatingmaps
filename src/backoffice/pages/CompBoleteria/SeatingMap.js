@@ -176,8 +176,8 @@ const SeatingMap = ({
 
     return (
       <React.Fragment key={mesa._id}>
-        {/* Renderizar mesa/zona solo si no es tipo 'zona' */}
-        {mesa.type !== 'zona' && (
+        {/* Renderizar mesa/zona si es mesa o si tiene sillas */}
+        {(mesa.type !== 'zona' || (mesa.sillas && mesa.sillas.length > 0)) && (
           <>
             <TableShape
               x={mesa.posicion.x}
