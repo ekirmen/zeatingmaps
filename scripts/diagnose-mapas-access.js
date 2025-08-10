@@ -110,7 +110,7 @@ async function diagnoseMapasAccess() {
       { name: 'Acceso básico', query: () => supabase.from('mapas').select('id').limit(1) },
       { name: 'Acceso con filtro sala_id', query: () => supabase.from('mapas').select('*').eq('sala_id', 7) },
       { name: 'Acceso con count', query: () => supabase.from('mapas').select('count') },
-      { name: 'Acceso con columnas específicas', query: () => supabase.from('mapas').select('id, sala_id, nombre') }
+      { name: 'Acceso con columnas específicas', query: () => supabase.from('mapas').select('id, sala_id, contenido') }
     ];
 
     for (const test of accessTests) {

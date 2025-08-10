@@ -1,36 +1,137 @@
-// Configuración de proxy para desarrollo
-// Este archivo permite que las rutas /api/* funcionen en desarrollo
-
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const express = require('express');
+const cors = require('cors');
 
 module.exports = function(app) {
-  // Proxy para rutas API
-  app.use(
-    '/api',
-    createProxyMiddleware({
-      target: 'http://localhost:3000',
-      changeOrigin: true,
-      pathRewrite: {
-        '^/api': '/api', // Mantener la ruta /api
-      },
-      // Log de las peticiones para debugging
-      onProxyReq: (proxyReq, req, res) => {
-        console.log(`[PROXY] ${req.method} ${req.url} -> ${proxyReq.path}`);
-      },
-      onProxyRes: (proxyRes, req, res) => {
-        console.log(`[PROXY] Respuesta: ${proxyRes.statusCode} para ${req.url}`);
-      },
-      onError: (err, req, res) => {
-        console.error(`[PROXY] Error: ${err.message} para ${req.url}`);
-        // Si hay un error, devolver una respuesta de fallback
-        res.writeHead(500, {
-          'Content-Type': 'application/json',
-        });
-        res.end(JSON.stringify({
-          success: false,
-          error: 'Error del proxy: ' + err.message
-        }));
-      }
-    })
-  );
+  // Crear una instancia de Express para manejar las rutas de API
+  const apiRouter = express.Router();
+  
+  // Middleware para parsear JSON
+  apiRouter.use(express.json());
+  
+  // Middleware CORS
+  apiRouter.use(cors());
+  
+  // Endpoint para realtime-sync
+  apiRouter.post('/realtime-sync', (req, res) => {
+    try {
+      const { salaId, action } = req.body;
+      
+      console.log(`[API LOCAL] Realtime sync - Sala: ${salaId}, Acción: ${action}`);
+      
+      // Simular respuesta exitosa
+      return res.status(200).json({
+        success: true,
+        data: {
+          updates: [],
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      console.error('[API LOCAL] Error en realtime-sync:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor',
+        message: error.message
+      });
+    }
+  });
+  
+  // Endpoint para guardar mapas
+  apiRouter.post('/mapas/:salaId/save', (req, res) => {
+    try {
+      const { salaId } = req.params;
+      const { contenido, zonas } = req.body;
+      
+      console.log(`[API LOCAL] Guardando mapa para sala ${salaId}:`, { contenido, zonas });
+      
+      const savedMapa = {
+        id: `mapa-${salaId}`,
+        sala_id: parseInt(salaId),
+        contenido: contenido || [],
+        zonas: zonas || [],
+        updated_at: new Date().toISOString(),
+        timestamp: Date.now()
+      };
+      
+      console.log(`[API LOCAL] Mapa guardado exitosamente:`, savedMapa);
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Mapa guardado exitosamente',
+        data: savedMapa,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('[API LOCAL] Error al guardar mapa:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor',
+        message: error.message
+      });
+    }
+  });
+  
+  // Endpoint para obtener mapas
+  apiRouter.get('/mapas/:salaId', (req, res) => {
+    try {
+      const { salaId } = req.params;
+      
+      console.log(`[API LOCAL] Obteniendo mapa para sala ${salaId}`);
+      
+      const mockMapa = {
+        id: `mapa-${salaId}`,
+        sala_id: parseInt(salaId),
+        contenido: [
+          {
+            type: 'mesa',
+            _id: 'mesa-1',
+            x: 100,
+            y: 100,
+            sillas: [
+              { _id: 'silla-1', x: 0, y: 0 },
+              { _id: 'silla-2', x: 50, y: 0 }
+            ]
+          }
+        ],
+        zonas: [
+          {
+            id: 'zona-1',
+            nombre: 'Zona Principal',
+            elementos: ['mesa-1']
+          }
+        ],
+        updated_at: new Date().toISOString()
+      };
+      
+      return res.status(200).json({
+        success: true,
+        data: mockMapa,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      console.error('[API LOCAL] Error al obtener mapa:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Error interno del servidor',
+        message: error.message
+      });
+    }
+  });
+  
+  // Endpoint de health check
+  apiRouter.get('/health', (req, res) => {
+    res.json({
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      message: 'API local funcionando correctamente'
+    });
+  });
+  
+  // Usar el router de API en la ruta /api
+  app.use('/api', apiRouter);
+  
+  console.log('🚀 API local configurada en /api');
 };

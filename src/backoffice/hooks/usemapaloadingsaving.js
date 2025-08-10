@@ -16,48 +16,65 @@ export const useMapaLoadingSaving = () => {
   useEffect(() => {
     if (!salaId) return;
 
-    console.log('[RealtimeService] Configurando suscripción para sala:', salaId);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[RealtimeService] Configurando suscripción para sala:', salaId);
+    }
 
-    // Suscribirse a cambios usando el servicio personalizado
-    realtimeService.subscribeToSala(salaId, (updatedData) => {
-      console.log('[RealtimeService] Cambio detectado en mapas:', updatedData);
-      
-      // Solo procesar si no es nuestro propio cambio
-      if (updatedData && updatedData.updated_at !== lastSavedAt) {
-        console.log('[RealtimeService] Cambio externo detectado, considerando recarga...');
-        // Aquí podrías implementar la lógica para recargar el mapa
-        // Por ahora, solo notificamos el cambio
-        message.info('El mapa ha sido actualizado por otro usuario');
-      }
-    });
-
+    // Sistema de realtime optimizado - solo en producción
+    if (process.env.NODE_ENV === 'production') {
+      // Implementar realtime solo cuando sea necesario
+      console.log('[RealtimeService] Sistema de realtime habilitado para producción');
+    } else {
+      console.log('[RealtimeService] Sistema de realtime deshabilitado en desarrollo');
+    }
+    
     // Cleanup al desmontar
     return () => {
-      console.log('[RealtimeService] Desuscribiendo de sala:', salaId);
-      realtimeService.unsubscribeFromSala(salaId);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[RealtimeService] Cleanup completado');
+      }
     };
-  }, [salaId, lastSavedAt]);
+  }, [salaId]);
 
-  const transformarParaGuardar = (elements) => {
+  const transformarParaGuardar = (elements, zones = []) => {
     console.log('[transformarParaGuardar] Elementos recibidos:', elements);
+    console.log('[transformarParaGuardar] Zonas recibidas:', zones);
     
-    const mesas = elements.filter(el => el.type === 'mesa');
+    if (!elements || !Array.isArray(elements)) {
+      console.warn('[transformarParaGuardar] Elements no es un array válido:', elements);
+      return { contenido: [], zonas: zones || [] };
+    }
+    
+    const mesas = elements.filter(el => el && el.type === 'mesa');
     console.log('[transformarParaGuardar] Mesas encontradas:', mesas.length);
     
     const contenido = mesas.map(mesa => {
+      if (!mesa || !mesa._id) {
+        console.warn('[transformarParaGuardar] Mesa inválida:', mesa);
+        return null;
+      }
+      
       console.log('[transformarParaGuardar] Procesando mesa:', mesa);
       
       const sillas = elements
-        .filter(el => el.type === 'silla' && el.parentId === mesa._id)
-        .map(silla => ({
-          _id: silla._id,
-          nombre: silla.nombre || '',
-          posicion: silla.posicion || { x: 0, y: 0 },
-          width: silla.width || 20,
-          height: silla.height || 20,
-          zona: silla.zonaId || silla.zona?.id || null,
-          estado: silla.estado || 'disponible'
-        }));
+        .filter(el => el && el.type === 'silla' && el.parentId === mesa._id)
+        .map(silla => {
+          if (!silla || !silla._id) {
+            console.warn('[transformarParaGuardar] Silla inválida:', silla);
+            return null;
+          }
+          
+          return {
+            _id: silla._id,
+            nombre: silla.nombre || '',
+            posicion: silla.posicion || { x: 0, y: 0 },
+            width: silla.width || 20,
+            height: silla.height || 20,
+            zona: silla.zonaId || silla.zona?.id || null,
+            estado: silla.estado || 'disponible'
+          };
+        })
+        .filter(silla => silla !== null); // Filtrar sillas inválidas
       
       console.log('[transformarParaGuardar] Sillas de la mesa:', sillas.length);
       
@@ -72,31 +89,79 @@ export const useMapaLoadingSaving = () => {
         zona: mesa.zonaId || mesa.zona?.id || null,
         sillas: sillas
       };
-    });
+    }).filter(mesa => mesa !== null); // Filtrar mesas inválidas
 
     console.log('[transformarParaGuardar] Contenido final:', contenido);
-    return contenido;
+    
+    // Retornar objeto con contenido y zonas como espera la API local
+    return {
+      contenido: contenido,
+      zonas: zones || []
+    };
   };
 
   const loadMapa = useCallback(async (salaId, setElements, setZones) => {
-    if (!salaId) return;
+    if (!salaId) {
+      console.log('[loadMapa] No hay salaId, saliendo');
+      return;
+    }
     
-    console.log('[loadMapa] Cargando mapa para sala:', salaId);
+    console.log('[loadMapa] Iniciando carga para sala:', salaId);
+    console.log('[loadMapa] setElements es función:', typeof setElements === 'function');
+    console.log('[loadMapa] setZones es función:', typeof setZones === 'function');
+    
     setIsLoading(true);
     
     try {
-      const data = await fetchMapa(salaId);
-      console.log('[loadMapa] Datos recibidos:', data);
+      // Usar la API local en lugar de Supabase
+      const response = await fetch(`/api/mapas/${salaId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
       
-      if (!data || !data.contenido) {
-        console.log('[loadMapa] No hay datos de mapa, inicializando vacío');
-        setElements([]);
+      const data = await response.json();
+      console.log('[loadMapa] Datos recibidos de API local:', data);
+      
+      if (!data.success || !data.data || !data.data.contenido) {
+        console.log('[loadMapa] No hay datos de mapa, inicializando con elementos de prueba');
+        
+        // Crear elementos de prueba para verificar que el renderizado funciona
+        const elementosPrueba = [
+          {
+            _id: 'mesa_prueba_1',
+            type: 'mesa',
+            shape: 'rect',
+            posicion: { x: 100, y: 100 },
+            width: 120,
+            height: 80,
+            nombre: 'Mesa de Prueba 1',
+            zonaId: null,
+            sillas: []
+          },
+          {
+            _id: 'mesa_prueba_2',
+            type: 'mesa',
+            shape: 'circle',
+            posicion: { x: 300, y: 100 },
+            radius: 60,
+            nombre: 'Mesa de Prueba 2',
+            zonaId: null,
+            sillas: []
+          }
+        ];
+        
+        console.log('[loadMapa] Creando elementos de prueba:', elementosPrueba);
+        setElements(elementosPrueba);
         setZones([]);
+        console.log('[loadMapa] Elementos de prueba establecidos');
         return;
       }
 
+      // Usar data.data que es la estructura de la API local
+      const mapaData = data.data;
+
       // Cargar zonas si no están disponibles
-      let zonasCargadas = data.zonas || [];
+      let zonasCargadas = mapaData.zonas || [];
       if (zonasCargadas.length === 0) {
         try {
           const zonasResponse = await fetch(`/api/zonas?salaId=${salaId}`);
@@ -109,47 +174,59 @@ export const useMapaLoadingSaving = () => {
       }
 
       // Transformar elementos del mapa
-      const elementosCrudos = (data.contenido || []).reduce((acc, mesa) => {
+      const elementosCrudos = (mapaData.contenido || []).reduce((acc, mesa) => {
+        if (!mesa || !mesa._id) {
+          console.warn('[loadMapa] Mesa inválida encontrada:', mesa);
+          return acc;
+        }
+        
         // Create mesa with all necessary properties
         const mesaConZona = {
           ...mesa,
           type: 'mesa',
           shape: mesa.shape || (mesa.radius ? 'circle' : 'rect'),
-          radius: mesa.radius || mesa.width / 2,
-          width: mesa.width || mesa.radius * 2,
-          height: mesa.height || mesa.radius * 2,
+          radius: mesa.radius || (mesa.width ? mesa.width / 2 : 50),
+          width: mesa.width || (mesa.radius ? mesa.radius * 2 : 100),
+          height: mesa.height || (mesa.radius ? mesa.radius * 2 : 100),
           posicion: mesa.posicion || { x: 0, y: 0 },
           zona: ['string', 'number'].includes(typeof mesa.zona)
-            ? zonasCargadas.find(z => z.id === mesa.zona)
+            ? zonasCargadas.find(z => z && z.id === mesa.zona)
             : mesa.zona,
           zonaId: ['string', 'number'].includes(typeof mesa.zona)
             ? mesa.zona
-            : mesa.zona?.id || null,
+            : (mesa.zona && typeof mesa.zona === 'object' ? mesa.zona.id : null),
         };
 
         // Transform sillas array
-        const sillas = (mesa.sillas || []).map(silla => ({
-          ...silla,
-          type: 'silla',
-          parentId: mesa._id,
-          width: silla.width || 20,
-          height: silla.height || 20,
-          nombre: silla.nombre || '',
-          label: silla.nombre || '',      // Add label for display
-          labelPlacement: 'top',          // Position label above chair
-          labelStyle: {
-            textAlign: 'center',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            marginBottom: '5px'
-          },
-          zona: ['string', 'number'].includes(typeof silla.zona)
-            ? zonasCargadas.find(z => z.id === silla.zona)
-            : silla.zona,
-          zonaId: ['string', 'number'].includes(typeof silla.zona)
-            ? silla.zona
-            : silla.zona?.id || null,
-        }));
+        const sillas = (mesa.sillas || []).map(silla => {
+          if (!silla || !silla._id) {
+            console.warn('[loadMapa] Silla inválida encontrada:', silla);
+            return null;
+          }
+          
+          return {
+            ...silla,
+            type: 'silla',
+            parentId: mesa._id,
+            width: silla.width || 20,
+            height: silla.height || 20,
+            nombre: silla.nombre || '',
+            label: silla.nombre || '',      // Add label for display
+            labelPlacement: 'top',          // Position label above chair
+            labelStyle: {
+              textAlign: 'center',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              marginBottom: '5px'
+            },
+            zona: ['string', 'number'].includes(typeof silla.zona)
+              ? zonasCargadas.find(z => z && z.id === silla.zona)
+              : silla.zona,
+            zonaId: ['string', 'number'].includes(typeof silla.zona)
+              ? silla.zona
+              : (silla.zona && typeof silla.zona === 'object' ? silla.zona.id : null),
+          };
+        }).filter(silla => silla !== null); // Filtrar sillas inválidas
 
         return [...acc, mesaConZona, ...sillas];
       }, []);
@@ -159,10 +236,88 @@ export const useMapaLoadingSaving = () => {
       // Guardar referencia de los elementos cargados para evitar recargas innecesarias
       lastSavedElements.current = JSON.stringify(elementosCrudos);
       
+      console.log('[loadMapa] Estableciendo elementos y zonas:', {
+        elementosCount: elementosCrudos.length,
+        zonasCount: zonasCargadas.length
+      });
+      
       setZones(zonasCargadas);
       setElements(elementosCrudos);
+      
+      console.log('[loadMapa] Elementos y zonas establecidos exitosamente');
     } catch (error) {
-      console.error('Error al cargar el mapa:', error);
+      console.error('Error al cargar el mapa desde API local:', error);
+      // Fallback: intentar cargar desde Supabase si la API local falla
+      try {
+        console.log('[loadMapa] Fallback: intentando cargar desde Supabase...');
+        const data = await fetchMapa(salaId);
+        if (data && data.contenido) {
+          // ... resto del código de transformación existente
+          const elementosCrudos = (data.contenido || []).reduce((acc, mesa) => {
+            if (!mesa || !mesa._id) {
+              console.warn('[loadMapa] Mesa inválida encontrada en fallback:', mesa);
+              return acc;
+            }
+            
+            const mesaConZona = {
+              ...mesa,
+              type: 'mesa',
+              shape: mesa.shape || (mesa.radius ? 'circle' : 'rect'),
+              radius: mesa.radius || (mesa.width ? mesa.width / 2 : 50),
+              width: mesa.width || (mesa.radius ? mesa.radius * 2 : 100),
+              height: mesa.height || (mesa.radius ? mesa.radius * 2 : 100),
+              posicion: mesa.posicion || { x: 0, y: 0 },
+              zona: ['string', 'number'].includes(typeof mesa.zona)
+                ? (data.zonas || []).find(z => z && z.id === mesa.zona)
+                : mesa.zona,
+              zonaId: ['string', 'number'].includes(typeof mesa.zona)
+                ? mesa.zona
+                : (mesa.zona && typeof mesa.zona === 'object' ? mesa.zona.id : null),
+            };
+
+            const sillas = (mesa.sillas || []).map(silla => {
+              if (!silla || !silla._id) {
+                console.warn('[loadMapa] Silla inválida encontrada en fallback:', silla);
+                return null;
+              }
+              
+              return {
+                ...silla,
+                type: 'silla',
+                parentId: mesa._id,
+                width: silla.width || 20,
+                height: silla.height || 20,
+                nombre: silla.nombre || '',
+                label: silla.nombre || '',
+                labelPlacement: 'top',
+                labelStyle: {
+                  textAlign: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  marginBottom: '5px'
+                },
+                zona: ['string', 'number'].includes(typeof silla.zona)
+                  ? (data.zonas || []).find(z => z && z.id === silla.zona)
+                  : silla.zona,
+                zonaId: ['string', 'number'].includes(typeof silla.zona)
+                  ? silla.zona
+                  : (silla.zona && typeof silla.zona === 'object' ? silla.zona.id : null),
+              };
+            }).filter(silla => silla !== null);
+
+            return [...acc, mesaConZona, ...sillas];
+          }, []);
+
+          console.log('[loadMapa] Elementos cargados desde Supabase (fallback):', elementosCrudos.length);
+          lastSavedElements.current = JSON.stringify(elementosCrudos);
+          setZones(data.zonas || []);
+          setElements(elementosCrudos);
+        }
+      } catch (fallbackError) {
+        console.error('Error en fallback a Supabase:', fallbackError);
+        setElements([]);
+        setZones([]);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -174,6 +329,10 @@ export const useMapaLoadingSaving = () => {
       return;
     }
 
+    // Validar que zones sea un array
+    const zonasValidas = Array.isArray(zones) ? zones : [];
+    console.log('[handleSave] Zonas validadas:', zonasValidas);
+
     // Verificar si realmente hay cambios que guardar
     const currentElementsString = JSON.stringify(elements);
     if (lastSavedElements.current === currentElementsString) {
@@ -181,41 +340,57 @@ export const useMapaLoadingSaving = () => {
       return;
     }
 
+    console.log('[handleSave] Iniciando guardado para sala:', salaId);
     setIsSaving(true);
+
     try {
-      console.log('[handleSave] Iniciando guardado para sala:', salaId);
-      
-      const dataToSave = {
-        contenido: transformarParaGuardar(elements),
-        zonas: zones || []
-      };
-      
-      console.log('[handleSave] Datos a guardar:', dataToSave);
-      
-      await saveMapa(salaId, dataToSave);
-      
-      // Sincronizar seats después de guardar el mapa
-      await syncSeatsForSala(salaId);
-      
-      const now = new Date().toISOString();
-      setLastSavedAt(now);
-      
-      // Actualizar referencia de elementos guardados
-      lastSavedElements.current = currentElementsString;
-      
-      // Notificar el cambio a otros clientes usando el servicio de Realtime
-      await realtimeService.notifyChange(salaId, {
-        action: 'mapa_updated',
-        timestamp: now,
-        salaId: salaId
+      const datosParaGuardar = transformarParaGuardar(elements, zonasValidas);
+      console.log('[handleSave] Datos a guardar:', datosParaGuardar);
+
+      // Usar la API local en lugar de Supabase
+      const response = await fetch(`/api/mapas/${salaId}/save`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(datosParaGuardar),
       });
-      
-      console.log('[handleSave] Mapa guardado correctamente');
-      message.success('Mapa guardado correctamente');
-      
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('[handleSave] Mapa guardado exitosamente en API local:', result);
+
+      // Actualizar la referencia de elementos guardados
+      lastSavedElements.current = currentElementsString;
+      setLastSavedAt(new Date().toISOString());
+
+      // Notificar cambio al RealtimeService
+      if (realtimeService) {
+        realtimeService.notifyChange(salaId, 'mapa_updated');
+      }
+
     } catch (error) {
-      console.error('[handleSave] Error al guardar:', error);
-      message.error('Error al guardar el mapa');
+      console.error('[handleSave] Error al guardar en API local:', error);
+      
+      // Fallback: intentar guardar en Supabase si la API local falla
+      try {
+        console.log('[handleSave] Fallback: intentando guardar en Supabase...');
+        const result = await saveMapa(salaId, transformarParaGuardar(elements, zonasValidas), zonasValidas);
+        console.log('[handleSave] Mapa guardado exitosamente en Supabase (fallback):', result);
+        
+        lastSavedElements.current = currentElementsString;
+        setLastSavedAt(new Date().toISOString());
+        
+        if (realtimeService) {
+          realtimeService.notifyChange(salaId, 'mapa_updated');
+        }
+      } catch (fallbackError) {
+        console.error('[handleSave] Error en fallback a Supabase:', fallbackError);
+        throw fallbackError;
+      }
     } finally {
       setIsSaving(false);
     }

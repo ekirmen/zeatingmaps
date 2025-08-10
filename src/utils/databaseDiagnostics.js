@@ -190,7 +190,7 @@ export const testMapaQuery = async (salaId) => {
     // Test 4: Query con campos específicos
     const { data: fieldsData, error: fieldsError, status: fieldsStatus } = await supabase
       .from('mapas')
-      .select('id, sala_id, nombre')
+      .select('id, sala_id, contenido')
       .eq('sala_id', salaId)
       .single();
     

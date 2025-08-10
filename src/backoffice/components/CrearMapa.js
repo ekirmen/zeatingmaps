@@ -86,11 +86,12 @@ const CrearMapa = () => {
     setElements(prev =>
       prev.map(el => {
         if (selectedIds.includes(el._id) || (el.type === 'silla' && selectedIds.includes(el.parentId))) {
+          const posicionActual = el.posicion || { x: 0, y: 0 };
           return {
             ...el,
             posicion: {
-              x: el.posicion.x + deltaX,
-              y: el.posicion.y + deltaY,
+              x: posicionActual.x + deltaX,
+              y: posicionActual.y + deltaY,
             }
           };
         }
@@ -107,8 +108,9 @@ const CrearMapa = () => {
     const newY = newPos?.y ?? e.target.y();
 
     if (selectedIds.includes(id)) {
-      const deltaX = newX - dragged.posicion.x;
-      const deltaY = newY - dragged.posicion.y;
+      const posicionActual = dragged.posicion || { x: 0, y: 0 };
+      const deltaX = newX - posicionActual.x;
+      const deltaY = newY - posicionActual.y;
       moverElementosSeleccionados(deltaX, deltaY);
     } else {
       updateElementProperty(id, 'posicion', { x: newX, y: newY });
@@ -175,6 +177,15 @@ const CrearMapa = () => {
     }
   };
 
+  // Debug: mostrar información de elementos solo en desarrollo
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[CrearMapa] Elementos totales:', elements?.length || 0);
+    console.log('[CrearMapa] Zonas cargadas:', loadedZonas?.length || 0);
+    console.log('[CrearMapa] Stage size:', stageSize);
+    console.log('[CrearMapa] Zoom:', zoom);
+    console.log('[CrearMapa] Selected IDs:', selectedIds?.length || 0);
+  }
+
   return (
     <div className="flex h-screen" data-testid="crear-mapa">
       <Menu
@@ -215,6 +226,16 @@ const CrearMapa = () => {
           <Button type="primary" loading={syncLoading} onClick={handleSync}>
             Sincronizar seats
           </Button>
+          {/* Botón de prueba para crear mesa */}
+          <Button 
+            type="default" 
+            onClick={() => {
+              console.log('[CrearMapa] Creando mesa de prueba...');
+              addMesa('rect');
+            }}
+          >
+            Crear Mesa Prueba
+          </Button>
         </div>
 
         <Stage
@@ -232,13 +253,14 @@ const CrearMapa = () => {
             <Grid width={stageSize.width / zoom} height={stageSize.height / zoom} gridSize={20} />
             {showZones && <Zonas zonas={loadedZonas} />}
 
-            {elements.map((element) => {
+            {useMemo(() => elements.map((element) => {
               const isSelected = selectedIds.includes(element._id);
               const elementZone = loadedZonas.find(z => z.id === element.zonaId);
               const strokeColor = isSelected ? 'blue' : elementZone?.color || 'black';
 
               switch (element.type) {
                 case 'mesa':
+                  console.log('[CrearMapa] Renderizando mesa:', element);
                   return (
                     <Mesa
                       key={element._id}
@@ -257,8 +279,8 @@ const CrearMapa = () => {
                     <Text
                       key={element._id}
                       id={element._id}
-                      x={element.posicion.x}
-                      y={element.posicion.y}
+                      x={element.posicion?.x || 0}
+                      y={element.posicion?.y || 0}
                       text={element.text}
                       fontSize={element.fontSize}
                       fill={element.fill}
@@ -278,8 +300,8 @@ const CrearMapa = () => {
                     <Rect
                       key={element._id}
                       id={element._id}
-                      x={element.posicion.x}
-                      y={element.posicion.y}
+                      x={element.posicion?.x || 0}
+                      y={element.posicion?.y || 0}
                       width={element.width}
                       height={element.height}
                       fill={element.fill}
@@ -299,8 +321,8 @@ const CrearMapa = () => {
                     <Ellipse
                       key={element._id}
                       id={element._id}
-                      x={element.posicion.x}
-                      y={element.posicion.y}
+                      x={element.posicion?.x || 0}
+                      y={element.posicion?.y || 0}
                       radiusX={element.radiusX}
                       radiusY={element.radiusY}
                       fill={element.fill}
@@ -329,8 +351,9 @@ const CrearMapa = () => {
                       onDragEnd={(e) => {
                         const newX = e.target.x();
                         const newY = e.target.y();
-                        const deltaX = newX - element.posicion.x;
-                        const deltaY = newY - element.posicion.y;
+                        const posicionActual = element.posicion || { x: 0, y: 0 };
+                        const deltaX = newX - posicionActual.x;
+                        const deltaY = newY - posicionActual.y;
                         const newPoints = element.points.map((p, i) =>
                           i % 2 === 0 ? p + deltaX : p + deltaY
                         );
@@ -345,8 +368,8 @@ const CrearMapa = () => {
                       key={element._id}
                       _id={element._id}
                       shape={element.shape}
-                      x={element.posicion.x}
-                      y={element.posicion.y}
+                      x={element.posicion?.x || 0}
+                      y={element.posicion?.y || 0}
                       width={element.width}
                       height={element.height}
                       numero={element.numero}
@@ -362,7 +385,7 @@ const CrearMapa = () => {
                 default:
                   return null;
               }
-            })}
+            }), [elements, selectedIds, loadedZonas, selectElement, onDragEndElement, updateElementProperty, updateElementSize])}
 
             {selectionRect?.visible && (
               <Rect

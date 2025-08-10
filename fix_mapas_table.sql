@@ -116,10 +116,9 @@ ORDER BY s.nombre;
 -- 6. Crear mapa de ejemplo para una sala si no existe
 -- (Descomenta y modifica según necesites)
 /*
-INSERT INTO mapas (sala_id, nombre, contenido, tenant_id)
+INSERT INTO mapas (sala_id, contenido, tenant_id)
 SELECT 
     s.id,
-    'Mapa de ' || s.nombre,
     '[]'::jsonb,
     s.tenant_id
 FROM salas s

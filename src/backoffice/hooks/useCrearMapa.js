@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 import { useMapaState } from './useMapaState';
 import { useMapaLoadingSaving } from './usemapaloadingsaving';
@@ -131,15 +131,24 @@ export const useCrearMapa = () => {
     return baseHandleSave(salaId, elements, zones);
   };
 
-  // Cargar mapa al iniciar SOLO cuando cambia salaId o cuando no hay elementos
-  // Y solo una vez para evitar recargas múltiples
+  // Cargar mapa al iniciar SOLO cuando cambia salaId
+  // Usar useCallback para estabilizar la función loadMapa
+  const stableLoadMapa = useCallback((salaId, setElements, setZones) => {
+    loadMapa(salaId, setElements, setZones);
+  }, [loadMapa]);
+
   useEffect(() => {
-    if (salaId && (!hasLoadedInitialData.current || (!elements || elements.length === 0))) {
+    console.log('[useCrearMapa] useEffect ejecutándose:', {
+      salaId,
+      hasLoadedInitialData: hasLoadedInitialData.current
+    });
+    
+    if (salaId && !hasLoadedInitialData.current) {
       console.log('[useCrearMapa] Cargando mapa inicial para sala:', salaId);
       hasLoadedInitialData.current = true;
-      loadMapa(salaId, setElements, setZones);
+      stableLoadMapa(salaId, setElements, setZones);
     }
-  }, [salaId, setElements, setZones, loadMapa]); // Removido 'elements' de las dependencias
+  }, [salaId, stableLoadMapa, setElements, setZones]);
 
   // Función para eliminar elementos seleccionados
   const eliminarElementoSeleccionado = () => deleteSelectedElements();

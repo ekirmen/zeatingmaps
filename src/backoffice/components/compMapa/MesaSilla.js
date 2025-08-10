@@ -19,6 +19,18 @@ export const Mesa = ({
   selectedIds = [],
   elements = [],
 }) => {
+  console.log('[Mesa] Componente renderizándose con props:', {
+    _id,
+    shape,
+    posicion,
+    radius,
+    width,
+    height,
+    nombre,
+    selected,
+    zonaId
+  });
+
   // Add validation check
   if (!posicion || typeof posicion.x !== 'number' || typeof posicion.y !== 'number') {
     console.warn('Invalid position provided to Mesa component:', posicion);
@@ -43,13 +55,28 @@ export const Mesa = ({
     const deltaY = newGridPos.y - posicion.y;
     
     // Update chair positions (relative to grid movement)
-    const chairUpdates = childChairs.map(chair => ({
-      _id: chair._id,
-      posicion: {
-        x: chair.posicion.x + deltaX,
-        y: chair.posicion.y + deltaY
+    const chairUpdates = childChairs.map(chair => {
+      // Parse chair position safely - it's stored as text in the database
+      let chairPos = { x: 0, y: 0 };
+      try {
+        if (chair.posicion && typeof chair.posicion === 'string') {
+          chairPos = JSON.parse(chair.posicion);
+        } else if (chair.posicion && typeof chair.posicion === 'object') {
+          chairPos = chair.posicion;
+        }
+      } catch (error) {
+        console.warn('Failed to parse chair position:', chair.posicion, error);
+        chairPos = { x: 0, y: 0 };
       }
-    }));
+
+      return {
+        _id: chair._id,
+        posicion: {
+          x: (chairPos.x || 0) + deltaX,
+          y: (chairPos.y || 0) + deltaY
+        }
+      };
+    });
 
     onDragEnd(e, _id, newGridPos, chairUpdates);
   };
@@ -95,29 +122,43 @@ export const Mesa = ({
         fontSize={14}
         fill="black"
       />
-      {/* Map over childChairs and render Silla components */}
+      {/* Renderizar sillas como elementos independientes */}
       {childChairs.map((silla) => {
-        // Calculate chair position relative to the table's grid position
-        const relativeX = silla.posicion.x - posicion.x;
-        const relativeY = silla.posicion.y - posicion.y;
+        // Parse chair position safely - it's stored as text in the database
+        let sillaPos = { x: 0, y: 0 };
+        try {
+          if (silla.posicion && typeof silla.posicion === 'string') {
+            sillaPos = JSON.parse(silla.posicion);
+          } else if (silla.posicion && typeof silla.posicion === 'object') {
+            sillaPos = silla.posicion;
+          }
+        } catch (error) {
+          console.warn('Failed to parse chair position:', silla.posicion, error);
+          sillaPos = { x: 0, y: 0 };
+        }
 
         return (
           <Silla
             key={silla._id}
-            {...silla}
-            x={relativeX}
-            y={relativeY}
+            _id={silla._id}
+            shape={silla.shape || 'rect'}
+            x={sillaPos.x}
+            y={sillaPos.y}
             width={silla.width || 20}
             height={silla.height || 20}
+            numero={silla.numero}
+            nombre={silla.nombre}
+            fila={silla.fila}
             selected={selectedIds.includes(silla._id)}
-            zonas={zonas}
-            onSelect={onSelect}
+            onSelect={() => onSelect(silla)}
             onDragEnd={onChairDragEnd}
+            zonaId={silla.zonaId}
+            zonas={zonas}
             parentPosition={posicion}
           />
         );
       })}
-    </Group> // Close the Group
+    </Group>
   );
 };
 
