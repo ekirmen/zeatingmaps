@@ -46,7 +46,10 @@ export const useBoleteria = () => {
     try {
       const { data: funcionData, error: funcionError } = await supabase
         .from('funciones')
-        .select('*')
+        .select(`
+          *,
+          plantilla(*)
+        `)
         .eq('id', functionId)
         .single();
   
@@ -74,9 +77,18 @@ export const useBoleteria = () => {
   
       setSelectedFuncion(funcionMapeada);
       localStorage.setItem(FUNC_KEY, functionId);
+      
+      console.log('Función seleccionada:', funcionMapeada);
+      console.log('Plantilla de la función:', funcionData.plantilla);
   
-      // Plantilla opcional: si tienes un id de plantilla en la función, podrías cargarla aquí.
-      setSelectedPlantilla(null);
+      // Cargar plantilla de precios si existe
+      if (funcionData.plantilla) {
+        console.log('Plantilla encontrada:', funcionData.plantilla);
+        setSelectedPlantilla(funcionData.plantilla);
+      } else {
+        console.log('No hay plantilla de precios para esta función');
+        setSelectedPlantilla(null);
+      }
   
       // Cargar mapa y zonas usando salaId robusto
       const salaId = mappedSala?.id || mappedSala?._id || salaField || null;

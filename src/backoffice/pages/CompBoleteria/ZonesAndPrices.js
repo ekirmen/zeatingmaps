@@ -75,6 +75,11 @@ const ZonesAndPrices = ({
     handleClearZoneSelection
   } = useZoneManagement(selectedPlantilla, getPrecioConDescuento);
 
+  // Debug logs
+  console.log('ZonesAndPrices - selectedPlantilla:', selectedPlantilla);
+  console.log('ZonesAndPrices - detallesPlantilla:', detallesPlantilla);
+  console.log('ZonesAndPrices - zonePriceRanges:', zonePriceRanges);
+
   // Handlers - Memoizar para evitar re-creación
   const seatHandlers = useMemo(() => createSeatHandlers({
     selectedFuncion,
