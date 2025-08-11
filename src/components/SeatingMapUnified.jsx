@@ -1,6 +1,7 @@
 import React, { useCallback } from 'react';
-import { Stage, Layer, Rect, Text, Group, Circle } from 'react-konva';
+import { Stage, Layer, Rect, Text, Group, Circle, Line } from 'react-konva';
 import { useSeatLockStore } from './seatLockStore';
+import { useSeatColors } from '../hooks/useSeatColors';
 
 const SeatingMapUnified = ({
   funcionId,
@@ -23,6 +24,7 @@ const SeatingMapUnified = ({
 }) => {
   const channel = useSeatLockStore(state => state.channel);
   const canLockSeats = !!channel;
+  const { getSeatColor, getBorderColor } = useSeatColors();
 
   const handleSeatClick = useCallback(
     async (seat) => {
@@ -241,28 +243,31 @@ if (Array.isArray(mapa?.contenido)) {
             );
           })}
 
-          {/* Renderizar zonas y asientos */}
+                              {/* Renderizar zonas y asientos */}
           {validatedZonas.map((zona) => (
             <Group key={zona.id}>
+              {/* Nombre de la zona */}
               <Text
                 text={zona.nombre}
                 x={10}
                 y={(zona.asientos?.[0]?.y || zona.asientos?.[0]?.posicion?.y || 0) - 20}
                 fontSize={14}
                 fill="#2d3748"
+                fontStyle="bold"
               />
-              {zona.asientos.map(seat => {
-                // Verificar si el asiento está seleccionado usando selectedSeats
-                const isSelected = selectedSeats && selectedSeats.includes(seat._id);
+              
+              {/* Renderizar asientos de la zona */}
+                             {zona.asientos.map(seat => {
+                 // Verificar si el asiento está seleccionado usando selectedSeats
+                 const isSelected = selectedSeats && selectedSeats.includes(seat._id);
 
-                // Default fill colors
-                let fill = '#9ae6b4'; // Verde libre
-                if (isSelected) fill = '#3182ce'; // Azul - seleccionado
-
-                // Override fill if seat is found by locator search
-                if (foundSeatIds.has(seat._id)) {
-                  fill = '#38a169'; // Verde oscuro (darker green)
-                }
+                 // Usar sistema de colores automático unificado
+                 let fill = getSeatColor(seat, zona, isSelected, selectedSeats);
+                 
+                 // Override fill if seat is found by locator search
+                 if (foundSeatIds.has(seat._id)) {
+                   fill = '#8b5cf6'; // 🟣 Púrpura = Encontrado por búsqueda
+                 }
 
                 // Asegurar que el asiento tenga las propiedades x e y
                 const seatX = seat.x ?? seat.posicion?.x ?? 0;
@@ -270,14 +275,14 @@ if (Array.isArray(mapa?.contenido)) {
 
                 return (
                   <Group key={seat._id} x={seatX} y={seatY} onClick={() => handleSeatClick(seat)}>
-                    <Rect
-                      width={seat.ancho ?? seat.width ?? 30}
-                      height={seat.alto ?? seat.height ?? 30}
-                      fill={fill}
-                      stroke="#2d3748"
-                      strokeWidth={1}
-                      cornerRadius={4}
-                    />
+                                         <Rect
+                       width={seat.ancho ?? seat.width ?? 30}
+                       height={seat.alto ?? seat.height ?? 30}
+                       fill={fill}
+                       stroke={getBorderColor(isSelected, zona)}
+                       strokeWidth={isSelected ? 2 : 1}
+                       cornerRadius={4}
+                     />
                     <Text
                       text={seat.nombre || seat._id}
                       fontSize={10}
@@ -292,6 +297,77 @@ if (Array.isArray(mapa?.contenido)) {
               })}
             </Group>
           ))}
+
+          {/* Renderizar OTROS ELEMENTOS del mapa (textos, formas, líneas, etc.) */}
+          {Array.isArray(mapa?.contenido) && mapa.contenido.map((elemento, index) => {
+            // Solo procesar elementos que NO sean mesas o zonas (ya procesados arriba)
+            if (elemento.type === 'mesa' || elemento.type === 'zona') {
+              return null;
+            }
+
+            // Procesar TEXTOS
+            if (elemento.type === 'texto' || elemento.text || elemento.nombre) {
+              return (
+                <Text
+                  key={`texto_${index}`}
+                  text={elemento.text || elemento.nombre || 'Texto'}
+                  x={elemento.x || elemento.posicion?.x || 0}
+                  y={elemento.y || elemento.posicion?.y || 0}
+                  fontSize={elemento.fontSize || 12}
+                  fill={elemento.color || '#2d3748'}
+                  fontStyle={elemento.bold ? 'bold' : 'normal'}
+                  align={elemento.align || 'left'}
+                />
+              );
+            }
+
+            // Procesar LÍNEAS
+            if (elemento.type === 'linea' || elemento.points) {
+              return (
+                <Line
+                  key={`linea_${index}`}
+                  points={elemento.points || [0, 0, 100, 100]}
+                  stroke={elemento.color || '#2d3748'}
+                  strokeWidth={elemento.strokeWidth || 2}
+                />
+              );
+            }
+
+            // Procesar CÍRCULOS
+            if (elemento.type === 'circulo' || elemento.shape === 'circle') {
+              return (
+                <Circle
+                  key={`circulo_${index}`}
+                  x={elemento.x || elemento.posicion?.x || 0}
+                  y={elemento.y || elemento.posicion?.y || 0}
+                  radius={elemento.radius || 20}
+                  fill={elemento.fill || 'transparent'}
+                  stroke={elemento.color || '#2d3748'}
+                  strokeWidth={elemento.strokeWidth || 2}
+                />
+              );
+            }
+
+            // Procesar RECTÁNGULOS
+            if (elemento.type === 'rectangulo' || elemento.shape === 'rect') {
+              return (
+                <Rect
+                  key={`rectangulo_${index}`}
+                  x={elemento.x || elemento.posicion?.x || 0}
+                  y={elemento.y || elemento.posicion?.y || 0}
+                  width={elemento.width || 100}
+                  height={elemento.height || 50}
+                  fill={elemento.fill || 'transparent'}
+                  stroke={elemento.color || '#2d3748'}
+                  strokeWidth={elemento.strokeWidth || 2}
+                  cornerRadius={elemento.cornerRadius || 0}
+                />
+              );
+            }
+
+            // Procesar otros elementos genéricos
+            return null;
+          })}
         </Layer>
       </Stage>
     </>

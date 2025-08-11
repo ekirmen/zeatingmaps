@@ -12,6 +12,7 @@ import { useMapaZoomStage } from '../hooks/useMapaZoomStage';
 import { fetchZonasPorSala } from '../services/apibackoffice';
 import { message, Switch, Button } from 'antd';
 import { syncSeatsForSala } from '../services/apibackoffice';
+import { useSeatColors } from '../../hooks/useSeatColors';
 
 const CrearMapa = () => {
   const { salaId } = useParams();
@@ -50,6 +51,7 @@ const CrearMapa = () => {
   } = useCrearMapa();
 
   const { stageSize, handleWheelZoom } = useMapaZoomStage(zoom, setZoom);
+  const { getSeatColor, getZonaColor, getBorderColor } = useSeatColors();
 
   const [sillaShape, setSillaShape] = useState('rect');
   const [loadedZonas, setLoadedZonas] = useState([]);
@@ -256,7 +258,8 @@ const CrearMapa = () => {
             {useMemo(() => elements.map((element) => {
               const isSelected = selectedIds.includes(element._id);
               const elementZone = loadedZonas.find(z => z.id === element.zonaId);
-              const strokeColor = isSelected ? 'blue' : elementZone?.color || 'black';
+              // Usar sistema de colores automático
+              const strokeColor = getBorderColor(isSelected, elementZone);
 
               switch (element.type) {
                 case 'mesa':
@@ -363,6 +366,8 @@ const CrearMapa = () => {
                     />
                   );
                 case 'silla':
+                  // Usar sistema de colores automático para asientos
+                  const seatColor = getSeatColor(element, elementZone, isSelected, selectedIds);
                   return (
                     <Silla
                       key={element._id}
@@ -380,6 +385,8 @@ const CrearMapa = () => {
                       onDragEnd={onDragEndElement}
                       zonaId={element.zonaId}
                       zonas={loadedZonas}
+                      fill={seatColor} // Color automático
+                      stroke={strokeColor} // Borde automático
                     />
                   );
                 default:

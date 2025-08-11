@@ -15,6 +15,7 @@ import SeatingMapUnified from '../../components/SeatingMapUnified';
 import Cart from './Cart';
 import ProductosWidget from '../components/ProductosWidget';
 import { diagnoseMapaAccess, testMapaQuery, generateDiagnosticReport } from '../../utils/databaseDiagnostics';
+import { getZonaColor } from '../../utils/getZonaColor';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -30,6 +31,7 @@ const EventosPage = () => {
   const [funciones, setFunciones] = useState([]);
   const [selectedFunctionId, setSelectedFunctionId] = useState(null);
   const [mapa, setMapa] = useState(null);
+  const [plantillaPrecios, setPlantillaPrecios] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [diagnosticReport, setDiagnosticReport] = useState(null);
@@ -123,6 +125,7 @@ const EventosPage = () => {
         if (!selectedFunctionId) {
           console.warn('[MAPA] No hay función seleccionada');
           setMapa(null);
+          setPlantillaPrecios(null);
           return;
         }
 
@@ -130,10 +133,40 @@ const EventosPage = () => {
         if (!funcion) {
           console.warn('[MAPA] No se encontró la función:', selectedFunctionId);
           setMapa(null);
+          setPlantillaPrecios(null);
           return;
         }
 
         console.log('[MAPA] Función encontrada:', funcion);
+        
+        // CARGAR PLANTILLA DE PRECIOS
+        console.log('[PRECIOS] Cargando plantilla de precios...');
+        let plantillaData = null;
+        
+        if (funcion.plantilla) {
+          // Si la función ya tiene plantilla embebida
+          plantillaData = funcion.plantilla;
+          console.log('[PRECIOS] Plantilla encontrada en función:', plantillaData);
+        } else if (funcion.plantilla_id) {
+          // Si la función tiene plantilla_id, cargarla por separado
+          try {
+            const { data: plantilla, error: plantillaError } = await supabase
+              .from('plantillas')
+              .select('*')
+              .eq('id', funcion.plantilla_id)
+              .maybeSingle();
+            
+            if (plantillaError) throw plantillaError;
+            if (plantilla) {
+              plantillaData = plantilla;
+              console.log('[PRECIOS] Plantilla cargada por ID:', plantillaData);
+            }
+          } catch (plantillaErr) {
+            console.warn('[PRECIOS] Error cargando plantilla:', plantillaErr);
+          }
+        }
+        
+        setPlantillaPrecios(plantillaData);
         
         const salaId = (funcion?.sala && typeof funcion.sala === 'object')
           ? (funcion.sala.id || funcion.sala._id)
@@ -199,7 +232,9 @@ const EventosPage = () => {
           // Transform the data structure to match SeatingMapUnified expectations
           const allSeats = [];
           const mesas = [];
+          const zonas = [];
           
+          // Procesar contenido del mapa
           (Array.isArray(contenido) ? contenido : [contenido]).forEach(item => {
             if (item.type === 'mesa' && item.sillas) {
               mesas.push(item);
@@ -210,21 +245,38 @@ const EventosPage = () => {
                   y: silla.posicion?.y || silla.y || 0,
                   ancho: silla.width || silla.ancho || 30,
                   alto: silla.height || silla.alto || 30,
-                  nombre: silla.nombre || silla.numero || silla._id || 'Asiento'
+                  nombre: silla.nombre || silla.numero || silla._id || 'Asiento',
+                  zonaId: item.zona_id || 'zona_principal'
                 });
+              });
+            } else if (item.type === 'zona') {
+              zonas.push({
+                id: item._id || item.id || `zona_${zonas.length + 1}`,
+                nombre: item.nombre || `Zona ${zonas.length + 1}`,
+                color: item.color || getZonaColor(zonas.length),
+                asientos: []
               });
             }
           });
           
-          const transformedZonas = [{
-            id: 'zona_principal',
-            nombre: 'Zona Principal',
-            asientos: allSeats
-          }];
+          // Si no hay zonas definidas, crear zona por defecto
+          if (zonas.length === 0) {
+            zonas.push({
+              id: 'zona_principal',
+              nombre: 'Zona Principal',
+              color: '#4CAF50', // Verde por defecto
+              asientos: allSeats
+            });
+          } else {
+            // Asignar asientos a sus zonas correspondientes
+            zonas.forEach(zona => {
+              zona.asientos = allSeats.filter(silla => silla.zonaId === zona.id);
+            });
+          }
           
           const transformedMap = {
             ...mapData,
-            zonas: transformedZonas,
+            zonas: zonas,
             // NO transformar contenido, mantener el array original
             contenido: mapData.contenido
           };
@@ -259,9 +311,30 @@ const EventosPage = () => {
 
       const nombreZona = zona?.nombre || 'Zona';
       
-      const precio = 10; // Precio por defecto de $10
-
-      console.log('Precio encontrado:', precio);
+      // OBTENER PRECIO DE LA PLANTILLA
+      let precio = 10; // Precio por defecto
+      
+      if (plantillaPrecios && plantillaPrecios.detalles) {
+        try {
+          const detalles = typeof plantillaPrecios.detalles === 'string' 
+            ? JSON.parse(plantillaPrecios.detalles) 
+            : plantillaPrecios.detalles;
+          
+          // Buscar precio por zona
+          const precioZona = detalles.find(d => 
+            d.zona_id === zonaId || d.zona_nombre === nombreZona
+          );
+          
+          if (precioZona) {
+            precio = precioZona.precio || precio;
+            console.log('[PRECIOS] Precio encontrado para zona:', precioZona);
+          }
+        } catch (e) {
+          console.warn('[PRECIOS] Error parsing detalles:', e);
+        }
+      }
+      
+      console.log('[PRECIOS] Precio final para asiento:', precio);
 
       // Verificar si el asiento ya está en el carrito
       const cartItems = useCartStore.getState().items;
@@ -474,49 +547,60 @@ const EventosPage = () => {
                   } 
                   key="seats"
                 >
-                  <Card 
-                    title="Selecciona tus asientos" 
-                    className="h-full"
-                    extra={
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 bg-green-500 rounded"></div>
-                          <span className="text-sm">Disponible</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                          <span className="text-sm">Seleccionado</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 bg-gray-400 rounded"></div>
-                          <span className="text-sm">Ocupado</span>
-                        </div>
-                      </div>
-                    }
-                  >
-                    {mapa ? (
-                      <div className="h-96 overflow-auto">
-                                               <SeatingMapUnified
-                         mapa={mapa}
-                         funcionId={selectedFunctionId}
-                         onSeatToggle={handleSeatToggle}
-                         onTableToggle={(table) => {
-                           console.log('Mesa seleccionada:', table);
-                         }}
-                         isSeatLocked={() => false}
-                         isSeatLockedByMe={() => false}
-                         lockSeat={() => Promise.resolve(true)}
-                         unlockSeat={() => Promise.resolve(true)}
-                         isTableLocked={() => false}
-                         isTableLockedByMe={() => false}
-                         lockTable={() => Promise.resolve(true)}
-                         unlockTable={() => Promise.resolve(true)}
-                         isAnySeatInTableLocked={() => false}
-                         areAllSeatsInTableLockedByMe={() => false}
-                         foundSeats={[]}
-                         selectedSeats={cartItems.map(item => item.sillaId)}
-                       />
-                      </div>
+                                     <Card 
+                     title="Selecciona tus asientos" 
+                     className="h-full"
+                   >
+                                         {mapa ? (
+                       <div className="h-96 overflow-auto relative">
+                         <SeatingMapUnified
+                           mapa={mapa}
+                           funcionId={selectedFunctionId}
+                           onSeatToggle={handleSeatToggle}
+                           onTableToggle={(table) => {
+                             console.log('Mesa seleccionada:', table);
+                           }}
+                           isSeatLocked={() => false}
+                           isSeatLockedByMe={() => false}
+                           lockSeat={() => Promise.resolve(true)}
+                           unlockSeat={() => Promise.resolve(true)}
+                           isTableLocked={() => false}
+                           isTableLockedByMe={() => false}
+                           lockTable={() => Promise.resolve(true)}
+                           unlockTable={() => Promise.resolve(true)}
+                           isAnySeatInTableLocked={() => false}
+                           areAllSeatsInTableLockedByMe={() => false}
+                           foundSeats={[]}
+                           selectedSeats={cartItems.map(item => item.sillaId)}
+                         />
+                         
+                                                   {/* Leyenda de Estado de Asientos */}
+                          <div className="absolute bottom-4 left-4 bg-white p-3 rounded shadow max-w-xs">
+                            <div className="text-xs space-y-2">
+                              <div className="font-semibold mb-2">Estado de Asientos</div>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                <span>Disponible (Color de zona)</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                <span>Seleccionado por mí</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                <span>Seleccionado por otro</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                <span>Bloqueado (por mí o por otro)</span>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                                <span>Vendido/Reservado</span>
+                              </div>
+                            </div>
+                          </div>
+                       </div>
                     ) : (
                       <div className="flex items-center justify-center h-96 text-gray-500">
                         <div className="text-center">
