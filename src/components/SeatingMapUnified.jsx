@@ -94,26 +94,18 @@ const SeatingMapUnified = ({
       asientos: zona.asientos.filter(seat => seat && seat._id)
     }));
   
-  // Obtener mesas del mapa - manejar diferentes estructuras de datos
-  let mesas = Array.isArray(mapa?.contenido) 
-    ? mapa.contenido.filter(item => item.type === 'mesa') 
-    : mapa?.contenido?.mesas || mapa?.contenido?.tables || [];
+  // Obtener mesas del mapa - CORREGIR ESTA LÓGICA
+let mesas = [];
+if (Array.isArray(mapa?.contenido)) {
+  mesas = mapa.contenido.filter(item => {
+    // Un elemento es una mesa si tiene nombre, shape y _id
+    return item && item._id && item.nombre && item.shape;
+  });
   
-  // Si no hay mesas con type === 'mesa', buscar elementos que parezcan mesas
-  if (mesas.length === 0 && Array.isArray(mapa?.contenido)) {
-    console.log('Buscando mesas en contenido del mapa...');
-    
-    const elementos = mapa.contenido;
-    mesas = elementos.filter(item => {
-      // Un elemento es una mesa si tiene sillas o si no es una silla individual
-      return item && item._id && (
-        (item.sillas && Array.isArray(item.sillas) && item.sillas.length > 0) ||
-        (item.type !== 'silla' && item.type !== 'zona')
-      );
-    });
-    
-    console.log('Mesas extraídas del contenido:', mesas);
-  }
+  console.log('Mesas extraídas del contenido:', mesas);
+} else {
+  mesas = mapa?.contenido?.mesas || mapa?.contenido?.tables || [];
+}
 
   // Validar y normalizar las mesas
   const validatedMesas = mesas
