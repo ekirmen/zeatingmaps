@@ -55,8 +55,36 @@ const SeatingMapUnified = ({
 
   // Fetch zones from "mapa". Some backends store the zones inside
   // "mapa.contenido" while others may return them at the root level.
-  const zonas = mapa?.zonas || mapa?.contenido?.zonas || [];
-  const allSeats = zonas?.flatMap((z) => z.asientos || []) || [];
+  let zonas = mapa?.zonas || mapa?.contenido?.zonas || [];
+  let allSeats = zonas?.flatMap((z) => z.asientos || []) || [];
+  
+  // Si no hay zonas en la estructura esperada, intentar extraer del contenido
+  if (zonas.length === 0 && Array.isArray(mapa?.contenido)) {
+    console.log('Buscando zonas en contenido del mapa...');
+    
+    // Buscar elementos que puedan ser zonas o contener asientos
+    const elementos = mapa.contenido;
+    zonas = elementos.filter(item => 
+      item && (item.type === 'zona' || item.asientos || item.sillas)
+    );
+    
+    // Extraer asientos de diferentes estructuras posibles
+    allSeats = elementos.flatMap(item => {
+      if (item.asientos && Array.isArray(item.asientos)) {
+        return item.asientos;
+      }
+      if (item.sillas && Array.isArray(item.sillas)) {
+        return item.sillas;
+      }
+      if (item.type === 'silla') {
+        return [item];
+      }
+      return [];
+    });
+    
+    console.log('Zonas extraídas del contenido:', zonas);
+    console.log('Asientos extraídos del contenido:', allSeats);
+  }
 
   // Validar que las zonas tengan asientos válidos
   const validatedZonas = zonas
@@ -67,9 +95,25 @@ const SeatingMapUnified = ({
     }));
   
   // Obtener mesas del mapa - manejar diferentes estructuras de datos
-  const mesas = Array.isArray(mapa?.contenido) 
+  let mesas = Array.isArray(mapa?.contenido) 
     ? mapa.contenido.filter(item => item.type === 'mesa') 
     : mapa?.contenido?.mesas || mapa?.contenido?.tables || [];
+  
+  // Si no hay mesas con type === 'mesa', buscar elementos que parezcan mesas
+  if (mesas.length === 0 && Array.isArray(mapa?.contenido)) {
+    console.log('Buscando mesas en contenido del mapa...');
+    
+    const elementos = mapa.contenido;
+    mesas = elementos.filter(item => {
+      // Un elemento es una mesa si tiene sillas o si no es una silla individual
+      return item && item._id && (
+        (item.sillas && Array.isArray(item.sillas) && item.sillas.length > 0) ||
+        (item.type !== 'silla' && item.type !== 'zona')
+      );
+    });
+    
+    console.log('Mesas extraídas del contenido:', mesas);
+  }
 
   // Validar y normalizar las mesas
   const validatedMesas = mesas
@@ -98,6 +142,12 @@ const SeatingMapUnified = ({
 
   // Debug: mostrar información del mapa
   console.log('Mapa recibido:', mapa);
+  console.log('Contenido del mapa:', mapa?.contenido);
+  console.log('Tipo de contenido:', typeof mapa?.contenido);
+  console.log('Es array:', Array.isArray(mapa?.contenido));
+  console.log('Longitud del contenido:', mapa?.contenido?.length);
+  console.log('Primer elemento:', mapa?.contenido?.[0]);
+  console.log('Segundo elemento:', mapa?.contenido?.[1]);
   console.log('Zonas encontradas:', zonas);
   console.log('Zonas validadas:', validatedZonas);
   console.log('Asientos totales:', allSeats.length);
@@ -107,21 +157,33 @@ const SeatingMapUnified = ({
   console.log('Asientos validados:', validatedSeats);
 
   // Calcular dimensiones máximas de manera segura
-  const maxX = validatedSeats.length > 0 
-    ? Math.max(...validatedSeats.map((s) => (s.x || 0) + (s.ancho || 30)), 800)
-    : 800;
-  const maxY = validatedSeats.length > 0 
-    ? Math.max(...validatedSeats.map((s) => (s.y || 0) + (s.alto || 30)), 600)
-    : 600;
+  let maxX = 800;
+  let maxY = 600;
+  
+  if (validatedSeats.length > 0) {
+    maxX = Math.max(...validatedSeats.map((s) => (s.x || 0) + (s.ancho || 30)), 800);
+    maxY = Math.max(...validatedSeats.map((s) => (s.y || 0) + (s.alto || 30)), 600);
+  } else if (validatedMesas.length > 0) {
+    // Si no hay asientos, usar las mesas para calcular dimensiones
+    maxX = Math.max(...validatedMesas.map((m) => (m.posicion?.x || 0) + (m.width || 100)), 800);
+    maxY = Math.max(...validatedMesas.map((m) => (m.posicion?.y || 0) + (m.height || 80)), 600);
+  }
 
-  if (!mapa || !validatedZonas || validatedZonas.length === 0) {
+  if (!mapa) {
     return <div>No map data available</div>;
+  }
+  
+  // Si no hay zonas tradicionales pero hay asientos, continuar
+  if (validatedZonas.length === 0 && allSeats.length === 0) {
+    console.warn('No zones or seats found in map');
+    return <div>No zones or seats found in map</div>;
   }
 
   // Validar que haya asientos válidos antes de continuar
   if (validatedSeats.length === 0) {
     console.warn('No valid seats found in the map');
-    return <div>No valid seats found in the map</div>;
+    // No retornar error, solo mostrar mensaje
+    console.log('Continuando sin asientos válidos...');
   }
 
   // Validar que haya mesas válidas
@@ -137,6 +199,15 @@ const SeatingMapUnified = ({
       {!canLockSeats && (
         <div className="text-sm text-gray-600 mb-2">Sincronizando asientos...</div>
       )}
+      
+      {/* Mostrar información de debug */}
+      <div className="text-xs text-gray-500 mb-2">
+        Elementos encontrados: {mapa?.contenido?.length || 0} | 
+        Zonas: {validatedZonas.length} | 
+        Mesas: {validatedMesas.length} | 
+        Asientos: {validatedSeats.length}
+      </div>
+      
       <Stage width={maxX + 50} height={maxY + 50} style={{ border: '1px solid #ccc' }}>
         <Layer>
           {/* Renderizar mesas primero (para que estén detrás de las sillas) */}
