@@ -3,37 +3,27 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 
 export const useMapaSeatsSync = (mapa, funcionId) => {
-  console.log('[HOOK_DEBUG] useMapaSeatsSync llamado con:', { mapa: !!mapa, funcionId, mapaContenido: mapa?.contenido });
-  
   const [seatsData, setSeatsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const extractSeatsFromMapa = useCallback((mapa) => {
     if (!mapa?.contenido) {
-      console.log('[EXTRACT_SEATS] No hay contenido en el mapa');
       return [];
     }
-
-    console.log('[EXTRACT_SEATS] Contenido del mapa:', mapa.contenido);
-    console.log('[EXTRACT_SEATS] Tipo de contenido:', typeof mapa.contenido);
-    console.log('[EXTRACT_SEATS] Es array:', Array.isArray(mapa.contenido));
 
     let allSeats = [];
 
     // Si el contenido es un array, procesar cada elemento
     if (Array.isArray(mapa.contenido)) {
       mapa.contenido.forEach((elemento, index) => {
-        console.log(`[EXTRACT_SEATS] Procesando elemento ${index}:`, elemento);
         
         // ESTRUCTURA EXACTA DEL JSON DEL USUARIO
         // Si es una mesa con sillas
         if (elemento._id && elemento.sillas && Array.isArray(elemento.sillas)) {
-          console.log(`[EXTRACT_SEATS] Encontrada mesa con sillas:`, elemento);
           
           elemento.sillas.forEach(silla => {
             if (silla._id) {
-              console.log(`[EXTRACT_SEATS] Procesando silla:`, silla);
               allSeats.push({
                 ...silla,
                 mesa_id: elemento._id,
@@ -58,15 +48,12 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
       });
     }
 
-    console.log(`[EXTRACT_SEATS] Total de asientos extraídos: ${allSeats.length}`);
-    console.log('[EXTRACT_SEATS] Asientos extraídos:', allSeats);
     return allSeats;
   }, []);
 
   // Sincronizar datos del mapa con el estado real
   const syncMapaWithSeats = async () => {
     if (!mapa || !funcionId) {
-      console.log('[SYNC] No hay mapa o funcionId:', { mapa: !!mapa, funcionId });
       return;
     }
 
@@ -74,19 +61,13 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
       setLoading(true);
       setError(null);
 
-      console.log('[SYNC] Iniciando sincronización para funcionId:', funcionId);
-      console.log('[SYNC] Mapa recibido:', mapa);
-
       // 1. Extraer asientos del mapa
       const seatsFromMapa = extractSeatsFromMapa(mapa);
-      console.log('[SYNC] Asientos extraídos del mapa:', seatsFromMapa.length);
       
       // TEMPORAL: Solo usar asientos del mapa, sin sincronización
-      console.log('[SYNC] Usando solo asientos del mapa (sin sincronización)');
       setSeatsData(seatsFromMapa);
 
     } catch (err) {
-      console.error('[SYNC] Error en sincronización:', err);
       setError(err);
     } finally {
       setLoading(false);
@@ -97,11 +78,6 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
   useEffect(() => {
     syncMapaWithSeats();
   }, [mapa, funcionId]);
-
-  // DEBUG: Loggear cuando seatsData cambie
-  useEffect(() => {
-    console.log('[HOOK_DEBUG] seatsData actualizado:', seatsData);
-  }, [seatsData]);
 
   return {
     seatsData,

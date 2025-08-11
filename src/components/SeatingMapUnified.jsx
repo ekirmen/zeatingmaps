@@ -24,13 +24,6 @@ const SeatingMapUnified = ({
   foundSeats = [],
   selectedSeats = []
 }) => {
-  console.log('[COMPONENT_DEBUG] SeatingMapUnified renderizado con:', { 
-    funcionId, 
-    mapa: !!mapa, 
-    mapaContenido: mapa?.contenido,
-    mapaContenidoType: typeof mapa?.contenido,
-    mapaContenidoIsArray: Array.isArray(mapa?.contenido)
-  });
   const channel = useSeatLockStore(state => state.channel);
   const canLockSeats = !!channel;
   const { getSeatColor, getBorderColor } = useSeatColors();
@@ -67,15 +60,36 @@ const SeatingMapUnified = ({
     [onTableToggle]
   );
 
+  // Función para manejar el zoom del mapa
+  const handleWheel = useCallback((e) => {
+    e.evt.preventDefault();
+    
+    const stage = stageRef.current;
+    if (!stage) return;
+
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+    
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+
+    const newScale = e.evt.deltaY > 0 ? oldScale * 0.9 : oldScale * 1.1;
+    
+    stage.scale({ x: newScale, y: newScale });
+    
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+    
+    stage.position(newPos);
+    stage.batchDraw();
+  }, []);
+
      // Usar asientos sincronizados del hook
    const allSeats = syncedSeats;
-   
-   // DEBUG TEMPORAL: Ver exactamente qué está pasando
-   console.log('[DEBUG_TEMP] syncedSeats:', syncedSeats);
-   console.log('[DEBUG_TEMP] allSeats:', allSeats);
-   console.log('[DEBUG_TEMP] typeof syncedSeats:', typeof syncedSeats);
-   console.log('[DEBUG_TEMP] Array.isArray(syncedSeats):', Array.isArray(syncedSeats));
-   console.log('[DEBUG_TEMP] syncedSeats.length:', syncedSeats?.length);
    
    // Crear zonas basadas en los asientos sincronizados
    const zonas = [];
@@ -132,17 +146,6 @@ if (Array.isArray(mapa?.contenido)) {
      // Los asientos ya vienen validados del hook de sincronización
    const validatedSeats = allSeats;
 
-     // Debug: mostrar información de sincronización
-   console.log('[SYNC] Estado de sincronización:');
-   console.log('- Asientos sincronizados:', syncedSeats.length);
-   console.log('- Loading:', seatsLoading);
-   console.log('- Error:', seatsError);
-   console.log('- Zonas creadas:', validatedZonas.length);
-   console.log('- Mesas encontradas:', validatedMesas.length);
-   console.log('- Asientos validados:', validatedSeats.length);
-   console.log('- Asientos del hook:', allSeats);
-   console.log('- Mapa completo:', mapa);
-
   // Calcular dimensiones máximas de manera segura
   let maxX = 800;
   let maxY = 600;
@@ -198,8 +201,6 @@ if (Array.isArray(mapa?.contenido)) {
         <Layer>
           {/* Renderizar mesas primero (para que estén detrás de las sillas) */}
           {validatedMesas.map((mesa) => {
-            console.log('[RENDER] Renderizando mesa:', mesa);
-            
             if (mesa.shape === 'circle') {
               return (
                 <Circle

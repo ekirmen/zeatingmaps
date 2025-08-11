@@ -165,7 +165,9 @@ const SeatingMap = ({
   }, [availableZonas, abonoMode, abonoSeats, selectedZonaId, tempBlocks, colorMap, isSeatLocked, isSeatLockedByMe, onSeatClick]);
 
   const renderTable = useCallback((mesa) => {
-    const TableShape = mesa.type === "circle" ? Circle : Rect;
+    // Usar 'shape' en lugar de 'type' para determinar el tipo de mesa
+    const isTable = mesa.shape === 'circle' || mesa.shape === 'rect';
+    const TableShape = mesa.shape === "circle" ? Circle : Rect;
     const availableSeats = mesa.sillas.filter(silla => {
       const seatZonaId = typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
       const isAvailable = availableZonas?.includes(seatZonaId) || !availableZonas;
@@ -176,15 +178,15 @@ const SeatingMap = ({
 
     return (
       <React.Fragment key={mesa._id}>
-        {/* Renderizar mesa/zona si es mesa o si tiene sillas */}
-        {(mesa.type !== 'zona' || (mesa.sillas && mesa.sillas.length > 0)) && (
+        {/* Renderizar mesa si tiene sillas o es una mesa válida */}
+        {isTable && (
           <>
             <TableShape
-              x={mesa.posicion.x}
-              y={mesa.posicion.y}
-              width={mesa.width}
-              height={mesa.height}
-              radius={mesa.type === "circle" ? mesa.width / 2 : 0}
+              x={mesa.posicion?.x || mesa.x || 0}
+              y={mesa.posicion?.y || mesa.y || 0}
+              width={mesa.width || 120}
+              height={mesa.height || 120}
+              radius={mesa.shape === "circle" ? (mesa.width || 120) / 2 : 0}
               fill={hoveredTable === mesa._id ? "#f3f4f6" : "#ffffff"}
               stroke={hoveredTable === mesa._id ? "#3b82f6" : "#4b5563"}
               strokeWidth={hoveredTable === mesa._id ? 3 : 2}
@@ -192,9 +194,9 @@ const SeatingMap = ({
               onMouseLeave={() => setHoveredTable(null)}
             />
             <Text
-              x={mesa.posicion.x - 20}
-              y={mesa.posicion.y - 10}
-              text={mesa.nombre}
+              x={(mesa.posicion?.x || mesa.x || 0) - 20}
+              y={(mesa.posicion?.y || mesa.y || 0) - 10}
+              text={mesa.nombre || `Mesa ${mesa._id}`}
               fontSize={scale < 1 ? 10 : 12}
               fill="#374151"
               fontStyle="bold"
@@ -203,13 +205,13 @@ const SeatingMap = ({
         )}
         
         {/* Renderizar asientos */}
-        {mesa.sillas.map((silla) => renderSeat(silla, mesa))}
+        {mesa.sillas && mesa.sillas.map((silla) => renderSeat(silla, mesa))}
         
         {/* Botón "Mesa completa" solo para mesas */}
-        {mesa.type !== 'zona' && hoveredTable === mesa._id && availableSeats.length > 0 && onSelectCompleteTable && (
+        {isTable && hoveredTable === mesa._id && availableSeats.length > 0 && onSelectCompleteTable && (
           <Label
-            x={mesa.posicion.x + mesa.width / 2 - 40}
-            y={mesa.posicion.y + mesa.height + 5}
+            x={(mesa.posicion?.x || mesa.x || 0) + (mesa.width || 120) / 2 - 40}
+            y={(mesa.posicion?.y || mesa.y || 0) + (mesa.height || 120) + 5}
           >
             <Tag fill="#3b82f6" opacity={0.9} />
             <Text
