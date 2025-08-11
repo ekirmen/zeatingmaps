@@ -645,16 +645,7 @@ const EventosPage = () => {
                   Volver a selección
                 </Button>
               </Col>
-              <Col>
-                <Button 
-                  type="primary" 
-                  icon={<ShoppingCartOutlined />} 
-                  onClick={() => setShowMap(false)}
-                  disabled={!mapa}
-                >
-                  Ver carrito
-                </Button>
-              </Col>
+              
               <Col>
                 <Button 
                   onClick={runManualDiagnostic}
