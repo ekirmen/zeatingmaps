@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { Stage, Layer, Rect, Text, Group, Circle, Line } from 'react-konva';
 import { useSeatLockStore } from './seatLockStore';
 import { useSeatColors } from '../hooks/useSeatColors';
+import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
 
 const SeatingMapUnified = ({
   funcionId,
@@ -25,6 +26,9 @@ const SeatingMapUnified = ({
   const channel = useSeatLockStore(state => state.channel);
   const canLockSeats = !!channel;
   const { getSeatColor, getBorderColor } = useSeatColors();
+  
+  // Usar hook de sincronización para obtener asientos con estado real
+  const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(mapa, funcionId);
 
   const handleSeatClick = useCallback(
     async (seat) => {
@@ -55,46 +59,33 @@ const SeatingMapUnified = ({
     [onTableToggle]
   );
 
-  // Fetch zones from "mapa". Some backends store the zones inside
-  // "mapa.contenido" while others may return them at the root level.
-  let zonas = mapa?.zonas || mapa?.contenido?.zonas || [];
-  let allSeats = zonas?.flatMap((z) => z.asientos || []) || [];
-  
-  // Si no hay zonas en la estructura esperada, intentar extraer del contenido
-  if (zonas.length === 0 && Array.isArray(mapa?.contenido)) {
-    console.log('Buscando zonas en contenido del mapa...');
-    
-    // Buscar elementos que puedan ser zonas o contener asientos
-    const elementos = mapa.contenido;
-    zonas = elementos.filter(item => 
-      item && (item.type === 'zona' || item.asientos || item.sillas)
-    );
-    
-    // Extraer asientos de diferentes estructuras posibles
-    allSeats = elementos.flatMap(item => {
-      if (item.asientos && Array.isArray(item.asientos)) {
-        return item.asientos;
-      }
-      if (item.sillas && Array.isArray(item.sillas)) {
-        return item.sillas;
-      }
-      if (item.type === 'silla') {
-        return [item];
-      }
-      return [];
-    });
-    
-    console.log('Zonas extraídas del contenido:', zonas);
-    console.log('Asientos extraídos del contenido:', allSeats);
-  }
+     // Usar asientos sincronizados del hook
+   const allSeats = syncedSeats;
+   
+   // Crear zonas basadas en los asientos sincronizados
+   const zonas = [];
+   if (allSeats.length > 0) {
+     // Agrupar asientos por zona
+     const zonasMap = new Map();
+     
+     allSeats.forEach(seat => {
+       const zonaId = seat.zonaId || 'zona_principal';
+       if (!zonasMap.has(zonaId)) {
+         zonasMap.set(zonaId, {
+           id: zonaId,
+           nombre: `Zona ${zonaId}`,
+           color: '#4CAF50',
+           asientos: []
+         });
+       }
+       zonasMap.get(zonaId).asientos.push(seat);
+     });
+     
+     zonas.push(...zonasMap.values());
+   }
 
-  // Validar que las zonas tengan asientos válidos
-  const validatedZonas = zonas
-    .filter(zona => zona && zona.id && zona.asientos && Array.isArray(zona.asientos))
-    .map(zona => ({
-      ...zona,
-      asientos: zona.asientos.filter(seat => seat && seat._id)
-    }));
+           // Usar zonas creadas directamente
+    const validatedZonas = zonas;
   
   // Obtener mesas del mapa - CORREGIR ESTA LÓGICA
 let mesas = [];
@@ -123,32 +114,16 @@ if (Array.isArray(mapa?.contenido)) {
       radius: mesa.radius ?? 50
     }));
 
-  // Asegurar que todos los asientos tengan las propiedades x e y
-  const validatedSeats = allSeats
-    .filter(seat => seat && seat._id) // Filtrar asientos válidos
-    .map(seat => ({
-      ...seat,
-      x: seat.x ?? seat.posicion?.x ?? 0,
-      y: seat.y ?? seat.posicion?.y ?? 0,
-      ancho: seat.ancho ?? seat.width ?? 30,
-      alto: seat.alto ?? seat.height ?? 30
-    }));
+     // Los asientos ya vienen validados del hook de sincronización
+   const validatedSeats = allSeats;
 
-  // Debug: mostrar información del mapa
-  console.log('Mapa recibido:', mapa);
-  console.log('Contenido del mapa:', mapa?.contenido);
-  console.log('Tipo de contenido:', typeof mapa?.contenido);
-  console.log('Es array:', Array.isArray(mapa?.contenido));
-  console.log('Longitud del contenido:', mapa?.contenido?.length);
-  console.log('Primer elemento:', mapa?.contenido?.[0]);
-  console.log('Segundo elemento:', mapa?.contenido?.[1]);
-  console.log('Zonas encontradas:', zonas);
-  console.log('Zonas validadas:', validatedZonas);
-  console.log('Asientos totales:', allSeats.length);
-  console.log('Mesas encontradas:', mesas);
-  console.log('Mesas validadas:', validatedMesas);
-  console.log('Asientos originales:', allSeats);
-  console.log('Asientos validados:', validatedSeats);
+     // Debug: mostrar información de sincronización
+   console.log('[SYNC] Estado de sincronización:');
+   console.log('- Asientos sincronizados:', syncedSeats.length);
+   console.log('- Loading:', seatsLoading);
+   console.log('- Error:', seatsError);
+   console.log('- Zonas creadas:', validatedZonas.length);
+   console.log('- Mesas encontradas:', validatedMesas.length);
 
   // Calcular dimensiones máximas de manera segura
   let maxX = 800;
@@ -167,18 +142,21 @@ if (Array.isArray(mapa?.contenido)) {
     return <div>No map data available</div>;
   }
   
-  // Si no hay zonas tradicionales pero hay asientos, continuar
-  if (validatedZonas.length === 0 && allSeats.length === 0) {
-    console.warn('No zones or seats found in map');
-    return <div>No zones or seats found in map</div>;
-  }
+     // Mostrar loading mientras se sincronizan los asientos
+   if (seatsLoading) {
+     return <div className="text-center p-4">Sincronizando asientos...</div>;
+   }
 
-  // Validar que haya asientos válidos antes de continuar
-  if (validatedSeats.length === 0) {
-    console.warn('No valid seats found in the map');
-    // No retornar error, solo mostrar mensaje
-    console.log('Continuando sin asientos válidos...');
-  }
+   // Mostrar error si hay problema de sincronización
+   if (seatsError) {
+     console.error('[SYNC] Error en sincronización:', seatsError);
+     return <div className="text-center p-4 text-red-600">Error al cargar asientos</div>;
+   }
+
+   // Si no hay asientos sincronizados, mostrar mensaje
+   if (validatedSeats.length === 0) {
+     return <div className="text-center p-4">No hay asientos disponibles en este mapa</div>;
+   }
 
   // Validar que haya mesas válidas
   if (validatedMesas.length === 0) {
@@ -243,21 +221,21 @@ if (Array.isArray(mapa?.contenido)) {
             );
           })}
 
-                              {/* Renderizar zonas y asientos */}
-          {validatedZonas.map((zona) => (
-            <Group key={zona.id}>
-              {/* Nombre de la zona */}
-              <Text
-                text={zona.nombre}
-                x={10}
-                y={(zona.asientos?.[0]?.y || zona.asientos?.[0]?.posicion?.y || 0) - 20}
-                fontSize={14}
-                fill="#2d3748"
-                fontStyle="bold"
-              />
-              
-              {/* Renderizar asientos de la zona */}
-                             {zona.asientos.map(seat => {
+                                         {/* Renderizar zonas y asientos */}
+           {validatedZonas.map((zona) => (
+             <Group key={zona.id}>
+               {/* Nombre de la zona */}
+               <Text
+                 text={zona.nombre}
+                 x={10}
+                 y={(zona.asientos?.[0]?.y || zona.asientos?.[0]?.posicion?.y || 0) - 20}
+                 fontSize={14}
+                 fill="#2d3748"
+                 fontStyle="bold"
+               />
+               
+               {/* Renderizar asientos de la zona */}
+               {zona.asientos.map(seat => {
                  // Verificar si el asiento está seleccionado usando selectedSeats
                  const isSelected = selectedSeats && selectedSeats.includes(seat._id);
 
@@ -269,13 +247,13 @@ if (Array.isArray(mapa?.contenido)) {
                    fill = '#8b5cf6'; // 🟣 Púrpura = Encontrado por búsqueda
                  }
 
-                // Asegurar que el asiento tenga las propiedades x e y
-                const seatX = seat.x ?? seat.posicion?.x ?? 0;
-                const seatY = seat.y ?? seat.posicion?.y ?? 0;
+                 // Asegurar que el asiento tenga las propiedades x e y
+                 const seatX = seat.x ?? seat.posicion?.x ?? 0;
+                 const seatY = seat.y ?? seat.posicion?.y ?? 0;
 
-                return (
-                  <Group key={seat._id} x={seatX} y={seatY} onClick={() => handleSeatClick(seat)}>
-                                         <Rect
+                 return (
+                   <Group key={seat._id} x={seatX} y={seatY} onClick={() => handleSeatClick(seat)}>
+                     <Rect
                        width={seat.ancho ?? seat.width ?? 30}
                        height={seat.alto ?? seat.height ?? 30}
                        fill={fill}
@@ -283,20 +261,20 @@ if (Array.isArray(mapa?.contenido)) {
                        strokeWidth={isSelected ? 2 : 1}
                        cornerRadius={4}
                      />
-                    <Text
-                      text={seat.nombre || seat._id}
-                      fontSize={10}
-                      fill="#1a202c"
-                      width={seat.ancho ?? seat.width ?? 30}
-                      height={seat.alto ?? seat.height ?? 30}
-                      align="center"
-                      verticalAlign="middle"
-                    />
-                  </Group>
-                );
-              })}
-            </Group>
-          ))}
+                     <Text
+                       text={seat.nombre || seat._id}
+                       fontSize={10}
+                       fill="#1a202c"
+                       width={seat.ancho ?? seat.width ?? 30}
+                       height={seat.alto ?? seat.height ?? 30}
+                       align="center"
+                       verticalAlign="middle"
+                     />
+                   </Group>
+                 );
+               })}
+             </Group>
+           ))}
 
           {/* Renderizar OTROS ELEMENTOS del mapa (textos, formas, líneas, etc.) */}
           {Array.isArray(mapa?.contenido) && mapa.contenido.map((elemento, index) => {
