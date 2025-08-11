@@ -9,7 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Event from './pages/Event';
 import EventsVenue from './pages/EventsVenue';
 import EventInfo from './pages/EventInfo';
-import EventMap from './pages/EventMap';
+
 import BuyEvent from './pages/BuyEvent';
 import SelectSeats from './pages/SelectSeats';
 import CartPage from './pages/Cart';
@@ -25,8 +25,6 @@ import EventSearchMap from './pages/EventSearchMap';
 import PaymentSuccess from './pages/PaymentSuccess';
 import Profile from './pages/profile';
 import EventosPage from './pages/EventosPage';
-import EventosMapPage from './pages/EventosMapPage';
-import EventMapPage from './pages/EventMapPage';
 import ThankYouPage from './pages/ThankYouPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiesPolicy from './pages/CookiesPolicy';
@@ -51,10 +49,8 @@ const StoreApp = () => {
               <Route path="/store" element={<EventsVenue groupByTags={false} />} />
               <Route path="/store/tag/:tagSlug?" element={<EventsVenue groupByTags />} />
               <Route path="/store/eventos/:eventSlug" element={<EventosPage />} />
-              <Route path="/store/eventos/:eventSlug/map" element={<EventosMapPage />} />
-              <Route path="/store/eventos/:eventSlug/mapa" element={<EventMapPage />} />
               <Route path="/store/event/:eventId" element={<EventInfo />} />
-              <Route path="/store/event/:eventId/map" element={<EventMap />} />
+
               <Route path="/store/event/:eventId/full" element={<Event />} />
               <Route path="/store/buy-event/:id" element={<BuyEvent />} />
               <Route path="/store/select-seats/:salaId" element={<SelectSeats />} />

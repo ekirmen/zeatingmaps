@@ -225,10 +225,8 @@ const EventosPage = () => {
           const transformedMap = {
             ...mapData,
             zonas: transformedZonas,
-            contenido: {
-              zonas: transformedZonas,
-              mesas: mesas
-            }
+            // NO transformar contenido, mantener el array original
+            contenido: mapData.contenido
           };
           
           console.log('Original map data:', mapData);
