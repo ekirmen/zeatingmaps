@@ -24,6 +24,13 @@ const SeatingMapUnified = ({
   foundSeats = [],
   selectedSeats = []
 }) => {
+  console.log('[COMPONENT_DEBUG] SeatingMapUnified renderizado con:', { 
+    funcionId, 
+    mapa: !!mapa, 
+    mapaContenido: mapa?.contenido,
+    mapaContenidoType: typeof mapa?.contenido,
+    mapaContenidoIsArray: Array.isArray(mapa?.contenido)
+  });
   const channel = useSeatLockStore(state => state.channel);
   const canLockSeats = !!channel;
   const { getSeatColor, getBorderColor } = useSeatColors();
@@ -62,6 +69,13 @@ const SeatingMapUnified = ({
 
      // Usar asientos sincronizados del hook
    const allSeats = syncedSeats;
+   
+   // DEBUG TEMPORAL: Ver exactamente qué está pasando
+   console.log('[DEBUG_TEMP] syncedSeats:', syncedSeats);
+   console.log('[DEBUG_TEMP] allSeats:', allSeats);
+   console.log('[DEBUG_TEMP] typeof syncedSeats:', typeof syncedSeats);
+   console.log('[DEBUG_TEMP] Array.isArray(syncedSeats):', Array.isArray(syncedSeats));
+   console.log('[DEBUG_TEMP] syncedSeats.length:', syncedSeats?.length);
    
    // Crear zonas basadas en los asientos sincronizados
    const zonas = [];
@@ -125,6 +139,9 @@ if (Array.isArray(mapa?.contenido)) {
    console.log('- Error:', seatsError);
    console.log('- Zonas creadas:', validatedZonas.length);
    console.log('- Mesas encontradas:', validatedMesas.length);
+   console.log('- Asientos validados:', validatedSeats.length);
+   console.log('- Asientos del hook:', allSeats);
+   console.log('- Mapa completo:', mapa);
 
   // Calcular dimensiones máximas de manera segura
   let maxX = 800;
