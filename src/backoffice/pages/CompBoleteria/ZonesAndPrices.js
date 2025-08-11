@@ -234,6 +234,33 @@ const ZonesAndPrices = ({
     <div className="h-full flex flex-col">
       {/* Header con controles */}
       <div className="p-4 border-b border-gray-200 space-y-4">
+        {/* Información del cliente seleccionado */}
+        {selectedClient && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="font-semibold text-blue-800">Cliente Seleccionado</h3>
+                <p className="text-blue-700">
+                  <strong>Nombre:</strong> {selectedClient.nombre || selectedClient.login || 'Sin nombre'}
+                </p>
+                <p className="text-blue-700">
+                  <strong>Email:</strong> {selectedClient.email || 'Sin email'}
+                </p>
+                <p className="text-blue-700">
+                  <strong>Teléfono:</strong> {selectedClient.telefono || 'Sin teléfono'}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedClient(null)}
+                className="text-red-500 hover:text-red-700 text-lg font-bold"
+                title="Quitar cliente"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Event Selector */}
         <EventSelector {...eventSelectorProps} />
 

@@ -197,7 +197,15 @@ const Cart = ({
                         Cantidad: {item.cantidad}
                       </div>
                       <div className="text-xs text-gray-400 mt-1">
-                        {item.asientos.map(seat => seat.nombre).join(', ')}
+                        {item.asientos.map(seat => {
+                          const seatName = seat.nombre || seat.nombreMesa || 'Sin nombre';
+                          const mesaName = seat.nombreMesa || seat.mesa_nombre || '';
+                          return (
+                            <div key={seat._id} className="text-xs">
+                              {mesaName ? `${mesaName} - ${seatName}` : seatName}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                     <button

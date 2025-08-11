@@ -1,8 +1,9 @@
-import React, { useCallback } from 'react';
-import { Stage, Layer, Rect, Text, Group, Circle, Line } from 'react-konva';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { Stage, Layer, Group, Circle, Rect, Text, Line } from 'react-konva';
 import { useSeatLockStore } from './seatLockStore';
 import { useSeatColors } from '../hooks/useSeatColors';
 import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
+import SeatStatusLegend from './SeatStatusLegend';
 
 const SeatingMapUnified = ({
   funcionId,
@@ -167,188 +168,138 @@ if (Array.isArray(mapa?.contenido)) {
   const foundSeatIds = new Set(foundSeats.map(seat => seat._id));
 
   return (
-    <>
-      {!canLockSeats && (
-        <div className="text-sm text-gray-600 mb-2">Sincronizando asientos...</div>
-      )}
-      
-      {/* Mostrar información de debug */}
-      <div className="text-xs text-gray-500 mb-2">
-        Elementos encontrados: {mapa?.contenido?.length || 0} | 
-        Zonas: {validatedZonas.length} | 
-        Mesas: {validatedMesas.length} | 
-        Asientos: {validatedSeats.length}
-      </div>
-      
-      <Stage width={maxX + 50} height={maxY + 50} style={{ border: '1px solid #ccc' }}>
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <SeatStatusLegend />
+      <Stage
+        width={maxX + 50}
+        height={maxY + 50}
+        style={{ border: '1px solid #ccc' }}
+        onWheel={handleWheel}
+        draggable
+        ref={stageRef}
+      >
         <Layer>
           {/* Renderizar mesas primero (para que estén detrás de las sillas) */}
           {validatedMesas.map((mesa) => {
-            // Color simple para las mesas
-            let fill = '#f7fafc'; // Gris claro por defecto
-
-            return (
-              <Group key={mesa._id} x={mesa.posicion.x} y={mesa.posicion.y}>
-                {mesa.shape === 'circle' ? (
-                  <Circle
-                    radius={mesa.radius}
-                    fill={fill}
-                    stroke="#2d3748"
-                    strokeWidth={2}
-                    onClick={() => handleTableClick(mesa)}
-                  />
-                ) : (
-                  <Rect
-                    width={mesa.width}
-                    height={mesa.height}
-                    fill={fill}
-                    stroke="#2d3748"
-                    strokeWidth={2}
-                    cornerRadius={4}
-                    onClick={() => handleTableClick(mesa)}
-                  />
-                )}
-                <Text
-                  text={mesa.nombre || `Mesa ${mesa._id}`}
-                  fontSize={12}
-                  fill="#1a202c"
-                  align="center"
-                  verticalAlign="middle"
-                  width={mesa.width}
-                  height={mesa.height}
+            console.log('[RENDER] Renderizando mesa:', mesa);
+            
+            if (mesa.shape === 'circle') {
+              return (
+                <Circle
+                  key={`mesa_${mesa._id}`}
+                  x={mesa.x || mesa.posicion?.x || 0}
+                  y={mesa.y || mesa.posicion?.y || 0}
+                  radius={mesa.radius || (mesa.width || 60) / 2}
+                  fill="#f0f0f0"
+                  stroke="#666"
+                  strokeWidth={2}
+                  opacity={0.8}
                 />
-              </Group>
+              );
+            } else if (mesa.shape === 'rect') {
+              return (
+                <Rect
+                  key={`mesa_${mesa._id}`}
+                  x={mesa.x || mesa.posicion?.x || 0}
+                  y={mesa.y || mesa.posicion?.y || 0}
+                  width={mesa.width || 120}
+                  height={mesa.height || 80}
+                  fill="#f0f0f0"
+                  stroke="#666"
+                  strokeWidth={2}
+                  opacity={0.8}
+                />
+              );
+            }
+            return null;
+          })}
+
+          {/* Renderizar asientos */}
+          {validatedSeats.map((seat) => {
+            const seatColor = getSeatColor(seat);
+            const borderColor = getBorderColor(seat);
+            
+            return (
+              <Circle
+                key={`seat_${seat._id}`}
+                x={seat.x || seat.posicion?.x || 0}
+                y={seat.y || seat.posicion?.y || 0}
+                radius={seat.width ? seat.width / 2 : 10}
+                fill={seatColor}
+                stroke={borderColor}
+                strokeWidth={2}
+                onClick={() => handleSeatClick(seat)}
+                onTap={() => handleSeatClick(seat)}
+                style={{ cursor: 'pointer' }}
+              />
             );
           })}
 
-                                         {/* Renderizar zonas y asientos */}
-           {validatedZonas.map((zona) => (
-             <Group key={zona.id}>
-               {/* Nombre de la zona */}
-               <Text
-                 text={zona.nombre}
-                 x={10}
-                 y={(zona.asientos?.[0]?.y || zona.asientos?.[0]?.posicion?.y || 0) - 20}
-                 fontSize={14}
-                 fill="#2d3748"
-                 fontStyle="bold"
-               />
-               
-               {/* Renderizar asientos de la zona */}
-               {zona.asientos.map(seat => {
-                 // Verificar si el asiento está seleccionado usando selectedSeats
-                 const isSelected = selectedSeats && selectedSeats.includes(seat._id);
-
-                 // Usar sistema de colores automático unificado
-                 let fill = getSeatColor(seat, zona, isSelected, selectedSeats);
-                 
-                 // Override fill if seat is found by locator search
-                 if (foundSeatIds.has(seat._id)) {
-                   fill = '#8b5cf6'; // 🟣 Púrpura = Encontrado por búsqueda
-                 }
-
-                 // Asegurar que el asiento tenga las propiedades x e y
-                 const seatX = seat.x ?? seat.posicion?.x ?? 0;
-                 const seatY = seat.y ?? seat.posicion?.y ?? 0;
-
-                 return (
-                   <Group key={seat._id} x={seatX} y={seatY} onClick={() => handleSeatClick(seat)}>
-                     <Rect
-                       width={seat.ancho ?? seat.width ?? 30}
-                       height={seat.alto ?? seat.height ?? 30}
-                       fill={fill}
-                       stroke={getBorderColor(isSelected, zona)}
-                       strokeWidth={isSelected ? 2 : 1}
-                       cornerRadius={4}
-                     />
-                     <Text
-                       text={seat.nombre || seat._id}
-                       fontSize={10}
-                       fill="#1a202c"
-                       width={seat.ancho ?? seat.width ?? 30}
-                       height={seat.alto ?? seat.height ?? 30}
-                       align="center"
-                       verticalAlign="middle"
-                     />
-                   </Group>
-                 );
-               })}
-             </Group>
-           ))}
-
-          {/* Renderizar OTROS ELEMENTOS del mapa (textos, formas, líneas, etc.) */}
-          {Array.isArray(mapa?.contenido) && mapa.contenido.map((elemento, index) => {
-            // Solo procesar elementos que NO sean mesas o zonas (ya procesados arriba)
-            if (elemento.type === 'mesa' || elemento.type === 'zona') {
-              return null;
-            }
-
-            // Procesar TEXTOS
-            if (elemento.type === 'texto' || elemento.text || elemento.nombre) {
+          {/* Renderizar otros elementos del mapa */}
+          {mapa?.contenido?.map((elemento, index) => {
+            // Renderizar elementos de texto
+            if (elemento.type === 'Text' || elemento.text) {
               return (
                 <Text
-                  key={`texto_${index}`}
-                  text={elemento.text || elemento.nombre || 'Texto'}
+                  key={`text_${index}`}
                   x={elemento.x || elemento.posicion?.x || 0}
                   y={elemento.y || elemento.posicion?.y || 0}
-                  fontSize={elemento.fontSize || 12}
-                  fill={elemento.color || '#2d3748'}
-                  fontStyle={elemento.bold ? 'bold' : 'normal'}
-                  align={elemento.align || 'left'}
+                  text={elemento.text || elemento.nombre || ''}
+                  fontSize={elemento.fontSize || 14}
+                  fill={elemento.fill || '#000'}
+                  fontFamily={elemento.fontFamily || 'Arial'}
                 />
               );
             }
-
-            // Procesar LÍNEAS
-            if (elemento.type === 'linea' || elemento.points) {
+            
+            // Renderizar líneas
+            if (elemento.type === 'Line' || elemento.points) {
               return (
                 <Line
-                  key={`linea_${index}`}
+                  key={`line_${index}`}
                   points={elemento.points || [0, 0, 100, 100]}
-                  stroke={elemento.color || '#2d3748'}
-                  strokeWidth={elemento.strokeWidth || 2}
+                  stroke={elemento.stroke || '#000'}
+                  strokeWidth={elemento.strokeWidth || 1}
                 />
               );
             }
-
-            // Procesar CÍRCULOS
-            if (elemento.type === 'circulo' || elemento.shape === 'circle') {
+            
+            // Renderizar círculos genéricos
+            if (elemento.type === 'Circle' && !elemento.shape) {
               return (
                 <Circle
-                  key={`circulo_${index}`}
+                  key={`circle_${index}`}
                   x={elemento.x || elemento.posicion?.x || 0}
                   y={elemento.y || elemento.posicion?.y || 0}
-                  radius={elemento.radius || 20}
-                  fill={elemento.fill || 'transparent'}
-                  stroke={elemento.color || '#2d3748'}
-                  strokeWidth={elemento.strokeWidth || 2}
+                  radius={elemento.radius || elemento.width ? elemento.width / 2 : 20}
+                  fill={elemento.fill || '#ccc'}
+                  stroke={elemento.stroke || '#666'}
+                  strokeWidth={elemento.strokeWidth || 1}
                 />
               );
             }
-
-            // Procesar RECTÁNGULOS
-            if (elemento.type === 'rectangulo' || elemento.shape === 'rect') {
+            
+            // Renderizar rectángulos genéricos
+            if (elemento.type === 'Rect' && !elemento.shape) {
               return (
                 <Rect
-                  key={`rectangulo_${index}`}
+                  key={`rect_${index}`}
                   x={elemento.x || elemento.posicion?.x || 0}
                   y={elemento.y || elemento.posicion?.y || 0}
                   width={elemento.width || 100}
-                  height={elemento.height || 50}
-                  fill={elemento.fill || 'transparent'}
-                  stroke={elemento.color || '#2d3748'}
-                  strokeWidth={elemento.strokeWidth || 2}
-                  cornerRadius={elemento.cornerRadius || 0}
+                  height={elemento.height || 100}
+                  fill={elemento.fill || '#ccc'}
+                  stroke={elemento.stroke || '#666'}
+                  strokeWidth={elemento.strokeWidth || 1}
                 />
               );
             }
-
-            // Procesar otros elementos genéricos
+            
             return null;
           })}
         </Layer>
       </Stage>
-    </>
+    </div>
   );
 };
 

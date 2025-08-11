@@ -1,41 +1,35 @@
--- Script para limpiar asientos recordados en boletería
--- Esto libera los asientos cuando se actualiza la página
+-- Script para limpiar asientos bloqueados en Boletería
+-- Esto resuelve el problema de "recordar asientos" - los asientos se liberan al refrescar la página
 
--- 1. Limpiar seat_locks expirados o antiguos
+-- 1. Limpiar locks expirados en seat_locks
 DELETE FROM public.seat_locks 
-WHERE expires_at < NOW() 
-   OR created_at < NOW() - INTERVAL '1 hour';
+WHERE expires_at < NOW();
 
--- 2. Limpiar seat_locks de sesiones inactivas (opcional)
--- DELETE FROM public.seat_locks 
--- WHERE session_id NOT IN (
---     SELECT DISTINCT session_id 
---     FROM public.seat_locks 
---     WHERE updated_at > NOW() - INTERVAL '30 minutes'
--- );
-
--- 3. Resetear estado de asientos bloqueados a available
+-- 2. Resetear asientos bloqueados a disponible en la tabla seats
 UPDATE public.seats 
-SET status = 'available', 
-    user_id = NULL, 
-    locked_at = NULL, 
-    locked_by = NULL, 
+SET 
+    status = 'available',
+    bloqueado = false,
+    locked_at = NULL,
+    locked_by = NULL,
     lock_expires_at = NULL,
-    bloqueado = false
-WHERE status IN ('locked', 'reserved') 
-  AND (lock_expires_at < NOW() OR lock_expires_at IS NULL);
+    updated_at = NOW()
+WHERE 
+    bloqueado = true 
+    OR status = 'locked'
+    OR (lock_expires_at IS NOT NULL AND lock_expires_at < NOW());
 
--- 4. Verificar asientos disponibles
+-- 3. Limpiar locks expirados en seat_locks (repetir para asegurar)
+DELETE FROM public.seat_locks 
+WHERE expires_at < NOW() - INTERVAL '1 minute';
+
+-- 4. Verificar que se limpiaron los locks
 SELECT 
     COUNT(*) as total_seats,
     COUNT(CASE WHEN status = 'available' THEN 1 END) as available_seats,
     COUNT(CASE WHEN status = 'locked' THEN 1 END) as locked_seats,
-    COUNT(CASE WHEN status = 'reserved' THEN 1 END) as reserved_seats,
-    COUNT(CASE WHEN status = 'sold' THEN 1 END) as sold_seats
+    COUNT(CASE WHEN bloqueado = true THEN 1 END) as blocked_seats
 FROM public.seats;
 
 -- 5. Verificar locks activos
-SELECT 
-    COUNT(*) as active_locks,
-    COUNT(CASE WHEN expires_at < NOW() THEN 1 END) as expired_locks
-FROM public.seat_locks;
+SELECT COUNT(*) as active_locks FROM public.seat_locks WHERE expires_at > NOW();

@@ -254,7 +254,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
       // Create a payment for each event
       const paymentPromises = Object.entries(seatsByEvent).map(([eventId, seats]) => {
         const paymentData = {
-          user_id: selectedClient.id || selectedClient._id,
+          usuario_id: selectedClient.id || selectedClient._id, // Cambiar user_id por usuario_id
           event: eventId,
           funcion: selectedFuncion.id || selectedFuncion._id,
           processed_by: isUuid(user?.id) ? user.id : null,
@@ -317,6 +317,21 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
         width={800}
         footer={
           <div>
+            {/* Información de la taquilla */}
+            {user && (
+              <div style={{ 
+                marginBottom: '15px', 
+                padding: '10px', 
+                background: '#e6f7ff', 
+                borderRadius: '4px',
+                border: '1px solid #91d5ff'
+              }}>
+                <Text strong style={{ color: '#1890ff' }}>
+                  🎫 Taquilla: {user.email || user.user_metadata?.email || 'Usuario actual'}
+                </Text>
+              </div>
+            )}
+            
             <div style={{ 
               marginBottom: '20px', 
               padding: '15px', 
