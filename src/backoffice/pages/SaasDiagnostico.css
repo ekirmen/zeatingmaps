@@ -273,3 +273,195 @@
 .steps-container .ant-steps-item-finish .ant-steps-item-icon .ant-steps-icon {
   color: white;
 }
+
+/* Estilos para boletería */
+.seats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.seat-item {
+  border: 1px solid #d9d9d9;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fff;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.seat-item:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.seat-item.blocked {
+  border-color: #ff4d4f;
+  background-color: #fff2f0;
+}
+
+.seat-item.disponible {
+  border-color: #52c41a;
+  background-color: #f6ffed;
+}
+
+.seat-item.reservado {
+  border-color: #fa8c16;
+  background-color: #fff7e6;
+}
+
+.seat-item.vendido {
+  border-color: #1890ff;
+  background-color: #e6f7ff;
+}
+
+.seat-info {
+  text-align: center;
+}
+
+.seat-id {
+  font-weight: bold;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.seat-status {
+  margin-bottom: 12px;
+}
+
+.seat-actions {
+  display: flex;
+  justify-content: center;
+}
+
+/* Estilos para tablas de boletería */
+.ticketing-table {
+  margin-top: 16px;
+}
+
+.ticketing-table .ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
+/* Estilos para modales de boletería */
+.ticketing-modal .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.ticketing-modal .ant-input-number {
+  width: 100%;
+}
+
+/* Estilos para estadísticas de boletería */
+.ticketing-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.ticketing-stat-card {
+  text-align: center;
+  padding: 16px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #f0f0f0;
+}
+
+.ticketing-stat-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1890ff;
+}
+
+.ticketing-stat-label {
+  color: #666;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+/* Estilos para filtros de boletería */
+.ticketing-filters {
+  background: #fafafa;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.ticketing-filters .ant-row {
+  align-items: center;
+}
+
+/* Estilos para botones de acción de boletería */
+.ticketing-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ticketing-actions .ant-btn {
+  flex-shrink: 0;
+}
+
+/* Estilos para estados de asientos */
+.seat-state-legend {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.seat-state-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.seat-state-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid #d9d9d9;
+}
+
+/* Responsive para boletería */
+@media (max-width: 768px) {
+  .seats-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  
+  .seat-item {
+    padding: 12px;
+  }
+  
+  .seat-id {
+    font-size: 14px;
+  }
+  
+  .ticketing-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .ticketing-filters .ant-col {
+    margin-bottom: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .seats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .ticketing-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .seat-state-legend {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

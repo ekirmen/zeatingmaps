@@ -30,7 +30,10 @@ import {
   Tooltip,
   Badge,
   Statistic,
-  Avatar
+  Avatar,
+  Empty,
+  Spin,
+  Table
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -102,7 +105,19 @@ const SaasDiagnostico = () => {
   // Estados para diagnóstico de errores
   const [databaseErrors, setDatabaseErrors] = useState([]);
   const [isScanningErrors, setIsScanningErrors] = useState(false);
-  const [errorScanResults, setErrorScanResults] = useState({});
+  const [errorScanResults, setErrorScanResults] = useState(null);
+  
+  // Estados para boletería
+  const [seats, setSeats] = useState([]);
+  const [reservations, setReservations] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [sales, setSales] = useState([]);
+  const [isLoadingSeats, setIsLoadingSeats] = useState(false);
+  const [isLoadingReservations, setIsLoadingReservations] = useState(false);
+  const [isLoadingPayments, setIsLoadingPayments] = useState(false);
+  const [isLoadingSales, setIsLoadingSales] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedSala, setSelectedSala] = useState(null);
   
   // Estados para modales
   const [modalVisible, setModalVisible] = useState(false);
@@ -123,64 +138,44 @@ const SaasDiagnostico = () => {
   // Pasos del diagnóstico
   const steps = [
     {
-      title: 'Seleccionar Tenant',
-      description: 'Elegir empresa para diagnosticar',
-      icon: <BankOutlined />
-    },
-    {
       title: 'Diagnóstico de Errores',
-      description: 'Detectar y corregir problemas de BD',
-      icon: <ExclamationCircleOutlined />
+      description: 'Detectar y corregir errores de BD'
     },
     {
-      title: 'Crear Recinto',
-      description: 'Configurar lugar del evento',
-      icon: <EnvironmentOutlined />
+      title: 'Recintos y Salas',
+      description: 'Configurar espacios de eventos'
     },
     {
-      title: 'Crear Salas',
-      description: 'Configurar espacios del recinto',
-      icon: <TeamOutlined />
+      title: 'Eventos y Funciones',
+      description: 'Crear eventos y funciones'
     },
     {
-      title: 'Crear Evento',
-      description: 'Configurar evento principal',
-      icon: <CalendarOutlined />
+      title: 'Mapas y Zonas',
+      description: 'Configurar distribución de asientos'
     },
     {
-      title: 'Crear Funciones',
-      description: 'Configurar fechas y horarios',
-      icon: <ClockCircleOutlined />
+      title: 'Plantillas de Precio',
+      description: 'Definir estructuras de precios'
     },
     {
-      title: 'Crear Plantilla de Precios',
-      description: 'Configurar estructura de precios',
-      icon: <DollarOutlined />
+      title: 'Productos y Servicios',
+      description: 'Gestionar productos adicionales'
     },
     {
-      title: 'Crear Mapa',
-      description: 'Configurar disposición de asientos',
-      icon: <PictureOutlined />
+      title: 'Gestión de Asientos',
+      description: 'Estado, bloqueo y disponibilidad'
     },
     {
-      title: 'Crear Zonas',
-      description: 'Configurar áreas del mapa',
-      icon: <StarOutlined />
+      title: 'Sistema de Reservas',
+      description: 'Crear y gestionar reservas'
     },
     {
-      title: 'Crear Productos',
-      description: 'Configurar productos adicionales',
-      icon: <ShoppingOutlined />
+      title: 'Panel de Pagos',
+      description: 'Transacciones y estados'
     },
     {
-      title: 'Crear Plantilla de Productos',
-      description: 'Configurar plantillas de productos',
-      icon: <FileTextOutlined />
-    },
-    {
-      title: 'Verificar Sistema',
-      description: 'Comprobar funcionamiento',
-      icon: <CheckCircleOutlined />
+      title: 'Gestión de Ventas',
+      description: 'Historial y reembolsos'
     }
   ];
 
@@ -694,7 +689,7 @@ const SaasDiagnostico = () => {
         return <ZonaForm form={zonaForm} onFinish={handleSaveZona} editingItem={editingItem} currentTenant={currentTenant} />;
       case 'producto':
         return <ProductoForm form={productoForm} onFinish={handleSaveProducto} editingItem={editingItem} currentTenant={currentTenant} />;
-      case 'plantilla_producto':
+      case 'plantillaProducto':
         return <PlantillaProductoForm form={plantillaProductoForm} onFinish={handleSavePlantillaProducto} editingItem={editingItem} currentTenant={currentTenant} />;
       default:
         return <div>Formulario no encontrado</div>;
@@ -1152,29 +1147,25 @@ const SaasDiagnostico = () => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        return <TenantSelectionStep />;
-      case 1:
         return <DatabaseErrorsStep />;
+      case 1:
+        return <RecintosSalasStep />;
       case 2:
-        return <RecintoStep />;
+        return <EventosFuncionesStep />;
       case 3:
-        return <SalasStep />;
+        return <MapasZonasStep />;
       case 4:
-        return <EventoStep />;
+        return <PlantillasPrecioStep />;
       case 5:
-        return <FuncionesStep />;
+        return <ProductosServiciosStep />;
       case 6:
-        return <PlantillaPreciosStep />;
+        return <GestionAsientosStep />;
       case 7:
-        return <MapaStep />;
+        return <SistemaReservasStep />;
       case 8:
-        return <ZonasStep />;
+        return <PanelPagosStep />;
       case 9:
-        return <ProductosStep />;
-      case 10:
-        return <PlantillasProductosStep />;
-      case 11:
-        return <VerificacionStep />;
+        return <GestionVentasStep />;
       default:
         return <div>Paso no encontrado</div>;
     }
@@ -1415,11 +1406,11 @@ const SaasDiagnostico = () => {
     </Card>
   );
 
-  const RecintoStep = () => (
-    <Card title="Creación de Recinto" className="diagnostic-step">
+  const RecintosSalasStep = () => (
+    <Card title="Creación de Recinto y Salas" className="diagnostic-step">
       <Alert
-        message="Recinto del Evento"
-        description="Crea el recinto donde se realizará el evento. Define la ubicación, capacidad y características principales."
+        message="Recinto del Evento y Salas"
+        description="Crea el recinto donde se realizará el evento y las salas dentro del recinto. Define la ubicación, capacidad y características principales."
         type="info"
         showIcon
         style={{ marginBottom: '24px' }}
@@ -1485,81 +1476,11 @@ const SaasDiagnostico = () => {
     </Card>
   );
 
-  const SalasStep = () => (
-    <Card title="Creación de Salas" className="diagnostic-step">
+  const EventosFuncionesStep = () => (
+    <Card title="Creación de Eventos y Funciones" className="diagnostic-step">
       <Alert
-        message="Salas del Recinto"
-        description="Crea las salas dentro del recinto seleccionado. Define la capacidad y características de cada espacio."
-        type="info"
-        showIcon
-        style={{ marginBottom: '24px' }}
-      />
-      
-      <Row gutter={[16, 16]}>
-        <Col span={24}>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            onClick={() => openModal('sala')}
-            block
-          >
-            Crear Nueva Sala
-          </Button>
-        </Col>
-      </Row>
-      
-      {salas.length > 0 && (
-        <div style={{ marginTop: '24px' }}>
-          <Title level={4}>Salas Creadas</Title>
-          <List
-            dataSource={salas}
-            renderItem={(sala) => (
-              <List.Item
-                actions={[
-                  <Button size="small" icon={<EyeOutlined />} onClick={() => openModal('sala', sala)}>
-                    Ver
-                  </Button>,
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openModal('sala', sala)}>
-                    Editar
-                  </Button>,
-                  <Button size="small" icon={<DeleteOutlined />} danger onClick={() => handleDeleteSala(sala.id)}>
-                    Eliminar
-                  </Button>
-                ]}
-              >
-                <List.Item.Meta
-                  title={sala.nombre}
-                  description={`Recinto: ${sala.recinto_id} - Capacidad: ${sala.capacidad} personas`}
-                />
-                <Tag color="green">Creada</Tag>
-              </List.Item>
-            )}
-          />
-        </div>
-      )}
-      
-      <div style={{ marginTop: '24px', textAlign: 'center' }}>
-        <Space>
-          <Button onClick={handlePrev}>
-            Anterior
-          </Button>
-          <Button 
-            type="primary" 
-            onClick={handleNext}
-            disabled={salas.length === 0}
-          >
-            Continuar
-          </Button>
-        </Space>
-      </div>
-    </Card>
-  );
-
-  const EventoStep = () => (
-    <Card title="Creación de Evento" className="diagnostic-step">
-      <Alert
-        message="Evento Principal"
-        description="Crea el evento principal que se realizará en el recinto. Define el nombre, descripción y características básicas."
+        message="Evento Principal y Funciones"
+        description="Crea el evento principal que se realizará en el recinto y las funciones específicas del evento con fechas, horarios y salas asignadas."
         type="info"
         showIcon
         style={{ marginBottom: '24px' }}
@@ -1625,11 +1546,11 @@ const SaasDiagnostico = () => {
     </Card>
   );
 
-  const FuncionesStep = () => (
-    <Card title="Creación de Funciones" className="diagnostic-step">
+  const MapasZonasStep = () => (
+    <Card title="Creación de Mapa y Zonas" className="diagnostic-step">
       <Alert
-        message="Funciones del Evento"
-        description="Crea las funciones específicas del evento con fechas, horarios y salas asignadas."
+        message="Mapa de Asientos y Zonas del Mapa"
+        description="Crea el mapa de disposición de asientos para la sala seleccionada y las zonas dentro del mapa para organizar los asientos por categorías y precios."
         type="info"
         showIcon
         style={{ marginBottom: '24px' }}
@@ -1640,38 +1561,38 @@ const SaasDiagnostico = () => {
           <Button 
             type="primary" 
             icon={<PlusOutlined />} 
-            onClick={() => openModal('funcion')}
+            onClick={() => openModal('mapa')}
             block
           >
-            Crear Nueva Función
+            Crear Nuevo Mapa
           </Button>
         </Col>
       </Row>
       
-      {funciones.length > 0 && (
+      {mapas.length > 0 && (
         <div style={{ marginTop: '24px' }}>
-          <Title level={4}>Funciones Creadas</Title>
+          <Title level={4}>Mapas Creados</Title>
           <List
-            dataSource={funciones}
-            renderItem={(funcion) => (
+            dataSource={mapas}
+            renderItem={(mapa) => (
               <List.Item
                 actions={[
-                  <Button size="small" icon={<EyeOutlined />} onClick={() => openModal('funcion', funcion)}>
+                  <Button size="small" icon={<EyeOutlined />} onClick={() => openModal('mapa', mapa)}>
                     Ver
                   </Button>,
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openModal('funcion', funcion)}>
+                  <Button size="small" icon={<EditOutlined />} onClick={() => openModal('mapa', mapa)}>
                     Editar
                   </Button>,
-                  <Button size="small" icon={<DeleteOutlined />} danger onClick={() => handleDeleteFuncion(funcion.id)}>
+                  <Button size="small" icon={<DeleteOutlined />} danger onClick={() => handleDeleteMapa(mapa.id)}>
                     Eliminar
                   </Button>
                 ]}
               >
                 <List.Item.Meta
-                  title={funcion.nombre}
-                  description={`Evento: ${funcion.evento_id} - Fecha: ${funcion.fecha_celebracion} - Hora: ${funcion.hora_inicio}`}
+                  title={mapa.nombre}
+                  description={`Sala: ${mapa.sala_id} - Filas: ${mapa.filas} - Columnas: ${mapa.columnas}`}
                 />
-                <Tag color="green">Creada</Tag>
+                <Tag color="green">Creado</Tag>
               </List.Item>
             )}
           />
@@ -1686,7 +1607,7 @@ const SaasDiagnostico = () => {
           <Button 
             type="primary" 
             onClick={handleNext}
-            disabled={funciones.length === 0}
+            disabled={mapas.length === 0}
           >
             Continuar
           </Button>
@@ -1695,7 +1616,7 @@ const SaasDiagnostico = () => {
     </Card>
   );
 
-  const PlantillaPreciosStep = () => (
+  const PlantillasPrecioStep = () => (
     <Card title="Creación de Plantilla de Precios" className="diagnostic-step">
       <Alert
         message="Plantilla de Precios"
@@ -1765,151 +1686,11 @@ const SaasDiagnostico = () => {
     </Card>
   );
 
-  const MapaStep = () => (
-    <Card title="Creación de Mapa" className="diagnostic-step">
+  const ProductosServiciosStep = () => (
+    <Card title="Creación de Productos y Servicios" className="diagnostic-step">
       <Alert
-        message="Mapa de Asientos"
-        description="Crea el mapa de disposición de asientos para la sala seleccionada. Define filas, columnas y tipos de asientos."
-        type="info"
-        showIcon
-        style={{ marginBottom: '24px' }}
-      />
-      
-      <Row gutter={[16, 16]}>
-        <Col span={24}>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            onClick={() => openModal('mapa')}
-            block
-          >
-            Crear Nuevo Mapa
-          </Button>
-        </Col>
-      </Row>
-      
-      {mapas.length > 0 && (
-        <div style={{ marginTop: '24px' }}>
-          <Title level={4}>Mapas Creados</Title>
-          <List
-            dataSource={mapas}
-            renderItem={(mapa) => (
-              <List.Item
-                actions={[
-                  <Button size="small" icon={<EyeOutlined />} onClick={() => openModal('mapa', mapa)}>
-                    Ver
-                  </Button>,
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openModal('mapa', mapa)}>
-                    Editar
-                  </Button>,
-                  <Button size="small" icon={<DeleteOutlined />} danger onClick={() => handleDeleteMapa(mapa.id)}>
-                    Eliminar
-                  </Button>
-                ]}
-              >
-                <List.Item.Meta
-                  title={mapa.nombre}
-                  description={`Sala: ${mapa.sala_id} - Filas: ${mapa.filas} - Columnas: ${mapa.columnas}`}
-                />
-                <Tag color="green">Creado</Tag>
-              </List.Item>
-            )}
-          />
-        </div>
-      )}
-      
-      <div style={{ marginTop: '24px', textAlign: 'center' }}>
-        <Space>
-          <Button onClick={handlePrev}>
-            Anterior
-          </Button>
-          <Button 
-            type="primary" 
-            onClick={handleNext}
-            disabled={mapas.length === 0}
-          >
-            Continuar
-          </Button>
-        </Space>
-      </div>
-    </Card>
-  );
-
-  const ZonasStep = () => (
-    <Card title="Creación de Zonas" className="diagnostic-step">
-      <Alert
-        message="Zonas del Mapa"
-        description="Crea las zonas dentro del mapa para organizar los asientos por categorías y precios."
-        type="info"
-        showIcon
-        style={{ marginBottom: '24px' }}
-      />
-      
-      <Row gutter={[16, 16]}>
-        <Col span={24}>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            onClick={() => openModal('zona')}
-            block
-          >
-            Crear Nueva Zona
-          </Button>
-        </Col>
-      </Row>
-      
-      {zonas.length > 0 && (
-        <div style={{ marginTop: '24px' }}>
-          <Title level={4}>Zonas Creadas</Title>
-          <List
-            dataSource={zonas}
-            renderItem={(zona) => (
-              <List.Item
-                actions={[
-                  <Button size="small" icon={<EyeOutlined />} onClick={() => openModal('zona', zona)}>
-                    Ver
-                  </Button>,
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openModal('zona', zona)}>
-                    Editar
-                  </Button>,
-                  <Button size="small" icon={<DeleteOutlined />} danger onClick={() => handleDeleteZona(zona.id)}>
-                    Eliminar
-                  </Button>
-                ]}
-              >
-                <List.Item.Meta
-                  title={zona.nombre}
-                  description={`Mapa: ${zona.mapa_id} - Color: ${zona.color} - Precio: $${zona.precio}`}
-                />
-                <Tag color="green">Creada</Tag>
-              </List.Item>
-            )}
-          />
-        </div>
-      )}
-      
-      <div style={{ marginTop: '24px', textAlign: 'center' }}>
-        <Space>
-          <Button onClick={handlePrev}>
-            Anterior
-          </Button>
-          <Button 
-            type="primary" 
-            onClick={handleNext}
-            disabled={zonas.length === 0}
-          >
-            Continuar
-          </Button>
-        </Space>
-      </div>
-    </Card>
-  );
-
-  const ProductosStep = () => (
-    <Card title="Creación de Productos" className="diagnostic-step">
-      <Alert
-        message="Productos Adicionales"
-        description="Crea productos adicionales que se pueden vender junto con las entradas del evento."
+        message="Productos Adicionales y Servicios"
+        description="Crea productos adicionales que se pueden vender junto con las entradas del evento y servicios adicionales que se ofrecen."
         type="info"
         showIcon
         style={{ marginBottom: '24px' }}
@@ -1975,75 +1756,802 @@ const SaasDiagnostico = () => {
     </Card>
   );
 
-  const PlantillasProductosStep = () => (
-    <Card title="Creación de Plantillas de Productos" className="diagnostic-step">
-      <Alert
-        message="Plantillas de Productos"
-        description="Crea plantillas para agrupar productos relacionados y facilitar su venta."
-        type="info"
-        showIcon
-        style={{ marginBottom: '24px' }}
-      />
-      
-      <Row gutter={[16, 16]}>
-        <Col span={24}>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            onClick={() => openModal('plantillaProducto')}
-            block
-          >
-            Crear Nueva Plantilla de Productos
-          </Button>
-        </Col>
-      </Row>
-      
-      {plantillasProductos.length > 0 && (
-        <div style={{ marginTop: '24px' }}>
-          <Title level={4}>Plantillas de Productos Creadas</Title>
-          <List
-            dataSource={plantillasProductos}
-            renderItem={(plantilla) => (
-              <List.Item
-                actions={[
-                  <Button size="small" icon={<EyeOutlined />} onClick={() => openModal('plantillaProducto', plantilla)}>
-                    Ver
-                  </Button>,
-                  <Button size="small" icon={<EditOutlined />} onClick={() => openModal('plantillaProducto', plantilla)}>
-                    Editar
-                  </Button>,
-                  <Button size="small" icon={<DeleteOutlined />} danger onClick={() => handleDeletePlantillaProducto(plantilla.id)}>
-                    Eliminar
-                  </Button>
-                ]}
-              >
-                <List.Item.Meta
-                  title={plantilla.nombre}
-                  description={`${plantilla.descripcion} - Evento: ${plantilla.evento_id}`}
-                />
-                <Tag color="green">Creada</Tag>
-              </List.Item>
+  const GestionAsientosStep = () => {
+    const [events, setEvents] = useState([]);
+    const [salas, setSalas] = useState([]);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [selectedSala, setSelectedSala] = useState(null);
+
+    useEffect(() => {
+      loadEventsData();
+    }, []);
+
+    const loadEventsData = async () => {
+      const eventsData = await loadEvents();
+      setEvents(eventsData);
+    };
+
+    const handleEventChange = async (eventId) => {
+      setSelectedEvent(eventId);
+      setSelectedSala(null);
+      setSeats([]);
+      if (eventId) {
+        const salasData = await loadSalas(eventId);
+        setSalas(salasData);
+      }
+    };
+
+    const handleSalaChange = async (salaId) => {
+      setSelectedSala(salaId);
+      if (salaId) {
+        await loadSeats(salaId);
+      }
+    };
+
+    return (
+      <Card title="Gestión de Asientos" className="diagnostic-step">
+        <Alert
+          message="Estado, Bloqueo y Disponibilidad"
+          description="Configura el estado, bloqueo y disponibilidad de los asientos para cada sala."
+          type="info"
+          showIcon
+          style={{ marginBottom: '24px' }}
+        />
+
+        <Row gutter={[16, 16]}>
+          <Col span={12}>
+            <Select
+              placeholder="Seleccionar Evento"
+              style={{ width: '100%' }}
+              onChange={handleEventChange}
+              value={selectedEvent}
+            >
+              {events.map(event => (
+                <Select.Option key={event.id} value={event.id}>
+                  {event.nombre} - {new Date(event.fecha_inicio).toLocaleDateString()}
+                </Select.Option>
+              ))}
+            </Select>
+          </Col>
+          <Col span={12}>
+            <Select
+              placeholder="Seleccionar Sala"
+              style={{ width: '100%' }}
+              onChange={handleSalaChange}
+              value={selectedSala}
+              disabled={!selectedEvent}
+            >
+              {salas.map(sala => (
+                <Select.Option key={sala.id} value={sala.id}>
+                  {sala.nombre} - {sala.capacidad} asientos
+                </Select.Option>
+              ))}
+            </Select>
+          </Col>
+        </Row>
+
+        {selectedSala && (
+          <div style={{ marginTop: '24px' }}>
+            <Title level={4}>Asientos de la Sala</Title>
+            {isLoadingSeats ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <Spin size="large" />
+                <div style={{ marginTop: '16px' }}>Cargando asientos...</div>
+              </div>
+            ) : seats.length > 0 ? (
+              <div className="seats-grid">
+                {seats.map(seat => (
+                  <div
+                    key={seat.id}
+                    className={`seat-item ${seat.estado} ${seat.bloqueado ? 'blocked' : ''}`}
+                    style={{
+                      backgroundColor: seat.zona?.color || '#f0f0f0',
+                      border: seat.bloqueado ? '2px solid #ff4d4f' : '1px solid #d9d9d9'
+                    }}
+                  >
+                    <div className="seat-info">
+                      <div className="seat-id">{seat.id}</div>
+                      <div className="seat-status">
+                        <Tag color={seat.estado === 'disponible' ? 'green' : 
+                                   seat.estado === 'reservado' ? 'orange' : 
+                                   seat.estado === 'vendido' ? 'red' : 'default'}>
+                          {seat.estado}
+                        </Tag>
+                      </div>
+                      <div className="seat-actions">
+                        <Button
+                          size="small"
+                          type={seat.bloqueado ? 'primary' : 'default'}
+                          onClick={() => toggleSeatLock(seat.id, seat.bloqueado)}
+                        >
+                          {seat.bloqueado ? 'Desbloquear' : 'Bloquear'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Empty description="No hay asientos configurados para esta sala" />
             )}
-          />
-        </div>
-      )}
-      
-      <div style={{ marginTop: '24px', textAlign: 'center' }}>
-        <Space>
-          <Button onClick={handlePrev}>
-            Anterior
-          </Button>
-          <Button 
-            type="primary" 
-            onClick={handleNext}
-            disabled={plantillasProductos.length === 0}
-          >
-            Continuar
-          </Button>
-        </Space>
-      </div>
-    </Card>
-  );
+          </div>
+        )}
+
+        <Row style={{ marginTop: '24px' }}>
+          <Col span={24}>
+            <Button
+              type="primary"
+              onClick={handleNext}
+              disabled={!selectedSala || seats.length === 0}
+            >
+              Continuar
+            </Button>
+          </Col>
+        </Row>
+      </Card>
+    );
+  };
+
+  const SistemaReservasStep = () => {
+    const [events, setEvents] = useState([]);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [reservationModalVisible, setReservationModalVisible] = useState(false);
+    const [newReservation, setNewReservation] = useState({});
+
+    useEffect(() => {
+      loadEventsData();
+    }, []);
+
+    useEffect(() => {
+      if (selectedEvent) {
+        loadReservations(selectedEvent);
+      }
+    }, [selectedEvent]);
+
+    const loadEventsData = async () => {
+      const eventsData = await loadEvents();
+      setEvents(eventsData);
+    };
+
+    const handleEventChange = (eventId) => {
+      setSelectedEvent(eventId);
+    };
+
+    const handleCreateReservation = () => {
+      setNewReservation({
+        evento_id: selectedEvent,
+        sala_id: '',
+        asiento_id: '',
+        usuario_id: ''
+      });
+      setReservationModalVisible(true);
+    };
+
+    const handleSaveReservation = async () => {
+      if (await createReservation(newReservation)) {
+        setReservationModalVisible(false);
+        setNewReservation({});
+      }
+    };
+
+    return (
+      <Card title="Sistema de Reservas" className="diagnostic-step">
+        <Alert
+          message="Crear y Gestionar Reservas"
+          description="Configura el sistema de reservas para que los usuarios puedan reservar asientos para eventos."
+          type="info"
+          showIcon
+          style={{ marginBottom: '24px' }}
+        />
+
+        <Row gutter={[16, 16]}>
+          <Col span={16}>
+            <Select
+              placeholder="Seleccionar Evento"
+              style={{ width: '100%' }}
+              onChange={handleEventChange}
+              value={selectedEvent}
+            >
+              {events.map(event => (
+                <Select.Option key={event.id} value={event.id}>
+                  {event.nombre} - {new Date(event.fecha_inicio).toLocaleDateString()}
+                </Select.Option>
+              ))}
+            </Select>
+          </Col>
+          <Col span={8}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleCreateReservation}
+              disabled={!selectedEvent}
+            >
+              Crear Reserva
+            </Button>
+          </Col>
+        </Row>
+
+        {selectedEvent && (
+          <div style={{ marginTop: '24px' }}>
+            <Title level={4}>Reservas del Evento</Title>
+            {isLoadingReservations ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <Spin size="large" />
+                <div style={{ marginTop: '16px' }}>Cargando reservas...</div>
+              </div>
+            ) : reservations.length > 0 ? (
+              <Table
+                dataSource={reservations}
+                columns={[
+                  {
+                    title: 'Usuario',
+                    dataIndex: 'usuarios',
+                    key: 'usuario',
+                    render: (usuarios) => usuarios?.email || 'N/A'
+                  },
+                  {
+                    title: 'Asiento',
+                    dataIndex: 'asiento_id',
+                    key: 'asiento'
+                  },
+                  {
+                    title: 'Estado',
+                    dataIndex: 'estado',
+                    key: 'estado',
+                    render: (estado) => (
+                      <Tag color={
+                        estado === 'reservado' ? 'green' :
+                        estado === 'cancelada' ? 'red' :
+                        estado === 'expirada' ? 'orange' : 'default'
+                      }>
+                        {estado}
+                      </Tag>
+                    )
+                  },
+                  {
+                    title: 'Fecha Reserva',
+                    dataIndex: 'fecha_reserva',
+                    key: 'fecha_reserva',
+                    render: (fecha) => new Date(fecha).toLocaleString()
+                  },
+                  {
+                    title: 'Expira',
+                    dataIndex: 'fecha_expiracion',
+                    key: 'fecha_expiracion',
+                    render: (fecha) => new Date(fecha).toLocaleString()
+                  },
+                  {
+                    title: 'Acciones',
+                    key: 'acciones',
+                    render: (_, record) => (
+                      <Space>
+                        {record.estado === 'reservado' && (
+                          <Button
+                            size="small"
+                            danger
+                            onClick={() => cancelReservation(record.id)}
+                          >
+                            Cancelar
+                          </Button>
+                        )}
+                      </Space>
+                    )
+                  }
+                ]}
+                pagination={{ pageSize: 10 }}
+                size="small"
+              />
+            ) : (
+              <Empty description="No hay reservas para este evento" />
+            )}
+          </div>
+        )}
+
+        <Row style={{ marginTop: '24px' }}>
+          <Col span={24}>
+            <Button
+              type="primary"
+              onClick={handleNext}
+              disabled={!selectedEvent}
+            >
+              Continuar
+            </Button>
+          </Col>
+        </Row>
+
+        {/* Modal para crear reserva */}
+        <Modal
+          title="Crear Nueva Reserva"
+          open={reservationModalVisible}
+          onOk={handleSaveReservation}
+          onCancel={() => setReservationModalVisible(false)}
+          okText="Crear"
+          cancelText="Cancelar"
+        >
+          <Form layout="vertical">
+            <Form.Item label="Sala" required>
+              <Select
+                placeholder="Seleccionar sala"
+                value={newReservation.sala_id}
+                onChange={(value) => setNewReservation({...newReservation, sala_id: value})}
+              >
+                {salas.map(sala => (
+                  <Select.Option key={sala.id} value={sala.id}>
+                    {sala.nombre}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item label="Asiento" required>
+              <Input
+                placeholder="ID del asiento"
+                value={newReservation.asiento_id}
+                onChange={(e) => setNewReservation({...newReservation, asiento_id: e.target.value})}
+              />
+            </Form.Item>
+            <Form.Item label="Usuario" required>
+              <Input
+                placeholder="ID del usuario"
+                value={newReservation.usuario_id}
+                onChange={(e) => setNewReservation({...newReservation, usuario_id: e.target.value})}
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Card>
+    );
+  };
+
+  const PanelPagosStep = () => {
+    const [events, setEvents] = useState([]);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+    const [newPayment, setNewPayment] = useState({});
+
+    useEffect(() => {
+      loadEventsData();
+    }, []);
+
+    useEffect(() => {
+      if (selectedEvent) {
+        loadPayments(selectedEvent);
+      }
+    }, [selectedEvent]);
+
+    const loadEventsData = async () => {
+      const eventsData = await loadEvents();
+      setEvents(eventsData);
+    };
+
+    const handleEventChange = (eventId) => {
+      setSelectedEvent(eventId);
+    };
+
+    const handleCreatePayment = () => {
+      setNewPayment({
+        evento_id: selectedEvent,
+        usuario_id: '',
+        monto: '',
+        metodo_pago: 'tarjeta'
+      });
+      setPaymentModalVisible(true);
+    };
+
+    const handleSavePayment = async () => {
+      if (await processPayment(newPayment)) {
+        setPaymentModalVisible(false);
+        setNewPayment({});
+      }
+    };
+
+    return (
+      <Card title="Panel de Pagos" className="diagnostic-step">
+        <Alert
+          message="Transacciones y Estados"
+          description="Configura el sistema de pagos para que los usuarios puedan realizar pagos y ver el estado de sus transacciones."
+          type="info"
+          showIcon
+          style={{ marginBottom: '24px' }}
+        />
+
+        <Row gutter={[16, 16]}>
+          <Col span={16}>
+            <Select
+              placeholder="Seleccionar Evento"
+              style={{ width: '100%' }}
+              onChange={handleEventChange}
+              value={selectedEvent}
+            >
+              {events.map(event => (
+                <Select.Option key={event.id} value={event.id}>
+                  {event.nombre} - {new Date(event.fecha_inicio).toLocaleDateString()}
+                </Select.Option>
+              ))}
+            </Select>
+          </Col>
+          <Col span={8}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleCreatePayment}
+              disabled={!selectedEvent}
+            >
+              Procesar Pago
+            </Button>
+          </Col>
+        </Row>
+
+        {selectedEvent && (
+          <div style={{ marginTop: '24px' }}>
+            <Title level={4}>Transacciones del Evento</Title>
+            {isLoadingPayments ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <Spin size="large" />
+                <div style={{ marginTop: '16px' }}>Cargando transacciones...</div>
+              </div>
+            ) : payments.length > 0 ? (
+              <Table
+                dataSource={payments}
+                columns={[
+                  {
+                    title: 'Usuario',
+                    dataIndex: 'usuarios',
+                    key: 'usuario',
+                    render: (usuarios) => usuarios?.email || 'N/A'
+                  },
+                  {
+                    title: 'Monto',
+                    dataIndex: 'monto',
+                    key: 'monto',
+                    render: (monto) => `$${monto}`
+                  },
+                  {
+                    title: 'Estado',
+                    dataIndex: 'estado',
+                    key: 'estado',
+                    render: (estado) => (
+                      <Tag color={
+                        estado === 'completado' ? 'green' :
+                        estado === 'procesando' ? 'blue' :
+                        estado === 'fallido' ? 'red' :
+                        estado === 'reembolsado' ? 'orange' : 'default'
+                      }>
+                        {estado}
+                      </Tag>
+                    )
+                  },
+                  {
+                    title: 'Método de Pago',
+                    dataIndex: 'metodo_pago',
+                    key: 'metodo_pago',
+                    render: (metodo) => (
+                      <Tag color="blue">{metodo}</Tag>
+                    )
+                  },
+                  {
+                    title: 'Fecha',
+                    dataIndex: 'fecha_pago',
+                    key: 'fecha_pago',
+                    render: (fecha) => new Date(fecha).toLocaleString()
+                  },
+                  {
+                    title: 'Acciones',
+                    key: 'acciones',
+                    render: (_, record) => (
+                      <Space>
+                        {record.estado === 'completado' && (
+                          <Button
+                            size="small"
+                            onClick={() => handleRefundPayment(record.id)}
+                          >
+                            Reembolsar
+                          </Button>
+                        )}
+                      </Space>
+                    )
+                  }
+                ]}
+                pagination={{ pageSize: 10 }}
+                size="small"
+              />
+            ) : (
+              <Empty description="No hay transacciones para este evento" />
+            )}
+          </div>
+        )}
+
+        <Row style={{ marginTop: '24px' }}>
+          <Col span={24}>
+            <Button
+              type="primary"
+              onClick={handleNext}
+              disabled={!selectedEvent}
+            >
+              Continuar
+            </Button>
+          </Col>
+        </Row>
+
+        {/* Modal para procesar pago */}
+        <Modal
+          title="Procesar Nuevo Pago"
+          open={paymentModalVisible}
+          onOk={handleSavePayment}
+          onCancel={() => setPaymentModalVisible(false)}
+          okText="Procesar"
+          cancelText="Cancelar"
+        >
+          <Form layout="vertical">
+            <Form.Item label="Usuario" required>
+              <Input
+                placeholder="ID del usuario"
+                value={newPayment.usuario_id}
+                onChange={(e) => setNewPayment({...newPayment, usuario_id: e.target.value})}
+              />
+            </Form.Item>
+            <Form.Item label="Monto" required>
+              <InputNumber
+                placeholder="0.00"
+                value={newPayment.monto}
+                onChange={(value) => setNewPayment({...newPayment, monto: value})}
+                min={0}
+                step={0.01}
+                style={{ width: '100%' }}
+                formatter={value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={value => value.replace(/\$\s?|(,*)/g, '')}
+              />
+            </Form.Item>
+            <Form.Item label="Método de Pago" required>
+              <Select
+                placeholder="Seleccionar método"
+                value={newPayment.metodo_pago}
+                onChange={(value) => setNewPayment({...newPayment, metodo_pago: value})}
+              >
+                <Select.Option value="tarjeta">Tarjeta de Crédito/Débito</Select.Option>
+                <Select.Option value="transferencia">Transferencia Bancaria</Select.Option>
+                <Select.Option value="efectivo">Efectivo</Select.Option>
+                <Select.Option value="paypal">PayPal</Select.Option>
+              </Select>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Card>
+    );
+  };
+
+  const GestionVentasStep = () => {
+    const [events, setEvents] = useState([]);
+    const [selectedEvent, setSelectedEvent] = useState(null);
+    const [saleModalVisible, setSaleModalVisible] = useState(false);
+    const [newSale, setNewSale] = useState({});
+
+    useEffect(() => {
+      loadEventsData();
+    }, []);
+
+    useEffect(() => {
+      if (selectedEvent) {
+        loadSales(selectedEvent);
+      }
+    }, [selectedEvent]);
+
+    const loadEventsData = async () => {
+      const eventsData = await loadEvents();
+      setEvents(eventsData);
+    };
+
+    const handleEventChange = (eventId) => {
+      setSelectedEvent(eventId);
+    };
+
+    const handleCreateSale = () => {
+      setNewSale({
+        evento_id: selectedEvent,
+        funcion_id: '',
+        asiento_id: '',
+        usuario_id: '',
+        precio: ''
+      });
+      setSaleModalVisible(true);
+    };
+
+    const handleSaveSale = async () => {
+      if (await registerSale(newSale)) {
+        setSaleModalVisible(false);
+        setNewSale({});
+      }
+    };
+
+    const handleRefundSale = async (saleId) => {
+      try {
+        const { error } = await supabase
+          .from('ventas')
+          .update({ estado: 'reembolsado' })
+          .eq('id', saleId);
+        
+        if (error) throw error;
+        
+        message.success('Venta reembolsada correctamente');
+        loadSales(selectedEvent);
+      } catch (error) {
+        console.error('Error reembolsando venta:', error);
+        message.error('Error reembolsando venta');
+      }
+    };
+
+    return (
+      <Card title="Gestión de Ventas" className="diagnostic-step">
+        <Alert
+          message="Historial y Reembolsos"
+          description="Configura el sistema de ventas para que los usuarios puedan registrar ventas y gestionar reembolsos."
+          type="info"
+          showIcon
+          style={{ marginBottom: '24px' }}
+        />
+
+        <Row gutter={[16, 16]}>
+          <Col span={16}>
+            <Select
+              placeholder="Seleccionar Evento"
+              style={{ width: '100%' }}
+              onChange={handleEventChange}
+              value={selectedEvent}
+            >
+              {events.map(event => (
+                <Select.Option key={event.id} value={event.id}>
+                  {event.nombre} - {new Date(event.fecha_inicio).toLocaleDateString()}
+                </Select.Option>
+              ))}
+            </Select>
+          </Col>
+          <Col span={8}>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleCreateSale}
+              disabled={!selectedEvent}
+            >
+              Registrar Venta
+            </Button>
+          </Col>
+        </Row>
+
+        {selectedEvent && (
+          <div style={{ marginTop: '24px' }}>
+            <Title level={4}>Ventas del Evento</Title>
+            {isLoadingSales ? (
+              <div style={{ textAlign: 'center', padding: '40px' }}>
+                <Spin size="large" />
+                <div style={{ marginTop: '16px' }}>Cargando ventas...</div>
+              </div>
+            ) : sales.length > 0 ? (
+              <Table
+                dataSource={sales}
+                columns={[
+                  {
+                    title: 'Usuario',
+                    dataIndex: 'usuarios',
+                    key: 'usuario',
+                    render: (usuarios) => usuarios?.email || 'N/A'
+                  },
+                  {
+                    title: 'Asiento',
+                    dataIndex: 'asiento_id',
+                    key: 'asiento'
+                  },
+                  {
+                    title: 'Precio',
+                    dataIndex: 'precio',
+                    key: 'precio',
+                    render: (precio) => `$${precio}`
+                  },
+                  {
+                    title: 'Estado',
+                    dataIndex: 'estado',
+                    key: 'estado',
+                    render: (estado) => (
+                      <Tag color={
+                        estado === 'vendido' ? 'green' :
+                        estado === 'reembolsado' ? 'orange' :
+                        estado === 'cancelado' ? 'red' : 'default'
+                      }>
+                        {estado}
+                      </Tag>
+                    )
+                  },
+                  {
+                    title: 'Fecha Venta',
+                    dataIndex: 'fecha_venta',
+                    key: 'fecha_venta',
+                    render: (fecha) => new Date(fecha).toLocaleString()
+                  },
+                  {
+                    title: 'Acciones',
+                    key: 'acciones',
+                    render: (_, record) => (
+                      <Space>
+                        {record.estado === 'vendido' && (
+                          <Button
+                            size="small"
+                            danger
+                            onClick={() => handleRefundSale(record.id)}
+                          >
+                            Reembolsar
+                          </Button>
+                        )}
+                      </Space>
+                    )
+                  }
+                ]}
+                pagination={{ pageSize: 10 }}
+                size="small"
+              />
+            ) : (
+              <Empty description="No hay ventas para este evento" />
+            )}
+          </div>
+        )}
+
+        <Row style={{ marginTop: '24px' }}>
+          <Col span={24}>
+            <Button
+              type="primary"
+              onClick={handleNext}
+              disabled={!selectedEvent}
+            >
+              Continuar
+            </Button>
+          </Col>
+        </Row>
+
+        {/* Modal para registrar venta */}
+        <Modal
+          title="Registrar Nueva Venta"
+          open={saleModalVisible}
+          onOk={handleSaveSale}
+          onCancel={() => setSaleModalVisible(false)}
+          okText="Registrar"
+          cancelText="Cancelar"
+        >
+          <Form layout="vertical">
+            <Form.Item label="Función" required>
+              <Input
+                placeholder="ID de la función"
+                value={newSale.funcion_id}
+                onChange={(e) => setNewSale({...newSale, funcion_id: e.target.value})}
+              />
+            </Form.Item>
+            <Form.Item label="Asiento" required>
+              <Input
+                placeholder="ID del asiento"
+                value={newSale.asiento_id}
+                onChange={(e) => setNewSale({...newSale, asiento_id: e.target.value})}
+              />
+            </Form.Item>
+            <Form.Item label="Usuario" required>
+              <Input
+                placeholder="ID del usuario"
+                value={newSale.usuario_id}
+                onChange={(e) => setNewSale({...newSale, usuario_id: e.target.value})}
+              />
+            </Form.Item>
+            <Form.Item label="Precio" required>
+              <InputNumber
+                placeholder="0.00"
+                value={newSale.precio}
+                onChange={(value) => setNewSale({...newSale, precio: value})}
+                min={0}
+                step={0.01}
+                style={{ width: '100%' }}
+                formatter={value => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={value => value.replace(/\$\s?|(,*)/g, '')}
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+      </Card>
+    );
+  };
 
   const VerificacionStep = () => (
     <Card title="Verificación del Sistema" className="diagnostic-step">
@@ -2182,6 +2690,309 @@ const SaasDiagnostico = () => {
       message.error('Error durante la verificación del sistema');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función para cargar eventos disponibles
+  const loadEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('eventos')
+        .select('id, nombre, fecha_inicio, fecha_fin')
+        .order('fecha_inicio', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error cargando eventos:', error);
+      message.error('Error cargando eventos');
+      return [];
+    }
+  };
+
+  // Función para cargar salas de un evento
+  const loadSalas = async (eventoId) => {
+    try {
+      const { data, error } = await supabase
+        .from('salas')
+        .select('id, nombre, capacidad')
+        .eq('evento_id', eventoId);
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error cargando salas:', error);
+      message.error('Error cargando salas');
+      return [];
+    }
+  };
+
+  // Función para cargar asientos de una sala
+  const loadSeats = async (salaId) => {
+    setIsLoadingSeats(true);
+    try {
+      const { data, error } = await supabase
+        .from('mapas')
+        .select(`
+          id,
+          sala_id,
+          asientos:asientos_json,
+          zonas(id, nombre, color)
+        `)
+        .eq('sala_id', salaId)
+        .single();
+      
+      if (error) throw error;
+      
+      if (data?.asientos) {
+        const seatsArray = Object.entries(data.asientos).map(([seatId, seatData]) => ({
+          id: seatId,
+          ...seatData,
+          zona: data.zonas?.find(z => z.id === seatData.zona_id)
+        }));
+        setSeats(seatsArray);
+      } else {
+        setSeats([]);
+      }
+    } catch (error) {
+      console.error('Error cargando asientos:', error);
+      message.error('Error cargando asientos');
+      setSeats([]);
+    } finally {
+      setIsLoadingSeats(false);
+    }
+  };
+
+  // Función para cargar reservas
+  const loadReservations = async (eventoId) => {
+    setIsLoadingReservations(true);
+    try {
+      const { data, error } = await supabase
+        .from('reservas')
+        .select(`
+          id,
+          evento_id,
+          sala_id,
+          asiento_id,
+          usuario_id,
+          estado,
+          fecha_reserva,
+          fecha_expiracion,
+          usuarios:profiles(email, full_name)
+        `)
+        .eq('evento_id', eventoId)
+        .order('fecha_reserva', { ascending: false });
+      
+      if (error) throw error;
+      setReservations(data || []);
+    } catch (error) {
+      console.error('Error cargando reservas:', error);
+      message.error('Error cargando reservas');
+      setReservations([]);
+    } finally {
+      setIsLoadingReservations(false);
+    }
+  };
+
+  // Función para cargar pagos
+  const loadPayments = async (eventoId) => {
+    setIsLoadingPayments(true);
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select(`
+          id,
+          evento_id,
+          usuario_id,
+          monto,
+          estado,
+          metodo_pago,
+          fecha_pago,
+          usuarios:profiles(email, full_name)
+        `)
+        .eq('evento_id', eventoId)
+        .order('fecha_pago', { ascending: false });
+      
+      if (error) throw error;
+      setPayments(data || []);
+    } catch (error) {
+      console.error('Error cargando pagos:', error);
+      message.error('Error cargando pagos');
+      setPayments([]);
+    } finally {
+      setIsLoadingPayments(false);
+    }
+  };
+
+  // Función para cargar ventas
+  const loadSales = async (eventoId) => {
+    setIsLoadingSales(true);
+    try {
+      const { data, error } = await supabase
+        .from('ventas')
+        .select(`
+          id,
+          evento_id,
+          funcion_id,
+          asiento_id,
+          usuario_id,
+          precio,
+          estado,
+          fecha_venta,
+          usuarios:profiles(email, full_name)
+        `)
+        .eq('evento_id', eventoId)
+        .order('fecha_venta', { ascending: false });
+      
+      if (error) throw error;
+      setSales(data || []);
+    } catch (error) {
+      console.error('Error cargando ventas:', error);
+      message.error('Error cargando ventas');
+      setSales([]);
+    } finally {
+      setIsLoadingSales(false);
+    }
+  };
+
+  // Función para bloquear/desbloquear asiento
+  const toggleSeatLock = async (seatId, isLocked) => {
+    try {
+      const { error } = await supabase
+        .from('asientos_bloqueados')
+        .upsert({
+          asiento_id: seatId,
+          bloqueado: !isLocked,
+          fecha_bloqueo: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      
+      message.success(`Asiento ${isLocked ? 'desbloqueado' : 'bloqueado'} correctamente`);
+      loadSeats(selectedSala);
+    } catch (error) {
+      console.error('Error cambiando estado de asiento:', error);
+      message.error('Error cambiando estado de asiento');
+    }
+  };
+
+  // Función para crear reserva
+  const createReservation = async (reservationData) => {
+    try {
+      const { error } = await supabase
+        .from('reservas')
+        .insert({
+          evento_id: reservationData.evento_id,
+          sala_id: reservationData.sala_id,
+          asiento_id: reservationData.asiento_id,
+          usuario_id: reservationData.usuario_id,
+          estado: 'reservado',
+          fecha_reserva: new Date().toISOString(),
+          fecha_expiracion: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutos
+        });
+      
+      if (error) throw error;
+      
+      message.success('Reserva creada correctamente');
+      loadReservations(reservationData.evento_id);
+      return true;
+    } catch (error) {
+      console.error('Error creando reserva:', error);
+      message.error('Error creando reserva');
+      return false;
+    }
+  };
+
+  // Función para cancelar reserva
+  const cancelReservation = async (reservationId) => {
+    try {
+      const { error } = await supabase
+        .from('reservas')
+        .update({ estado: 'cancelada' })
+        .eq('id', reservationId);
+      
+      if (error) throw error;
+      
+      message.success('Reserva cancelada correctamente');
+      loadReservations(selectedEvent);
+      return true;
+    } catch (error) {
+      console.error('Error cancelando reserva:', error);
+      message.error('Error cancelando reserva');
+      return false;
+    }
+  };
+
+  // Función para procesar pago
+  const processPayment = async (paymentData) => {
+    try {
+      const { error } = await supabase
+        .from('payments')
+        .insert({
+          evento_id: paymentData.evento_id,
+          usuario_id: paymentData.usuario_id,
+          monto: paymentData.monto,
+          estado: 'procesando',
+          metodo_pago: paymentData.metodo_pago,
+          fecha_pago: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      
+      message.success('Pago procesado correctamente');
+      loadPayments(paymentData.evento_id);
+      return true;
+    } catch (error) {
+      console.error('Error procesando pago:', error);
+      message.error('Error procesando pago');
+      return false;
+    }
+  };
+
+  // Función para registrar venta
+  const registerSale = async (saleData) => {
+    try {
+      const { error } = await supabase
+        .from('ventas')
+        .insert({
+          evento_id: saleData.evento_id,
+          funcion_id: saleData.funcion_id,
+          asiento_id: saleData.asiento_id,
+          usuario_id: saleData.usuario_id,
+          precio: saleData.precio,
+          estado: 'vendido',
+          fecha_venta: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      
+      message.success('Venta registrada correctamente');
+      loadSales(saleData.evento_id);
+      return true;
+    } catch (error) {
+      console.error('Error registrando venta:', error);
+      message.error('Error registrando venta');
+      return false;
+    }
+  };
+
+  // Función para reembolsar pago
+  const handleRefundPayment = async (paymentId) => {
+    try {
+      const { error } = await supabase
+        .from('payments')
+        .update({ estado: 'reembolsado' })
+        .eq('id', paymentId);
+      
+      if (error) throw error;
+      
+      message.success('Pago reembolsado correctamente');
+      if (selectedEvent) {
+        loadPayments(selectedEvent);
+      }
+    } catch (error) {
+      console.error('Error reembolsando pago:', error);
+      message.error('Error reembolsando pago');
     }
   };
 
