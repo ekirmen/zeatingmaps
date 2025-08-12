@@ -11,16 +11,28 @@
   ],
   "routes": [
     {
-      "src": "/dashboard/(.*)",
-      "dest": "/index.html"
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
     },
     {
-      "src": "/saas/(.*)",
-      "dest": "/index.html"
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
     },
     {
-      "src": "/store/(.*)",
-      "dest": "/index.html"
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "/robots.txt"
+    },
+    {
+      "src": "/logo(.*)",
+      "dest": "/logo$1"
     },
     {
       "src": "/(.*)",
