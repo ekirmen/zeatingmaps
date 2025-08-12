@@ -27,14 +27,6 @@
       "dest": "/index.html"
     }
   ],
-  "domains": [
-    "veneventos.com",
-    "www.veneventos.com",
-    "*.veneventos.com",
-    "kreatickets.com",
-    "www.kreatickets.com",
-    "*.kreatickets.com"
-  ],
   "functions": {
     "api/**/*.js": {
       "runtime": "nodejs18.x"
