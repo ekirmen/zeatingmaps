@@ -160,25 +160,29 @@ export const getDynamicDomainConfig = async (supabase, hostname) => {
 
     // Retornar configuración personalizada del tenant
     return {
+      id: tenant.id,
       name: tenant.company_name,
       theme: {
-        primaryColor: tenant.primary_color || '#1890ff',
-        secondaryColor: tenant.secondary_color || '#52c41a',
-        logo: tenant.logo_url || '/assets/logo.png'
+        primaryColor: tenant.theme_config?.primaryColor || tenant.primary_color || '#1890ff',
+        secondaryColor: tenant.theme_config?.secondaryColor || tenant.secondary_color || '#52c41a',
+        logo: tenant.theme_config?.logo || tenant.logo_url || '/assets/logo.png'
       },
       features: {
-        showSaaS: true,
-        showStore: true,
-        showBackoffice: true,
-        showTicketing: true,
-        showEvents: true,
-        showVenues: true
+        showSaaS: tenant.feature_flags?.showSaaS ?? true,
+        showStore: tenant.feature_flags?.showStore ?? true,
+        showBackoffice: tenant.feature_flags?.showBackoffice ?? true,
+        showTicketing: tenant.feature_flags?.showTicketing ?? true,
+        showEvents: tenant.feature_flags?.showEvents ?? true,
+        showVenues: tenant.feature_flags?.showVenues ?? true
       },
       branding: {
-        companyName: tenant.company_name,
-        tagline: tenant.settings?.tagline || 'Sistema de Gestión de Eventos',
-        contactEmail: tenant.contact_email
-      }
+        companyName: tenant.branding_config?.companyName || tenant.company_name,
+        tagline: tenant.branding_config?.tagline || 'Sistema de Gestión de Eventos',
+        contactEmail: tenant.branding_config?.contactEmail || tenant.contact_email
+      },
+      customRoutes: tenant.custom_routes || [],
+      isMainDomain: tenant.is_main_domain || false,
+      tenantType: tenant.tenant_type || 'company'
     };
   } catch (error) {
     console.error('Error obteniendo configuración dinámica:', error);
