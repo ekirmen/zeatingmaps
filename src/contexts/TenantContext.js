@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
+import { getDynamicDomainConfig, isMainDomain } from '../config/domainConfig';
 
 const TenantContext = createContext();
 
@@ -7,6 +8,7 @@ export const TenantProvider = ({ children }) => {
   const [currentTenant, setCurrentTenant] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [domainConfig, setDomainConfig] = useState(null);
 
   // Detectar tenant de cualquier dominio
   const detectTenant = async () => {
@@ -23,7 +25,24 @@ export const TenantProvider = ({ children }) => {
         return;
       }
       
-      // Caso 2: Vercel preview deployments (ej: zeatingmaps-ekirmens-projects.vercel.app)
+      // Caso 2: Dominio principal (sistema.veneventos.com)
+      if (isMainDomain()) {
+        console.log('🏠 Dominio principal detectado: sistema.veneventos.com');
+        // Para el dominio principal, no necesitamos un tenant específico
+        // pero sí podemos cargar configuración por defecto
+        setCurrentTenant({
+          id: 'main-domain',
+          company_name: 'Veneventos - Sistema Principal',
+          full_url: 'sistema.veneventos.com',
+          domain: 'veneventos.com',
+          subdomain: 'sistema',
+          status: 'active'
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // Caso 3: Vercel preview deployments (ej: zeatingmaps-ekirmens-projects.vercel.app)
       if (hostname.includes('.vercel.app')) {
         const parts = hostname.split('.');
         if (parts.length >= 3) {
@@ -37,7 +56,7 @@ export const TenantProvider = ({ children }) => {
         }
       }
       
-      // Caso 3: Búsqueda universal por hostname completo
+      // Caso 4: Búsqueda universal por hostname completo
       console.log('🔍 Buscando tenant por hostname completo:', hostname);
       await searchTenantByHostname(hostname);
       
@@ -68,6 +87,12 @@ export const TenantProvider = ({ children }) => {
       if (tenant) {
         console.log('✅ Tenant encontrado por URL completa:', tenant);
         setCurrentTenant(tenant);
+        
+        // Cargar configuración dinámica
+        const dynamicConfig = await getDynamicDomainConfig(supabase, hostname);
+        if (dynamicConfig) {
+          setDomainConfig(dynamicConfig);
+        }
         return;
       }
 
@@ -92,6 +117,12 @@ export const TenantProvider = ({ children }) => {
           if (tenant) {
             console.log('✅ Tenant encontrado por subdominio + dominio:', tenant);
             setCurrentTenant(tenant);
+            
+            // Cargar configuración dinámica
+            const dynamicConfig = await getDynamicDomainConfig(supabase, hostname);
+            if (dynamicConfig) {
+              setDomainConfig(dynamicConfig);
+            }
             return;
           }
         }
@@ -108,6 +139,12 @@ export const TenantProvider = ({ children }) => {
         if (tenant) {
           console.log('✅ Tenant encontrado por dominio:', tenant);
           setCurrentTenant(tenant);
+          
+          // Cargar configuración dinámica
+          const dynamicConfig = await getDynamicDomainConfig(supabase, hostname);
+          if (dynamicConfig) {
+            setDomainConfig(dynamicConfig);
+          }
           return;
         }
       }
@@ -148,6 +185,12 @@ export const TenantProvider = ({ children }) => {
         if (tenant.id && tenant.subdomain && tenant.company_name) {
           console.log('✅ Tenant encontrado por subdominio:', tenant);
           setCurrentTenant(tenant);
+          
+          // Cargar configuración dinámica
+          const dynamicConfig = await getDynamicDomainConfig(supabase, `${subdomain}.vercel.app`);
+          if (dynamicConfig) {
+            setDomainConfig(dynamicConfig);
+          }
         } else {
           console.warn('⚠️ Tenant encontrado pero con datos incompletos:', tenant);
           setError('La empresa encontrada tiene datos incompletos');
@@ -169,6 +212,7 @@ export const TenantProvider = ({ children }) => {
     currentTenant,
     loading,
     error,
+    domainConfig,
     detectTenant,
     // Función helper para verificar si el tenant es válido
     isTenantValid: () => {
@@ -184,7 +228,9 @@ export const TenantProvider = ({ children }) => {
              (currentTenant.subdomain && currentTenant.domain ? 
               `${currentTenant.subdomain}.${currentTenant.domain}` : 
               currentTenant.domain);
-    }
+    },
+    // Función helper para verificar si es el dominio principal
+    isMainDomain: () => isMainDomain()
   };
 
   return (

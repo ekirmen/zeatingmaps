@@ -1,6 +1,6 @@
 // Configuración por dominio para mostrar diferentes funcionalidades
 export const getDomainConfig = (hostname) => {
-  // Extraer el dominio principal
+  // Extraer el dominio principal y subdominio
   const domain = hostname.split('.').slice(-2).join('.');
   const subdomain = hostname.split('.')[0];
 
@@ -22,7 +22,7 @@ export const getDomainConfig = (hostname) => {
         showVenues: true
       },
       branding: {
-        companyName: 'Veneventos - update',
+        companyName: 'Veneventos - Sistema Principal',
         tagline: 'Sistema de Eventos Profesional',
         contactEmail: 'info@veneventos.com'
       }
@@ -71,7 +71,7 @@ export const getDomainConfig = (hostname) => {
     }
   };
 
-  // Configuración por defecto
+  // Configuración por defecto para dominios no configurados
   const defaultConfig = {
     name: 'ZeatingMaps',
     theme: {
@@ -80,7 +80,7 @@ export const getDomainConfig = (hostname) => {
       logo: '/assets/logo.png'
     },
     features: {
-      showSaaS: false,
+      showSaaS: true, // Habilitado por defecto para nuevos dominios
       showStore: true,
       showBackoffice: true,
       showTicketing: true,
@@ -90,7 +90,7 @@ export const getDomainConfig = (hostname) => {
     branding: {
       companyName: 'ZeatingMaps',
       tagline: 'Sistema de Gestión de Eventos',
-      contactEmail: 'info@  zeatingmaps.com'
+      contactEmail: 'info@zeatingmaps.com'
     }
   };
 
@@ -135,4 +135,55 @@ export const getDomainBranding = () => {
   const config = getCurrentDomainConfig();
   return config.branding;
 };
-export const forceUpdate = Date.now();
+
+// Función para detectar si es el dominio principal (sistema.veneventos.com)
+export const isMainDomain = () => {
+  if (typeof window !== 'undefined') {
+    return window.location.hostname === 'sistema.veneventos.com';
+  }
+  return false;
+};
+
+// Función para obtener configuración dinámica desde la base de datos
+export const getDynamicDomainConfig = async (supabase, hostname) => {
+  try {
+    // Buscar configuración en la base de datos
+    const { data: tenant, error } = await supabase
+      .from('tenants')
+      .select('*')
+      .or(`full_url.eq.${hostname},subdomain.eq.${hostname.split('.')[0]}`)
+      .single();
+
+    if (error || !tenant) {
+      return null;
+    }
+
+    // Retornar configuración personalizada del tenant
+    return {
+      name: tenant.company_name,
+      theme: {
+        primaryColor: tenant.primary_color || '#1890ff',
+        secondaryColor: tenant.secondary_color || '#52c41a',
+        logo: tenant.logo_url || '/assets/logo.png'
+      },
+      features: {
+        showSaaS: true,
+        showStore: true,
+        showBackoffice: true,
+        showTicketing: true,
+        showEvents: true,
+        showVenues: true
+      },
+      branding: {
+        companyName: tenant.company_name,
+        tagline: tenant.settings?.tagline || 'Sistema de Gestión de Eventos',
+        contactEmail: tenant.contact_email
+      }
+    };
+  } catch (error) {
+    console.error('Error obteniendo configuración dinámica:', error);
+    return null;
+  }
+};
+
+export const forceUpdate = Date.now(); // Forzar actualización
