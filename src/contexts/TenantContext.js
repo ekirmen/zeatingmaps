@@ -8,15 +8,12 @@ export const TenantProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Detectar tenant del subdominio
+  // Detectar tenant de cualquier dominio
   const detectTenant = async () => {
     try {
       setError(null);
       const hostname = window.location.hostname;
       console.log('🔍 Detectando tenant para hostname:', hostname);
-      
-      // Extraer subdominio de diferentes formatos de hostname
-      let subdomain = null;
       
       // Caso 1: localhost (desarrollo)
       if (hostname === 'localhost' || hostname.includes('localhost')) {
@@ -30,35 +27,108 @@ export const TenantProvider = ({ children }) => {
       if (hostname.includes('.vercel.app')) {
         const parts = hostname.split('.');
         if (parts.length >= 3) {
-          // Tomar solo la primera parte antes del primer guión
           const firstPart = parts[0];
           if (firstPart.includes('-')) {
-            subdomain = firstPart.split('-')[0];
-          } else {
-            subdomain = firstPart;
+            const subdomain = firstPart.split('-')[0];
+            console.log('🔍 Subdominio Vercel detectado:', subdomain);
+            await searchTenantBySubdomain(subdomain);
+            return;
           }
         }
       }
-      // Caso 3: Dominio personalizado (ej: empresa.ticketera.com)
-      else if (hostname.includes('.')) {
-        const parts = hostname.split('.');
-        if (parts.length >= 2) {
-          subdomain = parts[0];
-        }
+      
+      // Caso 3: Búsqueda universal por hostname completo
+      console.log('🔍 Buscando tenant por hostname completo:', hostname);
+      await searchTenantByHostname(hostname);
+      
+    } catch (error) {
+      console.error('❌ Error in tenant detection:', error);
+      setError(`Error inesperado: ${error.message}`);
+      setCurrentTenant(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Buscar tenant por hostname completo
+  const searchTenantByHostname = async (hostname) => {
+    try {
+      // Buscar por URL completa exacta
+      let { data: tenant, error } = await supabase
+        .from('tenants')
+        .select('*')
+        .eq('full_url', hostname)
+        .eq('status', 'active')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
       }
-      
-      console.log('🔍 Subdominio extraído:', subdomain);
-      
-      // Si no hay subdominio válido o es www, usar tenant por defecto
-      if (!subdomain || subdomain === 'www' || subdomain === 'localhost') {
-        console.log('📍 No se detectó subdominio válido, usando tenant por defecto');
-        setCurrentTenant(null);
-        setLoading(false);
+
+      if (tenant) {
+        console.log('✅ Tenant encontrado por URL completa:', tenant);
+        setCurrentTenant(tenant);
         return;
       }
 
-      // Buscar tenant por subdominio
-      console.log('🔍 Buscando tenant con subdominio:', subdomain);
+      // Si no se encuentra por URL completa, buscar por dominio
+      const domainParts = hostname.split('.');
+      if (domainParts.length >= 2) {
+        const domain = domainParts.slice(-2).join('.');
+        const subdomain = domainParts.length > 2 ? domainParts[0] : null;
+        
+        console.log('🔍 Buscando por dominio:', domain, 'subdominio:', subdomain);
+        
+        if (subdomain && subdomain !== 'www') {
+          // Buscar por subdominio + dominio
+          const searchUrl = `${subdomain}.${domain}`;
+          ({ data: tenant, error } = await supabase
+            .from('tenants')
+            .select('*')
+            .eq('full_url', searchUrl)
+            .eq('status', 'active')
+            .single());
+          
+          if (tenant) {
+            console.log('✅ Tenant encontrado por subdominio + dominio:', tenant);
+            setCurrentTenant(tenant);
+            return;
+          }
+        }
+        
+        // Buscar por dominio solo (para dominios completos)
+        ({ data: tenant, error } = await supabase
+          .from('tenants')
+          .select('*')
+          .eq('domain', domain)
+          .is('subdomain', null)
+          .eq('status', 'active')
+          .single());
+        
+        if (tenant) {
+          console.log('✅ Tenant encontrado por dominio:', tenant);
+          setCurrentTenant(tenant);
+          return;
+        }
+      }
+
+      // Si no se encuentra, mostrar error
+      console.log('📍 No se encontró tenant para hostname:', hostname);
+      setError(`No se encontró una empresa configurada para: ${hostname}`);
+      setCurrentTenant(null);
+      
+    } catch (error) {
+      console.error('❌ Error searching tenant by hostname:', error);
+      setError(`Error al detectar empresa: ${error.message}`);
+      setCurrentTenant(null);
+    }
+  };
+
+  // Buscar tenant por subdominio (para casos especiales como Vercel)
+  const searchTenantBySubdomain = async (subdomain) => {
+    try {
+      console.log('🔍 Buscando tenant por subdominio:', subdomain);
+      
       const { data: tenant, error } = await supabase
         .from('tenants')
         .select('*')
@@ -68,35 +138,26 @@ export const TenantProvider = ({ children }) => {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          // No se encontró el tenant
-          console.log('📍 No se encontró tenant activo para subdominio:', subdomain);
+          console.log('📍 No se encontró tenant para subdominio:', subdomain);
           setError(`No se encontró una empresa configurada para el subdominio: ${subdomain}`);
         } else {
-          console.error('❌ Error detecting tenant:', error.message);
-          setError(`Error al detectar empresa: ${error.message}`);
+          throw error;
         }
         setCurrentTenant(null);
       } else if (tenant && typeof tenant === 'object') {
-        // Verificar que el tenant tenga los campos mínimos requeridos
         if (tenant.id && tenant.subdomain && tenant.company_name) {
-          console.log('✅ Tenant encontrado:', tenant);
+          console.log('✅ Tenant encontrado por subdominio:', tenant);
           setCurrentTenant(tenant);
         } else {
           console.warn('⚠️ Tenant encontrado pero con datos incompletos:', tenant);
           setError('La empresa encontrada tiene datos incompletos');
           setCurrentTenant(null);
         }
-      } else {
-        console.warn('⚠️ Tenant encontrado pero no es un objeto válido:', tenant);
-        setError('La empresa encontrada no tiene un formato válido');
-        setCurrentTenant(null);
       }
     } catch (error) {
-      console.error('❌ Error in tenant detection:', error);
-      setError(`Error inesperado: ${error.message}`);
+      console.error('❌ Error searching tenant by subdomain:', error);
+      setError(`Error al detectar empresa: ${error.message}`);
       setCurrentTenant(null);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -114,7 +175,15 @@ export const TenantProvider = ({ children }) => {
       return currentTenant && 
              typeof currentTenant === 'object' && 
              currentTenant.id && 
-             currentTenant.subdomain;
+             (currentTenant.subdomain || currentTenant.domain);
+    },
+    // Función helper para obtener la URL completa del tenant
+    getTenantUrl: () => {
+      if (!currentTenant) return null;
+      return currentTenant.full_url || 
+             (currentTenant.subdomain && currentTenant.domain ? 
+              `${currentTenant.subdomain}.${currentTenant.domain}` : 
+              currentTenant.domain);
     }
   };
 

@@ -341,14 +341,15 @@ const SaasDashboard = () => {
         message.success('Tenant actualizado exitosamente');
         await logAuditAction('tenant_updated', { tenant_id: editingTenant.id, changes: values });
       } else {
-        // Para nuevos tenants, no incluir subdomain - se generará automáticamente
+        // Para nuevos tenants, incluir dominio y URL completa
         const tenantData = {
           ...values,
-          // El trigger en la base de datos generará el subdominio automáticamente
           status: values.status || 'active',
           plan_type: values.plan_type || 'basic',
           max_users: values.max_users || 10,
-          max_events: values.max_events || 50
+          max_events: values.max_events || 50,
+          // Si no se especifica full_url, generarla automáticamente
+          full_url: values.full_url || (values.subdomain && values.domain ? `${values.subdomain}.${values.domain}` : values.domain)
         };
         
         const { error } = await supabase
@@ -423,7 +424,7 @@ const SaasDashboard = () => {
           <div>
             <div style={{ fontWeight: '500' }}>{text}</div>
             <div style={{ fontSize: '12px', color: '#666' }}>
-              {record.subdomain}.ticketera.com
+              {record.full_url || `${record.subdomain}.${record.domain || 'veneventos.com'}`}
             </div>
           </div>
         </Space>
@@ -910,6 +911,26 @@ const SaasDashboard = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
+                name="domain"
+                label="Dominio"
+                rules={[{ required: true, message: 'Dominio requerido' }]}
+              >
+                <Input placeholder="ej: veneventos.com" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="full_url"
+                label="URL Completa (opcional)"
+              >
+                <Input placeholder="ej: cliente1.veneventos.com" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
                 name="max_users"
                 label="Usuarios Máximos"
               >
@@ -951,7 +972,7 @@ const SaasDashboard = () => {
           <div>
             <Descriptions bordered column={2}>
               <Descriptions.Item label="Empresa">{selectedTenant.company_name}</Descriptions.Item>
-              <Descriptions.Item label="Subdominio">{selectedTenant.subdomain}.ticketera.com</Descriptions.Item>
+              <Descriptions.Item label="Subdominio">{selectedTenant.full_url || `${selectedTenant.subdomain}.${selectedTenant.domain || 'veneventos.com'}`}</Descriptions.Item>
               <Descriptions.Item label="Email">{selectedTenant.contact_email}</Descriptions.Item>
               <Descriptions.Item label="Teléfono">{selectedTenant.contact_phone}</Descriptions.Item>
               <Descriptions.Item label="Plan">
@@ -991,7 +1012,7 @@ const SaasDashboard = () => {
               <Col span={12}>
                 <Button 
                   icon={<DatabaseOutlined />} 
-                  onClick={() => window.open(`https://${selectedTenant.subdomain}.ticketera.com`, '_blank')}
+                  onClick={() => window.open(`https://${selectedTenant.full_url || `${selectedTenant.subdomain}.${selectedTenant.domain || 'veneventos.com'}`}`, '_blank')}
                   block
                 >
                   Ver Sitio Web del Cliente
@@ -1000,7 +1021,7 @@ const SaasDashboard = () => {
               <Col span={12}>
                 <Button 
                   icon={<KeyOutlined />} 
-                  onClick={() => window.open(`https://${selectedTenant.subdomain}.ticketera.com/dashboard`, '_blank')}
+                  onClick={() => window.open(`https://${selectedTenant.full_url || `${selectedTenant.subdomain}.${selectedTenant.domain || 'veneventos.com'}`}/dashboard`, '_blank')}
                   block
                 >
                   Acceder al Dashboard del Cliente
