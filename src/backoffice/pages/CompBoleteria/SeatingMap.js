@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from "react"
 import { Stage, Layer, Circle, Rect, Text, Label, Tag } from "react-konva";
 import { useSeatLockStore } from "../../../components/seatLockStore";
 import { message } from "antd"; // Added message import
+import { Button, Popover } from "antd"; // Added Button and Popover imports
+import { ZoomInOutlined, ZoomOutOutlined, InfoCircleOutlined } from "@ant-design/icons"; // Added icons
 
 const SeatingMap = ({
   mapa,
@@ -167,16 +169,45 @@ const SeatingMap = ({
   }, [availableZonas, abonoMode, abonoSeats, selectedZonaId, tempBlocks, colorMap, isSeatLocked, isSeatLockedByMe, onSeatClick, blockMode]);
 
   const renderTable = useCallback((mesa) => {
+    console.log('🏗️ Renderizando mesa:', {
+      id: mesa._id,
+      nombre: mesa.nombre,
+      shape: mesa.shape,
+      posicion: mesa.posicion,
+      x: mesa.x,
+      y: mesa.y,
+      width: mesa.width,
+      height: mesa.height,
+      sillas: mesa.sillas?.length || 0
+    });
+
     // Usar 'shape' en lugar de 'type' para determinar el tipo de mesa
     const isTable = mesa.shape === 'circle' || mesa.shape === 'rect';
     const TableShape = mesa.shape === "circle" ? Circle : Rect;
-    const availableSeats = mesa.sillas.filter(silla => {
+    
+    // Obtener coordenadas de la mesa
+    const mesaX = mesa.posicion?.x || mesa.x || 0;
+    const mesaY = mesa.posicion?.y || mesa.y || 0;
+    const mesaWidth = mesa.width || 120;
+    const mesaHeight = mesa.height || 120;
+    const mesaRadius = mesa.shape === "circle" ? mesaWidth / 2 : 0;
+
+    console.log('📍 Coordenadas de mesa:', {
+      x: mesaX,
+      y: mesaY,
+      width: mesaWidth,
+      height: mesaHeight,
+      radius: mesaRadius,
+      isTable
+    });
+
+    const availableSeats = mesa.sillas?.filter(silla => {
       const seatZonaId = typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
       const isAvailable = availableZonas?.includes(seatZonaId) || !availableZonas;
       const isAbono = abonoMode && abonoSeats.includes(silla._id);
       const abonoRestriction = abonoMode && abonoSeats.length > 0 ? isAbono : true;
       return silla.estado === 'disponible' && isAvailable && abonoRestriction;
-    });
+    }) || [];
 
     return (
       <React.Fragment key={mesa._id}>
@@ -184,11 +215,11 @@ const SeatingMap = ({
         {isTable && (
           <>
             <TableShape
-              x={mesa.posicion?.x || mesa.x || 0}
-              y={mesa.posicion?.y || mesa.y || 0}
-              width={mesa.width || 120}
-              height={mesa.height || 120}
-              radius={mesa.shape === "circle" ? (mesa.width || 120) / 2 : 0}
+              x={mesaX}
+              y={mesaY}
+              width={mesaWidth}
+              height={mesaHeight}
+              radius={mesaRadius}
               fill={hoveredTable === mesa._id ? "#f3f4f6" : "#ffffff"}
               stroke={hoveredTable === mesa._id ? "#3b82f6" : "#4b5563"}
               strokeWidth={hoveredTable === mesa._id ? 3 : 2}
@@ -196,8 +227,8 @@ const SeatingMap = ({
               onMouseLeave={() => setHoveredTable(null)}
             />
             <Text
-              x={(mesa.posicion?.x || mesa.x || 0) - 20}
-              y={(mesa.posicion?.y || mesa.y || 0) - 10}
+              x={mesaX - 20}
+              y={mesaY - 10}
               text={mesa.nombre || `Mesa ${mesa._id}`}
               fontSize={scale < 1 ? 10 : 12}
               fill="#374151"
@@ -212,8 +243,8 @@ const SeatingMap = ({
         {/* Botón "Mesa completa" solo para mesas */}
         {isTable && hoveredTable === mesa._id && availableSeats.length > 0 && onSelectCompleteTable && (
           <Label
-            x={(mesa.posicion?.x || mesa.x || 0) + (mesa.width || 120) / 2 - 40}
-            y={(mesa.posicion?.y || mesa.y || 0) + (mesa.height || 120) + 5}
+            x={mesaX + mesaWidth / 2 - 40}
+            y={mesaY + mesaHeight + 5}
           >
             <Tag fill="#3b82f6" opacity={0.9} />
             <Text
@@ -264,59 +295,70 @@ const SeatingMap = ({
       className="w-full h-full overflow-hidden"
       style={{ backgroundColor: "#f9fafb" }}
     >
-      {/* Botón informativo de estado de asientos */}
-      <div style={{ 
-        position: 'absolute', 
-        top: 10, 
-        right: 10, 
-        zIndex: 1000 
-      }}>
-        <button
-          onClick={() => setShowSeatLegend(!showSeatLegend)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg shadow-lg text-sm font-medium"
-          title="Estado de Asientos"
+      {/* Controles de zoom */}
+      <div className="absolute top-4 right-4 flex flex-col space-y-2">
+        <Button
+          type="primary"
+          size="small"
+          onClick={() => setScale(scale + 0.2)}
+          icon={<ZoomInOutlined />}
+        />
+        <Button
+          type="primary"
+          size="small"
+          onClick={() => setScale(Math.max(0.5, scale - 0.2))}
+          icon={<ZoomOutOutlined />}
+        />
+        <Button
+          type="default"
+          size="small"
+          onClick={() => setScale(1)}
         >
-          ℹ️ Estado de Asientos
-        </button>
+          Reset
+        </Button>
         
-        {showSeatLegend && (
-          <div style={{
-            position: 'absolute',
-            top: '100%',
-            right: 0,
-            background: 'rgba(0,0,0,0.9)',
-            color: 'white',
-            padding: '15px',
-            borderRadius: '8px',
-            fontSize: '12px',
-            minWidth: '200px',
-            marginTop: '5px'
-          }}>
-            <div className="space-y-2">
-              <div className="font-semibold text-center mb-2">Estado de Asientos</div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                <span>Disponible</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                <span>Seleccionado</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                <span>Bloqueado por mí</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-                <span>Bloqueado por otro</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                <span>Vendido/Reservado</span>
+        {/* Menú informativo de Estado de Asientos */}
+        <Popover
+          content={
+            <div className="p-3 space-y-2 min-w-48">
+              <div className="font-semibold text-sm border-b pb-2 mb-2">Estado de Asientos</div>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span className="text-xs">Disponible</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                  <span className="text-xs">Seleccionado por mí</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <span className="text-xs">Bloqueado por mí</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                  <span className="text-xs">Bloqueado por otro</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <span className="text-xs">Vendido/Reservado</span>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          }
+          title="Leyenda de Estados"
+          trigger="hover"
+          placement="left"
+        >
+          <Button
+            type="default"
+            size="small"
+            icon={<InfoCircleOutlined />}
+            className="w-full"
+          >
+            Estado de Asientos
+          </Button>
+        </Popover>
       </div>
 
       {/* Debug temporal - mostrar datos del mapa */}
@@ -330,25 +372,36 @@ const SeatingMap = ({
           padding: '10px', 
           borderRadius: '5px', 
           fontSize: '12px',
-          maxWidth: '300px',
-          maxHeight: '200px',
+          maxWidth: '400px',
+          maxHeight: '300px',
           overflow: 'auto',
           zIndex: 1000
         }}>
           <div><strong>Debug - Datos del mapa:</strong></div>
           <div>Contenido: {mapa.contenido?.length || 0} elementos</div>
-          {mapa.contenido?.[0] && (
-            <div>
-              <div>Primer elemento: {mapa.contenido[0].nombre}</div>
-              <div>Asientos: {mapa.contenido[0].sillas?.length || 0}</div>
-              {mapa.contenido[0].sillas?.[0] && (
-                <div>
-                  <div>Primer asiento: {mapa.contenido[0].sillas[0].nombre}</div>
-                  <div>Posición: ({mapa.contenido[0].sillas[0].posicion?.x}, {mapa.contenido[0].sillas[0].posicion?.y})</div>
+          <div>Tipo de contenido: {typeof mapa.contenido}</div>
+          <div>Es array: {Array.isArray(mapa.contenido) ? 'Sí' : 'No'}</div>
+          
+          {mapa.contenido && Array.isArray(mapa.contenido) && mapa.contenido.map((item, index) => (
+            <div key={index} style={{ marginTop: '8px', padding: '5px', border: '1px solid #666' }}>
+              <div><strong>Elemento {index + 1}:</strong></div>
+              <div>ID: {item._id}</div>
+              <div>Nombre: {item.nombre}</div>
+              <div>Tipo/Shape: {item.type || item.shape}</div>
+              <div>Posición: ({item.posicion?.x || item.x}, {item.posicion?.y || item.y})</div>
+              <div>Dimensiones: {item.width}x{item.height}</div>
+              <div>Asientos: {item.sillas?.length || 0}</div>
+              {item.sillas && item.sillas.length > 0 && (
+                <div style={{ marginLeft: '10px' }}>
+                  <div><strong>Primer asiento:</strong></div>
+                  <div>ID: {item.sillas[0]._id}</div>
+                  <div>Nombre: {item.sillas[0].nombre}</div>
+                  <div>Posición: ({item.sillas[0].posicion?.x}, {item.sillas[0].posicion?.y})</div>
+                  <div>Estado: {item.sillas[0].estado}</div>
                 </div>
               )}
             </div>
-          )}
+          ))}
         </div>
       )}
 

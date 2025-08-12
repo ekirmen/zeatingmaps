@@ -91,6 +91,51 @@ const ZonesAndPrices = ({
     }
   }, [eventos, funciones, selectedEvent, selectedFuncion, restoreState, onEventSelect]);
   
+  // Limpiar carrito al cargar la página
+  useEffect(() => {
+    // Limpiar carrito al inicializar
+    if (setCarrito) {
+      setCarrito([]);
+      console.log('🧹 [CARRO] Carrito limpiado al cargar página');
+    }
+  }, []);
+
+  // Restaurar estado guardado al cargar
+  useEffect(() => {
+    if (eventos.length > 0 && funciones.length > 0 && plantillas.length > 0) {
+      const savedState = useBoleteriaMemory.restoreState(eventos, funciones, plantillas);
+      if (savedState) {
+        console.log('🔄 [MEMORIA] Restaurando estado guardado:', savedState);
+        
+        // Restaurar evento
+        if (savedState.selectedEvent) {
+          setSelectedEvent(savedState.selectedEvent);
+          console.log('✅ [MEMORIA] Evento restaurado:', savedState.selectedEvent.nombre);
+        }
+        
+        // Restaurar función
+        if (savedState.selectedFuncion) {
+          setSelectedFuncion(savedState.selectedFuncion);
+          console.log('✅ [MEMORIA] Función restaurada:', savedState.selectedFuncion.nombre);
+          
+          // Cargar automáticamente el mapa para la función restaurada
+          if (savedState.selectedFuncion.sala?.id) {
+            console.log('🗺️ [MEMORIA] Cargando mapa automáticamente para sala:', savedState.selectedFuncion.sala.id);
+            // El useEffect de fetchMapa se ejecutará automáticamente
+          }
+        }
+        
+        // Restaurar plantilla
+        if (savedState.selectedPlantilla) {
+          setSelectedPlantilla(savedState.selectedPlantilla);
+          console.log('✅ [MEMORIA] Plantilla restaurada:', savedState.selectedPlantilla.nombre);
+        }
+        
+        message.success('Estado anterior restaurado automáticamente');
+      }
+    }
+  }, [eventos, funciones, plantillas]);
+  
   // Guardar estado cuando cambie
   useEffect(() => {
     if (selectedEvent && selectedFuncion) {

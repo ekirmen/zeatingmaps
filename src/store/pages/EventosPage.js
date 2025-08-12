@@ -140,6 +140,7 @@ const EventosPage = () => {
         }
 
         console.log('[MAPA] Función encontrada:', funcion);
+        console.log('[MAPA] Estructura completa de la función:', JSON.stringify(funcion, null, 2));
         
         // CARGAR PLANTILLA DE PRECIOS
         console.log('[PRECIOS] Cargando plantilla de precios...');
@@ -170,17 +171,45 @@ const EventosPage = () => {
         
         setPlantillaPrecios(plantillaData);
         
-        const salaId = (funcion?.sala && typeof funcion.sala === 'object')
-          ? (funcion.sala.id || funcion.sala._id)
-          : funcion?.sala;
+        // MEJORAR LÓGICA PARA OBTENER SALA ID
+        let salaId = null;
+        
+        // Opción 1: Buscar en sala directa
+        if (funcion.sala) {
+          if (typeof funcion.sala === 'object') {
+            salaId = funcion.sala.id || funcion.sala._id;
+            console.log('[MAPA] Sala encontrada en funcion.sala (objeto):', salaId);
+          } else {
+            salaId = funcion.sala;
+            console.log('[MAPA] Sala encontrada en funcion.sala (directo):', salaId);
+          }
+        }
+        
+        // Opción 2: Buscar en sala_id
+        if (!salaId && funcion.sala_id) {
+          salaId = funcion.sala_id;
+          console.log('[MAPA] Sala encontrada en funcion.sala_id:', salaId);
+        }
+        
+        // Opción 3: Buscar en recinto.sala
+        if (!salaId && funcion.recinto && typeof funcion.recinto === 'object') {
+          salaId = funcion.recinto.sala?.id || funcion.recinto.sala?._id || funcion.recinto.sala;
+          console.log('[MAPA] Sala encontrada en funcion.recinto.sala:', salaId);
+        }
 
         if (!salaId) {
-          console.warn('[MAPA] No se encontró salaId en la función', funcion);
+          console.error('[MAPA] ❌ NO SE PUDO ENCONTRAR SALA ID');
+          console.error('[MAPA] Estructura de la función:', {
+            sala: funcion.sala,
+            sala_id: funcion.sala_id,
+            recinto: funcion.recinto,
+            keys: Object.keys(funcion)
+          });
           setMapa(null);
           return;
         }
 
-        console.log('[MAPA] Intentando cargar mapa para salaId:', salaId);
+        console.log('[MAPA] ✅ Sala ID encontrado:', salaId);
         
         const mapData = await fetchMapa(salaId);
         if (!mapData) {
@@ -595,33 +624,8 @@ const EventosPage = () => {
                            selectedSeats={cartItems.map(item => item.sillaId)}
                          />
                          
-                                                   {/* Leyenda de Estado de Asientos */}
-                          <div className="absolute bottom-4 left-4 bg-white p-3 rounded shadow max-w-xs">
-                            <div className="text-xs space-y-2">
-                              <div className="font-semibold mb-2">Estado de Asientos</div>
-                              <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                <span>Disponible (Color de zona)</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-                                <span>Seleccionado por mí</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                                <span>Seleccionado por otro</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                <span>Bloqueado (por mí o por otro)</span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-                                <span>Vendido/Reservado</span>
-                              </div>
-                            </div>
-                          </div>
-                       </div>
+                         
+                        </div>
                     ) : (
                       <div className="flex items-center justify-center h-96 text-gray-500">
                         <div className="text-center">

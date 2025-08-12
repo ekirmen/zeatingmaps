@@ -7,6 +7,7 @@ export const useBoleteriaMemory = () => {
     selectedEvent: null,
     selectedFuncion: null,
     selectedPlantilla: null
+    // NO incluir carrito - se debe limpiar al actualizar
   });
 
   // Cargar estado guardado al inicializar
@@ -22,7 +23,7 @@ export const useBoleteriaMemory = () => {
     }
   }, []);
 
-  // Guardar estado cuando cambie
+  // Guardar estado cuando cambie (sin carrito)
   const saveState = (newState) => {
     try {
       const stateToSave = {
@@ -39,7 +40,7 @@ export const useBoleteriaMemory = () => {
     }
   };
 
-  // Restaurar estado completo
+  // Restaurar estado completo (sin carrito)
   const restoreState = (eventos, funciones, plantillas) => {
     if (!lastState.selectedEvent || !lastState.selectedFuncion) {
       return null;
@@ -77,6 +78,7 @@ export const useBoleteriaMemory = () => {
       selectedEvent: event,
       selectedFuncion: funcion,
       selectedPlantilla: plantilla
+      // NO incluir carrito - debe estar vacío al restaurar
     };
   };
 

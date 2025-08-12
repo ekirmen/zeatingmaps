@@ -35,19 +35,38 @@ const SeatingMapUnified = ({
   const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(mapa, funcionId);
 
   const handleSeatClick = useCallback(
-    async (seat) => {
-      const seatId = seat._id;
-      if (!seatId) return;
+    (seat) => {
+      console.log('🪑 [SEATING_MAP] Asiento clickeado:', {
+        id: seat._id,
+        nombre: seat.nombre,
+        numero: seat.numero,
+        zona: seat.zona,
+        estado: seat.estado,
+        posicion: seat.posicion
+      });
 
-      // Para el store front, ignoramos el estado "reservado" y permitimos selección
-      // Solo bloqueamos asientos que están realmente pagados
-      if (seat.estado === 'pagado') {
-        if (onSeatInfo) onSeatInfo(seat);
+      // Verificar que el asiento sea válido
+      if (!seat || !seat._id) {
+        console.warn('❌ [SEATING_MAP] Asiento inválido:', seat);
         return;
       }
 
-      // Llamar directamente a onSeatToggle sin usar el sistema de bloqueo
-      if (onSeatToggle) onSeatToggle(seat);
+      // Verificar que el asiento esté disponible
+      if (seat.estado !== 'disponible') {
+        console.warn('❌ [SEATING_MAP] Asiento no disponible:', seat.estado);
+        return;
+      }
+
+      // Llamar a la función de toggle del asiento
+      if (onSeatToggle) {
+        console.log('✅ [SEATING_MAP] Llamando a onSeatToggle con asiento:', seat);
+        onSeatToggle(seat);
+      } else {
+        console.warn('⚠️ [SEATING_MAP] onSeatToggle no está definido');
+      }
+
+      // Llamar a la función de información del asiento si existe
+      if (onSeatInfo) onSeatInfo(seat);
     },
     [onSeatToggle, onSeatInfo]
   );
@@ -92,29 +111,43 @@ const SeatingMapUnified = ({
   }, []);
 
      // Usar asientos sincronizados del hook
-   const allSeats = syncedSeats;
-   
-   // Crear zonas basadas en los asientos sincronizados
-   const zonas = [];
-   if (allSeats.length > 0) {
-     // Agrupar asientos por zona
-     const zonasMap = new Map();
-     
-     allSeats.forEach(seat => {
-       const zonaId = seat.zonaId || 'zona_principal';
-       if (!zonasMap.has(zonaId)) {
-         zonasMap.set(zonaId, {
-           id: zonaId,
-           nombre: `Zona ${zonaId}`,
-           color: '#4CAF50',
-           asientos: []
-         });
-       }
-       zonasMap.get(zonaId).asientos.push(seat);
-     });
-     
-     zonas.push(...zonasMap.values());
-   }
+  const allSeats = syncedSeats;
+  
+  console.log('🪑 [SEATING_MAP] Asientos sincronizados recibidos:', {
+    total: allSeats.length,
+    asientos: allSeats.map(s => ({
+      id: s._id,
+      nombre: s.nombre,
+      numero: s.numero,
+      zona: s.zona,
+      estado: s.estado,
+      posicion: s.posicion
+    }))
+  });
+  
+  // Crear zonas basadas en los asientos sincronizados
+  const zonas = [];
+  if (allSeats.length > 0) {
+    // Agrupar asientos por zona
+    const zonasMap = new Map();
+    
+    allSeats.forEach(seat => {
+      const zonaId = seat.zonaId || 'zona_principal';
+      if (!zonasMap.has(zonaId)) {
+        zonasMap.set(zonaId, {
+          id: zonaId,
+          nombre: `Zona ${zonaId}`,
+          color: '#4CAF50',
+          asientos: []
+        });
+      }
+      zonasMap.get(zonaId).asientos.push(seat);
+    });
+    
+    zonas.push(...zonasMap.values());
+    
+    console.log('🏷️ [SEATING_MAP] Zonas creadas:', zonas);
+  }
 
            // Usar zonas creadas directamente
     const validatedZonas = zonas;
@@ -239,20 +272,35 @@ if (Array.isArray(mapa?.contenido)) {
           {validatedSeats.map((seat) => {
             const seatColor = getSeatColor(seat);
             const borderColor = getBorderColor(seat);
+            const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
             
             return (
-              <Circle
-                key={`seat_${seat._id}`}
-                x={seat.x || seat.posicion?.x || 0}
-                y={seat.y || seat.posicion?.y || 0}
-                radius={seat.width ? seat.width / 2 : 10}
-                fill={seatColor}
-                stroke={borderColor}
-                strokeWidth={2}
-                onClick={() => handleSeatClick(seat)}
-                onTap={() => handleSeatClick(seat)}
-                style={{ cursor: 'pointer' }}
-              />
+              <React.Fragment key={`seat_${seat._id}`}>
+                {/* Asiento */}
+                <Circle
+                  x={seat.x || seat.posicion?.x || 0}
+                  y={seat.y || seat.posicion?.y || 0}
+                  radius={seat.width ? seat.width / 2 : 10}
+                  fill={seatColor}
+                  stroke={borderColor}
+                  strokeWidth={2}
+                  onClick={() => handleSeatClick(seat)}
+                  onTap={() => handleSeatClick(seat)}
+                  style={{ cursor: 'pointer' }}
+                />
+                
+                {/* Nombre del asiento */}
+                <Text
+                  x={(seat.x || seat.posicion?.x || 0) - 15}
+                  y={(seat.y || seat.posicion?.y || 0) + 20}
+                  text={seatName}
+                  fontSize={10}
+                  fill="#333"
+                  fontFamily="Arial"
+                  align="center"
+                  width={30}
+                />
+              </React.Fragment>
             );
           })}
 
