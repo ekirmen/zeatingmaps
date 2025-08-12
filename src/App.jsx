@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import { useTenant } from './contexts/TenantContext';
 import TenantErrorBoundary from './components/TenantErrorBoundary';
@@ -15,23 +15,10 @@ const LoadingSpinner = () => (
     justifyContent: 'center', 
     alignItems: 'center', 
     height: '100vh',
-    flexDirection: 'column'
+    fontSize: '18px',
+    color: '#666'
   }}>
-    <div style={{ 
-      width: '50px', 
-      height: '50px', 
-      border: '5px solid #f3f3f3',
-      borderTop: '5px solid #1890ff',
-      borderRadius: '50%',
-      animation: 'spin 1s linear infinite'
-    }}></div>
-    <p style={{ marginTop: '20px', color: '#666' }}>Cargando aplicación...</p>
-    <style>{`
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    `}</style>
+    Cargando aplicación...
   </div>
 );
 
@@ -73,46 +60,44 @@ const App = () => {
 
   return (
     <ConfigProvider theme={theme}>
-      <Router>
-        <Routes>
-          {/* Rutas del Backoffice - Solo si está habilitado */}
-          {finalShowBackoffice && (
-            <>
-              <Route path="/dashboard/*" element={<BackofficeApp />} />
-              <Route path="/backoffice/*" element={<BackofficeApp />} />
-              <Route path="/admin/*" element={<BackofficeApp />} />
-              <Route path="/saas/*" element={<BackofficeApp />} />
-            </>
-          )}
+      <Routes>
+        {/* Rutas del Backoffice - Solo si está habilitado */}
+        {finalShowBackoffice && (
+          <>
+            <Route path="/dashboard/*" element={<BackofficeApp />} />
+            <Route path="/backoffice/*" element={<BackofficeApp />} />
+            <Route path="/admin/*" element={<BackofficeApp />} />
+            <Route path="/saas/*" element={<BackofficeApp />} />
+          </>
+        )}
 
-          {/* Rutas del Store - Solo si está habilitado */}
-          {finalShowStore && (
-            <>
-              <Route path="/store/*" element={<StoreApp />} />
-              <Route path="/eventos/*" element={<StoreApp />} />
-              <Route path="/comprar/*" element={<StoreApp />} />
-            </>
-          )}
+        {/* Rutas del Store - Solo si está habilitado */}
+        {finalShowStore && (
+          <>
+            <Route path="/store/*" element={<StoreApp />} />
+            <Route path="/eventos/*" element={<StoreApp />} />
+            <Route path="/comprar/*" element={<StoreApp />} />
+          </>
+        )}
 
-          {/* Ruta principal - Redirigir según configuración */}
-          <Route path="/" element={
-            <Navigate to={
-              finalShowSaaS ? "/dashboard" : 
-              finalShowStore ? "/store" : 
-              "/dashboard"
-            } replace />
-          } />
+        {/* Ruta principal - Redirigir según configuración */}
+        <Route path="/" element={
+          <Navigate to={
+            finalShowSaaS ? "/dashboard" :
+            finalShowStore ? "/store" :
+            "/dashboard"
+          } replace />
+        } />
 
-          {/* Ruta de fallback - Redirigir según configuración */}
-          <Route path="*" element={
-            <Navigate to={
-              finalShowSaaS ? "/dashboard" : 
-              finalShowStore ? "/store" : 
-              "/dashboard"
-            } replace />
-          } />
-        </Routes>
-      </Router>
+        {/* Ruta de fallback - Redirigir según configuración */}
+        <Route path="*" element={
+          <Navigate to={
+            finalShowSaaS ? "/dashboard" :
+            finalShowStore ? "/store" :
+            "/dashboard"
+          } replace />
+        } />
+      </Routes>
     </ConfigProvider>
   );
 };
