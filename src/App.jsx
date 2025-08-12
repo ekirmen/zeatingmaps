@@ -1,82 +1,106 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ConfigProvider } from 'antd';
 import { useTenant } from './contexts/TenantContext';
+import TenantErrorBoundary from './components/TenantErrorBoundary';
 import StoreApp from './store/StoreApp';
 import BackofficeApp from './backoffice/BackofficeApp';
-import TenantErrorBoundary from './components/TenantErrorBoundary';
+import { getCurrentDomainConfig, shouldShowSaaS, shouldShowBackoffice, shouldShowStore } from './config/domainConfig';
+import './index.css';
 
-function App() {
-  const location = useLocation();
-  const path = location.pathname;
-  const { currentTenant, loading, error, detectTenant } = useTenant();
+// Componente de carga
+const LoadingSpinner = () => (
+  <div style={{ 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    height: '100vh',
+    flexDirection: 'column'
+  }}>
+    <div style={{ 
+      width: '50px', 
+      height: '50px', 
+      border: '5px solid #f3f3f3',
+      borderTop: '5px solid #1890ff',
+      borderRadius: '50%',
+      animation: 'spin 1s linear infinite'
+    }}></div>
+    <p style={{ marginTop: '20px', color: '#666' }}>Cargando aplicación...</p>
+    <style>{`
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `}</style>
+  </div>
+);
 
-  // Determina si la ruta actual pertenece al backoffice
-  const isBackoffice = path.startsWith('/backoffice') || path.startsWith('/dashboard');
+// Componente principal de la aplicación
+const App = () => {
+  const { currentTenant, loading, error } = useTenant();
+  const domainConfig = getCurrentDomainConfig();
 
-  // Si está cargando, mostrar loading
+  // Si está cargando, mostrar spinner
   if (loading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        fontSize: '18px'
-      }}>
-        Detectando empresa...
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
-  // Si hay error de tenant y NO es backoffice, mostrar el error
-  if (error && !isBackoffice) {
-    // Extraer subdominio del hostname
-    const hostname = window.location.hostname;
-    let subdomain = null;
-    
-    if (hostname.includes('.vercel.app')) {
-      const parts = hostname.split('.');
-      if (parts.length >= 3) {
-        const firstPart = parts[0];
-        if (firstPart.includes('-')) {
-          subdomain = firstPart.split('-')[0];
-        } else {
-          subdomain = firstPart;
-        }
-      }
-    } else if (hostname.includes('.')) {
-      const parts = hostname.split('.');
-      if (parts.length >= 2) {
-        subdomain = parts[0];
-      }
-    }
-
-    return (
-      <TenantErrorBoundary 
-        error={error}
-        subdomain={subdomain}
-        onRetry={detectTenant}
-      />
-    );
+  // Si hay error, mostrar error boundary
+  if (error) {
+    return <TenantErrorBoundary error={error} />;
   }
 
-  // Si es backoffice, siempre permitir acceso
-  if (isBackoffice) {
-    return <BackofficeApp />;
-  }
+  // Configurar tema de Ant Design según el dominio
+  const theme = {
+    token: {
+      colorPrimary: domainConfig.theme.primaryColor,
+      colorSuccess: domainConfig.theme.secondaryColor,
+    },
+  };
 
-  // Si no hay tenant pero no hay error (caso de desarrollo local)
-  if (!currentTenant && !error) {
-    return <StoreApp />;
-  }
+  return (
+    <ConfigProvider theme={theme}>
+      <Router>
+        <Routes>
+          {/* Rutas del Backoffice - Solo si está habilitado para el dominio */}
+          {shouldShowBackoffice() && (
+            <>
+              <Route path="/dashboard/*" element={<BackofficeApp />} />
+              <Route path="/backoffice/*" element={<BackofficeApp />} />
+              <Route path="/admin/*" element={<BackofficeApp />} />
+            </>
+          )}
 
-  // Si hay tenant válido, mostrar la aplicación normal
-  if (currentTenant) {
-    return <StoreApp />;
-  }
+          {/* Rutas del Store - Solo si está habilitado para el dominio */}
+          {shouldShowStore() && (
+            <>
+              <Route path="/store/*" element={<StoreApp />} />
+              <Route path="/eventos/*" element={<StoreApp />} />
+              <Route path="/comprar/*" element={<StoreApp />} />
+            </>
+          )}
 
-  // Caso por defecto
-  return <StoreApp />;
-}
+          {/* Ruta principal - Redirigir según configuración del dominio */}
+          <Route path="/" element={
+            <Navigate to={
+              shouldShowSaaS() ? "/dashboard" : 
+              shouldShowStore() ? "/store" : 
+              "/dashboard"
+            } replace />
+          } />
+
+          {/* Ruta de fallback - Redirigir según configuración */}
+          <Route path="*" element={
+            <Navigate to={
+              shouldShowSaaS() ? "/dashboard" : 
+              shouldShowStore() ? "/store" : 
+              "/dashboard"
+            } replace />
+          } />
+        </Routes>
+      </Router>
+    </ConfigProvider>
+  );
+};
 
 export default App;

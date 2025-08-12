@@ -1,100 +1,46 @@
 {
-  "buildCommand": "npm run vercel-build",
-  "outputDirectory": "build",
-  "framework": "create-react-app",
-  "build": {
-    "env": {
-      "CI": "false",
-      "GENERATE_SOURCEMAP": "false",
-      "DISABLE_ESLINT_PLUGIN": "true",
-      "SKIP_PREFLIGHT_CHECK": "true",
-      "NODE_ENV": "production"
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
     }
-  },
+  ],
+  "routes": [
+    {
+      "src": "/dashboard/(.*)",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/saas/(.*)",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/store/(.*)",
+      "dest": "/index.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "domains": [
+    "veneventos.com",
+    "www.veneventos.com",
+    "*.veneventos.com",
+    "kreatickets.com",
+    "www.kreatickets.com",
+    "*.kreatickets.com"
+  ],
   "functions": {
     "api/**/*.js": {
-      "runtime": "@vercel/node@3.0.0"
+      "runtime": "nodejs18.x"
     }
   },
-  "rewrites": [
-    {
-      "source": "/store/static/:path*",
-      "destination": "/static/:path*"
-    },
-    {
-      "source": "/store/manifest.json",
-      "destination": "/manifest.json"
-    },
-    {
-      "source": "/store/logo192.png",
-      "destination": "/logo192.png"
-    },
-    {
-      "source": "/store/logo512.png",
-      "destination": "/logo512.png"
-    },
-    {
-      "source": "/store/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/payment-success/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/backoffice/static/:path*",
-      "destination": "/static/:path*"
-    },
-    {
-      "source": "/backoffice/manifest.json",
-      "destination": "/manifest.json"
-    },
-    {
-      "source": "/backoffice/logo192.png",
-      "destination": "/logo192.png"
-    },
-    {
-      "source": "/backoffice/logo512.png",
-      "destination": "/logo512.png"
-    },
-    {
-      "source": "/backoffice/:path*",
-      "destination": "/index.html"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/404",
-      "destination": "/index.html",
-      "statusCode": 404
-    }
-  ],
-  "headers": [
-    {
-      "source": "/static/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
-    }
-  ]
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
