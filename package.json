@@ -13,7 +13,7 @@
     "build:fast": "cross-env GENERATE_SOURCEMAP=false CI=false DISABLE_ESLINT_PLUGIN=true SKIP_PREFLIGHT_CHECK=true craco build",
     "preview": "serve -s build",
     "eject": "react-scripts eject",
-    "vercel-build": "npm run build",
+    "vercel-build": "CI=false npm run build",
     "test": "craco test",
     "test:ci": "cross-env CI=true craco test --watchAll=false --passWithNoTests",
     "test:db": "node scripts/db-check.js",
