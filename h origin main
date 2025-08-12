@@ -1,0 +1,5 @@
+[33mef00cea[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: add null safety to getTenantUrl function to prevent runtime errors
+[33ma2f43fb[m fix: correct getDynamicDomainConfig function and add proper fallbacks
+[33md3a55eb[m fix: use react-scripts build directly for Vercel deployment
+[33m3ba9140[m restore: working Vercel config with create-react-app framework and proper rewrites
+[33mffeec82[m fix: configure Vercel routes for React SPA with proper static file handling
