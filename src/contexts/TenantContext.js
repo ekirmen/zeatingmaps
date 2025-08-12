@@ -223,11 +223,29 @@ export const TenantProvider = ({ children }) => {
     },
     // Función helper para obtener la URL completa del tenant
     getTenantUrl: () => {
-      if (!currentTenant) return null;
-      return currentTenant.full_url || 
-             (currentTenant.subdomain && currentTenant.domain ? 
-              `${currentTenant.subdomain}.${currentTenant.domain}` : 
-              currentTenant.domain);
+      if (!currentTenant || typeof currentTenant !== 'object') return null;
+      
+      // Si tiene full_url, usarla directamente
+      if (currentTenant.full_url) {
+        return currentTenant.full_url;
+      }
+      
+      // Si tiene subdomain y domain, construir la URL
+      if (currentTenant.subdomain && currentTenant.domain) {
+        return `${currentTenant.subdomain}.${currentTenant.domain}`;
+      }
+      
+      // Si solo tiene domain
+      if (currentTenant.domain) {
+        return currentTenant.domain;
+      }
+      
+      // Si solo tiene subdomain
+      if (currentTenant.subdomain) {
+        return currentTenant.subdomain;
+      }
+      
+      return null;
     },
     // Función helper para verificar si es el dominio principal
     isMainDomain: () => isMainDomain()
