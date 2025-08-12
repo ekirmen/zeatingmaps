@@ -817,6 +817,12 @@ const SaasDashboard = () => {
             <Button icon={<FileTextOutlined />} onClick={() => message.info('Templates de soporte')}>
               Templates
             </Button>
+            <Button 
+              icon={<DatabaseOutlined />} 
+              onClick={() => window.location.href = '/dashboard/saas/diagnostico'}
+            >
+              Diagnóstico Completo
+            </Button>
             <Button type="primary" icon={<PlusOutlined />} onClick={handleAddTenant}>
               Agregar Empresa
             </Button>

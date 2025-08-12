@@ -40,6 +40,7 @@ import Formularios from './pages/Formularios';
 import Productos from './pages/Productos';
 import PlantillasProductos from './pages/PlantillasProductos';
 import SaasDashboard from './pages/SaasDashboard';
+import SaasDiagnostico from './pages/SaasDiagnostico';
 import TenantDetail from './pages/TenantDetail';
 import SaasSettings from './pages/SaasSettings';
 
@@ -117,6 +118,7 @@ const BackofficeApp = () => {
         {/* Panel SaaS */}
         <Route path="saas" element={<SaasDashboard />} />
         <Route path="saas/settings" element={<SaasSettings />} />
+        <Route path="saas/diagnostico" element={<SaasDiagnostico />} />
         <Route path="tenant/:id" element={<TenantDetail />} />
         
         {/* Configuración */}
