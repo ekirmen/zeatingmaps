@@ -129,12 +129,16 @@ export const useSeatLockStore = create((set, get) => ({
           set({ lockedSeats: [], lockedTables: [] });
         } else {
           console.log('[SEAT_LOCK] Bloqueos iniciales cargados:', data);
+          console.log('📊 [SEAT_LOCK] Total de bloqueos encontrados:', data?.length || 0);
           // Validar que data sea un array
           const validData = Array.isArray(data) ? data : [];
           
           // Separar bloqueos de asientos y mesas
           const seatLocks = validData.filter(lock => lock.lock_type === 'seat' || !lock.lock_type);
           const tableLocks = validData.filter(lock => lock.lock_type === 'table');
+          
+          console.log('🪑 [SEAT_LOCK] Bloqueos de asientos:', seatLocks.length);
+          console.log('🪑 [SEAT_LOCK] Bloqueos de mesas:', tableLocks.length);
           
           set({ 
             lockedSeats: seatLocks,
@@ -253,6 +257,8 @@ export const useSeatLockStore = create((set, get) => ({
 
   // Bloquear asiento individual
   lockSeat: async (seatId, status = 'seleccionado', overrideFuncionId = null) => {
+    console.log('🚀 [SEAT_LOCK] Iniciando proceso de bloqueo para asiento:', seatId);
+    
     // Verificar que supabase esté disponible
     if (!supabase) {
       console.error('[SEAT_LOCK] Cliente Supabase no disponible');
@@ -315,25 +321,32 @@ export const useSeatLockStore = create((set, get) => ({
         return false;
       }
 
+      console.log('💾 [SEAT_LOCK] Asiento guardado exitosamente en la base de datos');
+
       // Actualización local inmediata
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
+        console.log('📊 [SEAT_LOCK] Estado local ANTES del cambio:', currentSeats);
+        
+        const newLockedSeats = [
+          ...currentSeats.filter((s) => s.seat_id !== seatId),
+          {
+            seat_id: seatId,
+            funcion_id: funcionIdNum,
+            session_id: sessionId,
+            locked_at: lockedAt,
+            expires_at: expiresAt,
+            status,
+            lock_type: 'seat',
+          },
+        ];
+        console.log('🔒 [SEAT_LOCK] Estado local DESPUÉS del cambio:', newLockedSeats);
         return {
-          lockedSeats: [
-            ...currentSeats.filter((s) => s.seat_id !== seatId),
-            {
-              seat_id: seatId,
-              funcion_id: funcionIdNum,
-              session_id: sessionId,
-              locked_at: lockedAt,
-              expires_at: expiresAt,
-              status,
-              lock_type: 'seat',
-            },
-          ],
+          lockedSeats: newLockedSeats,
         };
       });
 
+      console.log('✅ Asiento bloqueado exitosamente en DB y estado local');
       return true;
     } catch (error) {
       console.error('[SEAT_LOCK] Error inesperado al bloquear asiento:', error);
@@ -433,6 +446,8 @@ export const useSeatLockStore = create((set, get) => ({
 
   // Desbloquear asiento individual
   unlockSeat: async (seatId, overrideFuncionId = null) => {
+    console.log('🚀 [SEAT_LOCK] Iniciando proceso de desbloqueo para asiento:', seatId);
+    
     // Verificar que supabase esté disponible
     if (!supabase) {
       console.error('[SEAT_LOCK] Cliente Supabase no disponible');
@@ -494,17 +509,22 @@ export const useSeatLockStore = create((set, get) => ({
         console.error('[SEAT_LOCK] Error al desbloquear asiento:', error);
         return false;
       }
+
+      console.log('💾 [SEAT_LOCK] Asiento eliminado exitosamente de la base de datos');
     
       // Actualización local inmediata
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
+        console.log('📊 [SEAT_LOCK] Estado local ANTES del desbloqueo:', currentSeats);
+        
         const updatedSeats = currentSeats.filter((s) => s.seat_id !== seatId);
-        console.log('[SEAT_LOCK] Asiento desbloqueado localmente:', seatId, 'Asientos restantes:', updatedSeats.length);
+        console.log('🔓 [SEAT_LOCK] Estado local DESPUÉS del desbloqueo:', updatedSeats);
         return {
           lockedSeats: updatedSeats,
         };
       });
     
+      console.log('✅ Asiento desbloqueado exitosamente en DB y estado local');
       return true;
     } catch (error) {
       console.error('[SEAT_LOCK] Error inesperado al desbloquear asiento:', error);

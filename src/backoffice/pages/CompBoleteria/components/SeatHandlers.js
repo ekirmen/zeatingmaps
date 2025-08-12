@@ -46,12 +46,20 @@ export const createSeatHandlers = ({
       
       if (blockedExists) {
         // Desbloquear asiento
+        console.log('🔓 Intentando desbloquear asiento:', seat._id, 'para función:', currentFuncId);
         setCarrito(carrito.filter(i => !(i._id === seat._id && i.isBlocked)));
-        unlockSeat(seat._id, currentFuncId).catch(console.error);
-        message.success('Asiento desbloqueado');
+        unlockSeat(seat._id, currentFuncId).then((result) => {
+          console.log('✅ Asiento desbloqueado exitosamente:', result);
+          message.success('Asiento desbloqueado');
+        }).catch(err => {
+          console.error('❌ Error al desbloquear asiento:', err);
+          message.error('Error al desbloquear el asiento');
+        });
       } else {
         // Bloquear asiento
-        lockSeat(seat._id, currentFuncId).then(() => {
+        console.log('🔒 Intentando bloquear asiento:', seat._id, 'para función:', currentFuncId);
+        lockSeat(seat._id, currentFuncId).then((result) => {
+          console.log('✅ Asiento bloqueado exitosamente:', result);
           setCarrito([
             ...carrito,
             {
@@ -67,8 +75,8 @@ export const createSeatHandlers = ({
           ]);
           message.success('Asiento bloqueado correctamente');
         }).catch(err => {
+          console.error('❌ Error al bloquear asiento:', err);
           message.error('Error al bloquear el asiento');
-          console.error('Error locking seat:', err);
         });
       }
       return;

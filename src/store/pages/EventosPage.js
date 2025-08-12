@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Button, Card, Select, message, Spin, Alert, Tabs, Row, Col } from 'antd';
-import { CalendarOutlined, EnvironmentOutlined, ClockCircleOutlined, ArrowLeftOutlined, ShoppingCartOutlined } from '@ant-design/icons';
+import { CalendarOutlined, EnvironmentOutlined, ClockCircleOutlined, ArrowLeftOutlined, ShoppingCartOutlined, BugOutlined } from '@ant-design/icons';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 import { supabase } from '../../supabaseClient';
 
@@ -16,6 +16,7 @@ import Cart from './Cart';
 import ProductosWidget from '../components/ProductosWidget';
 import { diagnoseMapaAccess, testMapaQuery, generateDiagnosticReport } from '../../utils/databaseDiagnostics';
 import { getZonaColor } from '../../utils/getZonaColor';
+import DiagnosticReport from '../../components/DiagnosticReport';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -32,9 +33,10 @@ const EventosPage = () => {
   const [selectedFunctionId, setSelectedFunctionId] = useState(null);
   const [mapa, setMapa] = useState(null);
   const [plantillaPrecios, setPlantillaPrecios] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [diagnosticReport, setDiagnosticReport] = useState(null);
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [activeTab, setActiveTab] = useState('seats');
@@ -204,6 +206,25 @@ const EventosPage = () => {
               message.error(`Error al cargar mapa: ${report.summary.errorCount} problema(s) detectado(s). Revisar consola para detalles.`);
             } else if (!report.summary.mapaExists) {
               message.warning('No existe un mapa para esta sala. Contactar al administrador.');
+            }
+            
+            // Mostrar reporte de diagnóstico detallado
+            console.log('🔍 [DIAGNÓSTICO] REPORTE COMPLETO:', report);
+            console.log('📋 [DIAGNÓSTICO] RESUMEN:', report.summary);
+            console.log('⚠️ [DIAGNÓSTICO] ADVERTENCIAS:', report.summary.criticalIssues);
+            console.log('📝 [DIAGNÓSTICO] ACCIONES RECOMENDADAS:', report.actions);
+            
+            // Mostrar alertas específicas para problemas críticos
+            if (report.summary.criticalIssues.length > 0) {
+              const criticalErrors = report.summary.criticalIssues.filter(issue => issue.priority === 'HIGH');
+              if (criticalErrors.length > 0) {
+                message.error(`Problemas críticos detectados: ${criticalErrors.length}. Revisar consola para detalles.`);
+              }
+              
+              const warnings = report.summary.criticalIssues.filter(issue => issue.priority === 'MEDIUM');
+              if (warnings.length > 0) {
+                message.warning(`Advertencias detectadas: ${warnings.length}. Revisar consola para detalles.`);
+              }
             }
           } catch (diagnosticError) {
             console.error('[MAPA] Error durante el diagnóstico:', diagnosticError);
@@ -655,40 +676,41 @@ const EventosPage = () => {
                   🔍 Diagnóstico
                 </Button>
               </Col>
+              
+              {diagnosticReport && (
+                <Col>
+                  <Button 
+                    onClick={() => setShowDiagnostic(!showDiagnostic)}
+                    type="default"
+                  >
+                    {showDiagnostic ? '📋 Ocultar Reporte' : '📋 Ver Reporte'}
+                  </Button>
+                </Col>
+              )}
+              
+              {diagnosticReport && (
+                <Col>
+                  <Button 
+                    onClick={() => {
+                      setDiagnosticReport(null);
+                      setShowDiagnostic(false);
+                    }}
+                    type="text"
+                    danger
+                  >
+                    🗑️ Limpiar
+                  </Button>
+                </Col>
+              )}
             </Row>
           </div>
         )}
 
-        {diagnosticReport && (
-          <Alert
-            message="Reporte de Diagnóstico"
-            description={
-              <div>
-                <p><strong>Resumen:</strong></p>
-                <ul>
-                  <li>Errores: {diagnosticReport.summary.errorCount}</li>
-                  <li>Acceso a tabla: {diagnosticReport.summary.canAccess ? '✅' : '❌'}</li>
-                  <li>Sala existe: {diagnosticReport.summary.salaExists ? '✅' : '❌'}</li>
-                  <li>Mapa existe: {diagnosticReport.summary.mapaExists ? '✅' : '❌'}</li>
-                  <li>Autenticado: {diagnosticReport.summary.isAuthenticated ? '✅' : '❌'}</li>
-                </ul>
-                {diagnosticReport.recommendations.length > 0 && (
-                  <>
-                    <p><strong>Recomendaciones:</strong></p>
-                    <ul>
-                      {diagnosticReport.recommendations.map((rec, index) => (
-                        <li key={index}>{rec}</li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </div>
-            }
-            type={diagnosticReport.summary.hasErrors ? "error" : "info"}
-            showIcon
-            closable
-            onClose={() => setDiagnosticReport(null)}
-            style={{ marginBottom: 16 }}
+        {diagnosticReport && showDiagnostic && (
+          <DiagnosticReport 
+            report={diagnosticReport} 
+            onRefresh={runManualDiagnostic}
+            showDetails={true}
           />
         )}
       </div>
@@ -857,9 +879,74 @@ const EventosPage = () => {
                 </Button>
               </Card>
             )}
+
+            {/* Botón de diagnóstico del sistema */}
+            <Card title="Herramientas del Sistema" className="mt-4">
+              <div className="space-y-2">
+                <Button 
+                  type="dashed" 
+                  size="large"
+                  onClick={async () => {
+                    try {
+                      setIsDiagnosing(true);
+                      const diagnosis = await diagnoseMapaAccess(null);
+                      const report = generateDiagnosticReport(diagnosis, []);
+                      setDiagnosticReport(report);
+                      setShowDiagnostic(true);
+                      message.success('Diagnóstico del sistema completado');
+                    } catch (error) {
+                      console.error('Error en diagnóstico del sistema:', error);
+                      message.error('Error al ejecutar diagnóstico del sistema');
+                    } finally {
+                      setIsDiagnosing(false);
+                    }
+                  }}
+                  loading={isDiagnosing}
+                  className="w-full"
+                  icon={<BugOutlined />}
+                >
+                  🔍 Diagnóstico del Sistema
+                </Button>
+                
+                {diagnosticReport && (
+                  <Button 
+                    type="default" 
+                    size="small"
+                    onClick={() => setShowDiagnostic(!showDiagnostic)}
+                    className="w-full"
+                  >
+                    {showDiagnostic ? '📋 Ocultar Reporte' : '📋 Ver Reporte'}
+                  </Button>
+                )}
+              </div>
+            </Card>
           </div>
         </div>
       </div>
+
+      {/* Reporte de diagnóstico */}
+      {diagnosticReport && showDiagnostic && (
+        <div className="max-w-7xl mx-auto px-4 pb-8">
+          <DiagnosticReport 
+            report={diagnosticReport} 
+            onRefresh={async () => {
+              try {
+                setIsDiagnosing(true);
+                const diagnosis = await diagnoseMapaAccess(null);
+                const report = generateDiagnosticReport(diagnosis, []);
+                setDiagnosticReport(report);
+                message.success('Diagnóstico actualizado');
+              } catch (error) {
+                console.error('Error al actualizar diagnóstico:', error);
+                message.error('Error al actualizar diagnóstico');
+              } finally {
+                setIsDiagnosing(false);
+              }
+            }}
+            showDetails={true}
+          />
+        </div>
+      )}
     </div>
   );
 };

@@ -20,6 +20,7 @@ const SeatingMap = ({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: "" });
   const [hoveredTable, setHoveredTable] = useState(null);
+  const [showSeatLegend, setShowSeatLegend] = useState(false);
   
   // Obtener funciones de seat lock
   const { isSeatLocked, isSeatLockedByMe } = useSeatLockStore();
@@ -87,7 +88,8 @@ const SeatingMap = ({
     
     const seatZonaId =
       typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
-    const isAvailable = availableZonas?.includes(seatZonaId);
+    // En modo bloqueo, permitir selección de cualquier asiento disponible
+    const isAvailable = blockMode ? true : (availableZonas?.includes(seatZonaId) || !availableZonas);
     const isAbono = abonoMode && abonoSeats.includes(silla._id);
     const isSelected = selectedZonaId && selectedZonaId === seatZonaId;
 
@@ -162,7 +164,7 @@ const SeatingMap = ({
         onTap={handleClick}
       />
     );
-  }, [availableZonas, abonoMode, abonoSeats, selectedZonaId, tempBlocks, colorMap, isSeatLocked, isSeatLockedByMe, onSeatClick]);
+  }, [availableZonas, abonoMode, abonoSeats, selectedZonaId, tempBlocks, colorMap, isSeatLocked, isSeatLockedByMe, onSeatClick, blockMode]);
 
   const renderTable = useCallback((mesa) => {
     // Usar 'shape' en lugar de 'type' para determinar el tipo de mesa
@@ -262,6 +264,61 @@ const SeatingMap = ({
       className="w-full h-full overflow-hidden"
       style={{ backgroundColor: "#f9fafb" }}
     >
+      {/* Botón informativo de estado de asientos */}
+      <div style={{ 
+        position: 'absolute', 
+        top: 10, 
+        right: 10, 
+        zIndex: 1000 
+      }}>
+        <button
+          onClick={() => setShowSeatLegend(!showSeatLegend)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg shadow-lg text-sm font-medium"
+          title="Estado de Asientos"
+        >
+          ℹ️ Estado de Asientos
+        </button>
+        
+        {showSeatLegend && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            right: 0,
+            background: 'rgba(0,0,0,0.9)',
+            color: 'white',
+            padding: '15px',
+            borderRadius: '8px',
+            fontSize: '12px',
+            minWidth: '200px',
+            marginTop: '5px'
+          }}>
+            <div className="space-y-2">
+              <div className="font-semibold text-center mb-2">Estado de Asientos</div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span>Disponible</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span>Seleccionado</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <span>Bloqueado por mí</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                <span>Bloqueado por otro</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                <span>Vendido/Reservado</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Debug temporal - mostrar datos del mapa */}
       {mapa && (
         <div style={{ 

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef, useMemo, useEffect } from 'react';
 import { message } from 'antd';
 import SeatingMap from './SeatingMap';
 import SeatAnimation from '../../components/SeatAnimation';
@@ -8,7 +8,8 @@ import {
   useMapData,
   useDiscountCode,
   useSeatManagement,
-  useZoneManagement
+  useZoneManagement,
+  useBoleteriaMemory
 } from './hooks';
 
 // Importar componentes separados
@@ -74,6 +75,32 @@ const ZonesAndPrices = ({
     zonePriceRanges,
     handleClearZoneSelection
   } = useZoneManagement(selectedPlantilla, getPrecioConDescuento);
+  
+  // Hook para recordar el último estado
+  const { saveState, restoreState, clearState } = useBoleteriaMemory();
+  
+  // Restaurar estado guardado cuando se carguen los datos
+  useEffect(() => {
+    if (eventos.length > 0 && !selectedEvent && !selectedFuncion) {
+      const restoredState = restoreState(eventos, funciones, []);
+      if (restoredState) {
+        console.log('🔄 Restaurando estado guardado:', restoredState);
+        onEventSelect(restoredState.selectedEvent);
+        // La función se seleccionará automáticamente cuando se seleccione el evento
+      }
+    }
+  }, [eventos, funciones, selectedEvent, selectedFuncion, restoreState, onEventSelect]);
+  
+  // Guardar estado cuando cambie
+  useEffect(() => {
+    if (selectedEvent && selectedFuncion) {
+      saveState({
+        selectedEvent,
+        selectedFuncion,
+        selectedPlantilla
+      });
+    }
+  }, [selectedEvent, selectedFuncion, selectedPlantilla, saveState]);
 
   // Debug logs
   console.log('ZonesAndPrices - selectedPlantilla:', selectedPlantilla);
@@ -275,6 +302,17 @@ const ZonesAndPrices = ({
 
         {/* Zone Selector */}
         <ZoneSelector {...zoneSelectorProps} />
+        
+        {/* Botón para limpiar estado guardado */}
+        <div className="flex justify-end">
+          <button
+            onClick={clearState}
+            className="text-gray-500 hover:text-gray-700 text-sm underline"
+            title="Limpiar estado guardado"
+          >
+            Limpiar estado guardado
+          </button>
+        </div>
       </div>
 
       {/* Área principal del mapa */}

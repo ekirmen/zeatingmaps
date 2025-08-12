@@ -28,6 +28,9 @@ const SeatingMapUnified = ({
   const canLockSeats = !!channel;
   const { getSeatColor, getBorderColor } = useSeatColors();
   
+  // Referencia al stage de Konva
+  const stageRef = useRef(null);
+  
   // Usar hook de sincronización para obtener asientos con estado real
   const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(mapa, funcionId);
 
