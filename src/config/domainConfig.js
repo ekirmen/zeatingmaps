@@ -80,7 +80,7 @@ export const getDomainConfig = (hostname) => {
       logo: '/assets/logo.png'
     },
     features: {
-      showSaaS: true,
+      showSaaS: false,
       showStore: true,
       showBackoffice: true,
       showTicketing: true,
