@@ -1,7 +1,6 @@
--- Script para crear un tenant de prueba para zeatingmaps-ekirmens-projects.vercel.app
--- Adaptado a la estructura existente de la tabla tenants
+-- Script simple para insertar tenant zeatingmaps
+-- Ejecuta este script en el SQL Editor de Supabase
 
--- Insertar tenant de prueba para zeatingmaps
 INSERT INTO tenants (
     subdomain,
     company_name,
@@ -25,7 +24,7 @@ DO UPDATE SET
     settings = EXCLUDED.settings,
     updated_at = NOW();
 
--- Verificar que se insertó correctamente
+-- Verificar que se insertó
 SELECT 
     id,
     subdomain,
@@ -35,14 +34,3 @@ SELECT
     created_at
 FROM tenants 
 WHERE subdomain = 'zeatingmaps';
-
--- Mostrar todos los tenants existentes
-SELECT 
-    id,
-    subdomain,
-    company_name,
-    status,
-    plan_type,
-    created_at
-FROM tenants 
-ORDER BY created_at DESC;

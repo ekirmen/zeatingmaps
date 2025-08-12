@@ -6,10 +6,12 @@ const TenantContext = createContext();
 export const TenantProvider = ({ children }) => {
   const [currentTenant, setCurrentTenant] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Detectar tenant del subdominio
   const detectTenant = async () => {
     try {
+      setError(null);
       const hostname = window.location.hostname;
       console.log('🔍 Detectando tenant para hostname:', hostname);
       
@@ -61,18 +63,37 @@ export const TenantProvider = ({ children }) => {
         .from('tenants')
         .select('*')
         .eq('subdomain', subdomain)
+        .eq('status', 'active')
         .single();
 
       if (error) {
-        console.error('❌ Error detecting tenant:', error);
-        console.log('📍 No se encontró tenant, usando configuración por defecto');
+        if (error.code === 'PGRST116') {
+          // No se encontró el tenant
+          console.log('📍 No se encontró tenant activo para subdominio:', subdomain);
+          setError(`No se encontró una empresa configurada para el subdominio: ${subdomain}`);
+        } else {
+          console.error('❌ Error detecting tenant:', error.message);
+          setError(`Error al detectar empresa: ${error.message}`);
+        }
         setCurrentTenant(null);
+      } else if (tenant && typeof tenant === 'object') {
+        // Verificar que el tenant tenga los campos mínimos requeridos
+        if (tenant.id && tenant.subdomain && tenant.company_name) {
+          console.log('✅ Tenant encontrado:', tenant);
+          setCurrentTenant(tenant);
+        } else {
+          console.warn('⚠️ Tenant encontrado pero con datos incompletos:', tenant);
+          setError('La empresa encontrada tiene datos incompletos');
+          setCurrentTenant(null);
+        }
       } else {
-        console.log('✅ Tenant encontrado:', tenant);
-        setCurrentTenant(tenant);
+        console.warn('⚠️ Tenant encontrado pero no es un objeto válido:', tenant);
+        setError('La empresa encontrada no tiene un formato válido');
+        setCurrentTenant(null);
       }
     } catch (error) {
       console.error('❌ Error in tenant detection:', error);
+      setError(`Error inesperado: ${error.message}`);
       setCurrentTenant(null);
     } finally {
       setLoading(false);
@@ -86,7 +107,15 @@ export const TenantProvider = ({ children }) => {
   const value = {
     currentTenant,
     loading,
-    detectTenant
+    error,
+    detectTenant,
+    // Función helper para verificar si el tenant es válido
+    isTenantValid: () => {
+      return currentTenant && 
+             typeof currentTenant === 'object' && 
+             currentTenant.id && 
+             currentTenant.subdomain;
+    }
   };
 
   return (
