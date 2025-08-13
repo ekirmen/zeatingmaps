@@ -18,13 +18,58 @@ const handleError = (error) => {
 
 // === ZONAS ===
 export const fetchZonas = async () => {
-  const { data, error } = await supabase.from('zonas').select('*');
+  // Obtener tenant_id del usuario autenticado
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Usuario no autenticado');
+  }
+
+  // Obtener tenant_id del perfil del usuario
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .single();
+  
+  if (profileError || !profile?.tenant_id) {
+    throw new Error('Usuario sin tenant_id válido');
+  }
+
+  // Filtrar zonas por tenant_id del usuario
+  const { data, error } = await supabase
+    .from('zonas')
+    .select('*')
+    .eq('tenant_id', profile.tenant_id);
+  
   handleError(error);
   return data;
 };
 
 export const fetchZonasPorSala = async (salaId) => {
-  const { data, error } = await supabase.from('zonas').select('*').eq('sala_id', salaId);
+  // Obtener tenant_id del usuario autenticado
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    throw new Error('Usuario no autenticado');
+  }
+
+  // Obtener tenant_id del perfil del usuario
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .single();
+  
+  if (profileError || !profile?.tenant_id) {
+    throw new Error('Usuario sin tenant_id válido');
+  }
+
+  // Filtrar zonas por sala_id y tenant_id del usuario
+  const { data, error } = await supabase
+    .from('zonas')
+    .select('*')
+    .eq('sala_id', salaId)
+    .eq('tenant_id', profile.tenant_id);
+  
   handleError(error);
   return data;
 };
