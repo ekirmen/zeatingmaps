@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
-import { useTenant } from './TenantContext';
+import { useTenant } from '../../contexts/TenantContext';
 
 const IvaContext = createContext();
 
