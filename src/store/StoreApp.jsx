@@ -5,6 +5,7 @@ import Header from './components/StoreHeader';
 import BasicFooter from '../components/BasicFooter';
 import GlobalCartTimer from './components/GlobalCartTimer';
 import ProtectedRoute from './components/ProtectedRoute';
+import NotFoundPage from '../components/NotFoundPage';
 
 import Event from './pages/Event';
 import EventsVenue from './pages/EventsVenue';
@@ -16,7 +17,6 @@ import CartPage from './pages/Cart';
 import Pay from './pages/Pay';
 import FaqPage from './pages/FaqPage';
 import SeatSelectionPage from './pages/SeatSelectionPage';
-import NotFoundPage from './pages/NotFoundPage';
 import StoreLogin from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -75,7 +75,7 @@ const StoreApp = () => {
               <Route path="/payment-success/:locator?" element={<PaymentSuccess />} />
               <Route path="/thank-you" element={<ThankYouPage />} />
               <Route path="/404" element={<NotFoundPage />} />
-              <Route path="*" element={<Navigate to="/404" />} />
+              <Route path="*" element={<Navigate to="/store" replace />} />
             </Routes>
           </div>
           {showFooter && <BasicFooter />}
