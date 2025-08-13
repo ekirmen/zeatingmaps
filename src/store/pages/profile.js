@@ -1,198 +1,554 @@
+// src/store/pages/Profile.js
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, Button, Form, Input, message, Spin } from 'antd';
-import { UserOutlined, MailOutlined, PhoneOutlined, BankOutlined } from '@ant-design/icons';
+import { 
+  Card, Avatar, Descriptions, Button, message, Tabs, 
+  List, Tag, Space, Row, Col, Statistic, Divider,
+  Timeline, Empty, Spin, Alert, Image, Badge
+} from 'antd';
+import { 
+  UserOutlined, ShoppingOutlined, CalendarOutlined, 
+  CreditCardOutlined, HeartOutlined, SettingOutlined,
+  EditOutlined, SaveOutlined, CloseOutlined, DollarOutlined,
+  TicketOutlined, ClockCircleOutlined
+} from '@ant-design/icons';
+import { useAuth } from '../../contexts/AuthContext';
+import { useMultiTenant } from '../../hooks/useMultiTenant';
+import { 
+  getUserProfile, 
+  getUserPurchases, 
+  getUserReservations, 
+  getUserFavorites,
+  getUserActivityHistory,
+  updateUserProfile,
+  getUserStats
+} from '../services/userProfileService';
+
+const { TabPane } = Tabs;
 
 const Profile = () => {
-  const navigate = useNavigate();
+  const { user, logout } = useAuth();
+  const { activeTenant } = useMultiTenant();
+  const [editing, setEditing] = useState(false);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [userData, setUserData] = useState(null);
-  const [form] = Form.useForm();
+  const [purchases, setPurchases] = useState([]);
+  const [reservations, setReservations] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [activityHistory, setActivityHistory] = useState([]);
+  const [stats, setStats] = useState({});
+  const [editForm, setEditForm] = useState({});
 
   useEffect(() => {
-    // Simular carga de datos del usuario
-    const token = localStorage.getItem('token');
-    if (!token) {
-      message.error('Debes iniciar sesión para ver tu perfil');
-      navigate('/store');
-      return;
+    if (user) {
+      loadUserData();
     }
+  }, [user]);
 
-    // Simular datos del usuario
-    setUserData({
-      id: localStorage.getItem('userId') || 'user-123',
-      login: 'usuario@ejemplo.com',
-      nombre: 'Usuario',
-      apellido: 'Ejemplo',
-      empresa: 'Empresa Demo',
-      telefono: '+58 412-123-4567',
-      email: 'usuario@ejemplo.com'
-    });
-
-    setLoading(false);
-  }, [navigate]);
-
-  const handleUpdateProfile = async (values) => {
+  const loadUserData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      // Simular actualización
-      console.log('Actualizando perfil:', values);
-      
-      setUserData(prev => ({
-        ...prev,
-        ...values
-      }));
+      // Cargar todos los datos en paralelo
+      const [
+        profileData,
+        purchasesData,
+        reservationsData,
+        favoritesData,
+        activityData,
+        statsData
+      ] = await Promise.all([
+        getUserProfile(user.id),
+        getUserPurchases(user.id),
+        getUserReservations(user.id),
+        getUserFavorites(user.id),
+        getUserActivityHistory(user.id),
+        getUserStats(user.id)
+      ]);
 
-      message.success('Perfil actualizado correctamente');
+      // Procesar datos del perfil
+      const processedProfile = {
+        email: user.email,
+        name: profileData?.login || user.user_metadata?.name || 'Usuario',
+        phone: profileData?.telefono || 'No especificado',
+        role: profileData?.user_tenants?.[0]?.role || 'usuario',
+        company: profileData?.user_tenants?.[0]?.tenants?.company_name || 'N/A',
+        joinDate: new Date(user.created_at).toLocaleDateString('es-ES'),
+        lastLogin: new Date().toLocaleDateString('es-ES'),
+        avatar: user.user_metadata?.avatar_url || null,
+        permissions: profileData?.user_tenants?.[0]?.permissions || {}
+      };
+
+      setProfile(processedProfile);
+      setEditForm({
+        name: processedProfile.name,
+        phone: processedProfile.phone
+      });
+
+      // Procesar otros datos
+      setPurchases(purchasesData);
+      setReservations(reservationsData);
+      setFavorites(favoritesData);
+      setActivityHistory(activityData);
+      setStats(statsData);
+
     } catch (error) {
-      console.error('Error al actualizar perfil:', error);
-      message.error('Error al actualizar el perfil');
+      console.error('Error al cargar datos:', error);
+      message.error('Error al cargar tu perfil');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userId');
-    message.success('Sesión cerrada correctamente');
-    navigate('/store');
+  const handleSave = async () => {
+    try {
+      await updateUserProfile(user.id, {
+        email: editForm.name,
+        phone: editForm.phone
+      });
+      
+      setProfile(prev => ({
+        ...prev,
+        name: editForm.name,
+        phone: editForm.phone
+      }));
+      
+      setEditing(false);
+      message.success('Perfil actualizado correctamente');
+    } catch (error) {
+      message.error('Error al actualizar el perfil');
+    }
   };
+
+  const handleLogout = () => {
+    logout();
+    message.success('Sesión cerrada correctamente');
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount || 0);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      'completed': 'green',
+      'pending': 'orange',
+      'cancelled': 'red',
+      'active': 'blue',
+      'expired': 'gray'
+    };
+    return colors[status] || 'default';
+  };
+
+  if (!user) {
+    return (
+      <div style={{ padding: '24px', textAlign: 'center' }}>
+        <Alert
+          message="Debes iniciar sesión"
+          description="Para ver tu perfil, necesitas iniciar sesión primero."
+          type="warning"
+          showIcon
+          action={
+            <Button size="small" type="primary" href="/store/login">
+              Iniciar Sesión
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div style={{ padding: '24px', textAlign: 'center' }}>
         <Spin size="large" />
+        <div style={{ marginTop: '16px' }}>Cargando tu perfil...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Mi Perfil
-          </h1>
-          <p className="text-gray-600">
-            Gestiona tu información personal y configuración de cuenta
-          </p>
-        </div>
+    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+      {/* Header del Perfil */}
+      <Card style={{ marginBottom: '24px' }}>
+        <Row gutter={24} align="middle">
+          <Col>
+            <Avatar 
+              size={80} 
+              src={profile?.avatar} 
+              icon={<UserOutlined />}
+              style={{ border: '3px solid #1890ff' }}
+            />
+          </Col>
+          <Col flex="1">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <h1 style={{ margin: '0 0 8px 0' }}>{profile?.name}</h1>
+                <p style={{ margin: '0 0 4px 0', color: '#666' }}>
+                  <UserOutlined /> {profile?.email}
+                </p>
+                <p style={{ margin: '0 0 4px 0', color: '#666' }}>
+                  <CalendarOutlined /> Miembro desde {profile?.joinDate}
+                </p>
+                <p style={{ margin: '0 0 4px 0', color: '#666' }}>
+                  <SettingOutlined /> {profile?.company}
+                </p>
+                <p style={{ margin: '0 0 4px 0', color: '#666' }}>
+                  <Tag color="blue">{profile?.role}</Tag>
+                </p>
+              </div>
+              <Space>
+                {editing ? (
+                  <>
+                    <Button type="primary" icon={<SaveOutlined />} onClick={handleSave}>
+                      Guardar
+                    </Button>
+                    <Button icon={<CloseOutlined />} onClick={() => setEditing(false)}>
+                      Cancelar
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button icon={<EditOutlined />} onClick={() => setEditing(true)}>
+                      Editar
+                    </Button>
+                    <Button danger onClick={handleLogout}>
+                      Cerrar Sesión
+                    </Button>
+                  </>
+                )}
+              </Space>
+            </div>
+          </Col>
+        </Row>
+      </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Información del Perfil */}
-          <div className="lg:col-span-2">
-            <Card title="Información Personal" className="mb-6">
-              <Form
-                form={form}
-                layout="vertical"
-                initialValues={userData}
-                onFinish={handleUpdateProfile}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Form.Item
-                    name="nombre"
-                    label="Nombre"
-                    rules={[{ required: true, message: 'Por favor ingresa tu nombre' }]}
-                  >
-                    <Input prefix={<UserOutlined />} placeholder="Tu nombre" />
-                  </Form.Item>
+      {/* Estadísticas Reales */}
+      <Row gutter={16} style={{ marginBottom: '24px' }}>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Compras"
+              value={stats.totalPurchases || 0}
+              prefix={<ShoppingOutlined />}
+              valueStyle={{ color: '#3f8600' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Reservas Activas"
+              value={stats.activeReservations || 0}
+              prefix={<CalendarOutlined />}
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Favoritos"
+              value={stats.totalFavorites || 0}
+              prefix={<HeartOutlined />}
+              valueStyle={{ color: '#cf1322' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="Total Gastado"
+              value={stats.totalSpent || 0}
+              prefix="$"
+              precision={2}
+              valueStyle={{ color: '#722ed1' }}
+            />
+          </Card>
+        </Col>
+      </Row>
 
-                  <Form.Item
-                    name="apellido"
-                    label="Apellido"
-                    rules={[{ required: true, message: 'Por favor ingresa tu apellido' }]}
-                  >
-                    <Input prefix={<UserOutlined />} placeholder="Tu apellido" />
-                  </Form.Item>
+      {/* Tabs de Información */}
+      <Card>
+        <Tabs defaultActiveKey="profile" size="large">
+          {/* Tab: Información Personal */}
+          <TabPane 
+            tab={
+              <span>
+                <UserOutlined />
+                Información Personal
+              </span>
+            } 
+            key="profile"
+          >
+            <Descriptions bordered column={2} size="large">
+              <Descriptions.Item label="Nombre" span={2}>
+                {editing ? (
+                  <Input 
+                    value={editForm.name}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                  />
+                ) : (
+                  profile?.name
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="Email" span={2}>
+                {profile?.email}
+              </Descriptions.Item>
+              <Descriptions.Item label="Teléfono">
+                {editing ? (
+                  <Input 
+                    value={editForm.phone}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                  />
+                ) : (
+                  profile?.phone
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="Rol">
+                <Tag color="blue">{profile?.role}</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Empresa" span={2}>
+                {profile?.company}
+              </Descriptions.Item>
+              <Descriptions.Item label="Fecha de Registro">
+                {profile?.joinDate}
+              </Descriptions.Item>
+              <Descriptions.Item label="Último Acceso">
+                {profile?.lastLogin}
+              </Descriptions.Item>
+            </Descriptions>
+          </TabPane>
 
-                  <Form.Item
-                    name="email"
-                    label="Email"
-                    rules={[
-                      { required: true, message: 'Por favor ingresa tu email' },
-                      { type: 'email', message: 'Email inválido' }
+          {/* Tab: Mis Compras */}
+          <TabPane 
+            tab={
+              <span>
+                <ShoppingOutlined />
+                Mis Compras ({purchases.length})
+              </span>
+            } 
+            key="purchases"
+          >
+            {purchases.length > 0 ? (
+              <List
+                dataSource={purchases}
+                renderItem={purchase => (
+                  <List.Item
+                    actions={[
+                      <Button size="small">Ver Detalles</Button>,
+                      <Button size="small">Descargar Ticket</Button>
                     ]}
                   >
-                    <Input prefix={<MailOutlined />} placeholder="tu@email.com" />
-                  </Form.Item>
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar 
+                          size={64}
+                          src={purchase.events?.image_url}
+                          icon={<ShoppingOutlined />}
+                        />
+                      }
+                      title={purchase.events?.name || 'Evento'}
+                      description={
+                        <Space direction="vertical" size="small">
+                          <div>
+                            <CalendarOutlined /> {formatDate(purchase.events?.date)}
+                          </div>
+                          <div>
+                            <TicketOutlined /> {purchase.tickets?.length || 0} tickets
+                          </div>
+                          <div>
+                            <CreditCardOutlined /> Orden: {purchase.id}
+                          </div>
+                        </Space>
+                      }
+                    />
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#52c41a' }}>
+                        {formatCurrency(purchase.total_amount)}
+                      </div>
+                      <Tag color={getStatusColor(purchase.status)}>
+                        {purchase.status}
+                      </Tag>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <Empty
+                description="No tienes compras aún"
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              >
+                <Button type="primary" href="/store">
+                  Explorar Eventos
+                </Button>
+              </Empty>
+            )}
+          </TabPane>
 
-                  <Form.Item
-                    name="telefono"
-                    label="Teléfono"
+          {/* Tab: Mis Reservas */}
+          <TabPane 
+            tab={
+              <span>
+                <CalendarOutlined />
+                Mis Reservas ({reservations.length})
+              </span>
+            } 
+            key="reservations"
+          >
+            {reservations.length > 0 ? (
+              <List
+                dataSource={reservations}
+                renderItem={reservation => (
+                  <List.Item
+                    actions={[
+                      <Button size="small" type="primary">Confirmar</Button>,
+                      <Button size="small" danger>Cancelar</Button>
+                    ]}
                   >
-                    <Input prefix={<PhoneOutlined />} placeholder="+58 412-123-4567" />
-                  </Form.Item>
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar 
+                          size={64}
+                          src={reservation.events?.image_url}
+                          icon={<CalendarOutlined />}
+                        />
+                      }
+                      title={reservation.events?.name || 'Evento'}
+                      description={
+                        <Space direction="vertical" size="small">
+                          <div>
+                            <CalendarOutlined /> {formatDate(reservation.events?.date)}
+                          </div>
+                          <div>
+                            <ClockCircleOutlined /> Expira: {formatDate(reservation.expires_at)}
+                          </div>
+                          <div>
+                            <TicketOutlined /> {reservation.ticket_count || 0} tickets
+                          </div>
+                        </Space>
+                      }
+                    />
+                    <div style={{ textAlign: 'right' }}>
+                      <Tag color={getStatusColor(reservation.status)}>
+                        {reservation.status}
+                      </Tag>
+                    </div>
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <Empty
+                description="No tienes reservas activas"
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            )}
+          </TabPane>
 
-                  <Form.Item
-                    name="empresa"
-                    label="Empresa"
+          {/* Tab: Mis Favoritos */}
+          <TabPane 
+            tab={
+              <span>
+                <HeartOutlined />
+                Mis Favoritos ({favorites.length})
+              </span>
+            } 
+            key="favorites"
+          >
+            {favorites.length > 0 ? (
+              <List
+                dataSource={favorites}
+                renderItem={favorite => (
+                  <List.Item
+                    actions={[
+                      <Button size="small" type="primary">Ver Evento</Button>,
+                      <Button size="small" danger>Quitar</Button>
+                    ]}
                   >
-                    <Input prefix={<BankOutlined />} placeholder="Nombre de tu empresa" />
-                  </Form.Item>
-                </div>
-
-                <div className="flex justify-end space-x-4 mt-6">
-                  <Button onClick={() => navigate('/store')}>
-                    Cancelar
-                  </Button>
-                  <Button type="primary" htmlType="submit" loading={loading}>
-                    Actualizar Perfil
-                  </Button>
-                </div>
-              </Form>
-            </Card>
-          </div>
-
-          {/* Panel Lateral */}
-          <div className="space-y-6">
-            <Card title="Acciones Rápidas">
-              <div className="space-y-3">
-                <Button 
-                  type="primary" 
-                  block 
-                  onClick={() => navigate('/store/cart')}
-                >
-                  Ver Carrito
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar 
+                          size={64}
+                          src={favorite.events?.image_url}
+                          icon={<HeartOutlined />}
+                        />
+                      }
+                      title={favorite.events?.name || 'Evento'}
+                      description={
+                        <Space direction="vertical" size="small">
+                          <div>
+                            <CalendarOutlined /> {formatDate(favorite.events?.date)}
+                          </div>
+                          <div>
+                            <SettingOutlined /> {favorite.events?.venue || 'Venue'}
+                          </div>
+                        </Space>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            ) : (
+              <Empty
+                description="No tienes eventos favoritos"
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              >
+                <Button type="primary" href="/store">
+                  Explorar Eventos
                 </Button>
-                <Button 
-                  block 
-                  onClick={() => navigate('/store')}
-                >
-                  Ver Eventos
-                </Button>
-                <Button 
-                  danger 
-                  block 
-                  onClick={handleLogout}
-                >
-                  Cerrar Sesión
-                </Button>
-              </div>
-            </Card>
+              </Empty>
+            )}
+          </TabPane>
 
-            <Card title="Información de la Cuenta">
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">ID de Usuario:</span>
-                  <span className="font-mono">{userData?.id}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Login:</span>
-                  <span>{userData?.login}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Estado:</span>
-                  <span className="text-green-600">Activo</span>
-                </div>
-              </div>
-            </Card>
-          </div>
-        </div>
-      </div>
+          {/* Tab: Historial de Actividad */}
+          <TabPane 
+            tab={
+              <span>
+                <ClockCircleOutlined />
+                Historial de Actividad
+              </span>
+            } 
+            key="activity"
+          >
+            {activityHistory.length > 0 ? (
+              <Timeline>
+                {activityHistory.map(activity => (
+                  <Timeline.Item 
+                    key={activity.id}
+                    color={activity.type === 'purchase' ? 'green' : 'blue'}
+                  >
+                    <p style={{ margin: '0 0 4px 0', fontWeight: 'bold' }}>
+                      {activity.action}
+                    </p>
+                    <p style={{ margin: '0 0 4px 0', color: '#666' }}>
+                      {activity.events?.name || 'Evento'}
+                    </p>
+                    <p style={{ margin: '0', fontSize: '12px', color: '#999' }}>
+                      {formatDate(activity.created_at)}
+                    </p>
+                  </Timeline.Item>
+                ))}
+              </Timeline>
+            ) : (
+              <Empty
+                description="No hay actividad reciente"
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+              />
+            )}
+          </TabPane>
+        </Tabs>
+      </Card>
     </div>
   );
 };
 
-export default Profile; 
+export default Profile;
