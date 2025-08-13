@@ -47,7 +47,7 @@ import SaasSettings from './pages/SaasSettings';
 const BackofficeApp = () => {
   return (
     <Routes>
-      <Route path="/dashboard" element={<BackofficeLayout />}>
+     <Route path="/" element={<BackofficeLayout />}>
         <Route index element={<Dashboard />} />
         
         {/* Actividad */}
@@ -130,7 +130,7 @@ const BackofficeApp = () => {
         <Route path="payment-gateways" element={<PaymentGateways />} />
         
         {/* Redirecciones */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="." replace />} />
       </Route>
     </Routes>
   );
