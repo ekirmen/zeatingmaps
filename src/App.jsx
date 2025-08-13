@@ -84,10 +84,10 @@ const App = () => {
         <Route path="/" element={
           <Navigate
             to={
-              finalShowStore
-                ? "/store"
-                : finalShowSaaS
+              finalShowSaaS
                 ? "/dashboard"
+                : finalShowStore
+                ? "/store"
                 : "/dashboard"
             }
             replace

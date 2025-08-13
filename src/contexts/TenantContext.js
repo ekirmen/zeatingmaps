@@ -28,16 +28,46 @@ export const TenantProvider = ({ children }) => {
       // Caso 2: Dominio principal (sistema.veneventos.com)
       if (isMainDomain()) {
         console.log('🏠 Dominio principal detectado: sistema.veneventos.com');
-        // Para el dominio principal, no necesitamos un tenant específico
-        // pero sí podemos cargar configuración por defecto
-        setCurrentTenant({
+        // Para el dominio principal, establecer tenant y configuración por defecto
+        const mainTenant = {
           id: 'main-domain',
           company_name: 'Veneventos - Sistema Principal',
           full_url: 'sistema.veneventos.com',
           domain: 'veneventos.com',
           subdomain: 'sistema',
           status: 'active'
-        });
+        };
+        
+        setCurrentTenant(mainTenant);
+        
+        // Establecer configuración por defecto para el dominio principal
+        const mainConfig = {
+          id: 'main-domain',
+          name: 'Veneventos - Sistema Principal',
+          theme: {
+            primaryColor: '#1890ff',
+            secondaryColor: '#52c41a',
+            logo: '/assets/logo-veneventos.png'
+          },
+          features: {
+            showSaaS: true,
+            showStore: true,
+            showBackoffice: true,
+            showTicketing: true,
+            showEvents: true,
+            showVenues: true
+          },
+          branding: {
+            companyName: 'Veneventos - Sistema Principal',
+            tagline: 'Sistema de Eventos Profesional',
+            contactEmail: 'info@veneventos.com'
+          },
+          customRoutes: [],
+          isMainDomain: true,
+          tenantType: 'main'
+        };
+        
+        setDomainConfig(mainConfig);
         setLoading(false);
         return;
       }
@@ -122,6 +152,34 @@ export const TenantProvider = ({ children }) => {
             const dynamicConfig = await getDynamicDomainConfig(supabase, hostname);
             if (dynamicConfig) {
               setDomainConfig(dynamicConfig);
+            } else {
+              // Si no hay configuración dinámica, usar configuración por defecto
+              const defaultConfig = {
+                id: tenant.id,
+                name: tenant.company_name,
+                theme: {
+                  primaryColor: tenant.primary_color || '#1890ff',
+                  secondaryColor: tenant.secondary_color || '#52c41a',
+                  logo: tenant.logo_url || '/assets/logo.png'
+                },
+                features: {
+                  showSaaS: true,
+                  showStore: true,
+                  showBackoffice: true,
+                  showTicketing: true,
+                  showEvents: true,
+                  showVenues: true
+                },
+                branding: {
+                  companyName: tenant.company_name,
+                  tagline: 'Sistema de Gestión de Eventos',
+                  contactEmail: tenant.contact_email
+                },
+                customRoutes: [],
+                isMainDomain: false,
+                tenantType: 'company'
+              };
+              setDomainConfig(defaultConfig);
             }
             return;
           }
@@ -144,6 +202,34 @@ export const TenantProvider = ({ children }) => {
           const dynamicConfig = await getDynamicDomainConfig(supabase, hostname);
           if (dynamicConfig) {
             setDomainConfig(dynamicConfig);
+          } else {
+            // Si no hay configuración dinámica, usar configuración por defecto
+            const defaultConfig = {
+              id: tenant.id,
+              name: tenant.company_name,
+              theme: {
+                primaryColor: tenant.primary_color || '#1890ff',
+                secondaryColor: tenant.secondary_color || '#52c41a',
+                logo: tenant.logo_url || '/assets/logo.png'
+              },
+              features: {
+                showSaaS: true,
+                showStore: true,
+                showBackoffice: true,
+                showTicketing: true,
+                showEvents: true,
+                showVenues: true
+              },
+              branding: {
+                companyName: tenant.company_name,
+                tagline: 'Sistema de Gestión de Eventos',
+                contactEmail: tenant.contact_email
+              },
+              customRoutes: [],
+              isMainDomain: false,
+              tenantType: 'company'
+            };
+            setDomainConfig(defaultConfig);
           }
           return;
         }
@@ -190,6 +276,34 @@ export const TenantProvider = ({ children }) => {
           const dynamicConfig = await getDynamicDomainConfig(supabase, `${subdomain}.vercel.app`);
           if (dynamicConfig) {
             setDomainConfig(dynamicConfig);
+          } else {
+            // Si no hay configuración dinámica, usar configuración por defecto
+            const defaultConfig = {
+              id: tenant.id,
+              name: tenant.company_name,
+              theme: {
+                primaryColor: tenant.primary_color || '#1890ff',
+                secondaryColor: tenant.secondary_color || '#52c41a',
+                logo: tenant.logo_url || '/assets/logo.png'
+              },
+              features: {
+                showSaaS: true,
+                showStore: true,
+                showBackoffice: true,
+                showTicketing: true,
+                showEvents: true,
+                showVenues: true
+              },
+              branding: {
+                companyName: tenant.company_name,
+                tagline: 'Sistema de Gestión de Eventos',
+                contactEmail: tenant.contact_email
+              },
+              customRoutes: [],
+              isMainDomain: false,
+              tenantType: 'company'
+            };
+            setDomainConfig(defaultConfig);
           }
         } else {
           console.warn('⚠️ Tenant encontrado pero con datos incompletos:', tenant);
