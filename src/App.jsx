@@ -82,21 +82,34 @@ const App = () => {
 
         {/* Ruta principal - Redirigir según configuración */}
         <Route path="/" element={
-          <Navigate to={
-            finalShowSaaS ? "/dashboard" :
-            finalShowStore ? "/store" :
-            "/dashboard"
-          } replace />
+          <Navigate
+            to={
+              finalShowStore
+                ? "/store"
+                : finalShowSaaS
+                ? "/dashboard"
+                : "/dashboard"
+            }
+            replace
+          />
         } />
 
         {/* Ruta de fallback - Redirigir según configuración */}
-        <Route path="*" element={
-          <Navigate to={
-            finalShowSaaS ? "/dashboard" :
-            finalShowStore ? "/store" :
-            "/dashboard"
-          } replace />
-        } />
+        <Route
+          path="*"
+          element={
+            <Navigate
+              to={
+                finalShowStore
+                  ? "/store"
+                  : finalShowSaaS
+                  ? "/dashboard"
+                  : "/dashboard"
+              }
+              replace
+            />
+          }
+        />
       </Routes>
     </ConfigProvider>
   );
