@@ -39,6 +39,9 @@ const Header = ({ onLogin, onLogout }) => {
       }
     };
     checkSession();
+    
+    // Debug: Log initial state
+    console.log('Header component mounted, initial modal state:', isAccountModalVisible);
   }, []);
 
   const handleRegister = async () => {
@@ -165,6 +168,19 @@ const Header = ({ onLogin, onLogout }) => {
     navigate(url);
   };
 
+  const openAccountModal = () => {
+    try {
+      setAccountMode('login');
+      setFormData({ email: '', password: '' });
+      setRegisterData({ email: '', password: '', phone: '', phoneCode: '+58' });
+      setForgotEmail('');
+      setError('');
+      setIsAccountModalVisible(true);
+    } catch (error) {
+      console.error('Error opening modal:', error);
+    }
+  };
+
   const { theme } = useTheme();
 
   const handleInputChange = (e) => {
@@ -173,6 +189,15 @@ const Header = ({ onLogin, onLogout }) => {
     setError('');
   };
 
+  console.log('Modal state in render:', isAccountModalVisible, 'Account mode:', accountMode);
+  console.log('Component re-rendering, modal should be:', isAccountModalVisible ? 'visible' : 'hidden');
+  console.log('Current form data:', formData);
+  console.log('Current register data:', registerData);
+  console.log('Modal visibility state:', isAccountModalVisible);
+  console.log('Modal mode state:', accountMode);
+  console.log('Modal will render with these props:', { isAccountModalVisible, accountMode, formData, registerData });
+  console.log('Modal will render with className: account-modal and wrapClassName: account-modal-wrapper');
+  
   return (
     <header className="header-custom py-4 shadow-md" style={{ backgroundColor: theme.headerBg, color: theme.headerText }}>
       <div className="container mx-auto flex justify-between items-center px-4">
@@ -214,7 +239,7 @@ const Header = ({ onLogin, onLogout }) => {
             </Button>
           ) : (
             <Button
-              onClick={() => navigate('/store/login')}
+              onClick={openAccountModal}
               style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}
             >
               {t('header.account')}
@@ -224,6 +249,13 @@ const Header = ({ onLogin, onLogout }) => {
       </div>
 
       {/* Modal Cuenta */}
+      {console.log('Rendering modal with state:', isAccountModalVisible)}
+      {isAccountModalVisible && console.log('Modal should be visible now')}
+      {isAccountModalVisible && console.log('Modal DOM element should be created')}
+      {isAccountModalVisible && console.log('Modal props:', { accountMode, formData: Object.keys(formData) })}
+      {isAccountModalVisible && console.log('Modal will render with title:', accountMode === 'login' ? t('header.login') : accountMode === 'register' ? t('header.signup') : t('header.forgot'))}
+      {isAccountModalVisible && console.log('Modal will render with footer button text:', accountMode === 'login' ? t('header.login') : accountMode === 'register' ? t('header.register') : t('button.continue'))}
+      {isAccountModalVisible && console.log('Modal will render with wrapClassName: account-modal-wrapper')}
       <Modal
         title={
           accountMode === 'login'
@@ -233,12 +265,46 @@ const Header = ({ onLogin, onLogout }) => {
             : t('header.forgot')
         }
         open={isAccountModalVisible}
-        onCancel={() => setIsAccountModalVisible(false)}
+        zIndex={1000}
+        style={{ position: 'relative' }}
+        width={400}
+        centered
+        maskClosable={true}
+        destroyOnClose={true}
+        getContainer={() => document.body}
+        forceRender={true}
+        afterClose={() => {
+          console.log('Modal closed, cleaning up state');
+          setAccountMode('login');
+          setFormData({ email: '', password: '' });
+          setRegisterData({ email: '', password: '', phone: '', phoneCode: '+58' });
+          setForgotEmail('');
+          setError('');
+        }}
+        keyboard={true}
+        closable={true}
+        confirmLoading={false}
+        okButtonProps={{ type: 'primary' }}
+        cancelButtonProps={{ type: 'default' }}
+        wrapClassName="account-modal-wrapper"
+        className="account-modal"
+        titleRender={(title) => (
+          <div style={{ color: theme.headerText, fontWeight: 'bold' }}>
+            {title}
+          </div>
+        )}
+        onCancel={() => {
+          setIsAccountModalVisible(false);
+          setAccountMode('login');
+          setFormData({ email: '', password: '' });
+          setRegisterData({ email: '', password: '', phone: '', phoneCode: '+58' });
+          setForgotEmail('');
+          setError('');
+        }}
         footer={[
           <Button
             key="submit"
-            type="default"
-            variant="outlined"
+            type="primary"
             block
             onClick={
               accountMode === 'login'
@@ -318,6 +384,29 @@ const Header = ({ onLogin, onLogout }) => {
       <Modal
         title={t('password.change')}
         open={isPasswordModalVisible}
+        zIndex={1000}
+        width={400}
+        centered
+        maskClosable={true}
+        destroyOnClose={true}
+        getContainer={() => document.body}
+        forceRender={true}
+        afterClose={() => {
+          console.log('Password modal closed, cleaning up state');
+          setPasswordData({ newPassword: '', confirmPassword: '' });
+        }}
+        keyboard={true}
+        closable={true}
+        confirmLoading={false}
+        okButtonProps={{ type: 'primary' }}
+        cancelButtonProps={{ type: 'default' }}
+        wrapClassName="password-modal-wrapper"
+        className="password-modal"
+        titleRender={(title) => (
+          <div style={{ color: theme.headerText, fontWeight: 'bold' }}>
+            {title}
+          </div>
+        )}
         onCancel={() => setIsPasswordModalVisible(false)}
         footer={[
           <Button key="submit" type="default" onClick={handleSavePassword}>{t('button.save')}</Button>,

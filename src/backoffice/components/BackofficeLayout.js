@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import SidebarMenu from './SidebarMenu';
 import AdminNotificationCenter from './AdminNotificationCenter';
+import DashboardLogin from './DashboardLogin';
 import { RecintoProvider } from '../contexts/RecintoContext';
 import { RecintoSalaProvider } from '../contexts/RecintoSalaContext';
 import { IvaProvider } from '../contexts/IvaContext';
@@ -14,6 +15,54 @@ const BackofficeLayout = () => {
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState(null);
+  
+  // Verificar autenticación al montar el componente
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        setIsAuthenticated(true);
+        // Aquí podrías verificar el token con el backend si es necesario
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+    };
+    
+    checkAuth();
+    
+    // Escuchar cambios en el localStorage
+    const handleStorageChange = () => {
+      checkAuth();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+  
+  // Función para manejar el login exitoso
+  const handleLogin = ({ token, user: userData }) => {
+    setIsAuthenticated(true);
+    setUser(userData);
+  };
+  
+  // Función para manejar el logout
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    setUser(null);
+  };
+  
+  // Si no está autenticado, mostrar el login
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <DashboardLogin onLogin={handleLogin} />
+      </div>
+    );
+  }
   
   if (isBoleteriaRoute || isCrearMapaRoute) {
     return (
@@ -65,11 +114,17 @@ const BackofficeLayout = () => {
                       <AdminNotificationCenter />
                       <div className="flex items-center space-x-3">
                         <div className="text-sm text-gray-500">
-                          Bienvenido, Administrador
+                          Bienvenido, {user?.email || 'Administrador'}
                         </div>
                         <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                          A
+                          {user?.email?.charAt(0).toUpperCase() || 'A'}
                         </div>
+                        <button
+                          onClick={handleLogout}
+                          className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded"
+                        >
+                          Cerrar Sesión
+                        </button>
                       </div>
                     </div>
                   </div>

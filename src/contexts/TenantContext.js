@@ -322,6 +322,22 @@ export const TenantProvider = ({ children }) => {
     detectTenant();
   }, []);
 
+  // Exponer el tenant actual globalmente para que otros servicios puedan acceder
+  useEffect(() => {
+    if (currentTenant?.id) {
+      // Guardar en localStorage para acceso desde servicios
+      localStorage.setItem('currentTenantId', currentTenant.id);
+      
+      // Exponer globalmente para acceso desde servicios de autenticación
+      if (typeof window !== 'undefined') {
+        window.__TENANT_CONTEXT__ = {
+          currentTenant,
+          getTenantId: () => currentTenant?.id
+        };
+      }
+    }
+  }, [currentTenant]);
+
   const value = {
     currentTenant,
     loading,

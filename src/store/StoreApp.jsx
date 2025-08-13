@@ -58,7 +58,7 @@ const StoreApp = () => {
               <Route path="/store/seat-selection/:funcionId" element={<SeatSelectionPage />} />
               <Route path="/store/cart" element={<CartPage />} />
               <Route path="/store/payment" element={
-                <ProtectedRoute>
+                <ProtectedRoute redirectTo="/store/login">
                   <Pay />
                 </ProtectedRoute>
               } />

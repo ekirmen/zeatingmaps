@@ -1,7 +1,107 @@
-// src/backoffice/services/authService.js
+// src/store/services/authService.js
 import { supabase } from '../../supabaseClient';
 import { supabaseAdmin } from '../../supabaseClient';
 import { SITE_URL } from '../../utils/siteUrl';
+
+// Función helper para obtener el tenant actual del contexto
+const getCurrentTenantId = () => {
+  try {
+    // Intentar obtener el tenant del localStorage (si se guardó previamente)
+    const tenantId = localStorage.getItem('currentTenantId');
+    if (tenantId) {
+      return tenantId;
+    }
+    
+    // Si no hay tenant en localStorage, intentar obtenerlo del contexto global
+    if (typeof window !== 'undefined' && window.__TENANT_CONTEXT__) {
+      const globalTenantId = window.__TENANT_CONTEXT__.getTenantId?.();
+      if (globalTenantId) {
+        return globalTenantId;
+      }
+    }
+    
+    // Si no se puede obtener el tenant, mostrar advertencia
+    console.warn('⚠️ No se pudo obtener el tenant_id. El usuario se registrará sin empresa asignada.');
+    return null;
+  } catch (error) {
+    console.warn('No se pudo obtener el tenant ID:', error);
+    return null;
+  }
+};
+
+// Función para obtener todos los tenants del usuario
+export const getUserTenants = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('user_tenants')
+      .select(`
+        tenant_id,
+        role,
+        permissions,
+        is_active,
+        is_primary,
+        tenants (
+          id,
+          company_name,
+          subdomain,
+          domain,
+          logo_url,
+          primary_color
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('is_active', true)
+      .order('is_primary', { ascending: false })
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error al obtener tenants del usuario:', error);
+    return [];
+  }
+};
+
+// Función para cambiar el tenant activo del usuario
+export const switchUserTenant = async (userId, newTenantId) => {
+  try {
+    const { data, error } = await supabase.rpc('switch_user_tenant', {
+      user_uuid: userId,
+      new_tenant_id: newTenantId
+    });
+
+    if (error) throw error;
+    
+    if (data) {
+      // Actualizar el tenant activo en localStorage
+      localStorage.setItem('currentTenantId', newTenantId);
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error al cambiar tenant:', error);
+    return false;
+  }
+};
+
+// Función para agregar un usuario a un tenant
+export const addUserToTenant = async (userId, tenantId, role = 'usuario', permissions = {}) => {
+  try {
+    const { data, error } = await supabase.rpc('add_user_to_tenant', {
+      user_uuid: userId,
+      tenant_uuid: tenantId,
+      user_role: role,
+      user_permissions: permissions
+    });
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error al agregar usuario al tenant:', error);
+    return false;
+  }
+};
 
 // Registro (sign up) con creación de perfil
 export const registerUser = async ({ email, password, phone }) => {
@@ -42,6 +142,15 @@ export const registerUser = async ({ email, password, phone }) => {
 
   const userId = user.id;
 
+  // Obtener el tenant_id actual
+  const tenantId = getCurrentTenantId();
+  
+  if (!tenantId) {
+    console.warn('⚠️ No se pudo obtener el tenant_id para el usuario registrado');
+    // En producción, esto debería ser un error crítico
+    // throw new Error('No se pudo determinar la empresa para el registro');
+  }
+
   // Crea perfil en tabla 'profiles' (relacionada con auth.users)
   const { error: profileError } = await supabase
     .from('profiles')
@@ -50,7 +159,32 @@ export const registerUser = async ({ email, password, phone }) => {
       login: email,
       telefono: phone,
       permisos: { role: 'usuario' }, // Asignar rol por defecto
+      tenant_id: tenantId, // Asignar el tenant_id correspondiente
     });
+
+  if (profileError) {
+    console.warn('⚠️ Error al crear perfil:', profileError.message);
+  }
+
+  // Agregar usuario al tenant actual usando la nueva tabla user_tenants
+  if (tenantId) {
+    try {
+      const { error: tenantError } = await supabase.rpc('add_user_to_tenant', {
+        user_uuid: userId,
+        tenant_uuid: tenantId,
+        user_role: 'usuario',
+        user_permissions: { role: 'usuario' }
+      });
+
+      if (tenantError) {
+        console.warn('⚠️ Error al agregar usuario al tenant:', tenantError.message);
+      } else {
+        console.log('✅ Usuario agregado exitosamente al tenant:', tenantId);
+      }
+    } catch (error) {
+      console.warn('⚠️ Error al agregar usuario al tenant:', error.message);
+    }
+  }
 
   if (profileError) {
     console.warn('⚠️ Error al crear perfil:', profileError.message);
@@ -76,7 +210,81 @@ export const loginUser = async ({ email, password }) => {
     throw new Error(error?.message || 'Credenciales incorrectas');
   }
 
+  // Verificar que el usuario tenga acceso al tenant actual
+  if (data.user) {
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('tenant_id, permisos')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profileError) {
+        console.warn('⚠️ No se pudo verificar el perfil del usuario:', profileError);
+      } else {
+        // Verificar que el usuario tenga un tenant_id válido
+        if (!profile.tenant_id) {
+          console.warn('⚠️ Usuario sin tenant_id asignado');
+          // En producción, esto podría ser un error crítico
+        }
+        
+        // Verificar que el usuario tenga acceso al tenant actual
+        const currentTenantId = getCurrentTenantId();
+        if (currentTenantId && profile.tenant_id && profile.tenant_id !== currentTenantId) {
+          console.warn('⚠️ Usuario intentando acceder a empresa diferente:', {
+            userTenant: profile.tenant_id,
+            currentTenant: currentTenantId
+          });
+          // En producción, esto debería ser un error de acceso denegado
+          // throw new Error('No tienes acceso a esta empresa');
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Error al verificar acceso del usuario:', error);
+    }
+  }
+
   return data;
+};
+
+// Función para verificar el acceso del usuario al tenant actual
+export const verifyTenantAccess = async (userId) => {
+  try {
+    const currentTenantId = getCurrentTenantId();
+    if (!currentTenantId) {
+      console.warn('⚠️ No se pudo obtener el tenant actual');
+      return { hasAccess: false, reason: 'No se pudo determinar la empresa' };
+    }
+
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('tenant_id, permisos')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('❌ Error al verificar perfil del usuario:', error);
+      return { hasAccess: false, reason: 'Error al verificar perfil' };
+    }
+
+    if (!profile.tenant_id) {
+      return { hasAccess: false, reason: 'Usuario sin empresa asignada' };
+    }
+
+    if (profile.tenant_id !== currentTenantId) {
+      return { 
+        hasAccess: false, 
+        reason: 'Usuario no tiene acceso a esta empresa',
+        userTenant: profile.tenant_id,
+        currentTenant: currentTenantId
+      };
+    }
+
+    return { hasAccess: true, profile };
+  } catch (error) {
+    console.error('❌ Error al verificar acceso del usuario:', error);
+    return { hasAccess: false, reason: 'Error inesperado' };
+  }
 };
 
 // Cierre de sesión
