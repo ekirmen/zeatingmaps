@@ -53,8 +53,9 @@ const Plano = () => {
       try {
         const recintosData = await import('../services/apibackoffice').then(mod => mod.fetchRecintos());
         setRecintos(recintosData);
+        console.log('[PLANO] Recintos cargados:', recintosData?.length || 0);
       } catch (error) {
-        console.error('Error al cargar recintos:', error);
+        console.error('[PLANO] Error al cargar recintos:', error);
       }
     };
     loadRecintos();
@@ -63,14 +64,17 @@ const Plano = () => {
   useEffect(() => {
     if (!sala) {
       setZonas([]);
+      console.log('[PLANO] No hay sala seleccionada, limpiando zonas');
       return;
     }
     const loadZonas = async () => {
       try {
+        console.log('[PLANO] Cargando zonas para sala:', sala.id, sala.nombre);
         const zonasData = await fetchZonasPorSala(sala.id);
         setZonas(zonasData || []);
+        console.log('[PLANO] Zonas cargadas:', zonasData?.length || 0);
       } catch (error) {
-        console.error('Error al cargar zonas:', error);
+        console.error('[PLANO] Error al cargar zonas:', error);
         setZonas([]);
       }
     };
@@ -98,8 +102,9 @@ const Plano = () => {
           });
         }
         setZoneSeatCounts(counts);
+        console.log('[PLANO] Conteo de asientos por zona:', counts);
       } catch (error) {
-        console.error('Error al cargar mapa:', error);
+        console.error('[PLANO] Error al cargar mapa:', error);
         setZoneSeatCounts({});
       }
     };
@@ -107,32 +112,58 @@ const Plano = () => {
   }, [sala]);
 
   const handleCrearZona = async () => {
-    if (!sala) return alert('Selecciona una sala.');
+    if (!recinto) {
+      console.warn('[PLANO] Intento de crear zona sin recinto seleccionado');
+      alert('Debe seleccionar un recinto primero.');
+      return;
+    }
+    
+    if (!sala) {
+      console.warn('[PLANO] Intento de crear zona sin sala seleccionada');
+      alert('Debe seleccionar una sala primero.');
+      return;
+    }
+
+    if (!nuevaZona.nombre.trim()) {
+      alert('El nombre de la zona es obligatorio.');
+      return;
+    }
+
     try {
+      console.log('[PLANO] Creando zona:', { ...nuevaZona, sala_id: sala.id });
       const nuevaZonaData = { ...nuevaZona, sala_id: sala.id };
       const zonaCreada = await createZona(nuevaZonaData);
       if (zonaCreada) {
         setZonas([...zonas, zonaCreada]);
+        console.log('[PLANO] Zona creada exitosamente:', zonaCreada);
       }
       setNuevaZona({ nombre: '', color: '#000000', aforo: 0, numerada: false });
       setModalIsOpen(false);
     } catch (err) {
-      console.error('Error al crear zona:', err);
+      console.error('[PLANO] Error al crear zona:', err);
+      alert('Error al crear la zona: ' + (err.message || 'Error desconocido'));
     }
   };
 
   const handleEditZona = async () => {
+    if (!recinto || !sala) {
+      alert('Debe seleccionar un recinto y una sala primero.');
+      return;
+    }
+
     try {
       const zonaData = { ...nuevaZona, sala_id: sala.id };
       const updatedZona = await updateZona(editingZona.id, zonaData);
       if (updatedZona) {
         setZonas(zonas.map(z => z.id === editingZona.id ? updatedZona : z));
+        console.log('[PLANO] Zona actualizada:', updatedZona);
       }
       setEditingZona(null);
       setNuevaZona({ nombre: '', color: '#000000', aforo: 0, numerada: false });
       setModalIsOpen(false);
     } catch (err) {
-      console.error('Error al editar zona:', err);
+      console.error('[PLANO] Error al editar zona:', err);
+      alert('Error al editar la zona: ' + (err.message || 'Error desconocido'));
     }
   };
 
@@ -141,15 +172,45 @@ const Plano = () => {
       try {
         await deleteZona(zonaId);
         setZonas(zonas.filter(z => z.id !== zonaId));
+        console.log('[PLANO] Zona eliminada:', zonaId);
       } catch (err) {
-        console.error('Error al eliminar zona:', err);
+        console.error('[PLANO] Error al eliminar zona:', err);
+        alert('Error al eliminar la zona: ' + (err.message || 'Error desconocido'));
       }
     }
   };
 
   const handleNavigateToCrearMapa = () => {
-    if (!sala) return alert('Selecciona una sala.');
+    if (!recinto) {
+      console.warn('[PLANO] Intento de ir a crear mapa sin recinto seleccionado');
+      alert('Debe seleccionar un recinto primero.');
+      return;
+    }
+    
+    if (!sala) {
+      console.warn('[PLANO] Intento de ir a crear mapa sin sala seleccionada');
+      alert('Debe seleccionar una sala primero.');
+      return;
+    }
+
+    if (zonas.length === 0) {
+      console.warn('[PLANO] Intento de ir a crear mapa sin zonas creadas');
+      alert('Debe crear al menos una zona antes de crear el mapa.');
+      return;
+    }
+
+    console.log('[PLANO] Navegando a crear mapa para sala:', sala.id);
     navigate(`/dashboard/crear-mapa/${sala.id}`);
+  };
+
+  // Función para validar si se puede crear zona
+  const canCreateZona = () => {
+    return recinto && sala;
+  };
+
+  // Función para validar si se puede ir a crear mapa
+  const canCreateMapa = () => {
+    return recinto && sala && zonas.length > 0;
   };
 
   return (
@@ -165,6 +226,7 @@ const Plano = () => {
               value={recinto?.id || ''}
               onChange={(e) => {
                 const r = recintos.find(r => String(r.id) === e.target.value);
+                console.log('[PLANO] Recinto seleccionado:', r);
                 setRecinto(r);
                 setSala(null);
               }}
@@ -183,6 +245,7 @@ const Plano = () => {
               value={sala?.id || ''}
               onChange={(e) => {
                 const s = recinto?.salas?.find(s => String(s.id) === e.target.value);
+                console.log('[PLANO] Sala seleccionada:', s);
                 setSala(s);
               }}
               disabled={!recinto}
@@ -195,17 +258,27 @@ const Plano = () => {
           </div>
         </div>
 
-        {!sala ? (
+        {!recinto ? (
           <div className="p-4 bg-yellow-100 text-yellow-800 rounded mb-6">
-            Por favor, seleccione un recinto y una sala para gestionar las zonas.
+            <strong>Seleccione un recinto</strong> para comenzar a gestionar zonas.
+          </div>
+        ) : !sala ? (
+          <div className="p-4 bg-blue-100 text-blue-800 rounded mb-6">
+            <strong>Recinto seleccionado:</strong> {recinto.nombre}. Ahora <strong>seleccione una sala</strong> para gestionar sus zonas.
           </div>
         ) : (
           <div>
             <h2 className="text-xl font-semibold mb-4 text-gray-700">Zonas de la sala: {sala.nombre}</h2>
             {zonas.length === 0 ? (
               <div className="text-center p-6 border border-dashed border-gray-300 rounded">
-                <p className="mb-4 text-gray-600">No hay zonas creadas.</p>
-                <button onClick={() => setModalIsOpen(true)} className="bg-indigo-600 text-white px-4 py-2 rounded">Crear Zona</button>
+                <p className="mb-4 text-gray-600">No hay zonas creadas para esta sala.</p>
+                <button 
+                  onClick={() => setModalIsOpen(true)} 
+                  className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={!canCreateZona()}
+                >
+                  Crear Primera Zona
+                </button>
               </div>
             ) : (
               <>
@@ -223,11 +296,27 @@ const Plano = () => {
                     </li>
                   ))}
                 </ul>
-                <button onClick={() => setModalIsOpen(true)} className="bg-green-600 text-white px-4 py-2 rounded">Crear Nueva Zona</button>
+                <button 
+                  onClick={() => setModalIsOpen(true)} 
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={!canCreateZona()}
+                >
+                  Crear Nueva Zona
+                </button>
               </>
             )}
             <div className="mt-6">
-              <button onClick={handleNavigateToCrearMapa} className="bg-blue-600 text-white px-5 py-2 rounded">Crear Mapa</button>
+              <button 
+                onClick={handleNavigateToCrearMapa} 
+                className={`px-5 py-2 rounded text-white ${
+                  canCreateMapa() 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : 'bg-gray-400 cursor-not-allowed'
+                }`}
+                disabled={!canCreateMapa()}
+              >
+                {canCreateMapa() ? 'Crear Mapa' : 'Seleccione recinto, sala y cree zonas primero'}
+              </button>
             </div>
           </div>
         )}

@@ -9,7 +9,7 @@ import {
   UserOutlined, ShoppingOutlined, CalendarOutlined, 
   CreditCardOutlined, HeartOutlined, SettingOutlined,
   EditOutlined, SaveOutlined, CloseOutlined, DollarOutlined,
-  TicketOutlined, ClockCircleOutlined
+  FileTextOutlined, ClockCircleOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMultiTenant } from '../../hooks/useMultiTenant';
@@ -364,7 +364,7 @@ const Profile = () => {
                             <CalendarOutlined /> {formatDate(purchase.events?.date)}
                           </div>
                           <div>
-                            <TicketOutlined /> {purchase.tickets?.length || 0} tickets
+                            <FileTextOutlined /> {purchase.tickets?.length || 0} tickets
                           </div>
                           <div>
                             <CreditCardOutlined /> Orden: {purchase.id}
@@ -433,7 +433,7 @@ const Profile = () => {
                             <ClockCircleOutlined /> Expira: {formatDate(reservation.expires_at)}
                           </div>
                           <div>
-                            <TicketOutlined /> {reservation.ticket_count || 0} tickets
+                            <FileTextOutlined /> {reservation.ticket_count || 0} tickets
                           </div>
                         </Space>
                       }
