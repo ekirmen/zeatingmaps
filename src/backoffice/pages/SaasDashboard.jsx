@@ -256,7 +256,9 @@ const SaasDashboard = () => {
       plan_type: tenant.plan_type,
       status: tenant.status,
       max_users: tenant.max_users,
-      max_events: tenant.max_events
+      max_events: tenant.max_events,
+      domain: tenant.domain,
+      full_url: tenant.full_url
     });
     setModalVisible(true);
   };
