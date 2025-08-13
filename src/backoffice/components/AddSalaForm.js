@@ -1,5 +1,7 @@
 // src/components/AddSalaForm.js
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../supabaseClient';
 
 const AddSalaForm = ({ onAddSala, onCancel, recintoId }) => {
   const [nombre, setNombre] = useState('');

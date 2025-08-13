@@ -1,9 +1,12 @@
 // src/components/CreateRecintoForm.jsx
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../supabaseClient';
 import { geocodeAddress } from '../../utils/geocode';
 import buildAddress from '../../utils/address';
 
 const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
+  const { user } = useAuth();
   const [nombre, setNombre] = useState('');
   const [capacidad, setCapacidad] = useState('');
   const [showAddress, setShowAddress] = useState(false);
@@ -39,16 +42,31 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 👉 buildAddress(details) genera 'direccion'
-    onCreateRecinto({
-      nombre,
-      direccion: buildAddress(details),
-      capacidad: Number(capacidad), // guarda como integer
-      ...details,                   // incluye pais, estado, codigopostal, etc.
-    });
+    try {
+      // Obtener tenant_id del usuario autenticado
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (error) throw error;
+
+      // 👉 buildAddress(details) genera 'direccion'
+      onCreateRecinto({
+        nombre,
+        direccion: buildAddress(details),
+        capacidad: Number(capacidad), // guarda como integer
+        ...details,                   // incluye pais, estado, codigopostal, etc.
+        tenant_id: profile.tenant_id, // incluir tenant_id
+      });
+    } catch (error) {
+      console.error('Error al obtener tenant_id:', error);
+      alert('Error al obtener información del usuario. Por favor, inténtalo de nuevo.');
+    }
   };
 
   const fullAddress = buildAddress(details);

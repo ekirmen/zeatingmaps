@@ -31,6 +31,31 @@ export const fetchZonasPorSala = async (salaId) => {
 
 export const createZona = async (data) => {
   const client = supabaseAdmin || supabase;
+  
+  // Si no se proporciona tenant_id, obtenerlo de la sala
+  if (!data.tenant_id && data.sala_id) {
+    try {
+      // Obtener el tenant_id de la sala
+      const { data: salaData, error: salaError } = await client
+        .from('salas')
+        .select('recintos!inner(tenant_id)')
+        .eq('id', data.sala_id)
+        .single();
+      
+      if (salaError) {
+        console.error('[createZona] Error al obtener tenant_id de la sala:', salaError);
+      } else if (salaData?.recintos?.tenant_id) {
+        data.tenant_id = salaData.recintos.tenant_id;
+        console.log('[createZona] Tenant_id asignado automáticamente:', data.tenant_id);
+      } else {
+        console.warn('[createZona] No se pudo obtener tenant_id de la sala');
+      }
+    } catch (error) {
+      console.error('[createZona] Error al procesar tenant_id:', error);
+    }
+  }
+  
+  // Crear la zona con tenant_id
   const { data: result, error } = await client.from('zonas').insert(data).single();
   handleError(error);
   return result;
@@ -38,6 +63,43 @@ export const createZona = async (data) => {
 
 export const updateZona = async (id, data) => {
   const client = supabaseAdmin || supabase;
+  
+  // Si no se proporciona tenant_id, obtenerlo de la zona existente o de la sala
+  if (!data.tenant_id) {
+    try {
+      // Primero intentar obtener el tenant_id de la zona existente
+      const { data: zonaExistente, error: zonaError } = await client
+        .from('zonas')
+        .select('tenant_id, sala_id')
+        .eq('id', id)
+        .single();
+      
+      if (zonaError) {
+        console.error('[updateZona] Error al obtener zona existente:', zonaError);
+      } else if (zonaExistente?.tenant_id) {
+        data.tenant_id = zonaExistente.tenant_id;
+        console.log('[updateZona] Tenant_id obtenido de zona existente:', data.tenant_id);
+      } else if (zonaExistente?.sala_id) {
+        // Si la zona no tiene tenant_id, obtenerlo de la sala
+        const { data: salaData, error: salaError } = await client
+          .from('salas')
+          .select('recintos!inner(tenant_id)')
+          .eq('id', zonaExistente.sala_id)
+          .single();
+        
+        if (salaError) {
+          console.error('[updateZona] Error al obtener tenant_id de la sala:', salaError);
+        } else if (salaData?.recintos?.tenant_id) {
+          data.tenant_id = salaData.recintos.tenant_id;
+          console.log('[updateZona] Tenant_id asignado automáticamente:', data.tenant_id);
+        }
+      }
+    } catch (error) {
+      console.error('[updateZona] Error al procesar tenant_id:', error);
+    }
+  }
+  
+  // Actualizar la zona con tenant_id
   const { data: result, error } = await client.from('zonas').update(data).eq('id', id).single();
   handleError(error);
   return result;
