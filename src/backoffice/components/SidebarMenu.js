@@ -136,6 +136,7 @@ const SidebarMenu = ({ collapsed }) => {
         { title: 'Entradas', path: '/dashboard/entradas', icon: faTicketAlt },
         { title: 'Productos', path: '/dashboard/productos', icon: faBox },
         { title: 'Plantillas de Productos', path: '/dashboard/plantillas-productos', icon: faBox },
+        { title: 'IVA', path: '/dashboard/iva', icon: faPercent },
         // { title: 'Donaciones', path: '/dashboard/donaciones', icon: faHandHoldingHeart }, // OCULTO
         { title: 'Comisiones y tasas', path: '/dashboard/comisiones', icon: faCreditCard },
         // { title: 'Seguros', path: '/dashboard/seguros', icon: faShieldAlt }, // OCULTO

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import { useIva } from '../contexts/IvaContext';
+import { useTenant } from '../../contexts/TenantContext';
 
 const CreateIva = () => {
+  const { currentTenant } = useTenant();
   const { ivas, setIvas } = useIva();
   const [nombre, setNombre] = useState('');
   const [porcentaje, setPorcentaje] = useState('');
@@ -10,31 +12,59 @@ const CreateIva = () => {
 
   useEffect(() => {
     fetchIvas();
-  }, []);
+  }, [currentTenant?.id]);
 
   const fetchIvas = async () => {
-    const { data, error } = await supabase.from('ivas').select('*');
+    if (!currentTenant?.id) {
+      console.warn('No hay tenant disponible');
+      setIvas([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('ivas')
+      .select('*')
+      .eq('tenant_id', currentTenant.id)
+      .order('nombre', { ascending: true });
+      
     if (error) {
       console.error('Error al cargar IVAs:', error.message);
       setIvas([]);
     } else {
-      setIvas(data);
+      setIvas(data || []);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const payload = { nombre, porcentaje: parseFloat(porcentaje) };
+    
+    if (!currentTenant?.id) {
+      alert('No hay tenant configurado');
+      return;
+    }
+
+    const payload = { 
+      nombre, 
+      porcentaje: parseFloat(porcentaje),
+      tenant_id: currentTenant.id
+    };
 
     if (editingId) {
-      const { error } = await supabase.from('ivas').update(payload).eq('id', editingId);
+      const { error } = await supabase
+        .from('ivas')
+        .update(payload)
+        .eq('id', editingId);
+        
       if (error) {
         alert('Error al actualizar: ' + error.message);
         return;
       }
       alert('IVA actualizado con éxito');
     } else {
-      const { error } = await supabase.from('ivas').insert([payload]);
+      const { error } = await supabase
+        .from('ivas')
+        .insert([payload]);
+        
       if (error) {
         alert('Error al crear: ' + error.message);
         return;
@@ -68,7 +98,26 @@ const CreateIva = () => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Gestión de IVA</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Gestión de IVA</h1>
+        <p className="text-gray-600 mb-4">Administra los tipos de IVA para tus productos y servicios</p>
+        {currentTenant && (
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <span className="text-sm font-medium">
+              Tenant: {currentTenant.company_name || currentTenant.id}
+            </span>
+          </div>
+        )}
+        {!currentTenant?.id && (
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full">
+            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+            <span className="text-sm font-medium">
+              ⚠️ No hay tenant configurado
+            </span>
+          </div>
+        )}
+      </div>
 
       <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-4 mb-8 space-y-4">
         <div>

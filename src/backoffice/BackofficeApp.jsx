@@ -79,6 +79,7 @@ const BackofficeApp = () => {
         <Route path="paquetes" element={<Abonos />} />
         <Route path="multipase" element={<Abonos />} />
         <Route path="abonos" element={<Abonos />} />
+        <Route path="iva" element={<CreateIva />} />
         
         {/* CRM */}
         <Route path="mailchimp" element={<Mailchimp />} />
