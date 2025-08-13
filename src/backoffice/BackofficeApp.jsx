@@ -43,6 +43,7 @@ import SaasDashboard from './pages/SaasDashboard';
 import SaasDiagnostico from './pages/SaasDiagnostico';
 import TenantDetail from './pages/TenantDetail';
 import SaasSettings from './pages/SaasSettings';
+import LegalTerms from '../store/pages/LegalTerms';
 
 const BackofficeApp = () => {
   return (
@@ -80,7 +81,6 @@ const BackofficeApp = () => {
         <Route path="abonos" element={<Abonos />} />
         
         {/* CRM */}
-        <Route path="clientes" element={<Usuarios />} />
         <Route path="mailchimp" element={<Mailchimp />} />
         <Route path="formularios" element={<Formularios />} />
         <Route path="notificaciones" element={<CRM />} />
@@ -107,7 +107,7 @@ const BackofficeApp = () => {
         <Route path="sites" element={<WebStudio />} />
         <Route path="formato-entrada" element={<FormatoEntrada />} />
         <Route path="banner-ads" element={<WebStudio />} />
-        <Route path="legal-texts" element={<WebStudio />} />
+        <Route path="legal-texts" element={<LegalTerms />} />
         <Route path="webstudio" element={<WebStudio />} />
         <Route path="pages" element={<WebStudio />} />
         <Route path="galeria" element={<Galeria />} />

@@ -72,6 +72,13 @@ const FormatoEntrada = () => {
     }
   };
 
+  const handleReset = () => {
+    form.setFieldsValue(DEFAULT_FORMAT_CONFIG);
+    setCurrentValues(DEFAULT_FORMAT_CONFIG);
+    setFormatConfig(DEFAULT_FORMAT_CONFIG);
+    message.success('Configuración restaurada a valores preestablecidos');
+  };
+
   const handleFormChange = (changedFields, allFields) => {
     const values = form.getFieldsValue();
     setCurrentValues(values);
@@ -390,6 +397,14 @@ const FormatoEntrada = () => {
             icon={<SaveOutlined />}
           >
             Guardar Configuración
+          </Button>
+          <Button 
+            type="default" 
+            size="large"
+            onClick={handleReset}
+            className="ml-2"
+          >
+            Restaurar Valores Preestablecidos
           </Button>
         </div>
       </Form>

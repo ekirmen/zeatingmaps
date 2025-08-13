@@ -11,23 +11,67 @@ const EventsList = ({
   handleDelete,
   handleDuplicate
 }) => {
+  if (!eventosFiltrados || eventosFiltrados.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CalendarOutlined className="text-3xl text-gray-400" />
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">No hay eventos configurados</h3>
+        <p className="text-gray-500 mb-6">
+          {!recintoSeleccionado 
+            ? 'Selecciona un recinto y sala para ver los eventos'
+            : 'Crea tu primer evento usando el botón "Crear Evento"'
+          }
+        </p>
+        {recintoSeleccionado && (
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg">
+            <EnvironmentOutlined className="text-blue-500" />
+            <span className="text-sm font-medium">
+              {recintoSeleccionado.nombre}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div
-      className={
-        viewMode === 'grid'
-          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-          : 'space-y-4'
-      }
-    >
-      {eventosFiltrados.length > 0 ? (
-        eventosFiltrados.map((evento) => (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      {/* Header de la lista */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Eventos Configurados</h2>
+          <p className="text-sm text-gray-600 mt-1">
+            {eventosFiltrados.length} evento{eventosFiltrados.length !== 1 ? 's' : ''} en {recintoSeleccionado?.nombre}
+          </p>
+        </div>
+        
+        {/* Contador de eventos */}
+        <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
+          <CalendarOutlined className="text-blue-500" />
+          <span className="text-sm font-medium">
+            {eventosFiltrados.length}
+          </span>
+        </div>
+      </div>
+
+      {/* Lista de eventos */}
+      <div
+        className={
+          viewMode === 'grid'
+            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+            : 'space-y-4'
+        }
+      >
+        {eventosFiltrados.map((evento) => (
           <Card
             key={evento.id}
             hoverable
             className={
               viewMode === 'grid'
-                ? 'h-full flex flex-col'
-                : 'flex-row'
+                ? 'h-full flex flex-col transition-all duration-200 hover:shadow-lg'
+                : 'flex-row transition-all duration-200 hover:shadow-lg'
             }
             cover={
               viewMode === 'grid' && (
@@ -54,6 +98,7 @@ const EventsList = ({
                   icon={<EditOutlined />} 
                   size="small"
                   onClick={() => handleEdit(evento.id)}
+                  className="w-full"
                 >
                   Editar
                 </Button>,
@@ -62,6 +107,7 @@ const EventsList = ({
                   icon={<CopyOutlined />} 
                   size="small"
                   onClick={() => handleDuplicate(evento.id)}
+                  className="w-full"
                 >
                   Duplicar
                 </Button>,
@@ -70,6 +116,7 @@ const EventsList = ({
                   icon={<DeleteOutlined />} 
                   size="small"
                   onClick={() => handleDelete(evento.id)}
+                  className="w-full"
                 >
                   Eliminar
                 </Button>
@@ -102,56 +149,56 @@ const EventsList = ({
             }
           >
             <Card.Meta
-              avatar={
-                viewMode === 'list' && (
-                  <Avatar 
-                    size={64}
-                    src={evento.imagenes?.banner ? resolveImageUrl(evento.imagenes.banner) : null}
-                    icon={<CalendarOutlined />}
-                  />
-                )
-              }
               title={
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-lg truncate">{evento.nombre}</span>
-                  <Tag color="blue" className="text-xs">
-                    {evento.sector || 'Sin sector'}
-                  </Tag>
+                <div className="flex items-start justify-between">
+                  <span className="font-semibold text-gray-900 truncate pr-2">
+                    {evento.nombre}
+                  </span>
+                  {evento.activo === 'true' ? (
+                    <Tag color="green" className="ml-2">Activo</Tag>
+                  ) : (
+                    <Tag color="red" className="ml-2">Inactivo</Tag>
+                  )}
                 </div>
               }
               description={
-                <div className="space-y-2">
-                  <div className="flex items-center text-gray-600">
-                    <EnvironmentOutlined className="mr-2" />
-                    <span className="text-sm">{recintoSeleccionado?.nombre || 'Sin recinto'}</span>
-                  </div>
-                  {evento.fecha_evento && (
-                    <div className="flex items-center text-gray-600">
-                      <CalendarOutlined className="mr-2" />
-                      <span className="text-sm">
-                        {new Date(evento.fecha_evento).toLocaleDateString('es-ES', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </span>
+                <div className="space-y-2 mt-3">
+                  {evento.sector && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <EnvironmentOutlined className="text-gray-400" />
+                      <span>{evento.sector}</span>
                     </div>
                   )}
-                  <div className="text-xs text-gray-400 mt-2">
-                    ID: {evento.id}
-                  </div>
+                  {evento.fecha_evento && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <CalendarOutlined className="text-gray-400" />
+                      <span>{new Date(evento.fecha_evento).toLocaleDateString('es-ES')}</span>
+                    </div>
+                  )}
+                  {evento.estadoVenta && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-gray-500">Estado:</span>
+                      <Tag 
+                        color={
+                          evento.estadoVenta === 'a-la-venta' ? 'green' : 
+                          evento.estadoVenta === 'agotado' ? 'red' : 
+                          evento.estadoVenta === 'proximamente' ? 'blue' : 'default'
+                        }
+                        className="text-xs"
+                      >
+                        {evento.estadoVenta === 'a-la-venta' ? 'A la venta' :
+                         evento.estadoVenta === 'agotado' ? 'Agotado' :
+                         evento.estadoVenta === 'proximamente' ? 'Próximamente' :
+                         evento.estadoVenta}
+                      </Tag>
+                    </div>
+                  )}
                 </div>
               }
             />
           </Card>
-        ))
-      ) : (
-        <div className="text-center py-12">
-          <CalendarOutlined className="text-6xl text-gray-300 mb-4" />
-          <h3 className="text-lg font-medium text-gray-600 mb-2">No hay eventos disponibles</h3>
-          <p className="text-gray-500">No se encontraron eventos para este recinto y sala.</p>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 };

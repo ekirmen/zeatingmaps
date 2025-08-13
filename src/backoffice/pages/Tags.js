@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Input, Modal, Form, Select, message, Space, Typography, Tabs } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UserOutlined, CalendarOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
+import { useTenant } from '../../contexts/TenantContext';
 
 const { Title, Text } = Typography;
 
 const { TabPane } = Tabs;
 
 const Tags = () => {
+  const { currentTenant } = useTenant();
   const [eventTags, setEventTags] = useState([]);
   const [userTags, setUserTags] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -18,16 +20,23 @@ const Tags = () => {
 
   useEffect(() => {
     loadTags();
-  }, []);
+  }, [currentTenant?.id]);
 
   const loadTags = async () => {
     try {
       setLoading(true);
       
+      if (!currentTenant?.id) {
+        console.warn('No hay tenant disponible');
+        message.warning('No hay tenant configurado');
+        return;
+      }
+      
       // Cargar tags de eventos
       const { data: eventData, error: eventError } = await supabase
         .from('tags')
         .select('*')
+        .eq('tenant_id', currentTenant.id)
         .order('name', { ascending: true });
 
       if (eventError) {
@@ -40,6 +49,7 @@ const Tags = () => {
       const { data: userData, error: userError } = await supabase
         .from('user_tags')
         .select('*')
+        .eq('tenant_id', currentTenant.id)
         .order('name', { ascending: true });
 
       if (userError) {
@@ -59,12 +69,20 @@ const Tags = () => {
     try {
       setLoading(true);
       
+      if (!currentTenant?.id) {
+        message.error('No hay tenant configurado');
+        return;
+      }
+      
       if (activeTab === 'event') {
         // Guardar tag de evento
         if (editingTag) {
           const { error } = await supabase
             .from('tags')
-            .update({ name: values.name })
+            .update({ 
+              name: values.name,
+              tenant_id: currentTenant.id 
+            })
             .eq('id', editingTag.id);
           
           if (error) throw error;
@@ -72,7 +90,10 @@ const Tags = () => {
         } else {
           const { error } = await supabase
             .from('tags')
-            .insert([{ name: values.name }]);
+            .insert([{ 
+              name: values.name,
+              tenant_id: currentTenant.id 
+            }]);
           
           if (error) throw error;
           message.success('Tag de evento creado correctamente');
@@ -85,7 +106,8 @@ const Tags = () => {
             .update({ 
               name: values.name, 
               description: values.description,
-              color: values.color 
+              color: values.color,
+              tenant_id: currentTenant.id 
             })
             .eq('id', editingTag.id);
           
@@ -97,7 +119,8 @@ const Tags = () => {
             .insert([{ 
               name: values.name, 
               description: values.description,
-              color: values.color 
+              color: values.color,
+              tenant_id: currentTenant.id 
             }]);
           
           if (error) throw error;
@@ -197,7 +220,26 @@ const Tags = () => {
 
   return (
     <div className="p-6">
-      <Title level={2}>Gestión de Tags</Title>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">Gestión de Tags</h1>
+        <p className="text-gray-600 mb-4">Administra tags para eventos y usuarios</p>
+        {currentTenant && (
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
+            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+            <span className="text-sm font-medium">
+              Tenant: {currentTenant.company_name || currentTenant.id}
+            </span>
+          </div>
+        )}
+        {!currentTenant?.id && (
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full">
+            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+            <span className="text-sm font-medium">
+              ⚠️ No hay tenant configurado
+            </span>
+          </div>
+        )}
+      </div>
       
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <TabPane 

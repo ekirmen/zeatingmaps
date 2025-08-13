@@ -1,148 +1,214 @@
 import React from "react";
 
-const PopupEditarEntrada = ({ tiposDeProducto, ivas, formData, onClose, onSave, onFormChange, salaSeleccionada }) => {
+const PopupEditarEntrada = ({ tiposDeProducto, ivas, formData, onClose, onSave, onFormChange, recintoSeleccionado }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     onFormChange({ ...formData, [name]: value });
   };
 
-  const handleTipoChange = (value) => {
-    onFormChange({ ...formData, tipo: value });
+  const handleTipoProductoChange = (value) => {
+    onFormChange({ ...formData, tipoProducto: value });
   };
 
   const handleSubmit = () => {
+    if (!formData.nombreEntrada) {
+      alert("Debes ingresar un nombre para la entrada.");
+      return;
+    }
+    if (!formData.ivaSeleccionado) {
+      alert("Selecciona un IVA.");
+      return;
+    }
+    if (!formData.tipoProducto) {
+      alert("Selecciona un tipo de producto.");
+      return;
+    }
     onSave(formData);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 mx-4">
-        <h3 className="text-xl font-semibold mb-4 text-center">Editar Ticket</h3>
-
-        <input
-          type="text"
-          name="nombreEntrada"
-          placeholder="Nombre de la Entrada"
-          value={formData.nombreEntrada}
-          onChange={handleChange}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-
-        <input
-          type="text"
-          name="producto"
-          placeholder="Nombre del Producto"
-          value={formData.producto}
-          onChange={handleChange}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-
-        <input
-          type="number"
-          name="precio"
-          placeholder="Precio"
-          min="0"
-          value={formData.precio}
-          onChange={handleChange}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-
-        <input
-          type="number"
-          name="cantidad"
-          placeholder="Cantidad"
-          min="0"
-          value={formData.cantidad}
-          onChange={handleChange}
-          className="w-full mb-3 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
-
-        <div className="flex gap-2 mb-3">
-          <input
-            type="number"
-            name="min"
-            placeholder="Cantidad Mínima"
-            min="1"
-            value={formData.min}
-            onChange={handleChange}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <input
-            type="number"
-            name="max"
-            placeholder="Cantidad Máxima"
-            min="1"
-            value={formData.max}
-            onChange={handleChange}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 rounded-t-xl">
+          <h3 className="text-2xl font-bold text-center">Editar Entrada</h3>
+          <p className="text-indigo-100 text-center mt-2">
+            Modifica los detalles de la entrada existente
+          </p>
         </div>
 
-        <label className="block font-semibold mb-1">IVA</label>
-        <select
-          name="ivaSeleccionado"
-          value={formData.ivaSeleccionado}
-          onChange={handleChange}
-          className="w-full mb-4 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          <option value="">Seleccionar IVA</option>
-          {ivas.map(iva => (
-            <option key={iva.id} value={iva.id}>
-              {iva.nombre} - {iva.porcentaje}%
-            </option>
-          ))}
-        </select>
+        <div className="p-6 space-y-6">
+          {/* Información del Recinto */}
+          {recintoSeleccionado && (
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                <div>
+                  <p className="text-sm font-medium text-indigo-800">Recinto Seleccionado</p>
+                  <p className="text-sm text-indigo-700">{recintoSeleccionado}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
-        {formData.ivaSeleccionado && (
-          <div className="mb-4 p-3 border border-indigo-200 rounded bg-indigo-50 text-indigo-700">
-            <p><strong>IVA Seleccionado:</strong></p>
-            {ivas
-              .filter(iva => iva.id === formData.ivaSeleccionado)
-              .map(iva => (
-                <p key={iva.id}>
-                  {iva.nombre} - {iva.porcentaje}%
-                </p>
-              ))}
+          {/* Nombre de la Entrada */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Nombre de la Entrada *
+            </label>
+            <input
+              type="text"
+              name="nombreEntrada"
+              placeholder="Ej: Entrada General, VIP, Reducida..."
+              value={formData.nombreEntrada || ''}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors text-gray-900 placeholder-gray-500"
+            />
           </div>
-        )}
 
-        <div className="mb-4">
-          <p className="block font-semibold mb-2">Tipo de Producto</p>
-          <div className="flex flex-wrap gap-3 max-h-40 overflow-y-auto border border-gray-200 rounded p-2">
-            {tiposDeProducto.map(tipo => (
-              <label
-                key={tipo.value}
-                className="flex items-center gap-2 cursor-pointer select-none"
-                title={tipo.description}
-              >
-                <input
-                  type="radio"
-                  name="tipo"
-                  value={tipo.value}
-                  checked={formData.tipo === tipo.value}
-                  onChange={() => handleTipoChange(tipo.value)}
-                  className="accent-indigo-600"
-                />
-                <span className="text-gray-700">{tipo.label}</span>
+          {/* Cantidad Mín / Máx */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Cantidad Mínima *
               </label>
-            ))}
+              <input
+                type="number"
+                name="min"
+                placeholder="1"
+                min="1"
+                value={formData.min || 1}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">
+                Cantidad Máxima *
+              </label>
+              <input
+                type="number"
+                name="max"
+                placeholder="10"
+                min="1"
+                value={formData.max || 10}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+              />
+            </div>
+          </div>
+
+          {/* Selección de IVA */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              IVA *
+            </label>
+            <select
+              name="ivaSeleccionado"
+              value={formData.ivaSeleccionado || ''}
+              onChange={handleChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+            >
+              <option value="">Seleccionar IVA</option>
+              {ivas && ivas.length > 0 ? (
+                ivas.map(iva => (
+                  <option key={iva.id} value={iva.id}>
+                    {iva.nombre} – {iva.porcentaje}%
+                  </option>
+                ))
+              ) : (
+                <option value="" disabled>No hay IVAs disponibles</option>
+              )}
+            </select>
+            
+            {/* Mostrar IVA seleccionado */}
+            {formData.ivaSeleccionado && ivas && ivas.length > 0 && (
+              <div className="mt-3 p-3 border border-indigo-200 rounded-lg bg-indigo-50">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-indigo-800">IVA Seleccionado:</span>
+                </div>
+                {ivas
+                  .filter(iva => iva.id === formData.ivaSeleccionado)
+                  .map(iva => (
+                    <p key={iva.id} className="text-sm text-indigo-700 mt-1 ml-4">
+                      {iva.nombre} - {iva.porcentaje}%
+                    </p>
+                  ))}
+              </div>
+            )}
+          </div>
+
+          {/* Tipo de Producto */}
+          <div className="space-y-3">
+            <label className="block text-sm font-semibold text-gray-700">
+              Tipo de Producto *
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
+              {tiposDeProducto.map(tipo => (
+                <label 
+                  key={tipo.value} 
+                  className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all hover:bg-white hover:border-indigo-300 ${
+                    formData.tipoProducto === tipo.value 
+                      ? 'bg-indigo-50 border-indigo-500' 
+                      : 'bg-white border-gray-200'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="tipoProducto"
+                    value={tipo.value}
+                    checked={formData.tipoProducto === tipo.value}
+                    onChange={() => handleTipoProductoChange(tipo.value)}
+                    className="mt-1 accent-indigo-600"
+                  />
+                  <div className="flex-1">
+                    <span className="block text-sm font-medium text-gray-900">
+                      {tipo.label}
+                    </span>
+                    <span className="block text-xs text-gray-600 mt-1">
+                      {tipo.description}
+                    </span>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Validaciones */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="w-5 h-5 text-yellow-600 mt-0.5">⚠️</div>
+              <div className="text-sm text-yellow-800">
+                <p className="font-medium mb-1">Campos obligatorios:</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>Nombre de la entrada</li>
+                  <li>Cantidad mínima y máxima</li>
+                  <li>IVA</li>
+                  <li>Tipo de producto</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 transition"
-          >
-            Guardar
-          </button>
+        {/* Botones */}
+        <div className="bg-gray-50 px-6 py-4 rounded-b-xl border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-end gap-3">
+            <button 
+              onClick={onClose} 
+              className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+            >
+              Cancelar
+            </button>
+            <button 
+              onClick={handleSubmit} 
+              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium transition-colors shadow-sm"
+            >
+              Actualizar Entrada
+            </button>
+          </div>
         </div>
       </div>
     </div>

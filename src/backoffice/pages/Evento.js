@@ -58,25 +58,34 @@ const Evento = () => {
     try {
       console.log('Fetching eventos for recinto:', recintoSeleccionado.id, 'sala:', salaSeleccionada.id);
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('eventos')
         .select('*')
         .eq('recinto', recintoSeleccionado.id)
-        .eq('sala', salaSeleccionada.id)
-        .order('created_at', { ascending: false });
+        .eq('sala', salaSeleccionada.id);
+      
+      // Filtrar por tenant_id si está disponible
+      if (currentTenant?.id) {
+        query = query.eq('tenant_id', currentTenant.id);
+        console.log('🔍 Filtrando por tenant_id:', currentTenant.id);
+      } else {
+        console.warn('⚠️ No hay tenant disponible para filtrar eventos');
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
   
       if (error) {
         console.error('Error fetching eventos:', error);
         throw error;
       }
       
-      console.log('Eventos loaded:', data);
+      console.log('✅ Eventos cargados:', data?.length || 0, 'eventos');
       setEventos(data || []);
     } catch (error) {
-      console.error('Error cargando eventos:', error);
+      console.error('❌ Error cargando eventos:', error);
       setEventos([]);
     }
-  }, [recintoSeleccionado, salaSeleccionada]);
+  }, [recintoSeleccionado, salaSeleccionada, currentTenant]);
   
 
   useEffect(() => { fetchEventos(); }, [fetchEventos]);
@@ -164,189 +173,89 @@ const Evento = () => {
         },
         analytics: {
           enabled: false,
-          gtmId: '',
-          metaPixelId: '',
-          metaAccessToken: ''
-        }
+          gtmId: ''
+        },
+        created_at: new Date().toISOString(),
       });
-      // No previous images when creating a new event
-      setOriginalImages({});
       setMenuVisible(true);
     } else {
-      alert('Por favor, selecciona un recinto y una sala para crear un evento.');
+      alert('Por favor, selecciona un recinto y una sala');
     }
   }, [recintoSeleccionado, salaSeleccionada]);
 
   const handleEdit = useCallback((eventoId) => {
-    console.log('handleEdit called with eventoId:', eventoId);
-    console.log('eventos disponibles:', eventos);
-    
     const eventoParaEditar = eventos.find((evento) => evento.id === eventoId);
-    console.log('eventoParaEditar found:', eventoParaEditar);
-    
     if (eventoParaEditar) {
-      const normalizeTags = (val) => {
-        if (!val) return [];
-        if (Array.isArray(val)) return val;
-        if (typeof val === 'string') {
-          try {
-            const parsed = JSON.parse(val);
-            if (Array.isArray(parsed)) return parsed;
-            return val
-              .split(',')
-              .map((t) => t.trim())
-              .filter(Boolean);
-          } catch {
-            return val
-              .split(',')
-              .map((t) => t.trim())
-              .filter(Boolean);
-          }
-        }
-        return [];
-      };
-
-      const parseImages = (imgs) => {
-        if (!imgs) return {};
-        if (typeof imgs === 'object') return imgs;
-        try {
-          const parsed = JSON.parse(imgs);
-          return typeof parsed === 'object' && parsed !== null ? parsed : {};
-        } catch {
-          return {};
-        }
-      };
-
-      const parsedImages = parseImages(eventoParaEditar.imagenes);
-      setOriginalImages(parsedImages);
-      setEventoData({
-        datosComprador: {},
-        datosBoleto: {},
-        mostrarDatosComprador: false,
-        mostrarDatosBoleto: false,
-        estadoVenta: 'a-la-venta',
-        descripcionEstado: '',
-        estadoPersonalizado: false,
-        ...eventoParaEditar,
-        tags: normalizeTags(eventoParaEditar.tags),
-        imagenes: parsedImages,
-      });
-      console.log('Evento data set successfully');
+      setEventoData(eventoParaEditar);
+      setMenuVisible(true);
     } else {
-      console.error('Evento no encontrado con ID:', eventoId);
+      alert('Evento no encontrado');
     }
-    setMenuVisible(true);
   }, [eventos]);
 
   const handleDelete = useCallback(async (eventoId) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este evento?')) return;
-  
-    try {
-      const { error } = await supabase
-        .from('eventos')
-        .delete()
-        .eq('id', eventoId);
-  
-      if (error) throw error;
-  
-      fetchEventos();
-    } catch (error) {
-      alert('Error al eliminar el evento');
-      console.error(error);
+    if (window.confirm('¿Estás seguro de que deseas eliminar este evento?')) {
+      try {
+        const { error } = await supabase
+          .from('eventos')
+          .delete()
+          .eq('id', eventoId);
+
+        if (error) throw error;
+
+        alert('Evento eliminado correctamente');
+        fetchEventos();
+      } catch (error) {
+        console.error('Error al eliminar evento:', error);
+        alert('Error al eliminar el evento: ' + error.message);
+      }
     }
   }, [fetchEventos]);
-  
+
   const handleDuplicate = useCallback(async (eventoId) => {
     try {
-      const { data: original, error } = await supabase
+      const { data, error } = await supabase
         .from('eventos')
         .select('*')
         .eq('id', eventoId)
         .single();
-  
-      if (error || !original) throw error;
-  
-      const { id, created_at, updated_at, ...duplicated } = original;
-      duplicated.nombre += ' (copia)';
-      if (duplicated.slug) {
-        duplicated.slug = `${duplicated.slug}-copia-${Date.now()}`;
+
+      if (error || !data) {
+        alert('No se pudo duplicar');
+        return;
       }
-  
-      const { error: insertError } = await supabase
-        .from('eventos')
-        .insert([duplicated]);
-  
-      if (insertError) throw insertError;
-  
-      fetchEventos();
+
+      const { id: _, ...duplicatedData } = data;
+      duplicatedData.nombre += ' (copia)';
+      duplicatedData.created_at = new Date().toISOString();
+      
+      // Asegurar tenant_id en el evento duplicado
+      if (currentTenant?.id) {
+        duplicatedData.tenant_id = currentTenant.id;
+      }
+
+      const { error: insertError } = await supabase.from('eventos').insert([duplicatedData]);
+      if (insertError) {
+        alert('Error al duplicar');
+      } else {
+        alert('Evento duplicado correctamente');
+        fetchEventos();
+      }
     } catch (error) {
-      console.error('Error duplicando el evento', error);
+      console.error('Error al duplicar evento:', error);
+      alert('Error al duplicar el evento: ' + error.message);
     }
-  }, [fetchEventos]);
-  
+  }, [fetchEventos, currentTenant]);
 
   const handleSave = useCallback(async () => {
     if (!eventoData) return;
 
     try {
+      setIsUploading(true);
+      const isExisting = !!eventoData.id;
+      
+      // Limpiar datos antes de enviar
       const cleanData = { ...eventoData };
-      const isExisting = !!cleanData.id;
-      if (!isExisting) {
-        // Generate an ID upfront so uploaded images can be organized
-        cleanData.id = uuidv4();
-      }
-
-      // Upload images from `imagenes` if they are File objects
-      if (cleanData.imagenes) {
-        setIsUploading(true);
-        const uploaded = {};
-        const extractPath = (url) => {
-          try {
-            const u = new URL(url);
-            const prefix = `/storage/v1/object/public/${EVENT_BUCKET}/`;
-            const idx = u.pathname.indexOf(prefix);
-            if (idx !== -1) {
-              return decodeURIComponent(u.pathname.slice(idx + prefix.length));
-            }
-          } catch (e) {
-            console.error('Failed to parse storage url', url, e);
-          }
-          return null;
-        };
-
-        for (const [key, value] of Object.entries(cleanData.imagenes)) {
-          if (value instanceof File) {
-            const filename = `${Date.now()}-${value.name}`;
-            const idPath = `${cleanData.id}/`;
-            const base = EVENT_FOLDER ? `${EVENT_FOLDER}/${idPath}` : idPath;
-            const path = `${base}${filename}`;
-            const { data: upData, error: upErr } = await supabase.storage
-              .from(EVENT_BUCKET)
-              .upload(path, value);
-            if (upErr) throw upErr;
-            const { data: urlData } = supabase.storage
-              .from(EVENT_BUCKET)
-              .getPublicUrl(upData.path);
-            uploaded[key] = urlData.publicUrl;
-
-            // Remove old image if replacing on existing record
-            if (isExisting && originalImages[key]) {
-              const oldPath = extractPath(originalImages[key]);
-              if (oldPath) {
-                await supabase.storage.from(EVENT_BUCKET).remove([oldPath]);
-              }
-            }
-          } else if (typeof value === 'string') {
-            uploaded[key] = value;
-          }
-        }
-        // Guardar como JSON string en la columna text
-        cleanData.imagenes = JSON.stringify(uploaded);
-        setIsUploading(false);
-      }
-
-      // Eliminar campos temporales o nulos
-      delete cleanData._id;
       delete cleanData.__v;
       delete cleanData.createdAt;
       delete cleanData.updatedAt;
@@ -360,6 +269,9 @@ const Evento = () => {
       // Asegurar tenant_id
       if (currentTenant?.id) {
         cleanData.tenant_id = currentTenant.id;
+        console.log('✅ Tenant ID asignado:', currentTenant.id);
+      } else {
+        console.warn('⚠️ No hay tenant disponible');
       }
 
       let response;
@@ -376,16 +288,18 @@ const Evento = () => {
 
       if (response.error) throw response.error;
 
+      console.log('✅ Evento guardado exitosamente con tenant_id:', cleanData.tenant_id);
       setIsSaved(true);
       setMenuVisible(false);
       fetchEventos();
       setTimeout(() => setIsSaved(false), 3000);
     } catch (error) {
+      console.error('❌ Error al guardar evento:', error);
       alert(error.message || 'Error al guardar el evento');
     } finally {
       setIsUploading(false);
     }
-  }, [eventoData, fetchEventos]);
+  }, [eventoData, fetchEventos, currentTenant]);
   
 
   const handleSearch = (term) => {
@@ -411,103 +325,203 @@ const Evento = () => {
     const ActiveComponent = tabs.find(tab => tab.id === activeTab)?.Component || null;
 
   return (
-    <div className="p-6 space-y-4">
-      <VenueSelectors
-        recintos={recintos}
-        recintoSeleccionado={recintoSeleccionado}
-        handleRecintoChange={handleRecintoChange}
-        salaSeleccionada={salaSeleccionada}
-        setSalaSeleccionada={setSalaSeleccionada}
-      />
-
-      <div className="flex justify-between items-center">
-        <SearchBar
-          searchTerm={searchTerm}
-          handleSearch={handleSearch}
-          searchResults={searchResults}
-          handleEdit={handleEdit}
-        />
-        <div className="flex items-center gap-2">
-          <button onClick={() => toggleView('grid')} className={`${viewMode === 'grid' ? 'text-blue-600' : ''}`}>
-            <FontAwesomeIcon icon={faThLarge} />
-          </button>
-          <button onClick={() => toggleView('list')} className={`${viewMode === 'list' ? 'text-blue-600' : ''}`}>
-            <FontAwesomeIcon icon={faList} />
-          </button>
-          <button
-            onClick={handleCreateEventClick}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Crear Evento
-          </button>
-        </div>
-      </div>
-
-      <EventsList
-        eventosFiltrados={eventosFiltrados}
-        viewMode={viewMode}
-        recintoSeleccionado={recintoSeleccionado}
-        handleEdit={handleEdit}
-        handleDelete={handleDelete}
-        handleDuplicate={handleDuplicate}
-      />
-
-      {menuVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
-          <div className="bg-white rounded-lg w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col">
-            <div className="flex justify-between items-center px-6 py-4 border-b">
-              <h2 className="text-xl font-semibold">Configuración de Evento</h2>
-              <button
-                onClick={() => setMenuVisible(false)}
-                className="text-gray-600 hover:text-gray-900 text-2xl font-bold"
-              >
-                &times;
-              </button>
-            </div>
-
-            <div className="flex border-b bg-gray-100 px-4">
-              {tabs.map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 text-sm whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-b-2 border-blue-600 text-blue-600 font-semibold'
-                      : 'text-gray-600 hover:text-blue-600'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex-grow overflow-y-auto p-6">
-              {ActiveComponent && (
-                <ActiveComponent eventoData={eventoData} setEventoData={setEventoData} />
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 px-6 py-4 border-t">
-              <button
-                onClick={() => setMenuVisible(false)}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-800"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={isUploading}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded text-white"
-              >
-                {isUploading ? `Guardando ${uploadProgress}%` : 'Guardar'}
-              </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Principal */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
+          <div className="px-8 py-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Eventos</h1>
+                <p className="text-lg text-gray-600">
+                  Crea y administra eventos para tus recintos y salas
+                </p>
+                {currentTenant && (
+                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                    <span className="text-sm font-medium">
+                      Tenant: {currentTenant.company_name || currentTenant.id}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      )}
+
+        {/* Selectores de Recinto y Sala */}
+        <VenueSelectors
+          recintos={recintos}
+          recintoSeleccionado={recintoSeleccionado}
+          handleRecintoChange={handleRecintoChange}
+          salaSeleccionada={salaSeleccionada}
+          setSalaSeleccionada={setSalaSeleccionada}
+        />
+
+        {/* Barra de Herramientas */}
+        {recintoSeleccionado && salaSeleccionada && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+              <div className="flex-1">
+                <SearchBar
+                  searchTerm={searchTerm}
+                  handleSearch={handleSearch}
+                  searchResults={searchResults}
+                  handleEdit={handleEdit}
+                />
+              </div>
+              
+              <div className="flex items-center gap-4">
+                {/* Toggle de Vista */}
+                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                  <button 
+                    onClick={() => toggleView('grid')} 
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === 'grid' 
+                        ? 'bg-white text-blue-600 shadow-sm' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    title="Vista de cuadrícula"
+                  >
+                    <FontAwesomeIcon icon={faThLarge} />
+                  </button>
+                  <button 
+                    onClick={() => toggleView('list')} 
+                    className={`p-2 rounded-md transition-colors ${
+                      viewMode === 'list' 
+                        ? 'bg-white text-blue-600 shadow-sm' 
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    title="Vista de lista"
+                  >
+                    <FontAwesomeIcon icon={faList} />
+                  </button>
+                </div>
+
+                {/* Botón Crear Evento */}
+                <button
+                  onClick={handleCreateEventClick}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-md transition-all duration-200 font-semibold flex items-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Crear Evento
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Lista de Eventos */}
+        <EventsList
+          eventosFiltrados={eventosFiltrados}
+          viewMode={viewMode}
+          recintoSeleccionado={recintoSeleccionado}
+          handleEdit={handleEdit}
+          handleDelete={handleDelete}
+          handleDuplicate={handleDuplicate}
+        />
+
+        {/* Modal de Configuración de Evento */}
+        {menuVisible && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
+            <div className="bg-white rounded-xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+              {/* Header del Modal */}
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-6">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h2 className="text-2xl font-bold">Configuración de Evento</h2>
+                    <p className="text-blue-100 mt-1">
+                      {eventoData?.id ? 'Editando evento existente' : 'Creando nuevo evento'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setMenuVisible(false)}
+                    className="text-white hover:text-blue-100 text-3xl font-bold transition-colors"
+                  >
+                    &times;
+                  </button>
+                </div>
+              </div>
+
+              {/* Tabs de Navegación */}
+              <div className="flex border-b bg-gray-50 px-6">
+                {tabs.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-6 py-4 text-sm whitespace-nowrap font-medium transition-colors ${
+                      activeTab === tab.id
+                        ? 'border-b-2 border-blue-600 text-blue-600 bg-white'
+                        : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Contenido del Tab Activo */}
+              <div className="flex-grow overflow-y-auto p-8">
+                {ActiveComponent && (
+                  <ActiveComponent eventoData={eventoData} setEventoData={setEventoData} />
+                )}
+              </div>
+
+              {/* Footer con Botones */}
+              <div className="bg-gray-50 px-8 py-6 border-t border-gray-200">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-gray-600">
+                    {currentTenant && (
+                      <span>Tenant ID: {currentTenant.id}</span>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setMenuVisible(false)}
+                      className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={isUploading}
+                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg text-white font-medium transition-colors shadow-sm flex items-center gap-2"
+                    >
+                      {isUploading ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Guardando {uploadProgress}%
+                        </>
+                      ) : (
+                        'Guardar Evento'
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notificación de Guardado */}
+        {isSaved && (
+          <div className="fixed bottom-6 right-6 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Evento guardado exitosamente</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
 
 export default Evento;
