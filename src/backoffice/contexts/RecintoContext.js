@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
+import { useTenant } from '../../contexts/TenantContext';
 
 const RecintoContext = createContext();
 
 export const RecintoProvider = ({ children }) => {
+  const { currentTenant } = useTenant();
   const [recintos, setRecintos] = useState([]);
   const [recintoSeleccionado, setRecintoSeleccionado] = useState(() => {
     const stored = localStorage.getItem('recintoSeleccionado');
@@ -17,20 +19,39 @@ export const RecintoProvider = ({ children }) => {
   useEffect(() => {
     const fetchRecintos = async () => {
       try {
-        const { data, error } = await supabase
+        console.log('🔍 [RecintoContext] Obteniendo recintos para tenant:', currentTenant?.id);
+        
+        let query = supabase
           .from('recintos')
-          .select('*, salas(*)'); // Asegúrate que 'salas' está relacionada
+          .select('*, salas(*)');
+        
+        // Filtrar por tenant_id si está disponible
+        if (currentTenant?.id) {
+          query = query.eq('tenant_id', currentTenant.id);
+          console.log('✅ [RecintoContext] Filtrando por tenant_id:', currentTenant.id);
+        } else {
+          console.warn('⚠️ [RecintoContext] No hay tenant disponible, consultando sin filtro');
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
 
-        setRecintos(data);
+        console.log('✅ [RecintoContext] Recintos obtenidos:', data?.length || 0);
+        setRecintos(data || []);
       } catch (error) {
-        console.error('Error al obtener recintos desde Supabase:', error.message);
+        console.error('❌ [RecintoContext] Error al obtener recintos:', error.message);
+        setRecintos([]);
       }
     };
 
-    fetchRecintos();
-  }, []);
+    // Solo ejecutar si tenemos un tenant o si estamos en desarrollo
+    if (currentTenant?.id || window.location.hostname === 'localhost') {
+      fetchRecintos();
+    } else if (!currentTenant && !window.location.hostname.includes('localhost')) {
+      console.log('⏳ [RecintoContext] Esperando tenant...');
+    }
+  }, [currentTenant?.id]);
 
   useEffect(() => {
     if (recintoSeleccionado) {
