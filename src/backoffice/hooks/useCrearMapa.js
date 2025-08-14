@@ -69,6 +69,7 @@ export const useCrearMapa = () => {
     updateElementSize: baseUpdateElementSize,
     deleteSelectedElements,
     limpiarSillasDuplicadas,
+    snapToGrid,
   } = useMapaElements(elements, setElements, selectedIds, selectedZone, numSillas);
 
   // Wrappers to keep selectedElement in sync when editing properties or size

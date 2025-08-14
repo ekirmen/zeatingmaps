@@ -8,7 +8,6 @@ const Menu = () => {
       <ul>
         {/* Enlaces a las diferentes páginas */}
         <li><Link to="/recinto">Recinto</Link></li>
-        <li><Link to="/dashboard/actividad">Actividad</Link></li>
         <li><Link to="/dashboard/recinto">Lista de Salas</Link></li>
         <li><Link to="/dashboard/usuarios">Usuarios</Link></li>
         <li><Link to="/dashboard/Referidos">Referidos</Link></li>

@@ -784,43 +784,34 @@ const BoleteriaMain = () => {
           </div>
         </Tooltip>
 
-
         <Tooltip title="Aplicar descuentos y códigos" placement="right">
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowDiscountModal(true)}>
             <MoneyCollectOutlined className="text-xl mb-1" />
             <div>Descuentos</div>
           </div>
         </Tooltip>
+        
+        <Tooltip title="Mapa de productos disponibles" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setActiveTab('productos')}>
+            <GiftOutlined className="text-xl mb-1" />
+            <div>Mapa Productos</div>
+          </div>
+        </Tooltip>
+        
         <Tooltip title="Buscar por localizador" placement="right">
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowLocatorSearch(true)}>
             <SearchOutlined className="text-xl mb-1" />
             <div>Localizador</div>
           </div>
         </Tooltip>
+        
         <Tooltip title="Gestionar carritos guardados" placement="right">
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowCartManagement(true)}>
             <ShoppingCartOutlined className="text-xl mb-1" />
             <div>Carritos</div>
           </div>
         </Tooltip>
-        <Tooltip title="Formularios personalizados" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowCustomForms(true)}>
-            <FormOutlined className="text-xl mb-1" />
-            <div>Formularios</div>
-          </div>
-        </Tooltip>
-        <Tooltip title="Integración MailChimp" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowMailChimp(true)}>
-            <MailOutlined className="text-xl mb-1" />
-            <div>MailChimp</div>
-          </div>
-        </Tooltip>
-        <Tooltip title="Notificaciones Push" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowPushNotifications(true)}>
-            <BellOutlined className="text-xl mb-1" />
-            <div>Notificaciones</div>
-          </div>
-        </Tooltip>
+        
         <Tooltip title="Exportar datos del evento" placement="right">
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={exportEventData}>
             <UploadOutlined className="text-xl mb-1" />

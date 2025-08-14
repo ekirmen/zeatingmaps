@@ -25,7 +25,6 @@ export const ROLES = {
 export const ROLE_PERMISSIONS = {
   [ROLES.SUPER_ADMIN]: [
     'dashboard',
-    'actividad',
     'administracion',
     'recintos',
     'plano',
@@ -44,7 +43,6 @@ export const ROLE_PERMISSIONS = {
   ],
   [ROLES.TENANT_ADMIN]: [
     'dashboard',
-    'actividad',
     'administracion',
     'recintos',
     'plano',
@@ -61,7 +59,6 @@ export const ROLE_PERMISSIONS = {
   ],
   [ROLES.EVENT_MANAGER]: [
     'dashboard',
-    'actividad',
     'recintos',
     'plano',
     'programacion',
@@ -72,7 +69,6 @@ export const ROLE_PERMISSIONS = {
   ],
   [ROLES.SALES_MANAGER]: [
     'dashboard',
-    'actividad',
     'ventas',
     'reports',
     'ver_ventas',
@@ -84,7 +80,6 @@ export const ROLE_PERMISSIONS = {
   ],
   [ROLES.BOX_OFFICE]: [
     'dashboard',
-    'actividad',
     'ventas',
     'boleteria',
     'ver_ventas',
@@ -94,7 +89,6 @@ export const ROLE_PERMISSIONS = {
   ],
   [ROLES.CUSTOMER_SUPPORT]: [
     'dashboard',
-    'actividad',
     'crm',
     'tickets_de_soporte',
     'datos_de_clientes',
@@ -102,7 +96,6 @@ export const ROLE_PERMISSIONS = {
   ],
   [ROLES.MARKETING]: [
     'dashboard',
-    'actividad',
     'crm',
     'campañas_de_marketing',
     'email_marketing',
@@ -110,7 +103,6 @@ export const ROLE_PERMISSIONS = {
   ],
   [ROLES.REPORTS]: [
     'dashboard',
-    'actividad',
     'reports',
     'analytics',
     'reportes_de_ventas',
@@ -118,7 +110,6 @@ export const ROLE_PERMISSIONS = {
   ],
   [ROLES.FINANCE]: [
     'dashboard',
-    'actividad',
     'reports',
     'ver_finanzas',
     'editar_finanzas',
@@ -127,7 +118,6 @@ export const ROLE_PERMISSIONS = {
   ],
   [ROLES.TECHNICAL]: [
     'dashboard',
-    'actividad',
     'reports',
     'soporte_técnico',
     'acceso_a_api',
@@ -170,7 +160,6 @@ export const hasPermission = (user, permission) => {
 export const hasRouteAccess = (user, route) => {
   const routePermissions = {
     '/dashboard': 'dashboard',
-    '/dashboard/actividad': 'actividad',
     '/dashboard/recintos': 'recintos',
     '/dashboard/plano': 'plano',
     '/dashboard/usuarios': 'usuarios',
@@ -235,13 +224,7 @@ export const generateFilteredMenu = (user) => {
       icon: 'house',
       requiredPermission: 'dashboard'
     },
-    {
-      id: 'actividad',
-      label: 'Actividad',
-      path: '/dashboard/actividad',
-      icon: 'chart-line',
-      requiredPermission: 'actividad'
-    },
+
     {
       id: 'administracion',
       label: 'Administración',

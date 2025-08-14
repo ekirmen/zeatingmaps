@@ -25,11 +25,11 @@ export const RecintoSalaProvider = ({ children }) => {
         let query = supabase.from('recintos').select('*, salas(*)');
         
         // Filtrar por tenant_id si está disponible
-        if (currentTenant?.id && currentTenant.id !== 'main-domain') {
+        if (currentTenant?.id && currentTenant.id !== '00000000-0000-0000-0000-000000000000') {
           query = query.eq('tenant_id', currentTenant.id);
           console.log('✅ [RecintoSalaContext] Filtrando por tenant_id:', currentTenant.id);
         } else {
-          console.warn('⚠️ [RecintoSalaContext] No hay tenant disponible o es main-domain, consultando sin filtro');
+          console.warn('⚠️ [RecintoSalaContext] No hay tenant disponible o es dominio principal, consultando sin filtro');
         }
         
         const { data, error } = await query;

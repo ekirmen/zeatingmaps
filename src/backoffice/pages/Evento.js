@@ -425,69 +425,86 @@ const Evento = () => {
 
         {/* Modal de Configuración de Evento */}
         {menuVisible && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
-            <div className="bg-white rounded-xl w-full max-w-6xl h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-              {/* Header del Modal */}
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-6">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[1000] p-4">
+            <div className="bg-white rounded-2xl w-full max-w-7xl h-[95vh] overflow-hidden flex flex-col shadow-2xl border border-gray-100">
+              {/* Header del Modal - Diseño Minimalista */}
+              <div className="bg-white border-b border-gray-100 px-8 py-6">
                 <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-2xl font-bold">Configuración de Evento</h2>
-                    <p className="text-blue-100 mt-1">
-                      {eventoData?.id ? 'Editando evento existente' : 'Creando nuevo evento'}
-                    </p>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900">Configuración de Evento</h2>
+                      <p className="text-gray-500 mt-1 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        {eventoData?.id ? 'Editando evento existente' : 'Creando nuevo evento'}
+                      </p>
+                    </div>
                   </div>
                   <button
                     onClick={() => setMenuVisible(false)}
-                    className="text-white hover:text-blue-100 text-3xl font-bold transition-colors"
+                    className="w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-all duration-200 flex items-center justify-center"
                   >
-                    &times;
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
               </div>
 
-              {/* Tabs de Navegación */}
-              <div className="flex border-b bg-gray-50 px-6">
-                {tabs.map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-6 py-4 text-sm whitespace-nowrap font-medium transition-colors ${
-                      activeTab === tab.id
-                        ? 'border-b-2 border-blue-600 text-blue-600 bg-white'
-                        : 'text-gray-600 hover:text-blue-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
+              {/* Tabs de Navegación - Diseño Mejorado */}
+              <div className="bg-gray-50/50 px-8 py-2 border-b border-gray-100">
+                <div className="flex gap-1">
+                  {tabs.map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        activeTab === tab.id
+                          ? 'bg-white text-blue-600 shadow-sm border border-gray-200'
+                          : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Contenido del Tab Activo */}
-              <div className="flex-grow overflow-y-auto p-8">
-                {ActiveComponent && (
-                  <ActiveComponent eventoData={eventoData} setEventoData={setEventoData} />
-                )}
+              <div className="flex-grow overflow-y-auto p-8 bg-gray-50/30">
+                <div className="max-w-4xl mx-auto">
+                  {ActiveComponent && (
+                    <ActiveComponent eventoData={eventoData} setEventoData={setEventoData} />
+                  )}
+                </div>
               </div>
 
-              {/* Footer con Botones */}
-              <div className="bg-gray-50 px-8 py-6 border-t border-gray-200">
+              {/* Footer con Botones - Diseño Mejorado */}
+              <div className="bg-white border-t border-gray-100 px-8 py-6">
                 <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-500 flex items-center gap-2">
                     {currentTenant && (
-                      <span>Tenant ID: {currentTenant.id}</span>
+                      <>
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        <span>Tenant: {currentTenant.company_name || currentTenant.id}</span>
+                      </>
                     )}
                   </div>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setMenuVisible(false)}
-                      className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
+                      className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium"
                     >
                       Cancelar
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={isUploading}
-                      className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 rounded-lg text-white font-medium transition-colors shadow-sm flex items-center gap-2"
+                      className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 rounded-lg text-white font-medium transition-all duration-200 shadow-sm flex items-center gap-2"
                     >
                       {isUploading ? (
                         <>
@@ -495,10 +512,15 @@ const Evento = () => {
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
-                          Guardando {uploadProgress}%
+                          Guardando...
                         </>
                       ) : (
-                        'Guardar Evento'
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Guardar Evento
+                        </>
                       )}
                     </button>
                   </div>

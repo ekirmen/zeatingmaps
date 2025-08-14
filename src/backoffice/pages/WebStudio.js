@@ -8,119 +8,52 @@ import EmailPageCreator from './EmailPageCreator';
 import SiteMap from '../components/SiteMap';
 import { fetchCmsPage, saveCmsPage } from '../services/apibackoffice';
 
-// Datos de ejemplo para las nuevas secciones
+// Datos de ejemplo para las nuevas secciones - Páginas del sistema reales
 const systemPages = [
-  { id: 1, name: 'Booking confirmation', url: '/booking-confirmation' },
-  { id: 2, name: "Ticket's purchase flow", url: '/purchase-flow' },
-  { id: 3, name: "Product's checkout", url: '/checkout' },
-  { id: 4, name: 'User control panel', url: '/user-panel' },
-  { id: 5, name: 'Edit profile', url: '/edit-profile' },
-  { id: 6, name: 'Error page', url: '/error' },
-  { id: 7, name: 'Event landing', url: '/event-landing' },
-  { id: 8, name: "Company's event list", url: '/company-events' },
-  { id: 9, name: 'Events venue grid', url: '/venue-events' },
-  { id: 10, name: 'Contact us', url: '/contact' },
-  { id: 11, name: 'Legal terms', url: '/legal' },
-  { id: 12, name: 'Checkout page', url: '/checkout-page' },
-  { id: 13, name: 'Search', url: '/search' },
-  { id: 14, name: 'Events venue date schedule', url: '/schedule' },
-  { id: 15, name: 'Sign up', url: '/signup' },
-  { id: 16, name: 'Thank you page', url: '/thank-you' },
-  { id: 17, name: 'Tour event landing', url: '/tour-landing' },
-  { id: 18, name: 'Your tickets', url: '/your-tickets' }
+  { id: 1, name: 'Inicio', url: '/', type: 'system' },
+  { id: 2, name: 'Eventos', url: '/eventos', type: 'system' },
+  { id: 3, name: 'Recintos', url: '/recintos', type: 'system' },
+  { id: 4, name: 'Contacto', url: '/contacto', type: 'system' },
+  { id: 5, name: 'Acerca de', url: '/acerca-de', type: 'system' },
+  { id: 6, name: 'Términos y Condiciones', url: '/terminos', type: 'system' },
+  { id: 7, name: 'Política de Privacidad', url: '/privacidad', type: 'system' },
+  { id: 8, name: 'FAQ', url: '/faq', type: 'system' }
 ];
 
+// Páginas de usuario reales (sin correos de prueba)
 const userPages = [
-  { id: 101, name: 'Astrid_Carolina_Herrera_,_LO_QUE_NO_TE_DIJERON_DEL_SEXO (Copiar)' },
-  { id: 102, name: 'DÍA DE LAS MADRES PIMPINELA' },
-  { id: 103, name: 'Felipe_Pelaez' },
-  { id: 104, name: 'Karina' },
-  { id: 105, name: 'Oktober_beer_fest_2024' },
-  { id: 106, name: 'PROMOCIÓN -20% POR EL DIA DEL PADRE - MERENGAZO VALENCIA' },
-  { id: 107, name: 'PROMOCIÓN 20% POR EL DIA DEL PADRE - MERENGAZO VALENCIA' },
-  { id: 108, name: 'Proximos_Eventos (Copiar)' },
-  { id: 109, name: 'Sin_Bandera_30_de_Abril (Copiar)' },
-  { id: 110, name: 'Teatro_Negro_de_Praga_' },
-  { id: 111, name: 'oasis' },
-  { id: 112, name: 'Republica Dominicana' },
-  { id: 113, name: 'usa' },
-  { id: 114, name: 'Venezuela' }
+  { id: 101, name: 'Astrid Carolina Herrera - LO QUE NO TE DIJERON DEL SEXO', url: '/astrid-carolina-herrera', type: 'user' },
+  { id: 102, name: 'DÍA DE LAS MADRES PIMPINELA', url: '/dia-madres-pimpinela', type: 'user' },
+  { id: 103, name: 'Felipe Pelaez', url: '/felipe-pelaez', type: 'user' },
+  { id: 104, name: 'Karina', url: '/karina', type: 'user' },
+  { id: 105, name: 'Oktober Beer Fest 2024', url: '/oktober-beer-fest-2024', type: 'user' },
+  { id: 106, name: 'PROMOCIÓN -20% POR EL DIA DEL PADRE - MERENGAZO VALENCIA', url: '/promocion-dia-padre-merengazo', type: 'user' },
+  { id: 107, name: 'PROMOCIÓN 20% POR EL DIA DEL PADRE - MERENGAZO VALENCIA', url: '/promocion-dia-padre-merengazo-20', type: 'user' },
+  { id: 108, name: 'Próximos Eventos', url: '/proximos-eventos', type: 'user' },
+  { id: 109, name: 'Sin Bandera 30 de Abril', url: '/sin-bandera-30-abril', type: 'user' },
+  { id: 110, name: 'Teatro Negro de Praga', url: '/teatro-negro-praga', type: 'user' },
+  { id: 111, name: 'Oasis', url: '/oasis', type: 'user' },
+  { id: 112, name: 'República Dominicana', url: '/republica-dominicana', type: 'user' },
+  { id: 113, name: 'USA', url: '/usa', type: 'user' },
+  { id: 114, name: 'Venezuela', url: '/venezuela', type: 'user' }
 ];
 
-const headerComponents = [
-  { id: 1, name: 'Classic con buscador', selected: false },
-  { id: 2, name: 'Classic', selected: true },
-  { id: 3, name: 'ON search', selected: true },
-  { id: 4, name: 'Default', selected: false },
-  { id: 5, name: 'Search minimalist', selected: true },
-  { id: 6, name: 'Default search', selected: false }
-];
+// Eliminar menú de componentes - solo mantener páginas y correos
+const headerComponents = [];
+const footerComponents = [];
 
-const footerComponents = [
-  { id: 1, name: 'compact', selected: false },
-  { id: 2, name: 'Default', selected: false },
-  { id: 3, name: 'Default centered company logo', selected: false },
-  { id: 4, name: 'Default company logo', selected: true },
-  { id: 5, name: 'Default no logo', selected: false }
-];
-
+// Correos electrónicos reales (sin correos de prueba)
 const emailTemplates = [
-  { id: 1, name: '15$_DESCUENTO__en_tus_entradas_solo_por_7_dias_Amigos_Invisibles' },
-  { id: 2, name: '2x1' },
-  { id: 3, name: 'ALL_STAR_2023' },
-  { id: 4, name: 'AMIGOS' },
-  { id: 5, name: 'CAMPAÑA OMAR COURTZ' },
-  { id: 6, name: 'DIA_DE_LAS_MADRES' },
-  { id: 7, name: 'DIA_DE_LAS_MADRES_CON_PIMPINELA' },
-  { id: 8, name: 'DIMENSION_LATINA_HOUSTON' },
-  { id: 9, name: 'DIMENSION_LATINA_ORLANDO' },
-  { id: 10, name: 'FASNET_FEST' },
-  { id: 11, name: 'Finaliza_etapa_de_Preventa_Sin_Bandera_el_28_de_Febrero_' },
-  { id: 12, name: 'Gran_amanecer_llanero' },
-  { id: 13, name: 'Ismael_Cala' },
-  { id: 14, name: 'Karina' },
-  { id: 15, name: 'Katie_Angel_' },
-  { id: 16, name: 'LA_COMEDIA_DEL_AnO' },
-  { id: 17, name: 'La_Casita_de_Dios_en_Valencia' },
-  { id: 18, name: 'MAGIC_KIDS_$EL_MUSICAL_DE_TUS_SUEnOS$_21_DE_JULIO' },
-  { id: 19, name: 'MARKO_DIRECCION' },
-  { id: 20, name: 'MENSAJE_PARA_GENTE_DE_MELENDI' },
-  { id: 21, name: 'MORA' },
-  { id: 22, name: 'MOTO' },
-  { id: 23, name: 'MOTOFEST' },
-  { id: 24, name: 'MOTO_DESCUENTO_40' },
-  { id: 25, name: 'Marko_Dallas_2023' },
-  { id: 26, name: 'NELSON_VELASQUEZ_CHICHIRIVICHE_' },
-  { id: 27, name: 'OKTOBER_BEER_FEST_' },
-  { id: 28, name: 'OKTOBER_BEER_FEST_.' },
-  { id: 29, name: 'OKTOBER_BEER_FEST_2024' },
-  { id: 30, name: 'OMAR_COURTZ_22_DE_NOVIEMBRE' },
-  { id: 31, name: 'OMAR_COURTZ_22_DE_NOVIEMBRE_2024.' },
-  { id: 32, name: 'OMAR_COURTZ_22_DE_NOVIEMBRE_DEL_2024...' },
-  { id: 33, name: 'PLANO_Y_CONTRAPLANO_VALENCIA' },
-  { id: 34, name: 'PROFESOR_BROCEnO_PRECIOS_NUEVOS' },
-  { id: 35, name: 'PROMOCION_-20$_AMANECER_VALLENATO_' },
-  { id: 36, name: 'PROMOCION_-20$_POR_EL_DIA_DEL_PADRE_-_MERENGAZO_VALENCIA' },
-  { id: 37, name: 'PROMO_-20$_POR_EL_DIA_DEL_PADRE_-_MERENGAZO_VALENCIA' },
-  { id: 38, name: 'Preventa_MORA_$Estela__TOUR$' },
-  { id: 39, name: 'Promo_Cuotas_Sin_Bandera' },
-  { id: 40, name: 'Promo_Sin_Bandera' },
-  { id: 41, name: 'Promocion_Ismael_Cala' },
-  { id: 42, name: 'Promocion_Karina' },
-  { id: 43, name: 'Proximos_Eventos' },
-  { id: 44, name: 'Proximos_eventos' },
-  { id: 45, name: 'Proximos_eventos_' },
-  { id: 46, name: 'Proximos_eventos_2023' },
-  { id: 47, name: 'Recomendaciones_Kany_Garcia' },
-  { id: 48, name: 'Sin_Bandera_30_de_Abril' },
-  { id: 49, name: 'VENEZUELA_ES_MUJER' },
-  { id: 50, name: 'VENTAS' },
-  { id: 51, name: 'VOZ_VEIS_NUEVO_FLAYER' },
-  { id: 52, name: '_DESCUENTO__en_tus_entradas_solo_por_7_dias_Laura_Chimaras' },
-  { id: 53, name: 'descuento_todos_los_clentes_de_kreatickets_15$_Laura_Chimaras' },
-  { id: 54, name: 'melendi/sin_bandera' },
-  { id: 55, name: 'plano_y_contra_plano' },
-  { id: 56, name: 'voz_veis' }
+  { id: 1, name: 'Promoción 15% Descuento - Amigos Invisibles', url: '/emails/promocion-amigos-invisibles', type: 'email' },
+  { id: 2, name: 'Oferta 2x1', url: '/emails/oferta-2x1', type: 'email' },
+  { id: 3, name: 'ALL STAR 2023', url: '/emails/all-star-2023', type: 'email' },
+  { id: 4, name: 'Campaña AMIGOS', url: '/emails/campana-amigos', type: 'email' },
+  { id: 5, name: 'Día de las Madres', url: '/emails/dia-madres', type: 'email' },
+  { id: 6, name: 'Día de las Madres con Pimpinela', url: '/emails/dia-madres-pimpinela', type: 'email' },
+  { id: 7, name: 'Dimension Latina Houston', url: '/emails/dimension-latina-houston', type: 'email' },
+  { id: 8, name: 'Dimension Latina Orlando', url: '/emails/dimension-latina-orlando', type: 'email' },
+  { id: 9, name: 'Fasnet Fest', url: '/emails/fasnet-fest', type: 'email' },
+  { id: 10, name: 'Gran Amanecer Llanero', url: '/emails/gran-amanecer-llanero', type: 'email' }
 ];
 
 const defaultWidgets = { header: [], content: [], footer: [] };
@@ -297,10 +230,9 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   const [editingWidget, setEditingWidget] = useState(null);
   const [editingArea, setEditingArea] = useState(null);
   const [editingIndex, setEditingIndex] = useState(null);
-  const [widgetsExpanded, setWidgetsExpanded] = useState(false);
-  const [pagesExpanded, setPagesExpanded] = useState(false);
-  const [componentsExpanded, setComponentsExpanded] = useState(false);
+  const [pagesExpanded, setPagesExpanded] = useState(true);
   const [emailsExpanded, setEmailsExpanded] = useState(false);
+  const [widgetsExpanded, setWidgetsExpanded] = useState(true);
   const [showEmailCreator, setShowEmailCreator] = useState(false);
   const [showSiteMap, setShowSiteMap] = useState(false);
   const [showNewPageModal, setShowNewPageModal] = useState(false);
@@ -313,6 +245,9 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     css: '',
     hideFromSEO: false
   });
+  const [editingPage, setEditingPage] = useState(null);
+  const [editingField, setEditingField] = useState(null);
+  const [editingValue, setEditingValue] = useState('');
   const [contextMenu, setContextMenu] = useState({
     show: false,
     x: 0,
@@ -530,7 +465,8 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         css: newPageData.css,
         hideFromSEO: newPageData.hideFromSEO,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        type: 'user'
       };
 
       // Agregar a la lista de páginas de usuario
@@ -542,6 +478,49 @@ const WebStudio = ({ setSidebarCollapsed }) => {
       console.error('Error creating page:', error);
       toast.error('Error al crear la página');
     }
+  };
+
+  // Funciones para edición inline
+  const startEditing = (page, field) => {
+    setEditingPage(page);
+    setEditingField(field);
+    setEditingValue(page[field] || '');
+  };
+
+  const saveEditing = () => {
+    if (editingPage && editingField) {
+      const updatedPage = { ...editingPage, [editingField]: editingValue };
+      
+      // Actualizar en la lista correspondiente
+      if (editingPage.type === 'system') {
+        const index = systemPages.findIndex(p => p.id === editingPage.id);
+        if (index !== -1) {
+          systemPages[index] = updatedPage;
+        }
+      } else {
+        const index = userPages.findIndex(p => p.id === editingPage.id);
+        if (index !== -1) {
+          userPages[index] = updatedPage;
+        }
+      }
+      
+      // Si es la página seleccionada, actualizarla también
+      if (selectedPage && selectedPage.id === editingPage.id) {
+        setSelectedPage(updatedPage);
+      }
+      
+      toast.success('Página actualizada exitosamente');
+    }
+    
+    setEditingPage(null);
+    setEditingField(null);
+    setEditingValue('');
+  };
+
+  const cancelEditing = () => {
+    setEditingPage(null);
+    setEditingField(null);
+    setEditingValue('');
   };
 
   const handleContextMenu = (e, item, type) => {
@@ -1414,8 +1393,51 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                         className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
                         onClick={() => setSelectedPage(page)}
                       >
-                        <span className="text-sm">{page.name}</span>
-                        <span className="text-xs text-gray-500">{page.id}</span>
+                        <div className="flex-1">
+                          {editingPage?.id === page.id && editingField === 'name' ? (
+                            <input
+                              type="text"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="w-full px-2 py-1 text-sm border rounded"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveEditing();
+                                if (e.key === 'Escape') cancelEditing();
+                              }}
+                              autoFocus
+                            />
+                          ) : (
+                            <span className="text-sm">{page.name}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {editingPage?.id === page.id && editingField === 'name' ? (
+                            <>
+                              <button
+                                onClick={saveEditing}
+                                className="text-green-600 hover:text-green-800 text-xs"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={cancelEditing}
+                                className="text-red-600 hover:text-red-800 text-xs"
+                              >
+                                ✗
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startEditing(page, 'name');
+                              }}
+                              className="text-gray-400 hover:text-gray-600 text-xs"
+                            >
+                              ✏️
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1435,89 +1457,59 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                       <i className="fas fa-plus-circle"></i>
                       <span className="text-sm">Nueva página</span>
                     </div>
-                                         {userPages.map(page => (
-                       <div
-                         key={page.id}
-                         className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
-                         onClick={() => setSelectedPage(page)}
-                       >
-                         <span className="text-sm">{page.name}</span>
-                         <button 
-                           className="text-gray-400 hover:text-gray-600"
-                           onClick={(e) => handleContextMenu(e, page, 'page')}
-                         >
-                           <i className="fas fa-ellipsis-v text-xs"></i>
-                         </button>
-                       </div>
-                     ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Componentes */}
-          <div className="border border-gray-300 rounded-lg">
-            <button
-              className="w-full text-left p-3 bg-gray-200 hover:bg-gray-300 transition-colors font-medium"
-              onClick={() => setComponentsExpanded(!componentsExpanded)}
-            >
-              Componentes {componentsExpanded ? '▼' : '▶'}
-            </button>
-            
-            {componentsExpanded && (
-              <div className="p-3 bg-white border-t border-gray-300">
-                {/* Cabeceras */}
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
-                    <i className="fas fa-folder"></i>
-                    Cabeceras
-                  </div>
-                  <div className="space-y-1">
-                                         {headerComponents.map(component => (
-                       <div
-                         key={component.id}
-                         className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
-                       >
-                         <div className="flex items-center gap-2">
-                           <div className={`w-3 h-3 rounded-full ${component.selected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                           <span className="text-sm">{component.name}</span>
-                         </div>
-                         <button 
-                           className="text-gray-400 hover:text-gray-600"
-                           onClick={(e) => handleContextMenu(e, component, 'component')}
-                         >
-                           <i className="fas fa-ellipsis-v text-xs"></i>
-                         </button>
-                       </div>
-                     ))}
-                  </div>
-                </div>
-
-                {/* Pies */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
-                    <i className="fas fa-folder"></i>
-                    Pies
-                  </div>
-                  <div className="space-y-1">
-                                         {footerComponents.map(component => (
-                       <div
-                         key={component.id}
-                         className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
-                       >
-                         <div className="flex items-center gap-2">
-                           <div className={`w-3 h-3 rounded-full ${component.selected ? 'bg-green-500' : 'bg-gray-300'}`}></div>
-                           <span className="text-sm">{component.name}</span>
-                         </div>
-                         <button 
-                           className="text-gray-400 hover:text-gray-600"
-                           onClick={(e) => handleContextMenu(e, component, 'component')}
-                         >
-                           <i className="fas fa-ellipsis-v text-xs"></i>
-                         </button>
-                       </div>
-                     ))}
+                    {userPages.map(page => (
+                      <div
+                        key={page.id}
+                        className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                        onClick={() => setSelectedPage(page)}
+                      >
+                        <div className="flex-1">
+                          {editingPage?.id === page.id && editingField === 'name' ? (
+                            <input
+                              type="text"
+                              value={editingValue}
+                              onChange={(e) => setEditingValue(e.target.value)}
+                              className="w-full px-2 py-1 text-sm border rounded"
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveEditing();
+                                if (e.key === 'Escape') cancelEditing();
+                              }}
+                              autoFocus
+                            />
+                          ) : (
+                            <span className="text-sm">{page.name}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {editingPage?.id === page.id && editingField === 'name' ? (
+                            <>
+                              <button
+                                onClick={saveEditing}
+                                className="text-green-600 hover:text-green-800 text-xs"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                onClick={cancelEditing}
+                                className="text-red-600 hover:text-red-800 text-xs"
+                              >
+                                ✗
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                startEditing(page, 'name');
+                              }}
+                              className="text-gray-400 hover:text-gray-600 text-xs"
+                            >
+                              ✏️
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1547,14 +1539,40 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                     <div
                       key={template.id}
                       className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
+                      onClick={() => setSelectedPage(template)}
                     >
                       <div className="flex items-center gap-2">
                         <i className="fas fa-envelope text-gray-400"></i>
                         <span className="text-sm">{template.name}</span>
                       </div>
-                      <button className="text-gray-400 hover:text-gray-600">
-                        <i className="fas fa-ellipsis-v text-xs"></i>
-                      </button>
+                      <div className="flex items-center gap-1">
+                        {editingPage?.id === template.id && editingField === 'name' ? (
+                          <>
+                            <button
+                              onClick={saveEditing}
+                              className="text-green-600 hover:text-green-800 text-xs"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={cancelEditing}
+                              className="text-red-600 hover:text-red-800 text-xs"
+                            >
+                              ✗
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              startEditing(template, 'name');
+                            }}
+                            className="text-gray-400 hover:text-gray-600 text-xs"
+                          >
+                            ✏️
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -1694,6 +1712,18 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
       {/* Main Editor */}
       <main className="flex-1 p-6 overflow-y-auto bg-gray-50">
+        {/* Header con nombre de página seleccionada */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            {selectedPage ? selectedPage.name : 'Selecciona una página'}
+          </h1>
+          {selectedPage && (
+            <p className="text-gray-600">
+              URL: {selectedPage.url} • Tipo: {selectedPage.type === 'system' ? 'Página del sistema' : selectedPage.type === 'email' ? 'Correo electrónico' : 'Página personalizada'}
+            </p>
+          )}
+        </div>
+
         {['header', 'content', 'footer'].map((area) => (
           <div key={area} className="mb-6">
             <h2 className="font-semibold mb-2 capitalize">{area}</h2>

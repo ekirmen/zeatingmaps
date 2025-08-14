@@ -30,19 +30,20 @@ export const TenantProvider = ({ children }) => {
         console.log('🏠 Dominio principal detectado: sistema.veneventos.com');
         // Para el dominio principal, establecer tenant y configuración por defecto
         const mainTenant = {
-          id: 'main-domain',
+          id: '00000000-0000-0000-0000-000000000000', // UUID válido para dominio principal
           company_name: 'Veneventos - Sistema Principal',
           full_url: 'sistema.veneventos.com',
           domain: 'veneventos.com',
           subdomain: 'sistema',
-          status: 'active'
+          status: 'active',
+          isMainDomain: true
         };
         
         setCurrentTenant(mainTenant);
         
         // Establecer configuración por defecto para el dominio principal
         const mainConfig = {
-          id: 'main-domain',
+          id: '00000000-0000-0000-0000-000000000000',
           name: 'Veneventos - Sistema Principal',
           theme: {
             primaryColor: '#1890ff',

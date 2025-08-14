@@ -29,7 +29,6 @@ import WebColors from './pages/WebColors';
 import EmailCampaigns from './pages/EmailCampaigns';
 import EmailPageCreator from './pages/EmailPageCreator';
 import Abonos from './pages/Abonos';
-import Actividad from './pages/Actividad';
 import Referidos from './pages/Referidos';
 import CompaniasPage from './pages/CompaniasPage';
 import SelectRecintoSala from './pages/SelectRecintoSala';
@@ -44,6 +43,7 @@ import SaasDiagnostico from './pages/SaasDiagnostico';
 import TenantDetail from './pages/TenantDetail';
 import SaasSettings from './pages/SaasSettings';
 import LegalTerms from '../store/pages/LegalTerms';
+import Descuentos from './pages/Descuentos';
 
 const BackofficeApp = () => {
   return (
@@ -52,7 +52,6 @@ const BackofficeApp = () => {
         <Route index element={<Dashboard />} />
         
         {/* Actividad */}
-        <Route path="actividad" element={<Actividad />} />
         
         {/* Administración */}
         <Route path="recintos" element={<Recinto />} />
@@ -80,6 +79,7 @@ const BackofficeApp = () => {
         <Route path="multipase" element={<Abonos />} />
         <Route path="abonos" element={<Abonos />} />
         <Route path="iva" element={<CreateIva />} />
+        <Route path="descuentos" element={<Descuentos />} />
         
         {/* CRM */}
         <Route path="mailchimp" element={<Mailchimp />} />

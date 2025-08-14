@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { message } from 'antd';
 
 export const useMapaElements = (elements, setElements, selectedIds, selectedZone, numSillas) => {
 
@@ -179,22 +180,25 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
 
   // Función para limpiar sillas duplicadas
   const limpiarSillasDuplicadas = () => {
+    console.log('[limpiarSillasDuplicadas] Iniciando limpieza de sillas duplicadas');
+    
     setElements(prev => {
       const sillas = prev.filter(el => el.type === 'silla');
       const mesas = prev.filter(el => el.type === 'mesa');
       
+      console.log(`[limpiarSillasDuplicadas] Sillas encontradas: ${sillas.length}`);
+      console.log(`[limpiarSillasDuplicadas] Mesas encontradas: ${mesas.length}`);
+      
       // Agrupar sillas por mesa
       const sillasPorMesa = {};
       sillas.forEach(silla => {
-        if (silla.parentId) {
-          if (!sillasPorMesa[silla.parentId]) {
-            sillasPorMesa[silla.parentId] = [];
-          }
-          sillasPorMesa[silla.parentId].push(silla);
+        if (!sillasPorMesa[silla.parentId]) {
+          sillasPorMesa[silla.parentId] = [];
         }
+        sillasPorMesa[silla.parentId].push(silla);
       });
       
-      // Eliminar sillas duplicadas (mantener solo la primera de cada posición)
+      // Para cada mesa, mantener solo una silla por posición
       const sillasUnicas = [];
       Object.entries(sillasPorMesa).forEach(([mesaId, sillasMesa]) => {
         const posiciones = new Set();
@@ -203,14 +207,48 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
           if (!posiciones.has(posKey)) {
             posiciones.add(posKey);
             sillasUnicas.push(silla);
+          } else {
+            console.log(`[limpiarSillasDuplicadas] Eliminando silla duplicada en posición ${posKey}`);
           }
         });
       });
       
-      // Retornar elementos sin sillas duplicadas
-      const elementosSinSillas = prev.filter(el => el.type !== 'silla');
-      return [...elementosSinSillas, ...sillasUnicas];
+      // Filtrar elementos no silla y agregar sillas únicas
+      const elementosNoSillas = prev.filter(el => el.type !== 'silla');
+      const resultado = [...elementosNoSillas, ...sillasUnicas];
+      
+      console.log(`[limpiarSillasDuplicadas] Sillas antes: ${sillas.length}, después: ${sillasUnicas.length}`);
+      console.log(`[limpiarSillasDuplicadas] Total elementos: ${resultado.length}`);
+      
+      return resultado;
     });
+  };
+
+  // Función para ajustar elementos a la cuadrícula
+  const snapToGrid = () => {
+    console.log('[snapToGrid] Ajustando elementos a la cuadrícula');
+    
+    setElements(prev => {
+      const GRID_SIZE = 20; // Tamaño de la cuadrícula
+      
+      return prev.map(element => {
+        if (element.posicion) {
+          const newX = Math.round(element.posicion.x / GRID_SIZE) * GRID_SIZE;
+          const newY = Math.round(element.posicion.y / GRID_SIZE) * GRID_SIZE;
+          
+          if (newX !== element.posicion.x || newY !== element.posicion.y) {
+            console.log(`[snapToGrid] Ajustando ${element.type} ${element._id}: (${element.posicion.x}, ${element.posicion.y}) -> (${newX}, ${newY})`);
+            return {
+              ...element,
+              posicion: { x: newX, y: newY }
+            };
+          }
+        }
+        return element;
+      });
+    });
+    
+    message.success('Elementos ajustados a la cuadrícula');
   };
 
   return {
@@ -220,5 +258,6 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
     updateElementSize,
     deleteSelectedElements,
     limpiarSillasDuplicadas,
+    snapToGrid,
   };
 };

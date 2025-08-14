@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   faHome,
@@ -93,6 +93,7 @@ const SidebarMenu = ({ collapsed }) => {
   const [activeSubmenu, setActiveSubmenu] = useState(null);
   const [showEventSearch, setShowEventSearch] = useState(false);
   const [temporaryExpanded, setTemporaryExpanded] = useState(false);
+  const [temporaryExpandedTimeout, setTemporaryExpandedTimeout] = useState(null);
 
   const isActive = (path) => {
     return location.pathname.includes(path);
@@ -102,17 +103,58 @@ const SidebarMenu = ({ collapsed }) => {
     setActiveSubmenu(activeSubmenu === submenuId ? null : submenuId);
   };
 
+  // Función mejorada para manejar la expansión temporal
+  const handleTemporaryExpansion = () => {
+    if (collapsed) {
+      // Limpiar timeout anterior si existe
+      if (temporaryExpandedTimeout) {
+        clearTimeout(temporaryExpandedTimeout);
+      }
+      
+      setTemporaryExpanded(true);
+      
+      // Crear nuevo timeout
+      const newTimeout = setTimeout(() => {
+        setTemporaryExpanded(false);
+        setTemporaryExpandedTimeout(null);
+      }, 5000); // Aumentado a 5 segundos para más estabilidad
+      
+      setTemporaryExpandedTimeout(newTimeout);
+    }
+  };
+
+  // Función para mantener el sidebar expandido cuando el usuario está interactuando
+  const keepExpanded = () => {
+    if (collapsed && temporaryExpanded) {
+      // Limpiar timeout anterior si existe
+      if (temporaryExpandedTimeout) {
+        clearTimeout(temporaryExpandedTimeout);
+      }
+      
+      // Crear nuevo timeout
+      const newTimeout = setTimeout(() => {
+        setTemporaryExpanded(false);
+        setTemporaryExpandedTimeout(null);
+      }, 5000);
+      
+      setTemporaryExpandedTimeout(newTimeout);
+    }
+  };
+
+  // Limpiar timeout al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (temporaryExpandedTimeout) {
+        clearTimeout(temporaryExpandedTimeout);
+      }
+    };
+  }, [temporaryExpandedTimeout]);
+
   const mainMenuItems = [
     {
       title: 'Dashboard',
       path: '/dashboard',
       icon: faHome,
-      type: 'link'
-    },
-    {
-      title: 'Actividad',
-      path: '/dashboard/actividad',
-      icon: faChartLine,
       type: 'link'
     },
     {
@@ -139,6 +181,7 @@ const SidebarMenu = ({ collapsed }) => {
         { title: 'Plantillas de Productos', path: '/dashboard/plantillas-productos', icon: faBox },
         { title: 'Comisiones y tasas', path: '/dashboard/comisiones', icon: faCreditCard },
         { title: 'IVA', path: '/dashboard/iva', icon: faPercent },
+        { title: 'Descuentos', path: '/dashboard/descuentos', icon: faPercent },
         { title: 'Abonos', path: '/dashboard/abonos', icon: faCalendarAlt },
         { title: 'Eventos', path: '/dashboard/eventos', icon: faTicketAlt },
         { title: 'Funciones', path: '/dashboard/funciones', icon: faCalendar }
@@ -239,10 +282,7 @@ const SidebarMenu = ({ collapsed }) => {
             isActive(item.path) ? 'bg-blue-100 text-blue-600 border-r-2 border-blue-600' : ''
           }`}
           onClick={() => {
-            if (collapsed) {
-              setTemporaryExpanded(true);
-              setTimeout(() => setTemporaryExpanded(false), 3000);
-            }
+            handleTemporaryExpansion();
           }}
         >
           <FontAwesomeIcon icon={item.icon} className="w-5 h-5 mr-3" />
@@ -256,10 +296,7 @@ const SidebarMenu = ({ collapsed }) => {
         <div key={item.title}>
           <button
             onClick={() => {
-              if (collapsed) {
-                setTemporaryExpanded(true);
-                setTimeout(() => setTemporaryExpanded(false), 3000);
-              }
+              handleTemporaryExpansion();
               toggleSubmenu(item.submenuId);
             }}
             className={`w-full flex items-center justify-between px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors ${
@@ -288,10 +325,7 @@ const SidebarMenu = ({ collapsed }) => {
                     isActive(subItem.path) ? 'bg-blue-100 text-blue-600' : ''
                   }`}
                   onClick={() => {
-                    if (collapsed) {
-                      setTemporaryExpanded(true);
-                      setTimeout(() => setTemporaryExpanded(false), 3000);
-                    }
+                    handleTemporaryExpansion();
                   }}
                 >
                   <FontAwesomeIcon icon={subItem.icon} className="w-4 h-4 mr-3" />
@@ -311,7 +345,11 @@ const SidebarMenu = ({ collapsed }) => {
   const isBoleteriaActive = isActive('/dashboard/boleteria');
 
   return (
-    <div className={`bg-white shadow-lg ${(collapsed && !temporaryExpanded) ? 'w-16' : 'w-64'} transition-all duration-300`}>
+    <div 
+      className={`bg-white shadow-lg ${(collapsed && !temporaryExpanded) ? 'w-16' : 'w-64'} transition-all duration-300`}
+      onMouseEnter={keepExpanded}
+      onMouseMove={keepExpanded}
+    >
       {/* Logo */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-center">
