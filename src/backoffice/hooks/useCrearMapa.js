@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useRef, useCallback } from 'react';
+import { message } from 'antd';
 
 import { useMapaState } from './useMapaState';
 import { useMapaLoadingSaving } from './usemapaloadingsaving';
@@ -82,6 +83,17 @@ export const useCrearMapa = () => {
     addLineElement,
     addChairRow,
   } = useMapaGraphicalElements(elements, setElements, selectedZone, numSillas, sillaShape);
+
+  // Lógica zoom y stage
+  const {
+    stageRef,
+    stageSize,
+    handleWheelZoom,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    centerView,
+  } = useMapaZoomStage(zoom, setZoom);
 
   // Selección y eventos
   const {
@@ -172,6 +184,68 @@ export const useCrearMapa = () => {
     );
   };
 
+  // Función para copiar elementos seleccionados
+  const copiarElementos = () => {
+    if (selectedIds.length === 0) return;
+    const elementosACopiar = elements.filter(el => selectedIds.includes(el._id));
+    localStorage.setItem('elementosCopiados', JSON.stringify(elementosACopiar));
+    message.success(`${elementosACopiar.length} elementos copiados`);
+  };
+
+  // Función para pegar elementos copiados
+  const pegarElementos = () => {
+    const elementosCopiados = localStorage.getItem('elementosCopiados');
+    if (!elementosCopiados) return;
+    
+    try {
+      const elementos = JSON.parse(elementosCopiados);
+      const nuevosElementos = elementos.map(el => ({
+        ...el,
+        _id: `element_${Date.now()}_${Math.random()}`,
+        posicion: {
+          x: el.posicion.x + 20,
+          y: el.posicion.y + 20
+        }
+      }));
+      
+      setElements(prev => [...prev, ...nuevosElementos]);
+      setSelectedIds(nuevosElementos.map(el => el._id));
+      message.success(`${nuevosElementos.length} elementos pegados`);
+    } catch (error) {
+      console.error('Error al pegar elementos:', error);
+    }
+  };
+
+  // Función para duplicar elementos seleccionados
+  const duplicarElementos = () => {
+    if (selectedIds.length === 0) return;
+    const elementosADuplicar = elements.filter(el => selectedIds.includes(el._id));
+    const nuevosElementos = elementosADuplicar.map(el => ({
+      ...el,
+      _id: `element_${Date.now()}_${Math.random()}`,
+      posicion: {
+        x: el.posicion.x + 20,
+        y: el.posicion.y + 20
+      }
+    }));
+    
+    setElements(prev => [...prev, ...nuevosElementos]);
+    setSelectedIds(nuevosElementos.map(el => el._id));
+    message.success(`${nuevosElementos.length} elementos duplicados`);
+  };
+
+  // Función para crear sección personalizable
+  const crearSeccion = () => {
+    // Implementar lógica de creación de sección
+    message.info('Modo sección activado - Haz clic para crear puntos');
+  };
+
+  // Función para forma personalizable
+  const formaPersonalizable = () => {
+    // Implementar lógica de forma personalizable
+    message.info('Modo forma personalizable activado');
+  };
+
   return {
     // Estados
     elements, setElements,
@@ -214,6 +288,7 @@ export const useCrearMapa = () => {
     // Zoom
     zoomIn,
     zoomOut,
+    resetZoom,
     handleWheelZoom,
 
     // Guardar
@@ -228,5 +303,12 @@ export const useCrearMapa = () => {
 
     // Snap grid
     snapToGrid: ajustarElementosAGrid,
+
+    // Funciones adicionales
+    copiarElementos,
+    pegarElementos,
+    duplicarElementos,
+    crearSeccion,
+    formaPersonalizable,
   };
 };

@@ -7,6 +7,7 @@ import Zonas from './compMapa/Zonas';
 import Menu from './compMapa/MenuMapa';
 import EditPopup from './compMapa/EditPopup';
 import FilaPopup from './compMapa/FilaPopup';
+import AdvancedEditPopup from './compMapa/AdvancedEditPopup';
 import { useCrearMapa } from '../hooks/useCrearMapa';
 import { fetchZonasPorSala, fetchSalaById } from '../services/apibackoffice';
 import { message, Switch, Button, Progress } from 'antd';
@@ -50,6 +51,12 @@ const CrearMapa = () => {
     addChairRow,
     snapToGrid,
     limpiarSillasDuplicadas,
+    resetZoom,
+    copiarElementos,
+    pegarElementos,
+    duplicarElementos,
+    crearSeccion,
+    formaPersonalizable,
   } = useCrearMapa();
 
 
@@ -369,6 +376,11 @@ const CrearMapa = () => {
         elements={elements}
         setSelectedIds={setSelectedIds}
         limpiarSillasDuplicadas={limpiarSillasDuplicadas}
+        copiarElementos={copiarElementos}
+        pegarElementos={pegarElementos}
+        duplicarElementos={duplicarElementos}
+        crearSeccion={crearSeccion}
+        formaPersonalizable={formaPersonalizable}
       />
 
       <div className="flex-1 relative">
@@ -634,6 +646,13 @@ const CrearMapa = () => {
             element={selectedElement}
             onChange={updateElementProperty}
             onClose={() => setShowNumeracion(false)}
+          />
+        )}
+        {selectedElement && (
+          <AdvancedEditPopup
+            element={selectedElement}
+            onUpdate={updateElementProperty}
+            onClose={() => setSelectedElement(null)}
           />
         )}
       </div>

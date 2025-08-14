@@ -48,6 +48,11 @@ const Menu = ({
   elements,
   setSelectedIds,
   limpiarSillasDuplicadas,
+  copiarElementos,
+  pegarElementos,
+  duplicarElementos,
+  crearSeccion,
+  formaPersonalizable,
 }) => {
   const [activeMode, setActiveMode] = useState('select');
   const [activeTab, setActiveTab] = useState('edit');
@@ -251,6 +256,93 @@ const Menu = ({
               <p className="text-xs text-gray-500 mt-2">
                 Haz clic en el mapa para colocar texto
               </p>
+            </Seccion>
+
+            {/* Propiedades Avanzadas */}
+            <Seccion titulo="Propiedades Avanzadas">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ancho
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-2 py-1 border rounded text-sm"
+                    placeholder="Ancho"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Alto
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-2 py-1 border rounded text-sm"
+                    placeholder="Alto"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Radio
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-2 py-1 border rounded text-sm"
+                    placeholder="Radio"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Rotación
+                  </label>
+                  <input
+                    type="number"
+                    className="w-full px-2 py-1 border rounded text-sm"
+                    placeholder="0°"
+                    min="0"
+                    max="360"
+                  />
+                </div>
+              </div>
+            </Seccion>
+
+            {/* Acciones */}
+            <Seccion titulo="Acciones">
+              <div className="space-y-2">
+                <button
+                  onClick={copiarElementos}
+                  className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                >
+                  📋 Copiar
+                </button>
+                <button
+                  onClick={pegarElementos}
+                  className="w-full p-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                >
+                  📋 Pegar
+                </button>
+                <button
+                  onClick={duplicarElementos}
+                  className="w-full p-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
+                >
+                  🔄 Duplicar
+                </button>
+                <button
+                  onClick={crearSeccion}
+                  className="w-full p-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm"
+                >
+                  📐 Crear Sección
+                </button>
+                <button
+                  onClick={formaPersonalizable}
+                  className="w-full p-2 bg-teal-600 text-white rounded hover:bg-teal-700 text-sm"
+                >
+                  🎨 Forma Personalizable
+                </button>
+              </div>
             </Seccion>
           </div>
         )}

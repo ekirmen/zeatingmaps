@@ -44,7 +44,7 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
     if (!mesaId || typeof mesaId !== 'string' || cantidad <= 0) return;
 
     console.log(`[addSillasToMesa] Iniciando proceso para mesa ${mesaId} con ${cantidad} sillas`);
-    console.log(`[addSillasToMesa] Elementos actuales:`, prev);
+    console.log(`[addSillasToMesa] Elementos actuales:`, elements);
 
     setElements(prev => {
       const mesa = prev.find(el => el._id === mesaId);
