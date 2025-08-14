@@ -74,6 +74,12 @@ const Tags = () => {
         return;
       }
       
+      // Validar que el tenant_id sea un UUID válido
+      if (currentTenant.id === 'main-domain') {
+        message.error('Tenant no válido. Por favor, selecciona un tenant válido.');
+        return;
+      }
+      
       if (activeTab === 'event') {
         // Guardar tag de evento
         if (editingTag) {
@@ -134,7 +140,7 @@ const Tags = () => {
       loadTags();
     } catch (error) {
       console.error('Error saving tag:', error);
-      message.error('Error al guardar el tag');
+      message.error('Error al guardar el tag: ' + (error.message || 'Error desconocido'));
     } finally {
       setLoading(false);
     }

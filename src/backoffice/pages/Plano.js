@@ -360,14 +360,30 @@ const Plano = () => {
               <>
                 <ul className="space-y-3 mb-4">
                   {zonas.filter(Boolean).map(z => (
-                    <li key={z.id} className="flex justify-between items-center border px-4 py-3 rounded">
-                      <div>
-                        <span style={{ color: z.color || '#000000' }} className="font-semibold">{z.nombre}</span>
-                        <span className="ml-2 text-gray-600">- Aforo: {zoneSeatCounts[z.id] ?? z.aforo}</span>
+                    <li key={z.id} className="flex justify-between items-center border px-4 py-3 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex items-center space-x-3">
+                        <div 
+                          className="w-4 h-4 rounded-full border-2 border-gray-200" 
+                          style={{ backgroundColor: z.color || '#000000' }}
+                        ></div>
+                        <div>
+                          <span className="font-semibold text-gray-800">{z.nombre}</span>
+                          <span className="ml-2 text-sm text-gray-600">- Aforo: {zoneSeatCounts[z.id] ?? z.aforo}</span>
+                        </div>
                       </div>
-                      <div className="space-x-2">
-                        <button onClick={() => { setEditingZona(z); setNuevaZona(z); setModalIsOpen(true); }} className="text-indigo-600">Editar</button>
-                        <button onClick={() => handleDeleteZona(z.id)} className="text-red-600">Eliminar</button>
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={() => { setEditingZona(z); setNuevaZona(z); setModalIsOpen(true); }} 
+                          className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
+                        >
+                          ✏️ Editar
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteZona(z.id)} 
+                          className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
+                        >
+                          🗑️ Eliminar
+                        </button>
                       </div>
                     </li>
                   ))}

@@ -24,58 +24,62 @@ const ModoDeVenta = ({ eventoData, setEventoData }) => {
       <div className="flex flex-wrap gap-4">
         <button
           type="button"
-          className={`flex flex-col items-center p-4 border rounded cursor-pointer focus:outline-none ${
-            eventoData.modoVenta === 'grid' ? 'border-blue-500' : 'border-gray-300'
+          className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer focus:outline-none transition-all duration-200 ${
+            eventoData.modoVenta === 'grid' 
+              ? 'border-blue-500 bg-blue-50 shadow-md' 
+              : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
           }`}
           onClick={() => handleSeleccionarModo('grid')}
         >
-          <GridIcon width={48} height={48} className="mb-2" />
-          <h4 className="font-semibold">Modo Grid</h4>
-          <p className="text-sm text-center">
+          <GridIcon width={48} height={48} className={`mb-2 ${eventoData.modoVenta === 'grid' ? 'opacity-100' : 'opacity-70'}`} />
+          <h4 className={`font-semibold ${eventoData.modoVenta === 'grid' ? 'text-blue-700' : 'text-gray-700'}`}>Modo Grid</h4>
+          <p className="text-sm text-center text-gray-600">
             Se muestra una tabla con todos los tipos de entrada.
           </p>
         </button>
         <button
           type="button"
-          className={`flex flex-col items-center p-4 border rounded cursor-pointer focus:outline-none ${
+          className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer focus:outline-none transition-all duration-200 ${
             eventoData.modoVenta === 'multi-step'
-              ? 'border-blue-500'
-              : 'border-gray-300'
+              ? 'border-blue-500 bg-blue-50 shadow-md'
+              : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
           }`}
           onClick={() => handleSeleccionarModo('multi-step')}
         >
-          <MultiStepIcon width={48} height={48} className="mb-2" />
-          <h4 className="font-semibold">Modo Multi-Step</h4>
-          <p className="text-sm text-center">
+          <MultiStepIcon width={48} height={48} className={`mb-2 ${eventoData.modoVenta === 'multi-step' ? 'opacity-100' : 'opacity-70'}`} />
+          <h4 className={`font-semibold ${eventoData.modoVenta === 'multi-step' ? 'text-blue-700' : 'text-gray-700'}`}>Modo Multi-Step</h4>
+          <p className="text-sm text-center text-gray-600">
             Recomendado para eventos multi función o múltiples zonas.
           </p>
         </button>
         <button
           type="button"
-          className={`flex flex-col items-center p-4 border rounded cursor-pointer focus:outline-none ${
-            eventoData.modoVenta === 'mapa' ? 'border-blue-500' : 'border-gray-300'
+          className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer focus:outline-none transition-all duration-200 ${
+            eventoData.modoVenta === 'mapa' 
+              ? 'border-blue-500 bg-blue-50 shadow-md' 
+              : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
           }`}
           onClick={() => handleSeleccionarModo('mapa')}
         >
-          <MapIcon width={48} height={48} className="mb-2" />
-          <h4 className="font-semibold">Modo Mapa</h4>
-          <p className="text-sm text-center">
+          <MapIcon width={48} height={48} className={`mb-2 ${eventoData.modoVenta === 'mapa' ? 'opacity-100' : 'opacity-70'}`} />
+          <h4 className={`font-semibold ${eventoData.modoVenta === 'mapa' ? 'text-blue-700' : 'text-gray-700'}`}>Modo Mapa</h4>
+          <p className="text-sm text-center text-gray-600">
             La selección de asientos se muestra antes que la de los tipos de
             precio.
           </p>
         </button>
         <button
           type="button"
-          className={`flex flex-col items-center p-4 border rounded cursor-pointer focus:outline-none ${
+          className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer focus:outline-none transition-all duration-200 ${
             eventoData.modoVenta === 'acreditacion'
-              ? 'border-blue-500'
-              : 'border-gray-300'
+              ? 'border-blue-500 bg-blue-50 shadow-md'
+              : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
           }`}
           onClick={() => handleSeleccionarModo('acreditacion')}
         >
-          <AccreditationIcon width={48} height={48} className="mb-2" />
-          <h4 className="font-semibold">Solicitud de Acreditación</h4>
-          <p className="text-sm text-center">
+          <AccreditationIcon width={48} height={48} className={`mb-2 ${eventoData.modoVenta === 'acreditacion' ? 'opacity-100' : 'opacity-70'}`} />
+          <h4 className={`font-semibold ${eventoData.modoVenta === 'acreditacion' ? 'text-blue-700' : 'text-gray-700'}`}>Solicitud de Acreditación</h4>
+          <p className="text-sm text-center text-gray-600">
             Para gestionar solicitudes de acreditación para asistentes.
           </p>
         </button>

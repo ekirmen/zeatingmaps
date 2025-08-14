@@ -221,18 +221,25 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
             theme="snow"
           />
           <button
-            className="html-toggle"
+            type="button"
+            className="html-toggle mt-2 px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
             onClick={() => setShowHtmlEditor(!showHtmlEditor)}
           >
-            Ver HTML
+            {showHtmlEditor ? 'Ocultar HTML' : 'Ver HTML'}
           </button>
           {showHtmlEditor && (
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="html-editor"
-              rows={10}
-            />
+            <div className="mt-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Editor HTML:
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="html-editor w-full p-3 border border-gray-300 rounded-md font-mono text-sm"
+                rows={10}
+                placeholder="Edita el HTML aquí..."
+              />
+            </div>
           )}
         </div>
       </section>

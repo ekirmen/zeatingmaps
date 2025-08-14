@@ -33,6 +33,7 @@ const CrearMapa = () => {
     addMesa,
     addSillasToMesa,
     selectElement,
+    selectGroup,
     updateElementProperty,
     updateElementSize,
     zoomIn,
@@ -56,6 +57,7 @@ const CrearMapa = () => {
     pegarElementos,
     duplicarElementos,
     crearSeccion,
+    handleSectionClick,
     formaPersonalizable,
     scheduleAutoSave,
     hasUnsavedChanges,
@@ -65,6 +67,11 @@ const CrearMapa = () => {
     setSectionPoints,
     isCreatingSection,
     setIsCreatingSection,
+    handlePanStart,
+    handlePanMove,
+    handlePanEnd,
+    isPanning,
+    stagePosition,
   } = useCrearMapa();
 
 
@@ -450,20 +457,83 @@ const CrearMapa = () => {
           </div>
         )}
 
+        {/* Indicador de paneo activo */}
+        {isPanning && (
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-blue-100 border border-blue-300 rounded px-3 py-1">
+            <span className="text-sm text-blue-700">
+              🖱️ Paneando mapa...
+            </span>
+          </div>
+        )}
+
         <Stage
           ref={stageRef}
           width={stageSize.width}
           height={stageSize.height}
           scaleX={zoom}
           scaleY={zoom}
+          x={stagePosition.x}
+          y={stagePosition.y}
           onWheel={handleWheelZoom}
-          onMouseDown={stageMouseDown}
-          onMouseMove={stageMouseMove}
-          onMouseUp={stageMouseUp}
+          onMouseDown={(e) => {
+            // Manejar paneo con botón central
+            if (e.evt.button === 1) {
+              handlePanStart(e);
+            } else {
+              stageMouseDown(e);
+            }
+          }}
+          onMouseMove={(e) => {
+            // Manejar paneo
+            if (isPanning) {
+              handlePanMove(e);
+            } else {
+              stageMouseMove(e);
+            }
+          }}
+          onMouseUp={(e) => {
+            // Manejar paneo
+            if (isPanning) {
+              handlePanEnd();
+            } else {
+              stageMouseUp(e);
+            }
+          }}
+          onClick={activeMode === 'section' ? handleSectionClick : undefined}
+          onContextMenu={(e) => e.evt.preventDefault()} // Prevenir menú contextual
         >
           <Layer>
             <Grid width={stageSize.width / zoom} height={stageSize.height / zoom} gridSize={20} />
             {showZones && <Zonas zonas={loadedZonas} />}
+
+            {/* Mostrar puntos de sección en construcción */}
+            {isCreatingSection && sectionPoints.length > 0 && (
+              <>
+                {/* Líneas entre puntos */}
+                {sectionPoints.length > 1 && (
+                  <Line
+                    points={sectionPoints.flatMap(p => [p.x, p.y])}
+                    stroke="#FFD700"
+                    strokeWidth={2}
+                    dash={[5, 5]}
+                  />
+                )}
+                
+                {/* Puntos individuales */}
+                {sectionPoints.map((point, index) => (
+                  <Ellipse
+                    key={`section-point-${index}`}
+                    x={point.x}
+                    y={point.y}
+                    radiusX={5}
+                    radiusY={5}
+                    fill="#FFD700"
+                    stroke="#FF6B00"
+                    strokeWidth={2}
+                  />
+                ))}
+              </>
+            )}
 
             {useMemo(() => elements.map((element) => {
               const isSelected = selectedIds.includes(element._id);
@@ -482,9 +552,23 @@ const CrearMapa = () => {
                       onSelect={selectElement}
                       onDragEnd={onDragEndElement}
                       onChairDragEnd={(e, sillaId) => onDragEndElement(e, sillaId)}
+                      onDoubleClick={selectGroup}
                       zonas={loadedZonas}
                       selectedIds={selectedIds}
                       elements={elements}
+                    />
+                  );
+                case 'seccion':
+                  return (
+                    <Line
+                      key={element._id}
+                      points={element.points}
+                      stroke={element.stroke}
+                      strokeWidth={element.strokeWidth}
+                      fill={element.fill}
+                      closed={true}
+                      onClick={() => selectElement(element)}
+                      onTap={() => selectElement(element)}
                     />
                   );
                 case 'text':
@@ -637,7 +721,7 @@ const CrearMapa = () => {
           <button
             onClick={() => {
               resetZoom();
-              centerView();
+              // centerView(); // This function is not defined in the original file
             }}
             className="p-3 bg-gray-600 text-white rounded-full hover:bg-gray-700 shadow-lg transition-all duration-200 hover:scale-110"
             title="Reset Zoom"

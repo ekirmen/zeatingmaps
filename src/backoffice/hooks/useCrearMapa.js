@@ -26,6 +26,11 @@ export const useCrearMapa = () => {
   const [activeMode, setActiveMode] = useState('select');
   const [sectionPoints, setSectionPoints] = useState([]);
   const [isCreatingSection, setIsCreatingSection] = useState(false);
+  
+  // Estado para paneo
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
 
   // Estado global
   const {
@@ -108,6 +113,7 @@ export const useCrearMapa = () => {
   // Selección y eventos
   const {
     selectElement,
+    selectGroup,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
@@ -253,15 +259,64 @@ export const useCrearMapa = () => {
   // Función para duplicar elementos seleccionados
   const duplicarElementos = () => {
     if (selectedIds.length === 0) return;
+    
     const elementosADuplicar = elements.filter(el => selectedIds.includes(el._id));
-    const nuevosElementos = elementosADuplicar.map(el => ({
-      ...el,
-      _id: `element_${Date.now()}_${Math.random()}`,
-      posicion: {
-        x: el.posicion.x + 20,
-        y: el.posicion.y + 20
+    const nuevosElementos = [];
+    
+    elementosADuplicar.forEach(elemento => {
+      if (elemento.type === 'mesa') {
+        // Duplicar mesa
+        const nuevaMesa = {
+          ...elemento,
+          _id: `mesa_${Date.now()}_${Math.random()}`,
+          posicion: {
+            x: elemento.posicion.x + 50,
+            y: elemento.posicion.y + 50
+          }
+        };
+        nuevosElementos.push(nuevaMesa);
+        
+        // Buscar y duplicar sillas asociadas a esta mesa
+        const sillasAsociadas = elements.filter(el => 
+          el.type === 'silla' && el.parentId === elemento._id
+        );
+        
+        sillasAsociadas.forEach(silla => {
+          const nuevaSilla = {
+            ...silla,
+            _id: `silla_${Date.now()}_${Math.random()}`,
+            parentId: nuevaMesa._id, // Asignar a la nueva mesa
+            posicion: {
+              x: silla.posicion.x + 50,
+              y: silla.posicion.y + 50
+            }
+          };
+          nuevosElementos.push(nuevaSilla);
+        });
+      } else if (elemento.type === 'silla') {
+        // Si es una silla individual, duplicarla
+        const nuevaSilla = {
+          ...elemento,
+          _id: `silla_${Date.now()}_${Math.random()}`,
+          posicion: {
+            x: elemento.posicion.x + 30,
+            y: elemento.posicion.y + 30
+          }
+        };
+        nuevosElementos.push(nuevaSilla);
+      } else {
+        // Para otros tipos de elementos
+        const nuevoElemento = {
+          ...elemento,
+          _id: `element_${Date.now()}_${Math.random()}`,
+          posicion: {
+            x: elemento.posicion.x + 20,
+            y: elemento.posicion.y + 20
+          }
+        };
+        nuevosElementos.push(nuevoElemento);
       }
-    }));
+    });
     
     setElements(prev => [...prev, ...nuevosElementos]);
     setSelectedIds(nuevosElementos.map(el => el._id));
@@ -272,7 +327,72 @@ export const useCrearMapa = () => {
   const crearSeccion = () => {
     // Activar modo de creación de sección
     setActiveMode('section');
-    message.info('Modo sección activado - Haz clic para crear puntos de la sección');
+    setIsCreatingSection(true);
+    setSectionPoints([]);
+    message.info('Modo sección activado - Haz clic en el mapa para crear puntos de la sección');
+  };
+
+  // Función para manejar clics en modo sección
+  const handleSectionClick = (e) => {
+    if (!isCreatingSection || activeMode !== 'section') return;
+    
+    const stage = e.target.getStage();
+    const pointerPos = stage.getPointerPosition();
+    
+    setSectionPoints(prev => [...prev, pointerPos]);
+    
+    if (sectionPoints.length >= 2) {
+      // Crear la sección cuando hay al menos 3 puntos
+      const nuevaSeccion = {
+        _id: `seccion_${Date.now()}_${Math.random()}`,
+        type: 'seccion',
+        nombre: `Sección ${Date.now()}`,
+        posicion: { x: 0, y: 0 },
+        points: [...sectionPoints, pointerPos].flatMap(p => [p.x, p.y]),
+        fill: 'rgba(255, 255, 0, 0.3)',
+        stroke: '#FFD700',
+        strokeWidth: 2,
+        zonaId: selectedZone?.id || null
+      };
+      
+      setElements(prev => [...prev, nuevaSeccion]);
+      setSectionPoints([]);
+      setIsCreatingSection(false);
+      setActiveMode('select');
+      message.success('Sección creada correctamente');
+    }
+  };
+
+  // Funciones para paneo con botón central del mouse
+  const handlePanStart = (e) => {
+    // Solo activar paneo con botón central (button 1)
+    if (e.evt.button === 1) {
+      e.evt.preventDefault();
+      setIsPanning(true);
+      const stage = e.target.getStage();
+      const pointerPos = stage.getPointerPosition();
+      setPanStart(pointerPos);
+    }
+  };
+
+  const handlePanMove = (e) => {
+    if (!isPanning) return;
+    
+    const stage = e.target.getStage();
+    const pointerPos = stage.getPointerPosition();
+    const deltaX = pointerPos.x - panStart.x;
+    const deltaY = pointerPos.y - panStart.y;
+    
+    setStagePosition(prev => ({
+      x: prev.x + deltaX,
+      y: prev.y + deltaY
+    }));
+    
+    setPanStart(pointerPos);
+  };
+
+  const handlePanEnd = () => {
+    setIsPanning(false);
   };
 
   // Función para forma personalizable
@@ -313,50 +433,56 @@ export const useCrearMapa = () => {
 
     // Selección y eventos
     selectElement,
+    selectGroup,
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
 
-    // Zonas
-    assignZoneToSillas,
-    assignZoneToSelected,
-
-    // Zoom
+    // Zoom y stage
+    handleWheelZoom,
     zoomIn,
     zoomOut,
     resetZoom,
-    handleWheelZoom,
+    centerView,
 
-    // Guardar
-    handleSave,
-
-    // Elementos gráficos
+    // Funciones de elementos gráficos
     addTextElement,
     addRectangleElement,
     addEllipseElement,
     addLineElement,
     addChairRow,
 
-    // Snap grid
-    snapToGrid: ajustarElementosAGrid,
-
-    // Funciones adicionales
+    // Funciones avanzadas
     copiarElementos,
     pegarElementos,
     duplicarElementos,
     crearSeccion,
+    handleSectionClick,
     formaPersonalizable,
-    
-    // Auto-guardado
-    scheduleAutoSave,
-    hasUnsavedChanges,
-    
-    // Modo de edición
+
+    // Estados de modo
     activeMode,
     setActiveMode,
     sectionPoints,
     setSectionPoints,
     isCreatingSection,
     setIsCreatingSection,
+
+    // Auto-guardado
+    scheduleAutoSave,
+    hasUnsavedChanges,
+
+    // Funciones adicionales
+    assignZoneToSelected,
+    snapToGrid,
+    limpiarSillasDuplicadas,
+    handleSave,
+
+    // Funciones de paneo
+    handlePanStart,
+    handlePanMove,
+    handlePanEnd,
+    isPanning,
+    stagePosition,
   };
 };

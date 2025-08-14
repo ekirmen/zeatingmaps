@@ -73,6 +73,154 @@ const Menu = ({
         </div>
       </div>
 
+      {/* Propiedades del Elemento Seleccionado */}
+      {selectedElement && (
+        <Seccion titulo="Propiedades del Elemento" defaultOpen={true}>
+          <div className="space-y-3">
+            {/* Nombre */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre:</label>
+              <input
+                type="text"
+                value={selectedElement.nombre || ''}
+                onChange={(e) => updateElementProperty(selectedElement._id, 'nombre', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                placeholder="Nombre del elemento"
+              />
+            </div>
+            
+            {/* Propiedades de Posición */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Posición X:</label>
+                <input
+                  type="number"
+                  value={selectedElement.posicion?.x || 0}
+                  onChange={(e) => updateElementProperty(selectedElement._id, 'posicion', {
+                    ...selectedElement.posicion,
+                    x: parseInt(e.target.value) || 0
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Posición Y:</label>
+                <input
+                  type="number"
+                  value={selectedElement.posicion?.y || 0}
+                  onChange={(e) => updateElementProperty(selectedElement._id, 'posicion', {
+                    ...selectedElement.posicion,
+                    y: parseInt(e.target.value) || 0
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Propiedades de Tamaño */}
+            {selectedElement.type === 'rect' && (
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Ancho:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={selectedElement.width || 120}
+                    onChange={(e) => updateElementSize(selectedElement._id, parseInt(e.target.value) || 120, selectedElement.height || 80)}
+                    className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Alto:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={selectedElement.height || 80}
+                    onChange={(e) => updateElementSize(selectedElement._id, selectedElement.width || 120, parseInt(e.target.value) || 80)}
+                    className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                  />
+                </div>
+              </div>
+            )}
+
+            {selectedElement.type === 'circle' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Radio:</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={selectedElement.radius || 60}
+                  onChange={(e) => updateElementProperty(selectedElement._id, 'radius', parseInt(e.target.value) || 60)}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+            )}
+
+            {/* Rotación */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Rotación:</label>
+              <input
+                type="range"
+                min="0"
+                max="360"
+                step="5"
+                value={selectedElement.rotation || 0}
+                onChange={(e) => updateElementProperty(selectedElement._id, 'rotation', parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+              <div className="text-center text-sm text-gray-600 mt-1">{selectedElement.rotation || 0}°</div>
+            </div>
+
+            {/* Zona */}
+            {selectedElement.type === 'mesa' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Zona:</label>
+                <select
+                  value={selectedElement.zonaId || ''}
+                  onChange={(e) => updateElementProperty(selectedElement._id, 'zonaId', e.target.value ? parseInt(e.target.value, 10) : null)}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="">Sin zona</option>
+                  {zonas.map(zona => (
+                    <option key={zona.id} value={zona.id}>{zona.nombre}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Número de silla */}
+            {selectedElement.type === 'silla' && (
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Número:</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={selectedElement.numero || ''}
+                  onChange={(e) => updateElementProperty(selectedElement._id, 'numero', parseInt(e.target.value) || '')}
+                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
+                />
+              </div>
+            )}
+
+            {/* Acciones del Elemento */}
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+              <button
+                onClick={duplicarElementos}
+                className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+              >
+                🔄 Duplicar
+              </button>
+              <button
+                onClick={deleteSelectedElements}
+                className="w-full p-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+              >
+                🗑️ Eliminar
+              </button>
+            </div>
+          </div>
+        </Seccion>
+      )}
+
       {/* Modos principales */}
       <div className="bg-white rounded-md shadow p-3">
         <h4 className="font-semibold text-gray-700 mb-3">Modos de Edición</h4>
@@ -84,6 +232,7 @@ const Menu = ({
                 ? 'bg-blue-600 text-white' 
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
+            title="Seleccionar y mover elementos"
           >
             👆 Seleccionar
           </button>
@@ -94,9 +243,25 @@ const Menu = ({
                 ? 'bg-blue-600 text-white' 
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
+            title="Editar propiedades y redimensionar"
           >
             ✏️ Editar
           </button>
+        </div>
+        <div className="text-xs text-gray-500 mt-2">
+          <strong>Seleccionar:</strong> Mover elementos, seleccionar múltiples<br/>
+          <strong>Editar:</strong> Cambiar propiedades, redimensionar
+        </div>
+        
+        {/* Información sobre navegación */}
+        <div className="mt-3 pt-3 border-t border-gray-200">
+          <h5 className="text-sm font-semibold text-gray-700 mb-2">Navegación del Mapa</h5>
+          <div className="text-xs text-gray-600 space-y-1">
+            <div>🖱️ <strong>Botón central:</strong> Paneo del mapa</div>
+            <div>🔍 <strong>Rueda:</strong> Zoom in/out</div>
+            <div>👆 <strong>Botón izquierdo:</strong> Seleccionar elementos</div>
+            <div>👆👆 <strong>Doble clic en mesa:</strong> Seleccionar grupo completo</div>
+          </div>
         </div>
       </div>
 
@@ -140,19 +305,30 @@ const Menu = ({
           <div className="p-4 space-y-4">
             {/* Secciones */}
             <Seccion titulo="Secciones" defaultOpen={true}>
-              <button
-                onClick={() => setActiveMode('section')}
-                className={`w-full p-2 rounded text-sm transition-colors ${
-                  activeMode === 'section' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                📐 Crear Sección
-              </button>
-              <p className="text-xs text-gray-500 mt-2">
-                Haz clic en el mapa para crear puntos de sección
-              </p>
+              {activeMode === 'section' ? (
+                <div className="space-y-2">
+                  <button
+                    className="w-full p-2 bg-red-600 text-white rounded text-sm"
+                    onClick={() => {
+                      setActiveMode('select');
+                      setIsCreatingSection(false);
+                      setSectionPoints([]);
+                    }}
+                  >
+                    ❌ Cancelar Creación de Sección
+                  </button>
+                  <p className="text-xs text-gray-500 text-center">
+                    Haz clic en el mapa para crear puntos de sección
+                  </p>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setActiveMode('section')}
+                  className="w-full p-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                >
+                  📐 Crear Sección
+                </button>
+              )}
             </Seccion>
 
             {/* Filas de asientos */}
@@ -258,57 +434,6 @@ const Menu = ({
               </p>
             </Seccion>
 
-            {/* Propiedades Avanzadas */}
-            <Seccion titulo="Propiedades Avanzadas">
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ancho
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-2 py-1 border rounded text-sm"
-                    placeholder="Ancho"
-                    min="1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Alto
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-2 py-1 border rounded text-sm"
-                    placeholder="Alto"
-                    min="1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Radio
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-2 py-1 border rounded text-sm"
-                    placeholder="Radio"
-                    min="1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rotación
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full px-2 py-1 border rounded text-sm"
-                    placeholder="0°"
-                    min="0"
-                    max="360"
-                  />
-                </div>
-              </div>
-            </Seccion>
-
             {/* Acciones */}
             <Seccion titulo="Acciones">
               <div className="space-y-2">
@@ -323,12 +448,6 @@ const Menu = ({
                   className="w-full p-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
                 >
                   📋 Pegar
-                </button>
-                <button
-                  onClick={duplicarElementos}
-                  className="w-full p-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
-                >
-                  🔄 Duplicar
                 </button>
                 <button
                   onClick={crearSeccion}
@@ -361,14 +480,18 @@ const Menu = ({
                 <div className="flex items-center space-x-2">
                   <input type="checkbox" id="showSeatLabels" className="rounded" />
                   <label htmlFor="showSeatLabels" className="text-sm text-gray-700">
-                    Numeración de asientos
+                    Numeración de asientos (nombre de la silla)
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <input type="checkbox" id="showObjectLabels" className="rounded" />
                   <label htmlFor="showObjectLabels" className="text-sm text-gray-700">
-                    Numeración de filas/mesas
+                    Numeración de grupos (mesas y filas)
                   </label>
+                </div>
+                <div className="text-xs text-gray-500 mt-2">
+                  <strong>Asientos:</strong> Muestra el nombre/número de cada silla individual<br/>
+                  <strong>Grupos:</strong> Muestra el nombre del grupo (mesa o fila) que contiene las sillas
                 </div>
               </div>
             </Seccion>
@@ -466,7 +589,10 @@ const Menu = ({
             🪑 Seleccionar Todas las Sillas
           </button>
           <button
-            onClick={() => setSelectedIds([])}
+            onClick={() => {
+              setSelectedIds([]);
+              setSelectedElement(null);
+            }}
             className="w-full p-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
           >
             ❌ Limpiar Selección
@@ -510,53 +636,6 @@ const Menu = ({
           ➕ Añadir Sillas a Mesa
         </button>
       </Seccion>
-
-      {/* Propiedades Avanzadas */}
-      {selectedElement && (
-        <Seccion titulo="Propiedades Avanzadas">
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700">Nombre:</label>
-              <input
-                type="text"
-                value={selectedElement.nombre || ''}
-                onChange={(e) => updateElementProperty(selectedElement._id, 'nombre', e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                placeholder="Nombre del elemento"
-              />
-            </div>
-            
-            {selectedElement.type === 'mesa' && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700">Zona:</label>
-                <select
-                  value={selectedElement.zonaId || ''}
-                  onChange={(e) => updateElementProperty(selectedElement._id, 'zonaId', e.target.value ? parseInt(e.target.value, 10) : null)}
-                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                >
-                  <option value="">Sin zona</option>
-                  {zonas.map(zona => (
-                    <option key={zona.id} value={zona.id}>{zona.nombre}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-            
-            {selectedElement.type === 'silla' && (
-              <div>
-                <label className="block text-sm font-semibold text-gray-700">Número:</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={selectedElement.numero || ''}
-                  onChange={(e) => updateElementProperty(selectedElement._id, 'numero', parseInt(e.target.value, 10) || '')}
-                  className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                />
-              </div>
-            )}
-          </div>
-        </Seccion>
-      )}
 
       {/* Guardar */}
       <Seccion titulo="Herramientas">

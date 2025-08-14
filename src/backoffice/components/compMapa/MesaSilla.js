@@ -14,6 +14,7 @@ export const Mesa = ({
   onSelect,
   onDragEnd,
   onChairDragEnd,
+  onDoubleClick,
   zonaId,
   zonas = [],
   selectedIds = [],
@@ -89,6 +90,7 @@ export const Mesa = ({
       onDragEnd={handleGroupDragEnd}
       onClick={() => onSelect({ _id })}
       onTap={() => onSelect({ _id })}
+      onDoubleClick={() => onDoubleClick && onDoubleClick(_id)}
     >
       {shape === 'circle' ? (
         <Circle

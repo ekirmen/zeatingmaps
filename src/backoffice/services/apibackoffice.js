@@ -285,7 +285,10 @@ export const saveMapa = async (salaId, data) => {
     const resp = await fetch(`/api/mapas/${salaId}/save`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contenido: data.contenido || [] })
+      body: JSON.stringify({ 
+        contenido: data.contenido || [],
+        tenant_id: data.tenant_id 
+      })
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
@@ -296,7 +299,11 @@ export const saveMapa = async (salaId, data) => {
   const client = supabaseAdmin;
   const { error } = await client
     .from('mapas')
-    .upsert({ sala_id: salaId, contenido: data.contenido || [] }, { onConflict: 'sala_id' });
+    .upsert({ 
+      sala_id: salaId, 
+      contenido: data.contenido || [],
+      tenant_id: data.tenant_id 
+    }, { onConflict: 'sala_id' });
   handleError(error);
 };
 
