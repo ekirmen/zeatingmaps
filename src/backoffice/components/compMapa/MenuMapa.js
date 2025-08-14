@@ -44,6 +44,9 @@ const Menu = ({
   addEllipseElement,
   addLineElement,
   startChairRowMode,
+  // Nueva información de la sala
+  salaInfo,
+  totalAsientos,
 }) => {
   return (
     <aside className="w-72 h-screen bg-gray-100 p-4 overflow-y-auto flex flex-col space-y-6">
@@ -53,11 +56,11 @@ const Menu = ({
       <div className="text-sm bg-white rounded-md shadow p-3 space-y-1">
         <div className="flex justify-between">
           <span className="text-gray-600">Sala</span>
-          <span className="font-semibold">HOTEL HESPERIA</span>
+          <span className="font-semibold">{salaInfo?.nombre || 'Cargando...'}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-gray-600">Asientos</span>
-          <span className="font-semibold">1710</span>
+          <span className="font-semibold">{totalAsientos}</span>
         </div>
       </div>
 

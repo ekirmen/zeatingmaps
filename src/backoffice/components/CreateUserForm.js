@@ -11,6 +11,7 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
     apellido: '',
     empresa: '',
     telefono: '',
+    permisos: { role: 'usuario' }
   });
 
   const handleSubmit = async (e) => {
@@ -44,6 +45,39 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
 
       if (profileError) throw profileError;
 
+      // Asignar recintos automáticamente si el usuario es administrador
+      if (formData.permisos?.role === 'administrador' || formData.permisos?.role === 'super_administrador') {
+        try {
+          // Obtener todos los recintos disponibles
+          const { data: recintos, error: recintosError } = await supabase
+            .from('recintos')
+            .select('id');
+          
+          if (recintosError) {
+            console.warn('No se pudieron obtener recintos para asignar:', recintosError);
+          } else if (recintos && recintos.length > 0) {
+            // Crear registros en recintos_usuario para cada recinto
+            const recintosUsuario = recintos.map(recinto => ({
+              usuario_id: userResponse.user.id,
+              recinto_id: recinto.id,
+              permisos: { role: 'administrador' }
+            }));
+
+            const { error: asignacionError } = await supabase
+              .from('recintos_usuario')
+              .upsert(recintosUsuario, { onConflict: 'usuario_id,recinto_id' });
+
+            if (asignacionError) {
+              console.warn('Error al asignar recintos al usuario:', asignacionError);
+            } else {
+              console.log(`✅ ${recintos.length} recintos asignados automáticamente al usuario administrador`);
+            }
+          }
+        } catch (error) {
+          console.warn('Error en asignación automática de recintos:', error);
+        }
+      }
+
       // Obtener el nuevo perfil
       const { data: newProfile } = await supabase
         .from('profiles')
@@ -72,6 +106,22 @@ const CreateUserForm = ({ onCreateUser, onCancel }) => {
           />
         </div>
       ))}
+      
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Rol:</label>
+        <select
+          value={formData.permisos?.role || 'usuario'}
+          onChange={(e) => setFormData({ 
+            ...formData, 
+            permisos: { ...formData.permisos, role: e.target.value } 
+          })}
+          className="w-full border rounded px-3 py-2"
+        >
+          <option value="usuario">Usuario</option>
+          <option value="administrador">Administrador</option>
+          <option value="super_administrador">Super Administrador</option>
+        </select>
+      </div>
       <div className="flex justify-end gap-3">
         <button type="button" onClick={onCancel} className="bg-gray-300 px-4 py-2 rounded">
           Cancelar

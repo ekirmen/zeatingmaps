@@ -4,9 +4,11 @@ import { message } from 'antd';
 import realtimeService from '../services/realtimeService';
 import { saveMapa, fetchMapa } from '../services/apibackoffice';
 import { syncSeatsForSala } from '../services/apibackoffice';
+import { useTenant } from '../../contexts/TenantContext';
 
 export const useMapaLoadingSaving = () => {
   const { salaId } = useParams();
+  const { currentTenant } = useTenant();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
@@ -39,10 +41,11 @@ export const useMapaLoadingSaving = () => {
   const transformarParaGuardar = (elements, zones = []) => {
     console.log('[transformarParaGuardar] Elementos recibidos:', elements);
     console.log('[transformarParaGuardar] Zonas recibidas:', zones);
+    console.log('[transformarParaGuardar] Tenant actual:', currentTenant?.id);
     
     if (!elements || !Array.isArray(elements)) {
       console.warn('[transformarParaGuardar] Elements no es un array válido:', elements);
-      return { contenido: [], zonas: zones || [] };
+      return { contenido: [], zonas: zones || [], tenant_id: currentTenant?.id };
     }
     
     const mesas = elements.filter(el => el && el.type === 'mesa');
@@ -93,10 +96,11 @@ export const useMapaLoadingSaving = () => {
 
     console.log('[transformarParaGuardar] Contenido final:', contenido);
     
-    // Retornar objeto con contenido y zonas como espera la API local
+    // Retornar objeto con contenido, zonas y tenant_id como espera la API local
     return {
       contenido: contenido,
-      zonas: zones || []
+      zonas: zones || [],
+      tenant_id: currentTenant?.id
     };
   };
 

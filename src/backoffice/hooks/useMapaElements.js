@@ -47,7 +47,9 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
       const mesa = prev.find(el => el._id === mesaId);
       if (!mesa || mesa.type !== 'mesa') return prev;
 
-      const nuevos = prev.filter(el => el.type !== 'silla' || el.parentId !== mesaId);
+      // Filtrar TODAS las sillas existentes de esta mesa para evitar duplicados
+      const elementosSinSillas = prev.filter(el => el.type !== 'silla' || el.parentId !== mesaId);
+      console.log(`[addSillasToMesa] Eliminando ${prev.length - elementosSinSillas.length} sillas existentes de mesa ${mesaId}`);
       const TAMAÑO_SILLA = 20;
       const MARGEN_SILLA = 15; // Aumentado el margen para mejor separación
       const nuevasSillas = [];
@@ -111,7 +113,8 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
         }
       }
 
-      return [...nuevos, ...nuevasSillas];
+      console.log(`[addSillasToMesa] Agregando ${nuevasSillas.length} nuevas sillas a mesa ${mesaId}`);
+      return [...elementosSinSillas, ...nuevasSillas];
     });
   };
 

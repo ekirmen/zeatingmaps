@@ -17,6 +17,9 @@ const Plano = () => {
   const [prevAforo, setPrevAforo] = useState(0);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingZona, setEditingZona] = useState(null);
+  const [loadingZonas, setLoadingZonas] = useState(false);
+  const [mapaPreview, setMapaPreview] = useState(null);
+  const [loadingMapa, setLoadingMapa] = useState(false);
   const numeradaBloqueada = editingZona?.numerada && editingZona.aforo > 0;
   const navigate = useNavigate();
 
@@ -61,32 +64,51 @@ const Plano = () => {
     loadRecintos();
   }, [setRecintos]);
 
-  useEffect(() => {
-    if (!sala) {
+  // Función para cargar zonas con retry
+  const loadZonas = async (salaId, retryCount = 0) => {
+    if (!salaId) {
       setZonas([]);
       console.log('[PLANO] No hay sala seleccionada, limpiando zonas');
       return;
     }
-    const loadZonas = async () => {
-      try {
-        console.log('[PLANO] Cargando zonas para sala:', sala.id, sala.nombre);
-        const zonasData = await fetchZonasPorSala(sala.id);
-        setZonas(zonasData || []);
-        console.log('[PLANO] Zonas cargadas:', zonasData?.length || 0);
-      } catch (error) {
-        console.error('[PLANO] Error al cargar zonas:', error);
-        setZonas([]);
+
+    setLoadingZonas(true);
+    try {
+      console.log('[PLANO] Cargando zonas para sala:', salaId, retryCount > 0 ? `(intento ${retryCount + 1})` : '');
+      const zonasData = await fetchZonasPorSala(salaId);
+      setZonas(zonasData || []);
+      console.log('[PLANO] Zonas cargadas:', zonasData?.length || 0);
+    } catch (error) {
+      console.error('[PLANO] Error al cargar zonas:', error);
+      setZonas([]);
+      
+      // Retry logic for zones loading
+      if (retryCount < 2) {
+        console.log('[PLANO] Reintentando carga de zonas en 1 segundo...');
+        setTimeout(() => loadZonas(salaId, retryCount + 1), 1000);
       }
-    };
-    loadZonas();
-  }, [sala]);
+    } finally {
+      setLoadingZonas(false);
+    }
+  };
+
+  useEffect(() => {
+    if (sala?.id) {
+      loadZonas(sala.id);
+    } else {
+      setZonas([]);
+      console.log('[PLANO] No hay sala seleccionada, limpiando zonas');
+    }
+  }, [sala?.id]);
 
   useEffect(() => {
     if (!sala) {
       setZoneSeatCounts({});
+      setMapaPreview(null);
       return;
     }
     const loadMapa = async () => {
+      setLoadingMapa(true);
       try {
         const mapa = await fetchMapa(sala.id);
         const counts = {};
@@ -97,15 +119,20 @@ const Plano = () => {
                 if (s.zona) counts[s.zona] = (counts[s.zona] || 0) + 1;
               });
             } else if (el.type === 'silla' && el.zona) {
-              counts[el.zona] = (counts[el.zona] || 0) + 1;
+              counts[el.zona] = (counts[s.zona] || 0) + 1;
             }
           });
         }
         setZoneSeatCounts(counts);
+        setMapaPreview(mapa);
         console.log('[PLANO] Conteo de asientos por zona:', counts);
+        console.log('[PLANO] Mapa cargado para preview:', mapa);
       } catch (error) {
         console.error('[PLANO] Error al cargar mapa:', error);
         setZoneSeatCounts({});
+        setMapaPreview(null);
+      } finally {
+        setLoadingMapa(false);
       }
     };
     loadMapa();
@@ -199,8 +226,15 @@ const Plano = () => {
       return;
     }
 
-    console.log('[PLANO] Navegando a crear mapa para sala:', sala.id);
-    navigate(`/dashboard/crear-mapa/${sala.id}`);
+    navigate('/dashboard/crear-mapa');
+  };
+
+  // Función para refrescar zonas manualmente
+  const refreshZonas = () => {
+    if (sala?.id) {
+      console.log('[PLANO] Refrescando zonas manualmente...');
+      loadZonas(sala.id);
+    }
   };
 
   // Función para validar si se puede crear zona
@@ -268,8 +302,21 @@ const Plano = () => {
           </div>
         ) : (
           <div>
-            <h2 className="text-xl font-semibold mb-4 text-gray-700">Zonas de la sala: {sala.nombre}</h2>
-            {zonas.length === 0 ? (
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold text-gray-700">Zonas de la sala: {sala.nombre}</h2>
+              <button
+                onClick={refreshZonas}
+                disabled={loadingZonas}
+                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                {loadingZonas ? 'Cargando...' : '🔄 Refrescar'}
+              </button>
+            </div>
+            {loadingZonas ? (
+              <div className="text-center p-6 border border-dashed border-gray-300 rounded">
+                <p className="mb-4 text-gray-600">Cargando zonas...</p>
+              </div>
+            ) : zonas.length === 0 ? (
               <div className="text-center p-6 border border-dashed border-gray-300 rounded">
                 <p className="mb-4 text-gray-600">No hay zonas creadas para esta sala.</p>
                 <button 
@@ -305,19 +352,111 @@ const Plano = () => {
                 </button>
               </>
             )}
-            <div className="mt-6">
-              <button 
-                onClick={handleNavigateToCrearMapa} 
-                className={`px-5 py-2 rounded text-white ${
-                  canCreateMapa() 
-                    ? 'bg-blue-600 hover:bg-blue-700' 
-                    : 'bg-gray-400 cursor-not-allowed'
-                }`}
-                disabled={!canCreateMapa()}
-              >
-                {canCreateMapa() ? 'Crear Mapa' : 'Seleccione recinto, sala y cree zonas primero'}
-              </button>
-            </div>
+                         <div className="mt-6">
+               <button 
+                 onClick={handleNavigateToCrearMapa} 
+                 className={`px-5 py-2 rounded text-white ${
+                   canCreateMapa() 
+                     ? 'bg-blue-600 hover:bg-blue-700' 
+                     : 'bg-gray-400 cursor-not-allowed'
+                 }`}
+                 disabled={!canCreateMapa()}
+               >
+                 {canCreateMapa() ? 'Crear Mapa' : 'Seleccione recinto, sala y cree zonas primero'}
+               </button>
+             </div>
+
+             {/* Preview del Mapa Existente */}
+             {mapaPreview && (
+               <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
+                 <h3 className="text-lg font-semibold text-gray-800 mb-4">📋 Vista Previa del Mapa</h3>
+                 
+                 {loadingMapa ? (
+                   <div className="text-center p-4">
+                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                     <p className="text-gray-600">Cargando preview del mapa...</p>
+                   </div>
+                 ) : (
+                   <div className="space-y-4">
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                       <div className="bg-white p-4 rounded-lg border">
+                         <h4 className="font-medium text-gray-700 mb-2">📊 Elementos del Mapa</h4>
+                         <div className="space-y-2">
+                           <div className="flex justify-between">
+                             <span className="text-sm text-gray-600">Mesas:</span>
+                             <span className="font-medium">
+                               {mapaPreview.contenido?.filter(el => el.type === 'mesa').length || 0}
+                             </span>
+                           </div>
+                           <div className="flex justify-between">
+                             <span className="text-sm text-gray-600">Sillas:</span>
+                             <span className="font-medium">
+                               {mapaPreview.contenido?.filter(el => el.type === 'silla').length || 0}
+                             </span>
+                           </div>
+                           <div className="flex justify-between">
+                             <span className="text-sm text-gray-600">Total:</span>
+                             <span className="font-medium">
+                               {mapaPreview.contenido?.length || 0}
+                             </span>
+                           </div>
+                         </div>
+                       </div>
+                       
+                       <div className="bg-white p-4 rounded-lg border">
+                         <h4 className="font-medium text-gray-700 mb-2">🎯 Zonas Utilizadas</h4>
+                         <div className="space-y-2">
+                           {Object.entries(zoneSeatCounts).map(([zonaId, count]) => {
+                             const zona = zonas.find(z => z.id === zonaId);
+                             return (
+                               <div key={zonaId} className="flex justify-between items-center">
+                                 <span className="text-sm text-gray-600 flex items-center gap-2">
+                                   <div 
+                                     className="w-3 h-3 rounded-full" 
+                                     style={{ backgroundColor: zona?.color || '#000' }}
+                                   ></div>
+                                   {zona?.nombre || 'Zona ' + zonaId}
+                                 </span>
+                                 <span className="font-medium">{count}</span>
+                               </div>
+                             );
+                           })}
+                           {Object.keys(zoneSeatCounts).length === 0 && (
+                             <p className="text-sm text-gray-500 italic">No hay zonas asignadas</p>
+                           )}
+                         </div>
+                       </div>
+                       
+                       <div className="bg-white p-4 rounded-lg border">
+                         <h4 className="font-medium text-gray-700 mb-2">📅 Última Actualización</h4>
+                         <div className="text-sm text-gray-600">
+                           {mapaPreview.updated_at ? (
+                             <span>{new Date(mapaPreview.updated_at).toLocaleString('es-ES')}</span>
+                           ) : (
+                             <span className="italic">No disponible</span>
+                           )}
+                         </div>
+                       </div>
+                     </div>
+                     
+                     <div className="flex gap-3">
+                       <button
+                         onClick={() => navigate('/dashboard/crear-mapa')}
+                         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                       >
+                         ✏️ Editar Mapa
+                       </button>
+                       <button
+                         onClick={() => window.open(`/dashboard/crear-mapa`, '_blank')}
+                         className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                       >
+                         🔗 Abrir en Nueva Pestaña
+                       </button>
+                     </div>
+                   </div>
+                 )}
+               </div>
+             )}
           </div>
         )}
       </div>

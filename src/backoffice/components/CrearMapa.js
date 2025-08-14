@@ -9,7 +9,7 @@ import EditPopup from './compMapa/EditPopup';
 import FilaPopup from './compMapa/FilaPopup';
 import { useCrearMapa } from '../hooks/useCrearMapa';
 import { useMapaZoomStage } from '../hooks/useMapaZoomStage';
-import { fetchZonasPorSala } from '../services/apibackoffice';
+import { fetchZonasPorSala, fetchSalaById } from '../services/apibackoffice';
 import { message, Switch, Button } from 'antd';
 import { syncSeatsForSala } from '../services/apibackoffice';
 import { useSeatColors } from '../../hooks/useSeatColors';
@@ -55,6 +55,7 @@ const CrearMapa = () => {
 
   const [sillaShape, setSillaShape] = useState('rect');
   const [loadedZonas, setLoadedZonas] = useState([]);
+  const [salaInfo, setSalaInfo] = useState(null);
   const [showNumeracion, setShowNumeracion] = useState(false);
   const [addingChairRow, setAddingChairRow] = useState(false);
   const [rowStart, setRowStart] = useState(null);
@@ -63,15 +64,20 @@ const CrearMapa = () => {
 
   useEffect(() => {
     if (!salaId) return;
-    const cargarZonas = async () => {
+    const cargarDatos = async () => {
       try {
-        const zonasData = await fetchZonasPorSala(salaId);
+        // Cargar zonas y información de la sala en paralelo
+        const [zonasData, salaData] = await Promise.all([
+          fetchZonasPorSala(salaId),
+          fetchSalaById(salaId)
+        ]);
         setLoadedZonas(zonasData);
+        setSalaInfo(salaData);
       } catch (err) {
-        console.error('Error al cargar zonas:', err);
+        console.error('Error al cargar datos:', err);
       }
     };
-    cargarZonas();
+    cargarDatos();
   }, [salaId]);
 
   const zoneSeatCounts = useMemo(() => {
@@ -83,6 +89,11 @@ const CrearMapa = () => {
     });
     return counts;
   }, [elements]);
+
+  // Calcular total de asientos
+  const totalAsientos = useMemo(() => {
+    return Object.values(zoneSeatCounts).reduce((sum, count) => sum + count, 0);
+  }, [zoneSeatCounts]);
 
   const moverElementosSeleccionados = (deltaX, deltaY) => {
     setElements(prev =>
@@ -179,6 +190,10 @@ const CrearMapa = () => {
     }
   };
 
+  const toggleNumeracion = () => {
+    setShowNumeracion(!showNumeracion);
+  };
+
   // Debug: mostrar información de elementos solo en desarrollo
   if (process.env.NODE_ENV === 'development') {
     console.log('[CrearMapa] Elementos totales:', elements?.length || 0);
@@ -217,7 +232,11 @@ const CrearMapa = () => {
         addEllipseElement={addEllipseElement}
         addLineElement={addLineElement}
         addChairRow={addChairRow}
+        startChairRowMode={startChairRowMode}
         snapToGrid={snapToGrid}
+        toggleNumeracion={toggleNumeracion}
+        salaInfo={salaInfo}
+        totalAsientos={totalAsientos}
       />
 
       <div className="flex-1 relative">

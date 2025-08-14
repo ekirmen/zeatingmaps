@@ -9,9 +9,11 @@ import { useMapaZones } from './usemapazones';
 import { useMapaZoomStage } from './useMapaZoomStage';
 import { useMapaGraphicalElements } from './useMapaGraphicalElements';
 import { fetchZonasPorSala } from '../services/apibackoffice';
+import { useTenant } from '../../contexts/TenantContext';
 
 export const useCrearMapa = () => {
   const { salaId } = useParams();
+  const { currentTenant } = useTenant();
   const hasLoadedInitialData = useRef(false); // Referencia para evitar recargas múltiples
 
   // Estado global

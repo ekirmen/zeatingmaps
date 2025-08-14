@@ -20,6 +20,7 @@ export const RecintoProvider = ({ children }) => {
     const fetchRecintos = async () => {
       try {
         console.log('🔍 [RecintoContext] Obteniendo recintos para tenant:', currentTenant?.id);
+        console.log('🔍 [RecintoContext] Hostname:', window.location.hostname);
         
         let query = supabase
           .from('recintos')
@@ -35,9 +36,13 @@ export const RecintoProvider = ({ children }) => {
 
         const { data, error } = await query;
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ [RecintoContext] Error en query:', error);
+          throw error;
+        }
 
         console.log('✅ [RecintoContext] Recintos obtenidos:', data?.length || 0);
+        console.log('✅ [RecintoContext] Primer recinto:', data?.[0]);
         setRecintos(data || []);
       } catch (error) {
         console.error('❌ [RecintoContext] Error al obtener recintos:', error.message);
@@ -47,6 +52,7 @@ export const RecintoProvider = ({ children }) => {
 
     // Solo ejecutar si tenemos un tenant o si estamos en desarrollo
     if (currentTenant?.id || window.location.hostname === 'localhost') {
+      console.log('🚀 [RecintoContext] Ejecutando fetchRecintos');
       fetchRecintos();
     } else if (!currentTenant && !window.location.hostname.includes('localhost')) {
       console.log('⏳ [RecintoContext] Esperando tenant...');

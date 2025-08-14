@@ -182,6 +182,12 @@ export const fetchSalasPorRecinto = async (recintoId) => {
   return data;
 };
 
+export const fetchSalaById = async (salaId) => {
+  const { data, error } = await supabase.from('salas').select('*').eq('id', salaId).single();
+  handleError(error);
+  return data;
+};
+
 export const createSala = async (data) => {
   const client = supabaseAdmin || supabase;
   const { data: result, error } = await client.from('salas').insert(data).single();
@@ -640,4 +646,12 @@ export const fetchPaymentBySeat = async (funcionId, seatId) => {
   handleError(error);
   return data;
 };
+
+// === CANALES DE VENTA ===
+export const fetchCanalesVenta = async () => {
+  const { data, error } = await supabase.from('canales_venta').select('*');
+  handleError(error);
+  return data;
+};
+
 // Puedes seguir migrando más entidades según este mismo patrón.

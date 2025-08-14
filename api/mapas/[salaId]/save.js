@@ -39,9 +39,17 @@ export default async function handler(req, res) {
       }
       contenido = Array.isArray(req.body.contenido) ? req.body.contenido : [];
 
+      // Extraer tenant_id del body si está disponible
+      const tenantId = req.body?.tenant_id;
+      console.log('[mapas save] Guardando mapa con tenant_id:', tenantId);
+      
       const { error: upsertErr } = await admin
         .from('mapas')
-        .upsert({ sala_id: salaId, contenido }, { onConflict: 'sala_id' });
+        .upsert({ 
+          sala_id: salaId, 
+          contenido,
+          tenant_id: tenantId 
+        }, { onConflict: 'sala_id' });
       if (upsertErr) throw upsertErr;
     }
 
