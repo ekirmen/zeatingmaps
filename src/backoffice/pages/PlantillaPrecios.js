@@ -84,6 +84,29 @@ const PlantillaPrecios = () => {
     cargarPlantillas();
   }, [cargarPlantillas]);
 
+  // Recargar entradas cuando se abre el modal de edición
+  useEffect(() => {
+    if (modalIsOpen && editingPlantilla && (!entradas.length || !zonas.length)) {
+      console.log('[PlantillaPrecios] Recargando datos para edición...');
+      // Recargar entradas si no están disponibles
+      if (!entradas.length && recinto) {
+        const fetchEntradas = async () => {
+          const { data, error } = await supabase.from('entradas').select('*').eq('recinto', recinto.id);
+          setEntradas(!error ? data : []);
+        };
+        fetchEntradas();
+      }
+      // Recargar zonas si no están disponibles
+      if (!zonas.length && sala) {
+        const fetchZonas = async () => {
+          const { data, error } = await supabase.from('zonas').select('*').eq('sala_id', sala.id);
+          setZonas(!error ? data : []);
+        };
+        fetchZonas();
+      }
+    }
+  }, [modalIsOpen, editingPlantilla, entradas.length, zonas.length, recinto, sala]);
+
   /* -------------------- HANDLERS INPUTS DETALLE --------------------- */
   const handleInputChange = (zonaId, entradaId, field, value) => {
     console.log('Input change:', { zonaId, entradaId, field, value });
@@ -208,6 +231,20 @@ const PlantillaPrecios = () => {
   /* ------------------------- EDITAR/ELIMINAR ------------------------ */
   const handleEditPlantilla = async (p) => {
     try {
+      // Asegurar que tenemos las entradas cargadas antes de editar
+      if (!entradas.length) {
+        console.log('[handleEditPlantilla] Cargando entradas antes de editar...');
+        const { data: entradasData, error: entradasError } = await supabase
+          .from('entradas')
+          .select('*')
+          .eq('recinto', recinto.id);
+        
+        if (!entradasError && entradasData) {
+          setEntradas(entradasData);
+          console.log('[handleEditPlantilla] Entradas cargadas:', entradasData);
+        }
+      }
+
       // Obtener la plantilla más actualizada desde la BD por si la consulta
       // inicial no incluye todos los campos de "detalles".
       const { data, error } = await supabase
@@ -219,15 +256,66 @@ const PlantillaPrecios = () => {
       if (error) throw error;
 
       const plantilla = data || p;
+      console.log('[handleEditPlantilla] Plantilla cargada:', plantilla);
 
       setEditingPlantilla(plantilla);
       setNombrePlantilla(plantilla.nombre);
+      
       // Supabase puede retornar `null` si la plantilla no tiene detalles
       // También puede almacenarlos como texto JSON
       const parsedDetalles = typeof plantilla.detalles === 'string'
         ? JSON.parse(plantilla.detalles)
         : plantilla.detalles;
-      setDetallesPrecios(Array.isArray(parsedDetalles) ? parsedDetalles : []);
+      
+      console.log('[handleEditPlantilla] Detalles parseados:', parsedDetalles);
+      
+      // Asegurar que tenemos los detalles como array
+      const detallesArray = Array.isArray(parsedDetalles) ? parsedDetalles : [];
+      
+      // Si estamos editando, inicializar con los detalles existentes
+      // y agregar cualquier combinación zona-entrada que falte
+      if (detallesArray.length > 0) {
+        const existingDetalles = [...detallesArray];
+        
+        // Agregar combinaciones faltantes para zonas y entradas actuales
+        zonas.forEach(zona => {
+          entradas.forEach(entrada => {
+            const exists = existingDetalles.find(d => 
+              d.zonaId === zona.id && d.entradaId === entrada.id
+            );
+            if (!exists) {
+              existingDetalles.push({
+                zonaId: zona.id,
+                entradaId: entrada.id,
+                precio: 0,
+                comision: 0,
+                precioGeneral: 0,
+                canales: '',
+                orden: 0
+              });
+            }
+          });
+        });
+        
+        console.log('[handleEditPlantilla] Detalles finales:', existingDetalles);
+        setDetallesPrecios(existingDetalles);
+      } else {
+        // Si no hay detalles, inicializar con todas las combinaciones
+        const initialDetalles = zonas.flatMap(z => 
+          entradas.map(e => ({
+            zonaId: z.id,
+            entradaId: e.id,
+            precio: 0,
+            comision: 0,
+            precioGeneral: 0,
+            canales: '',
+            orden: 0
+          }))
+        );
+        console.log('[handleEditPlantilla] Detalles iniciales:', initialDetalles);
+        setDetallesPrecios(initialDetalles);
+      }
+      
       setModalIsOpen(true);
     } catch (err) {
       console.error('Error cargando plantilla para editar:', err);
@@ -241,7 +329,12 @@ const PlantillaPrecios = () => {
   };
 
   /* ------------------- UTILS PARA RENDER TABLA ---------------------- */
-  const combinedItems = zonas.flatMap(z => entradas.map(e => ({ zonaId: z.id, zona: z.nombre, entrada: e.producto, entradaId: e.id })));
+  const combinedItems = zonas.flatMap(z => entradas.map(e => ({ 
+    zonaId: z.id, 
+    zona: z.nombre, 
+    entrada: e.producto, 
+    entradaId: e.id 
+  })));
   const currentItems = combinedItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const closeModal = () => {
@@ -270,17 +363,49 @@ const PlantillaPrecios = () => {
 
   const renderTableRows = () => {
     if (!zonas.length || !entradas.length) return (
-      <tr><td colSpan="8" className="py-4 text-center">Debes crear zonas y entradas</td></tr>
+      <tr><td colSpan="8" className="py-4 text-center">
+        {!zonas.length && !entradas.length ? 'Debes crear zonas y entradas' : 
+         !zonas.length ? 'Debes crear zonas' : 'Debes crear entradas'}
+      </tr>
     );
+
+    // Debug: mostrar información de los datos
+    console.log('[PlantillaPrecios] Debug - Zonas:', zonas);
+    console.log('[PlantillaPrecios] Debug - Entradas:', entradas);
+    console.log('[PlantillaPrecios] Debug - DetallesPrecios:', detallesPrecios);
+    console.log('[PlantillaPrecios] Debug - CurrentItems:', currentItems);
+
+    // Si no hay currentItems, mostrar un mensaje
+    if (!currentItems.length) {
+      return (
+        <tr>
+          <td colSpan="8" className="py-4 text-center text-gray-500">
+            No hay combinaciones zona-entrada disponibles
+          </td>
+        </tr>
+      );
+    }
 
     return currentItems.map((item, idx) => {
       const detalle = detallesPrecios.find(d => d.zonaId === item.zonaId && d.entradaId === item.entradaId) || {};
+      
+      // Buscar la entrada correspondiente para mostrar el nombre
+      const entrada = entradas.find(e => e.id === item.entradaId);
+      const zona = zonas.find(z => z.id === item.zonaId);
+      
+      console.log(`[PlantillaPrecios] Renderizando fila ${idx}:`, {
+        item,
+        entrada,
+        zona,
+        detalle
+      });
+      
       return (
         <tr key={idx} className="hover:bg-gray-50">
-          <td className="px-6 py-3 font-medium">{item.zona}</td>
+          <td className="px-6 py-3 font-medium">{zona?.nombre || item.zona || 'Zona no encontrada'}</td>
           <td className="px-6 py-3">
             <div>
-              <div className="font-medium">{item.entrada}</div>
+              <div className="font-medium">{entrada?.producto || item.entrada || 'Entrada no encontrada'}</div>
             </div>
           </td>
           {['precio', 'comision', 'precioGeneral'].map(f => (

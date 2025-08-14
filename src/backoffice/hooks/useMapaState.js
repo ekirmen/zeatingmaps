@@ -10,6 +10,7 @@ export const useMapaState = () => {
   const [numSillas, setNumSillas] = useState(4);
   const [zoom, setZoom] = useState(1);
   const [selectionRect, setSelectionRect] = useState(null);
+  const [sillaShape, setSillaShape] = useState('rect');
 
   return {
     elements, setElements,
@@ -21,5 +22,6 @@ export const useMapaState = () => {
     numSillas, setNumSillas,
     zoom, setZoom,
     selectionRect, setSelectionRect,
+    sillaShape, setSillaShape,
   };
 };

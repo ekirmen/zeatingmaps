@@ -8,7 +8,6 @@ import Menu from './compMapa/MenuMapa';
 import EditPopup from './compMapa/EditPopup';
 import FilaPopup from './compMapa/FilaPopup';
 import { useCrearMapa } from '../hooks/useCrearMapa';
-import { useMapaZoomStage } from '../hooks/useMapaZoomStage';
 import { fetchZonasPorSala, fetchSalaById } from '../services/apibackoffice';
 import { message, Switch, Button, Progress } from 'antd';
 import { syncSeatsForSala } from '../services/apibackoffice';
@@ -19,7 +18,7 @@ const CrearMapa = () => {
 
   const {
     elements, setElements,
-    selectedIds,
+    selectedIds, setSelectedIds,
     showZones, setShowZones,
     selectedZone, setSelectedZone,
     selectedElement,
@@ -27,6 +26,7 @@ const CrearMapa = () => {
     numSillas, setNumSillas,
     zoom, setZoom,
     stageRef,
+    stageSize,
     selectionRect,
 
     addMesa,
@@ -36,6 +36,7 @@ const CrearMapa = () => {
     updateElementSize,
     zoomIn,
     zoomOut,
+    handleWheelZoom,
     handleSave,
     assignZoneToSelected,
     handleMouseDown,
@@ -51,7 +52,7 @@ const CrearMapa = () => {
     limpiarSillasDuplicadas,
   } = useCrearMapa();
 
-  const { stageSize, handleWheelZoom, resetZoom, centerView } = useMapaZoomStage(zoom, setZoom);
+
   const { getSeatColor, getZonaColor, getBorderColor } = useSeatColors();
 
   const [sillaShape, setSillaShape] = useState('rect');
