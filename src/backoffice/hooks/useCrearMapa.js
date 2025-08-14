@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { message } from 'antd';
 
 import { useMapaState } from './useMapaState';
@@ -16,6 +16,11 @@ export const useCrearMapa = () => {
   const { salaId } = useParams();
   const { currentTenant } = useTenant();
   const hasLoadedInitialData = useRef(false); // Referencia para evitar recargas múltiples
+  
+  // Sistema de auto-guardado con debounce
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const autoSaveTimeoutRef = useRef(null);
+  const autoSaveDelay = 2000; // 2 segundos de delay
 
   // Estado global
   const {
@@ -143,8 +148,39 @@ export const useCrearMapa = () => {
       return false;
     }
     console.log('[useCrearMapa] Ejecutando handleSave para sala:', salaId);
-    return baseHandleSave(salaId, elements, zones);
+    const result = baseHandleSave(salaId, elements, zones);
+    if (result) {
+      setHasUnsavedChanges(false);
+    }
+    return result;
   };
+
+  // Función de auto-guardado con debounce
+  const scheduleAutoSave = useCallback(() => {
+    setHasUnsavedChanges(true);
+    
+    // Limpiar timeout anterior si existe
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    // Programar nuevo auto-guardado
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      if (hasUnsavedChanges) {
+        console.log('[useCrearMapa] Auto-guardando mapa...');
+        handleSave();
+      }
+    }, autoSaveDelay);
+  }, [hasUnsavedChanges, autoSaveDelay]);
+
+  // Limpiar timeout al desmontar
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Cargar mapa al iniciar SOLO cuando cambia salaId
   // Usar useCallback para estabilizar la función loadMapa
@@ -236,15 +272,22 @@ export const useCrearMapa = () => {
 
   // Función para crear sección personalizable
   const crearSeccion = () => {
-    // Implementar lógica de creación de sección
-    message.info('Modo sección activado - Haz clic para crear puntos');
+    // Activar modo de creación de sección
+    setActiveMode('section');
+    message.info('Modo sección activado - Haz clic para crear puntos de la sección');
   };
 
   // Función para forma personalizable
   const formaPersonalizable = () => {
-    // Implementar lógica de forma personalizable
-    message.info('Modo forma personalizable activado');
+    // Activar modo de forma personalizable
+    setActiveMode('freeform');
+    message.info('Modo forma personalizable activado - Haz clic y arrastra para crear formas');
   };
+
+  // Estado para modo de edición
+  const [activeMode, setActiveMode] = useState('select');
+  const [sectionPoints, setSectionPoints] = useState([]);
+  const [isCreatingSection, setIsCreatingSection] = useState(false);
 
   return {
     // Estados
@@ -310,5 +353,17 @@ export const useCrearMapa = () => {
     duplicarElementos,
     crearSeccion,
     formaPersonalizable,
+    
+    // Auto-guardado
+    scheduleAutoSave,
+    hasUnsavedChanges,
+    
+    // Modo de edición
+    activeMode,
+    setActiveMode,
+    sectionPoints,
+    setSectionPoints,
+    isCreatingSection,
+    setIsCreatingSection,
   };
 };

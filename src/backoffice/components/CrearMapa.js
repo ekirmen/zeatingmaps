@@ -57,6 +57,14 @@ const CrearMapa = () => {
     duplicarElementos,
     crearSeccion,
     formaPersonalizable,
+    scheduleAutoSave,
+    hasUnsavedChanges,
+    activeMode,
+    setActiveMode,
+    sectionPoints,
+    setSectionPoints,
+    isCreatingSection,
+    setIsCreatingSection,
   } = useCrearMapa();
 
 
@@ -188,11 +196,9 @@ const CrearMapa = () => {
       );
     }
 
-    // Guardar automáticamente después del arrastre
-    console.log('[onDragEndElement] Guardando automáticamente después del arrastre...');
-    setTimeout(() => {
-      handleSaveWithProgress();
-    }, 500); // Pequeño delay para evitar múltiples guardados
+    // Programar auto-guardado después del arrastre
+    console.log('[onDragEndElement] Programando auto-guardado...');
+    scheduleAutoSave();
   };
 
   const startChairRowMode = () => {
@@ -431,6 +437,15 @@ const CrearMapa = () => {
           <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-green-100 border border-green-300 rounded px-3 py-1">
             <span className="text-sm text-green-700">
               ✅ Mapa guardado: {lastSavedAt.toLocaleTimeString()}
+            </span>
+          </div>
+        )}
+
+        {/* Indicador de cambios no guardados */}
+        {hasUnsavedChanges && (
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-yellow-100 border border-yellow-300 rounded px-3 py-1">
+            <span className="text-sm text-yellow-700">
+              ⚠️ Cambios pendientes de guardar
             </span>
           </div>
         )}

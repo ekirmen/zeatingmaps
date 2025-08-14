@@ -14,6 +14,7 @@ const Funciones = () => {
   const [plantillas, setPlantillas] = useState([]);
   const [plantillasComisiones, setPlantillasComisiones] = useState([]);
   const [plantillasProductos, setPlantillasProductos] = useState([]);
+  const [loadingPlantillasProductos, setLoadingPlantillasProductos] = useState(false);
   const [funciones, setFunciones] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingFuncion, setEditingFuncion] = useState(null);
@@ -215,8 +216,9 @@ const Funciones = () => {
     fetchPlantillasComisiones();
   }, []);
 
-  useEffect(() => {
-    const fetchPlantillasProductos = async () => {
+  const fetchPlantillasProductos = async () => {
+    setLoadingPlantillasProductos(true);
+    try {
       const { data, error } = await supabase
         .from('plantillas_productos_template')
         .select('*')
@@ -225,16 +227,66 @@ const Funciones = () => {
 
       if (error) {
         console.error('Error al obtener plantillas de productos:', error);
+        // Si la tabla no existe, establecer un array vacío
+        if (error.code === '42P01') { // undefined_table
+          console.warn('La tabla plantillas_productos_template no existe. Se establecerá un array vacío.');
+          setPlantillasProductos([]);
+        } else {
+          setPlantillasProductos([]);
+        }
       } else {
         setPlantillasProductos(data || []);
       }
-    };
+    } catch (error) {
+      console.error('Error inesperado al obtener plantillas de productos:', error);
+      setPlantillasProductos([]);
+    } finally {
+      setLoadingPlantillasProductos(false);
+    }
+  };
 
+  useEffect(() => {
     fetchPlantillasProductos();
   }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validar que se haya seleccionado una sala
+    if (!salaSeleccionada) {
+      alert('Debe seleccionar una sala antes de crear una función');
+      return;
+    }
+
+    // Validar que se haya seleccionado un evento
+    if (!eventoSeleccionado) {
+      alert('Debe seleccionar un evento antes de crear una función');
+      return;
+    }
+
+    // Validar que se haya seleccionado una plantilla
+    if (!nuevaFuncion.plantilla) {
+      alert('Debe seleccionar una plantilla de precios antes de crear una función');
+      return;
+    }
+
+    // Validar que las fechas estén completas
+    if (!nuevaFuncion.fechaCelebracion || !nuevaFuncion.inicioVenta || !nuevaFuncion.finVenta) {
+      alert('Debe completar todas las fechas requeridas');
+      return;
+    }
+
+    // Validar que la fecha de inicio de venta sea anterior a la fecha de celebración
+    if (new Date(nuevaFuncion.inicioVenta) >= new Date(nuevaFuncion.fechaCelebracion)) {
+      alert('La fecha de inicio de venta debe ser anterior a la fecha de celebración');
+      return;
+    }
+
+    // Validar que la fecha de fin de venta sea anterior o igual a la fecha de celebración
+    if (new Date(nuevaFuncion.finVenta) > new Date(nuevaFuncion.fechaCelebracion)) {
+      alert('La fecha de fin de venta debe ser anterior o igual a la fecha de celebración');
+      return;
+    }
     
     // Calcular fecha de liberación de reservas
     let fechaLiberacionReservas = null;
@@ -278,7 +330,7 @@ const Funciones = () => {
           .eq('id', editingFuncion.id);
 
         if (error) throw error;
-        alert('Función actualizada');
+        alert('Función actualizada exitosamente');
         if (salaSeleccionada?.id) {
           await syncSeatsForSala(salaSeleccionada.id);
         }
@@ -288,9 +340,12 @@ const Funciones = () => {
           insertData.creadopor = creadopor;
         }
 
-        const { error } = await supabase.from('funciones').insert([insertData]);
+        const { data, error } = await supabase.from('funciones').insert([insertData]).select();
         if (error) throw error;
-        alert('Función creada');
+        
+        console.log('Función creada exitosamente:', data);
+        alert('Función creada exitosamente');
+        
         if (salaSeleccionada?.id) {
           await syncSeatsForSala(salaSeleccionada.id);
         }
@@ -301,7 +356,15 @@ const Funciones = () => {
       fetchFunciones();
     } catch (error) {
       console.error('Error al guardar función:', error);
-      alert('Ocurrió un error');
+      
+      // Mostrar mensaje de error más específico
+      if (error.code === '23505') {
+        alert('Error: Ya existe una función con estos datos');
+      } else if (error.code === '23503') {
+        alert('Error: Referencia inválida. Verifique que el evento y la sala existan');
+      } else {
+        alert(`Error al guardar función: ${error.message || 'Error desconocido'}`);
+      }
     }
   };
 
@@ -472,6 +535,14 @@ const Funciones = () => {
                       </option>
                     ))}
                   </select>
+                  {eventos.length === 0 && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      No hay eventos disponibles para esta sala. 
+                      <a href="/dashboard/eventos" className="text-blue-600 hover:underline ml-1">
+                        Crear evento
+                      </a>
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -711,6 +782,14 @@ const Funciones = () => {
                     </option>
                   ))}
                 </select>
+                {plantillasComisiones.length === 0 && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    No hay plantillas de comisiones disponibles. 
+                    <a href="/dashboard/comisiones" className="text-blue-600 hover:underline ml-1">
+                      Crear plantilla
+                    </a>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -729,6 +808,29 @@ const Funciones = () => {
                     </option>
                   ))}
                 </select>
+                {loadingPlantillasProductos ? (
+                  <p className="text-sm text-gray-500 mt-1">
+                    Cargando plantillas de productos...
+                  </p>
+                ) : plantillasProductos.length === 0 ? (
+                  <div className="text-sm text-gray-500 mt-1">
+                    <p>
+                      No hay plantillas de productos disponibles. 
+                      <a href="/dashboard/plantillas-productos" className="text-blue-600 hover:underline ml-1">
+                        Crear plantilla
+                      </a>
+                    </p>
+                    <button
+                      onClick={() => {
+                        setPlantillasProductos([]);
+                        fetchPlantillasProductos();
+                      }}
+                      className="text-blue-600 hover:underline mt-1"
+                    >
+                      Reintentar carga
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
 

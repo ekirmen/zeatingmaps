@@ -112,6 +112,13 @@ const Plano = () => {
     try {
       console.log('[PLANO] Cargando preview del mapa para sala:', salaId);
       const mapaData = await fetchMapa(salaId);
+      console.log('[PLANO] Datos del mapa recibidos:', mapaData);
+      
+      if (mapaData && mapaData.contenido) {
+        console.log('[PLANO] Contenido del mapa:', mapaData.contenido);
+        console.log('[PLANO] Número de elementos:', mapaData.contenido.length);
+      }
+      
       setMapaPreview(mapaData);
       console.log('[PLANO] Preview del mapa cargado:', mapaData ? 'Sí' : 'No');
     } catch (error) {
@@ -417,6 +424,18 @@ const Plano = () => {
                              </span>
                            </div>
                            <div className="flex justify-between">
+                             <span className="text-sm text-gray-600">Textos:</span>
+                             <span className="font-medium">
+                               {mapaPreview.contenido?.filter(el => el.type === 'text').length || 0}
+                             </span>
+                           </div>
+                           <div className="flex justify-between">
+                             <span className="text-sm text-gray-600">Formas:</span>
+                             <span className="font-medium">
+                               {mapaPreview.contenido?.filter(el => ['rect', 'ellipse', 'line'].includes(el.type)).length || 0}
+                             </span>
+                           </div>
+                           <div className="flex justify-between">
                              <span className="text-sm text-gray-600">Total:</span>
                              <span className="font-medium">
                                {mapaPreview.contenido?.length || 0}
@@ -472,7 +491,20 @@ const Plano = () => {
                    </div>
                  ) : (
                    <div className="text-center p-4">
-                     <p className="text-gray-600">No hay mapa para esta sala.</p>
+                     <div className="text-gray-600 space-y-2">
+                       <p>No hay mapa para esta sala.</p>
+                       <p className="text-sm text-gray-500">
+                         Crea un mapa para visualizar la distribución de asientos y mesas.
+                       </p>
+                       <div className="mt-3">
+                         <button
+                           onClick={() => navigate(`/dashboard/crear-mapa/${sala.id}`)}
+                           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                         >
+                           🗺️ Crear Primer Mapa
+                         </button>
+                       </div>
+                     </div>
                    </div>
                  )}
                </div>
