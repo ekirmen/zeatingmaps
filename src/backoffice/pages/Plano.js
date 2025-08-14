@@ -95,11 +95,32 @@ const Plano = () => {
   useEffect(() => {
     if (sala?.id) {
       loadZonas(sala.id);
+      // Cargar preview del mapa si existe
+      loadMapaPreview(sala.id);
     } else {
       setZonas([]);
-      console.log('[PLANO] No hay sala seleccionada, limpiando zonas');
+      setMapaPreview(null);
+      console.log('[PLANO] No hay sala seleccionada, limpiando zonas y mapa');
     }
   }, [sala?.id]);
+
+  // Función para cargar preview del mapa
+  const loadMapaPreview = async (salaId) => {
+    if (!salaId) return;
+    
+    setLoadingMapa(true);
+    try {
+      console.log('[PLANO] Cargando preview del mapa para sala:', salaId);
+      const mapaData = await fetchMapa(salaId);
+      setMapaPreview(mapaData);
+      console.log('[PLANO] Preview del mapa cargado:', mapaData ? 'Sí' : 'No');
+    } catch (error) {
+      console.error('[PLANO] Error al cargar preview del mapa:', error);
+      setMapaPreview(null);
+    } finally {
+      setLoadingMapa(false);
+    }
+  };
 
   useEffect(() => {
     if (!sala) {
@@ -226,7 +247,8 @@ const Plano = () => {
       return;
     }
 
-    navigate('/dashboard/crear-mapa');
+    console.log('[PLANO] Navegando a crear mapa para sala:', sala.id);
+    navigate(`/dashboard/crear-mapa/${sala.id}`);
   };
 
   // Función para refrescar zonas manualmente
@@ -362,21 +384,21 @@ const Plano = () => {
                  }`}
                  disabled={!canCreateMapa()}
                >
-                 {canCreateMapa() ? 'Crear Mapa' : 'Seleccione recinto, sala y cree zonas primero'}
+                 {canCreateMapa() ? (mapaPreview ? '✏️ Editar Mapa' : '🗺️ Crear Mapa') : 'Seleccione recinto, sala y cree zonas primero'}
                </button>
              </div>
 
-             {/* Preview del Mapa Existente */}
-             {mapaPreview && (
+                          {/* Preview del Mapa Existente */}
+             {sala && (
                <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
                  <h3 className="text-lg font-semibold text-gray-800 mb-4">📋 Vista Previa del Mapa</h3>
                  
                  {loadingMapa ? (
                    <div className="text-center p-4">
                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                     <p className="text-gray-600">Cargando preview del mapa...</p>
+                     <p className="text-gray-600">Cargando mapa...</p>
                    </div>
-                 ) : (
+                 ) : mapaPreview ? (
                    <div className="space-y-4">
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                        <div className="bg-white p-4 rounded-lg border">
@@ -439,20 +461,18 @@ const Plano = () => {
                        </div>
                      </div>
                      
-                     <div className="flex gap-3">
-                       <button
-                         onClick={() => navigate('/dashboard/crear-mapa')}
-                         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                       >
-                         ✏️ Editar Mapa
-                       </button>
-                       <button
-                         onClick={() => window.open(`/dashboard/crear-mapa`, '_blank')}
-                         className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
-                       >
-                         🔗 Abrir en Nueva Pestaña
-                       </button>
-                     </div>
+                                           <div className="flex gap-3">
+                        <button
+                          onClick={() => window.open(`/dashboard/crear-mapa/${sala.id}`, '_blank')}
+                          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
+                        >
+                          🔗 Abrir en Nueva Pestaña
+                        </button>
+                      </div>
+                   </div>
+                 ) : (
+                   <div className="text-center p-4">
+                     <p className="text-gray-600">No hay mapa para esta sala.</p>
                    </div>
                  )}
                </div>

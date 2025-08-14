@@ -25,11 +25,11 @@ export const RecintoSalaProvider = ({ children }) => {
         let query = supabase.from('recintos').select('*, salas(*)');
         
         // Filtrar por tenant_id si está disponible
-        if (currentTenant?.id) {
+        if (currentTenant?.id && currentTenant.id !== 'main-domain') {
           query = query.eq('tenant_id', currentTenant.id);
           console.log('✅ [RecintoSalaContext] Filtrando por tenant_id:', currentTenant.id);
         } else {
-          console.warn('⚠️ [RecintoSalaContext] No hay tenant disponible, consultando sin filtro');
+          console.warn('⚠️ [RecintoSalaContext] No hay tenant disponible o es main-domain, consultando sin filtro');
         }
         
         const { data, error } = await query;
@@ -47,9 +47,9 @@ export const RecintoSalaProvider = ({ children }) => {
     };
 
     // Solo ejecutar si tenemos un tenant o si estamos en desarrollo
-    if (currentTenant?.id || window.location.hostname === 'localhost') {
+    if (currentTenant?.id || window.location.hostname === 'localhost' || window.location.hostname.includes('vercel.app')) {
       fetchRecintos();
-    } else if (!currentTenant && !window.location.hostname.includes('localhost')) {
+    } else if (!currentTenant && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('vercel.app')) {
       console.log('⏳ [RecintoSalaContext] Esperando tenant...');
     }
   }, [currentTenant?.id]);

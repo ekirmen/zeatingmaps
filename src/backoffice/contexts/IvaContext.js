@@ -16,11 +16,14 @@ export const IvaProvider = ({ children }) => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('ivas')
-        .select('*')
-        .eq('tenant_id', currentTenant.id)
-        .order('nombre', { ascending: true });
+      // Si es main-domain, no filtrar por tenant_id
+      let query = supabase.from('ivas').select('*');
+      
+      if (currentTenant.id !== 'main-domain') {
+        query = query.eq('tenant_id', currentTenant.id);
+      }
+      
+      const { data, error } = await query.order('nombre', { ascending: true });
 
       if (error) {
         console.error('Error al obtener IVAs:', error.message);

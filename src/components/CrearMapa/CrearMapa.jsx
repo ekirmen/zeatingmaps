@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Group, Rect, Circle, Text, Line, Shape } from 'react-konva';
 import './CrearMapa.css';
+import { fetchSalaById } from '../../backoffice/services/apibackoffice';
 
 // Componentes importados
 import ShapeBuilder from './components/ShapeBuilder';
@@ -10,7 +11,7 @@ import GridPattern from './components/GridPattern';
 import CustomShape from './components/CustomShape';
 import { showNotification } from './utils/notifications';
 
-const CrearMapa = () => {
+const CrearMapa = ({ salaId }) => {
   // Estados principales
   const [shapes, setShapes] = useState([]);
   const [selectedShape, setSelectedShape] = useState(null);
@@ -22,10 +23,46 @@ const CrearMapa = () => {
   const [selectedElements, setSelectedElements] = useState([]);
   const [zoom, setZoom] = useState(1);
   const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
+  
+  // Estados para información de la sala
+  const [salaInfo, setSalaInfo] = useState(null);
+  const [loadingSala, setLoadingSala] = useState(false);
 
   // Referencias
   const stageRef = useRef();
   const isDraggingRef = useRef(false);
+
+  // Cargar información de la sala
+  useEffect(() => {
+    const loadSalaInfo = async () => {
+      if (!salaId) return;
+      
+      setLoadingSala(true);
+      try {
+        console.log('Cargando información de la sala:', salaId);
+        
+        const salaData = await fetchSalaById(salaId);
+        setSalaInfo({
+          id: salaData.id,
+          nombre: salaData.nombre,
+          asientos: 0 // Esto se puede calcular después
+        });
+        console.log('Información de la sala cargada:', salaData);
+      } catch (error) {
+        console.error('Error al cargar información de la sala:', error);
+        // En caso de error, usar información básica
+        setSalaInfo({
+          id: salaId,
+          nombre: `Sala ${salaId}`,
+          asientos: 0
+        });
+      } finally {
+        setLoadingSala(false);
+      }
+    };
+
+    loadSalaInfo();
+  }, [salaId]);
 
   // Interceptar Ctrl+C/V nativo
   useEffect(() => {
@@ -204,8 +241,16 @@ const CrearMapa = () => {
       <div className="editor-header">
         <h1>🎨 EDITOR DE MAPA PROFESIONAL</h1>
         <div className="venue-info">
-          <span>🏢 Sala: PPLAZA DE TOROS VALLE L...</span>
-          <span>🪑 Asientos: 12</span>
+          {loadingSala ? (
+            <span>🔄 Cargando información de la sala...</span>
+          ) : salaInfo ? (
+            <>
+              <span>🏢 Sala: {salaInfo.nombre}</span>
+              <span>🪑 Asientos: {salaInfo.asientos}</span>
+            </>
+          ) : (
+            <span>❌ No se pudo cargar la información de la sala</span>
+          )}
         </div>
       </div>
       

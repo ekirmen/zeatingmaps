@@ -27,11 +27,11 @@ export const RecintoProvider = ({ children }) => {
           .select('*, salas(*)');
         
         // Filtrar por tenant_id si está disponible
-        if (currentTenant?.id) {
+        if (currentTenant?.id && currentTenant.id !== 'main-domain') {
           query = query.eq('tenant_id', currentTenant.id);
           console.log('✅ [RecintoContext] Filtrando por tenant_id:', currentTenant.id);
         } else {
-          console.warn('⚠️ [RecintoContext] No hay tenant disponible, consultando sin filtro');
+          console.warn('⚠️ [RecintoContext] No hay tenant disponible o es main-domain, consultando sin filtro');
         }
 
         const { data, error } = await query;
@@ -51,10 +51,10 @@ export const RecintoProvider = ({ children }) => {
     };
 
     // Solo ejecutar si tenemos un tenant o si estamos en desarrollo
-    if (currentTenant?.id || window.location.hostname === 'localhost') {
+    if (currentTenant?.id || window.location.hostname === 'localhost' || window.location.hostname.includes('vercel.app')) {
       console.log('🚀 [RecintoContext] Ejecutando fetchRecintos');
       fetchRecintos();
-    } else if (!currentTenant && !window.location.hostname.includes('localhost')) {
+    } else if (!currentTenant && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('vercel.app')) {
       console.log('⏳ [RecintoContext] Esperando tenant...');
     }
   }, [currentTenant?.id]);
