@@ -22,6 +22,11 @@ export const useCrearMapa = () => {
   const autoSaveTimeoutRef = useRef(null);
   const autoSaveDelay = 2000; // 2 segundos de delay
 
+  // Estado para modo de edición
+  const [activeMode, setActiveMode] = useState('select');
+  const [sectionPoints, setSectionPoints] = useState([]);
+  const [isCreatingSection, setIsCreatingSection] = useState(false);
+
   // Estado global
   const {
     elements, setElements,
@@ -122,14 +127,7 @@ export const useCrearMapa = () => {
     assignZoneToSelected,
   } = useMapaZones(elements, setElements, selectedIds, selectedZone);
 
-  // Zoom y stage
-  const {
-    stageRef,
-    stageSize,
-    zoomIn,
-    zoomOut,
-    handleWheelZoom,
-  } = useMapaZoomStage();
+
 
   // Carga y guardado del mapa
   const {
@@ -171,7 +169,7 @@ export const useCrearMapa = () => {
         handleSave();
       }
     }, autoSaveDelay);
-  }, [hasUnsavedChanges, autoSaveDelay]);
+  }, [hasUnsavedChanges, autoSaveDelay, handleSave]);
 
   // Limpiar timeout al desmontar
   useEffect(() => {
@@ -184,9 +182,9 @@ export const useCrearMapa = () => {
 
   // Cargar mapa al iniciar SOLO cuando cambia salaId
   // Usar useCallback para estabilizar la función loadMapa
-  const stableLoadMapa = useCallback((salaId, setElements, setZones) => {
+  const stableLoadMapa = useCallback((salaId) => {
     loadMapa(salaId, setElements, setZones);
-  }, [loadMapa]);
+  }, [loadMapa, setElements, setZones]);
 
   useEffect(() => {
     console.log('[useCrearMapa] useEffect ejecutándose:', {
@@ -197,9 +195,9 @@ export const useCrearMapa = () => {
     if (salaId && !hasLoadedInitialData.current) {
       console.log('[useCrearMapa] Cargando mapa inicial para sala:', salaId);
       hasLoadedInitialData.current = true;
-      stableLoadMapa(salaId, setElements, setZones);
+      stableLoadMapa(salaId);
     }
-  }, [salaId, stableLoadMapa, setElements, setZones]);
+  }, [salaId, stableLoadMapa]);
 
   // Función para eliminar elementos seleccionados
   const eliminarElementoSeleccionado = () => deleteSelectedElements();
@@ -283,11 +281,6 @@ export const useCrearMapa = () => {
     setActiveMode('freeform');
     message.info('Modo forma personalizable activado - Haz clic y arrastra para crear formas');
   };
-
-  // Estado para modo de edición
-  const [activeMode, setActiveMode] = useState('select');
-  const [sectionPoints, setSectionPoints] = useState([]);
-  const [isCreatingSection, setIsCreatingSection] = useState(false);
 
   return {
     // Estados
