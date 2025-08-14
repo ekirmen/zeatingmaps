@@ -1,0 +1,317 @@
+/* ElementProperties Component Styles */
+
+.element-properties {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.element-properties h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.no-selection {
+  text-align: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+.no-selection p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Secciones de propiedades */
+.property-section {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+.property-section h5 {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 0.5rem;
+}
+
+/* Filas de propiedades */
+.property-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.property-row label {
+  min-width: 100px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.property-row input,
+.property-row select {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.property-row input:focus,
+.property-row select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.property-row input[type="color"] {
+  width: 60px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.property-row input[type="range"] {
+  flex: 1;
+  height: 6px;
+  background: #e9ecef;
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.property-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #667eea;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.property-row input[type="range"]::-webkit-slider-thumb:hover {
+  background: #5a6fd8;
+  transform: scale(1.1);
+}
+
+.property-row input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #667eea;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.property-row input[type="range"]::-moz-range-thumb:hover {
+  background: #5a6fd8;
+  transform: scale(1.1);
+}
+
+.property-value {
+  min-width: 60px;
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-align: right;
+  font-weight: 500;
+  background: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #e9ecef;
+}
+
+/* Acciones rápidas */
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.reset-btn,
+.center-btn {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reset-btn {
+  background: #ffc107;
+  color: #212529;
+}
+
+.reset-btn:hover {
+  background: #e0a800;
+  transform: translateY(-1px);
+}
+
+.center-btn {
+  background: #17a2b8;
+  color: white;
+}
+
+.center-btn:hover {
+  background: #138496;
+  transform: translateY(-1px);
+}
+
+/* Estilos específicos para diferentes tipos de inputs */
+.property-row input[type="text"] {
+  font-family: inherit;
+}
+
+.property-row input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.property-row input[type="number"]::-webkit-outer-spin-button,
+.property-row input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .property-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .property-row label {
+    min-width: auto;
+  }
+  
+  .property-row input,
+  .property-row select {
+    width: 100%;
+  }
+  
+  .property-row input[type="color"] {
+    width: 100%;
+    height: 50px;
+  }
+  
+  .property-value {
+    align-self: flex-end;
+  }
+}
+
+/* Animaciones */
+.property-section {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estados de hover para inputs */
+.property-row input:hover,
+.property-row select:hover {
+  border-color: #adb5bd;
+}
+
+/* Estilos para inputs deshabilitados */
+.property-row input:disabled,
+.property-row select:disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Estilos para valores de solo lectura */
+.property-value.readonly {
+  background: #e9ecef;
+  color: #495057;
+  font-style: italic;
+}
+
+/* Tooltips para propiedades */
+.property-row {
+  position: relative;
+}
+
+.property-row:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  opacity: 0.9;
+}
+
+/* Estilos para grupos de propiedades relacionadas */
+.property-group {
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+  background: #f8f9fa;
+}
+
+.property-group .property-row {
+  margin-bottom: 0.5rem;
+}
+
+.property-group .property-row:last-child {
+  margin-bottom: 0;
+}
+
+/* Estilos para propiedades importantes */
+.property-row.important label {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.property-row.important input:focus,
+.property-row.important select:focus {
+  border-color: #dc3545;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+}
+
+/* Estilos para propiedades opcionales */
+.property-row.optional label {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.property-row.optional input,
+.property-row.optional select {
+  border-style: dashed;
+}

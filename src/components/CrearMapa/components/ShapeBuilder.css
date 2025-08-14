@@ -1,0 +1,317 @@
+/* ShapeBuilder Component Styles */
+
+.shape-builder {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.shape-builder h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+/* Selector de tipo de shape */
+.shape-type-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.shape-type-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  background: white;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.shape-type-btn:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+  transform: translateY(-1px);
+}
+
+.shape-type-btn.active {
+  border-color: #667eea;
+  background: #667eea;
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.shape-icon {
+  font-size: 1.5rem;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.shape-info {
+  flex: 1;
+}
+
+.shape-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.shape-description {
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+/* Configuración de shape */
+.shape-config {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+.shape-config h5 {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.config-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.config-row label {
+  min-width: 80px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.config-row input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.config-row input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.config-row span {
+  min-width: 40px;
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-align: right;
+}
+
+/* Configuración de estilo */
+.style-config {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+.style-config h5 {
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Controles de dibujo */
+.drawing-controls {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+}
+
+.builder-instructions {
+  margin-bottom: 1.5rem;
+}
+
+.builder-instructions h5 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.builder-instructions ol {
+  margin: 0;
+  padding-left: 1.5rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+  line-height: 1.5;
+}
+
+.builder-instructions li {
+  margin-bottom: 0.25rem;
+}
+
+.control-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.start-btn,
+.clear-btn,
+.create-btn {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.start-btn {
+  background: #28a745;
+  color: white;
+}
+
+.start-btn:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.start-btn.active {
+  background: #dc3545;
+}
+
+.start-btn.active:hover {
+  background: #c82333;
+}
+
+.clear-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.clear-btn:hover {
+  background: #5a6268;
+}
+
+.clear-btn:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+}
+
+.create-btn {
+  background: #007bff;
+  color: white;
+}
+
+.create-btn:hover {
+  background: #0056b3;
+  transform: translateY(-1px);
+}
+
+.create-btn:disabled {
+  background: #adb5bd;
+  cursor: not-allowed;
+}
+
+/* Información de puntos */
+.points-info {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.points-count {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.points-count .label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.points-count .count {
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.points-count .count.warning {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.points-count .count.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.warning-message,
+.success-message {
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.warning-message {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.success-message {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+/* Controles predefinidos */
+.predefined-controls {
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .config-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .config-row label {
+    min-width: auto;
+  }
+  
+  .config-row input {
+    width: 100%;
+  }
+}
