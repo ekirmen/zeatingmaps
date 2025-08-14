@@ -363,9 +363,11 @@ const PlantillaPrecios = () => {
 
   const renderTableRows = () => {
     if (!zonas.length || !entradas.length) return (
-      <tr><td colSpan="8" className="py-4 text-center">
-        {!zonas.length && !entradas.length ? 'Debes crear zonas y entradas' : 
-         !zonas.length ? 'Debes crear zonas' : 'Debes crear entradas'}
+      <tr>
+        <td colSpan="8" className="py-4 text-center">
+          {!zonas.length && !entradas.length ? 'Debes crear zonas y entradas' : 
+           !zonas.length ? 'Debes crear zonas' : 'Debes crear entradas'}
+        </td>
       </tr>
     );
 
