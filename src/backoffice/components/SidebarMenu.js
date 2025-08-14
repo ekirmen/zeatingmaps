@@ -134,22 +134,22 @@ const SidebarMenu = ({ collapsed }) => {
       submenuId: 'scheduling',
       items: [
         { title: 'Entradas', path: '/dashboard/entradas', icon: faTicketAlt },
+        { title: 'Plantillas de precios', path: '/dashboard/plantillas-precios', icon: faPercent },
         { title: 'Productos', path: '/dashboard/productos', icon: faBox },
         { title: 'Plantillas de Productos', path: '/dashboard/plantillas-productos', icon: faBox },
-        { title: 'IVA', path: '/dashboard/iva', icon: faPercent },
-        // { title: 'Donaciones', path: '/dashboard/donaciones', icon: faHandHoldingHeart }, // OCULTO
         { title: 'Comisiones y tasas', path: '/dashboard/comisiones', icon: faCreditCard },
+        { title: 'IVA', path: '/dashboard/iva', icon: faPercent },
+        { title: 'Abonos', path: '/dashboard/abonos', icon: faCalendarAlt },
+        { title: 'Eventos', path: '/dashboard/eventos', icon: faTicketAlt },
+        { title: 'Funciones', path: '/dashboard/funciones', icon: faCalendar }
+        // { title: 'Donaciones', path: '/dashboard/donaciones', icon: faHandHoldingHeart }, // OCULTO
         // { title: 'Seguros', path: '/dashboard/seguros', icon: faShieldAlt }, // OCULTO
         // { title: 'Envío a domicilio', path: '/dashboard/envio', icon: faTruck }, // OCULTO
-        { title: 'Eventos', path: '/dashboard/eventos', icon: faTicketAlt },
-        { title: 'Plantillas de precios', path: '/dashboard/plantillas-precios', icon: faPercent },
-        { title: 'Funciones', path: '/dashboard/funciones', icon: faCalendar },
         // { title: 'Cupos', path: '/dashboard/cupos', icon: faChartBar }, // OCULTO
         // { title: 'Plantillas de cupos', path: '/dashboard/plantillas-cupos', icon: faFileAlt }, // OCULTO
         // { title: 'Filas virtuales', path: '/dashboard/filas-virtuales', icon: faUsers }, // OCULTO
         // { title: 'Paquetes', path: '/dashboard/paquetes', icon: faBox }, // OCULTO
         // { title: 'Multipase', path: '/dashboard/multipase', icon: faTicketAlt }, // OCULTO
-        { title: 'Abonos', path: '/dashboard/abonos', icon: faCalendarAlt }
       ]
     },
     {
@@ -158,7 +158,6 @@ const SidebarMenu = ({ collapsed }) => {
       type: 'submenu',
       submenuId: 'crm',
       items: [
-        { title: 'Clientes', path: '/dashboard/clientes', icon: faUsers },
         { title: 'Mailchimp', path: '/dashboard/mailchimp', icon: faEnvelope },
         { title: 'Formularios', path: '/dashboard/formularios', icon: faFileAlt },
         { title: 'Notificaciones', path: '/dashboard/notificaciones', icon: faBell },

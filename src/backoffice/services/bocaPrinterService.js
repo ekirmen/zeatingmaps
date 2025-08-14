@@ -337,11 +337,28 @@ export const applyBocaTemplate = async (templateName = 'default') => {
 // Guardar configuración de formato
 export const saveFormatConfig = async (config) => {
   try {
+    // Obtener el tenant actual
+    const { data: { user } } = await supabase.auth.getUser();
+    let tenant_id = null;
+    
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile) {
+        tenant_id = profile.tenant_id;
+      }
+    }
+
     const { data, error } = await supabase
       .from('printer_formats')
       .upsert({
         id: 1, // Solo una configuración global
         config: config,
+        tenant_id: tenant_id,
         updated_at: new Date().toISOString()
       })
       .select()
@@ -358,11 +375,32 @@ export const saveFormatConfig = async (config) => {
 // Obtener configuración de formato
 export const getFormatConfig = async () => {
   try {
-    const { data, error } = await supabase
+    // Obtener el tenant actual
+    const { data: { user } } = await supabase.auth.getUser();
+    let tenant_id = null;
+    
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile) {
+        tenant_id = profile.tenant_id;
+      }
+    }
+
+    let query = supabase
       .from('printer_formats')
       .select('config')
-      .eq('id', 1)
-      .single();
+      .eq('id', 1);
+    
+    if (tenant_id) {
+      query = query.eq('tenant_id', tenant_id);
+    }
+
+    const { data, error } = await query.single();
 
     if (error && error.code !== 'PGRST116') throw error;
     return data?.config || DEFAULT_FORMAT_CONFIG;

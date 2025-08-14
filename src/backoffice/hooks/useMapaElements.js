@@ -43,12 +43,22 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
   const addSillasToMesa = (mesaId, cantidad = numSillas, sillaShape = 'rect') => {
     if (!mesaId || typeof mesaId !== 'string' || cantidad <= 0) return;
 
+    console.log(`[addSillasToMesa] Iniciando proceso para mesa ${mesaId} con ${cantidad} sillas`);
+    console.log(`[addSillasToMesa] Elementos actuales:`, prev);
+
     setElements(prev => {
       const mesa = prev.find(el => el._id === mesaId);
-      if (!mesa || mesa.type !== 'mesa') return prev;
+      if (!mesa || mesa.type !== 'mesa') {
+        console.log(`[addSillasToMesa] Mesa no encontrada o tipo incorrecto:`, mesa);
+        return prev;
+      }
+
+      console.log(`[addSillasToMesa] Mesa encontrada:`, mesa);
 
       // Filtrar TODAS las sillas existentes de esta mesa para evitar duplicados
       const elementosSinSillas = prev.filter(el => el.type !== 'silla' || el.parentId !== mesaId);
+      console.log(`[addSillasToMesa] Elementos antes del filtro:`, prev.length);
+      console.log(`[addSillasToMesa] Elementos después del filtro:`, elementosSinSillas.length);
       console.log(`[addSillasToMesa] Eliminando ${prev.length - elementosSinSillas.length} sillas existentes de mesa ${mesaId}`);
       const TAMAÑO_SILLA = 20;
       const MARGEN_SILLA = 15; // Aumentado el margen para mejor separación
@@ -114,7 +124,10 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
       }
 
       console.log(`[addSillasToMesa] Agregando ${nuevasSillas.length} nuevas sillas a mesa ${mesaId}`);
-      return [...elementosSinSillas, ...nuevasSillas];
+      console.log(`[addSillasToMesa] Nuevas sillas:`, nuevasSillas);
+      const resultado = [...elementosSinSillas, ...nuevasSillas];
+      console.log(`[addSillasToMesa] Total de elementos después de agregar sillas:`, resultado.length);
+      return resultado;
     });
   };
 
@@ -164,11 +177,48 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
     // setSelectedIds([]); // La deselección se manejará en el hook de selección
   };
 
+  // Función para limpiar sillas duplicadas
+  const limpiarSillasDuplicadas = () => {
+    setElements(prev => {
+      const sillas = prev.filter(el => el.type === 'silla');
+      const mesas = prev.filter(el => el.type === 'mesa');
+      
+      // Agrupar sillas por mesa
+      const sillasPorMesa = {};
+      sillas.forEach(silla => {
+        if (silla.parentId) {
+          if (!sillasPorMesa[silla.parentId]) {
+            sillasPorMesa[silla.parentId] = [];
+          }
+          sillasPorMesa[silla.parentId].push(silla);
+        }
+      });
+      
+      // Eliminar sillas duplicadas (mantener solo la primera de cada posición)
+      const sillasUnicas = [];
+      Object.entries(sillasPorMesa).forEach(([mesaId, sillasMesa]) => {
+        const posiciones = new Set();
+        sillasMesa.forEach(silla => {
+          const posKey = `${silla.posicion.x},${silla.posicion.y}`;
+          if (!posiciones.has(posKey)) {
+            posiciones.add(posKey);
+            sillasUnicas.push(silla);
+          }
+        });
+      });
+      
+      // Retornar elementos sin sillas duplicadas
+      const elementosSinSillas = prev.filter(el => el.type !== 'silla');
+      return [...elementosSinSillas, ...sillasUnicas];
+    });
+  };
+
   return {
     addMesa,
     addSillasToMesa,
     updateElementProperty,
     updateElementSize,
     deleteSelectedElements,
+    limpiarSillasDuplicadas,
   };
 };

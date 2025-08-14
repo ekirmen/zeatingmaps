@@ -10,7 +10,7 @@ import FilaPopup from './compMapa/FilaPopup';
 import { useCrearMapa } from '../hooks/useCrearMapa';
 import { useMapaZoomStage } from '../hooks/useMapaZoomStage';
 import { fetchZonasPorSala, fetchSalaById } from '../services/apibackoffice';
-import { message, Switch, Button } from 'antd';
+import { message, Switch, Button, Progress } from 'antd';
 import { syncSeatsForSala } from '../services/apibackoffice';
 import { useSeatColors } from '../../hooks/useSeatColors';
 
@@ -48,9 +48,10 @@ const CrearMapa = () => {
     addLineElement,
     addChairRow,
     snapToGrid,
+    limpiarSillasDuplicadas,
   } = useCrearMapa();
 
-  const { stageSize, handleWheelZoom } = useMapaZoomStage(zoom, setZoom);
+  const { stageSize, handleWheelZoom, resetZoom, centerView } = useMapaZoomStage(zoom, setZoom);
   const { getSeatColor, getZonaColor, getBorderColor } = useSeatColors();
 
   const [sillaShape, setSillaShape] = useState('rect');
@@ -61,6 +62,9 @@ const CrearMapa = () => {
   const [rowStart, setRowStart] = useState(null);
   const [deleteMissing, setDeleteMissing] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
+  const [savingProgress, setSavingProgress] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState(null);
 
   useEffect(() => {
     if (!salaId) return;
@@ -94,6 +98,47 @@ const CrearMapa = () => {
   const totalAsientos = useMemo(() => {
     return Object.values(zoneSeatCounts).reduce((sum, count) => sum + count, 0);
   }, [zoneSeatCounts]);
+
+  // Calcular estadísticas de validación
+  const validationStats = useMemo(() => {
+    const stats = {
+      unlabeledSeats: 0,
+      unlabeledRows: 0,
+      unlabeledTables: 0,
+      duplicateSeats: 0,
+      uncategorizedSeats: 0,
+      uncategorizedZones: 0
+    };
+
+    elements.forEach(el => {
+      if (el.type === 'silla') {
+        if (!el.numero || el.numero === '') {
+          stats.unlabeledSeats++;
+        }
+        if (!el.zonaId) {
+          stats.uncategorizedSeats++;
+        }
+      } else if (el.type === 'mesa') {
+        if (!el.nombre || el.nombre === '') {
+          stats.unlabeledTables++;
+        }
+      }
+    });
+
+    // Detectar sillas duplicadas
+    const sillas = elements.filter(el => el.type === 'silla');
+    const posiciones = new Set();
+    sillas.forEach(silla => {
+      const posKey = `${silla.posicion?.x},${silla.posicion?.y}`;
+      if (posiciones.has(posKey)) {
+        stats.duplicateSeats++;
+      } else {
+        posiciones.add(posKey);
+      }
+    });
+
+    return stats;
+  }, [elements]);
 
   const moverElementosSeleccionados = (deltaX, deltaY) => {
     setElements(prev =>
@@ -138,7 +183,7 @@ const CrearMapa = () => {
     // Guardar automáticamente después del arrastre
     console.log('[onDragEndElement] Guardando automáticamente después del arrastre...');
     setTimeout(() => {
-      handleSave();
+      handleSaveWithProgress();
     }, 500); // Pequeño delay para evitar múltiples guardados
   };
 
@@ -194,6 +239,40 @@ const CrearMapa = () => {
     setShowNumeracion(!showNumeracion);
   };
 
+  // Función para guardar con progreso
+  const handleSaveWithProgress = async () => {
+    setIsSaving(true);
+    setSavingProgress(0);
+    
+    // Simular progreso
+    const progressInterval = setInterval(() => {
+      setSavingProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + 10;
+      });
+    }, 100);
+
+    try {
+      await handleSave();
+      setSavingProgress(100);
+      setLastSavedAt(new Date());
+      message.success('Mapa guardado correctamente');
+      
+      setTimeout(() => {
+        setSavingProgress(0);
+        setIsSaving(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error al guardar:', error);
+      message.error('Error al guardar el mapa');
+      setSavingProgress(0);
+      setIsSaving(false);
+    }
+  };
+
   // Debug: mostrar información de elementos solo en desarrollo
   if (process.env.NODE_ENV === 'development') {
     console.log('[CrearMapa] Elementos totales:', elements?.length || 0);
@@ -205,13 +284,61 @@ const CrearMapa = () => {
 
   return (
     <div className="flex h-screen" data-testid="crear-mapa">
+      {/* Panel de información superior derecho */}
+      <div className="fixed top-4 right-4 z-20 bg-white border rounded-lg shadow-lg p-4 max-w-sm">
+        <div className="topRightInfo" id="topRightInfo">
+          <div className="labelingMessages" id="labelingMessages">
+            <label className="error-title-message font-semibold text-red-600 mb-2 block">Acciones pendientes</label>
+            
+            {validationStats.unlabeledSeats > 0 && (
+              <div id="numberOfUnlabeledSeats" className="mb-2">
+                <span className="strong font-medium">{validationStats.unlabeledSeats}</span> Asientos sin numeración &nbsp; 
+                <a href="#" className="text-blue-600 hover:text-blue-800">
+                  <i className="fas fa-eye"></i>
+                </a>
+              </div>
+            )}
+            
+            {validationStats.unlabeledTables > 0 && (
+              <div id="numberOfUnlabeledTables" className="mb-2">
+                <span className="strong font-medium">{validationStats.unlabeledTables}</span> Mesas sin numeración
+              </div>
+            )}
+            
+            {validationStats.duplicateSeats > 0 && (
+              <div id="numberOfDuplicateSeats" className="mb-2">
+                <span className="strong font-medium">{validationStats.duplicateSeats}</span> Asientos duplicados
+              </div>
+            )}
+            
+            {validationStats.uncategorizedSeats > 0 && (
+              <div id="numberOfUncategorizedSeats" className="mb-2">
+                <span className="strong font-medium">{validationStats.uncategorizedSeats}</span> asientos sin zona
+              </div>
+            )}
+            
+            {validationStats.uncategorizedZones > 0 && (
+              <div id="numberOfUncategorizedGaZones" className="mb-2">
+                <span className="strong font-medium">{validationStats.uncategorizedZones}</span> Zona no numerada sin zona asignada
+              </div>
+            )}
+          </div>
+          
+          {selectedIds.length > 0 && (
+            <div className="selectedMessage mt-3 pt-3 border-t" id="objectsInSelectionMessage">
+              <span className="strong font-medium">{selectedIds.length}</span> Objetos seleccionados
+            </div>
+          )}
+        </div>
+      </div>
+
       <Menu
         addMesa={addMesa}
         addSillasToMesa={addSillasToMesa}
         selectedElement={selectedElement}
         numSillas={numSillas}
         setNumSillas={setNumSillas}
-        handleSave={handleSave}
+        handleSave={handleSaveWithProgress}
         updateElementProperty={updateElementProperty}
         updateElementSize={updateElementSize}
         zonas={loadedZonas}
@@ -237,16 +364,21 @@ const CrearMapa = () => {
         toggleNumeracion={toggleNumeracion}
         salaInfo={salaInfo}
         totalAsientos={totalAsientos}
+        // Nuevas props para funcionalidades avanzadas
+        elements={elements}
+        setSelectedIds={setSelectedIds}
+        limpiarSillasDuplicadas={limpiarSillasDuplicadas}
       />
 
       <div className="flex-1 relative">
         {/* Barra de acciones de sincronización */}
-        <div className="absolute top-2 right-2 z-10 bg-white border rounded shadow px-3 py-2 flex items-center gap-3">
+        <div className="absolute top-2 left-2 z-10 bg-white border rounded shadow px-3 py-2 flex items-center gap-3">
           <span>Eliminar obsoletos</span>
           <Switch checked={deleteMissing} onChange={setDeleteMissing} />
           <Button type="primary" loading={syncLoading} onClick={handleSync}>
             Sincronizar seats
           </Button>
+          
           {/* Botón de prueba para crear mesa */}
           <Button 
             type="default" 
@@ -257,7 +389,38 @@ const CrearMapa = () => {
           >
             Crear Mesa Prueba
           </Button>
+          
+          {/* Botón de debug para ver elementos */}
+          <Button 
+            type="default" 
+            onClick={() => {
+              console.log('[CrearMapa] Debug - Elementos actuales:', elements);
+              console.log('[CrearMapa] Debug - Sillas:', elements.filter(el => el.type === 'silla'));
+              console.log('[CrearMapa] Debug - Mesas:', elements.filter(el => el.type === 'mesa'));
+            }}
+          >
+            🐛 Debug Elementos
+          </Button>
         </div>
+
+        {/* Barra de progreso de guardado */}
+        {isSaving && (
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-white border rounded shadow px-4 py-2 min-w-64">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium">Guardando mapa...</span>
+              <Progress percent={savingProgress} size="small" />
+            </div>
+          </div>
+        )}
+
+        {/* Mensaje de último guardado */}
+        {lastSavedAt && !isSaving && (
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-green-100 border border-green-300 rounded px-3 py-1">
+            <span className="text-sm text-green-700">
+              ✅ Mapa guardado: {lastSavedAt.toLocaleTimeString()}
+            </span>
+          </div>
+        )}
 
         <Stage
           ref={stageRef}
@@ -426,20 +589,35 @@ const CrearMapa = () => {
             )}
           </Layer>
         </Stage>
+        
+        {/* Controles de zoom mejorados */}
         <div className="fixed bottom-4 right-4 flex flex-col space-y-2">
           <button
             onClick={zoomIn}
-            className="p-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            className="p-3 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 shadow-lg transition-all duration-200 hover:scale-110"
+            title="Zoom In"
           >
-            🔍
+            🔍+
           </button>
           <button
             onClick={zoomOut}
-            className="p-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+            className="p-3 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 shadow-lg transition-all duration-200 hover:scale-110"
+            title="Zoom Out"
           >
-            🔎
+            🔍-
+          </button>
+          <button
+            onClick={() => {
+              resetZoom();
+              centerView();
+            }}
+            className="p-3 bg-gray-600 text-white rounded-full hover:bg-gray-700 shadow-lg transition-all duration-200 hover:scale-110"
+            title="Reset Zoom"
+          >
+            🎯
           </button>
         </div>
+        
         {selectedElement && (
           <EditPopup
             element={selectedElement}

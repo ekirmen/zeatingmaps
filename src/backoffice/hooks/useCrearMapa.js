@@ -52,6 +52,7 @@ export const useCrearMapa = () => {
     updateElementProperty: baseUpdateElementProperty,
     updateElementSize: baseUpdateElementSize,
     deleteSelectedElements,
+    limpiarSillasDuplicadas,
   } = useMapaElements(elements, setElements, selectedIds, selectedZone, numSillas);
 
   // Wrappers to keep selectedElement in sync when editing properties or size
@@ -198,6 +199,7 @@ export const useCrearMapa = () => {
     updateElementSize: updateSizeAndSelection,
     deleteSelectedElements,
     eliminarElementoSeleccionado,
+    limpiarSillasDuplicadas,
 
     // Selección y eventos
     selectElement,

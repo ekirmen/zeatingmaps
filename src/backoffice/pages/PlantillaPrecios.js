@@ -85,11 +85,11 @@ const PlantillaPrecios = () => {
   }, [cargarPlantillas]);
 
   /* -------------------- HANDLERS INPUTS DETALLE --------------------- */
-  const handleInputChange = (zonaId, productoId, field, value) => {
-    console.log('Input change:', { zonaId, productoId, field, value });
+  const handleInputChange = (zonaId, entradaId, field, value) => {
+    console.log('Input change:', { zonaId, entradaId, field, value });
     
     const updated = [...detallesPrecios];
-    const idx = updated.findIndex(d => d.zonaId === zonaId && d.productoId === productoId);
+    const idx = updated.findIndex(d => d.zonaId === zonaId && d.entradaId === entradaId);
     
     // Determinar el tipo de valor y convertirlo apropiadamente
     const numeric = ['precio', 'comision', 'precioGeneral', 'orden'];
@@ -112,15 +112,14 @@ const PlantillaPrecios = () => {
       // Crear nuevo registro
       updated.push({ 
         zonaId, 
-        productoId, 
+        entradaId, 
         [field]: v,
         // Establecer valores por defecto para campos numéricos
         precio: field === 'precio' ? v : 0,
         comision: field === 'comision' ? v : 0,
         precioGeneral: field === 'precioGeneral' ? v : 0,
         orden: field === 'orden' ? v : 0,
-        canales: field === 'canales' ? v : '',
-        tipoEntrada: field === 'tipoEntrada' ? v : 'regular'
+        canales: field === 'canales' ? v : ''
       });
     }
 
@@ -149,7 +148,7 @@ const PlantillaPrecios = () => {
       d.precio !== null && 
       d.precio !== '' && 
       d.zonaId && 
-      d.productoId
+      d.entradaId
     );
 
     if (!detallesValidos.length) {
@@ -242,7 +241,7 @@ const PlantillaPrecios = () => {
   };
 
   /* ------------------- UTILS PARA RENDER TABLA ---------------------- */
-  const combinedItems = zonas.flatMap(z => entradas.map(e => ({ zonaId: z.id, zona: z.nombre, producto: e.producto, productoId: e.id })));
+  const combinedItems = zonas.flatMap(z => entradas.map(e => ({ zonaId: z.id, zona: z.nombre, entrada: e.producto, entradaId: e.id })));
   const currentItems = combinedItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const closeModal = () => {
@@ -253,17 +252,16 @@ const PlantillaPrecios = () => {
   };
 
   const openModal = () => {
-    // Inicializar detalles con valores por defecto para todas las combinaciones zona-producto
+    // Inicializar detalles con valores por defecto para todas las combinaciones zona-entrada
     const initialDetalles = zonas.flatMap(z => 
       entradas.map(e => ({
         zonaId: z.id,
-        productoId: e.id,
+        entradaId: e.id,
         precio: 0,
         comision: 0,
         precioGeneral: 0,
         canales: '',
-        orden: 0,
-        tipoEntrada: 'regular'
+        orden: 0
       }))
     );
     setDetallesPrecios(initialDetalles);
@@ -276,16 +274,13 @@ const PlantillaPrecios = () => {
     );
 
     return currentItems.map((item, idx) => {
-      const detalle = detallesPrecios.find(d => d.zonaId === item.zonaId && d.productoId === item.productoId) || {};
+      const detalle = detallesPrecios.find(d => d.zonaId === item.zonaId && d.entradaId === item.entradaId) || {};
       return (
         <tr key={idx} className="hover:bg-gray-50">
           <td className="px-6 py-3 font-medium">{item.zona}</td>
           <td className="px-6 py-3">
             <div>
-              <div className="font-medium">{item.producto}</div>
-              <div className="text-xs text-gray-500">
-                {detalle.tipoEntrada || 'Regular'}
-              </div>
+              <div className="font-medium">{item.entrada}</div>
             </div>
           </td>
           {['precio', 'comision', 'precioGeneral'].map(f => (
@@ -294,7 +289,7 @@ const PlantillaPrecios = () => {
                 type="number" 
                 className="w-full border px-2 py-1 rounded" 
                 value={detalle[f] ?? ''} 
-                onChange={e => handleInputChange(item.zonaId, item.productoId, f, e.target.value)}
+                onChange={e => handleInputChange(item.zonaId, item.entradaId, f, e.target.value)}
                 placeholder={f === 'precio' ? '0.00' : '0'}
                 min="0"
                 step={f === 'precio' ? '0.01' : '1'}
@@ -306,7 +301,7 @@ const PlantillaPrecios = () => {
               type="text" 
               className="w-full border px-2 py-1 rounded" 
               value={detalle.canales ?? ''} 
-              onChange={e => handleInputChange(item.zonaId, item.productoId, 'canales', e.target.value)}
+              onChange={e => handleInputChange(item.zonaId, item.entradaId, 'canales', e.target.value)}
               placeholder="1"
             />
           </td>
@@ -315,23 +310,12 @@ const PlantillaPrecios = () => {
               type="number" 
               className="w-full border px-2 py-1 rounded" 
               value={detalle.orden ?? ''} 
-              onChange={e => handleInputChange(item.zonaId, item.productoId, 'orden', e.target.value)}
+              onChange={e => handleInputChange(item.zonaId, item.entradaId, 'orden', e.target.value)}
               placeholder="1"
               min="0"
             />
           </td>
-          <td className="px-6 py-3">
-            <select 
-              className="w-full border px-2 py-1 rounded"
-              value={detalle.tipoEntrada || 'regular'}
-              onChange={e => handleInputChange(item.zonaId, item.productoId, 'tipoEntrada', e.target.value)}
-            >
-              <option value="regular">Regular</option>
-              <option value="cortesia">Cortesía</option>
-              <option value="descuento">Descuento</option>
-              <option value="vip">VIP</option>
-            </select>
-          </td>
+
         </tr>
       );
     });
@@ -385,7 +369,7 @@ const PlantillaPrecios = () => {
             
             {/* Información de debug */}
             <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
-              <div>Total de combinaciones zona-producto: {combinedItems.length}</div>
+              <div>Total de combinaciones zona-entrada: {combinedItems.length}</div>
               <div>Detalles configurados: {detallesPrecios.length}</div>
               <div>Detalles con precio: {detallesPrecios.filter(d => d.precio > 0).length}</div>
             </div>
@@ -393,7 +377,7 @@ const PlantillaPrecios = () => {
             <div className="overflow-x-auto">
                              <table className="min-w-full text-sm">
                  <thead className="bg-gray-50">
-                   <tr>{['Zona','Producto','Precio','Comisión','Precio Gen','Canales','Orden','Tipo'].map(h => <th key={h} className="px-4 py-2 text-left">{h}</th>)}</tr>
+                   <tr>{['Zona','Entrada','Precio','Comisión','Precio Gen','Canales','Orden'].map(h => <th key={h} className="px-4 py-2 text-left">{h}</th>)}</tr>
                  </thead>
                 <tbody>{renderTableRows()}</tbody>
               </table>

@@ -1,0 +1,477 @@
+import React, { useState } from 'react';
+
+const IconSelector = ({ onIconSelect, onClose, onColorChange, currentColor = '#000000' }) => {
+  const [selectedIcon, setSelectedIcon] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(currentColor);
+
+  // Paleta de iconos disponibles
+  const iconPalette = [
+    { id: 'star', icon: '⭐', name: 'Estrella' },
+    { id: 'heart', icon: '❤️', name: 'Corazón' },
+    { id: 'fire', icon: '🔥', name: 'Fuego' },
+    { id: 'lightning', icon: '⚡', name: 'Rayo' },
+    { id: 'sun', icon: '☀️', name: 'Sol' },
+    { id: 'moon', icon: '🌙', name: 'Luna' },
+    { id: 'cloud', icon: '☁️', name: 'Nube' },
+    { id: 'rainbow', icon: '🌈', name: 'Arcoíris' },
+    { id: 'flower', icon: '🌸', name: 'Flor' },
+    { id: 'tree', icon: '🌳', name: 'Árbol' },
+    { id: 'house', icon: '🏠', name: 'Casa' },
+    { id: 'car', icon: '🚗', name: 'Carro' },
+    { id: 'plane', icon: '✈️', name: 'Avión' },
+    { id: 'ship', icon: '🚢', name: 'Barco' },
+    { id: 'bike', icon: '🚲', name: 'Bicicleta' },
+    { id: 'bus', icon: '🚌', name: 'Autobús' },
+    { id: 'train', icon: '🚂', name: 'Tren' },
+    { id: 'subway', icon: '🚇', name: 'Metro' },
+    { id: 'taxi', icon: '🚕', name: 'Taxi' },
+    { id: 'ambulance', icon: '🚑', name: 'Ambulancia' },
+    { id: 'police', icon: '🚓', name: 'Policía' },
+    { id: 'firetruck', icon: '🚒', name: 'Bomberos' },
+    { id: 'truck', icon: '🚛', name: 'Camión' },
+    { id: 'motorcycle', icon: '🏍️', name: 'Motocicleta' },
+    { id: 'rocket', icon: '🚀', name: 'Cohete' },
+    { id: 'ufo', icon: '🛸', name: 'OVNI' },
+    { id: 'satellite', icon: '🛰️', name: 'Satélite' },
+    { id: 'phone', icon: '📱', name: 'Teléfono' },
+    { id: 'computer', icon: '💻', name: 'Computadora' },
+    { id: 'tv', icon: '📺', name: 'Televisión' },
+    { id: 'camera', icon: '📷', name: 'Cámara' },
+    { id: 'video', icon: '📹', name: 'Video' },
+    { id: 'radio', icon: '📻', name: 'Radio' },
+    { id: 'book', icon: '📚', name: 'Libros' },
+    { id: 'newspaper', icon: '📰', name: 'Periódico' },
+    { id: 'magazine', icon: '📖', name: 'Revista' },
+    { id: 'pencil', icon: '✏️', name: 'Lápiz' },
+    { id: 'pen', icon: '🖊️', name: 'Pluma' },
+    { id: 'scissors', icon: '✂️', name: 'Tijeras' },
+    { id: 'ruler', icon: '📏', name: 'Regla' },
+    { id: 'calculator', icon: '🧮', name: 'Calculadora' },
+    { id: 'clock', icon: '🕐', name: 'Reloj' },
+    { id: 'alarm', icon: '⏰', name: 'Alarma' },
+    { id: 'stopwatch', icon: '⏱️', name: 'Cronómetro' },
+    { id: 'timer', icon: '⏲️', name: 'Temporizador' },
+    { id: 'calendar', icon: '📅', name: 'Calendario' },
+    { id: 'gift', icon: '🎁', name: 'Regalo' },
+    { id: 'balloon', icon: '🎈', name: 'Globo' },
+    { id: 'party', icon: '🎉', name: 'Fiesta' },
+    { id: 'cake', icon: '🎂', name: 'Pastel' },
+    { id: 'candy', icon: '🍬', name: 'Dulce' },
+    { id: 'icecream', icon: '🍦', name: 'Helado' },
+    { id: 'pizza', icon: '🍕', name: 'Pizza' },
+    { id: 'hamburger', icon: '🍔', name: 'Hamburguesa' },
+    { id: 'hotdog', icon: '🌭', name: 'Perro Caliente' },
+    { id: 'taco', icon: '🌮', name: 'Taco' },
+    { id: 'sushi', icon: '🍣', name: 'Sushi' },
+    { id: 'coffee', icon: '☕', name: 'Café' },
+    { id: 'tea', icon: '🍵', name: 'Té' },
+    { id: 'beer', icon: '🍺', name: 'Cerveza' },
+    { id: 'wine', icon: '🍷', name: 'Vino' },
+    { id: 'cocktail', icon: '🍸', name: 'Cóctel' },
+    { id: 'music', icon: '🎵', name: 'Música' },
+    { id: 'guitar', icon: '🎸', name: 'Guitarra' },
+    { id: 'piano', icon: '🎹', name: 'Piano' },
+    { id: 'drum', icon: '🥁', name: 'Tambor' },
+    { id: 'microphone', icon: '🎤', name: 'Micrófono' },
+    { id: 'headphones', icon: '🎧', name: 'Audífonos' },
+    { id: 'game', icon: '🎮', name: 'Videojuego' },
+    { id: 'dice', icon: '🎲', name: 'Dados' },
+    { id: 'chess', icon: '♟️', name: 'Ajedrez' },
+    { id: 'cards', icon: '🃏', name: 'Cartas' },
+    { id: 'puzzle', icon: '🧩', name: 'Rompecabezas' },
+    { id: 'soccer', icon: '⚽', name: 'Fútbol' },
+    { id: 'basketball', icon: '🏀', name: 'Baloncesto' },
+    { id: 'baseball', icon: '⚾', name: 'Béisbol' },
+    { id: 'tennis', icon: '🎾', name: 'Tenis' },
+    { id: 'golf', icon: '⛳', name: 'Golf' },
+    { id: 'swimming', icon: '🏊', name: 'Natación' },
+    { id: 'skiing', icon: '⛷️', name: 'Esquí' },
+    { id: 'snowboarding', icon: '🏂', name: 'Snowboard' },
+    { id: 'surfing', icon: '🏄', name: 'Surf' },
+    { id: 'fishing', icon: '🎣', name: 'Pesca' },
+    { id: 'hiking', icon: '🏔️', name: 'Senderismo' },
+    { id: 'camping', icon: '⛺', name: 'Camping' },
+    { id: 'beach', icon: '🏖️', name: 'Playa' },
+    { id: 'mountain', icon: '⛰️', name: 'Montaña' },
+    { id: 'volcano', icon: '🌋', name: 'Volcán' },
+    { id: 'island', icon: '🏝️', name: 'Isla' },
+    { id: 'desert', icon: '🏜️', name: 'Desierto' },
+    { id: 'forest', icon: '🌲', name: 'Bosque' },
+    { id: 'jungle', icon: '🌴', name: 'Selva' },
+    { id: 'ocean', icon: '🌊', name: 'Océano' },
+    { id: 'river', icon: '🌊', name: 'Río' },
+    { id: 'lake', icon: '🏞️', name: 'Lago' },
+    { id: 'waterfall', icon: '🌊', name: 'Cascada' },
+    { id: 'bridge', icon: '🌉', name: 'Puente' },
+    { id: 'tower', icon: '🗼', name: 'Torre' },
+    { id: 'castle', icon: '🏰', name: 'Castillo' },
+    { id: 'church', icon: '⛪', name: 'Iglesia' },
+    { id: 'mosque', icon: '🕌', name: 'Mezquita' },
+    { id: 'temple', icon: '🕍', name: 'Templo' },
+    { id: 'synagogue', icon: '🕍', name: 'Sinagoga' },
+    { id: 'statue', icon: '🗽', name: 'Estatua' },
+    { id: 'monument', icon: '🏛️', name: 'Monumento' },
+    { id: 'fountain', icon: '⛲', name: 'Fuente' },
+    { id: 'park', icon: '🏞️', name: 'Parque' },
+    { id: 'garden', icon: '🌷', name: 'Jardín' },
+    { id: 'farm', icon: '🚜', name: 'Granja' },
+    { id: 'factory', icon: '🏭', name: 'Fábrica' },
+    { id: 'office', icon: '🏢', name: 'Oficina' },
+    { id: 'hospital', icon: '🏥', name: 'Hospital' },
+    { id: 'school', icon: '🏫', name: 'Escuela' },
+    { id: 'university', icon: '🏛️', name: 'Universidad' },
+    { id: 'library', icon: '📚', name: 'Biblioteca' },
+    { id: 'museum', icon: '🏛️', name: 'Museo' },
+    { id: 'theater', icon: '🎭', name: 'Teatro' },
+    { id: 'cinema', icon: '🎬', name: 'Cine' },
+    { id: 'stadium', icon: '🏟️', name: 'Estadio' },
+    { id: 'gym', icon: '💪', name: 'Gimnasio' },
+    { id: 'pool', icon: '🏊', name: 'Piscina' },
+    { id: 'spa', icon: '💆', name: 'Spa' },
+    { id: 'hotel', icon: '🏨', name: 'Hotel' },
+    { id: 'restaurant', icon: '🍽️', name: 'Restaurante' },
+    { id: 'cafe', icon: '☕', name: 'Café' },
+    { id: 'bar', icon: '🍺', name: 'Bar' },
+    { id: 'bank', icon: '🏦', name: 'Banco' },
+    { id: 'post', icon: '📮', name: 'Correos' },
+    { id: 'police', icon: '👮', name: 'Policía' },
+    { id: 'fire', icon: '🚒', name: 'Bomberos' },
+    { id: 'ambulance', icon: '🚑', name: 'Ambulancia' },
+    { id: 'gas', icon: '⛽', name: 'Gasolinera' },
+    { id: 'parking', icon: '🅿️', name: 'Estacionamiento' },
+    { id: 'atm', icon: '🏧', name: 'Cajero' },
+    { id: 'pharmacy', icon: '💊', name: 'Farmacia' },
+    { id: 'dentist', icon: '🦷', name: 'Dentista' },
+    { id: 'doctor', icon: '👨‍⚕️', name: 'Doctor' },
+    { id: 'nurse', icon: '👩‍⚕️', name: 'Enfermera' },
+    { id: 'teacher', icon: '👨‍🏫', name: 'Maestro' },
+    { id: 'student', icon: '👨‍🎓', name: 'Estudiante' },
+    { id: 'chef', icon: '👨‍🍳', name: 'Chef' },
+    { id: 'waiter', icon: '👨‍💼', name: 'Mesero' },
+    { id: 'driver', icon: '👨‍✈️', name: 'Conductor' },
+    { id: 'pilot', icon: '👨‍✈️', name: 'Piloto' },
+    { id: 'sailor', icon: '👨‍✈️', name: 'Marinero' },
+    { id: 'soldier', icon: '👨‍✈️', name: 'Soldado' },
+    { id: 'police', icon: '👮', name: 'Policía' },
+    { id: 'detective', icon: '🕵️', name: 'Detective' },
+    { id: 'guard', icon: '💂', name: 'Guardia' },
+    { id: 'construction', icon: '👷', name: 'Constructor' },
+    { id: 'farmer', icon: '👨‍🌾', name: 'Granjero' },
+    { id: 'fisherman', icon: '👨‍🌾', name: 'Pescador' },
+    { id: 'hunter', icon: '👨‍🌾', name: 'Cazador' },
+    { id: 'miner', icon: '⛏️', name: 'Miner' },
+    { id: 'scientist', icon: '👨‍🔬', name: 'Científico' },
+    { id: 'engineer', icon: '👨‍💻', name: 'Ingeniero' },
+    { id: 'artist', icon: '👨‍🎨', name: 'Artista' },
+    { id: 'musician', icon: '👨‍🎤', name: 'Músico' },
+    { id: 'actor', icon: '👨‍🎭', name: 'Actor' },
+    { id: 'dancer', icon: '👨‍🎭', name: 'Bailarín' },
+    { id: 'writer', icon: '👨‍💻', name: 'Escritor' },
+    { id: 'journalist', icon: '👨‍💻', name: 'Periodista' },
+    { id: 'photographer', icon: '📷', name: 'Fotógrafo' },
+    { id: 'cameraman', icon: '📹', name: 'Camarógrafo' },
+    { id: 'reporter', icon: '📺', name: 'Reportero' },
+    { id: 'anchor', icon: '📺', name: 'Presentador' },
+    { id: 'weather', icon: '🌤️', name: 'Clima' },
+    { id: 'news', icon: '📰', name: 'Noticias' },
+    { id: 'sports', icon: '⚽', name: 'Deportes' },
+    { id: 'entertainment', icon: '🎭', name: 'Entretenimiento' },
+    { id: 'business', icon: '💼', name: 'Negocios' },
+    { id: 'technology', icon: '💻', name: 'Tecnología' },
+    { id: 'science', icon: '🔬', name: 'Ciencia' },
+    { id: 'health', icon: '🏥', name: 'Salud' },
+    { id: 'education', icon: '📚', name: 'Educación' },
+    { id: 'travel', icon: '✈️', name: 'Viajes' },
+    { id: 'food', icon: '🍽️', name: 'Comida' },
+    { id: 'fashion', icon: '👗', name: 'Moda' },
+    { id: 'beauty', icon: '💄', name: 'Belleza' },
+    { id: 'fitness', icon: '💪', name: 'Fitness' },
+    { id: 'wellness', icon: '🧘', name: 'Bienestar' },
+    { id: 'spirituality', icon: '🧘', name: 'Espiritualidad' },
+    { id: 'religion', icon: '⛪', name: 'Religión' },
+    { id: 'philosophy', icon: '🤔', name: 'Filosofía' },
+    { id: 'psychology', icon: '🧠', name: 'Psicología' },
+    { id: 'medicine', icon: '💊', name: 'Medicina' },
+    { id: 'law', icon: '⚖️', name: 'Ley' },
+    { id: 'politics', icon: '🏛️', name: 'Política' },
+    { id: 'economy', icon: '💰', name: 'Economía' },
+    { id: 'finance', icon: '💳', name: 'Finanzas' },
+    { id: 'insurance', icon: '🛡️', name: 'Seguros' },
+    { id: 'realestate', icon: '🏠', name: 'Bienes Raíces' },
+    { id: 'marketing', icon: '📢', name: 'Mercadeo' },
+    { id: 'advertising', icon: '📺', name: 'Publicidad' },
+    { id: 'pr', icon: '📢', name: 'Relaciones Públicas' },
+    { id: 'hr', icon: '👥', name: 'Recursos Humanos' },
+    { id: 'operations', icon: '⚙️', name: 'Operaciones' },
+    { id: 'logistics', icon: '🚚', name: 'Logística' },
+    { id: 'supplychain', icon: '🔗', name: 'Cadena de Suministro' },
+    { id: 'quality', icon: '✅', name: 'Calidad' },
+    { id: 'safety', icon: '🛡️', name: 'Seguridad' },
+    { id: 'environment', icon: '🌍', name: 'Medio Ambiente' },
+    { id: 'sustainability', icon: '🌱', name: 'Sostenibilidad' },
+    { id: 'recycling', icon: '♻️', name: 'Reciclaje' },
+    { id: 'energy', icon: '⚡', name: 'Energía' },
+    { id: 'water', icon: '💧', name: 'Agua' },
+    { id: 'air', icon: '💨', name: 'Aire' },
+    { id: 'earth', icon: '🌍', name: 'Tierra' },
+    { id: 'space', icon: '🚀', name: 'Espacio' },
+    { id: 'universe', icon: '🌌', name: 'Universo' },
+    { id: 'galaxy', icon: '🌌', name: 'Galaxia' },
+    { id: 'planet', icon: '🪐', name: 'Planeta' },
+    { id: 'asteroid', icon: '☄️', name: 'Asteroide' },
+    { id: 'comet', icon: '☄️', name: 'Cometa' },
+    { id: 'meteor', icon: '☄️', name: 'Meteoro' },
+    { id: 'blackhole', icon: '🕳️', name: 'Agujero Negro' },
+    { id: 'wormhole', icon: '🕳️', name: 'Agujero de Gusano' },
+    { id: 'dimension', icon: '🌀', name: 'Dimensión' },
+    { id: 'time', icon: '⏰', name: 'Tiempo' },
+    { id: 'infinity', icon: '♾️', name: 'Infinito' },
+    { id: 'eternity', icon: '♾️', name: 'Eternidad' },
+    { id: 'immortality', icon: '🧬', name: 'Inmortalidad' },
+    { id: 'evolution', icon: '🧬', name: 'Evolución' },
+    { id: 'mutation', icon: '🧬', name: 'Mutación' },
+    { id: 'genetics', icon: '🧬', name: 'Genética' },
+    { id: 'dna', icon: '🧬', name: 'ADN' },
+    { id: 'cell', icon: '🔬', name: 'Célula' },
+    { id: 'molecule', icon: '⚛️', name: 'Molécula' },
+    { id: 'atom', icon: '⚛️', name: 'Átomo' },
+    { id: 'particle', icon: '⚛️', name: 'Partícula' },
+    { id: 'quantum', icon: '⚛️', name: 'Cuántico' },
+    { id: 'relativity', icon: '⚛️', name: 'Relatividad' },
+    { id: 'gravity', icon: '🌍', name: 'Gravedad' },
+    { id: 'magnetism', icon: '🧲', name: 'Magnetismo' },
+    { id: 'electricity', icon: '⚡', name: 'Electricidad' },
+    { id: 'radiation', icon: '☢️', name: 'Radiación' },
+    { id: 'nuclear', icon: '☢️', name: 'Nuclear' },
+    { id: 'chemical', icon: '🧪', name: 'Químico' },
+    { id: 'biological', icon: '🧬', name: 'Biológico' },
+    { id: 'physical', icon: '💪', name: 'Físico' },
+    { id: 'mathematical', icon: '📐', name: 'Matemático' },
+    { id: 'statistical', icon: '📊', name: 'Estadístico' },
+    { id: 'analytical', icon: '📈', name: 'Analítico' },
+    { id: 'logical', icon: '🧠', name: 'Lógico' },
+    { id: 'creative', icon: '🎨', name: 'Creativo' },
+    { id: 'innovative', icon: '💡', name: 'Innovador' },
+    { id: 'disruptive', icon: '💥', name: 'Disruptivo' },
+    { id: 'revolutionary', icon: '🚀', name: 'Revolucionario' },
+    { id: 'progressive', icon: '📈', name: 'Progresivo' },
+    { id: 'traditional', icon: '🏛️', name: 'Tradicional' },
+    { id: 'modern', icon: '🏢', name: 'Moderno' },
+    { id: 'futuristic', icon: '🚀', name: 'Futurista' },
+    { id: 'vintage', icon: '📻', name: 'Vintage' },
+    { id: 'retro', icon: '📺', name: 'Retro' },
+    { id: 'classic', icon: '🏛️', name: 'Clásico' },
+    { id: 'contemporary', icon: '🎨', name: 'Contemporáneo' },
+    { id: 'avant-garde', icon: '🎭', name: 'Vanguardista' },
+    { id: 'experimental', icon: '🧪', name: 'Experimental' },
+    { id: 'abstract', icon: '🎨', name: 'Abstracto' },
+    { id: 'concrete', icon: '🏗️', name: 'Concreto' },
+    { id: 'virtual', icon: '🖥️', name: 'Virtual' },
+    { id: 'augmented', icon: '👁️', name: 'Aumentado' },
+    { id: 'artificial', icon: '🤖', name: 'Artificial' },
+    { id: 'intelligent', icon: '🧠', name: 'Inteligente' },
+    { id: 'autonomous', icon: '🤖', name: 'Autónomo' },
+    { id: 'connected', icon: '🔗', name: 'Conectado' },
+    { id: 'smart', icon: '📱', name: 'Inteligente' },
+    { id: 'digital', icon: '💻', name: 'Digital' },
+    { id: 'analog', icon: '📻', name: 'Analógico' },
+    { id: 'wireless', icon: '📶', name: 'Inalámbrico' },
+    { id: 'mobile', icon: '📱', name: 'Móvil' },
+    { id: 'portable', icon: '💼', name: 'Portátil' },
+    { id: 'wearable', icon: '⌚', name: 'Usable' },
+    { id: 'implantable', icon: '💉', name: 'Implantable' },
+    { id: 'biometric', icon: '👁️', name: 'Biométrico' },
+    { id: 'cryptographic', icon: '🔐', name: 'Criptográfico' },
+    { id: 'blockchain', icon: '⛓️', name: 'Blockchain' },
+    { id: 'decentralized', icon: '🌐', name: 'Descentralizado' },
+    { id: 'distributed', icon: '🌐', name: 'Distribuido' },
+    { id: 'cloud', icon: '☁️', name: 'Nube' },
+    { id: 'edge', icon: '🌐', name: 'Borde' },
+    { id: 'fog', icon: '🌫️', name: 'Niebla' },
+    { id: 'mesh', icon: '🔗', name: 'Malla' },
+    { id: 'star', icon: '⭐', name: 'Estrella' },
+    { id: 'ring', icon: '💍', name: 'Anillo' },
+    { id: 'chain', icon: '⛓️', name: 'Cadena' },
+    { id: 'lock', icon: '🔒', name: 'Candado' },
+    { id: 'key', icon: '🔑', name: 'Llave' },
+    { id: 'door', icon: '🚪', name: 'Puerta' },
+    { id: 'window', icon: '🪟', name: 'Ventana' },
+    { id: 'wall', icon: '🧱', name: 'Pared' },
+    { id: 'floor', icon: '🏗️', name: 'Piso' },
+    { id: 'ceiling', icon: '🏗️', name: 'Techo' },
+    { id: 'roof', icon: '🏗️', name: 'Techo' },
+    { id: 'foundation', icon: '🏗️', name: 'Fundación' },
+    { id: 'beam', icon: '🏗️', name: 'Viga' },
+    { id: 'column', icon: '🏗️', name: 'Columna' },
+    { id: 'arch', icon: '🏗️', name: 'Arco' },
+    { id: 'dome', icon: '🏗️', name: 'Cúpula' },
+    { id: 'tunnel', icon: '🚇', name: 'Túnel' },
+    { id: 'cave', icon: '🕳️', name: 'Cueva' },
+    { id: 'mine', icon: '⛏️', name: 'Mina' },
+    { id: 'quarry', icon: '⛏️', name: 'Cantera' },
+    { id: 'well', icon: '🕳️', name: 'Pozo' },
+    { id: 'spring', icon: '💧', name: 'Manantial' },
+    { id: 'geyser', icon: '💧', name: 'Géiser' },
+    { id: 'hotspring', icon: '♨️', name: 'Aguas Termales' },
+    { id: 'mud', icon: '🌋', name: 'Lodo' },
+    { id: 'sand', icon: '🏜️', name: 'Arena' },
+    { id: 'soil', icon: '🌱', name: 'Suelo' },
+    { id: 'clay', icon: '🏺', name: 'Arcilla' },
+    { id: 'stone', icon: '🪨', name: 'Piedra' },
+    { id: 'crystal', icon: '💎', name: 'Cristal' },
+    { id: 'diamond', icon: '💎', name: 'Diamante' },
+    { id: 'ruby', icon: '💎', name: 'Rubí' },
+    { id: 'emerald', icon: '💎', name: 'Esmeralda' },
+    { id: 'sapphire', icon: '💎', name: 'Zafiro' },
+    { id: 'opal', icon: '💎', name: 'Ópalo' },
+    { id: 'pearl', icon: '💎', name: 'Perla' },
+    { id: 'gold', icon: '🥇', name: 'Oro' },
+    { id: 'silver', icon: '🥈', name: 'Plata' },
+    { id: 'bronze', icon: '🥉', name: 'Bronce' },
+    { id: 'copper', icon: '🔴', name: 'Cobre' },
+    { id: 'iron', icon: '🔴', name: 'Hierro' },
+    { id: 'steel', icon: '🔴', name: 'Acero' },
+    { id: 'aluminum', icon: '🔴', name: 'Aluminio' },
+    { id: 'titanium', icon: '🔴', name: 'Titanio' },
+    { id: 'platinum', icon: '🔴', name: 'Platino' },
+    { id: 'palladium', icon: '🔴', name: 'Paladio' },
+    { id: 'rhodium', icon: '🔴', name: 'Rodio' },
+    { id: 'iridium', icon: '🔴', name: 'Iridio' },
+    { id: 'osmium', icon: '🔴', name: 'Osmio' },
+    { id: 'ruthenium', icon: '🔴', name: 'Rutenio' },
+    { id: 'rhenium', icon: '🔴', name: 'Renio' },
+    { id: 'tungsten', icon: '🔴', name: 'Tungsteno' },
+    { id: 'molybdenum', icon: '🔴', name: 'Molibdeno' },
+    { id: 'niobium', icon: '🔴', name: 'Niobio' },
+    { id: 'tantalum', icon: '🔴', name: 'Tántalo' },
+    { id: 'vanadium', icon: '🔴', name: 'Vanadio' },
+    { id: 'chromium', icon: '🔴', name: 'Cromo' },
+    { id: 'manganese', icon: '🔴', name: 'Manganeso' },
+    { id: 'cobalt', icon: '🔴', name: 'Cobalto' },
+    { id: 'nickel', icon: '🔴', name: 'Níquel' },
+    { id: 'zinc', icon: '🔴', name: 'Zinc' },
+    { id: 'cadmium', icon: '🔴', name: 'Cadmio' },
+    { id: 'mercury', icon: '🔴', name: 'Mercurio' },
+    { id: 'lead', icon: '🔴', name: 'Plomo' },
+    { id: 'bismuth', icon: '🔴', name: 'Bismuto' },
+    { id: 'polonium', icon: '☢️', name: 'Polonio' },
+    { id: 'astatine', icon: '☢️', name: 'Astato' },
+    { id: 'radon', icon: '☢️', name: 'Radón' },
+    { id: 'francium', icon: '☢️', name: 'Francio' },
+    { id: 'radium', icon: '☢️', name: 'Radio' },
+    { id: 'actinium', icon: '☢️', name: 'Actinio' },
+    { id: 'thorium', icon: '☢️', name: 'Torio' },
+    { id: 'protactinium', icon: '☢️', name: 'Protactinio' },
+    { id: 'uranium', icon: '☢️', name: 'Uranio' },
+    { id: 'neptunium', icon: '☢️', name: 'Neptunio' },
+    { id: 'plutonium', icon: '☢️', name: 'Plutonio' },
+    { id: 'americium', icon: '☢️', name: 'Americio' },
+    { id: 'curium', icon: '☢️', name: 'Curio' },
+    { id: 'berkelium', icon: '☢️', name: 'Berkelio' },
+    { id: 'californium', icon: '☢️', name: 'Californio' },
+    { id: 'einsteinium', icon: '☢️', name: 'Einstenio' },
+    { id: 'fermium', icon: '☢️', name: 'Fermio' },
+    { id: 'mendelevium', icon: '☢️', name: 'Mendelevio' },
+    { id: 'nobelium', icon: '☢️', name: 'Nobelio' },
+    { id: 'lawrencium', icon: '☢️', name: 'Laurencio' },
+    { id: 'rutherfordium', icon: '☢️', name: 'Rutherfordio' },
+    { id: 'dubnium', icon: '☢️', name: 'Dubnio' },
+    { id: 'seaborgium', icon: '☢️', name: 'Seaborgio' },
+    { id: 'bohrium', icon: '☢️', name: 'Bohrio' },
+    { id: 'hassium', icon: '☢️', name: 'Hassio' },
+    { id: 'meitnerium', icon: '☢️', name: 'Meitnerio' },
+    { id: 'darmstadtium', icon: '☢️', name: 'Darmstadtio' },
+    { id: 'roentgenium', icon: '☢️', name: 'Roentgenio' },
+    { id: 'copernicium', icon: '☢️', name: 'Copernicio' },
+    { id: 'nihonium', icon: '☢️', name: 'Nihonio' },
+    { id: 'flerovium', icon: '☢️', name: 'Flerovio' },
+    { id: 'moscovium', icon: '☢️', name: 'Moscovio' },
+    { id: 'livermorium', icon: '☢️', name: 'Livermorio' },
+    { id: 'tennessine', icon: '☢️', name: 'Teneso' },
+    { id: 'oganesson', icon: '☢️', name: 'Oganesón' }
+  ];
+
+  const handleIconClick = (iconData) => {
+    setSelectedIcon(iconData);
+  };
+
+  const handleApply = () => {
+    if (selectedIcon) {
+      onIconSelect(selectedIcon.icon, selectedColor);
+    }
+    onClose();
+  };
+
+  const handleColorChange = (color) => {
+    setSelectedColor(color);
+    onColorChange(color);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 max-w-4xl max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Selector de Iconos</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Selector de color */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Color del icono:
+          </label>
+          <input
+            type="color"
+            value={selectedColor}
+            onChange={(e) => handleColorChange(e.target.value)}
+            className="w-20 h-10 border border-gray-300 rounded cursor-pointer"
+          />
+        </div>
+
+        {/* Paleta de iconos */}
+        <div className="grid grid-cols-8 gap-2 mb-4">
+          {iconPalette.map((iconData) => (
+            <button
+              key={iconData.id}
+              onClick={() => handleIconClick(iconData)}
+              className={`p-3 border rounded hover:bg-gray-100 transition-colors ${
+                selectedIcon?.id === iconData.id ? 'bg-blue-100 border-blue-500' : 'border-gray-300'
+              }`}
+              title={iconData.name}
+            >
+              <span className="text-2xl">{iconData.icon}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Botones de acción */}
+        <div className="flex justify-end space-x-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 border border-gray-300 rounded hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleApply}
+            disabled={!selectedIcon}
+            className={`px-4 py-2 rounded ${
+              selectedIcon
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            Aplicar Icono
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default IconSelector;
