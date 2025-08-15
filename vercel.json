@@ -5,7 +5,8 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "build"
+        "distDir": "build",
+        "nodeVersion": "22.x"
       }
     }
   ],
@@ -19,11 +20,7 @@
       "dest": "/store/$1"
     }
   ],
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "nodejs22.x"
-    }
-  },
+
   "env": {
     "NODE_VERSION": "22.x"
   }
