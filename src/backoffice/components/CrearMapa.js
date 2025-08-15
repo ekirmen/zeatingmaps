@@ -48,6 +48,14 @@ const CrearMapa = ({ salaId }) => {
   const [tableShape, setTableShape] = useState('square');
   const [tableSize, setTableSize] = useState(80);
   const [snapToGrid, setSnapToGrid] = useState(true);
+  
+  // Estado para zonas y selección
+  const [selectedZone, setSelectedZone] = useState(null);
+  const [isInZoneMode, setIsInZoneMode] = useState(false);
+  const [zonesFromDashboard, setZonesFromDashboard] = useState([]);
+  const [showContextMenu, setShowContextMenu] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+  const [contextMenuTarget, setContextMenuTarget] = useState(null);
 
   const stageRef = useRef();
 
@@ -66,6 +74,27 @@ const CrearMapa = ({ salaId }) => {
       setShowTypeSelector(true);
     }
   }, [elements.length, salaId]);
+
+  // Cargar zonas del dashboard
+  useEffect(() => {
+    const loadZonesFromDashboard = async () => {
+      try {
+        // Simular carga de zonas del dashboard
+        const mockZones = [
+          { id: 'dashboard-zone-1', name: 'Zona VIP', color: '#FFD700', x: 100, y: 100, width: 200, height: 150 },
+          { id: 'dashboard-zone-2', name: 'Zona General', color: '#87CEEB', x: 400, y: 100, width: 300, height: 200 },
+          { id: 'dashboard-zone-3', name: 'Zona Premium', color: '#98FB98', x: 100, y: 300, width: 250, height: 120 }
+        ];
+        setZonesFromDashboard(mockZones);
+      } catch (error) {
+        console.error('Error cargando zonas del dashboard:', error);
+      }
+    };
+
+    if (salaId) {
+      loadZonesFromDashboard();
+    }
+  }, [salaId]);
 
   // Funciones básicas
   const clearSelection = () => setSelectedElements([]);
@@ -371,6 +400,9 @@ const CrearMapa = ({ salaId }) => {
       const stage = e.target.getStage();
       const pointer = stage.getPointerPosition();
       
+      // Cerrar menú contextual si está abierto
+      setShowContextMenu(false);
+      
       switch (activeTool) {
         case 'seats':
           createSeat(pointer.x, pointer.y);
@@ -399,6 +431,68 @@ const CrearMapa = ({ salaId }) => {
     }
   };
 
+  // Manejar clic derecho para menú contextual
+  const handleStageContextMenu = (e) => {
+    e.evt.preventDefault();
+    const stage = e.target.getStage();
+    const pointer = stage.getPointerPosition();
+    
+    setContextMenuPosition({ x: pointer.x, y: pointer.y });
+    setContextMenuTarget(e.target);
+    setShowContextMenu(true);
+  };
+
+  // Entrar en modo zona
+  const enterZoneMode = (zoneId) => {
+    setSelectedZone(zoneId);
+    setIsInZoneMode(true);
+    setActiveTool('select');
+    message.info(`Modo zona activado: ${zoneId}`);
+  };
+
+  // Salir del modo zona
+  const exitZoneMode = () => {
+    setSelectedZone(null);
+    setIsInZoneMode(false);
+    setActiveTool('select');
+    message.info('Modo zona desactivado');
+  };
+
+  // Agregar asientos a una mesa
+  const addSeatsToTable = (tableId, count) => {
+    const table = elements.find(el => el.id === tableId);
+    if (!table) return;
+
+    const newSeats = [];
+    const radius = tableSize / 2 + 10;
+    
+    for (let i = 0; i < count; i++) {
+      const angle = (i * 2 * Math.PI) / count;
+      const x = table.x + tableSize / 2 + Math.cos(angle) * radius;
+      const y = table.y + tableSize / 2 + Math.sin(angle) * radius;
+      
+      newSeats.push({
+        id: `seat-${Date.now()}-${i}`,
+        type: 'silla',
+        x: snapToGrid ? Math.round(x / gridSize) * gridSize : x,
+        y: snapToGrid ? Math.round(y / gridSize) * gridSize : y,
+        width: seatSize,
+        height: seatSize,
+        numero: i + 1,
+        fila: 'M',
+        zonaId: table.zonaId,
+        estado: 'available',
+        shape: seatShape,
+        tenant_id: salaId,
+        color: currentColor,
+        tableId: tableId
+      });
+    }
+    
+    setElements([...elements, ...newSeats]);
+    message.success(`${count} asientos agregados a la mesa`);
+  };
+
   // Función para renderizar elementos
   const renderElements = useMemo(() => {
     try {
@@ -418,7 +512,7 @@ const CrearMapa = ({ salaId }) => {
                 getZonaColor={getZonaColor}
                 getBorderColor={getBorderColor}
                 showZones={true}
-                selectedZone={null}
+                selectedZone={selectedZone}
                 showConnections={true}
                 connectionStyle="dashed"
               />
@@ -435,7 +529,7 @@ const CrearMapa = ({ salaId }) => {
                 getZonaColor={getZonaColor}
                 getBorderColor={getBorderColor}
                 showZones={true}
-                selectedZone={null}
+                selectedZone={selectedZone}
                 showConnections={true}
                 connectionStyle="dashed"
               />
@@ -496,7 +590,34 @@ const CrearMapa = ({ salaId }) => {
       console.error('Error renderizando elementos:', error);
       return null;
     }
-  }, [elements, selectedElements, handleElementClick, handleElementDragEnd]);
+  }, [elements, selectedElements, selectedZone, handleElementClick, handleElementDragEnd]);
+
+  // Renderizar zonas del dashboard
+  const renderDashboardZones = useMemo(() => {
+    return zonesFromDashboard.map((zone) => (
+      <Group key={zone.id}>
+        <Rect
+          x={zone.x}
+          y={zone.y}
+          width={zone.width}
+          height={zone.height}
+          fill={zone.color + '20'}
+          stroke={zone.color}
+          strokeWidth={2}
+          opacity={0.6}
+          dash={[5, 5]}
+        />
+        <Text
+          x={zone.x + 10}
+          y={zone.y + 10}
+          text={zone.name}
+          fontSize={14}
+          fill={zone.color}
+          fontStyle="bold"
+        />
+      </Group>
+    ));
+  }, [zonesFromDashboard]);
 
   // Renderizar grid
   const renderGrid = useMemo(() => {
@@ -990,16 +1111,142 @@ const CrearMapa = ({ salaId }) => {
             <Button onClick={handleZoomOut}>🔍-</Button>
             <Button onClick={resetZoom}>🎯</Button>
           </div>
-          
-          <div className="saving-status">
-            <span>✅ Mapa guardado: {lastSavedAt || 'Nunca'}</span>
-          </div>
+        </div>
+
+        {/* Estado de guardado - separado y abajo a la izquierda */}
+        <div className="saving-status-left">
+          <span>✅ Mapa guardado: {lastSavedAt || 'Nunca'}</span>
         </div>
 
         {/* Indicador de paneo */}
         {isPanning && (
           <div className="panning-indicator">
             <span>🖱️ Paneando - Haz clic para soltar</span>
+          </div>
+        )}
+
+        {/* Panel de herramientas contextuales */}
+        {selectedElements.length > 0 && (
+          <div className="context-tools-panel">
+            <h4>🛠️ Herramientas para Elemento Seleccionado</h4>
+            <div className="context-tools-content">
+              {(() => {
+                const selectedElement = elements.find(el => el.id === selectedElements[0]);
+                if (!selectedElement) return null;
+                
+                switch (selectedElement.type) {
+                  case 'silla':
+                    return (
+                      <div>
+                        <p><strong>Tipo:</strong> Asiento</p>
+                        <p><strong>Número:</strong> {selectedElement.numero}</p>
+                        <p><strong>Fila:</strong> {selectedElement.fila}</p>
+                        <Button 
+                          onClick={() => {
+                            const newElements = elements.map(el => 
+                              el.id === selectedElement.id 
+                                ? { ...el, color: currentColor }
+                                : el
+                            );
+                            setElements(newElements);
+                            message.success('Color actualizado');
+                          }}
+                          style={{ marginRight: '0.5rem' }}
+                        >
+                          🎨 Cambiar Color
+                        </Button>
+                        <Button 
+                          danger
+                          onClick={() => deleteSelected()}
+                        >
+                          🗑️ Eliminar
+                        </Button>
+                      </div>
+                    );
+                  case 'mesa':
+                    return (
+                      <div>
+                        <p><strong>Tipo:</strong> Mesa</p>
+                        <p><strong>Nombre:</strong> {selectedElement.nombre}</p>
+                        <Button 
+                          onClick={() => {
+                            const count = parseInt(prompt('Cantidad de asientos:', '4')) || 4;
+                            addSeatsToTable(selectedElement.id, count);
+                          }}
+                          style={{ marginRight: '0.5rem' }}
+                        >
+                          🪑 Agregar Asientos
+                        </Button>
+                        <Button 
+                          onClick={() => {
+                            const newElements = elements.map(el => 
+                              el.id === selectedElement.id 
+                                ? { ...el, color: currentColor }
+                                : el
+                            );
+                            setElements(newElements);
+                            message.success('Color actualizado');
+                          }}
+                          style={{ marginRight: '0.5rem' }}
+                        >
+                          🎨 Cambiar Color
+                        </Button>
+                        <Button 
+                          danger
+                          onClick={() => deleteSelected()}
+                        >
+                          🗑️ Eliminar
+                        </Button>
+                      </div>
+                    );
+                  case 'zone':
+                    return (
+                      <div>
+                        <p><strong>Tipo:</strong> Zona</p>
+                        <p><strong>Nombre:</strong> {selectedElement.name}</p>
+                        <Button 
+                          onClick={() => enterZoneMode(selectedElement.id)}
+                          style={{ marginRight: '0.5rem' }}
+                        >
+                          🚪 Entrar a Zona
+                        </Button>
+                        <Button 
+                          danger
+                          onClick={() => deleteSelected()}
+                        >
+                          🗑️ Eliminar
+                        </Button>
+                      </div>
+                    );
+                  default:
+                    return (
+                      <div>
+                        <p><strong>Tipo:</strong> {selectedElement.type}</p>
+                        <Button 
+                          danger
+                          onClick={() => deleteSelected()}
+                        >
+                          🗑️ Eliminar
+                        </Button>
+                      </div>
+                    );
+                }
+              })()}
+            </div>
+          </div>
+        )}
+
+        {/* Indicador de modo zona */}
+        {isInZoneMode && (
+          <div className="zone-mode-indicator">
+            <span>🏠 Modo Zona: {selectedZone}</span>
+            <Button 
+              size="small"
+              onClick={exitZoneMode}
+              style={{ marginLeft: '1rem' }}
+            >
+              🚪 Salir de Zona
+            </Button>
           </div>
         )}
 
@@ -1019,10 +1266,14 @@ const CrearMapa = ({ salaId }) => {
           onTouchmove={handlePanMove}
           onTouchend={handlePanEnd}
           onClick={handleStageClick}
+          onContextMenu={handleStageContextMenu}
         >
           <Layer>
             {/* Grid de fondo */}
             {renderGrid}
+            
+            {/* Zonas del dashboard */}
+            {renderDashboardZones}
             
             {/* Elementos del mapa */}
             {renderElements}
@@ -1038,6 +1289,84 @@ const CrearMapa = ({ salaId }) => {
             )}
           </Layer>
         </Stage>
+
+        {/* Menú contextual */}
+        {showContextMenu && (
+          <div
+            style={{
+              position: 'absolute',
+              left: contextMenuPosition.x + stagePosition.x,
+              top: contextMenuPosition.y + stagePosition.y,
+              zIndex: 1000,
+              background: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              padding: '0.5rem 0',
+              minWidth: '150px'
+            }}
+          >
+            <div
+              style={{
+                padding: '0.5rem 1rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                color: '#374151',
+                borderBottom: '1px solid #f3f4f6'
+              }}
+              onClick={() => {
+                if (contextMenuTarget && contextMenuTarget.attrs && contextMenuTarget.attrs.id) {
+                  const elementId = contextMenuTarget.attrs.id;
+                  const element = elements.find(el => el.id === elementId);
+                  if (element && element.type === 'mesa') {
+                    const count = parseInt(prompt('Cantidad de asientos:', '4')) || 4;
+                    addSeatsToTable(elementId, count);
+                  }
+                }
+                setShowContextMenu(false);
+              }}
+            >
+              🪑 Agregar Asientos
+            </div>
+            <div
+              style={{
+                padding: '0.5rem 1rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                color: '#374151',
+                borderBottom: '1px solid #f3f4f6'
+              }}
+              onClick={() => {
+                if (contextMenuTarget && contextMenuTarget.attrs && contextMenuTarget.attrs.id) {
+                  const elementId = contextMenuTarget.attrs.id;
+                  handleElementClick(elementId);
+                }
+                setShowContextMenu(false);
+              }}
+            >
+              👆 Seleccionar
+            </div>
+            <div
+              style={{
+                padding: '0.5rem 1rem',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                color: '#dc2626'
+              }}
+              onClick={() => {
+                if (contextMenuTarget && contextMenuTarget.attrs && contextMenuTarget.attrs.id) {
+                  const elementId = contextMenuTarget.attrs.id;
+                  const newElements = elements.filter(el => el.id !== elementId);
+                  setElements(newElements);
+                  message.success('Elemento eliminado');
+                }
+                setShowContextMenu(false);
+              }}
+            >
+              🗑️ Eliminar
+            </div>
+          </div>
+        )}
       </main>
 
       {/* Selector de tipos de plano */}
