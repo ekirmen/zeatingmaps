@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Modal, Radio, Button, Card } from 'antd';
-import './SeatmapTypeSelector.css';
+import { Radio, Button } from 'antd';
 
 const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
   const [selectedType, setSelectedType] = useState('ROWS_WITH_SECTIONS');
@@ -51,60 +50,117 @@ const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
     setSelectedType(e.target.value);
   };
 
+  if (!visible) return null;
+
   return (
-    <Modal
-      title={
-        <div style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: 'bold', color: '#1e293b' }}>
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '16px',
+        padding: '2rem',
+        maxWidth: '800px',
+        width: '90%',
+        maxHeight: '90vh',
+        overflow: 'auto'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          fontSize: '1.5rem',
+          fontWeight: 'bold',
+          color: '#1e293b',
+          marginBottom: '2rem'
+        }}>
           🎯 ¿Qué tipo de plano de asientos quieres diseñar?
         </div>
-      }
-      open={visible}
-      onCancel={onCancel}
-      footer={null}
-      width={800}
-      centered
-      className="seatmap-type-selector-modal"
-    >
-      <div className="seatmap-type-selector">
-        <div className="type-options">
+        
+        <div style={{ marginBottom: '2rem' }}>
           {seatmapTypes.map((type) => (
-            <Card
+            <div
               key={type.id}
-              className={`type-option ${selectedType === type.value ? 'selected' : ''}`}
+              style={{
+                border: `2px solid ${selectedType === type.value ? '#667eea' : '#e2e8f0'}`,
+                borderRadius: '12px',
+                padding: '1.5rem',
+                marginBottom: '1rem',
+                cursor: 'pointer',
+                backgroundColor: selectedType === type.value ? '#f0f4ff' : 'white',
+                transition: 'all 0.3s ease'
+              }}
               onClick={() => setSelectedType(type.value)}
-              hoverable
             >
-              <div className="type-content">
-                <div className="type-icon">{type.icon}</div>
-                <div className="type-info">
-                  <h4 className="type-title">{type.title}</h4>
-                  <p className="type-description">{type.description}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                <div style={{
+                  fontSize: '3rem',
+                  width: '80px',
+                  height: '80px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: selectedType === type.value ? '#667eea' : '#f8fafc',
+                  borderRadius: '50%',
+                  border: `2px solid ${selectedType === type.value ? '#667eea' : '#e2e8f0'}`,
+                  color: selectedType === type.value ? 'white' : 'black'
+                }}>
+                  {type.icon}
                 </div>
-                <div className="type-radio">
-                  <Radio 
-                    checked={selectedType === type.value}
-                    onChange={handleTypeChange}
-                    value={type.value}
-                  />
+                <div style={{ flex: 1 }}>
+                  <h4 style={{
+                    margin: '0 0 0.5rem 0',
+                    fontSize: '1.25rem',
+                    fontWeight: '700',
+                    color: '#1e293b'
+                  }}>
+                    {type.title}
+                  </h4>
+                  <p style={{
+                    margin: 0,
+                    color: '#64748b',
+                    fontSize: '0.875rem'
+                  }}>
+                    {type.description}
+                  </p>
                 </div>
+                <Radio
+                  checked={selectedType === type.value}
+                  onChange={handleTypeChange}
+                  value={type.value}
+                />
               </div>
-            </Card>
+            </div>
           ))}
         </div>
-
-        <div className="type-footer">
-          <Button 
-            type="primary" 
-            size="large" 
+        
+        <div style={{ textAlign: 'center' }}>
+          <Button
+            type="primary"
+            size="large"
             onClick={handleSelect}
-            className="select-button"
-            block
+            style={{
+              height: '3.5rem',
+              fontSize: '1.125rem',
+              fontWeight: '700',
+              borderRadius: '12px',
+              backgroundColor: '#667eea',
+              border: 'none',
+              padding: '0 2rem'
+            }}
           >
             ✅ Seleccionar y Continuar
           </Button>
         </div>
       </div>
-    </Modal>
+    </div>
   );
 };
 
