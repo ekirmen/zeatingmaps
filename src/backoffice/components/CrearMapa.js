@@ -516,7 +516,7 @@ const CrearMapa = () => {
           type={showAdvancedControls ? 'primary' : 'default'}
           size="small"
         />
-      </Button>
+      </Tooltip>
     </div>
   );
 
