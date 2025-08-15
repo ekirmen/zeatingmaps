@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { Stage, Layer, Rect, Text, Ellipse, Line, Image } from 'react-konva';
 import { Mesa, Silla } from './compMapa/MesaSilla';
@@ -43,19 +43,33 @@ const CrearMapa = () => {
     activeMode, setActiveMode,
     sectionPoints, setSectionPoints,
     isCreatingSection, setIsCreatingSection,
-    
-    // Estados de fila de asientos
-    isCreatingSeatRow, setIsCreatingSeatRow,
-    seatRowStart, setSeatRowStart,
-    seatRowDirection, setSeatRowDirection,
-    
-    // Estados de paneo
     isPanning, setIsPanning,
     stagePosition, setStagePosition,
     hasUnsavedChanges, setHasUnsavedChanges,
     isLoading, setIsLoading,
     isSaving, setIsSaving,
     uploadProgress, setUploadProgress,
+    
+    // Nuevos estados de escalado
+    selectedScale, setSelectedScale,
+    showScaleControls, setShowScaleControls,
+    scaleSystem,
+    
+    // Nuevos estados de asientos
+    selectedSeatState, setSelectedSeatState,
+    seatStates,
+    
+    // Nuevos estados de conexiones
+    showConnections, setShowConnections,
+    connectionStyle, setConnectionStyle,
+    connectionThreshold, setConnectionThreshold,
+    
+    // Nuevos estados de fondo
+    backgroundImage, setBackgroundImage,
+    backgroundScale, setBackgroundScale,
+    backgroundOpacity, setBackgroundOpacity,
+    showBackgroundInWeb, setShowBackgroundInWeb,
+    backgroundSystem,
     
     // Funciones básicas
     addMesa,
@@ -68,6 +82,48 @@ const CrearMapa = () => {
     limpiarSillasDuplicadas,
     snapToGrid,
     assignZoneToSelected,
+    
+    // Nuevas funciones de escalado
+    scaleElement,
+    scaleSelectedElements,
+    
+    // Nuevas funciones de estados de asientos
+    changeSeatState,
+    changeSelectedSeatsState,
+    changeMesaSeatsState,
+    
+    // Nuevas funciones de conexiones
+    autoConnectSeats,
+    createManualConnection,
+    removeConnections,
+    changeConnectionStyle,
+    
+    // Nuevas funciones de coordenadas precisas
+    precisePositioning,
+    snapToCustomGrid,
+    
+    // Nuevas funciones de fondo
+    setBackgroundImage: handleSetBackgroundImage,
+    updateBackground: handleUpdateBackground,
+    removeBackground: handleRemoveBackground,
+    
+    // Funciones de elementos gráficos
+    addTextElement,
+    addRectangleElement,
+    addEllipseElement,
+    addLineElement,
+    addChairRow,
+    addSeccion,
+    
+    // Funciones de selección
+    selectMultipleElements,
+    clearSelection,
+    
+    // Funciones de zonas
+    addZone,
+    updateZone,
+    deleteZone,
+    toggleZoneVisibility,
     
     // Funciones de zoom y stage
     handleZoom,
@@ -84,18 +140,12 @@ const CrearMapa = () => {
     handleSectionClick,
     limpiarSeleccion,
     
-    // Funciones de fila de asientos
-    iniciarFilaAsientos,
-    actualizarFilaAsientos,
-    finalizarFilaAsientos,
-    añadirSillasAFila,
-    handleSeatRowSelect,
-    
     // Funciones de paneo
     handlePanStart,
     handlePanMove,
     handlePanEnd,
     
+
   } = useCrearMapa();
 
   const { getSeatColor, getZonaColor, getBorderColor } = useSeatColors();
@@ -103,7 +153,6 @@ const CrearMapa = () => {
   // Estados locales adicionales
   const [loadedZonas, setLoadedZonas] = useState([]);
   const [salaInfo, setSalaInfo] = useState(null);
-  const [loadingSala, setLoadingSala] = useState(false);
   const [showNumeracion, setShowNumeracion] = useState(false);
   const [addingChairRow, setAddingChairRow] = useState(false);
   const [rowStart, setRowStart] = useState(null);
@@ -112,15 +161,6 @@ const CrearMapa = () => {
   const [savingProgress, setSavingProgress] = useState(0);
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
-  
-  // Estado para el plano actual (página actual)
-  const [planoActual, setPlanoActual] = useState('plano_actual');
-  
-  // Estados para búsqueda de sala eliminados - ya no se necesitan
-
-  // Referencias
-  const stageRef = useRef();
-  const isDraggingRef = useRef(false);
 
   // ===== MANEJADORES DE EVENTOS =====
   
@@ -155,7 +195,7 @@ const CrearMapa = () => {
       // Selección normal
       const clickedOnEmpty = e.target === e.target.getStage();
       if (clickedOnEmpty) {
-        limpiarSeleccion();
+        clearSelection();
       }
     }
   };
@@ -165,24 +205,10 @@ const CrearMapa = () => {
     
     if (e.evt.ctrlKey || e.evt.metaKey) {
       // Selección múltiple con Ctrl/Cmd
-      // Implementar selección múltiple si es necesario
-      selectElement(elementId);
+      selectMultipleElements(elementId);
     } else {
       // Selección simple
       selectElement(elementId);
-    }
-    
-    // Si es una silla de una fila, mostrar el tooltip
-    const element = elements.find(el => el._id === elementId);
-    if (element && element.type === 'silla' && element.esFila) {
-      // Buscar la primera silla de la fila para mostrar el tooltip
-      const primeraSilla = elements.find(el => 
-        el.type === 'silla' && el.filaId === element.filaId
-      );
-      if (primeraSilla) {
-        // Pasar la información al MenuMapa para mostrar el tooltip
-        // Esto se manejará a través del selectedElement
-      }
     }
   };
 
@@ -200,8 +226,8 @@ const CrearMapa = () => {
     if (element) {
       const newPos = e.target.position();
       updateElementProperty(elementId, 'posicion', {
-        x: Math.round(newPos.x),
-        y: Math.round(newPos.y)
+        x: precisePositioning.round(newPos.x),
+        y: precisePositioning.round(newPos.y)
       });
     }
   };
@@ -209,29 +235,11 @@ const CrearMapa = () => {
   // ===== RENDERIZADO DE ELEMENTOS =====
   
   const renderElements = useMemo(() => {
-    console.log('Renderizando elementos:', elements.length, elements);
-    
-    // Filtrar elementos válidos
-    const validElements = elements.filter(element => 
-      element && 
-      element._id && 
-      element.type && 
-      element.posicion && 
-      typeof element.posicion.x === 'number' && 
-      typeof element.posicion.y === 'number'
-    );
-    
-    console.log('Elementos válidos:', validElements.length, validElements);
-    
-    return validElements.map(element => {
+    return elements.map(element => {
       const isSelected = selectedIds.includes(element._id);
       
       switch (element.type) {
         case 'mesa':
-          if (!element.width || !element.height) {
-            console.warn('Mesa sin dimensiones válidas:', element);
-            return null;
-          }
           return (
             <Mesa
               key={element._id}
@@ -241,14 +249,11 @@ const CrearMapa = () => {
               onDoubleClick={(e) => handleElementDoubleClick(element._id, e)}
               onDragEnd={(e) => handleElementDragEnd(element._id, e)}
               draggable={activeMode === 'select'}
+              scale={element.scale || 1}
             />
           );
           
         case 'silla':
-          if (!element.radius) {
-            console.warn('Silla sin radio válido:', element);
-            return null;
-          }
           return (
             <Silla
               key={element._id}
@@ -257,14 +262,67 @@ const CrearMapa = () => {
               onClick={(e) => handleElementClick(element._id, e)}
               onDragEnd={(e) => handleElementDragEnd(element._id, e)}
               draggable={activeMode === 'select'}
+              scale={element.scale || 1}
+              fill={element.fill || seatStates.available.fill}
+              stroke={element.stroke || seatStates.available.stroke}
+              opacity={element.opacity || seatStates.available.opacity}
+            />
+          );
+          
+        case 'conexion':
+          if (!showConnections) return null;
+          
+          const startSeat = elements.find(el => el._id === element.startSeatId);
+          const endSeat = elements.find(el => el._id === element.endSeatId);
+          
+          if (!startSeat || !endSeat) return null;
+          
+          return (
+            <Line
+              key={element._id}
+              points={[
+                startSeat.posicion.x + (startSeat.width || 20) / 2,
+                startSeat.posicion.y + (startSeat.height || 20) / 2,
+                endSeat.posicion.x + (endSeat.width || 20) / 2,
+                endSeat.posicion.y + (endSeat.height || 20) / 2
+              ]}
+              stroke={element.stroke}
+              strokeWidth={element.strokeWidth}
+              opacity={element.opacity}
+              dash={element.dash}
+            />
+          );
+          
+        case 'background':
+          if (!element.showInEditor) return null;
+          
+          return (
+            <Image
+              key={element._id}
+              image={element.imageUrl}
+              x={element.position.x}
+              y={element.position.y}
+              scaleX={element.scale}
+              scaleY={element.scale}
+              opacity={element.opacity}
+              listening={false}
+            />
+          );
+          
+        case 'seccion':
+          return (
+            <Line
+              key={element._id}
+              points={element.points.flatMap(p => [p.x, p.y])}
+              fill={element.fill}
+              stroke={element.stroke}
+              strokeWidth={element.strokeWidth}
+              closed={true}
+              opacity={0.3}
             />
           );
           
         case 'text':
-          if (!element.text) {
-            console.warn('Texto sin contenido válido:', element);
-            return null;
-          }
           return (
             <Text
               key={element._id}
@@ -280,10 +338,6 @@ const CrearMapa = () => {
           );
           
         case 'rect':
-          if (!element.width || !element.height) {
-            console.warn('Rectángulo sin dimensiones válidas:', element);
-            return null;
-          }
           return (
             <Rect
               key={element._id}
@@ -301,10 +355,6 @@ const CrearMapa = () => {
           );
           
         case 'circle':
-          if (!element.radius) {
-            console.warn('Círculo sin radio válido:', element);
-            return null;
-          }
           return (
             <Ellipse
               key={element._id}
@@ -322,10 +372,6 @@ const CrearMapa = () => {
           );
           
         case 'line':
-          if (!element.points || !Array.isArray(element.points) || element.points.length < 4) {
-            console.warn('Línea sin puntos válidos:', element);
-            return null;
-          }
           return (
             <Line
               key={element._id}
@@ -342,7 +388,7 @@ const CrearMapa = () => {
           return null;
       }
     });
-  }, [elements, selectedIds, activeMode]);
+  }, [elements, selectedIds, activeMode, showConnections, seatStates, precisePositioning]);
 
   // ===== RENDERIZADO DE PUNTOS DE SECCIÓN =====
   
@@ -381,82 +427,38 @@ const CrearMapa = () => {
   // ===== RENDERIZADO DE CUADRÍCULA =====
   
   const renderGrid = useMemo(() => {
+    if (!showScaleControls) return null;
+    
     return (
       <Grid
         size={20}
         scale={zoom}
         stagePosition={stagePosition}
+        showScale={true}
+        scaleSystem={scaleSystem}
       />
     );
-  }, [zoom, stagePosition]);
+  }, [showScaleControls, zoom, stagePosition, scaleSystem]);
 
   // ===== RENDERIZADO DE ZONAS =====
   
   const renderZonas = useMemo(() => {
-    console.log('Renderizando zonas:', { 
-      showZones, 
-      zonesCount: zones.length, 
-      loadedZonasCount: loadedZonas.length,
-      zones, 
-      loadedZonas 
-    });
-    
-    if (!showZones) {
-      console.log('Zonas deshabilitadas');
-      return null;
-    }
-    
-    // Usar loadedZonas en lugar de zones si zones está vacío
-    const zonasParaRenderizar = zones.length > 0 ? zones : loadedZonas;
-    
-    if (!zonasParaRenderizar || zonasParaRenderizar.length === 0) {
-      console.log('No hay zonas disponibles para renderizar');
-      return null;
-    }
-    
-    // Filtrar solo zonas con coordenadas válidas
-    const zonasValidas = zonasParaRenderizar.filter(zone => 
-      zone && 
-      zone._id && 
-      zone.coordenadas && 
-      typeof zone.coordenadas.x === 'number' && 
-      typeof zone.coordenadas.y === 'number'
-    );
-    
-    if (zonasValidas.length === 0) {
-      console.log('No hay zonas con coordenadas válidas');
-      return null;
-    }
-    
-    console.log('Renderizando zonas válidas:', zonasValidas);
+    if (!showZones) return null;
     
     return (
       <Zonas
-        zones={zonasValidas}
+        zones={zones}
         selectedZone={selectedZone}
         onZoneSelect={setSelectedZone}
+        onZoneToggle={toggleZoneVisibility}
       />
     );
-  }, [showZones, zones, loadedZonas, selectedZone]);
+  }, [showZones, zones, selectedZone, toggleZoneVisibility]);
 
   // ===== RENDERIZADO DE CONTROLES SUPERIORES =====
   
   const renderTopControls = () => (
     <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white rounded-lg shadow-lg p-3 flex items-center space-x-3">
-             {/* Información de Sala */}
-       <div className="flex items-center space-x-2">
-         <div className="text-sm font-medium text-gray-900">
-           Sala: {salaInfo ? salaInfo.nombre : 'Cargando...'}
-         </div>
-         {salaInfo && (
-           <div className="text-xs text-gray-500">
-             Asientos: {elements.filter(el => el.type === 'silla').length}
-           </div>
-         )}
-       </div>
-      
-      <div className="w-px h-6 bg-gray-300" />
-      
       {/* Zoom */}
       <div className="flex items-center space-x-2">
         <Tooltip title="Zoom Out">
@@ -481,13 +483,10 @@ const CrearMapa = () => {
       <div className="w-px h-6 bg-gray-300" />
       
       {/* Reset Zoom */}
-      <Tooltip title="Reset Zoom (100%)">
+      <Tooltip title="Reset Zoom">
         <Button
           icon={<ReloadOutlined />}
-          onClick={() => {
-            setZoom(1.0);
-            setStagePosition({ x: 0, y: 0 });
-          }}
+          onClick={resetZoom}
           size="small"
         />
       </Tooltip>
@@ -509,74 +508,15 @@ const CrearMapa = () => {
       
       <div className="w-px h-6 bg-gray-300" />
       
-      {/* Toggle Zonas */}
-      <Tooltip title={showZones ? "Ocultar Zonas" : "Mostrar Zonas"}>
+      {/* Controles Avanzados */}
+      <Tooltip title="Controles Avanzados">
         <Button
           icon={<SettingOutlined />}
-          onClick={() => setShowZones(!showZones)}
-          type={showZones ? 'primary' : 'default'}
+          onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+          type={showAdvancedControls ? 'primary' : 'default'}
           size="small"
-        >
-          Zonas
-        </Button>
+        />
       </Tooltip>
-      
-      <div className="w-px h-6 bg-gray-300" />
-      
-             {/* Buscar Zonas en DB */}
-       <Tooltip title="Buscar Zonas en Base de Datos">
-         <Button
-           icon={<ReloadOutlined />}
-           onClick={buscarZonasEnDB}
-           size="small"
-           type="dashed"
-           loading={loadingSala}
-         >
-           🔍Zonas
-         </Button>
-       </Tooltip>
-       
-       <div className="w-px h-6 bg-gray-300" />
-       
-       {/* Refrescar Zonas */}
-       <Tooltip title="Refrescar Zonas">
-         <Button
-           icon={<ReloadOutlined />}
-           onClick={cargarZonasDelPlano}
-           size="small"
-           loading={loadingSala}
-         >
-           🔄
-         </Button>
-       </Tooltip>
-       
-       <div className="w-px h-6 bg-gray-300" />
-       
-
-       
-       <div className="w-px h-6 bg-gray-300" />
-       
-       {/* Limpiar Elementos Inválidos */}
-       <Tooltip title="Limpiar Elementos Inválidos">
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={limpiarElementosInvalidos}
-            size="small"
-            danger
-          />
-        </Tooltip>
-       
-       <div className="w-px h-6 bg-gray-300" />
-       
-       {/* Controles Avanzados */}
-       <Tooltip title="Controles Avanzados">
-         <Button
-           icon={<SettingOutlined />}
-           onClick={() => setShowAdvancedControls(!showAdvancedControls)}
-           type={showAdvancedControls ? 'primary' : 'default'}
-           size="small"
-         />
-       </Tooltip>
     </div>
   );
 
@@ -622,7 +562,21 @@ const CrearMapa = () => {
 
   // ===== RENDERIZADO DE INFORMACIÓN DE SALA =====
   
-  // Esta función ya no se usa, la información se muestra en los controles superiores
+  const renderSalaInfo = () => {
+    if (!salaInfo) return null;
+    
+    return (
+      <div className="absolute top-4 left-4 z-10 bg-white rounded-lg shadow-lg p-3">
+        <div className="text-sm font-medium text-gray-900">{salaInfo.nombre}</div>
+        <div className="text-xs text-gray-500">
+          {elements.filter(el => el.type === 'silla').length} asientos
+        </div>
+        <div className="text-xs text-gray-500">
+          {elements.filter(el => el.type === 'mesa').length} mesas
+        </div>
+      </div>
+    );
+  };
 
   // ===== CARGA INICIAL =====
   
@@ -634,40 +588,18 @@ const CrearMapa = () => {
         setIsLoading(true);
         
         // Cargar zonas y información de la sala en paralelo
-        console.log('Cargando zonas y datos de sala...');
         const [zonasData, salaData] = await Promise.all([
           fetchZonasPorSala(salaId),
           fetchSalaById(salaId)
         ]);
         
-        console.log('Zonas cargadas:', zonasData);
-        console.log('Zonas con coordenadas válidas:', zonasData.filter(z => 
-          z && z.coordenadas && typeof z.coordenadas.x === 'number'
-        ));
-        console.log('Datos de sala:', salaData);
-        
         setLoadedZonas(zonasData);
         setSalaInfo(salaData);
         
-                 // Cargar mapa existente
-         console.log('Cargando mapa para sala:', salaId);
-         await loadMapa(salaId);
-         console.log('Mapa cargado, elementos:', elements);
-         console.log('Elementos con propiedades válidas:', elements.filter(el => 
-           el && el._id && el.type && el.posicion
-         ));
-         
-         // Limpiar elementos inválidos después de cargar
-         setTimeout(() => {
-           limpiarElementosInvalidos();
-         }, 1000);
-         
-         // Cargar zonas automáticamente después de cargar
-         setTimeout(() => {
-           cargarZonasDelPlano();
-         }, 1500);
-         
-       } catch (error) {
+        // Cargar mapa existente
+        await loadMapa();
+        
+      } catch (error) {
         console.error('Error cargando datos:', error);
         message.error('Error cargando datos de la sala');
       } finally {
@@ -677,167 +609,6 @@ const CrearMapa = () => {
     
     cargarDatos();
   }, [salaId, loadMapa]);
-
-  // Inicializar búsqueda de salas eliminado - ya no se necesita
-
-  // Establecer zoom inicial a 100%
-  useEffect(() => {
-    setZoom(1.0);
-    setStagePosition({ x: 0, y: 0 });
-    
-    // Habilitar zonas por defecto
-    setShowZones(true);
-    console.log('Estado inicial: zonas habilitadas, zoom 100%');
-  }, []);
-
-  // Cargar información de la sala
-  useEffect(() => {
-    const loadSalaInfo = async () => {
-      if (!salaId) return;
-      
-      setLoadingSala(true);
-      try {
-        console.log('Cargando información de la sala:', salaId);
-        
-        const salaData = await fetchSalaById(salaId);
-        setSalaInfo({
-          id: salaData.id,
-          nombre: salaData.nombre,
-          asientos: 0 // Esto se puede calcular después
-        });
-        console.log('Información de la sala cargada:', salaData);
-      } catch (error) {
-        console.error('Error al cargar información de la sala:', error);
-        // En caso de error, usar información básica
-        setSalaInfo({
-          id: salaId,
-          nombre: `Sala ${salaId}`,
-          asientos: 0
-        });
-      } finally {
-        setLoadingSala(false);
-      }
-    };
-
-    loadSalaInfo();
-  }, [salaId]);
-
-  // Funciones de búsqueda de salas eliminadas - ya no se necesitan
-
-  // ===== LIMPIEZA DE ELEMENTOS INVÁLIDOS =====
-  
-  const limpiarElementosInvalidos = () => {
-    const elementosValidos = elements.filter(element => 
-      element && 
-      element._id && 
-      element.type && 
-      element.posicion && 
-      typeof element.posicion.x === 'number' && 
-      typeof element.posicion.y === 'number'
-    );
-    
-    if (elementosValidos.length !== elements.length) {
-      console.log(`Limpiando elementos inválidos: ${elements.length} -> ${elementosValidos.length}`);
-      setElements(elementosValidos);
-      message.info(`Se limpiaron ${elements.length - elementosValidos.length} elementos inválidos`);
-    }
-  };
-
-  // ===== BUSCAR ZONAS EN BASE DE DATOS =====
-  
-  const buscarZonasEnDB = async () => {
-    try {
-      console.log('Buscando zonas en base de datos para sala:', salaId);
-      
-      // Buscar zonas existentes para la sala actual
-      const zonasEncontradas = await fetchZonasPorSala(salaId);
-      
-      if (zonasEncontradas && zonasEncontradas.length > 0) {
-        // Filtrar zonas con coordenadas válidas
-        const zonasValidas = zonasEncontradas.filter(zone => 
-          zone && 
-          zone._id && 
-          zone.coordenadas && 
-          typeof zone.coordenadas.x === 'number' && 
-          typeof zone.coordenadas.y === 'number'
-        );
-        
-        if (zonasValidas.length > 0) {
-          setLoadedZonas(zonasValidas);
-          message.success(`Se encontraron ${zonasValidas.length} zonas en la base de datos`);
-          console.log('Zonas encontradas en DB:', zonasValidas);
-          console.log('Detalles de zonas válidas:', zonasValidas.map(z => ({
-            id: z._id,
-            nombre: z.nombre,
-            color: z.color,
-            coordenadas: z.coordenadas
-          })));
-        } else {
-          message.warning('Se encontraron zonas pero sin coordenadas válidas');
-          console.log('Zonas sin coordenadas válidas:', zonasEncontradas);
-          console.log('Estructura de zonas encontradas:', zonasEncontradas.map(z => ({
-            id: z._id,
-            nombre: z.nombre,
-            tieneCoordenadas: !!z.coordenadas,
-            coordenadas: z.coordenadas
-          })));
-        }
-      } else {
-        message.info('No se encontraron zonas en la base de datos para este plano');
-        console.log('No hay zonas en DB para la sala:', salaId);
-      }
-      
-    } catch (error) {
-      console.error('Error buscando zonas en DB:', error);
-      message.error('Error al buscar zonas en la base de datos');
-    }
-  };
-
-
-
-  // ===== CARGAR ZONAS DEL PLANO ACTUAL =====
-  
-  const cargarZonasDelPlano = async () => {
-    try {
-      setLoadingSala(true);
-      console.log('Cargando zonas del plano actual para sala:', salaId);
-      
-      // Buscar zonas para la sala actual (página del plano)
-      const zonasDelPlano = await fetchZonasPorSala(salaId);
-      
-      if (zonasDelPlano && zonasDelPlano.length > 0) {
-        // Filtrar zonas con coordenadas válidas
-        const zonasValidas = zonasDelPlano.filter(zone => 
-          zone && 
-          zone._id && 
-          zone.coordenadas && 
-          typeof zone.coordenadas.x === 'number' && 
-          typeof zone.coordenadas.y === 'number'
-        );
-        
-        if (zonasValidas.length > 0) {
-          setLoadedZonas(zonasValidas);
-          message.success(`${zonasValidas.length} zonas cargadas para este plano`);
-          console.log('Zonas del plano actual:', zonasValidas);
-        } else {
-          message.warning('Zonas sin coordenadas válidas');
-          console.log('Zonas sin coordenadas válidas:', zonasDelPlano);
-        }
-      } else {
-        message.info('No hay zonas disponibles para este plano');
-        console.log('No hay zonas para este plano');
-        setLoadedZonas([]);
-      }
-      
-    } catch (error) {
-      console.error('Error cargando zonas del plano:', error);
-      message.error('Error al cargar zonas del plano');
-    } finally {
-      setLoadingSala(false);
-    }
-  };
-
-
 
   // ===== SINCRONIZACIÓN DE ASIENTOS =====
   
@@ -850,7 +621,7 @@ const CrearMapa = () => {
       message.success('Asientos sincronizados correctamente');
       
       // Recargar mapa después de sincronización
-      await loadMapa(salaId);
+      await loadMapa();
       
     } catch (error) {
       console.error('Error sincronizando asientos:', error);
@@ -874,6 +645,27 @@ const CrearMapa = () => {
         numSillas={numSillas}
         sillaShape={sillaShape}
         
+        // Nuevos estados de escalado
+        selectedScale={selectedScale}
+        showScaleControls={showScaleControls}
+        scaleSystem={scaleSystem}
+        
+        // Nuevos estados de asientos
+        selectedSeatState={selectedSeatState}
+        seatStates={seatStates}
+        
+        // Nuevos estados de conexiones
+        showConnections={showConnections}
+        connectionStyle={connectionStyle}
+        connectionThreshold={connectionThreshold}
+        
+        // Nuevos estados de fondo
+        backgroundImage={backgroundImage}
+        backgroundScale={backgroundScale}
+        backgroundOpacity={backgroundOpacity}
+        showBackgroundInWeb={showBackgroundInWeb}
+        backgroundSystem={backgroundSystem}
+        
         // Funciones básicas
         updateElementProperty={updateElementProperty}
         updateElementSize={updateElementSize}
@@ -882,11 +674,30 @@ const CrearMapa = () => {
         limpiarSeleccion={limpiarSeleccion}
         assignZoneToSelected={assignZoneToSelected}
         
-        // Funciones de fila de asientos
-        iniciarFilaAsientos={iniciarFilaAsientos}
-        actualizarFilaAsientos={actualizarFilaAsientos}
-        finalizarFilaAsientos={finalizarFilaAsientos}
-        añadirSillasAFila={añadirSillasAFila}
+        // Nuevas funciones de escalado
+        scaleElement={scaleElement}
+        scaleSelectedElements={scaleSelectedElements}
+        
+                 // Nuevas funciones de estados de asientos
+         changeSeatState={changeSeatState}
+         changeSelectedSeatsState={changeSelectedSeatsState}
+         changeMesaSeatsState={changeMesaSeatsState}
+         setSelectedSeatState={setSelectedSeatState}
+        
+        // Nuevas funciones de conexiones
+        autoConnectSeats={autoConnectSeats}
+        createManualConnection={createManualConnection}
+        removeConnections={removeConnections}
+        changeConnectionStyle={changeConnectionStyle}
+        
+        // Nuevas funciones de coordenadas precisas
+        precisePositioning={precisePositioning}
+        snapToCustomGrid={snapToCustomGrid}
+        
+        // Nuevas funciones de fondo
+        setBackgroundImage={handleSetBackgroundImage}
+        updateBackground={handleUpdateBackground}
+        removeBackground={handleRemoveBackground}
         
         // Funciones existentes
         addMesa={addMesa}
@@ -895,16 +706,6 @@ const CrearMapa = () => {
         setActiveMode={setActiveMode}
         setNumSillas={setNumSillas}
         setSillaShape={setSillaShape}
-        
-        // Funciones para el tooltip
-        setElements={setElements}
-        handleSeatRowSelect={handleSeatRowSelect}
-        
-        // Elementos del mapa
-        elements={elements}
-        
-        // Dirección de fila de asientos
-        seatRowDirection={seatRowDirection}
       />
 
       {/* Área principal del mapa */}
@@ -912,10 +713,13 @@ const CrearMapa = () => {
         {/* Controles superiores */}
         {renderTopControls()}
         
-                 {/* Indicador de paneo */}
-         {renderPanningIndicator()}
-         
-         {/* Progreso de guardado */}
+        {/* Indicador de paneo */}
+        {renderPanningIndicator()}
+        
+        {/* Información de sala */}
+        {renderSalaInfo()}
+        
+        {/* Progreso de guardado */}
         {renderSavingProgress()}
         
         {/* Estado de cambios */}
@@ -980,7 +784,7 @@ const CrearMapa = () => {
         
         {addingChairRow && (
           <FilaPopup
-            onAdd={() => {}} // Implementar si es necesario
+            onAdd={addChairRow}
             onClose={() => setAddingChairRow(false)}
             startPoint={rowStart}
           />

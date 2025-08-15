@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument, rgb } from 'pdf-lib';
 import QRCode from 'qrcode';
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
@@ -57,30 +57,16 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    // Get comprehensive payment data with event, venue, and function details
+    // Get payment data
     console.log('Searching for payment with locator:', locator);
     const { data: payment, error } = await supabaseAdmin
       .from('payments')
       .select(`
-        *,
-        funcion:funciones(
-          *,
-          evento:eventos(
-            *,
-            recinto:recintos(
-              *
-            )
-          )
-        ),
-        seats:zeatingmaps(
-          *,
-          zona:zonas(
-            *
-          )
-        ),
-        usuario:profiles(
-          *
-        )
+        locator, 
+        seats, 
+        status,
+        created_at,
+        funcion
       `)
       .eq('locator', locator)
       .single();
@@ -98,398 +84,72 @@ export default async function handler(req, res) {
     console.log('Payment found:', payment);
 
     // --- GENERAR QR ---
+    // El QR puede ser el locator o una URL de validación
     const qrText = `https://tusitio.com/validar-ticket/${payment.locator}`;
-    const qrDataUrl = await QRCode.toDataURL(qrText, { 
-      margin: 1, 
-      width: 200,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    });
-    const qrImageBytes = Buffer.from(qrDataUrl.split(",")[1], "base64");
+    const qrDataUrl = await QRCode.toDataURL(qrText, { margin: 1, width: 200 });
+    const qrImageBytes = Buffer.from(qrDataUrl.split(",")[1], 'base64');
 
     // --- CREAR PDF ---
     const pdfDoc = await PDFDocument.create();
-    
-    // Agregar fuentes estándar
-    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    
     const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
     const { width, height } = page.getSize();
 
-    // --- HEADER CON IMAGEN DEL EVENTO ---
-    const headerHeight = 120;
-    
-    // Fondo del header
-    page.drawRectangle({
-      x: 0,
-      y: height - headerHeight,
-      width: width,
-      height: headerHeight,
-      color: rgb(0.1, 0.1, 0.3)
-    });
-
-    // Título principal
+    // Título
     page.drawText('TICKET DE ENTRADA', {
       x: 50,
       y: height - 50,
-      size: 28,
-      font: helveticaBold,
-      color: rgb(1, 1, 1)
+      size: 22,
+      color: rgb(0.1, 0.1, 0.1),
+      font: undefined,
     });
 
-    // Subtítulo
-    page.drawText('Evento Especial', {
-      x: 50,
-      y: height - 80,
-      size: 16,
-      font: helveticaFont,
-      color: rgb(0.9, 0.9, 0.9)
-    });
-
-    // Logo/Imagen del evento (placeholder por ahora)
-    page.drawText('🎫', {
-      x: width - 80,
-      y: height - 60,
-      size: 40,
-      font: helveticaFont,
-      color: rgb(1, 1, 1)
-    });
-
-    // --- INFORMACIÓN DEL EVENTO ---
-    let y = height - headerHeight - 30;
-    
-    // Sección del evento
-    page.drawRectangle({
-      x: 30,
-      y: y - 80,
-      width: width - 60,
-      height: 80,
-      color: rgb(0.95, 0.95, 0.95)
-    });
-
-    page.drawText('INFORMACIÓN DEL EVENTO', {
-      x: 50,
-      y: y - 20,
-      size: 18,
-      font: helveticaBold,
-      color: rgb(0.1, 0.1, 0.3)
-    });
-
-    if (payment.funcion?.evento) {
-      const evento = payment.funcion.evento;
-      page.drawText(`🎭 ${evento.nombre || 'Evento'}`, {
-        x: 60,
-        y: y - 45,
-        size: 14,
-        font: helveticaBold,
-        color: rgb(0.2, 0.2, 0.2)
-      });
-
-      if (payment.funcion.fecha_celebracion) {
-        const fecha = new Date(payment.funcion.fecha_celebracion);
-        const fechaFormateada = fecha.toLocaleDateString('es-ES', {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
-        page.drawText(`📅 ${fechaFormateada}`, {
-          x: 60,
-          y: y - 65,
-          size: 12,
-          font: helveticaFont,
-          color: rgb(0.3, 0.3, 0.3)
-        });
-      }
-
-      if (payment.funcion.hora_inicio) {
-        page.drawText(`🕐 ${payment.funcion.hora_inicio}`, {
-          x: 60,
-          y: y - 80,
-          size: 12,
-          font: helveticaFont,
-          color: rgb(0.3, 0.3, 0.3)
-        });
-      }
+    // Datos principales
+    let y = height - 90;
+    page.drawText(`Localizador: ${payment.locator}`, { x: 50, y, size: 13, color: rgb(0,0,0) });
+    y -= 25;
+    if (payment.funcion) {
+      page.drawText(`Función ID: ${payment.funcion}`, { x: 50, y, size: 13, color: rgb(0,0,0) });
+      y -= 25;
     }
+    page.drawText(`Estado: ${payment.status}`, { x: 50, y, size: 13, color: rgb(0,0,0) });
+    y -= 30;
 
-    y -= 120;
-
-    // --- INFORMACIÓN DEL RECINTO ---
-    if (payment.funcion?.evento?.recinto) {
-      const recinto = payment.funcion.evento.recinto;
-      
-      page.drawRectangle({
-        x: 30,
-        y: y - 60,
-        width: width - 60,
-        height: 60,
-        color: rgb(0.9, 0.95, 1)
-      });
-
-      page.drawText('📍 UBICACIÓN', {
-        x: 50,
-        y: y - 20,
-        size: 16,
-        font: helveticaBold,
-        color: rgb(0.1, 0.1, 0.3)
-      });
-
-      page.drawText(`🏛️ ${recinto.nombre || 'Recinto'}`, {
-        x: 60,
-        y: y - 40,
-        size: 12,
-        font: helveticaFont,
-        color: rgb(0.2, 0.2, 0.2)
-      });
-
-      if (recinto.direccion) {
-        page.drawText(`📍 ${recinto.direccion}`, {
-          x: 60,
-          y: y - 55,
-          size: 11,
-          font: helveticaFont,
-          color: rgb(0.3, 0.3, 0.3)
-        });
-      }
-
-      y -= 80;
-    }
-
-    // --- DETALLES DEL TICKET ---
-    page.drawRectangle({
-      x: 30,
-      y: y - 100,
-      width: width - 60,
-      height: 100,
-      color: rgb(1, 0.95, 0.9)
-    });
-
-    page.drawText('🎫 DETALLES DEL TICKET', {
-      x: 50,
-      y: y - 20,
-      size: 16,
-      font: helveticaBold,
-      color: rgb(0.3, 0.2, 0.1)
-    });
-
-    page.drawText(`🔢 Localizador: ${payment.locator}`, {
-      x: 60,
-      y: y - 40,
-      size: 12,
-      font: helveticaFont,
-      color: rgb(0.3, 0.2, 0.1)
-    });
-
-    page.drawText(`📊 Estado: ${payment.status === 'pagado' ? '✅ PAGADO' : '⏳ PENDIENTE'}`, {
-      x: 60,
-      y: y - 55,
-      size: 12,
-      font: helveticaFont,
-      color: rgb(0.3, 0.2, 0.1)
-    });
-
-    if (payment.amount) {
-      page.drawText(`💰 Total: $${payment.amount.toFixed(2)}`, {
-        x: 60,
-        y: y - 70,
-        size: 12,
-        font: helveticaFont,
-        color: rgb(0.3, 0.2, 0.1)
-      });
-    }
-
-    const fechaCreacion = new Date(payment.created_at).toLocaleString('es-ES');
-    page.drawText(`📅 Comprado: ${fechaCreacion}`, {
-      x: 60,
-      y: y - 85,
-      size: 11,
-      font: helveticaFont,
-      color: rgb(0.4, 0.3, 0.2)
-    });
-
-    y -= 120;
-
-    // --- ASIENTOS ---
+    // Asientos
     if (payment.seats && payment.seats.length > 0) {
-      const seatsHeight = Math.max(80, payment.seats.length * 20 + 40);
-      
-      page.drawRectangle({
-        x: 30,
-        y: y - seatsHeight,
-        width: width - 60,
-        height: seatsHeight,
-        color: rgb(0.95, 1, 0.95)
-      });
-
-      page.drawText('🪑 ASIENTOS RESERVADOS', {
-        x: 50,
-        y: y - 20,
-        size: 16,
-        font: helveticaBold,
-        color: rgb(0.1, 0.3, 0.1)
-      });
-
+      page.drawText('Asientos:', { x: 50, y, size: 14, color: rgb(0,0,0) });
+      y -= 20;
       payment.seats.forEach((seat, index) => {
-        const seatY = y - 45 - (index * 20);
-        const seatText = `${seat.name || seat.nombre || 'Asiento'} - ${seat.zona?.nombre || 'General'} - $${seat.price || 0}`;
-        
-        page.drawText(`• ${seatText}`, {
-          x: 60,
-          y: seatY,
-          size: 11,
-          font: helveticaFont,
-          color: rgb(0.2, 0.3, 0.2)
-        });
+        const seatText = `${seat.name || seat.nombre} - ${seat.zona?.nombre || 'General'} - $${seat.price || 0}`;
+        page.drawText(seatText, { x: 70, y: y - (index * 18), size: 11, color: rgb(0.2,0.2,0.2) });
       });
-
-      y -= seatsHeight + 20;
+      y -= payment.seats.length * 18 + 10;
     }
 
-    // --- INFORMACIÓN DEL COMPRADOR ---
-    if (payment.usuario) {
-      page.drawRectangle({
-        x: 30,
-        y: y - 60,
-        width: width - 60,
-        height: 60,
-        color: rgb(1, 0.9, 0.95)
-      });
+    // Fecha de compra
+    const fechaCreacion = new Date(payment.created_at).toLocaleString('es-ES');
+    page.drawText(`Fecha de compra: ${fechaCreacion}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4) });
 
-      page.drawText('👤 COMPRADOR', {
-        x: 50,
-        y: y - 20,
-        size: 16,
-        font: helveticaBold,
-        color: rgb(0.3, 0.1, 0.2)
-      });
-
-      page.drawText(`👤 ${payment.usuario.nombre || ''} ${payment.usuario.apellido || ''}`, {
-        x: 60,
-        y: y - 40,
-        size: 12,
-        font: helveticaFont,
-        color: rgb(0.3, 0.1, 0.2)
-      });
-
-      if (payment.usuario.email) {
-        page.drawText(`📧 ${payment.usuario.email}`, {
-          x: 60,
-          y: y - 55,
-          size: 11,
-          font: helveticaFont,
-          color: rgb(0.4, 0.2, 0.3)
-        });
-      }
-
-      y -= 80;
-    }
-
-    // --- QR CODE ---
-    const qrSize = 120;
-    const qrX = width - qrSize - 50;
-    const qrY = y - qrSize - 20;
-
-    // Fondo del QR
-    page.drawRectangle({
-      x: qrX - 10,
-      y: qrY - 10,
-      width: qrSize + 20,
-      height: qrSize + 40,
-      color: rgb(0.95, 0.95, 0.95)
-    });
-
-    // Insertar QR
+    // --- Insertar QR ---
     const qrImage = await pdfDoc.embedPng(qrImageBytes);
+    const qrSize = 120;
     page.drawImage(qrImage, {
-      x: qrX,
-      y: qrY,
+      x: width - qrSize - 50,
+      y: height - qrSize - 60,
       width: qrSize,
       height: qrSize,
     });
-
-    // Texto del QR
-    page.drawText('📱 ESCANEA PARA VALIDAR', {
-      x: qrX - 5,
-      y: qrY - 15,
+    page.drawText('Escanea para validar', {
+      x: width - qrSize - 40,
+      y: height - qrSize - 75,
       size: 10,
-      font: helveticaBold,
-      color: rgb(0.2, 0.2, 0.2)
+      color: rgb(0.3,0.3,0.3)
     });
 
-    // --- INFORMACIÓN ADICIONAL A LA IZQUIERDA DEL QR ---
-    const infoX = 50;
-    const infoY = y - 60;
-
-    page.drawText('ℹ️ INFORMACIÓN IMPORTANTE', {
-      x: infoX,
-      y: infoY,
-      size: 14,
-      font: helveticaBold,
-      color: rgb(0.2, 0.2, 0.2)
-    });
-
-    page.drawText('• Presenta este ticket en la entrada del evento', {
-      x: infoX + 10,
-      y: infoY - 20,
-      size: 10,
-      font: helveticaFont,
-      color: rgb(0.3, 0.3, 0.3)
-    });
-
-    page.drawText('• El QR es único y será validado electrónicamente', {
-      x: infoX + 10,
-      y: infoY - 35,
-      size: 10,
-      font: helveticaFont,
-      color: rgb(0.3, 0.3, 0.3)
-    });
-
-    page.drawText('• No compartas tu ticket. Solo el primer escaneo será válido', {
-      x: infoX + 10,
-      y: infoY - 50,
-      size: 10,
-      font: helveticaFont,
-      color: rgb(0.3, 0.3, 0.3)
-    });
-
-    // --- FOOTER ---
-    const footerY = 50;
-    
-    page.drawRectangle({
-      x: 0,
-      y: 0,
-      width: width,
-      height: footerY,
-      color: rgb(0.1, 0.1, 0.3)
-    });
-
-    page.drawText('🎉 ¡Disfruta del evento!', {
-      x: 50,
-      y: 30,
-      size: 16,
-      font: helveticaBold,
-      color: rgb(1, 1, 1)
-    });
-
-    page.drawText('Para soporte: soporte@tuempresa.com', {
-      x: width - 300,
-      y: 20,
-      size: 10,
-      font: helveticaFont,
-      color: rgb(0.8, 0.8, 0.8)
-    });
-
-    page.drawText(`Ticket generado el: ${new Date().toLocaleString('es-ES')}`, {
-      x: width - 300,
-      y: 35,
-      size: 10,
-      font: helveticaFont,
-      color: rgb(0.8, 0.8, 0.8)
-    });
+    // --- Condiciones ---
+    page.drawText('Condiciones:', { x: 50, y: 80, size: 10, color: rgb(0.2,0.2,0.2) });
+    page.drawText('• Presenta este ticket en la entrada del evento.', { x: 60, y: 65, size: 9, color: rgb(0.2,0.2,0.2) });
+    page.drawText('• El QR es único y será validado electrónicamente.', { x: 60, y: 53, size: 9, color: rgb(0.2,0.2,0.2) });
+    page.drawText('• No compartas tu ticket. Solo el primer escaneo será válido.', { x: 60, y: 41, size: 9, color: rgb(0.2,0.2,0.2) });
 
     const pdfBytes = await pdfDoc.save();
 

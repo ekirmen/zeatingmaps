@@ -1,0 +1,10 @@
+[33m30e29a2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m tickera 2.4.8
+[33m9071f0b[m tickera 2.4.8
+[33m5a47c79[m tickera 2.4.7
+[33mb5a2419[m tickera 2.4.7
+[33m73d4872[m tickera 2.4.7
+[33md61506d[m tickera 2.4.6
+[33m8b14981[m tickera 2.4.5
+[33mfc4851c[m tickera 2.4.5
+[33meefbc1c[m Fix Node.js version to 22.x in package.json
+[33m72d7152[m Fix Node.js version to 22.x in package.json

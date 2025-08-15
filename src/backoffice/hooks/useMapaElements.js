@@ -223,18 +223,11 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
   // Creación de una nueva mesa
   const addMesa = (shape = 'rect') => {
     const id = 'mesa_' + uuidv4();
-    
-    // Calcular el centro del canvas visible (considerando el panel izquierdo de 320px)
-    const canvasWidth = window.innerWidth - 320;
-    const canvasHeight = window.innerHeight;
-    const centerX = canvasWidth / 2;
-    const centerY = canvasHeight / 2;
-    
     const nuevaMesa = {
       _id: id,
       type: 'mesa',
       shape,
-      posicion: { x: centerX, y: centerY },
+      posicion: { x: 200, y: 200 },
       radius: shape === 'circle' ? 60 : undefined,
       width: shape === 'rect' ? 120 : undefined,
       height: shape === 'rect' ? 80 : undefined,
@@ -245,20 +238,6 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
       scale: 1.0 // Escala por defecto
     };
     setElements(prev => [...prev, nuevaMesa]);
-    
-    // Centrar el stage en la nueva mesa
-    const canvasCenterX = (window.innerWidth - 320) / 2;
-    const canvasCenterY = window.innerHeight / 2;
-    
-    // Ajustar la posición del stage para que la mesa esté en el centro visible
-    const stageX = canvasCenterX - nuevaMesa.posicion.x;
-    const stageY = canvasCenterY - nuevaMesa.posicion.y;
-    
-    // Disparar un evento personalizado para que el componente padre pueda actualizar la posición del stage
-    window.dispatchEvent(new CustomEvent('centerStageOnMesa', {
-      detail: { x: stageX, y: stageY }
-    }));
-    
     return nuevaMesa;
   };
 
