@@ -487,8 +487,13 @@ export const useCrearMapa = () => {
   // Cargar mapa al iniciar
   useEffect(() => {
     if (!hasLoadedInitialData.current && salaId) {
-      loadMapa(salaId, setElements, setZones);
+      loadMapa(salaId);
       hasLoadedInitialData.current = true;
+      
+      // Centrar el stage inicialmente para que se vea el contenido
+      const centerX = (window.innerWidth - 320) / 2;
+      const centerY = window.innerHeight / 2;
+      setStagePosition({ x: centerX, y: centerY });
     }
   }, [salaId, loadMapa, setElements, setZones]);
 
