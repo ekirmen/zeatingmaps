@@ -7,7 +7,7 @@ import {
   ClearOutlined,
   ZoomInOutlined,
   ZoomOutOutlined,
-  GridOutlined,
+  ReloadOutlined,
   PictureOutlined,
   LinkOutlined,
   SettingOutlined
@@ -685,7 +685,7 @@ const MenuMapa = ({
           </Button>
           
           <Button 
-            icon={<GridOutlined />}
+            icon={<ReloadOutlined />}
             onClick={snapToGrid}
             className="w-full"
           >

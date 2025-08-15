@@ -19,7 +19,7 @@ import {
   SaveOutlined, 
   UndoOutlined,
   RedoOutlined,
-  GridOutlined,
+  ReloadOutlined,
   PictureOutlined,
   LinkOutlined,
   SettingOutlined
@@ -485,7 +485,7 @@ const CrearMapa = () => {
       {/* Reset Zoom */}
       <Tooltip title="Reset Zoom">
         <Button
-          icon={<GridOutlined />}
+          icon={<ReloadOutlined />}
           onClick={resetZoom}
           size="small"
         />
