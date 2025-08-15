@@ -498,8 +498,8 @@ const CrearMapa = () => {
         setLoadedZonas(zonasData);
         setSalaInfo(salaData);
         
-                 // Cargar mapa existente
-         await loadMapa(salaId);
+        // Cargar mapa existente
+        await loadMapa(salaId);
         
       } catch (error) {
         console.error('Error cargando datos:', error);
@@ -512,21 +512,6 @@ const CrearMapa = () => {
     cargarDatos();
   }, [salaId, loadMapa]);
 
-  // ===== ESCUCHAR EVENTO DE CENTRADO DE MESA =====
-  
-  useEffect(() => {
-    const handleCenterStageOnMesa = (event) => {
-      const { x, y } = event.detail;
-      setStagePosition({ x, y });
-    };
-
-    window.addEventListener('centerStageOnMesa', handleCenterStageOnMesa);
-    
-    return () => {
-      window.removeEventListener('centerStageOnMesa', handleCenterStageOnMesa);
-    };
-  }, []);
-
   // ===== SINCRONIZACIÓN DE ASIENTOS =====
   
   const handleSyncSeats = async () => {
@@ -538,7 +523,7 @@ const CrearMapa = () => {
       message.success('Asientos sincronizados correctamente');
       
       // Recargar mapa después de sincronización
-      await loadMapa(salaId, setElements, setZones);
+      await loadMapa(salaId);
       
     } catch (error) {
       console.error('Error sincronizando asientos:', error);
