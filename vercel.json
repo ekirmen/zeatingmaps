@@ -2,18 +2,19 @@
   "buildCommand": "npm run vercel-build",
   "outputDirectory": "build",
   "framework": "create-react-app",
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "@vercel/node@3.0.0"
+    }
+  },
   "build": {
     "env": {
       "CI": "false",
       "GENERATE_SOURCEMAP": "false",
       "DISABLE_ESLINT_PLUGIN": "true",
       "SKIP_PREFLIGHT_CHECK": "true",
-      "NODE_ENV": "production"
-    }
-  },
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "@vercel/node@3.0.0"
+      "NODE_ENV": "production",
+      "NODE_VERSION": "18.x"
     }
   },
   "rewrites": [
