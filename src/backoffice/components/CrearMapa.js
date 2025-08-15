@@ -3,6 +3,7 @@ import { Stage, Layer, Rect, Circle, Text, Group, Line, Image } from 'react-konv
 import { message, Button, Switch, Input, Select, Slider, ColorPicker } from 'antd';
 import { Mesa, Silla } from './compMapa/MesaSilla';
 import { useCrearMapa } from '../hooks/useCrearMapa';
+import SeatmapTypeSelector from './SeatmapTypeSelector';
 import './CrearMapa.css';
 
 const { Option } = Select;
@@ -11,8 +12,8 @@ const CrearMapa = ({ salaId }) => {
   const {
     elements,
     setElements,
-    selectedElements,
-    setSelectedElements,
+    selectedIds: selectedElements,
+    setSelectedIds: setSelectedElements,
     zoom,
     setZoom,
     stagePosition,
@@ -29,7 +30,7 @@ const CrearMapa = ({ salaId }) => {
     setSectionPoints,
     lastSavedAt,
     savingProgress,
-    loadedZonas,
+    zones: loadedZonas,
     salaInfo,
     showNumeracion,
     setShowNumeracion,
@@ -50,7 +51,7 @@ const CrearMapa = ({ salaId }) => {
     fetchSalaById,
     syncSeatsForSala,
     saveMapa
-  } = useCrearMapa(salaId);
+  } = useCrearMapa();
 
   const [toolMode, setToolMode] = useState('select'); // select, draw, text, shape
   const [drawingMode, setDrawingMode] = useState('seats'); // seats, sections, shapes
@@ -69,6 +70,11 @@ const CrearMapa = ({ salaId }) => {
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingPoints, setDrawingPoints] = useState([]);
   const [selectedTool, setSelectedTool] = useState('select');
+  
+  // Estado para el selector de tipos
+  const [showTypeSelector, setShowTypeSelector] = useState(false);
+  const [selectedSeatmapType, setSelectedSeatmapType] = useState(null);
+  const [hasMapData, setHasMapData] = useState(false);
 
   const stageRef = useRef();
   const isDrawingRef = useRef(false);
@@ -145,14 +151,51 @@ const CrearMapa = ({ salaId }) => {
     }
   }, [salaId, fetchSalaById, fetchZonasPorSala]);
 
-  // Agregar elementos de prueba si no hay ninguno
+  // Verificar si hay datos del mapa y mostrar selector de tipos si es necesario
   useEffect(() => {
-    if (elements.length === 0 && salaId) {
-      createStadiumTemplate();
+    if (salaId) {
+      // Verificar si hay elementos en el mapa
+      if (elements.length === 0) {
+        setShowTypeSelector(true);
+        setHasMapData(false);
+      } else {
+        setHasMapData(true);
+        setShowTypeSelector(false);
+      }
     }
   }, [elements.length, salaId]);
 
-  // Función para crear un template de stadium
+  // Función para crear templates según el tipo seleccionado
+  const createTemplateByType = (type) => {
+    let templateElements = [];
+    
+    switch (type) {
+      case 'ROWS_WITH_SECTIONS':
+        templateElements = createStadiumTemplate();
+        break;
+      case 'ROWS_WITHOUT_SECTIONS':
+        templateElements = createTheaterTemplate();
+        break;
+      case 'MIXED':
+        templateElements = createMixedTemplate();
+        break;
+      case 'TABLES':
+        templateElements = createRestaurantTemplate();
+        break;
+      case 'GENERAL_ADMISSION':
+        templateElements = createFestivalTemplate();
+        break;
+      default:
+        templateElements = createStadiumTemplate();
+    }
+    
+    setElements(templateElements);
+    setHasMapData(true);
+    setShowTypeSelector(false);
+    message.success(`Template de ${getTypeDisplayName(type)} creado`);
+  };
+
+  // Función para crear un template de stadium (filas con secciones)
   const createStadiumTemplate = () => {
     const centerX = 400;
     const centerY = 300;
@@ -222,8 +265,241 @@ const CrearMapa = ({ salaId }) => {
       name: 'Escenario'
     });
 
-    setElements(templateElements);
-    message.success('Template de stadium creado');
+    return templateElements;
+  };
+
+  // Función para crear template de teatro (filas sin secciones)
+  const createTheaterTemplate = () => {
+    const templateElements = [];
+    const startX = 100;
+    const startY = 100;
+    
+    // Crear filas de asientos
+    for (let row = 0; row < 8; row++) {
+      for (let seat = 0; seat < 12; seat++) {
+        templateElements.push({
+          id: `seat-${row}-${seat}`,
+          type: 'silla',
+          x: startX + (seat * seatSpacing),
+          y: startY + (row * rowSpacing),
+          width: seatSize,
+          height: seatSize,
+          numero: seat + 1,
+          fila: String.fromCharCode(65 + row),
+          zonaId: null,
+          estado: 'available',
+          shape: seatShape,
+          tenant_id: salaId,
+          color: '#48BB78'
+        });
+      }
+    }
+
+    // Agregar escenario
+    templateElements.push({
+      id: 'stage',
+      type: 'shape',
+      x: startX - 20,
+      y: startY - 60,
+      width: 12 * seatSpacing + 40,
+      height: 40,
+      fill: '#2C3E50',
+      stroke: '#34495E',
+      strokeWidth: 2,
+      tenant_id: salaId,
+      name: 'Escenario'
+    });
+
+    return templateElements;
+  };
+
+  // Función para crear template mixto
+  const createMixedTemplate = () => {
+    const templateElements = [];
+    const startX = 100;
+    const startY = 100;
+    
+    // Crear algunos asientos individuales
+    for (let i = 0; i < 20; i++) {
+      templateElements.push({
+        id: `seat-${i}`,
+        type: 'silla',
+        x: startX + (i * 30),
+        y: startY + (i % 2 * 40),
+        width: seatSize,
+        height: seatSize,
+        numero: i + 1,
+        fila: 'A',
+        zonaId: null,
+        estado: 'available',
+        shape: seatShape,
+        tenant_id: salaId,
+        color: '#48BB78'
+      });
+    }
+
+    // Agregar algunas formas
+    templateElements.push({
+      id: 'shape-1',
+      type: 'shape',
+      x: startX + 200,
+      y: startY + 200,
+      width: 100,
+      height: 60,
+      fill: '#ED8936',
+      stroke: '#DD6B20',
+      strokeWidth: 2,
+      tenant_id: salaId,
+      name: 'Área VIP'
+    });
+
+    return templateElements;
+  };
+
+  // Función para crear template de restaurante (mesas)
+  const createRestaurantTemplate = () => {
+    const templateElements = [];
+    const startX = 100;
+    const startY = 100;
+    
+    // Crear mesas
+    for (let row = 0; row < 3; row++) {
+      for (let col = 0; col < 4; col++) {
+        const tableId = `mesa-${row}-${col}`;
+        const tableX = startX + (col * 150);
+        const tableY = startY + (row * 120);
+        
+        // Mesa
+        templateElements.push({
+          id: tableId,
+          type: 'mesa',
+          x: tableX,
+          y: tableY,
+          width: 80,
+          height: 60,
+          nombre: `Mesa ${row * 4 + col + 1}`,
+          zonaId: null,
+          tenant_id: salaId,
+          sillas: []
+        });
+
+        // Asientos alrededor de la mesa
+        const seats = [
+          { x: tableX - 15, y: tableY + 20, fila: 'A', numero: 1 },
+          { x: tableX + 80, y: tableY + 20, fila: 'A', numero: 2 },
+          { x: tableX + 20, y: tableY - 15, fila: 'B', numero: 1 },
+          { x: tableX + 20, y: tableY + 60, fila: 'B', numero: 2 }
+        ];
+
+        seats.forEach((seat, seatIndex) => {
+          templateElements.push({
+            id: `${tableId}-silla-${seatIndex}`,
+            type: 'silla',
+            x: seat.x,
+            y: seat.y,
+            width: seatSize,
+            height: seatSize,
+            numero: seat.numero,
+            fila: seat.fila,
+            zonaId: null,
+            estado: 'available',
+            shape: seatShape,
+            tenant_id: salaId,
+            color: '#48BB78'
+          });
+        });
+      }
+    }
+
+    return templateElements;
+  };
+
+  // Función para crear template de festival (entrada general)
+  const createFestivalTemplate = () => {
+    const templateElements = [];
+    const startX = 100;
+    const startY = 100;
+    
+    // Crear áreas de entrada general
+    const areas = [
+      { name: 'Área Principal', x: startX, y: startY, width: 300, height: 200, color: '#4ECDC4' },
+      { name: 'Área VIP', x: startX + 350, y: startY, width: 150, height: 150, color: '#FFD700' },
+      { name: 'Bar', x: startX, y: startY + 250, width: 100, height: 80, color: '#FF6B6B' },
+      { name: 'Baños', x: startX + 120, y: startY + 250, width: 80, height: 60, color: '#A0AEC0' }
+    ];
+
+    areas.forEach((area, index) => {
+      templateElements.push({
+        id: `area-${index}`,
+        type: 'shape',
+        x: area.x,
+        y: area.y,
+        width: area.width,
+        height: area.height,
+        fill: area.color,
+        stroke: '#000',
+        strokeWidth: 2,
+        tenant_id: salaId,
+        name: area.name
+      });
+
+      // Agregar etiqueta
+      templateElements.push({
+        id: `label-${index}`,
+        type: 'text',
+        x: area.x + area.width / 2 - 30,
+        y: area.y + area.height / 2 - 10,
+        text: area.name,
+        fontSize: 14,
+        fill: '#000',
+        fontStyle: 'bold',
+        tenant_id: salaId
+      });
+    });
+
+    // Agregar escenario principal
+    templateElements.push({
+      id: 'stage',
+      type: 'shape',
+      x: startX + 150,
+      y: startY - 80,
+      width: 200,
+      height: 40,
+      fill: '#2C3E50',
+      stroke: '#34495E',
+      strokeWidth: 3,
+      tenant_id: salaId,
+      name: 'Escenario Principal'
+    });
+
+    return templateElements;
+  };
+
+  // Función para obtener el nombre de visualización del tipo
+  const getTypeDisplayName = (type) => {
+    const names = {
+      'ROWS_WITH_SECTIONS': 'Stadium con secciones',
+      'ROWS_WITHOUT_SECTIONS': 'Teatro sin secciones',
+      'MIXED': 'Diseño mixto',
+      'TABLES': 'Restaurante con mesas',
+      'GENERAL_ADMISSION': 'Festival de entrada general'
+    };
+    return names[type] || 'Stadium';
+  };
+
+  // Funciones para manejar la selección de tipo
+  const handleTypeSelect = (type) => {
+    setSelectedSeatmapType(type);
+    createTemplateByType(type);
+  };
+
+  const handleTypeSelectorCancel = () => {
+    setShowTypeSelector(false);
+    // Si no hay datos, redirigir o mostrar mensaje
+    if (!hasMapData) {
+      message.warning('Debes seleccionar un tipo de plano para continuar');
+      setShowTypeSelector(true);
+    }
   };
 
   // Funciones de herramientas
@@ -1019,9 +1295,9 @@ const CrearMapa = ({ salaId }) => {
             </Button>
             <Button 
               style={{ width: '100%', marginBottom: '0.5rem' }}
-              onClick={createStadiumTemplate}
+              onClick={() => setShowTypeSelector(true)}
             >
-              🏟️ Template Stadium
+              🏟️ Cambiar Tipo de Plano
             </Button>
             <Button 
               danger
@@ -1168,6 +1444,13 @@ const CrearMapa = ({ salaId }) => {
           </div>
         </div>
       </div>
+
+      {/* Modal selector de tipos de plano */}
+      <SeatmapTypeSelector
+        visible={showTypeSelector}
+        onSelect={handleTypeSelect}
+        onCancel={handleTypeSelectorCancel}
+      />
     </div>
   );
 };
