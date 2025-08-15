@@ -44,6 +44,13 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
   const [locator, setLocator] = useState('');
   const [emailToSend, setEmailToSend] = useState('');
 
+  // Set email automatically when selectedClient changes
+  useEffect(() => {
+    if (selectedClient?.email) {
+      setEmailToSend(selectedClient.email);
+    }
+  }, [selectedClient]);
+
   const existingPaymentId = carrito?.[0]?.paymentId;
   const existingLocator = carrito?.[0]?.locator;
 
@@ -452,7 +459,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
         </div>
       </Modal>
       <Modal
-        title="Confirmación"
+        title="Confirmación de Pago"
         open={showConfirmation}
         onCancel={() => setShowConfirmation(false)}
         footer={[
@@ -463,36 +470,83 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
             ? [
                 <Button
                   key="email"
-                  type="default"
-                  variant="outlined"
-                  block
+                  type="primary"
                   onClick={handleEmailTicket}
                   disabled={!emailToSend}
+                  style={{ marginRight: '8px' }}
                 >
-                  Enviar por correo
+                  📧 Enviar Ticket por Email
                 </Button>,
                 <Button
                   key="download"
                   type="default"
-                  variant="outlined"
-                  block
                   onClick={handleDownloadTicket}
                   disabled={!locator}
                 >
-                  Descargar Ticket
+                  📄 Descargar Ticket
                 </Button>
               ]
             : [])
         ]}
       >
         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-          <h2>Localizador: {locator}</h2>
-          <Input
-            placeholder="Correo electrónico"
-            value={emailToSend}
-            onChange={(e) => setEmailToSend(e.target.value)}
-            style={{ marginTop: '20px' }}
-          />
+          <div style={{ 
+            background: '#f0f8ff', 
+            padding: '20px', 
+            borderRadius: '8px', 
+            marginBottom: '20px',
+            border: '1px solid #d1ecf1'
+          }}>
+            <h2 style={{ color: '#0c5460', marginBottom: '10px' }}>
+              ✅ Pago Completado Exitosamente
+            </h2>
+            <p style={{ fontSize: '16px', color: '#0c5460', marginBottom: '15px' }}>
+              Localizador: <strong>{locator}</strong>
+            </p>
+            
+            {selectedClient && (
+              <div style={{ 
+                background: 'white', 
+                padding: '15px', 
+                borderRadius: '6px', 
+                marginBottom: '15px',
+                border: '1px solid #bee5eb'
+              }}>
+                <h4 style={{ color: '#0c5460', marginBottom: '10px' }}>Cliente:</h4>
+                <p style={{ margin: '5px 0' }}>
+                  <strong>Nombre:</strong> {selectedClient.nombre} {selectedClient.apellido}
+                </p>
+                <p style={{ margin: '5px 0' }}>
+                  <strong>Email:</strong> {selectedClient.email || 'No disponible'}
+                </p>
+                {selectedClient.telefono && (
+                  <p style={{ margin: '5px 0' }}>
+                    <strong>Teléfono:</strong> {selectedClient.telefono}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div style={{ 
+              background: 'white', 
+              padding: '15px', 
+              borderRadius: '6px',
+              border: '1px solid #bee5eb'
+            }}>
+              <h4 style={{ color: '#0c5460', marginBottom: '10px' }}>Enviar Ticket por Email:</h4>
+              <Input
+                placeholder="Correo electrónico para envío"
+                value={emailToSend}
+                onChange={(e) => setEmailToSend(e.target.value)}
+                style={{ marginBottom: '10px' }}
+                size="large"
+                prefix="📧"
+              />
+              <p style={{ fontSize: '12px', color: '#6c757d', margin: '0' }}>
+                El ticket será enviado a este correo electrónico
+              </p>
+            </div>
+          </div>
         </div>
       </Modal>
     </>

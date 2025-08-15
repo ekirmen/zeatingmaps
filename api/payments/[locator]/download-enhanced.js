@@ -7,28 +7,9 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.
 
 const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-console.log('Environment variables check:');
-console.log('- SUPABASE_URL:', process.env.SUPABASE_URL ? 'defined' : 'undefined');
-console.log('- REACT_APP_SUPABASE_URL:', process.env.REACT_APP_SUPABASE_URL ? 'defined' : 'undefined');
-console.log('- SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'defined' : 'undefined');
-console.log('- REACT_APP_SUPABASE_SERVICE_ROLE_KEY:', process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ? 'defined' : 'undefined');
-console.log('Final values:');
-console.log('- supabaseUrl:', supabaseUrl ? 'defined' : 'undefined');
-console.log('- supabaseServiceKey:', supabaseServiceKey ? 'defined' : 'undefined');
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Supabase environment variables are not defined');
-}
-
 export default async function handler(req, res) {
-  console.log('Download endpoint called with method:', req.method);
-  console.log('Query params:', req.query);
-  console.log('Headers:', req.headers);
+  console.log('Enhanced Download endpoint called with method:', req.method);
   
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('Missing Supabase environment variables');
-    return res.status(500).json({ error: 'Server configuration error' });
-  }
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });
@@ -48,7 +29,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Verify the user token using the access token (tolerante a mocks)
+    // Verify the user token
     const userResp = await supabaseAdmin?.auth?.getUser?.(token);
     const user = userResp?.data?.user || null;
     const userError = userResp?.error || null;
@@ -57,7 +38,7 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
-    // Get comprehensive payment data with event, venue, and function details
+    // Get comprehensive payment data with images
     console.log('Searching for payment with locator:', locator);
     const { data: payment, error } = await supabaseAdmin
       .from('payments')
@@ -68,8 +49,10 @@ export default async function handler(req, res) {
           evento:eventos(
             *,
             recinto:recintos(
-              *
-            )
+              *,
+              imagenes:recinto_imagenes(*)
+            ),
+            imagenes:evento_imagenes(*)
           )
         ),
         seats:zeatingmaps(
@@ -120,20 +103,50 @@ export default async function handler(req, res) {
     const { width, height } = page.getSize();
 
     // --- HEADER CON IMAGEN DEL EVENTO ---
-    const headerHeight = 120;
+    const headerHeight = 150;
     
-    // Fondo del header
+    // Fondo del header con gradiente
     page.drawRectangle({
       x: 0,
       y: height - headerHeight,
       width: width,
       height: headerHeight,
-      color: rgb(0.1, 0.1, 0.3)
+      color: rgb(0.1, 0.1, 0.4)
     });
 
+    // Imagen del evento (si existe)
+    let eventImage = null;
+    if (payment.funcion?.evento?.imagenes && payment.funcion.evento.imagenes.length > 0) {
+      try {
+        const imageUrl = payment.funcion.evento.imagenes[0].url;
+        if (imageUrl) {
+          const imageResponse = await fetch(imageUrl);
+          if (imageResponse.ok) {
+            const imageBuffer = await imageResponse.arrayBuffer();
+            eventImage = await pdfDoc.embedJpg(imageBuffer);
+          }
+        }
+      } catch (imgError) {
+        console.log('Could not load event image:', imgError);
+      }
+    }
+
+    // Si hay imagen del evento, mostrarla
+    if (eventImage) {
+      const imgWidth = 200;
+      const imgHeight = 120;
+      page.drawImage(eventImage, {
+        x: 50,
+        y: height - headerHeight + 15,
+        width: imgWidth,
+        height: imgHeight,
+      });
+    }
+
     // Título principal
+    const titleX = eventImage ? 270 : 50;
     page.drawText('TICKET DE ENTRADA', {
-      x: 50,
+      x: titleX,
       y: height - 50,
       size: 28,
       font: helveticaBold,
@@ -142,7 +155,7 @@ export default async function handler(req, res) {
 
     // Subtítulo
     page.drawText('Evento Especial', {
-      x: 50,
+      x: titleX,
       y: height - 80,
       size: 16,
       font: helveticaFont,
@@ -218,20 +231,50 @@ export default async function handler(req, res) {
 
     y -= 120;
 
-    // --- INFORMACIÓN DEL RECINTO ---
+    // --- INFORMACIÓN DEL RECINTO CON IMAGEN ---
     if (payment.funcion?.evento?.recinto) {
       const recinto = payment.funcion.evento.recinto;
+      const recintoHeight = 100;
       
       page.drawRectangle({
         x: 30,
-        y: y - 60,
+        y: y - recintoHeight,
         width: width - 60,
-        height: 60,
+        height: recintoHeight,
         color: rgb(0.9, 0.95, 1)
       });
 
+      // Imagen del recinto (si existe)
+      let venueImage = null;
+      if (recinto.imagenes && recinto.imagenes.length > 0) {
+        try {
+          const imageUrl = recinto.imagenes[0].url;
+          if (imageUrl) {
+            const imageResponse = await fetch(imageUrl);
+            if (imageResponse.ok) {
+              const imageBuffer = await imageResponse.arrayBuffer();
+              venueImage = await pdfDoc.embedJpg(imageBuffer);
+            }
+          }
+        } catch (imgError) {
+          console.log('Could not load venue image:', imgError);
+        }
+      }
+
+      // Si hay imagen del recinto, mostrarla
+      if (venueImage) {
+        const imgWidth = 120;
+        const imgHeight = 80;
+        page.drawImage(venueImage, {
+          x: 50,
+          y: y - recintoHeight + 10,
+          width: imgWidth,
+          height: imgHeight,
+        });
+      }
+
       page.drawText('📍 UBICACIÓN', {
-        x: 50,
+        x: venueImage ? 190 : 50,
         y: y - 20,
         size: 16,
         font: helveticaBold,
@@ -239,7 +282,7 @@ export default async function handler(req, res) {
       });
 
       page.drawText(`🏛️ ${recinto.nombre || 'Recinto'}`, {
-        x: 60,
+        x: venueImage ? 200 : 60,
         y: y - 40,
         size: 12,
         font: helveticaFont,
@@ -248,7 +291,7 @@ export default async function handler(req, res) {
 
       if (recinto.direccion) {
         page.drawText(`📍 ${recinto.direccion}`, {
-          x: 60,
+          x: venueImage ? 200 : 60,
           y: y - 55,
           size: 11,
           font: helveticaFont,
@@ -256,7 +299,17 @@ export default async function handler(req, res) {
         });
       }
 
-      y -= 80;
+      if (recinto.telefono) {
+        page.drawText(`📞 ${recinto.telefono}`, {
+          x: venueImage ? 200 : 60,
+          y: y - 70,
+          size: 11,
+          font: helveticaFont,
+          color: rgb(0.3, 0.3, 0.3)
+        });
+      }
+
+      y -= recintoHeight + 20;
     }
 
     // --- DETALLES DEL TICKET ---
@@ -494,10 +547,10 @@ export default async function handler(req, res) {
     const pdfBytes = await pdfDoc.save();
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="ticket-${locator}.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="ticket-${locator}-enhanced.pdf"`);
     return res.status(200).send(Buffer.from(pdfBytes));
   } catch (err) {
-    console.error('Error generating ticket:', err);
+    console.error('Error generating enhanced ticket:', err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
