@@ -173,6 +173,82 @@ const CrearMapa = () => {
     loadZonas();
   }, [salaId]);
 
+  // Cargar mapa al iniciar
+  useEffect(() => {
+    if (salaId) {
+      loadMapa();
+    }
+  }, [salaId, loadMapa]);
+
+  // Agregar elementos de prueba si no hay ninguno
+  useEffect(() => {
+    if (elements.length === 0 && salaId) {
+      // Agregar una mesa de prueba
+      const mesaPrueba = {
+        id: 'mesa-1',
+        type: 'mesa',
+        x: 200,
+        y: 200,
+        width: 120,
+        height: 80,
+        nombre: 'Mesa 1',
+        zonaId: null,
+        sillas: [
+          {
+            id: 'silla-1',
+            type: 'silla',
+            x: 10,
+            y: 10,
+            width: 20,
+            height: 20,
+            numero: 1,
+            fila: 'A',
+            zonaId: null,
+            estado: 'available'
+          },
+          {
+            id: 'silla-2',
+            type: 'silla',
+            x: 35,
+            y: 10,
+            width: 20,
+            height: 20,
+            numero: 2,
+            fila: 'A',
+            zonaId: null,
+            estado: 'available'
+          },
+          {
+            id: 'silla-3',
+            type: 'silla',
+            x: 10,
+            y: 35,
+            width: 20,
+            height: 20,
+            numero: 3,
+            fila: 'B',
+            zonaId: null,
+            estado: 'available'
+          },
+          {
+            id: 'silla-4',
+            type: 'silla',
+            x: 35,
+            y: 35,
+            width: 20,
+            height: 20,
+            numero: 4,
+            fila: 'B',
+            zonaId: null,
+            estado: 'available'
+          }
+        ]
+      };
+      
+      setElements([mesaPrueba]);
+    }
+  }, [elements.length, salaId, setElements]);
+
   const handleSyncSeats = async () => {
     setSyncLoading(true);
     try {
@@ -184,6 +260,96 @@ const CrearMapa = () => {
     } finally {
       setSyncLoading(false);
     }
+  };
+
+  // Funciones para los botones del menú
+  const handleCrearMesa = () => {
+    const nuevaMesa = {
+      id: `mesa-${Date.now()}`,
+      type: 'mesa',
+      x: 300 + Math.random() * 100,
+      y: 300 + Math.random() * 100,
+      width: 120,
+      height: 80,
+      nombre: `Mesa ${elements.filter(e => e.type === 'mesa').length + 1}`,
+      zonaId: null,
+      sillas: []
+    };
+    setElements([...elements, nuevaMesa]);
+    message.success('Mesa creada correctamente');
+  };
+
+  const handleCrearSeccion = () => {
+    setActiveMode('section');
+    setIsCreatingSection(true);
+    message.info('Haz clic en el mapa para crear puntos de sección');
+  };
+
+  const handleCrearFilaAsientos = () => {
+    const nuevaFila = {
+      id: `fila-${Date.now()}`,
+      type: 'fila',
+      x: 100,
+      y: 100,
+      asientos: 6,
+      fila: 'A',
+      zonaId: null
+    };
+    // Aquí se implementaría la lógica para crear una fila de asientos
+    message.info('Funcionalidad de fila de asientos en desarrollo');
+  };
+
+  const handleCrearAsiento = () => {
+    const nuevoAsiento = {
+      id: `silla-${Date.now()}`,
+      type: 'silla',
+      x: 150 + Math.random() * 200,
+      y: 150 + Math.random() * 200,
+      width: 20,
+      height: 20,
+      numero: elements.filter(e => e.type === 'silla').length + 1,
+      fila: 'A',
+      zonaId: null,
+      estado: 'available'
+    };
+    setElements([...elements, nuevoAsiento]);
+    message.success('Asiento creado correctamente');
+  };
+
+  const handleGuardarMapa = async () => {
+    try {
+      await saveMapa();
+      message.success('Mapa guardado correctamente');
+    } catch (error) {
+      message.error('Error guardando el mapa: ' + error.message);
+    }
+  };
+
+  const handleLimpiarSeccion = () => {
+    setSectionPoints([]);
+    setIsCreatingSection(false);
+    setActiveMode('select');
+    message.info('Puntos de sección limpiados');
+  };
+
+  const handleEliminarSeleccionados = () => {
+    if (selectedIds.length === 0) {
+      message.warning('No hay elementos seleccionados');
+      return;
+    }
+    const nuevosElementos = elements.filter(element => !selectedIds.includes(element.id));
+    setElements(nuevosElementos);
+    setSelectedIds([]);
+    message.success(`${selectedIds.length} elemento(s) eliminado(s)`);
+  };
+
+  const handleLimpiarTodo = () => {
+    setElements([]);
+    setSelectedIds([]);
+    setSectionPoints([]);
+    setIsCreatingSection(false);
+    setActiveMode('select');
+    message.success('Mapa limpiado completamente');
   };
 
   // Renderizado simplificado de controles superiores
@@ -202,9 +368,30 @@ const CrearMapa = () => {
         Sincronizar seats
       </Button>
       <Button 
-        onClick={() => addMesa()}
+        onClick={handleCrearMesa}
       >
         Crear Mesa Prueba
+      </Button>
+      <Button 
+        type="primary"
+        onClick={handleGuardarMapa}
+        loading={isSaving}
+      >
+        💾 Guardar
+      </Button>
+      <Button 
+        danger
+        onClick={handleEliminarSeleccionados}
+        disabled={selectedIds.length === 0}
+      >
+        🗑️ Eliminar ({selectedIds.length})
+      </Button>
+      <Button 
+        danger
+        onClick={handleLimpiarTodo}
+        disabled={elements.length === 0}
+      >
+        🧹 Limpiar Todo
       </Button>
       <Button 
         onClick={() => setShowAdvancedControls(true)}
@@ -334,7 +521,18 @@ const CrearMapa = () => {
 
   const handleStageClick = (e) => {
     if (e.target === e.target.getStage()) {
-      clearSelection();
+      if (activeMode === 'section' && isCreatingSection) {
+        const stage = e.target.getStage();
+        const pointer = stage.getPointerPosition();
+        const newPoint = {
+          x: pointer.x,
+          y: pointer.y
+        };
+        setSectionPoints([...sectionPoints, newPoint]);
+        message.success(`Punto de sección agregado: ${sectionPoints.length + 1}`);
+      } else {
+        clearSelection();
+      }
     }
   };
 
@@ -356,6 +554,17 @@ const CrearMapa = () => {
             <div className="info-item" id="numberOfUnlabeledTables">
               <span className="info-count">1</span> Mesas sin numeración
             </div>
+            <div className="info-item">
+              <span className="info-count">{selectedIds.length}</span> Elementos seleccionados
+            </div>
+            <div className="info-item">
+              <span className="info-count">{elements.length}</span> Elementos totales
+            </div>
+            {sectionPoints.length > 0 && (
+              <div className="info-item">
+                <span className="info-count">{sectionPoints.length}</span> Puntos de sección
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -419,9 +628,14 @@ const CrearMapa = () => {
                 </svg>
               </button>
               <div className="section-content">
-                <button className="section-button">
+                <button className="section-button" onClick={handleCrearSeccion}>
                   📐 Crear Sección
                 </button>
+                {sectionPoints.length > 0 && (
+                  <button className="section-button" onClick={handleLimpiarSeccion} style={{ marginTop: '0.5rem', backgroundColor: '#f56565', color: 'white' }}>
+                    🗑️ Limpiar Sección ({sectionPoints.length})
+                  </button>
+                )}
                 <p className="section-help">Haz clic en el mapa para crear puntos de sección</p>
               </div>
             </div>
@@ -434,6 +648,12 @@ const CrearMapa = () => {
                   <path d="m6 9 6 6 6-6"></path>
                 </svg>
               </button>
+              <div className="section-content">
+                <button className="section-button" onClick={handleCrearFilaAsientos}>
+                  🪑 Crear Fila de Asientos
+                </button>
+                <p className="section-help">Crea una fila de asientos numerados</p>
+              </div>
             </div>
 
             {/* Zonas No Numeradas */}
@@ -444,6 +664,12 @@ const CrearMapa = () => {
                   <path d="m6 9 6 6 6-6"></path>
                 </svg>
               </button>
+              <div className="section-content">
+                <button className="section-button" onClick={handleCrearAsiento}>
+                  🪑 Crear Asiento Individual
+                </button>
+                <p className="section-help">Crea un asiento individual en el mapa</p>
+              </div>
             </div>
 
             {/* Mesas */}
