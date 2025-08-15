@@ -43,33 +43,19 @@ const CrearMapa = () => {
     activeMode, setActiveMode,
     sectionPoints, setSectionPoints,
     isCreatingSection, setIsCreatingSection,
+    
+    // Estados de fila de asientos
+    isCreatingSeatRow, setIsCreatingSeatRow,
+    seatRowStart, setSeatRowStart,
+    seatRowDirection, setSeatRowDirection,
+    
+    // Estados de paneo
     isPanning, setIsPanning,
     stagePosition, setStagePosition,
     hasUnsavedChanges, setHasUnsavedChanges,
     isLoading, setIsLoading,
     isSaving, setIsSaving,
     uploadProgress, setUploadProgress,
-    
-    // Nuevos estados de escalado
-    selectedScale, setSelectedScale,
-    showScaleControls, setShowScaleControls,
-    scaleSystem,
-    
-    // Nuevos estados de asientos
-    selectedSeatState, setSelectedSeatState,
-    seatStates,
-    
-    // Nuevos estados de conexiones
-    showConnections, setShowConnections,
-    connectionStyle, setConnectionStyle,
-    connectionThreshold, setConnectionThreshold,
-    
-    // Nuevos estados de fondo
-    backgroundImage, setBackgroundImage,
-    backgroundScale, setBackgroundScale,
-    backgroundOpacity, setBackgroundOpacity,
-    showBackgroundInWeb, setShowBackgroundInWeb,
-    backgroundSystem,
     
     // Funciones básicas
     addMesa,
@@ -82,48 +68,6 @@ const CrearMapa = () => {
     limpiarSillasDuplicadas,
     snapToGrid,
     assignZoneToSelected,
-    
-    // Nuevas funciones de escalado
-    scaleElement,
-    scaleSelectedElements,
-    
-    // Nuevas funciones de estados de asientos
-    changeSeatState,
-    changeSelectedSeatsState,
-    changeMesaSeatsState,
-    
-    // Nuevas funciones de conexiones
-    autoConnectSeats,
-    createManualConnection,
-    removeConnections,
-    changeConnectionStyle,
-    
-    // Nuevas funciones de coordenadas precisas
-    precisePositioning,
-    snapToCustomGrid,
-    
-    // Nuevas funciones de fondo
-    setBackgroundImage: handleSetBackgroundImage,
-    updateBackground: handleUpdateBackground,
-    removeBackground: handleRemoveBackground,
-    
-    // Funciones de elementos gráficos
-    addTextElement,
-    addRectangleElement,
-    addEllipseElement,
-    addLineElement,
-    addChairRow,
-    addSeccion,
-    
-    // Funciones de selección
-    selectMultipleElements,
-    clearSelection,
-    
-    // Funciones de zonas
-    addZone,
-    updateZone,
-    deleteZone,
-    toggleZoneVisibility,
     
     // Funciones de zoom y stage
     handleZoom,
@@ -140,12 +84,18 @@ const CrearMapa = () => {
     handleSectionClick,
     limpiarSeleccion,
     
+    // Funciones de fila de asientos
+    iniciarFilaAsientos,
+    actualizarFilaAsientos,
+    finalizarFilaAsientos,
+    añadirSillasAFila,
+    handleSeatRowSelect,
+    
     // Funciones de paneo
     handlePanStart,
     handlePanMove,
     handlePanEnd,
     
-
   } = useCrearMapa();
 
   const { getSeatColor, getZonaColor, getBorderColor } = useSeatColors();
@@ -195,7 +145,7 @@ const CrearMapa = () => {
       // Selección normal
       const clickedOnEmpty = e.target === e.target.getStage();
       if (clickedOnEmpty) {
-        clearSelection();
+        limpiarSeleccion();
       }
     }
   };
@@ -205,10 +155,24 @@ const CrearMapa = () => {
     
     if (e.evt.ctrlKey || e.evt.metaKey) {
       // Selección múltiple con Ctrl/Cmd
-      selectMultipleElements(elementId);
+      // Implementar selección múltiple si es necesario
+      selectElement(elementId);
     } else {
       // Selección simple
       selectElement(elementId);
+    }
+    
+    // Si es una silla de una fila, mostrar el tooltip
+    const element = elements.find(el => el._id === elementId);
+    if (element && element.type === 'silla' && element.esFila) {
+      // Buscar la primera silla de la fila para mostrar el tooltip
+      const primeraSilla = elements.find(el => 
+        el.type === 'silla' && el.filaId === element.filaId
+      );
+      if (primeraSilla) {
+        // Pasar la información al MenuMapa para mostrar el tooltip
+        // Esto se manejará a través del selectedElement
+      }
     }
   };
 
@@ -226,8 +190,8 @@ const CrearMapa = () => {
     if (element) {
       const newPos = e.target.position();
       updateElementProperty(elementId, 'posicion', {
-        x: precisePositioning.round(newPos.x),
-        y: precisePositioning.round(newPos.y)
+        x: Math.round(newPos.x),
+        y: Math.round(newPos.y)
       });
     }
   };
@@ -249,7 +213,6 @@ const CrearMapa = () => {
               onDoubleClick={(e) => handleElementDoubleClick(element._id, e)}
               onDragEnd={(e) => handleElementDragEnd(element._id, e)}
               draggable={activeMode === 'select'}
-              scale={element.scale || 1}
             />
           );
           
@@ -262,63 +225,6 @@ const CrearMapa = () => {
               onClick={(e) => handleElementClick(element._id, e)}
               onDragEnd={(e) => handleElementDragEnd(element._id, e)}
               draggable={activeMode === 'select'}
-              scale={element.scale || 1}
-              fill={element.fill || seatStates.available.fill}
-              stroke={element.stroke || seatStates.available.stroke}
-              opacity={element.opacity || seatStates.available.opacity}
-            />
-          );
-          
-        case 'conexion':
-          if (!showConnections) return null;
-          
-          const startSeat = elements.find(el => el._id === element.startSeatId);
-          const endSeat = elements.find(el => el._id === element.endSeatId);
-          
-          if (!startSeat || !endSeat) return null;
-          
-          return (
-            <Line
-              key={element._id}
-              points={[
-                startSeat.posicion.x + (startSeat.width || 20) / 2,
-                startSeat.posicion.y + (startSeat.height || 20) / 2,
-                endSeat.posicion.x + (endSeat.width || 20) / 2,
-                endSeat.posicion.y + (endSeat.height || 20) / 2
-              ]}
-              stroke={element.stroke}
-              strokeWidth={element.strokeWidth}
-              opacity={element.opacity}
-              dash={element.dash}
-            />
-          );
-          
-        case 'background':
-          if (!element.showInEditor) return null;
-          
-          return (
-            <Image
-              key={element._id}
-              image={element.imageUrl}
-              x={element.position.x}
-              y={element.position.y}
-              scaleX={element.scale}
-              scaleY={element.scale}
-              opacity={element.opacity}
-              listening={false}
-            />
-          );
-          
-        case 'seccion':
-          return (
-            <Line
-              key={element._id}
-              points={element.points.flatMap(p => [p.x, p.y])}
-              fill={element.fill}
-              stroke={element.stroke}
-              strokeWidth={element.strokeWidth}
-              closed={true}
-              opacity={0.3}
             />
           );
           
@@ -388,7 +294,7 @@ const CrearMapa = () => {
           return null;
       }
     });
-  }, [elements, selectedIds, activeMode, showConnections, seatStates, precisePositioning]);
+  }, [elements, selectedIds, activeMode]);
 
   // ===== RENDERIZADO DE PUNTOS DE SECCIÓN =====
   
@@ -427,18 +333,14 @@ const CrearMapa = () => {
   // ===== RENDERIZADO DE CUADRÍCULA =====
   
   const renderGrid = useMemo(() => {
-    if (!showScaleControls) return null;
-    
     return (
       <Grid
         size={20}
         scale={zoom}
         stagePosition={stagePosition}
-        showScale={true}
-        scaleSystem={scaleSystem}
       />
     );
-  }, [showScaleControls, zoom, stagePosition, scaleSystem]);
+  }, [zoom, stagePosition]);
 
   // ===== RENDERIZADO DE ZONAS =====
   
@@ -450,10 +352,10 @@ const CrearMapa = () => {
         zones={zones}
         selectedZone={selectedZone}
         onZoneSelect={setSelectedZone}
-        onZoneToggle={toggleZoneVisibility}
+        onZoneToggle={() => {}} // Implementar si es necesario
       />
     );
-  }, [showZones, zones, selectedZone, toggleZoneVisibility]);
+  }, [showZones, zones, selectedZone]);
 
   // ===== RENDERIZADO DE CONTROLES SUPERIORES =====
   
@@ -597,7 +499,7 @@ const CrearMapa = () => {
         setSalaInfo(salaData);
         
         // Cargar mapa existente
-        await loadMapa();
+        await loadMapa(salaId, setElements, setZones);
         
       } catch (error) {
         console.error('Error cargando datos:', error);
@@ -621,7 +523,7 @@ const CrearMapa = () => {
       message.success('Asientos sincronizados correctamente');
       
       // Recargar mapa después de sincronización
-      await loadMapa();
+      await loadMapa(salaId, setElements, setZones);
       
     } catch (error) {
       console.error('Error sincronizando asientos:', error);
@@ -645,27 +547,6 @@ const CrearMapa = () => {
         numSillas={numSillas}
         sillaShape={sillaShape}
         
-        // Nuevos estados de escalado
-        selectedScale={selectedScale}
-        showScaleControls={showScaleControls}
-        scaleSystem={scaleSystem}
-        
-        // Nuevos estados de asientos
-        selectedSeatState={selectedSeatState}
-        seatStates={seatStates}
-        
-        // Nuevos estados de conexiones
-        showConnections={showConnections}
-        connectionStyle={connectionStyle}
-        connectionThreshold={connectionThreshold}
-        
-        // Nuevos estados de fondo
-        backgroundImage={backgroundImage}
-        backgroundScale={backgroundScale}
-        backgroundOpacity={backgroundOpacity}
-        showBackgroundInWeb={showBackgroundInWeb}
-        backgroundSystem={backgroundSystem}
-        
         // Funciones básicas
         updateElementProperty={updateElementProperty}
         updateElementSize={updateElementSize}
@@ -674,30 +555,11 @@ const CrearMapa = () => {
         limpiarSeleccion={limpiarSeleccion}
         assignZoneToSelected={assignZoneToSelected}
         
-        // Nuevas funciones de escalado
-        scaleElement={scaleElement}
-        scaleSelectedElements={scaleSelectedElements}
-        
-                 // Nuevas funciones de estados de asientos
-         changeSeatState={changeSeatState}
-         changeSelectedSeatsState={changeSelectedSeatsState}
-         changeMesaSeatsState={changeMesaSeatsState}
-         setSelectedSeatState={setSelectedSeatState}
-        
-        // Nuevas funciones de conexiones
-        autoConnectSeats={autoConnectSeats}
-        createManualConnection={createManualConnection}
-        removeConnections={removeConnections}
-        changeConnectionStyle={changeConnectionStyle}
-        
-        // Nuevas funciones de coordenadas precisas
-        precisePositioning={precisePositioning}
-        snapToCustomGrid={snapToCustomGrid}
-        
-        // Nuevas funciones de fondo
-        setBackgroundImage={handleSetBackgroundImage}
-        updateBackground={handleUpdateBackground}
-        removeBackground={handleRemoveBackground}
+        // Funciones de fila de asientos
+        iniciarFilaAsientos={iniciarFilaAsientos}
+        actualizarFilaAsientos={actualizarFilaAsientos}
+        finalizarFilaAsientos={finalizarFilaAsientos}
+        añadirSillasAFila={añadirSillasAFila}
         
         // Funciones existentes
         addMesa={addMesa}
@@ -706,6 +568,16 @@ const CrearMapa = () => {
         setActiveMode={setActiveMode}
         setNumSillas={setNumSillas}
         setSillaShape={setSillaShape}
+        
+        // Funciones para el tooltip
+        setElements={setElements}
+        handleSeatRowSelect={handleSeatRowSelect}
+        
+        // Elementos del mapa
+        elements={elements}
+        
+        // Dirección de fila de asientos
+        seatRowDirection={seatRowDirection}
       />
 
       {/* Área principal del mapa */}
@@ -784,7 +656,7 @@ const CrearMapa = () => {
         
         {addingChairRow && (
           <FilaPopup
-            onAdd={addChairRow}
+            onAdd={() => {}} // Implementar si es necesario
             onClose={() => setAddingChairRow(false)}
             startPoint={rowStart}
           />

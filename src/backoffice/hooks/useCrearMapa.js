@@ -8,7 +8,6 @@ import { useMapaElements } from './useMapaElements';
 import { useMapaSelection } from './useMapaSelection';
 import { useMapaZones } from './usemapazones';
 import { useMapaZoomStage } from './useMapaZoomStage';
-import { useMapaGraphicalElements } from './useMapaGraphicalElements';
 import { fetchZonasPorSala } from '../services/apibackoffice';
 import { useTenant } from '../../contexts/TenantContext';
 
@@ -27,27 +26,15 @@ export const useCrearMapa = () => {
   const [sectionPoints, setSectionPoints] = useState([]);
   const [isCreatingSection, setIsCreatingSection] = useState(false);
   
+  // Estado para filas de asientos
+  const [isCreatingSeatRow, setIsCreatingSeatRow] = useState(false);
+  const [seatRowStart, setSeatRowStart] = useState(null);
+  const [seatRowDirection, setSeatRowDirection] = useState('horizontal'); // 'horizontal' o 'vertical'
+  
   // Estado para paneo
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
-
-  // Estado para escalado
-  const [selectedScale, setSelectedScale] = useState(1.0);
-  const [showScaleControls, setShowScaleControls] = useState(false);
-
-  // Estado para estados de asientos
-  const [selectedSeatState, setSelectedSeatState] = useState('available');
-
-  // Estado para conexiones
-  const [showConnections, setShowConnections] = useState(true);
-  const [connectionStyle, setConnectionStyle] = useState('dashed');
-
-  // Estado para fondo
-  const [backgroundImage, setBackgroundImage] = useState(null);
-  const [backgroundScale, setBackgroundScale] = useState(1.0);
-  const [backgroundOpacity, setBackgroundOpacity] = useState(0.3);
-  const [showBackgroundInWeb, setShowBackgroundInWeb] = useState(true);
 
   // Estado global
   const {
@@ -85,31 +72,9 @@ export const useCrearMapa = () => {
     updateElementProperty: baseUpdateElementProperty,
     updateElementSize: baseUpdateElementSize,
     deleteSelectedElements,
-         limpiarSillasDuplicadas: handleLimpiarSillasDuplicadas,
+    limpiarSillasDuplicadas: handleLimpiarSillasDuplicadas,
     snapToGrid,
-         assignZoneToSelected: handleAssignZoneToSelected,
-    
-    // Nuevas funciones de escalado
-    scaleElement,
-    scaleSystem,
-    
-    // Nuevas funciones de estados de asientos
-    changeSeatState,
-    seatStates,
-    
-    // Nuevas funciones de conexiones
-    autoConnectSeats,
-    connectionThreshold,
-    
-    // Nuevas funciones de coordenadas precisas
-    precisePositioning,
-    snapToCustomGrid,
-    
-    // Nuevas funciones de fondo
-    setBackgroundImage: baseSetBackgroundImage,
-    updateBackground,
-    removeBackground,
-    backgroundSystem
+    assignZoneToSelected: handleAssignZoneToSelected,
   } = useMapaElements(elements, setElements, selectedIds, selectedZone, numSillas);
 
   // Wrappers to keep selectedElement in sync when editing properties or size
@@ -127,24 +92,9 @@ export const useCrearMapa = () => {
     }
   };
 
-  // Funciones para agregar mesa cuadrada o circular que llaman a addMesa
-  const agregarMesaCuadrada = () => addMesa('rect');
-  const agregarMesaCircular = () => addMesa('circle');
-
-  // Lógica elementos gráficos
-  const {
-    addTextElement,
-    addRectangleElement,
-    addEllipseElement,
-    addLineElement,
-    addChairRow,
-    addSeccion,
-  } = useMapaGraphicalElements(elements, setElements, selectedZone);
-
   // Lógica de selección
   const {
     selectElement,
-    selectMultipleElements,
     clearSelection,
     selectGroup,
   } = useMapaSelection(elements, selectedIds, setSelectedIds, setSelectedElement);
@@ -172,174 +122,6 @@ export const useCrearMapa = () => {
     isSaving,
     uploadProgress,
   } = useMapaLoadingSaving(elements, zones, salaId, currentTenant, setHasUnsavedChanges);
-
-  // ===== NUEVAS FUNCIONES DE ESCALADO =====
-  
-  // Función para escalar elementos seleccionados
-  const scaleSelectedElements = (scaleFactor) => {
-    if (selectedIds.length === 0) {
-      message.warning('Selecciona elementos para escalar');
-      return;
-    }
-
-    selectedIds.forEach(id => {
-      scaleElement(id, scaleFactor);
-    });
-
-    setSelectedScale(scaleFactor);
-    message.success(`Elementos escalados a ${(scaleFactor * 100).toFixed(0)}%`);
-  };
-
-  // Función para escalar elemento específico
-  const scaleElementById = (elementId, scaleFactor) => {
-    scaleElement(elementId, scaleFactor);
-    setSelectedScale(scaleFactor);
-  };
-
-  // ===== NUEVAS FUNCIONES DE ESTADOS DE ASIENTOS =====
-  
-  // Función para cambiar estado de asientos seleccionados
-  const changeSelectedSeatsState = (newState) => {
-    if (selectedIds.length === 0) {
-      message.warning('Selecciona asientos para cambiar estado');
-      return;
-    }
-
-    const asientosSeleccionados = elements.filter(el => 
-      selectedIds.includes(el._id) && el.type === 'silla'
-    );
-
-    if (asientosSeleccionados.length === 0) {
-      message.warning('Solo se pueden cambiar estados de asientos');
-      return;
-    }
-
-    asientosSeleccionados.forEach(asiento => {
-      changeSeatState(asiento._id, newState);
-    });
-
-    setSelectedSeatState(newState);
-    message.success(`${asientosSeleccionados.length} asientos cambiados a estado: ${newState}`);
-  };
-
-  // Función para cambiar estado de todos los asientos de una mesa
-  const changeMesaSeatsState = (mesaId, newState) => {
-    const sillasMesa = elements.filter(el => 
-      el.type === 'silla' && el.parentId === mesaId
-    );
-
-    if (sillasMesa.length === 0) {
-      message.warning('Esta mesa no tiene asientos');
-      return;
-    }
-
-    sillasMesa.forEach(asiento => {
-      changeSeatState(asiento._id, newState);
-    });
-
-    message.success(`${sillasMesa.length} asientos de la mesa cambiados a estado: ${newState}`);
-  };
-
-  // ===== NUEVAS FUNCIONES DE CONEXIONES =====
-  
-  // Función para crear conexiones manuales
-  const createManualConnection = (startSeatId, endSeatId) => {
-    if (startSeatId === endSeatId) {
-      message.error('No se puede conectar un asiento consigo mismo');
-      return;
-    }
-
-    const startSeat = elements.find(el => el._id === startSeatId);
-    const endSeat = elements.find(el => el._id === endSeatId);
-
-    if (!startSeat || !endSeat || startSeat.type !== 'silla' || endSeat.type !== 'silla') {
-      message.error('Solo se pueden conectar asientos');
-      return;
-    }
-
-    // Verificar si ya existe una conexión
-    const existingConnection = elements.find(el => 
-      el.type === 'conexion' && 
-      ((el.startSeatId === startSeatId && el.endSeatId === endSeatId) ||
-       (el.startSeatId === endSeatId && el.endSeatId === startSeatId))
-    );
-
-    if (existingConnection) {
-      message.warning('Ya existe una conexión entre estos asientos');
-      return;
-    }
-
-    const nuevaConexion = {
-      _id: `conexion_${Date.now()}`,
-      type: 'conexion',
-      startSeatId,
-      endSeatId,
-      stroke: '#8b93a6',
-      strokeWidth: 2,
-      opacity: 0.6,
-      dash: connectionStyle === 'dashed' ? [5, 5] : undefined
-    };
-
-    setElements(prev => [...prev, nuevaConexion]);
-    message.success('Conexión creada manualmente');
-  };
-
-  // Función para remover conexiones
-  const removeConnections = (connectionIds) => {
-    setElements(prev => prev.filter(el => 
-      !(el.type === 'conexion' && connectionIds.includes(el._id))
-    ));
-    message.success('Conexiones removidas');
-  };
-
-  // Función para cambiar estilo de conexiones
-  const changeConnectionStyle = (newStyle) => {
-    setConnectionStyle(newStyle);
-    setElements(prev => prev.map(el => {
-      if (el.type === 'conexion') {
-        return {
-          ...el,
-          dash: newStyle === 'dashed' ? [5, 5] : undefined
-        };
-      }
-      return el;
-    }));
-    message.success(`Estilo de conexiones cambiado a: ${newStyle}`);
-  };
-
-  // ===== NUEVAS FUNCIONES DE FONDO =====
-  
-  // Función para establecer imagen de fondo
-  const handleSetBackgroundImage = (imageUrl, options = {}) => {
-         const backgroundOptions = {
-       scale: backgroundScale,
-       opacity: backgroundOpacity,
-       position: { x: 0, y: 0 },
-       showInWeb: showBackgroundInWeb,
-       showInEditor: true,
-       ...options
-     };
-
-    baseSetBackgroundImage(imageUrl, backgroundOptions);
-    setBackgroundImage(imageUrl);
-  };
-
-  // Función para actualizar propiedades del fondo
-  const handleUpdateBackground = (updates) => {
-    updateBackground(updates);
-    
-    if (updates.scale !== undefined) setBackgroundScale(updates.scale);
-    if (updates.opacity !== undefined) setBackgroundOpacity(updates.opacity);
-    if (updates.showInWeb !== undefined) setShowBackgroundInWeb(updates.showInWeb);
-  };
-
-  // Función para remover imagen de fondo
-  const handleRemoveBackground = () => {
-    removeBackground();
-    setBackgroundImage(null);
-    setBackgroundScale(1.0);
-    setBackgroundOpacity(0.3);
-  };
 
   // ===== FUNCIONES EXISTENTES MANTENIDAS =====
 
@@ -398,6 +180,209 @@ export const useCrearMapa = () => {
     message.info('Modo sección activado - Haz clic para crear puntos de la sección');
   };
 
+  // Función para iniciar creación de fila de asientos
+  const iniciarFilaAsientos = (event) => {
+    const stage = event.target.getStage();
+    const point = stage.getPointerPosition();
+    
+    setIsCreatingSeatRow(true);
+    setSeatRowStart(point);
+    setActiveMode('fila-asientos');
+    
+    // Crear la primera silla
+    const primeraSilla = {
+      _id: `silla_${Date.now()}`,
+      type: 'silla',
+      posicion: { x: point.x, y: point.y },
+      width: 20,
+      height: 20,
+      fill: '#20B2AA',
+      stroke: '#008B8B',
+      strokeWidth: 1,
+      numero: 1,
+      filaId: `fila_${Date.now()}`,
+      esFila: true
+    };
+    
+    setElements(prev => [...prev, primeraSilla]);
+    message.info('Modo fila de asientos activado - Arrastra para crear más asientos');
+  };
+
+  // Función para actualizar fila de asientos durante el arrastre
+  const actualizarFilaAsientos = (event) => {
+    if (!isCreatingSeatRow || !seatRowStart) return;
+    
+    const stage = event.target.getStage();
+    const currentPoint = stage.getPointerPosition();
+    
+    // Determinar dirección (horizontal o vertical)
+    const deltaX = Math.abs(currentPoint.x - seatRowStart.x);
+    const deltaY = Math.abs(currentPoint.y - seatRowStart.y);
+    
+    if (deltaX > deltaY) {
+      setSeatRowDirection('horizontal');
+    } else {
+      setSeatRowDirection('vertical');
+    }
+    
+    // Calcular cuántas sillas necesitamos
+    const spacing = 25; // Espacio entre sillas
+    let numSillasNecesarias;
+    
+    if (seatRowDirection === 'horizontal') {
+      numSillasNecesarias = Math.floor(deltaX / spacing) + 1;
+    } else {
+      numSillasNecesarias = Math.floor(deltaY / spacing) + 1;
+    }
+    
+    // Limitar a un máximo razonable
+    numSillasNecesarias = Math.min(numSillasNecesarias, 20);
+    
+    // Obtener sillas existentes de esta fila
+    const sillasExistentes = elements.filter(el => 
+      el.type === 'silla' && el.filaId === elements[elements.length - 1]?.filaId
+    );
+    
+    // Si necesitamos más sillas, crearlas
+    if (numSillasNecesarias > sillasExistentes.length) {
+      const nuevasSillas = [];
+      
+      for (let i = sillasExistentes.length; i < numSillasNecesarias; i++) {
+        let nuevaPosicion;
+        
+        if (seatRowDirection === 'horizontal') {
+          nuevaPosicion = {
+            x: seatRowStart.x + (i * spacing),
+            y: seatRowStart.y
+          };
+        } else {
+          nuevaPosicion = {
+            x: seatRowStart.x,
+            y: seatRowStart.y + (i * spacing)
+          };
+        }
+        
+        const nuevaSilla = {
+          _id: `silla_${Date.now()}_${i}`,
+          type: 'silla',
+          posicion: nuevaPosicion,
+          width: 20,
+          height: 20,
+          fill: '#20B2AA',
+          stroke: '#008B8B',
+          strokeWidth: 1,
+          numero: i + 1,
+          filaId: sillasExistentes[0]?.filaId || `fila_${Date.now()}`,
+          esFila: true
+        };
+        
+        nuevasSillas.push(nuevaSilla);
+      }
+      
+      setElements(prev => [...prev, ...nuevasSillas]);
+    }
+  };
+
+  // Función para finalizar fila de asientos
+  const finalizarFilaAsientos = () => {
+    if (!isCreatingSeatRow) return;
+    
+    setIsCreatingSeatRow(false);
+    setSeatRowStart(null);
+    setActiveMode('select');
+    
+    const sillasCreadas = elements.filter(el => 
+      el.type === 'silla' && el.esFila && el.filaId === elements[elements.length - 1]?.filaId
+    );
+    
+    message.success(`Fila de asientos creada con ${sillasCreadas.length} asientos`);
+  };
+
+  // Función para añadir sillas a una fila existente
+  const añadirSillasAFila = (filaId, cantidad = 1, direccion = 'derecha') => {
+    const sillasFila = elements.filter(el => 
+      el.type === 'silla' && el.filaId === filaId
+    );
+    
+    if (sillasFila.length === 0) return;
+    
+    // Ordenar sillas por posición
+    const sillasOrdenadas = [...sillasFila].sort((a, b) => {
+      if (seatRowDirection === 'horizontal') {
+        return a.posicion.x - b.posicion.x;
+      } else {
+        return a.posicion.y - b.posicion.y;
+      }
+    });
+    
+    const ultimaSilla = sillasOrdenadas[sillasOrdenadas.length - 1];
+    const primeraSilla = sillasOrdenadas[0];
+    const spacing = 25;
+    
+    const nuevasSillas = [];
+    
+    for (let i = 0; i < cantidad; i++) {
+      let nuevaPosicion;
+      
+      if (direccion === 'derecha' || direccion === 'abajo') {
+        if (seatRowDirection === 'horizontal') {
+          nuevaPosicion = {
+            x: ultimaSilla.posicion.x + ((i + 1) * spacing),
+            y: ultimaSilla.posicion.y
+          };
+        } else {
+          nuevaPosicion = {
+            x: ultimaSilla.posicion.x,
+            y: ultimaSilla.posicion.y + ((i + 1) * spacing)
+          };
+        }
+      } else {
+        if (seatRowDirection === 'horizontal') {
+          nuevaPosicion = {
+            x: primeraSilla.posicion.x - ((i + 1) * spacing),
+            y: primeraSilla.posicion.y
+          };
+        } else {
+          nuevaPosicion = {
+            x: primeraSilla.posicion.x,
+            y: primeraSilla.posicion.y - ((i + 1) * spacing)
+          };
+        }
+      }
+      
+      const nuevaSilla = {
+        _id: `silla_${Date.now()}_${i}`,
+        type: 'silla',
+        posicion: nuevaPosicion,
+        width: 20,
+        height: 20,
+        fill: '#20B2AA',
+        stroke: '#008B8B',
+        strokeWidth: 1,
+        numero: direccion === 'derecha' || direccion === 'abajo' 
+          ? ultimaSilla.numero + i + 1 
+          : primeraSilla.numero - i - 1,
+        filaId: filaId,
+        esFila: true
+      };
+      
+      nuevasSillas.push(nuevaSilla);
+    }
+    
+    setElements(prev => [...prev, ...nuevasSillas]);
+    message.success(`${cantidad} sillas añadidas a la fila`);
+  };
+
+  // Función para manejar la selección de filas de asientos
+  const handleSeatRowSelect = (element) => {
+    if (element && element.esFila) {
+      // Aquí podrías agregar lógica adicional si es necesaria
+      // Por ahora solo retornamos true para indicar que es una fila válida
+      return true;
+    }
+    return false;
+  };
+
   // Función para manejar clics en modo sección
   const handleSectionClick = (event) => {
     if (!isCreatingSection || activeMode !== 'section') return;
@@ -410,7 +395,17 @@ export const useCrearMapa = () => {
       
       // Si tenemos suficientes puntos, crear la sección
       if (newPoints.length >= 3) {
-        const seccion = addSeccion(newPoints);
+        // Crear una línea simple como sección
+        const seccion = {
+          _id: `seccion_${Date.now()}`,
+          type: 'line',
+          points: newPoints.flatMap(p => [p.x, p.y]),
+          stroke: '#FF6B6B',
+          strokeWidth: 2,
+          closed: true
+        };
+        
+        setElements(prev => [...prev, seccion]);
         setIsCreatingSection(false);
         setActiveMode('select');
         setSectionPoints([]);
@@ -428,18 +423,18 @@ export const useCrearMapa = () => {
     message.info('Selección limpiada');
   };
 
-
-
   // Función para ajustar a cuadrícula
   const handleSnapToGrid = (gridSize = 20) => {
-    snapToCustomGrid(gridSize);
+    snapToGrid(gridSize);
   };
-
-
 
   // Función para guardar
   const handleSave = () => {
-    saveMapa();
+    if (salaId && elements && zones) {
+      saveMapa(salaId, elements, zones);
+    } else {
+      console.warn('[handleSave] Datos insuficientes para guardar:', { salaId, elementsCount: elements?.length, zonesCount: zones?.length });
+    }
   };
 
   // Funciones de paneo
@@ -476,7 +471,9 @@ export const useCrearMapa = () => {
       }
       
       autoSaveTimeoutRef.current = setTimeout(() => {
-        saveMapa();
+        if (salaId && elements && zones) {
+          saveMapa(salaId, elements, zones);
+        }
       }, autoSaveDelay);
     }
 
@@ -490,10 +487,10 @@ export const useCrearMapa = () => {
   // Cargar mapa al iniciar
   useEffect(() => {
     if (!hasLoadedInitialData.current && salaId) {
-      loadMapa();
+      loadMapa(salaId, setElements, setZones);
       hasLoadedInitialData.current = true;
     }
-  }, [salaId, loadMapa]);
+  }, [salaId, loadMapa, setElements, setZones]);
 
   return {
     // Estados
@@ -517,26 +514,10 @@ export const useCrearMapa = () => {
     isSaving,
     uploadProgress,
     
-    // Estados de escalado
-    selectedScale,
-    showScaleControls,
-    scaleSystem,
-    
-    // Estados de asientos
-    selectedSeatState,
-    seatStates,
-    
-    // Estados de conexiones
-    showConnections,
-    connectionStyle,
-    connectionThreshold,
-    
-    // Estados de fondo
-    backgroundImage,
-    backgroundScale,
-    backgroundOpacity,
-    showBackgroundInWeb,
-    backgroundSystem,
+    // Estados de fila de asientos
+    isCreatingSeatRow,
+    seatRowStart,
+    seatRowDirection,
     
     // Funciones básicas
     addMesa,
@@ -544,45 +525,12 @@ export const useCrearMapa = () => {
     updateElementProperty: updatePropertyAndSelection,
     updateElementSize: updateSizeAndSelection,
     deleteSelectedElements,
-         limpiarSillasDuplicadas: handleLimpiarSillasDuplicadas,
-     snapToGrid: handleSnapToGrid,
-     assignZoneToSelected: handleAssignZoneToSelected,
-    
-    // Funciones de escalado
-    scaleElement: scaleElementById,
-    scaleSelectedElements,
-    
-    // Funciones de estados de asientos
-    changeSeatState,
-    changeSelectedSeatsState,
-    changeMesaSeatsState,
-    
-    // Funciones de conexiones
-    autoConnectSeats,
-    createManualConnection,
-    removeConnections,
-    changeConnectionStyle,
-    
-    // Funciones de coordenadas precisas
-    precisePositioning,
-    snapToCustomGrid,
-    
-    // Funciones de fondo
-    setBackgroundImage: handleSetBackgroundImage,
-    updateBackground: handleUpdateBackground,
-    removeBackground: handleRemoveBackground,
-    
-    // Funciones de elementos gráficos
-    addTextElement,
-    addRectangleElement,
-    addEllipseElement,
-    addLineElement,
-    addChairRow,
-    addSeccion,
+    limpiarSillasDuplicadas: handleLimpiarSillasDuplicadas,
+    snapToGrid: handleSnapToGrid,
+    assignZoneToSelected: handleAssignZoneToSelected,
     
     // Funciones de selección
     selectElement,
-    selectMultipleElements,
     clearSelection,
     selectGroup,
     
@@ -607,6 +555,13 @@ export const useCrearMapa = () => {
     handleSectionClick,
     limpiarSeleccion,
     
+    // Funciones de fila de asientos
+    iniciarFilaAsientos,
+    actualizarFilaAsientos,
+    finalizarFilaAsientos,
+    añadirSillasAFila,
+    handleSeatRowSelect,
+    
     // Funciones de paneo
     handlePanStart,
     handlePanMove,
@@ -629,14 +584,10 @@ export const useCrearMapa = () => {
     setIsPanning,
     setStagePosition,
     setHasUnsavedChanges,
-    setSelectedScale,
-    setShowScaleControls,
-    setSelectedSeatState,
-    setShowConnections,
-    setConnectionStyle,
-    setBackgroundImage,
-    setBackgroundScale,
-    setBackgroundOpacity,
-    setShowBackgroundInWeb
+    
+    // Setters de fila de asientos
+    setIsCreatingSeatRow,
+    setSeatRowStart,
+    setSeatRowDirection
   };
 };
