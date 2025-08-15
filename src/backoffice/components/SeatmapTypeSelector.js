@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Radio, Button, Row, Col, Card } from 'antd';
+import { Modal, Radio, Button, Card } from 'antd';
 import './SeatmapTypeSelector.css';
-
-const { Option } = Radio;
 
 const SeatmapTypeSelector = ({ visible, onSelect, onCancel }) => {
   const [selectedType, setSelectedType] = useState('ROWS_WITH_SECTIONS');
