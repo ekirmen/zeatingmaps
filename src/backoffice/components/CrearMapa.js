@@ -193,6 +193,7 @@ const CrearMapa = () => {
         height: 80,
         nombre: 'Mesa 1',
         zonaId: null,
+        tenant_id: salaId, // Agregar tenant_id
         sillas: [
           {
             id: 'silla-1',
@@ -204,7 +205,9 @@ const CrearMapa = () => {
             numero: 1,
             fila: 'A',
             zonaId: null,
-            estado: 'available'
+            estado: 'available',
+            shape: 'circle',
+            tenant_id: salaId
           },
           {
             id: 'silla-2',
@@ -216,7 +219,9 @@ const CrearMapa = () => {
             numero: 2,
             fila: 'A',
             zonaId: null,
-            estado: 'available'
+            estado: 'available',
+            shape: 'square',
+            tenant_id: salaId
           },
           {
             id: 'silla-3',
@@ -228,7 +233,9 @@ const CrearMapa = () => {
             numero: 3,
             fila: 'B',
             zonaId: null,
-            estado: 'available'
+            estado: 'available',
+            shape: 'circle',
+            tenant_id: salaId
           },
           {
             id: 'silla-4',
@@ -240,7 +247,9 @@ const CrearMapa = () => {
             numero: 4,
             fila: 'B',
             zonaId: null,
-            estado: 'available'
+            estado: 'available',
+            shape: 'square',
+            tenant_id: salaId
           }
         ]
       };
@@ -273,6 +282,7 @@ const CrearMapa = () => {
       height: 80,
       nombre: `Mesa ${elements.filter(e => e.type === 'mesa').length + 1}`,
       zonaId: null,
+      tenant_id: salaId,
       sillas: []
     };
     setElements([...elements, nuevaMesa]);
@@ -310,10 +320,50 @@ const CrearMapa = () => {
       numero: elements.filter(e => e.type === 'silla').length + 1,
       fila: 'A',
       zonaId: null,
-      estado: 'available'
+      estado: 'available',
+      shape: Math.random() > 0.5 ? 'circle' : 'square', // Forma aleatoria
+      tenant_id: salaId
     };
     setElements([...elements, nuevoAsiento]);
     message.success('Asiento creado correctamente');
+  };
+
+  const handleCrearAsientoRedondo = () => {
+    const nuevoAsiento = {
+      id: `silla-${Date.now()}`,
+      type: 'silla',
+      x: 150 + Math.random() * 200,
+      y: 150 + Math.random() * 200,
+      width: 20,
+      height: 20,
+      numero: elements.filter(e => e.type === 'silla').length + 1,
+      fila: 'A',
+      zonaId: null,
+      estado: 'available',
+      shape: 'circle',
+      tenant_id: salaId
+    };
+    setElements([...elements, nuevoAsiento]);
+    message.success('Asiento redondo creado correctamente');
+  };
+
+  const handleCrearAsientoCuadrado = () => {
+    const nuevoAsiento = {
+      id: `silla-${Date.now()}`,
+      type: 'silla',
+      x: 150 + Math.random() * 200,
+      y: 150 + Math.random() * 200,
+      width: 20,
+      height: 20,
+      numero: elements.filter(e => e.type === 'silla').length + 1,
+      fila: 'A',
+      zonaId: null,
+      estado: 'available',
+      shape: 'square',
+      tenant_id: salaId
+    };
+    setElements([...elements, nuevoAsiento]);
+    message.success('Asiento cuadrado creado correctamente');
   };
 
   const handleGuardarMapa = async () => {
@@ -519,6 +569,22 @@ const CrearMapa = () => {
     });
   };
 
+  // Funciones de zoom mejoradas
+  const handleZoomIn = () => {
+    const newZoom = zoom * 1.2;
+    setZoom(newZoom);
+  };
+
+  const handleZoomOut = () => {
+    const newZoom = zoom / 1.2;
+    setZoom(newZoom);
+  };
+
+  const handleResetZoom = () => {
+    setZoom(1);
+    setStagePosition({ x: 0, y: 0 });
+  };
+
   const handleStageClick = (e) => {
     if (e.target === e.target.getStage()) {
       if (activeMode === 'section' && isCreatingSection) {
@@ -535,6 +601,8 @@ const CrearMapa = () => {
       }
     }
   };
+
+
 
   return (
     <div className="crear-mapa-container" data-testid="crear-mapa">
@@ -668,7 +736,13 @@ const CrearMapa = () => {
                 <button className="section-button" onClick={handleCrearAsiento}>
                   🪑 Crear Asiento Individual
                 </button>
-                <p className="section-help">Crea un asiento individual en el mapa</p>
+                <button className="section-button" onClick={handleCrearAsientoRedondo} style={{ marginTop: '0.5rem', backgroundColor: '#48BB78' }}>
+                  🔵 Asiento Redondo
+                </button>
+                <button className="section-button" onClick={handleCrearAsientoCuadrado} style={{ marginTop: '0.5rem', backgroundColor: '#ED8936' }}>
+                  ⬜ Asiento Cuadrado
+                </button>
+                <p className="section-help">Crea asientos individuales en el mapa</p>
               </div>
             </div>
 
@@ -732,6 +806,17 @@ const CrearMapa = () => {
               <path d="m6 9 6 6 6-6"></path>
             </svg>
           </button>
+          <div className="section-content">
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+              <button className="section-button" style={{ flex: 1, backgroundColor: '#48BB78', color: 'white' }}>
+                🔵 Redondos
+              </button>
+              <button className="section-button" style={{ flex: 1, backgroundColor: '#ED8936', color: 'white' }}>
+                ⬜ Cuadrados
+              </button>
+            </div>
+            <p className="section-help">Configura la forma predeterminada de los asientos</p>
+          </div>
         </div>
 
         {/* Herramientas */}
@@ -752,6 +837,13 @@ const CrearMapa = () => {
         
         {/* Estado de guardado */}
         {renderSavingStatus()}
+        
+        {/* Indicador de paneo */}
+        {isPanning && (
+          <div className="panning-indicator">
+            🖱️ Paneando mapa... Haz clic para soltar
+          </div>
+        )}
         
         {/* Stage de Konva */}
         <Stage
@@ -806,21 +898,21 @@ const CrearMapa = () => {
           <button 
             className="zoom-button primary" 
             title="Zoom In"
-            onClick={() => handleZoom(1.1)}
+            onClick={handleZoomIn}
           >
             🔍+
           </button>
           <button 
             className="zoom-button primary" 
             title="Zoom Out"
-            onClick={() => handleZoom(0.9)}
+            onClick={handleZoomOut}
           >
             🔍-
           </button>
           <button 
             className="zoom-button secondary" 
             title="Reset Zoom"
-            onClick={resetZoom}
+            onClick={handleResetZoom}
           >
             🎯
           </button>

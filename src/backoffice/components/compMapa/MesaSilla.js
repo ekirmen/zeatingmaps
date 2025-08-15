@@ -84,7 +84,7 @@ export const Silla = ({
   showConnections,
   connectionStyle,
 }) => {
-  const { id, x, y, width = 20, height = 20, numero, fila, zonaId, estado = 'available' } = silla;
+  const { id, x, y, width = 20, height = 20, numero, fila, zonaId, estado = 'available', shape = 'circle' } = silla;
 
   // Colores basados en el estado del asiento
   const seatColors = {
@@ -107,38 +107,41 @@ export const Silla = ({
       onDragEnd={onDragEnd}
       onClick={onClick}
     >
-      {/* Asiento principal */}
-      <Rect
-        x={0}
-        y={0}
-        width={width}
-        height={height}
-        fill={fillColor}
-        stroke={strokeColor}
-        strokeWidth={isSelected ? 3 : 2}
-        cornerRadius={3}
-        shadowColor="black"
-        shadowBlur={isSelected ? 10 : 5}
-        shadowOpacity={0.3}
-        shadowOffset={{ x: 2, y: 2 }}
-      />
-
-      {/* Respaldo del asiento */}
-      <Rect
-        x={0}
-        y={0}
-        width={width}
-        height={height * 0.3}
-        fill={fillColor}
-        stroke={strokeColor}
-        strokeWidth={1}
-        cornerRadius={{ topLeft: 3, topRight: 3, bottomLeft: 0, bottomRight: 0 }}
-      />
+      {/* Asiento principal - Redondo o Cuadrado */}
+      {shape === 'circle' ? (
+        <Circle
+          x={width / 2}
+          y={height / 2}
+          radius={width / 2}
+          fill={fillColor}
+          stroke={strokeColor}
+          strokeWidth={isSelected ? 3 : 2}
+          shadowColor="black"
+          shadowBlur={isSelected ? 10 : 5}
+          shadowOpacity={0.3}
+          shadowOffset={{ x: 2, y: 2 }}
+        />
+      ) : (
+        <Rect
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fill={fillColor}
+          stroke={strokeColor}
+          strokeWidth={isSelected ? 3 : 2}
+          cornerRadius={2}
+          shadowColor="black"
+          shadowBlur={isSelected ? 10 : 5}
+          shadowOpacity={0.3}
+          shadowOffset={{ x: 2, y: 2 }}
+        />
+      )}
 
       {/* Número del asiento */}
       <Text
         x={0}
-        y={height + 2}
+        y={height + 5}
         width={width}
         text={fila ? `${fila}${numero}` : numero?.toString() || ''}
         fontSize={10}
