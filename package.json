@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": "22.x"
+    "node": "18.x"
   },
-  "homepage": ".",
+  "homepage": "/store",
   "scripts": {
     "start": "craco start",
     "dev": "craco start",
@@ -13,7 +13,7 @@
     "build:fast": "cross-env GENERATE_SOURCEMAP=false CI=false DISABLE_ESLINT_PLUGIN=true SKIP_PREFLIGHT_CHECK=true craco build",
     "preview": "serve -s build",
     "eject": "react-scripts eject",
-    "vercel-build": "cross-env DISABLE_ESLINT_PLUGIN=true GENERATE_SOURCEMAP=false CI=false SKIP_PREFLIGHT_CHECK=true npm run build",
+    "vercel-build": "react-scripts build",
     "test": "craco test",
     "test:ci": "cross-env CI=true craco test --watchAll=false --passWithNoTests",
     "test:db": "node scripts/db-check.js",
