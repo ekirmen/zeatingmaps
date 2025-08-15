@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { message } from 'antd';
+import { Group, Rect, Text } from 'react-konva';
 import SeatmapTypeSelector from '../SeatmapTypeSelector';
 import EditorSidebar from './components/EditorSidebar';
 import MapArea from './components/MapArea';
@@ -612,40 +613,16 @@ const CrearMapaRefactored = ({ salaId }) => {
             cornerRadius={6}
           />
           {editingElement?.type === 'row' && editingElement?.fila === filaName ? (
-            <Group>
-              <Input
-                x={avgX - 28}
-                y={avgY - 33}
-                width={56}
-                height={21}
-                value={editingValue}
-                onChange={(e) => setEditingValue(e.target.value)}
-                onBlur={() => {
-                  editRowName(filaName, editingValue);
-                  setEditingElement(null);
-                  setEditingValue('');
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    editRowName(filaName, editingValue);
-                    setEditingElement(null);
-                    setEditingValue('');
-                  }
-                  if (e.key === 'Escape') {
-                    setEditingElement(null);
-                    setEditingValue('');
-                  }
-                }}
-                style={{
-                  fontSize: '14px',
-                  textAlign: 'center',
-                  border: 'none',
-                  outline: 'none',
-                  background: 'transparent',
-                  fontWeight: 'bold'
-                }}
-              />
-            </Group>
+            <Text
+              x={avgX - 28}
+              y={avgY - 33}
+              text={editingValue}
+              fontSize={14}
+              fill="#667eea"
+              fontStyle="bold"
+              align="center"
+              width={56}
+            />
           ) : (
             <Text
               x={avgX - 25}
@@ -969,6 +946,49 @@ const CrearMapaRefactored = ({ salaId }) => {
             // Implementar edición
           }}
         />
+
+        {/* Input HTML superpuesto para edición de filas */}
+        {editingElement?.type === 'row' && (
+          <input
+            type="text"
+            value={editingValue}
+            onChange={(e) => setEditingValue(e.target.value)}
+            onBlur={() => {
+              editRowName(editingElement.fila, editingValue);
+              setEditingElement(null);
+              setEditingValue('');
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                editRowName(editingElement.fila, editingValue);
+                setEditingElement(null);
+                setEditingValue('');
+              }
+              if (e.key === 'Escape') {
+                setEditingElement(null);
+                setEditingValue('');
+              }
+            }}
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '200px',
+              fontSize: '14px',
+              textAlign: 'center',
+              border: '2px solid #667eea',
+              borderRadius: '6px',
+              outline: 'none',
+              zIndex: 1000,
+              background: 'white',
+              color: '#667eea',
+              fontWeight: 'bold',
+              padding: '8px'
+            }}
+            autoFocus
+          />
+        )}
       </div>
     </div>
   );

@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Group, Line } from 'react-konva';
-import { Input } from 'react-konva';
 import { Mesa, Silla } from '../../compMapa/MesaSilla';
 
 const MapArea = ({
@@ -40,6 +39,44 @@ const MapArea = ({
   renderDashboardZones,
   stageRef
 }) => {
+  const [editingInput, setEditingInput] = useState(null);
+  const [editingPosition, setEditingPosition] = useState({ x: 0, y: 0 });
+  const inputRef = useRef();
+
+  // Manejar la edición de texto
+  useEffect(() => {
+    if (editingInput && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingInput]);
+
+  const handleTextEdit = (element, x, y, width) => {
+    setEditingInput(element);
+    setEditingPosition({ x, y, width });
+    setEditingValue(element.numero || element.nombre || '');
+  };
+
+  const handleTextSave = () => {
+    if (editingInput) {
+      saveEditing();
+      setEditingInput(null);
+    }
+  };
+
+  const handleTextCancel = () => {
+    setEditingInput(null);
+    cancelEditing();
+  };
+
+  const handleTextKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleTextSave();
+    } else if (e.key === 'Escape') {
+      handleTextCancel();
+    }
+  };
+
   // Renderizar elementos del mapa
   const renderElements = () => {
     try {
@@ -94,29 +131,17 @@ const MapArea = ({
                       strokeWidth={1}
                       cornerRadius={4}
                     />
-                    {editingElement?.id === element.id ? (
-                      <Group>
-                        <Input
-                          x={element.x - 2}
-                          y={element.y - 23}
-                          width={element.width + 6}
-                          height={16}
-                          value={editingValue}
-                          onChange={(e) => setEditingValue(e.target.value)}
-                          onBlur={saveEditing}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') saveEditing();
-                            if (e.key === 'Escape') cancelEditing();
-                          }}
-                          style={{
-                            fontSize: '12px',
-                            textAlign: 'center',
-                            border: 'none',
-                            outline: 'none',
-                            background: 'transparent'
-                          }}
-                        />
-                      </Group>
+                    {editingInput?.id === element.id ? (
+                      <Text
+                        x={element.x - 2}
+                        y={element.y - 23}
+                        text={editingValue}
+                        fontSize={12}
+                        fill="#667eea"
+                        fontStyle="bold"
+                        align="center"
+                        width={element.width + 6}
+                      />
                     ) : (
                       <Text
                         x={element.x}
@@ -127,7 +152,7 @@ const MapArea = ({
                         fontStyle="bold"
                         align="center"
                         width={element.width}
-                        onClick={() => startEditing(element)}
+                        onClick={() => handleTextEdit(element, element.x, element.y - 20, element.width)}
                         cursor="pointer"
                       />
                     )}
@@ -166,29 +191,17 @@ const MapArea = ({
                       strokeWidth={1}
                       cornerRadius={6}
                     />
-                    {editingElement?.id === element.id ? (
-                      <Group>
-                        <Input
-                          x={element.x - 8}
-                          y={element.y - 28}
-                          width={element.width + 16}
-                          height={21}
-                          value={editingValue}
-                          onChange={(e) => setEditingValue(e.target.value)}
-                          onBlur={saveEditing}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') saveEditing();
-                            if (e.key === 'Escape') cancelEditing();
-                          }}
-                          style={{
-                            fontSize: '12px',
-                            textAlign: 'center',
-                            border: 'none',
-                            outline: 'none',
-                            background: 'transparent'
-                          }}
-                        />
-                      </Group>
+                    {editingInput?.id === element.id ? (
+                      <Text
+                        x={element.x - 8}
+                        y={element.y - 28}
+                        text={editingValue}
+                        fontSize={12}
+                        fill="#667eea"
+                        fontStyle="bold"
+                        align="center"
+                        width={element.width + 16}
+                      />
                     ) : (
                       <Text
                         x={element.x}
@@ -199,7 +212,7 @@ const MapArea = ({
                         fontStyle="bold"
                         align="center"
                         width={element.width}
-                        onClick={() => startEditing(element)}
+                        onClick={() => handleTextEdit(element, element.x, element.y - 25, element.width)}
                         cursor="pointer"
                       />
                     )}
@@ -367,9 +380,6 @@ const MapArea = ({
         }}
         onContextMenu={handleStageContextMenu}
         onClick={handleStageClick}
-        onMouseDown={handlePanStart}
-        onMousemove={handlePanMove}
-        onMouseup={handlePanEnd}
       >
         <Layer>
           {/* Zonas del dashboard */}
@@ -409,6 +419,33 @@ const MapArea = ({
           {renderRowIndicators}
         </Layer>
       </Stage>
+
+      {/* Input HTML superpuesto para edición de texto */}
+      {editingInput && (
+        <input
+          ref={inputRef}
+          type="text"
+          value={editingValue}
+          onChange={(e) => setEditingValue(e.target.value)}
+          onBlur={handleTextSave}
+          onKeyDown={handleTextKeyDown}
+          style={{
+            position: 'absolute',
+            left: editingPosition.x + 380, // Ajustar por el sidebar
+            top: editingPosition.y + 100,  // Ajustar por el header
+            width: editingPosition.width,
+            fontSize: '12px',
+            textAlign: 'center',
+            border: '2px solid #667eea',
+            borderRadius: '4px',
+            outline: 'none',
+            zIndex: 1000,
+            background: 'white',
+            color: '#667eea',
+            fontWeight: 'bold'
+          }}
+        />
+      )}
     </div>
   );
 };
