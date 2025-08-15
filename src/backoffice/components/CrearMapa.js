@@ -10,7 +10,7 @@ import FilaPopup from './compMapa/FilaPopup';
 import AdvancedEditPopup from './compMapa/AdvancedEditPopup';
 import { useCrearMapa } from '../hooks/useCrearMapa';
 import { fetchZonasPorSala, fetchSalaById } from '../services/apibackoffice';
-import { message, Switch, Button, Progress, Tooltip, Input, Select } from 'antd';
+import { message, Switch, Button, Progress, Tooltip } from 'antd';
 import { syncSeatsForSala } from '../services/apibackoffice';
 import { useSeatColors } from '../../hooks/useSeatColors';
 import { 
@@ -22,8 +22,7 @@ import {
   ReloadOutlined,
   PictureOutlined,
   LinkOutlined,
-  SettingOutlined,
-  SearchOutlined
+  SettingOutlined
 } from '@ant-design/icons';
 
 const CrearMapa = () => {
@@ -114,10 +113,7 @@ const CrearMapa = () => {
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
   
-  // Estados para búsqueda de sala
-  const [searchSalaId, setSearchSalaId] = useState(salaId || '');
-  const [availableSalas, setAvailableSalas] = useState([]);
-  const [searchingSalas, setSearchingSalas] = useState(false);
+  // Estados para búsqueda de sala eliminados - ya no se necesitan
 
   // Referencias
   const stageRef = useRef();
@@ -210,6 +206,7 @@ const CrearMapa = () => {
   // ===== RENDERIZADO DE ELEMENTOS =====
   
   const renderElements = useMemo(() => {
+    console.log('Renderizando elementos:', elements.length, elements);
     return elements.map(element => {
       const isSelected = selectedIds.includes(element._id);
       
@@ -372,32 +369,16 @@ const CrearMapa = () => {
   
   const renderTopControls = () => (
     <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white rounded-lg shadow-lg p-3 flex items-center space-x-3">
-      {/* Buscador de Sala */}
+      {/* Información de Sala */}
       <div className="flex items-center space-x-2">
-        <Tooltip title={loadingSala ? "Cambiando de sala..." : "Buscar Sala"}>
-          <SearchOutlined className={`${loadingSala ? 'text-blue-500 animate-pulse' : 'text-gray-500'}`} />
-        </Tooltip>
-        <Select
-          showSearch
-          placeholder="Buscar sala..."
-          value={searchSalaId}
-          onChange={handleSalaSearch}
-          onSearch={searchAvailableSalas}
-          loading={searchingSalas || loadingSala}
-          style={{ width: 200 }}
-          filterOption={false}
-          notFoundContent={searchingSalas ? 'Buscando...' : 'No se encontraron salas'}
-          disabled={loadingSala}
-          options={availableSalas.map(sala => ({
-            value: sala.id,
-            label: (
-              <div className="flex flex-col">
-                <span className="font-medium">{sala.nombre}</span>
-                <span className="text-xs text-gray-500">ID: {sala.id}</span>
-              </div>
-            )
-          }))}
-        />
+        <div className="text-sm font-medium text-gray-900">
+          Sala: {salaInfo ? salaInfo.nombre : 'Cargando...'}
+        </div>
+        {salaInfo && (
+          <div className="text-xs text-gray-500">
+            Asientos: {elements.filter(el => el.type === 'silla').length}
+          </div>
+        )}
       </div>
       
       <div className="w-px h-6 bg-gray-300" />
@@ -426,10 +407,13 @@ const CrearMapa = () => {
       <div className="w-px h-6 bg-gray-300" />
       
       {/* Reset Zoom */}
-      <Tooltip title="Reset Zoom">
+      <Tooltip title="Reset Zoom (100%)">
         <Button
           icon={<ReloadOutlined />}
-          onClick={resetZoom}
+          onClick={() => {
+            setZoom(1.0);
+            setStagePosition({ x: 0, y: 0 });
+          }}
           size="small"
         />
       </Tooltip>
@@ -505,45 +489,7 @@ const CrearMapa = () => {
 
   // ===== RENDERIZADO DE INFORMACIÓN DE SALA =====
   
-  const renderSalaInfo = () => {
-    if (loadingSala) {
-      return (
-        <div className="absolute top-4 left-4 z-10 bg-white rounded-lg shadow-lg p-3">
-          <div className="flex items-center space-x-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-            <span className="text-sm text-gray-600">Cargando sala...</span>
-          </div>
-        </div>
-      );
-    }
-    
-    if (!salaInfo) return null;
-    
-    const totalAsientos = elements.filter(el => el.type === 'silla').length;
-    const totalMesas = elements.filter(el => el.type === 'mesa').length;
-    
-    return (
-      <div className="absolute top-4 left-4 z-10 bg-white rounded-lg shadow-lg p-3">
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-sm font-medium text-gray-900">{salaInfo.nombre}</div>
-          <div className="text-xs text-gray-500">ID: {salaInfo.id}</div>
-        </div>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <div className="text-gray-500">
-            <span className="font-medium">{totalAsientos}</span> asientos
-          </div>
-          <div className="text-gray-500">
-            <span className="font-medium">{totalMesas}</span> mesas
-          </div>
-        </div>
-        {lastSavedAt && (
-          <div className="text-xs text-green-600 mt-1">
-            ✓ Guardado: {new Date(lastSavedAt).toLocaleTimeString()}
-          </div>
-        )}
-      </div>
-    );
-  };
+  // Esta función ya no se usa, la información se muestra en los controles superiores
 
   // ===== CARGA INICIAL =====
   
@@ -564,7 +510,9 @@ const CrearMapa = () => {
         setSalaInfo(salaData);
         
         // Cargar mapa existente
+        console.log('Cargando mapa para sala:', salaId);
         await loadMapa(salaId);
+        console.log('Mapa cargado, elementos:', elements);
         
       } catch (error) {
         console.error('Error cargando datos:', error);
@@ -577,14 +525,13 @@ const CrearMapa = () => {
     cargarDatos();
   }, [salaId, loadMapa]);
 
-  // Inicializar búsqueda de salas
+  // Inicializar búsqueda de salas eliminado - ya no se necesita
+
+  // Establecer zoom inicial a 100%
   useEffect(() => {
-    if (salaId) {
-      setSearchSalaId(salaId);
-      // Cargar algunas salas de ejemplo para el dropdown
-      searchAvailableSalas('');
-    }
-  }, [salaId]);
+    setZoom(1.0);
+    setStagePosition({ x: 0, y: 0 });
+  }, []);
 
   // Cargar información de la sala
   useEffect(() => {
@@ -618,81 +565,7 @@ const CrearMapa = () => {
     loadSalaInfo();
   }, [salaId]);
 
-  // Función para buscar y cambiar de sala
-  const handleSalaSearch = async (newSalaId) => {
-    if (!newSalaId || newSalaId === salaId) return;
-    
-    setLoadingSala(true);
-    try {
-      console.log('Cambiando a sala:', newSalaId);
-      
-      // Cargar información de la nueva sala
-      const salaData = await fetchSalaById(newSalaId);
-      setSalaInfo({
-        id: salaData.id,
-        nombre: salaData.nombre,
-        asientos: 0
-      });
-      
-      // Cargar zonas de la nueva sala
-      const zonasData = await fetchZonasPorSala(newSalaId);
-      setLoadedZonas(zonasData);
-      
-      // Limpiar elementos actuales
-      setElements([]);
-      setZones([]);
-      setSelectedIds([]);
-      setSelectedElement(null);
-      
-      // Cargar mapa de la nueva sala
-      await loadMapa(newSalaId);
-      
-      // Actualizar URL (opcional)
-      window.history.pushState({}, '', `/crear-mapa/${newSalaId}`);
-      
-      // Actualizar el ID de la sala actual
-      setSearchSalaId(newSalaId);
-      
-      message.success(`Cambiado a sala: ${salaData.nombre}`);
-      console.log('Cambio de sala completado:', salaData);
-      
-    } catch (error) {
-      console.error('Error al cambiar de sala:', error);
-      message.error('Error al cambiar de sala');
-    } finally {
-      setLoadingSala(false);
-    }
-  };
-
-  // Función para buscar salas disponibles (mock - implementar según tu API)
-  const searchAvailableSalas = async (searchTerm) => {
-    if (!searchTerm || searchTerm.length < 2) {
-      setAvailableSalas([]);
-      return;
-    }
-    
-    setSearchingSalas(true);
-    try {
-      // Aquí deberías implementar la búsqueda real de salas
-      // Por ahora usamos un mock
-      const mockSalas = [
-        { id: 'sala-1', nombre: 'Sala Principal' },
-        { id: 'sala-2', nombre: 'Sala VIP' },
-        { id: 'sala-3', nombre: 'Sala de Eventos' },
-        { id: 'sala-4', nombre: 'Auditorio' },
-      ].filter(sala => 
-        sala.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        sala.id.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      
-      setAvailableSalas(mockSalas);
-    } catch (error) {
-      console.error('Error buscando salas:', error);
-      setAvailableSalas([]);
-    } finally {
-      setSearchingSalas(false);
-    }
-  };
+  // Funciones de búsqueda de salas eliminadas - ya no se necesitan
 
   // ===== SINCRONIZACIÓN DE ASIENTOS =====
   
@@ -767,13 +640,10 @@ const CrearMapa = () => {
         {/* Controles superiores */}
         {renderTopControls()}
         
-        {/* Indicador de paneo */}
-        {renderPanningIndicator()}
-        
-        {/* Información de sala */}
-        {renderSalaInfo()}
-        
-        {/* Progreso de guardado */}
+                 {/* Indicador de paneo */}
+         {renderPanningIndicator()}
+         
+         {/* Progreso de guardado */}
         {renderSavingProgress()}
         
         {/* Estado de cambios */}
