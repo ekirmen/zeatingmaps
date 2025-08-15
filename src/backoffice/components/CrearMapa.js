@@ -1,3 +1,3 @@
-import { CrearMapaRefactored } from './CrearMapa';
+import { CrearMapaRefactored } from './CrearMapa/CrearMapaRefactored';
 
 export default CrearMapaRefactored;
