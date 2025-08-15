@@ -26,7 +26,7 @@ const CrearMapaRefactored = ({ salaId }) => {
   const [seatSize, setSeatSize] = useState(20);
   const [seatShape, setSeatShape] = useState('circle');
   const [currentColor, setCurrentColor] = useState('#48BB78');
-  
+   
   // Estado para el selector de tipos
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const [hasMapData, setHasMapData] = useState(false);
@@ -56,7 +56,7 @@ const CrearMapaRefactored = ({ salaId }) => {
   const [tableShape, setTableShape] = useState('square');
   const [tableSize, setTableSize] = useState(80);
   const [snapToGrid, setSnapToGrid] = useState(true);
-  
+   
   // Estado para zonas y selección
   const [selectedZone, setSelectedZone] = useState(null);
   const [isInZoneMode, setIsInZoneMode] = useState(false);
@@ -777,491 +777,78 @@ const CrearMapaRefactored = ({ salaId }) => {
       
       {/* Selector de tipo de mapa */}
       {showTypeSelector && (
-        <SeatmapTypeSelector
-          onSelect={(type) => {
-            setActiveTool(type);
+        <div style={{ padding: '20px', border: '1px solid #ccc', margin: '20px' }}>
+          <h3>Selector de Tipo de Mapa</h3>
+          <p>Selecciona el tipo de mapa que quieres crear:</p>
+          <button onClick={() => {
+            setActiveTool('seats');
             setShowTypeSelector(false);
             setHasMapData(true);
-          }}
-        />
+          }}>Filas con secciones</button>
+          <button onClick={() => {
+            setActiveTool('tables');
+            setShowTypeSelector(false);
+            setHasMapData(true);
+          }}>Mesas</button>
+        </div>
       )}
 
       {/* Panel izquierdo - Herramientas */}
-      <EditorSidebar
-        expandedMenus={expandedMenus}
-        toggleMenu={toggleMenu}
-        activeTool={activeTool}
-        setActiveTool={setActiveTool}
-        drawingMode={drawingMode}
-        setDrawingMode={setDrawingMode}
-        isDrawing={isDrawing}
-        drawingPoints={drawingPoints}
-        setDrawingPoints={setDrawingPoints}
-        textContent={textContent}
-        setTextContent={setTextContent}
-        fontSize={fontSize}
-        setFontSize={setFontSize}
-        seatSpacing={seatSpacing}
-        setSeatSpacing={setSeatSpacing}
-        rowSpacing={rowSpacing}
-        setRowSpacing={setRowSpacing}
-        tableShape={tableShape}
-        setTableShape={setTableShape}
-        tableSize={tableSize}
-        setTableSize={setTableSize}
-        snapToGrid={snapToGrid}
-        setSnapToGrid={setSnapToGrid}
-        selectedZone={selectedZone}
-        setSelectedZone={setSelectedZone}
-        isInZoneMode={isInZoneMode}
-        setIsInZoneMode={setIsInZoneMode}
-        zonesFromDashboard={zonesFromDashboard}
-        showContextMenu={showContextMenu}
-        contextMenuPosition={contextMenuPosition}
-        contextMenuTarget={contextMenuTarget}
-        setShowContextMenu={setShowContextMenu}
-        setContextMenuPosition={setContextMenuPosition}
-        setContextMenuTarget={setContextMenuTarget}
-        numerationMode={numerationMode}
-        activateNumerationMode={activateNumerationMode}
-        editingElement={editingElement}
-        editingValue={editingValue}
-        setEditingElement={setEditingElement}
-        setEditingValue={setEditingValue}
-        saveEditing={saveEditing}
-        cancelEditing={cancelEditing}
-        getSeatsByRow={getSeatsByRow}
-        editRowName={editRowName}
-        seatSize={seatSize}
-        setSeatSize={setSeatSize}
-        seatShape={seatShape}
-        setSeatShape={setSeatShape}
-        currentColor={currentColor}
-        setCurrentColor={setCurrentColor}
-        createSeat={createSeat}
-        createSeatRow={createSeatRow}
-        createTable={createTable}
-        createZone={createZone}
-        createShape={createShape}
-        addText={addText}
-        clearSelection={clearSelection}
-        selectByType={selectByType}
-        moveSelected={moveSelected}
-        duplicateSelected={duplicateSelected}
-        deleteSelected={deleteSelected}
-        handleStageClick={handleStageClick}
-        handleStageContextMenu={handleStageContextMenu}
-        handleElementClick={handleElementClick}
-        handleElementDragEnd={handleElementDragEnd}
-        renderRowIndicators={renderRowIndicators}
-        renderDashboardZones={renderDashboardZones}
-        getSeatColor={getSeatColor}
-        getZonaColor={getZonaColor}
-        getBorderColor={getBorderColor}
-        addSeatsToTable={addSeatsToTable}
-        saveMapa={saveMapa}
-        lastSavedAt={lastSavedAt}
-        setLastSavedAt={setLastSavedAt}
-        hasMapData={hasMapData}
-        setHasMapData={setHasMapData}
-        showTypeSelector={showTypeSelector}
-        setShowTypeSelector={setShowTypeSelector}
-      />
+      <div style={{ padding: '20px', border: '1px solid #ccc', margin: '20px' }}>
+        <h3>Panel de Herramientas</h3>
+        <p>Herramienta activa: {activeTool}</p>
+        <button onClick={() => setActiveTool('seats')}>Crear Asientos</button>
+        <button onClick={() => setActiveTool('tables')}>Crear Mesas</button>
+        <button onClick={() => setActiveTool('select')}>Seleccionar</button>
+      </div>
 
       {/* Área principal del mapa */}
-      <div className="map-area">
-        {/* Controles superiores */}
-        <TopControls
-          zoom={zoom}
-          setZoom={setZoom}
-          stagePosition={stagePosition}
-          setStagePosition={setStagePosition}
-          isPanning={isPanning}
-          setIsPanning={setIsPanning}
-          panStart={panStart}
-          setPanStart={setPanStart}
-          handleZoomIn={handleZoomIn}
-          handleZoomOut={handleZoomOut}
-          resetZoom={resetZoom}
-          handlePanStart={handlePanStart}
-          handlePanMove={handlePanMove}
-          handlePanEnd={handlePanEnd}
-          handleMouseDown={handleMouseDown}
-          handleMouseMove={handleMouseMove}
-          handleMouseUp={handleMouseUp}
-          selectionRect={selectionRect}
-          isSelecting={isSelecting}
-          selectionStart={selectionStart}
-          setSelectionStart={setSelectionStart}
-          setSelectionRect={setSelectionRect}
-          setIsSelecting={setIsSelecting}
-          stageRef={stageRef}
-          gridSize={gridSize}
-          showGrid={showGrid}
-          setShowGrid={setShowGrid}
-          seatSize={seatSize}
-          seatShape={seatShape}
-          currentColor={currentColor}
-          setCurrentColor={setCurrentColor}
-          createSeat={createSeat}
-          createSeatRow={createSeatRow}
-          createTable={createTable}
-          createZone={createZone}
-          createShape={createShape}
-          addText={addText}
-          clearSelection={clearSelection}
-          selectByType={selectByType}
-          moveSelected={moveSelected}
-          duplicateSelected={duplicateSelected}
-          deleteSelected={deleteSelected}
-          handleStageClick={handleStageClick}
-          handleStageContextMenu={handleStageContextMenu}
-          handleElementClick={handleElementClick}
-          handleElementDragEnd={handleElementDragEnd}
-          renderRowIndicators={renderRowIndicators}
-          renderDashboardZones={renderDashboardZones}
-          getSeatColor={getSeatColor}
-          getZonaColor={getZonaColor}
-          getBorderColor={getBorderColor}
-          addSeatsToTable={addSeatsToTable}
-          saveMapa={saveMapa}
-          lastSavedAt={lastSavedAt}
-          setLastSavedAt={setLastSavedAt}
-          hasMapData={hasMapData}
-          setHasMapData={setHasMapData}
-          showTypeSelector={showTypeSelector}
-          setShowTypeSelector={setShowTypeSelector}
-        />
+      <div className="map-area" style={{ padding: '20px', border: '1px solid #ccc', margin: '20px' }}>
+        <h3>Área del Mapa</h3>
+        <p>Zoom: {zoom}</p>
+        <p>Posición: X={stagePosition.x}, Y={stagePosition.y}</p>
+        <p>Grid: {showGrid ? 'Visible' : 'Oculto'} (Tamaño: {gridSize})</p>
+        
+        {/* Controles básicos */}
+        <div style={{ margin: '10px 0' }}>
+          <button onClick={handleZoomIn}>🔍+</button>
+          <button onClick={handleZoomOut}>🔍-</button>
+          <button onClick={resetZoom}>🎯</button>
+          <button onClick={saveMapa}>💾 Guardar</button>
+        </div>
 
-        {/* Área del mapa */}
-        <MapArea
-          elements={elements}
-          selectedElements={selectedElements}
-          zoom={zoom}
-          stagePosition={stagePosition}
-          isPanning={isPanning}
-          panStart={panStart}
-          handlePanMove={handlePanMove}
-          handlePanEnd={handlePanEnd}
-          handleMouseDown={handleMouseDown}
-          handleMouseMove={handleMouseMove}
-          handleMouseUp={handleMouseUp}
-          selectionRect={selectionRect}
-          isSelecting={isSelecting}
-          selectionStart={selectionStart}
-          setSelectionStart={setSelectionStart}
-          setSelectionRect={setSelectionRect}
-          setIsSelecting={setIsSelecting}
-          stageRef={stageRef}
-          gridSize={gridSize}
-          showGrid={showGrid}
-          setShowGrid={setShowGrid}
-          seatSize={seatSize}
-          seatShape={seatShape}
-          currentColor={currentColor}
-          setCurrentColor={setCurrentColor}
-          createSeat={createSeat}
-          createSeatRow={createSeatRow}
-          createTable={createTable}
-          createZone={createZone}
-          createShape={createShape}
-          addText={addText}
-          clearSelection={clearSelection}
-          selectByType={selectByType}
-          moveSelected={moveSelected}
-          duplicateSelected={duplicateSelected}
-          deleteSelected={deleteSelected}
-          handleStageClick={handleStageClick}
-          handleStageContextMenu={handleStageContextMenu}
-          handleElementClick={handleElementClick}
-          handleElementDragEnd={handleElementDragEnd}
-          renderRowIndicators={renderRowIndicators}
-          renderDashboardZones={renderDashboardZones}
-          getSeatColor={getSeatColor}
-          getZonaColor={getZonaColor}
-          getBorderColor={getBorderColor}
-          addSeatsToTable={addSeatsToTable}
-          saveMapa={saveMapa}
-          lastSavedAt={lastSavedAt}
-          setLastSavedAt={setLastSavedAt}
-          hasMapData={hasMapData}
-          setHasMapData={setHasMapData}
-          showTypeSelector={showTypeSelector}
-          setShowTypeSelector={setShowTypeSelector}
-        />
+        {/* Área de canvas simplificada */}
+        <div style={{ 
+          width: '600px', 
+          height: '400px', 
+          border: '2px solid #333', 
+          backgroundColor: '#f0f0f0',
+          position: 'relative',
+          margin: '20px auto'
+        }}>
+          <p style={{ textAlign: 'center', marginTop: '180px' }}>
+            Área del Canvas (Konva.js)
+          </p>
+          {elements.length > 0 && (
+            <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'white', padding: '5px' }}>
+              <strong>Elementos creados:</strong>
+              <ul>
+                {elements.map(el => (
+                  <li key={el.id}>{el.type} - {el.numero || el.nombre || 'Sin nombre'}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
 
-        {/* Panel de información */}
-        <InfoPanel
-          elements={elements}
-          selectedElements={selectedElements}
-          zoom={zoom}
-          stagePosition={stagePosition}
-          isPanning={isPanning}
-          panStart={panStart}
-          handlePanMove={handlePanMove}
-          handlePanEnd={handlePanEnd}
-          handleMouseDown={handleMouseDown}
-          handleMouseMove={handleMouseMove}
-          handleMouseUp={handleMouseUp}
-          selectionRect={selectionRect}
-          isSelecting={isSelecting}
-          selectionStart={selectionStart}
-          setSelectionStart={setSelectionStart}
-          setSelectionRect={setSelectionRect}
-          setIsSelecting={setIsSelecting}
-          stageRef={stageRef}
-          gridSize={gridSize}
-          showGrid={showGrid}
-          setShowGrid={setShowGrid}
-          seatSize={seatSize}
-          seatShape={seatShape}
-          currentColor={currentColor}
-          setCurrentColor={setCurrentColor}
-          createSeat={createSeat}
-          createSeatRow={createSeatRow}
-          createTable={createTable}
-          createZone={createZone}
-          createShape={createShape}
-          addText={addText}
-          clearSelection={clearSelection}
-          selectByType={selectByType}
-          moveSelected={moveSelected}
-          duplicateSelected={duplicateSelected}
-          deleteSelected={deleteSelected}
-          handleStageClick={handleStageClick}
-          handleStageContextMenu={handleStageContextMenu}
-          handleElementClick={handleElementClick}
-          handleElementDragEnd={handleElementDragEnd}
-          renderRowIndicators={renderRowIndicators}
-          renderDashboardZones={renderDashboardZones}
-          getSeatColor={getSeatColor}
-          getZonaColor={getZonaColor}
-          getBorderColor={getBorderColor}
-          addSeatsToTable={addSeatsToTable}
-          saveMapa={saveMapa}
-          lastSavedAt={lastSavedAt}
-          setLastSavedAt={setLastSavedAt}
-          hasMapData={hasMapData}
-          setHasMapData={setHasMapData}
-          showTypeSelector={showTypeSelector}
-          setShowTypeSelector={setShowTypeSelector}
-        />
-
-        {/* Panel de herramientas contextuales */}
-        <ContextToolsPanel
-          elements={elements}
-          selectedElements={selectedElements}
-          zoom={zoom}
-          stagePosition={stagePosition}
-          isPanning={isPanning}
-          panStart={panStart}
-          handlePanMove={handlePanMove}
-          handlePanEnd={handlePanEnd}
-          handleMouseDown={handleMouseDown}
-          handleMouseMove={handleMouseMove}
-          handleMouseUp={handleMouseUp}
-          selectionRect={selectionRect}
-          isSelecting={isSelecting}
-          selectionStart={selectionStart}
-          setSelectionStart={setSelectionStart}
-          setSelectionRect={setSelectionRect}
-          setIsSelecting={setIsSelecting}
-          stageRef={stageRef}
-          gridSize={gridSize}
-          showGrid={showGrid}
-          setShowGrid={setShowGrid}
-          seatSize={seatSize}
-          seatShape={seatShape}
-          currentColor={currentColor}
-          setCurrentColor={setCurrentColor}
-          createSeat={createSeat}
-          createSeatRow={createSeatRow}
-          createTable={createTable}
-          createZone={createZone}
-          createShape={createShape}
-          addText={addText}
-          clearSelection={clearSelection}
-          selectByType={selectByType}
-          moveSelected={moveSelected}
-          duplicateSelected={duplicateSelected}
-          deleteSelected={deleteSelected}
-          handleStageClick={handleStageClick}
-          handleStageContextMenu={handleStageContextMenu}
-          handleElementClick={handleElementClick}
-          handleElementDragEnd={handleElementDragEnd}
-          renderRowIndicators={renderRowIndicators}
-          renderDashboardZones={renderDashboardZones}
-          getSeatColor={getSeatColor}
-          getZonaColor={getZonaColor}
-          getBorderColor={getBorderColor}
-          addSeatsToTable={addSeatsToTable}
-          saveMapa={saveMapa}
-          lastSavedAt={lastSavedAt}
-          setLastSavedAt={setLastSavedAt}
-          hasMapData={hasMapData}
-          setHasMapData={setHasMapData}
-          showTypeSelector={showTypeSelector}
-          setShowTypeSelector={setShowTypeSelector}
-        />
-
-        {/* Indicadores de estado */}
-        <StatusIndicators
-          elements={elements}
-          selectedElements={selectedElements}
-          zoom={zoom}
-          stagePosition={stagePosition}
-          isPanning={isPanning}
-          panStart={panStart}
-          handlePanMove={handlePanMove}
-          handlePanEnd={handlePanEnd}
-          handleMouseDown={handleMouseDown}
-          handleMouseMove={handleMouseMove}
-          handleMouseUp={handleMouseUp}
-          selectionRect={selectionRect}
-          isSelecting={isSelecting}
-          selectionStart={selectionStart}
-          setSelectionStart={setSelectionStart}
-          setSelectionRect={setSelectionRect}
-          setIsSelecting={setIsSelecting}
-          stageRef={stageRef}
-          gridSize={gridSize}
-          showGrid={showGrid}
-          setShowGrid={setShowGrid}
-          seatSize={seatSize}
-          seatShape={seatShape}
-          currentColor={currentColor}
-          setCurrentColor={setCurrentColor}
-          createSeat={createSeat}
-          createSeatRow={createSeatRow}
-          createTable={createTable}
-          createZone={createZone}
-          createShape={createShape}
-          addText={addText}
-          clearSelection={clearSelection}
-          selectByType={selectByType}
-          moveSelected={moveSelected}
-          duplicateSelected={duplicateSelected}
-          deleteSelected={deleteSelected}
-          handleStageClick={handleStageClick}
-          handleStageContextMenu={handleStageContextMenu}
-          handleElementClick={handleElementClick}
-          handleElementDragEnd={handleElementDragEnd}
-          renderRowIndicators={renderRowIndicators}
-          renderDashboardZones={renderDashboardZones}
-          getSeatColor={getSeatColor}
-          getZonaColor={getZonaColor}
-          getBorderColor={getBorderColor}
-          addSeatsToTable={addSeatsToTable}
-          saveMapa={saveMapa}
-          lastSavedAt={lastSavedAt}
-          setLastSavedAt={setLastSavedAt}
-          hasMapData={hasMapData}
-          setHasMapData={setHasMapData}
-          showTypeSelector={showTypeSelector}
-          setShowTypeSelector={setShowTypeSelector}
-        />
-
-        {/* Controles de zoom */}
-        <ZoomControls
-          zoom={zoom}
-          setZoom={setZoom}
-          handleZoomIn={handleZoomIn}
-          handleZoomOut={handleZoomOut}
-          resetZoom={resetZoom}
-        />
-
-        {/* Menú contextual */}
-        <ContextMenu
-          position={contextMenuPosition}
-          target={contextMenuTarget}
-          onClose={() => setShowContextMenu(false)}
-          onSelect={(action) => {
-            switch (action) {
-              case 'duplicate':
-                duplicateSelected();
-                break;
-              case 'delete':
-                deleteSelected();
-                break;
-              case 'edit':
-                startEditing(contextMenuTarget);
-                break;
-              case 'move':
-                // Implementar lógica de movimiento
-                break;
-              case 'resize':
-                // Implementar lógica de resize
-                break;
-              case 'rotate':
-                // Implementar lógica de rotación
-                break;
-              case 'group':
-                // Implementar lógica de agrupación
-                break;
-              case 'ungroup':
-                // Implementar lógica de desagrupación
-                break;
-              case 'sendToBack':
-                // Implementar lógica de enviar al fondo
-                break;
-              case 'bringToFront':
-                // Implementar lógica de traer al frente
-                break;
-              case 'properties':
-                // Implementar lógica de propiedades
-                break;
-              case 'info':
-                // Implementar lógica de información
-                break;
-              default:
-                break;
-            }
-            setShowContextMenu(false);
-          }}
-        />
-
-        {/* Input HTML superpuesto para edición de filas */}
-        {editingElement?.type === 'row' && (
-          <input
-            type="text"
-            value={editingValue}
-            onChange={(e) => setEditingValue(e.target.value)}
-            onBlur={() => {
-              editRowName(editingElement.fila, editingValue);
-              setEditingElement(null);
-              setEditingValue('');
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                editRowName(editingElement.fila, editingValue);
-                setEditingElement(null);
-                setEditingValue('');
-              }
-              if (e.key === 'Escape') {
-                setEditingElement(null);
-                setEditingValue('');
-              }
-            }}
-            style={{
-              position: 'absolute',
-              left: '50%',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: '200px',
-              fontSize: '14px',
-              textAlign: 'center',
-              border: '2px solid #667eea',
-              borderRadius: '6px',
-              outline: 'none',
-              zIndex: 1000,
-              background: 'white',
-              color: '#667eea',
-              fontWeight: 'bold',
-              padding: '8px'
-            }}
-            autoFocus
-          />
-        )}
+        {/* Información del estado */}
+        <div style={{ margin: '20px 0', padding: '10px', background: '#f9f9f9' }}>
+          <h4>Estado del Editor:</h4>
+          <p>Elementos seleccionados: {selectedElements.length}</p>
+          <p>Zona seleccionada: {selectedZone || 'Ninguna'}</p>
+          <p>Modo zona: {isInZoneMode ? 'Activo' : 'Inactivo'}</p>
+          <p>Último guardado: {lastSavedAt ? lastSavedAt.toLocaleString() : 'Nunca'}</p>
+        </div>
       </div>
     </div>
   );
