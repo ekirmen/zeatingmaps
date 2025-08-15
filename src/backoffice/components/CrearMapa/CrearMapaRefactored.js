@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { message } from 'antd';
 import { Group, Rect, Text } from 'react-konva';
-import SeatmapTypeSelector from '../SeatmapTypeSelector';
-import EditorSidebar from './components/EditorSidebar';
-import MapArea from './components/MapArea';
-import TopControls from './components/TopControls';
-import ZoomControls from './components/ZoomControls';
-import InfoPanel from './components/InfoPanel';
-import ContextMenu from './components/ContextMenu';
-import ContextToolsPanel from './components/ContextToolsPanel';
-import StatusIndicators from './components/StatusIndicators';
+// import SeatmapTypeSelector from '../SeatmapTypeSelector';
+// import EditorSidebar from './components/EditorSidebar';
+// import MapArea from './components/MapArea';
+// import TopControls from './components/TopControls';
+// import ZoomControls from './components/ZoomControls';
+// import InfoPanel from './components/InfoPanel';
+// import ContextMenu from './components/ContextMenu';
+// import ContextToolsPanel from './components/ContextToolsPanel';
+// import StatusIndicators from './components/StatusIndicators';
 import './CrearMapa.css';
 
 const CrearMapaRefactored = ({ salaId }) => {
@@ -770,182 +770,41 @@ const CrearMapaRefactored = ({ salaId }) => {
 
   return (
     <div className="crear-mapa-container">
+      <h1>Editor de Mapa - Versión Simplificada</h1>
+      <p>Sala ID: {salaId}</p>
+      <p>Elementos: {elements.length}</p>
+      <p>Estado: {showTypeSelector ? 'Mostrando selector' : 'Editor activo'}</p>
+      
       {/* Selector de tipo de mapa */}
       {showTypeSelector && (
-        <SeatmapTypeSelector
-          visible={showTypeSelector}
-          onSelect={(type) => {
-            setShowTypeSelector(false);
-            setHasMapData(true);
-            // Aquí se crearían los templates según el tipo
-            message.success(`Tipo de plano seleccionado: ${type}`);
-          }}
-          onCancel={() => {
-            if (hasMapData) {
-              setShowTypeSelector(false);
-            } else {
-              message.warning('Debes seleccionar un tipo de plano para continuar');
-            }
-          }}
-        />
+        <div>SeatmapTypeSelector commented out</div>
       )}
 
       {/* Panel izquierdo - Herramientas */}
-      <EditorSidebar
-        salaId={salaId}
-        elements={elements}
-        expandedMenus={expandedMenus}
-        toggleMenu={toggleMenu}
-        numerationMode={numerationMode}
-        activateNumerationMode={activateNumerationMode}
-        activeTool={activeTool}
-        setActiveTool={setActiveTool}
-        seatShape={seatShape}
-        setSeatShape={setSeatShape}
-        seatSize={seatSize}
-        setSeatSize={setSeatSize}
-        seatSpacing={seatSpacing}
-        setSeatSpacing={setSeatSpacing}
-        rowSpacing={rowSpacing}
-        setRowSpacing={setRowSpacing}
-        tableShape={tableShape}
-        setTableShape={setTableShape}
-        tableSize={tableSize}
-        setTableSize={setTableSize}
-        showGrid={showGrid}
-        setShowGrid={setShowGrid}
-        gridSize={gridSize}
-        setGridSize={setGridSize}
-        snapToGrid={snapToGrid}
-        setSnapToGrid={setSnapToGrid}
-        currentColor={currentColor}
-        setCurrentColor={setCurrentColor}
-        textContent={textContent}
-        setTextContent={setTextContent}
-        fontSize={fontSize}
-        setFontSize={setFontSize}
-        createSeatRow={createSeatRow}
-        selectByType={selectByType}
-        moveSelected={moveSelected}
-        duplicateSelected={duplicateSelected}
-        deleteSelected={deleteSelected}
-        saveMapa={saveMapa}
-        clearSelection={clearSelection}
-        setShowTypeSelector={setShowTypeSelector}
-      />
+      <div>EditorSidebar commented out</div>
 
       {/* Área principal del mapa */}
       <div className="map-area">
         {/* Controles superiores */}
-        <TopControls
-          showGrid={showGrid}
-          setShowGrid={setShowGrid}
-          snapToGrid={snapToGrid}
-          setSnapToGrid={setSnapToGrid}
-          selectedElements={selectedElements}
-          deleteSelected={deleteSelected}
-          enterZoneMode={enterZoneMode}
-          selectedElement={elements.find(el => el.id === selectedElements[0])}
-          selectedZone={selectedZone}
-          isInZoneMode={isInZoneMode}
-          exitZoneMode={exitZoneMode}
-        />
+        <div>TopControls commented out</div>
 
         {/* Área del mapa */}
-        <MapArea
-          elements={elements}
-          selectedElements={selectedElements}
-          zoom={zoom}
-          stagePosition={stagePosition}
-          isPanning={isPanning}
-          selectionRect={selectionRect}
-          drawingPoints={drawingPoints}
-          showGrid={showGrid}
-          gridSize={gridSize}
-          numerationMode={numerationMode}
-          editingElement={editingElement}
-          editingValue={editingValue}
-          setEditingValue={setEditingValue}
-          handleElementClick={handleElementClick}
-          handleElementDragEnd={handleElementDragEnd}
-          handlePanStart={handlePanStart}
-          handlePanMove={handlePanMove}
-          handlePanEnd={handlePanEnd}
-          handleMouseDown={handleMouseDown}
-          handleMouseMove={handleMouseMove}
-          handleMouseUp={handleMouseUp}
-          handleStageClick={handleStageClick}
-          handleStageContextMenu={handleStageContextMenu}
-          startEditing={startEditing}
-          saveEditing={saveEditing}
-          cancelEditing={cancelEditing}
-          renderRowIndicators={renderRowIndicators()}
-          getSeatColor={getSeatColor}
-          getZonaColor={getZonaColor}
-          getBorderColor={getBorderColor}
-          selectedZone={selectedZone}
-          isInZoneMode={isInZoneMode}
-          zonesFromDashboard={zonesFromDashboard}
-          renderDashboardZones={renderDashboardZones()}
-          stageRef={stageRef}
-        />
+        <div>MapArea commented out</div>
 
         {/* Panel de información */}
-        <InfoPanel
-          elements={elements}
-          selectedElements={selectedElements}
-        />
+        <div>InfoPanel commented out</div>
 
         {/* Panel de herramientas contextuales */}
-        <ContextToolsPanel
-          selectedElements={selectedElements}
-          elements={elements}
-          seatShape={seatShape}
-          setSeatShape={setSeatShape}
-          addSeatsToTable={addSeatsToTable}
-        />
+        <div>ContextToolsPanel commented out</div>
 
         {/* Indicadores de estado */}
-        <StatusIndicators
-          lastSavedAt={lastSavedAt}
-          numerationMode={numerationMode}
-          activateNumerationMode={activateNumerationMode}
-          isInZoneMode={isInZoneMode}
-          selectedZone={selectedZone}
-          exitZoneMode={exitZoneMode}
-        />
+        <div>StatusIndicators commented out</div>
 
         {/* Controles de zoom */}
-        <ZoomControls
-          handleZoomIn={handleZoomIn}
-          handleZoomOut={handleZoomOut}
-          resetZoom={resetZoom}
-        />
+        <div>ZoomControls commented out</div>
 
         {/* Menú contextual */}
-        <ContextMenu
-          showContextMenu={showContextMenu}
-          contextMenuPosition={contextMenuPosition}
-          contextMenuTarget={contextMenuTarget}
-          onSelect={(target) => {
-            setShowContextMenu(false);
-            if (target && target.attrs && target.attrs.id) {
-              handleElementClick(target.attrs.id);
-            }
-          }}
-          onDelete={() => {
-            setShowContextMenu(false);
-            deleteSelected();
-          }}
-          onDuplicate={() => {
-            setShowContextMenu(false);
-            duplicateSelected();
-          }}
-          onEdit={() => {
-            setShowContextMenu(false);
-            // Implementar edición
-          }}
-        />
+        <div>ContextMenu commented out</div>
 
         {/* Input HTML superpuesto para edición de filas */}
         {editingElement?.type === 'row' && (
