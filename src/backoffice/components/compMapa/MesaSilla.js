@@ -3,228 +3,161 @@ import React from 'react';
 import { Circle, Rect, Text, Group } from 'react-konva';
 
 export const Mesa = ({
-  _id,
-  shape,
-  posicion = { x: 0, y: 0 }, // This will be the grid position
-  radius,
-  width,
-  height,
-  nombre,
-  selected,
-  onSelect,
+  mesa,
+  isSelected,
+  onClick,
   onDragEnd,
-  onChairDragEnd,
-  onDoubleClick,
-  zonaId,
-  zonas = [],
-  selectedIds = [],
-  elements = [],
+  getSeatColor,
+  getZonaColor,
+  getBorderColor,
+  showZones,
+  selectedZone,
+  showConnections,
+  connectionStyle,
 }) => {
-  console.log('[Mesa] Componente renderizándose con props:', {
-    _id,
-    shape,
-    posicion,
-    radius,
-    width,
-    height,
-    nombre,
-    selected,
-    zonaId
-  });
+  const { id, x, y, width, height, nombre, zonaId, sillas = [] } = mesa;
 
-  // Add validation check
-  if (!posicion || typeof posicion.x !== 'number' || typeof posicion.y !== 'number') {
-    console.warn('Invalid position provided to Mesa component:', posicion);
-    posicion = { x: 0, y: 0 };
-  }
-
-  const zona = zonas.find((z) => z.id === zonaId);
-  const strokeColor = selected ? 'blue' : zona?.color || 'black';
-  const fillColor = zona?.color || '#ccc';
-
-  // Find chairs belonging to this mesa
-  const childChairs = elements.filter(el => el.type === 'silla' && el.parentId === _id);
-
-  const handleGroupDragEnd = (e) => {
-    const newGridPos = {
-      x: e.target.x(),
-      y: e.target.y()
-    };
-    
-    // Calculate movement delta
-    const deltaX = newGridPos.x - posicion.x;
-    const deltaY = newGridPos.y - posicion.y;
-    
-    // Update chair positions (relative to grid movement)
-    const chairUpdates = childChairs.map(chair => {
-      // Parse chair position safely - it's stored as text in the database
-      let chairPos = { x: 0, y: 0 };
-      try {
-        if (chair.posicion && typeof chair.posicion === 'string') {
-          chairPos = JSON.parse(chair.posicion);
-        } else if (chair.posicion && typeof chair.posicion === 'object') {
-          chairPos = chair.posicion;
-        }
-      } catch (error) {
-        console.warn('Failed to parse chair position:', chair.posicion, error);
-        chairPos = { x: 0, y: 0 };
-      }
-
-      return {
-        _id: chair._id,
-        posicion: {
-          x: (chairPos.x || 0) + deltaX,
-          y: (chairPos.y || 0) + deltaY
-        }
-      };
-    });
-
-    onDragEnd(e, _id, newGridPos, chairUpdates);
-  };
+  const strokeColor = isSelected ? '#0066FF' : getBorderColor(zonaId);
+  const fillColor = getZonaColor(zonaId);
 
   return (
     <Group
-      x={posicion.x}
-      y={posicion.y}
+      x={x}
+      y={y}
       draggable={true}
-      onDragEnd={handleGroupDragEnd}
-      onClick={() => onSelect({ _id })}
-      onTap={() => onSelect({ _id })}
-      onDoubleClick={() => onDoubleClick && onDoubleClick(_id)}
+      onDragEnd={onDragEnd}
+      onClick={onClick}
     >
-      {shape === 'circle' ? (
-        <Circle
-          // Position relative to the Group's origin (0,0)
-          x={0}
-          y={0}
-          radius={radius}
-          fill={fillColor}
-          stroke={strokeColor}
-          strokeWidth={2}
-          // Remove draggable from the shape inside the group
-        />
-      ) : (
-        <Rect
-          // Position relative to the Group's origin (0,0)
-          x={0}
-          y={0}
-          width={width}
-          height={height}
-          fill={fillColor}
-          stroke={strokeColor}
-          strokeWidth={2}
-          // Remove draggable from the shape inside the group
-        />
-      )}
-      {/* Position text relative to the Group's origin (0,0) */}
-      <Text
-        x={-(radius || width / 2)} // Adjust text position relative to group
-        y={-30} // Adjust text position relative to group
-        text={nombre}
-        fontSize={14}
-        fill="black"
+      <Rect
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        fill={fillColor}
+        stroke={strokeColor}
+        strokeWidth={isSelected ? 3 : 2}
+        cornerRadius={5}
       />
-      {/* Renderizar sillas como elementos independientes */}
-      {childChairs.map((silla) => {
-        // Parse chair position safely - it's stored as text in the database
-        let sillaPos = { x: 0, y: 0 };
-        try {
-          if (silla.posicion && typeof silla.posicion === 'string') {
-            sillaPos = JSON.parse(silla.posicion);
-          } else if (silla.posicion && typeof silla.posicion === 'object') {
-            sillaPos = silla.posicion;
-          }
-        } catch (error) {
-          console.warn('Failed to parse chair position:', silla.posicion, error);
-          sillaPos = { x: 0, y: 0 };
-        }
+      
+      <Text
+        x={0}
+        y={-25}
+        width={width}
+        text={nombre || 'Mesa'}
+        fontSize={12}
+        fill="#333"
+        align="center"
+        fontStyle="bold"
+      />
 
-        return (
-          <Silla
-            key={silla._id}
-            _id={silla._id}
-            shape={silla.shape || 'rect'}
-            x={sillaPos.x}
-            y={sillaPos.y}
-            width={silla.width || 20}
-            height={silla.height || 20}
-            numero={silla.numero}
-            nombre={silla.nombre}
-            fila={silla.fila}
-            selected={selectedIds.includes(silla._id)}
-            onSelect={() => onSelect(silla)}
-            onDragEnd={onChairDragEnd}
-            zonaId={silla.zonaId}
-            zonas={zonas}
-            parentPosition={posicion}
-          />
-        );
-      })}
+      {/* Renderizar sillas de la mesa */}
+      {sillas.map((silla) => (
+        <Silla
+          key={silla.id}
+          silla={silla}
+          isSelected={isSelected}
+          onClick={onClick}
+          onDragEnd={onDragEnd}
+          getSeatColor={getSeatColor}
+          getZonaColor={getZonaColor}
+          getBorderColor={getBorderColor}
+          showZones={showZones}
+          selectedZone={selectedZone}
+          showConnections={showConnections}
+          connectionStyle={connectionStyle}
+        />
+      ))}
     </Group>
   );
 };
 
 export const Silla = ({
-  _id,
-  shape = 'rect',
-  // Accept x and y props which are the positions relative to the parent Group
-  x,
-  y,
-  width,
-  height,
-  numero,
-  nombre,
-  fila,
-  selected,
-  onSelect,
-  onDragEnd, // This prop now receives onDragEndSilla from Mesa
-  zonaId,
-  zonas = [],
-  parentPosition,
+  silla,
+  isSelected,
+  onClick,
+  onDragEnd,
+  getSeatColor,
+  getZonaColor,
+  getBorderColor,
+  showZones,
+  selectedZone,
+  showConnections,
+  connectionStyle,
 }) => {
-  const zona = zonas.find((z) => z.id === zonaId);
-  const strokeColor = selected ? 'blue' : zona?.color || 'black';
-  const fillColor = zona?.color || '#48bb78';
+  const { id, x, y, width = 20, height = 20, numero, fila, zonaId, estado = 'available' } = silla;
+
+  // Colores basados en el estado del asiento
+  const seatColors = {
+    available: { fill: '#48BB78', stroke: '#38A169' },
+    occupied: { fill: '#F56565', stroke: '#E53E3E' },
+    reserved: { fill: '#ED8936', stroke: '#DD6B20' },
+    disabled: { fill: '#A0AEC0', stroke: '#718096' },
+    selected: { fill: '#0066FF', stroke: '#0052CC' }
+  };
+
+  const colors = seatColors[estado] || seatColors.available;
+  const strokeColor = isSelected ? '#0066FF' : getBorderColor(zonaId);
+  const fillColor = isSelected ? '#0066FF' : colors.fill;
 
   return (
-    <>
-      {shape === 'circle' ? (
+    <Group
+      x={x}
+      y={y}
+      draggable={true}
+      onDragEnd={onDragEnd}
+      onClick={onClick}
+    >
+      {/* Asiento principal */}
+      <Rect
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        fill={fillColor}
+        stroke={strokeColor}
+        strokeWidth={isSelected ? 3 : 2}
+        cornerRadius={3}
+        shadowColor="black"
+        shadowBlur={isSelected ? 10 : 5}
+        shadowOpacity={0.3}
+        shadowOffset={{ x: 2, y: 2 }}
+      />
+
+      {/* Respaldo del asiento */}
+      <Rect
+        x={0}
+        y={0}
+        width={width}
+        height={height * 0.3}
+        fill={fillColor}
+        stroke={strokeColor}
+        strokeWidth={1}
+        cornerRadius={{ topLeft: 3, topRight: 3, bottomLeft: 0, bottomRight: 0 }}
+      />
+
+      {/* Número del asiento */}
+      <Text
+        x={0}
+        y={height + 2}
+        width={width}
+        text={fila ? `${fila}${numero}` : numero?.toString() || ''}
+        fontSize={10}
+        fill="#333"
+        align="center"
+        fontStyle="bold"
+      />
+
+      {/* Indicador de estado */}
+      {estado !== 'available' && (
         <Circle
-          x={x + width / 2} // Use the relative x, y and adjust for center if needed
-          y={y + height / 2} // Use the relative x, y and adjust for center if needed
-          radius={width / 2}
-          fill={fillColor}
-          stroke={strokeColor}
-          strokeWidth={2}
-          draggable={false}
-          onClick={() => onSelect({ _id })} // Keep onClick to allow selection
-          onTap={() => onSelect({ _id })} // Keep onTap to allow selection
-          onDragEnd={(e) => onDragEnd(e, _id)}
-        />
-      ) : (
-        <Rect
-          x={x} // Use the relative x
-          y={y} // Use the relative y
-          width={width}
-          height={height}
-          fill={fillColor}
-          stroke={strokeColor}
-          strokeWidth={2}
-          draggable={false}
-          onClick={() => onSelect({ _id })} // Keep onClick to allow selection
-          onTap={() => onSelect({ _id })} // Keep onTap to allow selection
-          onDragEnd={(e) => onDragEnd(e, _id)}
+          x={width - 5}
+          y={5}
+          radius={3}
+          fill={colors.stroke}
+          stroke="white"
+          strokeWidth={1}
         />
       )}
-      <Text
-        x={x}
-        y={y - 20}  // Position text above chair
-        width={width}
-        text={fila ? `${fila}${numero}` : nombre || numero?.toString() || ''}
-        fontSize={12}
-        fill="black"
-        align="center"
-      />
-    </>
+    </Group>
   );
 };
