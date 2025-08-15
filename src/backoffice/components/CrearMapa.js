@@ -207,11 +207,28 @@ const CrearMapa = () => {
   
   const renderElements = useMemo(() => {
     console.log('Renderizando elementos:', elements.length, elements);
-    return elements.map(element => {
+    
+    // Filtrar elementos válidos
+    const validElements = elements.filter(element => 
+      element && 
+      element._id && 
+      element.type && 
+      element.posicion && 
+      typeof element.posicion.x === 'number' && 
+      typeof element.posicion.y === 'number'
+    );
+    
+    console.log('Elementos válidos:', validElements.length, validElements);
+    
+    return validElements.map(element => {
       const isSelected = selectedIds.includes(element._id);
       
       switch (element.type) {
         case 'mesa':
+          if (!element.width || !element.height) {
+            console.warn('Mesa sin dimensiones válidas:', element);
+            return null;
+          }
           return (
             <Mesa
               key={element._id}
@@ -225,6 +242,10 @@ const CrearMapa = () => {
           );
           
         case 'silla':
+          if (!element.radius) {
+            console.warn('Silla sin radio válido:', element);
+            return null;
+          }
           return (
             <Silla
               key={element._id}
@@ -237,6 +258,10 @@ const CrearMapa = () => {
           );
           
         case 'text':
+          if (!element.text) {
+            console.warn('Texto sin contenido válido:', element);
+            return null;
+          }
           return (
             <Text
               key={element._id}
@@ -252,6 +277,10 @@ const CrearMapa = () => {
           );
           
         case 'rect':
+          if (!element.width || !element.height) {
+            console.warn('Rectángulo sin dimensiones válidas:', element);
+            return null;
+          }
           return (
             <Rect
               key={element._id}
@@ -269,6 +298,10 @@ const CrearMapa = () => {
           );
           
         case 'circle':
+          if (!element.radius) {
+            console.warn('Círculo sin radio válido:', element);
+            return null;
+          }
           return (
             <Ellipse
               key={element._id}
@@ -286,6 +319,10 @@ const CrearMapa = () => {
           );
           
         case 'line':
+          if (!element.points || !Array.isArray(element.points) || element.points.length < 4) {
+            console.warn('Línea sin puntos válidos:', element);
+            return null;
+          }
           return (
             <Line
               key={element._id}
@@ -353,17 +390,38 @@ const CrearMapa = () => {
   // ===== RENDERIZADO DE ZONAS =====
   
   const renderZonas = useMemo(() => {
-    if (!showZones) return null;
+    console.log('Renderizando zonas:', { 
+      showZones, 
+      zonesCount: zones.length, 
+      loadedZonasCount: loadedZonas.length,
+      zones, 
+      loadedZonas 
+    });
+    
+    if (!showZones) {
+      console.log('Zonas deshabilitadas');
+      return null;
+    }
+    
+    // Usar loadedZonas en lugar de zones si zones está vacío
+    const zonasParaRenderizar = zones.length > 0 ? zones : loadedZonas;
+    
+    if (!zonasParaRenderizar || zonasParaRenderizar.length === 0) {
+      console.log('No hay zonas disponibles para renderizar');
+      return null;
+    }
+    
+    console.log('Renderizando zonas:', zonasParaRenderizar);
     
     return (
       <Zonas
-        zones={zones}
+        zones={zonasParaRenderizar}
         selectedZone={selectedZone}
         onZoneSelect={setSelectedZone}
         onZoneToggle={() => {}} // Implementar si es necesario
       />
     );
-  }, [showZones, zones, selectedZone]);
+  }, [showZones, zones, loadedZonas, selectedZone]);
 
   // ===== RENDERIZADO DE CONTROLES SUPERIORES =====
   
@@ -435,15 +493,41 @@ const CrearMapa = () => {
       
       <div className="w-px h-6 bg-gray-300" />
       
-      {/* Controles Avanzados */}
-      <Tooltip title="Controles Avanzados">
+      {/* Toggle Zonas */}
+      <Tooltip title={showZones ? "Ocultar Zonas" : "Mostrar Zonas"}>
         <Button
           icon={<SettingOutlined />}
-          onClick={() => setShowAdvancedControls(!showAdvancedControls)}
-          type={showAdvancedControls ? 'primary' : 'default'}
+          onClick={() => setShowZones(!showZones)}
+          type={showZones ? 'primary' : 'default'}
           size="small"
-        />
+        >
+          Zonas
+        </Button>
       </Tooltip>
+      
+      <div className="w-px h-6 bg-gray-300" />
+      
+      {/* Limpiar Elementos Inválidos */}
+      <Tooltip title="Limpiar Elementos Inválidos">
+         <Button
+           icon={<ReloadOutlined />}
+           onClick={limpiarElementosInvalidos}
+           size="small"
+           danger
+         />
+       </Tooltip>
+       
+       <div className="w-px h-6 bg-gray-300" />
+       
+       {/* Controles Avanzados */}
+       <Tooltip title="Controles Avanzados">
+         <Button
+           icon={<SettingOutlined />}
+           onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+           type={showAdvancedControls ? 'primary' : 'default'}
+           size="small"
+         />
+       </Tooltip>
     </div>
   );
 
@@ -501,20 +585,29 @@ const CrearMapa = () => {
         setIsLoading(true);
         
         // Cargar zonas y información de la sala en paralelo
+        console.log('Cargando zonas y datos de sala...');
         const [zonasData, salaData] = await Promise.all([
           fetchZonasPorSala(salaId),
           fetchSalaById(salaId)
         ]);
         
+        console.log('Zonas cargadas:', zonasData);
+        console.log('Datos de sala:', salaData);
+        
         setLoadedZonas(zonasData);
         setSalaInfo(salaData);
         
-        // Cargar mapa existente
-        console.log('Cargando mapa para sala:', salaId);
-        await loadMapa(salaId);
-        console.log('Mapa cargado, elementos:', elements);
-        
-      } catch (error) {
+                 // Cargar mapa existente
+         console.log('Cargando mapa para sala:', salaId);
+         await loadMapa(salaId);
+         console.log('Mapa cargado, elementos:', elements);
+         
+         // Limpiar elementos inválidos después de cargar
+         setTimeout(() => {
+           limpiarElementosInvalidos();
+         }, 1000);
+         
+       } catch (error) {
         console.error('Error cargando datos:', error);
         message.error('Error cargando datos de la sala');
       } finally {
@@ -531,6 +624,10 @@ const CrearMapa = () => {
   useEffect(() => {
     setZoom(1.0);
     setStagePosition({ x: 0, y: 0 });
+    
+    // Habilitar zonas por defecto
+    setShowZones(true);
+    console.log('Estado inicial: zonas habilitadas, zoom 100%');
   }, []);
 
   // Cargar información de la sala
@@ -566,6 +663,25 @@ const CrearMapa = () => {
   }, [salaId]);
 
   // Funciones de búsqueda de salas eliminadas - ya no se necesitan
+
+  // ===== LIMPIEZA DE ELEMENTOS INVÁLIDOS =====
+  
+  const limpiarElementosInvalidos = () => {
+    const elementosValidos = elements.filter(element => 
+      element && 
+      element._id && 
+      element.type && 
+      element.posicion && 
+      typeof element.posicion.x === 'number' && 
+      typeof element.posicion.y === 'number'
+    );
+    
+    if (elementosValidos.length !== elements.length) {
+      console.log(`Limpiando elementos inválidos: ${elements.length} -> ${elementosValidos.length}`);
+      setElements(elementosValidos);
+      message.info(`Se limpiaron ${elements.length - elementosValidos.length} elementos inválidos`);
+    }
+  };
 
   // ===== SINCRONIZACIÓN DE ASIENTOS =====
   
