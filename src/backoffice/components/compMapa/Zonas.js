@@ -1,40 +1,53 @@
-// Zonas.jsx
+// Zonas.jsx - Versión simplificada para Konva
 import React from 'react';
+import { Rect, Text, Group } from 'react-konva';
 
-const Zonas = ({ zones, loadingZonas, selectedZone, onSelect, onAssign }) => {
-  if (loadingZonas) {
-    return <p>Cargando...</p>;
+const Zonas = ({ zones, selectedZone, onZoneSelect }) => {
+  if (!zones || zones.length === 0) {
+    return null;
   }
 
   return (
-    <div className="flex">
-      <aside className="w-64 p-4 border-r">
-        <h2 className="text-lg font-bold mb-2">Zonas</h2>
-        <ul>
-          {zones.map((zone) => (
-            <li
-              key={zone._id}
-              onClick={() => onSelect(zone)}
-              style={{
-                cursor: 'pointer',
-                fontWeight: selectedZone?._id === zone._id ? 'bold' : 'normal',
-                color: zone.color,
-                marginBottom: '0.5rem',
-              }}
-            >
-              {zone.nombre}
-            </li>
-          ))}
-        </ul>
-        <button onClick={onAssign} disabled={!selectedZone}>
-          Asignar Zona
-        </button>
-      </aside>
+    <Group>
+      {zones.map((zone) => {
+        // Solo renderizar si la zona tiene coordenadas válidas
+        if (!zone.coordenadas || !zone.coordenadas.x || !zone.coordenadas.y) {
+          return null;
+        }
 
-      <main className="flex-1 p-4">
-        {/* Aquí puedes incluir el mapa y grid si quieres */}
-      </main>
-    </div>
+        const isSelected = selectedZone?._id === zone._id;
+        const zoneColor = zone.color || '#4A90E2';
+        const borderColor = isSelected ? '#FF6B6B' : zoneColor;
+        
+        return (
+          <Group key={zone._id}>
+            {/* Fondo de la zona */}
+            <Rect
+              x={zone.coordenadas.x}
+              y={zone.coordenadas.y}
+              width={zone.coordenadas.width || 100}
+              height={zone.coordenadas.height || 50}
+              fill={`${zoneColor}20`} // Color con transparencia
+              stroke={borderColor}
+              strokeWidth={isSelected ? 3 : 1}
+              dash={isSelected ? [5, 5] : []}
+              opacity={0.8}
+            />
+            
+            {/* Nombre de la zona */}
+            <Text
+              x={zone.coordenadas.x + 5}
+              y={zone.coordenadas.y + 5}
+              text={zone.nombre || 'Zona'}
+              fontSize={12}
+              fill={zoneColor}
+              fontStyle="bold"
+              align="left"
+            />
+          </Group>
+        );
+      })}
+    </Group>
   );
 };
 

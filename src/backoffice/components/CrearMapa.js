@@ -113,6 +113,9 @@ const CrearMapa = () => {
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [showAdvancedControls, setShowAdvancedControls] = useState(false);
   
+  // Estado para el plano actual (página actual)
+  const [planoActual, setPlanoActual] = useState('plano_actual');
+  
   // Estados para búsqueda de sala eliminados - ya no se necesitan
 
   // Referencias
@@ -411,14 +414,27 @@ const CrearMapa = () => {
       return null;
     }
     
-    console.log('Renderizando zonas:', zonasParaRenderizar);
+    // Filtrar solo zonas con coordenadas válidas
+    const zonasValidas = zonasParaRenderizar.filter(zone => 
+      zone && 
+      zone._id && 
+      zone.coordenadas && 
+      typeof zone.coordenadas.x === 'number' && 
+      typeof zone.coordenadas.y === 'number'
+    );
+    
+    if (zonasValidas.length === 0) {
+      console.log('No hay zonas con coordenadas válidas');
+      return null;
+    }
+    
+    console.log('Renderizando zonas válidas:', zonasValidas);
     
     return (
       <Zonas
-        zones={zonasParaRenderizar}
+        zones={zonasValidas}
         selectedZone={selectedZone}
         onZoneSelect={setSelectedZone}
-        onZoneToggle={() => {}} // Implementar si es necesario
       />
     );
   }, [showZones, zones, loadedZonas, selectedZone]);
@@ -427,17 +443,17 @@ const CrearMapa = () => {
   
   const renderTopControls = () => (
     <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white rounded-lg shadow-lg p-3 flex items-center space-x-3">
-      {/* Información de Sala */}
-      <div className="flex items-center space-x-2">
-        <div className="text-sm font-medium text-gray-900">
-          Sala: {salaInfo ? salaInfo.nombre : 'Cargando...'}
-        </div>
-        {salaInfo && (
-          <div className="text-xs text-gray-500">
-            Asientos: {elements.filter(el => el.type === 'silla').length}
-          </div>
-        )}
-      </div>
+             {/* Información de Sala */}
+       <div className="flex items-center space-x-2">
+         <div className="text-sm font-medium text-gray-900">
+           Sala: {salaInfo ? salaInfo.nombre : 'Cargando...'}
+         </div>
+         {salaInfo && (
+           <div className="text-xs text-gray-500">
+             Asientos: {elements.filter(el => el.type === 'silla').length}
+           </div>
+         )}
+       </div>
       
       <div className="w-px h-6 bg-gray-300" />
       
@@ -507,15 +523,48 @@ const CrearMapa = () => {
       
       <div className="w-px h-6 bg-gray-300" />
       
-      {/* Limpiar Elementos Inválidos */}
-      <Tooltip title="Limpiar Elementos Inválidos">
+             {/* Buscar Zonas en DB */}
+       <Tooltip title="Buscar Zonas en Base de Datos">
          <Button
            icon={<ReloadOutlined />}
-           onClick={limpiarElementosInvalidos}
+           onClick={buscarZonasEnDB}
            size="small"
-           danger
-         />
+           type="dashed"
+           loading={loadingSala}
+         >
+           🔍Zonas
+         </Button>
        </Tooltip>
+       
+       <div className="w-px h-6 bg-gray-300" />
+       
+       {/* Refrescar Zonas */}
+       <Tooltip title="Refrescar Zonas">
+         <Button
+           icon={<ReloadOutlined />}
+           onClick={cargarZonasDelPlano}
+           size="small"
+           loading={loadingSala}
+         >
+           🔄
+         </Button>
+       </Tooltip>
+       
+       <div className="w-px h-6 bg-gray-300" />
+       
+
+       
+       <div className="w-px h-6 bg-gray-300" />
+       
+       {/* Limpiar Elementos Inválidos */}
+       <Tooltip title="Limpiar Elementos Inválidos">
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={limpiarElementosInvalidos}
+            size="small"
+            danger
+          />
+        </Tooltip>
        
        <div className="w-px h-6 bg-gray-300" />
        
@@ -592,6 +641,9 @@ const CrearMapa = () => {
         ]);
         
         console.log('Zonas cargadas:', zonasData);
+        console.log('Zonas con coordenadas válidas:', zonasData.filter(z => 
+          z && z.coordenadas && typeof z.coordenadas.x === 'number'
+        ));
         console.log('Datos de sala:', salaData);
         
         setLoadedZonas(zonasData);
@@ -601,11 +653,19 @@ const CrearMapa = () => {
          console.log('Cargando mapa para sala:', salaId);
          await loadMapa(salaId);
          console.log('Mapa cargado, elementos:', elements);
+         console.log('Elementos con propiedades válidas:', elements.filter(el => 
+           el && el._id && el.type && el.posicion
+         ));
          
          // Limpiar elementos inválidos después de cargar
          setTimeout(() => {
            limpiarElementosInvalidos();
          }, 1000);
+         
+         // Cargar zonas automáticamente después de cargar
+         setTimeout(() => {
+           cargarZonasDelPlano();
+         }, 1500);
          
        } catch (error) {
         console.error('Error cargando datos:', error);
@@ -682,6 +742,102 @@ const CrearMapa = () => {
       message.info(`Se limpiaron ${elements.length - elementosValidos.length} elementos inválidos`);
     }
   };
+
+  // ===== BUSCAR ZONAS EN BASE DE DATOS =====
+  
+  const buscarZonasEnDB = async () => {
+    try {
+      console.log('Buscando zonas en base de datos para sala:', salaId);
+      
+      // Buscar zonas existentes para la sala actual
+      const zonasEncontradas = await fetchZonasPorSala(salaId);
+      
+      if (zonasEncontradas && zonasEncontradas.length > 0) {
+        // Filtrar zonas con coordenadas válidas
+        const zonasValidas = zonasEncontradas.filter(zone => 
+          zone && 
+          zone._id && 
+          zone.coordenadas && 
+          typeof zone.coordenadas.x === 'number' && 
+          typeof zone.coordenadas.y === 'number'
+        );
+        
+        if (zonasValidas.length > 0) {
+          setLoadedZonas(zonasValidas);
+          message.success(`Se encontraron ${zonasValidas.length} zonas en la base de datos`);
+          console.log('Zonas encontradas en DB:', zonasValidas);
+          console.log('Detalles de zonas válidas:', zonasValidas.map(z => ({
+            id: z._id,
+            nombre: z.nombre,
+            color: z.color,
+            coordenadas: z.coordenadas
+          })));
+        } else {
+          message.warning('Se encontraron zonas pero sin coordenadas válidas');
+          console.log('Zonas sin coordenadas válidas:', zonasEncontradas);
+          console.log('Estructura de zonas encontradas:', zonasEncontradas.map(z => ({
+            id: z._id,
+            nombre: z.nombre,
+            tieneCoordenadas: !!z.coordenadas,
+            coordenadas: z.coordenadas
+          })));
+        }
+      } else {
+        message.info('No se encontraron zonas en la base de datos para este plano');
+        console.log('No hay zonas en DB para la sala:', salaId);
+      }
+      
+    } catch (error) {
+      console.error('Error buscando zonas en DB:', error);
+      message.error('Error al buscar zonas en la base de datos');
+    }
+  };
+
+
+
+  // ===== CARGAR ZONAS DEL PLANO ACTUAL =====
+  
+  const cargarZonasDelPlano = async () => {
+    try {
+      setLoadingSala(true);
+      console.log('Cargando zonas del plano actual para sala:', salaId);
+      
+      // Buscar zonas para la sala actual (página del plano)
+      const zonasDelPlano = await fetchZonasPorSala(salaId);
+      
+      if (zonasDelPlano && zonasDelPlano.length > 0) {
+        // Filtrar zonas con coordenadas válidas
+        const zonasValidas = zonasDelPlano.filter(zone => 
+          zone && 
+          zone._id && 
+          zone.coordenadas && 
+          typeof zone.coordenadas.x === 'number' && 
+          typeof zone.coordenadas.y === 'number'
+        );
+        
+        if (zonasValidas.length > 0) {
+          setLoadedZonas(zonasValidas);
+          message.success(`${zonasValidas.length} zonas cargadas para este plano`);
+          console.log('Zonas del plano actual:', zonasValidas);
+        } else {
+          message.warning('Zonas sin coordenadas válidas');
+          console.log('Zonas sin coordenadas válidas:', zonasDelPlano);
+        }
+      } else {
+        message.info('No hay zonas disponibles para este plano');
+        console.log('No hay zonas para este plano');
+        setLoadedZonas([]);
+      }
+      
+    } catch (error) {
+      console.error('Error cargando zonas del plano:', error);
+      message.error('Error al cargar zonas del plano');
+    } finally {
+      setLoadingSala(false);
+    }
+  };
+
+
 
   // ===== SINCRONIZACIÓN DE ASIENTOS =====
   
