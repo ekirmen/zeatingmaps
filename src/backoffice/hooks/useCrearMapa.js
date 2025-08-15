@@ -311,14 +311,14 @@ export const useCrearMapa = () => {
   
   // Función para establecer imagen de fondo
   const handleSetBackgroundImage = (imageUrl, options = {}) => {
-    const backgroundOptions = {
-      scale: backgroundScale,
-      opacity: backgroundOpacity,
-      position: { x: 0, y: 0 },
-      showInWeb,
-      showInEditor: true,
-      ...options
-    };
+         const backgroundOptions = {
+       scale: backgroundScale,
+       opacity: backgroundOpacity,
+       position: { x: 0, y: 0 },
+       showInWeb: showBackgroundInWeb,
+       showInEditor: true,
+       ...options
+     };
 
     baseSetBackgroundImage(imageUrl, backgroundOptions);
     setBackgroundImage(imageUrl);
@@ -428,25 +428,14 @@ export const useCrearMapa = () => {
     message.info('Selección limpiada');
   };
 
-  // Función para asignar zona a elementos seleccionados
-  const handleAssignZoneToSelected = (zoneId) => {
-    if (!zoneId) {
-      message.warning('Selecciona una zona válida');
-      return;
-    }
-    
-    assignZoneToSelected(zoneId);
-  };
+
 
   // Función para ajustar a cuadrícula
   const handleSnapToGrid = (gridSize = 20) => {
     snapToCustomGrid(gridSize);
   };
 
-  // Función para limpiar sillas duplicadas
-  const handleLimpiarSillasDuplicadas = () => {
-    limpiarSillasDuplicadas();
-  };
+
 
   // Función para guardar
   const handleSave = () => {
@@ -555,9 +544,9 @@ export const useCrearMapa = () => {
     updateElementProperty: updatePropertyAndSelection,
     updateElementSize: updateSizeAndSelection,
     deleteSelectedElements,
-    limpiarSillasDuplicadas,
-    snapToGrid: handleSnapToGrid,
-    assignZoneToSelected,
+         limpiarSillasDuplicadas: handleLimpiarSillasDuplicadas,
+     snapToGrid: handleSnapToGrid,
+     assignZoneToSelected: handleAssignZoneToSelected,
     
     // Funciones de escalado
     scaleElement: scaleElementById,

@@ -678,10 +678,11 @@ const CrearMapa = () => {
         scaleElement={scaleElement}
         scaleSelectedElements={scaleSelectedElements}
         
-        // Nuevas funciones de estados de asientos
-        changeSeatState={changeSeatState}
-        changeSelectedSeatsState={changeSelectedSeatsState}
-        changeMesaSeatsState={changeMesaSeatsState}
+                 // Nuevas funciones de estados de asientos
+         changeSeatState={changeSeatState}
+         changeSelectedSeatsState={changeSelectedSeatsState}
+         changeMesaSeatsState={changeMesaSeatsState}
+         setSelectedSeatState={setSelectedSeatState}
         
         // Nuevas funciones de conexiones
         autoConnectSeats={autoConnectSeats}

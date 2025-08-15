@@ -71,6 +71,7 @@ const MenuMapa = ({
   changeSeatState,
   changeSelectedSeatsState,
   changeMesaSeatsState,
+  setSelectedSeatState,
   
   // Nuevas funciones de conexiones
   autoConnectSeats,

@@ -147,7 +147,7 @@ const Plano = () => {
                 if (s.zona) counts[s.zona] = (counts[s.zona] || 0) + 1;
               });
             } else if (el.type === 'silla' && el.zona) {
-              counts[el.zona] = (counts[s.zona] || 0) + 1;
+              counts[el.zona] = (counts[el.zona] || 0) + 1;
             }
           });
         }
