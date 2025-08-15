@@ -5,8 +5,7 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "build",
-        "nodeVersion": "22.x"
+        "distDir": "build"
       }
     }
   ],
@@ -27,10 +26,5 @@
   },
   "env": {
     "NODE_VERSION": "22.x"
-  },
-  "build": {
-    "env": {
-      "NODE_VERSION": "22.x"
-    }
   }
 }
