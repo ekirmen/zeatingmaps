@@ -13,12 +13,24 @@
   ],
   "routes": [
     {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/favicon.ico"
+    },
+    {
       "src": "/store/(.*)",
       "dest": "/store/index.html"
     },
     {
       "src": "/(.*)",
-      "dest": "/store/$1"
+      "dest": "/store/index.html"
     }
   ],
 
