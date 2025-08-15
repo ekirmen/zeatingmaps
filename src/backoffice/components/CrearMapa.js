@@ -1,83 +1,156 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { Stage, Layer, Rect, Text, Ellipse, Line } from 'react-konva';
+import { Stage, Layer, Rect, Text, Ellipse, Line, Image } from 'react-konva';
 import { Mesa, Silla } from './compMapa/MesaSilla';
 import Grid from './compMapa/Grid';
 import Zonas from './compMapa/Zonas';
-import Menu from './compMapa/MenuMapa';
+import MenuMapa from './compMapa/MenuMapa';
 import EditPopup from './compMapa/EditPopup';
 import FilaPopup from './compMapa/FilaPopup';
 import AdvancedEditPopup from './compMapa/AdvancedEditPopup';
 import { useCrearMapa } from '../hooks/useCrearMapa';
 import { fetchZonasPorSala, fetchSalaById } from '../services/apibackoffice';
-import { message, Switch, Button, Progress } from 'antd';
+import { message, Switch, Button, Progress, Tooltip } from 'antd';
 import { syncSeatsForSala } from '../services/apibackoffice';
 import { useSeatColors } from '../../hooks/useSeatColors';
+import { 
+  ZoomInOutlined, 
+  ZoomOutOutlined, 
+  SaveOutlined, 
+  UndoOutlined,
+  RedoOutlined,
+  GridOutlined,
+  PictureOutlined,
+  LinkOutlined,
+  SettingOutlined
+} from '@ant-design/icons';
 
 const CrearMapa = () => {
   const { salaId } = useParams();
 
   const {
+    // Estados básicos
     elements, setElements,
+    zones, setZones,
     selectedIds, setSelectedIds,
     showZones, setShowZones,
     selectedZone, setSelectedZone,
-    selectedElement,
-    setSelectedElement,
+    selectedElement, setSelectedElement,
     numSillas, setNumSillas,
     zoom, setZoom,
-    stageRef,
-    stageSize,
-    selectionRect,
-
+    selectionRect, setSelectionRect,
+    sillaShape, setSillaShape,
+    activeMode, setActiveMode,
+    sectionPoints, setSectionPoints,
+    isCreatingSection, setIsCreatingSection,
+    isPanning, setIsPanning,
+    stagePosition, setStagePosition,
+    hasUnsavedChanges, setHasUnsavedChanges,
+    isLoading, setIsLoading,
+    isSaving, setIsSaving,
+    uploadProgress, setUploadProgress,
+    
+    // Nuevos estados de escalado
+    selectedScale, setSelectedScale,
+    showScaleControls, setShowScaleControls,
+    scaleSystem,
+    
+    // Nuevos estados de asientos
+    selectedSeatState, setSelectedSeatState,
+    seatStates,
+    
+    // Nuevos estados de conexiones
+    showConnections, setShowConnections,
+    connectionStyle, setConnectionStyle,
+    connectionThreshold, setConnectionThreshold,
+    
+    // Nuevos estados de fondo
+    backgroundImage, setBackgroundImage,
+    backgroundScale, setBackgroundScale,
+    backgroundOpacity, setBackgroundOpacity,
+    showBackgroundInWeb, setShowBackgroundInWeb,
+    backgroundSystem,
+    
+    // Funciones básicas
     addMesa,
     addSillasToMesa,
     selectElement,
     selectGroup,
     updateElementProperty,
     updateElementSize,
-    zoomIn,
-    zoomOut,
-    handleWheelZoom,
-    handleSave,
-    assignZoneToSelected,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
     deleteSelectedElements,
+    limpiarSillasDuplicadas,
+    snapToGrid,
+    assignZoneToSelected,
+    
+    // Nuevas funciones de escalado
+    scaleElement,
+    scaleSelectedElements,
+    
+    // Nuevas funciones de estados de asientos
+    changeSeatState,
+    changeSelectedSeatsState,
+    changeMesaSeatsState,
+    
+    // Nuevas funciones de conexiones
+    autoConnectSeats,
+    createManualConnection,
+    removeConnections,
+    changeConnectionStyle,
+    
+    // Nuevas funciones de coordenadas precisas
+    precisePositioning,
+    snapToCustomGrid,
+    
+    // Nuevas funciones de fondo
+    setBackgroundImage: handleSetBackgroundImage,
+    updateBackground: handleUpdateBackground,
+    removeBackground: handleRemoveBackground,
+    
+    // Funciones de elementos gráficos
     addTextElement,
     addRectangleElement,
     addEllipseElement,
     addLineElement,
     addChairRow,
-    snapToGrid,
-    limpiarSillasDuplicadas,
+    addSeccion,
+    
+    // Funciones de selección
+    selectMultipleElements,
+    clearSelection,
+    
+    // Funciones de zonas
+    addZone,
+    updateZone,
+    deleteZone,
+    toggleZoneVisibility,
+    
+    // Funciones de zoom y stage
+    handleZoom,
     resetZoom,
-    copiarElementos,
-    pegarElementos,
+    centerStage,
+    
+    // Funciones de carga y guardado
+    loadMapa,
+    saveMapa,
+    
+    // Funciones de duplicación y sección
     duplicarElementos,
     crearSeccion,
     handleSectionClick,
-    formaPersonalizable,
-    scheduleAutoSave,
-    hasUnsavedChanges,
-    activeMode,
-    setActiveMode,
-    sectionPoints,
-    setSectionPoints,
-    isCreatingSection,
-    setIsCreatingSection,
+    limpiarSeleccion,
+    
+    // Funciones de paneo
     handlePanStart,
     handlePanMove,
     handlePanEnd,
-    isPanning,
-    stagePosition,
-  } = useCrearMapa();
+    
 
+  } = useCrearMapa();
 
   const { getSeatColor, getZonaColor, getBorderColor } = useSeatColors();
 
-  const [sillaShape, setSillaShape] = useState('rect');
+  // Estados locales adicionales
   const [loadedZonas, setLoadedZonas] = useState([]);
   const [salaInfo, setSalaInfo] = useState(null);
   const [showNumeracion, setShowNumeracion] = useState(false);
@@ -86,672 +159,643 @@ const CrearMapa = () => {
   const [deleteMissing, setDeleteMissing] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
   const [savingProgress, setSavingProgress] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [showAdvancedControls, setShowAdvancedControls] = useState(false);
 
+  // ===== MANEJADORES DE EVENTOS =====
+  
+  const handleStageWheel = (e) => {
+    e.evt.preventDefault();
+    const scaleBy = 1.1;
+    const stage = e.target.getStage();
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+    
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+    
+    const newScale = e.evt.deltaY > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+    
+    setZoom(newScale);
+    
+    const newPos = {
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    };
+    
+    setStagePosition(newPos);
+  };
+
+  const handleStageClick = (e) => {
+    if (activeMode === 'section') {
+      handleSectionClick(e);
+    } else {
+      // Selección normal
+      const clickedOnEmpty = e.target === e.target.getStage();
+      if (clickedOnEmpty) {
+        clearSelection();
+      }
+    }
+  };
+
+  const handleElementClick = (elementId, e) => {
+    e.cancelBubble = true;
+    
+    if (e.evt.ctrlKey || e.evt.metaKey) {
+      // Selección múltiple con Ctrl/Cmd
+      selectMultipleElements(elementId);
+    } else {
+      // Selección simple
+      selectElement(elementId);
+    }
+  };
+
+  const handleElementDoubleClick = (elementId, e) => {
+    e.cancelBubble = true;
+    
+    const element = elements.find(el => el._id === elementId);
+    if (element && element.type === 'mesa') {
+      selectGroup(elementId);
+    }
+  };
+
+  const handleElementDragEnd = (elementId, e) => {
+    const element = elements.find(el => el._id === elementId);
+    if (element) {
+      const newPos = e.target.position();
+      updateElementProperty(elementId, 'posicion', {
+        x: precisePositioning.round(newPos.x),
+        y: precisePositioning.round(newPos.y)
+      });
+    }
+  };
+
+  // ===== RENDERIZADO DE ELEMENTOS =====
+  
+  const renderElements = useMemo(() => {
+    return elements.map(element => {
+      const isSelected = selectedIds.includes(element._id);
+      
+      switch (element.type) {
+        case 'mesa':
+          return (
+            <Mesa
+              key={element._id}
+              element={element}
+              isSelected={isSelected}
+              onClick={(e) => handleElementClick(element._id, e)}
+              onDoubleClick={(e) => handleElementDoubleClick(element._id, e)}
+              onDragEnd={(e) => handleElementDragEnd(element._id, e)}
+              draggable={activeMode === 'select'}
+              scale={element.scale || 1}
+            />
+          );
+          
+        case 'silla':
+          return (
+            <Silla
+              key={element._id}
+              element={element}
+              isSelected={isSelected}
+              onClick={(e) => handleElementClick(element._id, e)}
+              onDragEnd={(e) => handleElementDragEnd(element._id, e)}
+              draggable={activeMode === 'select'}
+              scale={element.scale || 1}
+              fill={element.fill || seatStates.available.fill}
+              stroke={element.stroke || seatStates.available.stroke}
+              opacity={element.opacity || seatStates.available.opacity}
+            />
+          );
+          
+        case 'conexion':
+          if (!showConnections) return null;
+          
+          const startSeat = elements.find(el => el._id === element.startSeatId);
+          const endSeat = elements.find(el => el._id === element.endSeatId);
+          
+          if (!startSeat || !endSeat) return null;
+          
+          return (
+            <Line
+              key={element._id}
+              points={[
+                startSeat.posicion.x + (startSeat.width || 20) / 2,
+                startSeat.posicion.y + (startSeat.height || 20) / 2,
+                endSeat.posicion.x + (endSeat.width || 20) / 2,
+                endSeat.posicion.y + (endSeat.height || 20) / 2
+              ]}
+              stroke={element.stroke}
+              strokeWidth={element.strokeWidth}
+              opacity={element.opacity}
+              dash={element.dash}
+            />
+          );
+          
+        case 'background':
+          if (!element.showInEditor) return null;
+          
+          return (
+            <Image
+              key={element._id}
+              image={element.imageUrl}
+              x={element.position.x}
+              y={element.position.y}
+              scaleX={element.scale}
+              scaleY={element.scale}
+              opacity={element.opacity}
+              listening={false}
+            />
+          );
+          
+        case 'seccion':
+          return (
+            <Line
+              key={element._id}
+              points={element.points.flatMap(p => [p.x, p.y])}
+              fill={element.fill}
+              stroke={element.stroke}
+              strokeWidth={element.strokeWidth}
+              closed={true}
+              opacity={0.3}
+            />
+          );
+          
+        case 'text':
+          return (
+            <Text
+              key={element._id}
+              x={element.posicion.x}
+              y={element.posicion.y}
+              text={element.text}
+              fontSize={element.fontSize || 16}
+              fill={element.fill || '#000'}
+              draggable={activeMode === 'select'}
+              onClick={(e) => handleElementClick(element._id, e)}
+              onDragEnd={(e) => handleElementDragEnd(element._id, e)}
+            />
+          );
+          
+        case 'rect':
+          return (
+            <Rect
+              key={element._id}
+              x={element.posicion.x}
+              y={element.posicion.y}
+              width={element.width}
+              height={element.height}
+              fill={element.fill || 'transparent'}
+              stroke={element.stroke || '#000'}
+              strokeWidth={element.strokeWidth || 1}
+              draggable={activeMode === 'select'}
+              onClick={(e) => handleElementClick(element._id, e)}
+              onDragEnd={(e) => handleElementDragEnd(element._id, e)}
+            />
+          );
+          
+        case 'circle':
+          return (
+            <Ellipse
+              key={element._id}
+              x={element.posicion.x}
+              y={element.posicion.y}
+              radiusX={element.radius}
+              radiusY={element.radius}
+              fill={element.fill || 'transparent'}
+              stroke={element.stroke || '#000'}
+              strokeWidth={element.strokeWidth || 1}
+              draggable={activeMode === 'select'}
+              onClick={(e) => handleElementClick(element._id, e)}
+              onDragEnd={(e) => handleElementDragEnd(element._id, e)}
+            />
+          );
+          
+        case 'line':
+          return (
+            <Line
+              key={element._id}
+              points={element.points}
+              stroke={element.stroke || '#000'}
+              strokeWidth={element.strokeWidth || 1}
+              draggable={activeMode === 'select'}
+              onClick={(e) => handleElementClick(element._id, e)}
+              onDragEnd={(e) => handleElementDragEnd(element._id, e)}
+            />
+          );
+          
+        default:
+          return null;
+      }
+    });
+  }, [elements, selectedIds, activeMode, showConnections, seatStates, precisePositioning]);
+
+  // ===== RENDERIZADO DE PUNTOS DE SECCIÓN =====
+  
+  const renderSectionPoints = useMemo(() => {
+    if (!isCreatingSection || sectionPoints.length === 0) return null;
+    
+    return (
+      <>
+        {/* Línea que conecta los puntos */}
+        {sectionPoints.length > 1 && (
+          <Line
+            points={sectionPoints.flatMap(p => [p.x, p.y])}
+            stroke="#FF6B6B"
+            strokeWidth={2}
+            dash={[5, 5]}
+          />
+        )}
+        
+        {/* Puntos individuales */}
+        {sectionPoints.map((point, index) => (
+          <Ellipse
+            key={index}
+            x={point.x}
+            y={point.y}
+            radiusX={4}
+            radiusY={4}
+            fill="#FF6B6B"
+            stroke="#D63031"
+            strokeWidth={1}
+          />
+        ))}
+      </>
+    );
+  }, [isCreatingSection, sectionPoints]);
+
+  // ===== RENDERIZADO DE CUADRÍCULA =====
+  
+  const renderGrid = useMemo(() => {
+    if (!showScaleControls) return null;
+    
+    return (
+      <Grid
+        size={20}
+        scale={zoom}
+        stagePosition={stagePosition}
+        showScale={true}
+        scaleSystem={scaleSystem}
+      />
+    );
+  }, [showScaleControls, zoom, stagePosition, scaleSystem]);
+
+  // ===== RENDERIZADO DE ZONAS =====
+  
+  const renderZonas = useMemo(() => {
+    if (!showZones) return null;
+    
+    return (
+      <Zonas
+        zones={zones}
+        selectedZone={selectedZone}
+        onZoneSelect={setSelectedZone}
+        onZoneToggle={toggleZoneVisibility}
+      />
+    );
+  }, [showZones, zones, selectedZone, toggleZoneVisibility]);
+
+  // ===== RENDERIZADO DE CONTROLES SUPERIORES =====
+  
+  const renderTopControls = () => (
+    <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-white rounded-lg shadow-lg p-3 flex items-center space-x-3">
+      {/* Zoom */}
+      <div className="flex items-center space-x-2">
+        <Tooltip title="Zoom Out">
+          <Button
+            icon={<ZoomOutOutlined />}
+            onClick={() => handleZoom(zoom * 0.9)}
+            size="small"
+          />
+        </Tooltip>
+        <span className="text-sm font-medium min-w-[60px] text-center">
+          {Math.round(zoom * 100)}%
+        </span>
+        <Tooltip title="Zoom In">
+          <Button
+            icon={<ZoomInOutlined />}
+            onClick={() => handleZoom(zoom * 1.1)}
+            size="small"
+          />
+        </Tooltip>
+      </div>
+      
+      <div className="w-px h-6 bg-gray-300" />
+      
+      {/* Reset Zoom */}
+      <Tooltip title="Reset Zoom">
+        <Button
+          icon={<GridOutlined />}
+          onClick={resetZoom}
+          size="small"
+        />
+      </Tooltip>
+      
+      <div className="w-px h-6 bg-gray-300" />
+      
+      {/* Guardar */}
+      <Tooltip title="Guardar Mapa">
+        <Button
+          type="primary"
+          icon={<SaveOutlined />}
+          onClick={saveMapa}
+          loading={isSaving}
+          size="small"
+        >
+          Guardar
+        </Button>
+      </Tooltip>
+      
+      <div className="w-px h-6 bg-gray-300" />
+      
+      {/* Controles Avanzados */}
+      <Tooltip title="Controles Avanzados">
+        <Button
+          icon={<SettingOutlined />}
+          onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+          type={showAdvancedControls ? 'primary' : 'default'}
+          size="small"
+        />
+      </Button>
+    </div>
+  );
+
+  // ===== RENDERIZADO DE INDICADOR DE PANEO =====
+  
+  const renderPanningIndicator = () => {
+    if (!isPanning) return null;
+    
+    return (
+      <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-10 bg-blue-600 text-white px-4 py-2 rounded-lg shadow-lg">
+        🖱️ Paneando mapa...
+      </div>
+    );
+  };
+
+  // ===== RENDERIZADO DE PROGRESO DE GUARDADO =====
+  
+  const renderSavingProgress = () => {
+    if (!isSaving) return null;
+    
+    return (
+      <div className="absolute bottom-4 right-4 z-10 bg-white rounded-lg shadow-lg p-3 min-w-[200px]">
+        <div className="flex items-center space-x-2 mb-2">
+          <SaveOutlined className="text-blue-600" />
+          <span className="text-sm font-medium">Guardando mapa...</span>
+        </div>
+        <Progress percent={uploadProgress} size="small" />
+      </div>
+    );
+  };
+
+  // ===== RENDERIZADO DE ESTADO DE CAMBIOS =====
+  
+  const renderChangesStatus = () => {
+    if (!hasUnsavedChanges) return null;
+    
+    return (
+      <div className="absolute bottom-4 left-4 z-10 bg-yellow-500 text-white px-3 py-2 rounded-lg shadow-lg">
+        ⚠️ Cambios sin guardar
+      </div>
+    );
+  };
+
+  // ===== RENDERIZADO DE INFORMACIÓN DE SALA =====
+  
+  const renderSalaInfo = () => {
+    if (!salaInfo) return null;
+    
+    return (
+      <div className="absolute top-4 left-4 z-10 bg-white rounded-lg shadow-lg p-3">
+        <div className="text-sm font-medium text-gray-900">{salaInfo.nombre}</div>
+        <div className="text-xs text-gray-500">
+          {elements.filter(el => el.type === 'silla').length} asientos
+        </div>
+        <div className="text-xs text-gray-500">
+          {elements.filter(el => el.type === 'mesa').length} mesas
+        </div>
+      </div>
+    );
+  };
+
+  // ===== CARGA INICIAL =====
+  
   useEffect(() => {
     if (!salaId) return;
+    
     const cargarDatos = async () => {
       try {
+        setIsLoading(true);
+        
         // Cargar zonas y información de la sala en paralelo
         const [zonasData, salaData] = await Promise.all([
           fetchZonasPorSala(salaId),
           fetchSalaById(salaId)
         ]);
+        
         setLoadedZonas(zonasData);
         setSalaInfo(salaData);
-      } catch (err) {
-        console.error('Error al cargar datos:', err);
+        
+        // Cargar mapa existente
+        await loadMapa();
+        
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+        message.error('Error cargando datos de la sala');
+      } finally {
+        setIsLoading(false);
       }
     };
+    
     cargarDatos();
-  }, [salaId]);
+  }, [salaId, loadMapa]);
 
-  const zoneSeatCounts = useMemo(() => {
-    const counts = {};
-    elements.forEach((el) => {
-      if (el.type === 'silla' && el.zonaId) {
-        counts[el.zonaId] = (counts[el.zonaId] || 0) + 1;
-      }
-    });
-    return counts;
-  }, [elements]);
-
-  // Calcular total de asientos
-  const totalAsientos = useMemo(() => {
-    return Object.values(zoneSeatCounts).reduce((sum, count) => sum + count, 0);
-  }, [zoneSeatCounts]);
-
-  // Calcular estadísticas de validación
-  const validationStats = useMemo(() => {
-    const stats = {
-      unlabeledSeats: 0,
-      unlabeledRows: 0,
-      unlabeledTables: 0,
-      duplicateSeats: 0,
-      uncategorizedSeats: 0,
-      uncategorizedZones: 0
-    };
-
-    elements.forEach(el => {
-      if (el.type === 'silla') {
-        if (!el.numero || el.numero === '') {
-          stats.unlabeledSeats++;
-        }
-        if (!el.zonaId) {
-          stats.uncategorizedSeats++;
-        }
-      } else if (el.type === 'mesa') {
-        if (!el.nombre || el.nombre === '') {
-          stats.unlabeledTables++;
-        }
-      }
-    });
-
-    // Detectar sillas duplicadas
-    const sillas = elements.filter(el => el.type === 'silla');
-    const posiciones = new Set();
-    sillas.forEach(silla => {
-      const posKey = `${silla.posicion?.x},${silla.posicion?.y}`;
-      if (posiciones.has(posKey)) {
-        stats.duplicateSeats++;
-      } else {
-        posiciones.add(posKey);
-      }
-    });
-
-    return stats;
-  }, [elements]);
-
-  const moverElementosSeleccionados = (deltaX, deltaY) => {
-    setElements(prev =>
-      prev.map(el => {
-        if (selectedIds.includes(el._id) || (el.type === 'silla' && selectedIds.includes(el.parentId))) {
-          const posicionActual = el.posicion || { x: 0, y: 0 };
-          return {
-            ...el,
-            posicion: {
-              x: posicionActual.x + deltaX,
-              y: posicionActual.y + deltaY,
-            }
-          };
-        }
-        return el;
-      })
-    );
-  };
-
-  const onDragEndElement = (e, id, newPos, chairUpdates = []) => {
-    const dragged = elements.find(el => el._id === id);
-    if (!dragged) return;
-
-    const newX = newPos?.x ?? e.target.x();
-    const newY = newPos?.y ?? e.target.y();
-
-    if (selectedIds.includes(id)) {
-      const posicionActual = dragged.posicion || { x: 0, y: 0 };
-      const deltaX = newX - posicionActual.x;
-      const deltaY = newY - posicionActual.y;
-      moverElementosSeleccionados(deltaX, deltaY);
-    } else {
-      updateElementProperty(id, 'posicion', { x: newX, y: newY });
-    }
-
-    if (chairUpdates.length > 0) {
-      chairUpdates.forEach(ch =>
-        updateElementProperty(ch._id, 'posicion', ch.posicion)
-      );
-    }
-
-    // Programar auto-guardado después del arrastre
-    console.log('[onDragEndElement] Programando auto-guardado...');
-    scheduleAutoSave();
-  };
-
-  const startChairRowMode = () => {
-    setAddingChairRow(true);
-    setRowStart(null);
-  };
-
-  const stageMouseDown = (e) => {
-    if (addingChairRow) {
-      if (!rowStart) {
-        const pos = e.target.getStage().getPointerPosition();
-        setRowStart(pos);
-      }
-      return;
-    }
-    handleMouseDown(e);
-  };
-
-  const stageMouseMove = (e) => {
-    if (addingChairRow && rowStart) {
-      return;
-    }
-    handleMouseMove(e);
-  };
-
-  const stageMouseUp = (e) => {
-    if (addingChairRow && rowStart) {
-      const pos = e.target.getStage().getPointerPosition();
-      addChairRow(rowStart, pos);
-      setAddingChairRow(false);
-      setRowStart(null);
-      return;
-    }
-    handleMouseUp(e);
-  };
-
-  const handleSync = async () => {
+  // ===== SINCRONIZACIÓN DE ASIENTOS =====
+  
+  const handleSyncSeats = async () => {
     if (!salaId) return;
+    
     try {
       setSyncLoading(true);
-      await syncSeatsForSala(salaId, { deleteMissing });
-      message.success('Seats sincronizados correctamente');
-    } catch (e) {
-      console.error('Sync error', e);
-      message.error(e.message || 'Error al sincronizar');
+      await syncSeatsForSala(salaId, deleteMissing);
+      message.success('Asientos sincronizados correctamente');
+      
+      // Recargar mapa después de sincronización
+      await loadMapa();
+      
+    } catch (error) {
+      console.error('Error sincronizando asientos:', error);
+      message.error('Error sincronizando asientos');
     } finally {
       setSyncLoading(false);
     }
   };
 
-  const toggleNumeracion = () => {
-    setShowNumeracion(!showNumeracion);
-  };
-
-  // Función para guardar con progreso
-  const handleSaveWithProgress = async () => {
-    setIsSaving(true);
-    setSavingProgress(0);
-    
-    // Simular progreso
-    const progressInterval = setInterval(() => {
-      setSavingProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(progressInterval);
-          return 90;
-        }
-        return prev + 10;
-      });
-    }, 100);
-
-    try {
-      await handleSave();
-      setSavingProgress(100);
-      setLastSavedAt(new Date());
-      message.success('Mapa guardado correctamente');
-      
-      setTimeout(() => {
-        setSavingProgress(0);
-        setIsSaving(false);
-      }, 1000);
-    } catch (error) {
-      console.error('Error al guardar:', error);
-      message.error('Error al guardar el mapa');
-      setSavingProgress(0);
-      setIsSaving(false);
-    }
-  };
-
-  // Debug: mostrar información de elementos solo en desarrollo
-  if (process.env.NODE_ENV === 'development') {
-    console.log('[CrearMapa] Elementos totales:', elements?.length || 0);
-    console.log('[CrearMapa] Zonas cargadas:', loadedZonas?.length || 0);
-    console.log('[CrearMapa] Stage size:', stageSize);
-    console.log('[CrearMapa] Zoom:', zoom);
-    console.log('[CrearMapa] Selected IDs:', selectedIds?.length || 0);
-  }
-
   return (
-    <div className="flex h-screen" data-testid="crear-mapa">
-      {/* Panel de información superior derecho */}
-      <div className="fixed top-4 right-4 z-20 bg-white border rounded-lg shadow-lg p-4 max-w-sm">
-        <div className="topRightInfo" id="topRightInfo">
-          <div className="labelingMessages" id="labelingMessages">
-            <label className="error-title-message font-semibold text-red-600 mb-2 block">Acciones pendientes</label>
-            
-            {validationStats.unlabeledSeats > 0 && (
-              <div id="numberOfUnlabeledSeats" className="mb-2">
-                <span className="strong font-medium">{validationStats.unlabeledSeats}</span> Asientos sin numeración &nbsp; 
-                <a href="#" className="text-blue-600 hover:text-blue-800">
-                  <i className="fas fa-eye"></i>
-                </a>
-              </div>
-            )}
-            
-            {validationStats.unlabeledTables > 0 && (
-              <div id="numberOfUnlabeledTables" className="mb-2">
-                <span className="strong font-medium">{validationStats.unlabeledTables}</span> Mesas sin numeración
-              </div>
-            )}
-            
-            {validationStats.duplicateSeats > 0 && (
-              <div id="numberOfDuplicateSeats" className="mb-2">
-                <span className="strong font-medium">{validationStats.duplicateSeats}</span> Asientos duplicados
-              </div>
-            )}
-            
-            {validationStats.uncategorizedSeats > 0 && (
-              <div id="numberOfUncategorizedSeats" className="mb-2">
-                <span className="strong font-medium">{validationStats.uncategorizedSeats}</span> asientos sin zona
-              </div>
-            )}
-            
-            {validationStats.uncategorizedZones > 0 && (
-              <div id="numberOfUncategorizedGaZones" className="mb-2">
-                <span className="strong font-medium">{validationStats.uncategorizedZones}</span> Zona no numerada sin zona asignada
-              </div>
-            )}
-          </div>
-          
-          {selectedIds.length > 0 && (
-            <div className="selectedMessage mt-3 pt-3 border-t" id="objectsInSelectionMessage">
-              <span className="strong font-medium">{selectedIds.length}</span> Objetos seleccionados
-            </div>
-          )}
-        </div>
-      </div>
-
-      <Menu
-        addMesa={addMesa}
-        addSillasToMesa={addSillasToMesa}
+    <div className="h-screen flex bg-gray-100">
+      {/* Panel izquierdo - MenuMapa */}
+      <MenuMapa
+        // Estados básicos
         selectedElement={selectedElement}
+        activeMode={activeMode}
+        sectionPoints={sectionPoints}
+        isCreatingSection={isCreatingSection}
+        zones={loadedZonas}
+        selectedZone={selectedZone}
         numSillas={numSillas}
-        setNumSillas={setNumSillas}
-        handleSave={handleSaveWithProgress}
+        sillaShape={sillaShape}
+        
+        // Nuevos estados de escalado
+        selectedScale={selectedScale}
+        showScaleControls={showScaleControls}
+        scaleSystem={scaleSystem}
+        
+        // Nuevos estados de asientos
+        selectedSeatState={selectedSeatState}
+        seatStates={seatStates}
+        
+        // Nuevos estados de conexiones
+        showConnections={showConnections}
+        connectionStyle={connectionStyle}
+        connectionThreshold={connectionThreshold}
+        
+        // Nuevos estados de fondo
+        backgroundImage={backgroundImage}
+        backgroundScale={backgroundScale}
+        backgroundOpacity={backgroundOpacity}
+        showBackgroundInWeb={showBackgroundInWeb}
+        backgroundSystem={backgroundSystem}
+        
+        // Funciones básicas
         updateElementProperty={updateElementProperty}
         updateElementSize={updateElementSize}
-        zonas={loadedZonas}
-        zoneSeatCounts={zoneSeatCounts}
-        selectedZoneId={selectedZone ? String(selectedZone.id) : ''}
-        setSelectedZoneId={(zoneId) => {
-          const numericId = parseInt(zoneId, 10);
-          const zona = loadedZonas.find((z) => z.id === numericId);
-          setSelectedZone(zona || null);
-        }}
-        setShowZones={setShowZones}
-        sillaShape={sillaShape}
-        setSillaShape={setSillaShape}
-        assignZoneToSelected={assignZoneToSelected}
-        deleteSelectedElements={deleteSelectedElements}
-        addTextElement={addTextElement}
-        addRectangleElement={addRectangleElement}
-        addEllipseElement={addEllipseElement}
-        addLineElement={addLineElement}
-        addChairRow={addChairRow}
-        startChairRowMode={startChairRowMode}
-        snapToGrid={snapToGrid}
-        toggleNumeracion={toggleNumeracion}
-        salaInfo={salaInfo}
-        totalAsientos={totalAsientos}
-        // Nuevas props para funcionalidades avanzadas
-        elements={elements}
-        setSelectedIds={setSelectedIds}
-        limpiarSillasDuplicadas={limpiarSillasDuplicadas}
-        copiarElementos={copiarElementos}
-        pegarElementos={pegarElementos}
         duplicarElementos={duplicarElementos}
         crearSeccion={crearSeccion}
-        formaPersonalizable={formaPersonalizable}
+        limpiarSeleccion={limpiarSeleccion}
+        assignZoneToSelected={assignZoneToSelected}
+        
+        // Nuevas funciones de escalado
+        scaleElement={scaleElement}
+        scaleSelectedElements={scaleSelectedElements}
+        
+        // Nuevas funciones de estados de asientos
+        changeSeatState={changeSeatState}
+        changeSelectedSeatsState={changeSelectedSeatsState}
+        changeMesaSeatsState={changeMesaSeatsState}
+        
+        // Nuevas funciones de conexiones
+        autoConnectSeats={autoConnectSeats}
+        createManualConnection={createManualConnection}
+        removeConnections={removeConnections}
+        changeConnectionStyle={changeConnectionStyle}
+        
+        // Nuevas funciones de coordenadas precisas
+        precisePositioning={precisePositioning}
+        snapToCustomGrid={snapToCustomGrid}
+        
+        // Nuevas funciones de fondo
+        setBackgroundImage={handleSetBackgroundImage}
+        updateBackground={handleUpdateBackground}
+        removeBackground={handleRemoveBackground}
+        
+        // Funciones existentes
+        addMesa={addMesa}
+        addSillasToMesa={addSillasToMesa}
+        snapToGrid={snapToGrid}
+        setActiveMode={setActiveMode}
+        setNumSillas={setNumSillas}
+        setSillaShape={setSillaShape}
       />
 
+      {/* Área principal del mapa */}
       <div className="flex-1 relative">
-        {/* Barra de acciones de sincronización */}
-        <div className="absolute top-2 left-2 z-10 bg-white border rounded shadow px-3 py-2 flex items-center gap-3">
-          <span>Eliminar obsoletos</span>
-          <Switch checked={deleteMissing} onChange={setDeleteMissing} />
-          <Button type="primary" loading={syncLoading} onClick={handleSync}>
-            Sincronizar seats
-          </Button>
-          
-          {/* Botón de prueba para crear mesa */}
-          <Button 
-            type="default" 
-            onClick={() => {
-              console.log('[CrearMapa] Creando mesa de prueba...');
-              addMesa('rect');
-            }}
-          >
-            Crear Mesa Prueba
-          </Button>
-          
-          {/* Botón de debug para ver elementos */}
-          <Button 
-            type="default" 
-            onClick={() => {
-              console.log('[CrearMapa] Debug - Elementos actuales:', elements);
-              console.log('[CrearMapa] Debug - Sillas:', elements.filter(el => el.type === 'silla'));
-              console.log('[CrearMapa] Debug - Mesas:', elements.filter(el => el.type === 'mesa'));
-            }}
-          >
-            🐛 Debug Elementos
-          </Button>
-        </div>
-
-        {/* Barra de progreso de guardado */}
-        {isSaving && (
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-white border rounded shadow px-4 py-2 min-w-64">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium">Guardando mapa...</span>
-              <Progress percent={savingProgress} size="small" />
-            </div>
-          </div>
-        )}
-
-        {/* Mensaje de último guardado */}
-        {lastSavedAt && !isSaving && (
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-green-100 border border-green-300 rounded px-3 py-1">
-            <span className="text-sm text-green-700">
-              ✅ Mapa guardado: {lastSavedAt.toLocaleTimeString()}
-            </span>
-          </div>
-        )}
-
-        {/* Indicador de cambios no guardados */}
-        {hasUnsavedChanges && (
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-yellow-100 border border-yellow-300 rounded px-3 py-1">
-            <span className="text-sm text-yellow-700">
-              ⚠️ Cambios pendientes de guardar
-            </span>
-          </div>
-        )}
-
-        {/* Indicador de paneo activo */}
-        {isPanning && (
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-blue-100 border border-blue-300 rounded px-3 py-1">
-            <span className="text-sm text-blue-700">
-              🖱️ Paneando mapa...
-            </span>
-          </div>
-        )}
-
+        {/* Controles superiores */}
+        {renderTopControls()}
+        
+        {/* Indicador de paneo */}
+        {renderPanningIndicator()}
+        
+        {/* Información de sala */}
+        {renderSalaInfo()}
+        
+        {/* Progreso de guardado */}
+        {renderSavingProgress()}
+        
+        {/* Estado de cambios */}
+        {renderChangesStatus()}
+        
+        {/* Stage de Konva */}
         <Stage
-          ref={stageRef}
-          width={stageSize.width}
-          height={stageSize.height}
+          width={window.innerWidth - 320} // 320px para el panel izquierdo
+          height={window.innerHeight}
           scaleX={zoom}
           scaleY={zoom}
           x={stagePosition.x}
           y={stagePosition.y}
-          onWheel={handleWheelZoom}
-          onMouseDown={(e) => {
-            // Manejar paneo con botón central
-            if (e.evt.button === 1) {
-              handlePanStart(e);
-            } else {
-              stageMouseDown(e);
-            }
-          }}
-          onMouseMove={(e) => {
-            // Manejar paneo
-            if (isPanning) {
-              handlePanMove(e);
-            } else {
-              stageMouseMove(e);
-            }
-          }}
-          onMouseUp={(e) => {
-            // Manejar paneo
-            if (isPanning) {
-              handlePanEnd();
-            } else {
-              stageMouseUp(e);
-            }
-          }}
-          onClick={activeMode === 'section' ? handleSectionClick : undefined}
-          onContextMenu={(e) => e.evt.preventDefault()} // Prevenir menú contextual
+          onWheel={handleStageWheel}
+          onClick={handleStageClick}
+          onMouseDown={handlePanStart}
+          onMousemove={handlePanMove}
+          onMouseup={handlePanEnd}
+          draggable={false}
         >
+          {/* Capa de fondo */}
           <Layer>
-            <Grid width={stageSize.width / zoom} height={stageSize.height / zoom} gridSize={20} />
-            {showZones && <Zonas zonas={loadedZonas} />}
-
-            {/* Mostrar puntos de sección en construcción */}
-            {isCreatingSection && sectionPoints.length > 0 && (
-              <>
-                {/* Líneas entre puntos */}
-                {sectionPoints.length > 1 && (
-                  <Line
-                    points={sectionPoints.flatMap(p => [p.x, p.y])}
-                    stroke="#FFD700"
-                    strokeWidth={2}
-                    dash={[5, 5]}
-                  />
-                )}
-                
-                {/* Puntos individuales */}
-                {sectionPoints.map((point, index) => (
-                  <Ellipse
-                    key={`section-point-${index}`}
-                    x={point.x}
-                    y={point.y}
-                    radiusX={5}
-                    radiusY={5}
-                    fill="#FFD700"
-                    stroke="#FF6B00"
-                    strokeWidth={2}
-                  />
-                ))}
-              </>
-            )}
-
-            {useMemo(() => elements.map((element) => {
-              const isSelected = selectedIds.includes(element._id);
-              const elementZone = loadedZonas.find(z => z.id === element.zonaId);
-              // Usar sistema de colores automático
-              const strokeColor = getBorderColor(isSelected, elementZone);
-
-              switch (element.type) {
-                case 'mesa':
-                  console.log('[CrearMapa] Renderizando mesa:', element);
-                  return (
-                    <Mesa
-                      key={element._id}
-                      {...element}
-                      selected={isSelected}
-                      onSelect={selectElement}
-                      onDragEnd={onDragEndElement}
-                      onChairDragEnd={(e, sillaId) => onDragEndElement(e, sillaId)}
-                      onDoubleClick={selectGroup}
-                      zonas={loadedZonas}
-                      selectedIds={selectedIds}
-                      elements={elements}
-                    />
-                  );
-                case 'seccion':
-                  return (
-                    <Line
-                      key={element._id}
-                      points={element.points}
-                      stroke={element.stroke}
-                      strokeWidth={element.strokeWidth}
-                      fill={element.fill}
-                      closed={true}
-                      onClick={() => selectElement(element)}
-                      onTap={() => selectElement(element)}
-                    />
-                  );
-                case 'text':
-                  return (
-                    <Text
-                      key={element._id}
-                      id={element._id}
-                      x={element.posicion?.x || 0}
-                      y={element.posicion?.y || 0}
-                      text={element.text}
-                      fontSize={element.fontSize}
-                      fill={element.fill}
-                      draggable={element.draggable}
-                      stroke={strokeColor}
-                      strokeWidth={isSelected ? 2 : 0}
-                      onClick={() => selectElement(element)}
-                      onTap={() => selectElement(element)}
-                      onDragEnd={(e) => updateElementProperty(element._id, 'posicion', {
-                        x: e.target.x(),
-                        y: e.target.y(),
-                      })}
-                    />
-                  );
-                case 'rect':
-                  return (
-                    <Rect
-                      key={element._id}
-                      id={element._id}
-                      x={element.posicion?.x || 0}
-                      y={element.posicion?.y || 0}
-                      width={element.width}
-                      height={element.height}
-                      fill={element.fill}
-                      stroke={strokeColor}
-                      strokeWidth={element.strokeWidth + (isSelected ? 1 : 0)}
-                      draggable={element.draggable}
-                      onClick={() => selectElement(element)}
-                      onTap={() => selectElement(element)}
-                      onDragEnd={(e) => updateElementProperty(element._id, 'posicion', {
-                        x: e.target.x(),
-                        y: e.target.y(),
-                      })}
-                    />
-                  );
-                case 'ellipse':
-                  return (
-                    <Ellipse
-                      key={element._id}
-                      id={element._id}
-                      x={element.posicion?.x || 0}
-                      y={element.posicion?.y || 0}
-                      radiusX={element.radiusX}
-                      radiusY={element.radiusY}
-                      fill={element.fill}
-                      stroke={strokeColor}
-                      strokeWidth={element.strokeWidth + (isSelected ? 1 : 0)}
-                      draggable={element.draggable}
-                      onClick={() => selectElement(element)}
-                      onTap={() => selectElement(element)}
-                      onDragEnd={(e) => updateElementProperty(element._id, 'posicion', {
-                        x: e.target.x(),
-                        y: e.target.y(),
-                      })}
-                    />
-                  );
-                case 'line':
-                  return (
-                    <Line
-                      key={element._id}
-                      id={element._id}
-                      points={element.points}
-                      stroke={strokeColor}
-                      strokeWidth={element.strokeWidth + (isSelected ? 1 : 0)}
-                      draggable={element.draggable}
-                      onClick={() => selectElement(element)}
-                      onTap={() => selectElement(element)}
-                      onDragEnd={(e) => {
-                        const newX = e.target.x();
-                        const newY = e.target.y();
-                        const posicionActual = element.posicion || { x: 0, y: 0 };
-                        const deltaX = newX - posicionActual.x;
-                        const deltaY = newY - posicionActual.y;
-                        const newPoints = element.points.map((p, i) =>
-                          i % 2 === 0 ? p + deltaX : p + deltaY
-                        );
-                        updateElementProperty(element._id, 'posicion', { x: newX, y: newY });
-                        updateElementProperty(element._id, 'points', newPoints);
-                      }}
-                    />
-                  );
-                case 'silla':
-                  // Usar sistema de colores automático para asientos
-                  const seatColor = getSeatColor(element, elementZone, isSelected, selectedIds);
-                  return (
-                    <Silla
-                      key={element._id}
-                      _id={element._id}
-                      shape={element.shape}
-                      x={element.posicion?.x || 0}
-                      y={element.posicion?.y || 0}
-                      width={element.width}
-                      height={element.height}
-                      numero={element.numero}
-                      nombre={element.nombre}
-                      fila={element.fila}
-                      selected={isSelected}
-                      onSelect={selectElement}
-                      onDragEnd={onDragEndElement}
-                      zonaId={element.zonaId}
-                      zonas={loadedZonas}
-                      fill={seatColor} // Color automático
-                      stroke={strokeColor} // Borde automático
-                    />
-                  );
-                default:
-                  return null;
-              }
-            }), [elements, selectedIds, loadedZonas, selectElement, onDragEndElement, updateElementProperty, updateElementSize])}
-
-            {selectionRect?.visible && (
+            {/* Cuadrícula */}
+            {renderGrid}
+            
+            {/* Zonas */}
+            {renderZonas}
+          </Layer>
+          
+          {/* Capa principal */}
+          <Layer>
+            {/* Elementos del mapa */}
+            {renderElements}
+            
+            {/* Puntos de sección */}
+            {renderSectionPoints}
+            
+            {/* Rectángulo de selección */}
+            {selectionRect && (
               <Rect
-                x={Math.min(selectionRect.x1, selectionRect.x2)}
-                y={Math.min(selectionRect.y1, selectionRect.y2)}
-                width={Math.abs(selectionRect.x2 - selectionRect.x1)}
-                height={Math.abs(selectionRect.y2 - selectionRect.y1)}
-                fill="rgba(0, 0, 255, 0.2)"
-                stroke="blue"
+                x={selectionRect.startX}
+                y={selectionRect.startY}
+                width={selectionRect.endX - selectionRect.startX}
+                height={selectionRect.endY - selectionRect.startY}
+                stroke="#0066FF"
                 strokeWidth={1}
+                dash={[5, 5]}
+                fill="rgba(0, 102, 255, 0.1)"
               />
             )}
           </Layer>
         </Stage>
         
-        {/* Controles de zoom mejorados */}
-        <div className="fixed bottom-4 right-4 flex flex-col space-y-2">
-          <button
-            onClick={zoomIn}
-            className="p-3 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 shadow-lg transition-all duration-200 hover:scale-110"
-            title="Zoom In"
-          >
-            🔍+
-          </button>
-          <button
-            onClick={zoomOut}
-            className="p-3 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 shadow-lg transition-all duration-200 hover:scale-110"
-            title="Zoom Out"
-          >
-            🔍-
-          </button>
-          <button
-            onClick={() => {
-              resetZoom();
-              // centerView(); // This function is not defined in the original file
-            }}
-            className="p-3 bg-gray-600 text-white rounded-full hover:bg-gray-700 shadow-lg transition-all duration-200 hover:scale-110"
-            title="Reset Zoom"
-          >
-            🎯
-          </button>
-        </div>
-        
+        {/* Popups y modales */}
         {selectedElement && (
           <EditPopup
             element={selectedElement}
-            zoom={zoom}
-            onNameChange={updateElementProperty}
-            onSizeChange={updateElementSize}
-            onDelete={deleteSelectedElements}
-            onClose={() => setSelectedElement(null)}
-          />
-        )}
-        {showNumeracion && selectedElement && (
-          <FilaPopup
-            element={selectedElement}
-            onChange={updateElementProperty}
-            onClose={() => setShowNumeracion(false)}
-          />
-        )}
-        {selectedElement && (
-          <AdvancedEditPopup
-            element={selectedElement}
             onUpdate={updateElementProperty}
             onClose={() => setSelectedElement(null)}
+          />
+        )}
+        
+        {addingChairRow && (
+          <FilaPopup
+            onAdd={addChairRow}
+            onClose={() => setAddingChairRow(false)}
+            startPoint={rowStart}
+          />
+        )}
+        
+        {showAdvancedControls && (
+          <AdvancedEditPopup
+            onClose={() => setShowAdvancedControls(false)}
+            onSyncSeats={handleSyncSeats}
+            syncLoading={syncLoading}
+            deleteMissing={deleteMissing}
+            setDeleteMissing={setDeleteMissing}
           />
         )}
       </div>

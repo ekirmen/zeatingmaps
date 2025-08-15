@@ -32,6 +32,23 @@ export const useCrearMapa = () => {
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
 
+  // Estado para escalado
+  const [selectedScale, setSelectedScale] = useState(1.0);
+  const [showScaleControls, setShowScaleControls] = useState(false);
+
+  // Estado para estados de asientos
+  const [selectedSeatState, setSelectedSeatState] = useState('available');
+
+  // Estado para conexiones
+  const [showConnections, setShowConnections] = useState(true);
+  const [connectionStyle, setConnectionStyle] = useState('dashed');
+
+  // Estado para fondo
+  const [backgroundImage, setBackgroundImage] = useState(null);
+  const [backgroundScale, setBackgroundScale] = useState(1.0);
+  const [backgroundOpacity, setBackgroundOpacity] = useState(0.3);
+  const [showBackgroundInWeb, setShowBackgroundInWeb] = useState(true);
+
   // Estado global
   const {
     elements, setElements,
@@ -68,8 +85,31 @@ export const useCrearMapa = () => {
     updateElementProperty: baseUpdateElementProperty,
     updateElementSize: baseUpdateElementSize,
     deleteSelectedElements,
-    limpiarSillasDuplicadas,
+         limpiarSillasDuplicadas: handleLimpiarSillasDuplicadas,
     snapToGrid,
+         assignZoneToSelected: handleAssignZoneToSelected,
+    
+    // Nuevas funciones de escalado
+    scaleElement,
+    scaleSystem,
+    
+    // Nuevas funciones de estados de asientos
+    changeSeatState,
+    seatStates,
+    
+    // Nuevas funciones de conexiones
+    autoConnectSeats,
+    connectionThreshold,
+    
+    // Nuevas funciones de coordenadas precisas
+    precisePositioning,
+    snapToCustomGrid,
+    
+    // Nuevas funciones de fondo
+    setBackgroundImage: baseSetBackgroundImage,
+    updateBackground,
+    removeBackground,
+    backgroundSystem
   } = useMapaElements(elements, setElements, selectedIds, selectedZone, numSillas);
 
   // Wrappers to keep selectedElement in sync when editing properties or size
@@ -98,195 +138,242 @@ export const useCrearMapa = () => {
     addEllipseElement,
     addLineElement,
     addChairRow,
-  } = useMapaGraphicalElements(elements, setElements, selectedZone, numSillas, sillaShape);
+    addSeccion,
+  } = useMapaGraphicalElements(elements, setElements, selectedZone);
 
-  // Lógica zoom y stage
-  const {
-    stageRef,
-    stageSize,
-    handleWheelZoom,
-    zoomIn,
-    zoomOut,
-    resetZoom,
-    centerView,
-  } = useMapaZoomStage(zoom, setZoom);
-
-  // Selección y eventos
+  // Lógica de selección
   const {
     selectElement,
+    selectMultipleElements,
+    clearSelection,
     selectGroup,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
-  } = useMapaSelection(
-    elements,
-    selectedIds,
-    setSelectedIds,
-    setSelectedElement,
-    selectionRect,
-    setSelectionRect,
-    deleteSelectedElements
-  );
+  } = useMapaSelection(elements, selectedIds, setSelectedIds, setSelectedElement);
 
-  // Manejo de zonas en elementos
+  // Lógica de zonas
   const {
-    assignZoneToSillas,
-    assignZoneToSelected,
-  } = useMapaZones(elements, setElements, selectedIds, selectedZone);
+    addZone,
+    updateZone,
+    deleteZone,
+    toggleZoneVisibility,
+  } = useMapaZones(zones, setZones, selectedZone, setSelectedZone);
 
-
-
-  // Carga y guardado del mapa
+  // Lógica de zoom y stage
   const {
+    handleZoom,
+    resetZoom,
+    centerStage,
+  } = useMapaZoomStage(zoom, setZoom, setStagePosition);
+
+  // Lógica de carga y guardado
+  const {
+    loadMapa,
+    saveMapa,
     isLoading,
     isSaving,
-    lastSavedAt,
-    loadMapa,
-    handleSave: baseHandleSave,
-    transformarParaGuardar
-  } = useMapaLoadingSaving();
+    uploadProgress,
+  } = useMapaLoadingSaving(elements, zones, salaId, currentTenant, setHasUnsavedChanges);
 
-  // Wrapper para handleSave que incluye los parámetros necesarios
-  const handleSave = () => {
-    if (!salaId) {
-      console.error('No hay sala seleccionada');
-      return false;
+  // ===== NUEVAS FUNCIONES DE ESCALADO =====
+  
+  // Función para escalar elementos seleccionados
+  const scaleSelectedElements = (scaleFactor) => {
+    if (selectedIds.length === 0) {
+      message.warning('Selecciona elementos para escalar');
+      return;
     }
-    console.log('[useCrearMapa] Ejecutando handleSave para sala:', salaId);
-    const result = baseHandleSave(salaId, elements, zones);
-    if (result) {
-      setHasUnsavedChanges(false);
-    }
-    return result;
-  };
 
-  // Función de auto-guardado con debounce
-  const scheduleAutoSave = useCallback(() => {
-    setHasUnsavedChanges(true);
-    
-    // Limpiar timeout anterior si existe
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current);
-    }
-    
-    // Programar nuevo auto-guardado
-    autoSaveTimeoutRef.current = setTimeout(() => {
-      if (hasUnsavedChanges) {
-        console.log('[useCrearMapa] Auto-guardando mapa...');
-        handleSave();
-      }
-    }, autoSaveDelay);
-  }, [hasUnsavedChanges, autoSaveDelay, handleSave]);
-
-  // Limpiar timeout al desmontar
-  useEffect(() => {
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Cargar mapa al iniciar SOLO cuando cambia salaId
-  // Usar useCallback para estabilizar la función loadMapa
-  const stableLoadMapa = useCallback((salaId) => {
-    loadMapa(salaId, setElements, setZones);
-  }, [loadMapa, setElements, setZones]);
-
-  useEffect(() => {
-    console.log('[useCrearMapa] useEffect ejecutándose:', {
-      salaId,
-      hasLoadedInitialData: hasLoadedInitialData.current
+    selectedIds.forEach(id => {
+      scaleElement(id, scaleFactor);
     });
-    
-    if (salaId && !hasLoadedInitialData.current) {
-      console.log('[useCrearMapa] Cargando mapa inicial para sala:', salaId);
-      hasLoadedInitialData.current = true;
-      stableLoadMapa(salaId);
+
+    setSelectedScale(scaleFactor);
+    message.success(`Elementos escalados a ${(scaleFactor * 100).toFixed(0)}%`);
+  };
+
+  // Función para escalar elemento específico
+  const scaleElementById = (elementId, scaleFactor) => {
+    scaleElement(elementId, scaleFactor);
+    setSelectedScale(scaleFactor);
+  };
+
+  // ===== NUEVAS FUNCIONES DE ESTADOS DE ASIENTOS =====
+  
+  // Función para cambiar estado de asientos seleccionados
+  const changeSelectedSeatsState = (newState) => {
+    if (selectedIds.length === 0) {
+      message.warning('Selecciona asientos para cambiar estado');
+      return;
     }
-  }, [salaId, stableLoadMapa]);
 
-  // Función para eliminar elementos seleccionados
-  const eliminarElementoSeleccionado = () => deleteSelectedElements();
-
-  // Función para ajustar elementos a grid (imán)
-  const ajustarElementosAGrid = () => {
-    const gridSize = 20;
-    setElements(prev =>
-      prev.map(el => {
-        const isSelected =
-          selectedIds.includes(el._id) ||
-          (el.type === 'silla' && selectedIds.includes(el.parentId));
-        if (!isSelected) return el;
-        const newX = Math.round(el.posicion.x / gridSize) * gridSize;
-        const newY = Math.round(el.posicion.y / gridSize) * gridSize;
-        return { ...el, posicion: { x: newX, y: newY } };
-      })
+    const asientosSeleccionados = elements.filter(el => 
+      selectedIds.includes(el._id) && el.type === 'silla'
     );
-  };
 
-  // Función para copiar elementos seleccionados
-  const copiarElementos = () => {
-    if (selectedIds.length === 0) return;
-    const elementosACopiar = elements.filter(el => selectedIds.includes(el._id));
-    localStorage.setItem('elementosCopiados', JSON.stringify(elementosACopiar));
-    message.success(`${elementosACopiar.length} elementos copiados`);
-  };
-
-  // Función para pegar elementos copiados
-  const pegarElementos = () => {
-    const elementosCopiados = localStorage.getItem('elementosCopiados');
-    if (!elementosCopiados) return;
-    
-    try {
-      const elementos = JSON.parse(elementosCopiados);
-      const nuevosElementos = elementos.map(el => ({
-        ...el,
-        _id: `element_${Date.now()}_${Math.random()}`,
-        posicion: {
-          x: el.posicion.x + 20,
-          y: el.posicion.y + 20
-        }
-      }));
-      
-      setElements(prev => [...prev, ...nuevosElementos]);
-      setSelectedIds(nuevosElementos.map(el => el._id));
-      message.success(`${nuevosElementos.length} elementos pegados`);
-    } catch (error) {
-      console.error('Error al pegar elementos:', error);
+    if (asientosSeleccionados.length === 0) {
+      message.warning('Solo se pueden cambiar estados de asientos');
+      return;
     }
+
+    asientosSeleccionados.forEach(asiento => {
+      changeSeatState(asiento._id, newState);
+    });
+
+    setSelectedSeatState(newState);
+    message.success(`${asientosSeleccionados.length} asientos cambiados a estado: ${newState}`);
   };
 
-  // Función para duplicar elementos seleccionados
-  const duplicarElementos = () => {
-    if (selectedIds.length === 0) return;
-    
-    const elementosADuplicar = elements.filter(el => selectedIds.includes(el._id));
-    const nuevosElementos = [];
-    
-    elementosADuplicar.forEach(elemento => {
-      if (elemento.type === 'mesa') {
-        // Duplicar mesa
-        const nuevaMesa = {
-          ...elemento,
-          _id: `mesa_${Date.now()}_${Math.random()}`,
-          posicion: {
-            x: elemento.posicion.x + 50,
-            y: elemento.posicion.y + 50
-          }
+  // Función para cambiar estado de todos los asientos de una mesa
+  const changeMesaSeatsState = (mesaId, newState) => {
+    const sillasMesa = elements.filter(el => 
+      el.type === 'silla' && el.parentId === mesaId
+    );
+
+    if (sillasMesa.length === 0) {
+      message.warning('Esta mesa no tiene asientos');
+      return;
+    }
+
+    sillasMesa.forEach(asiento => {
+      changeSeatState(asiento._id, newState);
+    });
+
+    message.success(`${sillasMesa.length} asientos de la mesa cambiados a estado: ${newState}`);
+  };
+
+  // ===== NUEVAS FUNCIONES DE CONEXIONES =====
+  
+  // Función para crear conexiones manuales
+  const createManualConnection = (startSeatId, endSeatId) => {
+    if (startSeatId === endSeatId) {
+      message.error('No se puede conectar un asiento consigo mismo');
+      return;
+    }
+
+    const startSeat = elements.find(el => el._id === startSeatId);
+    const endSeat = elements.find(el => el._id === endSeatId);
+
+    if (!startSeat || !endSeat || startSeat.type !== 'silla' || endSeat.type !== 'silla') {
+      message.error('Solo se pueden conectar asientos');
+      return;
+    }
+
+    // Verificar si ya existe una conexión
+    const existingConnection = elements.find(el => 
+      el.type === 'conexion' && 
+      ((el.startSeatId === startSeatId && el.endSeatId === endSeatId) ||
+       (el.startSeatId === endSeatId && el.endSeatId === startSeatId))
+    );
+
+    if (existingConnection) {
+      message.warning('Ya existe una conexión entre estos asientos');
+      return;
+    }
+
+    const nuevaConexion = {
+      _id: `conexion_${Date.now()}`,
+      type: 'conexion',
+      startSeatId,
+      endSeatId,
+      stroke: '#8b93a6',
+      strokeWidth: 2,
+      opacity: 0.6,
+      dash: connectionStyle === 'dashed' ? [5, 5] : undefined
+    };
+
+    setElements(prev => [...prev, nuevaConexion]);
+    message.success('Conexión creada manualmente');
+  };
+
+  // Función para remover conexiones
+  const removeConnections = (connectionIds) => {
+    setElements(prev => prev.filter(el => 
+      !(el.type === 'conexion' && connectionIds.includes(el._id))
+    ));
+    message.success('Conexiones removidas');
+  };
+
+  // Función para cambiar estilo de conexiones
+  const changeConnectionStyle = (newStyle) => {
+    setConnectionStyle(newStyle);
+    setElements(prev => prev.map(el => {
+      if (el.type === 'conexion') {
+        return {
+          ...el,
+          dash: newStyle === 'dashed' ? [5, 5] : undefined
         };
-        nuevosElementos.push(nuevaMesa);
-        
-        // Buscar y duplicar sillas asociadas a esta mesa
-        const sillasAsociadas = elements.filter(el => 
+      }
+      return el;
+    }));
+    message.success(`Estilo de conexiones cambiado a: ${newStyle}`);
+  };
+
+  // ===== NUEVAS FUNCIONES DE FONDO =====
+  
+  // Función para establecer imagen de fondo
+  const handleSetBackgroundImage = (imageUrl, options = {}) => {
+    const backgroundOptions = {
+      scale: backgroundScale,
+      opacity: backgroundOpacity,
+      position: { x: 0, y: 0 },
+      showInWeb,
+      showInEditor: true,
+      ...options
+    };
+
+    baseSetBackgroundImage(imageUrl, backgroundOptions);
+    setBackgroundImage(imageUrl);
+  };
+
+  // Función para actualizar propiedades del fondo
+  const handleUpdateBackground = (updates) => {
+    updateBackground(updates);
+    
+    if (updates.scale !== undefined) setBackgroundScale(updates.scale);
+    if (updates.opacity !== undefined) setBackgroundOpacity(updates.opacity);
+    if (updates.showInWeb !== undefined) setShowBackgroundInWeb(updates.showInWeb);
+  };
+
+  // Función para remover imagen de fondo
+  const handleRemoveBackground = () => {
+    removeBackground();
+    setBackgroundImage(null);
+    setBackgroundScale(1.0);
+    setBackgroundOpacity(0.3);
+  };
+
+  // ===== FUNCIONES EXISTENTES MANTENIDAS =====
+
+  // Función para duplicar elementos
+  const duplicarElementos = () => {
+    if (selectedIds.length === 0) {
+      message.warning('Selecciona elementos para duplicar');
+      return;
+    }
+
+    const elementosSeleccionados = elements.filter(el => selectedIds.includes(el._id));
+    const nuevosElementos = [];
+
+    elementosSeleccionados.forEach(elemento => {
+      const nuevoElemento = {
+        ...elemento,
+        _id: `${elemento.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        posicion: {
+          x: elemento.posicion.x + 50,
+          y: elemento.posicion.y + 50
+        }
+      };
+
+      // Si es una mesa, duplicar también sus sillas
+      if (elemento.type === 'mesa') {
+        const sillasMesa = elements.filter(el => 
           el.type === 'silla' && el.parentId === elemento._id
         );
-        
-        sillasAsociadas.forEach(silla => {
+
+        sillasMesa.forEach(silla => {
           const nuevaSilla = {
             ...silla,
-            _id: `silla_${Date.now()}_${Math.random()}`,
-            parentId: nuevaMesa._id, // Asignar a la nueva mesa
+            _id: `silla_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            parentId: nuevoElemento._id,
             posicion: {
               x: silla.posicion.x + 50,
               y: silla.posicion.y + 50
@@ -294,196 +381,273 @@ export const useCrearMapa = () => {
           };
           nuevosElementos.push(nuevaSilla);
         });
-      } else if (elemento.type === 'silla') {
-        // Si es una silla individual, duplicarla
-        const nuevaSilla = {
-          ...elemento,
-          _id: `silla_${Date.now()}_${Math.random()}`,
-          posicion: {
-            x: elemento.posicion.x + 30,
-            y: elemento.posicion.y + 30
-          }
-        };
-        nuevosElementos.push(nuevaSilla);
-      } else {
-        // Para otros tipos de elementos
-        const nuevoElemento = {
-          ...elemento,
-          _id: `element_${Date.now()}_${Math.random()}`,
-          posicion: {
-            x: elemento.posicion.x + 20,
-            y: elemento.posicion.y + 20
-          }
-        };
-        nuevosElementos.push(nuevoElemento);
       }
+
+      nuevosElementos.push(nuevoElemento);
     });
-    
+
     setElements(prev => [...prev, ...nuevosElementos]);
-    setSelectedIds(nuevosElementos.map(el => el._id));
     message.success(`${nuevosElementos.length} elementos duplicados`);
   };
 
-  // Función para crear sección personalizable
+  // Función para crear sección
   const crearSeccion = () => {
-    // Activar modo de creación de sección
-    setActiveMode('section');
     setIsCreatingSection(true);
     setSectionPoints([]);
-    message.info('Modo sección activado - Haz clic en el mapa para crear puntos de la sección');
+    setActiveMode('section');
+    message.info('Modo sección activado - Haz clic para crear puntos de la sección');
   };
 
   // Función para manejar clics en modo sección
-  const handleSectionClick = (e) => {
+  const handleSectionClick = (event) => {
     if (!isCreatingSection || activeMode !== 'section') return;
+
+    const stage = event.target.getStage();
+    const point = stage.getPointerPosition();
     
-    const stage = e.target.getStage();
-    const pointerPos = stage.getPointerPosition();
-    
-    setSectionPoints(prev => [...prev, pointerPos]);
-    
-    if (sectionPoints.length >= 2) {
-      // Crear la sección cuando hay al menos 3 puntos
-      const nuevaSeccion = {
-        _id: `seccion_${Date.now()}_${Math.random()}`,
-        type: 'seccion',
-        nombre: `Sección ${Date.now()}`,
-        posicion: { x: 0, y: 0 },
-        points: [...sectionPoints, pointerPos].flatMap(p => [p.x, p.y]),
-        fill: 'rgba(255, 255, 0, 0.3)',
-        stroke: '#FFD700',
-        strokeWidth: 2,
-        zonaId: selectedZone?.id || null
-      };
+    setSectionPoints(prev => {
+      const newPoints = [...prev, point];
       
-      setElements(prev => [...prev, nuevaSeccion]);
-      setSectionPoints([]);
-      setIsCreatingSection(false);
-      setActiveMode('select');
-      message.success('Sección creada correctamente');
-    }
+      // Si tenemos suficientes puntos, crear la sección
+      if (newPoints.length >= 3) {
+        const seccion = addSeccion(newPoints);
+        setIsCreatingSection(false);
+        setActiveMode('select');
+        setSectionPoints([]);
+        message.success('Sección creada exitosamente');
+      }
+      
+      return newPoints;
+    });
   };
 
-  // Funciones para paneo con botón central del mouse
-  const handlePanStart = (e) => {
-    // Solo activar paneo con botón central (button 1)
-    if (e.evt.button === 1) {
-      e.evt.preventDefault();
+  // Función para limpiar selección
+  const limpiarSeleccion = () => {
+    clearSelection();
+    setSelectedElement(null);
+    message.info('Selección limpiada');
+  };
+
+  // Función para asignar zona a elementos seleccionados
+  const handleAssignZoneToSelected = (zoneId) => {
+    if (!zoneId) {
+      message.warning('Selecciona una zona válida');
+      return;
+    }
+    
+    assignZoneToSelected(zoneId);
+  };
+
+  // Función para ajustar a cuadrícula
+  const handleSnapToGrid = (gridSize = 20) => {
+    snapToCustomGrid(gridSize);
+  };
+
+  // Función para limpiar sillas duplicadas
+  const handleLimpiarSillasDuplicadas = () => {
+    limpiarSillasDuplicadas();
+  };
+
+  // Función para guardar
+  const handleSave = () => {
+    saveMapa();
+  };
+
+  // Funciones de paneo
+  const handlePanStart = (event) => {
+    if (event.evt.button === 1) { // Botón central del mouse
       setIsPanning(true);
-      const stage = e.target.getStage();
-      const pointerPos = stage.getPointerPosition();
-      setPanStart(pointerPos);
+      setPanStart({ x: event.evt.clientX, y: event.evt.clientY });
     }
   };
 
-  const handlePanMove = (e) => {
-    if (!isPanning) return;
-    
-    const stage = e.target.getStage();
-    const pointerPos = stage.getPointerPosition();
-    const deltaX = pointerPos.x - panStart.x;
-    const deltaY = pointerPos.y - panStart.y;
-    
-    setStagePosition(prev => ({
-      x: prev.x + deltaX,
-      y: prev.y + deltaY
-    }));
-    
-    setPanStart(pointerPos);
+  const handlePanMove = (event) => {
+    if (isPanning) {
+      const deltaX = event.evt.clientX - panStart.x;
+      const deltaY = event.evt.clientY - panStart.y;
+      
+      setStagePosition(prev => ({
+        x: prev.x + deltaX,
+        y: prev.y + deltaY
+      }));
+      
+      setPanStart({ x: event.evt.clientX, y: event.evt.clientY });
+    }
   };
 
   const handlePanEnd = () => {
     setIsPanning(false);
   };
 
-  // Función para forma personalizable
-  const formaPersonalizable = () => {
-    // Activar modo de forma personalizable
-    setActiveMode('freeform');
-    message.info('Modo forma personalizable activado - Haz clic y arrastra para crear formas');
-  };
+  // Auto-guardado cuando hay cambios
+  useEffect(() => {
+    if (hasUnsavedChanges && !isSaving) {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+      
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        saveMapa();
+      }, autoSaveDelay);
+    }
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [hasUnsavedChanges, isSaving, saveMapa]);
+
+  // Cargar mapa al iniciar
+  useEffect(() => {
+    if (!hasLoadedInitialData.current && salaId) {
+      loadMapa();
+      hasLoadedInitialData.current = true;
+    }
+  }, [salaId, loadMapa]);
 
   return {
     // Estados
-    elements, setElements,
-    selectedIds, setSelectedIds,
-    zonas: zones,          // renombramos zones -> zonas
-    setZonas: setZones,
-    showZones, setShowZones,
-    selectedZone, setSelectedZone,
-    selectedElement, setSelectedElement,
-    numSillas, setNumSillas,
-    zoom, setZoom,
-    selectionRect, setSelectionRect,
-    sillaShape, setSillaShape,
-
-    // Refs y tamaño
-    stageRef,
-    stageSize,
-
-    // Funciones mesas y sillas
+    elements,
+    zones,
+    selectedIds,
+    showZones,
+    selectedZone,
+    selectedElement,
+    numSillas,
+    zoom,
+    selectionRect,
+    sillaShape,
+    activeMode,
+    sectionPoints,
+    isCreatingSection,
+    isPanning,
+    stagePosition,
+    hasUnsavedChanges,
+    isLoading,
+    isSaving,
+    uploadProgress,
+    
+    // Estados de escalado
+    selectedScale,
+    showScaleControls,
+    scaleSystem,
+    
+    // Estados de asientos
+    selectedSeatState,
+    seatStates,
+    
+    // Estados de conexiones
+    showConnections,
+    connectionStyle,
+    connectionThreshold,
+    
+    // Estados de fondo
+    backgroundImage,
+    backgroundScale,
+    backgroundOpacity,
+    showBackgroundInWeb,
+    backgroundSystem,
+    
+    // Funciones básicas
     addMesa,
-    agregarMesaCuadrada,
-    agregarMesaCircular,
     addSillasToMesa,
     updateElementProperty: updatePropertyAndSelection,
     updateElementSize: updateSizeAndSelection,
     deleteSelectedElements,
-    eliminarElementoSeleccionado,
     limpiarSillasDuplicadas,
-
-    // Selección y eventos
-    selectElement,
-    selectGroup,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
-
-    // Zoom y stage
-    handleWheelZoom,
-    zoomIn,
-    zoomOut,
-    resetZoom,
-    centerView,
-
+    snapToGrid: handleSnapToGrid,
+    assignZoneToSelected,
+    
+    // Funciones de escalado
+    scaleElement: scaleElementById,
+    scaleSelectedElements,
+    
+    // Funciones de estados de asientos
+    changeSeatState,
+    changeSelectedSeatsState,
+    changeMesaSeatsState,
+    
+    // Funciones de conexiones
+    autoConnectSeats,
+    createManualConnection,
+    removeConnections,
+    changeConnectionStyle,
+    
+    // Funciones de coordenadas precisas
+    precisePositioning,
+    snapToCustomGrid,
+    
+    // Funciones de fondo
+    setBackgroundImage: handleSetBackgroundImage,
+    updateBackground: handleUpdateBackground,
+    removeBackground: handleRemoveBackground,
+    
     // Funciones de elementos gráficos
     addTextElement,
     addRectangleElement,
     addEllipseElement,
     addLineElement,
     addChairRow,
-
-    // Funciones avanzadas
-    copiarElementos,
-    pegarElementos,
+    addSeccion,
+    
+    // Funciones de selección
+    selectElement,
+    selectMultipleElements,
+    clearSelection,
+    selectGroup,
+    
+    // Funciones de zonas
+    addZone,
+    updateZone,
+    deleteZone,
+    toggleZoneVisibility,
+    
+    // Funciones de zoom y stage
+    handleZoom,
+    resetZoom,
+    centerStage,
+    
+    // Funciones de carga y guardado
+    loadMapa,
+    saveMapa: handleSave,
+    
+    // Funciones de duplicación y sección
     duplicarElementos,
     crearSeccion,
     handleSectionClick,
-    formaPersonalizable,
-
-    // Estados de modo
-    activeMode,
-    setActiveMode,
-    sectionPoints,
-    setSectionPoints,
-    isCreatingSection,
-    setIsCreatingSection,
-
-    // Auto-guardado
-    scheduleAutoSave,
-    hasUnsavedChanges,
-
-    // Funciones adicionales
-    assignZoneToSelected,
-    snapToGrid,
-    limpiarSillasDuplicadas,
-    handleSave,
-
+    limpiarSeleccion,
+    
     // Funciones de paneo
     handlePanStart,
     handlePanMove,
     handlePanEnd,
-    isPanning,
-    stagePosition,
+    
+    // Setters
+    setElements,
+    setZones,
+    setSelectedIds,
+    setShowZones,
+    setSelectedZone,
+    setSelectedElement,
+    setNumSillas,
+    setZoom,
+    setSelectionRect,
+    setSillaShape,
+    setActiveMode,
+    setSectionPoints,
+    setIsCreatingSection,
+    setIsPanning,
+    setStagePosition,
+    setHasUnsavedChanges,
+    setSelectedScale,
+    setShowScaleControls,
+    setSelectedSeatState,
+    setShowConnections,
+    setConnectionStyle,
+    setBackgroundImage,
+    setBackgroundScale,
+    setBackgroundOpacity,
+    setShowBackgroundInWeb
   };
 };

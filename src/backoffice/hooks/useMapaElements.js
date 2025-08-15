@@ -3,23 +3,223 @@ import { message } from 'antd';
 
 export const useMapaElements = (elements, setElements, selectedIds, selectedZone, numSillas) => {
 
+  // ===== SISTEMA DE ESCALADO AVANZADO =====
+  const scaleSystem = {
+    min: 0.1,
+    max: 3.0,
+    step: 0.1,
+    default: 1.0
+  };
+
+  // Función para escalar elementos proporcionalmente
+  const scaleElement = (elementId, scaleFactor) => {
+    setElements(prev => prev.map(el => {
+      if (el._id === elementId) {
+        const newScale = Math.max(scaleSystem.min, Math.min(scaleSystem.max, scaleFactor));
+        return {
+          ...el,
+          scale: newScale,
+          width: el.width ? el.width * newScale : el.width,
+          height: el.height ? el.height * newScale : el.height,
+          radius: el.radius ? el.radius * newScale : el.radius
+        };
+      }
+      return el;
+    }));
+  };
+
+  // ===== ESTADOS VISUALES DE ASIENTOS =====
+  const seatStates = {
+    available: { fill: '#00d6a4', stroke: '#a8aebc', opacity: 1 },
+    selected: { fill: '#008e6d', stroke: '#696f7d', opacity: 1 },
+    occupied: { fill: '#ff6b6b', stroke: '#d63031', opacity: 0.8 },
+    blocked: { fill: '#6c5ce7', stroke: '#5f3dc4', opacity: 0.7 },
+    reserved: { fill: '#fdcb6e', stroke: '#e17055', opacity: 0.9 }
+  };
+
+  // Función para cambiar estado de asiento
+  const changeSeatState = (seatId, newState) => {
+    if (!seatStates[newState]) return;
+    
+    setElements(prev => prev.map(el => {
+      if (el._id === seatId && el.type === 'silla') {
+        return {
+          ...el,
+          state: newState,
+          fill: seatStates[newState].fill,
+          stroke: seatStates[newState].stroke,
+          opacity: seatStates[newState].opacity
+        };
+      }
+      return el;
+    }));
+  };
+
+  // ===== LÍNEAS DE CONEXIÓN INTELIGENTES =====
+  const connectionThreshold = 50; // Distancia máxima para conectar asientos
+
+  // Función para conectar asientos automáticamente
+  const autoConnectSeats = (mesaId) => {
+    const mesa = elements.find(el => el._id === mesaId);
+    if (!mesa || mesa.type !== 'mesa') return;
+
+    const sillasMesa = elements.filter(el => el.type === 'silla' && el.parentId === mesaId);
+    if (sillasMesa.length < 2) return;
+
+    // Crear conexiones entre asientos cercanos
+    const nuevasConexiones = [];
+    
+    for (let i = 0; i < sillasMesa.length; i++) {
+      for (let j = i + 1; j < sillasMesa.length; j++) {
+        const silla1 = sillasMesa[i];
+        const silla2 = sillasMesa[j];
+        
+        const distance = Math.sqrt(
+          Math.pow(silla1.posicion.x - silla2.posicion.x, 2) + 
+          Math.pow(silla1.posicion.y - silla2.posicion.y, 2)
+        );
+        
+        if (distance <= connectionThreshold) {
+          nuevasConexiones.push({
+            _id: `conexion_${uuidv4()}`,
+            type: 'conexion',
+            startSeatId: silla1._id,
+            endSeatId: silla2._id,
+            stroke: '#8b93a6',
+            strokeWidth: 2,
+            opacity: 0.6,
+            dash: [5, 5]
+          });
+        }
+      }
+    }
+
+    // Agregar conexiones al mapa
+    setElements(prev => [...prev, ...nuevasConexiones]);
+    
+    if (nuevasConexiones.length > 0) {
+      message.success(`Se crearon ${nuevasConexiones.length} conexiones automáticas`);
+    }
+  };
+
+  // ===== SISTEMA DE COORDENADAS DE ALTA PRECISIÓN =====
+  const precisePositioning = {
+    // Redondear a 2 decimales para mayor precisión
+    round: (value) => parseFloat(value.toFixed(2)),
+    
+    // Ajustar a cuadrícula personalizable
+    snapToGrid: (value, gridSize = 5) => Math.round(value / gridSize) * gridSize,
+    
+    // Validar coordenadas dentro de límites razonables
+    validate: (x, y) => {
+      const maxCoord = 10000; // Máximo 10,000 píxeles
+      return Math.abs(x) <= maxCoord && Math.abs(y) <= maxCoord;
+    }
+  };
+
+  // Función para ajustar elementos a cuadrícula personalizada
+  const snapToCustomGrid = (gridSize = 5) => {
+    console.log(`[snapToCustomGrid] Ajustando elementos a cuadrícula de ${gridSize}px`);
+    
+    setElements(prev => {
+      return prev.map(element => {
+        if (element.posicion) {
+          const newX = precisePositioning.snapToGrid(element.posicion.x, gridSize);
+          const newY = precisePositioning.snapToGrid(element.posicion.y, gridSize);
+          
+          if (newX !== element.posicion.x || newY !== element.posicion.y) {
+            console.log(`[snapToCustomGrid] Ajustando ${element.type} ${element._id}: (${element.posicion.x}, ${element.posicion.y}) -> (${newX}, ${newY})`);
+            return {
+              ...element,
+              posicion: { 
+                x: precisePositioning.round(newX), 
+                y: precisePositioning.round(newY) 
+              }
+            };
+          }
+        }
+        return element;
+      });
+    });
+    
+    message.success(`Elementos ajustados a cuadrícula de ${gridSize}px`);
+  };
+
+  // ===== SISTEMA DE FONDO CON ESCALADO =====
+  const backgroundSystem = {
+    image: null,
+    scale: 1.0,
+    opacity: 0.3,
+    position: { x: 0, y: 0 },
+    showInWeb: true,
+    showInEditor: true
+  };
+
+  // Función para establecer imagen de fondo
+  const setBackgroundImage = (imageUrl, options = {}) => {
+    const backgroundElement = {
+      _id: 'background_image',
+      type: 'background',
+      imageUrl,
+      scale: options.scale || backgroundSystem.scale,
+      opacity: options.opacity || backgroundSystem.opacity,
+      position: options.position || backgroundSystem.position,
+      showInWeb: options.showInWeb !== undefined ? options.showInWeb : backgroundSystem.showInWeb,
+      showInEditor: options.showInEditor !== undefined ? options.showInEditor : backgroundSystem.showInEditor
+    };
+
+    setElements(prev => {
+      // Remover fondo anterior si existe
+      const sinFondo = prev.filter(el => el.type !== 'background');
+      return [...sinFondo, backgroundElement];
+    });
+
+    message.success('Imagen de fondo establecida');
+  };
+
+  // Función para actualizar propiedades del fondo
+  const updateBackground = (updates) => {
+    setElements(prev => prev.map(el => {
+      if (el.type === 'background') {
+        return { ...el, ...updates };
+      }
+      return el;
+    }));
+  };
+
+  // Función para remover imagen de fondo
+  const removeBackground = () => {
+    setElements(prev => prev.filter(el => el.type !== 'background'));
+    message.success('Imagen de fondo removida');
+  };
+
   // Función auxiliar para crear sillas (movida aquí)
   const crearSilla = ({ mesaId, x, y, numero, sillaShape, zonaId }) => {
     const TAMAÑO_SILLA = 20;
+    const posicion = {
+      x: precisePositioning.round(x),
+      y: precisePositioning.round(y)
+    };
+    
     return {
       _id: `silla_${uuidv4()}`,
       type: 'silla',
       parentId: mesaId,
-      posicion: { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 },
+      posicion,
       width: TAMAÑO_SILLA,
       height: TAMAÑO_SILLA,
       numero,
       shape: sillaShape,
       zonaId,
       rotation: 0,
-      fila: ''
+      fila: '',
+      state: 'available', // Estado por defecto
+      fill: seatStates.available.fill,
+      stroke: seatStates.available.stroke,
+      opacity: seatStates.available.opacity
     };
   };
+
   // Creación de una nueva mesa
   const addMesa = (shape = 'rect') => {
     const id = 'mesa_' + uuidv4();
@@ -29,12 +229,13 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
       shape,
       posicion: { x: 200, y: 200 },
       radius: shape === 'circle' ? 60 : undefined,
-      width: shape === 'rect' ? 120 : undefined, // Set initial width for rect
-      height: shape === 'rect' ? 80 : undefined, // Set initial height for rect
+      width: shape === 'rect' ? 120 : undefined,
+      height: shape === 'rect' ? 80 : undefined,
       nombre: 'Mesa ' + (elements.filter(e => e.type === 'mesa').length + 1),
-      sillas: [], // This 'sillas' array is not used for rendering chairs anymore
+      sillas: [],
       zonaId: selectedZone?.id || null,
-      fila: ''
+      fila: '',
+      scale: 1.0 // Escala por defecto
     };
     setElements(prev => [...prev, nuevaMesa]);
     return nuevaMesa;
@@ -62,7 +263,7 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
       console.log(`[addSillasToMesa] Elementos después del filtro:`, elementosSinSillas.length);
       console.log(`[addSillasToMesa] Eliminando ${prev.length - elementosSinSillas.length} sillas existentes de mesa ${mesaId}`);
       const TAMAÑO_SILLA = 20;
-      const MARGEN_SILLA = 15; // Aumentado el margen para mejor separación
+      const MARGEN_SILLA = 15;
       const nuevasSillas = [];
 
       const mesaWidth = mesa.shape === 'rect' ? Math.max(mesa.width || 120, 30) : null;
@@ -86,8 +287,8 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
           
           nuevasSillas.push(crearSilla({
             mesaId, 
-            x: Math.round(x * 100) / 100, 
-            y: Math.round(y * 100) / 100,
+            x: precisePositioning.round(x), 
+            y: precisePositioning.round(y),
             numero: i + 1,
             sillaShape,
             zonaId: selectedZone?.id || mesa.zonaId
@@ -98,23 +299,26 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
         const sides = [
           { len: mesaWidth, hor: true, startX: mesaX, startY: mesaY - MARGEN_SILLA - TAMAÑO_SILLA, dx: 1, dy: 0 },
           { len: mesaHeight, hor: false, startX: mesaX + mesaWidth + MARGEN_SILLA, startY: mesaY, dx: 0, dy: 1 },
-          { len: mesaWidth, hor: true, startX: mesaX + mesaWidth, startY: mesaY + mesaHeight + MARGEN_SILLA, dx: -1, dy: 0 },
-          { len: mesaHeight, hor: false, startX: mesaX - MARGEN_SILLA - TAMAÑO_SILLA, startY: mesaY + mesaHeight, dx: 0, dy: -1 },
+          { len: mesaWidth, hor: true, startX: mesaX, startY: mesaY + mesaHeight + MARGEN_SILLA, dx: 1, dy: 0 },
+          { len: mesaHeight, hor: false, startX: mesaX - MARGEN_SILLA - TAMAÑO_SILLA, startY: mesaY, dx: 0, dy: 1 }
         ];
-        for (let s = 0; s < sides.length && colocadas < cantidad; s++) {
-          const side = sides[s];
-          const restantes = cantidad - colocadas;
-          const porLado = Math.max(1, Math.ceil(restantes / (sides.length - s)));
-          for (let i = 0; i < porLado && colocadas < cantidad; i++) {
-            const factor = (i + 1) / (porLado + 1);
-            const x = side.hor
-              ? side.startX + side.dx * (side.len * factor - (side.dx === -1 ? TAMAÑO_SILLA : 0)) - (side.hor ? TAMAÑO_SILLA / 2 : 0)
-              : side.startX - (side.hor ? TAMAÑO_SILLA / 2 : 0);
-            const y = side.hor
-              ? side.startY
-              : side.startY + side.dy * (side.len * factor - (side.dy === -1 ? TAMAÑO_SILLA : 0)) - (side.hor ? 0 : TAMAÑO_SILLA / 2);
+
+        for (const side of sides) {
+          if (colocadas >= cantidad) break;
+          
+          const sillasEnLado = Math.min(
+            Math.floor(side.len / (TAMAÑO_SILLA + 5)),
+            cantidad - colocadas
+          );
+          
+          for (let i = 0; i < sillasEnLado; i++) {
+            const x = side.startX + (side.hor ? i * (TAMAÑO_SILLA + 5) : 0);
+            const y = side.startY + (side.hor ? 0 : i * (TAMAÑO_SILLA + 5));
+            
             nuevasSillas.push(crearSilla({
-              mesaId, x, y,
+              mesaId,
+              x: precisePositioning.round(x),
+              y: precisePositioning.round(y),
               numero: colocadas + 1,
               sillaShape,
               zonaId: selectedZone?.id || mesa.zonaId
@@ -124,41 +328,54 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
         }
       }
 
-      console.log(`[addSillasToMesa] Agregando ${nuevasSillas.length} nuevas sillas a mesa ${mesaId}`);
-      console.log(`[addSillasToMesa] Nuevas sillas:`, nuevasSillas);
+      console.log(`[addSillasToMesa] Sillas creadas:`, nuevasSillas.length);
       const resultado = [...elementosSinSillas, ...nuevasSillas];
-      console.log(`[addSillasToMesa] Total de elementos después de agregar sillas:`, resultado.length);
+      console.log(`[addSillasToMesa] Total elementos después:`, resultado.length);
+      
       return resultado;
     });
+
+    // Crear conexiones automáticas después de agregar sillas
+    setTimeout(() => autoConnectSeats(mesaId), 100);
   };
 
-  // Actualización de propiedades de elementos
+  // Función para asignar zona a elementos seleccionados
+  const assignZoneToSelected = (zoneId) => {
+    if (!zoneId) return;
+    
+    setElements(prev => prev.map(el => {
+      if (selectedIds.includes(el._id)) {
+        return { ...el, zonaId: zoneId };
+      }
+      return el;
+    }));
+    
+    message.success('Zona asignada a elementos seleccionados');
+  };
+
+  // Función para actualizar propiedades de elementos
   const updateElementProperty = (id, property, value) => {
-    setElements(prev =>
-      prev.map(el => {
-        if (el._id === id) {
-          return { ...el, [property]: value };
-        }
-        // The logic below for updating chairs nested in mesa.sillas is likely
-        // not needed anymore since chairs are top-level elements with parentId
-        /*
-        if (el.type === 'mesa' && el.sillas) {
-          const nuevasSillas = el.sillas.map(silla =>
-            silla._id === id ? { ...silla, [property]: value } : silla
-          );
-          // Si alguna silla fue actualizada, retornar la mesa con las sillas actualizadas
-          if (nuevasSillas.some((silla, index) => silla !== el.sillas[index])) {
-             return { ...el, sillas: nuevasSillas };
+    setElements(prev => prev.map(el => {
+      if (el._id === id) {
+        // Validar coordenadas si es una posición
+        if (property === 'posicion' && value.x !== undefined && value.y !== undefined) {
+          if (!precisePositioning.validate(value.x, value.y)) {
+            message.error('Coordenadas fuera de rango válido');
+            return el;
           }
+          value = {
+            x: precisePositioning.round(value.x),
+            y: precisePositioning.round(value.y)
+          };
         }
-        */
-        return el; // Retornar el elemento sin cambios si no es el que buscamos
-      })
-    );
+        
+        return { ...el, [property]: value };
+      }
+      return el;
+    }));
   };
 
-
-  // Actualización de tamaño de elementos
+  // Función para actualizar tamaño de elementos
   const updateElementSize = (id, newWidth, newHeight) => {
     setElements(prev =>
       prev.map(el =>
@@ -173,9 +390,11 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
       if (selectedIds.includes(el._id)) return false;
       // Si el elemento es silla y su padre está seleccionado, eliminar silla
       if (el.type === 'silla' && selectedIds.includes(el.parentId)) return false;
+      // Si el elemento es conexión y uno de sus asientos está seleccionado, eliminar conexión
+      if (el.type === 'conexion' && 
+          (selectedIds.includes(el.startSeatId) || selectedIds.includes(el.endSeatId))) return false;
       return true;
     }));
-    // setSelectedIds([]); // La deselección se manejará en el hook de selección
   };
 
   // Función para limpiar sillas duplicadas
@@ -224,34 +443,13 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
     });
   };
 
-  // Función para ajustar elementos a la cuadrícula
+  // Función para ajustar elementos a la cuadrícula (mantener compatibilidad)
   const snapToGrid = () => {
-    console.log('[snapToGrid] Ajustando elementos a la cuadrícula');
-    
-    setElements(prev => {
-      const GRID_SIZE = 20; // Tamaño de la cuadrícula
-      
-      return prev.map(element => {
-        if (element.posicion) {
-          const newX = Math.round(element.posicion.x / GRID_SIZE) * GRID_SIZE;
-          const newY = Math.round(element.posicion.y / GRID_SIZE) * GRID_SIZE;
-          
-          if (newX !== element.posicion.x || newY !== element.posicion.y) {
-            console.log(`[snapToGrid] Ajustando ${element.type} ${element._id}: (${element.posicion.x}, ${element.posicion.y}) -> (${newX}, ${newY})`);
-            return {
-              ...element,
-              posicion: { x: newX, y: newY }
-            };
-          }
-        }
-        return element;
-      });
-    });
-    
-    message.success('Elementos ajustados a la cuadrícula');
+    snapToCustomGrid(20); // Usar cuadrícula de 20px por defecto
   };
 
   return {
+    // Funciones básicas
     addMesa,
     addSillasToMesa,
     updateElementProperty,
@@ -259,5 +457,28 @@ export const useMapaElements = (elements, setElements, selectedIds, selectedZone
     deleteSelectedElements,
     limpiarSillasDuplicadas,
     snapToGrid,
+    assignZoneToSelected,
+    
+    // Nuevas funciones de escalado
+    scaleElement,
+    scaleSystem,
+    
+    // Nuevas funciones de estados de asientos
+    changeSeatState,
+    seatStates,
+    
+    // Nuevas funciones de conexiones
+    autoConnectSeats,
+    connectionThreshold,
+    
+    // Nuevas funciones de coordenadas precisas
+    precisePositioning,
+    snapToCustomGrid,
+    
+    // Nuevas funciones de fondo
+    setBackgroundImage,
+    updateBackground,
+    removeBackground,
+    backgroundSystem
   };
 };
