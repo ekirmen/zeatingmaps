@@ -5,7 +5,7 @@
   "engines": {
     "node": "22.x"
   },
-  "homepage": "/store",
+  "homepage": ".",
   "scripts": {
     "start": "craco start",
     "dev": "craco start",
