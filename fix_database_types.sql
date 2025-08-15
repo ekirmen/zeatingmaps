@@ -29,7 +29,24 @@ FROM information_schema.tables
 WHERE table_name IN ('eventos', 'recintos')
   AND table_schema = 'public';
 
--- 3. CORRECCIÓN: Si la tabla eventos no existe, crearla
+-- 3. DIAGNÓSTICO: Verificar campos existentes en las tablas
+SELECT 
+  'eventos' as tabla,
+  column_name,
+  data_type
+FROM information_schema.columns 
+WHERE table_name = 'eventos'
+ORDER BY ordinal_position
+UNION ALL
+SELECT 
+  'recintos' as tabla,
+  column_name,
+  data_type
+FROM information_schema.columns 
+WHERE table_name = 'recintos'
+ORDER BY ordinal_position;
+
+-- 4. CORRECCIÓN: Si la tabla eventos no existe, crearla
 CREATE TABLE IF NOT EXISTS eventos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nombre VARCHAR(255) NOT NULL,
@@ -42,7 +59,7 @@ CREATE TABLE IF NOT EXISTS eventos (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- 4. CORRECCIÓN: Si la tabla recintos no existe, crearla
+-- 5. CORRECCIÓN: Si la tabla recintos no existe, crearla
 CREATE TABLE IF NOT EXISTS recintos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   nombre VARCHAR(255) NOT NULL,
@@ -55,7 +72,7 @@ CREATE TABLE IF NOT EXISTS recintos (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
--- 5. CORRECCIÓN: Si las tablas existen pero tienen tipos incorrectos, corregirlas
+-- 6. CORRECCIÓN: Si las tablas existen pero tienen tipos incorrectos, corregirlas
 DO $$
 BEGIN
   -- Verificar y corregir tabla eventos
@@ -84,9 +101,15 @@ BEGIN
         updated_at TIMESTAMP DEFAULT NOW()
       );
       
-      -- Copiar datos existentes (si los hay)
-      INSERT INTO eventos_temp (nombre, descripcion, fecha_inicio, fecha_fin, estado, imagen_url, created_at, updated_at)
-      SELECT nombre, descripcion, fecha_inicio, fecha_fin, estado, imagen_url, created_at, updated_at
+      -- Copiar datos existentes (solo campos que existen)
+      INSERT INTO eventos_temp (nombre, descripcion, fecha_inicio, fecha_fin, estado, imagen_url)
+      SELECT 
+        COALESCE(nombre, 'Evento'),
+        COALESCE(descripcion, ''),
+        COALESCE(fecha_inicio, NOW()),
+        COALESCE(fecha_fin, NOW() + INTERVAL '1 day'),
+        COALESCE(estado, 'activo'),
+        COALESCE(imagen_url, '')
       FROM eventos;
       
       -- Eliminar tabla antigua y renombrar la nueva
@@ -123,9 +146,15 @@ BEGIN
         updated_at TIMESTAMP DEFAULT NOW()
       );
       
-      -- Copiar datos existentes (si los hay)
-      INSERT INTO recintos_temp (nombre, direccion, capacidad, ciudad, estado, pais, created_at, updated_at)
-      SELECT nombre, direccion, capacidad, ciudad, estado, pais, created_at, updated_at
+      -- Copiar datos existentes (solo campos que existen)
+      INSERT INTO recintos_temp (nombre, direccion, capacidad, ciudad, estado, pais)
+      SELECT 
+        COALESCE(nombre, 'Recinto'),
+        COALESCE(direccion, ''),
+        COALESCE(capacidad, 0),
+        COALESCE(ciudad, ''),
+        COALESCE(estado, ''),
+        COALESCE(pais, '')
       FROM recintos;
       
       -- Eliminar tabla antigua y renombrar la nueva
@@ -137,7 +166,7 @@ BEGIN
   END IF;
 END $$;
 
--- 6. VERIFICACIÓN FINAL: Confirmar que los tipos son correctos
+-- 7. VERIFICACIÓN FINAL: Confirmar que los tipos son correctos
 SELECT 
   'eventos' as tabla,
   column_name,
@@ -156,7 +185,7 @@ FROM information_schema.columns
 WHERE table_name = 'recintos' 
   AND column_name = 'id';
 
--- 7. CREAR ÍNDICES PARA MEJOR RENDIMIENTO
+-- 8. CREAR ÍNDICES PARA MEJOR RENDIMIENTO
 CREATE INDEX IF NOT EXISTS idx_eventos_nombre ON eventos(nombre);
 CREATE INDEX IF NOT EXISTS idx_eventos_estado ON eventos(estado);
 CREATE INDEX IF NOT EXISTS idx_eventos_fecha_inicio ON eventos(fecha_inicio);
@@ -165,7 +194,7 @@ CREATE INDEX IF NOT EXISTS idx_recintos_nombre ON recintos(nombre);
 CREATE INDEX IF NOT EXISTS idx_recintos_ciudad ON recintos(ciudad);
 CREATE INDEX IF NOT EXISTS idx_recintos_estado ON recintos(estado);
 
--- 8. MENSAJE DE ÉXITO
+-- 9. MENSAJE DE ÉXITO
 DO $$
 BEGIN
   RAISE NOTICE 'Script de corrección completado exitosamente';

@@ -85,25 +85,65 @@ END $$;
 ALTER TABLE evento_imagenes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE recinto_imagenes ENABLE ROW LEVEL SECURITY;
 
--- Políticas RLS para evento_imagenes
-CREATE POLICY "Users can view event images" ON evento_imagenes
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+-- Crear políticas RLS solo si no existen
+DO $$
+BEGIN
+  -- Políticas para evento_imagenes
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'evento_imagenes' 
+    AND policyname = 'Users can view event images'
+  ) THEN
+    CREATE POLICY "Users can view event images" ON evento_imagenes
+      FOR SELECT USING (auth.uid() IS NOT NULL);
+  END IF;
 
-CREATE POLICY "Users can insert event images" ON evento_imagenes
-  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'evento_imagenes' 
+    AND policyname = 'Users can insert event images'
+  ) THEN
+    CREATE POLICY "Users can insert event images" ON evento_imagenes
+      FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+  END IF;
 
-CREATE POLICY "Users can update event images" ON evento_imagenes
-  FOR UPDATE USING (auth.uid() IS NOT NULL);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'evento_imagenes' 
+    AND policyname = 'Users can update event images'
+  ) THEN
+    CREATE POLICY "Users can update event images" ON evento_imagenes
+      FOR UPDATE USING (auth.uid() IS NOT NULL);
+  END IF;
 
--- Políticas RLS para recinto_imagenes
-CREATE POLICY "Users can view venue images" ON recinto_imagenes
-  FOR SELECT USING (auth.uid() IS NOT NULL);
+  -- Políticas para recinto_imagenes
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'recinto_imagenes' 
+    AND policyname = 'Users can view venue images'
+  ) THEN
+    CREATE POLICY "Users can view venue images" ON recinto_imagenes
+      FOR SELECT USING (auth.uid() IS NOT NULL);
+  END IF;
 
-CREATE POLICY "Users can insert venue images" ON recinto_imagenes
-  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'recinto_imagenes' 
+    AND policyname = 'Users can insert venue images'
+  ) THEN
+    CREATE POLICY "Users can insert venue images" ON recinto_imagenes
+      FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+  END IF;
 
-CREATE POLICY "Users can update venue images" ON recinto_imagenes
-  FOR UPDATE USING (auth.uid() IS NOT NULL);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies 
+    WHERE tablename = 'recinto_imagenes' 
+    AND policyname = 'Users can update venue images'
+  ) THEN
+    CREATE POLICY "Users can update venue images" ON recinto_imagenes
+      FOR UPDATE USING (auth.uid() IS NOT NULL);
+  END IF;
+END $$;
 
 -- Función para actualizar updated_at automáticamente
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -115,15 +155,30 @@ END;
 $$ language 'plpgsql';
 
 -- Triggers para actualizar updated_at automáticamente
-CREATE TRIGGER update_evento_imagenes_updated_at 
-  BEFORE UPDATE ON evento_imagenes 
-  FOR EACH ROW 
-  EXECUTE FUNCTION update_updated_at_column();
+DO $$
+BEGIN
+  -- Trigger para evento_imagenes
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger 
+    WHERE tgname = 'update_evento_imagenes_updated_at'
+  ) THEN
+    CREATE TRIGGER update_evento_imagenes_updated_at 
+      BEFORE UPDATE ON evento_imagenes 
+      FOR EACH ROW 
+      EXECUTE FUNCTION update_updated_at_column();
+  END IF;
 
-CREATE TRIGGER update_recinto_imagenes_updated_at 
-  BEFORE UPDATE ON recinto_imagenes 
-  FOR EACH ROW 
-  EXECUTE FUNCTION update_updated_at_column();
+  -- Trigger para recinto_imagenes
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger 
+    WHERE tgname = 'update_recinto_imagenes_updated_at'
+  ) THEN
+    CREATE TRIGGER update_recinto_imagenes_updated_at 
+      BEFORE UPDATE ON recinto_imagenes 
+      FOR EACH ROW 
+      EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END $$;
 
 -- Comentarios de las tablas
 COMMENT ON TABLE evento_imagenes IS 'Imágenes asociadas a eventos';
@@ -146,3 +201,17 @@ COMMENT ON COLUMN recinto_imagenes.tipo IS 'Tipo de imagen: principal, galeria, 
 
 -- INSERT INTO recinto_imagenes (recinto_id, url, alt_text, tipo, orden) VALUES 
 --   ('recinto-uuid-1', 'https://ejemplo.com/recinto1.jpg', 'Vista exterior del recinto', 'exterior', 1);
+
+-- Mensaje de éxito
+DO $$
+BEGIN
+  RAISE NOTICE '========================================';
+  RAISE NOTICE 'TABLAS DE IMÁGENES CREADAS EXITOSAMENTE';
+  RAISE NOTICE '========================================';
+  RAISE NOTICE 'Tabla evento_imagenes creada/verificada';
+  RAISE NOTICE 'Tabla recinto_imagenes creada/verificada';
+  RAISE NOTICE 'Políticas RLS configuradas';
+  RAISE NOTICE 'Triggers configurados';
+  RAISE NOTICE '¡Sistema listo para usar!';
+  RAISE NOTICE '========================================';
+END $$;

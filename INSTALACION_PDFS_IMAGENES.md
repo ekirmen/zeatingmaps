@@ -1,63 +1,113 @@
 # 🚀 Guía de Instalación: Sistema de PDFs con Imágenes
 
-## ⚠️ PROBLEMA IDENTIFICADO
+## ⚠️ PROBLEMAS IDENTIFICADOS
 
-Has encontrado este error:
+### **Error 1: Incompatibilidad de Tipos**
 ```
 ERROR: 42804: foreign key constraint "recinto_imagenes_recinto_id_fkey" cannot be implemented
 DETAIL: Key columns "recinto_id" and "id" are of incompatible types: uuid and integer.
 ```
 
+### **Error 2: Campos Inexistentes**
+```
+ERROR: 42703: column "created_at" does not exist
+DETAIL: There is a column named "created_at" in table "recintos_temp", but it cannot be referenced from this part of the query.
+```
+
+### **Error 3: Políticas RLS Duplicadas** ⭐ **NUEVO**
+```
+ERROR: 42710: policy "Users can view event images" for table "evento_imagenes" already exists
+ERROR: 42710: policy "Users can view event images" for table "evento_imagenes" already exists
+```
+
 ## 🔍 DIAGNÓSTICO
 
-El problema es que las tablas `eventos` y `recintos` en tu base de datos tienen campos `id` de tipo `integer` en lugar de `UUID`, pero nuestro sistema está diseñado para trabajar con `UUID`.
+El problema es que las tablas `eventos` y `recintos` en tu base de datos:
+1. **Tienen campos `id` de tipo `integer`** en lugar de `UUID`
+2. **No tienen todos los campos esperados** como `created_at`, `updated_at`
+3. **Ya tienen políticas RLS duplicadas** de ejecuciones anteriores
+4. **Nuestro sistema está diseñado** para trabajar con `UUID` y campos completos
 
 ## 🛠️ SOLUCIÓN PASO A PASO
 
-### **PASO 1: Ejecutar Script de Diagnóstico y Corrección**
+### **PASO 1: Limpiar Políticas RLS Duplicadas** ⭐ **PRIMERO**
 
-```bash
-# Ejecuta este script primero para corregir los tipos de datos
-psql -d tu_base_de_datos -f fix_database_types.sql
-```
-
-**O si usas Supabase:**
+**Ejecuta este script para limpiar políticas duplicadas:**
 ```sql
--- Copia y pega el contenido de fix_database_types.sql en tu SQL Editor
+-- Copia y pega el contenido de cleanup_duplicate_policies.sql en tu SQL Editor
+-- Este script eliminará políticas duplicadas y creará unas limpias
 ```
 
-### **PASO 2: Verificar que las Correcciones Funcionaron**
+**¿Por qué este paso es necesario?**
+- ✅ **Elimina políticas duplicadas** que causan conflictos
+- ✅ **Crea políticas limpias** y consistentes
+- ✅ **Prepara el sistema** para la instalación correcta
 
-Después de ejecutar el script anterior, deberías ver:
-- ✅ Tabla `eventos` con campo `id` de tipo `UUID`
-- ✅ Tabla `recintos` con campo `id` de tipo `UUID`
-- ✅ Mensaje: "Script de corrección completado exitosamente"
+### **PASO 2: Ejecutar Script Simple de Corrección**
 
-### **PASO 3: Crear las Tablas de Imágenes**
-
-```bash
-# Ahora ejecuta el script corregido
-psql -d tu_base_de_datos -f create_image_tables.sql
-```
-
-**O si usas Supabase:**
+**Usa este script corregido:**
 ```sql
+-- Copia y pega el contenido de fix_database_types_simple.sql en tu SQL Editor
+```
+
+**¿Por qué este script es mejor?**
+- ✅ **No intenta copiar campos inexistentes**
+- ✅ **Crea tablas nuevas con estructura correcta**
+- ✅ **Migra solo los datos disponibles**
+- ✅ **Maneja errores de manera segura**
+
+### **PASO 3: Verificar que las Correcciones Funcionaron**
+
+Después de ejecutar ambos scripts deberías ver:
+- ✅ **Mensaje**: "LIMPIEZA DE POLÍTICAS COMPLETADA"
+- ✅ **Mensaje**: "SCRIPT DE CORRECCIÓN COMPLETADO EXITOSAMENTE"
+- ✅ **Tabla `eventos`** con campo `id` de tipo `UUID`
+- ✅ **Tabla `recintos`** con campo `id` de tipo `UUID`
+- ✅ **Estructura completa** con todos los campos necesarios
+
+### **PASO 4: Crear las Tablas de Imágenes**
+
+```sql
+-- Ahora ejecuta el script corregido
 -- Copia y pega el contenido de create_image_tables.sql en tu SQL Editor
 ```
 
-### **PASO 4: Instalar Dependencias de Node.js**
+**Este script ahora:**
+- ✅ **Verifica políticas existentes** antes de crearlas
+- ✅ **No crea duplicados** de políticas RLS
+- ✅ **Maneja triggers** de manera segura
+- ✅ **Incluye mensajes** de éxito claros
+
+### **PASO 5: Instalar Dependencias de Node.js**
 
 ```bash
 cd api
 npm install pdf-lib qrcode
 ```
 
-### **PASO 5: Verificar la Instalación**
+### **PASO 6: Verificar la Instalación**
 
-```bash
-# Verifica que las tablas se crearon correctamente
-psql -d tu_base_de_datos -c "\d evento_imagenes"
-psql -d tu_base_de_datos -c "\d recinto_imagenes"
+```sql
+-- Verifica que las tablas se crearon correctamente
+SELECT table_name FROM information_schema.tables 
+WHERE table_name IN ('evento_imagenes', 'recinto_imagenes');
+
+-- Verifica tipos de datos
+SELECT 
+  table_name,
+  column_name,
+  data_type
+FROM information_schema.columns 
+WHERE table_name IN ('evento_imagenes', 'recinto_imagenes')
+ORDER BY table_name, ordinal_position;
+
+-- Verifica políticas RLS
+SELECT 
+  tablename,
+  policyname,
+  cmd
+FROM pg_policies 
+WHERE tablename IN ('evento_imagenes', 'recinto_imagenes');
 ```
 
 ## 🔧 ALTERNATIVA: Si No Puedes Cambiar los Tipos de Datos
@@ -115,6 +165,21 @@ curl -H "Authorization: Bearer TU_TOKEN" \
 - ✅ Las imágenes se muestran en el backoffice
 
 ## 🚨 SOLUCIÓN DE PROBLEMAS COMUNES
+
+### **Error: "policy already exists"**
+```sql
+-- Ejecuta cleanup_duplicate_policies.sql primero
+-- Este script eliminará políticas duplicadas
+```
+
+### **Error: "column does not exist"**
+```sql
+-- Verificar qué campos tiene realmente la tabla
+SELECT column_name, data_type 
+FROM information_schema.columns 
+WHERE table_name = 'recintos'
+ORDER BY ordinal_position;
+```
 
 ### **Error: "relation does not exist"**
 ```sql
@@ -179,6 +244,7 @@ if (response.ok) {
 - Tablas `evento_imagenes` y `recinto_imagenes` creadas
 - Foreign keys funcionando correctamente
 - RLS habilitado y políticas configuradas
+- **Sin políticas duplicadas**
 
 ✅ **API:**
 - Endpoint `/api/payments/[locator]/download` funcionando
@@ -199,6 +265,31 @@ Si sigues teniendo problemas después de seguir esta guía:
 3. **Comprueba la consola** de la base de datos para errores SQL
 4. **Ejecuta los scripts de diagnóstico** para identificar problemas
 
+## 📝 RESUMEN DE ARCHIVOS
+
+### **Scripts de Limpieza:**
+1. **`cleanup_duplicate_policies.sql`** ⭐ **NUEVO** - Limpia políticas RLS duplicadas
+
+### **Scripts de Corrección:**
+2. **`fix_database_types_simple.sql`** ⭐ **RECOMENDADO** - Script simple y seguro
+3. **`fix_database_types.sql`** - Script completo con diagnóstico
+
+### **Scripts de Imágenes:**
+4. **`create_image_tables.sql`** - Crear tablas de imágenes (corregido)
+
+### **Documentación:**
+5. **`INSTALACION_PDFS_IMAGENES.md`** - Esta guía completa
+
+## 🚀 ORDEN DE EJECUCIÓN RECOMENDADO
+
+1. **`cleanup_duplicate_policies.sql`** ⭐ **PRIMERO** - Limpiar políticas duplicadas
+2. **`fix_database_types_simple.sql`** ⭐ **SEGUNDO** - Corregir tipos de datos
+3. **`create_image_tables.sql`** ⭐ **TERCERO** - Crear tablas de imágenes
+4. **Instalar dependencias** de Node.js
+5. **Probar el sistema** completo
+
 ---
 
-**¡Con esta guía deberías poder resolver el problema de tipos de datos y tener tu sistema de PDFs con imágenes funcionando perfectamente!** 🎉
+**¡Con esta guía actualizada deberías poder resolver todos los problemas: tipos de datos, campos inexistentes y políticas duplicadas!** 🎉
+
+**Recomendación**: Sigue el orden de ejecución recomendado para evitar conflictos.
