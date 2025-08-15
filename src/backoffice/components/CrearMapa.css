@@ -50,6 +50,26 @@
   margin-bottom: 0;
 }
 
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.info-value {
+  font-weight: 700;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
 .sala-info-label {
   color: #64748b;
   font-size: 0.875rem;
@@ -121,6 +141,12 @@
   overflow: hidden;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.menu-section:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .section-header {
@@ -137,15 +163,34 @@
   cursor: pointer;
   transition: all 0.3s ease;
   border-bottom: 1px solid #e2e8f0;
+  border-radius: 8px 8px 0 0;
 }
 
 .section-header:hover {
   background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
   transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.expand-icon {
+  font-size: 0.75rem;
+  color: #64748b;
+  transition: transform 0.3s ease;
+  font-weight: bold;
+}
+
+.section-header:hover .expand-icon {
+  color: #475569;
 }
 
 .section-content {
   padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 0 0 8px 8px;
+  border: 1px solid #e2e8f0;
+  border-top: none;
+  margin-top: -1px;
+  backdrop-filter: blur(10px);
 }
 
 .section-button {
@@ -215,10 +260,27 @@
   border: 1px solid #e2e8f0;
 }
 
+.control-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.control-group .ant-btn {
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.control-group .ant-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
 /* Estado de guardado */
 .saving-status {
   position: absolute;
-  top: 1rem;
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
@@ -352,6 +414,15 @@
   font-weight: 600;
   backdrop-filter: blur(10px);
   animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.05);
+  }
 }
 
 @keyframes pulse {
