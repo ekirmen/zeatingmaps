@@ -127,10 +127,10 @@ const CrearMapaEditor = ({
   const [gridSize, setGridSize] = useState(20);
   
   // ===== ESTADOS DE ESCALADO Y ZOOM =====
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(0.8); // Zoom inicial más pequeño para ver más contenido
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [minScale, setMinScale] = useState(0.1);
-  const [maxScale, setMaxScale] = useState(3);
+  const [maxScale, setMaxScale] = useState(5); // Zoom máximo más alto para más detalle
   
   // ===== ESTADOS DE HISTORIAL =====
   const [history, setHistory] = useState([]);
@@ -739,179 +739,234 @@ const CrearMapaEditor = ({
   // ===== RENDERIZADO PRINCIPAL =====
   return (
     <div className="h-screen flex flex-col bg-gray-100">
-      {/* ===== BARRA DE HERRAMIENTAS SUPERIOR ===== */}
-      <div className="bg-white border-b border-gray-200 p-3">
-        <Row gutter={16} align="middle">
-          <Col>
-            <Title level={4} className="mb-0">
-              {isEditMode ? 'Editar Mapa' : 'Crear Nuevo Mapa'}
-            </Title>
-          </Col>
-          
-          <Col>
-            <Space>
-              <Button 
-                icon={<UndoOutlined />} 
-                onClick={undo}
-                disabled={historyIndex <= 0}
-                title="Deshacer"
-              />
-              <Button 
-                icon={<RedoOutlined />} 
-                onClick={redo}
-                disabled={historyIndex >= history.length - 1}
-                title="Rehacer"
-              />
-              <Divider type="vertical" />
-              <Button 
-                icon={<SaveOutlined />} 
-                type="primary" 
-                onClick={handleSave}
-              >
-                Guardar
-              </Button>
-              <Button onClick={onCancel}>
-                Cancelar
-              </Button>
-            </Space>
-          </Col>
-          
-          <Col flex="auto">
-            <Space className="float-right">
-              <Button 
-                icon={<EyeOutlined />}
-                type={showPreviewMode ? 'primary' : 'default'}
-                onClick={() => setShowPreviewMode(!showPreviewMode)}
-                title="Vista previa"
-              />
-              <Button 
-                icon={<AppstoreOutlined />}
-                type={showGrid ? 'primary' : 'default'}
-                onClick={() => setShowGrid(!showGrid)}
-                title="Mostrar cuadrícula"
-              />
-              <Button 
-                icon={<SettingOutlined />}
-                onClick={() => setShowAdvancedControls(!showAdvancedControls)}
-                title="Controles avanzados"
-              />
-              {backgroundImage && (
-                <Button 
-                  icon={<PictureOutlined />}
-                  onClick={() => setShowBackgroundFilters(true)}
-                  title="Filtros de imagen"
-                >
-                  Filtros
-                </Button>
-              )}
-              <Button 
-                icon={<FullscreenOutlined />}
-                onClick={() => fitToScreen()}
-                title="Ajustar a pantalla"
-              />
-            </Space>
-          </Col>
-        </Row>
-      </div>
+             {/* ===== BARRA DE HERRAMIENTAS SUPERIOR ===== */}
+       <div className="bg-white border-b border-gray-200 p-2">
+         <Row gutter={16} align="middle">
+           <Col>
+             <div className="flex items-center gap-3">
+               <Title level={4} className="mb-0">
+                 {isEditMode ? 'Editar Mapa' : 'Crear Nuevo Mapa'}
+               </Title>
+               <div className="flex items-center gap-2 text-sm text-gray-600">
+                 <span className="font-medium">25%</span>
+                 <span>Progreso del Mapa</span>
+                 <span className="text-blue-600">Paso 2 de 5</span>
+                 <span className="text-green-600">🚀 Continuando...</span>
+               </div>
+             </div>
+           </Col>
+           
+           <Col>
+             <Space size="small">
+               <Button 
+                 icon={<UndoOutlined />} 
+                 onClick={undo}
+                 disabled={historyIndex <= 0}
+                 title="Deshacer"
+                 size="small"
+               />
+               <Button 
+                 icon={<RedoOutlined />} 
+                 onClick={redo}
+                 disabled={historyIndex >= history.length - 1}
+                 title="Rehacer"
+                 size="small"
+               />
+               <Divider type="vertical" />
+               <Button 
+                 icon={<SaveOutlined />} 
+                 type="primary" 
+                 onClick={handleSave}
+                 size="small"
+               >
+                 Guardar
+               </Button>
+               <Button onClick={onCancel} size="small">
+                 Cancelar
+               </Button>
+             </Space>
+           </Col>
+           
+           <Col flex="auto">
+             <Space className="float-right" size="small">
+               <Button 
+                 icon={<EyeOutlined />}
+                 type={showPreviewMode ? 'primary' : 'default'}
+                 onClick={() => setShowPreviewMode(!showPreviewMode)}
+                 title="Vista previa"
+                 size="small"
+               />
+               <Button 
+                 icon={<AppstoreOutlined />}
+                 type={showGrid ? 'primary' : 'default'}
+                 onClick={() => setShowGrid(!showGrid)}
+                 title="Mostrar cuadrícula"
+                 size="small"
+               />
+               <Button 
+                 icon={<SettingOutlined />}
+                 onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+                 title="Controles avanzados"
+                 size="small"
+               />
+               {backgroundImage && (
+                 <Button 
+                   icon={<PictureOutlined />}
+                   onClick={() => setShowBackgroundFilters(true)}
+                   title="Filtros de imagen"
+                   size="small"
+                 >
+                   Filtros
+                 </Button>
+               )}
+               <Button 
+                 icon={<FullscreenOutlined />}
+                 onClick={() => fitToScreen()}
+                 title="Ajustar a pantalla"
+                 size="small"
+               />
+             </Space>
+           </Col>
+         </Row>
+       </div>
 
       {/* ===== CONTENIDO PRINCIPAL ===== */}
       <div className="flex-1 flex overflow-hidden">
-        {/* ===== PANEL IZQUIERDO - MENÚ ===== */}
-        <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
-          <MenuMapa
-            selectedElement={elements.find(el => selectedIds.includes(el._id))}
-            activeMode={activeMode}
-            sectionPoints={sectionPoints}
-            isCreatingSection={isCreatingSection}
-            zones={[]} // TODO: Implementar zonas
-            selectedZone={selectedZone}
-            numSillas={numSillas}
-            sillaShape={sillaShape}
-            selectedScale={scale}
-            showScaleControls={showAdvancedControls}
-            scaleSystem={scaleSystem}
-            selectedSeatState={selectedSeatState}
-            seatStates={seatStates}
-            showConnections={showConnections}
-            connectionStyle={connectionStyle}
-            connectionThreshold={connectionThreshold}
-            backgroundImage={backgroundImage}
-            backgroundScale={backgroundScale}
-            backgroundOpacity={backgroundOpacity}
-            showBackgroundInWeb={showBackgroundInWeb}
-            updateElementProperty={updateElementProperty}
-            updateElementSize={updateElementSize}
-            duplicarElementos={handleDuplicateSelected}
-            crearSeccion={() => {}} // TODO: Implementar secciones
-            limpiarSeleccion={() => setSelectedIds([])}
-            assignZoneToSelected={assignZoneToSelected}
-            scaleElement={scaleElement}
-            scaleSelectedElements={() => {}} // TODO: Implementar
-            changeSeatState={changeSeatState}
-            changeSelectedSeatsState={() => {}} // TODO: Implementar
-            changeMesaSeatsState={() => {}} // TODO: Implementar
-            setSelectedSeatState={setSelectedSeatState}
-            autoConnectSeats={autoConnectSeats}
-            createManualConnection={() => {}} // TODO: Implementar
-            removeConnections={() => {}} // TODO: Implementar
-            changeConnectionStyle={setConnectionStyle}
-            precisePositioning={precisePositioning}
-            snapToCustomGrid={handleSnapToGrid}
-            setBackgroundImage={setBackgroundImageFunction}
-            updateBackground={updateBackground}
-            removeBackground={removeBackground}
-            addMesa={handleAddMesa}
-            addSillasToMesa={handleAddSillasToMesa}
-            snapToGrid={handleSnapToGrid}
-            setActiveMode={setActiveMode}
-            setNumSillas={setNumSillas}
-            setSillaShape={setSillaShape}
-          />
-        </div>
+                 {/* ===== PANEL IZQUIERDO - MENÚ ===== */}
+         <div className="w-72 bg-white border-r border-gray-200 overflow-y-auto">
+           {/* Flujo de Creación del Mapa */}
+           <div className="p-3 border-b border-gray-200">
+             <Title level={5} className="mb-2">Flujo de Creación del Mapa</Title>
+             <Text type="secondary" className="text-xs mb-3 block">
+               Sigue estos pasos para crear un mapa completo y profesional
+             </Text>
+             <div className="space-y-2">
+               <div className="flex items-center gap-2 text-xs">
+                 <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">1</div>
+                 <span>Configuración Básica</span>
+                 <span className="text-gray-400">Información del mapa</span>
+               </div>
+               <div className="flex items-center gap-2 text-xs">
+                 <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">2</div>
+                 <span>Diseño del Mapa</span>
+                 <span className="text-gray-400">Editor visual</span>
+               </div>
+               <div className="flex items-center gap-2 text-xs">
+                 <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center text-white text-xs">3</div>
+                 <span>Validación</span>
+                 <span className="text-gray-400">Verificar integridad</span>
+               </div>
+               <div className="flex items-center gap-2 text-xs">
+                 <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center text-white text-xs">4</div>
+                 <span>Vista Previa</span>
+                 <span className="text-gray-400">Revisar resultado</span>
+               </div>
+               <div className="flex items-center gap-2 text-xs">
+                 <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center text-white text-xs">5</div>
+                 <span>Configuración Avanzada</span>
+                 <span className="text-gray-400">Ajustes finales</span>
+               </div>
+             </div>
+           </div>
+           
+           <MenuMapa
+             selectedElement={elements.find(el => selectedIds.includes(el._id))}
+             activeMode={activeMode}
+             sectionPoints={sectionPoints}
+             isCreatingSection={isCreatingSection}
+             zones={[]} // TODO: Implementar zonas
+             selectedZone={selectedZone}
+             numSillas={numSillas}
+             sillaShape={sillaShape}
+             selectedScale={scale}
+             showScaleControls={showAdvancedControls}
+             scaleSystem={scaleSystem}
+             selectedSeatState={selectedSeatState}
+             seatStates={seatStates}
+             showConnections={showConnections}
+             connectionStyle={connectionStyle}
+             connectionThreshold={connectionThreshold}
+             backgroundImage={backgroundImage}
+             backgroundScale={backgroundScale}
+             backgroundOpacity={backgroundOpacity}
+             showBackgroundInWeb={showBackgroundInWeb}
+             updateElementProperty={updateElementProperty}
+             updateElementSize={updateElementSize}
+             duplicarElementos={handleDuplicateSelected}
+             crearSeccion={() => {}} // TODO: Implementar secciones
+             limpiarSeleccion={() => setSelectedIds([])}
+             assignZoneToSelected={assignZoneToSelected}
+             scaleElement={scaleElement}
+             scaleSelectedElements={() => {}} // TODO: Implementar
+             changeSeatState={changeSeatState}
+             changeSelectedSeatsState={() => {}} // TODO: Implementar
+             changeMesaSeatsState={() => {}} // TODO: Implementar
+             setSelectedSeatState={setSelectedSeatState}
+             autoConnectSeats={autoConnectSeats}
+             createManualConnection={() => {}} // TODO: Implementar
+             removeConnections={() => {}} // TODO: Implementar
+             changeConnectionStyle={setConnectionStyle}
+             precisePositioning={precisePositioning}
+             snapToCustomGrid={handleSnapToGrid}
+             setBackgroundImage={setBackgroundImageFunction}
+             updateBackground={updateBackground}
+             removeBackground={removeBackground}
+             addMesa={handleAddMesa}
+             addSillasToMesa={handleAddSillasToMesa}
+             snapToGrid={handleSnapToGrid}
+             setActiveMode={setActiveMode}
+             setNumSillas={setNumSillas}
+             setSillaShape={setSillaShape}
+           />
+         </div>
 
         {/* ===== ÁREA DE TRABAJO CENTRAL ===== */}
         <div className="flex-1 flex flex-col">
-          {/* ===== BARRA DE HERRAMIENTAS DEL MAPA ===== */}
-          <div className="bg-white border-b border-gray-200 p-2">
-            <Row gutter={16} align="middle">
-              <Col>
-                                 <Space>
+                     {/* ===== BARRA DE HERRAMIENTAS DEL MAPA ===== */}
+           <div className="bg-white border-b border-gray-200 p-1">
+             <Row gutter={8} align="middle">
+               <Col>
+                 <Space size="small">
                    <MesaTypeMenu 
                      onAddMesa={(type, defaultSize) => {
                        // TODO: Implementar diferentes tipos de mesa
                        handleAddMesa();
                      }}
                    />
-                  <Button 
-                    icon={<CopyOutlined />} 
-                    onClick={handleDuplicateSelected}
-                    disabled={selectedIds.length === 0}
-                    title="Duplicar seleccionados"
-                  >
-                    Duplicar
-                  </Button>
-                  <Button 
-                    icon={<DeleteOutlined />} 
-                    onClick={handleDeleteSelected}
-                    disabled={selectedIds.length === 0}
-                    danger
-                    title="Eliminar seleccionados"
-                  >
-                    Eliminar
-                  </Button>
-                  <Divider type="vertical" />
-                  <Button 
-                    icon={<ReloadOutlined />} 
-                    onClick={handleSnapToGrid}
-                    title="Ajustar a cuadrícula"
-                  >
-                    Cuadrícula
-                  </Button>
-                                     <Button 
+                   <Button 
+                     icon={<CopyOutlined />} 
+                     onClick={handleDuplicateSelected}
+                     disabled={selectedIds.length === 0}
+                     title="Duplicar seleccionados"
+                     size="small"
+                   >
+                     Duplicar
+                   </Button>
+                   <Button 
+                     icon={<DeleteOutlined />} 
+                     onClick={handleDeleteSelected}
+                     disabled={selectedIds.length === 0}
+                     danger
+                     title="Eliminar seleccionados"
+                     size="small"
+                   >
+                     Eliminar
+                   </Button>
+                   <Divider type="vertical" />
+                   <Button 
+                     icon={<ReloadOutlined />} 
+                     onClick={handleSnapToGrid}
+                     title="Ajustar a cuadrícula"
+                     size="small"
+                   >
+                     Cuadrícula
+                   </Button>
+                   <Button 
                      icon={<LinkOutlined />} 
                      onClick={() => autoConnectSeats(selectedIds[0])}
                      disabled={selectedIds.length !== 1 || !elements.find(el => el._id === selectedIds[0])?.type === 'mesa'}
                      title="Conectar asientos automáticamente"
+                     size="small"
                    >
                      Conectar
                    </Button>
@@ -919,6 +974,7 @@ const CrearMapaEditor = ({
                      icon={<AppstoreOutlined />} 
                      onClick={() => setShowZonaManager(true)}
                      title="Gestionar zonas"
+                     size="small"
                    >
                      Zonas
                    </Button>
@@ -934,91 +990,92 @@ const CrearMapaEditor = ({
                      }}
                      disabled={selectedIds.length !== 1 || !elements.find(el => el._id === selectedIds[0])?.type === 'mesa'}
                      title="Añadir sillas a mesa seleccionada"
+                     size="small"
                    >
                      + Sillas
                    </Button>
-                </Space>
-              </Col>
-              
-              <Col flex="auto">
-                <Space className="float-right">
-                  <Text className="text-sm text-gray-600">
-                    Zoom: {Math.round(scale * 100)}%
-                  </Text>
-                  <Button 
-                    icon={<ZoomOutOutlined />} 
-                    size="small"
-                    onClick={zoomOut}
-                    title="Zoom out"
-                  />
-                  <Button 
-                    icon={<ZoomInOutlined />} 
-                    size="small"
-                    onClick={zoomIn}
-                    title="Zoom in"
-                  />
-                  <Button 
-                    icon={<ReloadOutlined />} 
-                    size="small"
-                    onClick={resetZoom}
-                    title="Reset zoom"
-                  />
-                </Space>
-              </Col>
-            </Row>
-          </div>
+                 </Space>
+               </Col>
+               
+               <Col flex="auto">
+                 <Space className="float-right" size="small">
+                   <Text className="text-sm text-gray-600">
+                     Zoom: {Math.round(scale * 100)}%
+                   </Text>
+                   <Button 
+                     icon={<ZoomOutOutlined />} 
+                     size="small"
+                     onClick={zoomOut}
+                     title="Zoom out"
+                   />
+                   <Button 
+                     icon={<ZoomInOutlined />} 
+                     size="small"
+                     onClick={zoomIn}
+                     title="Zoom in"
+                   />
+                   <Button 
+                     icon={<ReloadOutlined />} 
+                     size="small"
+                     onClick={resetZoom}
+                     title="Reset zoom"
+                   />
+                 </Space>
+               </Col>
+             </Row>
+           </div>
 
-          {/* ===== CANVAS DEL MAPA ===== */}
-          <div className="flex-1 canvas-container" ref={containerRef}>
-            <Stage
-              ref={stageRef}
-              width={Math.max(1200, containerRef.current?.clientWidth || 1200)}
-              height={Math.max(800, containerRef.current?.clientHeight || 800)}
-              scaleX={scale}
-              scaleY={scale}
-              x={position.x}
-              y={position.y}
-              onWheel={handleWheel}
-              onMouseDown={handleMouseDown}
-              onClick={handleStageClick}
-              onContextMenu={handleContextMenu}
-              draggable={activeMode === 'pan'}
-            >
-              <Layer>
-                {/* Fondo */}
-                <Rect
-                  width={1200}
-                  height={800}
-                  fill="#ffffff"
-                />
-                
-                {/* Cuadrícula */}
-                {showGrid && (
-                  <Grid 
-                    width={1200} 
-                    height={800} 
-                    gridSize={gridSize}
-                  />
-                )}
-                
-                {/* Imagen de fondo */}
-                {backgroundImage && (
-                  <Image
-                    image={backgroundImage}
-                    x={0}
-                    y={0}
-                    scaleX={backgroundScale}
-                    scaleY={backgroundScale}
-                    opacity={backgroundOpacity}
-                    listening={false}
-                  />
-                )}
-                
-                {/* Elementos del mapa */}
-                {elements.map(renderElement)}
-              </Layer>
-            </Stage>
-          </div>
+                     {/* ===== CANVAS DEL MAPA ===== */}
+           <div className="flex-1 canvas-container" ref={containerRef}>
+             <Stage
+               ref={stageRef}
+               width={Math.max(2000, containerRef.current?.clientWidth || 2000)}
+               height={Math.max(1400, containerRef.current?.clientHeight || 1400)}
+               scaleX={scale}
+               scaleY={scale}
+               x={position.x}
+               y={position.y}
+               onWheel={handleWheel}
+               onMouseDown={handleMouseDown}
+               onClick={handleStageClick}
+               onContextMenu={handleContextMenu}
+               draggable={activeMode === 'pan'}
+             >
+               <Layer>
+                 {/* Fondo */}
+                 <Rect
+                   width={2000}
+                   height={1400}
+                   fill="#ffffff"
+                 />
+                 
+                 {/* Cuadrícula */}
+                 {showGrid && (
+                   <Grid 
+                     width={2000} 
+                     height={1400} 
+                     gridSize={gridSize}
+                   />
+                 )}
+                 
+                 {/* Imagen de fondo */}
+                 {backgroundImage && (
+                   <Image
+                     image={backgroundImage}
+                     x={0}
+                     y={0}
+                     scaleX={backgroundScale}
+                     scaleY={backgroundScale}
+                     opacity={backgroundOpacity}
+                     listening={false}
+                   />
+                 )}
+                 
+                 {/* Elementos del mapa */}
+                 {elements.map(renderElement)}
+               </Layer>
+             </Stage>
+           </div>
         </div>
 
         {/* ===== PANEL DERECHO - PROPIEDADES ===== */}
