@@ -53,31 +53,54 @@ const CrearMapaMain = ({
 }) => {
   // ===== ESTADOS PRINCIPALES =====
   const [currentStep, setCurrentStep] = useState(0);
-  const [mapa, setMapa] = useState(initialMapa || {
-    id: null,
-    nombre: 'Nuevo Mapa',
-    descripcion: '',
-    sala_id: salaId,
-    contenido: {
-      elementos: [],
-      zonas: [],
-      configuracion: {
-        gridSize: 20,
-        showGrid: true,
-        snapToGrid: true,
-        background: null,
-        dimensions: { width: 1200, height: 800 }
+  const [mapa, setMapa] = useState(() => {
+    // Crear un mapa por defecto seguro
+    const defaultMapa = {
+      id: null,
+      nombre: 'Nuevo Mapa',
+      descripcion: '',
+      sala_id: salaId,
+      contenido: {
+        elementos: [],
+        zonas: [],
+        configuracion: {
+          gridSize: 20,
+          showGrid: true,
+          snapToGrid: true,
+          background: null,
+          dimensions: { width: 1200, height: 800 }
+        }
+      },
+      estado: 'draft',
+      metadata: {
+        version: '1.0.0',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        author: 'Usuario',
+        tags: [],
+        notes: ''
       }
-    },
-    estado: 'draft',
-    metadata: {
-      version: '1.0.0',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      author: 'Usuario',
-      tags: [],
-      notes: ''
+    };
+
+    // Si hay un mapa inicial, fusionarlo con el por defecto
+    if (initialMapa) {
+      return {
+        ...defaultMapa,
+        ...initialMapa,
+        contenido: {
+          ...defaultMapa.contenido,
+          ...(initialMapa.contenido || {}),
+          elementos: Array.isArray(initialMapa.contenido?.elementos) ? initialMapa.contenido.elementos : [],
+          zonas: Array.isArray(initialMapa.contenido?.zonas) ? initialMapa.contenido.zonas : [],
+          configuracion: {
+            ...defaultMapa.contenido.configuracion,
+            ...(initialMapa.contenido?.configuracion || {})
+          }
+        }
+      };
     }
+
+    return defaultMapa;
   });
 
   const [showEditor, setShowEditor] = useState(false);
@@ -479,7 +502,7 @@ const CrearMapaMain = ({
                 <Button 
                   type="primary" 
                   onClick={nextStep}
-                  disabled={currentStep === 1 && !mapa.contenido.elementos.length}
+                                         disabled={currentStep === 1 && !(mapa?.contenido?.elementos && Array.isArray(mapa.contenido.elementos) && mapa.contenido.elementos.length > 0)}
                   size="large"
                   className="btn-gradient-primary shadow-custom hover-lift px-8 py-2 h-12 text-base font-semibold"
                 >
