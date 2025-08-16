@@ -49,7 +49,7 @@ const CrearMapaPage = () => {
       
       return () => clearTimeout(safetyTimeout);
     }
-  }, [isMounted, salaId]);
+  }, [isMounted, salaId, loading]); // Agregar loading como dependencia
 
   // Manejar caso cuando no hay salaId
   useEffect(() => {
@@ -824,24 +824,92 @@ const CrearMapaPage = () => {
                 isEditMode: !!mapa
               });
               
-              return (
-                <CrearMapaEditor
-                  salaId={salaId}
-                  onSave={handleSave}
-                  onCancel={handleCancel}
-                  initialMapa={mapa}
-                  isEditMode={!!mapa}
-                />
-              );
+              // Validar que las funciones sean funciones válidas
+              if (typeof handleSave !== 'function') {
+                throw new Error('La función onSave no es válida');
+              }
+              
+              if (typeof handleCancel !== 'function') {
+                throw new Error('La función onCancel no es válida');
+              }
+              
+              // Validar que salaId sea válido
+              if (!salaId || isNaN(parseInt(salaId))) {
+                throw new Error('El ID de la sala no es válido');
+              }
+              
+              // Validar que mapa tenga la estructura esperada
+              if (mapa && typeof mapa === 'object') {
+                console.log('[DEBUG] Estructura del mapa:', {
+                  id: mapa.id,
+                  sala_id: mapa.sala_id,
+                  contenido: typeof mapa.contenido,
+                  nombre: mapa.nombre,
+                  descripcion: mapa.descripcion,
+                  estado: mapa.estado,
+                  tenant_id: mapa.tenant_id,
+                  updated_at: mapa.updated_at,
+                  created_at: mapa.created_at
+                });
+                
+                // Verificar que contenido sea válido
+                if (mapa.contenido && typeof mapa.contenido !== 'object') {
+                  console.warn('[DEBUG] Contenido del mapa no es un objeto válido:', mapa.contenido);
+                  throw new Error('El contenido del mapa no es válido');
+                }
+                
+                // Verificar campos obligatorios
+                if (!mapa.id || !mapa.sala_id) {
+                  console.warn('[DEBUG] Mapa faltan campos obligatorios:', { id: mapa.id, sala_id: mapa.sala_id });
+                  throw new Error('El mapa no tiene todos los campos obligatorios');
+                }
+                
+                // Verificar que sala_id coincida
+                if (mapa.sala_id !== parseInt(salaId)) {
+                  console.warn('[DEBUG] Mapa.sala_id no coincide con salaId:', { mapa_sala_id: mapa.sala_id, salaId });
+                  throw new Error('El mapa no corresponde a la sala seleccionada');
+                }
+                
+                console.log('[DEBUG] Mapa validado exitosamente, procediendo a renderizar editor');
+              } else {
+                console.log('[DEBUG] No hay mapa o no es un objeto válido, creando mapa nuevo');
+              }
+              
+              console.log('[DEBUG] Todas las validaciones pasaron, renderizando CrearMapaEditor...');
+              
+              // Renderizar el editor con try-catch específico
+              try {
+                const editorComponent = (
+                  <CrearMapaEditor
+                    salaId={salaId}
+                    onSave={handleSave}
+                    onCancel={handleCancel}
+                    initialMapa={mapa}
+                    isEditMode={!!mapa}
+                  />
+                );
+                
+                console.log('[DEBUG] CrearMapaEditor renderizado exitosamente');
+                return editorComponent;
+                
+              } catch (renderError) {
+                console.error('[DEBUG] Error durante el renderizado de CrearMapaEditor:', renderError);
+                throw new Error(`Error de renderizado: ${renderError.message}`);
+              }
             } catch (editorError) {
               console.error('[DEBUG] Error al renderizar CrearMapaEditor:', editorError);
               return (
                 <div className="p-8 text-center">
                   <h3 className="text-lg font-semibold text-red-600 mb-2">Error al cargar el editor</h3>
                   <p className="text-gray-600 mb-4">{editorError.message}</p>
-                  <Button onClick={() => window.location.reload()} type="primary">
-                    Recargar Página
-                  </Button>
+                  <div className="space-y-2">
+                    <Button onClick={() => window.location.reload()} type="primary" className="mr-2">
+                      Recargar Página
+                    </Button>
+                    <Button onClick={() => setError(null)} type="default">
+                      Reintentar
+                    </Button>
+                  </div>
                 </div>
               );
             }
