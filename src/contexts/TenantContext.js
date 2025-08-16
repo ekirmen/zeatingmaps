@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
-import { getDynamicDomainConfig, isMainDomain } from '../config/domainConfig';
+import { getDynamicDomainConfig, isMainDomain, initializeDomainConfig } from '../config/domainConfig';
 
 const TenantContext = createContext();
 
@@ -14,7 +14,15 @@ export const TenantProvider = ({ children }) => {
   const detectTenant = useCallback(async () => {
     try {
       setError(null);
-      const hostname = window.location.hostname;
+      
+      // Usar inicialización retrasada para evitar problemas de timing
+      const hostname = await initializeDomainConfig().then(() => {
+        if (typeof window !== 'undefined' && window.location && window.location.hostname) {
+          return window.location.hostname;
+        }
+        return 'localhost';
+      });
+      
       console.log('🔍 Detectando tenant para hostname:', hostname);
       
       // Caso 1: localhost (desarrollo)

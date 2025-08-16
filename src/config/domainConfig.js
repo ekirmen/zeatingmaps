@@ -100,10 +100,20 @@ export const getDomainConfig = (hostname) => {
 
 // Función helper para obtener configuración del dominio actual
 export const getCurrentDomainConfig = () => {
-  if (typeof window !== 'undefined') {
-    return getDomainConfig(window.location.hostname);
+  try {
+    // Verificar que window esté disponible y completamente inicializado
+    if (typeof window !== 'undefined' && 
+        window.location && 
+        window.location.hostname && 
+        window.location.hostname !== '') {
+      return getDomainConfig(window.location.hostname);
+    }
+    // Fallback seguro
+    return getDomainConfig('localhost');
+  } catch (error) {
+    console.warn('Error al obtener configuración del dominio:', error);
+    return getDomainConfig('localhost');
   }
-  return getDomainConfig('localhost');
 };
 
 // Función para verificar si mostrar SaaS
@@ -138,10 +148,19 @@ export const getDomainBranding = () => {
 
 // Función para detectar si es el dominio principal (sistema.veneventos.com)
 export const isMainDomain = () => {
-  if (typeof window !== 'undefined') {
-    return window.location.hostname === 'sistema.veneventos.com';
+  try {
+    // Verificar que window esté disponible y completamente inicializado
+    if (typeof window !== 'undefined' && 
+        window.location && 
+        window.location.hostname && 
+        window.location.hostname !== '') {
+      return window.location.hostname === 'sistema.veneventos.com';
+    }
+    return false;
+  } catch (error) {
+    console.warn('Error al detectar dominio principal:', error);
+    return false;
   }
-  return false;
 };
 
 // Función para obtener configuración dinámica desde la base de datos
@@ -188,6 +207,21 @@ export const getDynamicDomainConfig = async (supabase, hostname) => {
     console.error('Error obteniendo configuración dinámica:', error);
     return null;
   }
+};
+
+// Función para inicialización retrasada - evita problemas de timing
+export const initializeDomainConfig = () => {
+  return new Promise((resolve) => {
+    // Esperar a que el DOM esté listo
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => resolve(getCurrentDomainConfig()), 100);
+      });
+    } else {
+      // DOM ya está listo, esperar un poco más para asegurar que window.location esté disponible
+      setTimeout(() => resolve(getCurrentDomainConfig()), 100);
+    }
+  });
 };
 
 export const forceUpdate = Date.now(); 
