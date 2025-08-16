@@ -54,6 +54,88 @@ const CrearMapaPage = () => {
     );
   }
 
+  // Crear la tabla mapas si no existe (solo en desarrollo)
+  const createMapasTable = async () => {
+    try {
+      console.log('[DEBUG] Intentando crear tabla mapas...');
+      
+      // Opción 1: Usar RPC exec_sql si existe
+      try {
+        const { error } = await supabase.rpc('exec_sql', {
+          sql: `
+            CREATE TABLE IF NOT EXISTS public.mapas (
+              id SERIAL PRIMARY KEY,
+              sala_id INTEGER NOT NULL,
+              contenido JSONB NOT NULL DEFAULT '{}',
+              tenant_id UUID,
+              updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+              nombre TEXT DEFAULT 'Nuevo Mapa',
+              descripcion TEXT DEFAULT '',
+              estado TEXT DEFAULT 'draft'
+            );
+          `
+        });
+        
+        if (!error) {
+          console.log('[DEBUG] Tabla mapas creada exitosamente con RPC');
+          return true;
+        }
+      } catch (rpcError) {
+        console.log('[DEBUG] RPC exec_sql no disponible, intentando alternativa...');
+      }
+      
+      // Opción 2: Intentar crear la tabla con una consulta simple
+      try {
+        // Intentar insertar un registro de prueba (esto creará la tabla si no existe)
+        const { error: insertError } = await supabase
+          .from('mapas')
+          .insert({
+            sala_id: salaId,
+            contenido: {},
+            nombre: 'Test Mapa',
+            estado: 'draft'
+          });
+        
+        if (!insertError) {
+          console.log('[DEBUG] Tabla mapas creada exitosamente con insert');
+          // Limpiar el registro de prueba
+          await supabase.from('mapas').delete().eq('nombre', 'Test Mapa');
+          return true;
+        }
+      } catch (insertError) {
+        console.warn('[DEBUG] No se pudo crear la tabla con insert:', insertError.message);
+      }
+      
+      console.warn('[DEBUG] No se pudo crear la tabla mapas con ningún método');
+      return false;
+      
+    } catch (err) {
+      console.warn('[DEBUG] Error al crear tabla mapas:', err.message);
+      return false;
+    }
+  };
+
+  // Verificar si la tabla mapas existe
+  const checkTableExists = async (tableName) => {
+    try {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('id')
+        .limit(1);
+      
+      if (error) {
+        console.warn(`[DEBUG] Tabla ${tableName} no accesible:`, error);
+        return false;
+      }
+      
+      console.log(`[DEBUG] Tabla ${tableName} es accesible`);
+      return true;
+    } catch (err) {
+      console.warn(`[DEBUG] Error al verificar tabla ${tableName}:`, err.message);
+      return false;
+    }
+  };
+
   // Cargar información de la sala
   useEffect(() => {
     if (salaId) {
@@ -89,6 +171,30 @@ const CrearMapaPage = () => {
 
       // Buscar si ya existe un mapa para esta sala
       try {
+        console.log('[DEBUG] Intentando acceder a tabla mapas para sala:', salaId);
+        
+        // Verificar si la tabla mapas existe
+        let tableExists = await checkTableExists('mapas');
+        
+        // Si la tabla no existe, intentar crearla (solo en desarrollo)
+        if (!tableExists) {
+          console.warn('[DEBUG] Tabla mapas no existe, intentando crearla...');
+          tableExists = await createMapasTable();
+          
+          if (!tableExists) {
+            console.warn('[DEBUG] No se pudo crear la tabla mapas, continuando sin ella');
+            
+            // Mostrar mensaje al usuario
+            message.warning(
+              'La tabla "mapas" no existe. Para crear mapas, ejecuta este SQL en tu base de datos: ' +
+              'CREATE TABLE public.mapas (id SERIAL PRIMARY KEY, sala_id INTEGER NOT NULL, contenido JSONB NOT NULL DEFAULT \'{}\', tenant_id UUID, updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(), nombre TEXT DEFAULT \'Nuevo Mapa\', descripcion TEXT DEFAULT \'\', estado TEXT DEFAULT \'draft\');'
+            );
+            
+            return; // Salir si no se puede crear la tabla
+          }
+        }
+        
+        // Si la tabla es accesible, buscar el mapa específico
         const { data: mapaData, error: mapaError } = await supabase
           .from('mapas')
           .select('*')
@@ -99,6 +205,7 @@ const CrearMapaPage = () => {
 
         if (mapaData && !mapaError) {
           safeSetState(setMapa, mapaData);
+          console.log('[DEBUG] Mapa encontrado:', mapaData);
         } else if (mapaError) {
           console.warn('[DEBUG] Error al cargar mapa existente:', mapaError);
           // No es crítico, continuar sin mapa
@@ -124,25 +231,22 @@ const CrearMapaPage = () => {
       try {
         const { data: mapasTest, error: mapasError } = await supabase
           .from('mapas')
-          .select('*')
+          .select('id')
           .limit(1);
         
-        console.log('[DEBUG] Mapas table access test:', { data: mapasTest, error: mapasError });
+        if (mapasError) {
+          console.warn('[DEBUG] Tabla mapas no accesible:', mapasError.message);
+          if (mapasError.code === 'PGRST116') {
+            console.warn('[DEBUG] Error 400: La tabla mapas probablemente no existe');
+          }
+        } else {
+          console.log('[DEBUG] Tabla mapas accesible, registros encontrados:', mapasTest?.length || 0);
+        }
       } catch (mapasError) {
         console.warn('[DEBUG] Mapas table access failed:', mapasError.message);
       }
       
-      // Test 2: Check the table structure (skip if RPC not available)
-      try {
-        const { data: tableInfo, error: tableError } = await supabase
-          .rpc('get_table_info', { table_name: 'mapas' });
-        
-        console.log('[DEBUG] Table structure test:', { data: tableInfo, error: tableError });
-      } catch (rpcError) {
-        console.log('[DEBUG] RPC not available, skipping table structure test:', rpcError.message);
-      }
-      
-      // Test 3: Check tenant context
+      // Test 2: Check tenant context
       try {
         const tenantData = addTenantToInsert({});
         console.log('[DEBUG] Tenant data from hook:', tenantData);
@@ -150,14 +254,18 @@ const CrearMapaPage = () => {
         console.warn('[DEBUG] Tenant hook error:', tenantError.message);
       }
       
-      // Test 4: Check if we can access the tenants table
+      // Test 3: Check if we can access the tenants table
       try {
         const { data: tenantsTest, error: tenantsError } = await supabase
           .from('tenants')
           .select('id, company_name')
           .limit(1);
         
-        console.log('[DEBUG] Tenants table access test:', { data: tenantsTest, error: tenantsError });
+        if (tenantsError) {
+          console.warn('[DEBUG] Tabla tenants no accesible:', tenantsError.message);
+        } else {
+          console.log('[DEBUG] Tabla tenants accesible, registros encontrados:', tenantsTest?.length || 0);
+        }
       } catch (tenantsError) {
         console.log('[DEBUG] Tenants table access failed:', tenantsError.message);
       }
