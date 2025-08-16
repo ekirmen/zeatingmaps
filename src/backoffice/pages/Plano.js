@@ -4,7 +4,7 @@ import { useRecintoSala } from '../contexts/RecintoSalaContext';
 import { fetchZonasPorSala, createZona, updateZona, deleteZona, fetchMapa } from '../services/apibackoffice';
 import { supabase } from '../../supabaseClient';
 import Modal from 'react-modal';
-import { CrearMapaMain } from '../components/CrearMapa';
+
 import { message } from 'antd';
 
 if (typeof document !== 'undefined' && document.getElementById('root')) {
@@ -24,7 +24,7 @@ const Plano = () => {
   const [loadingZonas, setLoadingZonas] = useState(false);
   const [mapaPreview, setMapaPreview] = useState(null);
   const [loadingMapa, setLoadingMapa] = useState(false);
-  const [showCrearMapa, setShowCrearMapa] = useState(false);
+
   const numeradaBloqueada = editingZona?.numerada && editingZona.aforo > 0;
 
   console.log('🎯 [PLANO] Estado inicial:', { 
@@ -162,19 +162,11 @@ const Plano = () => {
       alert('Debe seleccionar una sala primero para crear el mapa.');
       return;
     }
-    setShowCrearMapa(true);
+    // Redirigir a la página de crear mapa
+    window.location.href = `/dashboard/crear-mapa/${sala.id}`;
   };
 
-  const handleMapaSaved = () => {
-    setShowCrearMapa(false);
-    if (sala?.id) {
-      loadMapaPreview(sala.id);
-    }
-  };
 
-  const handleCancelCrearMapa = () => {
-    setShowCrearMapa(false);
-  };
 
   const handleCrearZona = async () => {
     if (!recinto) {
@@ -487,21 +479,7 @@ const Plano = () => {
         </div>
       </Modal>
 
-      {/* Modal para Crear/Editar Mapa */}
-      {showCrearMapa && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
-          <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-          <div className="relative z-10 w-full h-full">
-            <CrearMapaMain
-              salaId={sala?.id}
-              onSave={handleMapaSaved}
-              onCancel={handleCancelCrearMapa}
-              initialMapa={mapaPreview}
-              isEditMode={!!mapaPreview}
-            />
-          </div>
-        </div>
-      )}
+
     </div>
   );
 };

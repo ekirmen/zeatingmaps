@@ -24,6 +24,7 @@ import WebStudio from './pages/WebStudio';
 import EmailCampaigns from './pages/EmailCampaigns';
 import Abonos from './pages/Abonos';
 import Plano from './pages/Plano';
+import CrearMapaPage from './pages/CrearMapaPage';
 import CRM from './pages/CRM';
 import Mailchimp from './pages/Mailchimp';
 import Formularios from './pages/Formularios';
@@ -47,6 +48,7 @@ const BackofficeApp = () => {
         {/* Administración */}
         <Route path="recintos" element={<Recinto />} />
         <Route path="plano" element={<Plano />} />
+        <Route path="crear-mapa/:salaId?" element={<CrearMapaPage />} />
 
         <Route path="usuarios" element={<Usuarios />} />
         <Route path="liquidaciones" element={<PaymentAnalytics />} />
