@@ -82,6 +82,32 @@ const CrearMapaPage = () => {
     }
   }, [isMounted, salaId]);
 
+  // Validar estado antes de renderizar
+  const validateState = useCallback(() => {
+    try {
+      // Verificar que los estados sean válidos
+      if (loading !== true && loading !== false) {
+        console.warn('[DEBUG] Estado loading inválido:', loading);
+        return false;
+      }
+      
+      if (sala && typeof sala !== 'object') {
+        console.warn('[DEBUG] Estado sala inválido:', sala);
+        return false;
+      }
+      
+      if (mapa && typeof mapa !== 'object') {
+        console.warn('[DEBUG] Estado mapa inválido:', mapa);
+        return false;
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('[DEBUG] Error validando estado:', err);
+      return false;
+    }
+  }, [loading, sala, mapa]);
+
   // Si hay error, mostrar mensaje de error
   if (error) {
     return (
@@ -369,6 +395,16 @@ const CrearMapaPage = () => {
       isMounted,
       salaId
     });
+    
+    // Log adicional para debugging del error React #301
+    if (sala && mapa) {
+      console.log('[DEBUG] Datos completos cargados:', {
+        salaKeys: Object.keys(sala),
+        mapaKeys: Object.keys(mapa),
+        salaNombre: sala.nombre,
+        mapaId: mapa.id
+      });
+    }
   }, [loading, sala, mapa, error, isMounted, salaId]);
 
   // Cargar información de la sala
@@ -655,6 +691,22 @@ const CrearMapaPage = () => {
   };
 
   if (loading) {
+    // Validar estado antes de renderizar loading
+    if (!validateState()) {
+      console.warn('[DEBUG] Estado inválido detectado, mostrando error boundary');
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-red-600 mb-4">Error de Estado</h2>
+            <p className="text-gray-600 mb-4">El estado del componente es inválido. Recargando...</p>
+            <Button onClick={() => window.location.reload()} type="primary">
+              Recargar Página
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <Spin size="large" />
@@ -690,69 +742,128 @@ const CrearMapaPage = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button 
-              icon={<ArrowLeftOutlined />} 
-              onClick={handleCancel}
-              type="text"
-              size="large"
-            >
-              Volver
-            </Button>
-            <div>
-              <Title level={3} className="mb-1">
-                {mapa ? 'Editar Mapa' : 'Crear Nuevo Mapa'}
-              </Title>
-              {sala && (
-                <Text type="secondary">
-                  Sala: {sala.nombre} - Recinto: {sala.recintos?.nombre}
-                </Text>
-              )}
-            </div>
-          </div>
-          
-          <Space>
-            <Button 
-              icon={<EyeOutlined />}
-              onClick={() => {
-                // TODO: Implementar vista previa
-                message.info('Vista previa próximamente');
-              }}
-            >
-              Vista Previa
-            </Button>
-            <Button 
-              type="primary"
-              icon={<SaveOutlined />}
-              loading={saving}
-              onClick={() => {
-                // El guardado se maneja desde el editor
-                message.info('Usa el botón Guardar del editor');
-              }}
-            >
-              Guardar
-            </Button>
-          </Space>
+  // Validar estado antes de renderizar el contenido principal
+  if (!validateState()) {
+    console.warn('[DEBUG] Estado inválido detectado en renderizado principal, mostrando error boundary');
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Error de Estado</h2>
+          <p className="text-gray-600 mb-4">El estado del componente es inválido. Recargando...</p>
+          <Button onClick={() => window.location.reload()} type="primary">
+            Recargar Página
+          </Button>
         </div>
       </div>
+    );
+  }
 
-      {/* Editor */}
-      <div className="flex-1">
-        <CrearMapaEditor
-          salaId={salaId}
-          onSave={handleSave}
-          onCancel={handleCancel}
-          initialMapa={mapa}
-          isEditMode={!!mapa}
-        />
+  // Renderizado principal con try-catch
+  try {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                icon={<ArrowLeftOutlined />} 
+                onClick={handleCancel}
+                type="text"
+                size="large"
+              >
+                Volver
+              </Button>
+              <div>
+                <Title level={3} className="mb-1">
+                  {mapa ? 'Editar Mapa' : 'Crear Nuevo Mapa'}
+                </Title>
+                {sala && (
+                  <Text type="secondary">
+                    Sala: {sala.nombre} - Recinto: {sala.recintos?.nombre}
+                  </Text>
+                )}
+              </div>
+            </div>
+            
+            <Space>
+              <Button 
+                icon={<EyeOutlined />}
+                onClick={() => {
+                  // TODO: Implementar vista previa
+                  message.info('Vista previa próximamente');
+                }}
+              >
+                Vista Previa
+              </Button>
+              <Button 
+                type="primary"
+                icon={<SaveOutlined />}
+                loading={saving}
+                onClick={() => {
+                  // El guardado se maneja desde el editor
+                  message.info('Usa el botón Guardar del editor');
+                }}
+              >
+                Guardar
+              </Button>
+            </Space>
+          </div>
+        </div>
+
+        {/* Editor */}
+        <div className="flex-1">
+          {(() => {
+            try {
+              // Validar props antes de renderizar el editor
+              console.log('[DEBUG] Validando props para CrearMapaEditor:', {
+                salaId,
+                onSave: typeof handleSave,
+                onCancel: typeof handleCancel,
+                initialMapa: mapa ? 'presente' : 'ausente',
+                isEditMode: !!mapa
+              });
+              
+              return (
+                <CrearMapaEditor
+                  salaId={salaId}
+                  onSave={handleSave}
+                  onCancel={handleCancel}
+                  initialMapa={mapa}
+                  isEditMode={!!mapa}
+                />
+              );
+            } catch (editorError) {
+              console.error('[DEBUG] Error al renderizar CrearMapaEditor:', editorError);
+              return (
+                <div className="p-8 text-center">
+                  <h3 className="text-lg font-semibold text-red-600 mb-2">Error al cargar el editor</h3>
+                  <p className="text-gray-600 mb-4">{editorError.message}</p>
+                  <Button onClick={() => window.location.reload()} type="primary">
+                    Recargar Página
+                  </Button>
+                </div>
+              );
+            }
+          })()}
+        </div>
       </div>
-    </div>
-  );
+    );
+  } catch (renderError) {
+    console.error('[DEBUG] Error en renderizado principal:', renderError);
+    setError(`Error de renderizado: ${renderError.message}`);
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Error de Renderizado</h2>
+          <p className="text-gray-600 mb-4">{renderError.message}</p>
+          <Button onClick={() => setError(null)} type="primary">
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default CrearMapaPage;
