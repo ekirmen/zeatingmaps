@@ -27,7 +27,12 @@ const Plano = () => {
   const [showCrearMapa, setShowCrearMapa] = useState(false);
   const numeradaBloqueada = editingZona?.numerada && editingZona.aforo > 0;
 
-  console.log('🎯 [PLANO] Estado inicial:', { recinto, sala, recintos: recintos?.length || 0 });
+  console.log('🎯 [PLANO] Estado inicial:', { 
+    recinto: recinto ? '✅' : '❌', 
+    sala: sala ? '✅' : '❌', 
+    recintos: Array.isArray(recintos) ? recintos.length : '❌ No es array',
+    zonas: Array.isArray(zonas) ? zonas.length : '❌ No es array'
+  });
 
   // Limpiar todas las suscripciones de tiempo real al montar el componente
   useEffect(() => {
@@ -82,8 +87,15 @@ const Plano = () => {
     try {
       console.log('[PLANO] Cargando zonas para sala:', salaId, retryCount > 0 ? `(intento ${retryCount + 1})` : '');
       const zonasData = await fetchZonasPorSala(salaId);
-      setZonas(zonasData || []);
-      console.log('[PLANO] Zonas cargadas:', zonasData?.length || 0);
+      
+      // Verificar que zonasData sea un array válido
+      if (Array.isArray(zonasData)) {
+        setZonas(zonasData);
+        console.log('[PLANO] Zonas cargadas correctamente:', zonasData.length);
+      } else {
+        console.warn('[PLANO] zonasData no es un array:', zonasData);
+        setZonas([]);
+      }
     } catch (error) {
       console.error('[PLANO] Error al cargar zonas:', error);
       setZonas([]);
@@ -99,10 +111,14 @@ const Plano = () => {
   };
 
   useEffect(() => {
+    console.log('🎯 [PLANO] useEffect sala cambiada:', sala);
+    
     if (sala?.id) {
+      console.log('🎯 [PLANO] Cargando datos para sala:', sala.id);
       loadZonas(sala.id);
       loadMapaPreview(sala.id);
     } else {
+      console.log('🎯 [PLANO] Limpiando datos - no hay sala seleccionada');
       setZonas([]);
       setMapaPreview(null);
     }
@@ -114,8 +130,15 @@ const Plano = () => {
     setLoadingMapa(true);
     try {
       const mapaData = await fetchMapa(salaId);
-      setMapaPreview(mapaData);
-      console.log('[PLANO] Mapa cargado:', mapaData);
+      
+      // Verificar que mapaData sea válido
+      if (mapaData && typeof mapaData === 'object') {
+        setMapaPreview(mapaData);
+        console.log('[PLANO] Mapa cargado correctamente:', mapaData);
+      } else {
+        console.warn('[PLANO] mapaData no es válido:', mapaData);
+        setMapaPreview(null);
+      }
     } catch (error) {
       console.error('[PLANO] Error al cargar mapa:', error);
       setMapaPreview(null);
@@ -237,7 +260,7 @@ const Plano = () => {
               }}
             >
               <option value="">Seleccionar un recinto</option>
-              {recintos.map(r => (
+              {Array.isArray(recintos) && recintos.map(r => (
                 <option key={r.id} value={r.id}>{r.nombre}</option>
               ))}
             </select>
@@ -256,7 +279,7 @@ const Plano = () => {
               disabled={!recinto}
             >
               <option value="">Seleccionar una sala</option>
-              {recinto?.salas?.map(s => (
+              {Array.isArray(recinto?.salas) && recinto.salas.map(s => (
                 <option key={s.id} value={s.id}>{s.nombre}</option>
               ))}
             </select>
@@ -296,7 +319,7 @@ const Plano = () => {
               <div className="text-center p-6 border border-dashed border-gray-300 rounded">
                 <p className="mb-4 text-gray-600">Cargando zonas...</p>
               </div>
-            ) : zonas.length === 0 ? (
+            ) : !Array.isArray(zonas) || zonas.length === 0 ? (
               <div className="text-center p-6 border border-dashed border-gray-300 rounded">
                 <p className="mb-4 text-gray-600">No hay zonas creadas para esta sala.</p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -316,7 +339,7 @@ const Plano = () => {
                   </button>
                 </div>
               </div>
-            ) : (
+            ) : Array.isArray(zonas) ? (
               <div className="space-y-4">
                 {zonas.map((zona, index) => (
                   <div key={zona.id || index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
@@ -357,6 +380,10 @@ const Plano = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            ) : (
+              <div className="text-center p-6 border border-dashed border-gray-300 rounded">
+                <p className="text-gray-600">Error: Las zonas no están disponibles</p>
               </div>
             )}
 
