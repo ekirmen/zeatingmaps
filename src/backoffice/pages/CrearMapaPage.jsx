@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Button, Space, Typography, message, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, EyeOutlined } from '@ant-design/icons';
@@ -17,6 +17,42 @@ const CrearMapaPage = () => {
   const [mapa, setMapa] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Validar que el componente esté montado antes de hacer operaciones
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+    return () => setIsMounted(false);
+  }, []);
+
+  // Solo ejecutar operaciones si el componente está montado
+  const safeSetState = useCallback((setter, value) => {
+    if (isMounted) {
+      try {
+        setter(value);
+      } catch (err) {
+        console.error('Error setting state:', err);
+        setError(err.message);
+      }
+    }
+  }, [isMounted]);
+
+  // Si hay error, mostrar mensaje de error
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Error en el componente</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => setError(null)} type="primary">
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // Cargar información de la sala
   useEffect(() => {
@@ -49,26 +85,34 @@ const CrearMapaPage = () => {
 
       if (salaError) throw salaError;
       
-      setSala(salaData);
+      safeSetState(setSala, salaData);
 
       // Buscar si ya existe un mapa para esta sala
-      const { data: mapaData, error: mapaError } = await supabase
-        .from('mapas')
-        .select('*')
-        .eq('sala_id', salaId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      try {
+        const { data: mapaData, error: mapaError } = await supabase
+          .from('mapas')
+          .select('*')
+          .eq('sala_id', salaId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
-      if (mapaData && !mapaError) {
-        setMapa(mapaData);
+        if (mapaData && !mapaError) {
+          safeSetState(setMapa, mapaData);
+        } else if (mapaError) {
+          console.warn('[DEBUG] Error al cargar mapa existente:', mapaError);
+          // No es crítico, continuar sin mapa
+        }
+      } catch (mapaError) {
+        console.warn('[DEBUG] Error al acceder a tabla mapas:', mapaError);
+        // Si hay error de permisos o RLS, continuar sin mapa
       }
 
     } catch (error) {
       console.error('Error loading sala info:', error);
-      message.error('Error al cargar información de la sala');
+      message.error('Error al cargar información de la sala: ' + error.message);
     } finally {
-      setLoading(false);
+      safeSetState(setLoading, false);
     }
   };
 
@@ -77,34 +121,50 @@ const CrearMapaPage = () => {
       console.log('[DEBUG] Testing database access...');
       
       // Test 1: Check if we can access the mapas table
-      const { data: mapasTest, error: mapasError } = await supabase
-        .from('mapas')
-        .select('*')
-        .limit(1);
+      try {
+        const { data: mapasTest, error: mapasError } = await supabase
+          .from('mapas')
+          .select('*')
+          .limit(1);
+        
+        console.log('[DEBUG] Mapas table access test:', { data: mapasTest, error: mapasError });
+      } catch (mapasError) {
+        console.warn('[DEBUG] Mapas table access failed:', mapasError.message);
+      }
       
-      console.log('[DEBUG] Mapas table access test:', { data: mapasTest, error: mapasError });
-      
-      // Test 2: Check the table structure
-      const { data: tableInfo, error: tableError } = await supabase
-        .rpc('get_table_info', { table_name: 'mapas' })
-        .catch(() => ({ data: null, error: 'RPC not available' }));
-      
-      console.log('[DEBUG] Table structure test:', { data: tableInfo, error: tableError });
+      // Test 2: Check the table structure (skip if RPC not available)
+      try {
+        const { data: tableInfo, error: tableError } = await supabase
+          .rpc('get_table_info', { table_name: 'mapas' });
+        
+        console.log('[DEBUG] Table structure test:', { data: tableInfo, error: tableError });
+      } catch (rpcError) {
+        console.log('[DEBUG] RPC not available, skipping table structure test:', rpcError.message);
+      }
       
       // Test 3: Check tenant context
-      const tenantData = addTenantToInsert({});
-      console.log('[DEBUG] Tenant data from hook:', tenantData);
+      try {
+        const tenantData = addTenantToInsert({});
+        console.log('[DEBUG] Tenant data from hook:', tenantData);
+      } catch (tenantError) {
+        console.warn('[DEBUG] Tenant hook error:', tenantError.message);
+      }
       
       // Test 4: Check if we can access the tenants table
-      const { data: tenantsTest, error: tenantsError } = await supabase
-        .from('tenants')
-        .select('id, company_name')
-        .limit(1);
-      
-      console.log('[DEBUG] Tenants table access test:', { data: tenantsTest, error: tenantsError });
+      try {
+        const { data: tenantsTest, error: tenantsError } = await supabase
+          .from('tenants')
+          .select('id, company_name')
+          .limit(1);
+        
+        console.log('[DEBUG] Tenants table access test:', { data: tenantsTest, error: tenantsError });
+      } catch (tenantsError) {
+        console.log('[DEBUG] Tenants table access failed:', tenantsError.message);
+      }
       
     } catch (error) {
       console.error('[DEBUG] Database access test failed:', error);
+      // No propagar el error, solo log
     }
   };
 
@@ -185,7 +245,7 @@ const CrearMapaPage = () => {
             throw new Error(`Error al crear mapa: ${error.message}. Si el problema persiste, contacte al administrador.`);
           }
           
-          setMapa(data);
+          safeSetState(setMapa, data);
           message.success('Mapa creado exitosamente (sin tenant asignado)');
         } else {
           const { data, error } = await supabase
@@ -199,7 +259,7 @@ const CrearMapaPage = () => {
             throw error;
           }
           
-          setMapa(data);
+          safeSetState(setMapa, data);
           message.success('Mapa creado exitosamente');
         }
       }

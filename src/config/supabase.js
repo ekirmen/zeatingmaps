@@ -123,8 +123,13 @@ export const getSupabaseAdminClient = () => {
 // Inicializar clientes solo si las variables de entorno están disponibles
 if (supabaseUrl && supabaseAnonKey) {
   try {
-    supabaseClient = getSupabaseClient();
-    supabaseAdminClient = getSupabaseAdminClient();
+    // Solo inicializar una vez
+    if (!supabaseClient) {
+      supabaseClient = getSupabaseClient();
+    }
+    if (!supabaseAdminClient && serviceRoleKey) {
+      supabaseAdminClient = getSupabaseAdminClient();
+    }
   } catch (error) {
     console.error('[SUPABASE CONFIG] Error inicializando clientes:', error);
   }
