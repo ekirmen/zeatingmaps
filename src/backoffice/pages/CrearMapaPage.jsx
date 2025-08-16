@@ -29,13 +29,18 @@ const CrearMapaPage = () => {
 
   // Solo ejecutar operaciones si el componente está montado
   const safeSetState = useCallback((setter, value) => {
+    console.log('[DEBUG] safeSetState llamado con:', { setter: setter.name, value, isMounted });
     if (isMounted) {
       try {
+        console.log('[DEBUG] Ejecutando setter:', setter.name);
         setter(value);
+        console.log('[DEBUG] Setter ejecutado exitosamente:', setter.name);
       } catch (err) {
         console.error('Error setting state:', err);
         setError(err.message);
       }
+    } else {
+      console.warn('[DEBUG] Componente no montado, no se ejecuta setter:', setter.name);
     }
   }, [isMounted]);
 
@@ -316,12 +321,33 @@ const CrearMapaPage = () => {
     }
   };
 
+  // Monitorear cambios en el estado del componente
+  useEffect(() => {
+    console.log('[DEBUG] Estado del componente actualizado:', {
+      loading,
+      sala: sala ? 'cargada' : 'no cargada',
+      mapa: mapa ? 'encontrado' : 'no encontrado',
+      error: error ? 'sí' : 'no',
+      isMounted
+    });
+  }, [loading, sala, mapa, error, isMounted]);
+
   // Cargar información de la sala
   useEffect(() => {
     if (salaId) {
       loadSalaInfo();
       // Test database access
       testDatabaseAccess();
+      
+      // Timeout de seguridad para asegurar que loading se establezca a false
+      const safetyTimeout = setTimeout(() => {
+        console.log('[DEBUG] Timeout de seguridad: forzando loading a false');
+        if (loading) {
+          safeSetState(setLoading, false);
+        }
+      }, 10000); // 10 segundos
+      
+      return () => clearTimeout(safetyTimeout);
     } else {
       setLoading(false);
     }
@@ -386,6 +412,7 @@ const CrearMapaPage = () => {
         if (mapaData && !mapaError) {
           safeSetState(setMapa, mapaData);
           console.log('[DEBUG] Mapa encontrado:', mapaData);
+          console.log('[DEBUG] Estableciendo loading a false después de cargar mapa');
         } else if (mapaError) {
           console.warn('[DEBUG] Error al cargar mapa existente:', mapaError);
           
@@ -412,6 +439,9 @@ const CrearMapaPage = () => {
                 if (retryData && !retryError) {
                   safeSetState(setMapa, retryData);
                   console.log('[DEBUG] Mapa encontrado después de agregar campos:', retryData);
+                  console.log('[DEBUG] Estableciendo loading a false después de reintento exitoso');
+                  console.log('[DEBUG] NOTA: Este return puede estar causando que no se ejecute el finally');
+                  safeSetState(setLoading, false); // Establecer loading aquí también
                   return;
                 }
               } catch (retryError) {
@@ -429,10 +459,14 @@ const CrearMapaPage = () => {
         // Si hay error de permisos o RLS, continuar sin mapa
       }
 
+      // Establecer loading a false aquí, después de todas las operaciones
+      console.log('[DEBUG] Estableciendo loading a false después de todas las operaciones');
+      safeSetState(setLoading, false);
+
     } catch (error) {
       console.error('Error loading sala info:', error);
       message.error('Error al cargar información de la sala: ' + error.message);
-    } finally {
+      // Establecer loading a false también en caso de error
       safeSetState(setLoading, false);
     }
   };
@@ -603,8 +637,21 @@ const CrearMapaPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center">
         <Spin size="large" />
+        <div className="mt-4 text-center">
+          <p className="text-gray-600 mb-2">Cargando información de la sala...</p>
+          <Button 
+            onClick={() => {
+              console.log('[DEBUG] Botón de debug clickeado, forzando loading a false');
+              setLoading(false);
+            }}
+            type="dashed"
+            size="small"
+          >
+            Debug: Forzar Carga
+          </Button>
+        </div>
       </div>
     );
   }
