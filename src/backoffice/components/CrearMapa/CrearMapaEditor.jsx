@@ -172,7 +172,70 @@ const CrearMapaEditor = ({
   const [backgroundFilters, setBackgroundFilters] = useState({});
   const [showBackgroundFilters, setShowBackgroundFilters] = useState(false);
   
-
+  // ===== ESTADOS DE PROGRESO =====
+  const [currentStep, setCurrentStep] = useState(1);
+  const [totalSteps] = useState(5);
+  
+  // ===== FUNCIÓN PARA CALCULAR PROGRESO =====
+  const calculateProgress = useCallback(() => {
+    let progress = 0;
+    let step = 1;
+    
+    // Paso 1: Tener una sala seleccionada (25%)
+    if (salaId) {
+      progress += 25;
+      step = 2;
+    }
+    
+    // Paso 2: Tener al menos una zona creada (50%)
+    if (zonas.length > 0) {
+      progress += 25;
+      step = 3;
+    }
+    
+    // Paso 3: Tener al menos una mesa o silla (75%)
+    if (elements.length > 0) {
+      progress += 25;
+      step = 4;
+    }
+    
+    // Paso 4: Tener sillas asignadas a mesas (90%)
+    const mesasConSillas = elements.filter(el => 
+      el.type === 'mesa' && el.sillas && el.sillas.length > 0
+    );
+    if (mesasConSillas.length > 0) {
+      progress += 15;
+      step = 5;
+    }
+    
+    // Paso 5: Mapa guardado (100%)
+    if (mapa?.estado === 'active') {
+      progress += 10;
+      step = 5;
+    }
+    
+    setCurrentStep(step);
+    return progress;
+  }, [salaId, zonas.length, elements.length, mapa?.estado]);
+  
+  // ===== TEXTO DE PROGRESO =====
+  const getProgressText = useCallback(() => {
+    const progress = calculateProgress();
+    const stepTexts = {
+      1: 'Seleccionar Sala',
+      2: 'Crear Zonas',
+      3: 'Agregar Elementos',
+      4: 'Configurar Sillas',
+      5: 'Finalizar Mapa'
+    };
+    
+    return {
+      percentage: progress,
+      currentStep: currentStep,
+      stepText: stepTexts[currentStep] || 'Completado',
+      isComplete: progress >= 100
+    };
+  }, [calculateProgress, currentStep]);
   
   // ===== REFERENCIAS =====
   const stageRef = useRef(null);
@@ -242,6 +305,11 @@ const CrearMapaEditor = ({
 
     loadZonas();
   }, [salaId]);
+
+  useEffect(() => {
+    // Actualizar progreso cuando cambien los elementos
+    calculateProgress();
+  }, [calculateProgress, elements, zonas, mapa?.estado]);
 
   // ===== FUNCIONES DE HISTORIAL =====
   const addToHistory = useCallback((newElements, action) => {
@@ -624,6 +692,12 @@ const CrearMapaEditor = ({
 
   const handleSave = useCallback(async () => {
     try {
+      // Validar que elements sea un array
+      if (!Array.isArray(elements)) {
+        console.error('Elements no es un array:', elements);
+        throw new Error('Error interno: los elementos del mapa no son válidos');
+      }
+      
       const mapaToSave = {
         ...mapa,
         contenido: {
@@ -645,13 +719,16 @@ const CrearMapaEditor = ({
         estado: 'active'
       };
       
+      console.log('[DEBUG] Mapa a guardar:', mapaToSave);
+      console.log('[DEBUG] Contenido elementos:', mapaToSave.contenido.elementos);
+      
       if (onSave) {
         await onSave(mapaToSave);
       }
       
       message.success('Mapa guardado exitosamente');
     } catch (error) {
-      message.error('Error al guardar el mapa');
+      message.error('Error al guardar el mapa: ' + error.message);
       console.error('Error saving mapa:', error);
     }
   }, [mapa, elements, gridSize, showGrid, snapToGrid, backgroundImage, backgroundScale, backgroundOpacity, showBackgroundInWeb, onSave]);
@@ -1023,10 +1100,23 @@ const CrearMapaEditor = ({
                  {isEditMode ? 'Editar Mapa' : 'Crear Nuevo Mapa'}
                </Title>
                <div className="flex items-center gap-2 text-sm text-gray-600">
-                 <span className="font-medium">25%</span>
+                 <span className="font-medium">{getProgressText().percentage}%</span>
                  <span>Progreso del Mapa</span>
-                 <span className="text-blue-600">Paso 2 de 5</span>
-                 <span className="text-green-600">🚀 Continuando...</span>
+                 <span className="text-blue-600">Paso {getProgressText().currentStep} de {totalSteps}</span>
+                 <span className="text-green-600">
+                   {getProgressText().isComplete ? '✅ Completado' : '🚀 ' + getProgressText().stepText}
+                 </span>
+               </div>
+               <div className="w-full mt-2">
+                 <Progress 
+                   percent={getProgressText().percentage} 
+                   size="small" 
+                   status={getProgressText().isComplete ? "success" : "active"}
+                   strokeColor={{
+                     '0%': '#108ee9',
+                     '100%': '#87d068',
+                   }}
+                 />
                </div>
              </div>
            </Col>
@@ -1116,30 +1206,40 @@ const CrearMapaEditor = ({
                Sigue estos pasos para crear un mapa completo y profesional
              </Text>
              <div className="space-y-2">
-               <div className="flex items-center gap-2 text-xs">
-                 <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs">1</div>
-                 <span>Configuración Básica</span>
-                 <span className="text-gray-400">Información del mapa</span>
+               <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
+                 <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                   getProgressText().currentStep >= 1 ? 'bg-blue-500' : 'bg-gray-300'
+                 }`}>1</div>
+                 <span>Seleccionar Sala</span>
+                 <span className="text-gray-400">Configurar sala base</span>
                </div>
-               <div className="flex items-center gap-2 text-xs">
-                 <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">2</div>
-                 <span>Diseño del Mapa</span>
-                 <span className="text-gray-400">Editor visual</span>
+               <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
+                 <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                   getProgressText().currentStep >= 2 ? 'bg-blue-500' : 'bg-gray-300'
+                 }`}>2</div>
+                 <span>Crear Zonas</span>
+                 <span className="text-gray-400">Definir áreas del mapa</span>
                </div>
-               <div className="flex items-center gap-2 text-xs">
-                 <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center text-white text-xs">3</div>
-                 <span>Validación</span>
-                 <span className="text-gray-400">Verificar integridad</span>
+               <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
+                 <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                   getProgressText().currentStep >= 3 ? 'bg-blue-500' : 'bg-gray-300'
+                 }`}>3</div>
+                 <span>Agregar Elementos</span>
+                 <span className="text-gray-400">Mesas y sillas</span>
                </div>
-               <div className="flex items-center gap-2 text-xs">
-                 <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center text-white text-xs">4</div>
-                 <span>Vista Previa</span>
-                 <span className="text-gray-400">Revisar resultado</span>
+               <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 4 ? 'text-blue-600' : 'text-gray-400'}`}>
+                 <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                   getProgressText().currentStep >= 4 ? 'bg-blue-500' : 'bg-gray-300'
+                 }`}>4</div>
+                 <span>Configurar Sillas</span>
+                 <span className="text-gray-400">Asignar a mesas</span>
                </div>
-               <div className="flex items-center gap-2 text-xs">
-                 <div className="w-4 h-4 bg-gray-300 rounded-full flex items-center justify-center text-white text-xs">5</div>
-                 <span>Configuración Avanzada</span>
-                 <span className="text-gray-400">Ajustes finales</span>
+               <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 5 ? 'text-green-600' : 'text-gray-400'}`}>
+                 <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                   getProgressText().currentStep >= 5 ? 'bg-green-500' : 'bg-gray-300'
+                 }`}>5</div>
+                 <span>Finalizar Mapa</span>
+                 <span className="text-gray-400">Guardar y activar</span>
                </div>
              </div>
            </div>

@@ -83,6 +83,8 @@ const ContextMenu = ({
 
   // ===== ACCIONES DE ELEMENTOS (solo si hay elementos seleccionados) =====
   if (selectedElements.length > 0) {
+    const selectedElement = selectedElements[0]; // Tomar el primer elemento seleccionado
+    
     menuItems.push({
       key: 'elements',
       type: 'group',
@@ -108,6 +110,42 @@ const ContextMenu = ({
         }
       ]
     });
+
+    // ===== ACCIONES ESPECÍFICAS PARA MESAS =====
+    if (selectedElement.type === 'mesa') {
+      menuItems.push({
+        key: 'mesa-actions',
+        type: 'group',
+        label: 'Acciones de Mesa',
+        children: [
+          {
+            key: 'add-sillas-top',
+            icon: <PlusOutlined />,
+            label: 'Agregar Sillas - Cara Superior'
+          },
+          {
+            key: 'add-sillas-bottom',
+            icon: <PlusOutlined />,
+            label: 'Agregar Sillas - Cara Inferior'
+          },
+          {
+            key: 'add-sillas-left',
+            icon: <PlusOutlined />,
+            label: 'Agregar Sillas - Cara Izquierda'
+          },
+          {
+            key: 'add-sillas-right',
+            icon: <PlusOutlined />,
+            label: 'Agregar Sillas - Cara Derecha'
+          },
+          {
+            key: 'add-sillas-all',
+            icon: <PlusOutlined />,
+            label: 'Agregar Sillas - Todas las Caras'
+          }
+        ]
+      });
+    }
   }
 
   // ===== ACCIONES DE CREACIÓN =====
@@ -122,9 +160,19 @@ const ContextMenu = ({
         label: 'Agregar Mesa'
       },
       {
-        key: 'add-sillas',
+        key: 'add-sillas-cuadradas',
         icon: <PlusOutlined />,
-        label: 'Agregar Sillas'
+        label: 'Agregar Sillas Cuadradas'
+      },
+      {
+        key: 'add-sillas-redondas',
+        icon: <PlusOutlined />,
+        label: 'Agregar Sillas Redondas'
+      },
+      {
+        key: 'add-sillas-hexagonales',
+        icon: <PlusOutlined />,
+        label: 'Agregar Sillas Hexagonales'
       },
       {
         key: 'add-texto',
