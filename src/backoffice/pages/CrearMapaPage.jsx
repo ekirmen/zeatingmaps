@@ -54,6 +54,156 @@ const CrearMapaPage = () => {
     );
   }
 
+  // Agregar campos faltantes a la tabla mapas existente
+  const addMissingFieldsToMapas = async (missingFields) => {
+    try {
+      console.log('[DEBUG] Intentando agregar campos faltantes:', missingFields);
+      
+      // Opción 1: Usar RPC exec_sql si existe
+      try {
+        let alterSQL = '';
+        
+        if (missingFields.includes('nombre')) {
+          alterSQL += 'ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS nombre TEXT DEFAULT \'Nuevo Mapa\'; ';
+        }
+        if (missingFields.includes('descripcion')) {
+          alterSQL += 'ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS descripcion TEXT DEFAULT \'\'; ';
+        }
+        if (missingFields.includes('estado')) {
+          alterSQL += 'ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS estado TEXT DEFAULT \'draft\'; ';
+        }
+        
+        if (alterSQL) {
+          const { error } = await supabase.rpc('exec_sql', { sql: alterSQL });
+          
+          if (!error) {
+            console.log('[DEBUG] Campos agregados exitosamente con RPC');
+            return true;
+          }
+        }
+      } catch (rpcError) {
+        console.log('[DEBUG] RPC exec_sql no disponible para agregar campos...');
+      }
+      
+      // Opción 2: Intentar insertar un registro con campos faltantes para ver el error específico
+      try {
+        const testRecord = {
+          sala_id: salaId,
+          contenido: {},
+          nombre: 'Test Mapa',
+          descripcion: 'Descripción de prueba',
+          estado: 'draft'
+        };
+        
+        // Remover campos que no existen en la tabla
+        const existingFields = ['id', 'sala_id', 'contenido', 'tenant_id', 'updated_at'];
+        const filteredRecord = {};
+        existingFields.forEach(field => {
+          if (testRecord[field] !== undefined) {
+            filteredRecord[field] = testRecord[field];
+          }
+        });
+        
+        const { error: insertError } = await supabase
+          .from('mapas')
+          .insert(filteredRecord);
+        
+        if (!insertError) {
+          console.log('[DEBUG] Registro de prueba insertado exitosamente');
+          // Limpiar el registro de prueba
+          await supabase.from('mapas').delete().eq('nombre', 'Test Mapa');
+          return true;
+        } else {
+          console.warn('[DEBUG] Error al insertar registro de prueba:', insertError);
+        }
+      } catch (insertError) {
+        console.warn('[DEBUG] No se pudo insertar registro de prueba:', insertError.message);
+      }
+      
+      console.warn('[DEBUG] No se pudieron agregar los campos faltantes');
+      return false;
+      
+    } catch (err) {
+      console.warn('[DEBUG] Error al agregar campos faltantes:', err.message);
+      return false;
+    }
+  };
+
+  // Verificar la estructura actual de la tabla mapas
+  const checkMapasTableStructure = async () => {
+    try {
+      console.log('[DEBUG] Verificando estructura de tabla mapas...');
+      
+      // Intentar hacer una consulta simple para ver qué campos están disponibles
+      const { data: structureTest, error: structureError } = await supabase
+        .from('mapas')
+        .select('*')
+        .limit(1);
+      
+      if (structureError) {
+        console.error('[DEBUG] Error al verificar estructura:', structureError);
+        return false;
+      }
+      
+      // Verificar si los campos esperados están presentes
+      const expectedFields = ['id', 'sala_id', 'contenido', 'tenant_id', 'updated_at', 'nombre', 'descripcion', 'estado'];
+      const availableFields = structureTest && structureTest.length > 0 ? Object.keys(structureTest[0]) : [];
+      
+      console.log('[DEBUG] Campos disponibles en tabla mapas:', availableFields);
+      console.log('[DEBUG] Campos esperados:', expectedFields);
+      
+      // Verificar campos faltantes
+      const missingFields = expectedFields.filter(field => !availableFields.includes(field));
+      if (missingFields.length > 0) {
+        console.warn('[DEBUG] Campos faltantes en tabla mapas:', missingFields);
+        
+        // Mostrar mensaje al usuario sobre campos faltantes
+        message.warning(
+          `La tabla mapas existe pero le faltan algunos campos: ${missingFields.join(', ')}. ` +
+          'Intentando agregarlos automáticamente...'
+        );
+        
+        // Intentar agregar campos faltantes
+        const fieldsAdded = await addMissingFieldsToMapas(missingFields);
+        if (fieldsAdded) {
+          message.success('Campos faltantes agregados exitosamente');
+          // Verificar la estructura nuevamente
+          return await checkMapasTableStructure();
+        } else {
+          message.error(
+            'No se pudieron agregar los campos faltantes automáticamente. ' +
+            'Ejecuta este SQL en tu base de datos Supabase:'
+          );
+          
+          // Mostrar el SQL en la consola para que sea fácil copiarlo
+          const sqlCommands = [
+            "ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS nombre TEXT DEFAULT 'Nuevo Mapa';",
+            "ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS descripcion TEXT DEFAULT '';",
+            "ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS estado TEXT DEFAULT 'draft';"
+          ];
+          
+          console.log('[DEBUG] SQL para agregar campos faltantes:');
+          sqlCommands.forEach(sql => console.log(sql));
+          
+          // También mostrar en un alert para que sea fácil copiarlo
+          setTimeout(() => {
+            alert(
+              'Ejecuta este SQL en tu base de datos Supabase:\n\n' +
+              sqlCommands.join('\n')
+            );
+          }, 1000);
+        }
+      } else {
+        console.log('[DEBUG] Tabla mapas tiene todos los campos esperados');
+      }
+      
+      return true;
+    } catch (err) {
+      console.error('[DEBUG] Error al verificar estructura de tabla:', err);
+      return false;
+    }
+  };
+
   // Crear la tabla mapas si no existe (solo en desarrollo)
   const createMapasTable = async () => {
     try {
@@ -129,6 +279,12 @@ const CrearMapaPage = () => {
       }
       
       console.log(`[DEBUG] Tabla ${tableName} es accesible`);
+      
+      // Si es la tabla mapas, verificar también su estructura
+      if (tableName === 'mapas') {
+        await checkMapasTableStructure();
+      }
+      
       return true;
     } catch (err) {
       console.warn(`[DEBUG] Error al verificar tabla ${tableName}:`, err.message);
@@ -208,6 +364,16 @@ const CrearMapaPage = () => {
           console.log('[DEBUG] Mapa encontrado:', mapaData);
         } else if (mapaError) {
           console.warn('[DEBUG] Error al cargar mapa existente:', mapaError);
+          
+          // Mostrar mensaje específico según el tipo de error
+          if (mapaError.code === 'PGRST116') {
+            message.warning('No se encontró un mapa existente para esta sala. Se creará uno nuevo.');
+          } else if (mapaError.code === '42P01') {
+            message.error('Error: La tabla mapas no existe o no es accesible.');
+          } else {
+            message.warning(`Error al cargar mapa existente: ${mapaError.message}`);
+          }
+          
           // No es crítico, continuar sin mapa
         }
       } catch (mapaError) {
