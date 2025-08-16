@@ -52,7 +52,7 @@ export const RecintoSalaProvider = ({ children }) => {
     } else if (!currentTenant && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('vercel.app')) {
       console.log('⏳ [RecintoSalaContext] Esperando tenant...');
     }
-  }, [currentTenant?.id]);
+  }, [currentTenant]);
 
   useEffect(() => {
     if (recinto) {

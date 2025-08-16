@@ -7,26 +7,23 @@ import {
   Select, 
   Switch, 
   InputNumber, 
-  Upload, 
   message, 
   Space, 
   Typography,
-  Divider,
   Row,
   Col,
-  Alert,
-  Tabs
+  Tabs,
+  Alert
 } from 'antd';
 import { 
   SaveOutlined,
   PrinterOutlined,
   FileTextOutlined,
-  PictureOutlined,
   SettingOutlined
 } from '@ant-design/icons';
 import { saveFormatConfig, getFormatConfig, DEFAULT_FORMAT_CONFIG } from '../services/bocaPrinterService';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -39,20 +36,20 @@ const FormatoEntrada = () => {
   const [currentValues, setCurrentValues] = useState(DEFAULT_FORMAT_CONFIG);
 
   useEffect(() => {
+    const loadFormatConfig = async () => {
+      try {
+        const config = await getFormatConfig();
+        setFormatConfig(config);
+        setCurrentValues(config);
+        form.setFieldsValue(config);
+      } catch (error) {
+        console.error('Error loading format config:', error);
+        message.error('Error al cargar la configuración');
+      }
+    };
+
     loadFormatConfig();
   }, []);
-
-  const loadFormatConfig = async () => {
-    try {
-      const config = await getFormatConfig();
-      setFormatConfig(config);
-      setCurrentValues(config);
-      form.setFieldsValue(config);
-    } catch (error) {
-      console.error('Error loading format config:', error);
-      message.error('Error al cargar la configuración');
-    }
-  };
 
   const handleSave = async () => {
     try {
@@ -107,14 +104,7 @@ const FormatoEntrada = () => {
     const values = currentValues; // Usar los valores actuales del formulario
     let preview = '';
 
-    // Aplicar configuración de alineación
-    const alignmentClass = values.alignment === '0' ? 'text-left' : 
-                          values.alignment === '1' ? 'text-center' : 'text-right';
 
-    // Aplicar configuración de tamaño de fuente
-    const fontSizeClass = values.fontSize === '00' ? 'text-sm' :
-                         values.fontSize === '01' ? 'text-lg' :
-                         values.fontSize === '02' ? 'text-xl' : 'text-2xl';
 
     // Encabezado
     if (values.header) {

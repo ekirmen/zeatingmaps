@@ -4,17 +4,14 @@ import {
   Row, 
   Col, 
   Statistic, 
-  Progress, 
+  Progress,
   Table, 
   Button, 
-  Space, 
   Typography,
   Avatar,
   List,
   Tag,
   Spin,
-  Alert,
-  Divider,
   Calendar,
   Badge
 } from 'antd';
@@ -23,13 +20,8 @@ import {
   UserOutlined, 
   FileTextOutlined, 
   ShoppingCartOutlined,
-  RiseOutlined,
-  FallOutlined,
-  EyeOutlined,
-  HeartOutlined,
   BellOutlined,
   CalendarOutlined,
-  ClockCircleOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined
 } from '@ant-design/icons';
@@ -65,7 +57,7 @@ const Dashboard = () => {
         cleanup();
       }
     };
-  }, []);
+  }, [loadDashboardData, subscribeToRealtimeUpdates]);
 
   const loadDashboardData = async () => {
     try {

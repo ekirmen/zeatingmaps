@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { getDynamicDomainConfig, isMainDomain } from '../config/domainConfig';
 
@@ -11,7 +11,7 @@ export const TenantProvider = ({ children }) => {
   const [domainConfig, setDomainConfig] = useState(null);
 
   // Detectar tenant de cualquier dominio
-  const detectTenant = async () => {
+  const detectTenant = useCallback(async () => {
     try {
       setError(null);
       const hostname = window.location.hostname;
@@ -98,7 +98,7 @@ export const TenantProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Buscar tenant por hostname completo
   const searchTenantByHostname = async (hostname) => {
@@ -321,7 +321,7 @@ export const TenantProvider = ({ children }) => {
 
   useEffect(() => {
     detectTenant();
-  }, []);
+  }, [detectTenant]);
 
   // Exponer el tenant actual globalmente para que otros servicios puedan acceder
   useEffect(() => {

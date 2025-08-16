@@ -8,23 +8,17 @@ import {
   Alert, 
   Space, 
   Typography,
-  Divider,
   Row,
   Col,
   Form,
   InputNumber,
-  Upload,
   message,
-  Progress,
   Tag
 } from 'antd';
 import { 
   PrinterOutlined,
   SettingOutlined,
   ExperimentOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  UploadOutlined,
   SaveOutlined
 } from '@ant-design/icons';
 import { 
@@ -32,9 +26,6 @@ import {
   saveFormatConfig, 
   getFormatConfig,
   DEFAULT_FORMAT_CONFIG,
-  BOCA_DEFAULT_TEMPLATE,
-  BOCA_SMALL_TEMPLATE,
-  BOCA_PREMIUM_TEMPLATE,
   applyBocaTemplate
 } from '../services/bocaPrinterService';
 import './PrinterConfig.css';
@@ -52,7 +43,7 @@ const PrinterConfig = () => {
   const [formatConfig, setFormatConfig] = useState(DEFAULT_FORMAT_CONFIG);
   const [loading, setLoading] = useState(false);
   const [detecting, setDetecting] = useState(false);
-  const [previewData, setPreviewData] = useState({
+  const [previewData] = useState({
     eventName: 'EVENTO DE PRUEBA',
     eventDate: new Date().toLocaleDateString(),
     eventTime: '20:00',

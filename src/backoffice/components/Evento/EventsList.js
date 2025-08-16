@@ -1,6 +1,6 @@
 import React from 'react';
 import resolveImageUrl from '../../../utils/resolveImageUrl';
-import { Card, Tag, Button, Space, Avatar } from 'antd';
+import { Card, Tag, Button } from 'antd';
 import { EditOutlined, DeleteOutlined, CopyOutlined, CalendarOutlined, EnvironmentOutlined } from '@ant-design/icons';
 
 const EventsList = ({ 

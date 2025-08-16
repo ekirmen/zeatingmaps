@@ -4,8 +4,7 @@ import {
   TextWidget,
   BannerWidget,
   EventWidget,
-  HtmlWidget,
-  WIDGET_COMPONENTS
+  HtmlWidget
 } from './index';
 
 const EmailWidgetRenderer = ({ widgetType, config = {}, onConfigChange }) => {

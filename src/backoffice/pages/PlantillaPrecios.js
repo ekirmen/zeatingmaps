@@ -12,7 +12,7 @@ const PlantillaPrecios = () => {
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [zonas, setZonas] = useState([]);
   const [entradas, setEntradas] = useState([]);
-  const [nombrePlantilla, setNombrePlantilla] = useState('');
+    const [nombrePlantilla, setNombrePlantilla] = useState('');
   const [detallesPrecios, setDetallesPrecios] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;

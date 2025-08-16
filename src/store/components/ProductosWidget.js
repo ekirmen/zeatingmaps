@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, Button, Image, Typography, Space, InputNumber, message, Input, Select, Tag, Badge, Tooltip, Alert } from 'antd';
+import { Card, Button, Image, Typography, Space, InputNumber, Input, Select, Tag, Badge, Tooltip, Alert } from 'antd';
 import { 
   ShoppingCartOutlined, 
   PlusOutlined, 
@@ -28,20 +28,6 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
   const [showFilters, setShowFilters] = useState(false);
 
   const { addProduct, products: cartProducts } = useCartStore();
-
-  useEffect(() => {
-    if (eventoId) {
-      loadProductos();
-    } else {
-      setProductos([]);
-      setFilteredProductos([]);
-      setQuantities({});
-    }
-  }, [eventoId, loadProductos]);
-
-  useEffect(() => {
-    filterProductos();
-  }, [productos, searchTerm, categoryFilter, priceFilter, stockFilter, filterProductos]);
 
   const loadProductos = useCallback(async () => {
     try {
@@ -164,6 +150,20 @@ const ProductosWidget = ({ eventoId, onProductAdded }) => {
 
     setFilteredProductos(filtered);
   }, [productos, searchTerm, categoryFilter, priceFilter, stockFilter]);
+
+  useEffect(() => {
+    if (eventoId) {
+      loadProductos();
+    } else {
+      setProductos([]);
+      setFilteredProductos([]);
+      setQuantities({});
+    }
+  }, [eventoId, loadProductos]);
+
+  useEffect(() => {
+    filterProductos();
+  }, [productos, searchTerm, categoryFilter, priceFilter, stockFilter, filterProductos]);
 
   const handleQuantityChange = (productoId, value) => {
     setQuantities(prev => ({

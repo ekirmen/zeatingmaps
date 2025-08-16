@@ -4,6 +4,8 @@ import { useRecintoSala } from '../contexts/RecintoSalaContext';
 import { fetchZonasPorSala, createZona, updateZona, deleteZona, fetchMapa } from '../services/apibackoffice';
 import { supabase } from '../../supabaseClient';
 import Modal from 'react-modal';
+import { CrearMapaMain } from '../components/CrearMapa';
+import { message } from 'antd';
 
 if (typeof document !== 'undefined' && document.getElementById('root')) {
   Modal.setAppElement('#root');
@@ -20,8 +22,9 @@ const Plano = () => {
   const [loadingZonas, setLoadingZonas] = useState(false);
   const [mapaPreview, setMapaPreview] = useState(null);
   const [loadingMapa, setLoadingMapa] = useState(false);
+  const [showCrearMapa, setShowCrearMapa] = useState(false);
   const numeradaBloqueada = editingZona?.numerada && editingZona.aforo > 0;
-  const navigate = useNavigate();
+
 
   // Limpiar todas las suscripciones de tiempo real al montar el componente
   useEffect(() => {
@@ -102,7 +105,7 @@ const Plano = () => {
       setMapaPreview(null);
       console.log('[PLANO] No hay sala seleccionada, limpiando zonas y mapa');
     }
-  }, [sala?.id]);
+  }, [sala?.id, loadZonas, loadMapaPreview]);
 
   // Función para cargar preview del mapa
   const loadMapaPreview = async (salaId) => {
@@ -235,28 +238,7 @@ const Plano = () => {
     }
   };
 
-  const handleNavigateToCrearMapa = () => {
-    if (!recinto) {
-      console.warn('[PLANO] Intento de ir a crear mapa sin recinto seleccionado');
-      alert('Debe seleccionar un recinto primero.');
-      return;
-    }
-    
-    if (!sala) {
-      console.warn('[PLANO] Intento de ir a crear mapa sin sala seleccionada');
-      alert('Debe seleccionar una sala primero.');
-      return;
-    }
 
-    if (zonas.length === 0) {
-      console.warn('[PLANO] Intento de ir a crear mapa sin zonas creadas');
-      alert('Debe crear al menos una zona antes de crear el mapa.');
-      return;
-    }
-
-    console.log('[PLANO] Navegando a crear mapa para sala:', sala.id);
-    navigate(`/dashboard/crear-mapa/${sala.id}`);
-  };
 
   // Función para refrescar zonas manualmente
   const refreshZonas = () => {
@@ -271,10 +253,30 @@ const Plano = () => {
     return recinto && sala;
   };
 
-  // Función para validar si se puede ir a crear mapa
-  const canCreateMapa = () => {
-    return recinto && sala && zonas.length > 0;
+  // Función para manejar la creación del mapa
+  const handleCrearMapa = () => {
+    if (!sala?.id) {
+      alert('Debe seleccionar una sala primero para crear el mapa.');
+      return;
+    }
+    setShowCrearMapa(true);
   };
+
+  // Función para cancelar la creación del mapa
+  const handleCancelCrearMapa = () => {
+    setShowCrearMapa(false);
+  };
+
+  // Función para cuando se guarda el mapa desde CrearMapaMain
+  const handleMapaSaved = () => {
+    setShowCrearMapa(false);
+    // Recargar el preview del mapa
+    if (sala?.id) {
+      loadMapaPreview(sala.id);
+    }
+  };
+
+
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
@@ -333,13 +335,22 @@ const Plano = () => {
           <div>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-700">Zonas de la sala: {sala.nombre}</h2>
-              <button
-                onClick={refreshZonas}
-                disabled={loadingZonas}
-                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-              >
-                {loadingZonas ? 'Cargando...' : '🔄 Refrescar'}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={refreshZonas}
+                  disabled={loadingZonas}
+                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  {loadingZonas ? 'Cargando...' : '🔄 Refrescar'}
+                </button>
+                <button
+                  onClick={handleCrearMapa}
+                  disabled={!sala?.id}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+                >
+                  🎨 Crear Mapa
+                </button>
+              </div>
             </div>
             {loadingZonas ? (
               <div className="text-center p-6 border border-dashed border-gray-300 rounded">
@@ -348,13 +359,22 @@ const Plano = () => {
             ) : zonas.length === 0 ? (
               <div className="text-center p-6 border border-dashed border-gray-300 rounded">
                 <p className="mb-4 text-gray-600">No hay zonas creadas para esta sala.</p>
-                <button 
-                  onClick={() => setModalIsOpen(true)} 
-                  className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  disabled={!canCreateZona()}
-                >
-                  Crear Primera Zona
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button 
+                    onClick={() => setModalIsOpen(true)} 
+                    className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    disabled={!canCreateZona()}
+                  >
+                    Crear Primera Zona
+                  </button>
+                  <button 
+                    onClick={handleCrearMapa}
+                    disabled={!sala?.id}
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    🎨 Crear Mapa
+                  </button>
+                </div>
               </div>
             ) : (
               <>
@@ -388,28 +408,25 @@ const Plano = () => {
                     </li>
                   ))}
                 </ul>
-                <button 
-                  onClick={() => setModalIsOpen(true)} 
-                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  disabled={!canCreateZona()}
-                >
-                  Crear Nueva Zona
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button 
+                    onClick={() => setModalIsOpen(true)} 
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    disabled={!canCreateZona()}
+                  >
+                    Crear Nueva Zona
+                  </button>
+                  <button 
+                    onClick={handleCrearMapa}
+                    disabled={!sala?.id}
+                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                  >
+                    🎨 Crear Mapa
+                  </button>
+                </div>
               </>
             )}
-                         <div className="mt-6">
-               <button 
-                 onClick={handleNavigateToCrearMapa} 
-                 className={`px-5 py-2 rounded text-white ${
-                   canCreateMapa() 
-                     ? 'bg-blue-600 hover:bg-blue-700' 
-                     : 'bg-gray-400 cursor-not-allowed'
-                 }`}
-                 disabled={!canCreateMapa()}
-               >
-                 {canCreateMapa() ? (mapaPreview ? '✏️ Editar Mapa' : '🗺️ Crear Mapa') : 'Seleccione recinto, sala y cree zonas primero'}
-               </button>
-             </div>
+
 
                           {/* Preview del Mapa Existente */}
              {sala && (
@@ -497,13 +514,18 @@ const Plano = () => {
                      </div>
                      
                                            <div className="flex gap-3">
-                        <button
-                          onClick={() => window.open(`/dashboard/crear-mapa/${sala.id}`, '_blank')}
-                          className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-sm"
-                        >
-                          🔗 Abrir en Nueva Pestaña
-                        </button>
-                      </div>
+                       <button 
+                         onClick={handleCrearMapa}
+                         className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                       >
+                         ✏️ Editar Mapa
+                       </button>
+                       <button 
+                         className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                       >
+                         📊 Ver Estadísticas
+                       </button>
+                     </div>
                    </div>
                  ) : (
                    <div className="text-center p-4">
@@ -513,11 +535,12 @@ const Plano = () => {
                          Crea un mapa para visualizar la distribución de asientos y mesas.
                        </p>
                        <div className="mt-3">
-                         <button
-                           onClick={() => navigate(`/dashboard/crear-mapa/${sala.id}`)}
-                           className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                         <button 
+                           onClick={handleCrearMapa}
+                           disabled={!sala?.id}
+                           className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
                          >
-                           🗺️ Crear Primer Mapa
+                           🎨 Crear Mapa de la Sala
                          </button>
                        </div>
                      </div>
@@ -559,6 +582,22 @@ const Plano = () => {
           </div>
         </div>
       </Modal>
+
+      {/* Modal para Crear/Editar Mapa */}
+      {showCrearMapa && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          <div className="absolute inset-0 bg-black bg-opacity-50"></div>
+          <div className="relative z-10 w-full h-full">
+            <CrearMapaMain
+              salaId={sala?.id}
+              onSave={handleMapaSaved}
+              onCancel={handleCancelCrearMapa}
+              initialMapa={mapaPreview}
+              isEditMode={!!mapaPreview}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

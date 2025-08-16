@@ -1,6 +1,5 @@
 // Hook para sincronizar datos del mapa (JSONB) con la tabla seats (relacional)
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../supabaseClient';
 
 export const useMapaSeatsSync = (mapa, funcionId) => {
   const [seatsData, setSeatsData] = useState([]);
@@ -82,7 +81,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
   }, []);
 
   // Sincronizar datos del mapa con el estado real
-  const syncMapaWithSeats = async () => {
+  const syncMapaWithSeats = useCallback(async () => {
     if (!mapa || !funcionId) {
       return;
     }
@@ -102,12 +101,12 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [mapa, funcionId, extractSeatsFromMapa]);
 
   // Sincronizar cuando cambie el mapa o funcionId
   useEffect(() => {
     syncMapaWithSeats();
-  }, [mapa, funcionId]);
+  }, [mapa, funcionId, syncMapaWithSeats]);
 
   return {
     seatsData,

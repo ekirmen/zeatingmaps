@@ -2,7 +2,7 @@
 export const getDomainConfig = (hostname) => {
   // Extraer el dominio principal y subdominio
   const domain = hostname.split('.').slice(-2).join('.');
-  const subdomain = hostname.split('.')[0];
+  // const subdomain = hostname.split('.')[0]; // No utilizado actualmente
 
   // Configuración por dominio
   const domainConfigs = {

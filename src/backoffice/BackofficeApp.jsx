@@ -18,20 +18,11 @@ import PlantillaPrecios from './pages/PlantillaPrecios';
 import Funciones from './pages/Funciones';
 import Entrada from './pages/Entrada';
 import Galeria from './pages/Galeria';
-import Correo from './pages/Correo';
-import CrearMapaPage from './pages/CrearMapaPage';
 import CreateIva from './pages/CreateIva';
 import Tags from './pages/Tags';
 import WebStudio from './pages/WebStudio';
-import WebHeader from './pages/WebHeader';
-import WebFooter from './pages/WebFooter';
-import WebColors from './pages/WebColors';
 import EmailCampaigns from './pages/EmailCampaigns';
-import EmailPageCreator from './pages/EmailPageCreator';
 import Abonos from './pages/Abonos';
-import Referidos from './pages/Referidos';
-import CompaniasPage from './pages/CompaniasPage';
-import SelectRecintoSala from './pages/SelectRecintoSala';
 import Plano from './pages/Plano';
 import CRM from './pages/CRM';
 import Mailchimp from './pages/Mailchimp';
@@ -39,7 +30,7 @@ import Formularios from './pages/Formularios';
 import Productos from './pages/Productos';
 import PlantillasProductos from './pages/PlantillasProductos';
 import SaasDashboard from './pages/SaasDashboard';
-import SaasDiagnostico from './pages/SaasDiagnostico';
+
 import TenantDetail from './pages/TenantDetail';
 import SaasSettings from './pages/SaasSettings';
 import LegalTerms from '../store/pages/LegalTerms';
@@ -56,8 +47,7 @@ const BackofficeApp = () => {
         {/* Administración */}
         <Route path="recintos" element={<Recinto />} />
         <Route path="plano" element={<Plano />} />
-        {/* Ruta para crear/editar mapa por sala */}
-        <Route path="crear-mapa/:salaId" element={<CrearMapaPage />} />
+
         <Route path="usuarios" element={<Usuarios />} />
         <Route path="liquidaciones" element={<PaymentAnalytics />} />
         
@@ -119,7 +109,7 @@ const BackofficeApp = () => {
         {/* Panel SaaS */}
         <Route path="saas" element={<SaasDashboard />} />
         <Route path="saas/settings" element={<SaasSettings />} />
-        <Route path="saas/diagnostico" element={<SaasDiagnostico />} />
+
         <Route path="tenant/:id" element={<TenantDetail />} />
         
         {/* Configuración */}

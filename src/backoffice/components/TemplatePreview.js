@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card, Typography, Space, Tag } from 'antd';
-import { PrinterOutlined, CheckCircleOutlined } from '@ant-design/icons';
+import { PrinterOutlined } from '@ant-design/icons';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 
 const TemplatePreview = ({ template, ticketData }) => {
   const generatePreviewText = () => {

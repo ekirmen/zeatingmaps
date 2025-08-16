@@ -8,12 +8,10 @@ import {
   Input, 
   message, 
   Table, 
-  Tag, 
   Space,
   Typography,
   Divider,
   Alert,
-  Tooltip,
   Row,
   Col
 } from 'antd';
@@ -29,7 +27,6 @@ import {
 import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
 
 const PaymentGateways = () => {
   const [gateways, setGateways] = useState([]);
@@ -37,7 +34,7 @@ const PaymentGateways = () => {
   const [configModalVisible, setConfigModalVisible] = useState(false);
   const [selectedGateway, setSelectedGateway] = useState(null);
   const [configForm] = Form.useForm();
-  const [showSecrets, setShowSecrets] = useState({});
+
 
   // Configuraciones por defecto para cada pasarela
   const defaultConfigs = {

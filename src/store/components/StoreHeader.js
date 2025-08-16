@@ -42,7 +42,7 @@ const Header = ({ onLogin, onLogout }) => {
     
     // Debug: Log initial state
     console.log('Header component mounted, initial modal state:', isAccountModalVisible);
-  }, []);
+  }, [isAccountModalVisible]);
 
   const handleRegister = async () => {
     try {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Badge, Button, Tooltip, Modal, message } from 'antd';
+import { Badge, Button, Tooltip, Modal } from 'antd';
 import { ClockCircleOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { useAuth } from '../../contexts/AuthContext';

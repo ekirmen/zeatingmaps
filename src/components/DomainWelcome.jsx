@@ -1,16 +1,14 @@
 import React from 'react';
 import { Card, Typography, Space, Button, Divider } from 'antd';
 import { 
-  GlobalOutlined, 
   SettingOutlined, 
   ShoppingOutlined,
   CalendarOutlined,
-  UserOutlined,
   BankOutlined
 } from '@ant-design/icons';
 import { getCurrentDomainConfig, shouldShowSaaS, shouldShowBackoffice, shouldShowStore } from '../config/domainConfig';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 const DomainWelcome = () => {
   const config = getCurrentDomainConfig();

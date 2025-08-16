@@ -302,7 +302,7 @@ export const fetchMapa = async (salaIdOrMapId, by = 'sala') => {
         // Intentar obtener más información sobre el error
         try {
           console.log('[fetchMapa] Probando acceso básico a tabla mapas...');
-          const { data: testData, error: testError } = await supabase
+          const { error: testError } = await supabase
             .from('mapas')
             .select('count')
             .limit(1);

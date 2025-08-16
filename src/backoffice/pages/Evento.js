@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRecinto } from '../contexts/RecintoContext';
-import { useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faThLarge, faList } from '@fortawesome/free-solid-svg-icons';
 import DatosBasicos from '../components/Evento/DatosBasicos';
@@ -13,21 +12,13 @@ import SearchBar from '../components/Evento/SearchBar';
 import VenueSelectors from '../components/Evento/VenueSelectors';
 import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
-import { v4 as uuidv4 } from 'uuid';
 
-// Bucket where event related images are stored
-const rawEventBucket = process.env.REACT_APP_EVENT_BUCKET || 'eventos';
-const EVENT_BUCKET = rawEventBucket.replace(/^\/+|\/+$/g, '');
-// Optional subdirectory inside the bucket
-const rawEventFolder = process.env.REACT_APP_EVENT_FOLDER || '';
-const EVENT_FOLDER = rawEventFolder.replace(/^\/+|\/+$/g, '');
 
 const Evento = () => {
   const { currentTenant } = useTenant();
   const [viewMode, setViewMode] = useState('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState([]);
-  const navigate = useNavigate();
   const { recintos, recintoSeleccionado, setRecintoSeleccionado, salaSeleccionada, setSalaSeleccionada } = useRecinto();
   const [eventos, setEventos] = useState([]);
   const [eventosFiltrados, setEventosFiltrados] = useState([]);
@@ -35,10 +26,7 @@ const Evento = () => {
   const [menuVisible, setMenuVisible] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [activeTab, setActiveTab] = useState('datosBasicos');
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  // Keep track of original images when editing so we can delete replaced files
-  const [originalImages, setOriginalImages] = useState({});
 
   const filtrarEventos = useCallback(() => {
     if (!recintoSeleccionado || !salaSeleccionada) return;

@@ -12,38 +12,38 @@ const CampaignButtonGenerator = ({ campaignId, onButtonGenerated }) => {
   const [buttonText, setButtonText] = useState('');
 
   useEffect(() => {
+    const loadCampaignData = async () => {
+      setLoading(true);
+      try {
+        // Simular carga de datos de campaña
+        setTimeout(() => {
+          setCampaign({
+            id: campaignId,
+            name: 'Campaña de ejemplo',
+            type: 'newsletter',
+            events: [
+              { id: '1403', name: 'TEATRO NEGRO DE PRAGA 06 DE ABRIL' },
+              { id: '1586', name: 'ANAKENA 15 DE SEPTIEMBRE 2023' },
+              { id: '1640', name: 'PRUEBA 6' }
+            ],
+            channels: [
+              { id: '8', name: 'Marca blanca 1', url: 'https://kreatickets.pagatusboletos.com/tickets/' },
+              { id: '2', name: 'Internet', url: 'https://ventas.kreatickets.com/test/' },
+              { id: '999', name: 'Test', url: 'https://ventas.kreatickets.com/test/' }
+            ]
+          });
+          setLoading(false);
+        }, 1000);
+      } catch (error) {
+        toast.error('Error al cargar datos de la campaña');
+        setLoading(false);
+      }
+    };
+
     if (campaignId) {
       loadCampaignData();
     }
   }, [campaignId]);
-
-  const loadCampaignData = async () => {
-    setLoading(true);
-    try {
-      // Simular carga de datos de campaña
-      setTimeout(() => {
-        setCampaign({
-          id: campaignId,
-          name: 'Campaña de ejemplo',
-          type: 'newsletter',
-          events: [
-            { id: '1403', name: 'TEATRO NEGRO DE PRAGA 06 DE ABRIL' },
-            { id: '1586', name: 'ANAKENA 15 DE SEPTIEMBRE 2023' },
-            { id: '1640', name: 'PRUEBA 6' }
-          ],
-          channels: [
-            { id: '8', name: 'Marca blanca 1', url: 'https://kreatickets.pagatusboletos.com/tickets/' },
-            { id: '2', name: 'Internet', url: 'https://ventas.kreatickets.com/venta/' },
-            { id: '999', name: 'Test', url: 'https://ventas.kreatickets.com/test/' }
-          ]
-        });
-        setLoading(false);
-      }, 1000);
-    } catch (error) {
-      toast.error('Error al cargar datos de la campaña');
-      setLoading(false);
-    }
-  };
 
   const generateButton = () => {
     if (!campaign) {

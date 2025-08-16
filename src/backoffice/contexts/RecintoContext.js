@@ -57,7 +57,7 @@ export const RecintoProvider = ({ children }) => {
     } else if (!currentTenant && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('vercel.app')) {
       console.log('⏳ [RecintoContext] Esperando tenant...');
     }
-  }, [currentTenant?.id]);
+  }, [currentTenant]);
 
   useEffect(() => {
     if (recintoSeleccionado) {

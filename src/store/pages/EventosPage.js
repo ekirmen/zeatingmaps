@@ -219,45 +219,7 @@ const EventosPage = () => {
           console.warn('2. Problemas de permisos o RLS');
           console.warn('3. La tabla mapas no existe o no es accesible');
           
-          // Ejecutar diagnóstico automático
-          console.log('[MAPA] Ejecutando diagnóstico automático...');
-          try {
-            const diagnosis = await diagnoseMapaAccess(salaId);
-            const tests = await testMapaQuery(salaId);
-            const report = generateDiagnosticReport(diagnosis, tests);
-            
-            console.log('[MAPA] 🔍 REPORTE DE DIAGNÓSTICO:', report);
-            console.log('[MAPA] 📋 RESUMEN:', report.summary);
-            console.log('[MAPA] 💡 RECOMENDACIONES:', report.recommendations);
-            
-            // Mostrar alerta al usuario con información del diagnóstico
-            if (report.summary.hasErrors) {
-              message.error(`Error al cargar mapa: ${report.summary.errorCount} problema(s) detectado(s). Revisar consola para detalles.`);
-            } else if (!report.summary.mapaExists) {
-              message.warning('No existe un mapa para esta sala. Contactar al administrador.');
-            }
-            
-            // Mostrar reporte de diagnóstico detallado
-            console.log('🔍 [DIAGNÓSTICO] REPORTE COMPLETO:', report);
-            console.log('📋 [DIAGNÓSTICO] RESUMEN:', report.summary);
-            console.log('⚠️ [DIAGNÓSTICO] ADVERTENCIAS:', report.summary.criticalIssues);
-            console.log('📝 [DIAGNÓSTICO] ACCIONES RECOMENDADAS:', report.actions);
-            
-            // Mostrar alertas específicas para problemas críticos
-            if (report.summary.criticalIssues.length > 0) {
-              const criticalErrors = report.summary.criticalIssues.filter(issue => issue.priority === 'HIGH');
-              if (criticalErrors.length > 0) {
-                message.error(`Problemas críticos detectados: ${criticalErrors.length}. Revisar consola para detalles.`);
-              }
-              
-              const warnings = report.summary.criticalIssues.filter(issue => issue.priority === 'MEDIUM');
-              if (warnings.length > 0) {
-                message.warning(`Advertencias detectadas: ${warnings.length}. Revisar consola para detalles.`);
-              }
-            }
-          } catch (diagnosticError) {
-            console.error('[MAPA] Error durante el diagnóstico:', diagnosticError);
-          }
+
           
           setMapa(null);
           return;
@@ -442,27 +404,7 @@ const EventosPage = () => {
       return;
     }
 
-    setIsDiagnosing(true);
-    setDiagnosticReport(null);
-    
-    try {
-      console.log('[DIAGNÓSTICO MANUAL] Iniciando para salaId:', salaId);
-      
-      const diagnosis = await diagnoseMapaAccess(salaId);
-      const tests = await testMapaQuery(salaId);
-      const report = generateDiagnosticReport(diagnosis, tests);
-      
-      setDiagnosticReport(report);
-      
-      console.log('[DIAGNÓSTICO MANUAL] Completado:', report);
-      message.success('Diagnóstico completado. Revisar consola para detalles.');
-      
-    } catch (error) {
-      console.error('[DIAGNÓSTICO MANUAL] Error:', error);
-      message.error('Error durante el diagnóstico: ' + error.message);
-    } finally {
-      setIsDiagnosing(false);
-    }
+
   };
 
   const handleProceedToCart = () => {
@@ -671,52 +613,14 @@ const EventosPage = () => {
                 </Button>
               </Col>
               
-              <Col>
-                <Button 
-                  onClick={runManualDiagnostic}
-                  loading={isDiagnosing}
-                  type="dashed"
-                >
-                  🔍 Diagnóstico
-                </Button>
-              </Col>
+
               
-              {diagnosticReport && (
-                <Col>
-                  <Button 
-                    onClick={() => setShowDiagnostic(!showDiagnostic)}
-                    type="default"
-                  >
-                    {showDiagnostic ? '📋 Ocultar Reporte' : '📋 Ver Reporte'}
-                  </Button>
-                </Col>
-              )}
-              
-              {diagnosticReport && (
-                <Col>
-                  <Button 
-                    onClick={() => {
-                      setDiagnosticReport(null);
-                      setShowDiagnostic(false);
-                    }}
-                    type="text"
-                    danger
-                  >
-                    🗑️ Limpiar
-                  </Button>
-                </Col>
-              )}
+
             </Row>
           </div>
         )}
 
-        {diagnosticReport && showDiagnostic && (
-          <DiagnosticReport 
-            report={diagnosticReport} 
-            onRefresh={runManualDiagnostic}
-            showDetails={true}
-          />
-        )}
+
       </div>
     );
   }
@@ -884,73 +788,12 @@ const EventosPage = () => {
               </Card>
             )}
 
-            {/* Botón de diagnóstico del sistema */}
-            <Card title="Herramientas del Sistema" className="mt-4">
-              <div className="space-y-2">
-                <Button 
-                  type="dashed" 
-                  size="large"
-                  onClick={async () => {
-                    try {
-                      setIsDiagnosing(true);
-                      const diagnosis = await diagnoseMapaAccess(null);
-                      const report = generateDiagnosticReport(diagnosis, []);
-                      setDiagnosticReport(report);
-                      setShowDiagnostic(true);
-                      message.success('Diagnóstico del sistema completado');
-                    } catch (error) {
-                      console.error('Error en diagnóstico del sistema:', error);
-                      message.error('Error al ejecutar diagnóstico del sistema');
-                    } finally {
-                      setIsDiagnosing(false);
-                    }
-                  }}
-                  loading={isDiagnosing}
-                  className="w-full"
-                  icon={<BugOutlined />}
-                >
-                  🔍 Diagnóstico del Sistema
-                </Button>
-                
-                {diagnosticReport && (
-                  <Button 
-                    type="default" 
-                    size="small"
-                    onClick={() => setShowDiagnostic(!showDiagnostic)}
-                    className="w-full"
-                  >
-                    {showDiagnostic ? '📋 Ocultar Reporte' : '📋 Ver Reporte'}
-                  </Button>
-                )}
-              </div>
-            </Card>
+
           </div>
         </div>
       </div>
 
-      {/* Reporte de diagnóstico */}
-      {diagnosticReport && showDiagnostic && (
-        <div className="max-w-7xl mx-auto px-4 pb-8">
-          <DiagnosticReport 
-            report={diagnosticReport} 
-            onRefresh={async () => {
-              try {
-                setIsDiagnosing(true);
-                const diagnosis = await diagnoseMapaAccess(null);
-                const report = generateDiagnosticReport(diagnosis, []);
-                setDiagnosticReport(report);
-                message.success('Diagnóstico actualizado');
-              } catch (error) {
-                console.error('Error al actualizar diagnóstico:', error);
-                message.error('Error al actualizar diagnóstico');
-              } finally {
-                setIsDiagnosing(false);
-              }
-            }}
-            showDetails={true}
-          />
-        </div>
-      )}
+
     </div>
   );
 };

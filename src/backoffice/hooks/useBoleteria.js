@@ -168,7 +168,6 @@ export const useBoleteria = () => {
     } catch (err) {
       console.error("Error al seleccionar evento:", err);
       message.error(`Error al seleccionar evento: ${err.message}`);
-      setError(err);
       return { success: false };
     } finally {
       setLoading(false);
@@ -222,7 +221,7 @@ export const useBoleteria = () => {
         setEventos(data || []);
 
         const storedEventId = localStorage.getItem(EVENT_KEY);
-        const storedFuncId = localStorage.getItem(FUNC_KEY);
+
 
         if (storedEventId) {
           const initialEvent = data.find(e => e.id === storedEventId);
@@ -234,7 +233,6 @@ export const useBoleteria = () => {
       } catch (err) {
         console.error("Error al cargar eventos:", err);
         message.error(`Error al cargar eventos: ${err.message}`);
-        setError(err);
       } finally {
         setLoading(false);
       }

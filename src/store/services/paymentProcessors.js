@@ -1,4 +1,3 @@
-import { supabase } from '../../supabaseClient';
 import { createPaymentTransaction, updatePaymentTransactionStatus } from './paymentGatewaysService';
 
 /**

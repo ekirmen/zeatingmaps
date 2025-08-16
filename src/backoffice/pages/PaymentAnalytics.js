@@ -8,12 +8,10 @@ import {
   DatePicker, 
   Select, 
   Button, 
-  Progress, 
   Typography, 
   Space, 
   Tag,
-  Spin,
-  Alert
+  Spin
 } from 'antd';
 import { 
   DollarOutlined, 
@@ -65,7 +63,7 @@ const PaymentAnalytics = () => {
 
   useEffect(() => {
     loadAnalyticsData();
-  }, [filters]);
+  }, []);
 
   const loadAnalyticsData = async () => {
     try {

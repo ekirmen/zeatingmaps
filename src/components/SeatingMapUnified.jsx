@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { Stage, Layer, Group, Circle, Rect, Text, Line } from 'react-konva';
+import React, { useRef, useCallback } from 'react';
+import { Stage, Layer, Circle, Rect, Text, Line } from 'react-konva';
 import { useSeatLockStore } from './seatLockStore';
 import { useSeatColors } from '../hooks/useSeatColors';
 import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
@@ -25,7 +25,6 @@ const SeatingMapUnified = ({
   selectedSeats = []
 }) => {
   const channel = useSeatLockStore(state => state.channel);
-  const canLockSeats = !!channel;
   const { getSeatColor, getBorderColor } = useSeatColors();
   
   // Referencia al stage de Konva
@@ -71,16 +70,7 @@ const SeatingMapUnified = ({
     [onSeatToggle, onSeatInfo]
   );
 
-  const handleTableClick = useCallback(
-    async (table) => {
-      const tableId = table._id;
-      if (!tableId) return;
 
-      // Llamar directamente a onTableToggle sin usar el sistema de bloqueo
-      if (onTableToggle) onTableToggle(table);
-    },
-    [onTableToggle]
-  );
 
   // Función para manejar el zoom del mapa
   const handleWheel = useCallback((e) => {

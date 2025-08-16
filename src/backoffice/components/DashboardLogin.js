@@ -1,12 +1,9 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Modal, Input, Button, message } from 'antd';
-import { supabase } from '../../supabaseClient';
 import { loginUser } from '../services/authService';
 
 const DashboardLogin = ({ onLogin }) => {
-  const { t, i18n } = useTranslation();
   const { theme } = useTheme();
   const [isModalVisible, setIsModalVisible] = useState(true);
   const [error, setError] = useState('');

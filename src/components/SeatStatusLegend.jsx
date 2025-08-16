@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { Button, Popover, Space, Tag } from 'antd';
+import { Button, Popover, Space } from 'antd';
 
 const SeatStatusLegend = () => {
   const [visible, setVisible] = useState(false);

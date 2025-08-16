@@ -163,19 +163,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
     loadVenues();
   }, [user]);
 
-  // Función para obtener email del usuario desde auth.users
-  const getUserEmail = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .rpc('get_user_email', { user_id: userId });
-      
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      console.error('Error getting user email:', error);
-      return null;
-    }
-  };
+
 
   const loadVenues = async () => {
     try {

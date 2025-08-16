@@ -11,7 +11,7 @@ import { TagProvider } from '../contexts/TagContext';
 const BackofficeLayout = () => {
   const location = useLocation();
   const isBoleteriaRoute = location.pathname.includes('/dashboard/boleteria');
-  const isCrearMapaRoute = location.pathname.includes('/dashboard/crear-mapa');
+
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
@@ -64,7 +64,7 @@ const BackofficeLayout = () => {
     );
   }
   
-  if (isBoleteriaRoute || isCrearMapaRoute) {
+  if (isBoleteriaRoute) {
     return (
       <RecintoProvider>
         <RecintoSalaProvider>

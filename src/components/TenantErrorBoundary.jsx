@@ -8,7 +8,7 @@ const TenantErrorBoundary = ({ error, onRetry, subdomain }) => {
   const handleCreateTenant = () => {
     // Abrir el panel de SaaS en una nueva pestaña
     const baseUrl = window.location.origin;
-    const saasUrl = `${baseUrl}/backoffice/saas/diagnostico`;
+    const saasUrl = `${baseUrl}/backoffice/saas`;
     window.open(saasUrl, '_blank');
   };
 

@@ -12,8 +12,6 @@ import {
   Modal,
   Descriptions,
   Timeline,
-  Alert,
-  Spin,
   message,
   Row,
   Col,
@@ -21,7 +19,6 @@ import {
   Statistic
 } from 'antd';
 import { 
-  SearchOutlined,
   EyeOutlined,
   DownloadOutlined,
   FilterOutlined,
@@ -30,7 +27,6 @@ import {
   CloudOutlined,
   SafetyOutlined
 } from '@ant-design/icons';
-import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -51,7 +47,7 @@ const AuditLogs = () => {
 
   useEffect(() => {
     loadAuditLogs();
-  }, [filters]);
+  }, []);
 
   const loadAuditLogs = async () => {
     try {

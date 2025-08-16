@@ -13,18 +13,7 @@ const EventWidget = ({ config = {}, onConfigChange, type = 'evento' }) => {
     onConfigChange?.(newConfig);
   };
 
-  const getTitle = () => {
-    switch (type) {
-      case 'informacion-evento':
-        return 'Información del evento';
-      case 'banner-grande':
-        return 'Evento dinámico banner grande';
-      case 'banner-mediano':
-        return 'Evento dinámico banner mediano';
-      default:
-        return 'Evento';
-    }
-  };
+
 
   const getDescription = () => {
     switch (type) {

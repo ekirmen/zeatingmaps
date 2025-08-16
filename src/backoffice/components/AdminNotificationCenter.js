@@ -5,7 +5,6 @@ import {
   List, 
   Button, 
   Typography, 
-  Space,
   Avatar,
   Tag,
   Empty,
@@ -15,16 +14,12 @@ import {
 } from 'antd';
 import { 
   BellOutlined, 
-  CheckCircleOutlined,
-  CloseOutlined,
   CreditCardOutlined,
-  HistoryOutlined,
-  ExclamationCircleOutlined,
   UserOutlined,
   FileTextOutlined,
-  DollarOutlined,
   WarningOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
