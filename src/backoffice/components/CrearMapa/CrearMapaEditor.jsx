@@ -69,6 +69,10 @@ import FilaPopup from '../compMapa/FilaPopup';
 import IconSelector from '../compMapa/IconSelector';
 import PropiedadesMesa from '../compMapa/propiedades/PropiedadesMesa';
 import PropiedadesSilla from '../compMapa/propiedades/PropiedadesSilla';
+import ZonaManager from './ZonaManager';
+import ContextMenu from './ContextMenu';
+import MesaTypeMenu from './MesaTypeMenu';
+import BackgroundFilterMenu from './BackgroundFilterMenu';
 
 const { Option } = Select;
 const { Text, Title } = Typography;
@@ -151,6 +155,18 @@ const CrearMapaEditor = ({
     blocked: { fill: '#6c5ce7', stroke: '#5f3dc4', opacity: 0.7 },
     reserved: { fill: '#fdcb6e', stroke: '#e17055', opacity: 0.9 }
   });
+
+  // ===== ESTADOS DE ZONAS =====
+  const [zonas, setZonas] = useState([]);
+  const [showZonaManager, setShowZonaManager] = useState(false);
+
+  // ===== ESTADOS DE MENÚ CONTEXTUAL =====
+  const [contextMenuVisible, setContextMenuVisible] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+
+  // ===== ESTADOS DE FILTROS DE FONDO =====
+  const [backgroundFilters, setBackgroundFilters] = useState({});
+  const [showBackgroundFilters, setShowBackgroundFilters] = useState(false);
   
   // ===== REFERENCIAS =====
   const stageRef = useRef(null);
@@ -397,6 +413,100 @@ const CrearMapaEditor = ({
     });
   }, [position]);
 
+  // ===== FUNCIONES DE MENÚ CONTEXTUAL =====
+  const handleContextMenu = useCallback((e) => {
+    e.evt.preventDefault();
+    const stage = e.target.getStage();
+    const pointer = stage.getPointerPosition();
+    
+    setContextMenuPosition({
+      x: e.evt.clientX,
+      y: e.evt.clientY
+    });
+    setContextMenuVisible(true);
+  }, []);
+
+  const handleContextMenuAction = useCallback((action) => {
+    switch (action) {
+      case 'pan':
+        setActiveMode('pan');
+        break;
+      case 'select':
+        setActiveMode('select');
+        break;
+      case 'zoom-in':
+        zoomIn();
+        break;
+      case 'zoom-out':
+        zoomOut();
+        break;
+      case 'reset-zoom':
+        resetZoom();
+        break;
+      case 'fit-screen':
+        fitToScreen();
+        break;
+      case 'add-mesa':
+        handleAddMesa();
+        break;
+      case 'add-sillas':
+        // TODO: Implementar agregar sillas
+        break;
+      case 'add-texto':
+        // TODO: Implementar agregar texto
+        break;
+      case 'add-area':
+        // TODO: Implementar agregar área
+        break;
+      case 'edit':
+        setShowPropertiesPanel(true);
+        break;
+      case 'duplicate':
+        handleDuplicateSelected();
+        break;
+      case 'delete':
+        handleDeleteSelected();
+        break;
+      default:
+        break;
+    }
+  }, [zoomIn, zoomOut, resetZoom, fitToScreen, handleAddMesa, handleDuplicateSelected, handleDeleteSelected]);
+
+  // ===== FUNCIONES DE ZONAS =====
+  const handleZonasChange = useCallback((newZonas) => {
+    setZonas(newZonas);
+  }, []);
+
+  const handleAssignZone = useCallback((zonaId, elementIds) => {
+    const zona = zonas.find(z => z.id === zonaId);
+    if (!zona) return;
+
+    const elementosActualizados = elements.map(el => {
+      if (elementIds.includes(el._id)) {
+        return {
+          ...el,
+          zona: {
+            id: zona.id,
+            nombre: zona.nombre,
+            color: zona.color
+          }
+        };
+      }
+      return el;
+    });
+
+    setElements(elementosActualizados);
+  }, [zonas, elements]);
+
+  // ===== FUNCIONES DE FILTROS DE FONDO =====
+  const handleBackgroundFiltersChange = useCallback((newFilters) => {
+    setBackgroundFilters(newFilters);
+  }, []);
+
+  const handleBackgroundFiltersReset = useCallback(() => {
+    setBackgroundFilters({});
+  }, []);
+
   // ===== RENDERIZADO DE ELEMENTOS =====
   const renderElement = useCallback((element) => {
     const isSelected = selectedIds.includes(element._id);
@@ -416,6 +526,26 @@ const CrearMapaEditor = ({
         });
         node.scaleX(1);
         node.scaleY(1);
+      },
+      onMouseEnter: (e) => {
+        // Mostrar tooltip
+        const tooltipRect = e.target.parent.findOne('Rect[fill="rgba(0,0,0,0.8)"]');
+        const tooltipText = e.target.parent.findOne('KonvaText[fill="white"]');
+        if (tooltipRect && tooltipText) {
+          tooltipRect.visible(true);
+          tooltipText.visible(true);
+          e.target.getStage().draw();
+        }
+      },
+      onMouseLeave: (e) => {
+        // Ocultar tooltip
+        const tooltipRect = e.target.parent.findOne('Rect[fill="rgba(0,0,0,0.8)"]');
+        const tooltipText = e.target.parent.findOne('KonvaText[fill="white"]');
+        if (tooltipRect && tooltipText) {
+          tooltipRect.visible(false);
+          tooltipText.visible(false);
+          e.target.getStage().draw();
+        }
       }
     };
 
@@ -450,10 +580,32 @@ const CrearMapaEditor = ({
               width={element.width || 120}
               y={element.height ? element.height / 2 - 7 : 36}
             />
+            {/* Tooltip nativo de Konva */}
+            <Rect
+              x={-5}
+              y={-25}
+              width={130}
+              height={20}
+              fill="rgba(0,0,0,0.8)"
+              cornerRadius={4}
+              visible={false}
+              listening={false}
+            />
+            <KonvaText
+              x={0}
+              y={-20}
+              text={`Mesa: ${element.nombre || 'Sin nombre'} (${element.width || 120}x${element.height || 80})`}
+              fontSize={12}
+              fill="white"
+              align="center"
+              width={130}
+              visible={false}
+              listening={false}
+            />
           </Group>
         );
 
-      case 'silla':
+            case 'silla':
         return (
           <Group key={element._id} {...baseProps}>
             {element.shape === 'circle' ? (
@@ -485,6 +637,28 @@ const CrearMapaEditor = ({
                 y={element.height ? element.height / 2 - 5 : 7}
               />
             )}
+            {/* Tooltip nativo de Konva */}
+            <Rect
+              x={-5}
+              y={-25}
+              width={130}
+              height={20}
+              fill="rgba(0,0,0,0.8)"
+              cornerRadius={4}
+              visible={false}
+              listening={false}
+            />
+            <KonvaText
+              x={0}
+              y={-20}
+              text={`Silla ${element.numero || 'N/A'} - ${element.state || 'available'}`}
+              fontSize={12}
+              fill="white"
+              align="center"
+              width={130}
+              visible={false}
+              listening={false}
+            />
           </Group>
         );
 
@@ -588,6 +762,15 @@ const CrearMapaEditor = ({
                 onClick={() => setShowAdvancedControls(!showAdvancedControls)}
                 title="Controles avanzados"
               />
+              {backgroundImage && (
+                <Button 
+                  icon={<PictureOutlined />}
+                  onClick={() => setShowBackgroundFilters(true)}
+                  title="Filtros de imagen"
+                >
+                  Filtros
+                </Button>
+              )}
               <Button 
                 icon={<FullscreenOutlined />}
                 onClick={() => fitToScreen()}
@@ -659,14 +842,13 @@ const CrearMapaEditor = ({
           <div className="bg-white border-b border-gray-200 p-2">
             <Row gutter={16} align="middle">
               <Col>
-                <Space>
-                  <Button 
-                    icon={<PlusOutlined />} 
-                    onClick={handleAddMesa}
-                    title="Agregar mesa"
-                  >
-                    Mesa
-                  </Button>
+                                 <Space>
+                   <MesaTypeMenu 
+                     onAddMesa={(type, defaultSize) => {
+                       // TODO: Implementar diferentes tipos de mesa
+                       handleAddMesa();
+                     }}
+                   />
                   <Button 
                     icon={<CopyOutlined />} 
                     onClick={handleDuplicateSelected}
@@ -692,14 +874,36 @@ const CrearMapaEditor = ({
                   >
                     Cuadrícula
                   </Button>
-                  <Button 
-                    icon={<LinkOutlined />} 
-                    onClick={() => autoConnectSeats(selectedIds[0])}
-                    disabled={selectedIds.length !== 1 || !elements.find(el => el._id === selectedIds[0])?.type === 'mesa'}
-                    title="Conectar asientos automáticamente"
-                  >
-                    Conectar
-                  </Button>
+                                     <Button 
+                     icon={<LinkOutlined />} 
+                     onClick={() => autoConnectSeats(selectedIds[0])}
+                     disabled={selectedIds.length !== 1 || !elements.find(el => el._id === selectedIds[0])?.type === 'mesa'}
+                     title="Conectar asientos automáticamente"
+                   >
+                     Conectar
+                   </Button>
+                   <Button 
+                     icon={<AppstoreOutlined />} 
+                     onClick={() => setShowZonaManager(true)}
+                     title="Gestionar zonas"
+                   >
+                     Zonas
+                   </Button>
+                   <Button 
+                     icon={<PlusOutlined />} 
+                     onClick={() => {
+                       if (selectedIds.length === 1) {
+                         const element = elements.find(el => el._id === selectedIds[0]);
+                         if (element?.type === 'mesa') {
+                           handleAddSillasToMesa(element._id);
+                         }
+                       }
+                     }}
+                     disabled={selectedIds.length !== 1 || !elements.find(el => el._id === selectedIds[0])?.type === 'mesa'}
+                     title="Añadir sillas a mesa seleccionada"
+                   >
+                     + Sillas
+                   </Button>
                 </Space>
               </Col>
               
@@ -732,11 +936,11 @@ const CrearMapaEditor = ({
           </div>
 
           {/* ===== CANVAS DEL MAPA ===== */}
-          <div className="flex-1 bg-gray-50 overflow-hidden" ref={containerRef}>
+          <div className="flex-1 canvas-container" ref={containerRef}>
             <Stage
               ref={stageRef}
-              width={containerRef.current?.clientWidth || 1200}
-              height={containerRef.current?.clientHeight || 800}
+              width={Math.max(1200, containerRef.current?.clientWidth || 1200)}
+              height={Math.max(800, containerRef.current?.clientHeight || 800)}
               scaleX={scale}
               scaleY={scale}
               x={position.x}
@@ -744,6 +948,7 @@ const CrearMapaEditor = ({
               onWheel={handleWheel}
               onMouseDown={handleMouseDown}
               onClick={handleStageClick}
+              onContextMenu={handleContextMenu}
               draggable={activeMode === 'pan'}
             >
               <Layer>
@@ -807,30 +1012,68 @@ const CrearMapaEditor = ({
         )}
       </div>
 
-      {/* ===== MODALES Y POPUPS ===== */}
-      <Modal
-        title="Configuración Avanzada"
-        open={showAdvancedControls}
-        onCancel={() => setShowAdvancedControls(false)}
-        footer={null}
-        width={800}
-      >
-        <AdvancedConfiguration
-          gridSize={gridSize}
-          setGridSize={setGridSize}
-          showGrid={showGrid}
-          setShowGrid={setShowGrid}
-          snapToGrid={snapToGrid}
-          setSnapToGrid={setSnapToGrid}
-          backgroundImage={backgroundImage}
-          backgroundScale={backgroundScale}
-          backgroundOpacity={backgroundOpacity}
-          showBackgroundInWeb={showBackgroundInWeb}
-          onBackgroundUpload={handleBackgroundUpload}
-          onBackgroundUpdate={(updates) => updateBackground(updates)}
-          onBackgroundRemove={removeBackground}
-        />
-      </Modal>
+             {/* ===== MODALES Y POPUPS ===== */}
+       <Modal
+         title="Configuración Avanzada"
+         open={showAdvancedControls}
+         onCancel={() => setShowAdvancedControls(false)}
+         footer={null}
+         width={800}
+       >
+         <AdvancedConfiguration
+           gridSize={gridSize}
+           setGridSize={setGridSize}
+           showGrid={showGrid}
+           setShowGrid={setShowGrid}
+           snapToGrid={snapToGrid}
+           setSnapToGrid={setSnapToGrid}
+           backgroundImage={backgroundImage}
+           backgroundScale={backgroundScale}
+           backgroundOpacity={backgroundOpacity}
+           showBackgroundInWeb={showBackgroundInWeb}
+           onBackgroundUpload={handleBackgroundUpload}
+           onBackgroundUpdate={(updates) => updateBackground(updates)}
+           onBackgroundRemove={removeBackground}
+         />
+       </Modal>
+
+       {/* ===== GESTOR DE ZONAS ===== */}
+       <Modal
+         title="Gestión de Zonas"
+         open={showZonaManager}
+         onCancel={() => setShowZonaManager(false)}
+         footer={null}
+         width={800}
+       >
+         <ZonaManager
+           zonas={zonas}
+           onZonasChange={handleZonasChange}
+           selectedElements={selectedIds}
+           onAssignZone={handleAssignZone}
+         />
+       </Modal>
+
+       {/* ===== FILTROS DE IMAGEN DE FONDO ===== */}
+       <BackgroundFilterMenu
+         backgroundImage={backgroundImage}
+         filters={backgroundFilters}
+         onFiltersChange={handleBackgroundFiltersChange}
+         onResetFilters={handleBackgroundFiltersReset}
+         visible={showBackgroundFilters}
+         onClose={() => setShowBackgroundFilters(false)}
+       />
+
+       {/* ===== MENÚ CONTEXTUAL ===== */}
+       <ContextMenu
+         visible={contextMenuVisible}
+         position={contextMenuPosition}
+         onClose={() => setContextMenuVisible(false)}
+         onAction={handleContextMenuAction}
+         selectedElements={selectedIds}
+         canPan={true}
+         canZoom={true}
+         canEdit={true}
+       />
 
       {/* ===== POPUPS DE EDICIÓN ===== */}
       {selectedIds.length === 1 && (

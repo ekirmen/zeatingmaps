@@ -78,6 +78,15 @@ const CrearMapaPreview = ({
     }
   }, [mapa, containerRef.current]);
 
+  // Verificar que el mapa tenga dimensiones válidas
+  const getMapDimensions = () => {
+    if (mapa?.contenido?.configuracion?.dimensions) {
+      return mapa.contenido.configuracion.dimensions;
+    }
+    // Valores por defecto si no hay dimensiones
+    return { width: 1200, height: 800 };
+  };
+
   // ===== FUNCIONES DE ZOOM =====
   const zoomIn = () => {
     setScale(prev => Math.min(prev * 1.2, 3));
@@ -88,8 +97,8 @@ const CrearMapaPreview = ({
   };
 
   const resetZoom = () => {
-    if (containerRef.current && mapa?.contenido?.configuracion?.dimensions) {
-      const { width, height } = mapa.contenido.configuracion.dimensions;
+    if (containerRef.current) {
+      const { width, height } = getMapDimensions();
       const container = containerRef.current;
       const containerWidth = container.clientWidth;
       const containerHeight = container.clientHeight;
@@ -298,7 +307,7 @@ const CrearMapaPreview = ({
       sillas: sillas.length,
       conexiones: conexiones.length,
       zonas: zonas.length,
-      dimensiones: mapa.contenido.configuracion?.dimensions || { width: 0, height: 0 }
+      dimensiones: getMapDimensions()
     };
   };
 
@@ -619,8 +628,8 @@ const CrearMapaPreview = ({
                 <Layer>
                   {/* Fondo */}
                   <Rect
-                    width={stats.dimensiones.width}
-                    height={stats.dimensiones.height}
+                    width={getMapDimensions().width}
+                    height={getMapDimensions().height}
                     fill="#ffffff"
                   />
                   
