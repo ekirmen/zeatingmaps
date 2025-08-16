@@ -111,6 +111,25 @@ const CrearMapaRefactored = ({ salaId }) => {
 
     if (salaId) {
       loadZonesFromDashboard();
+      
+      // Intentar cargar mapa guardado
+      const savedMap = localStorage.getItem(`mapa-sala-${salaId}`);
+      if (savedMap) {
+        try {
+          const mapData = JSON.parse(savedMap);
+          if (mapData.elements && mapData.elements.length > 0) {
+            setElements(mapData.elements);
+            setHasMapData(true);
+            setShowTypeSelector(false);
+            if (mapData.lastSavedAt) {
+              setLastSavedAt(new Date(mapData.lastSavedAt));
+            }
+            message.info(`Mapa cargado con ${mapData.elements.length} elementos`);
+          }
+        } catch (error) {
+          console.error('Error cargando mapa guardado:', error);
+        }
+      }
     }
   }, [salaId]);
 
@@ -478,7 +497,19 @@ const CrearMapaRefactored = ({ salaId }) => {
     setSelectedZone(zoneId);
     setIsInZoneMode(true);
     setActiveTool('select');
-    message.info(`Modo zona activado: ${zoneId}`);
+    
+    // Ocultar elementos que no están en esta zona
+    const zone = zonesFromDashboard.find(z => z.id === zoneId);
+    if (zone) {
+      // Filtrar elementos para mostrar solo los que están en esta zona
+      const elementsInZone = elements.filter(element => {
+        if (element.type === 'zone') return true; // Siempre mostrar zonas
+        if (element.zonaId === zoneId) return true; // Mostrar elementos de esta zona
+        return false; // Ocultar elementos de otras zonas
+      });
+      
+      message.info(`Modo zona activado: ${zone.name || zoneId}`);
+    }
   };
 
   const exitZoneMode = () => {
@@ -505,18 +536,38 @@ const CrearMapaRefactored = ({ salaId }) => {
         salaId: salaId,
         elements: elements,
         lastModified: new Date().toISOString(),
-        tenant_id: salaId
+        tenant_id: salaId,
+        metadata: {
+          totalElements: elements.length,
+          seats: elements.filter(e => e.type === 'silla').length,
+          tables: elements.filter(e => e.type === 'mesa').length,
+          zones: elements.filter(e => e.type === 'zone').length,
+          createdBy: 'editor',
+          version: '1.0'
+        }
       };
 
       console.log('Guardando mapa:', mapData);
       
+      // Simular guardado en base de datos
       await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Aquí iría la llamada real a la API
+      // const response = await fetch('/api/mapas', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(mapData)
+      // });
+      
       setLastSavedAt(new Date());
-      message.success('Mapa guardado correctamente');
+      message.success(`Mapa guardado correctamente con ${elements.length} elementos`);
+      
+      // Guardar en localStorage como respaldo
+      localStorage.setItem(`mapa-sala-${salaId}`, JSON.stringify(mapData));
+      
     } catch (error) {
       console.error('Error guardando mapa:', error);
-      message.error('Error al guardar el mapa');
+      message.error('Error al guardar el mapa: ' + error.message);
     }
   };
 
@@ -553,6 +604,77 @@ const CrearMapaRefactored = ({ salaId }) => {
         default:
           clearSelection();
       }
+    }
+  };
+
+  const handleStageMouseMove = (e) => {
+    if (activeTool === 'seats' && isDrawing) {
+      const stage = e.target.getStage();
+      const pointer = stage.getPointerPosition();
+      
+      // Crear asientos mientras se mueve el mouse
+      if (drawingPoints.length > 0) {
+        const lastPoint = drawingPoints[drawingPoints.length - 1];
+        const distance = Math.sqrt(
+          Math.pow(pointer.x - lastPoint.x, 2) + 
+          Math.pow(pointer.y - lastPoint.y, 2)
+        );
+        
+        if (distance >= seatSpacing) {
+          // Calcular dirección
+          const dx = pointer.x - lastPoint.x;
+          const dy = pointer.y - lastPoint.y;
+          const angle = Math.atan2(dy, dx);
+          
+          // Crear asiento en la nueva posición
+          const newSeat = {
+            id: `seat-${Date.now()}-${Math.random()}`,
+            type: 'silla',
+            x: snapToGrid ? Math.round(pointer.x / gridSize) * gridSize : pointer.x,
+            y: snapToGrid ? Math.round(pointer.y / gridSize) * gridSize : pointer.y,
+            width: seatSize,
+            height: seatSize,
+            numero: elements.filter(e => e.type === 'silla').length + 1,
+            fila: String.fromCharCode(65 + Math.floor(Math.random() * 26)),
+            zonaId: selectedZone,
+            estado: 'available',
+            shape: seatShape,
+            tenant_id: salaId,
+            color: currentColor
+          };
+          
+          setElements(prev => [...prev, newSeat]);
+          setDrawingPoints(prev => [...prev, pointer]);
+        }
+      }
+    }
+  };
+
+  const handleStageMouseDown = (e) => {
+    if (e.evt.button === 0 && activeTool === 'seats') { // Left click + seats tool
+      const stage = e.target.getStage();
+      const pointer = stage.getPointerPosition();
+      
+      setIsDrawing(true);
+      setDrawingPoints([pointer]);
+      
+      // Crear primer asiento
+      createSeat(pointer.x, pointer.y);
+    } else if (e.evt.button === 1) { // Middle mouse button
+      handlePanStart(e);
+    } else if (e.evt.button === 0) { // Left mouse button
+      handleMouseDown(e);
+    }
+  };
+
+  const handleStageMouseUp = (e) => {
+    if (e.evt.button === 0 && activeTool === 'seats') {
+      setIsDrawing(false);
+      setDrawingPoints([]);
+    } else if (e.evt.button === 1) {
+      handlePanEnd();
+    } else if (e.evt.button === 0) {
+      handleMouseUp(e);
     }
   };
 
@@ -666,6 +788,101 @@ const CrearMapaRefactored = ({ salaId }) => {
     ));
   }, [zonesFromDashboard, isInZoneMode]);
 
+  // Renderizar elementos del mapa (con filtrado de zona)
+  const renderMapElements = useMemo(() => {
+    let elementsToRender = elements;
+    
+    // Si estamos en modo zona, filtrar elementos
+    if (isInZoneMode && selectedZone) {
+      elementsToRender = elements.filter(element => {
+        if (element.type === 'zone') return true; // Siempre mostrar zonas
+        if (element.zonaId === selectedZone) return true; // Mostrar elementos de esta zona
+        return false; // Ocultar elementos de otras zonas
+      });
+    }
+    
+    return elementsToRender.map((element) => {
+      if (element.type === 'silla') {
+        return (
+          <Group key={element.id} draggable>
+            {element.shape === 'circle' ? (
+              <Circle
+                x={element.x}
+                y={element.y}
+                radius={element.width / 2}
+                fill={element.color}
+                stroke="#000"
+                strokeWidth={1}
+                onClick={() => handleElementClick(element.id)}
+                onDragEnd={(e) => handleElementDragEnd(element.id, e)}
+              />
+            ) : (
+              <Rect
+                x={element.x}
+                y={element.y}
+                width={element.width}
+                height={element.height}
+                fill={element.color}
+                stroke="#000"
+                strokeWidth={1}
+                onClick={() => handleElementClick(element.id)}
+                onDragEnd={(e) => handleElementDragEnd(element.id, e)}
+              />
+            )}
+            <Text
+              x={element.x - 2}
+              y={element.y - 23}
+              text={element.numero || ''}
+              fontSize={12}
+              fill="#000"
+              align="center"
+              width={element.width + 4}
+            />
+          </Group>
+        );
+      } else if (element.type === 'mesa') {
+        return (
+          <Group key={element.id} draggable>
+            {element.shape === 'circle' ? (
+              <Circle
+                x={element.x + element.width / 2}
+                y={element.y + element.height / 2}
+                radius={element.width / 2}
+                fill={element.color}
+                stroke="#000"
+                strokeWidth={2}
+                onClick={() => handleElementClick(element.id)}
+                onDragEnd={(e) => handleElementDragEnd(element.id, e)}
+              />
+            ) : (
+              <Rect
+                x={element.x}
+                y={element.y}
+                width={element.width}
+                height={element.height}
+                fill={element.color}
+                stroke="#000"
+                strokeWidth={2}
+                onClick={() => handleElementDragEnd(element.id, e)}
+              />
+            )}
+            <Text
+              x={element.x - 8}
+              y={element.y - 28}
+              text={element.nombre || ''}
+              fontSize={14}
+              fill="#000"
+              fontStyle="bold"
+              align="center"
+              width={element.width + 16}
+            />
+          </Group>
+        );
+      }
+      return null;
+    });
+  }, [elements, isInZoneMode, selectedZone, handleElementClick, handleElementDragEnd]);
+
   // Funciones de utilidad para colores
   const getSeatColor = (seat) => seat.color || '#48BB78';
   const getZonaColor = (element) => element.color || '#87CEEB';
@@ -770,502 +987,710 @@ const CrearMapaRefactored = ({ salaId }) => {
   }
 
   return (
-    <div className="crear-mapa-container">
-      <h1>Editor de Mapa - Versión Simplificada</h1>
-      <p>Sala ID: {salaId}</p>
-      <p>Elementos: {elements.length}</p>
-      <p>Estado: {showTypeSelector ? 'Mostrando selector' : 'Editor activo'}</p>
-      
-      {/* Selector de tipo de mapa */}
-      {showTypeSelector && (
-        <div style={{ padding: '20px', border: '1px solid #ccc', margin: '20px' }}>
-          <h3>Selector de Tipo de Mapa</h3>
-          <p>Selecciona el tipo de mapa que quieres crear:</p>
-          <button onClick={() => {
-            setActiveTool('seats');
-            setShowTypeSelector(false);
-            setHasMapData(true);
-          }}>Filas con secciones</button>
-          <button onClick={() => {
-            setActiveTool('tables');
-            setShowTypeSelector(false);
-            setHasMapData(true);
-          }}>Mesas</button>
+    <div className="crear-mapa-container" style={{ 
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+      backgroundColor: '#f8fafc',
+      minHeight: '100vh',
+      padding: '20px'
+    }}>
+      <div style={{ 
+        maxWidth: '1400px', 
+        margin: '0 auto',
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        overflow: 'hidden'
+      }}>
+        {/* Header */}
+        <div style={{ 
+          padding: '24px 32px', 
+          borderBottom: '1px solid #e2e8f0',
+          backgroundColor: '#f8fafc'
+        }}>
+          <h1 style={{ 
+            margin: '0', 
+            fontSize: '24px', 
+            fontWeight: '600', 
+            color: '#1e293b'
+          }}>
+            Editor de Mapa - Sala {salaId}
+          </h1>
+          <p style={{ 
+            margin: '8px 0 0 0', 
+            color: '#64748b',
+            fontSize: '14px'
+          }}>
+            {elements.length} elementos • {showTypeSelector ? 'Selecciona tipo de mapa' : 'Editor activo'}
+          </p>
         </div>
-      )}
+        
+        {/* Selector de tipo de mapa */}
+        {showTypeSelector && (
+          <div style={{ 
+            padding: '32px', 
+            textAlign: 'center',
+            backgroundColor: '#f8fafc'
+          }}>
+            <h3 style={{ margin: '0 0 16px 0', color: '#1e293b' }}>Selecciona el tipo de mapa</h3>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+              <button 
+                onClick={() => {
+                  setActiveTool('seats');
+                  setShowTypeSelector(false);
+                  setHasMapData(true);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                🪑 Filas con secciones
+              </button>
+              <button 
+                onClick={() => {
+                  setActiveTool('tables');
+                  setShowTypeSelector(false);
+                  setHasMapData(true);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                🪑 Mesas
+              </button>
+            </div>
+          </div>
+        )}
 
-      {/* Panel izquierdo - Herramientas */}
-      <div style={{ padding: '20px', border: '1px solid #ccc', margin: '20px' }}>
-        <h3>Panel de Herramientas</h3>
-        <p>Herramienta activa: {activeTool}</p>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <h4>Herramientas de Selección</h4>
-          <button onClick={() => setActiveTool('select')}>🖱️ Seleccionar</button>
-          <button onClick={clearSelection}>🗑️ Limpiar Selección</button>
-        </div>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <h4>Crear Elementos</h4>
-          <button onClick={() => setActiveTool('seats')}>🪑 Crear Asientos</button>
-          <button onClick={() => setActiveTool('tables')}>🪑 Crear Mesas</button>
-          <button onClick={() => setActiveTool('zones')}>🏗️ Crear Zonas</button>
-        </div>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <h4>Crear Filas</h4>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Cantidad de asientos: </label>
-            <input 
-              type="number" 
-              value={seatSpacing} 
-              onChange={(e) => setSeatSpacing(parseInt(e.target.value) || 25)}
-              style={{ width: '60px', marginLeft: '10px' }}
-            />
-          </div>
-          <button onClick={() => createSeatRow(100, 100, 5, 'horizontal')}>📏 Fila Horizontal (5 asientos)</button>
-          <button onClick={() => createSeatRow(100, 200, 5, 'vertical')}>📏 Fila Vertical (5 asientos)</button>
-        </div>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <h4>Agregar Asientos a Mesa</h4>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Asientos arriba: </label>
-            <input 
-              type="number" 
-              min="0"
-              max="10"
-              style={{ width: '50px', marginLeft: '10px' }}
-              id="seats-up"
-            />
-          </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Asientos abajo: </label>
-            <input 
-              type="number" 
-              min="0"
-              max="10"
-              style={{ width: '50px', marginLeft: '10px' }}
-              id="seats-down"
-            />
-          </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Asientos izquierda: </label>
-            <input 
-              type="number" 
-              min="0"
-              max="10"
-              style={{ width: '50px', marginLeft: '10px' }}
-              id="seats-left"
-            />
-          </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Asientos derecha: </label>
-            <input 
-              type="number" 
-              min="0"
-              max="10"
-              style={{ width: '50px', marginLeft: '10px' }}
-              id="seats-right"
-            />
-          </div>
-          <button onClick={() => {
-            const up = parseInt(document.getElementById('seats-up').value) || 0;
-            const down = parseInt(document.getElementById('seats-down').value) || 0;
-            const left = parseInt(document.getElementById('seats-left').value) || 0;
-            const right = parseInt(document.getElementById('seats-right').value) || 0;
+        {/* Contenido principal */}
+        <div style={{ display: 'flex', minHeight: '600px' }}>
+          {/* Panel izquierdo - Herramientas */}
+          <div style={{ 
+            width: '320px', 
+            padding: '24px',
+            borderRight: '1px solid #e2e8f0',
+            backgroundColor: '#f8fafc',
+            overflowY: 'auto'
+          }}>
+            <h3 style={{ margin: '0 0 20px 0', color: '#1e293b', fontSize: '18px' }}>Herramientas</h3>
             
-            if (selectedElements.length === 1) {
-              const selectedElement = elements.find(el => el.id === selectedElements[0]);
-              if (selectedElement && selectedElement.type === 'mesa') {
-                addSeatsToTable(selectedElement.id, { up, down, left, right });
-              } else {
-                message.warning('Selecciona una mesa primero');
-              }
-            } else {
-              message.warning('Selecciona exactamente una mesa');
-            }
-          }}>➕ Agregar Asientos a Mesa Seleccionada</button>
-        </div>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <h4>Configuración</h4>
-          <div style={{ marginBottom: '5px' }}>
-            <label>
-              <input 
-                type="checkbox" 
-                checked={snapToGrid} 
-                onChange={(e) => setSnapToGrid(e.target.checked)}
-              />
-              Snap to Grid
-            </label>
-          </div>
-          <div style={{ marginBottom: '5px' }}>
-            <label>
-              <input 
-                type="checkbox" 
-                checked={showGrid} 
-                onChange={(e) => setShowGrid(e.target.checked)}
-              />
-              Mostrar Grid
-            </label>
-          </div>
-          <div style={{ marginBottom: '5px' }}>
-            <label>Tamaño Grid: </label>
-            <input 
-              type="number" 
-              value={gridSize} 
-              onChange={(e) => setGridSize(parseInt(e.target.value) || 20)}
-              style={{ width: '60px', marginLeft: '10px' }}
-            />
-          </div>
-        </div>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <h4>Acciones</h4>
-          <button onClick={saveMapa}>💾 Guardar Mapa</button>
-          <button onClick={() => setShowTypeSelector(true)}>🔄 Cambiar Tipo</button>
-        </div>
-        
-        <div style={{ marginBottom: '15px' }}>
-          <h4>Modo Numeración</h4>
-          <div style={{ marginBottom: '5px' }}>
-            <button 
-              onClick={() => activateNumerationMode('seats')}
-              style={{ 
-                backgroundColor: numerationMode === 'seats' ? '#667eea' : '#f0f0f0',
-                color: numerationMode === 'seats' ? 'white' : 'black'
-              }}
-            >
-              🔢 Numeración de Asientos
-            </button>
-          </div>
-          <div style={{ marginBottom: '5px' }}>
-            <button 
-              onClick={() => activateNumerationMode('tables')}
-              style={{ 
-                backgroundColor: numerationMode === 'tables' ? '#667eea' : '#f0f0f0',
-                color: numerationMode === 'tables' ? 'white' : 'black'
-              }}
-            >
-              🏷️ Numeración de Mesas
-            </button>
-          </div>
-          <div style={{ marginBottom: '5px' }}>
-            <button 
-              onClick={() => activateNumerationMode('rows')}
-              style={{ 
-                backgroundColor: numerationMode === 'rows' ? '#667eea' : '#f0f0f0',
-                color: numerationMode === 'rows' ? 'white' : 'black'
-              }}
-            >
-              📏 Numeración de Filas
-            </button>
-          </div>
-          {numerationMode && (
-            <div style={{ marginTop: '10px', padding: '10px', backgroundColor: '#f9f9f9', borderRadius: '5px' }}>
-              <p><strong>Modo activo:</strong> {numerationMode === 'seats' ? 'Asientos' : numerationMode === 'tables' ? 'Mesas' : 'Filas'}</p>
-              <p>Haz clic en un elemento para editarlo</p>
-              <button onClick={() => activateNumerationMode(null)}>❌ Desactivar</button>
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#475569', fontSize: '14px', fontWeight: '500' }}>Herramienta Activa</h4>
+              <div style={{ 
+                padding: '12px', 
+                backgroundColor: 'white', 
+                borderRadius: '8px', 
+                border: '2px solid #3b82f6',
+                color: '#3b82f6',
+                fontWeight: '500',
+                textAlign: 'center'
+              }}>
+                {activeTool === 'seats' ? '🪑 Crear Asientos' : 
+                 activeTool === 'tables' ? '🪑 Crear Mesas' : 
+                 activeTool === 'zones' ? '🏗️ Crear Zonas' : '🖱️ Seleccionar'}
+              </div>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Área principal del mapa */}
-      <div className="map-area" style={{ padding: '20px', border: '1px solid #ccc', margin: '20px' }}>
-        <h3>Área del Mapa</h3>
-        <p>Zoom: {zoom}</p>
-        <p>Posición: X={stagePosition.x}, Y={stagePosition.y}</p>
-        <p>Grid: {showGrid ? 'Visible' : 'Oculto'} (Tamaño: {gridSize})</p>
-        
-        {/* Controles básicos */}
-        <div style={{ margin: '10px 0' }}>
-          <button onClick={handleZoomIn}>🔍+</button>
-          <button onClick={handleZoomOut}>🔍-</button>
-          <button onClick={resetZoom}>🎯</button>
-          <button onClick={saveMapa}>💾 Guardar</button>
-        </div>
-        
-        {/* Controles de zoom avanzados */}
-        <div style={{ 
-          position: 'absolute', 
-          bottom: '20px', 
-          right: '20px', 
-          background: 'white', 
-          padding: '10px', 
-          borderRadius: '8px', 
-          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-          zIndex: 1000
-        }}>
-          <div style={{ marginBottom: '10px' }}>
-            <strong>Zoom: {Math.round(zoom * 100)}%</strong>
-          </div>
-          <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
-            <button onClick={handleZoomIn} style={{ padding: '5px 10px' }}>🔍+</button>
-            <button onClick={handleZoomOut} style={{ padding: '5px 10px' }}>🔍-</button>
-            <button onClick={resetZoom} style={{ padding: '5px 10px' }}>🎯</button>
-          </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
-            <div>🖱️ Clic: Crear elemento</div>
-            <div>🖱️ Arrastrar: Mover elemento</div>
-            <div>🖱️ Rueda: Zoom</div>
-            <div>🖱️ Medio: Pan</div>
-          </div>
-        </div>
-
-        {/* Área de canvas simplificada */}
-        <div style={{ 
-          width: '600px', 
-          height: '400px', 
-          border: '2px solid #333', 
-          backgroundColor: '#f0f0f0',
-          position: 'relative',
-          margin: '20px auto'
-        }}>
-          <Stage
-            width={600}
-            height={400}
-            ref={stageRef}
-            onClick={handleStageClick}
-            onContextMenu={handleStageContextMenu}
-            onWheel={(e) => {
-              e.evt.preventDefault();
-              const scaleBy = 1.1;
-              const stage = e.target.getStage();
-              const oldScale = stage.scaleX();
-              const pointer = stage.getPointerPosition();
-              
-              const mousePointTo = {
-                x: (pointer.x - stage.x()) / oldScale,
-                y: (pointer.y - stage.y()) / oldScale,
-              };
-              
-              const newScale = e.evt.deltaY > 0 ? oldScale * scaleBy : oldScale / scaleBy;
-              setZoom(newScale);
-              
-              const newPos = {
-                x: pointer.x - mousePointTo.x * newScale,
-                y: pointer.y - mousePointTo.y * newScale,
-              };
-              setStagePosition(newPos);
-            }}
-            onMouseDown={(e) => {
-              if (e.evt.button === 1) { // Middle mouse button
-                handlePanStart(e);
-              } else if (e.evt.button === 0) { // Left mouse button
-                handleMouseDown(e);
-              }
-            }}
-            onMouseMove={(e) => {
-              if (isPanning) {
-                handlePanMove(e);
-              } else if (isSelecting) {
-                handleMouseMove(e);
-              }
-            }}
-            onMouseUp={(e) => {
-              if (e.evt.button === 1) {
-                handlePanEnd();
-              } else if (e.evt.button === 0) {
-                handleMouseUp(e);
-              }
-            }}
-            scaleX={zoom}
-            scaleY={zoom}
-            x={stagePosition.x}
-            y={stagePosition.y}
-          >
-            <Layer>
-              {/* Grid */}
-              {showGrid && (
-                <>
-                  {Array.from({ length: Math.ceil(600 / gridSize) }, (_, i) => (
-                    <Line
-                      key={`v-${i}`}
-                      points={[i * gridSize, 0, i * gridSize, 400]}
-                      stroke="#ddd"
-                      strokeWidth={1}
-                    />
-                  ))}
-                  {Array.from({ length: Math.ceil(400 / gridSize) }, (_, i) => (
-                    <Line
-                      key={`h-${i}`}
-                      points={[0, i * gridSize, 600, i * gridSize]}
-                      stroke="#ddd"
-                      strokeWidth={1}
-                    />
-                  ))}
-                </>
-              )}
-              
-              {/* Elementos del mapa */}
-              {elements.map((element) => {
-                if (element.type === 'silla') {
-                  return (
-                    <Group key={element.id} draggable>
-                      {element.shape === 'circle' ? (
-                        <Circle
-                          x={element.x}
-                          y={element.y}
-                          radius={element.width / 2}
-                          fill={element.color}
-                          stroke="#000"
-                          strokeWidth={1}
-                          onClick={() => handleElementClick(element.id)}
-                          onDragEnd={(e) => handleElementDragEnd(element.id, e)}
-                        />
-                      ) : (
-                        <Rect
-                          x={element.x}
-                          y={element.y}
-                          width={element.width}
-                          height={element.height}
-                          fill={element.color}
-                          stroke="#000"
-                          strokeWidth={1}
-                          onClick={() => handleElementClick(element.id)}
-                          onDragEnd={(e) => handleElementDragEnd(element.id, e)}
-                        />
-                      )}
-                      <Text
-                        x={element.x - 2}
-                        y={element.y - 23}
-                        text={element.numero || ''}
-                        fontSize={12}
-                        fill="#000"
-                        align="center"
-                        width={element.width + 4}
-                      />
-                    </Group>
-                  );
-                } else if (element.type === 'mesa') {
-                  return (
-                    <Group key={element.id} draggable>
-                      {element.shape === 'circle' ? (
-                        <Circle
-                          x={element.x + element.width / 2}
-                          y={element.y + element.height / 2}
-                          radius={element.width / 2}
-                          fill={element.color}
-                          stroke="#000"
-                          strokeWidth={2}
-                          onClick={() => handleElementClick(element.id)}
-                          onDragEnd={(e) => handleElementDragEnd(element.id, e)}
-                        />
-                      ) : (
-                        <Rect
-                          x={element.x}
-                          y={element.y}
-                          width={element.width}
-                          height={element.height}
-                          fill={element.color}
-                          stroke="#000"
-                          strokeWidth={2}
-                          onClick={() => handleElementClick(element.id)}
-                          onDragEnd={(e) => handleElementDragEnd(element.id, e)}
-                        />
-                      )}
-                      <Text
-                        x={element.x - 8}
-                        y={element.y - 28}
-                        text={element.nombre || ''}
-                        fontSize={14}
-                        fill="#000"
-                        fontStyle="bold"
-                        align="center"
-                        width={element.width + 16}
-                      />
-                    </Group>
-                  );
-                }
-                return null;
-              })}
-              
-              {/* Zonas del dashboard */}
-              {zonesFromDashboard.map(zone => (
-                <Rect
-                  key={zone.id}
-                  x={zone.x}
-                  y={zone.y}
-                  width={zone.width}
-                  height={zone.height}
-                  fill={zone.color + '10'}
-                  stroke={zone.color}
-                  strokeWidth={1}
-                  dash={[5, 5]}
-                  onClick={() => enterZoneMode(zone.id)}
-                  cursor="pointer"
+            
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#475569', fontSize: '14px', fontWeight: '500' }}>Crear Elementos</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button 
+                  onClick={() => setActiveTool('select')}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: activeTool === 'select' ? '#3b82f6' : '#e2e8f0',
+                    color: activeTool === 'select' ? 'white' : '#475569',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textAlign: 'left'
+                  }}
+                >
+                  🖱️ Seleccionar
+                </button>
+                <button 
+                  onClick={() => setActiveTool('seats')}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: activeTool === 'seats' ? '#3b82f6' : '#e2e8f0',
+                    color: activeTool === 'seats' ? 'white' : '#475569',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textAlign: 'left'
+                  }}
+                >
+                  🪑 Crear Asientos
+                </button>
+                <button 
+                  onClick={() => setActiveTool('tables')}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: activeTool === 'tables' ? '#3b82f6' : '#e2e8f0',
+                    color: activeTool === 'tables' ? 'white' : '#475569',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textAlign: 'left'
+                  }}
+                >
+                  🪑 Crear Mesas
+                </button>
+                <button 
+                  onClick={() => setActiveTool('zones')}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: activeTool === 'zones' ? '#3b82f6' : '#e2e8f0',
+                    color: activeTool === 'zones' ? 'white' : '#475569',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textAlign: 'left'
+                  }}
+                >
+                  🏗️ Crear Zonas
+                </button>
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#475569', fontSize: '14px', fontWeight: '500' }}>Crear Fila de Sillas</h4>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#64748b' }}>
+                  Espaciado entre asientos:
+                </label>
+                <input 
+                  type="number" 
+                  value={seatSpacing} 
+                  onChange={(e) => setSeatSpacing(parseInt(e.target.value) || 25)}
+                  style={{ 
+                    width: '100%', 
+                    padding: '8px', 
+                    border: '1px solid #d1d5db', 
+                    borderRadius: '6px',
+                    fontSize: '14px'
+                  }}
                 />
-              ))}
-            </Layer>
-          </Stage>
-          
-          {elements.length > 0 && (
-            <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'white', padding: '5px' }}>
-              <strong>Elementos creados:</strong>
-              <ul>
-                {elements.map(el => (
-                  <li key={el.id}>{el.type} - {el.numero || el.nombre || 'Sin nombre'}</li>
-                ))}
-              </ul>
+              </div>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#64748b' }}>
+                  Forma de asiento:
+                </label>
+                <select 
+                  value={seatShape} 
+                  onChange={(e) => setSeatShape(e.target.value)}
+                  style={{ 
+                    width: '100%', 
+                    padding: '8px', 
+                    border: '1px solid #d1d5db', 
+                    borderRadius: '6px',
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value="circle">🔴 Redondo</option>
+                  <option value="square">⬜ Cuadrado</option>
+                </select>
+              </div>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#64748b' }}>
+                  Tamaño de asiento:
+                </label>
+                <input 
+                  type="number" 
+                  value={seatSize} 
+                  onChange={(e) => setSeatSize(parseInt(e.target.value) || 20)}
+                  style={{ 
+                    width: '100%', 
+                    padding: '8px', 
+                    border: '1px solid #d1d5db', 
+                    borderRadius: '6px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '8px 0' }}>
+                💡 Haz clic en el canvas y mueve el mouse para crear la fila
+              </p>
             </div>
-          )}
-        </div>
-
-        {/* Información del estado */}
-        <div style={{ margin: '20px 0', padding: '10px', background: '#f9f9f9' }}>
-          <h4>Estado del Editor:</h4>
-          <p>Elementos seleccionados: {selectedElements.length}</p>
-          <p>Zona seleccionada: {selectedZone || 'Ninguna'}</p>
-          <p>Modo zona: {isInZoneMode ? 'Activo' : 'Inactivo'}</p>
-          <p>Último guardado: {lastSavedAt ? lastSavedAt.toLocaleString() : 'Nunca'}</p>
-        </div>
-        
-        {/* Indicador de estado en la parte inferior */}
-        <div style={{ 
-          position: 'fixed', 
-          bottom: '0', 
-          left: '0', 
-          right: '0', 
-          background: '#667eea', 
-          color: 'white', 
-          padding: '10px', 
-          textAlign: 'center',
-          zIndex: 1001
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto' }}>
-            <div>
-              <strong>Editor de Mapa Activo</strong> | 
-              Elementos: {elements.length} | 
-              Seleccionados: {selectedElements.length} | 
-              Zoom: {Math.round(zoom * 100)}%
+            
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#475569', fontSize: '14px', fontWeight: '500' }}>Configuración de Mesa</h4>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#64748b' }}>
+                  Forma de mesa:
+                </label>
+                <select 
+                  value={tableShape} 
+                  onChange={(e) => setTableShape(e.target.value)}
+                  style={{ 
+                    width: '100%', 
+                    padding: '8px', 
+                    border: '1px solid #d1d5db', 
+                    borderRadius: '6px',
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value="square">⬜ Cuadrada</option>
+                  <option value="circle">🔴 Redonda</option>
+                </select>
+              </div>
+              <div style={{ marginBottom: '12px' }}>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: '#64748b' }}>
+                  Tamaño de mesa:
+                </label>
+                <input 
+                  type="number" 
+                  value={tableSize} 
+                  onChange={(e) => setTableSize(parseInt(e.target.value) || 80)}
+                  style={{ 
+                    width: '100%', 
+                    padding: '8px', 
+                    border: '1px solid #d1d5db', 
+                    borderRadius: '6px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
             </div>
-            <div>
-              {lastSavedAt && (
-                <span style={{ marginRight: '20px' }}>
-                  ✅ Último guardado: {lastSavedAt.toLocaleTimeString()}
-                </span>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#475569', fontSize: '14px', fontWeight: '500' }}>Configuración</h4>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={snapToGrid} 
+                    onChange={(e) => setSnapToGrid(e.target.checked)}
+                    style={{ width: '16px', height: '16px' }}
+                  />
+                  Snap to Grid
+                </label>
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={showGrid} 
+                    onChange={(e) => setShowGrid(e.target.checked)}
+                    style={{ width: '16px', height: '16px' }}
+                  />
+                  Mostrar Grid
+                </label>
+              </div>
+              <div style={{ marginBottom: '8px' }}>
+                <label style={{ fontSize: '12px', color: '#64748b' }}>Tamaño Grid:</label>
+                <input 
+                  type="number" 
+                  value={gridSize} 
+                  onChange={(e) => setGridSize(parseInt(e.target.value) || 20)}
+                  style={{ 
+                    width: '60px', 
+                    padding: '4px 8px', 
+                    border: '1px solid #d1d5db', 
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    marginLeft: '8px'
+                  }}
+                />
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#475569', fontSize: '14px', fontWeight: '500' }}>Acciones</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button 
+                  onClick={saveMapa}
+                  style={{
+                    padding: '12px 16px',
+                    backgroundColor: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  💾 Guardar Mapa
+                </button>
+                <button 
+                  onClick={() => {
+                    if (elements.length > 0) {
+                      if (window.confirm(`¿Estás seguro de que quieres limpiar el mapa? Se perderán ${elements.length} elementos.`)) {
+                        setElements([]);
+                        setSelectedElements([]);
+                        setHasMapData(false);
+                        setLastSavedAt(null);
+                        message.info('Mapa limpiado');
+                      }
+                    } else {
+                      message.info('El mapa ya está vacío');
+                    }
+                  }}
+                  style={{
+                    padding: '12px 16px',
+                    backgroundColor: '#ef4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  🗑️ Limpiar Mapa
+                </button>
+                <button 
+                  onClick={() => setShowTypeSelector(true)}
+                  style={{
+                    padding: '12px 16px',
+                    backgroundColor: '#f59e0b',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                >
+                  🔄 Cambiar Tipo
+                </button>
+              </div>
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#475569', fontSize: '14px', fontWeight: '500' }}>Modo Zona</h4>
+              {isInZoneMode ? (
+                <div style={{ 
+                  padding: '12px', 
+                  backgroundColor: '#fef3c7', 
+                  borderRadius: '6px',
+                  border: '1px solid #f59e0b'
+                }}>
+                  <p style={{ margin: '0 0 8px 0', fontSize: '12px', color: '#92400e' }}>
+                    <strong>Zona activa:</strong> {selectedZone}
+                  </p>
+                  <button 
+                    onClick={exitZoneMode}
+                    style={{
+                      padding: '8px 12px',
+                      backgroundColor: '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px'
+                    }}
+                  >
+                    🚪 Salir de Zona
+                  </button>
+                </div>
+              ) : (
+                <p style={{ fontSize: '12px', color: '#64748b', margin: '8px 0' }}>
+                  💡 Haz clic en una zona del mapa para entrar en modo zona
+                </p>
               )}
+            </div>
+            
+            <div style={{ marginBottom: '24px' }}>
+              <h4 style={{ margin: '0 0 12px 0', color: '#475569', fontSize: '14px', fontWeight: '500' }}>Modo Numeración</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button 
+                  onClick={() => activateNumerationMode('seats')}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: numerationMode === 'seats' ? '#8b5cf6' : '#e2e8f0',
+                    color: numerationMode === 'seats' ? 'white' : '#475569',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textAlign: 'left'
+                  }}
+                >
+                  🔢 Numeración de Asientos
+                </button>
+                <button 
+                  onClick={() => activateNumerationMode('tables')}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: numerationMode === 'tables' ? '#8b5cf6' : '#e2e8f0',
+                    color: numerationMode === 'tables' ? 'white' : '#475569',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textAlign: 'left'
+                  }}
+                >
+                  🏷️ Numeración de Mesas
+                </button>
+                <button 
+                  onClick={() => activateNumerationMode('rows')}
+                  style={{
+                    padding: '10px 16px',
+                    backgroundColor: numerationMode === 'rows' ? '#8b5cf6' : '#e2e8f0',
+                    color: numerationMode === 'rows' ? 'white' : '#475569',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    textAlign: 'left'
+                  }}
+                >
+                  📏 Numeración de Filas
+                </button>
+              </div>
               {numerationMode && (
-                <span style={{ 
-                  backgroundColor: 'rgba(255,255,255,0.2)', 
-                  padding: '5px 10px', 
-                  borderRadius: '15px',
-                  marginRight: '20px'
+                <div style={{ 
+                  marginTop: '12px', 
+                  padding: '12px', 
+                  backgroundColor: '#f1f5f9', 
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  color: '#475569'
                 }}>
-                  🔢 Modo: {numerationMode === 'seats' ? 'Asientos' : numerationMode === 'tables' ? 'Mesas' : 'Filas'}
-                </span>
+                  <p style={{ margin: '0 0 8px 0' }}><strong>Modo activo:</strong> {numerationMode === 'seats' ? 'Asientos' : numerationMode === 'tables' ? 'Mesas' : 'Filas'}</p>
+                  <p style={{ margin: '0 0 8px 0' }}>Haz clic en un elemento para editarlo</p>
+                  <button 
+                    onClick={() => activateNumerationMode(null)}
+                    style={{
+                      padding: '6px 12px',
+                      backgroundColor: '#ef4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px'
+                    }}
+                  >
+                    ❌ Desactivar
+                  </button>
+                </div>
               )}
-              {isInZoneMode && (
-                <span style={{ 
-                  backgroundColor: 'rgba(255,255,255,0.2)', 
-                  padding: '5px 10px', 
-                  borderRadius: '15px'
-                }}>
-                  🏗️ Zona: {selectedZone}
-                </span>
+            </div>
+          </div>
+
+          {/* Área principal del mapa */}
+          <div className="map-area" style={{ 
+            flex: 1, 
+            padding: '24px', 
+            position: 'relative',
+            backgroundColor: '#f0f0f0'
+          }}>
+            <h3 style={{ margin: '0 0 15px 0', color: '#1e293b', fontSize: '18px' }}>Área del Mapa</h3>
+            <p style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '14px' }}>Zoom: {zoom}</p>
+            <p style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '14px' }}>Posición: X={stagePosition.x}, Y={stagePosition.y}</p>
+            <p style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '14px' }}>Grid: {showGrid ? 'Visible' : 'Oculto'} (Tamaño: {gridSize})</p>
+            
+            {/* Controles básicos */}
+            <div style={{ margin: '10px 0' }}>
+              <button onClick={handleZoomIn} style={{ padding: '8px 12px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', marginRight: '8px' }}>🔍+</button>
+              <button onClick={handleZoomOut} style={{ padding: '8px 12px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', marginRight: '8px' }}>🔍-</button>
+              <button onClick={resetZoom} style={{ padding: '8px 12px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>🎯</button>
+              <button onClick={saveMapa} style={{ padding: '8px 12px', backgroundColor: '#10b981', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', marginLeft: '8px' }}>💾 Guardar</button>
+            </div>
+            
+            {/* Controles de zoom avanzados */}
+            <div style={{ 
+              position: 'absolute', 
+              bottom: '20px', 
+              right: '20px', 
+              background: 'white', 
+              padding: '10px', 
+              borderRadius: '8px', 
+              boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+              zIndex: 1000
+            }}>
+              <div style={{ marginBottom: '10px' }}>
+                <strong>Zoom: {Math.round(zoom * 100)}%</strong>
+              </div>
+              <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+                <button onClick={handleZoomIn} style={{ padding: '5px 10px' }}>🔍+</button>
+                <button onClick={handleZoomOut} style={{ padding: '5px 10px' }}>🔍-</button>
+                <button onClick={resetZoom} style={{ padding: '5px 10px' }}>🎯</button>
+              </div>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                <div>🖱️ Clic: Crear elemento</div>
+                <div>🖱️ Arrastrar: Mover elemento</div>
+                <div>🖱️ Rueda: Zoom</div>
+                <div>🖱️ Medio: Pan</div>
+              </div>
+            </div>
+
+            {/* Área de canvas simplificada */}
+            <div style={{ 
+              width: '600px', 
+              height: '400px', 
+              border: '2px solid #333', 
+              backgroundColor: '#f0f0f0',
+              position: 'relative',
+              margin: '20px auto'
+            }}>
+              <Stage
+                width={600}
+                height={400}
+                ref={stageRef}
+                onClick={handleStageClick}
+                onContextMenu={handleStageContextMenu}
+                onWheel={(e) => {
+                  e.evt.preventDefault();
+                  const scaleBy = 1.1;
+                  const stage = e.target.getStage();
+                  const oldScale = stage.scaleX();
+                  const pointer = stage.getPointerPosition();
+                  
+                  const mousePointTo = {
+                    x: (pointer.x - stage.x()) / oldScale,
+                    y: (pointer.y - stage.y()) / oldScale,
+                  };
+                  
+                  const newScale = e.evt.deltaY > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+                  setZoom(newScale);
+                  
+                  const newPos = {
+                    x: pointer.x - mousePointTo.x * newScale,
+                    y: pointer.y - mousePointTo.y * newScale,
+                  };
+                  setStagePosition(newPos);
+                }}
+                onMouseDown={handleStageMouseDown}
+                onMouseMove={handleStageMouseMove}
+                onMouseUp={handleStageMouseUp}
+                scaleX={zoom}
+                scaleY={zoom}
+                x={stagePosition.x}
+                y={stagePosition.y}
+              >
+                <Layer>
+                  {/* Grid */}
+                  {showGrid && (
+                    <>
+                      {Array.from({ length: Math.ceil(600 / gridSize) }, (_, i) => (
+                        <Line
+                          key={`v-${i}`}
+                          points={[i * gridSize, 0, i * gridSize, 400]}
+                          stroke="#ddd"
+                          strokeWidth={1}
+                        />
+                      ))}
+                      {Array.from({ length: Math.ceil(400 / gridSize) }, (_, i) => (
+                        <Line
+                          key={`h-${i}`}
+                          points={[0, i * gridSize, 600, i * gridSize]}
+                          stroke="#ddd"
+                          strokeWidth={1}
+                        />
+                      ))}
+                    </>
+                  )}
+                  
+                  {/* Elementos del mapa */}
+                  {renderMapElements}
+                  
+                  {/* Zonas del dashboard */}
+                  {zonesFromDashboard.map(zone => (
+                    <Rect
+                      key={zone.id}
+                      x={zone.x}
+                      y={zone.y}
+                      width={zone.width}
+                      height={zone.height}
+                      fill={zone.color + '10'}
+                      stroke={zone.color}
+                      strokeWidth={1}
+                      dash={[5, 5]}
+                      onClick={() => enterZoneMode(zone.id)}
+                      cursor="pointer"
+                    />
+                  ))}
+                </Layer>
+              </Stage>
+              
+              {elements.length > 0 && (
+                <div style={{ position: 'absolute', top: '10px', left: '10px', background: 'white', padding: '5px' }}>
+                  <strong>Elementos creados:</strong>
+                  <ul>
+                    {elements.map(el => (
+                      <li key={el.id}>{el.type} - {el.numero || el.nombre || 'Sin nombre'}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
+            </div>
+
+            {/* Información del estado */}
+            <div style={{ margin: '20px 0', padding: '10px', background: '#f9f9f9' }}>
+              <h4 style={{ margin: '0 0 10px 0', color: '#1e293b', fontSize: '16px' }}>Estado del Editor:</h4>
+              <p style={{ margin: '0 0 8px 0', color: '#64748b', fontSize: '14px' }}>Elementos seleccionados: {selectedElements.length}</p>
+              <p style={{ margin: '0 0 8px 0', color: '#64748b', fontSize: '14px' }}>Zona seleccionada: {selectedZone || 'Ninguna'}</p>
+              <p style={{ margin: '0 0 8px 0', color: '#64748b', fontSize: '14px' }}>Modo zona: {isInZoneMode ? 'Activo' : 'Inactivo'}</p>
+              <p style={{ margin: '0 0 8px 0', color: '#64748b', fontSize: '14px' }}>Último guardado: {lastSavedAt ? lastSavedAt.toLocaleString() : 'Nunca'}</p>
+            </div>
+            
+            {/* Indicador de estado en la parte inferior */}
+            <div style={{ 
+              position: 'fixed', 
+              bottom: '0', 
+              left: '0', 
+              right: '0', 
+              background: '#667eea', 
+              color: 'white', 
+              padding: '10px', 
+              textAlign: 'center',
+              zIndex: 1001
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '1200px', margin: '0 auto' }}>
+                <div>
+                  <strong>Editor de Mapa Activo</strong> | 
+                  Elementos: {elements.length} | 
+                  Seleccionados: {selectedElements.length} | 
+                  Zoom: {Math.round(zoom * 100)}%
+                </div>
+                <div>
+                  {lastSavedAt && (
+                    <span style={{ marginRight: '20px' }}>
+                      ✅ Último guardado: {lastSavedAt.toLocaleTimeString()}
+                    </span>
+                  )}
+                  {numerationMode && (
+                    <span style={{ 
+                      backgroundColor: 'rgba(255,255,255,0.2)', 
+                      padding: '5px 10px', 
+                      borderRadius: '15px',
+                      marginRight: '20px'
+                    }}>
+                      🔢 Modo: {numerationMode === 'seats' ? 'Asientos' : numerationMode === 'tables' ? 'Mesas' : 'Filas'}
+                    </span>
+                  )}
+                  {isInZoneMode && (
+                    <span style={{ 
+                      backgroundColor: 'rgba(255,255,255,0.2)', 
+                      padding: '5px 10px', 
+                      borderRadius: '15px'
+                    }}>
+                      🏗️ Zona: {selectedZone}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
