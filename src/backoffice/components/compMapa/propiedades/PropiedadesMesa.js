@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Input, Button, Slider, Space, Typography, Row, Col, Card } from 'antd';
-import { RotateRightOutlined, ArrowsAltOutlined, EditOutlined, CloseOutlined } from '@ant-design/icons';
+import { Input, Button, Slider, Space, Typography, Row, Col, Card, Divider, InputNumber } from 'antd';
+import { RotateRightOutlined, ArrowsAltOutlined, EditOutlined, CloseOutlined, CopyOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
-const PropiedadesMesa = ({ mesa, onUpdate, onClose }) => {
+const PropiedadesMesa = ({ mesa, onUpdate, onClose, onAddSillas, onRemoveSillas, onDuplicate, onDelete }) => {
   const [nombreMesa, setNombreMesa] = useState(mesa?.nombre || '');
   const [rotation, setRotation] = useState(mesa?.rotation || 0);
   const [width, setWidth] = useState(mesa?.width || 120);
   const [height, setHeight] = useState(mesa?.height || 80);
   const [radius, setRadius] = useState(mesa?.radius || 60);
+  
+  // Configuración de sillas
+  const [sillasConfig, setSillasConfig] = useState({
+    rect: { top: 0, right: 0, bottom: 0, left: 0 },
+    circle: { cantidad: 8, radio: 80 },
+    hexagon: { lados: [0, 0, 0, 0, 0, 0] },
+    star: { puntos: [0, 0, 0, 0, 0] }
+  });
 
   // Actualizar estado local cuando cambie la mesa
   useEffect(() => {
@@ -19,6 +27,11 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose }) => {
       setWidth(mesa.width || 120);
       setHeight(mesa.height || 80);
       setRadius(mesa.radius || 60);
+      
+      // Cargar configuración existente de sillas
+      if (mesa.sillasConfig) {
+        setSillasConfig(mesa.sillasConfig);
+      }
     }
   }, [mesa]);
 
@@ -51,6 +64,33 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose }) => {
       if (onUpdate) {
         onUpdate({ radius: value });
       }
+    }
+  };
+
+  const handleAddSillas = () => {
+    if (onAddSillas) {
+      onAddSillas(mesa._id, sillasConfig);
+    }
+  };
+
+  const handleRemoveSillas = () => {
+    if (onRemoveSillas) {
+      onRemoveSillas(mesa._id);
+    }
+  };
+
+  const getTotalSillas = () => {
+    switch (mesa?.shape || mesa?.type) {
+      case 'rect':
+        return Object.values(sillasConfig.rect).reduce((sum, val) => sum + (val || 0), 0);
+      case 'circle':
+        return sillasConfig.circle.cantidad || 0;
+      case 'hexagon':
+        return sillasConfig.hexagon.lados.reduce((sum, val) => sum + (val || 0), 0);
+      case 'star':
+        return sillasConfig.star.puntos.reduce((sum, val) => sum + (val || 0), 0);
+      default:
+        return 0;
     }
   };
 
@@ -96,6 +136,13 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose }) => {
           </Space>
         </div>
 
+        {/* Tipo de Mesa */}
+        <div className="bg-gray-50 p-2 rounded text-xs">
+          <Text type="secondary">
+            <strong>Tipo de Mesa:</strong> {mesa.shape || mesa.type || 'rect'}
+          </Text>
+        </div>
+
         {/* Rotación */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -105,6 +152,7 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose }) => {
           <Slider
             min={0}
             max={360}
+            step={5}
             value={rotation}
             onChange={handleRotate}
             marks={{
@@ -123,28 +171,28 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose }) => {
             <Col span={12}>
               <div>
                 <Text strong>Ancho:</Text>
-                <Input
+                <InputNumber
                   type="number"
                   min={20}
                   max={500}
                   value={width}
                   onChange={(e) => handleResize('width', parseInt(e.target.value) || 20)}
                   suffix="px"
-                  className="mt-1"
+                  className="w-full mt-1"
                 />
               </div>
             </Col>
             <Col span={12}>
               <div>
                 <Text strong>Alto:</Text>
-                <Input
+                <InputNumber
                   type="number"
                   min={20}
                   max={500}
                   value={height}
                   onChange={(e) => handleResize('height', parseInt(e.target.value) || 20)}
                   suffix="px"
-                  className="mt-1"
+                  className="w-full mt-1"
                 />
               </div>
             </Col>
@@ -152,23 +200,192 @@ const PropiedadesMesa = ({ mesa, onUpdate, onClose }) => {
         ) : (mesa.shape === 'circle' || mesa.type === 'circle') ? (
           <div>
             <Text strong>Radio:</Text>
-            <Input
+            <InputNumber
               type="number"
               min={20}
               max={200}
               value={radius}
               onChange={(e) => handleResize('radius', parseInt(e.target.value) || 20)}
               suffix="px"
-              className="mt-1"
+              className="w-full mt-1"
             />
           </div>
         ) : null}
 
+        <Divider />
+
+        {/* Gestión de Sillas */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <Text strong>Gestión de Sillas</Text>
+            <Text type="primary" className="text-sm">
+              Total: {getTotalSillas()}
+            </Text>
+          </div>
+
+          {/* Configuración según tipo de mesa */}
+          {(mesa.shape === 'rect' || mesa.type === 'rect') && (
+            <div className="space-y-3">
+              <Text type="secondary" className="text-xs">Sillas por lado:</Text>
+              <Row gutter={8}>
+                <Col span={6}>
+                  <div className="text-center">
+                    <Text className="text-xs">Arriba</Text>
+                    <InputNumber
+                      min={0}
+                      max={20}
+                      value={sillasConfig.rect.top}
+                      onChange={(value) => setSillasConfig(prev => ({
+                        ...prev,
+                        rect: { ...prev.rect, top: value || 0 }
+                      }))}
+                      className="w-full mt-1"
+                      size="small"
+                    />
+                  </div>
+                </Col>
+                <Col span={6}>
+                  <div className="text-center">
+                    <Text className="text-xs">Derecha</Text>
+                    <InputNumber
+                      min={0}
+                      max={20}
+                      value={sillasConfig.rect.right}
+                      onChange={(value) => setSillasConfig(prev => ({
+                        ...prev,
+                        rect: { ...prev.rect, right: value || 0 }
+                      }))}
+                      className="w-full mt-1"
+                      size="small"
+                    />
+                  </div>
+                </Col>
+                <Col span={6}>
+                  <div className="text-center">
+                    <Text className="text-xs">Abajo</Text>
+                    <InputNumber
+                      min={0}
+                      max={20}
+                      value={sillasConfig.rect.bottom}
+                      onChange={(value) => setSillasConfig(prev => ({
+                        ...prev,
+                        rect: { ...prev.rect, bottom: value || 0 }
+                      }))}
+                      className="w-full mt-1"
+                      size="small"
+                    />
+                  </div>
+                </Col>
+                <Col span={6}>
+                  <div className="text-center">
+                    <Text className="text-xs">Izquierda</Text>
+                    <InputNumber
+                      min={0}
+                      max={20}
+                      value={sillasConfig.rect.left}
+                      onChange={(value) => setSillasConfig(prev => ({
+                        ...prev,
+                        rect: { ...prev.rect, left: value || 0 }
+                      }))}
+                      className="w-full mt-1"
+                      size="small"
+                    />
+                  </div>
+                </Col>
+              </Row>
+            </div>
+          )}
+
+          {(mesa.shape === 'circle' || mesa.type === 'circle') && (
+            <div className="space-y-3">
+              <Text type="secondary" className="text-xs">Sillas circulares:</Text>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <div>
+                    <Text className="text-xs">Cantidad:</Text>
+                    <InputNumber
+                      min={1}
+                      max={24}
+                      value={sillasConfig.circle.cantidad}
+                      onChange={(value) => setSillasConfig(prev => ({
+                        ...prev,
+                        circle: { ...prev.circle, cantidad: value || 8 }
+                      }))}
+                      className="w-full mt-1"
+                      size="small"
+                    />
+                  </div>
+                </Col>
+                <Col span={12}>
+                  <div>
+                    <Text className="text-xs">Radio:</Text>
+                    <InputNumber
+                      min={40}
+                      max={200}
+                      value={sillasConfig.circle.radio}
+                      onChange={(value) => setSillasConfig(prev => ({
+                        ...prev,
+                        circle: { ...prev.circle, radio: value || 80 }
+                      }))}
+                      className="w-full mt-1"
+                      size="small"
+                    />
+                  </div>
+                </Col>
+              </Row>
+            </div>
+          )}
+
+          {/* Botones de acción para sillas */}
+          <div className="flex gap-2 mt-3">
+            <Button
+              icon={<PlusOutlined />}
+              size="small"
+              onClick={handleAddSillas}
+              disabled={getTotalSillas() === 0}
+              className="flex-1"
+            >
+              Agregar {getTotalSillas()} Sillas
+            </Button>
+            <Button
+              icon={<DeleteOutlined />}
+              size="small"
+              danger
+              onClick={handleRemoveSillas}
+              disabled={getTotalSillas() === 0}
+            >
+              Remover
+            </Button>
+          </div>
+        </div>
+
+        <Divider />
+
+        {/* Acciones */}
+        <div className="space-y-2">
+          <Button
+            icon={<CopyOutlined />}
+            size="small"
+            onClick={onDuplicate}
+            className="w-full"
+          >
+            Duplicar Mesa
+          </Button>
+          <Button
+            icon={<DeleteOutlined />}
+            size="small"
+            danger
+            onClick={onDelete}
+            className="w-full"
+          >
+            Eliminar Mesa
+          </Button>
+        </div>
+
         {/* Información adicional */}
-        <div className="bg-gray-50 p-3 rounded text-xs">
+        <div className="bg-gray-50 p-2 rounded text-xs">
           <Text type="secondary">
             💡 <strong>ID:</strong> {mesa._id}<br/>
-            💡 <strong>Tipo:</strong> {mesa.shape || mesa.type}<br/>
             💡 <strong>Posición:</strong> X: {Math.round(mesa.posicion?.x || 0)}, Y: {Math.round(mesa.posicion?.y || 0)}
           </Text>
         </div>

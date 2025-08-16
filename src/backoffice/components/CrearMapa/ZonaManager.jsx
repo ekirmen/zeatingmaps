@@ -18,6 +18,7 @@ import {
   Card,
   Badge
 } from 'antd';
+import { createZona, updateZona, deleteZona } from '../../services/apibackoffice';
 import {
   PlusOutlined,
   EditOutlined,
@@ -34,7 +35,8 @@ const ZonaManager = ({
   zonas = [], 
   onZonasChange, 
   selectedElements = [], 
-  onAssignZone 
+  onAssignZone,
+  salaId
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingZona, setEditingZona] = useState(null);
@@ -77,36 +79,35 @@ const ZonaManager = ({
       
       if (editingZona) {
         // Editar zona existente
-        nuevaZona = {
-          ...editingZona,
+        const zonaActualizada = await updateZona(editingZona.id, {
           ...values,
           updated_at: new Date().toISOString()
-        };
+        });
         
         const zonasActualizadas = zonasList.map(z => 
-          z.id === editingZona.id ? nuevaZona : z
+          z.id === editingZona.id ? zonaActualizada : z
         );
         setZonasList(zonasActualizadas);
         message.success('Zona actualizada exitosamente');
+        
+        if (onZonasChange) {
+          onZonasChange(zonasActualizadas);
+        }
       } else {
         // Crear nueva zona
-        nuevaZona = {
-          id: Date.now(),
-          nombre: values.nombre,
-          aforo: values.aforo,
-          color: values.color,
-          numerada: values.numerada,
-          descripcion: values.descripcion,
+        const zonaCreada = await createZona({
+          ...values,
+          sala_id: salaId,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        };
+        });
         
-        setZonasList([...zonasList, nuevaZona]);
+        setZonasList([...zonasList, zonaCreada]);
         message.success('Zona creada exitosamente');
-      }
-      
-      if (onZonasChange) {
-        onZonasChange([...zonasList, nuevaZona]);
+        
+        if (onZonasChange) {
+          onZonasChange([...zonasList, zonaCreada]);
+        }
       }
       
       handleCancel();
@@ -116,15 +117,22 @@ const ZonaManager = ({
     }
   };
 
-  const handleDeleteZona = (zonaId) => {
-    const zonasActualizadas = zonasList.filter(z => z.id !== zonaId);
-    setZonasList(zonasActualizadas);
-    
-    if (onZonasChange) {
-      onZonasChange(zonasActualizadas);
+  const handleDeleteZona = async (zonaId) => {
+    try {
+      await deleteZona(zonaId);
+      
+      const zonasActualizadas = zonasList.filter(z => z.id !== zonaId);
+      setZonasList(zonasActualizadas);
+      
+      if (onZonasChange) {
+        onZonasChange(zonasActualizadas);
+      }
+      
+      message.success('Zona eliminada exitosamente');
+    } catch (error) {
+      message.error('Error al eliminar la zona');
+      console.error('Error deleting zona:', error);
     }
-    
-    message.success('Zona eliminada exitosamente');
   };
 
   const handleAssignZone = (zonaId) => {

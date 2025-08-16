@@ -62,6 +62,7 @@ import { useMapaGraphicalElements } from '../../hooks/useMapaGraphicalElements';
 import { useMapaLoadingSaving } from '../../hooks/usemapaloadingsaving';
 import { useMapaZones } from '../../hooks/usemapazones';
 import { supabase } from '../../../supabaseClient';
+import { fetchZonasPorSala } from '../../services/apibackoffice';
 import Grid from '../compMapa/Grid';
 import MenuMapa from '../compMapa/MenuMapa';
 import AdvancedEditPopup from '../compMapa/AdvancedEditPopup';
@@ -75,7 +76,7 @@ import ContextMenu from './ContextMenu';
 import MesaTypeMenu from './MesaTypeMenu';
 import BackgroundFilterMenu from './BackgroundFilterMenu';
 import BackgroundImageManager from './BackgroundImageManager';
-import MesaSillaManager from './MesaSillaManager';
+
 
 const { Option } = Select;
 const { Text, Title } = Typography;
@@ -171,9 +172,7 @@ const CrearMapaEditor = ({
   const [backgroundFilters, setBackgroundFilters] = useState({});
   const [showBackgroundFilters, setShowBackgroundFilters] = useState(false);
   
-  // ===== ESTADOS DE GESTIÓN DE SILLAS =====
-  const [showMesaSillaManager, setShowMesaSillaManager] = useState(false);
-  const [selectedMesaForSillas, setSelectedMesaForSillas] = useState(null);
+
   
   // ===== REFERENCIAS =====
   const stageRef = useRef(null);
@@ -225,6 +224,24 @@ const CrearMapaEditor = ({
       setGridSize(mapa.contenido.configuracion.gridSize);
     }
   }, [mapa]);
+
+  // Cargar zonas de la sala
+  useEffect(() => {
+    const loadZonas = async () => {
+      if (salaId) {
+        try {
+          const zonasData = await fetchZonasPorSala(salaId);
+          setZonas(zonasData || []);
+          console.log('Zonas cargadas:', zonasData);
+        } catch (error) {
+          console.error('Error cargando zonas:', error);
+          message.error('Error al cargar las zonas de la sala');
+        }
+      }
+    };
+
+    loadZonas();
+  }, [salaId]);
 
   // ===== FUNCIONES DE HISTORIAL =====
   const addToHistory = useCallback((newElements, action) => {
@@ -1127,13 +1144,13 @@ const CrearMapaEditor = ({
              </div>
            </div>
            
-           <MenuMapa
-             selectedElement={elements.find(el => selectedIds.includes(el._id))}
-             activeMode={activeMode}
-             sectionPoints={sectionPoints}
-             isCreatingSection={isCreatingSection}
-             zones={[]} // TODO: Implementar zonas
-             selectedZone={selectedZone}
+                       <MenuMapa
+              selectedElement={elements.find(el => selectedIds.includes(el._id))}
+              activeMode={activeMode}
+              sectionPoints={sectionPoints}
+              isCreatingSection={isCreatingSection}
+              zones={zonas}
+              selectedZone={selectedZone}
              numSillas={numSillas}
              sillaShape={sillaShape}
              selectedScale={scale}
@@ -1233,23 +1250,7 @@ const CrearMapaEditor = ({
                    >
                      Zonas
                    </Button>
-                   <Button 
-                     icon={<SettingOutlined />} 
-                     onClick={() => {
-                       if (selectedIds.length === 1) {
-                         const element = elements.find(el => el._id === selectedIds[0]);
-                         if (element?.type === 'mesa') {
-                           setSelectedMesaForSillas(element);
-                           setShowMesaSillaManager(true);
-                         }
-                       }
-                     }}
-                     disabled={selectedIds.length !== 1 || !elements.find(el => el._id === selectedIds[0])?.type === 'mesa'}
-                     title="Gestionar sillas de la mesa"
-                     size="small"
-                   >
-                     🪑 Sillas
-                   </Button>
+                   
                  </Space>
                </Col>
                
@@ -1339,16 +1340,44 @@ const CrearMapaEditor = ({
           <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
             <div className="p-4">
               <Title level={5}>Propiedades</Title>
-              {selectedIds.length === 1 ? (
-                <ElementProperties
-                  element={elements.find(el => el._id === selectedIds[0])}
-                  onUpdate={(updates) => {
-                    Object.entries(updates).forEach(([key, value]) => {
-                      updateElementProperty(selectedIds[0], key, value);
-                    });
-                  }}
-                />
-              ) : (
+                             {selectedIds.length === 1 ? (
+                 <ElementProperties
+                   element={elements.find(el => el._id === selectedIds[0])}
+                   onUpdate={(updates) => {
+                     Object.entries(updates).forEach(([key, value]) => {
+                       updateElementProperty(selectedIds[0], key, value);
+                     });
+                   }}
+                   onAddSillas={handleAddSillasToMesa}
+                   onRemoveSillas={handleRemoveSillasFromMesa}
+                   onDuplicate={() => {
+                     const element = elements.find(el => el._id === selectedIds[0]);
+                     if (element) {
+                       const duplicatedElement = {
+                         ...element,
+                         _id: `duplicate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                         posicion: {
+                           x: element.posicion.x + 50,
+                           y: element.posicion.y + 50
+                         }
+                       };
+                       setElements(prev => [...prev, duplicatedElement]);
+                       addToHistory([...elements, duplicatedElement], `Duplicar ${element.type}`);
+                       message.success('Elemento duplicado');
+                     }
+                   }}
+                   onDelete={() => {
+                     const element = elements.find(el => el._id === selectedIds[0]);
+                     if (element) {
+                       const newElements = elements.filter(el => el._id !== selectedIds[0]);
+                       setElements(newElements);
+                       addToHistory(newElements, `Eliminar ${element.type}`);
+                       setSelectedIds([]);
+                       message.success('Elemento eliminado');
+                     }
+                   }}
+                 />
+               ) : (
                 <div className="text-gray-600">
                   {selectedIds.length} elementos seleccionados
                 </div>
@@ -1383,21 +1412,22 @@ const CrearMapaEditor = ({
          />
        </Modal>
 
-       {/* ===== GESTOR DE ZONAS ===== */}
-       <Modal
-         title="Gestión de Zonas"
-         open={showZonaManager}
-         onCancel={() => setShowZonaManager(false)}
-         footer={null}
-         width={800}
-       >
-         <ZonaManager
-           zonas={zonas}
-           onZonasChange={handleZonasChange}
-           selectedElements={selectedIds}
-           onAssignZone={handleAssignZone}
-         />
-       </Modal>
+               {/* ===== GESTOR DE ZONAS ===== */}
+        <Modal
+          title="Gestión de Zonas"
+          open={showZonaManager}
+          onCancel={() => setShowZonaManager(false)}
+          footer={null}
+          width={800}
+        >
+          <ZonaManager
+            zonas={zonas}
+            onZonasChange={handleZonasChange}
+            selectedElements={selectedIds}
+            onAssignZone={handleAssignZone}
+            salaId={salaId}
+          />
+        </Modal>
 
        {/* ===== FILTROS DE IMAGEN DE FONDO ===== */}
        <BackgroundFilterMenu
@@ -1421,17 +1451,7 @@ const CrearMapaEditor = ({
          canEdit={true}
        />
 
-       {/* ===== GESTOR DE SILLAS DE MESA ===== */}
-       <MesaSillaManager
-         visible={showMesaSillaManager}
-         onClose={() => {
-           setShowMesaSillaManager(false);
-           setSelectedMesaForSillas(null);
-         }}
-         mesa={selectedMesaForSillas}
-         onAddSillas={handleAddSillasToMesa}
-         onRemoveSillas={handleRemoveSillasFromMesa}
-       />
+       
 
       {/* ===== POPUPS DE EDICIÓN ===== */}
       {selectedIds.length === 1 && (
@@ -1462,12 +1482,21 @@ const CrearMapaEditor = ({
 
 // ===== COMPONENTES AUXILIARES =====
 
-const ElementProperties = ({ element, onUpdate }) => {
+const ElementProperties = ({ element, onUpdate, onAddSillas, onRemoveSillas, onDuplicate, onDelete }) => {
   if (!element) return null;
 
   switch (element.type) {
     case 'mesa':
-      return <PropiedadesMesa mesa={element} onUpdate={onUpdate} />;
+      return (
+        <PropiedadesMesa 
+          mesa={element} 
+          onUpdate={onUpdate}
+          onAddSillas={onAddSillas}
+          onRemoveSillas={onRemoveSillas}
+          onDuplicate={onDuplicate}
+          onDelete={onDelete}
+        />
+      );
     case 'silla':
       return <PropiedadesSilla silla={element} onUpdate={onUpdate} />;
     default:

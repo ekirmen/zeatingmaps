@@ -4,12 +4,14 @@ import { Card, Button, Space, Typography, message, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, EyeOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import CrearMapaEditor from '../components/CrearMapa/CrearMapaEditor';
+import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const { Title, Text } = Typography;
 
 const CrearMapaPage = () => {
   const { salaId } = useParams();
   const navigate = useNavigate();
+  const { addTenantToInsert } = useTenantFilter();
   
   const [sala, setSala] = useState(null);
   const [mapa, setMapa] = useState(null);
@@ -20,6 +22,8 @@ const CrearMapaPage = () => {
   useEffect(() => {
     if (salaId) {
       loadSalaInfo();
+      // Test database access
+      testDatabaseAccess();
     } else {
       setLoading(false);
     }
@@ -68,43 +72,136 @@ const CrearMapaPage = () => {
     }
   };
 
+  const testDatabaseAccess = async () => {
+    try {
+      console.log('[DEBUG] Testing database access...');
+      
+      // Test 1: Check if we can access the mapas table
+      const { data: mapasTest, error: mapasError } = await supabase
+        .from('mapas')
+        .select('*')
+        .limit(1);
+      
+      console.log('[DEBUG] Mapas table access test:', { data: mapasTest, error: mapasError });
+      
+      // Test 2: Check the table structure
+      const { data: tableInfo, error: tableError } = await supabase
+        .rpc('get_table_info', { table_name: 'mapas' })
+        .catch(() => ({ data: null, error: 'RPC not available' }));
+      
+      console.log('[DEBUG] Table structure test:', { data: tableInfo, error: tableError });
+      
+      // Test 3: Check tenant context
+      const tenantData = addTenantToInsert({});
+      console.log('[DEBUG] Tenant data from hook:', tenantData);
+      
+      // Test 4: Check if we can access the tenants table
+      const { data: tenantsTest, error: tenantsError } = await supabase
+        .from('tenants')
+        .select('id, company_name')
+        .limit(1);
+      
+      console.log('[DEBUG] Tenants table access test:', { data: tenantsTest, error: tenantsError });
+      
+    } catch (error) {
+      console.error('[DEBUG] Database access test failed:', error);
+    }
+  };
+
   const handleSave = async (mapaData) => {
     try {
       setSaving(true);
       
+      // Debug: Check authentication and tenant
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      console.log('[DEBUG] Current user:', user);
+      console.log('[DEBUG] Auth error:', authError);
+      
+      if (authError || !user) {
+        throw new Error('Usuario no autenticado. Por favor, inicie sesión nuevamente.');
+      }
+      
+      console.log('[DEBUG] Current tenant from hook:', addTenantToInsert({}));
+      
+      // Prepare base data
+      const baseData = {
+        nombre: mapaData.nombre || 'Mapa de Sala',
+        descripcion: mapaData.descripcion || '',
+        contenido: mapaData.contenido || [],
+        estado: mapaData.estado || 'activo'
+      };
+      
+      // Ensure required fields are present
+      if (!baseData.nombre) {
+        throw new Error('El nombre del mapa es obligatorio');
+      }
+      
+      if (!Array.isArray(baseData.contenido)) {
+        throw new Error('El contenido del mapa debe ser un array');
+      }
+      
       if (mapa?.id) {
         // Actualizar mapa existente
+        const updateData = addTenantToInsert({
+          ...baseData,
+          updated_at: new Date().toISOString()
+        });
+        
+        console.log('[DEBUG] Update data with tenant:', updateData);
+        
         const { error } = await supabase
           .from('mapas')
-          .update({
-            nombre: mapaData.nombre,
-            descripcion: mapaData.descripcion,
-            contenido: mapaData.contenido,
-            estado: mapaData.estado,
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('id', mapa.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('[DEBUG] Update error details:', error);
+          throw error;
+        }
         message.success('Mapa actualizado exitosamente');
       } else {
         // Crear nuevo mapa
-        const { data, error } = await supabase
-          .from('mapas')
-          .insert({
-            nombre: mapaData.nombre,
-            descripcion: mapaData.descripcion,
-            sala_id: salaId,
-            contenido: mapaData.contenido,
-            estado: mapaData.estado
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
+        const insertData = addTenantToInsert({
+          ...baseData,
+          sala_id: salaId
+        });
         
-        setMapa(data);
-        message.success('Mapa creado exitosamente');
+        console.log('[DEBUG] Insert data with tenant:', insertData);
+        
+        // If no tenant_id is available, try without it (fallback)
+        if (!insertData.tenant_id) {
+          console.warn('[DEBUG] No tenant_id available, trying without it');
+          const fallbackData = { ...insertData };
+          delete fallbackData.tenant_id;
+          
+          const { data, error } = await supabase
+            .from('mapas')
+            .insert(fallbackData)
+            .select()
+            .single();
+
+          if (error) {
+            console.error('[DEBUG] Fallback insert error:', error);
+            throw new Error(`Error al crear mapa: ${error.message}. Si el problema persiste, contacte al administrador.`);
+          }
+          
+          setMapa(data);
+          message.success('Mapa creado exitosamente (sin tenant asignado)');
+        } else {
+          const { data, error } = await supabase
+            .from('mapas')
+            .insert(insertData)
+            .select()
+            .single();
+
+          if (error) {
+            console.error('[DEBUG] Insert error details:', error);
+            throw error;
+          }
+          
+          setMapa(data);
+          message.success('Mapa creado exitosamente');
+        }
       }
 
       // Redirigir a la página de plano
@@ -112,7 +209,7 @@ const CrearMapaPage = () => {
       
     } catch (error) {
       console.error('Error saving mapa:', error);
-      message.error('Error al guardar el mapa');
+      message.error('Error al guardar el mapa: ' + error.message);
     } finally {
       setSaving(false);
     }
