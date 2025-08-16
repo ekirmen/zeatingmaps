@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Button, Space, Typography, message, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, EyeOutlined } from '@ant-design/icons';
@@ -406,6 +406,11 @@ const CrearMapaPage = () => {
       });
     }
   }, [loading, sala, mapa, error, isMounted, salaId]);
+  
+  // Log adicional para verificar re-renderizados
+  useEffect(() => {
+    console.log('[DEBUG] Componente re-renderizado, timestamp:', Date.now());
+  });
 
   // Cargar información de la sala
   const loadSalaInfo = async () => {
@@ -813,7 +818,14 @@ const CrearMapaPage = () => {
 
         {/* Editor */}
         <div className="flex-1">
-          {(() => {
+          {useMemo(() => {
+            console.log('[DEBUG] useMemo ejecutándose con dependencias:', {
+              salaId,
+              mapaId: mapa?.id,
+              handleSaveType: typeof handleSave,
+              handleCancelType: typeof handleCancel
+            });
+            
             try {
               // Validar props antes de renderizar el editor
               console.log('[DEBUG] Validando props para CrearMapaEditor:', {
@@ -885,35 +897,21 @@ const CrearMapaPage = () => {
               
               console.log('[DEBUG] Todas las validaciones pasaron, renderizando CrearMapaEditor...');
               
-              // Renderizar el editor con error boundary específico
+              // Renderizar el editor directamente
               try {
-                // Crear un error boundary específico para el editor
-                const EditorWithErrorBoundary = () => {
-                  try {
-                    console.log('[DEBUG] Creando componente CrearMapaEditor...');
-                    
-                    const editorComponent = (
-                      <CrearMapaEditor
-                        salaId={salaId}
-                        onSave={handleSave}
-                        onCancel={handleCancel}
-                        initialMapa={mapa}
-                        isEditMode={!!mapa}
-                      />
-                    );
-                    
-                    console.log('[DEBUG] CrearMapaEditor creado exitosamente');
-                    return editorComponent;
-                    
-                  } catch (componentError) {
-                    console.error('[DEBUG] Error al crear componente CrearMapaEditor:', componentError);
-                    throw new Error(`Error de componente: ${componentError.message}`);
-                  }
-                };
+                console.log('[DEBUG] Creando componente CrearMapaEditor...');
                 
-                console.log('[DEBUG] Renderizando EditorWithErrorBoundary...');
-                const editorComponent = <EditorWithErrorBoundary />;
-                console.log('[DEBUG] EditorWithErrorBoundary renderizado exitosamente');
+                const editorComponent = (
+                  <CrearMapaEditor
+                    salaId={salaId}
+                    onSave={handleSave}
+                    onCancel={handleCancel}
+                    initialMapa={mapa}
+                    isEditMode={!!mapa}
+                  />
+                );
+                
+                console.log('[DEBUG] CrearMapaEditor creado exitosamente');
                 
                 // Log adicional para verificar el componente
                 console.log('[DEBUG] Tipo del componente editor:', typeof editorComponent);
@@ -962,7 +960,7 @@ const CrearMapaPage = () => {
                 </div>
               );
             }
-          })()}
+          }, [salaId, mapa, handleSave, handleCancel])}
         </div>
       </div>
     );
