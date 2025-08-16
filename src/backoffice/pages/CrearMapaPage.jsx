@@ -49,7 +49,7 @@ const CrearMapaPage = () => {
       
       return () => clearTimeout(safetyTimeout);
     }
-  }, [isMounted, salaId, loading]); // Agregar loading como dependencia
+  }, [isMounted, salaId]); // Remover loading como dependencia para evitar re-renderizados infinitos
 
   // Manejar caso cuando no hay salaId
   useEffect(() => {
@@ -870,6 +870,14 @@ const CrearMapaPage = () => {
                   throw new Error('El mapa no corresponde a la sala seleccionada');
                 }
                 
+                // Verificar que el contenido tenga la estructura esperada
+                if (mapa.contenido && typeof mapa.contenido === 'object') {
+                  if (!mapa.contenido.elementos || !Array.isArray(mapa.contenido.elementos)) {
+                    console.warn('[DEBUG] Contenido del mapa no tiene elementos válidos:', mapa.contenido);
+                    // No lanzar error, solo warning
+                  }
+                }
+                
                 console.log('[DEBUG] Mapa validado exitosamente, procediendo a renderizar editor');
               } else {
                 console.log('[DEBUG] No hay mapa o no es un objeto válido, creando mapa nuevo');
@@ -877,19 +885,60 @@ const CrearMapaPage = () => {
               
               console.log('[DEBUG] Todas las validaciones pasaron, renderizando CrearMapaEditor...');
               
-              // Renderizar el editor con try-catch específico
+              // Renderizar el editor con error boundary específico
               try {
-                const editorComponent = (
-                  <CrearMapaEditor
-                    salaId={salaId}
-                    onSave={handleSave}
-                    onCancel={handleCancel}
-                    initialMapa={mapa}
-                    isEditMode={!!mapa}
-                  />
-                );
+                // Crear un error boundary específico para el editor
+                const EditorWithErrorBoundary = () => {
+                  try {
+                    console.log('[DEBUG] Creando componente CrearMapaEditor...');
+                    
+                    const editorComponent = (
+                      <CrearMapaEditor
+                        salaId={salaId}
+                        onSave={handleSave}
+                        onCancel={handleCancel}
+                        initialMapa={mapa}
+                        isEditMode={!!mapa}
+                      />
+                    );
+                    
+                    console.log('[DEBUG] CrearMapaEditor creado exitosamente');
+                    return editorComponent;
+                    
+                  } catch (componentError) {
+                    console.error('[DEBUG] Error al crear componente CrearMapaEditor:', componentError);
+                    throw new Error(`Error de componente: ${componentError.message}`);
+                  }
+                };
                 
-                console.log('[DEBUG] CrearMapaEditor renderizado exitosamente');
+                console.log('[DEBUG] Renderizando EditorWithErrorBoundary...');
+                const editorComponent = <EditorWithErrorBoundary />;
+                console.log('[DEBUG] EditorWithErrorBoundary renderizado exitosamente');
+                
+                // Log adicional para verificar el componente
+                console.log('[DEBUG] Tipo del componente editor:', typeof editorComponent);
+                console.log('[DEBUG] Props del componente:', {
+                  salaId: salaId,
+                  onSave: typeof handleSave,
+                  onCancel: typeof handleCancel,
+                  initialMapa: mapa ? 'presente' : 'ausente',
+                  isEditMode: !!mapa
+                });
+                
+                // Verificar que el componente sea un elemento React válido
+                if (!editorComponent || typeof editorComponent !== 'object') {
+                  console.error('[DEBUG] Componente editor no es válido:', editorComponent);
+                  throw new Error('El componente editor no es válido');
+                }
+                
+                // Verificar que tenga la propiedad type
+                if (!editorComponent.type) {
+                  console.error('[DEBUG] Componente editor no tiene type:', editorComponent);
+                  throw new Error('El componente editor no tiene type válido');
+                }
+                
+                console.log('[DEBUG] Componente editor validado exitosamente');
+                
                 return editorComponent;
                 
               } catch (renderError) {
