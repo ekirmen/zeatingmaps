@@ -46,9 +46,37 @@ const Dashboard = () => {
   const [systemAlerts, setSystemAlerts] = useState([]);
 
   useEffect(() => {
+    // Definir las funciones dentro del useEffect para evitar problemas de dependencias
+    
+
+    const subscribeToRealtimeUpdates = () => {
+      try {
+        // Suscribirse a actualizaciones en tiempo real
+        const subscription = supabase
+          .channel('dashboard-updates')
+          .on('postgres_changes', 
+            { event: '*', schema: 'public', table: 'payment_transactions' }, 
+            () => {
+              // Recargar datos cuando hay cambios
+              loadDashboardData();
+            }
+          )
+          .subscribe();
+
+        // Retornar función de limpieza
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Error subscribing to realtime updates:', error);
+        return () => {}; // Función de limpieza vacía en caso de error
+      }
+    };
+
+    // Ejecutar carga inicial
     loadDashboardData();
     
-    // Suscribirse a actualizaciones en tiempo real y retornar función de limpieza
+    // Suscribirse a actualizaciones en tiempo real
     const cleanup = subscribeToRealtimeUpdates();
     
     // Retornar función de limpieza
@@ -57,7 +85,7 @@ const Dashboard = () => {
         cleanup();
       }
     };
-  }, [loadDashboardData, subscribeToRealtimeUpdates]);
+  }, []); // Sin dependencias ya que las funciones están definidas dentro
 
   const loadDashboardData = async () => {
     try {

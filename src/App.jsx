@@ -6,6 +6,7 @@ import TenantErrorBoundary from './components/TenantErrorBoundary';
 import StoreApp from './store/StoreApp';
 import BackofficeApp from './backoffice/BackofficeApp';
 import { getCurrentDomainConfig, shouldShowSaaS, shouldShowBackoffice, shouldShowStore } from './config/domainConfig';
+import { ThemeProvider } from './contexts/ThemeContext';
 import './index.css';
 
 // Componente de carga
@@ -59,59 +60,61 @@ const App = () => {
   const finalShowStore = isMain ? true : showStore;
 
   return (
-    <ConfigProvider theme={theme}>
-      <Routes>
-        {/* Rutas del Backoffice - Solo si está habilitado */}
-        {finalShowBackoffice && (
-          <>
-            <Route path="/dashboard/*" element={<BackofficeApp />} />
-            <Route path="/backoffice/*" element={<BackofficeApp />} />
-            <Route path="/admin/*" element={<BackofficeApp />} />
-            <Route path="/saas/*" element={<BackofficeApp />} />
-          </>
-        )}
+    <ThemeProvider>
+      <ConfigProvider theme={theme}>
+        <Routes>
+          {/* Rutas del Backoffice - Solo si está habilitado */}
+          {finalShowBackoffice && (
+            <>
+              <Route path="/dashboard/*" element={<BackofficeApp />} />
+              <Route path="/backoffice/*" element={<BackofficeApp />} />
+              <Route path="/admin/*" element={<BackofficeApp />} />
+              <Route path="/saas/*" element={<BackofficeApp />} />
+            </>
+          )}
 
-        {/* Rutas del Store - Solo si está habilitado */}
-        {finalShowStore && (
-          <>
-            <Route path="/store/*" element={<StoreApp />} />
-            <Route path="/eventos/*" element={<StoreApp />} />
-            <Route path="/comprar/*" element={<StoreApp />} />
-          </>
-        )}
+          {/* Rutas del Store - Solo si está habilitado */}
+          {finalShowStore && (
+            <>
+              <Route path="/store/*" element={<StoreApp />} />
+              <Route path="/eventos/*" element={<StoreApp />} />
+              <Route path="/comprar/*" element={<StoreApp />} />
+            </>
+          )}
 
-        {/* Ruta principal - Redirigir según configuración */}
-        <Route path="/" element={
-          <Navigate
-            to={
-              finalShowStore
-                ? "/store"
-                : finalShowSaaS
-                ? "/dashboard"
-                : "/dashboard"
-            }
-            replace
-          />
-        } />
-
-        {/* Ruta de fallback - Redirigir según configuración */}
-        <Route
-          path="*"
-          element={
+          {/* Ruta principal - Redirigir según configuración */}
+          <Route path="/" element={
             <Navigate
               to={
-                finalShowSaaS
-                  ? "/dashboard"
-                  : finalShowStore
+                finalShowStore
                   ? "/store"
+                  : finalShowSaaS
+                  ? "/dashboard"
                   : "/dashboard"
               }
               replace
             />
-          }
-        />
-      </Routes>
-    </ConfigProvider>
+          } />
+
+          {/* Ruta de fallback - Redirigir según configuración */}
+          <Route
+            path="*"
+            element={
+              <Navigate
+                to={
+                  finalShowSaaS
+                    ? "/dashboard"
+                    : finalShowStore
+                    ? "/store"
+                    : "/dashboard"
+                }
+                replace
+              />
+            }
+          />
+        </Routes>
+      </ConfigProvider>
+    </ThemeProvider>
   );
 };
 
