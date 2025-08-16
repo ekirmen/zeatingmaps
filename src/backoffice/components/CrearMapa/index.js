@@ -6,8 +6,26 @@ import CrearMapaEditor from './CrearMapaEditor';
 import CrearMapaPreview from './CrearMapaPreview';
 import CrearMapaValidation from './CrearMapaValidation';
 import CrearMapaSettings from './CrearMapaSettings';
+import ZonaManager from './ZonaManager';
+import ContextMenu from './ContextMenu';
+import MesaTypeMenu from './MesaTypeMenu';
+import BackgroundFilterMenu from './BackgroundFilterMenu';
+import BackgroundImageManager from './BackgroundImageManager';
+import ImageUploader from './ImageUploader';
 
-export { CrearMapaMain, CrearMapaEditor, CrearMapaPreview, CrearMapaValidation, CrearMapaSettings };
+export { 
+  CrearMapaMain, 
+  CrearMapaEditor, 
+  CrearMapaPreview, 
+  CrearMapaValidation, 
+  CrearMapaSettings,
+  ZonaManager,
+  ContextMenu,
+  MesaTypeMenu,
+  BackgroundFilterMenu,
+  BackgroundImageManager,
+  ImageUploader
+};
 
 // ===== FUNCIONES UTILITARIAS =====
 export const crearMapaUtils = {

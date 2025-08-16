@@ -61,6 +61,7 @@ import { useMapaZoomStage } from '../../hooks/useMapaZoomStage';
 import { useMapaGraphicalElements } from '../../hooks/useMapaGraphicalElements';
 import { useMapaLoadingSaving } from '../../hooks/usemapaloadingsaving';
 import { useMapaZones } from '../../hooks/usemapazones';
+import { supabase } from '../../../supabaseClient';
 import Grid from '../compMapa/Grid';
 import MenuMapa from '../compMapa/MenuMapa';
 import AdvancedEditPopup from '../compMapa/AdvancedEditPopup';
@@ -73,6 +74,7 @@ import ZonaManager from './ZonaManager';
 import ContextMenu from './ContextMenu';
 import MesaTypeMenu from './MesaTypeMenu';
 import BackgroundFilterMenu from './BackgroundFilterMenu';
+import BackgroundImageManager from './BackgroundImageManager';
 
 const { Option } = Select;
 const { Text, Title } = Typography;
@@ -329,19 +331,50 @@ const CrearMapaEditor = ({
     message.success(`Elementos ajustados a cuadrícula de ${gridSize}px`);
   }, [snapToCustomGrid, gridSize, elements, addToHistory]);
 
-  const handleBackgroundUpload = useCallback((file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setBackgroundImage(e.target.result);
-      setBackgroundImageFunction(e.target.result, {
+  const handleBackgroundUpload = useCallback(async (file) => {
+    try {
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        message.error('Por favor selecciona solo archivos de imagen');
+        return false;
+      }
+      
+      // Validar tamaño (10MB máximo para mapas)
+      if (file.size > 10 * 1024 * 1024) {
+        message.error('La imagen debe pesar 10MB o menos');
+        return false;
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `mapas/${Date.now()}.${fileExt}`;
+      const filePath = `mapas/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('productos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('productos')
+        .getPublicUrl(filePath);
+
+      setBackgroundImage(publicUrl);
+      setBackgroundImageFunction(publicUrl, {
         scale: backgroundScale,
         opacity: backgroundOpacity,
         showInWeb: showBackgroundInWeb
       });
-      message.success('Imagen de fondo cargada');
-    };
-    reader.readAsDataURL(file);
-    return false; // Prevenir upload automático
+      message.success('Imagen de fondo subida y cargada correctamente');
+      return false; // Prevenir upload automático
+    } catch (error) {
+      console.error('Error uploading background image:', error);
+      message.error('Error al subir la imagen de fondo');
+      return false;
+    }
   }, [backgroundScale, backgroundOpacity, showBackgroundInWeb, setBackgroundImageFunction]);
 
   const handleSave = useCallback(async () => {
@@ -1204,15 +1237,19 @@ const AdvancedConfiguration = ({
       <div>
         <Title level={5}>Imagen de Fondo</Title>
         <div className="space-y-4">
-          <Upload
-            beforeUpload={onBackgroundUpload}
-            showUploadList={false}
-            accept="image/*"
-          >
-            <Button icon={<UploadOutlined />}>
-              {backgroundImage ? 'Cambiar Imagen' : 'Subir Imagen'}
-            </Button>
-          </Upload>
+          <BackgroundImageManager
+            onImageSelect={(imageUrl) => {
+              onBackgroundUpload({ name: 'background.jpg', type: 'image/jpeg' });
+              // Simular el archivo para mantener compatibilidad
+              const fakeFile = new File([''], 'background.jpg', { type: 'image/jpeg' });
+              fakeFile.url = imageUrl;
+              onBackgroundUpload(fakeFile);
+            }}
+            currentImage={backgroundImage}
+            onImageRemove={onBackgroundRemove}
+            title=""
+            description=""
+          />
           
           {backgroundImage && (
             <>
@@ -1247,13 +1284,6 @@ const AdvancedConfiguration = ({
                 />
                 <span>Mostrar en web</span>
               </div>
-              <Button 
-                danger 
-                onClick={onBackgroundRemove}
-                icon={<DeleteOutlined />}
-              >
-                Remover Fondo
-              </Button>
             </>
           )}
         </div>
