@@ -54,6 +54,26 @@ const CrearMapaPage = () => {
     );
   }
 
+  // Verificar y crear campos faltantes inmediatamente
+  const handleMissingFieldsError = async (error) => {
+    if (error.code === '42703') {
+      console.log('[DEBUG] Error de campo faltante detectado, verificando estructura...');
+      
+      // Verificar la estructura de la tabla
+      const structureOk = await checkMapasTableStructure();
+      
+      if (structureOk) {
+        message.success('Campos faltantes agregados exitosamente. Reintentando operación...');
+        // Reintentar la operación original
+        return true;
+      } else {
+        message.error('No se pudieron agregar los campos faltantes automáticamente.');
+        return false;
+      }
+    }
+    return false;
+  };
+
   // Agregar campos faltantes a la tabla mapas existente
   const addMissingFieldsToMapas = async (missingFields) => {
     try {
@@ -71,6 +91,9 @@ const CrearMapaPage = () => {
         }
         if (missingFields.includes('estado')) {
           alterSQL += 'ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS estado TEXT DEFAULT \'draft\'; ';
+        }
+        if (missingFields.includes('created_at')) {
+          alterSQL += 'ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(); ';
         }
         
         if (alterSQL) {
@@ -146,7 +169,7 @@ const CrearMapaPage = () => {
       }
       
       // Verificar si los campos esperados están presentes
-      const expectedFields = ['id', 'sala_id', 'contenido', 'tenant_id', 'updated_at', 'nombre', 'descripcion', 'estado'];
+      const expectedFields = ['id', 'sala_id', 'contenido', 'tenant_id', 'updated_at', 'created_at', 'nombre', 'descripcion', 'estado'];
       const availableFields = structureTest && structureTest.length > 0 ? Object.keys(structureTest[0]) : [];
       
       console.log('[DEBUG] Campos disponibles en tabla mapas:', availableFields);
@@ -179,7 +202,8 @@ const CrearMapaPage = () => {
           const sqlCommands = [
             "ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS nombre TEXT DEFAULT 'Nuevo Mapa';",
             "ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS descripcion TEXT DEFAULT '';",
-            "ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS estado TEXT DEFAULT 'draft';"
+            "ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS estado TEXT DEFAULT 'draft';",
+            "ALTER TABLE public.mapas ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();"
           ];
           
           console.log('[DEBUG] SQL para agregar campos faltantes:');
@@ -355,7 +379,7 @@ const CrearMapaPage = () => {
           .from('mapas')
           .select('*')
           .eq('sala_id', salaId)
-          .order('created_at', { ascending: false })
+          .order('id', { ascending: false }) // Usar 'id' en lugar de 'created_at'
           .limit(1)
           .single();
 
@@ -370,6 +394,30 @@ const CrearMapaPage = () => {
             message.warning('No se encontró un mapa existente para esta sala. Se creará uno nuevo.');
           } else if (mapaError.code === '42P01') {
             message.error('Error: La tabla mapas no existe o no es accesible.');
+          } else if (mapaError.code === '42703') {
+            message.warning('La tabla mapas existe pero le faltan algunos campos. Intentando agregarlos automáticamente...');
+            // Intentar agregar campos faltantes
+            const fieldsAdded = await handleMissingFieldsError(mapaError);
+            if (fieldsAdded) {
+              // Reintentar la consulta
+              try {
+                const { data: retryData, error: retryError } = await supabase
+                  .from('mapas')
+                  .select('*')
+                  .eq('sala_id', salaId)
+                  .order('id', { ascending: false })
+                  .limit(1)
+                  .single();
+                
+                if (retryData && !retryError) {
+                  safeSetState(setMapa, retryData);
+                  console.log('[DEBUG] Mapa encontrado después de agregar campos:', retryData);
+                  return;
+                }
+              } catch (retryError) {
+                console.warn('[DEBUG] Error al reintentar consulta:', retryError);
+              }
+            }
           } else {
             message.warning(`Error al cargar mapa existente: ${mapaError.message}`);
           }
