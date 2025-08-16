@@ -12,6 +12,7 @@ import MesaTypeMenu from './MesaTypeMenu';
 import BackgroundFilterMenu from './BackgroundFilterMenu';
 import BackgroundImageManager from './BackgroundImageManager';
 import ImageUploader from './ImageUploader';
+import MesaSillaManager from './MesaSillaManager';
 
 export { 
   CrearMapaMain, 
@@ -24,7 +25,8 @@ export {
   MesaTypeMenu,
   BackgroundFilterMenu,
   BackgroundImageManager,
-  ImageUploader
+  ImageUploader,
+  MesaSillaManager
 };
 
 // ===== FUNCIONES UTILITARIAS =====

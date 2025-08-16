@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { Stage, Layer, Circle, Rect, Text as KonvaText, Line, Image, Group } from 'react-konva';
+import { Stage, Layer, Circle, Rect, Text as KonvaText, Line, Image, Group, RegularPolygon, Star } from 'react-konva';
 import { 
   Button, 
   Card, 
@@ -75,6 +75,7 @@ import ContextMenu from './ContextMenu';
 import MesaTypeMenu from './MesaTypeMenu';
 import BackgroundFilterMenu from './BackgroundFilterMenu';
 import BackgroundImageManager from './BackgroundImageManager';
+import MesaSillaManager from './MesaSillaManager';
 
 const { Option } = Select;
 const { Text, Title } = Typography;
@@ -169,6 +170,10 @@ const CrearMapaEditor = ({
   // ===== ESTADOS DE FILTROS DE FONDO =====
   const [backgroundFilters, setBackgroundFilters] = useState({});
   const [showBackgroundFilters, setShowBackgroundFilters] = useState(false);
+  
+  // ===== ESTADOS DE GESTIÓN DE SILLAS =====
+  const [showMesaSillaManager, setShowMesaSillaManager] = useState(false);
+  const [selectedMesaForSillas, setSelectedMesaForSillas] = useState(null);
   
   // ===== REFERENCIAS =====
   const stageRef = useRef(null);
@@ -286,17 +291,235 @@ const CrearMapaEditor = ({
     updateElementSize(elementId, newSize.width, newSize.height);
   }, [updateElementSize]);
 
-  const handleAddMesa = useCallback(() => {
-    const nuevaMesa = addMesa(sillaShape);
-    addToHistory(elements, 'Agregar mesa');
-    message.success('Mesa agregada');
-  }, [addMesa, sillaShape, elements, addToHistory]);
+  const handleAddMesa = useCallback((type = 'rect', defaultSize = null) => {
+    const nuevaMesa = addMesa(type, defaultSize);
+    addToHistory(elements, `Agregar mesa ${type}`);
+    message.success(`Mesa ${type} agregada`);
+  }, [addMesa, elements, addToHistory]);
 
-  const handleAddSillasToMesa = useCallback((mesaId) => {
-    addSillasToMesa(mesaId, numSillas, sillaShape);
-    addToHistory(elements, `Agregar ${numSillas} sillas a mesa`);
-    message.success(`${numSillas} sillas agregadas a la mesa`);
-  }, [addSillasToMesa, numSillas, sillaShape, elements, addToHistory]);
+  const handleAddSillasToMesa = useCallback((mesaId, sillasConfig) => {
+    // Implementar lógica para agregar sillas según el tipo de mesa
+    const mesa = elements.find(el => el._id === mesaId);
+    if (!mesa) return;
+
+    const nuevasSillas = [];
+    let sillaId = 1;
+
+    switch (mesa.shape || mesa.type) {
+      case 'rect':
+        // Sillas en los 4 lados
+        const { top, right, bottom, left } = sillasConfig.rect;
+        
+        // Sillas arriba
+        for (let i = 0; i < top; i++) {
+          const x = mesa.posicion.x + (mesa.width / top) * i + (mesa.width / top) / 2;
+          const y = mesa.posicion.y - 25;
+          const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+          nuevasSillas.push({
+            _id: `silla_${Date.now()}_${sillaId++}`,
+            type: 'silla',
+            posicion: { x, y },
+            shape: isCircle ? 'circle' : 'rect',
+            radius: isCircle ? 10 : undefined,
+            width: isCircle ? undefined : 20,
+            height: isCircle ? undefined : 20,
+            fill: seatStates.available.fill,
+            stroke: seatStates.available.stroke,
+            state: 'available',
+            numero: sillaId - 1,
+            mesaId: mesaId
+          });
+        }
+
+        // Sillas derecha
+        for (let i = 0; i < right; i++) {
+          const x = mesa.posicion.x + mesa.width + 25;
+          const y = mesa.posicion.y + (mesa.height / right) * i + (mesa.height / right) / 2;
+          const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+          nuevasSillas.push({
+            _id: `silla_${Date.now()}_${sillaId++}`,
+            type: 'silla',
+            posicion: { x, y },
+            shape: isCircle ? 'circle' : 'rect',
+            radius: isCircle ? 10 : undefined,
+            width: isCircle ? undefined : 20,
+            height: isCircle ? undefined : 20,
+            fill: seatStates.available.fill,
+            stroke: seatStates.available.stroke,
+            state: 'available',
+            numero: sillaId - 1,
+            mesaId: mesaId
+          });
+        }
+
+        // Sillas abajo
+        for (let i = 0; i < bottom; i++) {
+          const x = mesa.posicion.x + (mesa.width / bottom) * i + (mesa.width / bottom) / 2;
+          const y = mesa.posicion.y + mesa.height + 25;
+          const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+          nuevasSillas.push({
+            _id: `silla_${Date.now()}_${sillaId++}`,
+            type: 'silla',
+            posicion: { x, y },
+            shape: isCircle ? 'circle' : 'rect',
+            radius: isCircle ? 10 : undefined,
+            width: isCircle ? undefined : 20,
+            height: isCircle ? undefined : 20,
+            fill: seatStates.available.fill,
+            stroke: seatStates.available.stroke,
+            state: 'available',
+            numero: sillaId - 1,
+            mesaId: mesaId
+          });
+        }
+
+        // Sillas izquierda
+        for (let i = 0; i < left; i++) {
+          const x = mesa.posicion.x - 25;
+          const y = mesa.posicion.y + (mesa.height / left) * i + (mesa.height / left) / 2;
+          const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+          nuevasSillas.push({
+            _id: `silla_${Date.now()}_${sillaId++}`,
+            type: 'silla',
+            posicion: { x, y },
+            shape: isCircle ? 'circle' : 'rect',
+            radius: isCircle ? 10 : undefined,
+            width: isCircle ? undefined : 20,
+            height: isCircle ? undefined : 20,
+            fill: seatStates.available.fill,
+            stroke: seatStates.available.stroke,
+            state: 'available',
+            numero: sillaId - 1,
+            mesaId: mesaId
+          });
+        }
+        break;
+
+      case 'circle':
+        // Sillas en círculo alrededor de la mesa
+        const { cantidad, radio } = sillasConfig.circle;
+        const mesaCenterX = mesa.posicion.x + (mesa.radius || 60);
+        const mesaCenterY = mesa.posicion.y + (mesa.radius || 60);
+        const sillaRadio = radio + 25; // Radio de la mesa + distancia para sillas
+
+        for (let i = 0; i < cantidad; i++) {
+          const angle = (i * 2 * Math.PI) / cantidad;
+          const x = mesaCenterX + Math.cos(angle) * sillaRadio;
+          const y = mesaCenterY + Math.sin(angle) * sillaRadio;
+          const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+          
+          nuevasSillas.push({
+            _id: `silla_${Date.now()}_${sillaId++}`,
+            type: 'silla',
+            posicion: { x, y },
+            shape: isCircle ? 'circle' : 'rect',
+            radius: isCircle ? 10 : undefined,
+            width: isCircle ? undefined : 20,
+            height: isCircle ? undefined : 20,
+            fill: seatStates.available.fill,
+            stroke: seatStates.available.stroke,
+            state: 'available',
+            numero: sillaId - 1,
+            mesaId: mesaId
+          });
+        }
+        break;
+
+      case 'hexagon':
+        // Sillas en los 6 lados del hexágono
+        const { lados } = sillasConfig.hexagon;
+        const hexCenterX = mesa.posicion.x + (mesa.width || 100) / 2;
+        const hexCenterY = mesa.posicion.y + (mesa.height || 100) / 2;
+        const hexRadio = Math.max(mesa.width || 100, mesa.height || 100) / 2 + 25;
+
+        lados.forEach((cantidad, ladoIndex) => {
+          if (cantidad > 0) {
+            const baseAngle = (ladoIndex * Math.PI) / 3;
+            for (let i = 0; i < cantidad; i++) {
+              const angle = baseAngle + (i - (cantidad - 1) / 2) * 0.3;
+              const x = hexCenterX + Math.cos(angle) * hexRadio;
+              const y = hexCenterY + Math.sin(angle) * hexRadio;
+              const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+              
+              nuevasSillas.push({
+                _id: `silla_${Date.now()}_${sillaId++}`,
+                type: 'silla',
+                posicion: { x, y },
+                shape: isCircle ? 'circle' : 'rect',
+                radius: isCircle ? 10 : undefined,
+                width: isCircle ? undefined : 20,
+                height: isCircle ? undefined : 20,
+                fill: seatStates.available.fill,
+                stroke: seatStates.available.stroke,
+                state: 'available',
+                numero: sillaId - 1,
+                mesaId: mesaId
+              });
+            }
+          }
+        });
+        break;
+
+      case 'star':
+        // Sillas en los 5 puntos de la estrella
+        const { puntos } = sillasConfig.star;
+        const starCenterX = mesa.posicion.x + (mesa.width || 120) / 2;
+        const starCenterY = mesa.posicion.y + (mesa.height || 120) / 2;
+        const starRadio = Math.max(mesa.width || 120, mesa.height || 120) / 2 + 25;
+
+        puntos.forEach((cantidad, puntoIndex) => {
+          if (cantidad > 0) {
+            const baseAngle = (puntoIndex * 2 * Math.PI) / 5;
+            for (let i = 0; i < cantidad; i++) {
+              const angle = baseAngle + (i - (cantidad - 1) / 2) * 0.2;
+              const x = starCenterX + Math.cos(angle) * starRadio;
+              const y = starCenterY + Math.sin(angle) * starRadio;
+              const isCircle = i % 2 === 0; // Alternar entre círculo y cuadrado
+              
+              nuevasSillas.push({
+                _id: `silla_${Date.now()}_${sillaId++}`,
+                type: 'silla',
+                posicion: { x, y },
+                shape: isCircle ? 'circle' : 'rect',
+                radius: isCircle ? 10 : undefined,
+                width: isCircle ? undefined : 20,
+                height: isCircle ? undefined : 20,
+                fill: seatStates.available.fill,
+                stroke: seatStates.available.stroke,
+                state: 'available',
+                numero: sillaId - 1,
+                mesaId: mesaId
+              });
+            }
+          }
+        });
+        break;
+
+      default:
+        break;
+    }
+
+    // Agregar las nuevas sillas al mapa
+    setElements(prev => [...prev, ...nuevasSillas]);
+    
+    // Actualizar la mesa con la configuración de sillas
+    updateElementProperty(mesaId, 'sillasConfig', sillasConfig);
+    
+    addToHistory([...elements, ...nuevasSillas], `Agregar ${nuevasSillas.length} sillas a mesa ${mesa.shape || mesa.type}`);
+    message.success(`${nuevasSillas.length} sillas agregadas a la mesa`);
+  }, [elements, seatStates, addToHistory, updateElementProperty]);
+
+  const handleRemoveSillasFromMesa = useCallback((mesaId) => {
+    // Remover todas las sillas conectadas a esta mesa
+    const sillasARemover = elements.filter(el => el.mesaId === mesaId);
+    const elementosRestantes = elements.filter(el => el.mesaId !== mesaId);
+    
+    setElements(elementosRestantes);
+    updateElementProperty(mesaId, 'sillasConfig', null);
+    
+    addToHistory(elementosRestantes, `Remover ${sillasARemover.length} sillas de la mesa`);
+    message.success(`${sillasARemover.length} sillas removidas de la mesa`);
+  }, [elements, addToHistory, updateElementProperty]);
 
   const handleDeleteSelected = useCallback(() => {
     deleteSelectedElements();
@@ -306,23 +529,28 @@ const CrearMapaEditor = ({
   }, [deleteSelectedElements, elements, addToHistory]);
 
   const handleDuplicateSelected = useCallback(() => {
-    const duplicatedElements = elements.map(el => {
-      if (selectedIds.includes(el._id)) {
-        return {
-          ...el,
-          _id: `duplicate_${Date.now()}_${Math.random()}`,
+    const duplicatedElements = [];
+    
+    selectedIds.forEach(selectedId => {
+      const originalElement = elements.find(el => el._id === selectedId);
+      if (originalElement) {
+        const duplicatedElement = {
+          ...originalElement,
+          _id: `duplicate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
           posicion: {
-            x: el.posicion.x + 50,
-            y: el.posicion.y + 50
+            x: originalElement.posicion.x + 50,
+            y: originalElement.posicion.y + 50
           }
         };
+        duplicatedElements.push(duplicatedElement);
       }
-      return el;
     });
     
-    setElements(duplicatedElements);
-    addToHistory(duplicatedElements, 'Duplicar elementos');
-    message.success('Elementos duplicados');
+    if (duplicatedElements.length > 0) {
+      setElements(prev => [...prev, ...duplicatedElements]);
+      addToHistory([...elements, ...duplicatedElements], `Duplicar ${duplicatedElements.length} elemento(s)`);
+      message.success(`${duplicatedElements.length} elemento(s) duplicado(s)`);
+    }
   }, [elements, selectedIds, addToHistory]);
 
   const handleSnapToGrid = useCallback(() => {
@@ -584,11 +812,38 @@ const CrearMapaEditor = ({
 
     switch (element.type) {
       case 'mesa':
+        const mesaWidth = element.width || 120;
+        const mesaHeight = element.height || 80;
+        const mesaRadius = element.radius || 60;
+        
         return (
-          <Group key={element._id} {...baseProps}>
+          <Group 
+            key={element._id} 
+            {...baseProps}
+            rotation={element.rotation || 0}
+          >
             {element.shape === 'circle' ? (
               <Circle
-                radius={element.radius || 60}
+                radius={mesaRadius}
+                fill={element.fill || '#f0f0f0'}
+                stroke={isSelected ? '#1890ff' : '#d9d9d9'}
+                strokeWidth={isSelected ? 3 : 2}
+                opacity={element.opacity || 1}
+              />
+            ) : element.shape === 'hexagon' ? (
+              <RegularPolygon
+                sides={6}
+                radius={Math.max(mesaWidth, mesaHeight) / 2}
+                fill={element.fill || '#f0f0f0'}
+                stroke={isSelected ? '#1890ff' : '#d9d9d9'}
+                strokeWidth={isSelected ? 3 : 2}
+                opacity={element.opacity || 1}
+              />
+            ) : element.shape === 'star' ? (
+              <Star
+                numPoints={5}
+                innerRadius={Math.min(mesaWidth, mesaHeight) / 3}
+                outerRadius={Math.max(mesaWidth, mesaHeight) / 2}
                 fill={element.fill || '#f0f0f0'}
                 stroke={isSelected ? '#1890ff' : '#d9d9d9'}
                 strokeWidth={isSelected ? 3 : 2}
@@ -596,8 +851,8 @@ const CrearMapaEditor = ({
               />
             ) : (
               <Rect
-                width={element.width || 120}
-                height={element.height || 80}
+                width={mesaWidth}
+                height={mesaHeight}
                 fill={element.fill || '#f0f0f0'}
                 stroke={isSelected ? '#1890ff' : '#d9d9d9'}
                 strokeWidth={isSelected ? 3 : 2}
@@ -605,19 +860,22 @@ const CrearMapaEditor = ({
                 cornerRadius={element.cornerRadius || 0}
               />
             )}
+            
+            {/* Nombre de la mesa */}
             <KonvaText
               text={element.nombre || 'Mesa'}
               fontSize={14}
               fill="#333"
               align="center"
-              width={element.width || 120}
-              y={element.height ? element.height / 2 - 7 : 36}
+              width={mesaWidth}
+              y={element.shape === 'circle' ? -mesaRadius - 20 : -mesaHeight / 2 - 20}
             />
+            
             {/* Tooltip nativo de Konva */}
             <Rect
               x={-5}
               y={-25}
-              width={130}
+              width={150}
               height={20}
               fill="rgba(0,0,0,0.8)"
               cornerRadius={4}
@@ -627,11 +885,11 @@ const CrearMapaEditor = ({
             <KonvaText
               x={0}
               y={-20}
-              text={`Mesa: ${element.nombre || 'Sin nombre'} (${element.width || 120}x${element.height || 80})`}
+              text={`Mesa: ${element.nombre || 'Sin nombre'} - ${element.shape || 'rect'}`}
               fontSize={12}
               fill="white"
               align="center"
-              width={130}
+              width={150}
               visible={false}
               listening={false}
             />
@@ -928,10 +1186,7 @@ const CrearMapaEditor = ({
                <Col>
                  <Space size="small">
                    <MesaTypeMenu 
-                     onAddMesa={(type, defaultSize) => {
-                       // TODO: Implementar diferentes tipos de mesa
-                       handleAddMesa();
-                     }}
+                     onAddMesa={handleAddMesa}
                    />
                    <Button 
                      icon={<CopyOutlined />} 
@@ -979,20 +1234,21 @@ const CrearMapaEditor = ({
                      Zonas
                    </Button>
                    <Button 
-                     icon={<PlusOutlined />} 
+                     icon={<SettingOutlined />} 
                      onClick={() => {
                        if (selectedIds.length === 1) {
                          const element = elements.find(el => el._id === selectedIds[0]);
                          if (element?.type === 'mesa') {
-                           handleAddSillasToMesa(element._id);
+                           setSelectedMesaForSillas(element);
+                           setShowMesaSillaManager(true);
                          }
                        }
                      }}
                      disabled={selectedIds.length !== 1 || !elements.find(el => el._id === selectedIds[0])?.type === 'mesa'}
-                     title="Añadir sillas a mesa seleccionada"
+                     title="Gestionar sillas de la mesa"
                      size="small"
                    >
-                     + Sillas
+                     🪑 Sillas
                    </Button>
                  </Space>
                </Col>
@@ -1163,6 +1419,18 @@ const CrearMapaEditor = ({
          canPan={true}
          canZoom={true}
          canEdit={true}
+       />
+
+       {/* ===== GESTOR DE SILLAS DE MESA ===== */}
+       <MesaSillaManager
+         visible={showMesaSillaManager}
+         onClose={() => {
+           setShowMesaSillaManager(false);
+           setSelectedMesaForSillas(null);
+         }}
+         mesa={selectedMesaForSillas}
+         onAddSillas={handleAddSillasToMesa}
+         onRemoveSillas={handleRemoveSillasFromMesa}
        />
 
       {/* ===== POPUPS DE EDICIÓN ===== */}
