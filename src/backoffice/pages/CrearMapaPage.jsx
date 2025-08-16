@@ -22,27 +22,65 @@ const CrearMapaPage = () => {
   // Validar que el componente esté montado antes de hacer operaciones
   const [isMounted, setIsMounted] = useState(false);
   
+  // Establecer isMounted inmediatamente
   useEffect(() => {
+    console.log('[DEBUG] Componente montándose, estableciendo isMounted = true');
     setIsMounted(true);
-    return () => setIsMounted(false);
+    return () => {
+      console.log('[DEBUG] Componente desmontándose, estableciendo isMounted = false');
+      setIsMounted(false);
+    };
   }, []);
+
+  // Inicialización del componente
+  useEffect(() => {
+    if (isMounted && salaId) {
+      console.log('[DEBUG] Componente montado y salaId disponible, iniciando carga...');
+      loadSalaInfo();
+      testDatabaseAccess();
+      
+      // Timeout de seguridad para asegurar que loading se establezca a false
+      const safetyTimeout = setTimeout(() => {
+        console.log('[DEBUG] Timeout de seguridad: forzando loading a false');
+        if (loading) {
+          safeSetState(setLoading, false);
+        }
+      }, 10000); // 10 segundos
+      
+      return () => clearTimeout(safetyTimeout);
+    }
+  }, [isMounted, salaId]);
+
+  // Manejar caso cuando no hay salaId
+  useEffect(() => {
+    if (isMounted && !salaId) {
+      console.log('[DEBUG] No hay salaId, estableciendo loading a false');
+      setLoading(false);
+    }
+  }, [isMounted, salaId]);
 
   // Solo ejecutar operaciones si el componente está montado
   const safeSetState = useCallback((setter, value) => {
-    console.log('[DEBUG] safeSetState llamado con:', { setter: setter.name, value, isMounted });
+    const setterName = setter.name || setter.toString().slice(0, 50);
+    console.log('[DEBUG] safeSetState llamado con:', { 
+      setter: setterName, 
+      value: typeof value === 'object' ? 'Object' : value, 
+      isMounted,
+      salaId 
+    });
     if (isMounted) {
       try {
-        console.log('[DEBUG] Ejecutando setter:', setter.name);
+        console.log('[DEBUG] Ejecutando setter:', setterName);
         setter(value);
-        console.log('[DEBUG] Setter ejecutado exitosamente:', setter.name);
+        console.log('[DEBUG] Setter ejecutado exitosamente:', setterName);
       } catch (err) {
         console.error('Error setting state:', err);
         setError(err.message);
       }
     } else {
-      console.warn('[DEBUG] Componente no montado, no se ejecuta setter:', setter.name);
+      console.warn('[DEBUG] Componente no montado, no se ejecuta setter:', setterName);
     }
-  }, [isMounted]);
+  }, [isMounted, salaId]);
 
   // Si hay error, mostrar mensaje de error
   if (error) {
@@ -328,31 +366,12 @@ const CrearMapaPage = () => {
       sala: sala ? 'cargada' : 'no cargada',
       mapa: mapa ? 'encontrado' : 'no encontrado',
       error: error ? 'sí' : 'no',
-      isMounted
+      isMounted,
+      salaId
     });
-  }, [loading, sala, mapa, error, isMounted]);
+  }, [loading, sala, mapa, error, isMounted, salaId]);
 
   // Cargar información de la sala
-  useEffect(() => {
-    if (salaId) {
-      loadSalaInfo();
-      // Test database access
-      testDatabaseAccess();
-      
-      // Timeout de seguridad para asegurar que loading se establezca a false
-      const safetyTimeout = setTimeout(() => {
-        console.log('[DEBUG] Timeout de seguridad: forzando loading a false');
-        if (loading) {
-          safeSetState(setLoading, false);
-        }
-      }, 10000); // 10 segundos
-      
-      return () => clearTimeout(safetyTimeout);
-    } else {
-      setLoading(false);
-    }
-  }, [salaId]);
-
   const loadSalaInfo = async () => {
     try {
       setLoading(true);
