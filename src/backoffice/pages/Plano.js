@@ -12,6 +12,8 @@ if (typeof document !== 'undefined' && document.getElementById('root')) {
 }
 
 const Plano = () => {
+  console.log('🎯 [PLANO] Componente Plano iniciando...');
+  
   const { recinto, setRecinto, sala, setSala, recintos, setRecintos } = useRecintoSala();
   const [zonas, setZonas] = useState([]);
   const [zoneSeatCounts, setZoneSeatCounts] = useState({});
@@ -25,6 +27,7 @@ const Plano = () => {
   const [showCrearMapa, setShowCrearMapa] = useState(false);
   const numeradaBloqueada = editingZona?.numerada && editingZona.aforo > 0;
 
+  console.log('🎯 [PLANO] Estado inicial:', { recinto, sala, recintos: recintos?.length || 0 });
 
   // Limpiar todas las suscripciones de tiempo real al montar el componente
   useEffect(() => {
@@ -98,86 +101,65 @@ const Plano = () => {
   useEffect(() => {
     if (sala?.id) {
       loadZonas(sala.id);
-      // Cargar preview del mapa si existe
       loadMapaPreview(sala.id);
     } else {
       setZonas([]);
       setMapaPreview(null);
-      console.log('[PLANO] No hay sala seleccionada, limpiando zonas y mapa');
     }
-  }, [sala?.id, loadZonas, loadMapaPreview]);
+  }, [sala]);
 
-  // Función para cargar preview del mapa
   const loadMapaPreview = async (salaId) => {
     if (!salaId) return;
     
     setLoadingMapa(true);
     try {
-      console.log('[PLANO] Cargando preview del mapa para sala:', salaId);
       const mapaData = await fetchMapa(salaId);
-      console.log('[PLANO] Datos del mapa recibidos:', mapaData);
-      
-      if (mapaData && mapaData.contenido) {
-        console.log('[PLANO] Contenido del mapa:', mapaData.contenido);
-        console.log('[PLANO] Número de elementos:', mapaData.contenido.length);
-      }
-      
       setMapaPreview(mapaData);
-      console.log('[PLANO] Preview del mapa cargado:', mapaData ? 'Sí' : 'No');
+      console.log('[PLANO] Mapa cargado:', mapaData);
     } catch (error) {
-      console.error('[PLANO] Error al cargar preview del mapa:', error);
+      console.error('[PLANO] Error al cargar mapa:', error);
       setMapaPreview(null);
     } finally {
       setLoadingMapa(false);
     }
   };
 
-  useEffect(() => {
-    if (!sala) {
-      setZoneSeatCounts({});
-      setMapaPreview(null);
+  const refreshZonas = () => {
+    if (sala?.id) {
+      loadZonas(sala.id);
+    }
+  };
+
+  const canCreateZona = () => {
+    return recinto && sala && !loadingZonas;
+  };
+
+  const handleCrearMapa = () => {
+    if (!sala?.id) {
+      alert('Debe seleccionar una sala primero para crear el mapa.');
       return;
     }
-    const loadMapa = async () => {
-      setLoadingMapa(true);
-      try {
-        const mapa = await fetchMapa(sala.id);
-        const counts = {};
-        if (mapa && Array.isArray(mapa.contenido)) {
-          mapa.contenido.forEach(el => {
-            if (el.type === 'mesa') {
-              (el.sillas || []).forEach(s => {
-                if (s.zona) counts[s.zona] = (counts[s.zona] || 0) + 1;
-              });
-            } else if (el.type === 'silla' && el.zona) {
-              counts[el.zona] = (counts[el.zona] || 0) + 1;
-            }
-          });
-        }
-        setZoneSeatCounts(counts);
-        setMapaPreview(mapa);
-        console.log('[PLANO] Conteo de asientos por zona:', counts);
-        console.log('[PLANO] Mapa cargado para preview:', mapa);
-      } catch (error) {
-        console.error('[PLANO] Error al cargar mapa:', error);
-        setZoneSeatCounts({});
-        setMapaPreview(null);
-      } finally {
-        setLoadingMapa(false);
-      }
-    };
-    loadMapa();
-  }, [sala]);
+    setShowCrearMapa(true);
+  };
+
+  const handleMapaSaved = () => {
+    setShowCrearMapa(false);
+    if (sala?.id) {
+      loadMapaPreview(sala.id);
+    }
+  };
+
+  const handleCancelCrearMapa = () => {
+    setShowCrearMapa(false);
+  };
 
   const handleCrearZona = async () => {
     if (!recinto) {
-      console.warn('[PLANO] Intento de crear zona sin recinto seleccionado');
       alert('Debe seleccionar un recinto primero.');
       return;
     }
     
     if (!sala) {
-      console.warn('[PLANO] Intento de crear zona sin sala seleccionada');
       alert('Debe seleccionar una sala primero.');
       return;
     }
@@ -188,12 +170,10 @@ const Plano = () => {
     }
 
     try {
-      console.log('[PLANO] Creando zona:', { ...nuevaZona, sala_id: sala.id });
       const nuevaZonaData = { ...nuevaZona, sala_id: sala.id };
       const zonaCreada = await createZona(nuevaZonaData);
       if (zonaCreada) {
         setZonas([...zonas, zonaCreada]);
-        console.log('[PLANO] Zona creada exitosamente:', zonaCreada);
       }
       setNuevaZona({ nombre: '', color: '#000000', aforo: 0, numerada: false });
       setModalIsOpen(false);
@@ -214,7 +194,6 @@ const Plano = () => {
       const updatedZona = await updateZona(editingZona.id, zonaData);
       if (updatedZona) {
         setZonas(zonas.map(z => z.id === editingZona.id ? updatedZona : z));
-        console.log('[PLANO] Zona actualizada:', updatedZona);
       }
       setEditingZona(null);
       setNuevaZona({ nombre: '', color: '#000000', aforo: 0, numerada: false });
@@ -230,7 +209,6 @@ const Plano = () => {
       try {
         await deleteZona(zonaId);
         setZonas(zonas.filter(z => z.id !== zonaId));
-        console.log('[PLANO] Zona eliminada:', zonaId);
       } catch (err) {
         console.error('[PLANO] Error al eliminar zona:', err);
         alert('Error al eliminar la zona: ' + (err.message || 'Error desconocido'));
@@ -238,46 +216,8 @@ const Plano = () => {
     }
   };
 
-
-
-  // Función para refrescar zonas manualmente
-  const refreshZonas = () => {
-    if (sala?.id) {
-      console.log('[PLANO] Refrescando zonas manualmente...');
-      loadZonas(sala.id);
-    }
-  };
-
-  // Función para validar si se puede crear zona
-  const canCreateZona = () => {
-    return recinto && sala;
-  };
-
-  // Función para manejar la creación del mapa
-  const handleCrearMapa = () => {
-    if (!sala?.id) {
-      alert('Debe seleccionar una sala primero para crear el mapa.');
-      return;
-    }
-    setShowCrearMapa(true);
-  };
-
-  // Función para cancelar la creación del mapa
-  const handleCancelCrearMapa = () => {
-    setShowCrearMapa(false);
-  };
-
-  // Función para cuando se guarda el mapa desde CrearMapaMain
-  const handleMapaSaved = () => {
-    setShowCrearMapa(false);
-    // Recargar el preview del mapa
-    if (sala?.id) {
-      loadMapaPreview(sala.id);
-    }
-  };
-
-
-
+  console.log('🎯 [PLANO] Renderizando componente...');
+  
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -377,177 +317,114 @@ const Plano = () => {
                 </div>
               </div>
             ) : (
-              <>
-                <ul className="space-y-3 mb-4">
-                  {zonas.filter(Boolean).map(z => (
-                    <li key={z.id} className="flex justify-between items-center border px-4 py-3 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-                      <div className="flex items-center space-x-3">
+              <div className="space-y-4">
+                {zonas.map((zona, index) => (
+                  <div key={zona.id || index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-3">
                         <div 
-                          className="w-4 h-4 rounded-full border-2 border-gray-200" 
-                          style={{ backgroundColor: z.color || '#000000' }}
+                          className="w-4 h-4 rounded-full" 
+                          style={{ backgroundColor: zona.color }}
                         ></div>
-                        <div>
-                          <span className="font-semibold text-gray-800">{z.nombre}</span>
-                          <span className="ml-2 text-sm text-gray-600">- Aforo: {zoneSeatCounts[z.id] ?? z.aforo}</span>
-                        </div>
+                        <span className="font-medium">{zona.nombre}</span>
+                        <span className="text-sm text-gray-500">
+                          Aforo: {zona.aforo || 'No definido'}
+                        </span>
+                        {zona.numerada && (
+                          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                            Numerada
+                          </span>
+                        )}
                       </div>
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={() => { setEditingZona(z); setNuevaZona(z); setModalIsOpen(true); }} 
-                          className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingZona(zona);
+                            setNuevaZona({ ...zona });
+                            setModalIsOpen(true);
+                          }}
+                          className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
                         >
                           ✏️ Editar
                         </button>
-                        <button 
-                          onClick={() => handleDeleteZona(z.id)} 
-                          className="px-3 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
+                        <button
+                          onClick={() => handleDeleteZona(zona.id)}
+                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
                         >
                           🗑️ Eliminar
                         </button>
                       </div>
-                    </li>
-                  ))}
-                </ul>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <button 
-                    onClick={() => setModalIsOpen(true)} 
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    disabled={!canCreateZona()}
-                  >
-                    Crear Nueva Zona
-                  </button>
-                  <button 
-                    onClick={handleCrearMapa}
-                    disabled={!sala?.id}
-                    className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-                  >
-                    🎨 Crear Mapa
-                  </button>
-                </div>
-              </>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
 
-
-                          {/* Preview del Mapa Existente */}
-             {sala && (
-               <div className="mt-8 p-6 bg-gray-50 rounded-lg border border-gray-200">
-                 <h3 className="text-lg font-semibold text-gray-800 mb-4">📋 Vista Previa del Mapa</h3>
-                 
-                 {loadingMapa ? (
-                   <div className="text-center p-4">
-                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                     <p className="text-gray-600">Cargando mapa...</p>
-                   </div>
-                 ) : mapaPreview ? (
-                   <div className="space-y-4">
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                       <div className="bg-white p-4 rounded-lg border">
-                         <h4 className="font-medium text-gray-700 mb-2">📊 Elementos del Mapa</h4>
-                         <div className="space-y-2">
-                           <div className="flex justify-between">
-                             <span className="text-sm text-gray-600">Mesas:</span>
-                             <span className="font-medium">
-                               {mapaPreview.contenido?.filter(el => el.type === 'mesa').length || 0}
-                             </span>
-                           </div>
-                           <div className="flex justify-between">
-                             <span className="text-sm text-gray-600">Sillas:</span>
-                             <span className="font-medium">
-                               {mapaPreview.contenido?.filter(el => el.type === 'silla').length || 0}
-                             </span>
-                           </div>
-                           <div className="flex justify-between">
-                             <span className="text-sm text-gray-600">Textos:</span>
-                             <span className="font-medium">
-                               {mapaPreview.contenido?.filter(el => el.type === 'text').length || 0}
-                             </span>
-                           </div>
-                           <div className="flex justify-between">
-                             <span className="text-sm text-gray-600">Formas:</span>
-                             <span className="font-medium">
-                               {mapaPreview.contenido?.filter(el => ['rect', 'ellipse', 'line'].includes(el.type)).length || 0}
-                             </span>
-                           </div>
-                           <div className="flex justify-between">
-                             <span className="text-sm text-gray-600">Total:</span>
-                             <span className="font-medium">
-                               {mapaPreview.contenido?.length || 0}
-                             </span>
-                           </div>
-                         </div>
-                       </div>
-                       
-                       <div className="bg-white p-4 rounded-lg border">
-                         <h4 className="font-medium text-gray-700 mb-2">🎯 Zonas Utilizadas</h4>
-                         <div className="space-y-2">
-                           {Object.entries(zoneSeatCounts).map(([zonaId, count]) => {
-                             const zona = zonas.find(z => z.id === zonaId);
-                             return (
-                               <div key={zonaId} className="flex justify-between items-center">
-                                 <span className="text-sm text-gray-600 flex items-center gap-2">
-                                   <div 
-                                     className="w-3 h-3 rounded-full" 
-                                     style={{ backgroundColor: zona?.color || '#000' }}
-                                   ></div>
-                                   {zona?.nombre || 'Zona ' + zonaId}
-                                 </span>
-                                 <span className="font-medium">{count}</span>
-                               </div>
-                             );
-                           })}
-                           {Object.keys(zoneSeatCounts).length === 0 && (
-                             <p className="text-sm text-gray-500 italic">No hay zonas asignadas</p>
-                           )}
-                         </div>
-                       </div>
-                       
-                       <div className="bg-white p-4 rounded-lg border">
-                         <h4 className="font-medium text-gray-700 mb-2">📅 Última Actualización</h4>
-                         <div className="text-sm text-gray-600">
-                           {mapaPreview.updated_at ? (
-                             <span>{new Date(mapaPreview.updated_at).toLocaleString('es-ES')}</span>
-                           ) : (
-                             <span className="italic">No disponible</span>
-                           )}
-                         </div>
-                       </div>
-                     </div>
-                     
-                                           <div className="flex gap-3">
-                       <button 
-                         onClick={handleCrearMapa}
-                         className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-                       >
-                         ✏️ Editar Mapa
-                       </button>
-                       <button 
-                         className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
-                       >
-                         📊 Ver Estadísticas
-                       </button>
-                     </div>
-                   </div>
-                 ) : (
-                   <div className="text-center p-4">
-                     <div className="text-gray-600 space-y-2">
-                       <p>No hay mapa para esta sala.</p>
-                       <p className="text-sm text-gray-500">
-                         Crea un mapa para visualizar la distribución de asientos y mesas.
-                       </p>
-                       <div className="mt-3">
-                         <button 
-                           onClick={handleCrearMapa}
-                           disabled={!sala?.id}
-                           className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
-                         >
-                           🎨 Crear Mapa de la Sala
-                         </button>
-                       </div>
-                     </div>
-                   </div>
-                 )}
-               </div>
-             )}
+            {/* Vista previa del mapa */}
+            {sala && (
+              <div className="mt-8 p-6 border border-gray-200 rounded-lg bg-white">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800">Vista Previa del Mapa</h3>
+                {loadingMapa ? (
+                  <div className="text-center p-6 border border-dashed border-gray-300 rounded">
+                    <p className="text-gray-600">Cargando mapa...</p>
+                  </div>
+                ) : mapaPreview ? (
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-lg font-medium text-gray-800">{mapaPreview.nombre}</h4>
+                        <p className="text-gray-600">{mapaPreview.descripcion}</p>
+                        <div className="text-sm text-gray-500 mt-2">
+                          <span className="mr-4">
+                            <strong>Estado:</strong> {mapaPreview.estado}
+                          </span>
+                          <span>
+                            <strong>Última actualización:</strong> 
+                            {mapaPreview.updated_at ? (
+                              <span>{new Date(mapaPreview.updated_at).toLocaleString('es-ES')}</span>
+                            ) : (
+                              <span className="italic">No disponible</span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={handleCrearMapa}
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-indigo-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                        >
+                          ✏️ Editar Mapa
+                        </button>
+                        <button 
+                          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+                        >
+                          📊 Ver Estadísticas
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center p-4">
+                    <div className="text-gray-600 space-y-2">
+                      <p>No hay mapa para esta sala.</p>
+                      <p className="text-sm text-gray-500">
+                        Crea un mapa para visualizar la distribución de asientos y mesas.
+                      </p>
+                      <div className="mt-3">
+                        <button 
+                          onClick={handleCrearMapa}
+                          disabled={!sala?.id}
+                          className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed font-medium shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
+                        >
+                          🎨 Crear Mapa de la Sala
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
