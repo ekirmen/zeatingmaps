@@ -1,8 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Stage, Layer, Rect, Circle, Group, Text as KonvaText, Line, RegularPolygon } from 'react-konva';
-import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider } from 'antd';
+import { Stage, Layer, Rect, Circle, Group, Text as KonvaText, Line, RegularPolygon, Image as KonvaImage } from 'react-konva';
+import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider, Upload } from 'antd';
 import { fetchZonasPorSala } from '../../services/apibackoffice';
-import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined, PictureOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
 
 const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [elements, setElements] = useState(Array.isArray(initialMapa?.contenido) ? initialMapa.contenido : []);
@@ -29,6 +29,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [seatShape, setSeatShape] = useState('circle'); // 'circle' | 'rect' | 'butaca'
   const [rowPreview, setRowPreview] = useState(null);
   const [popupDrag, setPopupDrag] = useState({ isDragging: false, startPos: null, offset: { x: 0, y: 0 } });
+  const [backgroundImage, setBackgroundImage] = useState(null);
+  const [backgroundImageElement, setBackgroundImageElement] = useState(null);
   
   const getArcAngles = (arc) => {
     // Rango de ángulos por arco (en radianes)
@@ -98,6 +100,50 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     setElements(prev => [...prev, el]);
   }, []);
 
+  // Función para manejar la carga de imagen de fondo
+  const handleBackgroundUpload = useCallback((file) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('Solo se permiten archivos de imagen!');
+      return false;
+    }
+    
+    const isLt1M = file.size / 1024 / 1024 < 1;
+    if (!isLt1M) {
+      message.error('La imagen debe ser menor a 1MB!');
+      return false;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        setBackgroundImage(img);
+        setBackgroundImageElement({
+          _id: `bg_${Date.now()}`,
+          type: 'background',
+          image: img,
+          imageData: e.target.result, // Guardar como data URL
+          width: window.innerWidth - 320,
+          height: window.innerHeight - 120,
+          x: 0,
+          y: 0
+        });
+        message.success('Imagen de fondo cargada correctamente');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    return false; // Prevenir el comportamiento por defecto de Upload
+  }, []);
+
+  // Función para remover el fondo
+  const removeBackground = useCallback(() => {
+    setBackgroundImage(null);
+    setBackgroundImageElement(null);
+    message.success('Fondo removido');
+  }, []);
+
   const stageRef = useRef(null);
   const canvasContainerRef = useRef(null);
   const selectedIdsRef = useRef([]);
@@ -134,11 +180,41 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       if (typeof meta.config.gridSize === 'number') setGridSize(meta.config.gridSize);
       if (typeof meta.config.showGrid === 'boolean') setShowGrid(meta.config.showGrid);
       if (typeof meta.config.snapToGrid === 'boolean') setSnapToGrid(meta.config.snapToGrid);
+      if (meta.config.backgroundImage) {
+        setBackgroundImage(meta.config.backgroundImage.image);
+        setBackgroundImageElement({
+          _id: meta.config.backgroundImage._id,
+          type: 'background',
+          image: meta.config.backgroundImage.image,
+          width: meta.config.backgroundImage.width,
+          height: meta.config.backgroundImage.height,
+          x: meta.config.backgroundImage.x,
+          y: meta.config.backgroundImage.y
+        });
+      }
       // Opcional: eliminar meta del render
       setElements(prev => prev.filter(el => !(el.type === 'meta' && el.key === 'config')));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Cargar fondo desde elementos iniciales
+  useEffect(() => {
+    if (initialMapa?.contenido) {
+      const bgElement = initialMapa.contenido.find(el => el.type === 'background');
+      if (bgElement) {
+        setBackgroundImageElement(bgElement);
+        // Crear imagen desde data URL si existe
+        if (bgElement.imageData) {
+          const img = new window.Image();
+          img.onload = () => {
+            setBackgroundImage(img);
+          };
+          img.src = bgElement.imageData;
+        }
+      }
+    }
+  }, [initialMapa]);
 
   // Manejar redimensionamiento de ventana
   useEffect(() => {
@@ -147,11 +223,19 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         stageRef.current.width(window.innerWidth - 320);
         stageRef.current.height(window.innerHeight - 120);
       }
+      // Actualizar tamaño del fondo si existe
+      if (backgroundImageElement) {
+        setBackgroundImageElement(prev => ({
+          ...prev,
+          width: window.innerWidth - 320,
+          height: window.innerHeight - 120
+        }));
+      }
     };
     
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  }, [backgroundImageElement]);
 
   // Manejar drag del popup de propiedades rápidas
   useEffect(() => {
@@ -237,15 +321,16 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     const ny = snapToGrid ? Math.round(y / gridSize) * gridSize : y;
     setElements(prev => {
       const curr = prev.find(el => el._id === id);
+      if (!curr || !curr.posicion) return prev;
       const next = prev.map(el => el._id === id ? { ...el, posicion: { x: nx, y: ny } } : el);
       // Si se está moviendo una silla y hay múltiples sillas seleccionadas, mover el grupo con el mismo delta
       if (curr && curr.type === 'silla' && Array.isArray(selectedIdsRef.current) && selectedIdsRef.current.length > 1) {
-        const dx = nx - (curr.posicion?.x || 0);
-        const dy = ny - (curr.posicion?.y || 0);
+        const dx = nx - (curr.posicion.x || 0);
+        const dy = ny - (curr.posicion.y || 0);
         return next.map(el => {
-          if (el._id !== id && selectedIdsRef.current.includes(el._id) && el.type === 'silla') {
-            const ex = (el.posicion?.x || 0) + dx;
-            const ey = (el.posicion?.y || 0) + dy;
+          if (el._id !== id && selectedIdsRef.current.includes(el._id) && el.type === 'silla' && el.posicion) {
+            const ex = (el.posicion.x || 0) + dx;
+            const ey = (el.posicion.y || 0) + dy;
             return { ...el, posicion: { x: ex, y: ey } };
           }
           return el;
@@ -254,10 +339,11 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       // Si se movió una mesa circular, reposicionar asientos adjuntos por arco/360
       if (curr && curr.type === 'mesa' && curr.shape === 'circle') {
         const mesa = next.find(el => el._id === id);
+        if (!mesa || !mesa.posicion) return next;
         const cx = mesa.posicion.x;
         const cy = mesa.posicion.y;
         return next.map(seat => {
-          if (seat.type === 'silla' && seat.mesaId === mesa._id && seat.arc) {
+          if (seat.type === 'silla' && seat.mesaId === mesa._id && seat.arc && seat.posicion) {
             const { start, end } = getArcAngles(seat.arc);
             const idx = seat.arcIndex || 0;
             const count = seat.arcCount || 1;
@@ -265,7 +351,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             const r = (mesa.radius || 60) + 25;
             return { ...seat, posicion: { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r } };
           }
-          if (seat.type === 'silla' && seat.mesaId === mesa._id && seat.circleIndex != null && seat.circleCount) {
+          if (seat.type === 'silla' && seat.mesaId === mesa._id && seat.circleIndex != null && seat.circleCount && seat.posicion) {
             const angle = (seat.circleIndex * 2 * Math.PI) / seat.circleCount;
             const r = (mesa.radius || 60) + 25;
             return { ...seat, posicion: { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r } };
@@ -276,10 +362,11 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       // Si se movió una mesa rectangular, reposicionar sillas con sideIndex/sideCount
       if (curr && curr.type === 'mesa' && curr.shape === 'rect') {
         const mesa = next.find(el => el._id === id);
+        if (!mesa || !mesa.posicion) return next;
         const w = mesa.width || 120;
         const h = mesa.height || 80;
         return next.map(seat => {
-          if (seat.type !== 'silla' || seat.mesaId !== mesa._id || !seat.side) return seat;
+          if (seat.type !== 'silla' || seat.mesaId !== mesa._id || !seat.side || !seat.posicion) return seat;
           const count = seat.sideCount || 1;
           const idx = seat.sideIndex || 0;
           if (seat.side === 'top') {
@@ -329,18 +416,32 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         stagePos,
         gridSize,
         showGrid,
-        snapToGrid
+        snapToGrid,
+        backgroundImage: backgroundImageElement ? {
+          _id: backgroundImageElement._id,
+          type: 'background',
+          width: backgroundImageElement.width,
+          height: backgroundImageElement.height,
+          x: backgroundImageElement.x,
+          y: backgroundImageElement.y
+        } : null
       }
     };
     return [...other, meta];
-  }, [scale, stagePos, gridSize, showGrid, snapToGrid]);
+  }, [scale, stagePos, gridSize, showGrid, snapToGrid, backgroundImageElement]);
 
   const handleSaveClick = useCallback(async () => {
     try {
       if (!Array.isArray(elements)) {
         throw new Error('El contenido del mapa debe ser un array');
       }
-      const listWithMeta = upsertMetaConfig(elements);
+      let listWithMeta = upsertMetaConfig(elements);
+      
+      // Añadir el fondo al contenido si existe
+      if (backgroundImageElement) {
+        listWithMeta = [...listWithMeta, backgroundImageElement];
+      }
+      
       const payload = {
         nombre: 'Mapa de Sala',
         descripcion: '',
@@ -351,7 +452,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     } catch (err) {
       message.error(err.message || 'Error al guardar');
     }
-  }, [elements, onSave, upsertMetaConfig]);
+  }, [elements, onSave, upsertMetaConfig, backgroundImageElement]);
 
   const assignZoneToSelection = useCallback(() => {
     if (!selectedIds?.length || !selectedZoneId) return;
@@ -378,7 +479,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const addSeatsToMesaAll = useCallback(() => {
     if (!selectedIds?.length) return;
     const mesa = elements.find(e => selectedIds.includes(e._id) && e.type === 'mesa');
-    if (!mesa) return;
+    if (!mesa || !mesa.posicion) return;
     const nuevas = [];
     let seq = elements.filter(e => e.type === 'silla').length + 1;
     if (mesa.shape === 'rect') {
@@ -452,7 +553,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const addSeatsToRectSide = useCallback((side) => {
     if (!selectedIds?.length) return;
     const mesa = elements.find(e => selectedIds.includes(e._id) && e.type === 'mesa' && e.shape === 'rect');
-    if (!mesa) return;
+    if (!mesa || !mesa.posicion) return;
     const nuevas = [];
     let seq = elements.filter(e => e.type === 'silla').length + 1;
     const countMap = { top: rectSideCounts.top, right: rectSideCounts.right, bottom: rectSideCounts.bottom, left: rectSideCounts.left };
@@ -509,7 +610,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const addSeatsToCircleArc = useCallback(() => {
     if (!selectedIds?.length) return;
     const mesa = elements.find(e => selectedIds.includes(e._id) && e.type === 'mesa' && e.shape === 'circle');
-    if (!mesa) return;
+    if (!mesa || !mesa.posicion) return;
     // quitar existentes del mismo arco en esta mesa
     let base = elements.filter(e => !(e.type === 'silla' && e.mesaId === mesa._id && e.arc === circleArc));
     const { start, end } = getArcAngles(circleArc);
@@ -596,6 +697,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       const x2 = Math.max(rect.x, rect.x + rect.w);
       const y2 = Math.max(rect.y, rect.y + rect.h);
       const newly = elements.filter(el => {
+        if (!el.posicion) return false;
         const ex = el.posicion.x;
         const ey = el.posicion.y;
         return ex >= x1 && ex <= x2 && ey >= y1 && ey <= y2;
@@ -649,11 +751,11 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     setElements(prev => {
       const next = prev.map(el => selectedIds.includes(el._id) ? { ...el, [prop]: value } : el);
       const mesa = next.find(el => selectedIds.includes(el._id) && el.type === 'mesa' && el.shape === 'circle');
-      if (mesa && (prop === 'radius' || prop === 'posicion')) {
+      if (mesa && mesa.posicion && (prop === 'radius' || prop === 'posicion')) {
         const cx = mesa.posicion.x;
         const cy = mesa.posicion.y;
         return next.map(seat => {
-          if (seat.type === 'silla' && seat.mesaId === mesa._id && seat.arc) {
+          if (seat.type === 'silla' && seat.mesaId === mesa._id && seat.arc && seat.posicion) {
             const { start, end } = getArcAngles(seat.arc);
             const idx = seat.arcIndex || 0;
             const count = seat.arcCount || 1;
@@ -661,7 +763,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             const r = (mesa.radius || 60) + 25;
             return { ...seat, posicion: { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r } };
           }
-          if (seat.type === 'silla' && seat.mesaId === mesa._id && seat.circleIndex != null && seat.circleCount) {
+          if (seat.type === 'silla' && seat.mesaId === mesa._id && seat.circleIndex != null && seat.circleCount && seat.posicion) {
             const angle = (seat.circleIndex * 2 * Math.PI) / seat.circleCount;
             const r = (mesa.radius || 60) + 25;
             return { ...seat, posicion: { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r } };
@@ -670,11 +772,11 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         });
       }
       const mesaRect = next.find(el => selectedIds.includes(el._id) && el.type === 'mesa' && el.shape === 'rect');
-      if (mesaRect && (prop === 'width' || prop === 'height' || prop === 'posicion')) {
+      if (mesaRect && mesaRect.posicion && (prop === 'width' || prop === 'height' || prop === 'posicion')) {
         const w = mesaRect.width || 120;
         const h = mesaRect.height || 80;
         return next.map(seat => {
-          if (seat.type !== 'silla' || seat.mesaId !== mesaRect._id || !seat.side) return seat;
+          if (seat.type !== 'silla' || seat.mesaId !== mesaRect._id || !seat.side || !seat.posicion) return seat;
           const count = seat.sideCount || 1;
           const idx = seat.sideIndex || 0;
           if (seat.side === 'top') {
@@ -734,7 +836,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const selectedEl = elements.find(e => selectedIds.includes(e._id)) || null;
   // Calcular posición del popup junto al elemento con auto-flip
   const computePopupStyle = () => {
-    if (!selectedEl || !stageRef.current || !canvasContainerRef.current) return { display: 'none' };
+    if (!selectedEl || !selectedEl.posicion || !stageRef.current || !canvasContainerRef.current) return { display: 'none' };
     const stage = stageRef.current;
     const container = canvasContainerRef.current;
     const scaleX = stage.scaleX();
@@ -779,6 +881,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   };
 
   const renderElement = useCallback((element) => {
+    if (!element || !element.posicion) return null;
     const isSelected = selectedIds.includes(element._id);
     const commonProps = {
       key: element._id,
@@ -994,6 +1097,58 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             </Space>
           </div>
 
+          <Divider />
+
+          <div>
+            <div className="font-medium mb-2">Fondo y Grid</div>
+            <Space direction="vertical" size="small" className="w-full">
+              <div className="flex items-center gap-2">
+                <Checkbox 
+                  checked={showGrid} 
+                  onChange={(e) => setShowGrid(e.target.checked)}
+                  icon={showGrid ? <EyeOutlined /> : <EyeInvisibleOutlined />}
+                >
+                  Mostrar grid
+                </Checkbox>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={snapToGrid} onChange={(e) => setSnapToGrid(e.target.checked)} disabled={!showGrid}>
+                  Snap to grid
+                </Checkbox>
+              </div>
+              {showGrid && (
+                <div className="flex items-center gap-2">
+                  <span>Tamaño grid</span>
+                  <InputNumber 
+                    min={5} 
+                    max={100} 
+                    value={gridSize} 
+                    onChange={setGridSize} 
+                    size="small"
+                    style={{ width: 80 }}
+                  />
+                </div>
+              )}
+              <Divider />
+              <div className="text-sm text-gray-600 mb-2">Imagen de fondo:</div>
+              <Upload
+                accept="image/*"
+                beforeUpload={handleBackgroundUpload}
+                showUploadList={false}
+                maxCount={1}
+              >
+                <Button icon={<PictureOutlined />} block>
+                  Subir fondo (PNG/JPG menor a 1MB)
+                </Button>
+              </Upload>
+              {backgroundImageElement && (
+                <Button onClick={removeBackground} danger size="small" block>
+                  Remover fondo
+                </Button>
+              )}
+            </Space>
+          </div>
+
           
 
           <Divider />
@@ -1041,6 +1196,16 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           >
             <Layer listening={false}>
               <Rect width={window.innerWidth - 320} height={window.innerHeight - 120} fill="#fff" />
+              {backgroundImage && backgroundImageElement && (
+                <KonvaImage
+                  image={backgroundImage}
+                  x={backgroundImageElement.x}
+                  y={backgroundImageElement.y}
+                  width={backgroundImageElement.width}
+                  height={backgroundImageElement.height}
+                  listening={false}
+                />
+              )}
               {showGrid && renderGrid()}
               {rowMode && rowPreview && (
                 <>
