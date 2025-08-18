@@ -99,6 +99,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
 
   const stageRef = useRef(null);
   const canvasContainerRef = useRef(null);
+  const selectedIdsRef = useRef([]);
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectStart, setSelectStart] = useState(null);
   const [selectRect, setSelectRect] = useState(null);
@@ -117,6 +118,11 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     };
     loadZonas();
   }, [salaId]);
+
+  // Mantener selectedIdsRef actualizado
+  useEffect(() => {
+    selectedIdsRef.current = selectedIds;
+  }, [selectedIds]);
 
   useEffect(() => {
     // Cargar meta config si viene embebida en elementos
@@ -205,11 +211,11 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       const curr = prev.find(el => el._id === id);
       const next = prev.map(el => el._id === id ? { ...el, posicion: { x: nx, y: ny } } : el);
       // Si se está moviendo una silla y hay múltiples sillas seleccionadas, mover el grupo con el mismo delta
-      if (curr && curr.type === 'silla' && Array.isArray(selectedIds) && selectedIds.length > 1) {
+      if (curr && curr.type === 'silla' && Array.isArray(selectedIdsRef.current) && selectedIdsRef.current.length > 1) {
         const dx = nx - (curr.posicion?.x || 0);
         const dy = ny - (curr.posicion?.y || 0);
         return next.map(el => {
-          if (el._id !== id && selectedIds.includes(el._id) && el.type === 'silla') {
+          if (el._id !== id && selectedIdsRef.current.includes(el._id) && el.type === 'silla') {
             const ex = (el.posicion?.x || 0) + dx;
             const ey = (el.posicion?.y || 0) + dy;
             return { ...el, posicion: { x: ex, y: ey } };
@@ -271,7 +277,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       }
       return next;
     });
-  }, [gridSize, snapToGrid, selectedIds]);
+  }, [gridSize, snapToGrid]);
 
   const handleDelete = useCallback(() => {
     if (!selectedIds?.length) return;
