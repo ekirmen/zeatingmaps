@@ -23,6 +23,18 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [seatEmpty, setSeatEmpty] = useState(false);
   const [circleArc, setCircleArc] = useState('top');
   const [circleArcCount, setCircleArcCount] = useState(6);
+  
+  const getArcAngles = (arc) => {
+    // Rango de ángulos por arco (en radianes)
+    switch (arc) {
+      case 'top': return { start: -Math.PI / 2, end: Math.PI / 2 };
+      case 'bottom': return { start: Math.PI / 2, end: (3 * Math.PI) / 2 };
+      case 'right': return { start: 0, end: Math.PI };
+      case 'left': return { start: Math.PI, end: 2 * Math.PI };
+      default: return { start: 0, end: 2 * Math.PI };
+    }
+  };
+  
   // Texto y formas
   const addTexto = useCallback(() => {
     const el = {
@@ -392,17 +404,6 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     message.success(`${nuevas.length} asientos agregados en ${side}`);
   }, [selectedIds, elements, rectSideCounts, seatEmpty]);
 
-  const getArcAngles = (arc) => {
-    // Rango de ángulos por arco (en radianes)
-    switch (arc) {
-      case 'top': return { start: -Math.PI / 2, end: Math.PI / 2 };
-      case 'bottom': return { start: Math.PI / 2, end: (3 * Math.PI) / 2 };
-      case 'right': return { start: 0, end: Math.PI };
-      case 'left': return { start: Math.PI, end: 2 * Math.PI };
-      default: return { start: 0, end: 2 * Math.PI };
-    }
-  };
-
   const addSeatsToCircleArc = useCallback(() => {
     if (!selectedIds?.length) return;
     const mesa = elements.find(e => selectedIds.includes(e._id) && e.type === 'mesa' && e.shape === 'circle');
@@ -444,6 +445,22 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const handleStageContextMenu = useCallback((e) => {
     e.evt.preventDefault();
   }, []);
+
+  const createRowSeatsFromDrag = useCallback((start, end) => {
+    if (!start || !end) return;
+    const count = Math.max(1, rowCount);
+    const dx = (end.x - start.x) / (count);
+    const dy = (end.y - start.y) / (count);
+    const newSeats = [];
+    let seq = elements.filter(e => e.type === 'silla').length + 1;
+    for (let i = 0; i < count; i++) {
+      const x = start.x + dx * (i + 0.5);
+      const y = start.y + dy * (i + 0.5);
+      newSeats.push({ _id: `silla_${Date.now()}_${seq}`, type: 'silla', posicion: { x, y }, shape: 'rect', width: 20, height: 20, fill: seatEmpty ? 'transparent' : '#00d6a4', stroke: seatEmpty ? '#d9d9d9' : undefined, empty: seatEmpty, numero: seq++, nombre: `${rowLabel}${i + 1}` });
+    }
+    setElements(prev => [...prev, ...newSeats]);
+    message.success(`Fila ${rowLabel} con ${count} asientos creada`);
+  }, [rowCount, rowLabel, elements, seatEmpty]);
 
   const handleMouseDown = useCallback((e) => {
     if (rowMode) {
@@ -619,21 +636,39 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     setTimeout(() => addSeatsToCircleArc(), 0);
   }, [elements, addSeatsToCircleArc]);
 
-  const createRowSeatsFromDrag = useCallback((start, end) => {
-    if (!start || !end) return;
-    const count = Math.max(1, rowCount);
-    const dx = (end.x - start.x) / (count);
-    const dy = (end.y - start.y) / (count);
-    const newSeats = [];
-    let seq = elements.filter(e => e.type === 'silla').length + 1;
-    for (let i = 0; i < count; i++) {
-      const x = start.x + dx * (i + 0.5);
-      const y = start.y + dy * (i + 0.5);
-      newSeats.push({ _id: `silla_${Date.now()}_${seq}`, type: 'silla', posicion: { x, y }, shape: 'rect', width: 20, height: 20, fill: seatEmpty ? 'transparent' : '#00d6a4', stroke: seatEmpty ? '#d9d9d9' : undefined, empty: seatEmpty, numero: seq++, nombre: `${rowLabel}${i + 1}` });
+  const selectedEl = elements.find(e => selectedIds.includes(e._id)) || null;
+  // Calcular posición del popup junto al elemento con auto-flip
+  const computePopupStyle = () => {
+    if (!selectedEl || !stageRef.current || !canvasContainerRef.current) return { display: 'none' };
+    const stage = stageRef.current;
+    const container = canvasContainerRef.current;
+    const scaleX = stage.scaleX();
+    const scaleY = stage.scaleY();
+    const sx = stage.x() || 0;
+    const sy = stage.y() || 0;
+    // centro del elemento
+    let cx = selectedEl.posicion.x;
+    let cy = selectedEl.posicion.y;
+    if (selectedEl.type === 'mesa' && selectedEl.shape === 'rect') {
+      cx = selectedEl.posicion.x + (selectedEl.width || 120) / 2;
+      cy = selectedEl.posicion.y + (selectedEl.height || 80) / 2;
     }
-    setElements(prev => [...prev, ...newSeats]);
-    message.success(`Fila ${rowLabel} con ${count} asientos creada`);
-  }, [rowCount, rowLabel, elements, seatEmpty]);
+    // convertir a coords de pantalla dentro del container
+    const px = cx * scaleX + sx;
+    const py = cy * scaleY + sy;
+    const margin = 10;
+    const popupW = 320;
+    const popupH = 160;
+    let left = px + margin;
+    let top = py - popupH / 2;
+    // auto-flip horizontal
+    if (left + popupW > container.clientWidth) left = px - popupW - margin;
+    if (left < 0) left = margin;
+    // auto-flip vertical
+    if (top < 0) top = py + margin;
+    if (top + popupH > container.clientHeight) top = container.clientHeight - popupH - margin;
+    return { position: 'absolute', left, top, background: 'white', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, boxShadow: '0 4px 10px rgba(0,0,0,0.08)', maxWidth: popupW, zIndex: 10 };
+  };
 
   const renderElement = useCallback((element) => {
     const isSelected = selectedIds.includes(element._id);
@@ -755,40 +790,6 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     }
     return null;
   }, [selectedIds, isRightPanning, handleElementDblClick, onDragEnd, addOneSeatRectSide, addOneSeatCircleArc]);
-
-  const selectedEl = elements.find(e => selectedIds.includes(e._id)) || null;
-  // Calcular posición del popup junto al elemento con auto-flip
-  const computePopupStyle = () => {
-    if (!selectedEl || !stageRef.current || !canvasContainerRef.current) return { display: 'none' };
-    const stage = stageRef.current;
-    const container = canvasContainerRef.current;
-    const scaleX = stage.scaleX();
-    const scaleY = stage.scaleY();
-    const sx = stage.x() || 0;
-    const sy = stage.y() || 0;
-    // centro del elemento
-    let cx = selectedEl.posicion.x;
-    let cy = selectedEl.posicion.y;
-    if (selectedEl.type === 'mesa' && selectedEl.shape === 'rect') {
-      cx = selectedEl.posicion.x + (selectedEl.width || 120) / 2;
-      cy = selectedEl.posicion.y + (selectedEl.height || 80) / 2;
-    }
-    // convertir a coords de pantalla dentro del container
-    const px = cx * scaleX + sx;
-    const py = cy * scaleY + sy;
-    const margin = 10;
-    const popupW = 320;
-    const popupH = 160;
-    let left = px + margin;
-    let top = py - popupH / 2;
-    // auto-flip horizontal
-    if (left + popupW > container.clientWidth) left = px - popupW - margin;
-    if (left < 0) left = margin;
-    // auto-flip vertical
-    if (top < 0) top = py + margin;
-    if (top + popupH > container.clientHeight) top = container.clientHeight - popupH - margin;
-    return { position: 'absolute', left, top, background: 'white', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, boxShadow: '0 4px 10px rgba(0,0,0,0.08)', maxWidth: popupW, zIndex: 10 };
-  };
 
   // Render
   return (

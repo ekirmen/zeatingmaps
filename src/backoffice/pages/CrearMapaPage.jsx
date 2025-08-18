@@ -104,10 +104,37 @@ const CrearMapaPage = () => {
       
       return true;
     } catch (err) {
-      console.error('[DEBUG] Error validando estado:', err);
+      console.error('[DEBUG] Error en validateState:', err);
       return false;
     }
   }, [loading, sala, mapa]);
+
+  // Monitorear cambios en el estado del componente
+  useEffect(() => {
+    console.log('[DEBUG] Estado del componente actualizado:', {
+      loading,
+      sala: sala ? 'cargada' : 'no cargada',
+      mapa: mapa ? 'encontrado' : 'no encontrado',
+      error: error ? 'sí' : 'no',
+      isMounted,
+      salaId
+    });
+    
+    // Log adicional para debugging del error React #301
+    if (sala && mapa) {
+      console.log('[DEBUG] Datos completos cargados:', {
+        salaKeys: Object.keys(sala),
+        mapaKeys: Object.keys(mapa),
+        salaNombre: sala.nombre,
+        mapaId: mapa.id
+      });
+    }
+  }, [loading, sala, mapa, error, isMounted, salaId]);
+  
+  // Log adicional para verificar re-renderizados
+  useEffect(() => {
+    console.log('[DEBUG] Componente re-renderizado, timestamp:', Date.now());
+  });
 
   // Si hay error, mostrar mensaje de error
   if (error) {
@@ -356,33 +383,6 @@ const CrearMapaPage = () => {
       return false;
     }
   };
-
-  // Monitorear cambios en el estado del componente
-  useEffect(() => {
-    console.log('[DEBUG] Estado del componente actualizado:', {
-      loading,
-      sala: sala ? 'cargada' : 'no cargada',
-      mapa: mapa ? 'encontrado' : 'no encontrado',
-      error: error ? 'sí' : 'no',
-      isMounted,
-      salaId
-    });
-    
-    // Log adicional para debugging del error React #301
-    if (sala && mapa) {
-      console.log('[DEBUG] Datos completos cargados:', {
-        salaKeys: Object.keys(sala),
-        mapaKeys: Object.keys(mapa),
-        salaNombre: sala.nombre,
-        mapaId: mapa.id
-      });
-    }
-  }, [loading, sala, mapa, error, isMounted, salaId]);
-  
-  // Log adicional para verificar re-renderizados
-  useEffect(() => {
-    console.log('[DEBUG] Componente re-renderizado, timestamp:', Date.now());
-  });
 
   // Cargar información de la sala
   const loadSalaInfo = async () => {
