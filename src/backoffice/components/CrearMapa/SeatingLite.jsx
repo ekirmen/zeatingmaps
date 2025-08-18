@@ -28,6 +28,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [showSeatNumbers, setShowSeatNumbers] = useState(true);
   const [seatShape, setSeatShape] = useState('circle'); // 'circle' | 'rect' | 'butaca'
   const [rowPreview, setRowPreview] = useState(null);
+  const [popupDrag, setPopupDrag] = useState({ isDragging: false, startPos: null, offset: { x: 0, y: 0 } });
   
   const getArcAngles = (arc) => {
     // Rango de ángulos por arco (en radianes)
@@ -151,6 +152,33 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Manejar drag del popup de propiedades rápidas
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (popupDrag.isDragging && popupDrag.startPos) {
+        const newX = e.clientX - popupDrag.startPos.x + popupDrag.offset.x;
+        const newY = e.clientY - popupDrag.startPos.y + popupDrag.offset.y;
+        setPopupDrag(prev => ({ ...prev, offset: { x: newX, y: newY } }));
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (popupDrag.isDragging) {
+        setPopupDrag(prev => ({ ...prev, isDragging: false, startPos: null }));
+      }
+    };
+
+    if (popupDrag.isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [popupDrag.isDragging, popupDrag.startPos, popupDrag.offset]);
 
   const addMesaRect = useCallback(() => {
     const mesa = {
@@ -726,15 +754,28 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     const margin = 10;
     const popupW = 320;
     const popupH = 160;
-    let left = px + margin;
-    let top = py - popupH / 2;
+    let left = px + margin + popupDrag.offset.x;
+    let top = py - popupH / 2 + popupDrag.offset.y;
     // auto-flip horizontal
-    if (left + popupW > container.clientWidth) left = px - popupW - margin;
-    if (left < 0) left = margin;
+    if (left + popupW > container.clientWidth) left = px - popupW - margin + popupDrag.offset.x;
+    if (left < 0) left = margin + popupDrag.offset.x;
     // auto-flip vertical
-    if (top < 0) top = py + margin;
-    if (top + popupH > container.clientHeight) top = container.clientHeight - popupH - margin;
-    return { position: 'absolute', left, top, background: 'white', border: '1px solid #e5e7eb', borderRadius: 8, padding: 12, boxShadow: '0 4px 10px rgba(0,0,0,0.08)', maxWidth: popupW, zIndex: 10 };
+    if (top < 0) top = py + margin + popupDrag.offset.y;
+    if (top + popupH > container.clientHeight) top = container.clientHeight - popupH - margin + popupDrag.offset.y;
+    return { 
+      position: 'absolute', 
+      left, 
+      top, 
+      background: 'white', 
+      border: '1px solid #e5e7eb', 
+      borderRadius: 8, 
+      padding: 12, 
+      boxShadow: '0 4px 10px rgba(0,0,0,0.08)', 
+      maxWidth: popupW, 
+      zIndex: 10,
+      cursor: popupDrag.isDragging ? 'grabbing' : 'grab',
+      userSelect: 'none'
+    };
   };
 
   const renderElement = useCallback((element) => {
@@ -953,27 +994,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             </Space>
           </div>
 
-          <Divider />
-
-          <div>
-            <div className="font-medium mb-2">Asientos a mesa (rectángulo)</div>
-            <Space direction="vertical" size="small" className="w-full">
-              <div className="text-xs text-gray-600">Lados (top/right/bottom/left)</div>
-              <div className="flex items-center gap-2">
-                <InputNumber min={0} max={20} value={rectSideCounts.top} onChange={(v) => setRectSideCounts(s => ({ ...s, top: v }))} />
-                <InputNumber min={0} max={20} value={rectSideCounts.right} onChange={(v) => setRectSideCounts(s => ({ ...s, right: v }))} />
-                <InputNumber min={0} max={20} value={rectSideCounts.bottom} onChange={(v) => setRectSideCounts(s => ({ ...s, bottom: v }))} />
-                <InputNumber min={0} max={20} value={rectSideCounts.left} onChange={(v) => setRectSideCounts(s => ({ ...s, left: v }))} />
-              </div>
-              <Space size="small" wrap>
-                <Button onClick={() => addSeatsToRectSide('top')}>Añadir lado arriba</Button>
-                <Button onClick={() => addSeatsToRectSide('right')}>Añadir lado derecha</Button>
-                <Button onClick={() => addSeatsToRectSide('bottom')}>Añadir lado abajo</Button>
-                <Button onClick={() => addSeatsToRectSide('left')}>Añadir lado izquierda</Button>
-                <Button type="dashed" onClick={addSeatsToMesaAll}>Añadir en todos los lados</Button>
-              </Space>
-            </Space>
-          </div>
+          
 
           <Divider />
 
@@ -1077,8 +1098,19 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
 
           {/* Popup contextual de propiedades rápidas */}
           {selectedEl && (
-            <div style={computePopupStyle()}>
-              <div className="font-medium mb-2">Propiedades rápidas</div>
+            <div style={computePopupStyle()}
+                 onMouseDown={(e) => {
+                   if (e.button === 0) { // Left click
+                     e.stopPropagation();
+                     setPopupDrag({ 
+                       isDragging: true, 
+                       startPos: { x: e.clientX, y: e.clientY }, 
+                       offset: popupDrag.offset 
+                     });
+                   }
+                 }}
+            >
+              <div className="font-medium mb-2" style={{ cursor: 'grab' }}>Propiedades rápidas</div>
               <Space direction="vertical" size="small" className="w-full">
                 <Input placeholder="Nombre" value={selectedEl.nombre || ''} onChange={e => updateSelectedProp('nombre', e.target.value)} />
                 
@@ -1121,7 +1153,14 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                         <InputNumber size="small" min={0} max={20} value={rectSideCounts.left} onChange={(v) => setRectSideCounts(s => ({ ...s, left: v }))} />
                       </div>
                     </div>
-                    <Button size="small" onClick={addSeatsToMesaAll} block>Añadir asientos</Button>
+                                         <Button size="small" onClick={addSeatsToMesaAll} block>Añadir en todos los lados</Button>
+                     <div className="text-xs text-gray-600 mb-1">Añadir por lado:</div>
+                     <div className="grid grid-cols-2 gap-1">
+                       <Button size="small" onClick={() => addSeatsToRectSide('top')}>↑ Arriba</Button>
+                       <Button size="small" onClick={() => addSeatsToRectSide('right')}>→ Derecha</Button>
+                       <Button size="small" onClick={() => addSeatsToRectSide('bottom')}>↓ Abajo</Button>
+                       <Button size="small" onClick={() => addSeatsToRectSide('left')}>← Izquierda</Button>
+                     </div>
                   </>
                 )}
                 
