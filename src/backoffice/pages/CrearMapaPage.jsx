@@ -681,8 +681,7 @@ const CrearMapaPage = () => {
         message.success('Mapa creado exitosamente');
       }
 
-      // Redirigir a la página de plano
-      navigate('/dashboard/plano');
+      // Permanecer en la página de creación tras guardar según petición
       
     } catch (error) {
       console.error('Error saving mapa:', error);
@@ -793,26 +792,7 @@ const CrearMapaPage = () => {
             </div>
             
             <Space>
-              <Button 
-                icon={<EyeOutlined />}
-                onClick={() => {
-                  // TODO: Implementar vista previa
-                  message.info('Vista previa próximamente');
-                }}
-              >
-                Vista Previa
-              </Button>
-              <Button 
-                type="primary"
-                icon={<SaveOutlined />}
-                loading={saving}
-                onClick={() => {
-                  // El guardado se maneja desde el editor
-                  message.info('Usa el botón Guardar del editor');
-                }}
-              >
-                Guardar
-              </Button>
+              {/* Botones de vista previa/guardar removidos a petición */}
             </Space>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Stage, Layer, Rect, Circle, Group, Text as KonvaText } from 'react-konva';
-import { Button, Space, message, Row, Col, Card } from 'antd';
+import { Button, Space, message } from 'antd';
 
 const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [elements, setElements] = useState(Array.isArray(initialMapa?.contenido) ? initialMapa.contenido : []);
@@ -99,29 +99,28 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   }, [onDragEnd, selectedId]);
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col">
-      <Card size="small" className="mb-2">
-        <Row align="middle" gutter={8}>
-          <Col>
-            <Space size="small">
-              <Button onClick={addMesa}>Añadir mesa</Button>
-              <Button onClick={addSilla}>Añadir silla</Button>
-              <Button onClick={handleDelete} disabled={!selectedId}>Eliminar seleccionado</Button>
-              <Button onClick={handleClear}>Limpiar</Button>
-            </Space>
-          </Col>
-          <Col flex="auto" />
-          <Col>
-            <Space size="small">
-              <Button onClick={onCancel}>Cancelar</Button>
-              <Button type="primary" onClick={handleSaveClick}>Guardar</Button>
-            </Space>
-          </Col>
-        </Row>
-      </Card>
-
-      <div className="flex-1 bg-white border rounded">
-        <Stage ref={stageRef} width={Math.max(1200, window.innerWidth - 80)} height={Math.max(700, window.innerHeight - 240)}>
+    <div className="h-[calc(100vh-140px)] flex">
+      {/* Panel lateral izquierdo */}
+      <div className="w-64 border-r bg-white p-3 flex flex-col gap-8">
+        <div>
+          <div className="font-medium mb-2">Herramientas</div>
+          <Space direction="vertical" size="small" className="w-full">
+            <Button onClick={addMesa} block>Añadir mesa</Button>
+            <Button onClick={addSilla} block>Añadir silla</Button>
+            <Button onClick={handleDelete} disabled={!selectedId} danger block>Eliminar seleccionado</Button>
+            <Button onClick={handleClear} block>Limpiar</Button>
+          </Space>
+        </div>
+        <div className="mt-auto">
+          <Space direction="vertical" size="small" className="w-full">
+            <Button onClick={onCancel} block>Cancelar</Button>
+            <Button type="primary" onClick={handleSaveClick} block>Guardar</Button>
+          </Space>
+        </div>
+      </div>
+      {/* Canvas a la derecha */}
+      <div className="flex-1 bg-white">
+        <Stage ref={stageRef} width={Math.max(1200, window.innerWidth - 80 - 256)} height={Math.max(700, window.innerHeight - 240)}>
           <Layer>
             <Rect width={2000} height={1400} fill="#fff" />
             {elements.map(renderElement)}
