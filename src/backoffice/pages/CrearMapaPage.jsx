@@ -4,6 +4,7 @@ import { Card, Button, Space, Typography, message, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, EyeOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import CrearMapaEditor from '../components/CrearMapa/CrearMapaEditor';
+import SeatingLite from '../components/CrearMapa/SeatingLite';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const { Title, Text } = Typography;
@@ -897,17 +898,16 @@ const CrearMapaPage = () => {
               
               console.log('[DEBUG] Todas las validaciones pasaron, renderizando CrearMapaEditor...');
               
-              // Renderizar el editor directamente
+              // Renderizar el editor directo (simple, estable)
               try {
                 console.log('[DEBUG] Creando componente CrearMapaEditor...');
                 
                 const editorComponent = (
-                  <CrearMapaEditor
+                  <SeatingLite
                     salaId={salaId}
                     onSave={handleSave}
                     onCancel={handleCancel}
-                    initialMapa={mapa}
-                    isEditMode={!!mapa}
+                    initialMapa={mapa ? { contenido: mapa.contenido?.elementos ? mapa.contenido.elementos : (Array.isArray(mapa.contenido) ? mapa.contenido : []) } : null}
                   />
                 );
                 
