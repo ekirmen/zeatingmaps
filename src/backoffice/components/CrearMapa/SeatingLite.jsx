@@ -126,8 +126,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           type: 'background',
           image: img,
           imageData: e.target.result, // Guardar como data URL
-          width: window.innerWidth - 320,
-          height: window.innerHeight - 120,
+          width: window.innerWidth - 320 - 40,
+          height: window.innerHeight - 40,
           x: 0,
           y: 0
         });
@@ -224,15 +224,15 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   useEffect(() => {
     const handleResize = () => {
       if (stageRef.current) {
-        stageRef.current.width(window.innerWidth - 320);
-        stageRef.current.height(window.innerHeight - 120);
+        stageRef.current.width(window.innerWidth - 320 - 40);
+        stageRef.current.height(window.innerHeight - 40);
       }
       // Actualizar tamaño del fondo si existe
       if (backgroundImageElement) {
         setBackgroundImageElement(prev => ({
           ...prev,
-          width: window.innerWidth - 320,
-          height: window.innerHeight - 120
+          width: window.innerWidth - 320 - 40,
+          height: window.innerHeight - 40
         }));
       }
     };
@@ -1026,30 +1026,21 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   // Render
   return (
     <div className="h-screen flex flex-col">
-      {/* Header con botón de guardar */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button onClick={onCancel} icon={<ArrowLeftOutlined />}>
-              Volver
-            </Button>
-            <div>
-              <h3 className="ant-typography mb-1">Editar Mapa</h3>
-              <span className="ant-typography ant-typography-secondary">Sala: {salaId}</span>
-            </div>
-          </div>
-          <Button type="primary" onClick={handleSaveClick} icon={<SaveOutlined />}>
-            Guardar Mapa
-          </Button>
-        </div>
-      </div>
-
       {/* Contenido principal */}
       <div className="flex-1 flex">
         {/* Panel lateral izquierdo */}
         <div className="w-80 border-r bg-white p-3 flex flex-col gap-2 overflow-y-auto">
+          {/* Botón de guardar */}
+          <Button type="primary" onClick={handleSaveClick} icon={<SaveOutlined />} block>
+            Guardar Mapa
+          </Button>
+          <Button onClick={onCancel} icon={<ArrowLeftOutlined />} block>
+            Volver
+          </Button>
+          <Divider />
+          
           <Collapse 
-            defaultActiveKey={['zones', 'tools', 'background']} 
+            defaultActiveKey={[]} 
             ghost 
             size="small"
             expandIcon={({ isActive }) => <DownOutlined rotate={isActive ? 180 : 0} />}
@@ -1175,8 +1166,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         <div ref={canvasContainerRef} className="flex-1 bg-white relative" onContextMenu={(e) => e.preventDefault()}>
           <Stage
             ref={stageRef}
-            width={window.innerWidth - 320}
-            height={window.innerHeight - 120}
+            width={window.innerWidth - 320 - 40}
+            height={window.innerHeight - 40}
             scaleX={scale}
             scaleY={scale}
             x={stagePos.x}
@@ -1194,7 +1185,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             }}
           >
             <Layer listening={false}>
-              <Rect width={window.innerWidth - 320} height={window.innerHeight - 120} fill="#fff" />
+              <Rect width={window.innerWidth - 320 - 40} height={window.innerHeight - 40} fill="#fff" />
               {backgroundImage && backgroundImageElement && (
                 <KonvaImage
                   image={backgroundImage}
@@ -1247,7 +1238,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           </Stage>
 
           {/* Botones de zoom y centrar */}
-          <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
+          <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
             <Button.Group size="small">
               <Button onClick={zoomIn} icon={<ZoomInOutlined />} />
               <Button onClick={zoomOut} icon={<ZoomOutOutlined />} />
