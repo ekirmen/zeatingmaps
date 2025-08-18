@@ -819,148 +819,22 @@ const CrearMapaPage = () => {
 
         {/* Editor */}
         <div className="flex-1">
-          {useMemo(() => {
-            console.log('[DEBUG] useMemo ejecutándose con dependencias:', {
-              salaId,
-              mapaId: mapa?.id,
-              handleSaveType: typeof handleSave,
-              handleCancelType: typeof handleCancel
-            });
-            
-            try {
-              // Validar props antes de renderizar el editor
-              console.log('[DEBUG] Validando props para CrearMapaEditor:', {
-                salaId,
-                onSave: typeof handleSave,
-                onCancel: typeof handleCancel,
-                initialMapa: mapa ? 'presente' : 'ausente',
-                isEditMode: !!mapa
-              });
-              
-              // Validar que las funciones sean funciones válidas
-              if (typeof handleSave !== 'function') {
-                throw new Error('La función onSave no es válida');
-              }
-              
-              if (typeof handleCancel !== 'function') {
-                throw new Error('La función onCancel no es válida');
-              }
-              
-              // Validar que salaId sea válido
-              if (!salaId || isNaN(parseInt(salaId))) {
-                throw new Error('El ID de la sala no es válido');
-              }
-              
-              // Validar que mapa tenga la estructura esperada
-              if (mapa && typeof mapa === 'object') {
-                console.log('[DEBUG] Estructura del mapa:', {
-                  id: mapa.id,
-                  sala_id: mapa.sala_id,
-                  contenido: typeof mapa.contenido,
-                  nombre: mapa.nombre,
-                  descripcion: mapa.descripcion,
-                  estado: mapa.estado,
-                  tenant_id: mapa.tenant_id,
-                  updated_at: mapa.updated_at,
-                  created_at: mapa.created_at
-                });
-                
-                // Verificar que contenido sea válido
-                if (mapa.contenido && typeof mapa.contenido !== 'object') {
-                  console.warn('[DEBUG] Contenido del mapa no es un objeto válido:', mapa.contenido);
-                  throw new Error('El contenido del mapa no es válido');
+          <SeatingLite
+            salaId={salaId}
+            onSave={handleSave}
+            onCancel={handleCancel}
+            initialMapa={
+              mapa
+                ? {
+                  contenido: Array.isArray(mapa?.contenido)
+                    ? mapa.contenido
+                    : Array.isArray(mapa?.contenido?.elementos)
+                    ? mapa.contenido.elementos
+                    : []
                 }
-                
-                // Verificar campos obligatorios
-                if (!mapa.id || !mapa.sala_id) {
-                  console.warn('[DEBUG] Mapa faltan campos obligatorios:', { id: mapa.id, sala_id: mapa.sala_id });
-                  throw new Error('El mapa no tiene todos los campos obligatorios');
-                }
-                
-                // Verificar que sala_id coincida
-                if (mapa.sala_id !== parseInt(salaId)) {
-                  console.warn('[DEBUG] Mapa.sala_id no coincide con salaId:', { mapa_sala_id: mapa.sala_id, salaId });
-                  throw new Error('El mapa no corresponde a la sala seleccionada');
-                }
-                
-                // Verificar que el contenido tenga la estructura esperada
-                if (mapa.contenido && typeof mapa.contenido === 'object') {
-                  if (!mapa.contenido.elementos || !Array.isArray(mapa.contenido.elementos)) {
-                    console.warn('[DEBUG] Contenido del mapa no tiene elementos válidos:', mapa.contenido);
-                    // No lanzar error, solo warning
-                  }
-                }
-                
-                console.log('[DEBUG] Mapa validado exitosamente, procediendo a renderizar editor');
-              } else {
-                console.log('[DEBUG] No hay mapa o no es un objeto válido, creando mapa nuevo');
-              }
-              
-              console.log('[DEBUG] Todas las validaciones pasaron, renderizando CrearMapaEditor...');
-              
-              // Renderizar el editor directo (simple, estable)
-              try {
-                console.log('[DEBUG] Creando componente CrearMapaEditor...');
-                
-                const editorComponent = (
-                  <SeatingLite
-                    salaId={salaId}
-                    onSave={handleSave}
-                    onCancel={handleCancel}
-                    initialMapa={mapa ? { contenido: mapa.contenido?.elementos ? mapa.contenido.elementos : (Array.isArray(mapa.contenido) ? mapa.contenido : []) } : null}
-                  />
-                );
-                
-                console.log('[DEBUG] CrearMapaEditor creado exitosamente');
-                
-                // Log adicional para verificar el componente
-                console.log('[DEBUG] Tipo del componente editor:', typeof editorComponent);
-                console.log('[DEBUG] Props del componente:', {
-                  salaId: salaId,
-                  onSave: typeof handleSave,
-                  onCancel: typeof handleCancel,
-                  initialMapa: mapa ? 'presente' : 'ausente',
-                  isEditMode: !!mapa
-                });
-                
-                // Verificar que el componente sea un elemento React válido
-                if (!editorComponent || typeof editorComponent !== 'object') {
-                  console.error('[DEBUG] Componente editor no es válido:', editorComponent);
-                  throw new Error('El componente editor no es válido');
-                }
-                
-                // Verificar que tenga la propiedad type
-                if (!editorComponent.type) {
-                  console.error('[DEBUG] Componente editor no tiene type:', editorComponent);
-                  throw new Error('El componente editor no tiene type válido');
-                }
-                
-                console.log('[DEBUG] Componente editor validado exitosamente');
-                
-                return editorComponent;
-                
-              } catch (renderError) {
-                console.error('[DEBUG] Error durante el renderizado de CrearMapaEditor:', renderError);
-                throw new Error(`Error de renderizado: ${renderError.message}`);
-              }
-            } catch (editorError) {
-              console.error('[DEBUG] Error al renderizar CrearMapaEditor:', editorError);
-              return (
-                <div className="p-8 text-center">
-                  <h3 className="text-lg font-semibold text-red-600 mb-2">Error al cargar el editor</h3>
-                  <p className="text-gray-600 mb-4">{editorError.message}</p>
-                  <div className="space-y-2">
-                    <Button onClick={() => window.location.reload()} type="primary" className="mr-2">
-                      Recargar Página
-                    </Button>
-                    <Button onClick={() => setError(null)} type="default">
-                      Reintentar
-                    </Button>
-                  </div>
-                </div>
-              );
+                : null
             }
-          }, [salaId, mapa, handleSave, handleCancel])}
+          />
         </div>
       </div>
     );
