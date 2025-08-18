@@ -33,6 +33,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [backgroundImageElement, setBackgroundImageElement] = useState(null);
   const [seatSpacing, setSeatSpacing] = useState(25); // Espaciado entre sillas
   const [backgroundScale, setBackgroundScale] = useState(1); // Escala del fondo
+  const [backgroundOpacity, setBackgroundOpacity] = useState(1); // Transparencia del fondo
+  const [activeInput, setActiveInput] = useState(null); // Para activar inputs automáticamente
   
   const getArcAngles = (arc) => {
     // Rango de ángulos por arco (en radianes)
@@ -126,8 +128,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           type: 'background',
           image: img,
           imageData: e.target.result, // Guardar como data URL
-          width: window.innerWidth - 320 - 40,
-          height: window.innerHeight - 40,
+          width: window.innerWidth - 320 - 80,
+          height: window.innerHeight - 80,
           x: 0,
           y: 0
         });
@@ -184,6 +186,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       if (typeof meta.config.snapToGrid === 'boolean') setSnapToGrid(meta.config.snapToGrid);
       if (typeof meta.config.seatSpacing === 'number') setSeatSpacing(meta.config.seatSpacing);
       if (typeof meta.config.backgroundScale === 'number') setBackgroundScale(meta.config.backgroundScale);
+      if (typeof meta.config.backgroundOpacity === 'number') setBackgroundOpacity(meta.config.backgroundOpacity);
       if (meta.config.backgroundImage) {
         setBackgroundImage(meta.config.backgroundImage.image);
         setBackgroundImageElement({
@@ -224,15 +227,15 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   useEffect(() => {
     const handleResize = () => {
       if (stageRef.current) {
-        stageRef.current.width(window.innerWidth - 320 - 40);
-        stageRef.current.height(window.innerHeight - 40);
+        stageRef.current.width(window.innerWidth - 320 - 80);
+        stageRef.current.height(window.innerHeight - 80);
       }
       // Actualizar tamaño del fondo si existe
       if (backgroundImageElement) {
         setBackgroundImageElement(prev => ({
           ...prev,
-          width: window.innerWidth - 320 - 40,
-          height: window.innerHeight - 40
+          width: window.innerWidth - 320 - 80,
+          height: window.innerHeight - 80
         }));
       }
     };
@@ -245,9 +248,15 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   useEffect(() => {
     const handleMouseMove = (e) => {
       if (popupDrag.isDragging && popupDrag.startPos) {
-        const newX = e.clientX - popupDrag.startPos.x + popupDrag.offset.x;
-        const newY = e.clientY - popupDrag.startPos.y + popupDrag.offset.y;
-        setPopupDrag(prev => ({ ...prev, offset: { x: newX, y: newY } }));
+        const deltaX = e.clientX - popupDrag.startPos.x;
+        const deltaY = e.clientY - popupDrag.startPos.y;
+        const newX = popupDrag.offset.x + deltaX;
+        const newY = popupDrag.offset.y + deltaY;
+        setPopupDrag(prev => ({ 
+          ...prev, 
+          offset: { x: newX, y: newY },
+          startPos: { x: e.clientX, y: e.clientY }
+        }));
       }
     };
 
@@ -423,6 +432,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         snapToGrid,
         seatSpacing,
         backgroundScale,
+        backgroundOpacity,
         backgroundImage: backgroundImageElement ? {
           _id: backgroundImageElement._id,
           type: 'background',
@@ -434,7 +444,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       }
     };
     return [...other, meta];
-  }, [scale, stagePos, gridSize, showGrid, snapToGrid, seatSpacing, backgroundScale, backgroundImageElement]);
+  }, [scale, stagePos, gridSize, showGrid, snapToGrid, seatSpacing, backgroundScale, backgroundOpacity, backgroundImageElement]);
 
   const handleSaveClick = useCallback(async () => {
     try {
@@ -899,6 +909,10 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           setSelectedIds(prev => prev.includes(element._id) ? prev.filter(id => id !== element._id) : [...prev, element._id]);
         } else {
           setSelectedIds([element._id]);
+          // Activar input automáticamente si es una silla
+          if (element.type === 'silla') {
+            setActiveInput('numero');
+          }
         }
       },
       onDblClick: () => handleElementDblClick(element),
@@ -922,6 +936,10 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
               setSelectedIds(prev => prev.includes(element._id) ? prev.filter(id => id !== element._id) : [...prev, element._id]);
             } else {
               setSelectedIds([element._id]);
+              // Activar input automáticamente si es una silla
+              if (element.type === 'silla') {
+                setActiveInput('numero');
+              }
             }
           }}
           onDblClick={() => handleElementDblClick(element)}
@@ -1030,6 +1048,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       <div className="flex-1 flex">
         {/* Panel lateral izquierdo */}
         <div className="w-80 border-r bg-white p-3 flex flex-col gap-2 overflow-y-auto">
+          {/* Información de sala */}
+          <div className="text-center pb-2 border-b">
+            <h3 className="text-sm font-medium mb-1">Editar Mapa</h3>
+            <span className="text-xs text-gray-500">Sala: {salaId}</span>
+          </div>
+          
           {/* Botón de guardar */}
           <Button type="primary" onClick={handleSaveClick} icon={<SaveOutlined />} block>
             Guardar Mapa
@@ -1152,6 +1176,18 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                         size="small"
                       />
                     </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">Transparencia:</span>
+                      <Slider
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        value={backgroundOpacity}
+                        onChange={setBackgroundOpacity}
+                        style={{ width: 100 }}
+                        size="small"
+                      />
+                    </div>
                     <Button onClick={removeBackground} danger size="small" block>
                       Remover fondo
                     </Button>
@@ -1166,8 +1202,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         <div ref={canvasContainerRef} className="flex-1 bg-white relative" onContextMenu={(e) => e.preventDefault()}>
           <Stage
             ref={stageRef}
-            width={window.innerWidth - 320 - 40}
-            height={window.innerHeight - 40}
+            width={window.innerWidth - 320 - 80}
+            height={window.innerHeight - 80}
             scaleX={scale}
             scaleY={scale}
             x={stagePos.x}
@@ -1185,7 +1221,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             }}
           >
             <Layer listening={false}>
-              <Rect width={window.innerWidth - 320 - 40} height={window.innerHeight - 40} fill="#fff" />
+              <Rect width={window.innerWidth - 320 - 80} height={window.innerHeight - 80} fill="#fff" />
               {backgroundImage && backgroundImageElement && (
                 <KonvaImage
                   image={backgroundImage}
@@ -1193,6 +1229,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                   y={backgroundImageElement.y}
                   width={backgroundImageElement.width * backgroundScale}
                   height={backgroundImageElement.height * backgroundScale}
+                  opacity={backgroundOpacity}
                   listening={false}
                 />
               )}
@@ -1403,7 +1440,15 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                   <>
                     <div className="flex items-center gap-2">
                       <span>N°</span>
-                      <InputNumber min={1} max={9999} value={selectedEl.numero || 1} onChange={v => updateSelectedProp('numero', v)} />
+                      <InputNumber 
+                        min={1} 
+                        max={9999} 
+                        value={selectedEl.numero || 1} 
+                        onChange={v => updateSelectedProp('numero', v)}
+                        autoFocus={activeInput === 'numero'}
+                        onFocus={() => setActiveInput('numero')}
+                        onBlur={() => setActiveInput(null)}
+                      />
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Tamaño</span>
