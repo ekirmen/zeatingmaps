@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Stage, Layer, Rect, Circle, Group, Text as KonvaText, Line, RegularPolygon } from 'react-konva';
 import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider } from 'antd';
 import { fetchZonasPorSala } from '../../services/apibackoffice';
+import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined } from '@ant-design/icons';
 
 const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [elements, setElements] = useState(Array.isArray(initialMapa?.contenido) ? initialMapa.contenido : []);
@@ -23,6 +24,10 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [seatEmpty, setSeatEmpty] = useState(false);
   const [circleArc, setCircleArc] = useState('top');
   const [circleArcCount, setCircleArcCount] = useState(6);
+  const [showTableLabels, setShowTableLabels] = useState(true);
+  const [showSeatNumbers, setShowSeatNumbers] = useState(true);
+  const [seatShape, setSeatShape] = useState('circle'); // 'circle' | 'rect' | 'butaca'
+  const [rowPreview, setRowPreview] = useState(null);
   
   const getArcAngles = (arc) => {
     // Rango de ángulos por arco (en radianes)
@@ -128,6 +133,19 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Manejar redimensionamiento de ventana
+  useEffect(() => {
+    const handleResize = () => {
+      if (stageRef.current) {
+        stageRef.current.width(window.innerWidth - 320);
+        stageRef.current.height(window.innerHeight - 120);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const addMesaRect = useCallback(() => {
     const mesa = {
       _id: `mesa_${Date.now()}`,
@@ -160,12 +178,11 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const addSilla = useCallback(() => {
     const baseX = 80 + (elements.length % 8) * 40;
     const baseY = 80 + Math.floor(elements.length / 8) * 40;
-    const silla = {
+    const sillaBase = {
       _id: `silla_${Date.now()}`,
       type: 'silla',
       posicion: { x: baseX, y: baseY },
-      shape: 'circle',
-      radius: 10,
+      shape: seatShape,
       fill: seatEmpty ? 'transparent' : '#00d6a4',
       stroke: seatEmpty ? '#d9d9d9' : undefined,
       empty: seatEmpty,
@@ -173,8 +190,13 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       numero: (elements.filter(e => e.type === 'silla').length + 1),
       nombre: ''
     };
+    const silla = seatShape === 'circle'
+      ? { ...sillaBase, radius: 10 }
+      : seatShape === 'rect'
+      ? { ...sillaBase, width: 20, height: 20 }
+      : { ...sillaBase, width: 18, height: 14 }; // butaca
     setElements(prev => [...prev, silla]);
-  }, [elements, seatEmpty]);
+  }, [elements, seatEmpty, seatShape]);
 
   const onDragEnd = useCallback((id, x, y) => {
     const nx = snapToGrid ? Math.round(x / gridSize) * gridSize : x;
@@ -182,6 +204,19 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     setElements(prev => {
       const curr = prev.find(el => el._id === id);
       const next = prev.map(el => el._id === id ? { ...el, posicion: { x: nx, y: ny } } : el);
+      // Si se está moviendo una silla y hay múltiples sillas seleccionadas, mover el grupo con el mismo delta
+      if (curr && curr.type === 'silla' && Array.isArray(selectedIds) && selectedIds.length > 1) {
+        const dx = nx - (curr.posicion?.x || 0);
+        const dy = ny - (curr.posicion?.y || 0);
+        return next.map(el => {
+          if (el._id !== id && selectedIds.includes(el._id) && el.type === 'silla') {
+            const ex = (el.posicion?.x || 0) + dx;
+            const ey = (el.posicion?.y || 0) + dy;
+            return { ...el, posicion: { x: ex, y: ey } };
+          }
+          return el;
+        });
+      }
       // Si se movió una mesa circular, reposicionar asientos adjuntos por arco/360
       if (curr && curr.type === 'mesa' && curr.shape === 'circle') {
         const mesa = next.find(el => el._id === id);
@@ -236,7 +271,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       }
       return next;
     });
-  }, [gridSize, snapToGrid]);
+  }, [gridSize, snapToGrid, selectedIds]);
 
   const handleDelete = useCallback(() => {
     if (!selectedIds?.length) return;
@@ -300,8 +335,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     const baseSeat = (extra) => ({
       _id: `silla_${Date.now()}_${seq}`,
       type: 'silla',
-      shape: 'circle',
-      radius: 10,
+      shape: seatShape,
       fill: seatEmpty ? 'transparent' : '#00d6a4',
       stroke: seatEmpty ? '#d9d9d9' : undefined,
       empty: seatEmpty,
@@ -315,30 +349,47 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       // borrar existentes por lados para esta mesa para evitar duplicados
       let base = elements.filter(e => !(e.type === 'silla' && e.mesaId === mesa._id && e.side));
       const { top, right, bottom, left } = rectSideCounts;
+      const allPositions = [];
+      
+      // Calcular todas las posiciones
       // top
       for (let i = 0; i < top; i++) {
         const x = mesa.posicion.x + ((mesa.width || 120) / (top + 1)) * (i + 1);
         const y = mesa.posicion.y - 25;
-        nuevas.push(baseSeat({ posicion: { x, y }, side: 'top', sideIndex: i, sideCount: top }));
+        allPositions.push({ x, y, side: 'top', sideIndex: i, sideCount: top });
       }
       // right
       for (let i = 0; i < right; i++) {
         const x = mesa.posicion.x + (mesa.width || 120) + 25;
         const y = mesa.posicion.y + ((mesa.height || 80) / (right + 1)) * (i + 1);
-        nuevas.push(baseSeat({ posicion: { x, y }, side: 'right', sideIndex: i, sideCount: right }));
+        allPositions.push({ x, y, side: 'right', sideIndex: i, sideCount: right });
       }
       // bottom
       for (let i = 0; i < bottom; i++) {
         const x = mesa.posicion.x + ((mesa.width || 120) / (bottom + 1)) * (i + 1);
         const y = mesa.posicion.y + (mesa.height || 80) + 25;
-        nuevas.push(baseSeat({ posicion: { x, y }, side: 'bottom', sideIndex: i, sideCount: bottom }));
+        allPositions.push({ x, y, side: 'bottom', sideIndex: i, sideCount: bottom });
       }
       // left
       for (let i = 0; i < left; i++) {
         const x = mesa.posicion.x - 25;
         const y = mesa.posicion.y + ((mesa.height || 80) / (left + 1)) * (i + 1);
-        nuevas.push(baseSeat({ posicion: { x, y }, side: 'left', sideIndex: i, sideCount: left }));
+        allPositions.push({ x, y, side: 'left', sideIndex: i, sideCount: left });
       }
+      
+      // Ordenar todas las posiciones de izquierda a derecha
+      allPositions.sort((a, b) => a.x - b.x);
+      
+      // Crear asientos con las posiciones ordenadas
+      allPositions.forEach(pos => {
+        const base = baseSeat({ 
+          posicion: { x: pos.x, y: pos.y }, 
+          side: pos.side, 
+          sideIndex: pos.sideIndex, 
+          sideCount: pos.sideCount 
+        });
+        nuevas.push(seatShape === 'circle' ? { ...base, radius: 10 } : seatShape === 'rect' ? { ...base, width: 20, height: 20 } : { ...base, width: 18, height: 14 });
+      });
       setElements(base.concat(nuevas));
       message.success(`${nuevas.length} asientos agregados`);
       return;
@@ -353,13 +404,14 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         const angle = (i * 2 * Math.PI) / count;
         const x = cx + Math.cos(angle) * r;
         const y = cy + Math.sin(angle) * r;
-        nuevas.push(baseSeat({ posicion: { x, y }, circleIndex: i, circleCount: count }));
+        const base = baseSeat({ posicion: { x, y }, circleIndex: i, circleCount: count });
+        nuevas.push(seatShape === 'circle' ? { ...base, radius: 10 } : seatShape === 'rect' ? { ...base, width: 20, height: 20 } : { ...base, width: 18, height: 14 });
       }
       setElements(base.concat(nuevas));
       message.success(`360°: ${nuevas.length} asientos`);
       return;
     }
-  }, [selectedIds, elements, rectSideCounts, circleSeatsCount, seatEmpty]);
+  }, [selectedIds, elements, rectSideCounts, circleSeatsCount, seatEmpty, seatShape, addSeatsToMesaAll]);
 
   const addSeatsToRectSide = useCallback((side) => {
     if (!selectedIds?.length) return;
@@ -371,23 +423,36 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     const n = countMap[side] || 0;
     // quitar existentes de ese lado
     let base = elements.filter(e => !(e.type === 'silla' && e.mesaId === mesa._id && e.side === side));
+    // Calcular posiciones de izquierda a derecha
+    const positions = [];
     for (let i = 0; i < n; i++) {
       let x = 0, y = 0;
       if (side === 'top') {
-        x = mesa.posicion.x + ((mesa.width || 120) / (n + 1)) * (i + 1); y = mesa.posicion.y - 25;
+        x = mesa.posicion.x + ((mesa.width || 120) / (n + 1)) * (i + 1); 
+        y = mesa.posicion.y - 25;
       } else if (side === 'right') {
-        x = mesa.posicion.x + (mesa.width || 120) + 25; y = mesa.posicion.y + ((mesa.height || 80) / (n + 1)) * (i + 1);
+        x = mesa.posicion.x + (mesa.width || 120) + 25; 
+        y = mesa.posicion.y + ((mesa.height || 80) / (n + 1)) * (i + 1);
       } else if (side === 'bottom') {
-        x = mesa.posicion.x + ((mesa.width || 120) / (n + 1)) * (i + 1); y = mesa.posicion.y + (mesa.height || 80) + 25;
+        x = mesa.posicion.x + ((mesa.width || 120) / (n + 1)) * (i + 1); 
+        y = mesa.posicion.y + (mesa.height || 80) + 25;
       } else {
-        x = mesa.posicion.x - 25; y = mesa.posicion.y + ((mesa.height || 80) / (n + 1)) * (i + 1);
+        x = mesa.posicion.x - 25; 
+        y = mesa.posicion.y + ((mesa.height || 80) / (n + 1)) * (i + 1);
       }
-      nuevas.push({
+      positions.push({ x, y, index: i });
+    }
+    
+    // Ordenar posiciones de izquierda a derecha
+    positions.sort((a, b) => a.x - b.x);
+    
+    // Crear asientos con las posiciones ordenadas
+    positions.forEach((pos, i) => {
+      const base = {
         _id: `silla_${Date.now()}_${seq}`,
         type: 'silla',
-        posicion: { x, y },
-        shape: 'circle',
-        radius: 10,
+        posicion: { x: pos.x, y: pos.y },
+        shape: seatShape,
         fill: seatEmpty ? 'transparent' : '#00d6a4',
         stroke: seatEmpty ? '#d9d9d9' : undefined,
         empty: seatEmpty,
@@ -396,13 +461,14 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         mesaId: mesa._id,
         zona: mesa.zona,
         side,
-        sideIndex: i,
+        sideIndex: pos.index,
         sideCount: n
-      });
-    }
+      };
+      nuevas.push(seatShape === 'circle' ? { ...base, radius: 10 } : seatShape === 'rect' ? { ...base, width: 20, height: 20 } : { ...base, width: 18, height: 14 });
+    });
     setElements(base.concat(nuevas));
     message.success(`${nuevas.length} asientos agregados en ${side}`);
-  }, [selectedIds, elements, rectSideCounts, seatEmpty]);
+  }, [selectedIds, elements, rectSideCounts, seatEmpty, seatShape, addSeatsToRectSide]);
 
   const addSeatsToCircleArc = useCallback(() => {
     if (!selectedIds?.length) return;
@@ -420,27 +486,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       const angle = start + (end - start) * ((i + 1) / (circleArcCount + 1));
       const x = cx + Math.cos(angle) * r;
       const y = cy + Math.sin(angle) * r;
-      nuevas.push({
-        _id: `silla_${Date.now()}_${seq}`,
-        type: 'silla',
-        posicion: { x, y },
-        shape: 'circle',
-        radius: 10,
-        fill: seatEmpty ? 'transparent' : '#00d6a4',
-        stroke: seatEmpty ? '#d9d9d9' : undefined,
-        empty: seatEmpty,
-        numero: seq++,
-        nombre: '',
-        mesaId: mesa._id,
-        zona: mesa.zona,
-        arc: circleArc,
-        arcIndex: i,
-        arcCount: circleArcCount
-      });
+      const base = baseSeat({ posicion: { x, y }, circleIndex: i, circleCount: circleArcCount });
+      nuevas.push(seatShape === 'circle' ? { ...base, radius: 10 } : seatShape === 'rect' ? { ...base, width: 20, height: 20 } : { ...base, width: 18, height: 14 });
     }
     setElements(base.concat(nuevas));
     message.success(`${nuevas.length} asientos agregados en arco ${circleArc}`);
-  }, [selectedIds, elements, circleArc, circleArcCount, seatEmpty]);
+  }, [selectedIds, elements, circleArc, circleArcCount, seatEmpty, seatShape, addSeatsToCircleArc]);
 
   const handleStageContextMenu = useCallback((e) => {
     e.evt.preventDefault();
@@ -456,11 +507,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     for (let i = 0; i < count; i++) {
       const x = start.x + dx * (i + 0.5);
       const y = start.y + dy * (i + 0.5);
-      newSeats.push({ _id: `silla_${Date.now()}_${seq}`, type: 'silla', posicion: { x, y }, shape: 'rect', width: 20, height: 20, fill: seatEmpty ? 'transparent' : '#00d6a4', stroke: seatEmpty ? '#d9d9d9' : undefined, empty: seatEmpty, numero: seq++, nombre: `${rowLabel}${i + 1}` });
+      const base = { _id: `silla_${Date.now()}_${seq}`, type: 'silla', posicion: { x, y }, shape: seatShape, fill: seatEmpty ? 'transparent' : '#00d6a4', stroke: seatEmpty ? '#d9d9d9' : undefined, empty: seatEmpty, numero: seq++, nombre: `${rowLabel}${i + 1}` };
+      newSeats.push(seatShape === 'circle' ? { ...base, radius: 10 } : seatShape === 'rect' ? { ...base, width: 20, height: 20 } : { ...base, width: 18, height: 14 });
     }
     setElements(prev => [...prev, ...newSeats]);
     message.success(`Fila ${rowLabel} con ${count} asientos creada`);
-  }, [rowCount, rowLabel, elements, seatEmpty]);
+  }, [rowCount, rowLabel, elements, seatEmpty, seatShape, createRowSeatsFromDrag]);
 
   const handleMouseDown = useCallback((e) => {
     if (rowMode) {
@@ -489,6 +541,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       const pos = e.target.getStage().getPointerPosition();
       createRowSeatsFromDrag(rowStart, pos);
       setRowStart(null);
+      setRowPreview(null);
       return;
     }
     if (isRightPanning) {
@@ -529,6 +582,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         if (newName !== null) {
           setElements(prev => prev.map(x => selectedIds.includes(x._id) ? { ...x, nombre: newName } : x));
         }
+      }
+      // Tecla Suprimir para eliminar elementos seleccionados
+      if (ev.key === 'Delete' && selectedIds?.length) {
+        ev.preventDefault();
+        setElements(prev => prev.filter(el => !selectedIds.includes(el._id)));
+        setSelectedIds([]);
       }
     };
     window.addEventListener('keydown', onKey);
@@ -739,7 +798,9 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         return (
           <Group {...commonProps}>
             <Circle radius={r} fill={element.fill || '#f0f0f0'} stroke={zoneStroke} strokeWidth={isSelected ? 3 : 2} />
-            <KonvaText text={element.nombre || 'Mesa'} fontSize={14} fill="#333" x={-40} y={-r - 20} />
+            {showTableLabels && (
+              <KonvaText text={element.nombre || 'Mesa'} fontSize={element.labelSize || 14} fill={element.labelColor || '#333'} offsetX={((element.nombre || 'Mesa').length * (element.labelSize || 14)) / 4} x={0} y={-7} />
+            )}
             {isSelected && (
               <>
                 {/* Handles en cardinales para añadir asientos por arco */}
@@ -757,7 +818,9 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       return (
         <Group {...commonProps}>
           <Rect width={w} height={h} fill={element.fill || '#f0f0f0'} stroke={zoneStroke} strokeWidth={isSelected ? 3 : 2} rotation={element.rotation || 0} />
-          <KonvaText text={element.nombre || 'Mesa'} fontSize={14} fill="#333" x={4} y={-18} />
+          {showTableLabels && (
+            <KonvaText text={element.nombre || 'Mesa'} fontSize={element.labelSize || 14} fill={element.labelColor || '#333'} offsetX={((element.nombre || 'Mesa').length * (element.labelSize || 14)) / 4} x={w/2} y={h/2 - (element.labelSize || 14)/2} />
+          )}
           {isSelected && (
             <>
               {/* Handles en el centro de cada lado para añadir asientos */}
@@ -773,319 +836,382 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     if (element.type === 'silla') {
       const seatStroke = element.stroke || (isSelected ? '#1890ff' : '#a8aebc');
       const seatOpacity = element.empty ? 0.5 : 1;
-      if (element.shape === 'circle') {
+      const shapeToDraw = element.shape || seatShape || 'circle';
+      if (shapeToDraw === 'circle') {
         return (
           <Group {...commonProps} opacity={seatOpacity}>
             <Circle radius={element.radius || 10} fill={element.fill || '#00d6a4'} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
-            {element.numero ? <KonvaText text={String(element.numero)} fontSize={10} fill="#333" x={-4} y={-4} /> : null}
+            {showSeatNumbers && element.numero ? <KonvaText text={String(element.numero)} fontSize={10} fill="#333" x={-4} y={-4} /> : null}
           </Group>
         );
       }
+      if (shapeToDraw === 'rect') {
+        return (
+          <Group {...commonProps} opacity={seatOpacity}>
+            <Rect width={element.width || 20} height={element.height || 20} fill={element.fill || '#00d6a4'} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
+            {showSeatNumbers && element.numero ? <KonvaText text={String(element.numero)} fontSize={10} fill="#333" x={-4} y={-4} /> : null}
+          </Group>
+        );
+      }
+      // butaca: rect con respaldo
       return (
         <Group {...commonProps} opacity={seatOpacity}>
-          <Rect width={element.width || 20} height={element.height || 20} fill={element.fill || '#00d6a4'} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
-          {element.numero ? <KonvaText text={String(element.numero)} fontSize={10} fill="#333" x={-4} y={-4} /> : null}
+          <Rect width={element.width || 18} height={element.height || 14} y={4} fill={element.fill || '#00d6a4'} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
+          <Rect width={element.width || 18} height={6} y={-6} fill={element.fill || '#00d6a4'} stroke={seatStroke} strokeWidth={isSelected ? 3 : 2} />
+          {showSeatNumbers && element.numero ? <KonvaText text={String(element.numero)} fontSize={9} fill="#333" x={-4} y={-2} /> : null}
         </Group>
       );
     }
     return null;
-  }, [selectedIds, isRightPanning, handleElementDblClick, onDragEnd, addOneSeatRectSide, addOneSeatCircleArc]);
+  }, [selectedIds, isRightPanning, handleElementDblClick, onDragEnd, addOneSeatRectSide, addOneSeatCircleArc, showTableLabels, showSeatNumbers, seatShape]);
 
   // Render
   return (
-    <div className="h-[calc(100vh-140px)] flex">
-      {/* Panel lateral izquierdo */}
-      <div className="w-80 border-r bg-white p-3 flex flex-col gap-4">
-        <div>
-          <div className="font-medium mb-2">Zonas</div>
-          <Space direction="vertical" size="small" className="w-full">
-            <Select
-              placeholder="Seleccione zona"
-              value={selectedZoneId}
-              onChange={setSelectedZoneId}
-              className="w-full"
-              options={(zones || []).map(z => ({ label: z.nombre, value: String(z.id) }))}
-            />
-            <Button onClick={assignZoneToSelection} disabled={!selectedIds?.length || !selectedZoneId} block>
-              Asignar a seleccionado
+    <div className="h-screen flex flex-col">
+      {/* Header con botón de guardar */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button onClick={onCancel} icon={<ArrowLeftOutlined />}>
+              Volver
             </Button>
-          </Space>
+            <div>
+              <h3 className="ant-typography mb-1">Editar Mapa</h3>
+              <span className="ant-typography ant-typography-secondary">Sala: {salaId}</span>
+            </div>
+          </div>
+          <Button type="primary" onClick={handleSaveClick} icon={<SaveOutlined />}>
+            Guardar Mapa
+          </Button>
         </div>
+      </div>
 
-        <Divider />
-
-        <div>
-          <div className="font-medium mb-2">Herramientas</div>
-          <Space direction="vertical" size="small" className="w-full">
-            <Button onClick={addMesaRect} block>Añadir mesa cuadrada</Button>
-            <Button onClick={addMesaCircle} block>Añadir mesa redonda</Button>
-            <Button onClick={addSilla} block>Añadir silla suelta</Button>
-            <Button onClick={addTexto} block>Añadir texto</Button>
-            <div className="grid grid-cols-3 gap-2">
-              <Button onClick={addFormaRect}>Cuadrado</Button>
-              <Button onClick={addFormaCircle}>Círculo</Button>
-              <Button onClick={addFormaTriangle}>Triángulo</Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <Checkbox checked={seatEmpty} onChange={(e) => setSeatEmpty(e.target.checked)}>Asientos vacíos (transparentes)</Checkbox>
-            </div>
-            <Button onClick={() => setRowMode(m => !m)} type={rowMode ? 'primary' : 'default'} block>
-              {rowMode ? 'Modo fila: activo' : 'Crear fila de asientos (arrastre)'}
-            </Button>
-            <div className="flex items-center gap-2">
-              <span className="w-16">Fila</span>
-              <Input value={rowLabel} onChange={e => setRowLabel(e.target.value)} />
-              <span>Cantidad</span>
-              <InputNumber min={1} max={200} value={rowCount} onChange={setRowCount} />
-            </div>
-          </Space>
-        </div>
-
-        <Divider />
-
-        <div>
-          <div className="font-medium mb-2">Asientos a mesa (rectángulo)</div>
-          <Space direction="vertical" size="small" className="w-full">
-            <div className="text-xs text-gray-600">Lados (top/right/bottom/left)</div>
-            <div className="flex items-center gap-2">
-              <InputNumber min={0} max={20} value={rectSideCounts.top} onChange={(v) => setRectSideCounts(s => ({ ...s, top: v }))} />
-              <InputNumber min={0} max={20} value={rectSideCounts.right} onChange={(v) => setRectSideCounts(s => ({ ...s, right: v }))} />
-              <InputNumber min={0} max={20} value={rectSideCounts.bottom} onChange={(v) => setRectSideCounts(s => ({ ...s, bottom: v }))} />
-              <InputNumber min={0} max={20} value={rectSideCounts.left} onChange={(v) => setRectSideCounts(s => ({ ...s, left: v }))} />
-            </div>
-            <Space size="small" wrap>
-              <Button onClick={() => addSeatsToRectSide('top')}>Añadir lado arriba</Button>
-              <Button onClick={() => addSeatsToRectSide('right')}>Añadir lado derecha</Button>
-              <Button onClick={() => addSeatsToRectSide('bottom')}>Añadir lado abajo</Button>
-              <Button onClick={() => addSeatsToRectSide('left')}>Añadir lado izquierda</Button>
-              <Button type="dashed" onClick={addSeatsToMesaAll}>Añadir en todos los lados</Button>
-            </Space>
-          </Space>
-        </div>
-
-        <Divider />
-
-        <div>
-          <div className="font-medium mb-2">Asientos a mesa (redonda)</div>
-          <Space direction="vertical" size="small" className="w-full">
-            <div className="flex items-center gap-2">
-              <span>Arco</span>
-              <Select value={circleArc} onChange={setCircleArc} options={[{value:'top',label:'Arriba'},{value:'right',label:'Derecha'},{value:'bottom',label:'Abajo'},{value:'left',label:'Izquierda'}]} />
-              <span>Cantidad</span>
-              <InputNumber min={0} max={50} value={circleArcCount} onChange={setCircleArcCount} />
-              <Button onClick={addSeatsToCircleArc}>Añadir arco</Button>
-            </div>
-            <div className="flex items-center gap-2">
-              <span>360°</span>
-              <InputNumber min={0} max={60} value={circleSeatsCount} onChange={setCircleSeatsCount} />
-              <Button type="dashed" onClick={addSeatsToMesaAll}>Añadir 360°</Button>
-            </div>
-          </Space>
-        </div>
-
-        <Divider />
-
-        <div>
-          <div className="font-medium mb-2">Propiedades seleccionadas</div>
-          {selectedEl ? (
+      {/* Contenido principal */}
+      <div className="flex-1 flex">
+        {/* Panel lateral izquierdo */}
+        <div className="w-80 border-r bg-white p-3 flex flex-col gap-4 overflow-y-auto">
+          <div>
+            <div className="font-medium mb-2">Zonas</div>
             <Space direction="vertical" size="small" className="w-full">
-              <Input placeholder="Nombre" value={selectedEl.nombre || ''} onChange={e => updateSelectedProp('nombre', e.target.value)} />
-              {selectedEl.type === 'texto' && (
+              <Select
+                placeholder="Seleccione zona"
+                value={selectedZoneId}
+                onChange={setSelectedZoneId}
+                className="w-full"
+                options={(zones || []).map(z => ({ label: z.nombre, value: String(z.id) }))}
+              />
+              <Button onClick={assignZoneToSelection} disabled={!selectedIds?.length || !selectedZoneId} block>
+                Asignar a seleccionado
+              </Button>
+            </Space>
+          </div>
+
+          <Divider />
+
+          <div>
+            <div className="font-medium mb-2">Herramientas</div>
+            <Space direction="vertical" size="small" className="w-full">
+              <Button onClick={addMesaRect} block>Añadir mesa cuadrada</Button>
+              <Button onClick={addMesaCircle} block>Añadir mesa redonda</Button>
+              <Button onClick={addSilla} block>Añadir silla suelta</Button>
+              <Button onClick={addTexto} block>Añadir texto</Button>
+              <div className="grid grid-cols-3 gap-2">
+                <Button onClick={addFormaRect}>Cuadrado</Button>
+                <Button onClick={addFormaCircle}>Círculo</Button>
+                <Button onClick={addFormaTriangle}>Triángulo</Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={seatEmpty} onChange={(e) => setSeatEmpty(e.target.checked)}>Asientos vacíos (transparentes)</Checkbox>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={showTableLabels} onChange={(e) => setShowTableLabels(e.target.checked)}>Mostrar nombres de mesas</Checkbox>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox checked={showSeatNumbers} onChange={(e) => setShowSeatNumbers(e.target.checked)}>Mostrar números de sillas</Checkbox>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>Forma silla</span>
+                <Select value={seatShape} onChange={setSeatShape} options={[{value:'circle',label:'Redonda'},{value:'rect',label:'Cuadrada'},{value:'butaca',label:'Butaca'}]} style={{ width: 140 }} />
+              </div>
+              <Button onClick={() => setRowMode(m => !m)} type={rowMode ? 'primary' : 'default'} block>
+                {rowMode ? 'Modo fila: activo' : 'Crear fila de asientos (arrastre)'}
+              </Button>
+              <div className="flex items-center gap-2">
+                <span className="w-16">Fila</span>
+                <Input value={rowLabel} onChange={e => setRowLabel(e.target.value)} />
+                <span>Cantidad</span>
+                <InputNumber min={1} max={200} value={rowCount} onChange={setRowCount} />
+              </div>
+            </Space>
+          </div>
+
+          <Divider />
+
+          <div>
+            <div className="font-medium mb-2">Asientos a mesa (rectángulo)</div>
+            <Space direction="vertical" size="small" className="w-full">
+              <div className="text-xs text-gray-600">Lados (top/right/bottom/left)</div>
+              <div className="flex items-center gap-2">
+                <InputNumber min={0} max={20} value={rectSideCounts.top} onChange={(v) => setRectSideCounts(s => ({ ...s, top: v }))} />
+                <InputNumber min={0} max={20} value={rectSideCounts.right} onChange={(v) => setRectSideCounts(s => ({ ...s, right: v }))} />
+                <InputNumber min={0} max={20} value={rectSideCounts.bottom} onChange={(v) => setRectSideCounts(s => ({ ...s, bottom: v }))} />
+                <InputNumber min={0} max={20} value={rectSideCounts.left} onChange={(v) => setRectSideCounts(s => ({ ...s, left: v }))} />
+              </div>
+              <Space size="small" wrap>
+                <Button onClick={() => addSeatsToRectSide('top')}>Añadir lado arriba</Button>
+                <Button onClick={() => addSeatsToRectSide('right')}>Añadir lado derecha</Button>
+                <Button onClick={() => addSeatsToRectSide('bottom')}>Añadir lado abajo</Button>
+                <Button onClick={() => addSeatsToRectSide('left')}>Añadir lado izquierda</Button>
+                <Button type="dashed" onClick={addSeatsToMesaAll}>Añadir en todos los lados</Button>
+              </Space>
+            </Space>
+          </div>
+
+          <Divider />
+
+          <div>
+            <div className="font-medium mb-2">Asientos a mesa (redonda)</div>
+            <Space direction="vertical" size="small" className="w-full">
+              <div className="flex items-center gap-2">
+                <span>Arco</span>
+                <Select value={circleArc} onChange={setCircleArc} options={[{value:'top',label:'Arriba'},{value:'right',label:'Derecha'},{value:'bottom',label:'Abajo'},{value:'left',label:'Izquierda'}]} />
+                <span>Cantidad</span>
+                <InputNumber min={0} max={50} value={circleArcCount} onChange={setCircleArcCount} />
+                <Button onClick={addSeatsToCircleArc}>Añadir arco</Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>360°</span>
+                <InputNumber min={0} max={60} value={circleSeatsCount} onChange={setCircleSeatsCount} />
+                <Button type="dashed" onClick={addSeatsToMesaAll}>Añadir 360°</Button>
+              </div>
+            </Space>
+          </div>
+        </div>
+
+        {/* Canvas a la derecha */}
+        <div ref={canvasContainerRef} className="flex-1 bg-white relative" onContextMenu={(e) => e.preventDefault()}>
+          <Stage
+            ref={stageRef}
+            width={window.innerWidth - 320}
+            height={window.innerHeight - 120}
+            scaleX={scale}
+            scaleY={scale}
+            x={stagePos.x}
+            y={stagePos.y}
+            onContextMenu={handleStageContextMenu}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseMove={(e) => {
+              const pos = e.target.getStage().getPointerPosition();
+              if (rowMode && rowStart) {
+                setRowPreview({ start: rowStart, end: pos });
+              } else if (isSelecting && selectStart) {
+                setSelectRect({ x: selectStart.x, y: selectStart.y, w: pos.x - selectStart.x, h: pos.y - selectStart.y });
+              }
+            }}
+          >
+            <Layer listening={false}>
+              <Rect width={window.innerWidth - 320} height={window.innerHeight - 120} fill="#fff" />
+              {showGrid && renderGrid()}
+              {rowMode && rowPreview && (
                 <>
-                  <Input placeholder="Texto" value={selectedEl.text || ''} onChange={e => updateSelectedProp('text', e.target.value)} />
-                  <div className="flex items-center gap-2">
-                    <span>Tamaño</span>
-                    <InputNumber min={8} max={200} value={selectedEl.fontSize || 18} onChange={v => updateSelectedProp('fontSize', v)} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>Color</span>
-                    <Input placeholder="#333333" value={selectedEl.fill || ''} onChange={e => updateSelectedProp('fill', e.target.value)} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>Borde</span>
-                    <Input placeholder="#000000" value={selectedEl.stroke || ''} onChange={e => updateSelectedProp('stroke', e.target.value)} />
-                    <InputNumber min={0} max={10} value={selectedEl.strokeWidth || 0} onChange={v => updateSelectedProp('strokeWidth', v)} />
-                  </div>
+                  <Line points={[rowPreview.start.x, rowPreview.start.y, rowPreview.end.x, rowPreview.end.y]} stroke="#00d6a4" strokeWidth={2} dash={[6, 6]} />
+                  {/* marcas */}
+                  {[...Array(Math.max(1, rowCount))].map((_, i) => {
+                    const t = (i + 1) / (rowCount + 1);
+                    const mx = rowPreview.start.x + (rowPreview.end.x - rowPreview.start.x) * t;
+                    const my = rowPreview.start.y + (rowPreview.end.y - rowPreview.start.y) * t;
+                    return <Circle key={`tick_${i}`} x={mx} y={my} radius={3} fill="#00d6a4" />
+                  })}
+                  {/* distancia */}
+                  {(() => {
+                    const dx = rowPreview.end.x - rowPreview.start.x;
+                    const dy = rowPreview.end.y - rowPreview.start.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    const label = `${Math.round(dist)} px | ${rowCount} sillas`;
+                    const lx = (rowPreview.start.x + rowPreview.end.x) / 2;
+                    const ly = (rowPreview.start.y + rowPreview.end.y) / 2;
+                    return <KonvaText x={lx} y={ly - 18} text={label} fontSize={12} fill="#00d6a4" />
+                  })()}
                 </>
               )}
-              {selectedEl.type === 'mesa' && selectedEl.shape === 'rect' && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <span>Ancho</span>
-                    <InputNumber min={10} max={1000} value={selectedEl.width || 120} onChange={v => updateSelectedProp('width', v)} />
-                    <span>Alto</span>
-                    <InputNumber min={10} max={1000} value={selectedEl.height || 80} onChange={v => updateSelectedProp('height', v)} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>Rotación</span>
-                    <InputNumber min={-180} max={180} value={selectedEl.rotation || 0} onChange={v => updateSelectedProp('rotation', v)} />
-                  </div>
-                </>
+              {isSelecting && selectRect && (
+                <Rect
+                  x={Math.min(selectRect.x, selectRect.x + selectRect.w)}
+                  y={Math.min(selectRect.y, selectRect.y + selectRect.h)}
+                  width={Math.abs(selectRect.w)}
+                  height={Math.abs(selectRect.h)}
+                  stroke="#1890ff"
+                  dash={[4, 4]}
+                  strokeWidth={1}
+                  fill="rgba(24,144,255,0.1)"
+                />
               )}
-              {selectedEl.type === 'mesa' && selectedEl.shape === 'circle' && (
-                <div className="flex items-center gap-2">
-                  <span>Radio</span>
-                  <InputNumber min={10} max={1000} value={selectedEl.radius || 60} onChange={v => updateSelectedProp('radius', v)} />
-                </div>
-              )}
-              {selectedEl.type === 'forma' && selectedEl.kind === 'rect' && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <span>Ancho</span>
-                    <InputNumber min={10} max={1000} value={selectedEl.width || 120} onChange={v => updateSelectedProp('width', v)} />
-                    <span>Alto</span>
-                    <InputNumber min={10} max={1000} value={selectedEl.height || 80} onChange={v => updateSelectedProp('height', v)} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>Rotación</span>
-                    <InputNumber min={-180} max={180} value={selectedEl.rotation || 0} onChange={v => updateSelectedProp('rotation', v)} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>Relleno</span>
-                    <Input placeholder="#eaeaea" value={selectedEl.fill || ''} onChange={e => updateSelectedProp('fill', e.target.value)} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>Borde</span>
-                    <Input placeholder="#999999" value={selectedEl.stroke || ''} onChange={e => updateSelectedProp('stroke', e.target.value)} />
-                    <InputNumber min={0} max={20} value={selectedEl.strokeWidth || 2} onChange={v => updateSelectedProp('strokeWidth', v)} />
-                  </div>
-                </>
-              )}
-              {selectedEl.type === 'forma' && (selectedEl.kind === 'circle' || selectedEl.kind === 'triangle') && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <span>{selectedEl.kind === 'circle' ? 'Radio' : 'Tamaño'}</span>
-                    <InputNumber min={5} max={1000} value={selectedEl.radius || 60} onChange={v => updateSelectedProp('radius', v)} />
-                  </div>
-                  {selectedEl.kind === 'triangle' && (
+            </Layer>
+            <Layer>
+              {elements.map(renderElement)}
+            </Layer>
+          </Stage>
+
+          {/* Botones de zoom y centrar */}
+          <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+            <Button.Group>
+              <Button onClick={zoomIn} icon={<ZoomInOutlined />} />
+              <Button onClick={zoomOut} icon={<ZoomOutOutlined />} />
+            </Button.Group>
+            <Button onClick={() => {
+              setStagePos({ x: 0, y: 0 });
+              setScale(1);
+            }} icon={<AimOutlined />}>
+              Centrar
+            </Button>
+          </div>
+
+          {/* Popup contextual de propiedades rápidas */}
+          {selectedEl && (
+            <div style={computePopupStyle()}>
+              <div className="font-medium mb-2">Propiedades rápidas</div>
+              <Space direction="vertical" size="small" className="w-full">
+                <Input placeholder="Nombre" value={selectedEl.nombre || ''} onChange={e => updateSelectedProp('nombre', e.target.value)} />
+                
+                {/* Propiedades específicas por tipo */}
+                {selectedEl.type === 'mesa' && selectedEl.shape === 'rect' && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span>Ancho</span>
+                      <InputNumber min={10} max={1000} value={selectedEl.width || 120} onChange={v => updateSelectedProp('width', v)} />
+                      <span>Alto</span>
+                      <InputNumber min={10} max={1000} value={selectedEl.height || 80} onChange={v => updateSelectedProp('height', v)} />
+                    </div>
                     <div className="flex items-center gap-2">
                       <span>Rotación</span>
                       <InputNumber min={-180} max={180} value={selectedEl.rotation || 0} onChange={v => updateSelectedProp('rotation', v)} />
                     </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <span>Relleno</span>
-                    <Input placeholder="#eaeaea" value={selectedEl.fill || ''} onChange={e => updateSelectedProp('fill', e.target.value)} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>Borde</span>
-                    <Input placeholder="#999999" value={selectedEl.stroke || ''} onChange={e => updateSelectedProp('stroke', e.target.value)} />
-                    <InputNumber min={0} max={20} value={selectedEl.strokeWidth || 2} onChange={v => updateSelectedProp('strokeWidth', v)} />
-                  </div>
-                </>
-              )}
-              {selectedEl.type === 'silla' && (
-                <>
-                  <div className="flex items-center gap-2">
-                    <span>Número</span>
-                    <InputNumber min={1} max={9999} value={selectedEl.numero || 1} onChange={v => updateSelectedProp('numero', v)} />
-                  </div>
-                  <Input placeholder="Nombre asiento" value={selectedEl.nombre || ''} onChange={e => updateSelectedProp('nombre', e.target.value)} />
-                  <div className="flex items-center gap-2">
-                    <span>Tamaño</span>
-                    <InputNumber min={6} max={60} value={selectedEl.radius || selectedEl.width || 20} onChange={v => {
-                      if (selectedEl.shape === 'circle') updateSelectedProp('radius', v); else { updateSelectedProp('width', v); updateSelectedProp('height', v); }
-                    }} />
-                  </div>
-                </>
-              )}
-            </Space>
-          ) : (
-            <div className="text-xs text-gray-500">Nada seleccionado</div>
+                    <div className="flex items-center gap-2">
+                      <span>Tamaño nombre</span>
+                      <InputNumber min={8} max={48} value={selectedEl.labelSize || 14} onChange={v => updateSelectedProp('labelSize', v)} />
+                      <span>Color</span>
+                      <Input placeholder="#333333" value={selectedEl.labelColor || '#333333'} onChange={e => updateSelectedProp('labelColor', e.target.value)} />
+                    </div>
+                    {/* Controles de asientos por lado */}
+                    <div className="text-xs text-gray-600 mb-1">Asientos por lado:</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs">↑</span>
+                        <InputNumber size="small" min={0} max={20} value={rectSideCounts.top} onChange={(v) => setRectSideCounts(s => ({ ...s, top: v }))} />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs">→</span>
+                        <InputNumber size="small" min={0} max={20} value={rectSideCounts.right} onChange={(v) => setRectSideCounts(s => ({ ...s, right: v }))} />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs">↓</span>
+                        <InputNumber size="small" min={0} max={20} value={rectSideCounts.bottom} onChange={(v) => setRectSideCounts(s => ({ ...s, bottom: v }))} />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs">←</span>
+                        <InputNumber size="small" min={0} max={20} value={rectSideCounts.left} onChange={(v) => setRectSideCounts(s => ({ ...s, left: v }))} />
+                      </div>
+                    </div>
+                    <Button size="small" onClick={addSeatsToMesaAll} block>Añadir asientos</Button>
+                  </>
+                )}
+                
+                {selectedEl.type === 'mesa' && selectedEl.shape === 'circle' && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span>Radio</span>
+                      <InputNumber min={10} max={1000} value={selectedEl.radius || 60} onChange={v => updateSelectedProp('radius', v)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>360° asientos</span>
+                      <InputNumber min={0} max={60} value={circleSeatsCount} onChange={setCircleSeatsCount} />
+                      <Button size="small" onClick={addSeatsToMesaAll}>Añadir</Button>
+                    </div>
+                  </>
+                )}
+                
+                {selectedEl.type === 'silla' && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span>N°</span>
+                      <InputNumber min={1} max={9999} value={selectedEl.numero || 1} onChange={v => updateSelectedProp('numero', v)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Tamaño</span>
+                      <InputNumber min={6} max={60} value={selectedEl.radius || selectedEl.width || 20} onChange={v => {
+                        if (selectedEl.shape === 'circle') updateSelectedProp('radius', v); else { updateSelectedProp('width', v); updateSelectedProp('height', v); }
+                      }} />
+                    </div>
+                  </>
+                )}
+                
+                {selectedEl.type === 'texto' && (
+                  <>
+                    <Input placeholder="Texto" value={selectedEl.text || ''} onChange={e => updateSelectedProp('text', e.target.value)} />
+                    <div className="flex items-center gap-2">
+                      <span>Tamaño</span>
+                      <InputNumber min={8} max={200} value={selectedEl.fontSize || 18} onChange={v => updateSelectedProp('fontSize', v)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Color</span>
+                      <Input placeholder="#333333" value={selectedEl.fill || ''} onChange={e => updateSelectedProp('fill', e.target.value)} />
+                    </div>
+                  </>
+                )}
+                
+                {selectedEl.type === 'forma' && (
+                  <>
+                    {selectedEl.kind === 'rect' && (
+                      <>
+                        <div className="flex items-center gap-2">
+                          <span>Ancho</span>
+                          <InputNumber min={10} max={1000} value={selectedEl.width || 120} onChange={v => updateSelectedProp('width', v)} />
+                          <span>Alto</span>
+                          <InputNumber min={10} max={1000} value={selectedEl.height || 80} onChange={v => updateSelectedProp('height', v)} />
+                        </div>
+                      </>
+                    )}
+                    {(selectedEl.kind === 'circle' || selectedEl.kind === 'triangle') && (
+                      <div className="flex items-center gap-2">
+                        <span>{selectedEl.kind === 'circle' ? 'Radio' : 'Tamaño'}</span>
+                        <InputNumber min={5} max={1000} value={selectedEl.radius || 60} onChange={v => updateSelectedProp('radius', v)} />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <span>Rotación</span>
+                      <InputNumber min={-180} max={180} value={selectedEl.rotation || 0} onChange={v => updateSelectedProp('rotation', v)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Relleno</span>
+                      <Input placeholder="#eaeaea" value={selectedEl.fill || ''} onChange={e => updateSelectedProp('fill', e.target.value)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Borde</span>
+                      <Input placeholder="#999999" value={selectedEl.stroke || ''} onChange={e => updateSelectedProp('stroke', e.target.value)} />
+                      <InputNumber min={0} max={20} value={selectedEl.strokeWidth || 2} onChange={v => updateSelectedProp('strokeWidth', v)} />
+                    </div>
+                  </>
+                )}
+
+                {/* Botones de acción */}
+                <Divider />
+                <div className="flex gap-2">
+                  <Button size="small" onClick={() => {
+                    // Copiar elemento
+                    const newEl = { ...selectedEl, _id: `${selectedEl.type}_${Date.now()}` };
+                    setElements(prev => [...prev, newEl]);
+                    setSelectedIds([newEl._id]);
+                  }}>Copiar</Button>
+                  <Button size="small" danger onClick={() => {
+                    setElements(prev => prev.filter(el => !selectedIds.includes(el._id)));
+                    setSelectedIds([]);
+                  }}>Eliminar</Button>
+                </div>
+              </Space>
+            </div>
           )}
         </div>
-      </div>
-      {/* Canvas a la derecha */}
-      <div ref={canvasContainerRef} className="flex-1 bg-white relative" onContextMenu={(e) => e.preventDefault()}>
-        <Stage
-          ref={stageRef}
-          width={Math.max(1200, window.innerWidth - 80 - 320)}
-          height={Math.max(700, window.innerHeight - 240)}
-          scaleX={scale}
-          scaleY={scale}
-          x={stagePos.x}
-          y={stagePos.y}
-          onContextMenu={handleStageContextMenu}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-          onMouseMove={(e) => {
-            if (!isSelecting || !selectStart) return;
-            const pos = e.target.getStage().getPointerPosition();
-            setSelectRect({ x: selectStart.x, y: selectStart.y, w: pos.x - selectStart.x, h: pos.y - selectStart.y });
-          }}
-        >
-          <Layer listening={false}>
-            <Rect width={2000} height={1400} fill="#fff" />
-            {showGrid && renderGrid()}
-            {isSelecting && selectRect && (
-              <Rect
-                x={Math.min(selectRect.x, selectRect.x + selectRect.w)}
-                y={Math.min(selectRect.y, selectRect.y + selectRect.h)}
-                width={Math.abs(selectRect.w)}
-                height={Math.abs(selectRect.h)}
-                stroke="#1890ff"
-                dash={[4, 4]}
-                strokeWidth={1}
-                fill="rgba(24,144,255,0.1)"
-              />
-            )}
-          </Layer>
-          <Layer>
-            {elements.map(renderElement)}
-          </Layer>
-        </Stage>
-
-        {selectedEl && (
-          <div style={computePopupStyle()}>
-            <div className="font-medium mb-2">Propiedades rápidas</div>
-            <Space direction="vertical" size="small" className="w-full">
-              <Input placeholder="Nombre" value={selectedEl.nombre || ''} onChange={e => updateSelectedProp('nombre', e.target.value)} />
-              {selectedEl.type === 'mesa' && selectedEl.shape === 'rect' && (
-                <div className="flex items-center gap-2">
-                  <span>Ancho</span>
-                  <InputNumber min={10} max={1000} value={selectedEl.width || 120} onChange={v => updateSelectedProp('width', v)} />
-                  <span>Alto</span>
-                  <InputNumber min={10} max={1000} value={selectedEl.height || 80} onChange={v => updateSelectedProp('height', v)} />
-                </div>
-              )}
-              {selectedEl.type === 'mesa' && selectedEl.shape === 'circle' && (
-                <div className="flex items-center gap-2">
-                  <span>Radio</span>
-                  <InputNumber min={10} max={1000} value={selectedEl.radius || 60} onChange={v => updateSelectedProp('radius', v)} />
-                </div>
-              )}
-              {selectedEl.type === 'silla' && (
-                <div className="flex items-center gap-2">
-                  <span>N°</span>
-                  <InputNumber min={1} max={9999} value={selectedEl.numero || 1} onChange={v => updateSelectedProp('numero', v)} />
-                </div>
-              )}
-              {selectedEl.type === 'texto' && (
-                <div className="flex items-center gap-2">
-                  <span>Size</span>
-                  <InputNumber min={8} max={200} value={selectedEl.fontSize || 18} onChange={v => updateSelectedProp('fontSize', v)} />
-                </div>
-              )}
-              {/* Mini menús */}
-              {selectedEl.type === 'mesa' && selectedEl.shape === 'rect' && (
-                <Space size="small" wrap>
-                  <Button size="small" onClick={() => addSeatsToRectSide('top')}>Lado arriba</Button>
-                  <Button size="small" onClick={() => addSeatsToRectSide('right')}>Lado derecha</Button>
-                  <Button size="small" onClick={() => addSeatsToRectSide('bottom')}>Lado abajo</Button>
-                  <Button size="small" onClick={() => addSeatsToRectSide('left')}>Lado izquierda</Button>
-                </Space>
-              )}
-              {selectedEl.type === 'mesa' && selectedEl.shape === 'circle' && (
-                <Space size="small" wrap>
-                  <Button size="small" onClick={() => { setCircleArc('top'); addSeatsToCircleArc(); }}>Arco arriba</Button>
-                  <Button size="small" onClick={() => { setCircleArc('right'); addSeatsToCircleArc(); }}>Arco derecha</Button>
-                  <Button size="small" onClick={() => { setCircleArc('bottom'); addSeatsToCircleArc(); }}>Arco abajo</Button>
-                  <Button size="small" onClick={() => { setCircleArc('left'); addSeatsToCircleArc(); }}>Arco izquierda</Button>
-                </Space>
-              )}
-            </Space>
-          </div>
-        )}
       </div>
     </div>
   );
