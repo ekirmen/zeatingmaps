@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Stage, Layer, Rect, Circle, Group, Text as KonvaText, Line, RegularPolygon, Image as KonvaImage } from 'react-konva';
 import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider, Upload, Collapse, ColorPicker, Slider } from 'antd';
 import { fetchZonasPorSala } from '../../services/apibackoffice';
-import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined, PictureOutlined, EyeOutlined, EyeInvisibleOutlined, DownOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined, PictureOutlined, EyeOutlined, EyeInvisibleOutlined, DownOutlined, UndoOutlined } from '@ant-design/icons';
 
 const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [elements, setElements] = useState(Array.isArray(initialMapa?.contenido) ? initialMapa.contenido : []);
@@ -36,6 +36,69 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [backgroundOpacity, setBackgroundOpacity] = useState(1); // Transparencia del fondo
   const [activeInput, setActiveInput] = useState(null); // Para activar inputs automáticamente
   
+  // Historial para Ctrl+Z
+  const [history, setHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const maxHistorySize = 50;
+
+  // Función para guardar estado en el historial
+  const saveToHistory = useCallback((newElements) => {
+    setHistory(prev => {
+      const newHistory = [...prev.slice(0, historyIndex + 1), newElements];
+      if (newHistory.length > maxHistorySize) {
+        newHistory.shift();
+      }
+      return newHistory;
+    });
+    setHistoryIndex(prev => Math.min(prev + 1, maxHistorySize - 1));
+  }, [historyIndex]);
+
+  // Función para deshacer (Ctrl+Z)
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setElements(history[newIndex]);
+      setSelectedIds([]);
+    }
+  }, [historyIndex, history]);
+
+  // Función para rehacer (Ctrl+Y)
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setElements(history[newIndex]);
+      setSelectedIds([]);
+    }
+  }, [historyIndex, history]);
+
+  // Manejar Ctrl+Z y Ctrl+Y
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          undo();
+        } else if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
+          e.preventDefault();
+          redo();
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
+
+  // Inicializar historial
+  useEffect(() => {
+    if (elements.length > 0 && history.length === 0) {
+      setHistory([elements]);
+      setHistoryIndex(0);
+    }
+  }, []);
+
   const getArcAngles = (arc) => {
     // Rango de ángulos por arco (en radianes)
     switch (arc) {
@@ -59,8 +122,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       stroke: undefined,
       strokeWidth: 0
     };
-    setElements(prev => [...prev, el]);
-  }, []);
+    setElements(prev => {
+      const newElements = [...prev, el];
+      saveToHistory(newElements);
+      return newElements;
+    });
+  }, [saveToHistory]);
   const addFormaRect = useCallback(() => {
     const el = {
       _id: `shape_${Date.now()}`,
@@ -74,8 +141,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       stroke: '#999999',
       strokeWidth: 2
     };
-    setElements(prev => [...prev, el]);
-  }, []);
+    setElements(prev => {
+      const newElements = [...prev, el];
+      saveToHistory(newElements);
+      return newElements;
+    });
+  }, [saveToHistory]);
   const addFormaCircle = useCallback(() => {
     const el = {
       _id: `shape_${Date.now()}`,
@@ -87,8 +158,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       stroke: '#999999',
       strokeWidth: 2
     };
-    setElements(prev => [...prev, el]);
-  }, []);
+    setElements(prev => {
+      const newElements = [...prev, el];
+      saveToHistory(newElements);
+      return newElements;
+    });
+  }, [saveToHistory]);
   const addFormaTriangle = useCallback(() => {
     const el = {
       _id: `shape_${Date.now()}`,
@@ -101,8 +176,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       stroke: '#999999',
       strokeWidth: 2
     };
-    setElements(prev => [...prev, el]);
-  }, []);
+    setElements(prev => {
+      const newElements = [...prev, el];
+      saveToHistory(newElements);
+      return newElements;
+    });
+  }, [saveToHistory]);
 
   // Función para manejar la carga de imagen de fondo
   const handleBackgroundUpload = useCallback((file) => {
@@ -128,8 +207,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           type: 'background',
           image: img,
           imageData: e.target.result, // Guardar como data URL
-          width: window.innerWidth - 320 - 80,
-          height: window.innerHeight - 80,
+          width: Math.min(800, window.innerWidth - 320 - 80),
+          height: Math.min(600, window.innerHeight - 80),
           x: 0,
           y: 0
         });
@@ -227,15 +306,15 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   useEffect(() => {
     const handleResize = () => {
       if (stageRef.current) {
-        stageRef.current.width(window.innerWidth - 320 - 80);
-        stageRef.current.height(window.innerHeight - 80);
+        stageRef.current.width(Math.min(800, window.innerWidth - 320 - 80));
+        stageRef.current.height(Math.min(600, window.innerHeight - 80));
       }
       // Actualizar tamaño del fondo si existe
       if (backgroundImageElement) {
         setBackgroundImageElement(prev => ({
           ...prev,
-          width: window.innerWidth - 320 - 80,
-          height: window.innerHeight - 80
+          width: Math.min(800, window.innerWidth - 320 - 80),
+          height: Math.min(600, window.innerHeight - 80)
         }));
       }
     };
@@ -289,12 +368,16 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       fill: '#f0f0f0',
       nombre: `Mesa ${elements.filter(e => e.type === 'mesa').length + 1}`
     };
-    setElements(prev => [...prev, mesa]);
-  }, [elements]);
+    setElements(prev => {
+      const newElements = [...prev, mesa];
+      saveToHistory(newElements);
+      return newElements;
+    });
+  }, [elements, saveToHistory]);
 
   const addMesaCircle = useCallback(() => {
     const mesa = {
-      _id: `mesa_${Date.now()}`,
+      _id: `shape_${Date.now()}`,
       type: 'mesa',
       shape: 'circle',
       posicion: { x: 200, y: 200 },
@@ -303,8 +386,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       fill: '#f0f0f0',
       nombre: `Mesa ${elements.filter(e => e.type === 'mesa').length + 1}`
     };
-    setElements(prev => [...prev, mesa]);
-  }, [elements]);
+    setElements(prev => {
+      const newElements = [...prev, mesa];
+      saveToHistory(newElements);
+      return newElements;
+    });
+  }, [elements, saveToHistory]);
 
   const addSilla = useCallback(() => {
     const baseX = 80 + (elements.length % 8) * 40;
@@ -326,8 +413,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       : seatShape === 'rect'
       ? { ...sillaBase, width: 20, height: 20 }
       : { ...sillaBase, width: 18, height: 14 }; // butaca
-    setElements(prev => [...prev, silla]);
-  }, [elements, seatEmpty, seatShape]);
+    setElements(prev => {
+      const newElements = [...prev, silla];
+      saveToHistory(newElements);
+      return newElements;
+    });
+  }, [elements, seatEmpty, seatShape, saveToHistory]);
 
   const onDragEnd = useCallback((id, x, y) => {
     const nx = snapToGrid ? Math.round(x / gridSize) * gridSize : x;
@@ -403,20 +494,27 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           return { ...seat, posicion: { x: xL, y: yL } };
         });
       }
-      return next;
+      const newElements = next;
+      saveToHistory(newElements);
+      return newElements;
     });
-  }, [gridSize, snapToGrid, seatSpacing]);
+  }, [gridSize, snapToGrid, seatSpacing, saveToHistory]);
 
   const handleDelete = useCallback(() => {
     if (!selectedIds?.length) return;
-    setElements(prev => prev.filter(el => !selectedIds.includes(el._id)));
+    setElements(prev => {
+      const newElements = prev.filter(el => !selectedIds.includes(el._id));
+      saveToHistory(newElements);
+      return newElements;
+    });
     setSelectedIds([]);
-  }, [selectedIds]);
+  }, [selectedIds, saveToHistory]);
 
   const handleClear = useCallback(() => {
     setElements([]);
     setSelectedIds([]);
-  }, []);
+    saveToHistory([]);
+  }, [saveToHistory]);
 
   const upsertMetaConfig = useCallback((list) => {
     const other = list.filter(el => !(el.type === 'meta' && el.key === 'config'));
@@ -474,8 +572,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     if (!selectedIds?.length || !selectedZoneId) return;
     const zone = zones.find(z => String(z.id) === String(selectedZoneId));
     if (!zone) return;
-    setElements(prev => prev.map(el => selectedIds.includes(el._id) ? { ...el, zona: { id: zone.id, nombre: zone.nombre, color: zone.color || '#999' } } : el));
-  }, [selectedIds, selectedZoneId, zones]);
+    setElements(prev => {
+      const newElements = prev.map(el => selectedIds.includes(el._id) ? { ...el, zona: { id: zone.id, nombre: zone.nombre, color: zone.color || '#999' } } : el);
+      saveToHistory(newElements);
+      return newElements;
+    });
+  }, [selectedIds, selectedZoneId, zones, saveToHistory]);
 
   // Función helper para crear asientos base
   const createBaseSeat = useCallback((mesa, seq, extra = {}) => ({
@@ -619,9 +721,13 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       };
       nuevas.push(seatShape === 'circle' ? { ...base, radius: 10 } : seatShape === 'rect' ? { ...base, width: 20, height: 20 } : { ...base, width: 18, height: 14 });
     });
-    setElements(base.concat(nuevas));
+    setElements(prev => {
+      const newElements = base.concat(nuevas);
+      saveToHistory(newElements);
+      return newElements;
+    });
     message.success(`${nuevas.length} asientos agregados en ${side}`);
-  }, [selectedIds, elements, rectSideCounts, createBaseSeat, seatSpacing]);
+  }, [selectedIds, elements, rectSideCounts, createBaseSeat, seatSpacing, saveToHistory]);
 
   const addSeatsToCircleArc = useCallback(() => {
     if (!selectedIds?.length) return;
@@ -642,9 +748,13 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       const base = createBaseSeat(mesa, seq++, { posicion: { x, y }, circleIndex: i, circleCount: circleArcCount });
       nuevas.push(seatShape === 'circle' ? { ...base, radius: 10 } : seatShape === 'rect' ? { ...base, width: 20, height: 20 } : { ...base, width: 18, height: 14 });
     }
-    setElements(base.concat(nuevas));
+    setElements(prev => {
+      const newElements = base.concat(nuevas);
+      saveToHistory(newElements);
+      return newElements;
+    });
     message.success(`${nuevas.length} asientos agregados en arco ${circleArc}`);
-  }, [selectedIds, elements, circleArc, circleArcCount, createBaseSeat, seatSpacing]);
+  }, [selectedIds, elements, circleArc, circleArcCount, createBaseSeat, seatSpacing, saveToHistory]);
 
   const handleStageContextMenu = useCallback((e) => {
     e.evt.preventDefault();
@@ -663,9 +773,13 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       const base = { _id: `silla_${Date.now()}_${seq}`, type: 'silla', posicion: { x, y }, shape: seatShape, fill: seatEmpty ? 'transparent' : '#00d6a4', stroke: seatEmpty ? '#d9d9d9' : undefined, empty: seatEmpty, numero: seq++, nombre: `${rowLabel}${i + 1}` };
       newSeats.push(seatShape === 'circle' ? { ...base, radius: 10 } : seatShape === 'rect' ? { ...base, width: 20, height: 20 } : { ...base, width: 18, height: 14 });
     }
-    setElements(prev => [...prev, ...newSeats]);
+    setElements(prev => {
+      const newElements = [...prev, ...newSeats];
+      saveToHistory(newElements);
+      return newElements;
+    });
     message.success(`Fila ${rowLabel} con ${count} asientos creada`);
-  }, [rowCount, rowLabel, elements, seatEmpty, seatShape]);
+  }, [rowCount, rowLabel, elements, seatEmpty, seatShape, saveToHistory]);
 
   const handleMouseDown = useCallback((e) => {
     if (rowMode) {
@@ -805,19 +919,14 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             const yR = mesaRect.posicion.y + ((h / (count + 1)) * (idx + 1));
             return { ...seat, posicion: { x: xR, y: yR } };
           }
-          if (seat.side === 'bottom') {
-            const xB = mesaRect.posicion.x + (w / (count + 1)) * (idx + 1);
-            const yB = mesaRect.posicion.y + h + seatSpacing;
-            return { ...seat, posicion: { x: xB, y: yB } };
-          }
-          const xL = mesaRect.posicion.x - seatSpacing;
-          const yL = mesaRect.posicion.y + ((h / (count + 1)) * (idx + 1));
-          return { ...seat, posicion: { x: xL, y: yL } };
+          return seat;
         });
       }
-      return next;
+      const newElements = next;
+      saveToHistory(newElements);
+      return newElements;
     });
-  }, [selectedIds, seatSpacing]);
+  }, [selectedIds, seatSpacing, saveToHistory]);
 
   const zoomIn = useCallback(() => setScale(s => Math.min(3, s + 0.1)), []);
   const zoomOut = useCallback(() => setScale(s => Math.max(0.2, s - 0.1)), []);
@@ -866,7 +975,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       cx = selectedEl.posicion.x + (selectedEl.width || 120) / 2;
       cy = selectedEl.posicion.y + (selectedEl.height || 80) / 2;
     }
-    // convertir a coords de pantalla dentro del container
+    // convertir a coords de pantalla dentro del container considerando el zoom
     const px = cx * scaleX + sx;
     const py = cy * scaleY + sy;
     const margin = 10;
@@ -1058,6 +1167,29 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           <Button type="primary" onClick={handleSaveClick} icon={<SaveOutlined />} block>
             Guardar Mapa
           </Button>
+          
+          {/* Botones de deshacer/rehacer */}
+          <div className="flex gap-1">
+            <Button 
+              onClick={undo} 
+              disabled={historyIndex <= 0}
+              icon={<UndoOutlined />} 
+              size="small"
+              title="Ctrl+Z"
+            >
+              Deshacer
+            </Button>
+            <Button 
+              onClick={redo} 
+              disabled={historyIndex >= history.length - 1}
+              icon={<UndoOutlined style={{ transform: 'scaleX(-1)' }} />} 
+              size="small"
+              title="Ctrl+Y"
+            >
+              Rehacer
+            </Button>
+          </div>
+          
           <Button onClick={onCancel} icon={<ArrowLeftOutlined />} block>
             Volver
           </Button>
@@ -1198,12 +1330,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           </Collapse>
         </div>
 
-        {/* Canvas a la derecha */}
+        {/* Canvas a la derecha - más pequeño */}
         <div ref={canvasContainerRef} className="flex-1 bg-white relative" onContextMenu={(e) => e.preventDefault()}>
           <Stage
             ref={stageRef}
-            width={window.innerWidth - 320 - 80}
-            height={window.innerHeight - 80}
+            width={Math.min(800, window.innerWidth - 320 - 80)}
+            height={Math.min(600, window.innerHeight - 80)}
             scaleX={scale}
             scaleY={scale}
             x={stagePos.x}
@@ -1221,7 +1353,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             }}
           >
             <Layer listening={false}>
-              <Rect width={window.innerWidth - 320 - 80} height={window.innerHeight - 80} fill="#fff" />
+              <Rect width={Math.min(800, window.innerWidth - 320 - 80)} height={Math.min(600, window.innerHeight - 80)} fill="#fff" />
               {backgroundImage && backgroundImageElement && (
                 <KonvaImage
                   image={backgroundImage}
@@ -1324,8 +1456,41 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                       <InputNumber min={10} max={1000} value={selectedEl.height || 80} onChange={v => updateSelectedProp('height', v)} />
                     </div>
                     <div className="flex items-center gap-2">
+                      <span>Ancho</span>
+                      <Slider
+                        min={10}
+                        max={1000}
+                        value={selectedEl.width || 120}
+                        onChange={v => updateSelectedProp('width', v)}
+                        style={{ width: 100 }}
+                        size="small"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Alto</span>
+                      <Slider
+                        min={10}
+                        max={1000}
+                        value={selectedEl.height || 80}
+                        onChange={v => updateSelectedProp('height', v)}
+                        style={{ width: 100 }}
+                        size="small"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
                       <span>Rotación</span>
                       <InputNumber min={-180} max={180} value={selectedEl.rotation || 0} onChange={v => updateSelectedProp('rotation', v)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Rotación</span>
+                      <Slider
+                        min={-180}
+                        max={180}
+                        value={selectedEl.rotation || 0}
+                        onChange={v => updateSelectedProp('rotation', v)}
+                        style={{ width: 100 }}
+                        size="small"
+                      />
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Tamaño nombre</span>
@@ -1334,6 +1499,17 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                       <ColorPicker 
                         value={selectedEl.labelColor || '#333333'} 
                         onChange={(color) => updateSelectedProp('labelColor', color.toHexString())}
+                        size="small"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Tamaño nombre</span>
+                      <Slider
+                        min={8}
+                        max={48}
+                        value={selectedEl.labelSize || 14}
+                        onChange={v => updateSelectedProp('labelSize', v)}
+                        style={{ width: 100 }}
                         size="small"
                       />
                     </div>
@@ -1368,6 +1544,17 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                         style={{ width: 60 }}
                       />
                     </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">Espaciado:</span>
+                      <Slider
+                        min={10}
+                        max={100}
+                        value={seatSpacing}
+                        onChange={setSeatSpacing}
+                        style={{ width: 100 }}
+                        size="small"
+                      />
+                    </div>
                     <Button size="small" onClick={addSeatsToMesaAll} block>Añadir en todos los lados</Button>
                   </>
                 )}
@@ -1377,6 +1564,17 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     <div className="flex items-center gap-2">
                       <span>Radio</span>
                       <InputNumber min={10} max={1000} value={selectedEl.radius || 60} onChange={v => updateSelectedProp('radius', v)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Radio</span>
+                      <Slider
+                        min={10}
+                        max={1000}
+                        value={selectedEl.radius || 60}
+                        onChange={v => updateSelectedProp('radius', v)}
+                        style={{ width: 100 }}
+                        size="small"
+                      />
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Tamaño nombre</span>
@@ -1456,6 +1654,19 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                         if (selectedEl.shape === 'circle') updateSelectedProp('radius', v); else { updateSelectedProp('width', v); updateSelectedProp('height', v); }
                       }} />
                     </div>
+                    <div className="flex items-center gap-2">
+                      <span>Tamaño</span>
+                      <Slider
+                        min={6}
+                        max={60}
+                        value={selectedEl.radius || selectedEl.width || 20}
+                        onChange={v => {
+                          if (selectedEl.shape === 'circle') updateSelectedProp('radius', v); else { updateSelectedProp('width', v); updateSelectedProp('height', v); }
+                        }}
+                        style={{ width: 100 }}
+                        size="small"
+                      />
+                    </div>
                   </>
                 )}
                 
@@ -1465,6 +1676,17 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     <div className="flex items-center gap-2">
                       <span>Tamaño</span>
                       <InputNumber min={8} max={200} value={selectedEl.fontSize || 18} onChange={v => updateSelectedProp('fontSize', v)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Tamaño</span>
+                      <Slider
+                        min={8}
+                        max={200}
+                        value={selectedEl.fontSize || 18}
+                        onChange={v => updateSelectedProp('fontSize', v)}
+                        style={{ width: 100 }}
+                        size="small"
+                      />
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Color</span>
@@ -1487,6 +1709,28 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                           <span>Alto</span>
                           <InputNumber min={10} max={1000} value={selectedEl.height || 80} onChange={v => updateSelectedProp('height', v)} />
                         </div>
+                        <div className="flex items-center gap-2">
+                          <span>Ancho</span>
+                          <Slider
+                            min={10}
+                            max={1000}
+                            value={selectedEl.width || 120}
+                            onChange={v => updateSelectedProp('width', v)}
+                            style={{ width: 100 }}
+                            size="small"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span>Alto</span>
+                          <Slider
+                            min={10}
+                            max={1000}
+                            value={selectedEl.height || 80}
+                            onChange={v => updateSelectedProp('height', v)}
+                            style={{ width: 100 }}
+                            size="small"
+                          />
+                        </div>
                       </>
                     )}
                     {(selectedEl.kind === 'circle' || selectedEl.kind === 'triangle') && (
@@ -1495,9 +1739,33 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                         <InputNumber min={5} max={1000} value={selectedEl.radius || 60} onChange={v => updateSelectedProp('radius', v)} />
                       </div>
                     )}
+                    {(selectedEl.kind === 'circle' || selectedEl.kind === 'triangle') && (
+                      <div className="flex items-center gap-2">
+                        <span>{selectedEl.kind === 'circle' ? 'Radio' : 'Tamaño'}</span>
+                        <Slider
+                          min={5}
+                          max={1000}
+                          value={selectedEl.radius || 60}
+                          onChange={v => updateSelectedProp('radius', v)}
+                          style={{ width: 100 }}
+                          size="small"
+                        />
+                      </div>
+                    )}
                     <div className="flex items-center gap-2">
                       <span>Rotación</span>
                       <InputNumber min={-180} max={180} value={selectedEl.rotation || 0} onChange={v => updateSelectedProp('rotation', v)} />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span>Rotación</span>
+                      <Slider
+                        min={-180}
+                        max={180}
+                        value={selectedEl.rotation || 0}
+                        onChange={v => updateSelectedProp('rotation', v)}
+                        style={{ width: 100 }}
+                        size="small"
+                      />
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Relleno</span>
@@ -1516,6 +1784,17 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                       />
                       <InputNumber min={0} max={20} value={selectedEl.strokeWidth || 2} onChange={v => updateSelectedProp('strokeWidth', v)} />
                     </div>
+                    <div className="flex items-center gap-2">
+                      <span>Grosor borde</span>
+                      <Slider
+                        min={0}
+                        max={20}
+                        value={selectedEl.strokeWidth || 2}
+                        onChange={v => updateSelectedProp('strokeWidth', v)}
+                        style={{ width: 100 }}
+                        size="small"
+                      />
+                    </div>
                   </>
                 )}
 
@@ -1525,11 +1804,19 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                   <Button size="small" onClick={() => {
                     // Copiar elemento
                     const newEl = { ...selectedEl, _id: `${selectedEl.type}_${Date.now()}` };
-                    setElements(prev => [...prev, newEl]);
+                    setElements(prev => {
+                      const newElements = [...prev, newEl];
+                      saveToHistory(newElements);
+                      return newElements;
+                    });
                     setSelectedIds([newEl._id]);
                   }}>Copiar</Button>
                   <Button size="small" danger onClick={() => {
-                    setElements(prev => prev.filter(el => !selectedIds.includes(el._id)));
+                    setElements(prev => {
+                      const newElements = prev.filter(el => !selectedIds.includes(el._id));
+                      saveToHistory(newElements);
+                      return newElements;
+                    });
                     setSelectedIds([]);
                   }}>Eliminar</Button>
                 </div>
