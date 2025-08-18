@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { Stage, Layer, Rect, Circle, Group, Text as KonvaText, Line } from 'react-konva';
+import { Stage, Layer, Rect, Circle, Group, Text as KonvaText, Line, RegularPolygon } from 'react-konva';
 import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider } from 'antd';
 import { fetchZonasPorSala } from '../../services/apibackoffice';
 
@@ -22,6 +22,62 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [seatEmpty, setSeatEmpty] = useState(false);
   const [circleArc, setCircleArc] = useState('top');
   const [circleArcCount, setCircleArcCount] = useState(6);
+  // Texto y formas
+  const addTexto = useCallback(() => {
+    const el = {
+      _id: `txt_${Date.now()}`,
+      type: 'texto',
+      posicion: { x: 150, y: 150 },
+      text: 'Texto',
+      fontSize: 18,
+      fill: '#333333',
+      stroke: undefined,
+      strokeWidth: 0
+    };
+    setElements(prev => [...prev, el]);
+  }, []);
+  const addFormaRect = useCallback(() => {
+    const el = {
+      _id: `shape_${Date.now()}`,
+      type: 'forma',
+      kind: 'rect',
+      posicion: { x: 200, y: 200 },
+      width: 120,
+      height: 80,
+      rotation: 0,
+      fill: '#eaeaea',
+      stroke: '#999999',
+      strokeWidth: 2
+    };
+    setElements(prev => [...prev, el]);
+  }, []);
+  const addFormaCircle = useCallback(() => {
+    const el = {
+      _id: `shape_${Date.now()}`,
+      type: 'forma',
+      kind: 'circle',
+      posicion: { x: 250, y: 250 },
+      radius: 50,
+      fill: '#eaeaea',
+      stroke: '#999999',
+      strokeWidth: 2
+    };
+    setElements(prev => [...prev, el]);
+  }, []);
+  const addFormaTriangle = useCallback(() => {
+    const el = {
+      _id: `shape_${Date.now()}`,
+      type: 'forma',
+      kind: 'triangle',
+      posicion: { x: 300, y: 300 },
+      radius: 60,
+      rotation: 0,
+      fill: '#eaeaea',
+      stroke: '#999999',
+      strokeWidth: 2
+    };
+    setElements(prev => [...prev, el]);
+  }, []);
 
   const stageRef = useRef(null);
 
@@ -367,6 +423,13 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   }, [selectedId, elements]);
 
   const handleElementDblClick = useCallback((el) => {
+    if (el.type === 'texto') {
+      const newText = window.prompt('Nuevo texto', el.text || '');
+      if (newText !== null) {
+        setElements(prev => prev.map(x => x._id === el._id ? { ...x, text: newText } : x));
+      }
+      return;
+    }
     const newName = window.prompt('Nuevo nombre', el.nombre || '');
     if (newName !== null) {
       setElements(prev => prev.map(x => x._id === el._id ? { ...x, nombre: newName } : x));
@@ -430,6 +493,45 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       onDragEnd: (e) => onDragEnd(element._id, e.target.x(), e.target.y())
     };
     const zoneStroke = element.zona?.color || (isSelected ? '#1890ff' : '#d9d9d9');
+    if (element.type === 'texto') {
+      return (
+        <KonvaText
+          key={element._id}
+          x={element.posicion.x}
+          y={element.posicion.y}
+          text={element.text || 'Texto'}
+          fontSize={element.fontSize || 18}
+          fill={element.fill || '#333'}
+          stroke={element.stroke}
+          strokeWidth={element.strokeWidth || 0}
+          draggable={!isRightPanning}
+          onClick={() => setSelectedId(element._id)}
+          onDblClick={() => handleElementDblClick(element)}
+          onDragEnd={(e) => onDragEnd(element._id, e.target.x(), e.target.y())}
+        />
+      );
+    }
+    if (element.type === 'forma') {
+      if (element.kind === 'circle') {
+        return (
+          <Group {...commonProps}>
+            <Circle radius={element.radius || 50} fill={element.fill || '#eaeaea'} stroke={element.stroke || '#999'} strokeWidth={element.strokeWidth || 2} />
+          </Group>
+        );
+      }
+      if (element.kind === 'triangle') {
+        return (
+          <Group {...commonProps}>
+            <RegularPolygon sides={3} radius={element.radius || 60} fill={element.fill || '#eaeaea'} stroke={element.stroke || '#999'} strokeWidth={element.strokeWidth || 2} rotation={element.rotation || 0} />
+          </Group>
+        );
+      }
+      return (
+        <Group {...commonProps}>
+          <Rect width={element.width || 120} height={element.height || 80} fill={element.fill || '#eaeaea'} stroke={element.stroke || '#999'} strokeWidth={element.strokeWidth || 2} rotation={element.rotation || 0} />
+        </Group>
+      );
+    }
     if (element.type === 'mesa') {
       if (element.shape === 'circle') {
         return (
@@ -497,6 +599,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             <Button onClick={addMesaRect} block>Añadir mesa cuadrada</Button>
             <Button onClick={addMesaCircle} block>Añadir mesa redonda</Button>
             <Button onClick={addSilla} block>Añadir silla suelta</Button>
+            <Button onClick={addTexto} block>Añadir texto</Button>
+            <div className="grid grid-cols-3 gap-2">
+              <Button onClick={addFormaRect}>Cuadrado</Button>
+              <Button onClick={addFormaCircle}>Círculo</Button>
+              <Button onClick={addFormaTriangle}>Triángulo</Button>
+            </div>
             <div className="flex items-center gap-2">
               <Checkbox checked={seatEmpty} onChange={(e) => setSeatEmpty(e.target.checked)}>Asientos vacíos (transparentes)</Checkbox>
             </div>
@@ -561,6 +669,24 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           {selectedEl ? (
             <Space direction="vertical" size="small" className="w-full">
               <Input placeholder="Nombre" value={selectedEl.nombre || ''} onChange={e => updateSelectedProp('nombre', e.target.value)} />
+              {selectedEl.type === 'texto' && (
+                <>
+                  <Input placeholder="Texto" value={selectedEl.text || ''} onChange={e => updateSelectedProp('text', e.target.value)} />
+                  <div className="flex items-center gap-2">
+                    <span>Tamaño</span>
+                    <InputNumber min={8} max={200} value={selectedEl.fontSize || 18} onChange={v => updateSelectedProp('fontSize', v)} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>Color</span>
+                    <Input placeholder="#333333" value={selectedEl.fill || ''} onChange={e => updateSelectedProp('fill', e.target.value)} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>Borde</span>
+                    <Input placeholder="#000000" value={selectedEl.stroke || ''} onChange={e => updateSelectedProp('stroke', e.target.value)} />
+                    <InputNumber min={0} max={10} value={selectedEl.strokeWidth || 0} onChange={v => updateSelectedProp('strokeWidth', v)} />
+                  </div>
+                </>
+              )}
               {selectedEl.type === 'mesa' && selectedEl.shape === 'rect' && (
                 <>
                   <div className="flex items-center gap-2">
@@ -580,6 +706,52 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                   <span>Radio</span>
                   <InputNumber min={10} max={1000} value={selectedEl.radius || 60} onChange={v => updateSelectedProp('radius', v)} />
                 </div>
+              )}
+              {selectedEl.type === 'forma' && selectedEl.kind === 'rect' && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span>Ancho</span>
+                    <InputNumber min={10} max={1000} value={selectedEl.width || 120} onChange={v => updateSelectedProp('width', v)} />
+                    <span>Alto</span>
+                    <InputNumber min={10} max={1000} value={selectedEl.height || 80} onChange={v => updateSelectedProp('height', v)} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>Rotación</span>
+                    <InputNumber min={-180} max={180} value={selectedEl.rotation || 0} onChange={v => updateSelectedProp('rotation', v)} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>Relleno</span>
+                    <Input placeholder="#eaeaea" value={selectedEl.fill || ''} onChange={e => updateSelectedProp('fill', e.target.value)} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>Borde</span>
+                    <Input placeholder="#999999" value={selectedEl.stroke || ''} onChange={e => updateSelectedProp('stroke', e.target.value)} />
+                    <InputNumber min={0} max={20} value={selectedEl.strokeWidth || 2} onChange={v => updateSelectedProp('strokeWidth', v)} />
+                  </div>
+                </>
+              )}
+              {selectedEl.type === 'forma' && (selectedEl.kind === 'circle' || selectedEl.kind === 'triangle') && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <span>{selectedEl.kind === 'circle' ? 'Radio' : 'Tamaño'}</span>
+                    <InputNumber min={5} max={1000} value={selectedEl.radius || 60} onChange={v => updateSelectedProp('radius', v)} />
+                  </div>
+                  {selectedEl.kind === 'triangle' && (
+                    <div className="flex items-center gap-2">
+                      <span>Rotación</span>
+                      <InputNumber min={-180} max={180} value={selectedEl.rotation || 0} onChange={v => updateSelectedProp('rotation', v)} />
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <span>Relleno</span>
+                    <Input placeholder="#eaeaea" value={selectedEl.fill || ''} onChange={e => updateSelectedProp('fill', e.target.value)} />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>Borde</span>
+                    <Input placeholder="#999999" value={selectedEl.stroke || ''} onChange={e => updateSelectedProp('stroke', e.target.value)} />
+                    <InputNumber min={0} max={20} value={selectedEl.strokeWidth || 2} onChange={v => updateSelectedProp('strokeWidth', v)} />
+                  </div>
+                </>
               )}
               {selectedEl.type === 'silla' && (
                 <>
