@@ -1,8 +1,8 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Stage, Layer, Rect, Circle, Group, Text as KonvaText, Line, RegularPolygon, Image as KonvaImage } from 'react-konva';
-import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider, Upload } from 'antd';
+import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider, Upload, Collapse, ColorPicker, Slider } from 'antd';
 import { fetchZonasPorSala } from '../../services/apibackoffice';
-import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined, PictureOutlined, EyeOutlined, EyeInvisibleOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined, PictureOutlined, EyeOutlined, EyeInvisibleOutlined, DownOutlined } from '@ant-design/icons';
 
 const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [elements, setElements] = useState(Array.isArray(initialMapa?.contenido) ? initialMapa.contenido : []);
@@ -31,6 +31,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [popupDrag, setPopupDrag] = useState({ isDragging: false, startPos: null, offset: { x: 0, y: 0 } });
   const [backgroundImage, setBackgroundImage] = useState(null);
   const [backgroundImageElement, setBackgroundImageElement] = useState(null);
+  const [seatSpacing, setSeatSpacing] = useState(25); // Espaciado entre sillas
+  const [backgroundScale, setBackgroundScale] = useState(1); // Escala del fondo
   
   const getArcAngles = (arc) => {
     // Rango de ángulos por arco (en radianes)
@@ -180,6 +182,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       if (typeof meta.config.gridSize === 'number') setGridSize(meta.config.gridSize);
       if (typeof meta.config.showGrid === 'boolean') setShowGrid(meta.config.showGrid);
       if (typeof meta.config.snapToGrid === 'boolean') setSnapToGrid(meta.config.snapToGrid);
+      if (typeof meta.config.seatSpacing === 'number') setSeatSpacing(meta.config.seatSpacing);
+      if (typeof meta.config.backgroundScale === 'number') setBackgroundScale(meta.config.backgroundScale);
       if (meta.config.backgroundImage) {
         setBackgroundImage(meta.config.backgroundImage.image);
         setBackgroundImageElement({
@@ -348,12 +352,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
             const idx = seat.arcIndex || 0;
             const count = seat.arcCount || 1;
             const angle = start + (end - start) * ((idx + 1) / (count + 1));
-            const r = (mesa.radius || 60) + 25;
+            const r = (mesa.radius || 60) + seatSpacing;
             return { ...seat, posicion: { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r } };
           }
           if (seat.type === 'silla' && seat.mesaId === mesa._id && seat.circleIndex != null && seat.circleCount && seat.posicion) {
             const angle = (seat.circleIndex * 2 * Math.PI) / seat.circleCount;
-            const r = (mesa.radius || 60) + 25;
+            const r = (mesa.radius || 60) + seatSpacing;
             return { ...seat, posicion: { x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r } };
           }
           return seat;
@@ -371,28 +375,28 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           const idx = seat.sideIndex || 0;
           if (seat.side === 'top') {
             const xTop = mesa.posicion.x + (w / (count + 1)) * (idx + 1);
-            const yTop = mesa.posicion.y - 25;
+            const yTop = mesa.posicion.y - seatSpacing;
             return { ...seat, posicion: { x: xTop, y: yTop } };
           }
           if (seat.side === 'right') {
-            const xR = mesa.posicion.x + w + 25;
-            const yR = mesa.posicion.y + (h / (count + 1)) * (idx + 1);
+            const xR = mesa.posicion.x + w + seatSpacing;
+            const yR = mesa.posicion.y + ((h / (count + 1)) * (idx + 1));
             return { ...seat, posicion: { x: xR, y: yR } };
           }
           if (seat.side === 'bottom') {
             const xB = mesa.posicion.x + (w / (count + 1)) * (idx + 1);
-            const yB = mesa.posicion.y + h + 25;
+            const yB = mesa.posicion.y + h + seatSpacing;
             return { ...seat, posicion: { x: xB, y: yB } };
           }
           // left
-          const xL = mesa.posicion.x - 25;
-          const yL = mesa.posicion.y + (h / (count + 1)) * (idx + 1);
+          const xL = mesa.posicion.x - seatSpacing;
+          const yL = mesa.posicion.y + ((h / (count + 1)) * (idx + 1));
           return { ...seat, posicion: { x: xL, y: yL } };
         });
       }
       return next;
     });
-  }, [gridSize, snapToGrid]);
+  }, [gridSize, snapToGrid, seatSpacing]);
 
   const handleDelete = useCallback(() => {
     if (!selectedIds?.length) return;
@@ -417,6 +421,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         gridSize,
         showGrid,
         snapToGrid,
+        seatSpacing,
+        backgroundScale,
         backgroundImage: backgroundImageElement ? {
           _id: backgroundImageElement._id,
           type: 'background',
@@ -428,7 +434,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       }
     };
     return [...other, meta];
-  }, [scale, stagePos, gridSize, showGrid, snapToGrid, backgroundImageElement]);
+  }, [scale, stagePos, gridSize, showGrid, snapToGrid, seatSpacing, backgroundScale, backgroundImageElement]);
 
   const handleSaveClick = useCallback(async () => {
     try {
@@ -492,24 +498,24 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       // top
       for (let i = 0; i < top; i++) {
         const x = mesa.posicion.x + ((mesa.width || 120) / (top + 1)) * (i + 1);
-        const y = mesa.posicion.y - 25;
+        const y = mesa.posicion.y - seatSpacing;
         allPositions.push({ x, y, side: 'top', sideIndex: i, sideCount: top });
       }
       // right
       for (let i = 0; i < right; i++) {
-        const x = mesa.posicion.x + (mesa.width || 120) + 25;
+        const x = mesa.posicion.x + (mesa.width || 120) + seatSpacing;
         const y = mesa.posicion.y + ((mesa.height || 80) / (right + 1)) * (i + 1);
         allPositions.push({ x, y, side: 'right', sideIndex: i, sideCount: right });
       }
       // bottom
       for (let i = 0; i < bottom; i++) {
         const x = mesa.posicion.x + ((mesa.width || 120) / (bottom + 1)) * (i + 1);
-        const y = mesa.posicion.y + (mesa.height || 80) + 25;
+        const y = mesa.posicion.y + (mesa.height || 80) + seatSpacing;
         allPositions.push({ x, y, side: 'bottom', sideIndex: i, sideCount: bottom });
       }
       // left
       for (let i = 0; i < left; i++) {
-        const x = mesa.posicion.x - 25;
+        const x = mesa.posicion.x - seatSpacing;
         const y = mesa.posicion.y + ((mesa.height || 80) / (left + 1)) * (i + 1);
         allPositions.push({ x, y, side: 'left', sideIndex: i, sideCount: left });
       }
@@ -548,7 +554,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       message.success(`360°: ${nuevas.length} asientos`);
       return;
     }
-  }, [selectedIds, elements, rectSideCounts, circleSeatsCount, createBaseSeat]);
+  }, [selectedIds, elements, rectSideCounts, circleSeatsCount, createBaseSeat, seatSpacing]);
 
   const addSeatsToRectSide = useCallback((side) => {
     if (!selectedIds?.length) return;
@@ -566,15 +572,15 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       let x = 0, y = 0;
       if (side === 'top') {
         x = mesa.posicion.x + ((mesa.width || 120) / (n + 1)) * (i + 1); 
-        y = mesa.posicion.y - 25;
+        y = mesa.posicion.y - seatSpacing;
       } else if (side === 'right') {
-        x = mesa.posicion.x + (mesa.width || 120) + 25; 
+        x = mesa.posicion.x + (mesa.width || 120) + seatSpacing; 
         y = mesa.posicion.y + ((mesa.height || 80) / (n + 1)) * (i + 1);
       } else if (side === 'bottom') {
         x = mesa.posicion.x + ((mesa.width || 120) / (n + 1)) * (i + 1); 
-        y = mesa.posicion.y + (mesa.height || 80) + 25;
+        y = mesa.posicion.y + (mesa.height || 80) + seatSpacing;
       } else {
-        x = mesa.posicion.x - 25; 
+        x = mesa.posicion.x - seatSpacing; 
         y = mesa.posicion.y + ((mesa.height || 80) / (n + 1)) * (i + 1);
       }
       positions.push({ x, y, index: i });
@@ -605,7 +611,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     });
     setElements(base.concat(nuevas));
     message.success(`${nuevas.length} asientos agregados en ${side}`);
-  }, [selectedIds, elements, rectSideCounts, createBaseSeat]);
+  }, [selectedIds, elements, rectSideCounts, createBaseSeat, seatSpacing]);
 
   const addSeatsToCircleArc = useCallback(() => {
     if (!selectedIds?.length) return;
@@ -618,7 +624,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     let seq = elements.filter(e => e.type === 'silla').length + 1;
     const cx = mesa.posicion.x;
     const cy = mesa.posicion.y;
-    const r = (mesa.radius || 60) + 25;
+    const r = (mesa.radius || 60) + seatSpacing;
     for (let i = 0; i < circleArcCount; i++) {
       const angle = start + (end - start) * ((i + 1) / (circleArcCount + 1));
       const x = cx + Math.cos(angle) * r;
@@ -628,7 +634,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     }
     setElements(base.concat(nuevas));
     message.success(`${nuevas.length} asientos agregados en arco ${circleArc}`);
-  }, [selectedIds, elements, circleArc, circleArcCount, createBaseSeat]);
+  }, [selectedIds, elements, circleArc, circleArcCount, createBaseSeat, seatSpacing]);
 
   const handleStageContextMenu = useCallback((e) => {
     e.evt.preventDefault();
@@ -781,27 +787,27 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           const idx = seat.sideIndex || 0;
           if (seat.side === 'top') {
             const xTop = mesaRect.posicion.x + (w / (count + 1)) * (idx + 1);
-            const yTop = mesaRect.posicion.y - 25;
+            const yTop = mesaRect.posicion.y - seatSpacing;
             return { ...seat, posicion: { x: xTop, y: yTop } };
           }
           if (seat.side === 'right') {
-            const xR = mesaRect.posicion.x + w + 25;
-            const yR = mesaRect.posicion.y + (h / (count + 1)) * (idx + 1);
+            const xR = mesaRect.posicion.x + w + seatSpacing;
+            const yR = mesaRect.posicion.y + ((h / (count + 1)) * (idx + 1));
             return { ...seat, posicion: { x: xR, y: yR } };
           }
           if (seat.side === 'bottom') {
             const xB = mesaRect.posicion.x + (w / (count + 1)) * (idx + 1);
-            const yB = mesaRect.posicion.y + h + 25;
+            const yB = mesaRect.posicion.y + h + seatSpacing;
             return { ...seat, posicion: { x: xB, y: yB } };
           }
-          const xL = mesaRect.posicion.x - 25;
-          const yL = mesaRect.posicion.y + (h / (count + 1)) * (idx + 1);
+          const xL = mesaRect.posicion.x - seatSpacing;
+          const yL = mesaRect.posicion.y + ((h / (count + 1)) * (idx + 1));
           return { ...seat, posicion: { x: xL, y: yL } };
         });
       }
       return next;
     });
-  }, [selectedIds]);
+  }, [selectedIds, seatSpacing]);
 
   const zoomIn = useCallback(() => setScale(s => Math.min(3, s + 0.1)), []);
   const zoomOut = useCallback(() => setScale(s => Math.max(0.2, s - 0.1)), []);
@@ -1041,135 +1047,128 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       {/* Contenido principal */}
       <div className="flex-1 flex">
         {/* Panel lateral izquierdo */}
-        <div className="w-80 border-r bg-white p-3 flex flex-col gap-4 overflow-y-auto">
-          <div>
-            <div className="font-medium mb-2">Zonas</div>
-            <Space direction="vertical" size="small" className="w-full">
-              <Select
-                placeholder="Seleccione zona"
-                value={selectedZoneId}
-                onChange={setSelectedZoneId}
-                className="w-full"
-                options={(zones || []).map(z => ({ label: z.nombre, value: String(z.id) }))}
-              />
-              <Button onClick={assignZoneToSelection} disabled={!selectedIds?.length || !selectedZoneId} block>
-                Asignar a seleccionado
-              </Button>
-            </Space>
-          </div>
+        <div className="w-80 border-r bg-white p-3 flex flex-col gap-2 overflow-y-auto">
+          <Collapse 
+            defaultActiveKey={['zones', 'tools', 'background']} 
+            ghost 
+            size="small"
+            expandIcon={({ isActive }) => <DownOutlined rotate={isActive ? 180 : 0} />}
+          >
+            <Collapse.Panel header="Zonas" key="zones">
+              <Space direction="vertical" size="small" className="w-full">
+                <Select
+                  placeholder="Seleccione zona"
+                  value={selectedZoneId}
+                  onChange={setSelectedZoneId}
+                  className="w-full"
+                  options={(zones || []).map(z => ({ label: z.nombre, value: String(z.id) }))}
+                />
+                <Button onClick={assignZoneToSelection} disabled={!selectedIds?.length || !selectedZoneId} block size="small">
+                  Asignar a seleccionado
+                </Button>
+              </Space>
+            </Collapse.Panel>
 
-          <Divider />
-
-          <div>
-            <div className="font-medium mb-2">Herramientas</div>
-            <Space direction="vertical" size="small" className="w-full">
-              <Button onClick={addMesaRect} block>Añadir mesa cuadrada</Button>
-              <Button onClick={addMesaCircle} block>Añadir mesa redonda</Button>
-              <Button onClick={addSilla} block>Añadir silla suelta</Button>
-              <Button onClick={addTexto} block>Añadir texto</Button>
-              <div className="grid grid-cols-3 gap-2">
-                <Button onClick={addFormaRect}>Cuadrado</Button>
-                <Button onClick={addFormaCircle}>Círculo</Button>
-                <Button onClick={addFormaTriangle}>Triángulo</Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox checked={seatEmpty} onChange={(e) => setSeatEmpty(e.target.checked)}>Asientos vacíos (transparentes)</Checkbox>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox checked={showTableLabels} onChange={(e) => setShowTableLabels(e.target.checked)}>Mostrar nombres de mesas</Checkbox>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox checked={showSeatNumbers} onChange={(e) => setShowSeatNumbers(e.target.checked)}>Mostrar números de sillas</Checkbox>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>Forma silla</span>
-                <Select value={seatShape} onChange={setSeatShape} options={[{value:'circle',label:'Redonda'},{value:'rect',label:'Cuadrada'},{value:'butaca',label:'Butaca'}]} style={{ width: 140 }} />
-              </div>
-              <Button onClick={() => setRowMode(m => !m)} type={rowMode ? 'primary' : 'default'} block>
-                {rowMode ? 'Modo fila: activo' : 'Crear fila de asientos (arrastre)'}
-              </Button>
-              <div className="flex items-center gap-2">
-                <span className="w-16">Fila</span>
-                <Input value={rowLabel} onChange={e => setRowLabel(e.target.value)} />
-                <span>Cantidad</span>
-                <InputNumber min={1} max={200} value={rowCount} onChange={setRowCount} />
-              </div>
-            </Space>
-          </div>
-
-          <Divider />
-
-          <div>
-            <div className="font-medium mb-2">Fondo y Grid</div>
-            <Space direction="vertical" size="small" className="w-full">
-              <div className="flex items-center gap-2">
-                <Checkbox 
-                  checked={showGrid} 
-                  onChange={(e) => setShowGrid(e.target.checked)}
-                  icon={showGrid ? <EyeOutlined /> : <EyeInvisibleOutlined />}
-                >
-                  Mostrar grid
-                </Checkbox>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox checked={snapToGrid} onChange={(e) => setSnapToGrid(e.target.checked)} disabled={!showGrid}>
-                  Snap to grid
-                </Checkbox>
-              </div>
-              {showGrid && (
-                <div className="flex items-center gap-2">
-                  <span>Tamaño grid</span>
-                  <InputNumber 
-                    min={5} 
-                    max={100} 
-                    value={gridSize} 
-                    onChange={setGridSize} 
-                    size="small"
-                    style={{ width: 80 }}
-                  />
+            <Collapse.Panel header="Herramientas" key="tools">
+              <Space direction="vertical" size="small" className="w-full">
+                <Button onClick={addMesaRect} block size="small">Añadir mesa cuadrada</Button>
+                <Button onClick={addMesaCircle} block size="small">Añadir mesa redonda</Button>
+                <Button onClick={addSilla} block size="small">Añadir silla suelta</Button>
+                <Button onClick={addTexto} block size="small">Añadir texto</Button>
+                <div className="grid grid-cols-3 gap-1">
+                  <Button onClick={addFormaRect} size="small">Cuadrado</Button>
+                  <Button onClick={addFormaCircle} size="small">Círculo</Button>
+                  <Button onClick={addFormaTriangle} size="small">Triángulo</Button>
                 </div>
-              )}
-              <Divider />
-              <div className="text-sm text-gray-600 mb-2">Imagen de fondo:</div>
-              <Upload
-                accept="image/*"
-                beforeUpload={handleBackgroundUpload}
-                showUploadList={false}
-                maxCount={1}
-              >
-                <Button icon={<PictureOutlined />} block>
-                  Subir fondo (PNG/JPG menor a 1MB)
+                <div className="flex items-center gap-2">
+                  <Checkbox checked={seatEmpty} onChange={(e) => setSeatEmpty(e.target.checked)}>Asientos vacíos</Checkbox>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox checked={showTableLabels} onChange={(e) => setShowTableLabels(e.target.checked)}>Mostrar nombres</Checkbox>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox checked={showSeatNumbers} onChange={(e) => setShowSeatNumbers(e.target.checked)}>Mostrar números</Checkbox>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>Forma silla:</span>
+                  <Select value={seatShape} onChange={setSeatShape} options={[{value:'circle',label:'Redonda'},{value:'rect',label:'Cuadrada'},{value:'butaca',label:'Butaca'}]} size="small" style={{ width: 100 }} />
+                </div>
+                <Button onClick={() => setRowMode(m => !m)} type={rowMode ? 'primary' : 'default'} block size="small">
+                  {rowMode ? 'Modo fila: activo' : 'Crear fila (arrastre)'}
                 </Button>
-              </Upload>
-              {backgroundImageElement && (
-                <Button onClick={removeBackground} danger size="small" block>
-                  Remover fondo
-                </Button>
-              )}
-            </Space>
-          </div>
+                {rowMode && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs">Fila:</span>
+                    <Input value={rowLabel} onChange={e => setRowLabel(e.target.value)} size="small" style={{ width: 60 }} />
+                    <span className="text-xs">Cant:</span>
+                    <InputNumber min={1} max={200} value={rowCount} onChange={setRowCount} size="small" style={{ width: 60 }} />
+                  </div>
+                )}
+              </Space>
+            </Collapse.Panel>
 
-          
-
-          <Divider />
-
-          <div>
-            <div className="font-medium mb-2">Asientos a mesa (redonda)</div>
-            <Space direction="vertical" size="small" className="w-full">
-              <div className="flex items-center gap-2">
-                <span>Arco</span>
-                <Select value={circleArc} onChange={setCircleArc} options={[{value:'top',label:'Arriba'},{value:'right',label:'Derecha'},{value:'bottom',label:'Abajo'},{value:'left',label:'Izquierda'}]} />
-                <span>Cantidad</span>
-                <InputNumber min={0} max={50} value={circleArcCount} onChange={setCircleArcCount} />
-                <Button onClick={addSeatsToCircleArc}>Añadir arco</Button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span>360°</span>
-                <InputNumber min={0} max={60} value={circleSeatsCount} onChange={setCircleSeatsCount} />
-                <Button type="dashed" onClick={addSeatsToMesaAll}>Añadir 360°</Button>
-              </div>
-            </Space>
-          </div>
+            <Collapse.Panel header="Fondo y Grid" key="background">
+              <Space direction="vertical" size="small" className="w-full">
+                <div className="flex items-center gap-2">
+                  <Checkbox 
+                    checked={showGrid} 
+                    onChange={(e) => setShowGrid(e.target.checked)}
+                  >
+                    Mostrar grid
+                  </Checkbox>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox checked={snapToGrid} onChange={(e) => setSnapToGrid(e.target.checked)} disabled={!showGrid}>
+                    Snap to grid
+                  </Checkbox>
+                </div>
+                {showGrid && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs">Tamaño:</span>
+                    <InputNumber 
+                      min={5} 
+                      max={100} 
+                      value={gridSize} 
+                      onChange={setGridSize} 
+                      size="small"
+                      style={{ width: 60 }}
+                    />
+                  </div>
+                )}
+                <Divider />
+                <div className="text-xs text-gray-600">Imagen de fondo:</div>
+                <Upload
+                  accept="image/*"
+                  beforeUpload={handleBackgroundUpload}
+                  showUploadList={false}
+                  maxCount={1}
+                >
+                  <Button icon={<PictureOutlined />} block size="small">
+                    Subir fondo
+                  </Button>
+                </Upload>
+                {backgroundImageElement && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">Tamaño:</span>
+                      <Slider
+                        min={0.1}
+                        max={3}
+                        step={0.1}
+                        value={backgroundScale}
+                        onChange={setBackgroundScale}
+                        style={{ width: 100 }}
+                        size="small"
+                      />
+                    </div>
+                    <Button onClick={removeBackground} danger size="small" block>
+                      Remover fondo
+                    </Button>
+                  </>
+                )}
+              </Space>
+            </Collapse.Panel>
+          </Collapse>
         </div>
 
         {/* Canvas a la derecha */}
@@ -1201,8 +1200,8 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                   image={backgroundImage}
                   x={backgroundImageElement.x}
                   y={backgroundImageElement.y}
-                  width={backgroundImageElement.width}
-                  height={backgroundImageElement.height}
+                  width={backgroundImageElement.width * backgroundScale}
+                  height={backgroundImageElement.height * backgroundScale}
                   listening={false}
                 />
               )}
@@ -1248,34 +1247,42 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
           </Stage>
 
           {/* Botones de zoom y centrar */}
-          <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-            <Button.Group>
+          <div className="absolute bottom-4 right-4 flex flex-col gap-2 z-10">
+            <Button.Group size="small">
               <Button onClick={zoomIn} icon={<ZoomInOutlined />} />
               <Button onClick={zoomOut} icon={<ZoomOutOutlined />} />
             </Button.Group>
-            <Button onClick={() => {
-              setStagePos({ x: 0, y: 0 });
-              setScale(1);
-            }} icon={<AimOutlined />}>
+            <Button 
+              size="small"
+              onClick={() => {
+                setStagePos({ x: 0, y: 0 });
+                setScale(1);
+              }} 
+              icon={<AimOutlined />}
+            >
               Centrar
             </Button>
           </div>
 
           {/* Popup contextual de propiedades rápidas */}
           {selectedEl && (
-            <div style={computePopupStyle()}
-                 onMouseDown={(e) => {
-                   if (e.button === 0) { // Left click
-                     e.stopPropagation();
-                     setPopupDrag({ 
-                       isDragging: true, 
-                       startPos: { x: e.clientX, y: e.clientY }, 
-                       offset: popupDrag.offset 
-                     });
-                   }
-                 }}
-            >
-              <div className="font-medium mb-2" style={{ cursor: 'grab' }}>Propiedades rápidas</div>
+            <div style={computePopupStyle()}>
+              <div 
+                className="font-medium mb-2 bg-gray-50 p-2 -m-2 mb-2 rounded-t cursor-grab" 
+                style={{ cursor: 'grab' }}
+                onMouseDown={(e) => {
+                  if (e.button === 0) { // Left click
+                    e.stopPropagation();
+                    setPopupDrag({ 
+                      isDragging: true, 
+                      startPos: { x: e.clientX, y: e.clientY }, 
+                      offset: popupDrag.offset 
+                    });
+                  }
+                }}
+              >
+                Propiedades rápidas
+              </div>
               <Space direction="vertical" size="small" className="w-full">
                 <Input placeholder="Nombre" value={selectedEl.nombre || ''} onChange={e => updateSelectedProp('nombre', e.target.value)} />
                 
@@ -1296,7 +1303,11 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                       <span>Tamaño nombre</span>
                       <InputNumber min={8} max={48} value={selectedEl.labelSize || 14} onChange={v => updateSelectedProp('labelSize', v)} />
                       <span>Color</span>
-                      <Input placeholder="#333333" value={selectedEl.labelColor || '#333333'} onChange={e => updateSelectedProp('labelColor', e.target.value)} />
+                      <ColorPicker 
+                        value={selectedEl.labelColor || '#333333'} 
+                        onChange={(color) => updateSelectedProp('labelColor', color.toHexString())}
+                        size="small"
+                      />
                     </div>
                     {/* Controles de asientos por lado */}
                     <div className="text-xs text-gray-600 mb-1">Asientos por lado:</div>
@@ -1318,14 +1329,18 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                         <InputNumber size="small" min={0} max={20} value={rectSideCounts.left} onChange={(v) => setRectSideCounts(s => ({ ...s, left: v }))} />
                       </div>
                     </div>
-                                         <Button size="small" onClick={addSeatsToMesaAll} block>Añadir en todos los lados</Button>
-                     <div className="text-xs text-gray-600 mb-1">Añadir por lado:</div>
-                     <div className="grid grid-cols-2 gap-1">
-                       <Button size="small" onClick={() => addSeatsToRectSide('top')}>↑ Arriba</Button>
-                       <Button size="small" onClick={() => addSeatsToRectSide('right')}>→ Derecha</Button>
-                       <Button size="small" onClick={() => addSeatsToRectSide('bottom')}>↓ Abajo</Button>
-                       <Button size="small" onClick={() => addSeatsToRectSide('left')}>← Izquierda</Button>
-                     </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">Espaciado:</span>
+                      <InputNumber 
+                        size="small" 
+                        min={10} 
+                        max={100} 
+                        value={seatSpacing} 
+                        onChange={setSeatSpacing}
+                        style={{ width: 60 }}
+                      />
+                    </div>
+                    <Button size="small" onClick={addSeatsToMesaAll} block>Añadir en todos los lados</Button>
                   </>
                 )}
                 
@@ -1336,9 +1351,59 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                       <InputNumber min={10} max={1000} value={selectedEl.radius || 60} onChange={v => updateSelectedProp('radius', v)} />
                     </div>
                     <div className="flex items-center gap-2">
-                      <span>360° asientos</span>
-                      <InputNumber min={0} max={60} value={circleSeatsCount} onChange={setCircleSeatsCount} />
-                      <Button size="small" onClick={addSeatsToMesaAll}>Añadir</Button>
+                      <span>Tamaño nombre</span>
+                      <InputNumber min={8} max={48} value={selectedEl.labelSize || 14} onChange={v => updateSelectedProp('labelSize', v)} />
+                      <span>Color</span>
+                      <ColorPicker 
+                        value={selectedEl.labelColor || '#333333'} 
+                        onChange={(color) => updateSelectedProp('labelColor', color.toHexString())}
+                        size="small"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">Espaciado:</span>
+                      <InputNumber 
+                        size="small" 
+                        min={10} 
+                        max={100} 
+                        value={seatSpacing} 
+                        onChange={setSeatSpacing}
+                        style={{ width: 60 }}
+                      />
+                    </div>
+                    {/* Controles de asientos circulares */}
+                    <div className="text-xs text-gray-600 mb-1">Asientos por arco:</div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">Arco:</span>
+                      <Select 
+                        value={circleArc} 
+                        onChange={setCircleArc} 
+                        options={[{value:'top',label:'Arriba'},{value:'right',label:'Derecha'},{value:'bottom',label:'Abajo'},{value:'left',label:'Izquierda'}]}
+                        size="small"
+                        style={{ width: 80 }}
+                      />
+                      <span className="text-xs">Cant:</span>
+                      <InputNumber 
+                        min={0} 
+                        max={50} 
+                        value={circleArcCount} 
+                        onChange={setCircleArcCount}
+                        size="small"
+                        style={{ width: 50 }}
+                      />
+                      <Button size="small" onClick={addSeatsToCircleArc}>Añadir</Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs">360°:</span>
+                      <InputNumber 
+                        min={0} 
+                        max={60} 
+                        value={circleSeatsCount} 
+                        onChange={setCircleSeatsCount}
+                        size="small"
+                        style={{ width: 50 }}
+                      />
+                      <Button size="small" type="dashed" onClick={addSeatsToMesaAll}>Añadir</Button>
                     </div>
                   </>
                 )}
@@ -1367,7 +1432,11 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Color</span>
-                      <Input placeholder="#333333" value={selectedEl.fill || ''} onChange={e => updateSelectedProp('fill', e.target.value)} />
+                      <ColorPicker 
+                        value={selectedEl.fill || '#333333'} 
+                        onChange={(color) => updateSelectedProp('fill', color.toHexString())}
+                        size="small"
+                      />
                     </div>
                   </>
                 )}
@@ -1396,11 +1465,19 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Relleno</span>
-                      <Input placeholder="#eaeaea" value={selectedEl.fill || ''} onChange={e => updateSelectedProp('fill', e.target.value)} />
+                      <ColorPicker 
+                        value={selectedEl.fill || '#eaeaea'} 
+                        onChange={(color) => updateSelectedProp('fill', color.toHexString())}
+                        size="small"
+                      />
                     </div>
                     <div className="flex items-center gap-2">
                       <span>Borde</span>
-                      <Input placeholder="#999999" value={selectedEl.stroke || ''} onChange={e => updateSelectedProp('stroke', e.target.value)} />
+                      <ColorPicker 
+                        value={selectedEl.stroke || '#999999'} 
+                        onChange={(color) => updateSelectedProp('stroke', color.toHexString())}
+                        size="small"
+                      />
                       <InputNumber min={0} max={20} value={selectedEl.strokeWidth || 2} onChange={v => updateSelectedProp('strokeWidth', v)} />
                     </div>
                   </>
