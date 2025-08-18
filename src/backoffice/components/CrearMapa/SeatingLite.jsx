@@ -332,25 +332,27 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     setElements(prev => prev.map(el => selectedIds.includes(el._id) ? { ...el, zona: { id: zone.id, nombre: zone.nombre, color: zone.color || '#999' } } : el));
   }, [selectedIds, selectedZoneId, zones]);
 
+  // Función helper para crear asientos base
+  const createBaseSeat = useCallback((mesa, seq, extra = {}) => ({
+    _id: `silla_${Date.now()}_${seq}`,
+    type: 'silla',
+    shape: seatShape,
+    fill: seatEmpty ? 'transparent' : '#00d6a4',
+    stroke: seatEmpty ? '#d9d9d9' : undefined,
+    empty: seatEmpty,
+    numero: seq,
+    nombre: '',
+    mesaId: mesa._id,
+    zona: mesa.zona,
+    ...extra
+  }), [seatShape, seatEmpty]);
+
   const addSeatsToMesaAll = useCallback(() => {
     if (!selectedIds?.length) return;
     const mesa = elements.find(e => selectedIds.includes(e._id) && e.type === 'mesa');
     if (!mesa) return;
     const nuevas = [];
     let seq = elements.filter(e => e.type === 'silla').length + 1;
-    const baseSeat = (extra) => ({
-      _id: `silla_${Date.now()}_${seq}`,
-      type: 'silla',
-      shape: seatShape,
-      fill: seatEmpty ? 'transparent' : '#00d6a4',
-      stroke: seatEmpty ? '#d9d9d9' : undefined,
-      empty: seatEmpty,
-      numero: seq++,
-      nombre: '',
-      mesaId: mesa._id,
-      zona: mesa.zona,
-      ...extra
-    });
     if (mesa.shape === 'rect') {
       // borrar existentes por lados para esta mesa para evitar duplicados
       let base = elements.filter(e => !(e.type === 'silla' && e.mesaId === mesa._id && e.side));
@@ -388,7 +390,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       
       // Crear asientos con las posiciones ordenadas
       allPositions.forEach(pos => {
-        const base = baseSeat({ 
+        const base = createBaseSeat(mesa, seq++, { 
           posicion: { x: pos.x, y: pos.y }, 
           side: pos.side, 
           sideIndex: pos.sideIndex, 
@@ -410,14 +412,14 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
         const angle = (i * 2 * Math.PI) / count;
         const x = cx + Math.cos(angle) * r;
         const y = cy + Math.sin(angle) * r;
-        const base = baseSeat({ posicion: { x, y }, circleIndex: i, circleCount: count });
+        const base = createBaseSeat(mesa, seq++, { posicion: { x, y }, circleIndex: i, circleCount: count });
         nuevas.push(seatShape === 'circle' ? { ...base, radius: 10 } : seatShape === 'rect' ? { ...base, width: 20, height: 20 } : { ...base, width: 18, height: 14 });
       }
       setElements(base.concat(nuevas));
       message.success(`360°: ${nuevas.length} asientos`);
       return;
     }
-  }, [selectedIds, elements, rectSideCounts, circleSeatsCount, seatEmpty, seatShape, addSeatsToMesaAll]);
+  }, [selectedIds, elements, rectSideCounts, circleSeatsCount, createBaseSeat]);
 
   const addSeatsToRectSide = useCallback((side) => {
     if (!selectedIds?.length) return;
@@ -474,7 +476,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     });
     setElements(base.concat(nuevas));
     message.success(`${nuevas.length} asientos agregados en ${side}`);
-  }, [selectedIds, elements, rectSideCounts, seatEmpty, seatShape, addSeatsToRectSide]);
+  }, [selectedIds, elements, rectSideCounts, createBaseSeat]);
 
   const addSeatsToCircleArc = useCallback(() => {
     if (!selectedIds?.length) return;
@@ -492,12 +494,12 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       const angle = start + (end - start) * ((i + 1) / (circleArcCount + 1));
       const x = cx + Math.cos(angle) * r;
       const y = cy + Math.sin(angle) * r;
-      const base = baseSeat({ posicion: { x, y }, circleIndex: i, circleCount: circleArcCount });
+      const base = createBaseSeat(mesa, seq++, { posicion: { x, y }, circleIndex: i, circleCount: circleArcCount });
       nuevas.push(seatShape === 'circle' ? { ...base, radius: 10 } : seatShape === 'rect' ? { ...base, width: 20, height: 20 } : { ...base, width: 18, height: 14 });
     }
     setElements(base.concat(nuevas));
     message.success(`${nuevas.length} asientos agregados en arco ${circleArc}`);
-  }, [selectedIds, elements, circleArc, circleArcCount, seatEmpty, seatShape, addSeatsToCircleArc]);
+  }, [selectedIds, elements, circleArc, circleArcCount, createBaseSeat]);
 
   const handleStageContextMenu = useCallback((e) => {
     e.evt.preventDefault();
@@ -518,7 +520,7 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     }
     setElements(prev => [...prev, ...newSeats]);
     message.success(`Fila ${rowLabel} con ${count} asientos creada`);
-  }, [rowCount, rowLabel, elements, seatEmpty, seatShape, createRowSeatsFromDrag]);
+  }, [rowCount, rowLabel, elements, seatEmpty, seatShape]);
 
   const handleMouseDown = useCallback((e) => {
     if (rowMode) {
