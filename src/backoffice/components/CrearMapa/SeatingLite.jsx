@@ -427,12 +427,27 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       const curr = prev.find(el => el._id === id);
       if (!curr || !curr.posicion) return prev;
       const next = prev.map(el => el._id === id ? { ...el, posicion: { x: nx, y: ny } } : el);
+      
       // Si se está moviendo una silla y hay múltiples sillas seleccionadas, mover el grupo con el mismo delta
       if (curr && curr.type === 'silla' && Array.isArray(selectedIdsRef.current) && selectedIdsRef.current.length > 1) {
         const dx = nx - (curr.posicion.x || 0);
         const dy = ny - (curr.posicion.y || 0);
         return next.map(el => {
           if (el._id !== id && selectedIdsRef.current.includes(el._id) && el.type === 'silla' && el.posicion) {
+            const ex = (el.posicion.x || 0) + dx;
+            const ey = (el.posicion.y || 0) + dy;
+            return { ...el, posicion: { x: ex, y: ey } };
+          }
+          return el;
+        });
+      }
+      
+      // Si se está moviendo cualquier elemento y hay múltiples elementos seleccionados, mover el grupo
+      if (Array.isArray(selectedIdsRef.current) && selectedIdsRef.current.length > 1 && selectedIdsRef.current.includes(id)) {
+        const dx = nx - (curr.posicion.x || 0);
+        const dy = ny - (curr.posicion.y || 0);
+        return next.map(el => {
+          if (el._id !== id && selectedIdsRef.current.includes(el._id) && el.posicion) {
             const ex = (el.posicion.x || 0) + dx;
             const ey = (el.posicion.y || 0) + dy;
             return { ...el, posicion: { x: ex, y: ey } };
