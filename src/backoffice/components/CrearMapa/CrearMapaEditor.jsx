@@ -2015,7 +2015,6 @@ const CrearMapaEditor = ({
                 cornerRadius={element.cornerRadius || 0}
               />
             )}
-            
             {/* Nombre de la mesa */}
             <KonvaText
               text={element.nombre || 'Mesa'}
@@ -2925,56 +2924,7 @@ const CrearMapaEditor = ({
            </div>
         </div>
 
-        {/* ===== PANEL DERECHO - PROPIEDADES ===== */}
-        {showPropertiesPanel && selectedIds.length > 0 && (
-          <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
-            <div className="p-4">
-              <Title level={5}>Propiedades</Title>
-                             {selectedIds.length === 1 ? (
-                 <ElementProperties
-                   element={elements.find(el => el._id === selectedIds[0])}
-                   onUpdate={(updates) => {
-                     Object.entries(updates).forEach(([key, value]) => {
-                       updateElementProperty(selectedIds[0], key, value);
-                     });
-                   }}
-                   onAddSillas={handleAddSillasToMesa}
-                   onRemoveSillas={handleRemoveSillasFromMesa}
-                   onDuplicate={() => {
-                     const element = elements.find(el => el._id === selectedIds[0]);
-                     if (element) {
-                       const duplicatedElement = {
-                         ...element,
-                         _id: `duplicate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                         posicion: {
-                           x: element.posicion.x + 50,
-                           y: element.posicion.y + 50
-                         }
-                       };
-                       setElements(prev => [...prev, duplicatedElement]);
-                       addToHistory([...elements, duplicatedElement], `Duplicar ${element.type}`);
-                       message.success('Elemento duplicado');
-                     }
-                   }}
-                   onDelete={() => {
-                     const element = elements.find(el => el._id === selectedIds[0]);
-                     if (element) {
-                       const newElements = elements.filter(el => el._id !== selectedIds[0]);
-                       setElements(newElements);
-                       addToHistory(newElements, `Eliminar ${element.type}`);
-                       setSelectedIds([]);
-                       message.success('Elemento eliminado');
-                     }
-                   }}
-                 />
-               ) : (
-                <div className="text-gray-600">
-                  {selectedIds.length} elementos seleccionados
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+        {/* Panel derecho eliminado: usamos Propiedades Rápidas en el panel izquierdo */}
       </div>
 
              {/* ===== MODALES Y POPUPS ===== */}
