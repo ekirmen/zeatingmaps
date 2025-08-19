@@ -249,6 +249,67 @@ const CrearMapaEditor = ({
     zoomToFit
   } = useMapaZoomStage(stageRef, scale, setScale, position, setPosition);
 
+  // ===== FUNCIONES CRÍTICAS (definidas antes de useEffect) =====
+  
+  // Función para agregar al historial
+  const addToHistory = useCallback((newElements, action) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({ elements: newElements, action, timestamp: Date.now() });
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex]);
+
+  // Función para actualizar estadísticas de IA
+  const updateAiStats = useCallback(() => {
+    const mesas = elements.filter(el => el.type === 'mesa');
+    const sillas = elements.filter(el => el.type === 'silla');
+    const zonas = elements.filter(el => el.zona);
+    
+    const totalArea = 2000 * 1400;
+    const elementosArea = elements.reduce((sum, el) => {
+      if (el.width && el.height) {
+        return sum + (el.width * el.height);
+      }
+      return sum + 400;
+    }, 0);
+    
+    setAiStats({
+      totalElements: elements.length,
+      mesas: mesas.length,
+      sillas: sillas.length,
+      zonas: zonas.length,
+      spaceUsage: (elementosArea / totalArea) * 100
+    });
+  }, [elements]);
+
+  // Función para calcular progreso
+  const calculateProgress = useCallback(() => {
+    const steps = [
+      !!salaId,
+      zonas.length > 0,
+      elements.filter(el => el.type === 'mesa').length > 0,
+      elements.filter(el => el.type === 'silla').length > 0,
+      elements.length > 0
+    ];
+    return steps.filter(Boolean).length;
+  }, [salaId, zonas, elements]);
+
+  // Función para obtener texto de progreso
+  const getProgressText = useCallback(() => {
+    const currentStep = calculateProgress();
+    const totalSteps = 5;
+    const percentage = (currentStep / totalSteps) * 100;
+    
+    let status = 'Pendiente';
+    if (percentage >= 100) status = 'Completado';
+    else if (percentage >= 80) status = 'Casi listo';
+    else if (percentage >= 60) status = 'En progreso';
+    else if (percentage >= 40) status = 'Iniciado';
+    else if (percentage >= 20) status = 'Planificando';
+    
+    return { currentStep, totalSteps, percentage, status };
+  }, [calculateProgress]);
+
   // ===== EFECTOS =====
   useEffect(() => {
     if (initialMapa?.contenido?.elementos) {
@@ -1766,65 +1827,6 @@ const CrearMapaEditor = ({
   // Se define al final del componente
 
   // ===== FUNCIONES PRINCIPALES =====
-  
-  // Función para agregar al historial
-  const addToHistory = useCallback((newElements, action) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({ elements: newElements, action, timestamp: Date.now() });
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex]);
-
-  // Función para actualizar estadísticas de IA
-  const updateAiStats = useCallback(() => {
-    const mesas = elements.filter(el => el.type === 'mesa');
-    const sillas = elements.filter(el => el.type === 'silla');
-    const zonas = elements.filter(el => el.zona);
-    
-    const totalArea = 2000 * 1400;
-    const elementosArea = elements.reduce((sum, el) => {
-      if (el.width && el.height) {
-        return sum + (el.width * el.height);
-      }
-      return sum + 400;
-    }, 0);
-    
-    setAiStats({
-      totalElements: elements.length,
-      mesas: mesas.length,
-      sillas: sillas.length,
-      zonas: zonas.length,
-      spaceUsage: (elementosArea / totalArea) * 100
-    });
-  }, [elements]);
-
-  // Función para calcular progreso
-  const calculateProgress = useCallback(() => {
-    const steps = [
-      !!salaId,
-      zonas.length > 0,
-      elements.filter(el => el.type === 'mesa').length > 0,
-      elements.filter(el => el.type === 'silla').length > 0,
-      elements.length > 0
-    ];
-    return steps.filter(Boolean).length;
-  }, [salaId, zonas, elements]);
-
-  // Función para obtener texto de progreso
-  const getProgressText = useCallback(() => {
-    const currentStep = calculateProgress();
-    const totalSteps = 5;
-    const percentage = (currentStep / totalSteps) * 100;
-    
-    let status = 'Pendiente';
-    if (percentage >= 100) status = 'Completado';
-    else if (percentage >= 80) status = 'Casi listo';
-    else if (percentage >= 60) status = 'En progreso';
-    else if (percentage >= 40) status = 'Iniciado';
-    else if (percentage >= 20) status = 'Planificando';
-    
-    return { currentStep, totalSteps, percentage, status };
-  }, [calculateProgress]);
 
   // ===== FUNCIONES DE ZONAS =====
   
