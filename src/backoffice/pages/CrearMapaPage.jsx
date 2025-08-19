@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Button, Space, Typography, message, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, EyeOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
-import CrearMapaEditor from '../components/CrearMapa/CrearMapaEditor.jsx';
+import CrearMapaEditor from '../components/CrearMapa/CrearMapaEditor';
+import SeatingLite from '../components/CrearMapa/SeatingLite';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const { Title, Text } = Typography;
@@ -798,12 +799,21 @@ const CrearMapaPage = () => {
 
         {/* Editor */}
         <div className="flex-1">
-          <CrearMapaEditor
+          <SeatingLite
             salaId={salaId}
             onSave={handleSave}
             onCancel={handleCancel}
-            initialMapa={mapa}
-            isEditMode={!!mapa}
+            initialMapa={
+              mapa
+                ? {
+                  contenido: Array.isArray(mapa?.contenido)
+                    ? mapa.contenido
+                    : Array.isArray(mapa?.contenido?.elementos)
+                    ? mapa.contenido.elementos
+                    : []
+                }
+                : null
+            }
           />
         </div>
       </div>

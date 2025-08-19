@@ -52,10 +52,10 @@ CrearMapa/
 ### Importación Básica
 
 ```javascript
-import { CrearMapaEditor, crearMapaUtils } from '../components/CrearMapa';
+import { CrearMapaMain, crearMapaUtils } from '../components/CrearMapa';
 
 // Uso básico
-<CrearMapaEditor
+<CrearMapaMain
   salaId="sala_123"
   onSave={handleSave}
   onCancel={handleCancel}

@@ -52,12 +52,7 @@ import {
   DownloadOutlined,
   UploadOutlined,
   InfoCircleOutlined,
-  QuestionCircleOutlined,
-  AimOutlined,
-  RobotOutlined,
-  BugOutlined,
-  BulbOutlined,
-  TeamOutlined
+  QuestionCircleOutlined
 } from '@ant-design/icons';
 import { useMapaElements } from '../../hooks/useMapaElements';
 import { useMapaState } from '../../hooks/useMapaState';
@@ -66,7 +61,7 @@ import { useMapaZoomStage } from '../../hooks/useMapaZoomStage';
 import { useMapaGraphicalElements } from '../../hooks/useMapaGraphicalElements';
 import { useMapaLoadingSaving } from '../../hooks/usemapaloadingsaving';
 import { useMapaZones } from '../../hooks/usemapazones';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from '../../../supabaseClient';
 import { fetchZonasPorSala } from '../../services/apibackoffice';
 import Grid from '../compMapa/Grid';
 import MenuMapa from '../compMapa/MenuMapa';
@@ -106,39 +101,13 @@ const CrearMapaEditor = ({
       configuracion: {
         gridSize: 20,
         showGrid: true,
-        snapToGrid: false,
-        backgroundImage: null,
-        backgroundScale: 1,
-        backgroundOpacity: 1,
-        showBackgroundInWeb: true
+        snapToGrid: true,
+        background: null,
+        dimensions: { width: 1200, height: 800 }
       }
     },
-    estado: 'borrador'
+    estado: 'draft'
   });
-
-  // ===== ESTADOS DE IA LOCAL =====
-  const [aiSuggestions, setAiSuggestions] = useState([]);
-  const [isAiProcessing, setIsAiProcessing] = useState(false);
-  const [aiMode, setAiMode] = useState('assist'); // 'assist', 'create', 'optimize'
-  const [aiIssues, setAiIssues] = useState([]);
-  const [aiStats, setAiStats] = useState({
-    totalElements: 0,
-    mesas: 0,
-    sillas: 0,
-    zonas: 0,
-    spaceUsage: 0
-  });
-
-  // ===== ESTADOS DE COLABORACIÓN EN TIEMPO REAL =====
-  const [collaborators, setCollaborators] = useState([]);
-  const [isCollaborating, setIsCollaborating] = useState(false);
-  const [userName, setUserName] = useState(`Usuario_${Math.random().toString(36).substr(2, 5)}`);
-  const [userColor, setUserColor] = useState(`hsl(${Math.random() * 360}, 70%, 60%)`);
-  const [chatMessages, setChatMessages] = useState([]);
-  const [isTyping, setIsTyping] = useState(false);
-  const [realtimeChannel, setRealtimeChannel] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState('disconnected');
-  const [otherUsersCursors, setOtherUsersCursors] = useState({});
 
   const [elements, setElements] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
@@ -208,9 +177,7 @@ const CrearMapaEditor = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [totalSteps] = useState(5);
   
-  // ===== FUNCIONES PRINCIPALES (definidas antes de useEffect) =====
-  
-  // Función para calcular progreso
+  // ===== FUNCIÓN PARA CALCULAR PROGRESO =====
   const calculateProgress = useCallback(() => {
     let progress = 0;
     let step = 1;
@@ -252,7 +219,7 @@ const CrearMapaEditor = ({
     return progress;
   }, [salaId, zonas.length, elements.length, mapa?.estado]);
   
-  // Texto de progreso
+  // ===== TEXTO DE PROGRESO =====
   const getProgressText = useCallback(() => {
     const progress = calculateProgress();
     const stepTexts = {
@@ -270,46 +237,6 @@ const CrearMapaEditor = ({
       isComplete: progress >= 100
     };
   }, [calculateProgress, currentStep]);
-  
-  // Función para agregar al historial
-  const addToHistory = useCallback((newElements, action) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({
-      elements: JSON.parse(JSON.stringify(newElements)),
-      action,
-      timestamp: Date.now()
-    });
-    
-    if (newHistory.length > maxHistorySize) {
-      newHistory.shift();
-    }
-    
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex, maxHistorySize]);
-  
-  // Función para actualizar estadísticas de IA
-  const updateAiStats = useCallback(() => {
-    const mesas = elements.filter(el => el.type === 'mesa');
-    const sillas = elements.filter(el => el.type === 'silla');
-    const zonas = elements.filter(el => el.zona);
-    
-    const totalArea = 2000 * 1400;
-    const elementosArea = elements.reduce((sum, el) => {
-      if (el.width && el.height) {
-        return sum + (el.width * el.height);
-      }
-      return sum + 400;
-    }, 0);
-    
-    setAiStats({
-      totalElements: elements.length,
-      mesas: mesas.length,
-      sillas: sillas.length,
-      zonas: zonas.length,
-      spaceUsage: (elementosArea / totalArea) * 100
-    });
-  }, [elements]);
   
   // ===== REFERENCIAS =====
   const stageRef = useRef(null);
@@ -402,302 +329,6 @@ const CrearMapaEditor = ({
     calculateProgress();
   }, [calculateProgress, elements, zonas, mapa?.estado]);
 
-  // Actualizar estadísticas de IA cuando cambien los elementos
-  useEffect(() => {
-    updateAiStats();
-  }, [elements, updateAiStats]);
-
-  // ===== FUNCIONES DE COLABORACIÓN EN TIEMPO REAL =====
-  
-  // Inicializar Supabase Realtime
-  const initializeSupabaseRealtime = useCallback(async () => {
-    try {
-      if (!salaId) return;
-      
-      // Crear canal único para esta sala
-      const channel = supabase.channel(`mapa_${salaId}`)
-        .on('presence', { event: 'sync' }, () => {
-          const presenceState = channel.presenceState();
-          const users = Object.values(presenceState).flat();
-          setCollaborators(users);
-        })
-        .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-          console.log('Usuario conectado:', newPresences);
-        })
-        .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-          console.log('Usuario desconectado:', leftPresences);
-        })
-        .on('broadcast', { event: 'element_updated' }, (payload) => {
-          handleElementUpdated(payload.payload);
-        })
-        .on('broadcast', { event: 'cursor_moved' }, (payload) => {
-          handleCursorMoved(payload.payload);
-        })
-        .on('broadcast', { event: 'chat_message' }, (payload) => {
-          handleChatMessage(payload.payload);
-        })
-        .on('broadcast', { event: 'element_created' }, (payload) => {
-          handleElementCreated(payload.payload);
-        })
-        .on('broadcast', { event: 'element_deleted' }, (payload) => {
-          handleElementDeleted(payload.payload);
-        })
-        .on('broadcast', { event: 'zone_assigned' }, (payload) => {
-          handleZoneAssigned(payload.payload);
-        });
-
-      // Suscribirse al canal
-      const status = await channel.subscribe(async (status) => {
-        setConnectionStatus(status);
-        if (status === 'SUBSCRIBED') {
-          // Unirse a la presencia
-          await channel.track({
-            user_id: userName,
-            user_name: userName,
-            user_color: userColor,
-            online_at: new Date().toISOString()
-          });
-        }
-      });
-
-      setRealtimeChannel(channel);
-      setConnectionStatus(status);
-      
-    } catch (error) {
-      console.error('Error inicializando Supabase Realtime:', error);
-      message.error('Error al conectar con la colaboración en tiempo real');
-    }
-  }, [salaId, userName, userColor]);
-
-  // Manejadores de eventos de colaboración
-  const handleElementUpdated = useCallback((payload) => {
-    if (payload.user_id === userName) return; // Ignorar cambios propios
-    
-    const { elementId, property, value } = payload;
-    updateElementProperty(elementId, property, value);
-    
-    // Agregar mensaje al chat
-    setChatMessages(prev => [...prev, {
-      id: Date.now(),
-      user: payload.user_name,
-      message: `Actualizó ${property} de ${payload.element_name || 'elemento'}`,
-      timestamp: new Date().toISOString(),
-      type: 'action'
-    }]);
-  }, [userName, updateElementProperty]);
-
-  const handleCursorMoved = useCallback((payload) => {
-    if (payload.user_id === userName) return;
-    
-    setOtherUsersCursors(prev => ({
-      ...prev,
-      [payload.user_id]: {
-        x: payload.x,
-        y: payload.y,
-        user_name: payload.user_name,
-        user_color: payload.user_color
-      }
-    }));
-  }, [userName]);
-
-  const handleChatMessage = useCallback((payload) => {
-    if (payload.user_id === userName) return;
-    
-    setChatMessages(prev => [...prev, {
-      id: Date.now(),
-      user: payload.user_name,
-      message: payload.message,
-      timestamp: payload.timestamp,
-      type: 'chat'
-    }]);
-  }, [userName]);
-
-  const handleElementCreated = useCallback((payload) => {
-    if (payload.user_id === userName) return;
-    
-    setElements(prev => [...prev, payload.element]);
-    
-    setChatMessages(prev => [...prev, {
-      id: Date.now(),
-      user: payload.user_name,
-      message: `Creó ${payload.element.type} "${payload.element.nombre || 'sin nombre'}"`,
-      timestamp: new Date().toISOString(),
-      type: 'action'
-    }]);
-  }, [userName]);
-
-  const handleElementDeleted = useCallback((payload) => {
-    if (payload.user_id === userName) return;
-    
-    setElements(prev => prev.filter(el => el._id !== payload.elementId));
-    
-    setChatMessages(prev => [...prev, {
-      id: Date.now(),
-      user: payload.user_name,
-      message: `Eliminó ${payload.element_type}`,
-      timestamp: new Date().toISOString(),
-      type: 'action'
-    }]);
-  }, [userName]);
-
-  const handleZoneAssigned = useCallback((payload) => {
-    if (payload.user_id === userName) return;
-    
-    const { elementIds, zona } = payload;
-    elementIds.forEach(elementId => {
-      updateElementProperty(elementId, 'zona', zona);
-      updateElementProperty(elementId, 'fill', zona.color);
-    });
-    
-    setChatMessages(prev => [...prev, {
-      id: Date.now(),
-      user: payload.user_name,
-      message: `Asignó zona "${zona.nombre}" a ${elementIds.length} elementos`,
-      timestamp: new Date().toISOString(),
-      type: 'action'
-    }]);
-  }, [userName, updateElementProperty]);
-
-  // Funciones para enviar cambios
-  const sendElementChange = useCallback((elementId, property, value, elementName) => {
-    if (!realtimeChannel || !isCollaborating) return;
-    
-    realtimeChannel.send({
-      type: 'broadcast',
-      event: 'element_updated',
-      payload: {
-        elementId,
-        property,
-        value,
-        element_name: elementName,
-        user_id: userName,
-        user_name: userName,
-        timestamp: new Date().toISOString()
-      }
-    });
-  }, [realtimeChannel, isCollaborating, userName]);
-
-  const sendCursorMove = useCallback((x, y) => {
-    if (!realtimeChannel || !isCollaborating) return;
-    
-    realtimeChannel.send({
-      type: 'broadcast',
-      event: 'cursor_moved',
-      payload: {
-        x,
-        y,
-        user_id: userName,
-        user_name: userName,
-        user_color: userColor,
-        timestamp: new Date().toISOString()
-      }
-    });
-  }, [realtimeChannel, isCollaborating, userName, userColor]);
-
-  const sendChatMessage = useCallback((message) => {
-    if (!realtimeChannel || !isCollaborating) return;
-    
-    const chatMessage = {
-      id: Date.now(),
-      user: userName,
-      message,
-      timestamp: new Date().toISOString(),
-      type: 'chat'
-    };
-    
-    setChatMessages(prev => [...prev, chatMessage]);
-    
-    realtimeChannel.send({
-      type: 'broadcast',
-      event: 'chat_message',
-      payload: {
-        ...chatMessage,
-        user_id: userName
-      }
-    });
-  }, [realtimeChannel, isCollaborating, userName]);
-
-  const sendElementCreated = useCallback((element) => {
-    if (!realtimeChannel || !isCollaborating) return;
-    
-    realtimeChannel.send({
-      type: 'broadcast',
-      event: 'element_created',
-      payload: {
-        element,
-        user_id: userName,
-        user_name: userName,
-        timestamp: new Date().toISOString()
-      }
-    });
-  }, [realtimeChannel, isCollaborating, userName]);
-
-  const sendElementDeleted = useCallback((elementId, elementType) => {
-    if (!realtimeChannel || !isCollaborating) return;
-    
-    realtimeChannel.send({
-      type: 'broadcast',
-      event: 'element_deleted',
-      payload: {
-        elementId,
-        element_type: elementType,
-        user_id: userName,
-        user_name: userName,
-        timestamp: new Date().toISOString()
-      }
-    });
-  }, [realtimeChannel, isCollaborating, userName]);
-
-  const sendZoneAssigned = useCallback((elementIds, zona) => {
-    if (!realtimeChannel || !isCollaborating) return;
-    
-    realtimeChannel.send({
-      type: 'broadcast',
-      event: 'zone_assigned',
-      payload: {
-        elementIds,
-        zona,
-        user_id: userName,
-        user_name: userName,
-        timestamp: new Date().toISOString()
-      }
-    });
-  }, [realtimeChannel, isCollaborating, userName]);
-
-  // Conectar/Desconectar colaboración
-  const toggleCollaboration = useCallback(async () => {
-    if (isCollaborating) {
-      // Desconectar
-      if (realtimeChannel) {
-        await realtimeChannel.unsubscribe();
-        setRealtimeChannel(null);
-      }
-      setIsCollaborating(false);
-      setConnectionStatus('disconnected');
-      setCollaborators([]);
-      setOtherUsersCursors({});
-      message.success('Colaboración desactivada');
-    } else {
-      // Conectar
-      setIsCollaborating(true);
-      await initializeSupabaseRealtime();
-      message.success('Colaboración activada');
-    }
-  }, [isCollaborating, realtimeChannel, initializeSupabaseRealtime]);
-
-  // Inicializar colaboración cuando se monte el componente
-  useEffect(() => {
-    if (salaId) {
-      initializeSupabaseRealtime();
-    }
-    
-    return () => {
-      if (realtimeChannel) {
-        realtimeChannel.unsubscribe();
-      }
-    };
-  }, [salaId, initializeSupabaseRealtime]);
-
   // ===== FUNCIONES DE COPIAR Y PEGAR =====
   const [clipboard, setClipboard] = useState([]);
   
@@ -728,6 +359,21 @@ const CrearMapaEditor = ({
   }, [clipboard, elements, addToHistory]);
   
   // ===== FUNCIONES DE HISTORIAL =====
+  const addToHistory = useCallback((newElements, action) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({
+      elements: JSON.parse(JSON.stringify(newElements)),
+      action,
+      timestamp: Date.now()
+    });
+    
+    if (newHistory.length > maxHistorySize) {
+      newHistory.shift();
+    }
+    
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex, maxHistorySize]);
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -771,11 +417,7 @@ const CrearMapaEditor = ({
     }
     
     updateElementProperty(elementId, 'posicion', newPosition);
-    
-    // Enviar cambio a colaboradores
-    const element = elements.find(el => el._id === elementId);
-    sendElementChange(elementId, 'posicion', newPosition, element?.nombre);
-  }, [snapToGrid, gridSize, updateElementProperty, elements, sendElementChange]);
+  }, [snapToGrid, gridSize, updateElementProperty]);
 
   const handleElementRotation = useCallback((elementId, newRotation) => {
     updateElementProperty(elementId, 'rotation', newRotation);
@@ -812,14 +454,8 @@ const CrearMapaEditor = ({
   const handleAddMesa = useCallback((type = 'rect', defaultSize = null) => {
     const nuevaMesa = addMesa(type, defaultSize);
     addToHistory(elements, `Agregar mesa ${type}`);
-    
-    // Enviar a colaboradores
-    if (nuevaMesa) {
-      sendElementCreated(nuevaMesa);
-    }
-    
     message.success(`Mesa ${type} agregada`);
-  }, [addMesa, elements, addToHistory, sendElementCreated]);
+  }, [addMesa, elements, addToHistory]);
 
   const handleAddSillasToMesa = useCallback((mesaId, sillasConfig) => {
     // Implementar lógica para agregar sillas según el tipo de mesa
@@ -1046,19 +682,11 @@ const CrearMapaEditor = ({
   }, [elements, addToHistory, updateElementProperty]);
 
   const handleDeleteSelected = useCallback(() => {
-    // Enviar a colaboradores antes de eliminar
-    selectedIds.forEach(elementId => {
-      const element = elements.find(el => el._id === elementId);
-      if (element) {
-        sendElementDeleted(elementId, element.type);
-      }
-    });
-    
     deleteSelectedElements();
     addToHistory(elements, 'Eliminar elementos seleccionados');
     setSelectedIds([]);
     message.success('Elementos eliminados');
-  }, [deleteSelectedElements, elements, addToHistory, selectedIds, sendElementDeleted]);
+  }, [deleteSelectedElements, elements, addToHistory]);
 
   const handleDuplicateSelected = useCallback(() => {
     const duplicatedElements = [];
@@ -1260,16 +888,7 @@ const CrearMapaEditor = ({
         y: pointer.y - (position.y - pointer.y),
       });
     }
-    
-    // Enviar posición del cursor a colaboradores
-    if (isCollaborating && e.target.getStage()) {
-      const stage = e.target.getStage();
-      const pointer = stage.getPointerPosition();
-      if (pointer) {
-        sendCursorMove(pointer.x, pointer.y);
-      }
-    }
-  }, [activeMode, position, isCollaborating, sendCursorMove]);
+  }, [activeMode, position]);
 
   const handleDoubleClick = useCallback((e) => {
     if (e.target === e.target.getStage()) {
@@ -1337,518 +956,6 @@ const CrearMapaEditor = ({
         break;
     }
   }, [zoomIn, zoomOut, resetZoom, fitToScreen, handleAddMesa, handleDuplicateSelected, handleDeleteSelected]);
-
-  // ===== FUNCIONES DE IA LOCAL =====
-  
-  // Función auxiliar para calcular distancia entre dos puntos
-  const calculateDistance = useCallback((pos1, pos2) => {
-    return Math.sqrt(Math.pow(pos2.x - pos1.x, 2) + Math.pow(pos2.y - pos1.y, 2));
-  }, []);
-
-  // Función auxiliar para calcular posición óptima de silla
-  const calculateChairPosition = useCallback((silla, mesa, index, totalSillas) => {
-    const angle = (index * 360 / totalSillas) * (Math.PI / 180);
-    const radius = Math.max(mesa.width, mesa.height) / 2 + 30;
-    
-    return {
-      x: mesa.posicion.x + (mesa.width / 2) + (radius * Math.cos(angle)),
-      y: mesa.posicion.y + (mesa.height / 2) + (radius * Math.sin(angle))
-    };
-  }, []);
-
-  // Auto-organización inteligente de elementos
-  const autoOrganizeElements = useCallback(() => {
-    setIsAiProcessing(true);
-    
-    try {
-      const mesas = elements.filter(el => el.type === 'mesa');
-      const sillas = elements.filter(el => el.type === 'silla');
-      
-      if (mesas.length === 0) {
-        message.warning('No hay mesas para organizar');
-        return;
-      }
-
-      // Calcula distribución óptima
-      const canvasWidth = 2000;
-      const canvasHeight = 1400;
-      const margin = 100;
-      const spacing = 300;
-      
-      mesas.forEach((mesa, index) => {
-        const row = Math.floor(index / 4); // 4 mesas por fila
-        const col = index % 4;
-        
-        const newX = margin + (col * spacing);
-        const newY = margin + (row * spacing);
-        
-        // Actualiza posición de la mesa
-        updateElementProperty(mesa._id, 'posicion', { x: newX, y: newY });
-        
-        // Reposiciona sillas asociadas
-        const sillasMesa = sillas.filter(s => s.mesaId === mesa._id);
-        sillasMesa.forEach((silla, sillaIndex) => {
-          const sillaPos = calculateChairPosition(silla, { ...mesa, posicion: { x: newX, y: newY } }, sillaIndex, sillasMesa.length);
-          updateElementProperty(silla._id, 'posicion', sillaPos);
-        });
-      });
-      
-      message.success(`Organización automática completada: ${mesas.length} mesas reorganizadas`);
-      
-    } catch (error) {
-      console.error('Error en auto-organización:', error);
-      message.error('Error en la organización automática');
-    } finally {
-      setIsAiProcessing(false);
-    }
-  }, [elements, updateElementProperty, calculateChairPosition]);
-
-  // Detección automática de problemas
-  const detectIssues = useCallback(() => {
-    setIsAiProcessing(true);
-    
-    try {
-      const issues = [];
-      const mesas = elements.filter(el => el.type === 'mesa');
-      const sillas = elements.filter(el => el.type === 'silla');
-      
-      // Problema 1: Mesas muy cercanas
-      mesas.forEach((mesa1, i) => {
-        mesas.slice(i + 1).forEach(mesa2 => {
-          const distance = calculateDistance(mesa1.posicion, mesa2.posicion);
-          if (distance < 150) {
-            issues.push({
-              type: 'spacing',
-              severity: 'warning',
-              message: `Mesa ${mesa1.nombre || mesa1._id} y ${mesa2.nombre || mesa2._id} están muy cercanas (${Math.round(distance)}px)`,
-              elements: [mesa1._id, mesa2._id]
-            });
-          }
-        });
-      });
-      
-      // Problema 2: Sillas sin asignar
-      const sillasSinAsignar = sillas.filter(silla => !silla.mesaId);
-      if (sillasSinAsignar.length > 0) {
-        issues.push({
-          type: 'unassigned',
-          severity: 'error',
-          message: `${sillasSinAsignar.length} sillas no están asignadas a mesas`,
-          elements: sillasSinAsignar.map(s => s._id)
-        });
-      }
-      
-      // Problema 3: Elementos fuera de límites
-      const elementosFuera = elements.filter(el => 
-        el.posicion.x < 0 || el.posicion.y < 0 || 
-        el.posicion.x > 1900 || el.posicion.y > 1300
-      );
-      
-      if (elementosFuera.length > 0) {
-        issues.push({
-          type: 'bounds',
-          severity: 'warning',
-          message: `${elementosFuera.length} elementos están fuera de los límites del canvas`,
-          elements: elementosFuera.map(el => el._id)
-        });
-      }
-      
-      setAiIssues(issues);
-      
-      if (issues.length === 0) {
-        message.success('✅ No se detectaron problemas en el mapa');
-      } else {
-        message.warning(`⚠️ Se detectaron ${issues.length} problemas`);
-      }
-      
-    } catch (error) {
-      console.error('Error en detección de problemas:', error);
-      message.error('Error en la detección automática');
-    } finally {
-      setIsAiProcessing(false);
-    }
-  }, [elements, calculateDistance]);
-
-  // Generación de sugerencias inteligentes
-  const generateDesignSuggestions = useCallback(() => {
-    setIsAiProcessing(true);
-    
-    try {
-      const suggestions = [];
-      const mesas = elements.filter(el => el.type === 'mesa');
-      const sillas = elements.filter(el => el.type === 'silla');
-      const zonas = elements.filter(el => el.zona);
-      
-      // Sugerencia 1: Agrupar por zonas
-      if (zonas.length < 3 && mesas.length > 5) {
-        suggestions.push({
-          type: 'zones',
-          priority: 'high',
-          message: 'Considera crear más zonas para mejor organización del evento',
-          action: 'createZones'
-        });
-      }
-      
-      // Sugerencia 2: Balance de sillas
-      if (mesas.length > 0) {
-        const mesasConSillas = mesas.map(mesa => ({
-          mesa,
-          sillas: sillas.filter(s => s.mesaId === mesa._id).length
-        }));
-        
-        const promedioSillas = mesasConSillas.reduce((sum, item) => sum + item.sillas, 0) / mesasConSillas.length;
-        
-        if (promedioSillas < 4) {
-          suggestions.push({
-            type: 'seating',
-            priority: 'medium',
-            message: `El promedio de sillas por mesa es ${promedioSillas.toFixed(1)}. Considera agregar más sillas para mejor aprovechamiento.`,
-            action: 'addSeats'
-          });
-        }
-      }
-      
-      // Sugerencia 3: Uso del espacio
-      const totalArea = 2000 * 1400;
-      const elementosArea = elements.reduce((sum, el) => {
-        if (el.width && el.height) {
-          return sum + (el.width * el.height);
-        }
-        return sum + 400; // Área estimada para sillas
-      }, 0);
-      
-      const spaceUsage = (elementosArea / totalArea) * 100;
-      
-      if (spaceUsage < 20) {
-        suggestions.push({
-          type: 'space',
-          priority: 'low',
-          message: `El uso del espacio es solo ${spaceUsage.toFixed(1)}%. Considera agregar más elementos o reorganizar.`,
-          action: 'optimizeSpace'
-        });
-      }
-      
-      setAiSuggestions(suggestions);
-      
-      if (suggestions.length === 0) {
-        message.success('✅ Tu mapa está bien optimizado');
-      } else {
-        message.info(`💡 ${suggestions.length} sugerencias generadas`);
-      }
-      
-    } catch (error) {
-      console.error('Error en generación de sugerencias:', error);
-      message.error('Error en la generación de sugerencias');
-    } finally {
-      setIsAiProcessing(false);
-    }
-  }, [elements]);
-
-  // Creación automática de mesas óptimas
-  const createOptimalTables = useCallback((numTables, seatsPerTable = 4) => {
-    setIsAiProcessing(true);
-    
-    try {
-      const newElements = [];
-      const canvasWidth = 2000;
-      const canvasHeight = 1400;
-      
-      // Calcula distribución óptima
-      const cols = Math.ceil(Math.sqrt(numTables));
-      const rows = Math.ceil(numTables / cols);
-      
-      const tableWidth = 120;
-      const tableHeight = 80;
-      const spacing = 250;
-      
-      for (let i = 0; i < numTables; i++) {
-        const row = Math.floor(i / cols);
-        const col = i % cols;
-        
-        // Posición calculada
-        const x = 100 + (col * spacing);
-        const y = 100 + (row * spacing);
-        
-        // Crea mesa
-        const mesa = {
-          _id: `mesa_ai_${Date.now()}_${i}`,
-          type: 'mesa',
-          nombre: `Mesa ${i + 1}`,
-          posicion: { x, y },
-          width: tableWidth,
-          height: tableHeight,
-          fill: '#4CAF50',
-          stroke: '#2E7D32',
-          strokeWidth: 2
-        };
-        
-        newElements.push(mesa);
-        
-        // Crea sillas alrededor
-        for (let j = 0; j < seatsPerTable; j++) {
-          const angle = (j * 360 / seatsPerTable) * (Math.PI / 180);
-          const radius = 60;
-          
-          const sillaX = x + (tableWidth / 2) + (radius * Math.cos(angle));
-          const sillaY = y + (tableHeight / 2) + (radius * Math.sin(angle));
-          
-          const silla = {
-            _id: `silla_ai_${Date.now()}_${i}_${j}`,
-            type: 'silla',
-            nombre: `Silla ${j + 1}`,
-            posicion: { x: sillaX, y: sillaY },
-            mesaId: mesa._id,
-            width: 20,
-            height: 20,
-            fill: '#2196F3',
-            stroke: '#1976D2',
-            strokeWidth: 1,
-            state: 'available'
-          };
-          
-          newElements.push(silla);
-        }
-      }
-      
-      // Agrega elementos al mapa
-      setElements(prev => [...prev, ...newElements]);
-      
-      message.success(`✅ ${numTables} mesas creadas automáticamente con ${seatsPerTable} sillas cada una`);
-      
-    } catch (error) {
-      console.error('Error en creación automática:', error);
-      message.error('Error en la creación automática');
-    } finally {
-      setIsAiProcessing(false);
-    }
-  }, []);
-
-  // Creación de layouts predefinidos
-  const createRestaurantLayout = useCallback((layoutType) => {
-    setIsAiProcessing(true);
-    
-    try {
-      let config;
-      
-      switch (layoutType) {
-        case 'intimate':
-          config = {
-            numTables: 8,
-            seatsPerTable: 2,
-            colors: { table: '#FF6B9D', chair: '#FF8EAB' },
-            spacing: 200,
-            message: 'Layout íntimo para eventos románticos'
-          };
-          break;
-        case 'family':
-          config = {
-            numTables: 6,
-            seatsPerTable: 6,
-            colors: { table: '#4ECDC4', chair: '#45B7AA' },
-            spacing: 300,
-            message: 'Layout familiar para eventos con niños'
-          };
-          break;
-        case 'elegant':
-          config = {
-            numTables: 10,
-            seatsPerTable: 4,
-            colors: { table: '#9B59B6', chair: '#8E44AD' },
-            spacing: 280,
-            message: 'Layout elegante para eventos formales'
-          };
-          break;
-        case 'fast':
-          config = {
-            numTables: 12,
-            seatsPerTable: 4,
-            colors: { table: '#F39C12', chair: '#E67E22' },
-            spacing: 220,
-            message: 'Layout rápido para eventos dinámicos'
-          };
-          break;
-        default:
-          config = {
-            numTables: 8,
-            seatsPerTable: 4,
-            colors: { table: '#95A5A6', chair: '#7F8C8D' },
-            spacing: 250,
-            message: 'Layout estándar'
-          };
-      }
-      
-      // Limpia elementos existentes
-      setElements([]);
-      
-      // Crea nuevo layout
-      const newElements = [];
-      const cols = Math.ceil(Math.sqrt(config.numTables));
-      const rows = Math.ceil(config.numTables / cols);
-      
-      for (let i = 0; i < config.numTables; i++) {
-        const row = Math.floor(i / cols);
-        const col = i % cols;
-        
-        const x = 100 + (col * config.spacing);
-        const y = 100 + (row * config.spacing);
-        
-        // Mesa
-        const mesa = {
-          _id: `mesa_${layoutType}_${Date.now()}_${i}`,
-          type: 'mesa',
-          nombre: `${layoutType.charAt(0).toUpperCase() + layoutType.slice(1)} ${i + 1}`,
-          posicion: { x, y },
-          width: 120,
-          height: 80,
-          fill: config.colors.table,
-          stroke: '#2C3E50',
-          strokeWidth: 2
-        };
-        
-        newElements.push(mesa);
-        
-        // Sillas
-        for (let j = 0; j < config.seatsPerTable; j++) {
-          const angle = (j * 360 / config.seatsPerTable) * (Math.PI / 180);
-          const radius = 60;
-          
-          const sillaX = x + 60 + (radius * Math.cos(angle));
-          const sillaY = y + 40 + (radius * Math.sin(angle));
-          
-          const silla = {
-            _id: `silla_${layoutType}_${Date.now()}_${i}_${j}`,
-            type: 'silla',
-            nombre: `Silla ${j + 1}`,
-            posicion: { x: sillaX, y: sillaY },
-            mesaId: mesa._id,
-            width: 20,
-            height: 20,
-            fill: config.colors.chair,
-            stroke: '#2C3E50',
-            strokeWidth: 1,
-            state: 'available'
-          };
-          
-          newElements.push(silla);
-        }
-      }
-      
-      setElements(newElements);
-      message.success(`✅ Layout ${layoutType} creado: ${config.message}`);
-      
-    } catch (error) {
-      console.error('Error en creación de layout:', error);
-      message.error('Error en la creación del layout');
-    } finally {
-      setIsAiProcessing(false);
-    }
-  }, []);
-
-  // Asignación automática de zonas
-  const autoAssignZones = useCallback((strategy = 'position') => {
-    setIsAiProcessing(true);
-    
-    try {
-      const mesas = elements.filter(el => el.type === 'mesa');
-      
-      if (mesas.length === 0) {
-        message.warning('No hay mesas para asignar zonas');
-        return;
-      }
-      
-      let zonasAsignadas = 0;
-      
-      switch (strategy) {
-        case 'position':
-          // Asigna por posición en el canvas
-          mesas.forEach((mesa, index) => {
-            const zona = {
-              id: `zona_${index + 1}`,
-              nombre: `Zona ${index + 1}`,
-              color: `hsl(${(index * 137.5) % 360}, 70%, 60%)`
-            };
-            
-            updateElementProperty(mesa._id, 'zona', zona);
-            updateElementProperty(mesa._id, 'fill', zona.color);
-            
-            // Asigna sillas asociadas
-            const sillasMesa = elements.filter(el => el.mesaId === mesa._id);
-            sillasMesa.forEach(silla => {
-              updateElementProperty(silla._id, 'zona', zona);
-              updateElementProperty(silla._id, 'fill', zona.color);
-            });
-            
-            zonasAsignadas++;
-          });
-          break;
-          
-        case 'density':
-          // Asigna por densidad de elementos
-          const densityZones = 4;
-          const zoneSize = 2000 / densityZones;
-          
-          mesas.forEach(mesa => {
-            const zoneX = Math.floor(mesa.posicion.x / zoneSize);
-            const zoneY = Math.floor(mesa.posicion.y / zoneSize);
-            const zoneIndex = zoneY * densityZones + zoneX;
-            
-            const zona = {
-              id: `zona_densidad_${zoneIndex}`,
-              nombre: `Zona ${zoneIndex + 1}`,
-              color: `hsl(${(zoneIndex * 137.5) % 360}, 70%, 60%)`
-            };
-            
-            updateElementProperty(mesa._id, 'zona', zona);
-            updateElementProperty(mesa._id, 'fill', zona.color);
-            
-            const sillasMesa = elements.filter(el => el.mesaId === mesa._id);
-            sillasMesa.forEach(silla => {
-              updateElementProperty(silla._id, 'zona', zona);
-              updateElementProperty(silla._id, 'fill', zona.color);
-            });
-            
-            zonasAsignadas++;
-          });
-          break;
-      }
-      
-      message.success(`✅ ${zonasAsignadas} mesas asignadas a zonas automáticamente`);
-      
-    } catch (error) {
-      console.error('Error en asignación automática de zonas:', error);
-      message.error('Error en la asignación automática');
-    } finally {
-      setIsAiProcessing(false);
-    }
-  }, [elements, updateElementProperty]);
-
-  // Renombrado inteligente en lote
-  const renameMesaAndChairs = useCallback((mesaId, newMesaName, chairPattern = 'Silla {n}') => {
-    try {
-      const mesa = elements.find(el => el._id === mesaId);
-      if (!mesa) return;
-      
-      // Renombra mesa
-      updateElementProperty(mesaId, 'nombre', newMesaName);
-      
-      // Renombra sillas asociadas
-      const sillasMesa = elements.filter(el => el.mesaId === mesaId);
-      sillasMesa.forEach((silla, index) => {
-        const newChairName = chairPattern.replace('{n}', (index + 1).toString());
-        updateElementProperty(silla._id, 'nombre', newChairName);
-      });
-      
-      message.success(`✅ Mesa y ${sillasMesa.length} sillas renombradas`);
-      
-    } catch (error) {
-      console.error('Error en renombrado:', error);
-      message.error('Error en el renombrado');
-    }
-  }, [elements, updateElementProperty]);
-
-
-
-
 
   // ===== FUNCIONES DE ZONAS =====
   const handleZonasChange = useCallback((newZonas) => {
@@ -1924,10 +1031,7 @@ const CrearMapaEditor = ({
         }
       }
     });
-    
-    // Enviar a colaboradores
-    sendZoneAssigned(elementIds, zona);
-  }, [zonas, elements, sendZoneAssigned]);
+  }, [zonas, elements]);
 
   // ===== FUNCIONES DE FILTROS DE FONDO =====
   const handleBackgroundFiltersChange = useCallback((newFilters) => {
@@ -2363,268 +1467,6 @@ const CrearMapaEditor = ({
               </div>
             )}
             
-            {/* ===== PANELES DE IA LOCAL ===== */}
-            
-            {/* Panel de Asistente IA */}
-            <div className="p-3 border-b border-gray-200">
-              <Title level={5} className="mb-3 flex items-center gap-2">
-                🤖 Asistente IA
-                {isAiProcessing && <Progress type="circle" size={16} />}
-              </Title>
-              <div className="space-y-2">
-                <Button 
-                  icon={<RobotOutlined />} 
-                  onClick={autoOrganizeElements}
-                  disabled={isAiProcessing}
-                  block
-                  size="small"
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  🧠 Auto-Organizar
-                </Button>
-                <Button 
-                  icon={<BugOutlined />} 
-                  onClick={detectIssues}
-                  disabled={isAiProcessing}
-                  block
-                  size="small"
-                  className="bg-orange-600 hover:bg-orange-700 text-white"
-                >
-                  🔍 Detectar Problemas
-                </Button>
-                <Button 
-                  icon={<BulbOutlined />} 
-                  onClick={generateDesignSuggestions}
-                  disabled={isAiProcessing}
-                  block
-                  size="small"
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  💡 Sugerencias
-                </Button>
-              </div>
-              
-              {/* Estadísticas de IA */}
-              <div className="mt-3 p-2 bg-gray-50 rounded text-xs">
-                <div className="font-medium mb-2">📊 Estadísticas:</div>
-                <div className="grid grid-cols-2 gap-1">
-                  <div>Elementos: {aiStats.totalElements}</div>
-                  <div>Mesas: {aiStats.mesas}</div>
-                  <div>Sillas: {aiStats.sillas}</div>
-                  <div>Zonas: {aiStats.zonas}</div>
-                </div>
-                <div className="mt-1 text-gray-600">
-                  Uso del espacio: {aiStats.spaceUsage.toFixed(1)}%
-                </div>
-              </div>
-            </div>
-
-            {/* Panel de Creación IA */}
-            <div className="p-3 border-b border-gray-200">
-              <Title level={5} className="mb-3">🎯 Creación IA</Title>
-              <div className="space-y-2">
-                <Button 
-                  icon={<AppstoreOutlined />} 
-                  onClick={() => createOptimalTables(8, 4)}
-                  disabled={isAiProcessing}
-                  block
-                  size="small"
-                  className="bg-green-600 hover:bg-green-700 text-white"
-                >
-                  🎯 Crear Mesas Óptimas
-                </Button>
-                
-                <div className="text-xs text-gray-600 mb-2">Layouts predefinidos:</div>
-                <div className="grid grid-cols-2 gap-1">
-                  <Button 
-                    size="small"
-                    onClick={() => createRestaurantLayout('intimate')}
-                    disabled={isAiProcessing}
-                    className="text-xs bg-pink-500 hover:bg-pink-600 text-white"
-                  >
-                    💕 Íntimo
-                  </Button>
-                  <Button 
-                    size="small"
-                    onClick={() => createRestaurantLayout('family')}
-                    disabled={isAiProcessing}
-                    className="text-xs bg-teal-500 hover:bg-teal-600 text-white"
-                  >
-                    👨‍👩‍👧‍👦 Familiar
-                  </Button>
-                  <Button 
-                    size="small"
-                    onClick={() => createRestaurantLayout('elegant')}
-                    disabled={isAiProcessing}
-                    className="text-xs bg-purple-500 hover:bg-purple-600 text-white"
-                  >
-                    ✨ Elegante
-                  </Button>
-                  <Button 
-                    size="small"
-                    onClick={() => createRestaurantLayout('fast')}
-                    disabled={isAiProcessing}
-                    className="text-xs bg-orange-500 hover:bg-orange-600 text-white"
-                  >
-                    ⚡ Rápido
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Panel de Control IA */}
-            <div className="p-3 border-b border-gray-200">
-              <Title level={5} className="mb-3">🏷️ Control IA</Title>
-              <div className="space-y-2">
-                <Button 
-                  icon={<AppstoreOutlined />} 
-                  onClick={() => autoAssignZones('position')}
-                  disabled={isAiProcessing}
-                  block
-                  size="small"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                >
-                  🏷️ Auto-Zonas
-                </Button>
-                <Button 
-                  icon={<AppstoreOutlined />} 
-                  onClick={() => autoAssignZones('density')}
-                  disabled={isAiProcessing}
-                  block
-                  size="small"
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                >
-                  🏷️ Zonas por Densidad
-                </Button>
-              </div>
-            </div>
-
-            {/* Panel de Problemas Detectados */}
-            {aiIssues.length > 0 && (
-              <div className="p-3 border-b border-gray-200">
-                <Title level={5} className="mb-3 text-orange-600">⚠️ Problemas Detectados</Title>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {aiIssues.map((issue, index) => (
-                    <div key={index} className={`p-2 rounded text-xs ${
-                      issue.severity === 'error' ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'
-                    }`}>
-                      <div className="font-medium">{issue.message}</div>
-                      <div className="text-gray-600">Tipo: {issue.type}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Panel de Sugerencias */}
-            {aiSuggestions.length > 0 && (
-              <div className="p-3 border-b border-gray-200">
-                <Title level={5} className="mb-3 text-blue-600">💡 Sugerencias</Title>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {aiSuggestions.map((suggestion, index) => (
-                    <div key={index} className={`p-2 rounded text-xs ${
-                      suggestion.priority === 'high' ? 'bg-red-50 border border-red-200' : 
-                      suggestion.priority === 'medium' ? 'bg-yellow-50 border border-yellow-200' : 
-                      'bg-blue-50 border border-blue-200'
-                    }`}>
-                      <div className="font-medium">{suggestion.message}</div>
-                      <div className="text-gray-600">Prioridad: {suggestion.priority}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ===== PANEL DE COLABORACIÓN EN TIEMPO REAL ===== */}
-            <div className="p-3 border-b border-gray-200">
-              <Title level={5} className="mb-3 flex items-center gap-2">
-                👥 Colaboración en Tiempo Real
-                <div className={`w-2 h-2 rounded-full ${
-                  connectionStatus === 'SUBSCRIBED' ? 'bg-green-500' : 
-                  connectionStatus === 'CHANNEL_ERROR' ? 'bg-red-500' : 'bg-yellow-500'
-                }`} />
-              </Title>
-              
-              <div className="space-y-3">
-                {/* Botón de conexión */}
-                <Button 
-                  icon={<TeamOutlined />} 
-                  onClick={toggleCollaboration}
-                  type={isCollaborating ? 'default' : 'primary'}
-                  block
-                  size="small"
-                  className={isCollaborating ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
-                >
-                  {isCollaborating ? 'Desconectar' : 'Conectar'}
-                </Button>
-                
-                {/* Estado de conexión */}
-                <div className="text-xs text-gray-600">
-                  Estado: {connectionStatus === 'SUBSCRIBED' ? 'Conectado' : 
-                          connectionStatus === 'CHANNEL_ERROR' ? 'Error' : 'Desconectado'}
-                </div>
-                
-                {/* Usuarios conectados */}
-                {collaborators.length > 0 && (
-                  <div>
-                    <div className="text-xs font-medium mb-2">Usuarios conectados:</div>
-                    <div className="space-y-1">
-                      {collaborators.map((user, index) => (
-                        <div key={index} className="flex items-center gap-2 text-xs">
-                          <div 
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: user.user_color }}
-                          />
-                          <span>{user.user_name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
-                {/* Chat en tiempo real */}
-                {isCollaborating && (
-                  <div>
-                    <div className="text-xs font-medium mb-2">Chat:</div>
-                    <div className="max-h-32 overflow-y-auto space-y-1 mb-2">
-                      {chatMessages.slice(-5).map((msg) => (
-                        <div key={msg.id} className={`text-xs p-1 rounded ${
-                          msg.type === 'action' ? 'bg-blue-50' : 'bg-gray-50'
-                        }`}>
-                          <span className="font-medium text-blue-600">{msg.user}:</span>
-                          <span className="ml-1">{msg.message}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-1">
-                      <Input
-                        size="small"
-                        placeholder="Mensaje..."
-                        onPressEnter={(e) => {
-                          if (e.target.value.trim()) {
-                            sendChatMessage(e.target.value.trim());
-                            e.target.value = '';
-                          }
-                        }}
-                      />
-                      <Button 
-                        size="small"
-                        onClick={() => {
-                          const input = document.querySelector('input[placeholder="Mensaje..."]');
-                          if (input && input.value.trim()) {
-                            sendChatMessage(input.value.trim());
-                            input.value = '';
-                          }
-                        }}
-                      >
-                        Enviar
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
             <MenuMapa
                selectedElement={elements.find(el => selectedIds.includes(el._id))}
                activeMode={activeMode}
@@ -2754,56 +1596,6 @@ const CrearMapaEditor = ({
                     
                     <Divider type="vertical" />
                     
-                    {/* Botones de IA */}
-                    <Button 
-                      icon={<RobotOutlined />} 
-                      onClick={autoOrganizeElements}
-                      disabled={isAiProcessing}
-                      title="Auto-organizar elementos"
-                      size="small"
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                    >
-                      🧠 IA
-                    </Button>
-                    
-                    <Button 
-                      icon={<BugOutlined />} 
-                      onClick={detectIssues}
-                      disabled={isAiProcessing}
-                      title="Detectar problemas"
-                      size="small"
-                      className="bg-orange-600 hover:bg-orange-700 text-white"
-                    >
-                      🔍
-                    </Button>
-                    
-                    <Button 
-                      icon={<BulbOutlined />} 
-                      onClick={generateDesignSuggestions}
-                      disabled={isAiProcessing}
-                      title="Generar sugerencias"
-                      size="small"
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      💡
-                    </Button>
-                    
-                    <Divider type="vertical" />
-                    
-                    {/* Botón de Colaboración */}
-                    <Button 
-                      icon={<TeamOutlined />} 
-                      onClick={toggleCollaboration}
-                      type={isCollaborating ? 'default' : 'primary'}
-                      title={isCollaborating ? 'Desconectar colaboración' : 'Activar colaboración'}
-                      size="small"
-                      className={isCollaborating ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
-                    >
-                      👥
-                    </Button>
-                    
-                    <Divider type="vertical" />
-                    
                     <Button 
                       icon={<ReloadOutlined />} 
                       onClick={() => {
@@ -2911,35 +1703,6 @@ const CrearMapaEditor = ({
                  {/* Elementos del mapa */}
                  {elements.map(renderElement)}
                </Layer>
-
-               {/* ===== CAPA DE COLABORACIÓN ===== */}
-               {isCollaborating && (
-                 <Layer>
-                   {/* Cursos de otros usuarios */}
-                   {Object.entries(otherUsersCursors).map(([userId, cursor]) => (
-                     <React.Fragment key={userId}>
-                       {/* Círculo del cursor */}
-                       <Circle
-                         x={cursor.x}
-                         y={cursor.y}
-                         radius={8}
-                         fill={cursor.user_color}
-                         stroke="white"
-                         strokeWidth={2}
-                       />
-                       {/* Nombre del usuario */}
-                       <Text
-                         x={cursor.x + 12}
-                         y={cursor.y - 6}
-                         text={cursor.user_name}
-                         fontSize={12}
-                         fill={cursor.user_color}
-                         fontStyle="bold"
-                       />
-                     </React.Fragment>
-                   ))}
-                 </Layer>
-               )}
              </Stage>
            </div>
         </div>
