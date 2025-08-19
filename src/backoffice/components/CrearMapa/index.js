@@ -1,6 +1,6 @@
 // ===== SISTEMA SIMPLIFICADO DE CREAR-MAPA =====
 // Solo exportamos el editor principal
-
+import CrearMapaEditor from './CrearMapaEditor';
 export { default as CrearMapaEditor } from './CrearMapaEditor';
 export { default as ZonaManager } from './ZonaManager';
 export { default as ContextMenu } from './ContextMenu';
