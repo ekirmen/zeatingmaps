@@ -631,7 +631,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     
     // Si estamos en modo selección, limpiar selección
     if (currentTool === 'select') {
-      setSelectedElements([]);
+      setSelectedIds([]);
       return;
     }
     
@@ -644,7 +644,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         addSilla(x, y);
         break;
       case 'filaAsientos':
-        addFilaAsientos(x, y);
+        createSeatRow(x, y, 5); // Default 5 seats
         break;
       case 'texto':
         addTexto(x, y);
@@ -661,7 +661,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       default:
         break;
     }
-  }, [currentTool, isCreatingCustomZone, addCustomZonePoint, addMesa, addSilla, addFilaAsientos, addTexto, addRectangulo, addCirculo, addPoligono]);
+  }, [currentTool, isCreatingCustomZone, addCustomZonePoint, addMesa, addSilla, createSeatRow, addTexto, addRectangulo, addCirculo, addPoligono]);
 
   // ===== FUNCIONES DE DRAG =====
   const handleElementDrag = useCallback((elementId, newPosition) => {
@@ -1718,9 +1718,9 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       setCurrentCustomZone(null);
       setCustomZonePoints([]);
       setCurrentTool('select');
-      addToHistory();
+      addToHistory([...customZones, newCustomZone], 'Crear zona personalizable');
     }
-  }, [isCreatingCustomZone, currentCustomZone, customZonePoints]);
+  }, [isCreatingCustomZone, currentCustomZone, customZonePoints, customZones]);
 
   const finishCustomZone = useCallback(() => {
     if (customZonePoints.length >= 3) {
@@ -1736,9 +1736,9 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       setCurrentCustomZone(null);
       setCustomZonePoints([]);
       setCurrentTool('select');
-      addToHistory();
+      addToHistory([...customZones, newCustomZone], 'Finalizar zona personalizable');
     }
-  }, [customZonePoints, currentCustomZone]);
+  }, [customZonePoints, currentCustomZone, customZones]);
 
   const cancelCustomZone = useCallback(() => {
     setIsCreatingCustomZone(false);
@@ -1811,13 +1811,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         : z
       )
     );
-    addToHistory();
-  }, [zonas]);
+    addToHistory(customZones, 'Asignar zona a zona personalizable');
+  }, [zonas, customZones]);
 
   const deleteCustomZone = useCallback((zoneId) => {
     setCustomZones(prev => prev.filter(z => z.id !== zoneId));
-    addToHistory();
-  }, []);
+    addToHistory(customZones.filter(z => z.id !== zoneId), 'Eliminar zona personalizable');
+  }, [customZones]);
 
   const editCustomZoneName = useCallback((zoneId, newName) => {
     setCustomZones(prev => 
@@ -1848,7 +1848,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             strokeWidth={2}
             points={points}
             draggable
-            onDragStart={() => setSelectedElements([zone.id])}
+            onDragStart={() => setSelectedIds([zone.id])}
             onDragEnd={(e) => {
               const newX = e.target.x();
               const newY = e.target.y();
