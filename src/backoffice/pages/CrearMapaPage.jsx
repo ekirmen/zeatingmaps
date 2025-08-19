@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Button, Space, Typography, message, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, EyeOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
-import CrearMapaEditor from '../components/CrearMapa/CrearMapaEditor';
+import CrearMapaEditor from '../components/CrearMapa/CrearMapaEditor.jsx';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const { Title, Text } = Typography;

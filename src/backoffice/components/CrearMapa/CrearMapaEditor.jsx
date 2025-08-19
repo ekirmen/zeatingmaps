@@ -66,7 +66,7 @@ import { useMapaZoomStage } from '../../hooks/useMapaZoomStage';
 import { useMapaGraphicalElements } from '../../hooks/useMapaGraphicalElements';
 import { useMapaLoadingSaving } from '../../hooks/usemapaloadingsaving';
 import { useMapaZones } from '../../hooks/usemapazones';
-import { supabase } from '../../../supabaseClient';
+import { supabase } from '../../services/supabaseClient';
 import { fetchZonasPorSala } from '../../services/apibackoffice';
 import Grid from '../compMapa/Grid';
 import MenuMapa from '../compMapa/MenuMapa';
