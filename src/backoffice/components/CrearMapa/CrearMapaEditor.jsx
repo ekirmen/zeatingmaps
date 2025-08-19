@@ -144,6 +144,7 @@ const CrearMapaEditor = ({
   const [backgroundScale, setBackgroundScale] = useState(1);
   const [backgroundOpacity, setBackgroundOpacity] = useState(0.3);
   const [showBackgroundInWeb, setShowBackgroundInWeb] = useState(true);
+  const [backgroundPosition, setBackgroundPosition] = useState({ x: 0, y: 0 });
   
   // ===== ESTADOS DE CONEXIONES =====
   const [showConnections, setShowConnections] = useState(true);
@@ -280,13 +281,30 @@ const CrearMapaEditor = ({
     }
   }, [initialMapa]);
 
-  useEffect(() => {
-    if (mapa.contenido?.configuracion) {
-      setShowGrid(mapa.contenido.configuracion.showGrid);
-      setSnapToGrid(mapa.contenido.configuracion.snapToGrid);
-      setGridSize(mapa.contenido.configuracion.gridSize);
-    }
-  }, [mapa]);
+     useEffect(() => {
+     if (mapa.contenido?.configuracion) {
+       setShowGrid(mapa.contenido.configuracion.showGrid);
+       setSnapToGrid(mapa.contenido.configuracion.snapToGrid);
+       setGridSize(mapa.contenido.configuracion.gridSize);
+       
+       // Restaurar configuración de imagen de fondo
+       if (mapa.contenido.configuracion.background) {
+         const bg = mapa.contenido.configuracion.background;
+         if (bg.position) {
+           setBackgroundPosition(bg.position);
+         }
+         if (bg.scale) {
+           setBackgroundScale(bg.scale);
+         }
+         if (bg.opacity) {
+           setBackgroundOpacity(bg.opacity);
+         }
+         if (bg.showInWeb !== undefined) {
+           setShowBackgroundInWeb(bg.showInWeb);
+         }
+       }
+     }
+   }, [mapa]);
 
   // Cargar zonas de la sala
   useEffect(() => {
@@ -311,6 +329,35 @@ const CrearMapaEditor = ({
     calculateProgress();
   }, [calculateProgress, elements, zonas, mapa?.estado]);
 
+  // ===== FUNCIONES DE COPIAR Y PEGAR =====
+  const [clipboard, setClipboard] = useState([]);
+  
+  const handleCopy = useCallback(() => {
+    if (selectedIds.length > 0) {
+      const elementsToCopy = elements.filter(el => selectedIds.includes(el._id));
+      setClipboard(JSON.parse(JSON.stringify(elementsToCopy)));
+      message.success(`${elementsToCopy.length} elemento(s) copiado(s)`);
+    }
+  }, [selectedIds, elements]);
+  
+  const handlePaste = useCallback(() => {
+    if (clipboard.length > 0) {
+      const pastedElements = clipboard.map(el => ({
+        ...el,
+        _id: `pasted_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        posicion: {
+          x: el.posicion.x + 50,
+          y: el.posicion.y + 50
+        }
+      }));
+      
+      setElements(prev => [...prev, ...pastedElements]);
+      setSelectedIds(pastedElements.map(el => el._id));
+      addToHistory([...elements, ...pastedElements], `Pegar ${pastedElements.length} elemento(s)`);
+      message.success(`${pastedElements.length} elemento(s) pegado(s)`);
+    }
+  }, [clipboard, elements, addToHistory]);
+  
   // ===== FUNCIONES DE HISTORIAL =====
   const addToHistory = useCallback((newElements, action) => {
     const newHistory = history.slice(0, historyIndex + 1);
@@ -371,6 +418,34 @@ const CrearMapaEditor = ({
     
     updateElementProperty(elementId, 'posicion', newPosition);
   }, [snapToGrid, gridSize, updateElementProperty]);
+
+  const handleElementRotation = useCallback((elementId, newRotation) => {
+    updateElementProperty(elementId, 'rotation', newRotation);
+    
+    // Si es una mesa, rotar también las sillas asociadas
+    const element = elements.find(el => el._id === elementId);
+    if (element && element.type === 'mesa') {
+      const sillasAsociadas = elements.filter(el => el.mesaId === elementId);
+      sillasAsociadas.forEach(silla => {
+        // Calcular nueva posición de la silla rotada
+        const mesaCenter = {
+          x: element.posicion.x + (element.width || 120) / 2,
+          y: element.posicion.y + (element.height || 80) / 2
+        };
+        
+        const sillaOffset = {
+          x: silla.posicion.x - mesaCenter.x,
+          y: silla.posicion.y - mesaCenter.y
+        };
+        
+        const angle = (newRotation - (element.rotation || 0)) * Math.PI / 180;
+        const newX = mesaCenter.x + sillaOffset.x * Math.cos(angle) - sillaOffset.y * Math.sin(angle);
+        const newY = mesaCenter.y + sillaOffset.x * Math.sin(angle) + sillaOffset.y * Math.cos(angle);
+        
+        updateElementProperty(silla._id, 'posicion', { x: newX, y: newY });
+      });
+    }
+  }, [elements, updateElementProperty]);
 
   const handleElementResize = useCallback((elementId, newSize) => {
     updateElementSize(elementId, newSize.width, newSize.height);
@@ -698,26 +773,27 @@ const CrearMapaEditor = ({
         throw new Error('Error interno: los elementos del mapa no son válidos');
       }
       
-      const mapaToSave = {
-        ...mapa,
-        contenido: {
-          ...mapa.contenido,
-          elementos: elements,
-          configuracion: {
-            gridSize,
-            showGrid,
-            snapToGrid,
-            background: backgroundImage ? {
-              image: backgroundImage,
-              scale: backgroundScale,
-              opacity: backgroundOpacity,
-              showInWeb: showBackgroundInWeb
-            } : null,
-            dimensions: { width: 1200, height: 800 }
-          }
-        },
-        estado: 'active'
-      };
+             const mapaToSave = {
+         ...mapa,
+         contenido: {
+           ...mapa.contenido,
+           elementos: elements,
+           configuracion: {
+             gridSize,
+             showGrid,
+             snapToGrid,
+             background: backgroundImage ? {
+               image: backgroundImage,
+               scale: backgroundScale,
+               opacity: backgroundOpacity,
+               position: backgroundPosition,
+               showInWeb: showBackgroundInWeb
+             } : null,
+             dimensions: { width: 1200, height: 800 }
+           }
+         },
+         estado: 'active'
+       };
       
       console.log('[DEBUG] Mapa a guardar:', mapaToSave);
       console.log('[DEBUG] Contenido elementos:', mapaToSave.contenido.elementos);
@@ -732,6 +808,40 @@ const CrearMapaEditor = ({
       console.error('Error saving mapa:', error);
     }
   }, [mapa, elements, gridSize, showGrid, snapToGrid, backgroundImage, backgroundScale, backgroundOpacity, showBackgroundInWeb, onSave]);
+
+  // ===== MANEJADOR DE TECLAS =====
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'c':
+            e.preventDefault();
+            handleCopy();
+            break;
+          case 'v':
+            e.preventDefault();
+            handlePaste();
+            break;
+          case 'z':
+            if (!e.shiftKey) {
+              e.preventDefault();
+              undo();
+            } else {
+              e.preventDefault();
+              redo();
+            }
+            break;
+          case 'y':
+            e.preventDefault();
+            redo();
+            break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleCopy, handlePaste, undo, redo]);
 
   // ===== FUNCIONES DE ZOOM Y PAN =====
   const handleWheel = useCallback((e) => {
@@ -767,6 +877,26 @@ const CrearMapaEditor = ({
       y: pointer.y - (position.y - pointer.y),
     });
   }, [position]);
+
+  const handleMouseMove = useCallback((e) => {
+    if (activeMode === 'pan' && e.evt.buttons === 1) {
+      const stage = e.target.getStage();
+      const pointer = stage.getPointerPosition();
+      
+      setPosition({
+        x: pointer.x - (position.x - pointer.x),
+        y: pointer.y - (position.y - pointer.y),
+      });
+    }
+  }, [activeMode, position]);
+
+  const handleDoubleClick = useCallback((e) => {
+    if (e.target === e.target.getStage()) {
+      // Doble clic en el stage para centrar la vista
+      setPosition({ x: 0, y: 0 });
+      setScale(0.8);
+    }
+  }, []);
 
   // ===== FUNCIONES DE MENÚ CONTEXTUAL =====
   const handleContextMenu = useCallback((e) => {
@@ -838,6 +968,31 @@ const CrearMapaEditor = ({
 
     const elementosActualizados = elements.map(el => {
       if (elementIds.includes(el._id)) {
+        // Si es una mesa, asignar zona y cambiar color de relleno
+        if (el.type === 'mesa') {
+          return {
+            ...el,
+            zona: {
+              id: zona.id,
+              nombre: zona.nombre,
+              color: zona.color
+            },
+            fill: zona.color // Cambiar el color de relleno de la mesa
+          };
+        }
+        // Si es una silla, asignar zona y cambiar color de relleno
+        if (el.type === 'silla') {
+          return {
+            ...el,
+            zona: {
+              id: zona.id,
+              nombre: zona.nombre,
+              color: zona.color
+            },
+            fill: zona.color // Cambiar el color de relleno de la silla
+          };
+        }
+        // Para otros elementos
         return {
           ...el,
           zona: {
@@ -851,6 +1006,31 @@ const CrearMapaEditor = ({
     });
 
     setElements(elementosActualizados);
+    
+    // Si se asignó zona a una mesa, también asignar a sus sillas asociadas
+    elementIds.forEach(elementId => {
+      const element = elements.find(el => el._id === elementId);
+      if (element && element.type === 'mesa') {
+        const sillasAsociadas = elements.filter(el => el.mesaId === elementId);
+        if (sillasAsociadas.length > 0) {
+          const sillasActualizadas = sillasAsociadas.map(silla => ({
+            ...silla,
+            zona: {
+              id: zona.id,
+              nombre: zona.nombre,
+              color: zona.color
+            },
+            fill: zona.color // Cambiar el color de relleno de las sillas
+          }));
+          
+          setElements(prev => prev.map(el => 
+            sillasAsociadas.some(s => s._id === el._id) 
+              ? sillasActualizadas.find(s => s._id === el._id)
+              : el
+          ));
+        }
+      }
+    });
   }, [zonas, elements]);
 
   // ===== FUNCIONES DE FILTROS DE FONDO =====
@@ -873,15 +1053,19 @@ const CrearMapaEditor = ({
       draggable: activeMode === 'select',
       onClick: () => handleElementClick(element._id),
       onDragEnd: (e) => handleElementDrag(element._id, { x: e.target.x(), y: e.target.y() }),
-      onTransformEnd: (e) => {
-        const node = e.target;
-        handleElementResize(element._id, {
-          width: node.width() * node.scaleX(),
-          height: node.height() * node.scaleY()
-        });
-        node.scaleX(1);
-        node.scaleY(1);
-      },
+             onTransformEnd: (e) => {
+         const node = e.target;
+         handleElementResize(element._id, {
+           width: node.width() * node.scaleX(),
+           height: node.height() * node.scaleY()
+         });
+         // Manejar rotación
+         if (node.rotation() !== (element.rotation || 0)) {
+           handleElementRotation(element._id, node.rotation());
+         }
+         node.scaleX(1);
+         node.scaleY(1);
+       },
       onMouseEnter: (e) => {
         // Mostrar tooltip
         const tooltipRect = e.target.parent.findOne('Rect[fill="rgba(0,0,0,0.8)"]');
@@ -1090,7 +1274,7 @@ const CrearMapaEditor = ({
 
   // ===== RENDERIZADO PRINCIPAL =====
   return (
-    <div className="h-screen flex flex-col bg-gray-100">
+         <div className="h-screen flex flex-col bg-gray-800">
 
 
       {/* ===== CONTENIDO PRINCIPAL ===== */}
@@ -1165,80 +1349,173 @@ const CrearMapaEditor = ({
                 </Button>
               </div>
               
-              {/* Botones de Deshacer/Rehacer */}
-              <div className="flex gap-1 mt-2">
-                <Button
-                  onClick={undo}
-                  disabled={historyIndex <= 0}
-                  icon={<UndoOutlined />}
-                  size="small"
-                  title="Ctrl+Z"
-                  className="flex-1"
-                >
-                  Deshacer
-                </Button>
-                <Button
-                  onClick={redo}
-                  disabled={historyIndex >= history.length - 1}
-                  icon={<UndoOutlined style={{ transform: 'scaleX(-1)' }} />}
-                  size="small"
-                  title="Ctrl+Y"
-                  className="flex-1"
-                >
-                  Rehacer
-                </Button>
-              </div>
+                           {/* Botones de Deshacer/Rehacer */}
+             <div className="flex gap-1 mt-2">
+               <Button
+                 onClick={undo}
+                 disabled={historyIndex <= 0}
+                 icon={<UndoOutlined />}
+                 size="small"
+                 title="Ctrl+Z"
+                 className="flex-1"
+               >
+                 Deshacer
+               </Button>
+               <Button
+                 onClick={redo}
+                 disabled={historyIndex >= history.length - 1}
+                 icon={<UndoOutlined style={{ transform: 'scaleX(-1)' }} />}
+                 size="small"
+                 title="Ctrl+Y"
+                 className="flex-1"
+               >
+                 Rehacer
+               </Button>
+             </div>
+             
+             {/* Instrucciones de uso */}
+             <div className="mt-3 p-2 bg-blue-50 rounded text-xs text-blue-800">
+               <div className="font-medium mb-1">💡 Atajos de teclado:</div>
+               <div>• <kbd className="bg-white px-1 rounded">Ctrl+C</kbd> Copiar</div>
+               <div>• <kbd className="bg-white px-1 rounded">Ctrl+V</kbd> Pegar</div>
+               <div>• <kbd className="bg-white px-1 rounded">Ctrl+Z</kbd> Deshacer</div>
+               <div>• <kbd className="bg-white px-1 rounded">Ctrl+Y</kbd> Rehacer</div>
+               <div>• <kbd className="bg-white px-1 rounded">Rueda</kbd> Zoom</div>
+               <div>• <kbd className="bg-white px-1 rounded">Doble clic</kbd> Centrar vista</div>
+             </div>
             </div>
            
-                       <MenuMapa
-              selectedElement={elements.find(el => selectedIds.includes(el._id))}
-              activeMode={activeMode}
-              sectionPoints={sectionPoints}
-              isCreatingSection={isCreatingSection}
-              zones={zonas}
-              selectedZone={selectedZone}
-             numSillas={numSillas}
-             sillaShape={sillaShape}
-             selectedScale={scale}
-             showScaleControls={showAdvancedControls}
-             scaleSystem={scaleSystem}
-             selectedSeatState={selectedSeatState}
-             seatStates={seatStates}
-             showConnections={showConnections}
-             connectionStyle={connectionStyle}
-             connectionThreshold={connectionThreshold}
-             backgroundImage={backgroundImage}
-             backgroundScale={backgroundScale}
-             backgroundOpacity={backgroundOpacity}
-             showBackgroundInWeb={showBackgroundInWeb}
-             updateElementProperty={updateElementProperty}
-             updateElementSize={updateElementSize}
-             duplicarElementos={handleDuplicateSelected}
-             crearSeccion={() => {}} // TODO: Implementar secciones
-             limpiarSeleccion={() => setSelectedIds([])}
-             assignZoneToSelected={assignZoneToSelected}
-             scaleElement={scaleElement}
-             scaleSelectedElements={() => {}} // TODO: Implementar
-             changeSeatState={changeSeatState}
-             changeSelectedSeatsState={() => {}} // TODO: Implementar
-             changeMesaSeatsState={() => {}} // TODO: Implementar
-             setSelectedSeatState={setSelectedSeatState}
-             autoConnectSeats={autoConnectSeats}
-             createManualConnection={() => {}} // TODO: Implementar
-             removeConnections={() => {}} // TODO: Implementar
-             changeConnectionStyle={setConnectionStyle}
-             precisePositioning={precisePositioning}
-             snapToCustomGrid={handleSnapToGrid}
-             setBackgroundImage={setBackgroundImageFunction}
-             updateBackground={updateBackground}
-             removeBackground={removeBackground}
-             addMesa={handleAddMesa}
-             addSillasToMesa={handleAddSillasToMesa}
-             snapToGrid={handleSnapToGrid}
-             setActiveMode={setActiveMode}
-             setNumSillas={setNumSillas}
-             setSillaShape={setSillaShape}
-           />
+                                   {/* Controles de Imagen de Fondo */}
+            {backgroundImage && (
+              <div className="p-3 border-b border-gray-200">
+                <Title level={5} className="mb-3">🎨 Imagen de Fondo</Title>
+                <div className="space-y-3">
+                  {/* Posición X */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-600">Posición X</span>
+                      <span className="text-xs font-mono text-gray-500">{backgroundPosition.x}px</span>
+                    </div>
+                    <Slider
+                      min={-500}
+                      max={500}
+                      value={backgroundPosition.x}
+                      onChange={(value) => setBackgroundPosition(prev => ({ ...prev, x: value }))}
+                      size="small"
+                      tooltip={{ formatter: (value) => `${value}px` }}
+                    />
+                  </div>
+                  
+                  {/* Posición Y */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-600">Posición Y</span>
+                      <span className="text-xs font-mono text-gray-500">{backgroundPosition.y}px</span>
+                    </div>
+                    <Slider
+                      min={-500}
+                      max={500}
+                      value={backgroundPosition.y}
+                      onChange={(value) => setBackgroundPosition(prev => ({ ...prev, y: value }))}
+                      size="small"
+                      tooltip={{ formatter: (value) => `${value}px` }}
+                    />
+                  </div>
+                  
+                  {/* Escala */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-600">Escala</span>
+                      <span className="text-xs font-mono text-gray-500">{Math.round(backgroundScale * 100)}%</span>
+                    </div>
+                    <Slider
+                      min={10}
+                      max={200}
+                      value={backgroundScale * 100}
+                      onChange={(value) => setBackgroundScale(value / 100)}
+                      size="small"
+                      tooltip={{ formatter: (value) => `${value}%` }}
+                    />
+                  </div>
+                  
+                  {/* Opacidad */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs text-gray-600">Opacidad</span>
+                      <span className="text-xs font-mono text-gray-500">{Math.round(backgroundOpacity * 100)}%</span>
+                    </div>
+                    <Slider
+                      min={10}
+                      max={100}
+                      value={backgroundOpacity * 100}
+                      onChange={(value) => setBackgroundOpacity(value / 100)}
+                      size="small"
+                      tooltip={{ formatter: (value) => `${value}%` }}
+                    />
+                  </div>
+                  
+                  {/* Botón para centrar imagen */}
+                  <Button
+                    size="small"
+                    onClick={() => setBackgroundPosition({ x: 0, y: 0 })}
+                    className="w-full text-xs"
+                    icon={<ReloadOutlined />}
+                  >
+                    Centrar Imagen
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            <MenuMapa
+               selectedElement={elements.find(el => selectedIds.includes(el._id))}
+               activeMode={activeMode}
+               sectionPoints={sectionPoints}
+               isCreatingSection={isCreatingSection}
+               zones={zonas}
+               selectedZone={selectedZone}
+              numSillas={numSillas}
+              sillaShape={sillaShape}
+              selectedScale={scale}
+              showScaleControls={showAdvancedControls}
+              scaleSystem={scaleSystem}
+              selectedSeatState={selectedSeatState}
+              seatStates={seatStates}
+              showConnections={showConnections}
+              connectionStyle={connectionStyle}
+              connectionThreshold={connectionThreshold}
+              backgroundImage={backgroundImage}
+              backgroundScale={backgroundScale}
+              backgroundOpacity={backgroundOpacity}
+              showBackgroundInWeb={showBackgroundInWeb}
+              updateElementProperty={updateElementProperty}
+              updateElementSize={updateElementSize}
+              duplicarElementos={handleDuplicateSelected}
+              crearSeccion={() => {}} // TODO: Implementar secciones
+              limpiarSeleccion={() => setSelectedIds([])}
+              assignZoneToSelected={assignZoneToSelected}
+              scaleElement={scaleElement}
+              scaleSelectedElements={() => {}} // TODO: Implementar
+              changeSeatState={changeSeatState}
+              changeSelectedSeatsState={() => {}} // TODO: Implementar
+              changeMesaSeatsState={() => {}} // TODO: Implementar
+              setSelectedSeatState={setSelectedSeatState}
+              autoConnectSeats={autoConnectSeats}
+              createManualConnection={() => {}} // TODO: Implementar
+              removeConnections={() => {}} // TODO: Implementar
+              changeConnectionStyle={setConnectionStyle}
+              precisePositioning={precisePositioning}
+              snapToCustomGrid={handleSnapToGrid}
+              setBackgroundImage={setBackgroundImageFunction}
+              updateBackground={updateBackground}
+              removeBackground={removeBackground}
+              addMesa={handleAddMesa}
+              addSillasToMesa={handleAddSillasToMesa}
+              snapToGrid={handleSnapToGrid}
+              setActiveMode={setActiveMode}
+              setNumSillas={setNumSillas}
+              setSillaShape={setSillaShape}
+            />
          </div>
 
         {/* ===== ÁREA DE TRABAJO CENTRAL ===== */}
@@ -1251,15 +1528,35 @@ const CrearMapaEditor = ({
                    <MesaTypeMenu 
                      onAddMesa={handleAddMesa}
                    />
-                   <Button 
-                     icon={<CopyOutlined />} 
-                     onClick={handleDuplicateSelected}
-                     disabled={selectedIds.length === 0}
-                     title="Duplicar seleccionados"
-                     size="small"
-                   >
-                     Duplicar
-                   </Button>
+                                       <Button 
+                      icon={<CopyOutlined />} 
+                      onClick={handleCopy}
+                      disabled={selectedIds.length === 0}
+                      title="Copiar seleccionados (Ctrl+C)"
+                      size="small"
+                    >
+                      Copiar
+                    </Button>
+                    
+                    <Button 
+                      icon={<UploadOutlined />} 
+                      onClick={handlePaste}
+                      disabled={clipboard.length === 0}
+                      title="Pegar elementos (Ctrl+V)"
+                      size="small"
+                    >
+                      Pegar
+                    </Button>
+                    
+                    <Button 
+                      icon={<CopyOutlined />} 
+                      onClick={handleDuplicateSelected}
+                      disabled={selectedIds.length === 0}
+                      title="Duplicar seleccionados"
+                      size="small"
+                    >
+                      Duplicar
+                    </Button>
                    <Button 
                      icon={<DeleteOutlined />} 
                      onClick={handleDeleteSelected}
@@ -1288,23 +1585,50 @@ const CrearMapaEditor = ({
                    >
                      Conectar
                    </Button>
-                   <Button 
-                     icon={<AppstoreOutlined />} 
-                     onClick={() => setShowZonaManager(true)}
-                     title="Gestionar zonas"
-                     size="small"
-                   >
-                     Zonas
-                   </Button>
+                                       <Button 
+                      icon={<AppstoreOutlined />} 
+                      onClick={() => setShowZonaManager(true)}
+                      title="Gestionar zonas"
+                      size="small"
+                    >
+                      Zonas
+                    </Button>
+                    
+                    <Divider type="vertical" />
+                    
+                    <Button 
+                      icon={<ReloadOutlined />} 
+                      onClick={() => {
+                        setPosition({ x: 0, y: 0 });
+                        setScale(0.8);
+                      }}
+                      title="Centrar vista"
+                      size="small"
+                    >
+                      Centrar
+                    </Button>
+                    
+                    <Button 
+                      icon={activeMode === 'pan' ? <EyeOutlined /> : <AimOutlined />}
+                      onClick={() => setActiveMode(activeMode === 'pan' ? 'select' : 'pan')}
+                      title={activeMode === 'pan' ? 'Modo Selección' : 'Modo Pan'}
+                      size="small"
+                      type={activeMode === 'pan' ? 'primary' : 'default'}
+                    >
+                      {activeMode === 'pan' ? 'Selección' : 'Pan'}
+                    </Button>
                    
                  </Space>
                </Col>
                
                <Col flex="auto">
-                 <Space className="float-right" size="small">
-                   <Text className="text-sm text-gray-600">
-                     Zoom: {Math.round(scale * 100)}%
-                   </Text>
+                                   <Space className="float-right" size="small">
+                    <Text className="text-sm text-gray-600">
+                      Modo: {activeMode === 'pan' ? '🖱️ Pan' : '👆 Selección'}
+                    </Text>
+                    <Text className="text-sm text-gray-600">
+                      Zoom: {Math.round(scale * 100)}%
+                    </Text>
                    <Button 
                      icon={<ZoomOutOutlined />} 
                      size="small"
@@ -1338,11 +1662,13 @@ const CrearMapaEditor = ({
                scaleY={scale}
                x={position.x}
                y={position.y}
-               onWheel={handleWheel}
-               onMouseDown={handleMouseDown}
-               onClick={handleStageClick}
-               onContextMenu={handleContextMenu}
-               draggable={activeMode === 'pan'}
+                               onWheel={handleWheel}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onClick={handleStageClick}
+                onDoubleClick={handleDoubleClick}
+                onContextMenu={handleContextMenu}
+                draggable={activeMode === 'pan'}
              >
                <Layer>
                  {/* Fondo */}
@@ -1361,18 +1687,18 @@ const CrearMapaEditor = ({
                    />
                  )}
                  
-                 {/* Imagen de fondo */}
-                 {backgroundImage && (
-                   <Image
-                     image={backgroundImage}
-                     x={0}
-                     y={0}
-                     scaleX={backgroundScale}
-                     scaleY={backgroundScale}
-                     opacity={backgroundOpacity}
-                     listening={false}
-                   />
-                 )}
+                                   {/* Imagen de fondo */}
+                  {backgroundImage && (
+                    <Image
+                      image={backgroundImage}
+                      x={backgroundPosition.x}
+                      y={backgroundPosition.y}
+                      scaleX={backgroundScale}
+                      scaleY={backgroundScale}
+                      opacity={backgroundOpacity}
+                      listening={false}
+                    />
+                  )}
                  
                  {/* Elementos del mapa */}
                  {elements.map(renderElement)}
