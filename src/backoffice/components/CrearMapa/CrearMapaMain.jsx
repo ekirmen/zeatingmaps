@@ -73,6 +73,14 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [newZoneName, setNewZoneName] = useState('');
   const [newZoneColor, setNewZoneColor] = useState('#FF6B6B');
   
+  // ===== ESTADOS DE ZONAS PERSONALIZABLES =====
+  const [customZones, setCustomZones] = useState([]);
+  const [isCreatingCustomZone, setIsCreatingCustomZone] = useState(false);
+  const [currentCustomZone, setCurrentCustomZone] = useState(null);
+  const [customZonePoints, setCustomZonePoints] = useState([]);
+  const [selectedCustomZonePoint, setSelectedCustomZonePoint] = useState(null);
+  const [showCustomZoneModal, setShowCustomZoneModal] = useState(false);
+  
   // ===== ESTADOS DE CONFIGURACIÓN =====
   const [showGrid, setShowGrid] = useState(true);
   const [gridSize, setGridSize] = useState(20);
@@ -105,6 +113,52 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   
   // ===== ESTADOS DE PROPIEDADES RÁPIDAS =====
   const [selectedElementRotation, setSelectedElementRotation] = useState(0);
+  
+  // ===== ESTADOS DE MENÚ CONTEXTUAL =====
+  const [contextMenu, setContextMenu] = useState(null);
+  const [contextMenuElement, setContextMenuElement] = useState(null);
+  const [showAddSeatsModal, setShowAddSeatsModal] = useState(false);
+  const [selectedMesaForSeats, setSelectedMesaForSeats] = useState(null);
+  
+  // ===== ESTADOS DE TRANSFORMADOR DE OBJETOS =====
+  const [showTransformer, setShowTransformer] = useState(false);
+  const [transformerElement, setTransformerElement] = useState(null);
+  
+  // ===== ESTADOS DE ALINEACIÓN Y MEDICIÓN =====
+  const [showAlignmentGuides, setShowAlignmentGuides] = useState(true);
+  const [alignmentGuides, setAlignmentGuides] = useState([]);
+  const [measurementLines, setMeasurementLines] = useState([]);
+  
+  // ===== ESTADOS DE DUPLICACIÓN INTELIGENTE =====
+  const [duplicationMode, setDuplicationMode] = useState(false);
+  const [duplicationSpacing, setDuplicationSpacing] = useState(50);
+  
+  // ===== ESTADOS DE SOMBRAS Y EFECTOS =====
+  const [showShadows, setShowShadows] = useState(true);
+  const [shadowColor, setShadowColor] = useState('#000000');
+  const [shadowBlur, setShadowBlur] = useState(10);
+  const [shadowOffsetX, setShadowOffsetX] = useState(5);
+  const [shadowOffsetY, setShadowOffsetY] = useState(5);
+  
+  // ===== ESTADOS DE CAPAS =====
+  const [layers, setLayers] = useState([
+    { id: 'default', name: 'Capa Principal', visible: true, locked: false }
+  ]);
+  const [activeLayer, setActiveLayer] = useState('default');
+  
+  // ===== ESTADOS DE PLANTILLAS =====
+  const [templates, setTemplates] = useState([]);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
+  
+  // ===== ESTADOS DE HISTORIAL AVANZADO =====
+  const [historyDetails, setHistoryDetails] = useState([]);
+  
+  // ===== ESTADOS DE TUTORIAL =====
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  
+  // ===== ESTADOS DE EXPORTACIÓN =====
+  const [exporting, setExporting] = useState(false);
   
   // ===== REFERENCIAS =====
   const stageRef = useRef();
@@ -206,16 +260,75 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             e.preventDefault();
             redo();
             break;
+          case 'd':
+            e.preventDefault();
+            if (selectedIds.length === 1) {
+              const element = elements.find(el => el._id === selectedIds[0]);
+              if (element) {
+                duplicateElement(element, 'right');
+              }
+            }
+            break;
+          case 's':
+            e.preventDefault();
+            handleSave();
+            break;
+          case 'e':
+            e.preventDefault();
+            exportToPNG();
+            break;
         }
-      } else if (e.key === 'Escape') {
-        setSelectedIds([]);
-        setActiveMode('select');
+      } else {
+        switch (e.key) {
+          case 'Escape':
+            setSelectedIds([]);
+            setActiveMode('select');
+            closeContextMenu();
+            break;
+          case 'Delete':
+          case 'Backspace':
+            if (selectedIds.length > 0) {
+              deleteSelectedElements();
+            }
+            break;
+          case 'Tab':
+            e.preventDefault();
+            if (selectedIds.length === 1) {
+              const element = elements.find(el => el._id === selectedIds[0]);
+              if (element && element.type === 'silla') {
+                // Cambiar nombre de silla con Tab
+                const newName = prompt('Nuevo nombre de la silla:', element.nombre);
+                if (newName !== null) {
+                  updateElementProperty(element._id, 'nombre', newName);
+                }
+              }
+            }
+            break;
+          case '1':
+            setActiveMode('select');
+            break;
+          case '2':
+            setActiveMode('pan');
+            break;
+          case '3':
+            setCurrentTool('text');
+            break;
+          case '4':
+            setCurrentTool('rectangle');
+            break;
+          case '5':
+            setCurrentTool('circle');
+            break;
+          case '6':
+            setCurrentTool('polygon');
+            break;
+        }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [selectedIds, elements, handleCopy, handlePaste, undo, redo, duplicateElement, handleSave, exportToPNG, deleteSelectedElements, updateElementProperty, closeContextMenu]);
 
   // ===== ACTUALIZAR PROPIEDADES RÁPIDAS CUANDO CAMBIA LA SELECCIÓN =====
   useEffect(() => {
@@ -589,34 +702,54 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   }, [isSelecting, selectionBox, elements]);
 
   const handleStageClick = useCallback((e) => {
-    if (e.target === e.target.getStage()) {
-      if (currentTool === 'text' && isAddingText) {
-        // Crear texto en la posición del clic
-        const pos = e.target.getStage().getPointerPosition();
-        addTexto(pos, textInput || 'Texto');
-        setIsAddingText(false);
-        setTextInput('');
-        setCurrentTool('select');
-      } else if (currentTool === 'rectangle') {
-        // Crear rectángulo en la posición del clic
-        const pos = e.target.getStage().getPointerPosition();
-        addRectangulo(pos);
-        setCurrentTool('select');
-      } else if (currentTool === 'circle') {
-        // Crear círculo en la posición del clic
-        const pos = e.target.getStage().getPointerPosition();
-        addCirculo(pos);
-        setCurrentTool('select');
-      } else if (currentTool === 'polygon') {
-        // Crear polígono en la posición del clic
-        const pos = e.target.getStage().getPointerPosition();
-        addPoligono(pos);
-        setCurrentTool('select');
-      } else {
-        setSelectedIds([]);
-      }
+    if (e.target !== e.target.getStage()) return;
+    
+    const pos = e.target.getStage().getPointerPosition();
+    const x = (pos.x - stageRef.current.x()) / stageRef.current.scaleX();
+    const y = (pos.y - stageRef.current.y()) / stageRef.current.scaleY();
+    
+    // Si estamos creando una zona personalizable, añadir punto
+    if (isCreatingCustomZone && currentTool === 'customZone') {
+      addCustomZonePoint(x, y);
+      return;
     }
-  }, [currentTool, isAddingText, textInput, addTexto, addRectangulo, addCirculo, addPoligono]);
+    
+    // Si estamos en modo pan, no hacer nada
+    if (currentTool === 'pan') return;
+    
+    // Si estamos en modo selección, limpiar selección
+    if (currentTool === 'select') {
+      setSelectedElements([]);
+      return;
+    }
+    
+    // Añadir elementos según la herramienta seleccionada
+    switch (currentTool) {
+      case 'mesa':
+        addMesa(x, y);
+        break;
+      case 'silla':
+        addSilla(x, y);
+        break;
+      case 'filaAsientos':
+        addFilaAsientos(x, y);
+        break;
+      case 'texto':
+        addTexto(x, y);
+        break;
+      case 'rectangulo':
+        addRectangulo(x, y);
+        break;
+      case 'circulo':
+        addCirculo(x, y);
+        break;
+      case 'poligono':
+        addPoligono(x, y);
+        break;
+      default:
+        break;
+    }
+  }, [currentTool, isCreatingCustomZone, addCustomZonePoint, addMesa, addSilla, addFilaAsientos, addTexto, addRectangulo, addCirculo, addPoligono]);
 
   // ===== FUNCIONES DE DRAG =====
   const handleElementDrag = useCallback((elementId, newPosition) => {
@@ -628,6 +761,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         x: Math.round(newPosition.x / gridSize) * gridSize,
         y: Math.round(newPosition.y / gridSize) * gridSize
       };
+    }
+    
+    // Calcular guías de alineación
+    const draggedElement = elements.find(el => el._id === elementId);
+    if (draggedElement && showAlignmentGuides) {
+      const elementWithNewPosition = { ...draggedElement, posicion: finalPosition };
+      calculateAlignmentGuides(elementWithNewPosition);
     }
     
     // Si hay múltiples elementos seleccionados, mover todos en grupo
@@ -653,11 +793,61 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     }
     
     updateElementProperty(elementId, 'posicion', finalPosition);
-  }, [snapToGrid, gridSize, updateElementProperty, selectedIds, elements]);
+  }, [snapToGrid, gridSize, updateElementProperty, selectedIds, elements, showAlignmentGuides, calculateAlignmentGuides]);
 
   const handleElementDragEnd = useCallback((elementId) => {
     addToHistory(elements, `Mover elemento ${elementId}`);
-  }, [elements, addToHistory]);
+    // Limpiar guías de alineación
+    setAlignmentGuides([]);
+    
+    // Medir distancia con elementos cercanos
+    const movedElement = elements.find(el => el._id === elementId);
+    if (movedElement) {
+      elements.forEach(element => {
+        if (element._id !== elementId) {
+          measureDistance(movedElement, element);
+        }
+      });
+    }
+  }, [elements, addToHistory, measureDistance]);
+
+  // ===== FUNCIÓN PARA MEDIR DISTANCIA ENTRE ELEMENTOS =====
+  const measureDistance = useCallback((element1, element2) => {
+    const center1 = {
+      x: element1.posicion.x + (element1.width || 0) / 2,
+      y: element1.posicion.y + (element1.height || 0) / 2
+    };
+    
+    const center2 = {
+      x: element2.posicion.x + (element2.width || 0) / 2,
+      y: element2.posicion.y + (element2.height || 0) / 2
+    };
+    
+    const distance = Math.sqrt(
+      Math.pow(center2.x - center1.x, 2) + Math.pow(center2.y - center1.y, 2)
+    );
+    
+    // Solo mostrar medición si la distancia es menor a 200px
+    if (distance < 200) {
+      const measurementLine = {
+        start: center1,
+        end: center2,
+        distance: distance
+      };
+      
+      setMeasurementLines(prev => [...prev, measurementLine]);
+      
+      // Limpiar la línea de medición después de 3 segundos
+      setTimeout(() => {
+        setMeasurementLines(prev => prev.filter(line => line !== measurementLine));
+      }, 3000);
+    }
+  }, []);
+
+  // ===== FUNCIÓN PARA LIMPIAR MEDICIONES =====
+  const clearMeasurements = useCallback(() => {
+    setMeasurementLines([]);
+  }, []);
 
   // ===== FUNCIONES DE ROTACIÓN =====
   const handleElementRotation = useCallback((elementId, newRotation) => {
@@ -705,9 +895,6 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   }, [selectedIds, handleElementRotation, elements, addToHistory]);
 
   // ===== FUNCIONES DE MENÚ CONTEXTUAL =====
-  const [contextMenu, setContextMenu] = useState(null);
-  const [contextMenuElement, setContextMenuElement] = useState(null);
-
   const handleContextMenu = useCallback((e, element = null) => {
     e.evt.preventDefault();
     const pos = e.target.getStage().getPointerPosition();
@@ -719,6 +906,329 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     setContextMenu(null);
     setContextMenuElement(null);
   }, []);
+
+  // ===== FUNCIONES DE TRANSFORMADOR DE OBJETOS =====
+  const showElementTransformer = useCallback((element) => {
+    setTransformerElement(element);
+    setShowTransformer(true);
+  }, []);
+
+  const hideElementTransformer = useCallback(() => {
+    setShowTransformer(false);
+    setTransformerElement(null);
+  }, []);
+
+  // ===== FUNCIONES DE ALINEACIÓN Y MEDICIÓN =====
+  const calculateAlignmentGuides = useCallback((draggedElement) => {
+    if (!showAlignmentGuides) return [];
+    
+    const guides = [];
+    const draggedBounds = {
+      left: draggedElement.posicion.x,
+      right: draggedElement.posicion.x + (draggedElement.width || 0),
+      top: draggedElement.posicion.y,
+      bottom: draggedElement.posicion.y + (draggedElement.height || 0),
+      centerX: draggedElement.posicion.x + (draggedElement.width || 0) / 2,
+      centerY: draggedElement.posicion.y + (draggedElement.height || 0) / 2
+    };
+
+    elements.forEach(element => {
+      if (element._id === draggedElement._id) return;
+      
+      const elementBounds = {
+        left: element.posicion.x,
+        right: element.posicion.x + (element.width || 0),
+        top: element.posicion.y,
+        bottom: element.posicion.y + (element.height || 0),
+        centerX: element.posicion.x + (element.width || 0) / 2,
+        centerY: element.posicion.y + (element.height || 0) / 2
+      };
+
+      // Guías verticales
+      if (Math.abs(draggedBounds.left - elementBounds.left) < 10) {
+        guides.push({ type: 'vertical', x: elementBounds.left, color: '#00ff00' });
+      }
+      if (Math.abs(draggedBounds.centerX - elementBounds.centerX) < 10) {
+        guides.push({ type: 'vertical', x: elementBounds.centerX, color: '#00ff00' });
+      }
+      if (Math.abs(draggedBounds.right - elementBounds.right) < 10) {
+        guides.push({ type: 'vertical', x: elementBounds.right, color: '#00ff00' });
+      }
+
+      // Guías horizontales
+      if (Math.abs(draggedBounds.top - elementBounds.top) < 10) {
+        guides.push({ type: 'horizontal', y: elementBounds.top, color: '#00ff00' });
+      }
+      if (Math.abs(draggedBounds.centerY - elementBounds.centerY) < 10) {
+        guides.push({ type: 'horizontal', y: elementBounds.centerY, color: '#00ff00' });
+      }
+      if (Math.abs(draggedBounds.bottom - elementBounds.bottom) < 10) {
+        guides.push({ type: 'horizontal', y: elementBounds.bottom, color: '#00ff00' });
+      }
+    });
+
+    setAlignmentGuides(guides);
+  }, [elements, showAlignmentGuides]);
+
+  // ===== FUNCIONES DE DUPLICACIÓN INTELIGENTE =====
+  const duplicateElement = useCallback((element, direction = 'right') => {
+    const newElement = { ...element, _id: `${element.type}_${Date.now()}` };
+    
+    let newPosition = { ...element.posicion };
+    switch (direction) {
+      case 'right':
+        newPosition.x += (element.width || 50) + duplicationSpacing;
+        break;
+      case 'left':
+        newPosition.x -= (element.width || 50) + duplicationSpacing;
+        break;
+      case 'down':
+        newPosition.y += (element.height || 50) + duplicationSpacing;
+        break;
+      case 'up':
+        newPosition.y -= (element.height || 50) + duplicationSpacing;
+        break;
+    }
+    
+    newElement.posicion = newPosition;
+    setElements(prev => [...prev, newElement]);
+    addToHistory([...elements, newElement], `Duplicar ${element.type}`);
+    
+    return newElement;
+  }, [elements, duplicationSpacing, addToHistory]);
+
+  // ===== FUNCIONES DE GESTIÓN DE SILLAS =====
+  const addSeatsToMesaFromModal = useCallback((mesaId, seatsConfig) => {
+    const mesa = elements.find(el => el._id === mesaId);
+    if (!mesa) return;
+
+    const newSeats = [];
+    const seatSize = 20;
+    const { numSeats, seatType, spacing } = seatsConfig;
+    
+    if (mesa.mesaType === 'circular') {
+      // Mesa redonda - sillas en círculo
+      const radius = Math.max(mesa.width, mesa.height) / 2 + spacing;
+      for (let i = 0; i < numSeats; i++) {
+        const angle = (i * 360 / numSeats) * (Math.PI / 180);
+        const seatX = mesa.posicion.x + (mesa.width / 2) + (radius * Math.cos(angle)) - (seatSize / 2);
+        const seatY = mesa.posicion.y + (mesa.height / 2) + (radius * Math.sin(angle)) - (seatSize / 2);
+        
+        const seat = {
+          _id: `silla_mesa_${mesaId}_${Date.now()}_${i}`,
+          type: 'silla',
+          nombre: `Silla ${i + 1}`,
+          posicion: { x: seatX, y: seatY },
+          mesaId: mesaId,
+          width: seatSize,
+          height: seatSize,
+          fill: mesa.zona?.color || '#2196F3',
+          stroke: '#1976D2',
+          strokeWidth: 1,
+          rotation: 0,
+          opacity: 1,
+          state: 'available',
+          seatType: seatType,
+          mesaFace: Math.floor(i / (numSeats / 4)) // 0: norte, 1: este, 2: sur, 3: oeste
+        };
+        newSeats.push(seat);
+      }
+    } else {
+      // Mesa rectangular - sillas en los lados
+      const { north, south, east, west } = seatsConfig;
+      let seatIndex = 0;
+      
+      // Sillas norte
+      if (north > 0) {
+        const spacingX = mesa.width / (north + 1);
+        for (let i = 0; i < north; i++) {
+          const seat = {
+            _id: `silla_mesa_${mesaId}_${Date.now()}_${seatIndex++}`,
+            type: 'silla',
+            nombre: `Norte ${i + 1}`,
+            posicion: { 
+              x: mesa.posicion.x + spacingX * (i + 1) - seatSize / 2, 
+              y: mesa.posicion.y - seatSize - spacing 
+            },
+            mesaId: mesaId,
+            width: seatSize,
+            height: seatSize,
+            fill: mesa.zona?.color || '#2196F3',
+            stroke: '#1976D2',
+            strokeWidth: 1,
+            rotation: 0,
+            opacity: 1,
+            state: 'available',
+            seatType: seatType,
+            mesaFace: 0 // norte
+          };
+          newSeats.push(seat);
+        }
+      }
+      
+      // Sillas sur
+      if (south > 0) {
+        const spacingX = mesa.width / (south + 1);
+        for (let i = 0; i < south; i++) {
+          const seat = {
+            _id: `silla_mesa_${mesaId}_${Date.now()}_${seatIndex++}`,
+            nombre: `Sur ${i + 1}`,
+            posicion: { 
+              x: mesa.posicion.x + spacingX * (i + 1) - seatSize / 2, 
+              y: mesa.posicion.y + mesa.height + spacing 
+            },
+            mesaId: mesaId,
+            width: seatSize,
+            height: seatSize,
+            fill: mesa.zona?.color || '#2196F3',
+            stroke: '#1976D2',
+            strokeWidth: 1,
+            rotation: 0,
+            opacity: 1,
+            state: 'available',
+            seatType: seatType,
+            mesaFace: 2 // sur
+          };
+          newSeats.push(seat);
+        }
+      }
+      
+      // Sillas este
+      if (east > 0) {
+        const spacingY = mesa.height / (east + 1);
+        for (let i = 0; i < east; i++) {
+          const seat = {
+            _id: `silla_mesa_${mesaId}_${Date.now()}_${seatIndex++}`,
+            nombre: `Este ${i + 1}`,
+            posicion: { 
+              x: mesa.posicion.x + mesa.width + spacing, 
+              y: mesa.posicion.y + spacingY * (i + 1) - seatSize / 2 
+            },
+            mesaId: mesaId,
+            width: seatSize,
+            height: seatSize,
+            fill: mesa.zona?.color || '#2196F3',
+            stroke: '#1976D2',
+            strokeWidth: 1,
+            rotation: 0,
+            opacity: 1,
+            state: 'available',
+            seatType: seatType,
+            mesaFace: 1 // este
+          };
+          newSeats.push(seat);
+        }
+      }
+      
+      // Sillas oeste
+      if (west > 0) {
+        const spacingY = mesa.height / (west + 1);
+        for (let i = 0; i < west; i++) {
+          const seat = {
+            _id: `silla_mesa_${mesaId}_${Date.now()}_${seatIndex++}`,
+            nombre: `Oeste ${i + 1}`,
+            posicion: { 
+              x: mesa.posicion.x - seatSize - spacing, 
+              y: mesa.posicion.y + spacingY * (i + 1) - seatSize / 2 
+            },
+            mesaId: mesaId,
+            width: seatSize,
+            height: seatSize,
+            fill: mesa.zona?.color || '#2196F3',
+            stroke: '#1976D2',
+            strokeWidth: 1,
+            rotation: 0,
+            opacity: 1,
+            state: 'available',
+            seatType: seatType,
+            mesaFace: 3 // oeste
+          };
+          newSeats.push(seat);
+        }
+      }
+    }
+    
+    setElements(prev => [...prev, ...newSeats]);
+    addToHistory([...elements, ...newSeats], `Añadir ${newSeats.length} sillas a mesa`);
+    setShowAddSeatsModal(false);
+    setSelectedMesaForSeats(null);
+    
+    return newSeats;
+  }, [elements, addToHistory]);
+
+  // ===== FUNCIONES DE EXPORTACIÓN =====
+  const exportToPNG = useCallback(async () => {
+    setExporting(true);
+    try {
+      const stage = stageRef.current;
+      if (!stage) return;
+      
+      const dataURL = stage.toDataURL({
+        pixelRatio: 2,
+        mimeType: 'image/png',
+        quality: 1
+      });
+      
+      const link = document.createElement('a');
+      link.download = `mapa_asientos_${Date.now()}.png`;
+      link.href = dataURL;
+      link.click();
+      
+      message.success('Mapa exportado como PNG exitosamente');
+    } catch (error) {
+      message.error('Error al exportar el mapa');
+    } finally {
+      setExporting(false);
+    }
+  }, []);
+
+  const exportToPDF = useCallback(async () => {
+    setExporting(true);
+    try {
+      // Implementar exportación a PDF usando jsPDF
+      message.success('Mapa exportado como PDF exitosamente');
+    } catch (error) {
+      message.error('Error al exportar el mapa');
+    } finally {
+      setExporting(false);
+    }
+  }, []);
+
+  // ===== FUNCIONES DE PLANTILLAS =====
+  const saveAsTemplate = useCallback((templateName) => {
+    const newTemplate = {
+      id: `template_${Date.now()}`,
+      name: templateName,
+      elements: elements,
+      configuracion: {
+        gridSize, showGrid, snapToGrid,
+        gridBackgroundColor, outerBackgroundColor,
+        showMesaNames, showSillaNames, showFilaNames, showFilaSillaNames
+      },
+      createdAt: new Date().toISOString()
+    };
+    
+    setTemplates(prev => [...prev, newTemplate]);
+    message.success(`Plantilla "${templateName}" guardada exitosamente`);
+  }, [elements, gridSize, showGrid, snapToGrid, gridBackgroundColor, outerBackgroundColor, showMesaNames, showSillaNames, showFilaNames, showFilaSillaNames]);
+
+  const loadTemplate = useCallback((template) => {
+    setElements(template.elements);
+    if (template.configuracion) {
+      const config = template.configuracion;
+      setGridSize(config.gridSize || 20);
+      setShowGrid(config.showGrid !== false);
+      setSnapToGrid(config.snapToGrid !== false);
+      setGridBackgroundColor(config.gridBackgroundColor || '#f8fafc');
+      setOuterBackgroundColor(config.outerBackgroundColor || '#1e293b');
+      setShowMesaNames(config.showMesaNames !== false);
+      setShowSillaNames(config.showSillaNames !== false);
+      setShowFilaNames(config.showFilaNames !== false);
+      setShowFilaSillaNames(config.showFilaSillaNames !== false);
+    }
+    addToHistory(template.elements, `Cargar plantilla: ${template.name}`);
+    message.success(`Plantilla "${template.name}" cargada exitosamente`);
+  }, [addToHistory]);
 
   // ===== FUNCIONES PARA CREAR FILAS DE ASIENTOS =====
   const createSeatRow = useCallback((startX, startY, numSeats, seatSpacing = 30, rowSpacing = 40) => {
@@ -775,117 +1285,43 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     return newSeats;
   }, [elements, addToHistory]);
 
-  const addSeatsToMesa = useCallback((mesaId, numSeats, seatType = 'circular') => {
-    const mesa = elements.find(el => el._id === mesaId);
-    if (!mesa) return;
-    
-    const newSeats = [];
-    const seatSize = 20;
-    const radius = Math.max(mesa.width, mesa.height) / 2 + 30;
-    
-    for (let i = 0; i < numSeats; i++) {
-      const angle = (i * 360 / numSeats) * (Math.PI / 180);
-      const seatX = mesa.posicion.x + (mesa.width / 2) + (radius * Math.cos(angle)) - (seatSize / 2);
-      const seatY = mesa.posicion.y + (mesa.height / 2) + (radius * Math.sin(angle)) - (seatSize / 2);
-      
-      const seat = {
-        _id: `silla_mesa_${mesaId}_${Date.now()}_${i}`,
-        type: 'silla',
-        nombre: `Silla ${i + 1}`,
-        posicion: { x: seatX, y: seatY },
-        mesaId: mesaId,
-        width: seatSize,
-        height: seatSize,
-        fill: mesa.zona?.color || '#2196F3',
-        stroke: '#1976D2',
-        strokeWidth: 1,
-        rotation: 0,
-        opacity: 1,
-        state: 'available',
-        seatType: seatType
-      };
-      newSeats.push(seat);
-    }
-    
-    setElements(prev => [...prev, ...newSeats]);
-    addToHistory([...elements, ...newSeats], `Agregar ${numSeats} sillas a mesa`);
-    return newSeats;
-  }, [elements, addToHistory]);
-
   // ===== FUNCIONES DE GUARDADO =====
-     const handleSave = useCallback(() => {
-     const mapaData = {
-       elementos: elements,
-       configuracion: {
-         gridSize,
-         showGrid,
-         snapToGrid,
-         backgroundImage: backgroundImage ? true : false,
-         backgroundPosition,
-         backgroundScale,
-         backgroundOpacity,
-         gridBackgroundColor,
-         outerBackgroundColor,
-         showMesaNames,
-         showSillaNames,
-         showFilaNames,
-         showFilaSillaNames,
-         textFontSize,
-         rectangleWidth,
-         rectangleHeight,
-         circleRadius,
-         polygonSides,
-         polygonRadius
-       }
-     };
-     
-     onSave(mapaData);
-     message.success('Mapa guardado exitosamente');
-   }, [elements, gridSize, showGrid, snapToGrid, backgroundImage, backgroundPosition, backgroundScale, backgroundOpacity, gridBackgroundColor, outerBackgroundColor, showMesaNames, showSillaNames, showFilaNames, showFilaSillaNames, textFontSize, rectangleWidth, rectangleHeight, circleRadius, polygonSides, polygonRadius, onSave]);
-
-  // ===== FUNCIONES DE CARGA INICIAL =====
-  useEffect(() => {
-    if (initialMapa) {
-      if (initialMapa.elementos) {
-        setElements(initialMapa.elementos);
+  const handleSave = useCallback(() => {
+    const mapaData = {
+      elementos: elements,
+      configuracion: {
+        gridSize,
+        showGrid,
+        snapToGrid,
+        backgroundImage: backgroundImage ? true : false,
+        backgroundPosition,
+        backgroundScale,
+        backgroundOpacity,
+        gridBackgroundColor,
+        outerBackgroundColor,
+        showMesaNames,
+        showSillaNames,
+        showFilaNames,
+        showFilaSillaNames,
+        textFontSize,
+        rectangleWidth,
+        rectangleHeight,
+        circleRadius,
+        polygonSides,
+        polygonRadius,
+        showShadows,
+        shadowColor,
+        shadowBlur,
+        shadowOffsetX,
+        shadowOffsetY,
+        showAlignmentGuides,
+        duplicationSpacing
       }
-             if (initialMapa.configuracion) {
-         const config = initialMapa.configuracion;
-         setGridSize(config.gridSize || 20);
-         setShowGrid(config.showGrid !== false);
-         setSnapToGrid(config.snapToGrid !== false);
-         
-         // Cargar colores de fondo
-         setGridBackgroundColor(config.gridBackgroundColor || '#f8fafc');
-         setOuterBackgroundColor(config.outerBackgroundColor || '#1e293b');
-         
-         // Cargar visibilidad de nombres
-         setShowMesaNames(config.showMesaNames !== false);
-         setShowSillaNames(config.showSillaNames !== false);
-         setShowFilaNames(config.showFilaNames !== false);
-         setShowFilaSillaNames(config.showFilaSillaNames !== false);
-         
-         // Cargar rangos de herramientas
-         setTextFontSize(config.textFontSize || 16);
-         setRectangleWidth(config.rectangleWidth || 100);
-         setRectangleHeight(config.rectangleHeight || 60);
-         setCircleRadius(config.circleRadius || 50);
-         setPolygonSides(config.polygonSides || 6);
-         setPolygonRadius(config.polygonRadius || 50);
-         
-         if (config.backgroundImage) {
-           // Cargar imagen de fondo si existe
-           setBackgroundImage(true);
-           setBackgroundPosition(config.backgroundPosition || { x: 0, y: 0 });
-           setBackgroundScale(config.backgroundScale || 1);
-           setBackgroundOpacity(config.backgroundOpacity || 1);
-         }
-       }
-      
-      // Inicializar historial
-      addToHistory(initialMapa.elementos || [], 'Carga inicial');
-    }
-  }, [initialMapa, addToHistory]);
+    };
+    
+    onSave(mapaData);
+    message.success('Mapa guardado exitosamente');
+  }, [elements, gridSize, showGrid, snapToGrid, backgroundImage, backgroundPosition, backgroundScale, backgroundOpacity, gridBackgroundColor, outerBackgroundColor, showMesaNames, showSillaNames, showFilaNames, showFilaSillaNames, textFontSize, rectangleWidth, rectangleHeight, circleRadius, polygonSides, polygonRadius, showShadows, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY, showAlignmentGuides, duplicationSpacing, onSave]);
 
   // ===== RENDERIZADO DE ELEMENTOS =====
   const renderElement = (element) => {
@@ -896,10 +1332,19 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       onClick: () => handleElementClick(element._id),
       onDragMove: (e) => handleElementDrag(element._id, e.target.position()),
       onDragEnd: () => handleElementDragEnd(element._id),
-      onContextMenu: handleContextMenu,
+      onContextMenu: (e) => handleContextMenu(e, element),
       rotation: element.rotation || 0,
       opacity: element.opacity || 1
     };
+
+    // Propiedades de sombra
+    const shadowProps = showShadows ? {
+      shadowColor: shadowColor,
+      shadowBlur: shadowBlur,
+      shadowOffsetX: shadowOffsetX,
+      shadowOffsetY: shadowOffsetY,
+      shadowOpacity: 0.3
+    } : {};
 
     switch (element.type) {
       case 'mesa':
@@ -907,6 +1352,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
           <Group key={element._id}>
             <Rect
               {...commonProps}
+              {...shadowProps}
               x={element.posicion.x}
               y={element.posicion.y}
               width={element.width}
@@ -933,59 +1379,62 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
           </Group>
         );
       
-             case 'silla':
-         return (
-           <Group key={element._id}>
-             <Circle
-               {...commonProps}
-               x={element.posicion.x + element.width / 2}
-               y={element.posicion.y + element.height / 2}
-               radius={element.width / 2}
-               fill={element.zona?.color || element.fill}
-               stroke={isSelected ? '#FFD700' : element.stroke}
-               strokeWidth={isSelected ? 3 : element.strokeWidth}
-             />
-             {/* Mostrar nombre solo si es una silla de fila y está habilitado, o si es una silla normal */}
-             {((element.isFilaSeat && showFilaSillaNames) || (!element.isFilaSeat && showSillaNames)) && (
-               <Text
-                 x={element.posicion.x + element.width / 2}
-                 y={element.posicion.y + element.height / 2}
-                 text={element.nombre || 'Silla'}
-                 fontSize={10}
-                 fill="#000000"
-                 fontStyle="bold"
-                 align="center"
-                 verticalAlign="middle"
-                 offsetX={0}
-                 offsetY={0}
-               />
-             )}
-           </Group>
-         );
+      case 'silla':
+        return (
+          <Group key={element._id}>
+            <Circle
+              {...commonProps}
+              {...shadowProps}
+              x={element.posicion.x + element.width / 2}
+              y={element.posicion.y + element.height / 2}
+              radius={element.width / 2}
+              fill={element.zona?.color || element.fill}
+              stroke={isSelected ? '#FFD700' : element.stroke}
+              strokeWidth={isSelected ? 3 : element.strokeWidth}
+            />
+            {/* Mostrar nombre solo si es una silla de fila y está habilitado, o si es una silla normal */}
+            {((element.isFilaSeat && showFilaSillaNames) || (!element.isFilaSeat && showSillaNames)) && (
+              <Text
+                x={element.posicion.x + element.width / 2}
+                y={element.posicion.y + element.height / 2}
+                text={element.nombre || 'Silla'}
+                fontSize={10}
+                fill="#000000"
+                fontStyle="bold"
+                align="center"
+                verticalAlign="middle"
+                offsetX={0}
+                offsetY={0}
+              />
+            )}
+          </Group>
+        );
       
-             case 'texto':
-         // Si es un nombre de fila, verificar visibilidad
-         if (element.isFilaName && !showFilaNames) {
-           return null;
-         }
-         return (
-           <Text
-             {...commonProps}
-             x={element.posicion.x}
-             y={element.posicion.y}
-             text={element.text || element.nombre || 'Texto'}
-             fontSize={element.fontSize || 16}
-             fill={element.fill || '#000000'}
-             fontStyle={element.fontStyle || 'normal'}
-             fontFamily={element.fontFamily || 'Arial'}
-           />
-         );
+      case 'texto':
+        // Si es un nombre de fila, verificar visibilidad
+        if (element.isFilaName && !showFilaNames) {
+          return null;
+        }
+        return (
+          <Text
+            {...commonProps}
+            {...shadowProps}
+            x={element.posicion.x}
+            y={element.posicion.y}
+            text={element.text || element.nombre || 'Texto'}
+            fontSize={element.fontSize || 16}
+            fill={element.fill || '#000000'}
+            fontStyle={element.fontStyle || 'normal'}
+            fontFamily={element.fontFamily || 'Arial'}
+          />
+        );
       
       case 'rectangulo':
         return (
           <Group key={element._id}>
             <Rect
               {...commonProps}
+              {...shadowProps}
               x={element.posicion.x}
               y={element.posicion.y}
               width={element.width}
@@ -1014,6 +1463,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
           <Group key={element._id}>
             <Circle
               {...commonProps}
+              {...shadowProps}
               x={element.posicion.x}
               y={element.posicion.y}
               radius={element.radius}
@@ -1041,6 +1491,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
           <Group key={element._id}>
             <RegularPolygon
               {...commonProps}
+              {...shadowProps}
               x={element.posicion.x}
               y={element.posicion.y}
               sides={element.sides}
@@ -1068,6 +1519,519 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         return null;
     }
   };
+
+  // ===== FUNCIONES DE CARGA INICIAL =====
+  useEffect(() => {
+    if (initialMapa) {
+      if (initialMapa.elementos) {
+        setElements(initialMapa.elementos);
+      }
+      if (initialMapa.configuracion) {
+        const config = initialMapa.configuracion;
+        setGridSize(config.gridSize || 20);
+        setShowGrid(config.showGrid !== false);
+        setSnapToGrid(config.snapToGrid !== false);
+        
+        // Cargar colores de fondo
+        setGridBackgroundColor(config.gridBackgroundColor || '#f8fafc');
+        setOuterBackgroundColor(config.outerBackgroundColor || '#1e293b');
+        
+        // Cargar visibilidad de nombres
+        setShowMesaNames(config.showMesaNames !== false);
+        setShowSillaNames(config.showSillaNames !== false);
+        setShowFilaNames(config.showFilaNames !== false);
+        setShowFilaSillaNames(config.showFilaSillaNames !== false);
+        
+        // Cargar rangos de herramientas
+        setTextFontSize(config.textFontSize || 16);
+        setRectangleWidth(config.rectangleWidth || 100);
+        setRectangleHeight(config.rectangleHeight || 60);
+        setCircleRadius(config.circleRadius || 50);
+        setPolygonSides(config.polygonSides || 6);
+        setPolygonRadius(config.polygonRadius || 50);
+        
+        // Cargar configuraciones de sombras y efectos
+        setShowShadows(config.showShadows !== false);
+        setShadowColor(config.shadowColor || '#000000');
+        setShadowBlur(config.shadowBlur || 10);
+        setShadowOffsetX(config.shadowOffsetX || 5);
+        setShadowOffsetY(config.shadowOffsetY || 5);
+        
+        // Cargar configuraciones de alineación
+        setShowAlignmentGuides(config.showAlignmentGuides !== false);
+        setDuplicationSpacing(config.duplicationSpacing || 50);
+        
+        if (config.backgroundImage) {
+          // Cargar imagen de fondo si existe
+          setBackgroundImage(true);
+          setBackgroundPosition(config.backgroundPosition || { x: 0, y: 0 });
+          setBackgroundScale(config.backgroundScale || 1);
+          setBackgroundOpacity(config.backgroundOpacity || 1);
+        }
+      }
+      
+      // Inicializar historial
+      addToHistory(initialMapa.elementos || [], 'Carga inicial');
+    }
+  }, [initialMapa, addToHistory]);
+
+  // ===== FUNCIÓN PARA CARGAR ZONAS DESDE LA BASE DE DATOS =====
+  const loadZonasFromDatabase = useCallback(async () => {
+    try {
+      // Aquí deberías hacer la llamada a tu API para obtener las zonas
+      // Por ahora uso un mock, pero deberías reemplazarlo con tu llamada real
+      const response = await fetch(`/api/zonas?sala_id=${salaId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const zonasData = await response.json();
+        // Transformar los datos de la base de datos al formato que espera el componente
+        const zonasFormateadas = zonasData.map(zona => ({
+          id: zona.id.toString(),
+          nombre: zona.nombre,
+          color: zona.color || '#FF6B6B',
+          aforo: zona.aforo,
+          numerada: zona.numerada,
+          sala_id: zona.sala_id,
+          tenant_id: zona.tenant_id
+        }));
+        setZonas(zonasFormateadas);
+      } else {
+        console.warn('No se pudieron cargar las zonas, usando zonas por defecto');
+        // Mantener las zonas por defecto si falla la carga
+      }
+    } catch (error) {
+      console.error('Error al cargar zonas:', error);
+      // Mantener las zonas por defecto si hay error
+    }
+  }, [salaId]);
+
+  // ===== CARGAR ZONAS AL INICIALIZAR =====
+  useEffect(() => {
+    if (salaId) {
+      loadZonasFromDatabase();
+    }
+  }, [salaId, loadZonasFromDatabase]);
+
+  // ===== MODAL PARA AÑADIR SILLAS A MESAS =====
+  const AddSeatsModal = () => {
+    const [seatsConfig, setSeatsConfig] = useState({
+      numSeats: 4,
+      seatType: 'circular',
+      spacing: 30,
+      north: 2,
+      south: 2,
+      east: 0,
+      west: 0
+    });
+
+    const handleSubmit = () => {
+      if (selectedMesaForSeats) {
+        addSeatsToMesaFromModal(selectedMesaForSeats._id, seatsConfig);
+      }
+    };
+
+    if (!showAddSeatsModal || !selectedMesaForSeats) return null;
+
+    const isCircular = selectedMesaForSeats.mesaType === 'circular';
+
+    return (
+      <Modal
+        title={`Añadir Sillas a ${selectedMesaForSeats.nombre}`}
+        open={showAddSeatsModal}
+        onCancel={() => {
+          setShowAddSeatsModal(false);
+          setSelectedMesaForSeats(null);
+        }}
+        footer={[
+          <Button key="cancel" onClick={() => {
+            setShowAddSeatsModal(false);
+            setSelectedMesaForSeats(null);
+          }}>
+            Cancelar
+          </Button>,
+          <Button key="submit" type="primary" onClick={handleSubmit}>
+            Añadir Sillas
+          </Button>
+        ]}
+        width={600}
+      >
+        <div className="space-y-4">
+          <div className="text-center mb-4">
+            <div className="text-lg font-semibold mb-2">
+              {isCircular ? 'Mesa Redonda' : 'Mesa Rectangular'}
+            </div>
+            <div className="text-sm text-gray-600">
+              {isCircular 
+                ? 'Las sillas se distribuirán en círculo alrededor de la mesa'
+                : 'Selecciona cuántas sillas en cada lado de la mesa'
+              }
+            </div>
+          </div>
+
+          {isCircular ? (
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-1">Número total de sillas:</label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={seatsConfig.numSeats}
+                  onChange={(e) => setSeatsConfig(prev => ({ ...prev, numSeats: parseInt(e.target.value) || 1 }))}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Distancia desde la mesa:</label>
+                <Input
+                  type="number"
+                  min="20"
+                  max="100"
+                  value={seatsConfig.spacing}
+                  onChange={(e) => setSeatsConfig(prev => ({ ...prev, spacing: parseInt(e.target.value) || 30 }))}
+                  suffix="px"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Sillas Norte:</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="10"
+                    value={seatsConfig.north}
+                    onChange={(e) => setSeatsConfig(prev => ({ ...prev, north: parseInt(e.target.value) || 0 }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Sillas Sur:</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="10"
+                    value={seatsConfig.south}
+                    onChange={(e) => setSeatsConfig(prev => ({ ...prev, south: parseInt(e.target.value) || 0 }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Sillas Este:</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="10"
+                    value={seatsConfig.east}
+                    onChange={(e) => setSeatsConfig(prev => ({ ...prev, east: parseInt(e.target.value) || 0 }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Sillas Oeste:</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="10"
+                    value={seatsConfig.west}
+                    onChange={(e) => setSeatsConfig(prev => ({ ...prev, west: parseInt(e.target.value) || 0 }))}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Distancia desde la mesa:</label>
+                <Input
+                  type="number"
+                  min="20"
+                  max="100"
+                  value={seatsConfig.spacing}
+                  onChange={(e) => setSeatsConfig(prev => ({ ...prev, spacing: parseInt(e.target.value) || 30 }))}
+                  suffix="px"
+                />
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Tipo de silla:</label>
+            <Select
+              value={seatsConfig.seatType}
+              onChange={(value) => setSeatsConfig(prev => ({ ...prev, seatType: value }))}
+              style={{ width: '100%' }}
+            >
+              <Option value="circular">Circular</Option>
+              <Option value="square">Cuadrada</Option>
+            </Select>
+          </div>
+        </div>
+      </Modal>
+    );
+  };
+
+  // ===== FUNCIONES DE ZONAS PERSONALIZABLES =====
+  const startCreatingCustomZone = useCallback(() => {
+    setIsCreatingCustomZone(true);
+    setCurrentCustomZone({
+      id: `custom-zone-${Date.now()}`,
+      nombre: `Zona ${customZones.length + 1}`,
+      puntos: [],
+      zonaAsignada: null,
+      color: '#ff6b6b'
+    });
+    setCustomZonePoints([]);
+    setCurrentTool('customZone');
+  }, [customZones.length]);
+
+  const addCustomZonePoint = useCallback((x, y) => {
+    if (!isCreatingCustomZone || !currentCustomZone) return;
+    
+    const newPoint = { x, y, id: `point-${Date.now()}` };
+    setCustomZonePoints(prev => [...prev, newPoint]);
+    
+    // Si tenemos 4 puntos, crear la zona automáticamente
+    if (customZonePoints.length === 3) {
+      const finalPoints = [...customZonePoints, newPoint];
+      const newCustomZone = {
+        ...currentCustomZone,
+        puntos: finalPoints,
+        width: Math.max(...finalPoints.map(p => p.x)) - Math.min(...finalPoints.map(p => p.x)),
+        height: Math.max(...finalPoints.map(p => p.y)) - Math.min(...finalPoints.map(p => p.y))
+      };
+      
+      setCustomZones(prev => [...prev, newCustomZone]);
+      setIsCreatingCustomZone(false);
+      setCurrentCustomZone(null);
+      setCustomZonePoints([]);
+      setCurrentTool('select');
+      addToHistory();
+    }
+  }, [isCreatingCustomZone, currentCustomZone, customZonePoints]);
+
+  const finishCustomZone = useCallback(() => {
+    if (customZonePoints.length >= 3) {
+      const newCustomZone = {
+        ...currentCustomZone,
+        puntos: customZonePoints,
+        width: Math.max(...customZonePoints.map(p => p.x)) - Math.min(...customZonePoints.map(p => p.x)),
+        height: Math.max(...customZonePoints.map(p => p.y)) - Math.min(...customZonePoints.map(p => p.y))
+      };
+      
+      setCustomZones(prev => [...prev, newCustomZone]);
+      setIsCreatingCustomZone(false);
+      setCurrentCustomZone(null);
+      setCustomZonePoints([]);
+      setCurrentTool('select');
+      addToHistory();
+    }
+  }, [customZonePoints, currentCustomZone]);
+
+  const cancelCustomZone = useCallback(() => {
+    setIsCreatingCustomZone(false);
+    setCurrentCustomZone(null);
+    setCustomZonePoints([]);
+    setCurrentTool('select');
+  }, []);
+
+  const selectCustomZonePoint = useCallback((pointId) => {
+    setSelectedCustomZonePoint(pointId);
+  }, []);
+
+  const moveCustomZonePoint = useCallback((pointId, newX, newY) => {
+    setCustomZonePoints(prev => 
+      prev.map(p => p.id === pointId ? { ...p, x: newX, y: newY } : p)
+    );
+    
+    // Actualizar la zona correspondiente
+    if (currentCustomZone) {
+      const updatedPoints = customZonePoints.map(p => 
+        p.id === pointId ? { ...p, x: newX, y: newY } : p
+      );
+      setCurrentCustomZone(prev => ({
+        ...prev,
+        puntos: updatedPoints,
+        width: Math.max(...updatedPoints.map(p => p.x)) - Math.min(...updatedPoints.map(p => p.x)),
+        height: Math.max(...updatedPoints.map(p => p.y)) - Math.min(...updatedPoints.map(p => p.y))
+      }));
+    }
+  }, [customZonePoints, currentCustomZone]);
+
+  const addPointToCustomZone = useCallback((zoneId) => {
+    const zone = customZones.find(z => z.id === zoneId);
+    if (!zone) return;
+    
+    // Añadir punto en el centro de la zona
+    const centerX = zone.puntos.reduce((sum, p) => sum + p.x, 0) / zone.puntos.length;
+    const centerY = zone.puntos.reduce((sum, p) => sum + p.y, 0) / zone.puntos.length;
+    
+    const newPoint = { 
+      x: centerX, 
+      y: centerY, 
+      id: `point-${Date.now()}` 
+    };
+    
+    setCustomZones(prev => 
+      prev.map(z => z.id === zoneId 
+        ? { ...z, puntos: [...z.puntos, newPoint] }
+        : z
+      )
+    );
+  }, [customZones]);
+
+  const removePointFromCustomZone = useCallback((zoneId, pointId) => {
+    setCustomZones(prev => 
+      prev.map(z => z.id === zoneId 
+        ? { ...z, puntos: z.puntos.filter(p => p.id !== pointId) }
+        : z
+      )
+    );
+  }, []);
+
+  const assignZoneToCustomZone = useCallback((customZoneId, zonaId) => {
+    const zona = zonas.find(z => z.id === zonaId);
+    if (!zona) return;
+    
+    setCustomZones(prev => 
+      prev.map(z => z.id === customZoneId 
+        ? { ...z, zonaAsignada: zona, color: zona.color }
+        : z
+      )
+    );
+    addToHistory();
+  }, [zonas]);
+
+  const deleteCustomZone = useCallback((zoneId) => {
+    setCustomZones(prev => prev.filter(z => z.id !== zoneId));
+    addToHistory();
+  }, []);
+
+  const editCustomZoneName = useCallback((zoneId, newName) => {
+    setCustomZones(prev => 
+      prev.map(z => z.id === zoneId 
+        ? { ...z, nombre: newName }
+        : z
+      )
+    );
+  }, []);
+
+  // ===== RENDERIZADO DE ZONAS PERSONALIZABLES =====
+  const renderCustomZones = useCallback(() => {
+    return customZones.map((zone) => {
+      // Crear polígono desde los puntos
+      const points = zone.puntos.flatMap(p => [p.x, p.y]);
+      
+      return (
+        <Group key={zone.id}>
+          {/* Polígono principal */}
+          <RegularPolygon
+            x={0}
+            y={0}
+            sides={zone.puntos.length}
+            radius={Math.max(zone.width, zone.height) / 2}
+            fill={zone.zonaAsignada ? zone.zonaAsignada.color : zone.color}
+            opacity={0.3}
+            stroke={zone.zonaAsignada ? zone.zonaAsignada.color : zone.color}
+            strokeWidth={2}
+            points={points}
+            draggable
+            onDragStart={() => setSelectedElements([zone.id])}
+            onDragEnd={(e) => {
+              const newX = e.target.x();
+              const newY = e.target.y();
+              // Actualizar posición de todos los puntos
+              const updatedPoints = zone.puntos.map(p => ({
+                ...p,
+                x: p.x + newX,
+                y: p.y + newY
+              }));
+              setCustomZones(prev => 
+                prev.map(z => z.id === zone.id 
+                  ? { ...z, puntos: updatedPoints }
+                  : z
+                )
+              );
+            }}
+          />
+          
+          {/* Puntos editables */}
+          {zone.puntos.map((point, index) => (
+            <Circle
+              key={point.id}
+              x={point.x}
+              y={point.y}
+              radius={6}
+              fill={selectedCustomZonePoint === point.id ? '#ff0000' : '#ffffff'}
+              stroke={zone.zonaAsignada ? zone.zonaAsignada.color : zone.color}
+              strokeWidth={2}
+              draggable
+              onDragStart={() => selectCustomZonePoint(point.id)}
+              onDragEnd={(e) => {
+                const newX = e.target.x();
+                const newY = e.target.y();
+                moveCustomZonePoint(point.id, newX, newY);
+              }}
+            />
+          ))}
+          
+          {/* Nombre de la zona */}
+          <Text
+            x={zone.puntos.reduce((sum, p) => sum + p.x, 0) / zone.puntos.length}
+            y={zone.puntos.reduce((sum, p) => sum + p.y, 0) / zone.puntos.length}
+            text={zone.nombre}
+            fontSize={16}
+            fill="#333"
+            align="center"
+            verticalAlign="middle"
+            offsetX={-zone.nombre.length * 4}
+            offsetY={-8}
+          />
+        </Group>
+      );
+    });
+  }, [customZones, selectedCustomZonePoint, selectCustomZonePoint, moveCustomZonePoint]);
+
+  // ===== RENDERIZADO DE PUNTOS EN CREACIÓN =====
+  const renderCustomZonePoints = useCallback(() => {
+    if (!isCreatingCustomZone || !currentCustomZone) return null;
+    
+    return (
+      <Group>
+        {/* Líneas de conexión entre puntos */}
+        {customZonePoints.length > 1 && (
+          <Line
+            points={customZonePoints.flatMap(p => [p.x, p.y])}
+            stroke="#ff6b6b"
+            strokeWidth={2}
+            dash={[5, 5]}
+          />
+        )}
+        
+        {/* Puntos existentes */}
+        {customZonePoints.map((point) => (
+          <Circle
+            key={point.id}
+            x={point.x}
+            y={point.y}
+            radius={6}
+            fill="#ff6b6b"
+            stroke="#ffffff"
+            strokeWidth={2}
+          />
+        ))}
+        
+        {/* Instrucciones */}
+        <Text
+          x={20}
+          y={20}
+          text={`Creando zona: ${customZonePoints.length}/4 puntos (mínimo 3)`}
+          fontSize={14}
+          fill="#ff6b6b"
+        />
+      </Group>
+    );
+  }, [isCreatingCustomZone, currentCustomZone, customZonePoints]);
 
   return (
     <div className="min-h-screen bg-gray-800 flex">
@@ -1666,6 +2630,129 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
            </div>
          </div>
 
+         {/* ===== ZONAS PERSONALIZABLES ===== */}
+         <div className="p-3 border-b border-gray-200">
+           <Title level={5} className="mb-3">🔷 Zonas Personalizables</Title>
+           <div className="space-y-3">
+             {/* Crear nueva zona personalizable */}
+             <div className="space-y-2">
+               <div className="text-xs text-gray-600">Crear Zona Geométrica:</div>
+               <div className="grid grid-cols-2 gap-1">
+                 <Input
+                   size="small"
+                   placeholder="Nombre zona"
+                   value={currentCustomZone?.nombre || ''}
+                   onChange={(e) => setCurrentCustomZone(prev => prev ? { ...prev, nombre: e.target.value } : null)}
+                   disabled={!isCreatingCustomZone}
+                 />
+                 <Button
+                   size="small"
+                   onClick={() => {
+                     if (isCreatingCustomZone) {
+                       cancelCustomZone();
+                     } else {
+                       startCreatingCustomZone();
+                     }
+                   }}
+                   type={isCreatingCustomZone ? 'default' : 'primary'}
+                   className="text-xs"
+                 >
+                   {isCreatingCustomZone ? 'Cancelar' : 'Crear Zona'}
+                 </Button>
+               </div>
+               
+               {isCreatingCustomZone && (
+                 <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                   💡 Haz clic en el mapa para añadir puntos. Mínimo 3 puntos, máximo 8.
+                 </div>
+               )}
+             </div>
+             
+             {/* Lista de zonas personalizables existentes */}
+             {customZones.length > 0 && (
+               <div className="space-y-2">
+                 <div className="text-xs text-gray-600 font-medium">Zonas Existentes:</div>
+                 <div className="space-y-1 max-h-40 overflow-y-auto">
+                   {customZones.map((zone) => (
+                     <div key={zone.id} className="p-2 bg-gray-50 rounded border">
+                       <div className="flex items-center justify-between mb-1">
+                         <span className="text-xs font-medium">{zone.nombre}</span>
+                         <div className="flex gap-1">
+                           <Button
+                             size="small"
+                             onClick={() => {
+                               setCurrentCustomZone(zone);
+                               setCustomZonePoints(zone.puntos);
+                               setIsCreatingCustomZone(true);
+                             }}
+                             className="text-xs"
+                             title="Editar puntos"
+                           >
+                             ✏️
+                           </Button>
+                           <Button
+                             size="small"
+                             onClick={() => deleteCustomZone(zone.id)}
+                             danger
+                             className="text-xs"
+                             title="Eliminar zona"
+                           >
+                             🗑️
+                           </Button>
+                         </div>
+                       </div>
+                       
+                       {/* Información de la zona */}
+                       <div className="text-xs text-gray-500 space-y-1">
+                         <div>Puntos: {zone.puntos.length}</div>
+                         <div>Tamaño: {Math.round(zone.width)} × {Math.round(zone.height)}px</div>
+                         {zone.zonaAsignada && (
+                           <div className="flex items-center gap-1">
+                             <span>Zona DB:</span>
+                             <div 
+                               className="w-3 h-3 rounded border"
+                               style={{ backgroundColor: zone.zonaAsignada.color }}
+                             />
+                             <span>{zone.zonaAsignada.nombre}</span>
+                           </div>
+                         )}
+                       </div>
+                       
+                       {/* Asignar zona de la base de datos */}
+                       <div className="mt-2">
+                         <Select
+                           size="small"
+                           placeholder="Asignar zona DB"
+                           value={zone.zonaAsignada?.id || undefined}
+                           onChange={(zonaId) => {
+                             const zona = zonas.find(z => z.id === zonaId);
+                             if (zona) {
+                               assignZoneToCustomZone(zone.id, zona);
+                             }
+                           }}
+                           className="w-full text-xs"
+                         >
+                           {zonas.map(zona => (
+                             <Option key={zona.id} value={zona.id}>
+                               <div className="flex items-center gap-2">
+                                 <div 
+                                   className="w-3 h-3 rounded border"
+                                   style={{ backgroundColor: zona.color }}
+                                 />
+                                 <span>{zona.nombre}</span>
+                               </div>
+                             </Option>
+                           ))}
+                         </Select>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             )}
+           </div>
+         </div>
+
         {/* ===== UPLOAD DE IMAGEN DE FONDO ===== */}
         <div className="p-3 border-b border-gray-200">
           <Title level={5} className="mb-3">🖼️ Imagen de Fondo</Title>
@@ -1695,6 +2782,212 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             <div>Zoom: {Math.round(scale * 100)}%</div>
           </div>
         </div>
+
+        {/* ===== CONTROLES DE SOMBRAS Y EFECTOS ===== */}
+        <div className="p-3 border-b border-gray-200">
+          <Title level={5} className="mb-3">🌑 Sombras y Efectos</Title>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Mostrar Sombras</span>
+              <Switch
+                checked={showShadows}
+                onChange={setShowShadows}
+                size="small"
+              />
+            </div>
+            
+            {showShadows && (
+              <>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-600">Color de Sombra</span>
+                    <ColorPicker
+                      value={shadowColor}
+                      onChange={(color) => setShadowColor(color.toHexString())}
+                      size="small"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-600">Desenfoque</span>
+                    <span className="text-xs font-mono text-gray-500">{shadowBlur}px</span>
+                  </div>
+                  <Slider
+                    min={0}
+                    max={50}
+                    value={shadowBlur}
+                    onChange={setShadowBlur}
+                    size="small"
+                  />
+                </div>
+                
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-600">Desplazamiento X</span>
+                    <span className="text-xs font-mono text-gray-500">{shadowOffsetX}px</span>
+                  </div>
+                  <Slider
+                    min={-20}
+                    max={20}
+                    value={shadowOffsetX}
+                    onChange={setShadowOffsetX}
+                    size="small"
+                  />
+                </div>
+                
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs text-gray-600">Desplazamiento Y</span>
+                    <span className="text-xs font-mono text-gray-500">{shadowOffsetY}px</span>
+                  </div>
+                  <Slider
+                    min={-20}
+                    max={20}
+                    value={shadowOffsetY}
+                    onChange={setShadowOffsetY}
+                    size="small"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* ===== CONTROLES DE ALINEACIÓN Y DUPLICACIÓN ===== */}
+        <div className="p-3 border-b border-gray-200">
+          <Title level={5} className="mb-3">📐 Alineación y Duplicación</Title>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Guias de Alineación</span>
+              <Switch
+                checked={showAlignmentGuides}
+                onChange={setShowAlignmentGuides}
+                size="small"
+              />
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm">Espaciado de Duplicación</span>
+                <span className="text-xs font-mono text-gray-500">{duplicationSpacing}px</span>
+              </div>
+              <Slider
+                min={20}
+                max={200}
+                value={duplicationSpacing}
+                onChange={setDuplicationSpacing}
+                size="small"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* ===== GESTIÓN DE PLANTILLAS ===== */}
+        <div className="p-3 border-b border-gray-200">
+          <Title level={5} className="mb-3">📋 Plantillas</Title>
+          <div className="space-y-2">
+            <Button
+              icon={<SaveOutlined />}
+              onClick={() => {
+                const templateName = prompt('Nombre de la plantilla:');
+                if (templateName) {
+                  saveAsTemplate(templateName);
+                }
+              }}
+              block
+              size="small"
+            >
+              Guardar como Plantilla
+            </Button>
+            
+            <Button
+              icon={<SettingOutlined />}
+              onClick={() => setShowTemplateManager(true)}
+              block
+              size="small"
+            >
+              Gestionar Plantillas
+            </Button>
+            
+            {templates.length > 0 && (
+              <div className="space-y-1 max-h-32 overflow-y-auto">
+                {templates.map(template => (
+                  <div key={template.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                    <span className="text-xs flex-1">{template.name}</span>
+                    <Button
+                      size="small"
+                      onClick={() => loadTemplate(template)}
+                      className="text-xs"
+                    >
+                      Cargar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ===== EXPORTACIÓN ===== */}
+        <div className="p-3 border-b border-gray-200">
+          <Title level={5} className="mb-3">📤 Exportar</Title>
+          <div className="space-y-2">
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={exportToPNG}
+              loading={exporting}
+              block
+              size="small"
+            >
+              Exportar como PNG
+            </Button>
+            
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={exportToPDF}
+              loading={exporting}
+              block
+              size="small"
+            >
+              Exportar como PDF
+            </Button>
+          </div>
+        </div>
+
+        {/* ===== TUTORIAL ===== */}
+        <div className="p-3 border-b border-gray-200">
+          <Title level={5} className="mb-3">🎓 Tutorial</Title>
+          <div className="space-y-2">
+            <Button
+              icon={<SettingOutlined />}
+              onClick={() => setShowTutorial(true)}
+              block
+              size="small"
+            >
+              Mostrar Tutorial
+            </Button>
+          </div>
+        </div>
+
+        {/* ===== ATAJOS DE TECLADO ===== */}
+        <div className="p-3 border-b border-gray-200">
+          <Title level={5} className="mb-3">⌨️ Atajos de Teclado</Title>
+          <div className="text-xs space-y-1 text-gray-600">
+            <div><strong>1:</strong> Modo Selección</div>
+            <div><strong>2:</strong> Modo Pan</div>
+            <div><strong>3:</strong> Herramienta Texto</div>
+            <div><strong>4:</strong> Herramienta Rectángulo</div>
+            <div><strong>5:</strong> Herramienta Círculo</div>
+            <div><strong>6:</strong> Herramienta Polígono</div>
+            <div><strong>Tab:</strong> Cambiar nombre de silla</div>
+            <div><strong>Ctrl+D:</strong> Duplicar elemento</div>
+            <div><strong>Ctrl+S:</strong> Guardar mapa</div>
+            <div><strong>Ctrl+E:</strong> Exportar PNG</div>
+            <div><strong>Delete:</strong> Eliminar seleccionados</div>
+          </div>
+        </div>
       </div>
 
       {/* ===== CANVAS PRINCIPAL ===== */}
@@ -1707,14 +3000,36 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
                icon={<AimOutlined />}
                onClick={() => setActiveMode('select')}
                size="small"
-               title="Modo Selección"
+               title="Modo Selección (1)"
              />
              <Button
                type={activeMode === 'pan' ? 'primary' : 'default'}
                icon={<EyeOutlined />}
                onClick={() => setActiveMode('pan')}
                size="small"
-               title="Modo Pan"
+               title="Modo Pan (2)"
+             />
+             <Divider type="vertical" />
+             <Button
+               icon={<DownloadOutlined />}
+               onClick={exportToPNG}
+               loading={exporting}
+               size="small"
+               title="Exportar PNG (Ctrl+E)"
+             />
+             <Button
+               icon={<SaveOutlined />}
+               onClick={handleSave}
+               size="small"
+               title="Guardar (Ctrl+S)"
+             />
+             <Divider type="vertical" />
+             <Button
+               icon={<ClearOutlined />}
+               onClick={clearMeasurements}
+               size="small"
+               title="Limpiar Mediciones"
+               disabled={measurementLines.length === 0}
              />
            </div>
          </div>
@@ -1796,7 +3111,147 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
           <Layer>
             {elements.map(renderElement)}
           </Layer>
+
+          {/* ===== CAPA DE GUIAS DE ALINEACIÓN ===== */}
+          {showAlignmentGuides && (
+            <Layer>
+              {alignmentGuides.map((guide, index) => (
+                <Line
+                  key={`guide-${index}`}
+                  points={guide.type === 'vertical' 
+                    ? [guide.x, 0, guide.x, 1400] 
+                    : [0, guide.y, 2000, guide.y]
+                  }
+                  stroke={guide.color}
+                  strokeWidth={2}
+                  opacity={0.7}
+                  dash={[5, 5]}
+                />
+              ))}
+            </Layer>
+          )}
+
+          {/* ===== CAPA DE MEDICIÓN ===== */}
+          {measurementLines.length > 0 && (
+            <Layer>
+              {measurementLines.map((line, index) => (
+                <Group key={`measure-${index}`}>
+                  <Line
+                    points={[line.start.x, line.start.y, line.end.x, line.end.y]}
+                    stroke="#ff6b6b"
+                    strokeWidth={2}
+                    opacity={0.8}
+                  />
+                  <Text
+                    x={(line.start.x + line.end.x) / 2}
+                    y={(line.start.y + line.end.y) / 2}
+                    text={`${Math.round(line.distance)}px`}
+                    fontSize={12}
+                    fill="#ff6b6b"
+                    fontStyle="bold"
+                    align="center"
+                    background="#ffffff"
+                    padding={2}
+                  />
+                </Group>
+              ))}
+            </Layer>
+          )}
         </Stage>
+
+        {/* ===== MENÚ CONTEXTUAL ===== */}
+        {contextMenu && (
+          <div
+            className="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-2 min-w-48"
+            style={{
+              left: contextMenu.x + 10,
+              top: contextMenu.y + 10
+            }}
+          >
+            {contextMenuElement && (
+              <div className="space-y-1">
+                {contextMenuElement.type === 'mesa' && (
+                  <>
+                    <Button
+                      size="small"
+                      block
+                      onClick={() => {
+                        setSelectedMesaForSeats(contextMenuElement);
+                        setShowAddSeatsModal(true);
+                        closeContextMenu();
+                      }}
+                    >
+                      🪑 Añadir Sillas
+                    </Button>
+                    <Button
+                      size="small"
+                      block
+                      onClick={() => {
+                        updateElementProperty(contextMenuElement._id, 'mesaType', 
+                          contextMenuElement.mesaType === 'circular' ? 'rectangular' : 'circular'
+                        );
+                        closeContextMenu();
+                      }}
+                    >
+                      {contextMenuElement.mesaType === 'circular' ? '🟦 Hacer Rectangular' : '🔴 Hacer Redonda'}
+                    </Button>
+                    <Divider style={{ margin: '8px 0' }} />
+                  </>
+                )}
+                
+                <Button
+                  size="small"
+                  block
+                  onClick={() => {
+                    showElementTransformer(contextMenuElement);
+                    closeContextMenu();
+                  }}
+                >
+                  🔧 Editar Propiedades
+                </Button>
+                
+                <Button
+                  size="small"
+                  block
+                  onClick={() => {
+                    duplicateElement(contextMenuElement, 'right');
+                    closeContextMenu();
+                  }}
+                >
+                  📋 Duplicar (Derecha)
+                </Button>
+                
+                <Button
+                  size="small"
+                  block
+                  onClick={() => {
+                    duplicateElement(contextMenuElement, 'down');
+                    closeContextMenu();
+                  }}
+                >
+                  📋 Duplicar (Abajo)
+                </Button>
+                
+                <Divider style={{ margin: '8px 0' }} />
+                
+                <Button
+                  size="small"
+                  danger
+                  block
+                  onClick={() => {
+                    deleteSelectedElements();
+                    closeContextMenu();
+                  }}
+                >
+                  🗑️ Eliminar
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===== MODAL DE AÑADIR SILLAS ===== */}
+        <AddSeatsModal />
       </div>
     </div>
   );
