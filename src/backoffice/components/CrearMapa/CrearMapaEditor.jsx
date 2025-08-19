@@ -66,7 +66,7 @@ import { useMapaZoomStage } from '../../hooks/useMapaZoomStage';
 import { useMapaGraphicalElements } from '../../hooks/useMapaGraphicalElements';
 import { useMapaLoadingSaving } from '../../hooks/usemapaloadingsaving';
 import { useMapaZones } from '../../hooks/usemapazones';
-import { supabase } from '../../services/supabaseClient';
+import { supabase } from '../../../supabaseClient';
 import { fetchZonasPorSala } from '../../services/apibackoffice';
 import Grid from '../compMapa/Grid';
 import MenuMapa from '../compMapa/MenuMapa';
@@ -209,10 +209,65 @@ const CrearMapaEditor = ({
   const [totalSteps] = useState(5);
   
   // ===== FUNCIÓN PARA CALCULAR PROGRESO =====
-  // Se define al final del componente
+  const calculateProgress = useCallback(() => {
+    let progress = 0;
+    let step = 1;
+    
+    // Paso 1: Tener una sala seleccionada (25%)
+    if (salaId) {
+      progress += 25;
+      step = 2;
+    }
+    
+    // Paso 2: Tener al menos una zona creada (50%)
+    if (zonas.length > 0) {
+      progress += 25;
+      step = 3;
+    }
+    
+    // Paso 3: Tener al menos una mesa o silla (75%)
+    if (elements.length > 0) {
+      progress += 25;
+      step = 4;
+    }
+    
+    // Paso 4: Tener sillas asignadas a mesas (90%)
+    const mesasConSillas = elements.filter(el => 
+      el.type === 'mesa' && el.sillas && el.sillas.length > 0
+    );
+    if (mesasConSillas.length > 0) {
+      progress += 15;
+      step = 5;
+    }
+    
+    // Paso 5: Mapa guardado (100%)
+    if (mapa?.estado === 'active') {
+      progress += 10;
+      step = 5;
+    }
+    
+    setCurrentStep(step);
+    return progress;
+  }, [salaId, zonas.length, elements.length, mapa?.estado]);
   
   // ===== TEXTO DE PROGRESO =====
-  // Se define al final del componente
+  const getProgressText = useCallback(() => {
+    const progress = calculateProgress();
+    const stepTexts = {
+      1: 'Seleccionar Sala',
+      2: 'Crear Zonas',
+      3: 'Agregar Elementos',
+      4: 'Configurar Sillas',
+      5: 'Finalizar Mapa'
+    };
+    
+    return {
+      percentage: progress,
+      currentStep: currentStep,
+      stepText: stepTexts[currentStep] || 'Completado',
+      isComplete: progress >= 100
+    };
+  }, [calculateProgress, currentStep]);
   
   // ===== REFERENCIAS =====
   const stageRef = useRef(null);
@@ -249,72 +304,11 @@ const CrearMapaEditor = ({
     zoomToFit
   } = useMapaZoomStage(stageRef, scale, setScale, position, setPosition);
 
-  // ===== FUNCIONES CRÍTICAS (definidas antes de useEffect) =====
-  
-  // Función para agregar al historial
-  const addToHistory = useCallback((newElements, action) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({ elements: newElements, action, timestamp: Date.now() });
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex]);
-
-  // Función para actualizar estadísticas de IA
-  const updateAiStats = useCallback(() => {
-    const mesas = elements.filter(el => el.type === 'mesa');
-    const sillas = elements.filter(el => el.type === 'silla');
-    const zonas = elements.filter(el => el.zona);
-    
-    const totalArea = 2000 * 1400;
-    const elementosArea = elements.reduce((sum, el) => {
-      if (el.width && el.height) {
-        return sum + (el.width * el.height);
-      }
-      return sum + 400;
-    }, 0);
-    
-    setAiStats({
-      totalElements: elements.length,
-      mesas: mesas.length,
-      sillas: sillas.length,
-      zonas: zonas.length,
-      spaceUsage: (elementosArea / totalArea) * 100
-    });
-  }, [elements]);
-
-  // Función para calcular progreso
-  const calculateProgress = useCallback(() => {
-    const steps = [
-      !!salaId,
-      zonas.length > 0,
-      elements.filter(el => el.type === 'mesa').length > 0,
-      elements.filter(el => el.type === 'silla').length > 0,
-      elements.length > 0
-    ];
-    return steps.filter(Boolean).length;
-  }, [salaId, zonas, elements]);
-
-  // Función para obtener texto de progreso
-  const getProgressText = useCallback(() => {
-    const currentStep = calculateProgress();
-    const totalSteps = 5;
-    const percentage = (currentStep / totalSteps) * 100;
-    
-    let status = 'Pendiente';
-    if (percentage >= 100) status = 'Completado';
-    else if (percentage >= 80) status = 'Casi listo';
-    else if (percentage >= 60) status = 'En progreso';
-    else if (percentage >= 40) status = 'Iniciado';
-    else if (percentage >= 20) status = 'Planificando';
-    
-    return { currentStep, totalSteps, percentage, status };
-  }, [calculateProgress]);
-
   // ===== EFECTOS =====
   useEffect(() => {
     if (initialMapa?.contenido?.elementos) {
       setElements(initialMapa.contenido.elementos);
-      // Guardar en historial después de que se definan las funciones
+      addToHistory(initialMapa.contenido.elementos, 'Carga inicial');
     }
   }, [initialMapa]);
 
@@ -361,16 +355,15 @@ const CrearMapaEditor = ({
     loadZonas();
   }, [salaId]);
 
-  // Comentado temporalmente para evitar TDZ
-  // useEffect(() => {
-  //   // Actualizar progreso cuando cambien los elementos
-  //   calculateProgress();
-  // }, [calculateProgress, elements, zonas, mapa?.estado]);
+  useEffect(() => {
+    // Actualizar progreso cuando cambien los elementos
+    calculateProgress();
+  }, [calculateProgress, elements, zonas, mapa?.estado]);
 
-  // Comentado temporalmente para evitar TDZ
-  // useEffect(() => {
-  //   updateAiStats();
-  // }, [elements, updateAiStats]);
+  // Actualizar estadísticas de IA cuando cambien los elementos
+  useEffect(() => {
+    updateAiStats();
+  }, [elements, updateAiStats]);
 
   // ===== FUNCIONES DE COLABORACIÓN EN TIEMPO REAL =====
   
@@ -693,7 +686,21 @@ const CrearMapaEditor = ({
   }, [clipboard, elements, addToHistory]);
   
   // ===== FUNCIONES DE HISTORIAL =====
-  // Definida arriba; mover la implementación única aquí
+  const addToHistory = useCallback((newElements, action) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({
+      elements: JSON.parse(JSON.stringify(newElements)),
+      action,
+      timestamp: Date.now()
+    });
+    
+    if (newHistory.length > maxHistorySize) {
+      newHistory.shift();
+    }
+    
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex, maxHistorySize]);
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -1812,24 +1819,32 @@ const CrearMapaEditor = ({
     }
   }, [elements, updateElementProperty]);
 
-  // ===== FUNCIONES PRINCIPALES =====
-  // Todas las funciones useCallback se definen al final del componente
+  // Actualización de estadísticas de IA
+  const updateAiStats = useCallback(() => {
+    const mesas = elements.filter(el => el.type === 'mesa');
+    const sillas = elements.filter(el => el.type === 'silla');
+    const zonas = elements.filter(el => el.zona);
+    
+    const totalArea = 2000 * 1400;
+    const elementosArea = elements.reduce((sum, el) => {
+      if (el.width && el.height) {
+        return sum + (el.width * el.height);
+      }
+      return sum + 400;
+    }, 0);
+    
+    setAiStats({
+      totalElements: elements.length,
+      mesas: mesas.length,
+      sillas: sillas.length,
+      zonas: zonas.length,
+      spaceUsage: (elementosArea / totalArea) * 100
+    });
+  }, [elements]);
 
 
 
   // ===== FUNCIONES DE ZONAS =====
-  // Se definen al final del componente
-
-  // ===== FUNCIONES DE FILTROS DE FONDO =====
-  // Se definen al final del componente
-
-  // ===== RENDERIZADO DE ELEMENTOS =====
-  // Se define al final del componente
-
-  // ===== FUNCIONES PRINCIPALES =====
-
-  // ===== FUNCIONES DE ZONAS =====
-  
   const handleZonasChange = useCallback((newZonas) => {
     setZonas(newZonas);
   }, []);
@@ -1909,7 +1924,6 @@ const CrearMapaEditor = ({
   }, [zonas, elements, sendZoneAssigned]);
 
   // ===== FUNCIONES DE FILTROS DE FONDO =====
-  
   const handleBackgroundFiltersChange = useCallback((newFilters) => {
     setBackgroundFilters(newFilters);
   }, []);
@@ -1919,7 +1933,6 @@ const CrearMapaEditor = ({
   }, []);
 
   // ===== RENDERIZADO DE ELEMENTOS =====
-  
   const renderElement = useCallback((element) => {
     const isSelected = selectedIds.includes(element._id);
     const baseProps = {
@@ -1930,19 +1943,19 @@ const CrearMapaEditor = ({
       draggable: activeMode === 'select',
       onClick: () => handleElementClick(element._id),
       onDragEnd: (e) => handleElementDrag(element._id, { x: e.target.x(), y: e.target.y() }),
-      onTransformEnd: (e) => {
-        const node = e.target;
-        handleElementResize(element._id, {
-          width: node.width() * node.scaleX(),
-          height: node.height() * node.scaleY()
-        });
-        // Manejar rotación
-        if (node.rotation() !== (element.rotation || 0)) {
-          handleElementRotation(element._id, node.rotation());
-        }
-        node.scaleX(1);
-        node.scaleY(1);
-      },
+             onTransformEnd: (e) => {
+         const node = e.target;
+         handleElementResize(element._id, {
+           width: node.width() * node.scaleX(),
+           height: node.height() * node.scaleY()
+         });
+         // Manejar rotación
+         if (node.rotation() !== (element.rotation || 0)) {
+           handleElementRotation(element._id, node.rotation());
+         }
+         node.scaleX(1);
+         node.scaleY(1);
+       },
       onMouseEnter: (e) => {
         // Mostrar tooltip
         const tooltipRect = e.target.parent.findOne('Rect[fill="rgba(0,0,0,0.8)"]');
@@ -2015,6 +2028,7 @@ const CrearMapaEditor = ({
                 cornerRadius={element.cornerRadius || 0}
               />
             )}
+            
             {/* Nombre de la mesa */}
             <KonvaText
               text={element.nombre || 'Mesa'}
@@ -2050,7 +2064,7 @@ const CrearMapaEditor = ({
           </Group>
         );
 
-      case 'silla':
+            case 'silla':
         return (
           <Group key={element._id} {...baseProps}>
             {element.shape === 'circle' ? (
@@ -2924,7 +2938,56 @@ const CrearMapaEditor = ({
            </div>
         </div>
 
-        {/* Panel derecho eliminado: usamos Propiedades Rápidas en el panel izquierdo */}
+        {/* ===== PANEL DERECHO - PROPIEDADES ===== */}
+        {showPropertiesPanel && selectedIds.length > 0 && (
+          <div className="w-80 bg-white border-l border-gray-200 overflow-y-auto">
+            <div className="p-4">
+              <Title level={5}>Propiedades</Title>
+                             {selectedIds.length === 1 ? (
+                 <ElementProperties
+                   element={elements.find(el => el._id === selectedIds[0])}
+                   onUpdate={(updates) => {
+                     Object.entries(updates).forEach(([key, value]) => {
+                       updateElementProperty(selectedIds[0], key, value);
+                     });
+                   }}
+                   onAddSillas={handleAddSillasToMesa}
+                   onRemoveSillas={handleRemoveSillasFromMesa}
+                   onDuplicate={() => {
+                     const element = elements.find(el => el._id === selectedIds[0]);
+                     if (element) {
+                       const duplicatedElement = {
+                         ...element,
+                         _id: `duplicate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                         posicion: {
+                           x: element.posicion.x + 50,
+                           y: element.posicion.y + 50
+                         }
+                       };
+                       setElements(prev => [...prev, duplicatedElement]);
+                       addToHistory([...elements, duplicatedElement], `Duplicar ${element.type}`);
+                       message.success('Elemento duplicado');
+                     }
+                   }}
+                   onDelete={() => {
+                     const element = elements.find(el => el._id === selectedIds[0]);
+                     if (element) {
+                       const newElements = elements.filter(el => el._id !== selectedIds[0]);
+                       setElements(newElements);
+                       addToHistory(newElements, `Eliminar ${element.type}`);
+                       setSelectedIds([]);
+                       message.success('Elemento eliminado');
+                     }
+                   }}
+                 />
+               ) : (
+                <div className="text-gray-600">
+                  {selectedIds.length} elementos seleccionados
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
              {/* ===== MODALES Y POPUPS ===== */}
