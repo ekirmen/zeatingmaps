@@ -209,65 +209,10 @@ const CrearMapaEditor = ({
   const [totalSteps] = useState(5);
   
   // ===== FUNCIÓN PARA CALCULAR PROGRESO =====
-  const calculateProgress = useCallback(() => {
-    let progress = 0;
-    let step = 1;
-    
-    // Paso 1: Tener una sala seleccionada (25%)
-    if (salaId) {
-      progress += 25;
-      step = 2;
-    }
-    
-    // Paso 2: Tener al menos una zona creada (50%)
-    if (zonas.length > 0) {
-      progress += 25;
-      step = 3;
-    }
-    
-    // Paso 3: Tener al menos una mesa o silla (75%)
-    if (elements.length > 0) {
-      progress += 25;
-      step = 4;
-    }
-    
-    // Paso 4: Tener sillas asignadas a mesas (90%)
-    const mesasConSillas = elements.filter(el => 
-      el.type === 'mesa' && el.sillas && el.sillas.length > 0
-    );
-    if (mesasConSillas.length > 0) {
-      progress += 15;
-      step = 5;
-    }
-    
-    // Paso 5: Mapa guardado (100%)
-    if (mapa?.estado === 'active') {
-      progress += 10;
-      step = 5;
-    }
-    
-    setCurrentStep(step);
-    return progress;
-  }, [salaId, zonas.length, elements.length, mapa?.estado]);
+  // Se define al final del componente
   
   // ===== TEXTO DE PROGRESO =====
-  const getProgressText = useCallback(() => {
-    const progress = calculateProgress();
-    const stepTexts = {
-      1: 'Seleccionar Sala',
-      2: 'Crear Zonas',
-      3: 'Agregar Elementos',
-      4: 'Configurar Sillas',
-      5: 'Finalizar Mapa'
-    };
-    
-    return {
-      percentage: progress,
-      currentStep: currentStep,
-      stepText: stepTexts[currentStep] || 'Completado',
-      isComplete: progress >= 100
-    };
-  }, [calculateProgress, currentStep]);
+  // Se define al final del componente
   
   // ===== REFERENCIAS =====
   const stageRef = useRef(null);
@@ -305,27 +250,10 @@ const CrearMapaEditor = ({
   } = useMapaZoomStage(stageRef, scale, setScale, position, setPosition);
 
   // ===== EFECTOS =====
-  // ===== FUNCIONES DE HISTORIAL (mover arriba para evitar TDZ) =====
-  const addToHistory = useCallback((newElements, action) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({
-      elements: JSON.parse(JSON.stringify(newElements)),
-      action,
-      timestamp: Date.now()
-    });
-    
-    if (newHistory.length > maxHistorySize) {
-      newHistory.shift();
-    }
-    
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex, maxHistorySize]);
-
   useEffect(() => {
     if (initialMapa?.contenido?.elementos) {
       setElements(initialMapa.contenido.elementos);
-      addToHistory(initialMapa.contenido.elementos, 'Carga inicial');
+      // Guardar en historial después de que se definan las funciones
     }
   }, [initialMapa]);
 
@@ -372,17 +300,16 @@ const CrearMapaEditor = ({
     loadZonas();
   }, [salaId]);
 
-  useEffect(() => {
-    // Actualizar progreso cuando cambien los elementos
-    calculateProgress();
-  }, [calculateProgress, elements, zonas, mapa?.estado]);
+  // Comentado temporalmente para evitar TDZ
+  // useEffect(() => {
+  //   // Actualizar progreso cuando cambien los elementos
+  //   calculateProgress();
+  // }, [calculateProgress, elements, zonas, mapa?.estado]);
 
-  // Definir updateAiStats antes de su primer uso para evitar TDZ (implementación única)
-
-  // Actualizar estadísticas de IA cuando cambien los elementos
-  useEffect(() => {
-    updateAiStats();
-  }, [elements, updateAiStats]);
+  // Comentado temporalmente para evitar TDZ
+  // useEffect(() => {
+  //   updateAiStats();
+  // }, [elements, updateAiStats]);
 
   // ===== FUNCIONES DE COLABORACIÓN EN TIEMPO REAL =====
   
@@ -1824,7 +1751,31 @@ const CrearMapaEditor = ({
     }
   }, [elements, updateElementProperty]);
 
-  // Actualización de estadísticas de IA
+  // ===== FUNCIONES PRINCIPALES =====
+  // Todas las funciones useCallback se definen al final del componente
+
+
+
+  // ===== FUNCIONES DE ZONAS =====
+  // Se definen al final del componente
+
+  // ===== FUNCIONES DE FILTROS DE FONDO =====
+  // Se definen al final del componente
+
+  // ===== RENDERIZADO DE ELEMENTOS =====
+  // Se define al final del componente
+
+  // ===== FUNCIONES PRINCIPALES =====
+  
+  // Función para agregar al historial
+  const addToHistory = useCallback((newElements, action) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({ elements: newElements, action, timestamp: Date.now() });
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex]);
+
+  // Función para actualizar estadísticas de IA
   const updateAiStats = useCallback(() => {
     const mesas = elements.filter(el => el.type === 'mesa');
     const sillas = elements.filter(el => el.type === 'silla');
@@ -1847,9 +1798,36 @@ const CrearMapaEditor = ({
     });
   }, [elements]);
 
+  // Función para calcular progreso
+  const calculateProgress = useCallback(() => {
+    const steps = [
+      !!salaId,
+      zonas.length > 0,
+      elements.filter(el => el.type === 'mesa').length > 0,
+      elements.filter(el => el.type === 'silla').length > 0,
+      elements.length > 0
+    ];
+    return steps.filter(Boolean).length;
+  }, [salaId, zonas, elements]);
 
+  // Función para obtener texto de progreso
+  const getProgressText = useCallback(() => {
+    const currentStep = calculateProgress();
+    const totalSteps = 5;
+    const percentage = (currentStep / totalSteps) * 100;
+    
+    let status = 'Pendiente';
+    if (percentage >= 100) status = 'Completado';
+    else if (percentage >= 80) status = 'Casi listo';
+    else if (percentage >= 60) status = 'En progreso';
+    else if (percentage >= 40) status = 'Iniciado';
+    else if (percentage >= 20) status = 'Planificando';
+    
+    return { currentStep, totalSteps, percentage, status };
+  }, [calculateProgress]);
 
   // ===== FUNCIONES DE ZONAS =====
+  
   const handleZonasChange = useCallback((newZonas) => {
     setZonas(newZonas);
   }, []);
@@ -1929,6 +1907,7 @@ const CrearMapaEditor = ({
   }, [zonas, elements, sendZoneAssigned]);
 
   // ===== FUNCIONES DE FILTROS DE FONDO =====
+  
   const handleBackgroundFiltersChange = useCallback((newFilters) => {
     setBackgroundFilters(newFilters);
   }, []);
@@ -1938,6 +1917,7 @@ const CrearMapaEditor = ({
   }, []);
 
   // ===== RENDERIZADO DE ELEMENTOS =====
+  
   const renderElement = useCallback((element) => {
     const isSelected = selectedIds.includes(element._id);
     const baseProps = {
@@ -1948,19 +1928,19 @@ const CrearMapaEditor = ({
       draggable: activeMode === 'select',
       onClick: () => handleElementClick(element._id),
       onDragEnd: (e) => handleElementDrag(element._id, { x: e.target.x(), y: e.target.y() }),
-             onTransformEnd: (e) => {
-         const node = e.target;
-         handleElementResize(element._id, {
-           width: node.width() * node.scaleX(),
-           height: node.height() * node.scaleY()
-         });
-         // Manejar rotación
-         if (node.rotation() !== (element.rotation || 0)) {
-           handleElementRotation(element._id, node.rotation());
-         }
-         node.scaleX(1);
-         node.scaleY(1);
-       },
+      onTransformEnd: (e) => {
+        const node = e.target;
+        handleElementResize(element._id, {
+          width: node.width() * node.scaleX(),
+          height: node.height() * node.scaleY()
+        });
+        // Manejar rotación
+        if (node.rotation() !== (element.rotation || 0)) {
+          handleElementRotation(element._id, node.rotation());
+        }
+        node.scaleX(1);
+        node.scaleY(1);
+      },
       onMouseEnter: (e) => {
         // Mostrar tooltip
         const tooltipRect = e.target.parent.findOne('Rect[fill="rgba(0,0,0,0.8)"]');
@@ -2069,7 +2049,7 @@ const CrearMapaEditor = ({
           </Group>
         );
 
-            case 'silla':
+      case 'silla':
         return (
           <Group key={element._id} {...baseProps}>
             {element.shape === 'circle' ? (
