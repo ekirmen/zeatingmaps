@@ -1,11 +1,7 @@
-// ===== SISTEMA COMPLETO DE CREAR-MAPA =====
-// Este es el sistema más avanzado y completo para la creación de mapas de ticketera
+// ===== SISTEMA SIMPLIFICADO DE CREAR-MAPA =====
+// Sistema optimizado con solo los componentes esenciales
 
-import CrearMapaMain from './CrearMapaMain';
 import CrearMapaEditor from './CrearMapaEditor';
-import CrearMapaPreview from './CrearMapaPreview';
-import CrearMapaValidation from './CrearMapaValidation';
-import CrearMapaSettings from './CrearMapaSettings';
 import ZonaManager from './ZonaManager';
 import ContextMenu from './ContextMenu';
 import MesaTypeMenu from './MesaTypeMenu';
@@ -15,11 +11,7 @@ import ImageUploader from './ImageUploader';
 import MesaSillaManager from './MesaSillaManager';
 
 export { 
-  CrearMapaMain, 
   CrearMapaEditor, 
-  CrearMapaPreview, 
-  CrearMapaValidation, 
-  CrearMapaSettings,
   ZonaManager,
   ContextMenu,
   MesaTypeMenu,
@@ -359,4 +351,4 @@ export const useCrearMapa = () => {
 };
 
 // ===== EXPORTACIÓN POR DEFECTO =====
-export default CrearMapaMain;
+export default CrearMapaEditor;
