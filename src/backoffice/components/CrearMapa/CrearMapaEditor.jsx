@@ -305,6 +305,23 @@ const CrearMapaEditor = ({
   } = useMapaZoomStage(stageRef, scale, setScale, position, setPosition);
 
   // ===== EFECTOS =====
+  // ===== FUNCIONES DE HISTORIAL (mover arriba para evitar TDZ) =====
+  const addToHistory = useCallback((newElements, action) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({
+      elements: JSON.parse(JSON.stringify(newElements)),
+      action,
+      timestamp: Date.now()
+    });
+    
+    if (newHistory.length > maxHistorySize) {
+      newHistory.shift();
+    }
+    
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex, maxHistorySize]);
+
   useEffect(() => {
     if (initialMapa?.contenido?.elementos) {
       setElements(initialMapa.contenido.elementos);
@@ -359,6 +376,8 @@ const CrearMapaEditor = ({
     // Actualizar progreso cuando cambien los elementos
     calculateProgress();
   }, [calculateProgress, elements, zonas, mapa?.estado]);
+
+  // Definir updateAiStats antes de su primer uso para evitar TDZ (implementación única)
 
   // Actualizar estadísticas de IA cuando cambien los elementos
   useEffect(() => {
@@ -686,21 +705,7 @@ const CrearMapaEditor = ({
   }, [clipboard, elements, addToHistory]);
   
   // ===== FUNCIONES DE HISTORIAL =====
-  const addToHistory = useCallback((newElements, action) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({
-      elements: JSON.parse(JSON.stringify(newElements)),
-      action,
-      timestamp: Date.now()
-    });
-    
-    if (newHistory.length > maxHistorySize) {
-      newHistory.shift();
-    }
-    
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex, maxHistorySize]);
+  // Definida arriba; mover la implementación única aquí
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
