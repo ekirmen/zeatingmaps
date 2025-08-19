@@ -1,3 +1,16 @@
+/**
+ * Editor principal de mapas de asientos - Versión 3.6.5
+ * Permite crear y editar mapas de eventos con mesas, sillas, filas y zonas personalizables
+ * 
+ * Funcionalidades implementadas:
+ * - Editor de mapas con herramientas de dibujo
+ * - Sistema de historial (Ctrl+Z/Y)
+ * - Zonas personalizables con puntos editables
+ * - Herramientas de alineación y medición
+ * - Exportación a PNG
+ * - Sistema de capas y plantillas
+ * - Atajos de teclado completos
+ */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Line, Image, Group, RegularPolygon, Star } from 'react-konva';
 import { Button, Space, Input, Select, Slider, Switch, message, Tooltip, Divider, Row, Col, Typography, Badge, Popconfirm, Modal, Form, InputNumber, ColorPicker, Upload, Progress, Card } from 'antd';
