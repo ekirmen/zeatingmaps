@@ -1098,49 +1098,97 @@ const CrearMapaEditor = ({
                  {/* ===== PANEL IZQUIERDO - MENÚ ===== */}
          <div className="w-72 bg-white border-r border-gray-200 overflow-y-auto">
            {/* Flujo de Creación del Mapa */}
-           <div className="p-3 border-b border-gray-200">
-             <Title level={5} className="mb-2">Flujo de Creación del Mapa</Title>
-             <Text type="secondary" className="text-xs mb-3 block">
-               Sigue estos pasos para crear un mapa completo y profesional
-             </Text>
-             <div className="space-y-2">
-               <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
-                 <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
-                   getProgressText().currentStep >= 1 ? 'bg-blue-500' : 'bg-gray-300'
-                 }`}>1</div>
-                 <span>Seleccionar Sala</span>
-                 <span className="text-gray-400">Configurar sala base</span>
-               </div>
-               <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
-                 <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
-                   getProgressText().currentStep >= 2 ? 'bg-blue-500' : 'bg-gray-300'
-                 }`}>2</div>
-                 <span>Crear Zonas</span>
-                 <span className="text-gray-400">Definir áreas del mapa</span>
-               </div>
-               <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
-                 <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
-                   getProgressText().currentStep >= 3 ? 'bg-blue-500' : 'bg-gray-300'
-                 }`}>3</div>
-                 <span>Agregar Elementos</span>
-                 <span className="text-gray-400">Mesas y sillas</span>
-               </div>
-               <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 4 ? 'text-blue-600' : 'text-gray-400'}`}>
-                 <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
-                   getProgressText().currentStep >= 4 ? 'bg-blue-500' : 'bg-gray-300'
-                 }`}>4</div>
-                 <span>Configurar Sillas</span>
-                 <span className="text-gray-400">Asignar a mesas</span>
-               </div>
-               <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 5 ? 'text-green-600' : 'text-gray-400'}`}>
-                 <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
-                   getProgressText().currentStep >= 5 ? 'bg-green-500' : 'bg-gray-300'
-                 }`}>5</div>
-                 <span>Finalizar Mapa</span>
-                 <span className="text-gray-400">Guardar y activar</span>
-               </div>
-             </div>
-           </div>
+                       <div className="p-3 border-b border-gray-200">
+              <Title level={5} className="mb-2">Flujo de Creación del Mapa</Title>
+              <Text type="secondary" className="text-xs mb-3 block">
+                Sigue estos pasos para crear un mapa completo y profesional
+              </Text>
+              <div className="space-y-2">
+                <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 1 ? 'text-blue-600' : 'text-gray-400'}`}>
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                    getProgressText().currentStep >= 1 ? 'bg-blue-500' : 'bg-gray-300'
+                  }`}>1</div>
+                  <span>Seleccionar Sala</span>
+                  <span className="text-gray-400">Configurar sala base</span>
+                </div>
+                <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 2 ? 'text-blue-600' : 'text-gray-400'}`}>
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                    getProgressText().currentStep >= 2 ? 'bg-blue-500' : 'bg-gray-300'
+                  }`}>2</div>
+                  <span>Crear Zonas</span>
+                  <span className="text-gray-400">Definir áreas del mapa</span>
+                </div>
+                <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 3 ? 'text-blue-600' : 'text-gray-400'}`}>
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                    getProgressText().currentStep >= 3 ? 'bg-blue-500' : 'bg-gray-300'
+                  }`}>3</div>
+                  <span>Agregar Elementos</span>
+                  <span className="text-gray-400">Mesas y sillas</span>
+                </div>
+                <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 4 ? 'text-blue-600' : 'text-gray-400'}`}>
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                    getProgressText().currentStep >= 4 ? 'bg-blue-500' : 'bg-gray-300'
+                  }`}>4</div>
+                  <span>Configurar Sillas</span>
+                  <span className="text-gray-400">Asignar a mesas</span>
+                </div>
+                <div className={`flex items-center gap-2 text-xs ${getProgressText().currentStep >= 5 ? 'text-green-600' : 'text-gray-400'}`}>
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center text-white text-xs ${
+                    getProgressText().currentStep >= 5 ? 'bg-green-500' : 'bg-gray-300'
+                  }`}>5</div>
+                  <span>Finalizar Mapa</span>
+                  <span className="text-gray-400">Guardar y activar</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Botones de Acción Principal */}
+            <div className="p-3 border-b border-gray-200">
+              <div className="space-y-2">
+                <Button 
+                  icon={<SaveOutlined />} 
+                  type="primary" 
+                  onClick={handleSave}
+                  block
+                  size="small"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  💾 Guardar Mapa
+                </Button>
+                <Button 
+                  onClick={onCancel}
+                  block
+                  size="small"
+                  className="border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                >
+                  ❌ Cancelar
+                </Button>
+              </div>
+              
+              {/* Botones de Deshacer/Rehacer */}
+              <div className="flex gap-1 mt-2">
+                <Button
+                  onClick={undo}
+                  disabled={historyIndex <= 0}
+                  icon={<UndoOutlined />}
+                  size="small"
+                  title="Ctrl+Z"
+                  className="flex-1"
+                >
+                  Deshacer
+                </Button>
+                <Button
+                  onClick={redo}
+                  disabled={historyIndex >= history.length - 1}
+                  icon={<UndoOutlined style={{ transform: 'scaleX(-1)' }} />}
+                  size="small"
+                  title="Ctrl+Y"
+                  className="flex-1"
+                >
+                  Rehacer
+                </Button>
+              </div>
+            </div>
            
                        <MenuMapa
               selectedElement={elements.find(el => selectedIds.includes(el._id))}
