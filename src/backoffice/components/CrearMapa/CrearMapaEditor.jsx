@@ -208,7 +208,9 @@ const CrearMapaEditor = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [totalSteps] = useState(5);
   
-  // ===== FUNCIÓN PARA CALCULAR PROGRESO =====
+  // ===== FUNCIONES PRINCIPALES (definidas antes de useEffect) =====
+  
+  // Función para calcular progreso
   const calculateProgress = useCallback(() => {
     let progress = 0;
     let step = 1;
@@ -250,7 +252,7 @@ const CrearMapaEditor = ({
     return progress;
   }, [salaId, zonas.length, elements.length, mapa?.estado]);
   
-  // ===== TEXTO DE PROGRESO =====
+  // Texto de progreso
   const getProgressText = useCallback(() => {
     const progress = calculateProgress();
     const stepTexts = {
@@ -268,6 +270,46 @@ const CrearMapaEditor = ({
       isComplete: progress >= 100
     };
   }, [calculateProgress, currentStep]);
+  
+  // Función para agregar al historial
+  const addToHistory = useCallback((newElements, action) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push({
+      elements: JSON.parse(JSON.stringify(newElements)),
+      action,
+      timestamp: Date.now()
+    });
+    
+    if (newHistory.length > maxHistorySize) {
+      newHistory.shift();
+    }
+    
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex, maxHistorySize]);
+  
+  // Función para actualizar estadísticas de IA
+  const updateAiStats = useCallback(() => {
+    const mesas = elements.filter(el => el.type === 'mesa');
+    const sillas = elements.filter(el => el.type === 'silla');
+    const zonas = elements.filter(el => el.zona);
+    
+    const totalArea = 2000 * 1400;
+    const elementosArea = elements.reduce((sum, el) => {
+      if (el.width && el.height) {
+        return sum + (el.width * el.height);
+      }
+      return sum + 400;
+    }, 0);
+    
+    setAiStats({
+      totalElements: elements.length,
+      mesas: mesas.length,
+      sillas: sillas.length,
+      zonas: zonas.length,
+      spaceUsage: (elementosArea / totalArea) * 100
+    });
+  }, [elements]);
   
   // ===== REFERENCIAS =====
   const stageRef = useRef(null);
@@ -686,21 +728,6 @@ const CrearMapaEditor = ({
   }, [clipboard, elements, addToHistory]);
   
   // ===== FUNCIONES DE HISTORIAL =====
-  const addToHistory = useCallback((newElements, action) => {
-    const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push({
-      elements: JSON.parse(JSON.stringify(newElements)),
-      action,
-      timestamp: Date.now()
-    });
-    
-    if (newHistory.length > maxHistorySize) {
-      newHistory.shift();
-    }
-    
-    setHistory(newHistory);
-    setHistoryIndex(newHistory.length - 1);
-  }, [history, historyIndex, maxHistorySize]);
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -1819,28 +1846,7 @@ const CrearMapaEditor = ({
     }
   }, [elements, updateElementProperty]);
 
-  // Actualización de estadísticas de IA
-  const updateAiStats = useCallback(() => {
-    const mesas = elements.filter(el => el.type === 'mesa');
-    const sillas = elements.filter(el => el.type === 'silla');
-    const zonas = elements.filter(el => el.zona);
-    
-    const totalArea = 2000 * 1400;
-    const elementosArea = elements.reduce((sum, el) => {
-      if (el.width && el.height) {
-        return sum + (el.width * el.height);
-      }
-      return sum + 400;
-    }, 0);
-    
-    setAiStats({
-      totalElements: elements.length,
-      mesas: mesas.length,
-      sillas: sillas.length,
-      zonas: zonas.length,
-      spaceUsage: (elementosArea / totalArea) * 100
-    });
-  }, [elements]);
+
 
 
 
