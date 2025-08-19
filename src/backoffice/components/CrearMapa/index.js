@@ -1,25 +1,14 @@
 // ===== SISTEMA SIMPLIFICADO DE CREAR-MAPA =====
-// Sistema optimizado con solo los componentes esenciales
+// Solo exportamos el editor principal
 
-import CrearMapaEditor from './CrearMapaEditor';
-import ZonaManager from './ZonaManager';
-import ContextMenu from './ContextMenu';
-import MesaTypeMenu from './MesaTypeMenu';
-import BackgroundFilterMenu from './BackgroundFilterMenu';
-import BackgroundImageManager from './BackgroundImageManager';
-import ImageUploader from './ImageUploader';
-import MesaSillaManager from './MesaSillaManager';
-
-export { 
-  CrearMapaEditor, 
-  ZonaManager,
-  ContextMenu,
-  MesaTypeMenu,
-  BackgroundFilterMenu,
-  BackgroundImageManager,
-  ImageUploader,
-  MesaSillaManager
-};
+export { default as CrearMapaEditor } from './CrearMapaEditor';
+export { default as ZonaManager } from './ZonaManager';
+export { default as ContextMenu } from './ContextMenu';
+export { default as MesaTypeMenu } from './MesaTypeMenu';
+export { default as BackgroundFilterMenu } from './BackgroundFilterMenu';
+export { default as BackgroundImageManager } from './BackgroundImageManager';
+export { default as ImageUploader } from './ImageUploader';
+export { default as MesaSillaManager } from './MesaSillaManager';
 
 // ===== FUNCIONES UTILITARIAS =====
 export const crearMapaUtils = {
