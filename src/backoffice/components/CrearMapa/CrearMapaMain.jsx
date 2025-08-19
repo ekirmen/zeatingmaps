@@ -240,95 +240,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   }, []);
 
   // ===== ATAJOS DE TECLADO =====
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.ctrlKey || e.metaKey) {
-        switch (e.key) {
-          case 'c':
-            e.preventDefault();
-            handleCopy();
-            break;
-          case 'v':
-            e.preventDefault();
-            handlePaste();
-            break;
-          case 'z':
-            e.preventDefault();
-            undo();
-            break;
-          case 'y':
-            e.preventDefault();
-            redo();
-            break;
-          case 'd':
-            e.preventDefault();
-            if (selectedIds.length === 1) {
-              const element = elements.find(el => el._id === selectedIds[0]);
-              if (element) {
-                duplicateElement(element, 'right');
-              }
-            }
-            break;
-          case 's':
-            e.preventDefault();
-            handleSave();
-            break;
-          case 'e':
-            e.preventDefault();
-            exportToPNG();
-            break;
-        }
-      } else {
-        switch (e.key) {
-          case 'Escape':
-            setSelectedIds([]);
-            setActiveMode('select');
-            closeContextMenu();
-            break;
-          case 'Delete':
-          case 'Backspace':
-            if (selectedIds.length > 0) {
-              deleteSelectedElements();
-            }
-            break;
-          case 'Tab':
-            e.preventDefault();
-            if (selectedIds.length === 1) {
-              const element = elements.find(el => el._id === selectedIds[0]);
-              if (element && element.type === 'silla') {
-                // Cambiar nombre de silla con Tab
-                const newName = prompt('Nuevo nombre de la silla:', element.nombre);
-                if (newName !== null) {
-                  updateElementProperty(element._id, 'nombre', newName);
-                }
-              }
-            }
-            break;
-          case '1':
-            setActiveMode('select');
-            break;
-          case '2':
-            setActiveMode('pan');
-            break;
-          case '3':
-            setCurrentTool('text');
-            break;
-          case '4':
-            setCurrentTool('rectangle');
-            break;
-          case '5':
-            setCurrentTool('circle');
-            break;
-          case '6':
-            setCurrentTool('polygon');
-            break;
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedIds, elements, handleCopy, handlePaste, undo, redo, duplicateElement, handleSave, exportToPNG, deleteSelectedElements, updateElementProperty, closeContextMenu]);
+  // Este useEffect se moverá después de que todas las funciones estén declaradas
 
   // ===== ACTUALIZAR PROPIEDADES RÁPIDAS CUANDO CAMBIA LA SELECCIÓN =====
   useEffect(() => {
@@ -2032,6 +1944,97 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       </Group>
     );
   }, [isCreatingCustomZone, currentCustomZone, customZonePoints]);
+
+  // ===== ATAJOS DE TECLADO =====
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'c':
+            e.preventDefault();
+            handleCopy();
+            break;
+          case 'v':
+            e.preventDefault();
+            handlePaste();
+            break;
+          case 'z':
+            e.preventDefault();
+            undo();
+            break;
+          case 'y':
+            e.preventDefault();
+            redo();
+            break;
+          case 'd':
+            e.preventDefault();
+            if (selectedIds.length === 1) {
+              const element = elements.find(el => el._id === selectedIds[0]);
+              if (element) {
+                duplicateElement(element, 'right');
+              }
+            }
+            break;
+          case 's':
+            e.preventDefault();
+            handleSave();
+            break;
+          case 'e':
+            e.preventDefault();
+            exportToPNG();
+            break;
+        }
+      } else {
+        switch (e.key) {
+          case 'Escape':
+            setSelectedIds([]);
+            setActiveMode('select');
+            closeContextMenu();
+            break;
+          case 'Delete':
+          case 'Backspace':
+            if (selectedIds.length > 0) {
+              deleteSelectedElements();
+            }
+            break;
+          case 'Tab':
+            e.preventDefault();
+            if (selectedIds.length === 1) {
+              const element = elements.find(el => el._id === selectedIds[0]);
+              if (element && element.type === 'silla') {
+                // Cambiar nombre de silla con Tab
+                const newName = prompt('Nuevo nombre de la silla:', element.nombre);
+                if (newName !== null) {
+                  updateElementProperty(element._id, 'nombre', newName);
+                }
+              }
+            }
+            break;
+          case '1':
+            setActiveMode('select');
+            break;
+          case '2':
+            setActiveMode('pan');
+            break;
+          case '3':
+            setCurrentTool('text');
+            break;
+          case '4':
+            setCurrentTool('rectangle');
+            break;
+          case '5':
+            setCurrentTool('circle');
+            break;
+          case '6':
+            setCurrentTool('polygon');
+            break;
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [selectedIds, elements, handleCopy, handlePaste, undo, redo, duplicateElement, handleSave, exportToPNG, deleteSelectedElements, updateElementProperty, closeContextMenu]);
 
   return (
     <div className="min-h-screen bg-gray-800 flex">
