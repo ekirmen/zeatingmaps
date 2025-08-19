@@ -52,7 +52,8 @@ import {
   DownloadOutlined,
   UploadOutlined,
   InfoCircleOutlined,
-  QuestionCircleOutlined
+  QuestionCircleOutlined,
+  AimOutlined
 } from '@ant-design/icons';
 import { useMapaElements } from '../../hooks/useMapaElements';
 import { useMapaState } from '../../hooks/useMapaState';
@@ -357,6 +358,94 @@ const CrearMapaEditor = ({
       message.success(`${pastedElements.length} elemento(s) pegado(s)`);
     }
   }, [clipboard, elements, addToHistory]);
+
+  // ===== FUNCIONES DE ZOOM Y PAN =====
+  const handleWheel = useCallback((e) => {
+    e.evt.preventDefault();
+    const stage = e.target.getStage();
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+    
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+    
+    const direction = e.evt.deltaY > 0 ? -1 : 1;
+    const scaleBy = 1.1;
+    const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+    
+    // Limitar zoom
+    const clampedScale = Math.max(minScale, Math.min(maxScale, newScale));
+    
+    setScale(clampedScale);
+    setPosition({
+      x: pointer.x - mousePointTo.x * clampedScale,
+      y: pointer.y - mousePointTo.y * clampedScale,
+    });
+  }, [minScale, maxScale]);
+
+  const handleMouseDown = useCallback((e) => {
+    if (activeMode === 'pan') {
+      const stage = e.target.getStage();
+      stage.draggable(true);
+    }
+  }, [activeMode]);
+
+  const handleMouseMove = useCallback((e) => {
+    if (activeMode === 'pan') {
+      const stage = e.target.getStage();
+      if (stage.draggable()) {
+        setPosition({
+          x: stage.x(),
+          y: stage.y(),
+        });
+      }
+    }
+  }, [activeMode, position]);
+
+  const handleDoubleClick = useCallback((e) => {
+    if (e.target === e.target.getStage()) {
+      // Centrar vista en el punto del doble clic
+      const stage = e.target.getStage();
+      const pointer = stage.getPointerPosition();
+      const newX = -(pointer.x - stage.width() / 2);
+      const newY = -(pointer.y - stage.height() / 2);
+      setPosition({ x: newX, y: newY });
+    }
+  }, []);
+
+  // ===== ATAJOS DE TECLADO =====
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        switch (e.key) {
+          case 'c':
+            e.preventDefault();
+            handleCopy();
+            break;
+          case 'v':
+            e.preventDefault();
+            handlePaste();
+            break;
+          case 'z':
+            e.preventDefault();
+            undo();
+            break;
+          case 'y':
+            e.preventDefault();
+            redo();
+            break;
+        }
+      } else if (e.key === 'Escape') {
+        setSelectedIds([]);
+        setActiveMode('select');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleCopy, handlePaste, undo, redo]);
   
   // ===== FUNCIONES DE HISTORIAL =====
   const addToHistory = useCallback((newElements, action) => {
@@ -843,60 +932,7 @@ const CrearMapaEditor = ({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleCopy, handlePaste, undo, redo]);
 
-  // ===== FUNCIONES DE ZOOM Y PAN =====
-  const handleWheel = useCallback((e) => {
-    e.evt.preventDefault();
-    const scaleBy = 1.1;
-    const stage = e.target.getStage();
-    const oldScale = stage.scaleX();
-    const pointer = stage.getPointerPosition();
-    
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
-    
-    const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
-    const clampedScale = Math.min(Math.max(newScale, minScale), maxScale);
-    
-    setScale(clampedScale);
-    setPosition({
-      x: pointer.x - mousePointTo.x * clampedScale,
-      y: pointer.y - mousePointTo.y * clampedScale,
-    });
-  }, [minScale, maxScale]);
 
-  const handleMouseDown = useCallback((e) => {
-    if (e.target !== e.target.getStage()) return;
-    
-    const stage = e.target.getStage();
-    const pointer = stage.getPointerPosition();
-    
-    setPosition({
-      x: pointer.x - (position.x - pointer.x),
-      y: pointer.y - (position.y - pointer.y),
-    });
-  }, [position]);
-
-  const handleMouseMove = useCallback((e) => {
-    if (activeMode === 'pan' && e.evt.buttons === 1) {
-      const stage = e.target.getStage();
-      const pointer = stage.getPointerPosition();
-      
-      setPosition({
-        x: pointer.x - (position.x - pointer.x),
-        y: pointer.y - (position.y - pointer.y),
-      });
-    }
-  }, [activeMode, position]);
-
-  const handleDoubleClick = useCallback((e) => {
-    if (e.target === e.target.getStage()) {
-      // Doble clic en el stage para centrar la vista
-      setPosition({ x: 0, y: 0 });
-      setScale(0.8);
-    }
-  }, []);
 
   // ===== FUNCIONES DE MENÚ CONTEXTUAL =====
   const handleContextMenu = useCallback((e) => {
@@ -1463,6 +1499,159 @@ const CrearMapaEditor = ({
                   >
                     Centrar Imagen
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {/* ===== PANEL DE PROPIEDADES RÁPIDAS ===== */}
+            {selectedIds.length > 0 && (
+              <div className="p-3 border-b border-gray-200">
+                <Title level={5} className="mb-3">⚙️ Propiedades Rápidas</Title>
+                <div className="space-y-3">
+                  {(() => {
+                    const selectedElement = elements.find(el => selectedIds.includes(el._id));
+                    if (!selectedElement) return null;
+
+                    return (
+                      <>
+                        {/* Nombre */}
+                        <div>
+                          <label className="block text-xs text-gray-600 mb-1">Nombre</label>
+                          <Input
+                            size="small"
+                            value={selectedElement.nombre || ''}
+                            onChange={(e) => updateElementProperty(selectedElement._id, 'nombre', e.target.value)}
+                            placeholder="Nombre del elemento"
+                          />
+                        </div>
+
+                        {/* Posición X */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-gray-600">Posición X</span>
+                            <span className="text-xs font-mono text-gray-500">{Math.round(selectedElement.posicion?.x || 0)}px</span>
+                          </div>
+                          <Slider
+                            min={0}
+                            max={2000}
+                            value={selectedElement.posicion?.x || 0}
+                            onChange={(value) => updateElementProperty(selectedElement._id, 'posicion', { 
+                              ...selectedElement.posicion, 
+                              x: value 
+                            })}
+                            size="small"
+                            tooltip={{ formatter: (value) => `${value}px` }}
+                          />
+                        </div>
+
+                        {/* Posición Y */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-gray-600">Posición Y</span>
+                            <span className="text-xs font-mono text-gray-500">{Math.round(selectedElement.posicion?.y || 0)}px</span>
+                          </div>
+                          <Slider
+                            min={0}
+                            max={1400}
+                            value={selectedElement.posicion?.y || 0}
+                            onChange={(value) => updateElementProperty(selectedElement._id, 'posicion', { 
+                              ...selectedElement.posicion, 
+                              y: value 
+                            })}
+                            size="small"
+                            tooltip={{ formatter: (value) => `${value}px` }}
+                          />
+                        </div>
+
+                        {/* Tamaño (solo para elementos con width/height) */}
+                        {(selectedElement.width || selectedElement.height) && (
+                          <>
+                            {/* Ancho */}
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-gray-600">Ancho</span>
+                                <span className="text-xs font-mono text-gray-500">{selectedElement.width || 0}px</span>
+                              </div>
+                              <Slider
+                                min={20}
+                                max={500}
+                                value={selectedElement.width || 0}
+                                onChange={(value) => updateElementProperty(selectedElement._id, 'width', value)}
+                                size="small"
+                                tooltip={{ formatter: (value) => `${value}px` }}
+                              />
+                            </div>
+
+                            {/* Alto */}
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="text-xs text-gray-600">Alto</span>
+                                <span className="text-xs font-mono text-gray-500">{selectedElement.height || 0}px</span>
+                              </div>
+                              <Slider
+                                min={20}
+                                max={500}
+                                value={selectedElement.height || 0}
+                                onChange={(value) => updateElementProperty(selectedElement._id, 'height', value)}
+                                size="small"
+                                tooltip={{ formatter: (value) => `${value}px` }}
+                              />
+                            </div>
+                          </>
+                        )}
+
+                        {/* Radio (solo para círculos) */}
+                        {selectedElement.radius && (
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-gray-600">Radio</span>
+                              <span className="text-xs font-mono text-gray-500">{selectedElement.radius}px</span>
+                            </div>
+                            <Slider
+                              min={10}
+                              max={200}
+                              value={selectedElement.radius}
+                              onChange={(value) => updateElementProperty(selectedElement._id, 'radius', value)}
+                              size="small"
+                              tooltip={{ formatter: (value) => `${value}px` }}
+                            />
+                          </div>
+                        )}
+
+                        {/* Rotación */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-gray-600">Rotación</span>
+                            <span className="text-xs font-mono text-gray-500">{Math.round(selectedElement.rotation || 0)}°</span>
+                          </div>
+                          <Slider
+                            min={0}
+                            max={360}
+                            value={selectedElement.rotation || 0}
+                            onChange={(value) => updateElementProperty(selectedElement._id, 'rotation', value)}
+                            size="small"
+                            tooltip={{ formatter: (value) => `${value}°` }}
+                          />
+                        </div>
+
+                        {/* Opacidad */}
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-gray-600">Opacidad</span>
+                            <span className="text-xs font-mono text-gray-500">{Math.round((selectedElement.opacity || 1) * 100)}%</span>
+                          </div>
+                          <Slider
+                            min={10}
+                            max={100}
+                            value={(selectedElement.opacity || 1) * 100}
+                            onChange={(value) => updateElementProperty(selectedElement._id, 'opacity', value / 100)}
+                            size="small"
+                            tooltip={{ formatter: (value) => `${value}%` }}
+                          />
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             )}
