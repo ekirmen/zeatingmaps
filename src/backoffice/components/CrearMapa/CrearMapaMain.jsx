@@ -78,17 +78,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [clipboard, setClipboard] = useState([]);
   
   // ===== ESTADOS DE ZONAS =====
-  const [zonas, setZonas] = useState([
-    { id: 'zona1', nombre: 'Zona A', color: '#FF6B6B' },
-    { id: 'zona2', nombre: 'Zona B', color: '#4ECDC4' },
-    { id: 'zona3', nombre: 'Zona C', color: '#45B7AA' },
-    { id: 'zona4', nombre: 'Zona D', color: '#96CEB4' },
-    { id: 'zona5', nombre: 'Zona E', color: '#FFEAA7' }
-  ]);
+  const [zonas, setZonas] = useState([]);
   const [selectedZone, setSelectedZone] = useState(null);
   const [showZoneManager, setShowZoneManager] = useState(false);
   const [newZoneName, setNewZoneName] = useState('');
   const [newZoneColor, setNewZoneColor] = useState('#FF6B6B');
+  const [newZoneAforo, setNewZoneAforo] = useState(0);
+  const [newZoneNumerada, setNewZoneNumerada] = useState(false);
   
   // ===== ESTADOS DE ZONAS PERSONALIZABLES =====
   const [customZones, setCustomZones] = useState([]);
@@ -136,6 +132,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [contextMenuElement, setContextMenuElement] = useState(null);
   const [showAddSeatsModal, setShowAddSeatsModal] = useState(false);
   const [selectedMesaForSeats, setSelectedMesaForSeats] = useState(null);
+
+  // ===== ESTADOS DE PANELES DESPLEGABLES =====
+  const [showCreateElements, setShowCreateElements] = useState(false);
+  const [showEditTools, setShowEditTools] = useState(false);
+  const [showZoomTools, setShowZoomTools] = useState(false);
+  const [showConfigTools, setShowConfigTools] = useState(false);
+  const [showInfoPanel, setShowInfoPanel] = useState(false);
   
   // ===== ESTADOS DE TRANSFORMADOR DE OBJETOS =====
   const [showTransformer, setShowTransformer] = useState(false);
@@ -378,15 +381,22 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const addNewZone = useCallback(() => {
     if (newZoneName.trim()) {
       const newZone = {
-        id: `zona_${Date.now()}`,
+        id: Date.now(), // Usar timestamp como ID temporal
         nombre: newZoneName.trim(),
-        color: newZoneColor
+        aforo: newZoneAforo,
+        color: newZoneColor,
+        numerada: newZoneNumerada,
+        sala_id: salaId,
+        tenant_id: null // Se asignará desde el contexto
       };
       setZonas(prev => [...prev, newZone]);
       setNewZoneName('');
+      setNewZoneAforo(0);
+      setNewZoneColor('#FF6B6B');
+      setNewZoneNumerada(false);
       message.success(`Zona "${newZone.nombre}" creada`);
     }
-  }, [newZoneName, newZoneColor]);
+  }, [newZoneName, newZoneColor, newZoneAforo, newZoneNumerada, salaId]);
 
   const deleteZone = useCallback((zoneId) => {
     setZonas(prev => prev.filter(z => z.id !== zoneId));
@@ -869,441 +879,589 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     );
   }
 
-  return (
-    <div className="w-full h-full bg-gray-100">
-      {/* Barra de herramientas completa */}
-      <div className="bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center space-x-4 flex-wrap">
-          {/* Controles de modo */}
-          <div className="flex items-center space-x-2 border-r border-gray-300 pr-4">
-            <button
-              onClick={() => setActiveMode('select')}
-              className={`px-3 py-2 rounded text-sm font-medium ${
-                activeMode === 'select'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              ✋ Seleccionar
-            </button>
-            <button
-              onClick={() => setActiveMode('pan')}
-              className={`px-3 py-2 rounded text-sm font-medium ${
-                activeMode === 'pan'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-            >
-              🖐️ Mover
-            </button>
-          </div>
-
-          {/* Controles de elementos */}
-          <div className="flex items-center space-x-2 border-r border-gray-300 pr-4">
-            <button
-              onClick={() => addMesa('rectangular')}
-              className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-            >
-              🟦 Mesa
-            </button>
-            <button
-              onClick={() => addMesa('circular')}
-              className="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
-            >
-              🔴 Mesa Redonda
-            </button>
-            <button
-              onClick={() => addSilla()}
-              className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-            >
-              🪑 Silla
-            </button>
-            <button
-              onClick={() => addTexto()}
-              className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
-            >
-              📝 Texto
-            </button>
-            <button
-              onClick={() => addRectangulo()}
-              className="px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
-            >
-              ⬜ Rectángulo
-            </button>
-            <button
-              onClick={() => addCirculo()}
-              className="px-3 py-2 bg-pink-600 text-white rounded hover:bg-pink-700 text-sm"
-            >
-              ⭕ Círculo
-            </button>
-          </div>
-
-          {/* Controles de edición */}
-          <div className="flex items-center space-x-2 border-r border-gray-300 pr-4">
-            <button
-              onClick={undo}
-              disabled={historyIndex <= 0}
-              className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-sm"
-            >
-              ↶ Deshacer
-            </button>
-            <button
-              onClick={redo}
-              disabled={historyIndex >= history.length - 1}
-              className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-sm"
-            >
-              ↷ Rehacer
-            </button>
-            <button
-              onClick={handleCopy}
-              disabled={selectedIds.length === 0}
-              className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-sm"
-            >
-              📋 Copiar
-            </button>
-            <button
-              onClick={handlePaste}
-              disabled={clipboard.length === 0}
-              className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-sm"
-            >
-              📄 Pegar
-            </button>
-            <button
-              onClick={deleteSelectedElements}
-              disabled={selectedIds.length === 0}
-              className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-sm"
-            >
-              🗑️ Eliminar
-            </button>
-          </div>
-
-          {/* Selector de zona */}
-          {selectedIds.length > 0 && (
-            <div className="flex items-center space-x-2 border-r border-gray-300 pr-4">
-              <span className="text-sm text-gray-600">Zona:</span>
-              <select
-                onChange={(e) => assignZoneToSelected(e.target.value)}
-                className="px-2 py-1 border border-gray-300 rounded text-sm"
-                defaultValue=""
-              >
-                <option value="">Sin zona</option>
-                {zonas.map(zona => (
-                  <option key={zona.id} value={zona.id}>
-                    {zona.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Controles de zoom */}
-          <div className="flex items-center space-x-2 border-r border-gray-300 pr-4">
-            <button
-              onClick={() => {
-                const newScale = Math.min(maxScale, scale * 1.2);
-                setScale(newScale);
-              }}
-              className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
-            >
-              🔍+
-            </button>
-            <span className="text-sm text-gray-600 w-16 text-center">
-              {Math.round(scale * 100)}%
-            </span>
-            <button
-              onClick={() => {
-                const newScale = Math.max(minScale, scale / 1.2);
-                setScale(newScale);
-              }}
-              className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
-            >
-              🔍-
-            </button>
-            <button
-              onClick={() => {
-                setScale(1);
-                setPosition({ x: 0, y: 0 });
-              }}
-              className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
-            >
-              🏠 Centrar
-            </button>
-          </div>
-
-          {/* Controles de acción */}
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => onSave && onSave(elements)}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              💾 Guardar
-            </button>
-            <button
-              onClick={onCancel}
-              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-            >
-              ❌ Cancelar
-            </button>
-          </div>
+    return (
+    <div className="w-full h-full bg-gray-100 flex">
+      {/* Panel lateral izquierdo con herramientas */}
+      <div className="w-80 bg-white border-r border-gray-300 flex flex-col">
+        {/* Header del panel */}
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Editor de Mapas
+          </h2>
+          <p className="text-sm text-gray-500">
+            Sala ID: {salaId}
+          </p>
         </div>
 
-        {/* Segunda fila de herramientas */}
-        <div className="mt-3 pt-3 border-t border-gray-200">
-          <div className="flex items-center space-x-4 text-sm">
-            {/* Información de selección */}
-            <div className="text-gray-600">
-              Elementos: {elements.length} | Seleccionados: {selectedIds.length}
+        {/* Contenido del panel con scroll */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Panel: Herramientas de Selección */}
+          <div className="bg-white border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setActiveMode('select')}
+              className={`w-full p-3 text-left font-medium rounded-t-lg ${
+                activeMode === 'select'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              ✋ Herramientas de Selección
+            </button>
+            <div className={`p-3 border-t border-gray-200 ${activeMode === 'select' ? 'block' : 'hidden'}`}>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setActiveMode('select')}
+                  className={`w-full px-3 py-2 rounded text-sm ${
+                    activeMode === 'select'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  ✋ Seleccionar
+                </button>
+                <button
+                  onClick={() => setActiveMode('pan')}
+                  className={`w-full px-3 py-2 rounded text-sm ${
+                    activeMode === 'pan'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  🖐️ Mover
+                </button>
+              </div>
             </div>
-            
-            {/* Controles de grid */}
-            <div className="flex items-center space-x-2">
-              <label className="flex items-center space-x-1">
-                <input
-                  type="checkbox"
-                  checked={showGrid}
-                  onChange={(e) => setShowGrid(e.target.checked)}
-                  className="rounded"
-                />
-                <span>Grid</span>
-              </label>
-              <input
-                type="range"
-                min="10"
-                max="50"
-                value={gridSize}
-                onChange={(e) => setGridSize(Number(e.target.value))}
-                className="w-16"
-              />
-              <span className="w-8">{gridSize}px</span>
-            </div>
+          </div>
 
-            {/* Controles de visibilidad */}
-            <div className="flex items-center space-x-2">
-              <label className="flex items-center space-x-1">
-                <input
-                  type="checkbox"
-                  checked={showMesaNames}
-                  onChange={(e) => setShowMesaNames(e.target.checked)}
-                  className="rounded"
-                />
-                <span>Nombres</span>
-              </label>
+          {/* Panel: Crear Elementos */}
+          <div className="bg-white border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setShowCreateElements(!showCreateElements)}
+              className="w-full p-3 text-left font-medium rounded-t-lg bg-green-100 text-green-700 hover:bg-green-200"
+            >
+              🎨 Crear Elementos
+            </button>
+            <div className={`p-3 border-t border-gray-200 ${showCreateElements ? 'block' : 'hidden'}`}>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => addMesa('rectangular')}
+                  className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                >
+                  🟦 Mesa
+                </button>
+                <button
+                  onClick={() => addMesa('circular')}
+                  className="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+                >
+                  🔴 Mesa Redonda
+                </button>
+                <button
+                  onClick={() => addSilla()}
+                  className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                >
+                  🪑 Silla
+                </button>
+                <button
+                  onClick={() => addTexto()}
+                  className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
+                >
+                  📝 Texto
+                </button>
+                <button
+                  onClick={() => addRectangulo()}
+                  className="px-3 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 text-sm"
+                >
+                  ⬜ Rectángulo
+                </button>
+                <button
+                  onClick={() => addCirculo()}
+                  className="px-3 py-2 bg-pink-600 text-white rounded hover:bg-pink-700 text-sm"
+                >
+                  ⭕ Círculo
+                </button>
+              </div>
             </div>
+          </div>
 
-            {/* Historial */}
-            <div className="text-gray-500">
-              Historial: {historyIndex + 1}/{history.length}
+          {/* Panel: Edición */}
+          <div className="bg-white border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setShowEditTools(!showEditTools)}
+              className="w-full p-3 text-left font-medium rounded-t-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
+            >
+              🔧 Herramientas de Edición
+            </button>
+            <div className={`p-3 border-t border-gray-200 ${showEditTools ? 'block' : 'hidden'}`}>
+              <div className="space-y-2">
+                <button
+                  onClick={undo}
+                  disabled={historyIndex <= 0}
+                  className="w-full px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-sm"
+                >
+                  ↶ Deshacer
+                </button>
+                <button
+                  onClick={redo}
+                  disabled={historyIndex >= history.length - 1}
+                  className="w-full px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-sm"
+                >
+                  ↷ Rehacer
+                </button>
+                <button
+                  onClick={handleCopy}
+                  disabled={selectedIds.length === 0}
+                  className="w-full px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-sm"
+                >
+                  📋 Copiar
+                </button>
+                <button
+                  onClick={handlePaste}
+                  disabled={clipboard.length === 0}
+                  className="w-full px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-sm"
+                >
+                  📄 Pegar
+                </button>
+                <button
+                  onClick={deleteSelectedElements}
+                  disabled={selectedIds.length === 0}
+                  className="w-full px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-sm"
+                >
+                  🗑️ Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel: Zoom y Navegación */}
+          <div className="bg-white border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setShowZoomTools(!showZoomTools)}
+              className="w-full p-3 text-left font-medium rounded-t-lg bg-purple-100 text-purple-700 hover:bg-purple-200"
+            >
+              🔍 Zoom y Navegación
+            </button>
+            <div className={`p-3 border-t border-gray-200 ${showZoomTools ? 'block' : 'hidden'}`}>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      const newScale = Math.min(maxScale, scale * 1.2);
+                      setScale(newScale);
+                    }}
+                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+                  >
+                    🔍+
+                  </button>
+                  <span className="text-sm text-gray-600 flex-1 text-center">
+                    {Math.round(scale * 100)}%
+                  </span>
+                  <button
+                    onClick={() => {
+                      const newScale = Math.max(minScale, scale / 1.2);
+                      setScale(newScale);
+                    }}
+                    className="px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+                  >
+                    🔍-
+                  </button>
+                </div>
+                <button
+                  onClick={() => {
+                    setScale(1);
+                    setPosition({ x: 0, y: 0 });
+                  }}
+                  className="w-full px-3 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+                >
+                  🏠 Centrar Vista
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel: Configuración */}
+          <div className="bg-white border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setShowConfigTools(!showConfigTools)}
+              className="w-full p-3 text-left font-medium rounded-t-lg bg-orange-100 text-orange-700 hover:bg-orange-200"
+            >
+              ⚙️ Configuración
+            </button>
+            <div className={`p-3 border-t border-gray-200 ${showConfigTools ? 'block' : 'hidden'}`}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-gray-600">Grid:</label>
+                  <input
+                    type="checkbox"
+                    checked={showGrid}
+                    onChange={(e) => setShowGrid(e.target.checked)}
+                    className="rounded"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-gray-600">Tamaño Grid:</label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="50"
+                    value={gridSize}
+                    onChange={(e) => setGridSize(Number(e.target.value))}
+                    className="w-20"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-gray-600">Nombres:</label>
+                  <input
+                    type="checkbox"
+                    checked={showMesaNames}
+                    onChange={(e) => setShowMesaNames(e.target.checked)}
+                    className="rounded"
+                  />
+                </div>
+                <div className="text-xs text-gray-500 text-center">
+                  Historial: {historyIndex + 1}/{history.length}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel: Información */}
+          <div className="bg-white border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setShowInfoPanel(!showInfoPanel)}
+              className="w-full p-3 text-left font-medium rounded-t-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
+            >
+              ℹ️ Información
+            </button>
+            <div className={`p-3 border-t border-gray-200 ${showInfoPanel ? 'block' : 'hidden'}`}>
+              <div className="text-sm text-gray-600 space-y-2">
+                <div>Elementos: {elements.length}</div>
+                <div>Seleccionados: {selectedIds.length}</div>
+                <div className="pt-2 border-t border-gray-200">
+                  <div className="font-medium mb-2">Atajos de Teclado:</div>
+                  <div className="space-y-1 text-xs">
+                    <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+Z</kbd> Deshacer</div>
+                    <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+Y</kbd> Rehacer</div>
+                    <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+C</kbd> Copiar</div>
+                    <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+V</kbd> Pegar</div>
+                    <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+S</kbd> Guardar</div>
+                    <div><kbd className="bg-gray-100 px-1 rounded">Del</kbd> Eliminar</div>
+                    <div><kbd className="bg-gray-100 px-1 rounded">Esc</kbd> Deseleccionar</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Panel: Acciones */}
+          <div className="bg-white border border-gray-200 rounded-lg">
+            <div className="p-3">
+              <div className="space-y-2">
+                <button
+                  onClick={() => onSave && onSave(elements)}
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  💾 Guardar
+                </button>
+                <button
+                  onClick={onCancel}
+                  className="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                >
+                  ❌ Cancelar
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Área de trabajo */}
-      <div className="flex-1 flex">
-        {/* Panel lateral */}
-        <div className="w-80 bg-white border-r border-gray-300 p-4">
-          <div className="space-y-6">
-            {/* Gestión de zonas */}
-            <div>
-              <h3 className="font-semibold mb-3">🎨 Gestión de Zonas</h3>
-              <div className="space-y-2">
-                {zonas.map(zona => (
-                  <div key={zona.id} className="flex items-center justify-between p-2 border border-gray-200 rounded">
-                    <div className="flex items-center space-x-2">
-                      <div 
-                        className="w-4 h-4 rounded"
-                        style={{ backgroundColor: zona.color }}
-                      ></div>
-                      <span className="text-sm">{zona.nombre}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <input
-                        type="color"
-                        value={zona.color}
-                        onChange={(e) => updateZoneColor(zona.id, e.target.value)}
-                        className="w-6 h-6 border-none rounded cursor-pointer"
-                      />
-                      <button
-                        onClick={() => deleteZone(zona.id)}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {/* Agregar nueva zona */}
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    placeholder="Nombre de zona"
-                    value={newZoneName}
-                    onChange={(e) => setNewZoneName(e.target.value)}
-                    className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-                  />
-                  <input
-                    type="color"
-                    value={newZoneColor}
-                    onChange={(e) => setNewZoneColor(e.target.value)}
-                    className="w-8 h-8 border-none rounded cursor-pointer"
-                  />
-                  <button
-                    onClick={addNewZone}
-                    disabled={!newZoneName.trim()}
-                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
-                  >
-                    +
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Propiedades del elemento seleccionado */}
-            {selectedIds.length === 1 && (
-              <div>
-                <h3 className="font-semibold mb-3">🔧 Propiedades</h3>
-                {(() => {
-                  const element = elements.find(el => el._id === selectedIds[0]);
-                  if (!element) return null;
+      {/* Área de trabajo principal */}
+      <div className="flex-1 flex flex-col">
+        {/* Canvas principal */}
+        <div className="flex-1 p-4">
+          <div className="bg-white border border-gray-300 rounded-lg p-4 h-full">
+            {/* Canvas de Konva */}
+            <div className="border border-gray-200 rounded-lg overflow-hidden h-full">
+              <Stage
+                ref={stageRef}
+                width={800}
+                height={600}
+                style={{ background: '#f8fafc' }}
+                scaleX={scale}
+                scaleY={scale}
+                x={position.x}
+                y={position.y}
+                onWheel={handleWheel}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+              >
+                <Layer>
+                  {/* Grid de fondo */}
+                  {showGrid && (
+                    <Group>
+                      {Array.from({ length: Math.ceil(800 / gridSize) }, (_, i) => (
+                        <Line
+                          key={`v${i}`}
+                          points={[i * gridSize, 0, i * gridSize, 600]}
+                          stroke="#e2e8f0"
+                          strokeWidth={1}
+                        />
+                      ))}
+                      {Array.from({ length: Math.ceil(600 / gridSize) }, (_, i) => (
+                        <Line
+                          key={`h${i}`}
+                          points={[0, i * gridSize, 800, i * gridSize]}
+                          stroke="#e2e8f0"
+                          strokeWidth={1}
+                        />
+                      ))}
+                    </Group>
+                  )}
                   
-                  return (
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm text-gray-600 mb-1">Nombre:</label>
-                        <input
-                          type="text"
-                          value={element.nombre || element.texto || ''}
-                          onChange={(e) => {
-                            const property = element.type === 'texto' ? 'texto' : 'nombre';
-                            updateElementProperty(element._id, property, e.target.value);
-                          }}
-                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  {/* Elementos del mapa */}
+                  {renderElements()}
+                  
+                  {/* Nombres de elementos */}
+                  {showMesaNames && elements.map(element => {
+                    if (element.type === 'mesa' && element.nombre) {
+                      return (
+                        <Text
+                          key={`name_${element._id}`}
+                          x={element.posicion.x + element.width / 2}
+                          y={element.posicion.y + element.height / 2}
+                          text={element.nombre}
+                          fontSize={12}
+                          fill="#000000"
+                          fontFamily="Arial"
+                          align="center"
+                          verticalAlign="middle"
+                          offsetX={element.nombre.length * 3}
+                          offsetY={6}
+                          listening={false}
                         />
-                      </div>
-                      
-                      {element.type === 'mesa' && (
-                        <>
-                          <div>
-                            <label className="block text-sm text-gray-600 mb-1">Ancho:</label>
-                            <input
-                              type="number"
-                              value={element.width}
-                              onChange={(e) => updateElementProperty(element._id, 'width', Number(e.target.value))}
-                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm text-gray-600 mb-1">Alto:</label>
-                            <input
-                              type="number"
-                              value={element.height}
-                              onChange={(e) => updateElementProperty(element._id, 'height', Number(e.target.value))}
-                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm text-gray-600 mb-1">Tipo:</label>
-                            <select
-                              value={element.mesaType || 'rectangular'}
-                              onChange={(e) => updateElementProperty(element._id, 'mesaType', e.target.value)}
-                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                            >
-                              <option value="rectangular">Rectangular</option>
-                              <option value="circular">Circular</option>
-                            </select>
-                          </div>
-                        </>
-                      )}
-
-                      {element.type === 'texto' && (
-                        <div>
-                          <label className="block text-sm text-gray-600 mb-1">Tamaño de fuente:</label>
-                          <input
-                            type="number"
-                            value={element.fontSize}
-                            onChange={(e) => updateElementProperty(element._id, 'fontSize', Number(e.target.value))}
-                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
-                          />
-                        </div>
-                      )}
-
-                      <div>
-                        <label className="block text-sm text-gray-600 mb-1">Color:</label>
-                        <input
-                          type="color"
-                          value={element.fill}
-                          onChange={(e) => updateElementProperty(element._id, 'fill', e.target.value)}
-                          className="w-full h-8 border border-gray-300 rounded cursor-pointer"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm text-gray-600 mb-1">Rotación:</label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="360"
-                          value={selectedElementRotation}
-                          onChange={(e) => {
-                            const rotation = Number(e.target.value);
-                            setSelectedElementRotation(rotation);
-                            updateElementProperty(element._id, 'rotation', rotation);
-                          }}
-                          className="w-full"
-                        />
-                        <span className="text-xs text-gray-500">{selectedElementRotation}°</span>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm text-gray-600 mb-1">Opacidad:</label>
-                        <input
-                          type="range"
-                          min="0"
-                          max="1"
-                          step="0.1"
-                          value={element.opacity}
-                          onChange={(e) => updateElementProperty(element._id, 'opacity', Number(e.target.value))}
-                          className="w-full"
-                        />
-                        <span className="text-xs text-gray-500">{Math.round(element.opacity * 100)}%</span>
-                      </div>
-
-                      <div className="pt-2 border-t border-gray-200">
-                        <button
-                          onClick={() => duplicateElement(element, 'right')}
-                          className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                        >
-                          📋 Duplicar
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-
-            {/* Atajos de teclado */}
-            <div>
-              <h3 className="font-semibold mb-3">⌨️ Atajos de Teclado</h3>
-              <div className="text-xs text-gray-600 space-y-1">
-                <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+Z</kbd> Deshacer</div>
-                <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+Y</kbd> Rehacer</div>
-                <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+C</kbd> Copiar</div>
-                <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+V</kbd> Pegar</div>
-                <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+S</kbd> Guardar</div>
-                <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+A</kbd> Seleccionar todo</div>
-                <div><kbd className="bg-gray-100 px-1 rounded">Del</kbd> Eliminar</div>
-                <div><kbd className="bg-gray-100 px-1 rounded">Esc</kbd> Deseleccionar</div>
-                <div><kbd className="bg-gray-100 px-1 rounded">M</kbd> Agregar mesa</div>
-                <div><kbd className="bg-gray-100 px-1 rounded">S</kbd> Agregar silla</div>
-                <div><kbd className="bg-gray-100 px-1 rounded">T</kbd> Agregar texto</div>
-              </div>
+                      );
+                    }
+                    return null;
+                  })}
+                </Layer>
+              </Stage>
             </div>
           </div>
         </div>
+
+        {/* Panel inferior con propiedades y zonas */}
+        <div className="h-64 bg-white border-t border-gray-200 flex">
+          {/* Panel de propiedades */}
+          <div className="flex-1 p-4 border-r border-gray-200">
+            <h3 className="font-semibold mb-3">🔧 Propiedades del Elemento</h3>
+            {selectedIds.length === 1 ? (
+              (() => {
+                const element = elements.find(el => el._id === selectedIds[0]);
+                if (!element) return <div className="text-gray-500">Selecciona un elemento</div>;
+                 
+                return (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Nombre:</label>
+                      <input
+                        type="text"
+                        value={element.nombre || element.texto || ''}
+                        onChange={(e) => {
+                          const property = element.type === 'texto' ? 'texto' : 'nombre';
+                          updateElementProperty(element._id, property, e.target.value);
+                        }}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                      />
+                    </div>
+                     
+                    {element.type === 'mesa' && (
+                      <>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Ancho:</label>
+                          <input
+                            type="number"
+                            value={element.width}
+                            onChange={(e) => updateElementProperty(element._id, 'width', Number(e.target.value))}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Alto:</label>
+                          <input
+                            type="number"
+                            value={element.height}
+                            onChange={(e) => updateElementProperty(element._id, 'height', Number(e.target.value))}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm text-gray-600 mb-1">Tipo:</label>
+                          <select
+                            value={element.mesaType || 'rectangular'}
+                            onChange={(e) => updateElementProperty(element._id, 'mesaType', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                          >
+                            <option value="rectangular">Rectangular</option>
+                            <option value="circular">Circular</option>
+                          </select>
+                        </div>
+                      </>
+                    )}
+
+                    {element.type === 'texto' && (
+                      <div>
+                        <label className="block text-sm text-gray-600 mb-1">Tamaño de fuente:</label>
+                        <input
+                          type="number"
+                          value={element.fontSize}
+                          onChange={(e) => updateElementProperty(element._id, 'fontSize', Number(e.target.value))}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Color:</label>
+                      <input
+                        type="color"
+                        value={element.fill}
+                        onChange={(e) => updateElementProperty(element._id, 'fill', e.target.value)}
+                        className="w-full h-8 border border-gray-300 rounded cursor-pointer"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Rotación:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="360"
+                        value={selectedElementRotation}
+                        onChange={(e) => {
+                          const rotation = Number(e.target.value);
+                          setSelectedElementRotation(rotation);
+                          updateElementProperty(element._id, 'rotation', rotation);
+                        }}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-gray-500">{selectedElementRotation}°</span>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-gray-600 mb-1">Opacidad:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.1"
+                        value={element.opacity}
+                        onChange={(e) => updateElementProperty(element._id, 'opacity', Number(e.target.value))}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-gray-500">{Math.round(element.opacity * 100)}%</span>
+                    </div>
+
+                    <div className="pt-2 border-t border-gray-200">
+                      <button
+                        onClick={() => duplicateElement(element, 'right')}
+                        className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                      >
+                        📋 Duplicar
+                      </button>
+                    </div>
+                  </div>
+                );
+              })()
+            ) : (
+              <div className="text-gray-500">Selecciona un elemento para ver sus propiedades</div>
+            )}
+          </div>
+
+                     {/* Panel de zonas */}
+           <div className="w-80 p-4">
+             <h3 className="font-semibold mb-3">🎨 Gestión de Zonas</h3>
+             <div className="space-y-2">
+               {zonas.map(zona => (
+                 <div key={zona.id} className="p-2 border border-gray-200 rounded">
+                   <div className="flex items-center justify-between mb-2">
+                     <div className="flex items-center space-x-2">
+                       <div 
+                         className="w-4 h-4 rounded"
+                         style={{ backgroundColor: zona.color }}
+                       ></div>
+                       <span className="text-sm font-medium">{zona.nombre}</span>
+                     </div>
+                     <div className="flex items-center space-x-1">
+                       <input
+                         type="color"
+                         value={zona.color}
+                         onChange={(e) => updateZoneColor(zona.id, e.target.value)}
+                         className="w-6 h-6 border-none rounded cursor-pointer"
+                       />
+                       <button
+                         onClick={() => deleteZone(zona.id)}
+                         className="text-red-600 hover:text-red-800 text-sm"
+                       >
+                         🗑️
+                       </button>
+                     </div>
+                   </div>
+                   <div className="text-xs text-gray-500 space-y-1">
+                     <div>Aforo: {zona.aforo || 0}</div>
+                     <div>Numerada: {zona.numerada ? 'Sí' : 'No'}</div>
+                   </div>
+                 </div>
+               ))}
+             </div>
+              
+             {/* Agregar nueva zona */}
+             <div className="mt-3 pt-3 border-t border-gray-200">
+               <div className="space-y-2">
+                 <input
+                   type="text"
+                   placeholder="Nombre de zona"
+                   value={newZoneName}
+                   onChange={(e) => setNewZoneName(e.target.value)}
+                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                 />
+                 <div className="flex items-center space-x-2">
+                   <input
+                     type="number"
+                     placeholder="Aforo"
+                     value={newZoneAforo}
+                     onChange={(e) => setNewZoneAforo(Number(e.target.value))}
+                     className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                   />
+                   <label className="flex items-center space-x-1 text-xs">
+                     <input
+                       type="checkbox"
+                       checked={newZoneNumerada}
+                       onChange={(e) => setNewZoneNumerada(e.target.checked)}
+                       className="rounded"
+                     />
+                     <span>Numerada</span>
+                   </label>
+                 </div>
+                 <div className="flex items-center space-x-2">
+                   <input
+                     type="color"
+                     value={newZoneColor}
+                     onChange={(e) => setNewZoneColor(e.target.value)}
+                     className="w-8 h-8 border-none rounded cursor-pointer"
+                   />
+                   <button
+                     onClick={addNewZone}
+                     disabled={!newZoneName.trim()}
+                     className="flex-1 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+                   >
+                     + Agregar Zona
+                   </button>
+                 </div>
+               </div>
+             </div>
+           </div>
+        </div>
+      </div>
 
         {/* Canvas principal */}
         <div className="flex-1 p-4">
@@ -1383,8 +1541,6 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
                 })}
               </Layer>
             </Stage>
-          </div>
-
           </div>
         </div>
       </div>
