@@ -13,7 +13,9 @@ import {
   LayerOutlined,
   PictureOutlined,
   UploadOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined
 } from "@ant-design/icons";
 
 const SeatingMap = ({
@@ -62,11 +64,14 @@ const SeatingMap = ({
     grid: { visible: true, locked: false, name: 'Grid' }
   });
   
-  // ===== ESTADOS DE ZONAS PERSONALIZABLES =====
+  // ===== ESTADOS DE ZONAS PERSONALIZABLES MEJORADOS =====
   const [customZones, setCustomZones] = useState([]);
   const [showCustomZonePanel, setShowCustomZonePanel] = useState(false);
   const [isCreatingCustomZone, setIsCreatingCustomZone] = useState(false);
   const [customZonePoints, setCustomZonePoints] = useState([]);
+  const [editingZoneId, setEditingZoneId] = useState(null);
+  const [selectedZonePoint, setSelectedZonePoint] = useState(null);
+  const [zoneEditMode, setZoneEditMode] = useState('create'); // 'create', 'edit', 'add'
   
   // ===== ESTADOS DE CONFIGURACIÓN =====
   const [showConfigPanel, setShowConfigPanel] = useState(false);
@@ -102,6 +107,10 @@ const SeatingMap = ({
     lastRender: Date.now()
   });
 
+  // ===== ESTADOS DE ESTABILIZACIÓN =====
+  const [isStabilizing, setIsStabilizing] = useState(false);
+  const [canvasStable, setCanvasStable] = useState(true);
+
   // Obtener funciones de seat lock
   const { isSeatLocked, isSeatLockedByMe } = useSeatLockStore();
 
@@ -134,6 +143,36 @@ const SeatingMap = ({
     console.log('[SeatingMap] Mapa recibido:', mapa);
     console.log('[SeatingMap] Mesas:', mapa?.mesas);
   }, [mapa]);
+
+  // ===== EFECTO PARA ESTABILIZAR EL CANVAS Y EVITAR DESAPARICIÓN DE ELEMENTOS =====
+  useEffect(() => {
+    if (stageRef.current) {
+      // Forzar re-renderizado del canvas
+      stageRef.current.batchDraw();
+      
+      // Estabilizar las capas
+      const layers = stageRef.current.getLayers();
+      layers.forEach(layer => {
+        layer.batchDraw();
+      });
+    }
+  }, [mapa, customZones, selectedSeats, layers, showGrid, backgroundImage]);
+
+  // ===== EFECTO DE LIMPIEZA AL DESMONTAR =====
+  useEffect(() => {
+    return () => {
+      // Limpiar estados al desmontar
+      clearAllStates();
+      
+      // Limpiar referencias
+      if (stageRef.current) {
+        stageRef.current.destroy();
+      }
+      if (transformerRef.current) {
+        transformerRef.current.destroy();
+      }
+    };
+  }, [clearAllStates]);
 
   // ===== EFECTO PARA MANEJAR EL TRANSFORMADOR =====
   useEffect(() => {
@@ -227,34 +266,170 @@ const SeatingMap = ({
     }));
   }, []);
 
-  // ===== FUNCIONES DE ZONAS PERSONALIZABLES =====
+  // ===== FUNCIONES DE ZONAS PERSONALIZABLES MEJORADAS =====
   const startCustomZoneCreation = useCallback(() => {
     setIsCreatingCustomZone(true);
+    setZoneEditMode('create');
     setCustomZonePoints([]);
-    message.info('Haz clic en el canvas para crear puntos de la zona. Doble clic para finalizar.');
+    setEditingZoneId(null);
+    setSelectedZonePoint(null);
+    message.info('Haz clic en el canvas para crear puntos de la zona. Se creará un cubo automáticamente con 3 puntos.');
   }, []);
+
+  const startZoneEditing = useCallback((zoneId) => {
+    const zone = customZones.find(z => z.id === zoneId);
+    if (!zone) return;
+    
+    setIsCreatingCustomZone(true);
+    setZoneEditMode('edit');
+    setEditingZoneId(zoneId);
+    setCustomZonePoints([...zone.points]);
+    setSelectedZonePoint(null);
+    message.info('Modo edición activado. Haz clic en un punto para seleccionarlo o en el canvas para añadir nuevos puntos.');
+  }, [customZones]);
 
   const addCustomZonePoint = useCallback((x, y) => {
     if (!isCreatingCustomZone) return;
     
     const newPoint = { x, y, id: Date.now() };
-    setCustomZonePoints(prev => [...prev, newPoint]);
+    const updatedPoints = [...customZonePoints, newPoint];
+    setCustomZonePoints(updatedPoints);
     
-    if (customZonePoints.length >= 2) {
+    // Crear zona automáticamente cuando hay 3 puntos
+    if (updatedPoints.length === 3) {
       const zone = {
-        id: Date.now(),
+        id: editingZoneId || Date.now(),
         name: `Zona Personalizada ${customZones.length + 1}`,
         color: '#FF6B6B',
-        points: [...customZonePoints, newPoint],
+        points: updatedPoints,
         price: 0,
         capacity: 0
       };
-      setCustomZones(prev => [...prev, zone]);
-      setIsCreatingCustomZone(false);
-      setCustomZonePoints([]);
-      message.success('Zona personalizada creada exitosamente');
+      
+      if (editingZoneId) {
+        // Actualizar zona existente
+        setCustomZones(prev => prev.map(z => 
+          z.id === editingZoneId ? zone : z
+        ));
+        message.success('Zona actualizada exitosamente');
+      } else {
+        // Crear nueva zona
+        setCustomZones(prev => [...prev, zone]);
+        message.success('Zona personalizada creada exitosamente');
+      }
+      
+      // Continuar en modo edición para permitir más puntos
+      if (editingZoneId) {
+        setCustomZonePoints(updatedPoints);
+      } else {
+        setIsCreatingCustomZone(false);
+        setCustomZonePoints([]);
+        setEditingZoneId(null);
+      }
     }
-  }, [isCreatingCustomZone, customZonePoints, customZones.length]);
+  }, [isCreatingCustomZone, customZonePoints, customZones.length, editingZoneId]);
+
+  const selectZonePoint = useCallback((pointId) => {
+    setSelectedZonePoint(pointId);
+  }, []);
+
+  const moveZonePoint = useCallback((pointId, newX, newY) => {
+    if (!editingZoneId) return;
+    
+    setCustomZonePoints(prev => prev.map(point => 
+      point.id === pointId ? { ...point, x: newX, y: newY } : point
+    ));
+    
+    // Actualizar la zona en tiempo real
+    setCustomZones(prev => prev.map(zone => 
+      zone.id === editingZoneId 
+        ? { ...zone, points: customZonePoints.map(point => 
+            point.id === pointId ? { ...point, x: newX, y: newY } : point
+          )}
+        : zone
+    ));
+  }, [editingZoneId, customZonePoints]);
+
+  const removeZonePoint = useCallback((pointId) => {
+    if (!editingZoneId) return;
+    
+    const updatedPoints = customZonePoints.filter(point => point.id !== pointId);
+    if (updatedPoints.length < 3) {
+      message.warning('Una zona debe tener al menos 3 puntos');
+      return;
+    }
+    
+    setCustomZonePoints(updatedPoints);
+    
+    // Actualizar la zona
+    setCustomZones(prev => prev.map(zone => 
+      zone.id === editingZoneId 
+        ? { ...zone, points: updatedPoints }
+        : zone
+    ));
+    
+    message.success('Punto removido exitosamente');
+  }, [editingZoneId, customZonePoints]);
+
+  const finishZoneEditing = useCallback(() => {
+    if (editingZoneId) {
+      // Actualizar zona final
+      setCustomZones(prev => prev.map(zone => 
+        zone.id === editingZoneId 
+          ? { ...zone, points: customZonePoints }
+          : zone
+      ));
+    }
+    
+    setIsCreatingCustomZone(false);
+    setCustomZonePoints([]);
+    setEditingZoneId(null);
+    setSelectedZonePoint(null);
+    setZoneEditMode('create');
+    message.success('Edición de zona finalizada');
+  }, [editingZoneId, customZonePoints]);
+
+  const deleteCustomZone = useCallback((zoneId) => {
+    setCustomZones(prev => prev.filter(z => z.id !== zoneId));
+    message.success('Zona eliminada exitosamente');
+  }, []);
+
+  // ===== FUNCIONES DE LIMPIEZA Y ESTABILIZACIÓN =====
+  const clearAllStates = useCallback(() => {
+    setSelectedSeats([]);
+    setCustomZonePoints([]);
+    setEditingZoneId(null);
+    setSelectedZonePoint(null);
+    setIsCreatingCustomZone(false);
+    setZoneEditMode('create');
+  }, []);
+
+  const stabilizeCanvas = useCallback(() => {
+    if (stageRef.current) {
+      setIsStabilizing(true);
+      setCanvasStable(false);
+      
+      // Forzar re-renderizado del canvas
+      stageRef.current.batchDraw();
+      const layers = stageRef.current.getLayers();
+      layers.forEach(layer => layer.batchDraw());
+      
+      // Simular proceso de estabilización
+      setTimeout(() => {
+        setIsStabilizing(false);
+        setCanvasStable(true);
+        message.success('Canvas estabilizado');
+      }, 500);
+    }
+  }, []);
+
+  const resetCanvas = useCallback(() => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+    clearAllStates();
+    stabilizeCanvas();
+    message.info('Canvas reseteado');
+  }, [clearAllStates, stabilizeCanvas]);
 
   // ===== FUNCIONES DE CAPAS =====
   const toggleLayer = useCallback((layerName) => {
@@ -497,7 +672,7 @@ const SeatingMap = ({
     renderSeat
   ]);
 
-  // ===== FUNCIÓN DE RENDERIZADO DE ZONAS PERSONALIZABLES =====
+  // ===== FUNCIÓN DE RENDERIZADO DE ZONAS PERSONALIZABLES MEJORADA =====
   const renderCustomZones = useCallback(() => {
     if (!layers.zones.visible) return null;
     
@@ -524,11 +699,20 @@ const SeatingMap = ({
                 key={point.id}
                 x={point.x}
                 y={point.y}
-                radius={4}
-                fill={zone.color}
-                stroke="#000"
-                strokeWidth={1}
-                listening={false}
+                radius={editingZoneId === zone.id ? 6 : 4}
+                fill={editingZoneId === zone.id ? '#FFD700' : zone.color}
+                stroke={editingZoneId === zone.id ? '#000' : '#000'}
+                strokeWidth={editingZoneId === zone.id ? 2 : 1}
+                listening={editingZoneId === zone.id}
+                onClick={() => editingZoneId === zone.id && selectZonePoint(point.id)}
+                onDragMove={(e) => {
+                  if (editingZoneId === zone.id) {
+                    const newX = e.target.x();
+                    const newY = e.target.y();
+                    moveZonePoint(point.id, newX, newY);
+                  }
+                }}
+                draggable={editingZoneId === zone.id}
               />
             ))}
             
@@ -542,6 +726,55 @@ const SeatingMap = ({
               listening={false}
               fontStyle="bold"
             />
+            
+            {/* Botones de acción para zona en edición */}
+            {editingZoneId === zone.id && (
+              <Group>
+                {/* Botón para añadir punto */}
+                <Circle
+                  x={zone.points[0]?.x || 0}
+                  y={(zone.points[0]?.y || 0) + 30}
+                  radius={8}
+                  fill="#4CAF50"
+                  stroke="#000"
+                  strokeWidth={1}
+                  listening={true}
+                  onClick={() => {
+                    const centerX = zone.points.reduce((sum, p) => sum + p.x, 0) / zone.points.length;
+                    const centerY = zone.points.reduce((sum, p) => sum + p.y, 0) / zone.points.length;
+                    addCustomZonePoint(centerX + 20, centerY + 20);
+                  }}
+                />
+                <Text
+                  text="+"
+                  x={(zone.points[0]?.x || 0) - 4}
+                  y={(zone.points[0]?.y || 0) + 26}
+                  fontSize={12}
+                  fill="#000"
+                  listening={false}
+                />
+                
+                {/* Botón para finalizar edición */}
+                <Circle
+                  x={(zone.points[0]?.x || 0) + 20}
+                  y={(zone.points[0]?.y || 0) + 30}
+                  radius={8}
+                  fill="#FF9800"
+                  stroke="#000"
+                  strokeWidth={1}
+                  listening={true}
+                  onClick={finishZoneEditing}
+                />
+                <Text
+                  text="✓"
+                  x={(zone.points[0]?.x || 0) + 16}
+                  y={(zone.points[0]?.y || 0) + 26}
+                  fontSize={12}
+                  fill="#000"
+                  listening={false}
+                />
+              </Group>
+            )}
           </Group>
         ))}
         
@@ -551,15 +784,44 @@ const SeatingMap = ({
             key={point.id}
             x={point.x}
             y={point.y}
-            radius={4}
+            radius={6}
             fill="#FF6B6B"
             stroke="#000"
-            strokeWidth={1}
+            strokeWidth={2}
+            listening={true}
+            onClick={() => selectZonePoint(point.id)}
+            onDragMove={(e) => {
+              const newX = e.target.x();
+              const newY = e.target.y();
+              moveZonePoint(point.id, newX, newY);
+            }}
+            draggable={true}
           />
         ))}
+        
+        {/* Líneas temporales durante la creación */}
+        {isCreatingCustomZone && customZonePoints.length > 1 && (
+          <Line
+            points={customZonePoints.flatMap(point => [point.x, point.y])}
+            stroke="#FF6B6B"
+            strokeWidth={2}
+            strokeDash={[5, 5]}
+            listening={false}
+          />
+        )}
       </>
     );
-  }, [customZones, isCreatingCustomZone, customZonePoints, layers.zones.visible]);
+  }, [
+    customZones, 
+    isCreatingCustomZone, 
+    customZonePoints, 
+    layers.zones.visible,
+    editingZoneId,
+    selectZonePoint,
+    moveZonePoint,
+    addCustomZonePoint,
+    finishZoneEditing
+  ]);
 
   // ===== FUNCIÓN DE RENDERIZADO DE GRID =====
   const renderGrid = useCallback(() => {
@@ -962,11 +1224,23 @@ const SeatingMap = ({
           icon={<MagicOutlined />}
           onClick={() => setEnhancedVisuals(!enhancedVisuals)}
         />
+        <Button
+          size="small"
+          icon={<SettingOutlined />}
+          onClick={stabilizeCanvas}
+          title="Estabilizar Canvas"
+        />
+        <Button
+          size="small"
+          icon={<DeleteOutlined />}
+          onClick={resetCanvas}
+          title="Reset Canvas"
+        />
       </div>
     </div>
   );
 
-  // ===== PANEL DE ZONAS PERSONALIZABLES =====
+  // ===== PANEL DE ZONAS PERSONALIZABLES MEJORADO =====
   const CustomZonePanel = () => (
     showCustomZonePanel && (
       <div className="absolute bottom-4 left-4 bg-white p-4 rounded-lg shadow-lg border max-w-xs">
@@ -976,19 +1250,80 @@ const SeatingMap = ({
           <div className="space-y-2">
             {customZones.map(zone => (
               <div key={zone.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                <span className="text-sm text-gray-600">{zone.name}</span>
-                <Button
-                  size="small"
-                  danger
-                  onClick={() => setCustomZones(prev => prev.filter(z => z.id !== zone.id))}
-                >
-                  🗑️
-                </Button>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-700">{zone.name}</div>
+                  <div className="text-xs text-gray-500">{zone.points.length} puntos</div>
+                </div>
+                <Space>
+                  <Button
+                    size="small"
+                    icon={<EditOutlined />}
+                    onClick={() => startZoneEditing(zone.id)}
+                    disabled={isCreatingCustomZone}
+                  />
+                  <Button
+                    size="small"
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => deleteCustomZone(zone.id)}
+                    disabled={isCreatingCustomZone}
+                  />
+                </Space>
               </div>
             ))}
           </div>
         ) : (
           <p className="text-sm text-gray-500">No hay zonas personalizadas</p>
+        )}
+        
+        <Divider className="my-2" />
+        
+        {/* Controles de edición */}
+        {isCreatingCustomZone && (
+          <div className="space-y-2">
+            <div className="text-xs text-gray-600">
+              {zoneEditMode === 'create' && 'Creando nueva zona...'}
+              {zoneEditMode === 'edit' && 'Editando zona...'}
+            </div>
+            
+            {editingZoneId && (
+              <div className="space-y-2">
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={finishZoneEditing}
+                  className="w-full"
+                >
+                  Finalizar Edición
+                </Button>
+                
+                {selectedZonePoint && (
+                  <Button
+                    size="small"
+                    danger
+                    onClick={() => removeZonePoint(selectedZonePoint)}
+                    className="w-full"
+                  >
+                    Eliminar Punto Seleccionado
+                  </Button>
+                )}
+              </div>
+            )}
+            
+            <Button
+              size="small"
+              onClick={() => {
+                setIsCreatingCustomZone(false);
+                setCustomZonePoints([]);
+                setEditingZoneId(null);
+                setSelectedZonePoint(null);
+                setZoneEditMode('create');
+              }}
+              className="w-full"
+            >
+              Cancelar
+            </Button>
+          </div>
         )}
       </div>
     )
@@ -1002,9 +1337,42 @@ const SeatingMap = ({
         <div>📊 Mapa recibido: {debugInfo.mapaReceived ? '✅' : '❌'}</div>
         <div>🏗️ Mesas: {debugInfo.mesasCount}</div>
         <div>🪑 Asientos: {debugInfo.sillasCount}</div>
+        <div>🎯 Zonas personalizadas: {customZones.length}</div>
+        <div>✏️ Editando zona: {editingZoneId ? '✅' : '❌'}</div>
+        <div>🔄 Estabilizando: {isStabilizing ? '✅' : '❌'}</div>
+        <div>🎨 Canvas Estable: {canvasStable ? '✅' : '❌'}</div>
       </div>
     </div>
   );
+
+  // ===== MANEJADOR DE CLIC EN EL CANVAS MEJORADO =====
+  const handleCanvasClick = useCallback((e) => {
+    if (!isCreatingCustomZone) return;
+    
+    const stage = e.target.getStage();
+    const point = stage.getPointerPosition();
+    const adjustedPoint = {
+      x: (point.x - position.x) / scale,
+      y: (point.y - position.y) / scale
+    };
+    
+    addCustomZonePoint(adjustedPoint.x, adjustedPoint.y);
+  }, [isCreatingCustomZone, position, scale, addCustomZonePoint]);
+
+  // ===== MANEJADOR DE DOBLE CLIC EN EL CANVAS =====
+  const handleCanvasDoubleClick = useCallback((e) => {
+    if (!isCreatingCustomZone) return;
+    
+    // Finalizar creación/edición con doble clic
+    if (customZonePoints.length >= 3) {
+      if (editingZoneId) {
+        finishZoneEditing();
+      } else {
+        setIsCreatingCustomZone(false);
+        setCustomZonePoints([]);
+      }
+    }
+  }, [isCreatingCustomZone, customZonePoints.length, editingZoneId, finishZoneEditing]);
 
   return (
     <div className="relative w-full h-full">
@@ -1019,17 +1387,8 @@ const SeatingMap = ({
         y={position.y}
         draggable={true}
         onDragEnd={handleDragEnd}
-        onMouseDown={(e) => {
-          if (isCreatingCustomZone) {
-            const stage = e.target.getStage();
-            const point = stage.getPointerPosition();
-            const adjustedPoint = {
-              x: (point.x - position.x) / scale,
-              y: (point.y - position.y) / scale
-            };
-            addCustomZonePoint(adjustedPoint.x, adjustedPoint.y);
-          }
-        }}
+        onMouseDown={handleCanvasClick}
+        onDblClick={handleCanvasDoubleClick}
       >
         <Layer>
           {/* Imagen de fondo */}
@@ -1064,6 +1423,52 @@ const SeatingMap = ({
                 return newBox.width < 10 || newBox.height < 10 ? oldBox : newBox;
               }}
             />
+          )}
+          
+          {/* Indicador de estabilización */}
+          {isStabilizing && (
+            <Group>
+              <Rect
+                x={50}
+                y={50}
+                width={200}
+                height={60}
+                fill="#00000080"
+                cornerRadius={10}
+                listening={false}
+              />
+              <Text
+                text="🔄 Estabilizando Canvas..."
+                x={70}
+                y={75}
+                fontSize={14}
+                fill="#FFFFFF"
+                listening={false}
+              />
+            </Group>
+          )}
+          
+          {/* Indicador de estado del canvas */}
+          {!canvasStable && !isStabilizing && (
+            <Group>
+              <Rect
+                x={50}
+                y={120}
+                width={200}
+                height={40}
+                fill="#FF980080"
+                cornerRadius={8}
+                listening={false}
+              />
+              <Text
+                text="⚠️ Canvas inestable"
+                x={70}
+                y={140}
+                fontSize={12}
+                fill="#FFFFFF"
+                listening={false}
+              />
+            </Group>
           )}
         </Layer>
       </Stage>
