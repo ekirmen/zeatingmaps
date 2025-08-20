@@ -54,6 +54,8 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [elements, setElements] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [activeMode, setActiveMode] = useState('select'); // 'select', 'pan', 'add'
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   
   // ===== ESTADOS DE ZOOM Y PAN =====
   const [scale, setScale] = useState(1);
@@ -357,7 +359,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     if (selectedIds.length > 0) {
       const newElements = elements.map(el =>
         selectedIds.includes(el._id)
-          ? { ...el, zonaId }
+          ? { ...el, zonaId: zoneId }
           : el
       );
       setElements(newElements);
@@ -440,6 +442,55 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     });
   }, []);
 
+  // Función para manejar click derecho (menú contextual)
+  const handleElementRightClick = useCallback((e, elementId) => {
+    e.evt.preventDefault();
+    const element = elements.find(el => el._id === elementId);
+    if (element) {
+      setContextMenu({
+        x: e.evt.clientX,
+        y: e.evt.clientY,
+        elementId
+      });
+      setContextMenuElement(element);
+      // Seleccionar el elemento si no está seleccionado
+      if (!selectedIds.includes(elementId)) {
+        setSelectedIds([elementId]);
+      }
+    }
+  }, [elements, selectedIds]);
+
+  // Función para cerrar menú contextual
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null);
+    setContextMenuElement(null);
+  }, []);
+
+  // Función para duplicar elemento desde menú contextual
+  const duplicateFromContext = useCallback(() => {
+    if (contextMenuElement) {
+      duplicateElement(contextMenuElement, 'right');
+      closeContextMenu();
+    }
+  }, [contextMenuElement, duplicateElement, closeContextMenu]);
+
+  // Función para eliminar elemento desde menú contextual
+  const deleteFromContext = useCallback(() => {
+    if (contextMenuElement) {
+      deleteSelectedElements();
+      closeContextMenu();
+    }
+  }, [contextMenuElement, deleteSelectedElements, closeContextMenu]);
+
+  // Función para copiar elemento desde menú contextual
+  const copyFromContext = useCallback(() => {
+    if (contextMenuElement) {
+      setSelectedIds([contextMenuElement._id]);
+      handleCopy();
+      closeContextMenu();
+    }
+  }, [contextMenuElement, handleCopy, closeContextMenu]);
+
   // Función para renderizar elementos en el canvas
   const renderElements = useCallback(() => {
     return elements.map(element => {
@@ -465,6 +516,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
               opacity={element.opacity}
               onClick={() => handleElementClick(element._id)}
               onTap={() => handleElementClick(element._id)}
+              onContextMenu={(e) => handleElementRightClick(e, element._id)}
               draggable={activeMode === 'select'}
               onDragEnd={(e) => {
                 const newElements = elements.map(el =>
@@ -491,6 +543,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
               opacity={element.opacity}
               onClick={() => handleElementClick(element._id)}
               onTap={() => handleElementClick(element._id)}
+              onContextMenu={(e) => handleElementRightClick(e, element._id)}
               draggable={activeMode === 'select'}
               onDragEnd={(e) => {
                 const newElements = elements.map(el =>
@@ -520,6 +573,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             opacity={element.opacity}
             onClick={() => handleElementClick(element._id)}
             onTap={() => handleElementClick(element._id)}
+            onContextMenu={(e) => handleElementRightClick(e, element._id)}
             draggable={activeMode === 'select'}
             onDragEnd={(e) => {
               const newElements = elements.map(el =>
@@ -548,6 +602,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             opacity={element.opacity}
             onClick={() => handleElementClick(element._id)}
             onTap={() => handleElementClick(element._id)}
+            onContextMenu={(e) => handleElementRightClick(e, element._id)}
             draggable={activeMode === 'select'}
             onDragEnd={(e) => {
               const newElements = elements.map(el =>
@@ -577,6 +632,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             opacity={element.opacity}
             onClick={() => handleElementClick(element._id)}
             onTap={() => handleElementClick(element._id)}
+            onContextMenu={(e) => handleElementRightClick(e, element._id)}
             draggable={activeMode === 'select'}
             onDragEnd={(e) => {
               const newElements = elements.map(el =>
@@ -605,6 +661,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             opacity={element.opacity}
             onClick={() => handleElementClick(element._id)}
             onTap={() => handleElementClick(element._id)}
+            onContextMenu={(e) => handleElementRightClick(e, element._id)}
             draggable={activeMode === 'select'}
             onDragEnd={(e) => {
               const newElements = elements.map(el =>
@@ -700,6 +757,18 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     }
   }, [selectedIds, elements]);
 
+  // Efecto para cerrar menú contextual al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (contextMenu && !e.target.closest('.context-menu')) {
+        closeContextMenu();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [contextMenu, closeContextMenu]);
+
   // Efecto para manejar atajos de teclado
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -749,7 +818,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
           case 'Escape':
             e.preventDefault();
             setSelectedIds([]);
-            setContextMenu(null);
+            closeContextMenu();
             break;
           case 'm':
             e.preventDefault();
@@ -1319,6 +1388,146 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
           </div>
         </div>
       </div>
+
+      {/* Menú contextual flotante */}
+      {contextMenu && (
+        <div
+          className="fixed z-50 bg-white border border-gray-300 rounded-lg shadow-lg py-2 min-w-48 context-menu"
+          style={{
+            left: contextMenu.x,
+            top: contextMenu.y,
+          }}
+        >
+          {/* Información del elemento */}
+          <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
+            <div className="text-sm font-medium text-gray-700">
+              {contextMenuElement?.type === 'mesa' && 'Mesa'}
+              {contextMenuElement?.type === 'silla' && 'Silla'}
+              {contextMenuElement?.type === 'texto' && 'Texto'}
+              {contextMenuElement?.type === 'rectangulo' && 'Rectángulo'}
+              {contextMenuElement?.type === 'circulo' && 'Círculo'}
+            </div>
+            <div className="text-xs text-gray-500">
+              {contextMenuElement?.nombre || contextMenuElement?.texto || 'Sin nombre'}
+            </div>
+          </div>
+
+          {/* Acciones rápidas */}
+          <div className="py-1">
+            <button
+              onClick={copyFromContext}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+            >
+              <span>📋</span>
+              <span>Copiar</span>
+            </button>
+            
+            <button
+              onClick={duplicateFromContext}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+            >
+              <span>📄</span>
+              <span>Duplicar</span>
+            </button>
+
+            <button
+              onClick={() => {
+                if (contextMenuElement) {
+                  setSelectedIds([contextMenuElement._id]);
+                  closeContextMenu();
+                }
+              }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+            >
+              <span>✏️</span>
+              <span>Editar propiedades</span>
+            </button>
+
+            {/* Acciones específicas por tipo */}
+            {contextMenuElement?.type === 'mesa' && (
+              <button
+                onClick={() => {
+                  setSelectedMesaForSeats(contextMenuElement);
+                  setShowAddSeatsModal(true);
+                  closeContextMenu();
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+              >
+                <span>🪑</span>
+                <span>Agregar sillas</span>
+              </button>
+            )}
+
+            {contextMenuElement?.type === 'texto' && (
+              <button
+                onClick={() => {
+                  if (contextMenuElement) {
+                    setTextInput(contextMenuElement.texto || '');
+                    setIsAddingText(true);
+                    closeContextMenu();
+                  }
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2"
+              >
+                <span>✏️</span>
+                <span>Editar texto</span>
+              </button>
+            )}
+
+            {/* Separador */}
+            <div className="border-t border-gray-200 my-1"></div>
+
+            {/* Acciones de zona */}
+            <div className="px-4 py-2">
+              <div className="text-xs text-gray-500 mb-2">Asignar zona:</div>
+              <div className="grid grid-cols-2 gap-1">
+                <button
+                  onClick={() => {
+                    assignZoneToSelected('');
+                    closeContextMenu();
+                  }}
+                  className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  Sin zona
+                </button>
+                {zonas.map(zona => (
+                  <button
+                    key={zona.id}
+                    onClick={() => {
+                      assignZoneToSelected(zona.id);
+                      closeContextMenu();
+                    }}
+                    className="px-2 py-1 text-xs text-white rounded hover:opacity-80"
+                    style={{ backgroundColor: zona.color }}
+                  >
+                    {zona.nombre}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Separador */}
+            <div className="border-t border-gray-200 my-1"></div>
+
+            {/* Acción destructiva */}
+            <button
+              onClick={deleteFromContext}
+              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+            >
+              <span>🗑️</span>
+              <span>Eliminar</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Overlay para cerrar menú contextual */}
+      {contextMenu && (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={closeContextMenu}
+        />
+      )}
     </div>
   );
 };
