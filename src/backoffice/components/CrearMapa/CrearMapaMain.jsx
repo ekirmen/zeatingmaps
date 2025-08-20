@@ -139,6 +139,12 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [showZoomTools, setShowZoomTools] = useState(false);
   const [showConfigTools, setShowConfigTools] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const [showBackgroundTools, setShowBackgroundTools] = useState(false);
+  const [showAlignmentTools, setShowAlignmentTools] = useState(false);
+  const [showEffectsTools, setShowEffectsTools] = useState(false);
+  const [showLayersPanel, setShowLayersPanel] = useState(false);
+  const [showTemplatesPanel, setShowTemplatesPanel] = useState(false);
+  const [showExportPanel, setShowExportPanel] = useState(false);
   
   // ===== ESTADOS DE TRANSFORMADOR DE OBJETOS =====
   const [showTransformer, setShowTransformer] = useState(false);
@@ -179,6 +185,9 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   
   // ===== ESTADOS DE EXPORTACIÓN =====
   const [exporting, setExporting] = useState(false);
+  
+  // ===== ESTADOS DE PLANTILLAS =====
+  const [newTemplateName, setNewTemplateName] = useState('');
   
   // ===== REFERENCIAS =====
   const stageRef = useRef();
@@ -347,6 +356,45 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     return newCirculo;
   }, [elements, addToHistory, circleRadius]);
 
+  const addPoligono = useCallback((posicion = { x: 100, y: 100 }) => {
+    const newPoligono = {
+      _id: `polygon_${Date.now()}`,
+      type: 'poligono',
+      posicion,
+      radius: polygonRadius,
+      sides: polygonSides,
+      fill: '#FF5722',
+      stroke: '#D84315',
+      strokeWidth: 2,
+      rotation: 0,
+      opacity: 1
+    };
+    
+    setElements(prev => [...prev, newPoligono]);
+    addToHistory([...elements, newPoligono], 'Agregar polígono');
+    return newPoligono;
+  }, [elements, addToHistory, polygonRadius, polygonSides]);
+
+  const addEstrella = useCallback((posicion = { x: 100, y: 100 }) => {
+    const newEstrella = {
+      _id: `star_${Date.now()}`,
+      type: 'estrella',
+      posicion,
+      innerRadius: polygonRadius * 0.5,
+      outerRadius: polygonRadius,
+      numPoints: 5,
+      fill: '#FFD700',
+      stroke: '#FFA000',
+      strokeWidth: 2,
+      rotation: 0,
+      opacity: 1
+    };
+    
+    setElements(prev => [...prev, newEstrella]);
+    addToHistory([...elements, newEstrella], 'Agregar estrella');
+    return newEstrella;
+  }, [elements, addToHistory, polygonRadius]);
+
   // Función para eliminar elementos seleccionados
   const deleteSelectedElements = useCallback(() => {
     if (selectedIds.length > 0) {
@@ -501,6 +549,286 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     }
   }, [contextMenuElement, handleCopy, closeContextMenu]);
 
+  // ===== FUNCIONES DE IMAGEN DE FONDO =====
+  const handleBackgroundUpload = useCallback((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        setBackgroundImage({
+          src: e.target.result,
+          width: img.width,
+          height: img.height
+        });
+        message.success('Imagen de fondo cargada');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    return false; // Prevent upload
+  }, []);
+
+  const removeBackgroundImage = useCallback(() => {
+    setBackgroundImage(null);
+    setBackgroundPosition({ x: 0, y: 0 });
+    setBackgroundScale(1);
+    setBackgroundOpacity(1);
+    message.success('Imagen de fondo eliminada');
+  }, []);
+
+  // ===== FUNCIONES DE ALINEACIÓN =====
+  const alignElements = useCallback((alignment) => {
+    if (selectedIds.length < 2) {
+      message.warning('Selecciona al menos 2 elementos para alinear');
+      return;
+    }
+
+    const selectedElements = elements.filter(el => selectedIds.includes(el._id));
+    let newElements = [...elements];
+
+    switch (alignment) {
+      case 'left':
+        const minX = Math.min(...selectedElements.map(el => el.posicion.x));
+        selectedElements.forEach(el => {
+          const index = newElements.findIndex(nel => nel._id === el._id);
+          newElements[index] = { ...el, posicion: { ...el.posicion, x: minX } };
+        });
+        break;
+      case 'center':
+        const avgX = selectedElements.reduce((sum, el) => sum + el.posicion.x + el.width / 2, 0) / selectedElements.length;
+        selectedElements.forEach(el => {
+          const index = newElements.findIndex(nel => nel._id === el._id);
+          newElements[index] = { ...el, posicion: { ...el.posicion, x: avgX - el.width / 2 } };
+        });
+        break;
+      case 'right':
+        const maxX = Math.max(...selectedElements.map(el => el.posicion.x + el.width));
+        selectedElements.forEach(el => {
+          const index = newElements.findIndex(nel => nel._id === el._id);
+          newElements[index] = { ...el, posicion: { ...el.posicion, x: maxX - el.width } };
+        });
+        break;
+      case 'top':
+        const minY = Math.min(...selectedElements.map(el => el.posicion.y));
+        selectedElements.forEach(el => {
+          const index = newElements.findIndex(nel => nel._id === el._id);
+          newElements[index] = { ...el, posicion: { ...el.posicion, y: minY } };
+        });
+        break;
+      case 'middle':
+        const avgY = selectedElements.reduce((sum, el) => sum + el.posicion.y + el.height / 2, 0) / selectedElements.length;
+        selectedElements.forEach(el => {
+          const index = newElements.findIndex(nel => nel._id === el._id);
+          newElements[index] = { ...el, posicion: { ...el.posicion, y: avgY - el.height / 2 } };
+        });
+        break;
+      case 'bottom':
+        const maxY = Math.max(...selectedElements.map(el => el.posicion.y + el.height));
+        selectedElements.forEach(el => {
+          const index = newElements.findIndex(nel => nel._id === el._id);
+          newElements[index] = { ...el, posicion: { ...el.posicion, y: maxY - el.height } };
+        });
+        break;
+      default:
+        return;
+    }
+
+    setElements(newElements);
+    addToHistory(newElements, `Alinear ${selectedIds.length} elementos`);
+    message.success(`Elementos alineados: ${alignment}`);
+  }, [selectedIds, elements, addToHistory]);
+
+  // ===== FUNCIONES DE DUPLICACIÓN INTELIGENTE =====
+  const duplicateInPattern = useCallback((pattern, count, spacing) => {
+    if (selectedIds.length === 0) {
+      message.warning('Selecciona elementos para duplicar');
+      return;
+    }
+
+    const selectedElements = elements.filter(el => selectedIds.includes(el._id));
+    let newElements = [...elements];
+
+    for (let i = 1; i <= count; i++) {
+      selectedElements.forEach(element => {
+        let offset = { x: 0, y: 0 };
+        
+        switch (pattern) {
+          case 'horizontal':
+            offset = { x: spacing * i, y: 0 };
+            break;
+          case 'vertical':
+            offset = { x: 0, y: spacing * i };
+            break;
+          case 'diagonal':
+            offset = { x: spacing * i, y: spacing * i };
+            break;
+          case 'grid':
+            const cols = Math.ceil(Math.sqrt(count));
+            const row = Math.floor((i - 1) / cols);
+            const col = (i - 1) % cols;
+            offset = { x: spacing * col, y: spacing * row };
+            break;
+          default:
+            offset = { x: spacing * i, y: 0 };
+        }
+
+        const duplicated = {
+          ...element,
+          _id: `${element.type}_${Date.now()}_${i}`,
+          posicion: {
+            x: element.posicion.x + offset.x,
+            y: element.posicion.y + offset.y
+          }
+        };
+        newElements.push(duplicated);
+      });
+    }
+
+    setElements(newElements);
+    addToHistory(newElements, `Duplicar ${selectedElements.length} elementos en patrón ${pattern}`);
+    message.success(`${selectedElements.length * count} elementos duplicados`);
+  }, [selectedIds, elements, addToHistory]);
+
+  // ===== FUNCIONES DE CAPAS =====
+  const moveToLayer = useCallback((elementIds, layerName) => {
+    const newElements = elements.map(el =>
+      elementIds.includes(el._id) ? { ...el, layer: layerName } : el
+    );
+    setElements(newElements);
+    addToHistory(newElements, `Mover a capa ${layerName}`);
+  }, [elements, addToHistory]);
+
+  const toggleLayerVisibility = useCallback((layerName) => {
+    setLayers(prev => prev.map(layer =>
+      layer.name === layerName ? { ...layer, visible: !layer.visible } : layer
+    ));
+  }, []);
+
+  // ===== FUNCIONES DE PLANTILLAS =====
+  const saveAsTemplate = useCallback((templateName) => {
+    if (!templateName.trim()) {
+      message.error('Ingresa un nombre para la plantilla');
+      return;
+    }
+
+    const template = {
+      id: `template_${Date.now()}`,
+      name: templateName.trim(),
+      elements: JSON.parse(JSON.stringify(elements)),
+      zonas: JSON.parse(JSON.stringify(zonas)),
+      createdAt: new Date().toISOString()
+    };
+
+    setTemplates(prev => [...prev, template]);
+    message.success(`Plantilla "${templateName}" guardada`);
+  }, [elements, zonas]);
+
+  const loadTemplate = useCallback((template) => {
+    setElements(template.elements);
+    setZonas(template.zonas);
+    addToHistory(template.elements, `Cargar plantilla ${template.name}`);
+    message.success(`Plantilla "${template.name}" cargada`);
+  }, [addToHistory]);
+
+  // ===== FUNCIONES DE EXPORTACIÓN =====
+  const exportToPNG = useCallback(async () => {
+    if (!stageRef.current) return;
+
+    setExporting(true);
+    try {
+      const dataURL = stageRef.current.toDataURL({
+        pixelRatio: 2,
+        quality: 1
+      });
+      
+      const link = document.createElement('a');
+      link.download = `mapa_sala_${salaId}_${Date.now()}.png`;
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      message.success('Mapa exportado como PNG');
+    } catch (error) {
+      message.error('Error al exportar: ' + error.message);
+    } finally {
+      setExporting(false);
+    }
+  }, [salaId]);
+
+  const exportToPDF = useCallback(async () => {
+    if (!stageRef.current) return;
+
+    setExporting(true);
+    try {
+      // Crear PDF usando jsPDF (requiere instalación)
+      const dataURL = stageRef.current.toDataURL({
+        pixelRatio: 2,
+        quality: 1
+      });
+      
+      // Por ahora, exportar como imagen hasta instalar jsPDF
+      const link = document.createElement('a');
+      link.download = `mapa_sala_${salaId}_${Date.now()}.png`;
+      link.href = dataURL;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      message.success('Mapa exportado (PNG - PDF pendiente de configurar)');
+    } catch (error) {
+      message.error('Error al exportar: ' + error.message);
+    } finally {
+      setExporting(false);
+    }
+  }, [salaId]);
+
+  // ===== FUNCIONES DE SNAP TO GRID =====
+  const snapToGridPosition = useCallback((position) => {
+    if (!snapToGrid) return position;
+    
+    return {
+      x: Math.round(position.x / gridSize) * gridSize,
+      y: Math.round(position.y / gridSize) * gridSize
+    };
+  }, [snapToGrid, gridSize]);
+
+  // ===== FUNCIONES DE SILLAS AUTOMÁTICAS =====
+  const addSeatsAroundTable = useCallback((mesa, seatsCount, spacing = 40) => {
+    if (!mesa || mesa.type !== 'mesa') return;
+
+    const newSeats = [];
+    const centerX = mesa.posicion.x + mesa.width / 2;
+    const centerY = mesa.posicion.y + mesa.height / 2;
+    const radius = Math.max(mesa.width, mesa.height) / 2 + spacing;
+
+    for (let i = 0; i < seatsCount; i++) {
+      const angle = (i / seatsCount) * 2 * Math.PI;
+      const x = centerX + Math.cos(angle) * radius;
+      const y = centerY + Math.sin(angle) * radius;
+
+      const seat = {
+        _id: `silla_${Date.now()}_${i}`,
+        type: 'silla',
+        posicion: { x: x - 10, y: y - 10 },
+        width: 20,
+        height: 20,
+        fill: '#4ECDC4',
+        stroke: '#000000',
+        strokeWidth: 1,
+        rotation: 0,
+        opacity: 1,
+        zonaId: mesa.zonaId
+      };
+      newSeats.push(seat);
+    }
+
+    const newElements = [...elements, ...newSeats];
+    setElements(newElements);
+    addToHistory(newElements, `Agregar ${seatsCount} sillas alrededor de mesa`);
+    message.success(`${seatsCount} sillas agregadas`);
+  }, [elements, addToHistory]);
+
   // Función para renderizar elementos en el canvas
   const renderElements = useCallback(() => {
     return elements.map(element => {
@@ -529,12 +857,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
               onContextMenu={(e) => handleElementRightClick(e, element._id)}
               draggable={activeMode === 'select'}
               onDragEnd={(e) => {
+                const rawPosition = { x: e.target.x() - element.width / 2, y: e.target.y() - element.height / 2 };
+                const snappedPosition = snapToGridPosition(rawPosition);
                 const newElements = elements.map(el =>
                   el._id === element._id
-                    ? { ...el, posicion: { x: e.target.x() - element.width / 2, y: e.target.y() - element.height / 2 } }
+                    ? { ...el, posicion: snappedPosition }
                     : el
                 );
                 setElements(newElements);
+                addToHistory(newElements, `Mover ${element.type}`);
               }}
             />
           );
@@ -556,12 +887,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
               onContextMenu={(e) => handleElementRightClick(e, element._id)}
               draggable={activeMode === 'select'}
               onDragEnd={(e) => {
+                const rawPosition = { x: e.target.x(), y: e.target.y() };
+                const snappedPosition = snapToGridPosition(rawPosition);
                 const newElements = elements.map(el =>
                   el._id === element._id
-                    ? { ...el, posicion: { x: e.target.x(), y: e.target.y() } }
+                    ? { ...el, posicion: snappedPosition }
                     : el
                 );
                 setElements(newElements);
+                addToHistory(newElements, `Mover ${element.type}`);
               }}
             />
           );
@@ -674,12 +1008,82 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             onContextMenu={(e) => handleElementRightClick(e, element._id)}
             draggable={activeMode === 'select'}
             onDragEnd={(e) => {
+              const rawPosition = { x: e.target.x(), y: e.target.y() };
+              const snappedPosition = snapToGridPosition(rawPosition);
               const newElements = elements.map(el =>
                 el._id === element._id
-                  ? { ...el, posicion: { x: e.target.x(), y: e.target.y() } }
+                  ? { ...el, posicion: snappedPosition }
                   : el
               );
               setElements(newElements);
+              addToHistory(newElements, `Mover ${element.type}`);
+            }}
+          />
+        );
+      }
+
+      // Renderizar polígono
+      if (element.type === 'poligono') {
+        return (
+          <RegularPolygon
+            key={element._id}
+            x={element.posicion.x}
+            y={element.posicion.y}
+            sides={element.sides}
+            radius={element.radius}
+            fill={element.fill}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            rotation={element.rotation}
+            opacity={element.opacity}
+            onClick={() => handleElementClick(element._id)}
+            onTap={() => handleElementClick(element._id)}
+            onContextMenu={(e) => handleElementRightClick(e, element._id)}
+            draggable={activeMode === 'select'}
+            onDragEnd={(e) => {
+              const rawPosition = { x: e.target.x(), y: e.target.y() };
+              const snappedPosition = snapToGridPosition(rawPosition);
+              const newElements = elements.map(el =>
+                el._id === element._id
+                  ? { ...el, posicion: snappedPosition }
+                  : el
+              );
+              setElements(newElements);
+              addToHistory(newElements, `Mover ${element.type}`);
+            }}
+          />
+        );
+      }
+
+      // Renderizar estrella
+      if (element.type === 'estrella') {
+        return (
+          <Star
+            key={element._id}
+            x={element.posicion.x}
+            y={element.posicion.y}
+            numPoints={element.numPoints}
+            innerRadius={element.innerRadius}
+            outerRadius={element.outerRadius}
+            fill={element.fill}
+            stroke={strokeColor}
+            strokeWidth={strokeWidth}
+            rotation={element.rotation}
+            opacity={element.opacity}
+            onClick={() => handleElementClick(element._id)}
+            onTap={() => handleElementClick(element._id)}
+            onContextMenu={(e) => handleElementRightClick(e, element._id)}
+            draggable={activeMode === 'select'}
+            onDragEnd={(e) => {
+              const rawPosition = { x: e.target.x(), y: e.target.y() };
+              const snappedPosition = snapToGridPosition(rawPosition);
+              const newElements = elements.map(el =>
+                el._id === element._id
+                  ? { ...el, posicion: snappedPosition }
+                  : el
+              );
+              setElements(newElements);
+              addToHistory(newElements, `Mover ${element.type}`);
             }}
           />
         );
@@ -842,13 +1246,25 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             e.preventDefault();
             addTexto();
             break;
+          case 'r':
+            e.preventDefault();
+            addRectangulo();
+            break;
+          case 'c':
+            e.preventDefault();
+            addCirculo();
+            break;
+          case 'p':
+            e.preventDefault();
+            addPoligono();
+            break;
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [elements, onSave, deleteSelectedElements, undo, redo, handleCopy, handlePaste, addMesa, addSilla, addTexto]);
+  }, [elements, onSave, deleteSelectedElements, undo, redo, handleCopy, handlePaste, addMesa, addSilla, addTexto, addRectangulo, addCirculo, addPoligono, closeContextMenu]);
 
   // ===== RENDERIZADO =====
   
@@ -979,6 +1395,59 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
                 >
                   ⭕ Círculo
                 </button>
+                <button
+                  onClick={() => addPoligono()}
+                  className="px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm"
+                >
+                  🔶 Polígono
+                </button>
+                <button
+                  onClick={() => addEstrella()}
+                  className="px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
+                >
+                  ⭐ Estrella
+                </button>
+              </div>
+              
+              {/* Configuración de formas */}
+              <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                <div className="text-xs text-gray-600 font-medium">Configuración:</div>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-gray-600">Tamaño texto:</label>
+                  <input
+                    type="range"
+                    min="8"
+                    max="48"
+                    value={textFontSize}
+                    onChange={(e) => setTextFontSize(Number(e.target.value))}
+                    className="w-16"
+                  />
+                  <span className="text-xs text-gray-500 w-8">{textFontSize}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-gray-600">Radio círculo:</label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={circleRadius}
+                    onChange={(e) => setCircleRadius(Number(e.target.value))}
+                    className="w-16"
+                  />
+                  <span className="text-xs text-gray-500 w-8">{circleRadius}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs text-gray-600">Lados polígono:</label>
+                  <input
+                    type="range"
+                    min="3"
+                    max="12"
+                    value={polygonSides}
+                    onChange={(e) => setPolygonSides(Number(e.target.value))}
+                    className="w-16"
+                  />
+                  <span className="text-xs text-gray-500 w-8">{polygonSides}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -1109,6 +1578,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
                   />
                 </div>
                 <div className="flex items-center justify-between">
+                  <label className="text-sm text-gray-600">Snap to Grid:</label>
+                  <input
+                    type="checkbox"
+                    checked={snapToGrid}
+                    onChange={(e) => setSnapToGrid(e.target.checked)}
+                    className="rounded"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
                   <label className="text-sm text-gray-600">Nombres:</label>
                   <input
                     type="checkbox"
@@ -1124,33 +1602,361 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             </div>
           </div>
 
-          {/* Panel: Información */}
-          <div className="bg-white border border-gray-200 rounded-lg">
-            <button
-              onClick={() => setShowInfoPanel(!showInfoPanel)}
-              className="w-full p-3 text-left font-medium rounded-t-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
-            >
-              ℹ️ Información
-            </button>
-            <div className={`p-3 border-t border-gray-200 ${showInfoPanel ? 'block' : 'hidden'}`}>
-              <div className="text-sm text-gray-600 space-y-2">
-                <div>Elementos: {elements.length}</div>
-                <div>Seleccionados: {selectedIds.length}</div>
-                <div className="pt-2 border-t border-gray-200">
-                  <div className="font-medium mb-2">Atajos de Teclado:</div>
-                  <div className="space-y-1 text-xs">
-                    <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+Z</kbd> Deshacer</div>
-                    <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+Y</kbd> Rehacer</div>
-                    <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+C</kbd> Copiar</div>
-                    <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+V</kbd> Pegar</div>
-                    <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+S</kbd> Guardar</div>
-                    <div><kbd className="bg-gray-100 px-1 rounded">Del</kbd> Eliminar</div>
-                    <div><kbd className="bg-gray-100 px-1 rounded">Esc</kbd> Deseleccionar</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                     {/* Panel: Imagen de Fondo */}
+           <div className="bg-white border border-gray-200 rounded-lg">
+             <button
+               onClick={() => setShowBackgroundTools(!showBackgroundTools)}
+               className="w-full p-3 text-left font-medium rounded-t-lg bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+             >
+               🖼️ Imagen de Fondo
+             </button>
+             <div className={`p-3 border-t border-gray-200 ${showBackgroundTools ? 'block' : 'hidden'}`}>
+               <div className="space-y-3">
+                 {!backgroundImage ? (
+                   <div>
+                     <input
+                       ref={fileInputRef}
+                       type="file"
+                       accept="image/*"
+                       onChange={(e) => {
+                         if (e.target.files[0]) {
+                           handleBackgroundUpload(e.target.files[0]);
+                         }
+                       }}
+                       className="hidden"
+                     />
+                     <button
+                       onClick={() => fileInputRef.current?.click()}
+                       className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                     >
+                       📁 Subir Imagen
+                     </button>
+                   </div>
+                 ) : (
+                   <div className="space-y-2">
+                     <div className="text-xs text-gray-600">Imagen cargada</div>
+                     <div className="flex items-center justify-between">
+                       <label className="text-sm text-gray-600">Opacidad:</label>
+                       <input
+                         type="range"
+                         min="0"
+                         max="1"
+                         step="0.1"
+                         value={backgroundOpacity}
+                         onChange={(e) => setBackgroundOpacity(Number(e.target.value))}
+                         className="w-20"
+                       />
+                     </div>
+                     <div className="flex items-center justify-between">
+                       <label className="text-sm text-gray-600">Escala:</label>
+                       <input
+                         type="range"
+                         min="0.1"
+                         max="3"
+                         step="0.1"
+                         value={backgroundScale}
+                         onChange={(e) => setBackgroundScale(Number(e.target.value))}
+                         className="w-20"
+                       />
+                     </div>
+                     <button
+                       onClick={removeBackgroundImage}
+                       className="w-full px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                     >
+                       🗑️ Quitar Imagen
+                     </button>
+                   </div>
+                 )}
+               </div>
+             </div>
+           </div>
+
+           {/* Panel: Herramientas de Alineación */}
+           <div className="bg-white border border-gray-200 rounded-lg">
+             <button
+               onClick={() => setShowAlignmentTools(!showAlignmentTools)}
+               className="w-full p-3 text-left font-medium rounded-t-lg bg-yellow-100 text-yellow-700 hover:bg-yellow-200"
+             >
+               📐 Alineación
+             </button>
+             <div className={`p-3 border-t border-gray-200 ${showAlignmentTools ? 'block' : 'hidden'}`}>
+               <div className="space-y-3">
+                 <div>
+                   <div className="text-xs text-gray-600 mb-2">Alineación Horizontal:</div>
+                   <div className="grid grid-cols-3 gap-1">
+                     <button
+                       onClick={() => alignElements('left')}
+                       disabled={selectedIds.length < 2}
+                       className="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-xs"
+                     >
+                       ⬅️ Izq
+                     </button>
+                     <button
+                       onClick={() => alignElements('center')}
+                       disabled={selectedIds.length < 2}
+                       className="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-xs"
+                     >
+                       ↔️ Centro
+                     </button>
+                     <button
+                       onClick={() => alignElements('right')}
+                       disabled={selectedIds.length < 2}
+                       className="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-xs"
+                     >
+                       ➡️ Der
+                     </button>
+                   </div>
+                 </div>
+                 <div>
+                   <div className="text-xs text-gray-600 mb-2">Alineación Vertical:</div>
+                   <div className="grid grid-cols-3 gap-1">
+                     <button
+                       onClick={() => alignElements('top')}
+                       disabled={selectedIds.length < 2}
+                       className="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-xs"
+                     >
+                       ⬆️ Arr
+                     </button>
+                     <button
+                       onClick={() => alignElements('middle')}
+                       disabled={selectedIds.length < 2}
+                       className="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-xs"
+                     >
+                       ↕️ Medio
+                     </button>
+                     <button
+                       onClick={() => alignElements('bottom')}
+                       disabled={selectedIds.length < 2}
+                       className="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 text-xs"
+                     >
+                       ⬇️ Abj
+                     </button>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
+
+           {/* Panel: Duplicación Inteligente */}
+           <div className="bg-white border border-gray-200 rounded-lg">
+             <button
+               onClick={() => setShowEffectsTools(!showEffectsTools)}
+               className="w-full p-3 text-left font-medium rounded-t-lg bg-pink-100 text-pink-700 hover:bg-pink-200"
+             >
+               📋 Duplicación Inteligente
+             </button>
+             <div className={`p-3 border-t border-gray-200 ${showEffectsTools ? 'block' : 'hidden'}`}>
+               <div className="space-y-3">
+                 <div>
+                   <label className="block text-sm text-gray-600 mb-1">Cantidad:</label>
+                   <input
+                     type="number"
+                     min="1"
+                     max="20"
+                     value={duplicationSpacing / 10}
+                     onChange={(e) => setDuplicationSpacing(Number(e.target.value) * 10)}
+                     className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                   />
+                 </div>
+                 <div>
+                   <label className="block text-sm text-gray-600 mb-1">Espaciado:</label>
+                   <input
+                     type="range"
+                     min="20"
+                     max="100"
+                     value={duplicationSpacing}
+                     onChange={(e) => setDuplicationSpacing(Number(e.target.value))}
+                     className="w-full"
+                   />
+                   <span className="text-xs text-gray-500">{duplicationSpacing}px</span>
+                 </div>
+                 <div className="grid grid-cols-2 gap-2">
+                   <button
+                     onClick={() => duplicateInPattern('horizontal', Math.floor(duplicationSpacing / 10), duplicationSpacing)}
+                     disabled={selectedIds.length === 0}
+                     className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs"
+                   >
+                     ↔️ Horizontal
+                   </button>
+                   <button
+                     onClick={() => duplicateInPattern('vertical', Math.floor(duplicationSpacing / 10), duplicationSpacing)}
+                     disabled={selectedIds.length === 0}
+                     className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs"
+                   >
+                     ↕️ Vertical
+                   </button>
+                   <button
+                     onClick={() => duplicateInPattern('grid', Math.floor(duplicationSpacing / 10), duplicationSpacing)}
+                     disabled={selectedIds.length === 0}
+                     className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs"
+                   >
+                     ⊞ Grilla
+                   </button>
+                   <button
+                     onClick={() => duplicateInPattern('diagonal', Math.floor(duplicationSpacing / 10), duplicationSpacing)}
+                     disabled={selectedIds.length === 0}
+                     className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-xs"
+                   >
+                     ↗️ Diagonal
+                   </button>
+                 </div>
+               </div>
+             </div>
+           </div>
+
+           {/* Panel: Capas */}
+           <div className="bg-white border border-gray-200 rounded-lg">
+             <button
+               onClick={() => setShowLayersPanel(!showLayersPanel)}
+               className="w-full p-3 text-left font-medium rounded-t-lg bg-teal-100 text-teal-700 hover:bg-teal-200"
+             >
+               📚 Capas
+             </button>
+             <div className={`p-3 border-t border-gray-200 ${showLayersPanel ? 'block' : 'hidden'}`}>
+               <div className="space-y-2">
+                 {layers.map(layer => (
+                   <div key={layer.name} className="flex items-center justify-between p-2 border border-gray-200 rounded">
+                     <div className="flex items-center space-x-2">
+                       <input
+                         type="checkbox"
+                         checked={layer.visible}
+                         onChange={() => toggleLayerVisibility(layer.name)}
+                         className="rounded"
+                       />
+                       <span className="text-sm">{layer.name}</span>
+                     </div>
+                     <span className="text-xs text-gray-500">{layer.elements || 0}</span>
+                   </div>
+                 ))}
+                 <button
+                   onClick={() => {
+                     const newLayer = `Capa ${layers.length + 1}`;
+                     setLayers(prev => [...prev, { name: newLayer, visible: true, elements: 0 }]);
+                   }}
+                   className="w-full px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                 >
+                   + Nueva Capa
+                 </button>
+               </div>
+             </div>
+           </div>
+
+           {/* Panel: Plantillas */}
+           <div className="bg-white border border-gray-200 rounded-lg">
+             <button
+               onClick={() => setShowTemplatesPanel(!showTemplatesPanel)}
+               className="w-full p-3 text-left font-medium rounded-t-lg bg-cyan-100 text-cyan-700 hover:bg-cyan-200"
+             >
+               📄 Plantillas
+             </button>
+             <div className={`p-3 border-t border-gray-200 ${showTemplatesPanel ? 'block' : 'hidden'}`}>
+               <div className="space-y-3">
+                 <div>
+                   <input
+                     type="text"
+                     placeholder="Nombre de plantilla"
+                     value={newTemplateName}
+                     onChange={(e) => setNewTemplateName(e.target.value)}
+                     className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                   />
+                   <button
+                     onClick={() => {
+                       saveAsTemplate(newTemplateName);
+                       setNewTemplateName('');
+                     }}
+                     disabled={!newTemplateName.trim()}
+                     className="w-full mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+                   >
+                     💾 Guardar Plantilla
+                   </button>
+                 </div>
+                 <div className="space-y-2">
+                   {templates.map(template => (
+                     <div key={template.id} className="flex items-center justify-between p-2 border border-gray-200 rounded">
+                       <span className="text-sm">{template.name}</span>
+                       <div className="flex items-center space-x-1">
+                         <button
+                           onClick={() => loadTemplate(template)}
+                           className="px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs"
+                         >
+                           📂
+                         </button>
+                         <button
+                           onClick={() => setTemplates(prev => prev.filter(t => t.id !== template.id))}
+                           className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+                         >
+                           🗑️
+                         </button>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             </div>
+           </div>
+
+           {/* Panel: Exportación */}
+           <div className="bg-white border border-gray-200 rounded-lg">
+             <button
+               onClick={() => setShowExportPanel(!showExportPanel)}
+               className="w-full p-3 text-left font-medium rounded-t-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+             >
+               📤 Exportación
+             </button>
+             <div className={`p-3 border-t border-gray-200 ${showExportPanel ? 'block' : 'hidden'}`}>
+               <div className="space-y-2">
+                 <button
+                   onClick={exportToPNG}
+                   disabled={exporting || elements.length === 0}
+                   className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 text-sm"
+                 >
+                   {exporting ? '⏳ Exportando...' : '🖼️ Exportar PNG'}
+                 </button>
+                 <button
+                   onClick={exportToPDF}
+                   disabled={exporting || elements.length === 0}
+                   className="w-full px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 text-sm"
+                 >
+                   {exporting ? '⏳ Exportando...' : '📄 Exportar PDF'}
+                 </button>
+               </div>
+             </div>
+           </div>
+
+           {/* Panel: Información */}
+           <div className="bg-white border border-gray-200 rounded-lg">
+             <button
+               onClick={() => setShowInfoPanel(!showInfoPanel)}
+               className="w-full p-3 text-left font-medium rounded-t-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
+             >
+               ℹ️ Información
+             </button>
+             <div className={`p-3 border-t border-gray-200 ${showInfoPanel ? 'block' : 'hidden'}`}>
+               <div className="text-sm text-gray-600 space-y-2">
+                 <div>Elementos: {elements.length}</div>
+                 <div>Seleccionados: {selectedIds.length}</div>
+                 <div className="pt-2 border-t border-gray-200">
+                   <div className="font-medium mb-2">Atajos de Teclado:</div>
+                   <div className="space-y-1 text-xs">
+                     <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+Z</kbd> Deshacer</div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+Y</kbd> Rehacer</div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+C</kbd> Copiar</div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+V</kbd> Pegar</div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">Ctrl+S</kbd> Guardar</div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">Del</kbd> Eliminar</div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">Esc</kbd> Deseleccionar</div>
+                     <div className="pt-1 border-t border-gray-200"></div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">M</kbd> Mesa</div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">S</kbd> Silla</div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">T</kbd> Texto</div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">R</kbd> Rectángulo</div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">C</kbd> Círculo</div>
+                     <div><kbd className="bg-gray-100 px-1 rounded">P</kbd> Polígono</div>
+                   </div>
+                 </div>
+               </div>
+             </div>
+           </div>
 
           {/* Panel: Acciones */}
           <div className="bg-white border border-gray-200 rounded-lg">
@@ -1196,6 +2002,19 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
                 onMouseUp={handleMouseUp}
               >
                 <Layer>
+                  {/* Imagen de fondo */}
+                  {backgroundImage && (
+                    <Image
+                      image={backgroundImage}
+                      x={backgroundPosition.x}
+                      y={backgroundPosition.y}
+                      scaleX={backgroundScale}
+                      scaleY={backgroundScale}
+                      opacity={backgroundOpacity}
+                      listening={false}
+                    />
+                  )}
+
                   {/* Grid de fondo */}
                   {showGrid && (
                     <Group>
@@ -1463,87 +2282,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         </div>
       </div>
 
-        {/* Canvas principal */}
-        <div className="flex-1 p-4">
-          <div className="bg-white border border-gray-300 rounded-lg p-4">
-            <div className="mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">
-                Editor de Mapas - Sala ID: {salaId}
-              </h2>
-              <p className="text-sm text-gray-500">
-                Usa las herramientas de arriba para crear tu mapa de asientos
-              </p>
-            </div>
 
-          {/* Canvas de Konva */}
-          <div className="mt-6 border border-gray-200 rounded-lg overflow-hidden">
-            <Stage
-              ref={stageRef}
-              width={800}
-              height={600}
-              style={{ background: '#f8fafc' }}
-              scaleX={scale}
-              scaleY={scale}
-              x={position.x}
-              y={position.y}
-              onWheel={handleWheel}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-            >
-              <Layer>
-                {/* Grid de fondo */}
-                {showGrid && (
-                  <Group>
-                    {Array.from({ length: Math.ceil(800 / gridSize) }, (_, i) => (
-                      <Line
-                        key={`v${i}`}
-                        points={[i * gridSize, 0, i * gridSize, 600]}
-                        stroke="#e2e8f0"
-                        strokeWidth={1}
-                      />
-                    ))}
-                    {Array.from({ length: Math.ceil(600 / gridSize) }, (_, i) => (
-                      <Line
-                        key={`h${i}`}
-                        points={[0, i * gridSize, 800, i * gridSize]}
-                        stroke="#e2e8f0"
-                        strokeWidth={1}
-                      />
-                    ))}
-                  </Group>
-                )}
-                
-                {/* Elementos del mapa */}
-                {renderElements()}
-                
-                {/* Nombres de elementos */}
-                {showMesaNames && elements.map(element => {
-                  if (element.type === 'mesa' && element.nombre) {
-                    return (
-                      <Text
-                        key={`name_${element._id}`}
-                        x={element.posicion.x + element.width / 2}
-                        y={element.posicion.y + element.height / 2}
-                        text={element.nombre}
-                        fontSize={12}
-                        fill="#000000"
-                        fontFamily="Arial"
-                        align="center"
-                        verticalAlign="middle"
-                        offsetX={element.nombre.length * 3}
-                        offsetY={6}
-                        listening={false}
-                      />
-                    );
-                  }
-                  return null;
-                })}
-              </Layer>
-            </Stage>
-          </div>
-        </div>
-      </div>
 
       {/* Menú contextual flotante */}
       {contextMenu && (
@@ -1683,6 +2422,69 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
           className="fixed inset-0 z-40"
           onClick={closeContextMenu}
         />
+      )}
+
+      {/* Modal para agregar sillas automáticamente */}
+      {showAddSeatsModal && selectedMesaForSeats && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-6 w-96">
+            <h3 className="text-lg font-semibold mb-4">🪑 Agregar Sillas Automáticamente</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Mesa seleccionada:</label>
+                <div className="px-3 py-2 bg-gray-100 rounded text-sm">
+                  {selectedMesaForSeats.nombre || 'Mesa sin nombre'}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Número de sillas:</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  defaultValue={4}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                  id="seatsCount"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Espaciado desde mesa:</label>
+                <input
+                  type="range"
+                  min="20"
+                  max="80"
+                  defaultValue={40}
+                  className="w-full"
+                  id="seatsSpacing"
+                />
+                <span className="text-xs text-gray-500">40px</span>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => {
+                    const seatsCount = Number(document.getElementById('seatsCount').value);
+                    const spacing = Number(document.getElementById('seatsSpacing').value);
+                    addSeatsAroundTable(selectedMesaForSeats, seatsCount, spacing);
+                    setShowAddSeatsModal(false);
+                    setSelectedMesaForSeats(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  ✅ Agregar Sillas
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAddSeatsModal(false);
+                    setSelectedMesaForSeats(null);
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
+                >
+                  ❌ Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
