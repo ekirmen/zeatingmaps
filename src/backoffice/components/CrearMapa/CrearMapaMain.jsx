@@ -12,40 +12,11 @@
  * - Atajos de teclado completos
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Stage, Layer, Rect, Circle, Text, Line, Image, Group, RegularPolygon, Star } from 'react-konva';
-import { Button, Space, Input, Select, Slider, Switch, message, Tooltip, Divider, Row, Col, Typography, Badge, Popconfirm, Modal, Form, InputNumber, ColorPicker, Upload, Progress, Card } from 'antd';
-import { 
-  PlusOutlined, 
-  DeleteOutlined, 
-  CopyOutlined, 
-  ScissorOutlined, 
-  ClearOutlined, 
-  SaveOutlined, 
-  UndoOutlined, 
-  RedoOutlined,
-  ZoomInOutlined,
-  ZoomOutOutlined,
-  FullscreenOutlined,
-  CompressOutlined,
-  DownloadOutlined,
-  UploadOutlined,
-  SettingOutlined,
-  EyeOutlined,
-  EyeInvisibleOutlined,
-  AlignLeftOutlined,
-  AlignCenterOutlined,
-  AlignRightOutlined,
-  VerticalAlignTopOutlined,
-  VerticalAlignMiddleOutlined,
-  VerticalAlignBottomOutlined,
-  PictureOutlined,
-  ReloadOutlined,
-  AimOutlined
-} from '@ant-design/icons';
+import { Stage, Layer, Rect, Circle, Text, Line, Image, Group, RegularPolygon, Star, Transformer } from 'react-konva';
+import { Input, Select, message } from 'antd';
 
-const { Title, Text: AntText } = Typography;
+
 const { Option } = Select;
-const { TextArea } = Input;
 
 const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   // ===== TODOS LOS HOOKS DEBEN ESTAR AL INICIO =====
@@ -79,8 +50,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   
   // ===== ESTADOS DE ZONAS =====
   const [zonas, setZonas] = useState([]);
-  const [selectedZone, setSelectedZone] = useState(null);
-  const [showZoneManager, setShowZoneManager] = useState(false);
+
   const [newZoneName, setNewZoneName] = useState('');
   const [newZoneColor, setNewZoneColor] = useState('#FF6B6B');
   const [newZoneAforo, setNewZoneAforo] = useState(0);
@@ -93,6 +63,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [customZonePoints, setCustomZonePoints] = useState([]);
   const [selectedCustomZonePoint, setSelectedCustomZonePoint] = useState(null);
   const [showCustomZoneModal, setShowCustomZoneModal] = useState(false);
+  const [customZoneMode, setCustomZoneMode] = useState('create'); // 'create', 'edit', 'select'
   
   // ===== ESTADOS DE CONFIGURACIÓN =====
   const [showGrid, setShowGrid] = useState(true);
@@ -100,19 +71,12 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [snapToGrid, setSnapToGrid] = useState(true);
   
   // ===== ESTADOS DE COLORES DE FONDO =====
-  const [gridBackgroundColor, setGridBackgroundColor] = useState('#f8fafc');
-  const [outerBackgroundColor, setOuterBackgroundColor] = useState('#1e293b');
-  const [showGridColorPicker, setShowGridColorPicker] = useState(false);
-  const [showOuterColorPicker, setShowOuterColorPicker] = useState(false);
+
   
   // ===== ESTADOS DE VISIBILIDAD DE NOMBRES =====
   const [showMesaNames, setShowMesaNames] = useState(true);
-  const [showSillaNames, setShowSillaNames] = useState(true);
-  const [showFilaNames, setShowFilaNames] = useState(true);
-  const [showFilaSillaNames, setShowFilaSillaNames] = useState(true);
   
   // ===== ESTADOS DE HERRAMIENTAS =====
-  const [currentTool, setCurrentTool] = useState('select');
   const [textInput, setTextInput] = useState('');
   const [isAddingText, setIsAddingText] = useState(false);
   
@@ -145,6 +109,8 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [showLayersPanel, setShowLayersPanel] = useState(false);
   const [showTemplatesPanel, setShowTemplatesPanel] = useState(false);
   const [showExportPanel, setShowExportPanel] = useState(false);
+  const [showCustomZonePanel, setShowCustomZonePanel] = useState(false);
+  const [showTransformerPanel, setShowTransformerPanel] = useState(false);
   
   // ===== ESTADOS DE TRANSFORMADOR DE OBJETOS =====
   const [showTransformer, setShowTransformer] = useState(false);
@@ -177,7 +143,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   
   // ===== ESTADOS DE HISTORIAL AVANZADO =====
-  const [historyDetails, setHistoryDetails] = useState([]);
+
   
   // ===== ESTADOS DE TUTORIAL =====
   const [showTutorial, setShowTutorial] = useState(false);
@@ -191,6 +157,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   
   // ===== REFERENCIAS =====
   const stageRef = useRef();
+  const transformerRef = useRef();
   const fileInputRef = useRef();
 
   // ===== FUNCIONES PRINCIPALES (definidas después de todos los hooks) =====
@@ -251,9 +218,12 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         }
       }));
       
-      setElements(prev => [...prev, ...pastedElements]);
+      setElements(prev => {
+        const newElements = [...prev, ...pastedElements];
+        addToHistory(newElements, `Pegar ${pastedElements.length} elemento(s)`);
+        return newElements;
+      });
       setSelectedIds(pastedElements.map(el => el._id));
-      addToHistory([...elements, ...pastedElements], `Pegar ${pastedElements.length} elemento(s)`);
       message.success(`${pastedElements.length} elemento(s) pegado(s)`);
     }
   }, [clipboard, elements, addToHistory]);
@@ -275,10 +245,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       opacity: 1
     };
     
-    setElements(prev => [...prev, newMesa]);
-    addToHistory([...elements, newMesa], `Agregar mesa ${type}`);
+    setElements(prev => {
+      const newElements = [...prev, newMesa];
+      addToHistory(newElements, `Agregar mesa ${type}`);
+      return newElements;
+    });
     return newMesa;
-  }, [elements, addToHistory]);
+  }, [addToHistory]);
 
   const addSilla = useCallback((mesaId = null, posicion = { x: 100, y: 100 }) => {
     const newSilla = {
@@ -296,10 +269,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       opacity: 1
     };
     
-    setElements(prev => [...prev, newSilla]);
-    addToHistory([...elements, newSilla], 'Agregar silla');
+    setElements(prev => {
+      const newElements = [...prev, newSilla];
+      addToHistory(newElements, 'Agregar silla');
+      return newElements;
+    });
     return newSilla;
-  }, [elements, addToHistory]);
+  }, [addToHistory]);
 
   const addTexto = useCallback((posicion = { x: 100, y: 100 }, texto = 'Texto') => {
     const newTexto = {
@@ -314,10 +290,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       opacity: 1
     };
     
-    setElements(prev => [...prev, newTexto]);
-    addToHistory([...elements, newTexto], 'Agregar texto');
+    setElements(prev => {
+      const newElements = [...prev, newTexto];
+      addToHistory(newElements, 'Agregar texto');
+      return newElements;
+    });
     return newTexto;
-  }, [elements, addToHistory, textFontSize]);
+  }, [addToHistory, textFontSize]);
 
   const addRectangulo = useCallback((posicion = { x: 100, y: 100 }) => {
     const newRectangulo = {
@@ -333,10 +312,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       opacity: 1
     };
     
-    setElements(prev => [...prev, newRectangulo]);
-    addToHistory([...elements, newRectangulo], 'Agregar rectángulo');
+    setElements(prev => {
+      const newElements = [...prev, newRectangulo];
+      addToHistory(newElements, 'Agregar rectángulo');
+      return newElements;
+    });
     return newRectangulo;
-  }, [elements, addToHistory, rectangleWidth, rectangleHeight]);
+  }, [addToHistory, rectangleWidth, rectangleHeight]);
 
   const addCirculo = useCallback((posicion = { x: 100, y: 100 }) => {
     const newCirculo = {
@@ -351,10 +333,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       opacity: 1
     };
     
-    setElements(prev => [...prev, newCirculo]);
-    addToHistory([...elements, newCirculo], 'Agregar círculo');
+    setElements(prev => {
+      const newElements = [...prev, newCirculo];
+      addToHistory(newElements, 'Agregar círculo');
+      return newElements;
+    });
     return newCirculo;
-  }, [elements, addToHistory, circleRadius]);
+  }, [addToHistory, circleRadius]);
 
   const addPoligono = useCallback((posicion = { x: 100, y: 100 }) => {
     const newPoligono = {
@@ -370,10 +355,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       opacity: 1
     };
     
-    setElements(prev => [...prev, newPoligono]);
-    addToHistory([...elements, newPoligono], 'Agregar polígono');
+    setElements(prev => {
+      const newElements = [...prev, newPoligono];
+      addToHistory(newElements, 'Agregar polígono');
+      return newElements;
+    });
     return newPoligono;
-  }, [elements, addToHistory, polygonRadius, polygonSides]);
+  }, [addToHistory, polygonRadius, polygonSides]);
 
   const addEstrella = useCallback((posicion = { x: 100, y: 100 }) => {
     const newEstrella = {
@@ -390,10 +378,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       opacity: 1
     };
     
-    setElements(prev => [...prev, newEstrella]);
-    addToHistory([...elements, newEstrella], 'Agregar estrella');
+    setElements(prev => {
+      const newElements = [...prev, newEstrella];
+      addToHistory(newElements, 'Agregar estrella');
+      return newElements;
+    });
     return newEstrella;
-  }, [elements, addToHistory, polygonRadius]);
+  }, [addToHistory, polygonRadius]);
 
   // Función para eliminar elementos seleccionados
   const deleteSelectedElements = useCallback(() => {
@@ -484,10 +475,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       }
     };
     
-    setElements(prev => [...prev, duplicated]);
-    addToHistory([...elements, duplicated], `Duplicar ${element.type}`);
+    setElements(prev => {
+      const newElements = [...prev, duplicated];
+      addToHistory(newElements, `Duplicar ${element.type}`);
+      return newElements;
+    });
     return duplicated;
-  }, [elements, addToHistory]);
+  }, [addToHistory]);
 
   // Función para seleccionar elementos
   const handleElementClick = useCallback((elementId) => {
@@ -498,6 +492,10 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         return [...prev, elementId];
       }
     });
+    
+    // Mostrar transformador para el elemento seleccionado
+    setShowTransformer(true);
+    setTransformerElement(elementId);
   }, []);
 
   // Función para manejar click derecho (menú contextual)
@@ -574,6 +572,118 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     setBackgroundScale(1);
     setBackgroundOpacity(1);
     message.success('Imagen de fondo eliminada');
+  }, []);
+
+  // ===== FUNCIONES DE SOMBRAS Y EFECTOS =====
+  const applyShadowToElement = useCallback((elementId, shadowProps) => {
+    setElements(prev => prev.map(el => 
+      el._id === elementId 
+        ? { ...el, shadow: shadowProps }
+        : el
+    ));
+  }, []);
+
+  const applyShadowToSelected = useCallback((shadowProps) => {
+    if (selectedIds.length === 0) {
+      message.warning('Selecciona al menos un elemento para aplicar sombra');
+      return;
+    }
+    
+    setElements(prev => prev.map(el => 
+      selectedIds.includes(el._id)
+        ? { ...el, shadow: shadowProps }
+        : el
+    ));
+    
+    addToHistory(elements, `Aplicar sombra a ${selectedIds.length} elemento(s)`);
+  }, [selectedIds, elements, addToHistory]);
+
+  const removeShadowFromSelected = useCallback(() => {
+    if (selectedIds.length === 0) {
+      message.warning('Selecciona al menos un elemento para remover sombra');
+      return;
+    }
+    
+    setElements(prev => prev.map(el => 
+      selectedIds.includes(el._id)
+        ? { ...el, shadow: null }
+        : el
+    ));
+    
+    addToHistory(elements, `Remover sombra de ${selectedIds.length} elemento(s)`);
+  }, [selectedIds, elements, addToHistory]);
+
+  // ===== FUNCIONES DE ZONAS PERSONALIZABLES =====
+  const startCustomZoneCreation = useCallback(() => {
+    setIsCreatingCustomZone(true);
+    setCustomZoneMode('create');
+    setCustomZonePoints([]);
+    setCurrentCustomZone({
+      id: Date.now(),
+      name: `Zona Personalizada ${customZones.length + 1}`,
+      color: '#FF6B6B',
+      points: [],
+      aforo: 0,
+      numerada: false
+    });
+    message.info('Haz clic en el canvas para crear puntos de la zona. Doble clic para finalizar.');
+  }, [customZones.length]);
+
+  const addCustomZonePoint = useCallback((x, y) => {
+    if (!isCreatingCustomZone) return;
+    
+    const newPoint = { x, y, id: Date.now() };
+    setCustomZonePoints(prev => [...prev, newPoint]);
+    
+    if (customZonePoints.length >= 2) {
+      // Crear la zona cuando hay al menos 3 puntos
+      const zone = {
+        ...currentCustomZone,
+        points: [...customZonePoints, newPoint]
+      };
+      setCustomZones(prev => [...prev, zone]);
+      setIsCreatingCustomZone(false);
+      setCustomZonePoints([]);
+      setCurrentCustomZone(null);
+      message.success('Zona personalizada creada exitosamente');
+    }
+  }, [isCreatingCustomZone, customZonePoints, currentCustomZone]);
+
+  const editCustomZone = useCallback((zoneId) => {
+    const zone = customZones.find(z => z.id === zoneId);
+    if (zone) {
+      setCurrentCustomZone(zone);
+      setCustomZonePoints(zone.points);
+      setCustomZoneMode('edit');
+      setShowCustomZoneModal(true);
+    }
+  }, [customZones]);
+
+  const updateCustomZonePoint = useCallback((pointId, newPosition) => {
+    if (customZoneMode === 'edit' && currentCustomZone) {
+      setCustomZonePoints(prev => prev.map(p => 
+        p.id === pointId ? { ...p, ...newPosition } : p
+      ));
+    }
+  }, [customZoneMode, currentCustomZone]);
+
+  const saveCustomZoneChanges = useCallback(() => {
+    if (currentCustomZone && customZoneMode === 'edit') {
+      setCustomZones(prev => prev.map(z => 
+        z.id === currentCustomZone.id 
+          ? { ...z, points: customZonePoints }
+          : z
+      ));
+      setShowCustomZoneModal(false);
+      setCurrentCustomZone(null);
+      setCustomZonePoints([]);
+      message.success('Zona personalizada actualizada');
+    }
+  }, [currentCustomZone, customZoneMode, customZonePoints]);
+
+  const deleteCustomZone = useCallback((zoneId) => {
+    setCustomZones(prev => prev.filter(z => z.id !== zoneId));
+    message.success('Zona personalizada eliminada');
   }, []);
 
   // ===== FUNCIONES DE ALINEACIÓN =====
@@ -823,11 +933,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       newSeats.push(seat);
     }
 
-    const newElements = [...elements, ...newSeats];
-    setElements(newElements);
-    addToHistory(newElements, `Agregar ${seatsCount} sillas alrededor de mesa`);
+    setElements(prev => {
+      const newElements = [...prev, ...newSeats];
+      addToHistory(newElements, `Agregar ${seatsCount} sillas alrededor de mesa`);
+      return newElements;
+    });
     message.success(`${seatsCount} sillas agregadas`);
-  }, [elements, addToHistory]);
+  }, [addToHistory]);
 
   // Función para renderizar elementos en el canvas
   const renderElements = useCallback(() => {
@@ -859,13 +971,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
               onDragEnd={(e) => {
                 const rawPosition = { x: e.target.x() - element.width / 2, y: e.target.y() - element.height / 2 };
                 const snappedPosition = snapToGridPosition(rawPosition);
-                const newElements = elements.map(el =>
-                  el._id === element._id
-                    ? { ...el, posicion: snappedPosition }
-                    : el
-                );
-                setElements(newElements);
-                addToHistory(newElements, `Mover ${element.type}`);
+                setElements(prev => {
+                  const newElements = prev.map(el =>
+                    el._id === element._id
+                      ? { ...el, posicion: snappedPosition }
+                      : el
+                  );
+                  addToHistory(newElements, `Mover ${element.type}`);
+                  return newElements;
+                });
               }}
             />
           );
@@ -889,13 +1003,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
               onDragEnd={(e) => {
                 const rawPosition = { x: e.target.x(), y: e.target.y() };
                 const snappedPosition = snapToGridPosition(rawPosition);
-                const newElements = elements.map(el =>
-                  el._id === element._id
-                    ? { ...el, posicion: snappedPosition }
-                    : el
-                );
-                setElements(newElements);
-                addToHistory(newElements, `Mover ${element.type}`);
+                setElements(prev => {
+                  const newElements = prev.map(el =>
+                    el._id === element._id
+                      ? { ...el, posicion: snappedPosition }
+                      : el
+                  );
+                  addToHistory(newElements, `Mover ${element.type}`);
+                  return newElements;
+                });
               }}
             />
           );
@@ -915,17 +1031,26 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             strokeWidth={strokeWidth}
             rotation={element.rotation}
             opacity={element.opacity}
+            shadowColor={element.shadow?.color || shadowColor}
+            shadowBlur={element.shadow?.blur || shadowBlur}
+            shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
+            shadowOffsetY={element.shadow?.offsetY || shadowOffsetY}
             onClick={() => handleElementClick(element._id)}
             onTap={() => handleElementClick(element._id)}
             onContextMenu={(e) => handleElementRightClick(e, element._id)}
             draggable={activeMode === 'select'}
             onDragEnd={(e) => {
-              const newElements = elements.map(el =>
-                el._id === element._id
-                  ? { ...el, posicion: { x: e.target.x(), y: e.target.y() } }
-                  : el
-              );
-              setElements(newElements);
+              const rawPosition = { x: e.target.x(), y: e.target.y() };
+              const snappedPosition = snapToGridPosition(rawPosition);
+              setElements(prev => {
+                const newElements = prev.map(el =>
+                  el._id === element._id
+                    ? { ...el, posicion: snappedPosition }
+                    : el
+                );
+                addToHistory(newElements, `Mover ${element.type}`);
+                return newElements;
+              });
             }}
           />
         );
@@ -944,17 +1069,26 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             fontFamily={element.fontFamily}
             rotation={element.rotation}
             opacity={element.opacity}
+            shadowColor={element.shadow?.color || shadowColor}
+            shadowBlur={element.shadow?.blur || shadowBlur}
+            shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
+            shadowOffsetY={element.shadow?.offsetY || shadowOffsetY}
             onClick={() => handleElementClick(element._id)}
             onTap={() => handleElementClick(element._id)}
             onContextMenu={(e) => handleElementRightClick(e, element._id)}
             draggable={activeMode === 'select'}
             onDragEnd={(e) => {
-              const newElements = elements.map(el =>
-                el._id === element._id
-                  ? { ...el, posicion: { x: e.target.x(), y: e.target.y() } }
-                  : el
-              );
-              setElements(newElements);
+              const rawPosition = { x: e.target.x(), y: e.target.y() };
+              const snappedPosition = snapToGridPosition(rawPosition);
+              setElements(prev => {
+                const newElements = prev.map(el =>
+                  el._id === element._id
+                    ? { ...el, posicion: snappedPosition }
+                    : el
+                );
+                addToHistory(newElements, `Mover ${element.type}`);
+                return newElements;
+              });
             }}
           />
         );
@@ -974,17 +1108,26 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             strokeWidth={strokeWidth}
             rotation={element.rotation}
             opacity={element.opacity}
+            shadowColor={element.shadow?.color || shadowColor}
+            shadowBlur={element.shadow?.blur || shadowBlur}
+            shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
+            shadowOffsetY={element.shadow?.offsetY || shadowOffsetY}
             onClick={() => handleElementClick(element._id)}
             onTap={() => handleElementClick(element._id)}
             onContextMenu={(e) => handleElementRightClick(e, element._id)}
             draggable={activeMode === 'select'}
             onDragEnd={(e) => {
-              const newElements = elements.map(el =>
-                el._id === element._id
-                  ? { ...el, posicion: { x: e.target.x(), y: e.target.y() } }
-                  : el
-              );
-              setElements(newElements);
+              const rawPosition = { x: e.target.x(), y: e.target.y() };
+              const snappedPosition = snapToGridPosition(rawPosition);
+              setElements(prev => {
+                const newElements = prev.map(el =>
+                  el._id === element._id
+                    ? { ...el, posicion: snappedPosition }
+                    : el
+                );
+                addToHistory(newElements, `Mover ${element.type}`);
+                return newElements;
+              });
             }}
           />
         );
@@ -1003,6 +1146,10 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             strokeWidth={strokeWidth}
             rotation={element.rotation}
             opacity={element.opacity}
+            shadowColor={element.shadow?.color || shadowColor}
+            shadowBlur={element.shadow?.blur || shadowBlur}
+            shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
+            shadowOffsetY={element.shadow?.offsetY || shadowOffsetY}
             onClick={() => handleElementClick(element._id)}
             onTap={() => handleElementClick(element._id)}
             onContextMenu={(e) => handleElementRightClick(e, element._id)}
@@ -1010,13 +1157,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             onDragEnd={(e) => {
               const rawPosition = { x: e.target.x(), y: e.target.y() };
               const snappedPosition = snapToGridPosition(rawPosition);
-              const newElements = elements.map(el =>
-                el._id === element._id
-                  ? { ...el, posicion: snappedPosition }
-                  : el
-              );
-              setElements(newElements);
-              addToHistory(newElements, `Mover ${element.type}`);
+              setElements(prev => {
+                const newElements = prev.map(el =>
+                  el._id === element._id
+                    ? { ...el, posicion: snappedPosition }
+                    : el
+                );
+                addToHistory(newElements, `Mover ${element.type}`);
+                return newElements;
+              });
             }}
           />
         );
@@ -1036,6 +1185,10 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             strokeWidth={strokeWidth}
             rotation={element.rotation}
             opacity={element.opacity}
+            shadowColor={element.shadow?.color || shadowColor}
+            shadowBlur={element.shadow?.blur || shadowBlur}
+            shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
+            shadowOffsetY={element.shadow?.offsetY || shadowOffsetY}
             onClick={() => handleElementClick(element._id)}
             onTap={() => handleElementClick(element._id)}
             onContextMenu={(e) => handleElementRightClick(e, element._id)}
@@ -1043,13 +1196,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             onDragEnd={(e) => {
               const rawPosition = { x: e.target.x(), y: e.target.y() };
               const snappedPosition = snapToGridPosition(rawPosition);
-              const newElements = elements.map(el =>
-                el._id === element._id
-                  ? { ...el, posicion: snappedPosition }
-                  : el
-              );
-              setElements(newElements);
-              addToHistory(newElements, `Mover ${element.type}`);
+              setElements(prev => {
+                const newElements = prev.map(el =>
+                  el._id === element._id
+                    ? { ...el, posicion: snappedPosition }
+                    : el
+                );
+                addToHistory(newElements, `Mover ${element.type}`);
+                return newElements;
+              });
             }}
           />
         );
@@ -1070,6 +1225,10 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             strokeWidth={strokeWidth}
             rotation={element.rotation}
             opacity={element.opacity}
+            shadowColor={element.shadow?.color || shadowColor}
+            shadowBlur={element.shadow?.blur || shadowBlur}
+            shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
+            shadowOffsetY={element.shadow?.offsetY || shadowOffsetY}
             onClick={() => handleElementClick(element._id)}
             onTap={() => handleElementClick(element._id)}
             onContextMenu={(e) => handleElementRightClick(e, element._id)}
@@ -1077,13 +1236,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             onDragEnd={(e) => {
               const rawPosition = { x: e.target.x(), y: e.target.y() };
               const snappedPosition = snapToGridPosition(rawPosition);
-              const newElements = elements.map(el =>
-                el._id === element._id
-                  ? { ...el, posicion: snappedPosition }
-                  : el
-              );
-              setElements(newElements);
-              addToHistory(newElements, `Mover ${element.type}`);
+              setElements(prev => {
+                const newElements = prev.map(el =>
+                  el._id === element._id
+                    ? { ...el, posicion: snappedPosition }
+                    : el
+                );
+                addToHistory(newElements, `Mover ${element.type}`);
+                return newElements;
+              });
             }}
           />
         );
@@ -1091,7 +1252,75 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
 
       return null;
     });
-  }, [elements, selectedIds, handleElementClick, getElementZoneColor, activeMode]);
+  }, [elements, selectedIds, handleElementClick, getElementZoneColor, activeMode, snapToGridPosition, addToHistory]);
+
+  // Función para renderizar zonas personalizables
+  const renderCustomZones = useCallback(() => {
+    return (
+      <>
+        {/* Zonas personalizadas existentes */}
+        {customZones.map(zone => (
+          <Group key={zone.id}>
+            {/* Polígono de la zona */}
+            <RegularPolygon
+              x={0}
+              y={0}
+              sides={zone.points.length}
+              radius={20}
+              fill={zone.color}
+              opacity={0.3}
+              stroke={zone.color}
+              strokeWidth={2}
+              listening={false}
+            />
+            
+            {/* Puntos de la zona */}
+            {zone.points.map((point, index) => (
+              <Circle
+                key={point.id}
+                x={point.x}
+                y={point.y}
+                radius={4}
+                fill={zone.color}
+                stroke="#000"
+                strokeWidth={1}
+                draggable={customZoneMode === 'edit'}
+                onDragEnd={(e) => {
+                  if (customZoneMode === 'edit') {
+                    updateCustomZonePoint(point.id, { x: e.target.x(), y: e.target.y() });
+                  }
+                }}
+              />
+            ))}
+            
+            {/* Líneas conectando los puntos */}
+            {zone.points.length > 1 && (
+              <Line
+                points={zone.points.flatMap(point => [point.x, point.y])}
+                stroke={zone.color}
+                strokeWidth={2}
+                closed={true}
+                listening={false}
+              />
+            )}
+          </Group>
+        ))}
+        
+        {/* Puntos temporales durante la creación */}
+        {isCreatingCustomZone && customZonePoints.map((point, index) => (
+          <Circle
+            key={point.id}
+            x={point.x}
+            y={point.y}
+            radius={4}
+            fill="#FF6B6B"
+            stroke="#000"
+            strokeWidth={1}
+          />
+        ))}
+      </>
+    );
+  }, [customZones, customZoneMode, isCreatingCustomZone, customZonePoints, updateCustomZonePoint]);
 
   // Función para manejar zoom con la rueda del mouse
   const handleWheel = useCallback((e) => {
@@ -1125,7 +1354,18 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       const stage = e.target.getStage();
       stage.draggable(true);
     }
-  }, [activeMode]);
+    
+    // Manejar creación de zonas personalizables
+    if (isCreatingCustomZone) {
+      const stage = e.target.getStage();
+      const point = stage.getPointerPosition();
+      const adjustedPoint = {
+        x: (point.x - position.x) / scale,
+        y: (point.y - position.y) / scale
+      };
+      addCustomZonePoint(adjustedPoint.x, adjustedPoint.y);
+    }
+  }, [activeMode, isCreatingCustomZone, position, scale, addCustomZonePoint]);
 
   const handleMouseMove = useCallback((e) => {
     if (activeMode === 'pan') {
@@ -1158,6 +1398,73 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       addToHistory(initialMapa.contenido, 'Cargar mapa inicial');
     }
   }, [initialMapa, addToHistory]);
+
+  // Efecto para cargar zonas desde la base de datos
+  useEffect(() => {
+    const loadZonas = async () => {
+      try {
+        console.log('[CrearMapaMain] Cargando zonas para sala:', salaId);
+        
+                         // Importar dinámicamente para evitar problemas de circular dependency
+                 const { supabase } = await import('../../../config/supabase.js');
+        
+        const { data: zonasData, error } = await supabase
+          .from('zonas')
+          .select('*')
+          .eq('sala_id', salaId);
+        
+        if (error) {
+          console.error('[CrearMapaMain] Error cargando zonas:', error);
+          message.error('Error cargando zonas: ' + error.message);
+          return;
+        }
+        
+        if (zonasData && zonasData.length > 0) {
+          console.log('[CrearMapaMain] Zonas cargadas:', zonasData);
+          setZonas(zonasData);
+          message.success(`${zonasData.length} zona(s) cargada(s) desde la base de datos`);
+        } else {
+          console.log('[CrearMapaMain] No se encontraron zonas para esta sala');
+          // Crear zona por defecto si no hay ninguna
+          const defaultZone = {
+            id: 1,
+            nombre: 'Zona Principal',
+            aforo: 100,
+            color: '#FF6B6B',
+            numerada: false,
+            sala_id: salaId,
+            tenant_id: null
+          };
+          setZonas([defaultZone]);
+        }
+      } catch (error) {
+        console.error('[CrearMapaMain] Error en loadZonas:', error);
+        message.error('Error cargando zonas: ' + error.message);
+      }
+    };
+
+    if (salaId) {
+      loadZonas();
+    }
+  }, [salaId]);
+
+  // Efecto para debuggear el estado de elementos
+  useEffect(() => {
+    console.log('[CrearMapaMain] Estado actual de elementos:', elements);
+    console.log('[CrearMapaMain] Estado actual de zonas:', zonas);
+  }, [elements, zonas]);
+
+  // Efecto para manejar el transformador
+  useEffect(() => {
+    if (transformerRef.current && selectedIds.length > 0) {
+      const stage = stageRef.current;
+      const selectedNode = stage.findOne(`#${selectedIds[0]}`);
+      if (selectedNode) {
+        transformerRef.current.nodes([selectedNode]);
+        transformerRef.current.getLayer().batchDraw();
+      }
+    }
+  }, [selectedIds]);
 
   // Efecto para actualizar propiedades rápidas cuando cambia la selección
   useEffect(() => {
@@ -1407,6 +1714,12 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
                 >
                   ⭐ Estrella
                 </button>
+                <button
+                  onClick={startCustomZoneCreation}
+                  className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                >
+                  🎯 Zona Personalizada
+                </button>
               </div>
               
               {/* Configuración de formas */}
@@ -1547,6 +1860,51 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
             </div>
           </div>
 
+          {/* Panel: Zonas Personalizables */}
+          <div className="bg-white border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setShowCustomZonePanel(!showCustomZonePanel)}
+              className="w-full p-3 text-left font-medium rounded-t-lg bg-red-100 text-red-700 hover:bg-red-200"
+            >
+              🎯 Zonas Personalizables
+            </button>
+            <div className={`p-3 border-t border-gray-200 ${showCustomZonePanel ? 'block' : 'hidden'}`}>
+              <div className="space-y-3">
+                <button
+                  onClick={startCustomZoneCreation}
+                  className="w-full px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                >
+                  ➕ Crear Nueva Zona
+                </button>
+                
+                {customZones.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-700">Zonas Existentes:</div>
+                    {customZones.map(zone => (
+                      <div key={zone.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm text-gray-600">{zone.name}</span>
+                        <div className="flex space-x-1">
+                          <button
+                            onClick={() => editCustomZone(zone.id)}
+                            className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => deleteCustomZone(zone.id)}
+                            className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Panel: Configuración */}
           <div className="bg-white border border-gray-200 rounded-lg">
             <button
@@ -1600,9 +1958,143 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
                 </div>
               </div>
             </div>
+                    </div>
+
+          {/* Panel: Efectos y Sombras */}
+          <div className="bg-white border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setShowEffectsTools(!showEffectsTools)}
+              className="w-full p-3 text-left font-medium rounded-t-lg bg-purple-100 text-purple-700 hover:bg-purple-200"
+            >
+              ✨ Efectos y Sombras
+            </button>
+            <div className={`p-3 border-t border-gray-200 ${showEffectsTools ? 'block' : 'hidden'}`}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-gray-600">Mostrar Sombras:</label>
+                  <input
+                    type="checkbox"
+                    checked={showShadows}
+                    onChange={(e) => setShowShadows(e.target.checked)}
+                    className="rounded"
+                  />
+                </div>
+                
+                {showShadows && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm text-gray-600">Color Sombra:</label>
+                      <input
+                        type="color"
+                        value={shadowColor}
+                        onChange={(e) => setShadowColor(e.target.value)}
+                        className="w-8 h-6 rounded border"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm text-gray-600">Desenfoque:</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="50"
+                        value={shadowBlur}
+                        onChange={(e) => setShadowBlur(Number(e.target.value))}
+                        className="w-20"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm text-gray-600">Offset X:</label>
+                      <input
+                        type="range"
+                        min="-20"
+                        max="20"
+                        value={shadowOffsetX}
+                        onChange={(e) => setShadowOffsetX(Number(e.target.value))}
+                        className="w-20"
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm text-gray-600">Offset Y:</label>
+                      <input
+                        type="range"
+                        min="-20"
+                        max="20"
+                        value={shadowOffsetY}
+                        onChange={(e) => setShadowOffsetY(Number(e.target.value))}
+                        className="w-20"
+                      />
+                    </div>
+                    
+                    <div className="pt-2 border-t border-gray-200">
+                      <button
+                        onClick={() => applyShadowToSelected({
+                          color: shadowColor,
+                          blur: shadowBlur,
+                          offsetX: shadowOffsetX,
+                          offsetY: shadowOffsetY
+                        })}
+                        disabled={selectedIds.length === 0}
+                        className="w-full px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 text-sm"
+                      >
+                        🎨 Aplicar a Seleccionados
+                      </button>
+                      <button
+                        onClick={removeShadowFromSelected}
+                        disabled={selectedIds.length === 0}
+                        className="w-full px-3 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 disabled:opacity-50 text-sm"
+                      >
+                        🚫 Remover Sombras
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
-                     {/* Panel: Imagen de Fondo */}
+          {/* Panel: Transformador Visual */}
+          <div className="bg-white border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setShowTransformerPanel(!showTransformerPanel)}
+              className="w-full p-3 text-left font-medium rounded-t-lg bg-green-100 text-green-700 hover:bg-green-200"
+            >
+              🔧 Transformador Visual
+            </button>
+            <div className={`p-3 border-t border-gray-200 ${showTransformerPanel ? 'block' : 'hidden'}`}>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm text-gray-600">Mostrar Transformador:</label>
+                  <input
+                    type="checkbox"
+                    checked={showTransformer}
+                    onChange={(e) => setShowTransformer(e.target.checked)}
+                    className="rounded"
+                  />
+                </div>
+                
+                {showTransformer && selectedIds.length > 0 && (
+                  <>
+                    <div className="text-sm text-gray-600">
+                      Elemento seleccionado: {selectedIds.length}
+                    </div>
+                    <div className="pt-2 border-t border-gray-200">
+                      <div className="text-xs text-gray-500 mb-2">
+                        Usa los handles del transformador para:
+                      </div>
+                      <div className="text-xs text-gray-500 space-y-1">
+                        <div>• 🔴 Esquinas: Redimensionar</div>
+                        <div>• 🔵 Lados: Redimensionar proporcional</div>
+                        <div>• 🟡 Centro: Rotar</div>
+                        <div>• 🟢 Esquinas internas: Redimensionar desde centro</div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Panel: Imagen de Fondo */}
            <div className="bg-white border border-gray-200 rounded-lg">
              <button
                onClick={() => setShowBackgroundTools(!showBackgroundTools)}
@@ -2039,6 +2531,20 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
                   
                   {/* Elementos del mapa */}
                   {renderElements()}
+                  
+                  {/* Zonas personalizables */}
+                  {renderCustomZones()}
+                  
+                  {/* Transformador para elementos seleccionados */}
+                  {showTransformer && selectedIds.length > 0 && (
+                    <Transformer
+                      ref={transformerRef}
+                      boundBoxFunc={(oldBox, newBox) => {
+                        // Limitar el redimensionamiento mínimo
+                        return newBox.width < 5 || newBox.height < 5 ? oldBox : newBox;
+                      }}
+                    />
+                  )}
                   
                   {/* Nombres de elementos */}
                   {showMesaNames && elements.map(element => {
