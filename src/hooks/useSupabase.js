@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSupabaseClient, getSupabaseAdminClient } from '../config/supabase';
+import { supabase, supabaseAdmin } from '../config/supabase';
 
 export const useSupabase = () => {
   const [supabase, setSupabase] = useState(null);
@@ -14,8 +14,8 @@ export const useSupabase = () => {
         setError(null);
 
         // Obtener clientes
-        const client = getSupabaseClient();
-        const adminClient = getSupabaseAdminClient();
+        const client = supabase;
+        const adminClient = supabaseAdmin;
 
         if (!client) {
           throw new Error('No se pudo inicializar el cliente de Supabase');
