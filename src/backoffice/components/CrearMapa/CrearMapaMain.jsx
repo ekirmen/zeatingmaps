@@ -13,15 +13,15 @@
  */
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Line, Image, Group, RegularPolygon, Star, Transformer } from 'react-konva';
-import { Input, Select, message } from 'antd';
+import { Select, message } from 'antd';
 
 
-const { Option } = Select;
+
 
 const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   // ===== TODOS LOS HOOKS DEBEN ESTAR AL INICIO =====
   
-  // ===== ESTADOS PRINCIPALES =====
+    // ===== ESTADOS PRINCIPALES =====
   const [elements, setElements] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
   const [activeMode, setActiveMode] = useState('select'); // 'select', 'pan', 'add'
@@ -56,7 +56,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [newZoneAforo, setNewZoneAforo] = useState(0);
   const [newZoneNumerada, setNewZoneNumerada] = useState(false);
   
-  // ===== ESTADOS DE ZONAS PERSONALIZABLES =====
+    // ===== ESTADOS DE ZONAS PERSONALIZABLES =====
   const [customZones, setCustomZones] = useState([]);
   const [isCreatingCustomZone, setIsCreatingCustomZone] = useState(false);
   const [currentCustomZone, setCurrentCustomZone] = useState(null);
@@ -76,11 +76,11 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   // ===== ESTADOS DE VISIBILIDAD DE NOMBRES =====
   const [showMesaNames, setShowMesaNames] = useState(true);
   
-  // ===== ESTADOS DE HERRAMIENTAS =====
+    // ===== ESTADOS DE HERRAMIENTAS =====
   const [textInput, setTextInput] = useState('');
   const [isAddingText, setIsAddingText] = useState(false);
   
-  // ===== ESTADOS DE RANGOS PARA HERRAMIENTAS =====
+    // ===== ESTADOS DE RANGOS PARA HERRAMIENTAS =====
   const [textFontSize, setTextFontSize] = useState(16);
   const [rectangleWidth, setRectangleWidth] = useState(100);
   const [rectangleHeight, setRectangleHeight] = useState(60);
@@ -112,16 +112,14 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [showCustomZonePanel, setShowCustomZonePanel] = useState(false);
   const [showTransformerPanel, setShowTransformerPanel] = useState(false);
   
-  // ===== ESTADOS DE TRANSFORMADOR DE OBJETOS =====
+    // ===== ESTADOS DE TRANSFORMADOR DE OBJETOS =====
   const [showTransformer, setShowTransformer] = useState(false);
   const [transformerElement, setTransformerElement] = useState(null);
   
   // ===== ESTADOS DE ALINEACIÓN Y MEDICIÓN =====
-  const [showAlignmentGuides, setShowAlignmentGuides] = useState(true);
-  const [alignmentGuides, setAlignmentGuides] = useState([]);
-  const [measurementLines, setMeasurementLines] = useState([]);
+
   
-  // ===== ESTADOS DE DUPLICACIÓN INTELIGENTE =====
+    // ===== ESTADOS DE DUPLICACIÓN INTELIGENTE =====
   const [duplicationMode, setDuplicationMode] = useState(false);
   const [duplicationSpacing, setDuplicationSpacing] = useState(50);
   
@@ -136,18 +134,17 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   const [layers, setLayers] = useState([
     { id: 'default', name: 'Capa Principal', visible: true, locked: false }
   ]);
-  const [activeLayer, setActiveLayer] = useState('default');
+
   
   // ===== ESTADOS DE PLANTILLAS =====
   const [templates, setTemplates] = useState([]);
-  const [showTemplateManager, setShowTemplateManager] = useState(false);
+
   
   // ===== ESTADOS DE HISTORIAL AVANZADO =====
 
   
   // ===== ESTADOS DE TUTORIAL =====
-  const [showTutorial, setShowTutorial] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(0);
+
   
   // ===== ESTADOS DE EXPORTACIÓN =====
   const [exporting, setExporting] = useState(false);
@@ -575,13 +572,6 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   }, []);
 
   // ===== FUNCIONES DE SOMBRAS Y EFECTOS =====
-  const applyShadowToElement = useCallback((elementId, shadowProps) => {
-    setElements(prev => prev.map(el => 
-      el._id === elementId 
-        ? { ...el, shadow: shadowProps }
-        : el
-    ));
-  }, []);
 
   const applyShadowToSelected = useCallback((shadowProps) => {
     if (selectedIds.length === 0) {
@@ -667,19 +657,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     }
   }, [customZoneMode, currentCustomZone]);
 
-  const saveCustomZoneChanges = useCallback(() => {
-    if (currentCustomZone && customZoneMode === 'edit') {
-      setCustomZones(prev => prev.map(z => 
-        z.id === currentCustomZone.id 
-          ? { ...z, points: customZonePoints }
-          : z
-      ));
-      setShowCustomZoneModal(false);
-      setCurrentCustomZone(null);
-      setCustomZonePoints([]);
-      message.success('Zona personalizada actualizada');
-    }
-  }, [currentCustomZone, customZoneMode, customZonePoints]);
+
 
   const deleteCustomZone = useCallback((zoneId) => {
     setCustomZones(prev => prev.filter(z => z.id !== zoneId));
@@ -800,13 +778,6 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   }, [selectedIds, elements, addToHistory]);
 
   // ===== FUNCIONES DE CAPAS =====
-  const moveToLayer = useCallback((elementIds, layerName) => {
-    const newElements = elements.map(el =>
-      elementIds.includes(el._id) ? { ...el, layer: layerName } : el
-    );
-    setElements(newElements);
-    addToHistory(newElements, `Mover a capa ${layerName}`);
-  }, [elements, addToHistory]);
 
   const toggleLayerVisibility = useCallback((layerName) => {
     setLayers(prev => prev.map(layer =>

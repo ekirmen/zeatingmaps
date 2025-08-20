@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
-import { Stage, Layer, Circle, Rect, Text, Label, Tag, Transformer, Group, Line, RegularPolygon } from "react-konva";
+import { Stage, Layer, Circle, Rect, Text, Label, Tag, Transformer, Group, Line, RegularPolygon, Image } from "react-konva";
 import { useSeatLockStore } from "../../../components/seatLockStore";
-import { message, Button, Popover, Slider, Switch, ColorPicker, Space, Divider } from "antd";
+import { message, Button, Popover, Slider, Switch, ColorPicker, Space, Divider, Input, InputNumber, Upload } from "antd";
 import { 
   ZoomInOutlined, 
   ZoomOutOutlined, 
@@ -10,7 +10,10 @@ import {
   EyeOutlined,
   EyeInvisibleOutlined,
   MagicOutlined,
-  LayerOutlined
+  LayerOutlined,
+  PictureOutlined,
+  UploadOutlined,
+  DeleteOutlined
 } from "@ant-design/icons";
 
 const SeatingMap = ({
@@ -28,6 +31,7 @@ const SeatingMap = ({
   // ===== REFS =====
   const stageRef = useRef(null);
   const transformerRef = useRef(null);
+  const backgroundImageRef = useRef(null);
   
   // ===== ESTADOS PRINCIPALES =====
   const [scale, setScale] = useState(1);
@@ -70,6 +74,34 @@ const SeatingMap = ({
   const [gridSize, setGridSize] = useState(20);
   const [showGrid, setShowGrid] = useState(true);
   
+  // ===== ESTADOS DE IMAGEN DE FONDO =====
+  const [backgroundImage, setBackgroundImage] = useState(null);
+  const [backgroundImageUrl, setBackgroundImageUrl] = useState('');
+  const [backgroundImageConfig, setBackgroundImageConfig] = useState({
+    x: 0,
+    y: 0,
+    scale: 1,
+    opacity: 1,
+    rotation: 0,
+    shadowColor: '#000000',
+    shadowBlur: 10,
+    shadowOffsetX: 5,
+    shadowOffsetY: 5,
+    borderColor: '#ffffff',
+    borderWidth: 2,
+    showBorder: true,
+    showShadow: true
+  });
+  const [showBackgroundPanel, setShowBackgroundPanel] = useState(false);
+  
+  // ===== ESTADOS DE DEBUG =====
+  const [debugInfo, setDebugInfo] = useState({
+    mapaReceived: false,
+    mesasCount: 0,
+    sillasCount: 0,
+    lastRender: Date.now()
+  });
+
   // Obtener funciones de seat lock
   const { isSeatLocked, isSeatLockedByMe } = useSeatLockStore();
 
@@ -87,6 +119,21 @@ const SeatingMap = ({
     selectedZona ? selectedZona._id || selectedZona.id : null,
     [selectedZona]
   );
+
+  // ===== EFECTO PARA DEBUG Y MONITOREO =====
+  useEffect(() => {
+    const newDebugInfo = {
+      mapaReceived: !!mapa,
+      mesasCount: mapa?.mesas?.length || 0,
+      sillasCount: mapa?.mesas?.reduce((total, mesa) => total + (mesa.sillas?.length || 0), 0) || 0,
+      lastRender: Date.now()
+    };
+    
+    setDebugInfo(newDebugInfo);
+    console.log('[SeatingMap] Debug Info:', newDebugInfo);
+    console.log('[SeatingMap] Mapa recibido:', mapa);
+    console.log('[SeatingMap] Mesas:', mapa?.mesas);
+  }, [mapa]);
 
   // ===== EFECTO PARA MANEJAR EL TRANSFORMADOR =====
   useEffect(() => {
@@ -150,6 +197,35 @@ const SeatingMap = ({
     
     return shadowConfig;
   }, [showShadows, shadowColor, shadowBlur, shadowOffsetX, shadowOffsetY]);
+
+  // ===== FUNCIONES DE IMAGEN DE FONDO =====
+  const handleBackgroundImageUpload = useCallback((file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new window.Image();
+      img.onload = () => {
+        setBackgroundImage(img);
+        setBackgroundImageUrl(e.target.result);
+        message.success('Imagen de fondo cargada exitosamente');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+    return false; // Prevenir upload automático
+  }, []);
+
+  const removeBackgroundImage = useCallback(() => {
+    setBackgroundImage(null);
+    setBackgroundImageUrl('');
+    message.info('Imagen de fondo removida');
+  }, []);
+
+  const updateBackgroundConfig = useCallback((key, value) => {
+    setBackgroundImageConfig(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  }, []);
 
   // ===== FUNCIONES DE ZONAS PERSONALIZABLES =====
   const startCustomZoneCreation = useCallback(() => {
@@ -240,6 +316,11 @@ const SeatingMap = ({
 
   // ===== FUNCIÓN DE RENDERIZADO DE ASIENTOS MEJORADA =====
   const renderSeat = useCallback((silla, mesa) => {
+    if (!silla || !silla._id) {
+      console.warn('[SeatingMap] Asiento inválido:', silla);
+      return null;
+    }
+
     const seatZonaId =
       typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
     
@@ -265,6 +346,12 @@ const SeatingMap = ({
     const shadow = getSeatShadow(silla);
     const isLocked = isSeatLocked(silla._id);
     const isLockedByMe = isSeatLockedByMe(silla._id);
+
+    // Validar posición del asiento
+    if (!silla.posicion || typeof silla.posicion.x !== 'number' || typeof silla.posicion.y !== 'number') {
+      console.warn('[SeatingMap] Posición inválida para asiento:', silla._id, silla.posicion);
+      return null;
+    }
 
     return (
       <Group
@@ -345,6 +432,17 @@ const SeatingMap = ({
 
   // ===== FUNCIÓN DE RENDERIZADO DE MESAS MEJORADA =====
   const renderTable = useCallback((mesa) => {
+    if (!mesa || !mesa._id) {
+      console.warn('[SeatingMap] Mesa inválida:', mesa);
+      return null;
+    }
+
+    // Validar posición de la mesa
+    if (!mesa.posicion || typeof mesa.posicion.x !== 'number' || typeof mesa.posicion.y !== 'number') {
+      console.warn('[SeatingMap] Posición inválida para mesa:', mesa._id, mesa.posicion);
+      return null;
+    }
+
     const isSelected = selectedZonaId && selectedZonaId === (mesa.zona?._id || mesa.zona?.id);
     const shadow = getSeatShadow(mesa);
     
@@ -386,7 +484,7 @@ const SeatingMap = ({
         
         {/* Asientos de la mesa */}
         {mesa.sillas && layers.seats.visible && 
-          mesa.sillas.map(silla => renderSeat(silla, mesa))
+          mesa.sillas.map(silla => renderSeat(silla, mesa)).filter(Boolean)
         }
       </Group>
     );
@@ -504,6 +602,31 @@ const SeatingMap = ({
     return <Group>{lines}</Group>;
   }, [showGrid, layers.grid.visible, gridSize]);
 
+  // ===== FUNCIÓN DE RENDERIZADO DE IMAGEN DE FONDO =====
+  const renderBackgroundImage = useCallback(() => {
+    if (!backgroundImage || !layers.background.visible) return null;
+    
+    return (
+      <Image
+        ref={backgroundImageRef}
+        image={backgroundImage}
+        x={backgroundImageConfig.x}
+        y={backgroundImageConfig.y}
+        scaleX={backgroundImageConfig.scale}
+        scaleY={backgroundImageConfig.scale}
+        rotation={backgroundImageConfig.rotation}
+        opacity={backgroundImageConfig.opacity}
+        shadowColor={backgroundImageConfig.showShadow ? backgroundImageConfig.shadowColor : undefined}
+        shadowBlur={backgroundImageConfig.showShadow ? backgroundImageConfig.shadowBlur : undefined}
+        shadowOffsetX={backgroundImageConfig.showShadow ? backgroundImageConfig.shadowOffsetX : undefined}
+        shadowOffsetY={backgroundImageConfig.showShadow ? backgroundImageConfig.shadowOffsetY : undefined}
+        stroke={backgroundImageConfig.showBorder ? backgroundImageConfig.borderColor : undefined}
+        strokeWidth={backgroundImageConfig.showBorder ? backgroundImageConfig.borderWidth : undefined}
+        listening={false}
+      />
+    );
+  }, [backgroundImage, backgroundImageConfig, layers.background.visible]);
+
   // ===== PANEL DE CONFIGURACIÓN =====
   const ConfigPanel = () => (
     <div className="absolute top-4 right-4 bg-white p-4 rounded-lg shadow-lg border max-w-xs">
@@ -613,9 +736,211 @@ const SeatingMap = ({
     </div>
   );
 
+  // ===== PANEL DE IMAGEN DE FONDO =====
+  const BackgroundImagePanel = () => (
+    <div className="absolute top-4 left-4 bg-white p-4 rounded-lg shadow-lg border max-w-xs">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-gray-800">🖼️ Imagen de Fondo</h3>
+        <Button
+          size="small"
+          icon={<PictureOutlined />}
+          onClick={() => setShowBackgroundPanel(!showBackgroundPanel)}
+        />
+      </div>
+      
+      {showBackgroundPanel && (
+        <div className="space-y-3">
+          {/* Upload de imagen */}
+          <div>
+            <Upload
+              beforeUpload={handleBackgroundImageUpload}
+              showUploadList={false}
+              accept="image/*"
+            >
+              <Button size="small" icon={<UploadOutlined />} className="w-full">
+                Cargar Imagen
+              </Button>
+            </Upload>
+          </div>
+
+          {backgroundImage && (
+            <>
+              <Divider className="my-2" />
+              
+              {/* Posición X, Y */}
+              <div className="space-y-2">
+                <div>
+                  <span className="text-xs text-gray-600">Posición X</span>
+                  <Slider
+                    size="small"
+                    min={-500}
+                    max={500}
+                    value={backgroundImageConfig.x}
+                    onChange={(value) => updateBackgroundConfig('x', value)}
+                  />
+                </div>
+                <div>
+                  <span className="text-xs text-gray-600">Posición Y</span>
+                  <Slider
+                    size="small"
+                    min={-500}
+                    max={500}
+                    value={backgroundImageConfig.y}
+                    onChange={(value) => updateBackgroundConfig('y', value)}
+                  />
+                </div>
+              </div>
+
+              {/* Escala */}
+              <div>
+                <span className="text-xs text-gray-600">Escala</span>
+                <Slider
+                  size="small"
+                  min={0.1}
+                  max={3}
+                  step={0.1}
+                  value={backgroundImageConfig.scale}
+                  onChange={(value) => updateBackgroundConfig('scale', value)}
+                />
+              </div>
+
+              {/* Rotación */}
+              <div>
+                <span className="text-xs text-gray-600">Rotación</span>
+                <Slider
+                  size="small"
+                  min={0}
+                  max={360}
+                  value={backgroundImageConfig.rotation}
+                  onChange={(value) => updateBackgroundConfig('rotation', value)}
+                />
+              </div>
+
+              {/* Opacidad */}
+              <div>
+                <span className="text-xs text-gray-600">Opacidad</span>
+                <Slider
+                  size="small"
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  value={backgroundImageConfig.opacity}
+                  onChange={(value) => updateBackgroundConfig('opacity', value)}
+                />
+              </div>
+
+              <Divider className="my-2" />
+
+              {/* Sombra */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-gray-600">Sombra</span>
+                  <Switch
+                    size="small"
+                    checked={backgroundImageConfig.showShadow}
+                    onChange={(checked) => updateBackgroundConfig('showShadow', checked)}
+                  />
+                </div>
+                {backgroundImageConfig.showShadow && (
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-xs text-gray-600">Color Sombra</span>
+                      <ColorPicker
+                        value={backgroundImageConfig.shadowColor}
+                        onChange={(color) => updateBackgroundConfig('shadowColor', color.toHexString())}
+                        size="small"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-600">Desenfoque</span>
+                      <Slider
+                        size="small"
+                        min={0}
+                        max={50}
+                        value={backgroundImageConfig.shadowBlur}
+                        onChange={(value) => updateBackgroundConfig('shadowBlur', value)}
+                      />
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-600">Offset X</span>
+                      <Slider
+                        size="small"
+                        min={-20}
+                        max={20}
+                        value={backgroundImageConfig.shadowOffsetX}
+                        onChange={(value) => updateBackgroundConfig('shadowOffsetX', value)}
+                      />
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-600">Offset Y</span>
+                      <Slider
+                        size="small"
+                        min={-20}
+                        max={20}
+                        value={backgroundImageConfig.shadowOffsetY}
+                        onChange={(value) => updateBackgroundConfig('shadowOffsetY', value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Borde */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-gray-600">Borde</span>
+                  <Switch
+                    size="small"
+                    checked={backgroundImageConfig.showBorder}
+                    onChange={(checked) => updateBackgroundConfig('showBorder', checked)}
+                  />
+                </div>
+                {backgroundImageConfig.showBorder && (
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-xs text-gray-600">Color Borde</span>
+                      <ColorPicker
+                        value={backgroundImageConfig.borderColor}
+                        onChange={(color) => updateBackgroundConfig('borderColor', color.toHexString())}
+                        size="small"
+                      />
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-600">Ancho Borde</span>
+                      <Slider
+                        size="small"
+                        min={1}
+                        max={20}
+                        value={backgroundImageConfig.borderWidth}
+                        onChange={(value) => updateBackgroundConfig('borderWidth', value)}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Divider className="my-2" />
+
+              {/* Botón para remover */}
+              <Button
+                size="small"
+                danger
+                icon={<DeleteOutlined />}
+                onClick={removeBackgroundImage}
+                className="w-full"
+              >
+                Remover Imagen
+              </Button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   // ===== PANEL DE HERRAMIENTAS =====
   const ToolsPanel = () => (
-    <div className="absolute top-4 left-4 bg-white p-3 rounded-lg shadow-lg border">
+    <div className="absolute top-20 left-4 bg-white p-3 rounded-lg shadow-lg border">
       <div className="space-y-2">
         <Button
           size="small"
@@ -669,6 +994,18 @@ const SeatingMap = ({
     )
   );
 
+  // ===== PANEL DE DEBUG =====
+  const DebugPanel = () => (
+    <div className="absolute bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg border text-xs">
+      <div className="space-y-1">
+        <div>🔄 Último render: {new Date(debugInfo.lastRender).toLocaleTimeString()}</div>
+        <div>📊 Mapa recibido: {debugInfo.mapaReceived ? '✅' : '❌'}</div>
+        <div>🏗️ Mesas: {debugInfo.mesasCount}</div>
+        <div>🪑 Asientos: {debugInfo.sillasCount}</div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="relative w-full h-full">
       {/* Canvas de Konva Mejorado */}
@@ -695,6 +1032,9 @@ const SeatingMap = ({
         }}
       >
         <Layer>
+          {/* Imagen de fondo */}
+          {renderBackgroundImage()}
+          
           {/* Grid de fondo */}
           {renderGrid()}
           
@@ -702,7 +1042,18 @@ const SeatingMap = ({
           {renderCustomZones()}
           
           {/* Mesas y asientos */}
-          {mapa?.mesas && mapa.mesas.map(renderTable)}
+          {mapa?.mesas && Array.isArray(mapa.mesas) && mapa.mesas.length > 0 ? (
+            mapa.mesas.map(renderTable).filter(Boolean)
+          ) : (
+            <Text
+              text="No hay mesas disponibles"
+              x={400}
+              y={300}
+              fontSize={16}
+              fill="#999"
+              align="center"
+            />
+          )}
           
           {/* Transformador para asientos seleccionados */}
           {showTransformer && selectedSeats.length > 0 && (
@@ -719,8 +1070,10 @@ const SeatingMap = ({
 
       {/* Paneles de control */}
       <ConfigPanel />
+      <BackgroundImagePanel />
       <ToolsPanel />
       <CustomZonePanel />
+      <DebugPanel />
 
       {/* Leyenda de asientos */}
       {showSeatLegend && (
