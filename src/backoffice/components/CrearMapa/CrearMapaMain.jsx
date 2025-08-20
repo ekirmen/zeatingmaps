@@ -76,6 +76,11 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
   // ===== ESTADOS DE VISIBILIDAD DE NOMBRES =====
   const [showMesaNames, setShowMesaNames] = useState(true);
   
+  // ===== ESTADOS DE ESTABILIZACIÓN DEL CANVAS =====
+  const [isStabilizing, setIsStabilizing] = useState(false);
+  const [canvasStable, setCanvasStable] = useState(true);
+  const [lastRenderTime, setLastRenderTime] = useState(Date.now());
+  
     // ===== ESTADOS DE HERRAMIENTAS =====
   const [textInput, setTextInput] = useState('');
   const [isAddingText, setIsAddingText] = useState(false);
@@ -661,7 +666,43 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
 
   const deleteCustomZone = useCallback((zoneId) => {
     setCustomZones(prev => prev.filter(z => z.id !== zoneId));
-    message.success('Zona personalizada eliminada');
+    message.success('Zona personalizada eliminada exitosamente');
+  }, []);
+
+  // ===== FUNCIONES DE ESTABILIZACIÓN DEL CANVAS =====
+  const stabilizeCanvas = useCallback(() => {
+    if (stageRef.current) {
+      setIsStabilizing(true);
+      setCanvasStable(false);
+      
+      // Forzar re-renderizado del canvas
+      stageRef.current.batchDraw();
+      const layers = stageRef.current.getLayers();
+      layers.forEach(layer => layer.batchDraw());
+      
+      // Simular proceso de estabilización
+      setTimeout(() => {
+        setIsStabilizing(false);
+        setCanvasStable(true);
+        setLastRenderTime(Date.now());
+        message.success('Canvas estabilizado');
+      }, 500);
+    }
+  }, []);
+
+  const resetCanvas = useCallback(() => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+    setSelectedIds([]);
+    stabilizeCanvas();
+    message.info('Canvas reseteado');
+  }, [stabilizeCanvas]);
+
+  const forceCanvasUpdate = useCallback(() => {
+    if (stageRef.current) {
+      stageRef.current.batchDraw();
+      setLastRenderTime(Date.now());
+    }
   }, []);
 
   // ===== FUNCIONES DE ALINEACIÓN =====
@@ -914,10 +955,21 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
 
   // Función para renderizar elementos en el canvas
   const renderElements = useCallback(() => {
+    // Verificar que elements sea un array válido
+    if (!Array.isArray(elements) || elements.length === 0) {
+      return null;
+    }
+
     return elements.map(element => {
+      // Validar que el elemento tenga todas las propiedades necesarias
+      if (!element || !element._id || !element.type || !element.posicion) {
+        console.warn('[CrearMapaMain] Elemento inválido:', element);
+        return null;
+      }
+
       const isSelected = selectedIds.includes(element._id);
-      const strokeColor = isSelected ? '#FF6B6B' : element.stroke;
-      const strokeWidth = isSelected ? 3 : element.strokeWidth;
+      const strokeColor = isSelected ? '#FF6B6B' : (element.stroke || '#000000');
+      const strokeWidth = isSelected ? 3 : (element.strokeWidth || 1);
 
       // Renderizar mesa
       if (element.type === 'mesa') {
@@ -927,14 +979,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
           return (
             <Circle
               key={element._id}
+              id={element._id}
               x={element.posicion.x + element.width / 2}
               y={element.posicion.y + element.height / 2}
               radius={Math.min(element.width, element.height) / 2}
               fill={zoneColor}
               stroke={strokeColor}
               strokeWidth={strokeWidth}
-              rotation={element.rotation}
-              opacity={element.opacity}
+              rotation={element.rotation || 0}
+              opacity={element.opacity || 1}
               onClick={() => handleElementClick(element._id)}
               onTap={() => handleElementClick(element._id)}
               onContextMenu={(e) => handleElementRightClick(e, element._id)}
@@ -958,6 +1011,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
           return (
             <Rect
               key={element._id}
+              id={element._id}
               x={element.posicion.x}
               y={element.posicion.y}
               width={element.width}
@@ -965,8 +1019,8 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
               fill={zoneColor}
               stroke={strokeColor}
               strokeWidth={strokeWidth}
-              rotation={element.rotation}
-              opacity={element.opacity}
+              rotation={element.rotation || 0}
+              opacity={element.opacity || 1}
               onClick={() => handleElementClick(element._id)}
               onTap={() => handleElementClick(element._id)}
               onContextMenu={(e) => handleElementRightClick(e, element._id)}
@@ -994,14 +1048,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         return (
           <Circle
             key={element._id}
+            id={element._id}
             x={element.posicion.x}
             y={element.posicion.y}
             radius={element.width / 2}
-            fill={element.fill}
+            fill={element.fill || '#60a5fa'}
             stroke={strokeColor}
             strokeWidth={strokeWidth}
-            rotation={element.rotation}
-            opacity={element.opacity}
+            rotation={element.rotation || 0}
+            opacity={element.opacity || 1}
             shadowColor={element.shadow?.color || shadowColor}
             shadowBlur={element.shadow?.blur || shadowBlur}
             shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
@@ -1032,14 +1087,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         return (
           <Text
             key={element._id}
+            id={element._id}
             x={element.posicion.x}
             y={element.posicion.y}
-            text={element.texto}
-            fontSize={element.fontSize}
-            fill={element.fill}
-            fontFamily={element.fontFamily}
-            rotation={element.rotation}
-            opacity={element.opacity}
+            text={element.texto || ''}
+            fontSize={element.fontSize || 16}
+            fill={element.fill || '#000000'}
+            fontFamily={element.fontFamily || 'Arial'}
+            rotation={element.rotation || 0}
+            opacity={element.opacity || 1}
             shadowColor={element.shadow?.color || shadowColor}
             shadowBlur={element.shadow?.blur || shadowBlur}
             shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
@@ -1070,15 +1126,16 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         return (
           <Rect
             key={element._id}
+            id={element._id}
             x={element.posicion.x}
             y={element.posicion.y}
             width={element.width}
             height={element.height}
-            fill={element.fill}
+            fill={element.fill || '#ffffff'}
             stroke={strokeColor}
             strokeWidth={strokeWidth}
-            rotation={element.rotation}
-            opacity={element.opacity}
+            rotation={element.rotation || 0}
+            opacity={element.opacity || 1}
             shadowColor={element.shadow?.color || shadowColor}
             shadowBlur={element.shadow?.blur || shadowBlur}
             shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
@@ -1109,14 +1166,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         return (
           <Circle
             key={element._id}
+            id={element._id}
             x={element.posicion.x}
             y={element.posicion.y}
             radius={element.radius}
-            fill={element.fill}
+            fill={element.fill || '#ffffff'}
             stroke={strokeColor}
             strokeWidth={strokeWidth}
-            rotation={element.rotation}
-            opacity={element.opacity}
+            rotation={element.rotation || 0}
+            opacity={element.opacity || 1}
             shadowColor={element.shadow?.color || shadowColor}
             shadowBlur={element.shadow?.blur || shadowBlur}
             shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
@@ -1147,15 +1205,16 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         return (
           <RegularPolygon
             key={element._id}
+            id={element._id}
             x={element.posicion.x}
             y={element.posicion.y}
-            sides={element.sides}
+            sides={element.sides || 6}
             radius={element.radius}
-            fill={element.fill}
+            fill={element.fill || '#ffffff'}
             stroke={strokeColor}
             strokeWidth={strokeWidth}
-            rotation={element.rotation}
-            opacity={element.opacity}
+            rotation={element.rotation || 0}
+            opacity={element.opacity || 1}
             shadowColor={element.shadow?.color || shadowColor}
             shadowBlur={element.shadow?.blur || shadowBlur}
             shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
@@ -1186,16 +1245,17 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         return (
           <Star
             key={element._id}
+            id={element._id}
             x={element.posicion.x}
             y={element.posicion.y}
-            numPoints={element.numPoints}
-            innerRadius={element.innerRadius}
-            outerRadius={element.outerRadius}
-            fill={element.fill}
+            numPoints={element.numPoints || 5}
+            innerRadius={element.innerRadius || 20}
+            outerRadius={element.outerRadius || 40}
+            fill={element.fill || '#ffffff'}
             stroke={strokeColor}
             strokeWidth={strokeWidth}
-            rotation={element.rotation}
-            opacity={element.opacity}
+            rotation={element.rotation || 0}
+            opacity={element.opacity || 1}
             shadowColor={element.shadow?.color || shadowColor}
             shadowBlur={element.shadow?.blur || shadowBlur}
             shadowOffsetX={element.shadow?.offsetX || shadowOffsetX}
@@ -1221,9 +1281,24 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
         );
       }
 
+      // Elemento no reconocido
+      console.warn('[CrearMapaMain] Tipo de elemento no reconocido:', element.type);
       return null;
-    });
-  }, [elements, selectedIds, handleElementClick, getElementZoneColor, activeMode, snapToGridPosition, addToHistory]);
+    }).filter(Boolean); // Filtrar elementos nulos
+  }, [
+    elements,
+    selectedIds,
+    activeMode,
+    shadowColor,
+    shadowBlur,
+    shadowOffsetX,
+    shadowOffsetY,
+    getElementZoneColor,
+    handleElementClick,
+    handleElementRightClick,
+    snapToGridPosition,
+    addToHistory
+  ]);
 
   // Función para renderizar zonas personalizables
   const renderCustomZones = useCallback(() => {
@@ -1457,9 +1532,9 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [contextMenu, closeContextMenu]);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [contextMenu]);
 
   // Efecto para manejar atajos de teclado
   useEffect(() => {
@@ -1544,8 +1619,41 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [elements, onSave, deleteSelectedElements, undo, redo, handleCopy, handlePaste, addMesa, addSilla, addTexto, addRectangulo, addCirculo, addPoligono, closeContextMenu]);
 
-  // ===== RENDERIZADO =====
-  
+  // Efecto para estabilizar el canvas y evitar desaparición de elementos
+  useEffect(() => {
+    if (stageRef.current) {
+      // Forzar re-renderizado del canvas
+      stageRef.current.batchDraw();
+      
+      // Estabilizar las capas
+      const layers = stageRef.current.getLayers();
+      layers.forEach(layer => {
+        layer.batchDraw();
+      });
+      
+      // Actualizar tiempo de renderizado
+      setLastRenderTime(Date.now());
+    }
+  }, [elements, customZones, selectedIds, showGrid, backgroundImage]);
+
+  // Efecto de limpieza al desmontar
+  useEffect(() => {
+    return () => {
+      // Limpiar estados al desmontar
+      setSelectedIds([]);
+      
+      // Limpiar referencias
+      if (stageRef.current) {
+        stageRef.current.destroy();
+      }
+      if (transformerRef.current) {
+        transformerRef.current.destroy();
+      }
+    };
+  }, []);
+
+  // ===== FUNCIONES DE RENDERIZADO =====
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -2437,6 +2545,48 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
                 >
                   ❌ Cancelar
                 </button>
+                
+                <div className="border-t border-gray-200 pt-2 mt-2">
+                  <div className="text-xs text-gray-500 mb-2">🔧 Herramientas de Canvas</div>
+                  <button
+                    onClick={stabilizeCanvas}
+                    disabled={isStabilizing}
+                    className="w-full px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 text-sm mb-2"
+                  >
+                    {isStabilizing ? '🔄 Estabilizando...' : '🔄 Estabilizar Canvas'}
+                  </button>
+                  <button
+                    onClick={resetCanvas}
+                    className="w-full px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm mb-2"
+                  >
+                    🎯 Reset Canvas
+                  </button>
+                  <button
+                    onClick={forceCanvasUpdate}
+                    className="w-full px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
+                  >
+                    ⚡ Forzar Actualización
+                  </button>
+                </div>
+                
+                {/* Indicadores de estado */}
+                <div className="border-t border-gray-200 pt-2 mt-2">
+                  <div className="text-xs text-gray-500 mb-2">📊 Estado del Canvas</div>
+                  <div className="text-xs space-y-1">
+                    <div className="flex justify-between">
+                      <span>Estable:</span>
+                      <span className={canvasStable ? 'text-green-600' : 'text-red-600'}>
+                        {canvasStable ? '✅' : '❌'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Último render:</span>
+                      <span className="text-gray-600">
+                        {new Date(lastRenderTime).toLocaleTimeString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -2515,6 +2665,52 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa }) => {
                         return newBox.width < 5 || newBox.height < 5 ? oldBox : newBox;
                       }}
                     />
+                  )}
+                  
+                  {/* Indicador de estabilización */}
+                  {isStabilizing && (
+                    <Group>
+                      <Rect
+                        x={50}
+                        y={50}
+                        width={200}
+                        height={60}
+                        fill="#00000080"
+                        cornerRadius={10}
+                        listening={false}
+                      />
+                      <Text
+                        text="🔄 Estabilizando Canvas..."
+                        x={70}
+                        y={75}
+                        fontSize={14}
+                        fill="#FFFFFF"
+                        listening={false}
+                      />
+                    </Group>
+                  )}
+                  
+                  {/* Indicador de estado del canvas */}
+                  {!canvasStable && !isStabilizing && (
+                    <Group>
+                      <Rect
+                        x={50}
+                        y={120}
+                        width={200}
+                        height={40}
+                        fill="#FF980080"
+                        cornerRadius={8}
+                        listening={false}
+                      />
+                      <Text
+                        text="⚠️ Canvas inestable"
+                        x={70}
+                        y={140}
+                        fontSize={12}
+                        fill="#FFFFFF"
+                        listening={false}
+                      />
+                    </Group>
                   )}
                   
                   {/* Nombres de elementos */}
