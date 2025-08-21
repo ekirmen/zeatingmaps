@@ -160,7 +160,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
 
   // ===== FUNCIONES DE ELEMENTOS =====
   const addElement = useCallback((type, properties) => {
-    const newId = ++idCounter;
+    const newId = idCounter + 1;
     const newElement = {
       _id: newId,
       type,
@@ -243,6 +243,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
     const seats = [];
     const mesaCenter = mesa.center;
     const isCircular = mesa.type === 'round';
+    let currentIdCounter = idCounter;
     
     if (isCircular) {
       // Asientos en círculo
@@ -250,12 +251,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
         const angle = (i * 2 * Math.PI) / count;
         const radius = mesa.radius + 15; // 15px fuera de la mesa
         
+        currentIdCounter += 1;
         seats.push({
           x: mesaCenter.x + radius * Math.cos(angle),
           y: mesaCenter.y + radius * Math.sin(angle),
           label: (i + 1).toString(),
           zonaId: mesa.zonaId,
-          id: ++idCounter
+          id: currentIdCounter
         });
       }
     } else {
@@ -265,23 +267,25 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
       
       // Lado izquierdo
       for (let i = 0; i < seatsPerSide; i++) {
+        currentIdCounter += 1;
         seats.push({
           x: mesaCenter.x - mesa.width / 2 - 15,
           y: mesaCenter.y - mesa.height / 2 + (i * seatSpacing),
           label: (i + 1).toString(),
           zonaId: mesa.zonaId,
-          id: ++idCounter
+          id: currentIdCounter
         });
       }
       
       // Lado derecho
       for (let i = 0; i < seatsPerSide; i++) {
+        currentIdCounter += 1;
         seats.push({
           x: mesaCenter.x + mesa.width / 2 + 15,
           y: mesaCenter.y - mesa.height / 2 + (i * seatSpacing),
           label: (i + seatsPerSide + 1).toString(),
           zonaId: mesa.zonaId,
-          id: ++idCounter
+          id: currentIdCounter
         });
       }
     }
@@ -291,7 +295,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
     );
     
     setElements(newElements);
-    setIdCounter(idCounter);
+    setIdCounter(currentIdCounter);
     stabilizeCanvas();
     message.success(`${seats.length} asientos agregados a la mesa`);
   }, [elements, idCounter, stabilizeCanvas]);
@@ -334,7 +338,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
 
     const newMesa = {
       ...mesa,
-      _id: ++idCounter,
+      _id: idCounter + 1,
       center: { x: mesa.center.x + 150, y: mesa.center.y },
       label: `${mesa.label} (copia)`,
       seats: [] // Sin asientos en la copia
@@ -342,7 +346,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
 
     const newElements = [...elements, newMesa];
     setElements(newElements);
-    setIdCounter(idCounter);
+    setIdCounter(idCounter + 1);
     setSelectedIds([newMesa._id]);
     stabilizeCanvas();
     message.success('Mesa duplicada exitosamente');
@@ -358,7 +362,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
       y,
       label: (mesa.seats?.length || 0) + 1,
       zonaId: mesa.zonaId,
-      id: ++idCounter
+      id: idCounter + 1
     };
 
     const newSeats = [...(mesa.seats || []), newSeat];
@@ -367,7 +371,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
     );
     
     setElements(newElements);
-    setIdCounter(idCounter);
+    setIdCounter(idCounter + 1);
     stabilizeCanvas();
     message.success('Asiento individual agregado');
   }, [elements, idCounter, stabilizeCanvas]);
@@ -437,13 +441,15 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
     }
     
     const seats = [];
+    let currentIdCounter = idCounter;
     for (let i = 0; i < seatCount; i++) {
+      currentIdCounter += 1;
       seats.push({
         x: startX + (i * 20), // 20px entre asientos
         y: startY,
         label: (seatCount - i).toString(), // Numeración descendente
         zonaId: selectedZoneId,
-        id: ++idCounter
+        id: currentIdCounter
       });
     }
 
@@ -465,7 +471,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
     });
     
     setSelectedIds([row._id]);
-    setIdCounter(idCounter);
+    setIdCounter(currentIdCounter);
     message.success(`Fila ${label} agregada con ${seatCount} asientos`);
   }, [addElement, selectedZoneId, zones, idCounter, stabilizeCanvas]);
 
