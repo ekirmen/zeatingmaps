@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import BackofficeLayout from './components/BackofficeLayout';
 import Dashboard from './pages/Dashboard';
@@ -37,33 +37,7 @@ import SaasSettings from './pages/SaasSettings';
 import LegalTerms from '../store/pages/LegalTerms';
 import Descuentos from './pages/Descuentos';
 
-// Importar utilidades de inicialización segura
-import { initializeApp, cleanupApp } from '../utils/appInitializer';
-import { setupErrorHandling } from '../utils/errorBoundary';
-
 const BackofficeApp = () => {
-  // Inicializar la aplicación de forma segura
-  useEffect(() => {
-    const initApp = async () => {
-      try {
-        await initializeApp();
-      } catch (error) {
-        console.error('❌ [BackofficeApp] Error durante la inicialización:', error);
-      }
-    };
-
-    initApp();
-
-    // Configurar el sistema de manejo de errores
-    const cleanupErrorHandling = setupErrorHandling();
-
-    // Limpiar al desmontar
-    return () => {
-      cleanupApp();
-      cleanupErrorHandling();
-    };
-  }, []);
-
   return (
     <Routes>
      <Route path="/" element={<BackofficeLayout />}>

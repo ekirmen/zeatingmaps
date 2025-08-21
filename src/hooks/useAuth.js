@@ -1,183 +1,242 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '../config/supabase';
+import { getSupabaseClient } from '../config/supabase';
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [profile, setProfile] = useState(null);
 
-  // Función para obtener el perfil del usuario
+  // Obtener perfil del usuario
   const fetchUserProfile = useCallback(async (userId) => {
     try {
+      const supabase = getSupabaseClient();
       if (!supabase) {
         console.error('[useAuth] Cliente de Supabase no disponible');
         return null;
       }
 
       const { data, error } = await supabase
-        .from('usuarios')
+        .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
       if (error) {
-        console.error('[useAuth] Error al obtener perfil:', error);
+        console.error('[useAuth] Error obteniendo perfil:', error);
         return null;
       }
 
       return data;
-    } catch (error) {
-      console.error('[useAuth] Error inesperado al obtener perfil:', error);
+    } catch (err) {
+      console.error('[useAuth] Error en fetchUserProfile:', err);
       return null;
     }
   }, []);
 
-  // Función para iniciar sesión
-  const signIn = useCallback(async (email, password) => {
+  // Verificar sesión actual
+  const validateSession = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
+      const supabase = getSupabaseClient();
+      if (!supabase) {
+        throw new Error('Cliente de Supabase no disponible');
+      }
+
+      // Obtener sesión actual
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        throw sessionError;
+      }
+
+      if (session?.user) {
+        setUser(session.user);
+        
+        // Obtener perfil del usuario
+        const profile = await fetchUserProfile(session.user.id);
+        setUserProfile(profile);
+        
+        console.log('[useAuth] Usuario autenticado:', {
+          id: session.user.id,
+          email: session.user.email,
+          profile: profile
+        });
+      } else {
+        setUser(null);
+        setUserProfile(null);
+        console.log('[useAuth] No hay sesión activa');
+      }
+    } catch (err) {
+      console.error('[useAuth] Error validando sesión:', err);
+      setError(err.message);
+      setUser(null);
+      setUserProfile(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchUserProfile]);
+
+  // Iniciar sesión
+  const signIn = async ({ email, password }) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const supabase = getSupabaseClient();
       if (!supabase) {
         throw new Error('Cliente de Supabase no disponible');
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
 
       if (error) {
         throw error;
       }
 
-      return data;
-    } catch (error) {
-      setError(error.message);
-      throw error;
+      if (data?.user) {
+        setUser(data.user);
+        
+        // Obtener perfil del usuario
+        const profile = await fetchUserProfile(data.user.id);
+        setUserProfile(profile);
+        
+        console.log('[useAuth] Login exitoso:', {
+          id: data.user.id,
+          email: data.user.email,
+          profile: profile
+        });
+        
+        return { success: true, user: data.user, profile };
+      } else {
+        throw new Error('Respuesta de login inválida');
+      }
+    } catch (err) {
+      console.error('[useAuth] Error en login:', err);
+      setError(err.message);
+      throw err;
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  // Función para registrarse
-  const signUp = useCallback(async (email, password, userData = {}) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      if (!supabase) {
-        throw new Error('Cliente de Supabase no disponible');
-      }
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: userData,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      return data;
-    } catch (error) {
-      setError(error.message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Función para cerrar sesión
-  const signOut = useCallback(async () => {
+  // Cerrar sesión
+  const signOut = async () => {
     try {
       setLoading(true);
       
+      const supabase = getSupabaseClient();
       if (supabase) {
         await supabase.auth.signOut();
-        setUser(null);
-        setProfile(null);
       }
-    } catch (error) {
-      console.error('[useAuth] Error al cerrar sesión:', error);
-      setError(error.message);
+      
+      setUser(null);
+      setUserProfile(null);
+      setError(null);
+      
+      console.log('[useAuth] Sesión cerrada exitosamente');
+    } catch (err) {
+      console.error('[useAuth] Error cerrando sesión:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
-  // Función para actualizar perfil
+  // Verificar permisos
+  const hasPermission = useCallback((permission) => {
+    if (!userProfile) return false;
+    
+    // Super admin tiene todos los permisos
+    if (userProfile.role === 'super_admin') return true;
+    
+    // Verificar permisos específicos del rol
+    if (userProfile.permissions && Array.isArray(userProfile.permissions)) {
+      return userProfile.permissions.includes(permission);
+    }
+    
+    return false;
+  }, [userProfile]);
+
+  // Verificar si es super admin
+  const isSuperAdmin = useCallback(() => {
+    return userProfile?.role === 'super_admin';
+  }, [userProfile]);
+
+  // Verificar si es tenant admin
+  const isTenantAdmin = useCallback(() => {
+    return userProfile?.role === 'tenant_admin';
+  }, [userProfile]);
+
+  // Verificar si es admin de cualquier tipo
+  const isAdmin = useCallback(() => {
+    return isSuperAdmin() || isTenantAdmin();
+  }, [isSuperAdmin, isTenantAdmin]);
+
+  // Verificar acceso a tenant
+  const hasTenantAccess = useCallback((targetTenantId) => {
+    if (!userProfile) return false;
+    
+    // Super admin tiene acceso a todos los tenants
+    if (isSuperAdmin()) return true;
+    
+    // Tenant admin solo tiene acceso a su propio tenant
+    if (isTenantAdmin()) {
+      return userProfile.tenant_id === targetTenantId;
+    }
+    
+    return false;
+  }, [userProfile, isSuperAdmin, isTenantAdmin]);
+
+  // Actualizar perfil del usuario
   const updateProfile = useCallback(async (updates) => {
     try {
-      setLoading(true);
-      setError(null);
+      if (!user?.id) {
+        throw new Error('Usuario no autenticado');
+      }
 
+      const supabase = getSupabaseClient();
       if (!supabase) {
         throw new Error('Cliente de Supabase no disponible');
       }
 
-      const { data, error } = await supabase.auth.updateUser({
-        data: updates,
-      });
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id)
+        .select()
+        .single();
 
       if (error) {
         throw error;
       }
 
-      // Actualizar perfil local
-      if (data.user) {
-        setProfile(prev => ({ ...prev, ...updates }));
-      }
-
-      return data;
-    } catch (error) {
-      setError(error.message);
-      throw error;
-    } finally {
-      setLoading(false);
+      setUserProfile(data);
+      console.log('[useAuth] Perfil actualizado:', data);
+      
+      return { success: true, profile: data };
+    } catch (err) {
+      console.error('[useAuth] Error actualizando perfil:', err);
+      setError(err.message);
+      throw err;
     }
-  }, []);
-
-  // Función para restablecer contraseña
-  const resetPassword = useCallback(async (email) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      if (!supabase) {
-        throw new Error('Cliente de Supabase no disponible');
-      }
-
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      return { success: true };
-    } catch (error) {
-      setError(error.message);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  }, [user]);
 
   // Escuchar cambios de autenticación
   useEffect(() => {
+    const supabase = getSupabaseClient();
     if (!supabase) {
       console.error('[useAuth] No se puede inicializar listener de auth');
       return;
     }
 
     // Validar sesión inicial
-    // validateSession(); // This function was removed from the original file
+    validateSession();
 
     // Escuchar cambios de autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -187,10 +246,10 @@ export const useAuth = () => {
         if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user);
           const profile = await fetchUserProfile(session.user.id);
-          setProfile(profile);
+          setUserProfile(profile);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
-          setProfile(null);
+          setUserProfile(null);
         } else if (event === 'TOKEN_REFRESHED' && session?.user) {
           setUser(session.user);
         }
@@ -200,12 +259,12 @@ export const useAuth = () => {
     return () => {
       subscription?.unsubscribe();
     };
-  }, [fetchUserProfile]); // This dependency was removed from the original file
+  }, [validateSession, fetchUserProfile]);
 
   return {
     // Estado
     user,
-    profile, // Changed from userProfile to profile
+    userProfile,
     loading,
     error,
     
@@ -213,14 +272,13 @@ export const useAuth = () => {
     signIn,
     signOut,
     updateProfile,
-    resetPassword, // Added resetPassword
     
     // Verificaciones de permisos
-    // hasPermission, // Removed as per new_code
-    // isSuperAdmin, // Removed as per new_code
-    // isTenantAdmin, // Removed as per new_code
-    // isAdmin, // Removed as per new_code
-    // hasTenantAccess, // Removed as per new_code
+    hasPermission,
+    isSuperAdmin,
+    isTenantAdmin,
+    isAdmin,
+    hasTenantAccess,
     
     // Utilidades
     isAuthenticated: !!user,

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase, supabaseAdmin } from '../config/supabase';
+import { getSupabaseClient, getSupabaseAdminClient } from '../config/supabase';
 
 const SupabaseContext = createContext();
 
@@ -26,8 +26,8 @@ export const SupabaseProvider = ({ children }) => {
         console.log('[SUPABASE PROVIDER] Inicializando Supabase...');
 
         // Obtener clientes
-        const client = supabase;
-        const adminClient = supabaseAdmin;
+        const client = getSupabaseClient();
+        const adminClient = getSupabaseAdminClient();
 
         if (!client) {
           throw new Error('No se pudo inicializar el cliente de Supabase');

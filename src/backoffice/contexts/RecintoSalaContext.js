@@ -5,65 +5,19 @@ import { useTenant } from '../../contexts/TenantContext';
 const RecintoSalaContext = createContext();
 
 export const RecintoSalaProvider = ({ children }) => {
-  // Hook para obtener el tenant de forma segura - SIEMPRE debe estar en el nivel superior
-  const tenantContext = useTenant();
-  const currentTenant = tenantContext?.currentTenant || null;
-
-  // Verificación de seguridad para evitar errores de inicialización
-  const [isInitialized, setIsInitialized] = useState(false);
+  const { currentTenant } = useTenant();
   const [recintos, setRecintos] = useState([]);
   const [recinto, setRecinto] = useState(() => {
-    try {
-      const stored = localStorage.getItem('recinto');
-      return stored ? JSON.parse(stored) : null;
-    } catch (error) {
-      console.warn('⚠️ [RecintoSalaContext] Error al leer recinto del localStorage:', error);
-      return null;
-    }
+    const stored = localStorage.getItem('recinto');
+    return stored ? JSON.parse(stored) : null;
   });
   const [salas, setSalas] = useState([]);
   const [sala, setSala] = useState(() => {
-    try {
-      const stored = localStorage.getItem('sala');
-      return stored ? JSON.parse(stored) : null;
-    } catch (error) {
-      console.warn('⚠️ [RecintoSalaContext] Error al leer sala del localStorage:', error);
-      return null;
-    }
+    const stored = localStorage.getItem('sala');
+    return stored ? JSON.parse(stored) : null;
   });
 
   useEffect(() => {
-    // Marcar como inicializado después de un breve delay
-    const initTimer = setTimeout(() => {
-      setIsInitialized(true);
-    }, 100);
-
-    return () => clearTimeout(initTimer);
-  }, []);
-
-  useEffect(() => {
-    if (recinto) {
-      localStorage.setItem('recinto', JSON.stringify(recinto));
-      // actualizar las salas del recinto seleccionado
-      setSalas(recinto.salas || []);
-    } else {
-      localStorage.removeItem('recinto');
-      setSalas([]);
-    }
-  }, [recinto]);
-
-  useEffect(() => {
-    if (sala) {
-      localStorage.setItem('sala', JSON.stringify(sala));
-    } else {
-      localStorage.removeItem('sala');
-    }
-  }, [sala]);
-
-  useEffect(() => {
-    // Solo ejecutar si el contexto está inicializado
-    if (!isInitialized) return;
-
     const fetchRecintos = async () => {
       try {
         console.log('🔍 [RecintoSalaContext] Obteniendo recintos para tenant:', currentTenant?.id);
@@ -98,7 +52,26 @@ export const RecintoSalaProvider = ({ children }) => {
     } else if (!currentTenant && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('vercel.app')) {
       console.log('⏳ [RecintoSalaContext] Esperando tenant...');
     }
-  }, [currentTenant, isInitialized]);
+  }, [currentTenant]);
+
+  useEffect(() => {
+    if (recinto) {
+      localStorage.setItem('recinto', JSON.stringify(recinto));
+      // actualizar las salas del recinto seleccionado
+      setSalas(recinto.salas || []);
+    } else {
+      localStorage.removeItem('recinto');
+      setSalas([]);
+    }
+  }, [recinto]);
+
+  useEffect(() => {
+    if (sala) {
+      localStorage.setItem('sala', JSON.stringify(sala));
+    } else {
+      localStorage.removeItem('sala');
+    }
+  }, [sala]);
 
   return (
     <RecintoSalaContext.Provider
@@ -121,17 +94,7 @@ export const RecintoSalaProvider = ({ children }) => {
 export const useRecintoSala = () => {
   const context = useContext(RecintoSalaContext);
   if (!context) {
-    console.warn('⚠️ [RecintoSalaContext] Contexto no disponible, retornando valores por defecto');
-    return {
-      recintos: [],
-      setRecintos: () => {},
-      recinto: null,
-      setRecinto: () => {},
-      salas: [],
-      setSalas: () => {},
-      sala: null,
-      setSala: () => {},
-    };
+    throw new Error('useRecintoSala debe ser usado dentro de RecintoSalaProvider');
   }
   return context;
 };

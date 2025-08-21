@@ -5,45 +5,18 @@ import { useTenant } from '../../contexts/TenantContext';
 const RecintoContext = createContext();
 
 export const RecintoProvider = ({ children }) => {
-  // Hook para obtener el tenant de forma segura - SIEMPRE debe estar en el nivel superior
-  const tenantContext = useTenant();
-  const currentTenant = tenantContext?.currentTenant || null;
-
-  // Verificación de seguridad para evitar errores de inicialización
-  const [isInitialized, setIsInitialized] = useState(false);
+  const { currentTenant } = useTenant();
   const [recintos, setRecintos] = useState([]);
   const [recintoSeleccionado, setRecintoSeleccionado] = useState(() => {
-    try {
-      const stored = localStorage.getItem('recintoSeleccionado');
-      return stored ? JSON.parse(stored) : null;
-    } catch (error) {
-      console.warn('⚠️ [RecintoContext] Error al leer recintoSeleccionado del localStorage:', error);
-      return null;
-    }
+    const stored = localStorage.getItem('recintoSeleccionado');
+    return stored ? JSON.parse(stored) : null;
   });
   const [salaSeleccionada, setSalaSeleccionada] = useState(() => {
-    try {
-      const stored = localStorage.getItem('salaSeleccionada');
-      return stored ? JSON.parse(stored) : null;
-    } catch (error) {
-      console.warn('⚠️ [RecintoContext] Error al leer salaSeleccionada del localStorage:', error);
-      return null;
-    }
+    const stored = localStorage.getItem('salaSeleccionada');
+    return stored ? JSON.parse(stored) : null;
   });
 
   useEffect(() => {
-    // Marcar como inicializado después de un breve delay
-    const initTimer = setTimeout(() => {
-      setIsInitialized(true);
-    }, 100);
-
-    return () => clearTimeout(initTimer);
-  }, []);
-
-  useEffect(() => {
-    // Solo ejecutar si el contexto está inicializado
-    if (!isInitialized) return;
-
     const fetchRecintos = async () => {
       try {
         console.log('🔍 [RecintoContext] Obteniendo recintos para tenant:', currentTenant?.id);
@@ -84,7 +57,7 @@ export const RecintoProvider = ({ children }) => {
     } else if (!currentTenant && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('vercel.app')) {
       console.log('⏳ [RecintoContext] Esperando tenant...');
     }
-  }, [currentTenant, isInitialized]);
+  }, [currentTenant]);
 
   useEffect(() => {
     if (recintoSeleccionado) {
@@ -121,15 +94,7 @@ export const RecintoProvider = ({ children }) => {
 export const useRecinto = () => {
   const context = useContext(RecintoContext);
   if (!context) {
-    console.warn('⚠️ [RecintoContext] Contexto no disponible, retornando valores por defecto');
-    return {
-      recintos: [],
-      setRecintos: () => {},
-      recintoSeleccionado: null,
-      setRecintoSeleccionado: () => {},
-      salaSeleccionada: null,
-      setSalaSeleccionada: () => {},
-    };
+    throw new Error('useRecinto must be used within a RecintoProvider');
   }
   return context;
 };

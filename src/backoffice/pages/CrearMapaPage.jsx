@@ -3,8 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Button, Space, Typography, message, Spin, Empty } from 'antd';
 import { ArrowLeftOutlined, SaveOutlined, EyeOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
-
-import CrearMapaMain from '../components/CrearMapa/CrearMapaMain';
+import CrearMapaEditor from '../components/CrearMapa/CrearMapaEditor';
+import SeatingLite from '../components/CrearMapa/SeatingLite';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const { Title, Text } = Typography;
@@ -767,13 +767,53 @@ const CrearMapaPage = () => {
   try {
     return (
       <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                icon={<ArrowLeftOutlined />} 
+                onClick={handleCancel}
+                type="text"
+                size="large"
+              >
+                Volver
+              </Button>
+              <div>
+                <Title level={3} className="mb-1">
+                  {mapa ? 'Editar Mapa' : 'Crear Nuevo Mapa'}
+                </Title>
+                {sala && (
+                  <Text type="secondary">
+                    Sala: {sala.nombre} - Recinto: {sala.recintos?.nombre}
+                  </Text>
+                )}
+              </div>
+            </div>
+            
+            <Space>
+              {/* Botones de vista previa/guardar removidos a petición */}
+            </Space>
+          </div>
+        </div>
+
         {/* Editor */}
         <div className="flex-1">
-          <CrearMapaMain
+          <SeatingLite
             salaId={salaId}
             onSave={handleSave}
             onCancel={handleCancel}
-            initialMapa={mapa}
+            initialMapa={
+              mapa
+                ? {
+                  contenido: Array.isArray(mapa?.contenido)
+                    ? mapa.contenido
+                    : Array.isArray(mapa?.contenido?.elementos)
+                    ? mapa.contenido.elementos
+                    : []
+                }
+                : null
+            }
           />
         </div>
       </div>

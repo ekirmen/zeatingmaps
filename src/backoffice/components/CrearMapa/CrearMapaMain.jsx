@@ -1,1434 +1,696 @@
-/**
- * Editor principal de mapas de asientos - Versión 5.1.0
- * ADAPTADO A LA BASE DE DATOS REAL DEL USUARIO
- * 
- * Esquema real:
- * - zonas: id, nombre, aforo, color, numerada, sala_id, tenant_id
- * - Conecta a Supabase para datos reales
- * - Sistema de zonas dinámico basado en BD
- * - ESTABILIDAD COMPLETA DEL CANVAS KONVA
- */
-import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { Stage, Layer, Rect, Circle, Text, Line, Image, Group, RegularPolygon, Star, Transformer } from 'react-konva';
-import { Select, message, Button, Input, ColorPicker, Space, Divider, Spin } from 'antd';
-import { supabase } from '../../../config/supabase';
+import React, { useState, useEffect } from 'react';
+import { 
+  Card, 
+  Button, 
+  Space, 
+  Typography, 
+  Steps, 
+  message, 
+  Modal, 
+  Form, 
+  Input, 
+  Select, 
+  Divider,
+  Row,
+  Col,
+  Alert,
+  Progress,
+  Tag,
+  Tooltip,
+  Badge
+} from 'antd';
+import './CrearMapa.css';
+import {
+  PlusOutlined,
+  EditOutlined,
+  EyeOutlined,
+  DeleteOutlined,
+  SaveOutlined,
+  UploadOutlined,
+  DownloadOutlined,
+  SettingOutlined,
+  InfoCircleOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+  PlayCircleOutlined,
+  PauseCircleOutlined
+} from '@ant-design/icons';
+import CrearMapaEditor from './CrearMapaEditor';
+import CrearMapaPreview from './CrearMapaPreview';
+import CrearMapaSettings from './CrearMapaSettings';
+import CrearMapaValidation from './CrearMapaValidation';
 
-const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
-  // ===== REFS =====
-  const stageRef = useRef(null);
-  const transformerRef = useRef(null);
+const { Title, Text, Paragraph } = Typography;
+const { Option } = Select;
+const { TextArea } = Input;
 
+const CrearMapaMain = ({ 
+  salaId, 
+  onSave, 
+  onCancel,
+  initialMapa = null,
+  isEditMode = false 
+}) => {
   // ===== ESTADOS PRINCIPALES =====
-  const [elements, setElements] = useState([]);
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [activeMode, setActiveMode] = useState('select'); // 'select', 'pan', 'add'
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  
-  // ===== ESTADOS DE ZOOM Y PAN =====
-  const [scale, setScale] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [minScale] = useState(0.1);
-  const [maxScale] = useState(5);
-  
-  // ===== ESTADOS DE ZONAS (BASADO EN TU TABLA zonas) =====
-  const [zones, setZones] = useState([]);
-  const [selectedZoneId, setSelectedZoneId] = useState(null);
-  const [loadingZones, setLoadingZones] = useState(true);
-  
-  // ===== ESTADOS DE CONFIGURACIÓN =====
-  const [showGrid, setShowGrid] = useState(true);
-  const [gridSize, setGridSize] = useState(20);
-  const [snapToGrid, setSnapToGrid] = useState(true);
-  const [showMesaNames, setShowMesaNames] = useState(true);
-  const [showTransformer, setShowTransformer] = useState(true);
-  
-  // ===== ESTADOS DE HERRAMIENTAS =====
-  const [textInput, setTextInput] = useState('');
-  const [isAddingText, setIsAddingText] = useState(false);
-  const [textFontSize, setTextFontSize] = useState(60);
-  const [rectangleWidth, setRectangleWidth] = useState(120);
-  const [rectangleHeight, setRectangleHeight] = useState(36);
-  const [circleRadius, setCircleRadius] = useState(23.87);
-  
-  // ===== ESTADOS DE PANELES =====
-  const [showZonesPanel, setShowZonesPanel] = useState(true);
-  const [showToolsPanel, setShowToolsPanel] = useState(true);
-  const [showPropertiesPanel, setShowPropertiesPanel] = useState(true);
-
-  // ===== ESTADOS DE ESTABILIZACIÓN DEL CANVAS =====
-  const [canvasStable, setCanvasStable] = useState(true);
-  const [lastRenderTime, setLastRenderTime] = useState(Date.now());
-  const [idCounter, setIdCounter] = useState(0);
-
-  // ===== FUNCIONES DE CARGA DE ZONAS DESDE SUPABASE =====
-  const loadZonesFromDatabase = useCallback(async () => {
-    try {
-      setLoadingZones(true);
-      
-      let query = supabase
-        .from('zonas')
-        .select('*')
-        .eq('sala_id', salaId);
-      
-      // Si hay tenant_id, filtrar por él
-      if (tenantId) {
-        query = query.eq('tenant_id', tenantId);
-      }
-      
-      const { data: zonesData, error } = await query;
-      
-      if (error) {
-        console.error('Error cargando zonas:', error);
-        message.error('Error cargando zonas desde la base de datos');
-        return;
-      }
-      
-      if (zonesData && zonesData.length > 0) {
-        setZones(zonesData);
-        setSelectedZoneId(zonesData[0].id); // Seleccionar primera zona por defecto
-        message.success(`${zonesData.length} zonas cargadas desde la base de datos`);
-      } else {
-        // Si no hay zonas, crear algunas por defecto
-        const defaultZones = [
-          {
-            id: 1,
-            nombre: 'ZONA 1',
-            aforo: 50,
-            color: '#049cfb',
-            numerada: true,
-            sala_id: salaId,
-            tenant_id: tenantId
-          },
-          {
-            id: 2,
-            nombre: 'ZONA 2',
-            aforo: 100,
-            color: '#05ffc1',
-            numerada: true,
-            sala_id: salaId,
-            tenant_id: tenantId
-          }
-        ];
-        setZones(defaultZones);
-        setSelectedZoneId(1);
-        message.info('No se encontraron zonas. Se crearon zonas por defecto.');
-      }
-    } catch (error) {
-      console.error('Error en loadZonesFromDatabase:', error);
-      message.error('Error cargando zonas');
-    } finally {
-      setLoadingZones(false);
-      setLoading(false);
-    }
-  }, [salaId, tenantId]);
-
-  // ===== FUNCIONES DE ESTABILIZACIÓN DEL CANVAS =====
-  const stabilizeCanvas = useCallback(() => {
-    if (stageRef.current) {
-      setCanvasStable(false);
-      
-      // Forzar re-renderizado del canvas
-      stageRef.current.batchDraw();
-      const layers = stageRef.current.getLayers();
-      layers.forEach(layer => layer.batchDraw());
-      
-      // Simular proceso de estabilización
-      setTimeout(() => {
-        setCanvasStable(true);
-        setLastRenderTime(Date.now());
-        message.success('Canvas estabilizado');
-      }, 300);
-    }
-  }, []);
-
-  const forceCanvasUpdate = useCallback(() => {
-    if (stageRef.current) {
-      stageRef.current.batchDraw();
-      setLastRenderTime(Date.now());
-      message.info('Canvas actualizado');
-    }
-  }, []);
-
-  const resetCanvas = useCallback(() => {
-    setScale(1);
-    setPosition({ x: 0, y: 0 });
-    setSelectedIds([]);
-    stabilizeCanvas();
-    message.info('Canvas reseteado');
-  }, [stabilizeCanvas]);
-
-  // ===== FUNCIONES DE ELEMENTOS =====
-  const addElement = useCallback((type, properties) => {
-    const newId = idCounter + 1;
-    const newElement = {
-      _id: newId,
-      type,
-      ...properties
-    };
-
-    const newElements = [...elements, newElement];
-    setElements(newElements);
-    setIdCounter(newId);
-    stabilizeCanvas();
-    
-    return newElement;
-  }, [elements, idCounter, stabilizeCanvas]);
-
-  // ===== FUNCIONES DE MESAS =====
-  const addMesa = useCallback((tipo = 'rectangular') => {
-    const selectedZone = zones.find(z => z.id === selectedZoneId);
-    if (!selectedZone) {
-      message.warning('Selecciona una zona antes de agregar una mesa');
-      return;
-    }
-    
-    const zoneColor = selectedZone.color || '#8BC34A';
-    
-    if (tipo === 'rectangular') {
-      const mesa = addElement('mesa', {
-        center: { x: 100, y: 100 },
-        width: rectangleWidth,
-        height: rectangleHeight,
-        label: `Mesa ${elements.filter(e => e.type === 'mesa').length + 1}`,
-        type: 'rectangular',
-        objectType: 'table',
-        layout: 'twoSides',
-        zonaId: selectedZoneId,
-        zona: {
-          id: selectedZone.id,
-          nombre: selectedZone.nombre,
-          color: zoneColor,
-          aforo: selectedZone.aforo,
-          numerada: selectedZone.numerada
-        },
-        uuid: `uuid${Date.now()}`,
-        seats: [],
-        rotationAngle: 0
-      });
-      
-      setSelectedIds([mesa._id]);
-      message.success('Mesa rectangular agregada');
-    } else {
-      const mesa = addElement('mesa', {
-        center: { x: 100, y: 100 },
-        radius: circleRadius,
-        label: `Mesa ${elements.filter(e => e.type === 'mesa').length + 1}`,
-        type: 'round',
-        objectType: 'table',
-        zonaId: selectedZoneId,
-        zona: {
-          id: selectedZone.id,
-          nombre: selectedZone.nombre,
-          color: zoneColor,
-          aforo: selectedZone.aforo,
-          numerada: selectedZone.numerada
-        },
-        uuid: `uuid${Date.now()}`,
-        seats: [],
-        rotationAngle: 0,
-        openSpaces: 0
-      });
-      
-      setSelectedIds([mesa._id]);
-      message.success('Mesa circular agregada');
-    }
-  }, [addElement, elements, selectedZoneId, zones, rectangleWidth, rectangleHeight, circleRadius]);
-
-  // ===== FUNCIONES DE ASIENTOS =====
-  const addSeatsToMesa = useCallback((mesaId, count = 8) => {
-    const mesa = elements.find(e => e._id === mesaId);
-    if (!mesa) return;
-
-    const seats = [];
-    const mesaCenter = mesa.center;
-    const isCircular = mesa.type === 'round';
-    let currentIdCounter = idCounter;
-    
-    if (isCircular) {
-      // Asientos en círculo
-      for (let i = 0; i < count; i++) {
-        const angle = (i * 2 * Math.PI) / count;
-        const radius = mesa.radius + 15; // 15px fuera de la mesa
-        
-        currentIdCounter += 1;
-        seats.push({
-          x: mesaCenter.x + radius * Math.cos(angle),
-          y: mesaCenter.y + radius * Math.sin(angle),
-          label: (i + 1).toString(),
-          zonaId: mesa.zonaId,
-          id: currentIdCounter
-        });
-      }
-    } else {
-      // Asientos en rectángulo
-      const seatsPerSide = Math.ceil(count / 2);
-      const seatSpacing = 30;
-      
-      // Lado izquierdo
-      for (let i = 0; i < seatsPerSide; i++) {
-        currentIdCounter += 1;
-        seats.push({
-          x: mesaCenter.x - mesa.width / 2 - 15,
-          y: mesaCenter.y - mesa.height / 2 + (i * seatSpacing),
-          label: (i + 1).toString(),
-          zonaId: mesa.zonaId,
-          id: currentIdCounter
-        });
-      }
-      
-      // Lado derecho
-      for (let i = 0; i < seatsPerSide; i++) {
-        currentIdCounter += 1;
-        seats.push({
-          x: mesaCenter.x + mesa.width / 2 + 15,
-          y: mesaCenter.y - mesa.height / 2 + (i * seatSpacing),
-          label: (i + seatsPerSide + 1).toString(),
-          zonaId: mesa.zonaId,
-          id: currentIdCounter
-        });
-      }
-    }
-
-    const newElements = elements.map(el =>
-      el._id === mesaId ? { ...el, seats } : el
-    );
-    
-    setElements(newElements);
-    setIdCounter(currentIdCounter);
-    stabilizeCanvas();
-    message.success(`${seats.length} asientos agregados a la mesa`);
-  }, [elements, idCounter, stabilizeCanvas]);
-
-  // ===== FUNCIONES PARA AGREGAR ASIENTOS DESDE LA INTERFAZ =====
-  const [showAddSeatsModal, setShowAddSeatsModal] = useState(false);
-  const [selectedMesaForSeats, setSelectedMesaForSeats] = useState(null);
-  const [seatsCount, setSeatsCount] = useState(8);
-
-  const openAddSeatsModal = useCallback((mesaId) => {
-    const mesa = elements.find(e => e._id === mesaId);
-    if (!mesa) return;
-    
-    setSelectedMesaForSeats(mesa);
-    setSeatsCount(8);
-    setShowAddSeatsModal(true);
-  }, [elements]);
-
-  const handleAddSeats = useCallback(() => {
-    if (selectedMesaForSeats && seatsCount > 0) {
-      addSeatsToMesa(selectedMesaForSeats._id, seatsCount);
-      setShowAddSeatsModal(false);
-      setSelectedMesaForSeats(null);
-    }
-  }, [selectedMesaForSeats, seatsCount, addSeatsToMesa]);
-
-  const removeSeatsFromMesa = useCallback((mesaId) => {
-    const newElements = elements.map(el =>
-      el._id === mesaId ? { ...el, seats: [] } : el
-    );
-    
-    setElements(newElements);
-    stabilizeCanvas();
-    message.success('Asientos removidos de la mesa');
-  }, [elements, stabilizeCanvas]);
-
-  const duplicateMesa = useCallback((mesaId) => {
-    const mesa = elements.find(e => e._id === mesaId);
-    if (!mesa) return;
-
-    const newMesa = {
-      ...mesa,
-      _id: idCounter + 1,
-      center: { x: mesa.center.x + 150, y: mesa.center.y },
-      label: `${mesa.label} (copia)`,
-      seats: [] // Sin asientos en la copia
-    };
-
-    const newElements = [...elements, newMesa];
-    setElements(newElements);
-    setIdCounter(idCounter + 1);
-    setSelectedIds([newMesa._id]);
-    stabilizeCanvas();
-    message.success('Mesa duplicada exitosamente');
-  }, [elements, idCounter, stabilizeCanvas]);
-
-  // ===== FUNCIONES DE ASIENTOS INDIVIDUALES =====
-  const addSingleSeat = useCallback((mesaId, x, y) => {
-    const mesa = elements.find(e => e._id === mesaId);
-    if (!mesa) return;
-
-    const newSeat = {
-      x,
-      y,
-      label: (mesa.seats?.length || 0) + 1,
-      zonaId: mesa.zonaId,
-      id: idCounter + 1
-    };
-
-    const newSeats = [...(mesa.seats || []), newSeat];
-    const newElements = elements.map(el =>
-      el._id === mesaId ? { ...el, seats: newSeats } : el
-    );
-    
-    setElements(newElements);
-    setIdCounter(idCounter + 1);
-    stabilizeCanvas();
-    message.success('Asiento individual agregado');
-  }, [elements, idCounter, stabilizeCanvas]);
-
-  const removeSingleSeat = useCallback((mesaId, seatId) => {
-    const mesa = elements.find(e => e._id === mesaId);
-    if (!mesa) return;
-
-    const newSeats = mesa.seats?.filter(seat => seat.id !== seatId) || [];
-    const newElements = elements.map(el =>
-      el._id === mesaId ? { ...el, seats: newSeats } : el
-    );
-    
-    setElements(newElements);
-    stabilizeCanvas();
-    message.success('Asiento removido');
-  }, [elements, stabilizeCanvas]);
-
-  // ===== FUNCIONES DE CONFIGURACIÓN DE ASIENTOS =====
-  const [showLayoutModal, setShowLayoutModal] = useState(false);
-  const [selectedMesaForLayout, setSelectedMesaForLayout] = useState(null);
-  const [layoutType, setLayoutType] = useState('1');
-  const [layoutSeatsCount, setLayoutSeatsCount] = useState(8);
-  
-  // Estado para confirmación de eliminación de asientos
-  const [showDeleteSeatModal, setShowDeleteSeatModal] = useState(false);
-  const [seatToDelete, setSeatToDelete] = useState(null);
-
-  const openLayoutModal = useCallback((mesaId) => {
-    const mesa = elements.find(e => e._id === mesaId);
-    if (!mesa) return;
-    
-    setSelectedMesaForLayout(mesa);
-    setLayoutType(mesa.type === 'round' ? '1' : '2');
-    setLayoutSeatsCount(8);
-    setShowLayoutModal(true);
-  }, [elements]);
-
-  const handleConfigureLayout = useCallback(() => {
-    if (selectedMesaForLayout && layoutSeatsCount > 0) {
-      addSeatsToMesa(selectedMesaForLayout._id, layoutSeatsCount);
-      setShowLayoutModal(false);
-      setSelectedMesaForLayout(null);
-    }
-  }, [selectedMesaForLayout, layoutSeatsCount, addSeatsToMesa]);
-
-  // Función para confirmar eliminación de asiento
-  const confirmDeleteSeat = useCallback((mesaId, seatId, seatLabel) => {
-    setSeatToDelete({ mesaId, seatId, seatLabel });
-    setShowDeleteSeatModal(true);
-  }, []);
-
-  const handleDeleteSeat = useCallback(() => {
-    if (seatToDelete) {
-      removeSingleSeat(seatToDelete.mesaId, seatToDelete.seatId);
-      setShowDeleteSeatModal(false);
-      setSeatToDelete(null);
-    }
-  }, [seatToDelete, removeSingleSeat]);
-
-  // ===== FUNCIONES DE FILAS =====
-  const addRow = useCallback((label = 'A', seatCount = 26, startX = 100, startY = 100) => {
-    const selectedZone = zones.find(z => z.id === selectedZoneId);
-    if (!selectedZone) {
-      message.warning('Selecciona una zona antes de agregar una fila');
-      return;
-    }
-    
-    const seats = [];
-    let currentIdCounter = idCounter;
-    for (let i = 0; i < seatCount; i++) {
-      currentIdCounter += 1;
-      seats.push({
-        x: startX + (i * 20), // 20px entre asientos
-        y: startY,
-        label: (seatCount - i).toString(), // Numeración descendente
-        zonaId: selectedZoneId,
-        id: currentIdCounter
-      });
-    }
-
-    const row = addElement('row', {
-      label,
-      seats,
-      curve: 0,
-      chairSpacing: 4,
-      objectType: 'row',
-      uuid: `uuid${Date.now()}`,
-      zonaId: selectedZoneId,
-      zona: {
-        id: selectedZone.id,
-        nombre: selectedZone.nombre,
-        color: selectedZone.color,
-        aforo: selectedZone.aforo,
-        numerada: selectedZone.numerada
-      }
-    });
-    
-    setSelectedIds([row._id]);
-    setIdCounter(currentIdCounter);
-    message.success(`Fila ${label} agregada con ${seatCount} asientos`);
-  }, [addElement, selectedZoneId, zones, idCounter, stabilizeCanvas]);
-
-  // ===== FUNCIONES DE TEXTO =====
-  const addTexto = useCallback(() => {
-    const texto = addElement('texto', {
-      text: textInput || 'ESCENARIO',
-      centerX: 100,
-      centerY: 100,
-      rotationAngle: 0,
-      fontSize: textFontSize,
-      textColor: 'rgb(246, 248, 253)',
-      textAboveEverything: 0,
-      objectType: 'text'
-    });
-    
-    setSelectedIds([texto._id]);
-    setIsAddingText(false);
-    setTextInput('');
-    message.success('Texto agregado');
-  }, [addElement, textInput, textFontSize]);
-
-  // ===== FUNCIONES DE FORMAS =====
-  const addShape = useCallback((type = 'rectangle') => {
-    const selectedZone = zones.find(z => z.id === selectedZoneId);
-    if (!selectedZone) {
-      message.warning('Selecciona una zona antes de agregar una forma');
-      return;
-    }
-    
-    if (type === 'rectangle') {
-      const shape = addElement('shape', {
-        strokeWidth: 3,
-        strokeColor: '#8b93a6',
-        fillColor: selectedZone.color || '#ffffff',
-        rotationAngle: 0,
-        center: { x: 100, y: 100 },
-        objectType: 'shapedObject',
-        uuid: `uuid${Date.now()}`,
-        type: 'rectangle',
-        width: rectangleWidth,
-        height: rectangleHeight,
-        cornerRadius: 4,
-        zonaId: selectedZoneId
-      });
-      
-      setSelectedIds([shape._id]);
-      message.success('Rectángulo agregado');
-    }
-  }, [addElement, selectedZoneId, zones, rectangleWidth, rectangleHeight]);
-
-  // ===== FUNCIONES DE SELECCIÓN =====
-  const handleElementClick = useCallback((elementId) => {
-    if (activeMode === 'select') {
-      setSelectedIds(prev => 
-        prev.includes(elementId) 
-          ? prev.filter(id => id !== elementId)
-          : [...prev, elementId]
-      );
-    }
-  }, [activeMode]);
-
-  const handleElementRightClick = useCallback((e, elementId) => {
-    e.evt.preventDefault();
-    // Implementar menú contextual si es necesario
-  }, []);
-
-  // ===== FUNCIONES DE MANIPULACIÓN =====
-  const deleteSelectedElements = useCallback(() => {
-    if (selectedIds.length === 0) {
-      message.warning('No hay elementos seleccionados');
-      return;
-    }
-
-    const newElements = elements.filter(el => !selectedIds.includes(el._id));
-    setElements(newElements);
-    setSelectedIds([]);
-    stabilizeCanvas();
-    message.success(`${selectedIds.length} elemento(s) eliminado(s)`);
-  }, [selectedIds, elements, stabilizeCanvas]);
-
-  const updateElementProperty = useCallback((elementId, property, value) => {
-    const newElements = elements.map(el =>
-      el._id === elementId ? { ...el, [property]: value } : el
-    );
-    setElements(newElements);
-    stabilizeCanvas();
-  }, [elements, stabilizeCanvas]);
-
-  // ===== FUNCIONES DE ZOOM Y PAN =====
-  const handleWheel = useCallback((e) => {
-    e.evt.preventDefault();
-    const scaleBy = 1.1;
-    const oldScale = scale;
-    const pointer = stageRef.current.getPointerPosition();
-    if (!pointer) return;
-
-    const mousePointTo = {
-      x: (pointer.x - position.x) / oldScale,
-      y: (pointer.y - position.y) / oldScale,
-    };
-
-    const newScale = Math.min(Math.max(e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy, minScale), maxScale);
-
-    setScale(newScale);
-    setPosition({
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
-    });
-  }, [scale, position, minScale, maxScale]);
-
-  const handleMouseDown = useCallback((e) => {
-    if (activeMode === 'pan') {
-      stageRef.current.draggable(true);
-    }
-  }, [activeMode]);
-
-  const handleMouseUp = useCallback((e) => {
-    if (activeMode === 'pan') {
-      stageRef.current.draggable(false);
-    }
-  }, [activeMode]);
-
-  // ===== FUNCIONES DE SNAP TO GRID =====
-  const snapToGridPosition = useCallback((position) => {
-    if (!snapToGrid) return position;
-    
-    return {
-      x: Math.round(position.x / gridSize) * gridSize,
-      y: Math.round(position.y / gridSize) * gridSize
-    };
-  }, [snapToGrid, gridSize]);
-
-  // ===== FUNCIONES DE EXPORTACIÓN =====
-  const exportToSeatmapFormat = useCallback(() => {
-    const seatmapData = {
-      categories: {
-        list: zones.map(zone => ({
-          label: zone.nombre,
-          color: zone.color,
-          catId: zone.id
-        })),
-        listGA: []
+  const [currentStep, setCurrentStep] = useState(0);
+  const [mapa, setMapa] = useState(() => {
+    // Crear un mapa por defecto seguro
+    const defaultMapa = {
+      id: null,
+      nombre: 'Nuevo Mapa',
+      descripcion: '',
+      sala_id: salaId,
+      contenido: {
+        elementos: [],
+        zonas: [],
+        configuracion: {
+          gridSize: 20,
+          showGrid: true,
+          snapToGrid: true,
+          background: null,
+          dimensions: { width: 1200, height: 800 }
+        }
       },
-      idCounter: idCounter,
-      name: "Mapa de Asientos",
-      sectionScaleFactor: 170,
-      showAllButtons: false,
-      showRowLabels: false,
-      showRowLines: true,
-      subChart: {
-        height: 600,
-        width: 800,
-        snapOffset: { x: 0, y: 0 },
-        tables: elements.filter(e => e.type === 'mesa'),
-        texts: elements.filter(e => e.type === 'texto'),
-        rows: elements.filter(e => e.type === 'row'),
-        shapes: elements.filter(e => e.type === 'shape'),
-        booths: [],
-        generalAdmissionAreas: []
+      estado: 'draft',
+      metadata: {
+        version: '1.0.0',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        author: 'Usuario',
+        tags: [],
+        notes: ''
       }
     };
 
-    const dataStr = JSON.stringify(seatmapData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `seatmap_${salaId}_${Date.now()}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    
-    message.success('Mapa exportado en formato seatmap');
-  }, [zones, idCounter, elements, salaId]);
-
-  // ===== FUNCIONES DE RENDERIZADO =====
-  const renderElements = useCallback(() => {
-    if (!Array.isArray(elements) || elements.length === 0) {
-      return null;
+    // Si hay un mapa inicial, fusionarlo con el por defecto
+    if (initialMapa) {
+      return {
+        ...defaultMapa,
+        ...initialMapa,
+        contenido: {
+          ...defaultMapa.contenido,
+          ...(initialMapa.contenido || {}),
+          elementos: Array.isArray(initialMapa.contenido?.elementos) ? initialMapa.contenido.elementos : [],
+          zonas: Array.isArray(initialMapa.contenido?.zonas) ? initialMapa.contenido.zonas : [],
+          configuracion: {
+            ...defaultMapa.contenido.configuracion,
+            ...(initialMapa.contenido?.configuracion || {})
+          }
+        }
+      };
     }
 
-    return elements.map(element => {
-      if (!element || !element._id) {
-        return null;
-      }
+    return defaultMapa;
+  });
 
-      const isSelected = selectedIds.includes(element._id);
-      const strokeColor = isSelected ? '#FF6B6B' : '#000000';
-      const strokeWidth = isSelected ? 3 : 1;
+  const [showEditor, setShowEditor] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+  
+  // ===== ESTADOS DE VALIDACIÓN =====
+  const [validationResults, setValidationResults] = useState({
+    isValid: false,
+    errors: [],
+    warnings: [],
+    suggestions: []
+  });
+  
+  // ===== ESTADOS DE PROGRESO =====
+  const [progress, setProgress] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-      // Renderizar mesa
-      if (element.type === 'mesa') {
-        if (element.type === 'round') {
-          return (
-            <Group key={element._id}>
-              <Circle
-                x={element.center.x}
-                y={element.center.y}
-                radius={element.radius}
-                fill={element.zona?.color || '#ffffff'}
-                stroke={strokeColor}
-                strokeWidth={strokeWidth}
-                rotation={element.rotationAngle || 0}
-                onClick={() => handleElementClick(element._id)}
-                onTap={() => handleElementClick(element._id)}
-                onContextMenu={(e) => handleElementRightClick(e, element._id)}
-                draggable={activeMode === 'select'}
-                onDragEnd={(e) => {
-                  const newCenter = { x: e.target.x(), y: e.target.y() };
-                  const newElements = elements.map(el =>
-                    el._id === element._id ? { ...el, center: newCenter } : el
-                  );
-                  setElements(newElements);
-                  stabilizeCanvas();
-                }}
-              />
-              
-              {/* Asientos de la mesa */}
-              {element.seats && element.seats.map(seat => (
-                <Circle
-                  key={seat.id}
-                  x={seat.x}
-                  y={seat.y}
-                  radius={8}
-                  fill="#60a5fa"
-                  stroke="#000"
-                  strokeWidth={1}
-                  onClick={(e) => {
-                    e.cancelBubble = true;
-                    confirmDeleteSeat(element._id, seat.id, seat.label);
-                  }}
-                />
-              ))}
-              
-              {/* Etiqueta de la mesa */}
-              <Text
-                text={element.label}
-                x={element.center.x - 20}
-                y={element.center.y - 10}
-                fontSize={12}
-                fill="#000"
-                align="center"
-                listening={false}
-              />
-
-              {/* Contador de asientos */}
-              <Text
-                text={`${element.seats?.length || 0} asientos`}
-                x={element.center.x - 25}
-                y={element.center.y + element.radius + 20}
-                fontSize={10}
-                fill="#666"
-                align="center"
-                listening={false}
-              />
-            </Group>
-          );
-        } else {
-          return (
-            <Group key={element._id}>
-              <Rect
-                x={element.center.x - element.width / 2}
-                y={element.center.y - element.height / 2}
-                width={element.width}
-                height={element.height}
-                fill={element.zona?.color || '#ffffff'}
-                stroke={strokeColor}
-                strokeWidth={strokeWidth}
-                rotation={element.rotationAngle || 0}
-                onClick={() => handleElementClick(element._id)}
-                onTap={() => handleElementClick(element._id)}
-                onContextMenu={(e) => handleElementRightClick(e, element._id)}
-                draggable={activeMode === 'select'}
-                onDragEnd={(e) => {
-                  const newCenter = { x: e.target.x(), y: e.target.y() };
-                  const newElements = elements.map(el =>
-                    el._id === element._id ? { ...el, center: newCenter } : el
-                  );
-                  setElements(newElements);
-                  stabilizeCanvas();
-                }}
-              />
-              
-              {/* Asientos de la mesa */}
-              {element.seats && element.seats.map(seat => (
-                <Circle
-                  key={seat.id}
-                  x={seat.x}
-                  y={seat.y}
-                  radius={8}
-                  fill="#60a5fa"
-                  stroke="#000"
-                  strokeWidth={1}
-                  onClick={(e) => {
-                    e.cancelBubble = true;
-                    confirmDeleteSeat(element._id, seat.id, seat.label);
-                  }}
-                />
-              ))}
-              
-              {/* Etiqueta de la mesa */}
-              <Text
-                text={element.label}
-                x={element.center.x - 20}
-                y={element.center.y - 10}
-                fontSize={12}
-                fill="#000"
-                align="center"
-                listening={false}
-              />
-
-              {/* Contador de asientos */}
-              <Text
-                text={`${element.seats?.length || 0} asientos`}
-                x={element.center.x - 25}
-                y={element.center.y + element.height / 2 + 20}
-                fontSize={10}
-                fill="#666"
-                align="center"
-                listening={false}
-              />
-            </Group>
-          );
-        }
-      }
-
-      // Renderizar fila
-      if (element.type === 'row') {
-        return (
-          <Group key={element._id}>
-            {/* Asientos de la fila */}
-            {element.seats && element.seats.map(seat => (
-              <Circle
-                key={seat.id}
-                x={seat.x}
-                y={seat.y}
-                radius={8}
-                fill="#60a5fa"
-                stroke="#000"
-                strokeWidth={1}
-                onClick={(e) => {
-                  e.cancelBubble = true;
-                  confirmDeleteSeat(element._id, seat.id, seat.label);
-                }}
-              />
-            ))}
-            
-            {/* Etiqueta de la fila */}
-            <Text
-              text={element.label}
-              x={element.seats[0]?.x - 20 || 0}
-              y={element.seats[0]?.y - 20 || 0}
-              fontSize={14}
-              fill="#000"
-              fontStyle="bold"
-              listening={false}
-            />
-
-            {/* Contador de asientos */}
-            <Text
-              text={`${element.seats?.length || 0} asientos`}
-              x={element.seats[0]?.x - 20 || 0}
-              y={element.seats[0]?.y + 20 || 0}
-              fontSize={10}
-              fill="#666"
-              listening={false}
-            />
-          </Group>
-        );
-      }
-
-      // Renderizar texto
-      if (element.type === 'texto') {
-        return (
-          <Text
-            key={element._id}
-            x={element.centerX}
-            y={element.centerY}
-            text={element.text}
-            fontSize={element.fontSize}
-            fill={element.textColor}
-            rotation={element.rotationAngle || 0}
-            align="center"
-            onClick={() => handleElementClick(element._id)}
-            onTap={() => handleElementClick(element._id)}
-            draggable={activeMode === 'select'}
-            onDragEnd={(e) => {
-              const newElements = elements.map(el =>
-                el._id === element._id ? { 
-                  ...el, 
-                  centerX: e.target.x(), 
-                  centerY: e.target.y() 
-                } : el
-              );
-              setElements(newElements);
-              stabilizeCanvas();
-            }}
-          />
-        );
-      }
-
-      // Renderizar forma
-      if (element.type === 'shape') {
-        if (element.type === 'rectangle') {
-          return (
-            <Rect
-              key={element._id}
-              x={element.center.x - element.width / 2}
-              y={element.center.y - element.height / 2}
-              width={element.width}
-              height={element.height}
-              fill={element.fillColor}
-              stroke={element.strokeColor}
-              strokeWidth={element.strokeWidth}
-              cornerRadius={element.cornerRadius}
-              rotation={element.rotationAngle || 0}
-              onClick={() => handleElementClick(element._id)}
-              onTap={() => handleElementClick(element._id)}
-              draggable={activeMode === 'select'}
-              onDragEnd={(e) => {
-                const newCenter = { x: e.target.x(), y: e.target.y() };
-                const newElements = elements.map(el =>
-                  el._id === element._id ? { ...el, center: newCenter } : el
-                );
-                setElements(newElements);
-                stabilizeCanvas();
-              }}
-            />
-          );
-        }
-      }
-
-      return null;
-    }).filter(Boolean);
-  }, [elements, selectedIds, activeMode, handleElementClick, handleElementRightClick, removeSingleSeat, stabilizeCanvas]);
+  // ===== PASOS DEL WIZARD =====
+  const steps = [
+    {
+      title: 'Configuración Básica',
+      description: 'Información del mapa',
+      icon: <InfoCircleOutlined />,
+      content: 'basic'
+    },
+    {
+      title: 'Diseño del Mapa',
+      description: 'Editor visual',
+      icon: <EditOutlined />,
+      content: 'editor'
+    },
+    {
+      title: 'Validación',
+      description: 'Verificar integridad',
+      icon: <CheckCircleOutlined />,
+      content: 'validation'
+    },
+    {
+      title: 'Vista Previa',
+      description: 'Revisar resultado',
+      icon: <EyeOutlined />,
+      content: 'preview'
+    },
+    {
+      title: 'Configuración Avanzada',
+      description: 'Ajustes finales',
+      icon: <SettingOutlined />,
+      content: 'settings'
+    }
+  ];
 
   // ===== EFECTOS =====
   useEffect(() => {
-    // Cargar zonas desde la base de datos al montar el componente
-    loadZonesFromDatabase();
-  }, [loadZonesFromDatabase]);
-
-  useEffect(() => {
-    if (initialMapa && initialMapa.contenido) {
-      setElements(initialMapa.contenido);
+    if (initialMapa) {
+      setMapa(initialMapa);
+      setCurrentStep(1); // Ir directamente al editor si es edición
     }
   }, [initialMapa]);
 
   useEffect(() => {
-    if (transformerRef.current && selectedIds.length > 0) {
-      const stage = stageRef.current;
-      const selectedNode = stage.findOne(`#${selectedIds[0]}`);
-      if (selectedNode) {
-        transformerRef.current.nodes([selectedNode]);
-        transformerRef.current.getLayer().batchDraw();
+    // Calcular progreso basado en el paso actual y validación
+    let progressValue = (currentStep / (steps.length - 1)) * 100;
+    
+    if (currentStep >= 2 && validationResults.isValid) {
+      progressValue += 20; // Bonus por validación exitosa
+    }
+    
+    setProgress(Math.min(progressValue, 100));
+  }, [currentStep, validationResults.isValid, steps.length]);
+
+  // ===== FUNCIONES DE NAVEGACIÓN =====
+  const nextStep = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const goToStep = (step) => {
+    setCurrentStep(step);
+  };
+
+  // ===== FUNCIONES DE VALIDACIÓN =====
+  const validateMapa = async () => {
+    setIsProcessing(true);
+    setProgress(0);
+    
+    try {
+      // Simular proceso de validación
+      for (let i = 0; i <= 100; i += 20) {
+        setProgress(i);
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
+      
+      const results = await CrearMapaValidation.validate(mapa);
+      setValidationResults(results);
+      
+      if (results.isValid) {
+        message.success('Mapa validado exitosamente');
+        nextStep();
+      } else {
+        message.warning('El mapa tiene algunos problemas que deben corregirse');
+      }
+    } catch (error) {
+      message.error('Error durante la validación');
+      console.error('Validation error:', error);
+    } finally {
+      setIsProcessing(false);
     }
-  }, [selectedIds]);
+  };
 
-  useEffect(() => {
-    if (stageRef.current) {
-      stageRef.current.batchDraw();
-      const layers = stageRef.current.getLayers();
-      layers.forEach(layer => layer.batchDraw());
-      setLastRenderTime(Date.now());
+  // ===== FUNCIONES DE GUARDADO =====
+  const handleSave = async (mapaData) => {
+    try {
+      const mapaToSave = {
+        ...mapaData,
+        metadata: {
+          ...mapaData.metadata,
+          updated_at: new Date().toISOString(),
+          version: mapaData.metadata.version || '1.0.0'
+        }
+      };
+      
+      if (onSave) {
+        await onSave(mapaToSave);
+      }
+      
+      setMapa(mapaToSave);
+      message.success('Mapa guardado exitosamente');
+      
+      // Ir al siguiente paso si no es el último
+      if (currentStep < steps.length - 1) {
+        nextStep();
+      }
+    } catch (error) {
+      message.error('Error al guardar el mapa');
+      console.error('Save error:', error);
     }
-  }, [elements, showGrid]);
+  };
 
-  // ===== RENDERIZADO =====
-  if (loading || loadingZones) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <Spin size="large" />
-          <p className="mt-4 text-lg text-gray-600">
-            {loadingZones ? 'Cargando zonas desde la base de datos...' : 'Cargando editor de mapas...'}
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const handleFinalSave = async () => {
+    try {
+      const finalMapa = {
+        ...mapa,
+        estado: 'active',
+        metadata: {
+          ...mapa.metadata,
+          updated_at: new Date().toISOString(),
+          published_at: new Date().toISOString()
+        }
+      };
+      
+      if (onSave) {
+        await onSave(finalMapa);
+      }
+      
+      message.success('Mapa publicado exitosamente');
+      onCancel(); // Cerrar el editor
+    } catch (error) {
+      message.error('Error al publicar el mapa');
+      console.error('Final save error:', error);
+    }
+  };
 
-  if (error) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="text-red-600 text-6xl mb-4">❌</div>
-          <p className="text-lg text-red-600">Error: {error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Recargar
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // ===== RENDERIZADO DE CONTENIDO POR PASO =====
+  const renderStepContent = () => {
+    switch (steps[currentStep].content) {
+      case 'basic':
+        return (
+          <CrearMapaBasicConfig
+            mapa={mapa}
+            onUpdate={setMapa}
+            onNext={nextStep}
+          />
+        );
+      
+      case 'editor':
+        return (
+          <CrearMapaEditor
+            salaId={salaId}
+            initialMapa={mapa}
+            onSave={handleSave}
+            onCancel={() => setCurrentStep(currentStep - 1)}
+            isEditMode={isEditMode}
+          />
+        );
+      
+      case 'validation':
+        return (
+          <CrearMapaValidation
+            mapa={mapa}
+            results={validationResults}
+            onValidate={validateMapa}
+            onNext={nextStep}
+            isProcessing={isProcessing}
+            progress={progress}
+          />
+        );
+      
+      case 'preview':
+        return (
+          <CrearMapaPreview
+            mapa={mapa}
+            onEdit={() => setCurrentStep(1)}
+            onNext={nextStep}
+          />
+        );
+      
+      case 'settings':
+        return (
+          <CrearMapaSettings
+            mapa={mapa}
+            onUpdate={setMapa}
+            onFinish={handleFinalSave}
+            onBack={() => setCurrentStep(currentStep - 1)}
+          />
+        );
+      
+      default:
+        return null;
+    }
+  };
 
+  // ===== RENDERIZADO PRINCIPAL =====
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Panel lateral izquierdo */}
-      <div className="w-80 bg-white border-r border-gray-200 overflow-y-auto">
-        <div className="p-4 space-y-4">
-          {/* Panel: Zonas */}
-          <div className="bg-white border border-gray-200 rounded-lg">
-            <button
-              onClick={() => setShowZonesPanel(!showZonesPanel)}
-              className="w-full p-3 text-left font-medium rounded-t-lg bg-blue-100 text-blue-700 hover:bg-blue-200"
-            >
-              🎯 Zonas ({zones.length})
-            </button>
-            <div className={`p-3 border-t border-gray-200 ${showZonesPanel ? 'block' : 'hidden'}`}>
-              <div className="space-y-2">
-                {zones.map(zone => (
-                  <div
-                    key={zone.id}
-                    className={`p-2 rounded cursor-pointer ${
-                      selectedZoneId === zone.id ? 'bg-blue-100 border-blue-300' : 'bg-gray-50'
-                    }`}
-                    onClick={() => setSelectedZoneId(zone.id)}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <div
-                        className="w-4 h-4 rounded"
-                        style={{ backgroundColor: zone.color || '#cccccc' }}
-                      />
-                      <span className="font-medium">{zone.nombre}</span>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {zone.aforo || 0} asientos • {zone.numerada ? 'Numerada' : 'No numerada'}
-                    </div>
-                  </div>
-                ))}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* ===== HEADER ===== */}
+      <div className="bg-white shadow-lg border-b border-gray-200 p-8">
+        <div className="max-w-7xl mx-auto">
+          <Row gutter={24} align="middle">
+            <Col flex="auto">
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-2xl text-white">🎨</span>
+                </div>
+                <div>
+                  <Title level={1} className="mb-2 bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                    {isEditMode ? 'Editar Mapa' : 'Crear Nuevo Mapa'}
+                  </Title>
+                  <Text className="text-lg text-gray-600">
+                    {isEditMode ? 'Modifica la configuración y diseño del mapa existente' : 'Diseña y configura un nuevo mapa para tu sala'}
+                  </Text>
+                </div>
+              </div>
+            </Col>
+            
+            <Col>
+              <Space size="middle">
+                <Button 
+                  icon={<EyeOutlined />}
+                  onClick={() => setShowPreview(true)}
+                  title="Vista previa rápida"
+                  size="large"
+                  className="btn-gradient-primary shadow-custom hover-lift"
+                >
+                  Vista Previa
+                </Button>
+                <Button 
+                  icon={<SettingOutlined />}
+                  onClick={() => setShowSettings(true)}
+                  title="Configuración avanzada"
+                  size="large"
+                  className="btn-gradient-success shadow-custom hover-lift"
+                >
+                  Configuración
+                </Button>
+                <Button 
+                  onClick={onCancel}
+                  size="large"
+                  className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+                >
+                  Cancelar
+                </Button>
+              </Space>
+            </Col>
+          </Row>
+        </div>
+      </div>
+
+      {/* ===== PROGRESS BAR ===== */}
+      <div className="bg-white shadow-sm border-b border-gray-200 p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-bold">{Math.round(progress)}%</span>
+              </div>
+              <div>
+                <Text className="text-base font-semibold text-gray-800">
+                  Progreso del Mapa
+                </Text>
+                <Text className="text-sm text-gray-500">
+                  Paso {currentStep + 1} de {steps.length}
+                </Text>
+              </div>
+            </div>
+            <div className="text-right">
+              <Text className="text-sm text-gray-500">
+                {progress === 100 ? (
+                  <span className="text-green-600 font-semibold">🎉 ¡Listo para publicar!</span>
+                ) : (
+                  <span className="text-blue-600">🚀 Continuando...</span>
+                )}
+              </Text>
+            </div>
+          </div>
+          <Progress 
+            percent={progress} 
+            status={progress === 100 ? 'success' : 'active'}
+            strokeColor={{
+              '0%': '#3b82f6',
+              '50%': '#8b5cf6',
+              '100%': '#10b981',
+            }}
+            strokeWidth={12}
+            showInfo={false}
+            className="custom-progress"
+          />
+        </div>
+      </div>
+
+      {/* ===== STEPS NAVIGATION ===== */}
+      <div className="bg-white shadow-sm border-b border-gray-200 p-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="mb-4">
+            <Text className="text-lg font-semibold text-gray-800 mb-2">
+              Flujo de Creación del Mapa
+            </Text>
+            <Text className="text-sm text-gray-600">
+              Sigue estos pasos para crear un mapa completo y profesional
+            </Text>
+          </div>
+          <Steps 
+            current={currentStep} 
+            onChange={goToStep}
+            items={steps}
+            progressDot
+            responsive={true}
+            className="custom-steps"
+          />
+        </div>
+      </div>
+
+      {/* ===== MAIN CONTENT ===== */}
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 crear-mapa-content">
+          {renderStepContent()}
+        </div>
+      </div>
+
+      {/* ===== FOOTER NAVIGATION ===== */}
+      <div className="bg-white shadow-lg border-t border-gray-200 p-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex justify-between items-center">
+            <div>
+              {currentStep > 0 && (
+                <Button 
+                  onClick={prevStep}
+                  size="large"
+                  className="border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 px-6"
+                >
+                  ← Anterior
+                </Button>
+              )}
+            </div>
+            
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-3">
+                {validationResults.isValid && (
+                  <Tag color="success" icon={<CheckCircleOutlined />} className="px-3 py-1 text-sm font-medium">
+                    ✅ Validado - ¡Perfecto!
+                  </Tag>
+                )}
+                {validationResults.errors.length > 0 && (
+                  <Tag color="error" icon={<ExclamationCircleOutlined />} className="px-3 py-1 text-sm font-medium">
+                    ❌ {validationResults.errors.length} errores
+                  </Tag>
+                )}
+                {validationResults.warnings.length > 0 && (
+                  <Tag color="warning" icon={<ExclamationCircleOutlined />} className="px-3 py-1 text-sm font-medium">
+                    ⚠️ {validationResults.warnings.length} advertencias
+                  </Tag>
+                )}
+                {validationResults.suggestions.length > 0 && (
+                  <Tag color="processing" icon={<InfoCircleOutlined />} className="px-3 py-1 text-sm font-medium">
+                    💡 {validationResults.suggestions.length} sugerencias
+                  </Tag>
+                )}
               </div>
               
-              {zones.length === 0 && (
-                <div className="text-center text-gray-500 py-4">
-                  No hay zonas configuradas para esta sala
-                </div>
+              {currentStep < steps.length - 1 ? (
+                <Button 
+                  type="primary" 
+                  onClick={nextStep}
+                                         disabled={currentStep === 1 && !(mapa?.contenido?.elementos && Array.isArray(mapa.contenido.elementos) && mapa.contenido.elementos.length > 0)}
+                  size="large"
+                  className="btn-gradient-primary shadow-custom hover-lift px-8 py-2 h-12 text-base font-semibold"
+                >
+                  Siguiente →
+                </Button>
+              ) : (
+                <Button 
+                  type="primary" 
+                  icon={<SaveOutlined />}
+                  onClick={handleFinalSave}
+                  disabled={!validationResults.isValid}
+                  size="large"
+                  className="btn-gradient-success shadow-custom hover-lift px-8 py-2 h-12 text-base font-semibold"
+                >
+                  🚀 Publicar Mapa
+                </Button>
               )}
             </div>
           </div>
-
-          {/* Panel: Herramientas */}
-          <div className="bg-white border border-gray-200 rounded-lg">
-            <button
-              onClick={() => setShowToolsPanel(!showToolsPanel)}
-              className="w-full p-3 text-left font-medium rounded-t-lg bg-green-100 text-green-700 hover:bg-green-200"
-            >
-              🛠️ Herramientas
-            </button>
-            <div className={`p-3 border-t border-gray-200 ${showToolsPanel ? 'block' : 'hidden'}`}>
-              <div className="space-y-2">
-                <button
-                  onClick={() => addMesa('rectangular')}
-                  className="w-full px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                  disabled={!selectedZoneId}
-                >
-                  🏗️ Mesa Rectangular
-                </button>
-                <button
-                  onClick={() => addMesa('round')}
-                  className="w-full px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                  disabled={!selectedZoneId}
-                >
-                  🔵 Mesa Circular
-                </button>
-                <button
-                  onClick={() => addRow('A', 26)}
-                  className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                  disabled={!selectedZoneId}
-                >
-                  📊 Fila A (26 asientos)
-                </button>
-                <button
-                  onClick={() => setIsAddingText(true)}
-                  className="w-full px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
-                >
-                  📝 Texto
-                </button>
-                <button
-                  onClick={() => addShape('rectangle')}
-                  className="w-full px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm"
-                  disabled={!selectedZoneId}
-                >
-                  ⬜ Rectángulo
-                </button>
-                
-                {/* Configuración de herramientas */}
-                <Divider className="my-2" />
-                <div className="space-y-2">
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Ancho Mesa:</label>
-                    <Input
-                      type="number"
-                      value={rectangleWidth}
-                      onChange={(e) => setRectangleWidth(Number(e.target.value))}
-                      size="small"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Alto Mesa:</label>
-                    <Input
-                      type="number"
-                      value={rectangleHeight}
-                      onChange={(e) => setRectangleHeight(Number(e.target.value))}
-                      size="small"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-600 mb-1">Radio Mesa:</label>
-                    <Input
-                      type="number"
-                      value={circleRadius}
-                      onChange={(e) => setCircleRadius(Number(e.target.value))}
-                      size="small"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Panel: Gestión de Asientos */}
-          <div className="bg-white border border-gray-200 rounded-lg">
-            <button
-              onClick={() => setShowPropertiesPanel(!showPropertiesPanel)}
-              className="w-full p-3 text-left font-medium rounded-t-lg bg-purple-100 text-purple-700 hover:bg-purple-200"
-            >
-              🪑 Gestión de Asientos
-            </button>
-            <div className={`p-3 border-t border-gray-200 ${showPropertiesPanel ? 'block' : 'hidden'}`}>
-              <div className="space-y-2">
-                <div className="text-sm text-gray-600 mb-2">
-                  Selecciona una mesa para gestionar sus asientos
-                </div>
-                
-                {selectedIds.length > 0 && elements.find(e => e._id === selectedIds[0] && e.type === 'mesa') && (
-                  <div className="space-y-2">
-                    <button
-                      onClick={() => openAddSeatsModal(selectedIds[0])}
-                      className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                    >
-                      ➕ Agregar Asientos
-                    </button>
-                    <button
-                      onClick={() => openLayoutModal(selectedIds[0])}
-                      className="w-full px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                    >
-                      ⚙️ Configurar Layout
-                    </button>
-                    <button
-                      onClick={() => removeSeatsFromMesa(selectedIds[0])}
-                      className="w-full px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                    >
-                      🗑️ Remover Todos los Asientos
-                    </button>
-                    <button
-                      onClick={() => duplicateMesa(selectedIds[0])}
-                      className="w-full px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
-                    >
-                      📋 Duplicar Mesa
-                    </button>
-                  </div>
-                )}
-                
-                {selectedIds.length === 0 && (
-                  <div className="text-center text-gray-500 py-2">
-                    Selecciona una mesa para gestionar asientos
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Panel: Acciones */}
-          <div className="bg-white border border-gray-200 rounded-lg">
-            <div className="p-3">
-              <div className="space-y-2">
-                <button
-                  onClick={() => onSave && onSave(elements)}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  💾 Guardar
-                </button>
-                <button
-                  onClick={exportToSeatmapFormat}
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-                >
-                  📤 Exportar Seatmap
-                </button>
-                <button
-                  onClick={onCancel}
-                  className="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-                >
-                  ❌ Cancelar
-                </button>
-                
-                <div className="border-t border-gray-200 pt-2 mt-2">
-                  <div className="text-xs text-gray-500 mb-2">🔧 Herramientas de Canvas</div>
-                  <button
-                    onClick={stabilizeCanvas}
-                    className="w-full px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm mb-2"
-                  >
-                    🔄 Estabilizar Canvas
-                  </button>
-                  <button
-                    onClick={resetCanvas}
-                    className="w-full px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm mb-2"
-                  >
-                    🎯 Reset Canvas
-                  </button>
-                  <button
-                    onClick={forceCanvasUpdate}
-                    className="w-full px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-sm"
-                  >
-                    ⚡ Forzar Actualización
-                  </button>
-                </div>
-                
-                {/* Indicadores de estado */}
-                <div className="border-t border-gray-200 pt-2 mt-2">
-                  <div className="text-xs text-gray-500 mb-2">📊 Estado del Canvas</div>
-                  <div className="text-xs space-y-1">
-                    <div className="flex justify-between">
-                      <span>Estable:</span>
-                      <span className={canvasStable ? 'text-green-600' : 'text-red-600'}>
-                        {canvasStable ? '✅' : '❌'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Último render:</span>
-                      <span className="text-gray-600">
-                        {new Date(lastRenderTime).toLocaleTimeString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Elementos:</span>
-                      <span className="text-gray-600">{elements.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Zona activa:</span>
-                      <span className="text-gray-600">
-                        {zones.find(z => z.id === selectedZoneId)?.nombre || 'N/A'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total asientos:</span>
-                      <span className="text-gray-600">
-                        {elements.reduce((total, el) => total + (el.seats?.length || 0), 0)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Área de trabajo principal */}
-      <div className="flex-1 flex flex-col">
-        {/* Canvas principal */}
-        <div className="flex-1 p-4">
-          <div className="bg-white border border-gray-300 rounded-lg p-4 h-full">
-            {/* Canvas de Konva */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden h-full">
-              <Stage
-                ref={stageRef}
-                width={800}
-                height={600}
-                style={{ background: '#f8fafc' }}
-                scaleX={scale}
-                scaleY={scale}
-                x={position.x}
-                y={position.y}
-                onWheel={handleWheel}
-                onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
-              >
-                <Layer>
-                  {/* Grid de fondo */}
-                  {showGrid && (
-                    <Group>
-                      {Array.from({ length: Math.ceil(800 / gridSize) }, (_, i) => (
-                        <Line
-                          key={`v${i}`}
-                          points={[i * gridSize, 0, i * gridSize, 600]}
-                          stroke="#e2e8f0"
-                          strokeWidth={1}
-                        />
-                      ))}
-                      {Array.from({ length: Math.ceil(600 / gridSize) }, (_, i) => (
-                        <Line
-                          key={`h${i}`}
-                          points={[0, i * gridSize, 800, i * gridSize]}
-                          stroke="#e2e8f0"
-                          strokeWidth={1}
-                        />
-                      ))}
-                    </Group>
-                  )}
-                  
-                  {/* Elementos del mapa */}
-                  {renderElements()}
-                  
-                  {/* Transformador para elementos seleccionados */}
-                  {showTransformer && selectedIds.length > 0 && (
-                    <Transformer
-                      ref={transformerRef}
-                      boundBoxFunc={(oldBox, newBox) => {
-                        return newBox.width < 5 || newBox.height < 5 ? oldBox : newBox;
-                      }}
-                    />
-                  )}
-                </Layer>
-              </Stage>
-            </div>
-          </div>
+      {/* ===== MODALES ===== */}
+      <Modal
+        title="Vista Previa del Mapa"
+        open={showPreview}
+        onCancel={() => setShowPreview(false)}
+        footer={null}
+        width="90%"
+        style={{ top: 20 }}
+      >
+        <CrearMapaPreview
+          mapa={mapa}
+          onEdit={() => {
+            setShowPreview(false);
+            setCurrentStep(1);
+          }}
+        />
+      </Modal>
+
+      <Modal
+        title="Configuración Avanzada"
+        open={showSettings}
+        onCancel={() => setShowSettings(false)}
+        footer={null}
+        width="80%"
+      >
+        <CrearMapaSettings
+          mapa={mapa}
+          onUpdate={setMapa}
+          onFinish={() => setShowSettings(false)}
+        />
+      </Modal>
+    </div>
+  );
+};
+
+// ===== COMPONENTES AUXILIARES =====
+
+const CrearMapaBasicConfig = ({ mapa, onUpdate, onNext }) => {
+  const [form] = Form.useForm();
+
+  const handleFinish = (values) => {
+    onUpdate({
+      ...mapa,
+      ...values,
+      metadata: {
+        ...mapa.metadata,
+        updated_at: new Date().toISOString()
+      }
+    });
+    onNext();
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <div className="text-center mb-8">
+        <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-custom">
+          <span className="text-4xl text-white">🎨</span>
         </div>
+        <Title level={1} className="mb-4 text-gradient">
+          ¡Bienvenido al Creador de Mapas!
+        </Title>
+        <Title level={3} className="mb-3 text-gray-700">
+          Configuración Básica del Mapa
+        </Title>
+        <Text className="text-lg text-gray-600 max-w-2xl mx-auto">
+          Comienza creando tu mapa de asientos personalizado. Define la información fundamental y luego pasa al editor visual donde podrás diseñar la distribución perfecta.
+        </Text>
       </div>
+      
+      <Form
+        form={form}
+        layout="vertical"
+        initialValues={mapa}
+        onFinish={handleFinish}
+        className="space-y-6"
+      >
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              name="nombre"
+              label="Nombre del Mapa"
+              rules={[{ required: true, message: 'El nombre es obligatorio' }]}
+            >
+              <Input placeholder="Ej: Mapa Principal - Sala A" />
+            </Form.Item>
+          </Col>
+          
+          <Col span={12}>
+            <Form.Item
+              name="estado"
+              label="Estado"
+              rules={[{ required: true, message: 'El estado es obligatorio' }]}
+            >
+              <Select>
+                <Option value="draft">Borrador</Option>
+                <Option value="active">Activo</Option>
+                <Option value="inactive">Inactivo</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
 
-             {/* Modal para agregar texto */}
-       {isAddingText && (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-           <div className="bg-white p-6 rounded-lg w-96">
-             <h3 className="text-lg font-semibold mb-4">Agregar Texto</h3>
-             <div className="space-y-4">
-               <div>
-                 <label className="block text-sm text-gray-600 mb-1">Texto:</label>
-                 <Input
-                   value={textInput}
-                   onChange={(e) => setTextInput(e.target.value)}
-                   placeholder="Ej: ESCENARIO"
-                 />
-               </div>
-               <div>
-                 <label className="block text-sm text-gray-600 mb-1">Tamaño de fuente:</label>
-                 <Input
-                   type="number"
-                   value={textFontSize}
-                   onChange={(e) => setTextFontSize(Number(e.target.value))}
-                 />
-               </div>
-               <div className="flex space-x-2">
-                 <Button onClick={addTexto} type="primary">
-                   Agregar
-                 </Button>
-                 <Button onClick={() => setIsAddingText(false)}>
-                   Cancelar
-                 </Button>
-               </div>
-             </div>
-           </div>
-         </div>
-       )}
+        <Form.Item
+          name="descripcion"
+          label="Descripción"
+        >
+          <TextArea 
+            rows={4} 
+            placeholder="Describe el propósito y características del mapa..."
+          />
+        </Form.Item>
 
-       {/* Modal para agregar asientos */}
-       {showAddSeatsModal && (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-           <div className="bg-white p-6 rounded-lg w-96">
-             <h3 className="text-lg font-semibold mb-4">
-               Agregar Asientos a {selectedMesaForSeats?.label}
-             </h3>
-             <div className="space-y-4">
-               <div>
-                 <label className="block text-sm text-gray-600 mb-1">Cantidad de asientos:</label>
-                 <Input
-                   type="number"
-                   value={seatsCount}
-                   onChange={(e) => setSeatsCount(Number(e.target.value))}
-                   min={1}
-                   max={20}
-                 />
-               </div>
-               <div className="flex space-x-2">
-                 <Button onClick={handleAddSeats} type="primary">
-                   Agregar
-                 </Button>
-                 <Button onClick={() => setShowAddSeatsModal(false)}>
-                   Cancelar
-                 </Button>
-               </div>
-             </div>
-           </div>
-         </div>
-       )}
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              name={['contenido', 'configuracion', 'dimensions', 'width']}
+              label="Ancho del Mapa (px)"
+              rules={[{ required: true, message: 'El ancho es obligatorio' }]}
+            >
+              <Input type="number" min={400} max={2000} />
+            </Form.Item>
+          </Col>
+          
+          <Col span={12}>
+            <Form.Item
+              name={['contenido', 'configuracion', 'dimensions', 'height']}
+              label="Alto del Mapa (px)"
+              rules={[{ required: true, message: 'El alto es obligatorio' }]}
+            >
+              <Input type="number" min={300} max={1500} />
+            </Form.Item>
+          </Col>
+        </Row>
 
-       {/* Modal para configurar layout de asientos */}
-       {showLayoutModal && (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-           <div className="bg-white p-6 rounded-lg w-96">
-             <h3 className="text-lg font-semibold mb-4">
-               Configurar Layout de Asientos para {selectedMesaForLayout?.label}
-             </h3>
-             <div className="space-y-4">
-               <div>
-                 <label className="block text-sm text-gray-600 mb-1">Tipo de layout:</label>
-                 <Select
-                   value={layoutType}
-                   onChange={setLayoutType}
-                   className="w-full"
-                 >
-                   <Select.Option value="1">Círculo (para mesas circulares)</Select.Option>
-                   <Select.Option value="2">Dos lados (para mesas rectangulares)</Select.Option>
-                   <Select.Option value="3">Personalizado</Select.Option>
-                 </Select>
-               </div>
-               {layoutType !== '3' && (
-                 <div>
-                   <label className="block text-sm text-gray-600 mb-1">Cantidad de asientos:</label>
-                   <Input
-                     type="number"
-                     value={layoutSeatsCount}
-                     onChange={(e) => setLayoutSeatsCount(Number(e.target.value))}
-                     min={1}
-                     max={20}
-                   />
-                 </div>
-               )}
-               <div className="flex space-x-2">
-                 <Button onClick={handleConfigureLayout} type="primary" disabled={layoutType === '3'}>
-                   Configurar
-                 </Button>
-                 <Button onClick={() => setShowLayoutModal(false)}>
-                   Cancelar
-                 </Button>
-               </div>
-             </div>
-           </div>
-         </div>
-       )}
+        <Form.Item
+          name={['metadata', 'tags']}
+          label="Etiquetas"
+        >
+          <Select
+            mode="tags"
+            placeholder="Agregar etiquetas..."
+            style={{ width: '100%' }}
+          />
+        </Form.Item>
 
-       {/* Modal para confirmar eliminación de asiento */}
-       {showDeleteSeatModal && (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-           <div className="bg-white p-6 rounded-lg w-96">
-             <h3 className="text-lg font-semibold mb-4">Confirmar Eliminación</h3>
-             <div className="space-y-4">
-               <p className="text-gray-600">
-                 ¿Estás seguro de que quieres eliminar el asiento {seatToDelete?.seatLabel}?
-               </p>
-               <div className="flex space-x-2">
-                 <Button onClick={handleDeleteSeat} type="primary" danger>
-                   Eliminar
-                 </Button>
-                 <Button onClick={() => setShowDeleteSeatModal(false)}>
-                   Cancelar
-                 </Button>
-               </div>
-             </div>
-           </div>
-         </div>
-       )}
+        <Form.Item
+          name={['metadata', 'notes']}
+          label="Notas"
+        >
+          <TextArea 
+            rows={3} 
+            placeholder="Notas adicionales sobre el mapa..."
+          />
+        </Form.Item>
+
+        <div className="text-center pt-6">
+          <Button 
+            type="primary" 
+            size="large" 
+            htmlType="submit"
+            className="btn-gradient-primary shadow-custom hover-lift px-12 py-3 h-14 text-lg font-semibold"
+          >
+            🎨 Continuar al Editor
+          </Button>
+        </div>
+      </Form>
     </div>
   );
 };

@@ -10,8 +10,6 @@ import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
 import FunctionModal from './CompBoleteria/FunctionModal';
 import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
-import AdvancedTickeraFeatures from './CompBoleteria/AdvancedTickeraFeatures';
-import RealTimeValidationComponent from './CompBoleteria/RealTimeValidation';
 
 import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
@@ -69,25 +67,6 @@ const Boleteria = () => {
   const [clientAbonos, setClientAbonos] = useState([]);
   const [seatPayment, setSeatPayment] = useState(null);
   const [isSeatModalVisible, setIsSeatModalVisible] = useState(false);
-  
-  // ===== ESTADOS PARA FUNCIONALIDADES AVANZADAS =====
-  const [showAdvancedFeatures, setShowAdvancedFeatures] = useState(false);
-  const [currentTemplate, setCurrentTemplate] = useState(null);
-
-  // ===== FUNCIONES PARA FUNCIONALIDADES AVANZADAS =====
-  const handleTemplateApply = useCallback((template) => {
-    setCurrentTemplate(template);
-    message.success(`Plantilla "${template.name}" aplicada exitosamente`);
-    
-    // Aquí se aplicarían las configuraciones de la plantilla
-    // Por ejemplo, ajustar tamaños de asientos, espaciado, etc.
-    console.log('Aplicando plantilla:', template);
-  }, []);
-
-  const handleAuditExport = useCallback((auditData) => {
-    console.log('Exportando auditoría:', auditData);
-    message.success('Reporte de auditoría exportado exitosamente');
-  }, []);
 
   useEffect(() => {
     if (!selectedFuncion) return;
@@ -347,25 +326,13 @@ const Boleteria = () => {
       {/* Sidebar izquierdo */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <button 
-              onClick={() => window.history.back()} 
-              className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
-            >
-              <AiOutlineLeft className="text-lg" />
-              <span>Volver</span>
-            </button>
-            
-            {/* Botón de Funcionalidades Avanzadas */}
-            <Button
-              type="primary"
-              size="small"
-              onClick={() => setShowAdvancedFeatures(true)}
-              className="bg-gradient-to-r from-blue-500 to-purple-600 border-0 hover:from-blue-600 hover:to-purple-700"
-            >
-              🚀 Avanzado
-            </Button>
-          </div>
+          <button 
+            onClick={() => window.history.back()} 
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+          >
+            <AiOutlineLeft className="text-lg" />
+            <span>Volver</span>
+          </button>
         </div>
         
         <div className="flex-1 overflow-auto p-4">
@@ -394,28 +361,6 @@ const Boleteria = () => {
       <ClientModals {...clientModalsProps} />
       <FunctionModal {...functionModalProps} />
       <PaymentModal {...paymentModalProps} />
-      
-      {/* Modal de Funcionalidades Avanzadas */}
-      <AdvancedTickeraFeatures
-        visible={showAdvancedFeatures}
-        onClose={() => setShowAdvancedFeatures(false)}
-        currentEvent={selectedEvent}
-        onTemplateApply={handleTemplateApply}
-        onAuditExport={handleAuditExport}
-      />
-      
-      {/* Componente de Validaciones en Tiempo Real */}
-      <RealTimeValidationComponent
-        selectedSeats={carrito}
-        selectedClient={selectedClient}
-        paymentData={null} // Se puede conectar con datos de pago cuando esté disponible
-        onValidationChange={(validation) => {
-          console.log('Validación de asientos:', validation);
-          // Aquí se pueden tomar acciones basadas en la validación
-        }}
-        showNotifications={true}
-      />
-      
       <Modal
         open={isSeatModalVisible}
         onCancel={() => setIsSeatModalVisible(false)}

@@ -1,15 +1,33 @@
-// ===== SISTEMA SIMPLIFICADO DE CREAR-MAPA =====
-// Solo exportamos el editor principal
-import CrearMapaMain from './CrearMapaMain';
+// ===== SISTEMA COMPLETO DE CREAR-MAPA =====
+// Este es el sistema más avanzado y completo para la creación de mapas de ticketera
 
-export { default as CrearMapaMain } from './CrearMapaMain';
-export { default as ZonaManager } from './ZonaManager';
-export { default as ContextMenu } from './ContextMenu';
-export { default as MesaTypeMenu } from './MesaTypeMenu';
-export { default as BackgroundFilterMenu } from './BackgroundFilterMenu';
-export { default as BackgroundImageManager } from './BackgroundImageManager';
-export { default as ImageUploader } from './ImageUploader';
-export { default as MesaSillaManager } from './MesaSillaManager';
+import CrearMapaMain from './CrearMapaMain';
+import CrearMapaEditor from './CrearMapaEditor';
+import CrearMapaPreview from './CrearMapaPreview';
+import CrearMapaValidation from './CrearMapaValidation';
+import CrearMapaSettings from './CrearMapaSettings';
+import ZonaManager from './ZonaManager';
+import ContextMenu from './ContextMenu';
+import MesaTypeMenu from './MesaTypeMenu';
+import BackgroundFilterMenu from './BackgroundFilterMenu';
+import BackgroundImageManager from './BackgroundImageManager';
+import ImageUploader from './ImageUploader';
+import MesaSillaManager from './MesaSillaManager';
+
+export { 
+  CrearMapaMain, 
+  CrearMapaEditor, 
+  CrearMapaPreview, 
+  CrearMapaValidation, 
+  CrearMapaSettings,
+  ZonaManager,
+  ContextMenu,
+  MesaTypeMenu,
+  BackgroundFilterMenu,
+  BackgroundImageManager,
+  ImageUploader,
+  MesaSillaManager
+};
 
 // ===== FUNCIONES UTILITARIAS =====
 export const crearMapaUtils = {
