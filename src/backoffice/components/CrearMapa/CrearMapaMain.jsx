@@ -11,7 +11,7 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Stage, Layer, Rect, Circle, Text, Line, Image, Group, RegularPolygon, Star, Transformer } from 'react-konva';
 import { Select, message, Button, Input, ColorPicker, Space, Divider, Spin } from 'antd';
-import { supabase } from '../../../../config/supabase';
+import { supabase } from '../../../config/supabase';
 
 const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
   // ===== REFS =====
@@ -297,16 +297,26 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
   }, [elements, idCounter, stabilizeCanvas]);
 
   // ===== FUNCIONES PARA AGREGAR ASIENTOS DESDE LA INTERFAZ =====
-  const showAddSeatsModal = useCallback((mesaId) => {
+  const [showAddSeatsModal, setShowAddSeatsModal] = useState(false);
+  const [selectedMesaForSeats, setSelectedMesaForSeats] = useState(null);
+  const [seatsCount, setSeatsCount] = useState(8);
+
+  const openAddSeatsModal = useCallback((mesaId) => {
     const mesa = elements.find(e => e._id === mesaId);
     if (!mesa) return;
+    
+    setSelectedMesaForSeats(mesa);
+    setSeatsCount(8);
+    setShowAddSeatsModal(true);
+  }, [elements]);
 
-    // Crear modal simple para agregar asientos
-    const count = prompt(`¿Cuántos asientos quieres agregar a ${mesa.label}?`, '8');
-    if (count && !isNaN(count)) {
-      addSeatsToMesa(mesaId, parseInt(count));
+  const handleAddSeats = useCallback(() => {
+    if (selectedMesaForSeats && seatsCount > 0) {
+      addSeatsToMesa(selectedMesaForSeats._id, seatsCount);
+      setShowAddSeatsModal(false);
+      setSelectedMesaForSeats(null);
     }
-  }, [elements, addSeatsToMesa]);
+  }, [selectedMesaForSeats, seatsCount, addSeatsToMesa]);
 
   const removeSeatsFromMesa = useCallback((mesaId) => {
     const newElements = elements.map(el =>
@@ -377,37 +387,46 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
   }, [elements, stabilizeCanvas]);
 
   // ===== FUNCIONES DE CONFIGURACIÓN DE ASIENTOS =====
-  const configureSeatLayout = useCallback((mesaId) => {
+  const [showLayoutModal, setShowLayoutModal] = useState(false);
+  const [selectedMesaForLayout, setSelectedMesaForLayout] = useState(null);
+  const [layoutType, setLayoutType] = useState('1');
+  const [layoutSeatsCount, setLayoutSeatsCount] = useState(8);
+  
+  // Estado para confirmación de eliminación de asientos
+  const [showDeleteSeatModal, setShowDeleteSeatModal] = useState(false);
+  const [seatToDelete, setSeatToDelete] = useState(null);
+
+  const openLayoutModal = useCallback((mesaId) => {
     const mesa = elements.find(e => e._id === mesaId);
     if (!mesa) return;
+    
+    setSelectedMesaForLayout(mesa);
+    setLayoutType(mesa.type === 'round' ? '1' : '2');
+    setLayoutSeatsCount(8);
+    setShowLayoutModal(true);
+  }, [elements]);
 
-    const layout = prompt(
-      `Configurar layout de asientos para ${mesa.label}:\n` +
-      `1. Círculo (para mesas circulares)\n` +
-      `2. Dos lados (para mesas rectangulares)\n` +
-      `3. Personalizado\n` +
-      `Ingresa el número (1-3):`, 
-      mesa.type === 'round' ? '1' : '2'
-    );
-
-    if (layout === '1') {
-      // Layout circular
-      const count = prompt('¿Cuántos asientos en círculo?', '8');
-      if (count && !isNaN(count)) {
-        addSeatsToMesa(mesaId, parseInt(count));
-      }
-    } else if (layout === '2') {
-      // Layout dos lados
-      const count = prompt('¿Cuántos asientos en total?', '8');
-      if (count && !isNaN(count)) {
-        addSeatsToMesa(mesaId, parseInt(count));
-      }
-    } else if (layout === '3') {
-      // Layout personalizado
-      message.info('Layout personalizado: Haz clic en el canvas para agregar asientos individuales');
-      // Aquí podrías implementar un modo de edición más avanzado
+  const handleConfigureLayout = useCallback(() => {
+    if (selectedMesaForLayout && layoutSeatsCount > 0) {
+      addSeatsToMesa(selectedMesaForLayout._id, layoutSeatsCount);
+      setShowLayoutModal(false);
+      setSelectedMesaForLayout(null);
     }
-  }, [elements, addSeatsToMesa]);
+  }, [selectedMesaForLayout, layoutSeatsCount, addSeatsToMesa]);
+
+  // Función para confirmar eliminación de asiento
+  const confirmDeleteSeat = useCallback((mesaId, seatId, seatLabel) => {
+    setSeatToDelete({ mesaId, seatId, seatLabel });
+    setShowDeleteSeatModal(true);
+  }, []);
+
+  const handleDeleteSeat = useCallback(() => {
+    if (seatToDelete) {
+      removeSingleSeat(seatToDelete.mesaId, seatToDelete.seatId);
+      setShowDeleteSeatModal(false);
+      setSeatToDelete(null);
+    }
+  }, [seatToDelete, removeSingleSeat]);
 
   // ===== FUNCIONES DE FILAS =====
   const addRow = useCallback((label = 'A', seatCount = 26, startX = 100, startY = 100) => {
@@ -678,9 +697,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
                   strokeWidth={1}
                   onClick={(e) => {
                     e.cancelBubble = true;
-                    if (confirm(`¿Remover asiento ${seat.label}?`)) {
-                      removeSingleSeat(element._id, seat.id);
-                    }
+                    confirmDeleteSeat(element._id, seat.id, seat.label);
                   }}
                 />
               ))}
@@ -746,9 +763,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
                   strokeWidth={1}
                   onClick={(e) => {
                     e.cancelBubble = true;
-                    if (confirm(`¿Remover asiento ${seat.label}?`)) {
-                      removeSingleSeat(element._id, seat.id);
-                    }
+                    confirmDeleteSeat(element._id, seat.id, seat.label);
                   }}
                 />
               ))}
@@ -795,9 +810,7 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
                 strokeWidth={1}
                 onClick={(e) => {
                   e.cancelBubble = true;
-                  if (confirm(`¿Remover asiento ${seat.label}?`)) {
-                    removeSingleSeat(element._id, seat.id);
-                  }
+                  confirmDeleteSeat(element._id, seat.id, seat.label);
                 }}
               />
             ))}
@@ -1096,13 +1109,13 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
                 {selectedIds.length > 0 && elements.find(e => e._id === selectedIds[0] && e.type === 'mesa') && (
                   <div className="space-y-2">
                     <button
-                      onClick={() => showAddSeatsModal(selectedIds[0])}
+                      onClick={() => openAddSeatsModal(selectedIds[0])}
                       className="w-full px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
                     >
                       ➕ Agregar Asientos
                     </button>
                     <button
-                      onClick={() => configureSeatLayout(selectedIds[0])}
+                      onClick={() => openLayoutModal(selectedIds[0])}
                       className="w-full px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
                     >
                       ⚙️ Configurar Layout
@@ -1278,40 +1291,138 @@ const CrearMapaMain = ({ salaId, onSave, onCancel, initialMapa, tenantId }) => {
         </div>
       </div>
 
-      {/* Modal para agregar texto */}
-      {isAddingText && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-96">
-            <h3 className="text-lg font-semibold mb-4">Agregar Texto</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Texto:</label>
-                <Input
-                  value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                  placeholder="Ej: ESCENARIO"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Tamaño de fuente:</label>
-                <Input
-                  type="number"
-                  value={textFontSize}
-                  onChange={(e) => setTextFontSize(Number(e.target.value))}
-                />
-              </div>
-              <div className="flex space-x-2">
-                <Button onClick={addTexto} type="primary">
-                  Agregar
-                </Button>
-                <Button onClick={() => setIsAddingText(false)}>
-                  Cancelar
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+             {/* Modal para agregar texto */}
+       {isAddingText && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+           <div className="bg-white p-6 rounded-lg w-96">
+             <h3 className="text-lg font-semibold mb-4">Agregar Texto</h3>
+             <div className="space-y-4">
+               <div>
+                 <label className="block text-sm text-gray-600 mb-1">Texto:</label>
+                 <Input
+                   value={textInput}
+                   onChange={(e) => setTextInput(e.target.value)}
+                   placeholder="Ej: ESCENARIO"
+                 />
+               </div>
+               <div>
+                 <label className="block text-sm text-gray-600 mb-1">Tamaño de fuente:</label>
+                 <Input
+                   type="number"
+                   value={textFontSize}
+                   onChange={(e) => setTextFontSize(Number(e.target.value))}
+                 />
+               </div>
+               <div className="flex space-x-2">
+                 <Button onClick={addTexto} type="primary">
+                   Agregar
+                 </Button>
+                 <Button onClick={() => setIsAddingText(false)}>
+                   Cancelar
+                 </Button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+
+       {/* Modal para agregar asientos */}
+       {showAddSeatsModal && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+           <div className="bg-white p-6 rounded-lg w-96">
+             <h3 className="text-lg font-semibold mb-4">
+               Agregar Asientos a {selectedMesaForSeats?.label}
+             </h3>
+             <div className="space-y-4">
+               <div>
+                 <label className="block text-sm text-gray-600 mb-1">Cantidad de asientos:</label>
+                 <Input
+                   type="number"
+                   value={seatsCount}
+                   onChange={(e) => setSeatsCount(Number(e.target.value))}
+                   min={1}
+                   max={20}
+                 />
+               </div>
+               <div className="flex space-x-2">
+                 <Button onClick={handleAddSeats} type="primary">
+                   Agregar
+                 </Button>
+                 <Button onClick={() => setShowAddSeatsModal(false)}>
+                   Cancelar
+                 </Button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+
+       {/* Modal para configurar layout de asientos */}
+       {showLayoutModal && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+           <div className="bg-white p-6 rounded-lg w-96">
+             <h3 className="text-lg font-semibold mb-4">
+               Configurar Layout de Asientos para {selectedMesaForLayout?.label}
+             </h3>
+             <div className="space-y-4">
+               <div>
+                 <label className="block text-sm text-gray-600 mb-1">Tipo de layout:</label>
+                 <Select
+                   value={layoutType}
+                   onChange={setLayoutType}
+                   className="w-full"
+                 >
+                   <Select.Option value="1">Círculo (para mesas circulares)</Select.Option>
+                   <Select.Option value="2">Dos lados (para mesas rectangulares)</Select.Option>
+                   <Select.Option value="3">Personalizado</Select.Option>
+                 </Select>
+               </div>
+               {layoutType !== '3' && (
+                 <div>
+                   <label className="block text-sm text-gray-600 mb-1">Cantidad de asientos:</label>
+                   <Input
+                     type="number"
+                     value={layoutSeatsCount}
+                     onChange={(e) => setLayoutSeatsCount(Number(e.target.value))}
+                     min={1}
+                     max={20}
+                   />
+                 </div>
+               )}
+               <div className="flex space-x-2">
+                 <Button onClick={handleConfigureLayout} type="primary" disabled={layoutType === '3'}>
+                   Configurar
+                 </Button>
+                 <Button onClick={() => setShowLayoutModal(false)}>
+                   Cancelar
+                 </Button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
+
+       {/* Modal para confirmar eliminación de asiento */}
+       {showDeleteSeatModal && (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+           <div className="bg-white p-6 rounded-lg w-96">
+             <h3 className="text-lg font-semibold mb-4">Confirmar Eliminación</h3>
+             <div className="space-y-4">
+               <p className="text-gray-600">
+                 ¿Estás seguro de que quieres eliminar el asiento {seatToDelete?.seatLabel}?
+               </p>
+               <div className="flex space-x-2">
+                 <Button onClick={handleDeleteSeat} type="primary" danger>
+                   Eliminar
+                 </Button>
+                 <Button onClick={() => setShowDeleteSeatModal(false)}>
+                   Cancelar
+                 </Button>
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
     </div>
   );
 };
