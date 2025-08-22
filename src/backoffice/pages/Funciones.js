@@ -28,6 +28,11 @@ const Funciones = () => {
     pagoAPlazos: false,
     permitirReservasWeb: false,
     tiempoCaducidadReservas: -120, // 2 horas por defecto
+    activo: true,
+    visibleEnBoleteria: true,
+    visibleEnStore: true,
+    activarPorFecha: false,
+    fechaActivacion: '',
   });
 
   const getEventoNombre = (eventoId) => {
@@ -282,6 +287,12 @@ const Funciones = () => {
       return;
     }
 
+    // Validar que la fecha de fin de venta sea posterior o igual a la fecha de inicio de venta
+    if (new Date(nuevaFuncion.finVenta) < new Date(nuevaFuncion.inicioVenta)) {
+      alert('La fecha de fin de venta debe ser posterior o igual a la fecha de inicio de venta');
+      return;
+    }
+    
     // Validar que la fecha de fin de venta sea anterior o igual a la fecha de celebración
     if (new Date(nuevaFuncion.finVenta) > new Date(nuevaFuncion.fechaCelebracion)) {
       alert('La fecha de fin de venta debe ser anterior o igual a la fecha de celebración');
@@ -309,6 +320,11 @@ const Funciones = () => {
       plantilla: nuevaFuncion.plantilla,
       plantilla_comisiones: nuevaFuncion.plantillaComisiones || null,
       plantilla_producto: nuevaFuncion.plantillaProducto || null,
+      activo: nuevaFuncion.activo,
+      visibleEnBoleteria: nuevaFuncion.visibleEnBoleteria,
+      visibleEnStore: nuevaFuncion.visibleEnStore,
+      activarPorFecha: nuevaFuncion.activarPorFecha,
+      fechaActivacion: nuevaFuncion.fechaActivacion,
       ...(currentTenant?.id ? { tenant_id: currentTenant.id } : {}),
     };
 
@@ -408,6 +424,11 @@ const Funciones = () => {
       pagoAPlazos: funcion.pagoAPlazos || false,
       permitirReservasWeb: funcion.permitirReservasWeb || false,
       tiempoCaducidadReservas: funcion.tiempoCaducidadReservas || -120,
+      activo: funcion.activo || true,
+      visibleEnBoleteria: funcion.visibleEnBoleteria || true,
+      visibleEnStore: funcion.visibleEnStore || true,
+      activarPorFecha: funcion.activarPorFecha || false,
+      fechaActivacion: funcion.fechaActivacion || '',
     });
     setModalIsOpen(true);
   };
@@ -466,6 +487,11 @@ const Funciones = () => {
                     pagoAPlazos: false,
                     permitirReservasWeb: false,
                     tiempoCaducidadReservas: -120,
+                    activo: true,
+                    visibleEnBoleteria: true,
+                    visibleEnStore: true,
+                    activarPorFecha: false,
+                    fechaActivacion: '',
                   });
                   setModalIsOpen(true);
                 }}
@@ -705,132 +731,144 @@ const Funciones = () => {
           </h2>
           
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha Celebración *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Celebración</label>
                 <input
-                  type="date"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  type="datetime-local"
+                  className="border p-2 w-full rounded"
                   value={nuevaFuncion.fechaCelebracion}
-                  onChange={(e) =>
-                    setNuevaFuncion({ ...nuevaFuncion, fechaCelebracion: e.target.value })
-                  }
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaCelebracion: e.target.value })}
                   required
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Inicio Venta *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Inicio de Venta</label>
                 <input
-                  type="date"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  type="datetime-local"
+                  className="border p-2 w-full rounded"
                   value={nuevaFuncion.inicioVenta}
                   onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, inicioVenta: e.target.value })}
                   required
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fin Venta *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fin de Venta</label>
                 <input
-                  type="date"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  type="datetime-local"
+                  className="border p-2 w-full rounded"
                   value={nuevaFuncion.finVenta}
                   onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, finVenta: e.target.value })}
                   required
                 />
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Plantilla de Precios *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Activación (Opcional)</label>
+                <input
+                  type="datetime-local"
+                  className="border p-2 w-full rounded"
+                  value={nuevaFuncion.fechaActivacion}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaActivacion: e.target.value })}
+                  disabled={!nuevaFuncion.activarPorFecha}
+                />
+              </div>
+            </div>
+
+            {/* Controles de Activación */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="activo"
+                  checked={nuevaFuncion.activo}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, activo: e.target.checked })}
+                />
+                <label htmlFor="activo" className="text-sm font-medium text-gray-700">Activar Función</label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="visibleEnBoleteria"
+                  checked={nuevaFuncion.visibleEnBoleteria}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, visibleEnBoleteria: e.target.checked })}
+                />
+                <label htmlFor="visibleEnBoleteria" className="text-sm font-medium text-gray-700">Visible en Boletería</label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="visibleEnStore"
+                  checked={nuevaFuncion.visibleEnStore}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, visibleEnStore: e.target.checked })}
+                />
+                <label htmlFor="visibleEnStore" className="text-sm font-medium text-gray-700">Visible en Store</label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="activarPorFecha"
+                  checked={nuevaFuncion.activarPorFecha}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, activarPorFecha: e.target.checked })}
+                />
+                <label htmlFor="activarPorFecha" className="text-sm font-medium text-gray-700">Activar por Fecha</label>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de Precios</label>
                 <select
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border p-2 w-full rounded"
                   value={nuevaFuncion.plantilla}
                   onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, plantilla: e.target.value })}
                   required
                 >
-                  <option value="">Seleccionar Plantilla</option>
-                  {plantillas.map(plantilla => (
+                  <option value="">Seleccionar plantilla</option>
+                  {plantillas.map((plantilla) => (
                     <option key={plantilla.id} value={plantilla.id}>
                       {plantilla.nombre}
                     </option>
                   ))}
                 </select>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Plantilla de Comisiones
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de Comisiones</label>
                 <select
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border p-2 w-full rounded"
                   value={nuevaFuncion.plantillaComisiones}
                   onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, plantillaComisiones: e.target.value })}
                 >
-                  <option value="">Seleccionar Plantilla</option>
-                  {plantillasComisiones.map(plantilla => (
+                  <option value="">Seleccionar plantilla</option>
+                  {plantillasComisiones.map((plantilla) => (
                     <option key={plantilla.id} value={plantilla.id}>
                       {plantilla.nombre}
                     </option>
                   ))}
                 </select>
                 {plantillasComisiones.length === 0 && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    No hay plantillas de comisiones disponibles. 
-                    <a href="/dashboard/comisiones" className="text-blue-600 hover:underline ml-1">
-                      Crear plantilla
-                    </a>
-                  </p>
+                  <p className="text-sm text-orange-600 mt-1">No hay plantillas de comisiones disponibles. <a href="/dashboard/plantillas-comisiones" className="text-blue-600 underline">Crear plantilla</a></p>
                 )}
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Plantilla de Producto
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de Productos</label>
                 <select
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="border p-2 w-full rounded"
                   value={nuevaFuncion.plantillaProducto}
                   onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, plantillaProducto: e.target.value })}
                 >
-                  <option value="">Seleccionar Plantilla</option>
-                  {plantillasProductos.map(plantilla => (
+                  <option value="">Seleccionar plantilla</option>
+                  {plantillasProductos.map((plantilla) => (
                     <option key={plantilla.id} value={plantilla.id}>
                       {plantilla.nombre}
                     </option>
                   ))}
                 </select>
-                {loadingPlantillasProductos ? (
-                  <p className="text-sm text-gray-500 mt-1">
-                    Cargando plantillas de productos...
-                  </p>
-                ) : plantillasProductos.length === 0 ? (
-                  <div className="text-sm text-gray-500 mt-1">
-                    <p>
-                      No hay plantillas de productos disponibles. 
-                      <a href="/dashboard/plantillas-productos" className="text-blue-600 hover:underline ml-1">
-                        Crear plantilla
-                      </a>
-                    </p>
-                    <button
-                      onClick={() => {
-                        setPlantillasProductos([]);
-                        fetchPlantillasProductos();
-                      }}
-                      className="text-blue-600 hover:underline mt-1"
-                    >
-                      Reintentar carga
-                    </button>
-                  </div>
-                ) : null}
+                {plantillasProductos.length === 0 && (
+                  <p className="text-sm text-orange-600 mt-1">No hay plantillas de productos disponibles. <a href="/dashboard/plantillas-productos" className="text-blue-600 underline">Crear plantilla</a></p>
+                )}
               </div>
             </div>
 
@@ -884,8 +922,9 @@ const Funciones = () => {
               </select>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center">
+            {/* Opciones adicionales */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-2">
                 <input
                   type="checkbox"
                   id="pagoAPlazos"
