@@ -1362,32 +1362,32 @@ const BoleteriaMain = () => {
                    </div>
                  )}
                  
-                                <div className="border-t pt-2">
-                 <div className="flex justify-between font-bold text-lg">
-                   <span>Total:</span>
-                   <span>${calculateTotal().toFixed(2)}</span>
-                 </div>
-               </div>
-               
-               {blockMode && (
-                 <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                   <div className="flex items-center space-x-2 mb-2">
-                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                     <span className="text-sm font-medium text-red-800">Modo Bloqueo Activo</span>
-                   </div>
-                   <p className="text-xs text-red-600">
-                     Selecciona asientos en el mapa para bloquearlos. Los asientos bloqueados se marcarán como reservados.
-                   </p>
-                   {blockedSeats.length > 0 && (
-                     <div className="mt-2 text-xs text-red-700">
-                       <strong>{blockedSeats.length} asiento(s) seleccionado(s) para bloquear</strong>
-                     </div>
-                   )}
-                 </div>
-               )}
-               </div>
+                <div className="border-t pt-2">
+                  <div className="flex justify-between font-bold text-lg">
+                    <span>Total:</span>
+                    <span>${calculateTotal().toFixed(2)}</span>
+                  </div>
+                </div>
+                
+                {blockMode && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <span className="text-sm font-medium text-red-800">Modo Bloqueo Activo</span>
+                    </div>
+                    <p className="text-xs text-red-600">
+                      Selecciona asientos en el mapa para bloquearlos. Los asientos bloqueados se marcarán como reservados.
+                    </p>
+                    {blockedSeats.length > 0 && (
+                      <div className="mt-2 text-xs text-red-700">
+                        <strong>{blockedSeats.length} asiento(s) seleccionado(s) para bloquear</strong>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
               
-                                                           <div className="mt-6 space-y-2">
+                              <div className="mt-6 space-y-2">
                   <div className="flex space-x-2">
                     <Button 
                       size="small"
@@ -1432,6 +1432,7 @@ const BoleteriaMain = () => {
                     </Button>
                   </Tooltip>
                 </div>
+              </div>
             </div>
           </div>
         </div>
