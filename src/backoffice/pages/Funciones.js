@@ -129,10 +129,10 @@ const Funciones = () => {
     streamingTransmissionStart: '',
     streamingTransmissionStop: '',
     idSala: salaSeleccionada?.id || '',
-    idPlantillaEntradas: '',
-    idPlantillaProductos: '',
-    idSpecialProductsTemplate: '',
-    idPlantillaCupos: '',
+    idPlantillaEntradas: null,
+    idPlantillaProductos: null,
+    idSpecialProductsTemplate: null,
+    idPlantillaCupos: null,
     permitePagoPlazos: false,
     numPlazosPago: 0,
     permiteReserva: false,
@@ -150,7 +150,7 @@ const Funciones = () => {
     customPrintingTicketDate: '',
     customSes1: '',
     customSes2: '',
-    idBarcodePool: '',
+    idBarcodePool: null,
     activo: true,
     visibleEnBoleteria: true,
     visibleEnStore: true
@@ -196,6 +196,12 @@ const Funciones = () => {
   // Helper function to convert empty strings to null for timestamp fields
   const formatTimestampField = (value) => {
     return value === '' ? null : value;
+  };
+
+  // Helper function to convert empty strings to null for integer fields
+  const formatIntegerField = (value) => {
+    if (value === '' || value === null || value === undefined) return null;
+    return parseInt(value) || null;
   };
 
   const getTiempoCaducidadText = (minutos) => {
@@ -267,10 +273,10 @@ const Funciones = () => {
       streamingTransmissionStart: '',
       streamingTransmissionStop: '',
       idSala: salaSeleccionada?.id || '',
-      idPlantillaEntradas: '',
-      idPlantillaProductos: '',
-      idSpecialProductsTemplate: '',
-      idPlantillaCupos: '',
+      idPlantillaEntradas: null,
+      idPlantillaProductos: null,
+      idSpecialProductsTemplate: null,
+      idPlantillaCupos: null,
       permitePagoPlazos: false,
       numPlazosPago: 0,
       permiteReserva: false,
@@ -288,7 +294,7 @@ const Funciones = () => {
       customPrintingTicketDate: '',
       customSes1: '',
       customSes2: '',
-      idBarcodePool: '',
+      idBarcodePool: null,
       activo: true,
       visibleEnBoleteria: true,
       visibleEnStore: true
@@ -530,12 +536,12 @@ const Funciones = () => {
         streaming_show_url: nuevaFuncion.streamingShowUrl,
         streaming_transmission_start: formatTimestampField(nuevaFuncion.streamingTransmissionStart),
         streaming_transmission_stop: formatTimestampField(nuevaFuncion.streamingTransmissionStop),
-        plantilla_entradas: nuevaFuncion.idPlantillaEntradas,
-        plantilla_producto: nuevaFuncion.idPlantillaProductos,
-        plantilla_comisiones: nuevaFuncion.idSpecialProductsTemplate,
-        plantilla_cupos: nuevaFuncion.idPlantillaCupos,
+        plantilla_entradas: formatIntegerField(nuevaFuncion.idPlantillaEntradas),
+        plantilla_producto: formatIntegerField(nuevaFuncion.idPlantillaProductos),
+        plantilla_comisiones: formatIntegerField(nuevaFuncion.idSpecialProductsTemplate),
+        plantilla_cupos: formatIntegerField(nuevaFuncion.idPlantillaCupos),
         permite_pago_plazos: nuevaFuncion.permitePagoPlazos,
-        num_plazos_pago: nuevaFuncion.numPlazosPago,
+        num_plazos_pago: formatIntegerField(nuevaFuncion.numPlazosPago),
         permite_reserva: nuevaFuncion.permiteReserva,
         misma_fecha_canales: nuevaFuncion.mismaFechaCanales,
         inicio_venta: nuevaFuncion.fechaInicioVenta,
@@ -548,7 +554,7 @@ const Funciones = () => {
         custom_printing_ticket_date: formatTimestampField(nuevaFuncion.customPrintingTicketDate),
         custom_ses1: nuevaFuncion.customSes1,
         custom_ses2: nuevaFuncion.customSes2,
-        id_barcode_pool: nuevaFuncion.idBarcodePool,
+        id_barcode_pool: formatIntegerField(nuevaFuncion.idBarcodePool),
         activo: nuevaFuncion.activo,
         visible_en_boleteria: nuevaFuncion.visibleEnBoleteria,
         visible_en_store: nuevaFuncion.visibleEnStore,
@@ -609,10 +615,10 @@ const Funciones = () => {
       streamingTransmissionStart: funcion.streaming_transmission_start || '',
       streamingTransmissionStop: funcion.streaming_transmission_stop || '',
       idSala: funcion.sala_id || funcion.sala || '',
-      idPlantillaEntradas: funcion.plantilla_entradas || funcion.plantilla || '',
-      idPlantillaProductos: funcion.plantilla_producto || '',
-      idSpecialProductsTemplate: funcion.plantilla_comisiones || '',
-      idPlantillaCupos: funcion.plantilla_cupos || '',
+      idPlantillaEntradas: funcion.plantilla_entradas || funcion.plantilla || null,
+      idPlantillaProductos: funcion.plantilla_producto || null,
+      idSpecialProductsTemplate: funcion.plantilla_comisiones || null,
+      idPlantillaCupos: funcion.plantilla_cupos || null,
       permitePagoPlazos: funcion.permite_pago_plazos || false,
       numPlazosPago: funcion.num_plazos_pago || 0,
       permiteReserva: funcion.permite_reserva || funcion.permitir_reservas_web || false,
@@ -630,7 +636,7 @@ const Funciones = () => {
       customPrintingTicketDate: funcion.custom_printing_ticket_date || '',
       customSes1: funcion.custom_ses1 || '',
       customSes2: funcion.custom_ses2 || '',
-      idBarcodePool: funcion.id_barcode_pool || '',
+      idBarcodePool: funcion.id_barcode_pool || null,
       activo: funcion.activo !== false,
       visibleEnBoleteria: funcion.visible_en_boleteria !== false,
       visibleEnStore: funcion.visible_en_store !== false
@@ -678,22 +684,6 @@ const Funciones = () => {
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex justify-between items-center mb-6">
               <h1 className="text-2xl font-bold text-gray-900">Funciones</h1>
-              <button
-                onClick={() => {
-                  setEditingFuncion(null);
-                  resetNuevaFuncion();
-                  setModalIsOpen(true);
-                }}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              >
-                Nueva Función
-              </button>
-            </div>
-          </div>
-
-          {/* Filtros */}
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <div className="mb-4 flex justify-end">
               <button 
                 onClick={() => {
                   setRecintoSeleccionado(null);
@@ -781,7 +771,12 @@ const Funciones = () => {
                     resetNuevaFuncion();
                     setModalIsOpen(true);
                   }}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+                  disabled={!recintoSeleccionado || !salaSeleccionada || !eventoSeleccionado}
+                  className={`w-full px-4 py-2 rounded-md font-medium transition-colors ${
+                    recintoSeleccionado && salaSeleccionada && eventoSeleccionado
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
                 >
                   Nueva Función
                 </button>
