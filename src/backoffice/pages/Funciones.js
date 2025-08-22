@@ -443,7 +443,7 @@ const Funciones = () => {
         idSala: salaSeleccionada.id
       }));
     }
-  }, [salaSeleccionado]);
+  }, [salaSeleccionada]);
 
   // Sincronizar fechas de canales cuando se marque/desmarque "Misma fecha en todos los canales"
   useEffect(() => {
