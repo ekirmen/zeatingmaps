@@ -214,8 +214,16 @@ const Funciones = () => {
   const calcularAperturaPuertas = (fechaCelebracion) => {
     if (!fechaCelebracion) return '';
     const fecha = new Date(fechaCelebracion);
+    // Restar 2 horas exactas
     fecha.setHours(fecha.getHours() - 2);
-    return fecha.toISOString().slice(0, 16);
+    // Formatear para datetime-local (YYYY-MM-DDTHH:MM)
+    const year = fecha.getFullYear();
+    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+    const day = String(fecha.getDate()).padStart(2, '0');
+    const hours = String(fecha.getHours()).padStart(2, '0');
+    const minutes = String(fecha.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   // Función para sincronizar fechas de canales
