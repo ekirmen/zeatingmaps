@@ -128,7 +128,7 @@ const Funciones = () => {
     streamingShowUrl: false,
     streamingTransmissionStart: '',
     streamingTransmissionStop: '',
-    idSala: '',
+    idSala: salaSeleccionada?.id || '',
     idPlantillaEntradas: '',
     idPlantillaProductos: '',
     idSpecialProductsTemplate: '',
@@ -150,8 +150,7 @@ const Funciones = () => {
     customPrintingTicketDate: '',
     customSes1: '',
     customSes2: '',
-    idBarcodePool: '',
-    activo: true
+    idBarcodePool: ''
   });
 
   const getEventoNombre = (eventoId) => {
@@ -208,6 +207,27 @@ const Funciones = () => {
     }
   };
 
+  // Función para calcular fecha de apertura de puertas (2 horas antes)
+  const calcularAperturaPuertas = (fechaCelebracion) => {
+    if (!fechaCelebracion) return '';
+    const fecha = new Date(fechaCelebracion);
+    fecha.setHours(fecha.getHours() - 2);
+    return fecha.toISOString().slice(0, 16);
+  };
+
+  // Función para sincronizar fechas de canales
+  const sincronizarFechasCanales = (fechaInicio, fechaFin) => {
+    if (nuevaFuncion.mismaFechaCanales) {
+      setNuevaFuncion(prev => ({
+        ...prev,
+        canales: {
+          boxOffice: { ...prev.canales.boxOffice, inicio: fechaInicio, fin: fechaFin },
+          internet: { ...prev.canales.internet, inicio: fechaInicio, fin: fechaFin }
+        }
+      }));
+    }
+  };
+
   // Función para resetear el estado
   const resetNuevaFuncion = () => {
     setNuevaFuncion({
@@ -230,7 +250,7 @@ const Funciones = () => {
       streamingShowUrl: false,
       streamingTransmissionStart: '',
       streamingTransmissionStop: '',
-      idSala: '',
+      idSala: salaSeleccionada?.id || '',
       idPlantillaEntradas: '',
       idPlantillaProductos: '',
       idSpecialProductsTemplate: '',
@@ -252,8 +272,7 @@ const Funciones = () => {
       customPrintingTicketDate: '',
       customSes1: '',
       customSes2: '',
-      idBarcodePool: '',
-      activo: true
+      idBarcodePool: ''
     });
   };
 
@@ -410,6 +429,23 @@ const Funciones = () => {
     fetchPlantillasProductos();
   }, []);
 
+  // Actualizar la sala automáticamente cuando cambie la sala seleccionada
+  useEffect(() => {
+    if (salaSeleccionada?.id) {
+      setNuevaFuncion(prev => ({
+        ...prev,
+        idSala: salaSeleccionada.id
+      }));
+    }
+  }, [salaSeleccionado]);
+
+  // Sincronizar fechas de canales cuando se marque/desmarque "Misma fecha en todos los canales"
+  useEffect(() => {
+    if (nuevaFuncion.mismaFechaCanales && nuevaFuncion.fechaInicioVenta && nuevaFuncion.fechaFinVenta) {
+      sincronizarFechasCanales(nuevaFuncion.fechaInicioVenta, nuevaFuncion.fechaFinVenta);
+    }
+  }, [nuevaFuncion.mismaFechaCanales]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -480,9 +516,6 @@ const Funciones = () => {
         custom_ses1: nuevaFuncion.customSes1,
         custom_ses2: nuevaFuncion.customSes2,
         id_barcode_pool: nuevaFuncion.idBarcodePool,
-        activo: nuevaFuncion.activo,
-        visible_en_boleteria: nuevaFuncion.visibleEnBoleteria,
-        visible_en_store: nuevaFuncion.visibleEnStore,
         tenant_id: currentTenant?.id,
         recinto_id: recintoSeleccionado?.id
       };
@@ -561,10 +594,7 @@ const Funciones = () => {
       customPrintingTicketDate: funcion.custom_printing_ticket_date || '',
       customSes1: funcion.custom_ses1 || '',
       customSes2: funcion.custom_ses2 || '',
-      idBarcodePool: funcion.id_barcode_pool || '',
-      activo: funcion.activo !== false,
-      visibleEnBoleteria: funcion.visible_en_boleteria !== false,
-      visibleEnStore: funcion.visible_en_store !== false
+      idBarcodePool: funcion.id_barcode_pool || ''
     };
     
     setNuevaFuncion(funcionEditada);
@@ -875,16 +905,6 @@ const Funciones = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Información básica */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Evento</label>
-                  <input
-                    type="text"
-                    className="border p-2 w-full rounded bg-gray-100"
-                    value={eventoSeleccionado ? eventoSeleccionado.nombre : ''}
-                    disabled
-                    readOnly
-                  />
-                </div>
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -909,7 +929,15 @@ const Funciones = () => {
                     type="datetime-local"
                     className="border p-2 w-full rounded"
                     value={nuevaFuncion.fechaCelebracion}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaCelebracion: e.target.value })}
+                    onChange={(e) => {
+                      const fechaCelebracion = e.target.value;
+                      const aperturaPuertas = calcularAperturaPuertas(fechaCelebracion);
+                      setNuevaFuncion({ 
+                        ...nuevaFuncion, 
+                        fechaCelebracion,
+                        aperturaPuertas
+                      });
+                    }}
                     required
                   />
                 </div>
@@ -1168,21 +1196,13 @@ const Funciones = () => {
               <div className="border-t pt-4">
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Configuraciones</h4>
                 
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <p className="text-sm text-blue-800">
+                    <strong>Nota:</strong> La sala se selecciona automáticamente desde el buscador de recinto/sala/evento en la parte superior.
+                  </p>
+                </div>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Sala</label>
-                    <select
-                      className="border p-2 w-full rounded"
-                      value={nuevaFuncion.idSala}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idSala: e.target.value })}
-                      required
-                    >
-                      <option value="">Selecciona una sala</option>
-                      {salaSeleccionada && (
-                        <option value={salaSeleccionada.id}>{salaSeleccionada.nombre}</option>
-                      )}
-                    </select>
-                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de tickets</label>
                     <select
@@ -1193,6 +1213,19 @@ const Funciones = () => {
                     >
                       <option value="">Selecciona la plantilla de entradas</option>
                       {plantillas.map(plantilla => (
+                        <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de productos</label>
+                    <select
+                      className="border p-2 w-full rounded"
+                      value={nuevaFuncion.idPlantillaProductos}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaProductos: e.target.value })}
+                    >
+                      <option value="">No existen plantillas de productos activas</option>
+                      {plantillasProductos.map(plantilla => (
                         <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
                       ))}
                     </select>
@@ -1328,7 +1361,11 @@ const Funciones = () => {
                         type="datetime-local"
                         className="border p-2 w-full rounded"
                         value={nuevaFuncion.fechaInicioVenta}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaInicioVenta: e.target.value })}
+                        onChange={(e) => {
+                          const fechaInicio = e.target.value;
+                          setNuevaFuncion({ ...nuevaFuncion, fechaInicioVenta: fechaInicio });
+                          sincronizarFechasCanales(fechaInicio, nuevaFuncion.fechaFinVenta);
+                        }}
                         required
                       />
                     </div>
@@ -1338,14 +1375,18 @@ const Funciones = () => {
                         type="datetime-local"
                         className="border p-2 w-full rounded"
                         value={nuevaFuncion.fechaFinVenta}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaFinVenta: e.target.value })}
+                        onChange={(e) => {
+                          const fechaFin = e.target.value;
+                          setNuevaFuncion({ ...nuevaFuncion, fechaFinVenta: fechaFin });
+                          sincronizarFechasCanales(nuevaFuncion.fechaInicioVenta, fechaFin);
+                        }}
                         required
                       />
                     </div>
                   </div>
 
                   {/* Tabla de canales */}
-                  <div className="overflow-x-auto">
+                                    <div className="overflow-x-auto">
                     <table className="min-w-full border border-gray-300">
                       <thead>
                         <tr className="bg-gray-50">
@@ -1402,7 +1443,7 @@ const Funciones = () => {
                                   boxOffice: { ...nuevaFuncion.canales.boxOffice, inicio: e.target.value }
                                 }
                               })}
-                              disabled={!nuevaFuncion.canales.boxOffice.activo}
+                              disabled={!nuevaFuncion.canales.boxOffice.activo || nuevaFuncion.mismaFechaCanales}
                             />
                           </td>
                           <td className="border border-gray-300 px-4 py-2">
@@ -1417,7 +1458,7 @@ const Funciones = () => {
                                   boxOffice: { ...nuevaFuncion.canales.boxOffice, fin: e.target.value }
                                 }
                               })}
-                              disabled={!nuevaFuncion.canales.boxOffice.activo}
+                              disabled={!nuevaFuncion.canales.boxOffice.activo || nuevaFuncion.mismaFechaCanales}
                             />
                           </td>
                         </tr>
@@ -1432,46 +1473,46 @@ const Funciones = () => {
                                   canales: {
                                     ...nuevaFuncion.canales,
                                     internet: { ...nuevaFuncion.canales.internet, activo: e.target.checked }
-                                  }
-                                })}
-                              />
-                              <span>Internet</span>
-                            </div>
-                          </td>
-                          <td className="border border-gray-300 px-4 py-2">
-                            <input
-                              type="datetime-local"
-                              className="border p-2 w-full rounded"
-                              value={nuevaFuncion.canales.internet.inicio}
-                              onChange={(e) => setNuevaFuncion({
-                                ...nuevaFuncion,
-                                canales: {
-                                  ...nuevaFuncion.canales,
-                                  internet: { ...nuevaFuncion.canales.internet, inicio: e.target.value }
                                 }
                               })}
-                              disabled={!nuevaFuncion.canales.internet.activo}
                             />
-                          </td>
-                          <td className="border border-gray-300 px-4 py-2">
-                            <input
-                              type="datetime-local"
-                              className="border p-2 w-full rounded"
-                              value={nuevaFuncion.canales.internet.fin}
-                              onChange={(e) => setNuevaFuncion({
-                                ...nuevaFuncion,
-                                canales: {
-                                  ...nuevaFuncion.canales,
-                                  internet: { ...nuevaFuncion.canales.internet, fin: e.target.value }
-                                }
-                              })}
-                              disabled={!nuevaFuncion.canales.internet.activo}
-                            />
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                            <span>Internet</span>
+                          </div>
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          <input
+                            type="datetime-local"
+                            className="border p-2 w-full rounded"
+                            value={nuevaFuncion.canales.internet.inicio}
+                            onChange={(e) => setNuevaFuncion({
+                              ...nuevaFuncion,
+                              canales: {
+                                ...nuevaFuncion.canales,
+                                internet: { ...nuevaFuncion.canales.internet, inicio: e.target.value }
+                              }
+                            })}
+                            disabled={!nuevaFuncion.canales.internet.activo || nuevaFuncion.mismaFechaCanales}
+                          />
+                        </td>
+                        <td className="border border-gray-300 px-4 py-2">
+                          <input
+                            type="datetime-local"
+                            className="border p-2 w-full rounded"
+                            value={nuevaFuncion.canales.internet.fin}
+                            onChange={(e) => setNuevaFuncion({
+                              ...nuevaFuncion,
+                              canales: {
+                                ...nuevaFuncion.canales,
+                                internet: { ...nuevaFuncion.canales.internet, fin: e.target.value }
+                              }
+                            })}
+                            disabled={!nuevaFuncion.canales.internet.activo || nuevaFuncion.mismaFechaCanales}
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
                 </div>
               </div>
 
@@ -1591,20 +1632,7 @@ const Funciones = () => {
                 </div>
               </div>
 
-              {/* Controles de Activación */}
-              <div className="border-t pt-4">
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Estado</h4>
-                
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="activo"
-                    checked={nuevaFuncion.activo}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, activo: e.target.checked })}
-                  />
-                  <label htmlFor="activo" className="text-sm font-medium text-gray-700">Activar Función</label>
-                </div>
-              </div>
+
 
               {/* Botones de acción */}
               <div className="flex justify-end space-x-4 pt-6 border-t">
