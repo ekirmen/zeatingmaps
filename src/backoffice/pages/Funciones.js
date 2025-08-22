@@ -354,15 +354,15 @@ const Funciones = () => {
             fechaCelebracion:fecha_celebracion,
             inicioVenta:inicio_venta,
             finVenta:fin_venta,
-            pagoAPlazos:pago_a_plazos,
-            permitirReservasWeb:permitir_reservas_web,
+            pagoAPlazos:permite_pago_plazos,
+            permitirReservasWeb:permite_reserva,
             tiempoCaducidadReservas:tiempo_caducidad_reservas,
             fechaLiberacionReservas:fecha_liberacion_reservas,
-            evento,
-            sala(*),
-            plantilla(*),
-            plantillaComisiones:plantilla_comisiones(*),
-            plantillaProducto:plantilla_producto(*)
+            evento_id,
+            sala_id,
+            plantilla_entradas,
+            plantilla_comisiones,
+            plantilla_producto
           `);
 
         if (error) {
@@ -512,15 +512,15 @@ const Funciones = () => {
         streaming_transmission_start: nuevaFuncion.streamingTransmissionStart,
         streaming_transmission_stop: nuevaFuncion.streamingTransmissionStop,
         plantilla_entradas: nuevaFuncion.idPlantillaEntradas,
-        plantilla_productos: nuevaFuncion.idPlantillaProductos,
+        plantilla_producto: nuevaFuncion.idPlantillaProductos,
         plantilla_comisiones: nuevaFuncion.idSpecialProductsTemplate,
         plantilla_cupos: nuevaFuncion.idPlantillaCupos,
         permite_pago_plazos: nuevaFuncion.permitePagoPlazos,
         num_plazos_pago: nuevaFuncion.numPlazosPago,
         permite_reserva: nuevaFuncion.permiteReserva,
         misma_fecha_canales: nuevaFuncion.mismaFechaCanales,
-        fecha_inicio_venta: nuevaFuncion.fechaInicioVenta,
-        fecha_fin_venta: nuevaFuncion.fechaFinVenta,
+        inicio_venta: nuevaFuncion.fechaInicioVenta,
+        fin_venta: nuevaFuncion.fechaFinVenta,
         canales: nuevaFuncion.canales,
         cancellation_date_selected: nuevaFuncion.cancellationDateSelected,
         end_date_cancellation: nuevaFuncion.endDateCancellation,
@@ -530,6 +530,9 @@ const Funciones = () => {
         custom_ses1: nuevaFuncion.customSes1,
         custom_ses2: nuevaFuncion.customSes2,
         id_barcode_pool: nuevaFuncion.idBarcodePool,
+        activo: nuevaFuncion.activo,
+        visible_en_boleteria: nuevaFuncion.visibleEnBoleteria,
+        visible_en_store: nuevaFuncion.visibleEnStore,
         tenant_id: currentTenant?.id,
         recinto_id: recintoSeleccionado?.id
       };
@@ -588,15 +591,15 @@ const Funciones = () => {
       streamingTransmissionStop: funcion.streaming_transmission_stop || '',
       idSala: funcion.sala_id || funcion.sala || '',
       idPlantillaEntradas: funcion.plantilla_entradas || funcion.plantilla || '',
-      idPlantillaProductos: funcion.plantilla_productos || funcion.plantilla_producto || '',
+      idPlantillaProductos: funcion.plantilla_producto || '',
       idSpecialProductsTemplate: funcion.plantilla_comisiones || '',
       idPlantillaCupos: funcion.plantilla_cupos || '',
       permitePagoPlazos: funcion.permite_pago_plazos || false,
       numPlazosPago: funcion.num_plazos_pago || 0,
       permiteReserva: funcion.permite_reserva || funcion.permitir_reservas_web || false,
       mismaFechaCanales: funcion.misma_fecha_canales !== false,
-      fechaInicioVenta: funcion.fecha_inicio_venta || funcion.inicio_venta || '',
-      fechaFinVenta: funcion.fecha_fin_venta || funcion.fin_venta || '',
+      fechaInicioVenta: funcion.inicio_venta || '',
+      fechaFinVenta: funcion.fin_venta || '',
       canales: funcion.canales || {
         boxOffice: { activo: true, inicio: '', fin: '' },
         internet: { activo: true, inicio: '', fin: '' }
@@ -608,7 +611,10 @@ const Funciones = () => {
       customPrintingTicketDate: funcion.custom_printing_ticket_date || '',
       customSes1: funcion.custom_ses1 || '',
       customSes2: funcion.custom_ses2 || '',
-      idBarcodePool: funcion.id_barcode_pool || ''
+      idBarcodePool: funcion.id_barcode_pool || '',
+      activo: funcion.activo !== false,
+      visibleEnBoleteria: funcion.visible_en_boleteria !== false,
+      visibleEnStore: funcion.visible_en_store !== false
     };
     
     setNuevaFuncion(funcionEditada);
@@ -808,19 +814,19 @@ const Funciones = () => {
                         {formatFecha(funcion.fechaCelebracion)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getEventoNombre(funcion.evento)}
+                        {getEventoNombre(funcion.evento_id)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {funcion.sala?.nombre || 'Sala desconocida'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getPlantillaNombre(funcion.plantilla)}
+                        {getPlantillaNombre(funcion.plantilla_entradas)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getPlantillaComisionesNombre(funcion.plantillaComisiones)}
+                        {getPlantillaComisionesNombre(funcion.plantilla_comisiones)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getPlantillaProductoNombre(funcion.plantillaProducto)}
+                        {getPlantillaProductoNombre(funcion.plantilla_producto)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatFecha(funcion.inicioVenta)}
@@ -829,19 +835,19 @@ const Funciones = () => {
                         {formatFecha(funcion.finVenta)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {funcion.tiempoCaducidadReservas !== null 
-                          ? getTiempoCaducidadText(funcion.tiempoCaducidadReservas)
+                        {funcion.tiempo_caducidad_reservas !== null 
+                          ? getTiempoCaducidadText(funcion.tiempo_caducidad_reservas)
                           : 'No configurado'
                         }
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div className="flex flex-col space-y-1">
-                          {funcion.pagoAPlazos && (
+                          {funcion.permite_pago_plazos && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               Pago a plazos
                             </span>
                           )}
-                          {funcion.permitirReservasWeb && (
+                          {funcion.permite_reserva && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               Reservas web
                             </span>
