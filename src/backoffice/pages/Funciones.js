@@ -674,6 +674,19 @@ const Funciones = () => {
 
           {/* Filtros */}
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="mb-4 flex justify-end">
+              <button 
+                onClick={() => {
+                  setRecintoSeleccionado(null);
+                  setSalaSeleccionada(null);
+                  setEventoSeleccionado(null);
+                }}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md font-medium transition-colors"
+              >
+                Limpiar Filtros
+              </button>
+            </div>
+            
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Recinto</label>
