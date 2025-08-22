@@ -193,6 +193,11 @@ const Funciones = () => {
     return formatDateString(date);
   };
 
+  // Helper function to convert empty strings to null for timestamp fields
+  const formatTimestampField = (value) => {
+    return value === '' ? null : value;
+  };
+
   const getTiempoCaducidadText = (minutos) => {
     if (minutos === 0) return 'En la fecha de celebración';
     if (minutos < 0) {
@@ -232,8 +237,8 @@ const Funciones = () => {
       setNuevaFuncion(prev => ({
         ...prev,
         canales: {
-          boxOffice: { ...prev.canales.boxOffice, inicio: fechaInicio, fin: fechaFin },
-          internet: { ...prev.canales.internet, inicio: fechaInicio, fin: fechaFin }
+          boxOffice: { ...prev.canales.boxOffice, inicio: fechaInicio || '', fin: fechaFin || '' },
+          internet: { ...prev.canales.internet, inicio: fechaInicio || '', fin: fechaFin || '' }
         }
       }));
     }
@@ -489,6 +494,20 @@ const Funciones = () => {
         return;
       }
 
+      // Validar que las fechas requeridas no estén vacías
+      if (!nuevaFuncion.fechaCelebracion) {
+        alert('La fecha de celebración es obligatoria');
+        return;
+      }
+      if (!nuevaFuncion.fechaInicioVenta) {
+        alert('La fecha de inicio de venta es obligatoria');
+        return;
+      }
+      if (!nuevaFuncion.fechaFinVenta) {
+        alert('La fecha de fin de venta es obligatoria');
+        return;
+      }
+
       const funcionData = {
         evento_id: eventoSeleccionado?.id,
         sala_id: nuevaFuncion.idSala,
@@ -497,7 +516,7 @@ const Funciones = () => {
         lit_sesion: nuevaFuncion.litSesion,
         utiliza_lit_sesion: nuevaFuncion.utilizaLitSesion,
         tiempo_caducidad_reservas: nuevaFuncion.tiempoCaducidadReservas,
-        apertura_puertas: nuevaFuncion.aperturaPuertas,
+        apertura_puertas: formatTimestampField(nuevaFuncion.aperturaPuertas),
         promotional_session_label: nuevaFuncion.promotionalSessionLabel,
         session_belongs_season_pass: nuevaFuncion.sessionBelongsSeasonPass,
         id_abono_sala: nuevaFuncion.idAbonoSala,
@@ -509,8 +528,8 @@ const Funciones = () => {
         streaming_password: nuevaFuncion.streamingPassword,
         streaming_only_one_session_by_ticket: nuevaFuncion.streamingOnlyOneSessionByTicket,
         streaming_show_url: nuevaFuncion.streamingShowUrl,
-        streaming_transmission_start: nuevaFuncion.streamingTransmissionStart,
-        streaming_transmission_stop: nuevaFuncion.streamingTransmissionStop,
+        streaming_transmission_start: formatTimestampField(nuevaFuncion.streamingTransmissionStart),
+        streaming_transmission_stop: formatTimestampField(nuevaFuncion.streamingTransmissionStop),
         plantilla_entradas: nuevaFuncion.idPlantillaEntradas,
         plantilla_producto: nuevaFuncion.idPlantillaProductos,
         plantilla_comisiones: nuevaFuncion.idSpecialProductsTemplate,
@@ -523,10 +542,10 @@ const Funciones = () => {
         fin_venta: nuevaFuncion.fechaFinVenta,
         canales: nuevaFuncion.canales,
         cancellation_date_selected: nuevaFuncion.cancellationDateSelected,
-        end_date_cancellation: nuevaFuncion.endDateCancellation,
+        end_date_cancellation: formatTimestampField(nuevaFuncion.endDateCancellation),
         ticket_printing_release_date_selected: nuevaFuncion.ticketPrintingReleaseDateSelected,
         ticket_printing_release_date: nuevaFuncion.ticketPrintingReleaseDate,
-        custom_printing_ticket_date: nuevaFuncion.customPrintingTicketDate,
+        custom_printing_ticket_date: formatTimestampField(nuevaFuncion.customPrintingTicketDate),
         custom_ses1: nuevaFuncion.customSes1,
         custom_ses2: nuevaFuncion.customSes2,
         id_barcode_pool: nuevaFuncion.idBarcodePool,
