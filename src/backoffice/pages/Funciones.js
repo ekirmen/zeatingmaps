@@ -533,7 +533,7 @@ const Funciones = () => {
       }
 
       // Validar que los UUIDs requeridos estén presentes
-      if (!eventoSeleccionado?.id) {
+      if (!eventoSeleccionado) {
         alert('Debe seleccionar un evento');
         return;
       }
@@ -778,8 +778,11 @@ const Funciones = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Evento</label>
                   <select
-                    value={eventoSeleccionado || ''}
-                    onChange={(e) => setEventoSeleccionado(e.target.value)}
+                    value={eventoSeleccionado ? eventoSeleccionado.id : ''}
+                    onChange={(e) => {
+                      const evento = eventos.find(ev => String(ev.id) === e.target.value);
+                      setEventoSeleccionado(evento);
+                    }}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Seleccionar Evento</option>
@@ -1317,19 +1320,6 @@ const Funciones = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de productos</label>
-                    <select
-                      className="border p-2 w-full rounded"
-                      value={nuevaFuncion.idPlantillaProductos}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaProductos: e.target.value })}
-                    >
-                      <option value="">No existen plantillas de productos activas</option>
-                      {plantillasProductos.map(plantilla => (
-                        <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de precios especiales</label>
                     <select
                       className="border p-2 w-full rounded"
@@ -1340,6 +1330,16 @@ const Funciones = () => {
                       {plantillasComisiones.map(plantilla => (
                         <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
                       ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de cupos</label>
+                    <select
+                      className="border p-2 w-full rounded"
+                      value={nuevaFuncion.idPlantillaCupos}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaCupos: e.target.value })}
+                    >
+                      <option value="">No existen plantillas de cupos activas</option>
                     </select>
                   </div>
                 </div>
