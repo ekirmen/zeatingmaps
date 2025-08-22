@@ -151,9 +151,7 @@ const Funciones = () => {
     customSes1: '',
     customSes2: '',
     idBarcodePool: '',
-    activo: true,
-    visibleEnBoleteria: true,
-    visibleEnStore: true
+    activo: true
   });
 
   const getEventoNombre = (eventoId) => {
@@ -255,9 +253,7 @@ const Funciones = () => {
       customSes1: '',
       customSes2: '',
       idBarcodePool: '',
-      activo: true,
-      visibleEnBoleteria: true,
-      visibleEnStore: true
+      activo: true
     });
   };
 
@@ -421,18 +417,6 @@ const Funciones = () => {
       // Validar que la fecha de inicio de venta sea anterior a la fecha de celebración
       if (new Date(nuevaFuncion.fechaInicioVenta) >= new Date(nuevaFuncion.fechaCelebracion)) {
         alert('La fecha de inicio de venta debe ser anterior a la fecha de celebración');
-        return;
-      }
-
-      // Validar que la fecha de fin de venta sea posterior o igual a la fecha de inicio de venta
-      if (new Date(nuevaFuncion.fechaFinVenta) < new Date(nuevaFuncion.fechaInicioVenta)) {
-        alert('La fecha de fin de venta debe ser posterior o igual a la fecha de inicio de venta');
-        return;
-      }
-      
-      // Validar que la fecha de fin de venta sea anterior o igual a la fecha de celebración
-      if (new Date(nuevaFuncion.fechaFinVenta) > new Date(nuevaFuncion.fechaCelebracion)) {
-        alert('La fecha de fin de venta debe ser anterior o igual a la fecha de celebración');
         return;
       }
 
@@ -859,752 +843,758 @@ const Funciones = () => {
           setEditingFuncion(null);
           resetNuevaFuncion();
         }}
-        className="bg-white rounded-lg shadow-xl max-w-4xl mx-auto focus:outline-none"
-        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
+        className="bg-white rounded-lg shadow-xl max-w-5xl mx-auto focus:outline-none"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+        style={{
+          content: {
+            maxHeight: '90vh',
+            overflow: 'hidden'
+          }
+        }}
       >
-        <div className="p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">
-              {editingFuncion ? 'Editar Función' : 'Nueva Función'}
-            </h2>
-            <button
-              onClick={() => {
-                setModalIsOpen(false);
-                setEditingFuncion(null);
-                resetNuevaFuncion();
-              }}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Información básica */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Evento</label>
-                <input
-                  type="text"
-                  className="border p-2 w-full rounded bg-gray-100"
-                  value={eventoSeleccionado ? eventoSeleccionado.nombre : ''}
-                  disabled
-                  readOnly
-                />
+        <div className="flex items-center justify-between border-b border-gray-200 p-4">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {editingFuncion ? 'Editar Función' : 'Nueva Función'}
+          </h2>
+          <button
+            onClick={() => {
+              setModalIsOpen(false);
+              setEditingFuncion(null);
+              resetNuevaFuncion();
+            }}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 120px)' }}>
+          <div className="p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Información básica */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Evento</label>
+                  <input
+                    type="text"
+                    className="border p-2 w-full rounded bg-gray-100"
+                    value={eventoSeleccionado ? eventoSeleccionado.nombre : ''}
+                    disabled
+                    readOnly
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="streamingMode"
+                    checked={nuevaFuncion.streamingMode}
+                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingMode: e.target.checked })}
+                  />
+                  <label htmlFor="streamingMode" className="text-sm font-medium text-gray-700">En línea</label>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="streamingMode"
-                  checked={nuevaFuncion.streamingMode}
-                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingMode: e.target.checked })}
-                />
-                <label htmlFor="streamingMode" className="text-sm font-medium text-gray-700">En línea</label>
-              </div>
-            </div>
 
-            {/* Fechas principales */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Fechas principales */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Fecha de celebración
+                    <span className="ml-1 text-gray-500">
+                      <i className="fas fa-question-circle" title="Fecha y hora del evento"></i>
+                    </span>
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="border p-2 w-full rounded"
+                    value={nuevaFuncion.fechaCelebracion}
+                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaCelebracion: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Zona horaria</label>
+                  <select
+                    className="border p-2 w-full rounded"
+                    value={nuevaFuncion.zonaHoraria}
+                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, zonaHoraria: e.target.value })}
+                    required
+                  >
+                    {ZONAS_HORARIAS.map(zona => (
+                      <option key={zona} value={zona}>{zona}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Apertura de puertas</label>
+                  <input
+                    type="datetime-local"
+                    className="border p-2 w-full rounded"
+                    value={nuevaFuncion.aperturaPuertas}
+                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, aperturaPuertas: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Literal de función */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="utilizaLitSesion"
+                    checked={nuevaFuncion.utilizaLitSesion}
+                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, utilizaLitSesion: e.target.checked })}
+                  />
+                  <label htmlFor="utilizaLitSesion" className="text-sm font-medium text-gray-700">Literal de función</label>
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    className="border p-2 w-full rounded"
+                    placeholder="Literal de función"
+                    value={nuevaFuncion.litSesion}
+                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, litSesion: e.target.value })}
+                    disabled={!nuevaFuncion.utilizaLitSesion}
+                  />
+                </div>
+              </div>
+
+              {/* Fecha de liberación de reservas */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Fecha de celebración
+                  Fecha de liberación de reservas
                   <span className="ml-1 text-gray-500">
-                    <i className="fas fa-question-circle" title="Fecha y hora del evento"></i>
+                    <i className="fas fa-question-circle" title="Tiempo antes o después de la fecha de celebración para liberar reservas"></i>
+                  </span>
+                </label>
+                <select
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={nuevaFuncion.tiempoCaducidadReservas}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, tiempoCaducidadReservas: parseInt(e.target.value) })}
+                  required
+                >
+                  <optgroup label="Antes de la fecha de celebración">
+                    {TIEMPOS_LIBERACION.filter(option => option.value <= 0).map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Después de la fecha de compra">
+                    {TIEMPOS_LIBERACION.filter(option => option.value > 0).map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+
+              {/* Etiqueta promocional */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <i className="fas fa-tag mr-2"></i>
+                  Etiqueta promocional de la función
+                  <span className="ml-1 text-gray-500">
+                    <i className="fas fa-question-circle" title="Etiqueta promocional para marketing"></i>
                   </span>
                 </label>
                 <input
-                  type="datetime-local"
-                  className="border p-2 w-full rounded"
-                  value={nuevaFuncion.fechaCelebracion}
-                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaCelebracion: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Zona horaria</label>
-                <select
-                  className="border p-2 w-full rounded"
-                  value={nuevaFuncion.zonaHoraria}
-                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, zonaHoraria: e.target.value })}
-                  required
-                >
-                  {ZONAS_HORARIAS.map(zona => (
-                    <option key={zona} value={zona}>{zona}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Apertura de puertas</label>
-                <input
-                  type="datetime-local"
-                  className="border p-2 w-full rounded"
-                  value={nuevaFuncion.aperturaPuertas}
-                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, aperturaPuertas: e.target.value })}
-                />
-              </div>
-            </div>
-
-            {/* Literal de función */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="utilizaLitSesion"
-                  checked={nuevaFuncion.utilizaLitSesion}
-                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, utilizaLitSesion: e.target.checked })}
-                />
-                <label htmlFor="utilizaLitSesion" className="text-sm font-medium text-gray-700">Literal de función</label>
-              </div>
-              <div>
-                <input
                   type="text"
                   className="border p-2 w-full rounded"
-                  placeholder="Literal de función"
-                  value={nuevaFuncion.litSesion}
-                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, litSesion: e.target.value })}
-                  disabled={!nuevaFuncion.utilizaLitSesion}
+                  placeholder="Etiqueta promocional"
+                  value={nuevaFuncion.promotionalSessionLabel}
+                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, promotionalSessionLabel: e.target.value })}
+                  maxLength={50}
                 />
               </div>
-            </div>
 
-            {/* Fecha de liberación de reservas */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Fecha de liberación de reservas
-                <span className="ml-1 text-gray-500">
-                  <i className="fas fa-question-circle" title="Tiempo antes o después de la fecha de celebración para liberar reservas"></i>
-                </span>
-              </label>
-              <select
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={nuevaFuncion.tiempoCaducidadReservas}
-                onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, tiempoCaducidadReservas: parseInt(e.target.value) })}
-                required
-              >
-                <optgroup label="Antes de la fecha de celebración">
-                  {TIEMPOS_LIBERACION.filter(option => option.value <= 0).map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Después de la fecha de compra">
-                  {TIEMPOS_LIBERACION.filter(option => option.value > 0).map(option => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-            </div>
-
-            {/* Etiqueta promocional */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <i className="fas fa-tag mr-2"></i>
-                Etiqueta promocional de la función
-                <span className="ml-1 text-gray-500">
-                  <i className="fas fa-question-circle" title="Etiqueta promocional para marketing"></i>
-                </span>
-              </label>
-              <input
-                type="text"
-                className="border p-2 w-full rounded"
-                placeholder="Etiqueta promocional"
-                value={nuevaFuncion.promotionalSessionLabel}
-                onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, promotionalSessionLabel: e.target.value })}
-                maxLength={50}
-              />
-            </div>
-
-            {/* Pase de temporada */}
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="sessionBelongsSeasonPass"
-                  checked={nuevaFuncion.sessionBelongsSeasonPass}
-                  onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, sessionBelongsSeasonPass: e.target.checked })}
-                />
-                <label htmlFor="sessionBelongsSeasonPass" className="text-sm font-medium text-gray-700">
-                  La función pertenece al pase de temporada
-                </label>
+              {/* Pase de temporada */}
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="sessionBelongsSeasonPass"
+                    checked={nuevaFuncion.sessionBelongsSeasonPass}
+                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, sessionBelongsSeasonPass: e.target.checked })}
+                  />
+                  <label htmlFor="sessionBelongsSeasonPass" className="text-sm font-medium text-gray-700">
+                    La función pertenece al pase de temporada
+                  </label>
+                </div>
+                {nuevaFuncion.sessionBelongsSeasonPass && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Pertenece a Abono</label>
+                    <select
+                      className="border p-2 w-full rounded"
+                      multiple
+                      value={nuevaFuncion.idAbonoSala}
+                      onChange={(e) => {
+                        const values = Array.from(e.target.selectedOptions, option => option.value);
+                        setNuevaFuncion({ ...nuevaFuncion, idAbonoSala: values });
+                      }}
+                    >
+                      <option value="">No existen abonos activos</option>
+                    </select>
+                  </div>
+                )}
               </div>
-              {nuevaFuncion.sessionBelongsSeasonPass && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Pertenece a Abono</label>
-                  <select
-                    className="border p-2 w-full rounded"
-                    multiple
-                    value={nuevaFuncion.idAbonoSala}
-                    onChange={(e) => {
-                      const values = Array.from(e.target.selectedOptions, option => option.value);
-                      setNuevaFuncion({ ...nuevaFuncion, idAbonoSala: values });
-                    }}
-                  >
-                    <option value="">No existen abonos activos</option>
-                  </select>
+
+              {/* Opciones de streaming */}
+              {nuevaFuncion.streamingMode && (
+                <div className="border-t pt-4">
+                  <h4 className="text-lg font-medium text-gray-900 mb-4">Opciones de streaming</h4>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="overwriteStreamingSetup"
+                        checked={nuevaFuncion.overwriteStreamingSetup}
+                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, overwriteStreamingSetup: e.target.checked })}
+                      />
+                      <label htmlFor="overwriteStreamingSetup" className="text-sm font-medium text-gray-700">
+                        Sobrescribir la configuración del evento
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Plataforma de streaming</label>
+                        <select
+                          className="border p-2 w-full rounded"
+                          value={nuevaFuncion.streamingType}
+                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingType: e.target.value })}
+                        >
+                          {PLATAFORMAS_STREAMING.map(plataforma => (
+                            <option key={plataforma.value} value={plataforma.value}>
+                              {plataforma.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">URL del video</label>
+                        <input
+                          type="text"
+                          className="border p-2 w-full rounded"
+                          placeholder="URL del video"
+                          value={nuevaFuncion.streamingUrl}
+                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingUrl: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Identificador de la sala</label>
+                        <input
+                          type="text"
+                          className="border p-2 w-full rounded"
+                          placeholder="ID de la sala"
+                          value={nuevaFuncion.streamingId}
+                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingId: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Contraseña <span className="text-gray-500">(Opcional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="border p-2 w-full rounded"
+                          placeholder="Contraseña"
+                          value={nuevaFuncion.streamingPassword}
+                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingPassword: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="streamingOnlyOneSessionByTicket"
+                          checked={nuevaFuncion.streamingOnlyOneSessionByTicket}
+                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingOnlyOneSessionByTicket: e.target.checked })}
+                        />
+                        <label htmlFor="streamingOnlyOneSessionByTicket" className="text-sm font-medium text-gray-700">
+                          Solo un dispositivo simultáneo por entrada
+                        </label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="streamingShowUrl"
+                          checked={nuevaFuncion.streamingShowUrl}
+                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingShowUrl: e.target.checked })}
+                        />
+                        <label htmlFor="streamingShowUrl" className="text-sm font-medium text-gray-700">
+                          Mostrar URL
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Fecha de inicio de la transmisión <span className="text-gray-500">(Opcional)</span>
+                        </label>
+                        <input
+                          type="datetime-local"
+                          className="border p-2 w-full rounded"
+                          value={nuevaFuncion.streamingTransmissionStart}
+                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingTransmissionStart: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Fecha fin de la transmisión <span className="text-gray-500">(Opcional)</span>
+                        </label>
+                        <input
+                          type="datetime-local"
+                          className="border p-2 w-full rounded"
+                          value={nuevaFuncion.streamingTransmissionStop}
+                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingTransmissionStop: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
 
-            {/* Opciones de streaming */}
-            {nuevaFuncion.streamingMode && (
+              {/* Configuraciones */}
               <div className="border-t pt-4">
-                <h4 className="text-lg font-medium text-gray-900 mb-4">Opciones de streaming</h4>
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Configuraciones</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Sala</label>
+                    <select
+                      className="border p-2 w-full rounded"
+                      value={nuevaFuncion.idSala}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idSala: e.target.value })}
+                      required
+                    >
+                      <option value="">Selecciona una sala</option>
+                      {salaSeleccionada && (
+                        <option value={salaSeleccionada.id}>{salaSeleccionada.nombre}</option>
+                      )}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de tickets</label>
+                    <select
+                      className="border p-2 w-full rounded"
+                      value={nuevaFuncion.idPlantillaEntradas}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaEntradas: e.target.value })}
+                      required
+                    >
+                      <option value="">Selecciona la plantilla de entradas</option>
+                      {plantillas.map(plantilla => (
+                        <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de productos</label>
+                    <select
+                      className="border p-2 w-full rounded"
+                      value={nuevaFuncion.idPlantillaProductos}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaProductos: e.target.value })}
+                    >
+                      <option value="">No existen plantillas de productos activas</option>
+                      {plantillasProductos.map(plantilla => (
+                        <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de precios especiales</label>
+                    <select
+                      className="border p-2 w-full rounded"
+                      value={nuevaFuncion.idSpecialProductsTemplate}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idSpecialProductsTemplate: e.target.value })}
+                    >
+                      <option value="">Selecciona una plantilla de productos especiales</option>
+                      {plantillasComisiones.map(plantilla => (
+                        <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de cupos</label>
+                    <select
+                      className="border p-2 w-full rounded"
+                      value={nuevaFuncion.idPlantillaCupos}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaCupos: e.target.value })}
+                    >
+                      <option value="">No existen plantillas de cupos activas</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Pool códigos de barras</label>
+                    <select
+                      className="border p-2 w-full rounded"
+                      value={nuevaFuncion.idBarcodePool}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idBarcodePool: e.target.value })}
+                    >
+                      <option value="">Selecciona pool de códigos</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Opciones */}
+              <div className="border-t pt-4">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Opciones</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="permitePagoPlazos"
+                        checked={nuevaFuncion.permitePagoPlazos}
+                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, permitePagoPlazos: e.target.checked })}
+                      />
+                      <label htmlFor="permitePagoPlazos" className="text-sm font-medium text-gray-700">
+                        Pago a plazos
+                      </label>
+                    </div>
+                    {nuevaFuncion.permitePagoPlazos && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Número máximo de pagos
+                        </label>
+                        <select
+                          className="border p-2 w-full rounded"
+                          value={nuevaFuncion.numPlazosPago}
+                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, numPlazosPago: parseInt(e.target.value) })}
+                        >
+                          <option value={0}>Selecciona el máximo número de plazos</option>
+                          {NUM_PLAZOS.map(num => (
+                            <option key={num} value={num}>{num}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="permiteReserva"
+                      checked={nuevaFuncion.permiteReserva}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, permiteReserva: e.target.checked })}
+                    />
+                    <label htmlFor="permiteReserva" className="text-sm font-medium text-gray-700">
+                      Permite reservas a clientes web
+                      <span className="ml-1 text-gray-500">
+                        <i className="fas fa-question-circle" title="Permitir reservas desde la web"></i>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              {/* Canales y periodos de venta */}
+              <div className="border-t pt-4">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Canales y periodos de venta</h4>
                 
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      id="overwriteStreamingSetup"
-                      checked={nuevaFuncion.overwriteStreamingSetup}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, overwriteStreamingSetup: e.target.checked })}
+                      id="mismaFechaCanales"
+                      checked={nuevaFuncion.mismaFechaCanales}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, mismaFechaCanales: e.target.checked })}
                     />
-                    <label htmlFor="overwriteStreamingSetup" className="text-sm font-medium text-gray-700">
-                      Sobrescribir la configuración del evento
+                    <label htmlFor="mismaFechaCanales" className="text-sm font-medium text-gray-700">
+                      Misma fecha en todos los canales
                     </label>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Plataforma de streaming</label>
-                      <select
-                        className="border p-2 w-full rounded"
-                        value={nuevaFuncion.streamingType}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingType: e.target.value })}
-                      >
-                        {PLATAFORMAS_STREAMING.map(plataforma => (
-                          <option key={plataforma.value} value={plataforma.value}>
-                            {plataforma.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">URL del video</label>
-                      <input
-                        type="text"
-                        className="border p-2 w-full rounded"
-                        placeholder="URL del video"
-                        value={nuevaFuncion.streamingUrl}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingUrl: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Identificador de la sala</label>
-                      <input
-                        type="text"
-                        className="border p-2 w-full rounded"
-                        placeholder="ID de la sala"
-                        value={nuevaFuncion.streamingId}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingId: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Contraseña <span className="text-gray-500">(Opcional)</span>
-                      </label>
-                      <input
-                        type="text"
-                        className="border p-2 w-full rounded"
-                        placeholder="Contraseña"
-                        value={nuevaFuncion.streamingPassword}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingPassword: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="streamingOnlyOneSessionByTicket"
-                        checked={nuevaFuncion.streamingOnlyOneSessionByTicket}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingOnlyOneSessionByTicket: e.target.checked })}
-                      />
-                      <label htmlFor="streamingOnlyOneSessionByTicket" className="text-sm font-medium text-gray-700">
-                        Solo un dispositivo simultáneo por entrada
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="streamingShowUrl"
-                        checked={nuevaFuncion.streamingShowUrl}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingShowUrl: e.target.checked })}
-                      />
-                      <label htmlFor="streamingShowUrl" className="text-sm font-medium text-gray-700">
-                        Mostrar URL
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Fecha de inicio de la transmisión <span className="text-gray-500">(Opcional)</span>
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Inicio venta</label>
                       <input
                         type="datetime-local"
                         className="border p-2 w-full rounded"
-                        value={nuevaFuncion.streamingTransmissionStart}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingTransmissionStart: e.target.value })}
+                        value={nuevaFuncion.fechaInicioVenta}
+                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaInicioVenta: e.target.value })}
+                        required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Fecha fin de la transmisión <span className="text-gray-500">(Opcional)</span>
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Fin venta</label>
                       <input
                         type="datetime-local"
                         className="border p-2 w-full rounded"
-                        value={nuevaFuncion.streamingTransmissionStop}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, streamingTransmissionStop: e.target.value })}
+                        value={nuevaFuncion.fechaFinVenta}
+                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaFinVenta: e.target.value })}
+                        required
                       />
                     </div>
                   </div>
+
+                  {/* Tabla de canales */}
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full border border-gray-300">
+                      <thead>
+                        <tr className="bg-gray-50">
+                          <th className="border border-gray-300 px-4 py-2 text-left">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                className="channelsChk"
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setNuevaFuncion({
+                                    ...nuevaFuncion,
+                                    canales: {
+                                      boxOffice: { ...nuevaFuncion.canales.boxOffice, activo: checked },
+                                      internet: { ...nuevaFuncion.canales.internet, activo: checked }
+                                    }
+                                  });
+                                }}
+                              />
+                              <span>Canales activos</span>
+                            </div>
+                          </th>
+                          <th className="border border-gray-300 px-4 py-2 text-left">Inicio venta</th>
+                          <th className="border border-gray-300 px-4 py-2 text-left">Fin venta</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={nuevaFuncion.canales.boxOffice.activo}
+                                onChange={(e) => setNuevaFuncion({
+                                  ...nuevaFuncion,
+                                  canales: {
+                                    ...nuevaFuncion.canales,
+                                    boxOffice: { ...nuevaFuncion.canales.boxOffice, activo: e.target.checked }
+                                  }
+                                })}
+                              />
+                              <span>Box office</span>
+                            </div>
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <input
+                              type="datetime-local"
+                              className="border p-2 w-full rounded"
+                              value={nuevaFuncion.canales.boxOffice.inicio}
+                              onChange={(e) => setNuevaFuncion({
+                                ...nuevaFuncion,
+                                canales: {
+                                  ...nuevaFuncion.canales,
+                                  boxOffice: { ...nuevaFuncion.canales.boxOffice, inicio: e.target.value }
+                                }
+                              })}
+                              disabled={!nuevaFuncion.canales.boxOffice.activo}
+                            />
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <input
+                              type="datetime-local"
+                              className="border p-2 w-full rounded"
+                              value={nuevaFuncion.canales.boxOffice.fin}
+                              onChange={(e) => setNuevaFuncion({
+                                ...nuevaFuncion,
+                                canales: {
+                                  ...nuevaFuncion.canales,
+                                  boxOffice: { ...nuevaFuncion.canales.boxOffice, fin: e.target.value }
+                                }
+                              })}
+                              disabled={!nuevaFuncion.canales.boxOffice.activo}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                checked={nuevaFuncion.canales.internet.activo}
+                                onChange={(e) => setNuevaFuncion({
+                                  ...nuevaFuncion,
+                                  canales: {
+                                    ...nuevaFuncion.canales,
+                                    internet: { ...nuevaFuncion.canales.internet, activo: e.target.checked }
+                                  }
+                                })}
+                              />
+                              <span>Internet</span>
+                            </div>
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <input
+                              type="datetime-local"
+                              className="border p-2 w-full rounded"
+                              value={nuevaFuncion.canales.internet.inicio}
+                              onChange={(e) => setNuevaFuncion({
+                                ...nuevaFuncion,
+                                canales: {
+                                  ...nuevaFuncion.canales,
+                                  internet: { ...nuevaFuncion.canales.internet, inicio: e.target.value }
+                                }
+                              })}
+                              disabled={!nuevaFuncion.canales.internet.activo}
+                            />
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <input
+                              type="datetime-local"
+                              className="border p-2 w-full rounded"
+                              value={nuevaFuncion.canales.internet.fin}
+                              onChange={(e) => setNuevaFuncion({
+                                ...nuevaFuncion,
+                                canales: {
+                                  ...nuevaFuncion.canales,
+                                  internet: { ...nuevaFuncion.canales.internet, fin: e.target.value }
+                                }
+                              })}
+                              disabled={!nuevaFuncion.canales.internet.activo}
+                            />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            )}
 
-            {/* Configuraciones */}
-            <div className="border-t pt-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-4">Configuraciones</h4>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Sala</label>
-                  <select
-                    className="border p-2 w-full rounded"
-                    value={nuevaFuncion.idSala}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idSala: e.target.value })}
-                    required
-                  >
-                    <option value="">Selecciona una sala</option>
-                    {salaSeleccionada && (
-                      <option value={salaSeleccionada.id}>{salaSeleccionada.nombre}</option>
-                    )}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de tickets</label>
-                  <select
-                    className="border p-2 w-full rounded"
-                    value={nuevaFuncion.idPlantillaEntradas}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaEntradas: e.target.value })}
-                    required
-                  >
-                    <option value="">Selecciona la plantilla de entradas</option>
-                    {plantillas.map(plantilla => (
-                      <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de productos</label>
-                  <select
-                    className="border p-2 w-full rounded"
-                    value={nuevaFuncion.idPlantillaProductos}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaProductos: e.target.value })}
-                  >
-                    <option value="">No existen plantillas de productos activas</option>
-                    {plantillasProductos.map(plantilla => (
-                      <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de precios especiales</label>
-                  <select
-                    className="border p-2 w-full rounded"
-                    value={nuevaFuncion.idSpecialProductsTemplate}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idSpecialProductsTemplate: e.target.value })}
-                  >
-                    <option value="">Selecciona una plantilla de productos especiales</option>
-                    {plantillasComisiones.map(plantilla => (
-                      <option key={plantilla.id} value={plantilla.id}>{plantilla.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de cupos</label>
-                  <select
-                    className="border p-2 w-full rounded"
-                    value={nuevaFuncion.idPlantillaCupos}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaCupos: e.target.value })}
-                  >
-                    <option value="">No existen plantillas de cupos activas</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Pool códigos de barras</label>
-                  <select
-                    className="border p-2 w-full rounded"
-                    value={nuevaFuncion.idBarcodePool}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idBarcodePool: e.target.value })}
-                  >
-                    <option value="">Selecciona pool de códigos</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Opciones */}
-            <div className="border-t pt-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-4">Opciones</h4>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+              {/* Fechas de cancelación */}
+              <div className="border-t pt-4">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Fechas de cancelación</h4>
+                
+                <div className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      id="permitePagoPlazos"
-                      checked={nuevaFuncion.permitePagoPlazos}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, permitePagoPlazos: e.target.checked })}
+                      id="cancellationDateSelected"
+                      checked={nuevaFuncion.cancellationDateSelected}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, cancellationDateSelected: e.target.checked })}
                     />
-                    <label htmlFor="permitePagoPlazos" className="text-sm font-medium text-gray-700">
-                      Pago a plazos
+                    <label htmlFor="cancellationDateSelected" className="text-sm font-medium text-gray-700">
+                      Fecha límite para cancelar entradas
                     </label>
                   </div>
-                  {nuevaFuncion.permitePagoPlazos && (
+                  {nuevaFuncion.cancellationDateSelected && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Número máximo de pagos
-                      </label>
-                      <select
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de fin de cancelación</label>
+                      <input
+                        type="datetime-local"
                         className="border p-2 w-full rounded"
-                        value={nuevaFuncion.numPlazosPago}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, numPlazosPago: parseInt(e.target.value) })}
-                      >
-                        <option value={0}>Selecciona el máximo número de plazos</option>
-                        {NUM_PLAZOS.map(num => (
-                          <option key={num} value={num}>{num}</option>
-                        ))}
-                      </select>
+                        value={nuevaFuncion.endDateCancellation}
+                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, endDateCancellation: e.target.value })}
+                      />
                     </div>
                   )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="permiteReserva"
-                    checked={nuevaFuncion.permiteReserva}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, permiteReserva: e.target.checked })}
-                  />
-                  <label htmlFor="permiteReserva" className="text-sm font-medium text-gray-700">
-                    Permite reservas a clientes web
-                    <span className="ml-1 text-gray-500">
-                      <i className="fas fa-question-circle" title="Permitir reservas desde la web"></i>
-                    </span>
-                  </label>
+              </div>
+
+              {/* Bloqueo de impresión de tickets */}
+              <div className="border-t pt-4">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Bloqueo de impresión de tickets</h4>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="ticketPrintingReleaseDateSelected"
+                      checked={nuevaFuncion.ticketPrintingReleaseDateSelected}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, ticketPrintingReleaseDateSelected: e.target.checked })}
+                    />
+                    <label htmlFor="ticketPrintingReleaseDateSelected" className="text-sm font-medium text-gray-700">
+                      Restringir la impresión antes de la fecha de celebración
+                    </label>
+                  </div>
+                  
+                  {nuevaFuncion.ticketPrintingReleaseDateSelected && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de liberación de tickets</label>
+                        <select
+                          className="border p-2 w-full rounded"
+                          value={nuevaFuncion.ticketPrintingReleaseDate}
+                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, ticketPrintingReleaseDate: e.target.value })}
+                        >
+                          <optgroup label="Antes de la fecha de celebración">
+                            {TIEMPOS_IMPRESION.filter(option => option.value !== 'custom').map(option => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </optgroup>
+                          <optgroup label="Fecha custom">
+                            <option value="custom">Fecha personalizada</option>
+                          </optgroup>
+                        </select>
+                      </div>
+                      {nuevaFuncion.ticketPrintingReleaseDate === 'custom' && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Selecciona una fecha personalizada
+                          </label>
+                          <input
+                            type="datetime-local"
+                            className="border p-2 w-full rounded"
+                            value={nuevaFuncion.customPrintingTicketDate}
+                            onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, customPrintingTicketDate: e.target.value })}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
 
-            {/* Canales y periodos de venta */}
-            <div className="border-t pt-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-4">Canales y periodos de venta</h4>
-              
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="mismaFechaCanales"
-                    checked={nuevaFuncion.mismaFechaCanales}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, mismaFechaCanales: e.target.checked })}
-                  />
-                  <label htmlFor="mismaFechaCanales" className="text-sm font-medium text-gray-700">
-                    Misma fecha en todos los canales
-                  </label>
-                </div>
-
+              {/* Campos personalizados */}
+              <div className="border-t pt-4">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Campos personalizados</h4>
+                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Inicio venta</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Personalizado 1</label>
                     <input
-                      type="datetime-local"
+                      type="text"
                       className="border p-2 w-full rounded"
-                      value={nuevaFuncion.fechaInicioVenta}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaInicioVenta: e.target.value })}
-                      required
+                      placeholder="Campo personalizado 1"
+                      value={nuevaFuncion.customSes1}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, customSes1: e.target.value })}
+                      maxLength={250}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Fin venta</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Personalizado 2</label>
                     <input
-                      type="datetime-local"
+                      type="text"
                       className="border p-2 w-full rounded"
-                      value={nuevaFuncion.fechaFinVenta}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaFinVenta: e.target.value })}
-                      required
+                      placeholder="Campo personalizado 2"
+                      value={nuevaFuncion.customSes2}
+                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, customSes2: e.target.value })}
+                      maxLength={250}
                     />
                   </div>
                 </div>
-
-                {/* Tabla de canales */}
-                <div className="overflow-x-auto">
-                  <table className="min-w-full border border-gray-300">
-                    <thead>
-                      <tr className="bg-gray-50">
-                        <th className="border border-gray-300 px-4 py-2 text-left">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              className="channelsChk"
-                              onChange={(e) => {
-                                const checked = e.target.checked;
-                                setNuevaFuncion({
-                                  ...nuevaFuncion,
-                                  canales: {
-                                    boxOffice: { ...nuevaFuncion.canales.boxOffice, activo: checked },
-                                    internet: { ...nuevaFuncion.canales.internet, activo: checked }
-                                  }
-                                });
-                              }}
-                            />
-                            <span>Canales activos</span>
-                          </div>
-                        </th>
-                        <th className="border border-gray-300 px-4 py-2 text-left">Inicio venta</th>
-                        <th className="border border-gray-300 px-4 py-2 text-left">Fin venta</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className="border border-gray-300 px-4 py-2">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              checked={nuevaFuncion.canales.boxOffice.activo}
-                              onChange={(e) => setNuevaFuncion({
-                                ...nuevaFuncion,
-                                canales: {
-                                  ...nuevaFuncion.canales,
-                                  boxOffice: { ...nuevaFuncion.canales.boxOffice, activo: e.target.checked }
-                                }
-                              })}
-                            />
-                            <span>Box office</span>
-                          </div>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2">
-                          <input
-                            type="datetime-local"
-                            className="border p-2 w-full rounded"
-                            value={nuevaFuncion.canales.boxOffice.inicio}
-                            onChange={(e) => setNuevaFuncion({
-                              ...nuevaFuncion,
-                              canales: {
-                                ...nuevaFuncion.canales,
-                                boxOffice: { ...nuevaFuncion.canales.boxOffice, inicio: e.target.value }
-                              }
-                            })}
-                            disabled={!nuevaFuncion.canales.boxOffice.activo}
-                          />
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2">
-                          <input
-                            type="datetime-local"
-                            className="border p-2 w-full rounded"
-                            value={nuevaFuncion.canales.boxOffice.fin}
-                            onChange={(e) => setNuevaFuncion({
-                              ...nuevaFuncion,
-                              canales: {
-                                ...nuevaFuncion.canales,
-                                boxOffice: { ...nuevaFuncion.canales.boxOffice, fin: e.target.value }
-                              }
-                            })}
-                            disabled={!nuevaFuncion.canales.boxOffice.activo}
-                          />
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="border border-gray-300 px-4 py-2">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              checked={nuevaFuncion.canales.internet.activo}
-                              onChange={(e) => setNuevaFuncion({
-                                ...nuevaFuncion,
-                                canales: {
-                                  ...nuevaFuncion.canales,
-                                  internet: { ...nuevaFuncion.canales.internet, activo: e.target.checked }
-                                }
-                              })}
-                            />
-                            <span>Internet</span>
-                          </div>
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2">
-                          <input
-                            type="datetime-local"
-                            className="border p-2 w-full rounded"
-                            value={nuevaFuncion.canales.internet.inicio}
-                            onChange={(e) => setNuevaFuncion({
-                              ...nuevaFuncion,
-                              canales: {
-                                ...nuevaFuncion.canales,
-                                internet: { ...nuevaFuncion.canales.internet, inicio: e.target.value }
-                              }
-                            })}
-                            disabled={!nuevaFuncion.canales.internet.activo}
-                          />
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2">
-                          <input
-                            type="datetime-local"
-                            className="border p-2 w-full rounded"
-                            value={nuevaFuncion.canales.internet.fin}
-                            onChange={(e) => setNuevaFuncion({
-                              ...nuevaFuncion,
-                              canales: {
-                                ...nuevaFuncion.canales,
-                                internet: { ...nuevaFuncion.canales.internet, fin: e.target.value }
-                              }
-                            })}
-                            disabled={!nuevaFuncion.canales.internet.activo}
-                          />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
               </div>
-            </div>
 
-            {/* Fechas de cancelación */}
-            <div className="border-t pt-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-4">Fechas de cancelación</h4>
-              
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="cancellationDateSelected"
-                    checked={nuevaFuncion.cancellationDateSelected}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, cancellationDateSelected: e.target.checked })}
-                  />
-                  <label htmlFor="cancellationDateSelected" className="text-sm font-medium text-gray-700">
-                    Fecha límite para cancelar entradas
-                  </label>
-                </div>
-                {nuevaFuncion.cancellationDateSelected && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de fin de cancelación</label>
-                    <input
-                      type="datetime-local"
-                      className="border p-2 w-full rounded"
-                      value={nuevaFuncion.endDateCancellation}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, endDateCancellation: e.target.value })}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Bloqueo de impresión de tickets */}
-            <div className="border-t pt-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-4">Bloqueo de impresión de tickets</h4>
-              
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="ticketPrintingReleaseDateSelected"
-                    checked={nuevaFuncion.ticketPrintingReleaseDateSelected}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, ticketPrintingReleaseDateSelected: e.target.checked })}
-                  />
-                  <label htmlFor="ticketPrintingReleaseDateSelected" className="text-sm font-medium text-gray-700">
-                    Restringir la impresión antes de la fecha de celebración
-                  </label>
-                </div>
+              {/* Controles de Activación */}
+              <div className="border-t pt-4">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Estado</h4>
                 
-                {nuevaFuncion.ticketPrintingReleaseDateSelected && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de liberación de tickets</label>
-                      <select
-                        className="border p-2 w-full rounded"
-                        value={nuevaFuncion.ticketPrintingReleaseDate}
-                        onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, ticketPrintingReleaseDate: e.target.value })}
-                      >
-                        <optgroup label="Antes de la fecha de celebración">
-                          {TIEMPOS_IMPRESION.filter(option => option.value !== 'custom').map(option => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </optgroup>
-                        <optgroup label="Fecha custom">
-                          <option value="custom">Fecha personalizada</option>
-                        </optgroup>
-                      </select>
-                    </div>
-                    {nuevaFuncion.ticketPrintingReleaseDate === 'custom' && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Selecciona una fecha personalizada
-                        </label>
-                        <input
-                          type="datetime-local"
-                          className="border p-2 w-full rounded"
-                          value={nuevaFuncion.customPrintingTicketDate}
-                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, customPrintingTicketDate: e.target.value })}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Campos personalizados */}
-            <div className="border-t pt-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-4">Campos personalizados</h4>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Personalizado 1</label>
-                  <input
-                    type="text"
-                    className="border p-2 w-full rounded"
-                    placeholder="Campo personalizado 1"
-                    value={nuevaFuncion.customSes1}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, customSes1: e.target.value })}
-                    maxLength={250}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Personalizado 2</label>
-                  <input
-                    type="text"
-                    className="border p-2 w-full rounded"
-                    placeholder="Campo personalizado 2"
-                    value={nuevaFuncion.customSes2}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, customSes2: e.target.value })}
-                    maxLength={250}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Controles de Activación */}
-            <div className="border-t pt-4">
-              <h4 className="text-lg font-medium text-gray-900 mb-4">Estado y Visibilidad</h4>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
@@ -1614,54 +1604,33 @@ const Funciones = () => {
                   />
                   <label htmlFor="activo" className="text-sm font-medium text-gray-700">Activar Función</label>
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="visibleEnBoleteria"
-                    checked={nuevaFuncion.visibleEnBoleteria}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, visibleEnBoleteria: e.target.checked })}
-                  />
-                  <label htmlFor="visibleEnBoleteria" className="text-sm font-medium text-gray-700">Visible en Boletería</label>
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="visibleEnStore"
-                    checked={nuevaFuncion.visibleEnStore}
-                    onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, visibleEnStore: e.target.checked })}
-                  />
-                  <label htmlFor="visibleEnStore" className="text-sm font-medium text-gray-700">Visible en Store</label>
-                </div>
               </div>
-            </div>
 
-            {/* Botones de acción */}
-            <div className="flex justify-end space-x-4 pt-6 border-t">
-              <button
-                type="button"
-                onClick={() => {
-                  setModalIsOpen(false);
-                  setEditingFuncion(null);
-                  resetNuevaFuncion();
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                {editingFuncion ? 'Actualizar' : 'Crear'} Función
-              </button>
-            </div>
-          </form>
-        </div>
-      </Modal>
-    </div>
-  );
-};
+              {/* Botones de acción */}
+              <div className="flex justify-end space-x-4 pt-6 border-t">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalIsOpen(false);
+                    setEditingFuncion(null);
+                    resetNuevaFuncion();
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  {editingFuncion ? 'Actualizar' : 'Crear'} Función
+                </button>
+              </div>
+            </form>
+          </div>
+        </Modal>
+      </div>
+    );
+  };
 
-export default Funciones;
+  export default Funciones;
