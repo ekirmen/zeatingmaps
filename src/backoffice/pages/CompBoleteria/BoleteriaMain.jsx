@@ -956,9 +956,10 @@ const BoleteriaMain = () => {
   ];
 
   return (
-    <div className="h-screen flex bg-gray-100">
-      {/* Sidebar izquierda */}
-      <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
+    <div>
+      <div className="h-screen flex bg-gray-100">
+        {/* Sidebar izquierda */}
+        <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
         {/* Botón de Atrás */}
         <Tooltip title="Volver atrás" placement="right">
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => window.history.back()}>
@@ -1035,8 +1036,9 @@ const BoleteriaMain = () => {
               </div>
             </div>
           )}
-        <div className="bg-white shadow-sm border-b px-4 py-1">
-          <div className="flex items-center justify-between">
+          
+          <div className="bg-white shadow-sm border-b px-4 py-1">
+            <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
                 {selectedEvent && (thumbnailImage || selectedEvent.imagen_url) ? (
@@ -1051,7 +1053,7 @@ const BoleteriaMain = () => {
                 ) : (
                   <Avatar size="large" src="/assets/logo.png" alt="Event" />
                 )}
-                                  <div className="text-xs">
+                <div className="text-xs">
                     <div className="font-medium">
                       {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
                     </div>
@@ -1068,68 +1070,68 @@ const BoleteriaMain = () => {
                       </div>
                     )}
                   </div>
-              </div>
-              
-              {/* Botón de Atrás */}
-              <Button
-                type="default"
-                icon={<ArrowLeftOutlined />}
-                onClick={() => window.history.back()}
-                className="ml-4"
-                title="Volver atrás"
-              >
-                Atrás
-              </Button>
-
-              {/* Botón de Recargar */}
-              {selectedFuncion && (
+                </div>
+                
+                {/* Botón de Atrás */}
                 <Button
-                  type="primary"
-                  icon={<ReloadOutlined />}
-                  onClick={() => {
-                    if (selectedFuncion) {
-                      loadMapaForFunction(selectedFuncion);
-                      loadPlantillaForFunction(selectedFuncion);
-                    }
-                  }}
-                  className="ml-2"
-                  title="Recargar mapa y plantilla"
-                  loading={boleteriaLoading}
+                  type="default"
+                  icon={<ArrowLeftOutlined />}
+                  onClick={() => window.history.back()}
+                  className="ml-4"
+                  title="Volver atrás"
                 >
-                  Recargar
+                  Atrás
                 </Button>
-              )}
+
+                {/* Botón de Recargar */}
+                {selectedFuncion && (
+                  <Button
+                    type="primary"
+                    icon={<ReloadOutlined />}
+                    onClick={() => {
+                      if (selectedFuncion) {
+                        loadMapaForFunction(selectedFuncion);
+                        loadPlantillaForFunction(selectedFuncion);
+                      }
+                    }}
+                    className="ml-2"
+                    title="Recargar mapa y plantilla"
+                    loading={boleteriaLoading}
+                  >
+                    Recargar
+                  </Button>
+                )}
               </div>
             </div>
-                        <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-gray-500">Modo bloqueo:</span>
-                <input
-                  type="checkbox"
-                  checked={blockMode}
-                  onChange={(e) => handleBlockModeToggle(e.target.checked)}
-                  className="rounded"
-                />
-              </div>
-              <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
-              <Tooltip 
-                title={
-                  <div className="text-xs">
-                    <div className="font-medium mb-2">Atajos de Teclado:</div>
-                    <div>• <strong>Ctrl+E:</strong> Buscar eventos</div>
-                    <div>• <strong>Ctrl+U:</strong> Buscar usuarios</div>
-                    <div>• <strong>Ctrl+L:</strong> Búsqueda por localizador</div>
-                    <div>• <strong>Ctrl+X:</strong> Exportar datos</div>
-                    <div>• <strong>Escape:</strong> Cerrar modales</div>
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-500">Modo bloqueo:</span>
+                    <input
+                      type="checkbox"
+                      checked={blockMode}
+                      onChange={(e) => handleBlockModeToggle(e.target.checked)}
+                      className="rounded"
+                    />
                   </div>
-                }
-                placement="bottom"
-              >
-                <QuestionCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help text-sm ml-2" />
-              </Tooltip>
+                  <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
+                  <Tooltip 
+                    title={
+                      <div className="text-xs">
+                        <div className="font-medium mb-2">Atajos de Teclado:</div>
+                        <div>• <strong>Ctrl+E:</strong> Buscar eventos</div>
+                        <div>• <strong>Ctrl+U:</strong> Buscar usuarios</div>
+                        <div>• <strong>Ctrl+L:</strong> Búsqueda por localizador</div>
+                        <div>• <strong>Ctrl+X:</strong> Exportar datos</div>
+                        <div>• <strong>Escape:</strong> Cerrar modales</div>
+                      </div>
+                    }
+                    placement="bottom"
+                  >
+                    <QuestionCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help text-sm ml-2" />
+                  </Tooltip>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         {/* Resumen de Compra - Movido arriba */}
         <div className="bg-white shadow-sm border-b px-4 py-2">
@@ -1141,10 +1143,10 @@ const BoleteriaMain = () => {
           </div>
         </div>
 
-                 {/* Área principal */}
-         <div className="flex-1 flex">
-           {/* Contenido central */}
-           <div className="flex-1 p-4">
+        {/* Área principal */}
+        <div className="flex-1 flex">
+          {/* Contenido central */}
+          <div className="flex-1 p-4">
              {/* Selección de precios dinámica */}
              {selectedFuncion && (
                <DynamicPriceSelector
@@ -1163,30 +1165,30 @@ const BoleteriaMain = () => {
              />
            </div>
 
-                     {/* Panel lateral derecho */}
-           <div className="w-80 bg-white shadow-lg">
-             <div className="p-4">
+          {/* Panel lateral derecho */}
+          <div className="w-80 bg-white shadow-lg">
+            <div className="p-4">
               
-                             {/* Información del Cliente */}
-               <div className="mb-2 p-2 bg-blue-50 rounded-lg">
+              {/* Información del Cliente */}
+              <div className="mb-2 p-2 bg-blue-50 rounded-lg">
                 <h4 className="font-medium text-gray-900 mb-2">Cliente</h4>
-                                 {selectedClient ? (
-                   <div className="text-sm space-y-1">
-                     <div><span className="font-medium">Nombre:</span> {selectedClient.nombre || selectedClient.login || 'N/A'}</div>
-                     <div><span className="font-medium">Email:</span> {selectedClient.email || selectedClient.login || 'N/A'}</div>
-                     <div><span className="font-medium">Teléfono:</span> {selectedClient.telefono || 'N/A'}</div>
-                     <div className="mt-2">
-                       <Button 
-                         size="small" 
-                         type="default"
-                         onClick={() => setShowUserSearch(true)}
-                       >
-                         Cambiar Usuario
-                       </Button>
-                     </div>
-                   </div>
-                 ) : (
-                                     <div className="text-center">
+                {selectedClient ? (
+                  <div className="text-sm space-y-1">
+                    <div><span className="font-medium">Nombre:</span> {selectedClient.nombre || selectedClient.login || 'N/A'}</div>
+                    <div><span className="font-medium">Email:</span> {selectedClient.email || selectedClient.login || 'N/A'}</div>
+                    <div><span className="font-medium">Teléfono:</span> {selectedClient.telefono || 'N/A'}</div>
+                    <div className="mt-2">
+                      <Button 
+                        size="small" 
+                        type="default"
+                        onClick={() => setShowUserSearch(true)}
+                      >
+                        Cambiar Usuario
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
                      <Tooltip title="Paso 2: Buscar o crear cliente para continuar">
                        <Button 
                          type="primary" 
@@ -1204,9 +1206,9 @@ const BoleteriaMain = () => {
                 )}
               </div>
               
-                             {/* Estadísticas del Evento - Ahora en botón */}
-               {selectedFuncion && (
-                 <div className="mb-2">
+              {/* Estadísticas del Evento - Ahora en botón */}
+              {selectedFuncion && (
+                <div className="mb-2">
                   <Tooltip title="Ver estadísticas detalladas del evento">
                     <Button 
                       type="default" 
@@ -1256,90 +1258,89 @@ const BoleteriaMain = () => {
                 </div>
               )}
               
-                             
               
-                             {/* Asientos seleccionados */}
-               {selectedSeats.length > 0 && (
-                 <div className="mb-2">
+              {/* Asientos seleccionados */}
+              {selectedSeats.length > 0 && (
+                <div className="mb-2">
                   <h4 className="font-medium text-gray-900 mb-2">Asientos Seleccionados</h4>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
-                                         {selectedSeats.map((seat, index) => (
-                       <div key={seat._id || index} className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                         <div className="flex-1">
-                           <div className="font-medium text-sm">
-                             {seat.nombre || `Asiento ${seat._id}`}
-                           </div>
-                           <div className="text-xs text-gray-600">
-                             {selectedPriceOption ? 
-                               `${selectedPriceOption.entrada.nombre_entrada} - ${selectedPriceOption.zona.nombre}` : 
-                               'Selecciona zona y precio'
-                             }
-                           </div>
-                         </div>
-                         <div className="text-right">
-                           <div className="font-bold text-sm">
-                             ${(seat.precio || selectedPriceOption?.precio || 0).toFixed(2)}
-                           </div>
-                           <Button 
-                             size="small" 
-                             type="text" 
-                             danger
-                             onClick={() => {
-                               setSelectedSeats(prev => prev.filter(s => s._id !== seat._id));
-                             }}
-                           >
-                             ×
-                           </Button>
-                         </div>
-                       </div>
-                     ))}
+                    {selectedSeats.map((seat, index) => (
+                      <div key={seat._id || index} className="flex items-center justify-between p-2 bg-blue-50 rounded">
+                        <div className="flex-1">
+                          <div className="font-medium text-sm">
+                            {seat.nombre || `Asiento ${seat._id}`}
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            {selectedPriceOption ? 
+                              `${selectedPriceOption.entrada.nombre_entrada} - ${selectedPriceOption.zona.nombre}` : 
+                              'Selecciona zona y precio'
+                            }
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-sm">
+                            ${(seat.precio || selectedPriceOption?.precio || 0).toFixed(2)}
+                          </div>
+                          <Button 
+                            size="small" 
+                            type="text" 
+                            danger
+                            onClick={() => {
+                              setSelectedSeats(prev => prev.filter(s => s._id !== seat._id));
+                            }}
+                          >
+                            ×
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
               
-                             <div className="space-y-4">
-                 <div className="flex justify-between">
-                   <span>Boletos:</span>
-                   <span>{selectedSeats.length}, ${selectedSeats.reduce((sum, seat) => {
-                     const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
-                     return sum + seatPrice;
-                   }, 0).toFixed(2)}</span>
-                 </div>
-                 
-                                   {productosCarrito.length > 0 && (
-                    <div className="mb-2">
-                      <h4 className="font-medium text-gray-900 mb-2">Productos en Carrito</h4>
-                      <div className="space-y-2 max-h-32 overflow-y-auto">
-                        {productosCarrito.map((producto) => (
-                          <div key={producto.id} className="flex items-center justify-between p-2 bg-green-50 rounded">
-                            <div className="flex-1">
-                              <div className="font-medium text-sm">{producto.nombre}</div>
-                              <div className="text-xs text-gray-600">
-                                ${(producto.precio_especial || producto.precio).toFixed(2)} c/u
-                              </div>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <InputNumber
-                                size="small"
-                                min={1}
-                                value={producto.cantidad}
-                                onChange={(value) => handleProductQuantityChange(producto.id, value)}
-                                style={{ width: 60 }}
-                              />
-                              <Button 
-                                size="small" 
-                                type="text" 
-                                danger
-                                onClick={() => handleProductRemove(producto.id)}
-                              >
-                                ×
-                              </Button>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span>Boletos:</span>
+                  <span>{selectedSeats.length}, ${selectedSeats.reduce((sum, seat) => {
+                    const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
+                    return sum + seatPrice;
+                  }, 0).toFixed(2)}</span>
+                </div>
+                
+                                {productosCarrito.length > 0 && (
+                  <div className="mb-2">
+                    <h4 className="font-medium text-gray-900 mb-2">Productos en Carrito</h4>
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {productosCarrito.map((producto) => (
+                        <div key={producto.id} className="flex items-center justify-between p-2 bg-green-50 rounded">
+                          <div className="flex-1">
+                            <div className="font-medium text-sm">{producto.nombre}</div>
+                            <div className="text-xs text-gray-600">
+                              ${(producto.precio_especial || producto.precio).toFixed(2)} c/u
                             </div>
                           </div>
-                        ))}
-                      </div>
+                          <div className="flex items-center space-x-2">
+                            <InputNumber
+                              size="small"
+                              min={1}
+                              value={producto.cantidad}
+                              onChange={(value) => handleProductQuantityChange(producto.id, value)}
+                              style={{ width: 60 }}
+                            />
+                            <Button 
+                              size="small" 
+                              type="text" 
+                              danger
+                              onClick={() => handleProductRemove(producto.id)}
+                            >
+                              ×
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  )}
+                  </div>
+                )}
                   
                   <div className="flex justify-between">
                     <span>Productos:</span>
@@ -1387,8 +1388,8 @@ const BoleteriaMain = () => {
                 )}
               </div>
               
-                              <div className="mt-6 space-y-2">
-                  <div className="flex space-x-2">
+              <div className="mt-6 space-y-2">
+                <div className="flex space-x-2">
                     <Button 
                       size="small"
                       onClick={saveCurrentCart}
@@ -1436,8 +1437,6 @@ const BoleteriaMain = () => {
             </div>
           </div>
         </div>
-      </div>
-
       {/* Modal de búsqueda de eventos */}
       <Modal
         title="Seleccionar Evento y Función"
@@ -1850,9 +1849,8 @@ const BoleteriaMain = () => {
          selectedEvent={selectedEvent}
          selectedAffiliate={null}
        />
-
-     </div>
-   );
+    </div>
+  );
  };
 
 export default BoleteriaMain; 
