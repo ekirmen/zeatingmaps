@@ -128,7 +128,7 @@ const Funciones = () => {
     streamingShowUrl: false,
     streamingTransmissionStart: '',
     streamingTransmissionStop: '',
-    idSala: salaSeleccionada?.id || '',
+    idSala: salaSeleccionada?.id || null,
     idPlantillaEntradas: null,
     idPlantillaProductos: null,
     idSpecialProductsTemplate: null,
@@ -204,6 +204,24 @@ const Funciones = () => {
     return parseInt(value) || null;
   };
 
+  // Helper function to convert empty strings to null for UUID fields
+  const formatUUIDField = (value) => {
+    if (value === '' || value === null || value === undefined) return null;
+    
+    // Convert to string if it's a number or other type
+    const stringValue = String(value);
+    
+    // Check if it's a valid UUID format (basic check)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(stringValue)) {
+      return stringValue;
+    }
+    
+    // If it's not a valid UUID, return null
+    console.warn(`Invalid UUID format: ${value}`);
+    return null;
+  };
+
   const getTiempoCaducidadText = (minutos) => {
     if (minutos === 0) return 'En la fecha de celebración';
     if (minutos < 0) {
@@ -272,7 +290,7 @@ const Funciones = () => {
       streamingShowUrl: false,
       streamingTransmissionStart: '',
       streamingTransmissionStop: '',
-      idSala: salaSeleccionada?.id || '',
+      idSala: salaSeleccionada?.id || null,
       idPlantillaEntradas: null,
       idPlantillaProductos: null,
       idSpecialProductsTemplate: null,
@@ -514,9 +532,27 @@ const Funciones = () => {
         return;
       }
 
+      // Validar que los UUIDs requeridos estén presentes
+      if (!eventoSeleccionado?.id) {
+        alert('Debe seleccionar un evento');
+        return;
+      }
+      if (!nuevaFuncion.idSala) {
+        alert('Debe seleccionar una sala');
+        return;
+      }
+      if (!currentTenant?.id) {
+        alert('Error: No se pudo obtener el tenant actual');
+        return;
+      }
+      if (!recintoSeleccionado?.id) {
+        alert('Error: No se pudo obtener el recinto seleccionado');
+        return;
+      }
+
       const funcionData = {
-        evento_id: eventoSeleccionado?.id,
-        sala_id: nuevaFuncion.idSala,
+        evento_id: formatUUIDField(eventoSeleccionado?.id),
+        sala_id: formatUUIDField(nuevaFuncion.idSala),
         fecha_celebracion: nuevaFuncion.fechaCelebracion,
         zona_horaria: nuevaFuncion.zonaHoraria,
         lit_sesion: nuevaFuncion.litSesion,
@@ -558,8 +594,8 @@ const Funciones = () => {
         activo: nuevaFuncion.activo,
         visible_en_boleteria: nuevaFuncion.visibleEnBoleteria,
         visible_en_store: nuevaFuncion.visibleEnStore,
-        tenant_id: currentTenant?.id,
-        recinto_id: recintoSeleccionado?.id
+        tenant_id: formatUUIDField(currentTenant?.id),
+        recinto_id: formatUUIDField(recintoSeleccionado?.id)
       };
 
       if (editingFuncion) {
