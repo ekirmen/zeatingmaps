@@ -322,7 +322,7 @@ const BoleteriaMain = () => {
     try {
       const { data, error } = await supabase
         .from('funciones')
-        .select('*, salas(*)')
+        .select('*, salas!funciones_sala_fkey(*)')
         .eq('evento_id', eventId)
         .order('fecha_celebracion', { ascending: true });
 
