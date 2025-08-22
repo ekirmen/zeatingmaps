@@ -594,6 +594,16 @@ const Funciones = () => {
       console.log('currentTenant?.id:', currentTenant?.id);
       console.log('Tenant actual del contexto:', currentTenant);
 
+      // Debug: Verificar valores antes de formatear
+      console.log('🔍 Debug - Valores antes de formatear:');
+      console.log('eventoSeleccionado?.id:', eventoSeleccionado?.id);
+      console.log('nuevaFuncion.idSala:', nuevaFuncion.idSala);
+      console.log('recintoSeleccionado?.id:', recintoSeleccionado?.id);
+      console.log('currentTenant?.id:', currentTenant?.id);
+      console.log('nuevaFuncion.idPlantillaEntradas:', nuevaFuncion.idPlantillaEntradas);
+      console.log('nuevaFuncion.idPlantillaProductos:', nuevaFuncion.idPlantillaProductos);
+      console.log('nuevaFuncion.idSpecialProductsTemplate:', nuevaFuncion.idSpecialProductsTemplate);
+
       const funcionData = {
         evento_id: formatUUIDField(eventoSeleccionado?.id),
         sala_id: formatIDField(nuevaFuncion.idSala),
@@ -642,9 +652,22 @@ const Funciones = () => {
         recinto_id: formatIDField(recintoSeleccionado?.id)
       };
 
+      // Debug: Verificar campos formateados
+      console.log('🔍 Debug - Campos formateados:');
+      console.log('evento_id formateado:', funcionData.evento_id);
+      console.log('sala_id formateado:', funcionData.sala_id);
+      console.log('recinto_id formateado:', funcionData.recinto_id);
+      console.log('tenant_id formateado:', funcionData.tenant_id);
+      console.log('plantilla_entradas formateado:', funcionData.plantilla_entradas);
+      console.log('plantilla_producto formateado:', funcionData.plantilla_producto);
+      console.log('plantilla_comisiones formateado:', funcionData.plantilla_comisiones);
+
       // Debug: Verificar funcionData completo
       console.log('🔍 Debug - funcionData completo:');
       console.log('funcionData.tenant_id:', funcionData.tenant_id);
+      console.log('funcionData.evento_id:', funcionData.evento_id);
+      console.log('funcionData.sala_id:', funcionData.sala_id);
+      console.log('funcionData.recinto_id:', funcionData.recinto_id);
       console.log('funcionData completo:', funcionData);
 
       // Validación final antes de enviar
