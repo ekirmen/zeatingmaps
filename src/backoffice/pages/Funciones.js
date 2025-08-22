@@ -745,13 +745,13 @@ const Funciones = () => {
               <div className="flex items-end">
                 <button 
                   onClick={() => {
-                    setRecintoSeleccionado(null);
-                    setSalaSeleccionada(null);
-                    setEventoSeleccionado(null);
+                    setEditingFuncion(null);
+                    resetNuevaFuncion();
+                    setModalIsOpen(true);
                   }}
-                  className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md font-medium transition-colors"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
                 >
-                  Limpiar Filtros
+                  Nueva Función
                 </button>
               </div>
             </div>
