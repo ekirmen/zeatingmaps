@@ -72,7 +72,7 @@ const AuditSystem = () => {
           action: 'login',
           details: 'Usuario inició sesión en el sistema',
           severity: 'info',
-          tenant_id: '00000000-0000-0000-0000-000000000000',
+          tenant_id: '9dbdb86f-8424-484c-bb76-0d9fa27573c8',
           created_at: new Date().toISOString(),
           tenants: { company_name: 'Sistema Principal', subdomain: 'sistema' },
           admin_user: { email: 'admin@veneventos.com' }
@@ -82,7 +82,7 @@ const AuditSystem = () => {
           action: 'tenant_created',
           details: 'Nuevo tenant creado: ZeatingMaps',
           severity: 'info',
-          tenant_id: '00000000-0000-0000-0000-000000000000',
+          tenant_id: '9dbdb86f-8424-484c-bb76-0d9fa27573c8',
           created_at: new Date(Date.now() - 3600000).toISOString(),
           tenants: { company_name: 'Sistema Principal', subdomain: 'sistema' },
           admin_user: { email: 'admin@veneventos.com' }
@@ -92,7 +92,7 @@ const AuditSystem = () => {
           action: 'backup_created',
           details: 'Backup automático del sistema completado',
           severity: 'info',
-          tenant_id: '00000000-0000-0000-0000-000000000000',
+          tenant_id: '9dbdb86f-8424-484c-bb76-0d9fa27573c8',
           created_at: new Date(Date.now() - 7200000).toISOString(),
           tenants: { company_name: 'Sistema Principal', subdomain: 'sistema' },
           admin_user: { email: 'admin@veneventos.com' }

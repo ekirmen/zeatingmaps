@@ -27,11 +27,11 @@ export const RecintoProvider = ({ children }) => {
           .select('*, salas(*)');
         
         // Filtrar por tenant_id si está disponible
-        if (currentTenant?.id && currentTenant.id !== '00000000-0000-0000-0000-000000000000') {
+        if (currentTenant?.id) {
           query = query.eq('tenant_id', currentTenant.id);
           console.log('✅ [RecintoContext] Filtrando por tenant_id:', currentTenant.id);
         } else {
-          console.warn('⚠️ [RecintoContext] No hay tenant disponible o es dominio principal, consultando sin filtro');
+          console.warn('⚠️ [RecintoContext] No hay tenant disponible, consultando sin filtro');
         }
 
         const { data, error } = await query;

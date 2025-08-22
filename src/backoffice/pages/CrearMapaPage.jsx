@@ -559,8 +559,8 @@ const CrearMapaPage = () => {
   // Valida que el tenant_id exista realmente en la tabla tenants; si no, retorna null
   const ensureValidTenantId = async (maybeTenantId) => {
     try {
-      if (!maybeTenantId || maybeTenantId === '00000000-0000-0000-0000-000000000000') {
-        console.warn('[DEBUG] tenant_id inválido o placeholder, se omitirá');
+      if (!maybeTenantId) {
+        console.warn('[DEBUG] tenant_id no proporcionado, se omitirá');
         return null;
       }
       const { data, error } = await supabase

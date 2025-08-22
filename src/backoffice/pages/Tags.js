@@ -74,9 +74,9 @@ const Tags = () => {
         return;
       }
       
-      // Validar que el tenant_id sea un UUID válido
-      if (currentTenant.id === '00000000-0000-0000-0000-000000000000') {
-        message.error('No se pueden crear tags en el dominio principal. Por favor, selecciona un tenant específico.');
+      // Validar que el tenant_id sea válido
+      if (!currentTenant.id) {
+        message.error('No se puede crear tags sin un tenant válido.');
         return;
       }
       

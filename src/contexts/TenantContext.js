@@ -36,10 +36,61 @@ export const TenantProvider = ({ children }) => {
       // Caso 2: Dominio principal (sistema.veneventos.com)
       if (isMainDomain()) {
         console.log('🏠 Dominio principal detectado: sistema.veneventos.com');
-        // Para el dominio principal, establecer tenant y configuración por defecto
+        
+        // Buscar el tenant real para el dominio principal en lugar de usar un UUID falso
+        try {
+          const { data: mainTenant, error } = await supabase
+            .from('tenants')
+            .select('*')
+            .eq('subdomain', 'sistema')
+            .eq('status', 'active')
+            .single();
+          
+          if (mainTenant && !error) {
+            console.log('✅ Tenant principal encontrado en BD:', mainTenant);
+            setCurrentTenant(mainTenant);
+            
+            // Establecer configuración basada en el tenant real
+            const mainConfig = {
+              id: mainTenant.id,
+              name: mainTenant.company_name,
+              theme: {
+                primaryColor: mainTenant.primary_color || '#1890ff',
+                secondaryColor: mainTenant.secondary_color || '#52c41a',
+                logo: mainTenant.logo_url || '/assets/logo-veneventos.png'
+              },
+              features: {
+                showSaaS: mainTenant.feature_flags?.showSaaS ?? true,
+                showStore: mainTenant.feature_flags?.showStore ?? true,
+                showBackoffice: mainTenant.feature_flags?.showBackoffice ?? true,
+                showTicketing: mainTenant.feature_flags?.showTicketing ?? true,
+                showEvents: mainTenant.feature_flags?.showEvents ?? true,
+                showVenues: mainTenant.feature_flags?.showVenues ?? true
+              },
+              branding: {
+                companyName: mainTenant.company_name,
+                tagline: 'Sistema de Eventos Profesional',
+                contactEmail: mainTenant.contact_email
+              },
+              customRoutes: mainTenant.custom_routes || [],
+              isMainDomain: true,
+              tenantType: 'main'
+            };
+            
+            setDomainConfig(mainConfig);
+            setLoading(false);
+            return;
+          } else {
+            console.warn('⚠️ No se encontró tenant principal en BD, usando configuración por defecto');
+          }
+        } catch (error) {
+          console.warn('⚠️ Error al buscar tenant principal:', error);
+        }
+        
+        // Fallback: usar configuración por defecto con tenant_id real
         const mainTenant = {
-          id: '00000000-0000-0000-0000-000000000000', // UUID válido para dominio principal
-          company_name: 'Veneventos - Sistema Principal',
+          id: '9dbdb86f-8424-484c-bb76-0d9fa27573c8', // UUID real del tenant principal
+          company_name: 'Sistema Veneventos - Empresa de Prueba',
           full_url: 'sistema.veneventos.com',
           domain: 'veneventos.com',
           subdomain: 'sistema',
@@ -51,8 +102,8 @@ export const TenantProvider = ({ children }) => {
         
         // Establecer configuración por defecto para el dominio principal
         const mainConfig = {
-          id: '00000000-0000-0000-0000-000000000000',
-          name: 'Veneventos - Sistema Principal',
+          id: '9dbdb86f-8424-484c-bb76-0d9fa27573c8',
+          name: 'Sistema Veneventos - Empresa de Prueba',
           theme: {
             primaryColor: '#1890ff',
             secondaryColor: '#52c41a',
@@ -67,7 +118,7 @@ export const TenantProvider = ({ children }) => {
             showVenues: true
           },
           branding: {
-            companyName: 'Veneventos - Sistema Principal',
+            companyName: 'Sistema Veneventos - Empresa de Prueba',
             tagline: 'Sistema de Eventos Profesional',
             contactEmail: 'info@veneventos.com'
           },
