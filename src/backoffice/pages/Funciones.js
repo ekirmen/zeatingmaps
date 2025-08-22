@@ -99,6 +99,13 @@ const NUM_PLAZOS = [2, 3, 4, 5, 6, 7, 8, 10, 12];
 const Funciones = () => {
   const { currentTenant } = useTenant();
   const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
+  
+  // Debug: Verificar que currentTenant se cargue correctamente
+  useEffect(() => {
+    console.log('🔍 Debug - Componente Funciones cargado:');
+    console.log('currentTenant:', currentTenant);
+    console.log('currentTenant?.id:', currentTenant?.id);
+  }, [currentTenant]);
   const [eventos, setEventos] = useState([]);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const [plantillas, setPlantillas] = useState([]);
@@ -219,6 +226,31 @@ const Funciones = () => {
     
     // If it's not a valid UUID, return null
     console.warn(`Invalid UUID format: ${value}`);
+    return null;
+  };
+
+  // Helper function for ID fields that can be integers or UUIDs
+  const formatIDField = (value) => {
+    if (value === '' || value === null || value === undefined) return null;
+    
+    // If it's already a number, return it
+    if (typeof value === 'number') return value;
+    
+    // Convert to string and check if it's a number
+    const stringValue = String(value);
+    const numValue = parseInt(stringValue);
+    
+    // If it's a valid number, return it
+    if (!isNaN(numValue)) return numValue;
+    
+    // If it's not a number, check if it's a valid UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(stringValue)) {
+      return stringValue;
+    }
+    
+    // If it's neither a number nor a UUID, return null
+    console.warn(`Invalid ID format: ${value}`);
     return null;
   };
 
@@ -475,7 +507,6 @@ const Funciones = () => {
   // Actualizar la sala automáticamente cuando cambie la sala seleccionada
   useEffect(() => {
     if (salaSeleccionada?.id) {
-      console.log('Debug - Actualizando idSala con:', salaSeleccionada.id);
       setNuevaFuncion(prev => ({
         ...prev,
         idSala: salaSeleccionada.id
@@ -557,14 +588,15 @@ const Funciones = () => {
         return;
       }
 
-      console.log('Debug - Valores antes de enviar:');
-      console.log('nuevaFuncion.idSala:', nuevaFuncion.idSala);
-      console.log('salaSeleccionada:', salaSeleccionada);
-      console.log('eventoSeleccionado:', eventoSeleccionado);
+      // Debug: Verificar tenant_id
+      console.log('🔍 Debug - Verificando tenant_id:');
+      console.log('currentTenant:', currentTenant);
+      console.log('currentTenant?.id:', currentTenant?.id);
+      console.log('Tenant actual del contexto:', currentTenant);
 
       const funcionData = {
         evento_id: formatUUIDField(eventoSeleccionado?.id),
-        sala_id: formatUUIDField(nuevaFuncion.idSala),
+        sala_id: formatIDField(nuevaFuncion.idSala),
         fecha_celebracion: nuevaFuncion.fechaCelebracion,
         zona_horaria: nuevaFuncion.zonaHoraria,
         lit_sesion: nuevaFuncion.litSesion,
@@ -607,11 +639,13 @@ const Funciones = () => {
         visible_en_boleteria: nuevaFuncion.visibleEnBoleteria,
         visible_en_store: nuevaFuncion.visibleEnStore,
         tenant_id: formatUUIDField(currentTenant?.id),
-        recinto_id: formatUUIDField(recintoSeleccionado?.id)
+        recinto_id: formatIDField(recintoSeleccionado?.id)
       };
 
-      console.log('Debug - funcionData completo:', funcionData);
-      console.log('Debug - sala_id específico:', funcionData.sala_id);
+      // Debug: Verificar funcionData completo
+      console.log('🔍 Debug - funcionData completo:');
+      console.log('funcionData.tenant_id:', funcionData.tenant_id);
+      console.log('funcionData completo:', funcionData);
 
       // Validación final antes de enviar
       if (!funcionData.sala_id) {
@@ -619,7 +653,14 @@ const Funciones = () => {
         return;
       }
 
+      // Validación del tenant_id
+      if (!funcionData.tenant_id) {
+        alert('Error: El tenant_id no puede ser null. Por favor, verifique la configuración del tenant.');
+        return;
+      }
+
       if (editingFuncion) {
+        console.log('🔍 Debug - Actualizando función con tenant_id:', funcionData.tenant_id);
         const { error } = await supabase
           .from('funciones')
           .update(funcionData)
@@ -628,6 +669,7 @@ const Funciones = () => {
         if (error) throw error;
         alert('Función actualizada exitosamente');
       } else {
+        console.log('🔍 Debug - Creando función con tenant_id:', funcionData.tenant_id);
         const { error } = await supabase
           .from('funciones')
           .insert([funcionData]);
@@ -827,7 +869,6 @@ const Funciones = () => {
               <div className="flex items-end">
                 <button 
                                   onClick={() => {
-                  console.log('Debug - Abriendo modal, salaSeleccionada:', salaSeleccionada);
                   setEditingFuncion(null);
                   resetNuevaFuncion();
                   setModalIsOpen(true);
