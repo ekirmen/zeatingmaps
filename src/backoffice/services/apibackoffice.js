@@ -338,9 +338,9 @@ export const syncSeatsForSala = async (salaId, options = {}) => {
   const seatDefs = [];
   mapa.contenido.forEach(el => {
     if (el.type === 'mesa') {
-      (el.sillas || []).forEach(s => { if (s && s._id) seatDefs.push({ id: s._id, zona: s.zona || null }); });
+      (el.sillas || []).forEach(s => { if (s && s._id) seatDefs.push({ id: s._id, zona: s.zona || 'general' }); });
     } else if (el.type === 'silla') {
-      if (el && el._id) seatDefs.push({ id: el._id, zona: el.zona || null });
+      if (el && el._id) seatDefs.push({ id: el._id, zona: el.zona || 'general' });
     }
   });
 
