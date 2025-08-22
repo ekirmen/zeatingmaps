@@ -1010,8 +1010,8 @@ const BoleteriaMain = () => {
         </Tooltip>
       </div>
 
-              {/* Contenido principal */}
-        <div className="flex-1 flex flex-col">
+      {/* Contenido principal */}
+      <div className="flex-1 flex flex-col">
           {/* Header */}
           
           {/* Mensajes informativos */}
@@ -1481,10 +1481,6 @@ const BoleteriaMain = () => {
           )}
         </div>
       </Modal>
-
-      
-
-
 
       {/* Modal de búsqueda de usuarios */}
       <Modal
