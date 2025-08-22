@@ -93,12 +93,18 @@ export const useBoleteria = () => {
       // Cargar mapa y zonas usando salaId robusto
       const salaId = mappedSala?.id || mappedSala?._id || salaField || null;
       if (salaId) {
+        console.log('🔍 [useBoleteria] Cargando mapa para sala:', salaId);
+        
         const mapData = await fetchMapa(salaId);
+        console.log('📊 [useBoleteria] Mapa cargado:', mapData);
         setMapa(mapData);
-  
+
+        console.log('🔍 [useBoleteria] Cargando zonas para sala:', salaId);
         const zonasData = await fetchZonasPorSala(salaId);
+        console.log('🏷️ [useBoleteria] Zonas cargadas:', zonasData);
         setZonas(zonasData);
       } else {
+        console.warn('⚠️ [useBoleteria] No hay salaId disponible para cargar mapa y zonas');
         setMapa(null);
         setZonas([]);
       }

@@ -83,10 +83,16 @@ const SeatingMap = ({
     console.log('🪑 Renderizando asiento:', {
       id: silla._id,
       nombre: silla.nombre,
+      numero: silla.numero,
       posicion: silla.posicion,
       zona: silla.zona,
       estado: silla.estado
     });
+    
+    // Obtener coordenadas de la silla
+    const sillaX = silla.posicion?.x || silla.x || 0;
+    const sillaY = silla.posicion?.y || silla.y || 0;
+    const sillaRadius = silla.radius || 10;
     
     const seatZonaId =
       typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
@@ -118,32 +124,24 @@ const SeatingMap = ({
     const handleClick = () => {
       if (!canSelect) return;
       
-      // Verificar si el asiento está bloqueado por otro usuario
       if (isLocked && !isLockedByMe) {
-        console.log("Asiento bloqueado por otro usuario");
-        message.warning('Este asiento está bloqueado por otro usuario');
+        message.warning("Este asiento está bloqueado por otro usuario");
         return;
       }
       
-      // Verificar si el asiento está vendido o reservado
-      if (silla.estado === 'pagado' || silla.estado === 'reservado') {
-        console.log("Asiento ya vendido o reservado");
-        message.warning('Este asiento ya está vendido o reservado');
-        return;
+      if (onSeatClick) {
+        onSeatClick(silla, mesa);
       }
-      
-      onSeatClick(silla, mesa);
     };
 
     const handleMouseEnter = () => {
-      if (canSelect) {
-        setTooltip({
-          visible: true,
-          x: silla.posicion.x + 20,
-          y: silla.posicion.y - 10,
-          text: `${silla.nombre} - ${silla.estado}`,
-        });
-      }
+      const tooltipText = `${silla.nombre || silla.numero || 'Asiento'} - ${silla.estado || 'disponible'}`;
+      setTooltip({
+        visible: true,
+        x: sillaX + 20,
+        y: sillaY - 20,
+        text: tooltipText
+      });
     };
 
     const handleMouseLeave = () => {
@@ -153,53 +151,56 @@ const SeatingMap = ({
     return (
       <Circle
         key={silla._id}
-        x={silla.posicion.x}
-        y={silla.posicion.y}
-        radius={silla.width ? silla.width / 2 : 10}
+        x={sillaX}
+        y={sillaY}
+        radius={sillaRadius}
         fill={fill}
-        stroke={isLocked ? "#dc2626" : "#374151"}
-        strokeWidth={isLocked ? 3 : 1}
-        opacity={canSelect ? 1 : 0.5}
+        stroke={isLockedByMe ? "#f59e0b" : isSelected ? "#000" : "#1976D2"}
+        strokeWidth={isSelected || isLockedByMe ? 3 : 1}
         onClick={handleClick}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onTap={handleClick}
+        listening={canSelect}
+        opacity={isLocked && !isLockedByMe ? 0.5 : 1}
       />
     );
-  }, [availableZonas, abonoMode, abonoSeats, selectedZonaId, tempBlocks, colorMap, isSeatLocked, isSeatLockedByMe, onSeatClick, blockMode]);
+  }, [availableZonas, abonoMode, abonoSeats, selectedZonaId, tempBlocks, colorMap, isSeatLocked, isSeatLockedByMe, onSeatClick]);
 
   const renderTable = useCallback((mesa) => {
-    console.log('🏗️ Renderizando mesa:', {
+    // Debug: Log de cada mesa que se intenta renderizar
+    console.log('🪑 Renderizando mesa:', {
       id: mesa._id,
       nombre: mesa.nombre,
+      tipo: mesa.type,
       shape: mesa.shape,
       posicion: mesa.posicion,
-      x: mesa.x,
-      y: mesa.y,
-      width: mesa.width,
-      height: mesa.height,
       sillas: mesa.sillas?.length || 0
     });
 
-    // Usar 'shape' en lugar de 'type' para determinar el tipo de mesa
-    const isTable = mesa.shape === 'circle' || mesa.shape === 'rect';
-    const TableShape = mesa.shape === "circle" ? Circle : Rect;
+    // Determinar si es una mesa válida
+    const isTable = mesa.type === 'mesa' || mesa.shape || (mesa.sillas && mesa.sillas.length > 0);
     
     // Obtener coordenadas de la mesa
     const mesaX = mesa.posicion?.x || mesa.x || 0;
     const mesaY = mesa.posicion?.y || mesa.y || 0;
     const mesaWidth = mesa.width || 120;
-    const mesaHeight = mesa.height || 120;
-    const mesaRadius = mesa.shape === "circle" ? mesaWidth / 2 : 0;
+    const mesaHeight = mesa.height || 80;
+    const mesaRadius = mesa.radius || (mesa.shape === 'circle' ? Math.min(mesaWidth, mesaHeight) / 2 : 0);
 
-    console.log('📍 Coordenadas de mesa:', {
+    // Determinar la forma de la mesa
+    const TableShape = mesa.shape === 'circle' ? Circle : Rect;
+    const tableProps = mesa.shape === 'circle' ? {
+      x: mesaX + mesaWidth / 2,
+      y: mesaY + mesaHeight / 2,
+      radius: mesaRadius,
+      isTable
+    } : {
       x: mesaX,
       y: mesaY,
       width: mesaWidth,
       height: mesaHeight,
-      radius: mesaRadius,
       isTable
-    });
+    };
 
     const availableSeats = mesa.sillas?.filter(silla => {
       const seatZonaId = typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
@@ -215,11 +216,7 @@ const SeatingMap = ({
         {isTable && (
           <>
             <TableShape
-              x={mesaX}
-              y={mesaY}
-              width={mesaWidth}
-              height={mesaHeight}
-              radius={mesaRadius}
+              {...tableProps}
               fill={hoveredTable === mesa._id ? "#f3f4f6" : "#ffffff"}
               stroke={hoveredTable === mesa._id ? "#3b82f6" : "#4b5563"}
               strokeWidth={hoveredTable === mesa._id ? 3 : 2}
@@ -281,8 +278,38 @@ const SeatingMap = ({
         id: mapa.contenido[0]._id,
         nombre: mapa.contenido[0].nombre,
         tipo: mapa.contenido[0].type,
-        sillas: mapa.contenido[0].sillas?.length || 0
+        shape: mapa.contenido[0].shape,
+        sillas: mapa.contenido[0].sillas?.length || 0,
+        posicion: mapa.contenido[0].posicion || mapa.contenido[0].x ? { x: mapa.contenido[0].x, y: mapa.contenido[0].y } : null
       } : null
+    });
+    
+    // Debug detallado de cada elemento
+    mapa.contenido.forEach((elemento, index) => {
+      console.log(`🔍 Elemento ${index + 1}:`, {
+        id: elemento._id,
+        nombre: elemento.nombre,
+        tipo: elemento.type,
+        shape: elemento.shape,
+        posicion: elemento.posicion,
+        x: elemento.x,
+        y: elemento.y,
+        width: elemento.width,
+        height: elemento.height,
+        radius: elemento.radius,
+        sillas: elemento.sillas ? {
+          cantidad: elemento.sillas.length,
+          primerSilla: elemento.sillas[0] ? {
+            id: elemento.sillas[0]._id,
+            nombre: elemento.sillas[0].nombre,
+            numero: elemento.sillas[0].numero,
+            posicion: elemento.sillas[0].posicion,
+            x: elemento.sillas[0].x,
+            y: elemento.sillas[0].y,
+            estado: elemento.sillas[0].estado
+          } : null
+        } : null
+      });
     });
   }
 
@@ -367,41 +394,88 @@ const SeatingMap = ({
           position: 'absolute', 
           top: 10, 
           left: 10, 
-          background: 'rgba(0,0,0,0.8)', 
+          background: 'rgba(0,0,0,0.9)', 
           color: 'white', 
-          padding: '10px', 
-          borderRadius: '5px', 
+          padding: '15px', 
+          borderRadius: '8px', 
           fontSize: '12px',
-          maxWidth: '400px',
-          maxHeight: '300px',
+          maxWidth: '500px',
+          maxHeight: '400px',
           overflow: 'auto',
-          zIndex: 1000
+          zIndex: 1000,
+          fontFamily: 'monospace'
         }}>
-          <div><strong>Debug - Datos del mapa:</strong></div>
-          <div>Contenido: {mapa.contenido?.length || 0} elementos</div>
-          <div>Tipo de contenido: {typeof mapa.contenido}</div>
-          <div>Es array: {Array.isArray(mapa.contenido) ? 'Sí' : 'No'}</div>
+          <div style={{ marginBottom: '10px', borderBottom: '1px solid #666', paddingBottom: '5px' }}>
+            <strong>🔍 DEBUG - Estructura del Mapa</strong>
+          </div>
+          
+          <div style={{ marginBottom: '8px' }}>
+            <strong>📊 Información General:</strong>
+          </div>
+          <div>• ID del mapa: {mapa.id}</div>
+          <div>• Nombre: {mapa.nombre}</div>
+          <div>• Sala ID: {mapa.sala_id}</div>
+          <div>• Tenant ID: {mapa.tenant_id}</div>
+          
+          <div style={{ marginTop: '10px', marginBottom: '8px' }}>
+            <strong>📋 Contenido del Mapa:</strong>
+          </div>
+          <div>• Tipo: {typeof mapa.contenido}</div>
+          <div>• Es array: {Array.isArray(mapa.contenido) ? '✅ Sí' : '❌ No'}</div>
+          <div>• Elementos: {mapa.contenido?.length || 0}</div>
           
           {mapa.contenido && Array.isArray(mapa.contenido) && mapa.contenido.map((item, index) => (
-            <div key={index} style={{ marginTop: '8px', padding: '5px', border: '1px solid #666' }}>
-              <div><strong>Elemento {index + 1}:</strong></div>
-              <div>ID: {item._id}</div>
-              <div>Nombre: {item.nombre}</div>
-              <div>Tipo/Shape: {item.type || item.shape}</div>
-              <div>Posición: ({item.posicion?.x || item.x}, {item.posicion?.y || item.y})</div>
-              <div>Dimensiones: {item.width}x{item.height}</div>
-              <div>Asientos: {item.sillas?.length || 0}</div>
+            <div key={index} style={{ 
+              marginTop: '12px', 
+              padding: '8px', 
+              border: '1px solid #666', 
+              borderRadius: '4px',
+              background: 'rgba(255,255,255,0.1)'
+            }}>
+              <div style={{ fontWeight: 'bold', color: '#4ade80' }}>
+                🎯 Elemento {index + 1}:
+              </div>
+              <div>• ID: {item._id || 'Sin ID'}</div>
+              <div>• Nombre: {item.nombre || 'Sin nombre'}</div>
+              <div>• Tipo: {item.type || 'Sin tipo'}</div>
+              <div>• Shape: {item.shape || 'Sin shape'}</div>
+              <div>• Posición: ({item.posicion?.x || item.x || 'N/A'}, {item.posicion?.y || item.y || 'N/A'})</div>
+              <div>• Dimensiones: {item.width || 'N/A'} x {item.height || 'N/A'}</div>
+              <div>• Radio: {item.radius || 'N/A'}</div>
+              <div>• Sillas: {item.sillas?.length || 0}</div>
+              
               {item.sillas && item.sillas.length > 0 && (
-                <div style={{ marginLeft: '10px' }}>
-                  <div><strong>Primer asiento:</strong></div>
-                  <div>ID: {item.sillas[0]._id}</div>
-                  <div>Nombre: {item.sillas[0].nombre}</div>
-                  <div>Posición: ({item.sillas[0].posicion?.x}, {item.sillas[0].posicion?.y})</div>
-                  <div>Estado: {item.sillas[0].estado}</div>
+                <div style={{ marginLeft: '15px', marginTop: '8px', padding: '5px', border: '1px solid #444', borderRadius: '3px' }}>
+                  <div style={{ fontWeight: 'bold', color: '#fbbf24' }}>🪑 Primeras 3 sillas:</div>
+                  {item.sillas.slice(0, 3).map((silla, sillaIndex) => (
+                    <div key={sillaIndex} style={{ marginLeft: '10px', fontSize: '11px' }}>
+                      • Silla {sillaIndex + 1}: ID={silla._id}, Nombre={silla.nombre || silla.numero}, 
+                      Pos=({silla.posicion?.x || silla.x}, {silla.posicion?.y || silla.y}), 
+                      Estado={silla.estado || 'N/A'}
+                    </div>
+                  ))}
+                  {item.sillas.length > 3 && (
+                    <div style={{ marginLeft: '10px', fontSize: '11px', color: '#9ca3af' }}>
+                      ... y {item.sillas.length - 3} sillas más
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           ))}
+          
+          {(!mapa.contenido || !Array.isArray(mapa.contenido)) && (
+            <div style={{ 
+              marginTop: '10px', 
+              padding: '8px', 
+              border: '1px solid #ef4444', 
+              borderRadius: '4px',
+              background: 'rgba(239,68,68,0.2)',
+              color: '#fca5a5'
+            }}>
+              ⚠️ El contenido del mapa no es un array válido
+            </div>
+          )}
         </div>
       )}
 
