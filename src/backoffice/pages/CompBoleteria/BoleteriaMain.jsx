@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber } from 'antd';
-import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ProductosWidget from '../../../store/components/ProductosWidget';
@@ -28,7 +28,12 @@ const BoleteriaMain = () => {
     selectedPlantilla,
     setSelectedPlantilla,
     setSelectedEvent,
-    setSelectedFuncion
+    setSelectedFuncion,
+    handleEventSelect,
+    handleFunctionSelect,
+    mapa,
+    zonas,
+    loading: boleteriaLoading
   } = useBoleteria();
 
   const {
@@ -96,6 +101,9 @@ const BoleteriaMain = () => {
   const [showMailChimp, setShowMailChimp] = useState(false);
   const [showPushNotifications, setShowPushNotifications] = useState(false);
 
+  // Estado para el mapa
+  const [mapaLocal, setMapaLocal] = useState(null);
+
   // Función para obtener las imágenes del evento
   const getEventImages = () => {
     if (!selectedEvent?.imagenes) return {};
@@ -119,6 +127,7 @@ const BoleteriaMain = () => {
     loadPlantillasPrecios();
     loadPersistedData();
     loadSavedCarts();
+    loadLastSelection(); // Cargar última selección
   }, []);
 
   // Cargar datos persistidos
@@ -138,6 +147,51 @@ const BoleteriaMain = () => {
     }
   };
 
+  // Cargar última selección de evento y función
+  const loadLastSelection = async () => {
+    try {
+      const lastEventId = localStorage.getItem('boleteriaEventId');
+      const lastFunctionId = localStorage.getItem('boleteriaFunctionId');
+      
+      console.log('🔄 [loadLastSelection] Cargando última selección:', { lastEventId, lastFunctionId });
+      
+      if (lastEventId) {
+        // Cargar evento
+        const { data: eventoData, error: eventoError } = await supabase
+          .from('eventos')
+          .select('*')
+          .eq('id', lastEventId)
+          .single();
+        
+        if (!eventoError && eventoData) {
+          console.log('✅ [loadLastSelection] Evento cargado:', eventoData);
+          setSelectedEvent(eventoData);
+          
+          // Si también hay función guardada, cargarla
+          if (lastFunctionId) {
+            const { data: funcionData, error: funcionError } = await supabase
+              .from('funciones')
+              .select('*, plantilla(*)')
+              .eq('id', lastFunctionId)
+              .single();
+            
+            if (!funcionError && funcionData) {
+              console.log('✅ [loadLastSelection] Función cargada:', funcionData);
+              setSelectedFuncion(funcionData);
+              
+              // Cargar plantilla si existe
+              if (funcionData.plantilla) {
+                setSelectedPlantilla(funcionData.plantilla);
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ [loadLastSelection] Error cargando última selección:', error);
+    }
+  };
+
   // Guardar datos en localStorage
   useEffect(() => {
     localStorage.setItem('selectedSeats', JSON.stringify(selectedSeats));
@@ -146,6 +200,29 @@ const BoleteriaMain = () => {
   useEffect(() => {
     localStorage.setItem('productosCarrito', JSON.stringify(productosCarrito));
   }, [productosCarrito]);
+
+  // Cargar funciones cuando se selecciona un evento
+  useEffect(() => {
+    if (selectedEvent) {
+      loadFunctionsForEvent(selectedEvent.id);
+    }
+  }, [selectedEvent]);
+
+  // Cargar mapa y plantilla cuando se selecciona una función
+  useEffect(() => {
+    if (selectedFuncion) {
+      loadMapaForFunction(selectedFuncion);
+      loadPlantillaForFunction(selectedFuncion);
+    }
+  }, [selectedFuncion]);
+
+  // Sincronizar mapa del hook con estado local
+  useEffect(() => {
+    if (mapa) {
+      setMapaLocal(mapa);
+      console.log('🔄 [useEffect] Mapa sincronizado desde hook:', mapa);
+    }
+  }, [mapa]);
 
   const loadSavedCarts = async () => {
     try {
@@ -322,7 +399,7 @@ const BoleteriaMain = () => {
     try {
       const { data, error } = await supabase
         .from('funciones')
-        .select('*, salas!funciones_sala_fkey(*)')
+        .select('*, salas(*)')
         .eq('evento_id', eventId)
         .order('fecha_celebracion', { ascending: true });
 
@@ -352,6 +429,63 @@ const BoleteriaMain = () => {
       setPlantillasPrecios(data || []);
     } catch (error) {
       console.error('Error loading price templates:', error);
+    }
+  };
+
+  // Cargar mapa para una función específica
+  const loadMapaForFunction = async (funcion) => {
+    try {
+      if (!funcion.sala_id && !funcion.sala?.id) {
+        console.warn('⚠️ [loadMapaForFunction] No hay sala_id disponible');
+        return;
+      }
+
+      const salaId = funcion.sala_id || funcion.sala?.id;
+      console.log('🔍 [loadMapaForFunction] Cargando mapa para sala:', salaId);
+
+      // Importar dinámicamente el servicio
+      const { fetchMapa } = await import('../../../services/supabaseServices');
+      const mapData = await fetchMapa(salaId);
+      
+      console.log('📊 [loadMapaForFunction] Mapa cargado:', mapData);
+      
+      // Actualizar el estado del mapa local
+      if (mapData) {
+        setMapaLocal(mapData);
+        console.log('✅ [loadMapaForFunction] Mapa actualizado en estado local');
+      }
+    } catch (error) {
+      console.error('❌ [loadMapaForFunction] Error cargando mapa:', error);
+    }
+  };
+
+  // Cargar plantilla para una función específica
+  const loadPlantillaForFunction = async (funcion) => {
+    try {
+      if (!funcion.plantilla_entradas) {
+        console.warn('⚠️ [loadPlantillaForFunction] No hay plantilla_entradas configurada');
+        return;
+      }
+
+      console.log('🔍 [loadPlantillaForFunction] Cargando plantilla:', funcion.plantilla_entradas);
+
+      const { data: plantillaData, error: plantillaError } = await supabase
+        .from('plantillas')
+        .select('*')
+        .eq('id', funcion.plantilla_entradas)
+        .single();
+
+      if (plantillaError) {
+        console.error('❌ [loadPlantillaForFunction] Error cargando plantilla:', plantillaError);
+        return;
+      }
+
+      if (plantillaData) {
+        console.log('✅ [loadPlantillaForFunction] Plantilla cargada:', plantillaData);
+        setSelectedPlantilla(plantillaData);
+      }
+    } catch (error) {
+      console.error('❌ [loadPlantillaForFunction] Error cargando plantilla:', error);
     }
   };
 
@@ -825,6 +959,14 @@ const BoleteriaMain = () => {
     <div className="h-screen flex bg-gray-100">
       {/* Sidebar izquierda */}
       <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
+        {/* Botón de Atrás */}
+        <Tooltip title="Volver atrás" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => window.history.back()}>
+            <ArrowLeftOutlined className="text-xl mb-1" />
+            <div>Atrás</div>
+          </div>
+        </Tooltip>
+        
         <Tooltip title="Paso 1: Buscar y seleccionar evento" placement="right">
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowEventSearch(true)}>
             <SearchOutlined className="text-xl mb-1" />
@@ -868,9 +1010,31 @@ const BoleteriaMain = () => {
         </Tooltip>
       </div>
 
-      {/* Contenido principal */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
+              {/* Contenido principal */}
+        <div className="flex-1 flex flex-col">
+          {/* Header */}
+          
+          {/* Mensajes informativos */}
+          {selectedFuncion && (
+            <div className="bg-blue-50 border-b border-blue-200 px-4 py-2">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-blue-800">
+                  {!mapaLocal && (
+                    <span className="mr-4">⚠️ No hay mapa configurado para esta sala</span>
+                  )}
+                  {!selectedPlantilla && (
+                    <span className="mr-4">⚠️ No hay plantilla de precios configurada</span>
+                  )}
+                  {mapaLocal && selectedPlantilla && (
+                    <span className="text-green-600">✅ Mapa y plantilla cargados correctamente</span>
+                  )}
+                </div>
+                <div className="text-xs text-blue-600">
+                  Función: {selectedFuncion.id} | Sala: {selectedFuncion.sala_id || selectedFuncion.sala?.id || 'Sin sala'}
+                </div>
+              </div>
+            </div>
+          )}
         <div className="bg-white shadow-sm border-b px-4 py-1">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -887,15 +1051,54 @@ const BoleteriaMain = () => {
                 ) : (
                   <Avatar size="large" src="/assets/logo.png" alt="Event" />
                 )}
-                <div className="text-xs">
-                  <div className="font-medium">
-                    {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
+                                  <div className="text-xs">
+                    <div className="font-medium">
+                      {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
+                    </div>
+                    <div className="text-gray-600">
+                      <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
+                      <span className="ml-2">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
+                    </div>
+                    {/* Información de debug */}
+                    {selectedFuncion && (
+                      <div className="text-gray-500 mt-1">
+                        <span>Sala: {selectedFuncion.sala_id || selectedFuncion.sala?.id || 'Sin sala'}</span>
+                        <span className="ml-2">Plantilla: {selectedPlantilla ? selectedPlantilla.nombre : 'Sin plantilla'}</span>
+                        <span className="ml-2">Mapa: {mapaLocal ? 'Cargado' : 'No cargado'}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="text-gray-600">
-                    <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
-                    <span className="ml-2">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
-                  </div>
-                </div>
+              </div>
+              
+              {/* Botón de Atrás */}
+              <Button
+                type="default"
+                icon={<ArrowLeftOutlined />}
+                onClick={() => window.history.back()}
+                className="ml-4"
+                title="Volver atrás"
+              >
+                Atrás
+              </Button>
+
+              {/* Botón de Recargar */}
+              {selectedFuncion && (
+                <Button
+                  type="primary"
+                  icon={<ReloadOutlined />}
+                  onClick={() => {
+                    if (selectedFuncion) {
+                      loadMapaForFunction(selectedFuncion);
+                      loadPlantillaForFunction(selectedFuncion);
+                    }
+                  }}
+                  className="ml-2"
+                  title="Recargar mapa y plantilla"
+                  loading={boleteriaLoading}
+                >
+                  Recargar
+                </Button>
+              )}
               </div>
             </div>
                         <div className="flex items-center space-x-2">
