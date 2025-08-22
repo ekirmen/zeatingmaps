@@ -210,6 +210,57 @@ const Funciones = () => {
     }
   };
 
+  // Función para resetear el estado
+  const resetNuevaFuncion = () => {
+    setNuevaFuncion({
+      fechaCelebracion: '',
+      zonaHoraria: 'America/Mexico_City',
+      litSesion: '',
+      utilizaLitSesion: false,
+      tiempoCaducidadReservas: -120,
+      aperturaPuertas: '',
+      promotionalSessionLabel: '',
+      sessionBelongsSeasonPass: false,
+      idAbonoSala: [],
+      streamingMode: false,
+      overwriteStreamingSetup: false,
+      streamingType: 'ENETRES',
+      streamingUrl: '',
+      streamingId: '',
+      streamingPassword: '',
+      streamingOnlyOneSessionByTicket: false,
+      streamingShowUrl: false,
+      streamingTransmissionStart: '',
+      streamingTransmissionStop: '',
+      idSala: '',
+      idPlantillaEntradas: '',
+      idPlantillaProductos: '',
+      idSpecialProductsTemplate: '',
+      idPlantillaCupos: '',
+      permitePagoPlazos: false,
+      numPlazosPago: 0,
+      permiteReserva: false,
+      mismaFechaCanales: true,
+      fechaInicioVenta: '',
+      fechaFinVenta: '',
+      canales: {
+        boxOffice: { activo: true, inicio: '', fin: '' },
+        internet: { activo: true, inicio: '', fin: '' }
+      },
+      cancellationDateSelected: false,
+      endDateCancellation: '',
+      ticketPrintingReleaseDateSelected: false,
+      ticketPrintingReleaseDate: 120,
+      customPrintingTicketDate: '',
+      customSes1: '',
+      customSes2: '',
+      idBarcodePool: '',
+      activo: true,
+      visibleEnBoleteria: true,
+      visibleEnStore: true
+    });
+  };
+
   // Fetch eventos when sala changes
   useEffect(() => {
     const fetchEventos = async () => {
@@ -219,62 +270,50 @@ const Funciones = () => {
           .select('*')
           .eq('recinto', recintoSeleccionado.id)
           .eq('sala', salaSeleccionada.id);
-
+        
         if (error) {
-          console.error('Error al obtener eventos:', error);
+          console.error('Error fetching eventos:', error);
         } else {
-          setEventos(data);
-          setEventoSeleccionado(null);
+          setEventos(data || []);
         }
-      } else {
-        setEventos([]);
       }
     };
 
     fetchEventos();
-  }, [recintoSeleccionado, salaSeleccionada]);
+  }, [salaSeleccionada, recintoSeleccionado]);
 
-  const fetchFunciones = useCallback(async () => {
-    let query = supabase
-      .from('funciones')
-      .select(`
-        id,
-        fechaCelebracion:fecha_celebracion,
-        inicioVenta:inicio_venta,
-        finVenta:fin_venta,
-        pagoAPlazos:pago_a_plazos,
-        permitirReservasWeb:permitir_reservas_web,
-        tiempoCaducidadReservas:tiempo_caducidad_reservas,
-        fechaLiberacionReservas:fecha_liberacion_reservas,
-        evento,
-        sala(*),
-        plantilla(*),
-        plantillaComisiones:plantilla_comisiones(*),
-        plantillaProducto:plantilla_producto(*)
-      `);
-
-    if (eventoSeleccionado) {
-      const eventoId = eventoSeleccionado?.id || eventoSeleccionado?._id || eventoSeleccionado;
-      query = query.eq('evento', eventoId);
-    } else if (salaSeleccionada) {
-      query = query.eq('sala', salaSeleccionada.id);
-    } else if (recintoSeleccionado) {
-      const salaIds = recintoSeleccionado.salas.map(s => s.id);
-      query = query.in('sala', salaIds);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error al obtener funciones:', error);
-    } else {
+  // Fetch funciones
+  const loadFunciones = useCallback(async () => {
+    if (!salaSeleccionada?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('funciones')
+        .select(`
+          *,
+          eventos!evento_id(*),
+          plantillas!plantilla_entradas(*)
+        `)
+        .eq('sala_id', salaSeleccionada.id)
+        .order('fecha_celebracion', { ascending: true });
+      
+      if (error) throw error;
       setFunciones(data || []);
+    } catch (error) {
+      console.error('Error loading funciones:', error);
     }
-  }, [eventoSeleccionado, salaSeleccionada, recintoSeleccionado]);
+  }, [salaSeleccionada]);
 
   useEffect(() => {
-    fetchFunciones();
-  }, [fetchFunciones]);
+    loadFunciones();
+  }, [loadFunciones]);
+
+  // Load funciones when sala changes
+  useEffect(() => {
+    if (salaSeleccionada?.id) {
+      loadFunciones();
+    }
+  }, [salaSeleccionada, loadFunciones]);
 
   useEffect(() => {
     if (!recintoSeleccionado && !salaSeleccionada && !eventoSeleccionado) {
@@ -483,55 +522,9 @@ const Funciones = () => {
 
       setModalIsOpen(false);
       setEditingFuncion(null);
-      setNuevaFuncion({
-        fechaCelebracion: '',
-        zonaHoraria: 'America/Mexico_City',
-        litSesion: '',
-        utilizaLitSesion: false,
-        tiempoCaducidadReservas: -120,
-        aperturaPuertas: '',
-        promotionalSessionLabel: '',
-        sessionBelongsSeasonPass: false,
-        idAbonoSala: [],
-        streamingMode: false,
-        overwriteStreamingSetup: false,
-        streamingType: 'ENETRES',
-        streamingUrl: '',
-        streamingId: '',
-        streamingPassword: '',
-        streamingOnlyOneSessionByTicket: false,
-        streamingShowUrl: false,
-        streamingTransmissionStart: '',
-        streamingTransmissionStop: '',
-        idSala: '',
-        idPlantillaEntradas: '',
-        idPlantillaProductos: '',
-        idSpecialProductsTemplate: '',
-        idPlantillaCupos: '',
-        permitePagoPlazos: false,
-        numPlazosPago: 0,
-        permiteReserva: false,
-        mismaFechaCanales: true,
-        fechaInicioVenta: '',
-        fechaFinVenta: '',
-        canales: {
-          boxOffice: { activo: true, inicio: '', fin: '' },
-          internet: { activo: true, inicio: '', fin: '' }
-        },
-        cancellationDateSelected: false,
-        endDateCancellation: '',
-        ticketPrintingReleaseDateSelected: false,
-        ticketPrintingReleaseDate: 120,
-        customPrintingTicketDate: '',
-        customSes1: '',
-        customSes2: '',
-        idBarcodePool: '',
-        activo: true,
-        visibleEnBoleteria: true,
-        visibleEnStore: true
-      });
+      resetNuevaFuncion();
       
-      fetchFunciones();
+      loadFunciones();
     } catch (error) {
       console.error('Error saving funcion:', error);
       alert('Error al guardar la función: ' + error.message);
@@ -540,50 +533,57 @@ const Funciones = () => {
 
   const handleEdit = (funcion) => {
     setEditingFuncion(funcion);
-
-    let plantillaId = '';
-    if (funcion.plantilla) {
-      if (typeof funcion.plantilla === 'object' && funcion.plantilla.id) {
-        plantillaId = funcion.plantilla.id;
-      } else {
-        plantillaId = funcion.plantilla;
-      }
-    }
-
-    let plantillaComisionesId = '';
-    if (funcion.plantillaComisiones) {
-      if (typeof funcion.plantillaComisiones === 'object' && funcion.plantillaComisiones.id) {
-        plantillaComisionesId = funcion.plantillaComisiones.id;
-      } else {
-        plantillaComisionesId = funcion.plantillaComisiones;
-      }
-    }
-
-    let plantillaProductoId = '';
-    if (funcion.plantillaProducto) {
-      if (typeof funcion.plantillaProducto === 'object' && funcion.plantillaProducto.id) {
-        plantillaProductoId = funcion.plantillaProducto.id;
-      } else {
-        plantillaProductoId = funcion.plantillaProducto;
-      }
-    }
-
-    setNuevaFuncion({
-      fechaCelebracion: funcion.fechaCelebracion?.split('T')[0] || '',
-      plantilla: plantillaId,
-      plantillaComisiones: plantillaComisionesId,
-      plantillaProducto: plantillaProductoId,
-      inicioVenta: funcion.inicioVenta?.split('T')[0] || '',
-      finVenta: funcion.finVenta?.split('T')[0] || '',
-      pagoAPlazos: funcion.pagoAPlazos || false,
-      permitirReservasWeb: funcion.permitirReservasWeb || false,
-      tiempoCaducidadReservas: funcion.tiempoCaducidadReservas || -120,
-      activo: funcion.activo || true,
-      visibleEnBoleteria: funcion.visibleEnBoleteria || true,
-      visibleEnStore: funcion.visibleEnStore || true,
-      activarPorFecha: funcion.activarPorFecha || false,
-      fechaActivacion: funcion.fechaActivacion || '',
-    });
+    
+    // Asegurar que todos los campos estén inicializados correctamente
+    const funcionEditada = {
+      fechaCelebracion: funcion.fecha_celebracion || '',
+      zonaHoraria: funcion.zona_horaria || 'America/Mexico_City',
+      litSesion: funcion.lit_sesion || '',
+      utilizaLitSesion: funcion.utiliza_lit_sesion || false,
+      tiempoCaducidadReservas: funcion.tiempo_caducidad_reservas || -120,
+      aperturaPuertas: funcion.apertura_puertas || '',
+      promotionalSessionLabel: funcion.promotional_session_label || '',
+      sessionBelongsSeasonPass: funcion.session_belongs_season_pass || false,
+      idAbonoSala: funcion.id_abono_sala || [],
+      streamingMode: funcion.streaming_mode || false,
+      overwriteStreamingSetup: funcion.overwrite_streaming_setup || false,
+      streamingType: funcion.streaming_type || 'ENETRES',
+      streamingUrl: funcion.streaming_url || '',
+      streamingId: funcion.streaming_id || '',
+      streamingPassword: funcion.streaming_password || '',
+      streamingOnlyOneSessionByTicket: funcion.streaming_only_one_session_by_ticket || false,
+      streamingShowUrl: funcion.streaming_show_url || false,
+      streamingTransmissionStart: funcion.streaming_transmission_start || '',
+      streamingTransmissionStop: funcion.streaming_transmission_stop || '',
+      idSala: funcion.sala_id || funcion.sala || '',
+      idPlantillaEntradas: funcion.plantilla_entradas || funcion.plantilla || '',
+      idPlantillaProductos: funcion.plantilla_productos || funcion.plantilla_producto || '',
+      idSpecialProductsTemplate: funcion.plantilla_comisiones || '',
+      idPlantillaCupos: funcion.plantilla_cupos || '',
+      permitePagoPlazos: funcion.permite_pago_plazos || false,
+      numPlazosPago: funcion.num_plazos_pago || 0,
+      permiteReserva: funcion.permite_reserva || funcion.permitir_reservas_web || false,
+      mismaFechaCanales: funcion.misma_fecha_canales !== false,
+      fechaInicioVenta: funcion.fecha_inicio_venta || funcion.inicio_venta || '',
+      fechaFinVenta: funcion.fecha_fin_venta || funcion.fin_venta || '',
+      canales: funcion.canales || {
+        boxOffice: { activo: true, inicio: '', fin: '' },
+        internet: { activo: true, inicio: '', fin: '' }
+      },
+      cancellationDateSelected: funcion.cancellation_date_selected || false,
+      endDateCancellation: funcion.end_date_cancellation || '',
+      ticketPrintingReleaseDateSelected: funcion.ticket_printing_release_date_selected || false,
+      ticketPrintingReleaseDate: funcion.ticket_printing_release_date || 120,
+      customPrintingTicketDate: funcion.custom_printing_ticket_date || '',
+      customSes1: funcion.custom_ses1 || '',
+      customSes2: funcion.custom_ses2 || '',
+      idBarcodePool: funcion.id_barcode_pool || '',
+      activo: funcion.activo !== false,
+      visibleEnBoleteria: funcion.visible_en_boleteria !== false,
+      visibleEnStore: funcion.visible_en_store !== false
+    };
+    
+    setNuevaFuncion(funcionEditada);
     setModalIsOpen(true);
   };
 
@@ -594,7 +594,7 @@ const Funciones = () => {
     if (error) {
       alert('Error al eliminar');
     } else {
-      fetchFunciones();
+      loadFunciones();
     }
   };
 
@@ -613,7 +613,7 @@ const Funciones = () => {
       if (duplicatedData.sala) {
         await syncSeatsForSala(duplicatedData.sala);
       }
-      fetchFunciones();
+      loadFunciones();
     }
   };
 
@@ -623,35 +623,17 @@ const Funciones = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Gestión de Funciones</h1>
-                <p className="text-sm text-gray-600 mt-1">Administra las funciones de tus eventos</p>
-              </div>
-              <button 
+            <div className="flex justify-between items-center mb-6">
+              <h1 className="text-2xl font-bold text-gray-900">Funciones</h1>
+              <button
                 onClick={() => {
                   setEditingFuncion(null);
-                  setNuevaFuncion({
-                    fechaCelebracion: '',
-                    plantilla: '',
-                    plantillaComisiones: '',
-                    plantillaProducto: '',
-                    inicioVenta: '',
-                    finVenta: '',
-                    pagoAPlazos: false,
-                    permitirReservasWeb: false,
-                    tiempoCaducidadReservas: -120,
-                    activo: true,
-                    visibleEnBoleteria: true,
-                    visibleEnStore: true,
-                    activarPorFecha: false,
-                    fechaActivacion: '',
-                  });
+                  resetNuevaFuncion();
                   setModalIsOpen(true);
                 }}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
               >
-                + Nueva Función
+                Nueva Función
               </button>
             </div>
           </div>
@@ -875,14 +857,29 @@ const Funciones = () => {
         onRequestClose={() => {
           setModalIsOpen(false);
           setEditingFuncion(null);
+          resetNuevaFuncion();
         }}
         className="bg-white rounded-lg shadow-xl max-w-4xl mx-auto focus:outline-none"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
       >
         <div className="p-6">
-          <h2 className="text-xl font-semibold mb-6 text-center">
-            {editingFuncion ? 'Editar Función' : 'Nueva Función'}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900">
+              {editingFuncion ? 'Editar Función' : 'Nueva Función'}
+            </h2>
+            <button
+              onClick={() => {
+                setModalIsOpen(false);
+                setEditingFuncion(null);
+                resetNuevaFuncion();
+              }}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Información básica */}
@@ -1644,7 +1641,11 @@ const Funciones = () => {
             <div className="flex justify-end space-x-4 pt-6 border-t">
               <button
                 type="button"
-                onClick={() => setModalIsOpen(false)}
+                onClick={() => {
+                  setModalIsOpen(false);
+                  setEditingFuncion(null);
+                  resetNuevaFuncion();
+                }}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
                 Cancelar
