@@ -231,7 +231,7 @@ const BoleteriaMain = () => {
       if (data.function_id) {
         const { data: func } = await supabase
           .from('funciones')
-          .select('*, sala(*)')
+          .select('*, salas(*)')
           .eq('id', data.function_id)
           .single();
         setSelectedFuncion(func);
@@ -322,8 +322,8 @@ const BoleteriaMain = () => {
     try {
       const { data, error } = await supabase
         .from('funciones')
-        .select('*, sala(*)')
-        .eq('evento', eventId)
+        .select('*, salas(*)')
+        .eq('evento_id', eventId)
         .order('fecha_celebracion', { ascending: true });
 
       if (error) {
