@@ -343,6 +343,20 @@ const SeatingMap = ({
   const stageWidth = window.innerWidth < 640 ? window.innerWidth * 0.95 : window.innerWidth * 0.6;
   const stageHeight = window.innerWidth < 640 ? window.innerHeight * 0.6 : window.innerHeight * 0.7;
 
+  // Normalizar contenido: agrupar sillas sueltas por mesaId y dibujar huérfanas
+  const elementos = Array.isArray(mapa?.contenido) ? mapa.contenido : [];
+  const mesas = elementos.filter((el) => el && el.type === 'mesa');
+  const sillasSueltas = elementos.filter((el) => el && el.type === 'silla');
+  const mesasConSillas = useMemo(() => {
+    return mesas.map((m) => {
+      const sillasDeMesa = (m.sillas && m.sillas.length > 0)
+        ? m.sillas
+        : sillasSueltas.filter((s) => s && (s.mesaId === m._id));
+      return { ...m, sillas: sillasDeMesa };
+    });
+  }, [mesas, sillasSueltas]);
+  const sillasHuerfanas = useMemo(() => sillasSueltas.filter((s) => !s.mesaId), [sillasSueltas]);
+
   return (
     <div
       ref={containerRef}
@@ -535,7 +549,10 @@ const SeatingMap = ({
         onDragEnd={handleDragEnd}
       >
         <Layer>
-          {mapa?.contenido?.map(renderTable)}
+          {mesasConSillas.map(renderTable)}
+
+          {/* Renderizar sillas huérfanas (sin mesaId) */}
+          {sillasHuerfanas.map((silla) => renderSeat(silla, null))}
           
           {/* Tooltip */}
           {tooltip.visible && (
