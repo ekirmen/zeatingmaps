@@ -103,6 +103,53 @@ export const useBoleteria = () => {
         const zonasData = await fetchZonasPorSala(salaId);
         console.log('🏷️ [useBoleteria] Zonas cargadas:', zonasData);
         setZonas(zonasData);
+        
+        // Calcular estadísticas del evento basadas en el mapa cargado
+        if (mapData && mapData.contenido && Array.isArray(mapData.contenido)) {
+          console.log('📊 [useBoleteria] Calculando estadísticas desde el mapa cargado');
+          let totalSeats = 0;
+          let availableSeats = 0;
+          let soldSeats = 0;
+          let reservedSeats = 0;
+          
+          mapData.contenido.forEach(elemento => {
+            if (elemento.sillas && Array.isArray(elemento.sillas)) {
+              totalSeats += elemento.sillas.length;
+              
+              elemento.sillas.forEach(silla => {
+                switch (silla.estado) {
+                  case 'pagado':
+                  case 'vendido':
+                    soldSeats++;
+                    break;
+                  case 'reservado':
+                    reservedSeats++;
+                    break;
+                  case 'disponible':
+                  default:
+                    availableSeats++;
+                    break;
+                }
+              });
+            }
+          });
+          
+          console.log('✅ [useBoleteria] Estadísticas calculadas:', {
+            totalSeats,
+            availableSeats,
+            soldSeats,
+            reservedSeats
+          });
+          
+          // Mostrar notificación de disponibilidad
+          if (availableSeats <= 5 && availableSeats > 0) {
+            message.warning(`⚠️ Solo quedan ${availableSeats} asientos disponibles`);
+          } else if (availableSeats === 0) {
+            message.error('❌ No hay asientos disponibles');
+          } else if (availableSeats <= 10) {
+            message.info(`ℹ️ Quedan ${availableSeats} asientos disponibles`);
+          }
+        }
       } else {
         console.warn('⚠️ [useBoleteria] No hay salaId disponible para cargar mapa y zonas');
         setMapa(null);

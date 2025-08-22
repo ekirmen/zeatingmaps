@@ -151,6 +151,21 @@ const ZonesAndPrices = ({
   console.log('ZonesAndPrices - selectedPlantilla:', selectedPlantilla);
   console.log('ZonesAndPrices - detallesPlantilla:', detallesPlantilla);
   console.log('ZonesAndPrices - zonePriceRanges:', zonePriceRanges);
+  
+  // Debug adicional para zonas y mapa
+  console.log('🔍 [ZonesAndPrices] Debug completo:', {
+    zonas: {
+      total: zonas.length,
+      datos: zonas.map(z => ({ id: z.id, _id: z._id, nombre: z.nombre }))
+    },
+    selectedZonaId,
+    availableZonas,
+    mapa: {
+      existe: !!mapa,
+      contenido: mapa?.contenido?.length || 0,
+      tipo: typeof mapa?.contenido
+    }
+  });
 
   // Handlers - Memoizar para evitar re-creación
   const seatHandlers = useMemo(() => createSeatHandlers({
@@ -273,10 +288,18 @@ const ZonesAndPrices = ({
   );
 
   // Memoizar las zonas disponibles
-  const availableZonas = useMemo(() => 
-    selectedZonaId ? [selectedZonaId] : zonas.map(z => z.id || z._id),
-    [selectedZonaId, zonas]
-  );
+  const availableZonas = useMemo(() => {
+    // Si hay una zona específica seleccionada, solo mostrar esa zona
+    if (selectedZonaId) {
+      console.log('🎯 [ZonesAndPrices] Zona específica seleccionada:', selectedZonaId);
+      return [selectedZonaId];
+    }
+    
+    // Si no hay zona seleccionada, mostrar todas las zonas disponibles
+    const allZonas = zonas.map(z => z.id || z._id).filter(Boolean);
+    console.log('🌍 [ZonesAndPrices] Mostrando todas las zonas disponibles:', allZonas);
+    return allZonas;
+  }, [selectedZonaId, zonas]);
 
   // Memoizar las props del SeatingMap
   const seatingMapProps = useMemo(() => ({

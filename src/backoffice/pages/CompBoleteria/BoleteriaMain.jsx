@@ -359,21 +359,71 @@ const BoleteriaMain = () => {
     if (!funcionId) return;
     
     try {
-      // Cargar estadísticas del evento
-      const { data: seats, error: seatsError } = await supabase
-        .from('asientos')
-        .select('*')
-        .eq('funcion_id', funcionId);
+      // En lugar de consultar la tabla asientos, usar los datos del mapa
+      // que ya están cargados en el estado
+      let totalSeats = 0;
+      let availableSeats = 0;
+      let soldSeats = 0;
+      let reservedSeats = 0;
+      
+      // Si tenemos un mapa cargado, calcular estadísticas desde ahí
+      if (mapa && mapa.contenido && Array.isArray(mapa.contenido)) {
+        console.log('📊 [loadEventStats] Calculando estadísticas desde el mapa:', mapa.contenido);
+        
+        mapa.contenido.forEach(elemento => {
+          if (elemento.sillas && Array.isArray(elemento.sillas)) {
+            totalSeats += elemento.sillas.length;
+            
+            elemento.sillas.forEach(silla => {
+              switch (silla.estado) {
+                case 'pagado':
+                case 'vendido':
+                  soldSeats++;
+                  break;
+                case 'reservado':
+                  reservedSeats++;
+                  break;
+                case 'disponible':
+                default:
+                  availableSeats++;
+                  break;
+              }
+            });
+          }
+        });
+        
+        console.log('✅ [loadEventStats] Estadísticas calculadas desde mapa:', {
+          totalSeats,
+          availableSeats,
+          soldSeats,
+          reservedSeats
+        });
+      } else {
+        console.log('⚠️ [loadEventStats] No hay mapa disponible, consultando tabla asientos como fallback');
+        
+        // Fallback: consultar tabla asientos si no hay mapa
+        const { data: seats, error: seatsError } = await supabase
+          .from('asientos')
+          .select('*')
+          .eq('funcion_id', funcionId);
 
-      if (seatsError) {
-        console.error('Error loading seats:', seatsError);
-        return;
+        if (seatsError) {
+          console.error('Error loading seats:', seatsError);
+          return;
+        }
+
+        totalSeats = seats?.length || 0;
+        soldSeats = seats?.filter(seat => seat.estado === 'vendido').length || 0;
+        reservedSeats = seats?.filter(seat => seat.estado === 'reservado').length || 0;
+        availableSeats = totalSeats - soldSeats - reservedSeats;
+        
+        console.log('📊 [loadEventStats] Estadísticas desde tabla asientos:', {
+          totalSeats,
+          availableSeats,
+          soldSeats,
+          reservedSeats
+        });
       }
-
-      const totalSeats = seats?.length || 0;
-      const soldSeats = seats?.filter(seat => seat.estado === 'vendido').length || 0;
-      const reservedSeats = seats?.filter(seat => seat.estado === 'reservado').length || 0;
-      const availableSeats = totalSeats - soldSeats - reservedSeats;
 
       setEventStats({
         totalSeats,
@@ -381,8 +431,6 @@ const BoleteriaMain = () => {
         soldSeats,
         reservedSeats
       });
-
-      console.log('Event stats loaded:', { totalSeats, availableSeats, soldSeats, reservedSeats });
 
       // Notificaciones de disponibilidad
       if (availableSeats <= 5 && availableSeats > 0) {

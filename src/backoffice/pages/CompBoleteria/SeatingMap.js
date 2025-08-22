@@ -97,7 +97,23 @@ const SeatingMap = ({
     const seatZonaId =
       typeof silla.zona === "object" ? silla.zona._id || silla.zona.id : silla.zona;
     // En modo bloqueo, permitir selección de cualquier asiento disponible
-    const isAvailable = blockMode ? true : (availableZonas?.includes(seatZonaId) || !availableZonas);
+    // Si no hay zonas disponibles o no hay zonas configuradas, permitir todos los asientos
+    const isAvailable = blockMode ? true : 
+      (availableZonas && availableZonas.length > 0) ? 
+        (availableZonas.includes(seatZonaId) || !seatZonaId) : 
+        true; // Si no hay zonas configuradas, permitir todos los asientos
+    
+    // Debug: Log de la lógica de disponibilidad
+    console.log('🎯 [renderSeat] Lógica de disponibilidad:', {
+      sillaId: silla._id,
+      seatZonaId,
+      availableZonas,
+      availableZonasLength: availableZonas?.length || 0,
+      isAvailable,
+      blockMode,
+      abonoMode
+    });
+    
     const isAbono = abonoMode && abonoSeats.includes(silla._id);
     const isSelected = selectedZonaId && selectedZonaId === seatZonaId;
 
@@ -311,6 +327,17 @@ const SeatingMap = ({
         } : null
       });
     });
+    
+    // Contar total de asientos
+    const totalAsientos = mapa.contenido.reduce((total, elemento) => {
+      return total + (elemento.sillas?.length || 0);
+    }, 0);
+    
+    console.log(`🎯 [SeatingMap] Total de asientos en el mapa: ${totalAsientos}`);
+    
+    if (totalAsientos === 0) {
+      console.warn('⚠️ [SeatingMap] ¡ADVERTENCIA! No se encontraron asientos en el mapa');
+    }
   }
 
   const stageWidth = window.innerWidth < 640 ? window.innerWidth * 0.95 : window.innerWidth * 0.6;
@@ -406,7 +433,7 @@ const SeatingMap = ({
           fontFamily: 'monospace'
         }}>
           <div style={{ marginBottom: '10px', borderBottom: '1px solid #666', paddingBottom: '5px' }}>
-            <strong>🔍 DEBUG - Estructura del Mapa</strong>
+            <strong>�� DEBUG - Estructura del Mapa</strong>
           </div>
           
           <div style={{ marginBottom: '8px' }}>
@@ -418,12 +445,29 @@ const SeatingMap = ({
           <div>• Tenant ID: {mapa.tenant_id}</div>
           
           <div style={{ marginTop: '10px', marginBottom: '8px' }}>
+            <strong>🏷️ Zonas Disponibles:</strong>
+          </div>
+          <div>• Zonas configuradas: {availableZonas?.length || 0}</div>
+          <div>• Zona seleccionada: {selectedZonaId || 'Ninguna'}</div>
+          <div>• Modo bloqueo: {blockMode ? '✅ Activado' : '❌ Desactivado'}</div>
+          <div>• Modo abono: {abonoMode ? '✅ Activado' : '❌ Desactivado'}</div>
+          
+          <div style={{ marginTop: '10px', marginBottom: '8px' }}>
             <strong>📋 Contenido del Mapa:</strong>
           </div>
           <div>• Tipo: {typeof mapa.contenido}</div>
           <div>• Es array: {Array.isArray(mapa.contenido) ? '✅ Sí' : '❌ No'}</div>
           <div>• Elementos: {mapa.contenido?.length || 0}</div>
           
+          {/* Contar total de asientos */}
+          {mapa.contenido && Array.isArray(mapa.contenido) && (
+            <div style={{ marginTop: '8px', padding: '5px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px' }}>
+              <div style={{ fontWeight: 'bold', color: '#fbbf24' }}>
+                🎯 Total de Asientos: {mapa.contenido.reduce((total, elemento) => total + (elemento.sillas?.length || 0), 0)}
+              </div>
+            </div>
+          )}
+
           {mapa.contenido && Array.isArray(mapa.contenido) && mapa.contenido.map((item, index) => (
             <div key={index} style={{ 
               marginTop: '12px', 
