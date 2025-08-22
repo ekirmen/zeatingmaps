@@ -290,7 +290,7 @@ const Funciones = () => {
       streamingShowUrl: false,
       streamingTransmissionStart: '',
       streamingTransmissionStop: '',
-      idSala: salaSeleccionada?.id || null,
+      idSala: salaSeleccionada?.id || nuevaFuncion.idSala || null,
       idPlantillaEntradas: null,
       idPlantillaProductos: null,
       idSpecialProductsTemplate: null,
@@ -475,6 +475,7 @@ const Funciones = () => {
   // Actualizar la sala automáticamente cuando cambie la sala seleccionada
   useEffect(() => {
     if (salaSeleccionada?.id) {
+      console.log('Debug - Actualizando idSala con:', salaSeleccionada.id);
       setNuevaFuncion(prev => ({
         ...prev,
         idSala: salaSeleccionada.id
@@ -550,6 +551,17 @@ const Funciones = () => {
         return;
       }
 
+      // Validación adicional para sala_id
+      if (!nuevaFuncion.idSala) {
+        alert('Error: El ID de la sala es requerido');
+        return;
+      }
+
+      console.log('Debug - Valores antes de enviar:');
+      console.log('nuevaFuncion.idSala:', nuevaFuncion.idSala);
+      console.log('salaSeleccionada:', salaSeleccionada);
+      console.log('eventoSeleccionado:', eventoSeleccionado);
+
       const funcionData = {
         evento_id: formatUUIDField(eventoSeleccionado?.id),
         sala_id: formatUUIDField(nuevaFuncion.idSala),
@@ -597,6 +609,15 @@ const Funciones = () => {
         tenant_id: formatUUIDField(currentTenant?.id),
         recinto_id: formatUUIDField(recintoSeleccionado?.id)
       };
+
+      console.log('Debug - funcionData completo:', funcionData);
+      console.log('Debug - sala_id específico:', funcionData.sala_id);
+
+      // Validación final antes de enviar
+      if (!funcionData.sala_id) {
+        alert('Error: El ID de la sala no puede ser null. Por favor, seleccione una sala.');
+        return;
+      }
 
       if (editingFuncion) {
         const { error } = await supabase
@@ -650,7 +671,7 @@ const Funciones = () => {
       streamingShowUrl: funcion.streaming_show_url || false,
       streamingTransmissionStart: funcion.streaming_transmission_start || '',
       streamingTransmissionStop: funcion.streaming_transmission_stop || '',
-      idSala: funcion.sala_id || funcion.sala || '',
+      idSala: funcion.sala_id || funcion.sala || null,
       idPlantillaEntradas: funcion.plantilla_entradas || funcion.plantilla || null,
       idPlantillaProductos: funcion.plantilla_producto || null,
       idSpecialProductsTemplate: funcion.plantilla_comisiones || null,
@@ -805,11 +826,12 @@ const Funciones = () => {
 
               <div className="flex items-end">
                 <button 
-                  onClick={() => {
-                    setEditingFuncion(null);
-                    resetNuevaFuncion();
-                    setModalIsOpen(true);
-                  }}
+                                  onClick={() => {
+                  console.log('Debug - Abriendo modal, salaSeleccionada:', salaSeleccionada);
+                  setEditingFuncion(null);
+                  resetNuevaFuncion();
+                  setModalIsOpen(true);
+                }}
                   disabled={!recintoSeleccionado || !salaSeleccionada || !eventoSeleccionado}
                   className={`w-full px-4 py-2 rounded-md font-medium transition-colors ${
                     recintoSeleccionado && salaSeleccionada && eventoSeleccionado
