@@ -68,8 +68,33 @@ export const useEventsList = () => {
         throw supabaseError;
       }
 
+      let rows = data || [];
+
+      // Fallback: si no hay eventos, reintentar sin el filtro 'oculto=false'
+      if (!rows.length) {
+        console.warn('[useEventsList] No se encontraron eventos con oculto=false. Reintentando con activo=true...');
+        const { data: dataFallback, error: errFallback } = await supabase
+          .from('eventos')
+          .select(`
+            id,
+            nombre,
+            fecha_evento,
+            recinto,
+            imagenes,
+            slug,
+            recintos!recinto_id (
+              nombre
+            )
+          `)
+          .eq('activo', true)
+          .order('fecha_evento', { ascending: true });
+        if (!errFallback && Array.isArray(dataFallback)) {
+          rows = dataFallback;
+        }
+      }
+
       // Map raw Supabase data to the format expected by EventListWidget
-      const formattedEvents = data.map(event => ({
+      const formattedEvents = rows.map(event => ({
         ...normalizeEventData(event),
         venue: event.recintos ? event.recintos.nombre : null // Get venue name from joined table
       }));
