@@ -1628,6 +1628,7 @@ const Funciones = () => {
               </div>
             </form>
           </div>
+        </div>
         </Modal>
       </div>
     );
