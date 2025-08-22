@@ -150,7 +150,10 @@ const Funciones = () => {
     customPrintingTicketDate: '',
     customSes1: '',
     customSes2: '',
-    idBarcodePool: ''
+    idBarcodePool: '',
+    activo: true,
+    visibleEnBoleteria: true,
+    visibleEnStore: true
   });
 
   const getEventoNombre = (eventoId) => {
@@ -272,7 +275,10 @@ const Funciones = () => {
       customPrintingTicketDate: '',
       customSes1: '',
       customSes2: '',
-      idBarcodePool: ''
+      idBarcodePool: '',
+      activo: true,
+      visibleEnBoleteria: true,
+      visibleEnStore: true
     });
   };
 
