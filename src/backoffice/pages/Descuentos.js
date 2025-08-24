@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient'; // Assuming this path is correct for your public client
-import { Input, Button, DatePicker, Select, Form, Table, Space, Tag, message } from 'antd';
+import { Input, InputNumber, Button, DatePicker, Select, Form, Table, Space, Tag, message } from 'antd';
 import dayjs from 'dayjs';
 import { useTenant } from '../../contexts/TenantContext';
 
@@ -128,7 +128,22 @@ const Descuentos = () => {
       message.error('No se encontró el tenant actual. Actualiza la página e inicia sesión de nuevo.');
       return;
     }
-    const detalles = Object.entries(zoneDetails).map(([zonaId, det]) => ({ zona: zonaId, tipo: det.tipo, valor: Number(det.cantidad) }));
+    // Validación y construcción de detalles (porcentaje vs monto)
+    for (const [zonaId, det] of Object.entries(zoneDetails)) {
+      const p = Number(det.porcentaje || 0);
+      const m = Number(det.monto || 0);
+      if (p > 0 && m > 0) {
+        message.error(`Zona ${zonaId}: define porcentaje o monto, no ambos.`);
+        return;
+      }
+    }
+    const detalles = Object.entries(zoneDetails).flatMap(([zonaId, det]) => {
+      const p = Number(det.porcentaje || 0);
+      const m = Number(det.monto || 0);
+      if (p > 0) return [{ zona: zonaId, tipo: 'porcentaje', valor: p }];
+      if (m > 0) return [{ zona: zonaId, tipo: 'monto', valor: m }];
+      return [];
+    });
     const dto = {
       nombreCodigo: values.codigo,
       fechaInicio: values.fechaInicio ? values.fechaInicio.toISOString() : null,

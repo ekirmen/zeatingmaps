@@ -445,9 +445,50 @@ const SimpleSeatingMap = ({
                   </div>
                 </div>
               )}
+
+              {/* Formas genéricas (rect/circle) que no son mesas */}
+              {!elemento.type && elemento.shape === 'rect' && (
+                <div
+                  className="absolute border border-gray-300 rounded"
+                  style={{
+                    left: elemento.posicion?.x ?? elemento.x ?? 0,
+                    top: elemento.posicion?.y ?? elemento.y ?? 0,
+                    width: elemento.width ?? 100,
+                    height: elemento.height ?? 60,
+                    backgroundColor: elemento.fill || '#f0f0f0',
+                    opacity: 0.8
+                  }}
+                />
+              )}
+              {!elemento.type && elemento.shape === 'circle' && (
+                <div
+                  className="absolute rounded-full border border-gray-300"
+                  style={{
+                    left: (elemento.posicion?.x ?? elemento.x ?? 0) - ((elemento.radius ?? elemento.width ?? 40) / 2),
+                    top: (elemento.posicion?.y ?? elemento.y ?? 0) - ((elemento.radius ?? elemento.width ?? 40) / 2),
+                    width: elemento.radius ? elemento.radius * 2 : (elemento.width ?? 40),
+                    height: elemento.radius ? elemento.radius * 2 : (elemento.height ?? elemento.width ?? 40),
+                    backgroundColor: elemento.fill || '#f0f0f0',
+                    opacity: 0.8
+                  }}
+                />
+              )}
+
+              {/* Texto genérico */}
+              {(elemento.type === 'Text' || elemento.text) && (
+                <div
+                  className="absolute text-xs text-gray-700"
+                  style={{
+                    left: elemento.posicion?.x ?? elemento.x ?? 0,
+                    top: elemento.posicion?.y ?? elemento.y ?? 0
+                  }}
+                >
+                  {elemento.text || elemento.nombre}
+                </div>
+              )}
               
               {/* Sillas */}
-              {elemento.sillas && elemento.sillas.map(silla => {
+              {(elemento.sillas || elemento.asientos || elemento.seats || []).map(silla => {
                 const zoneInfo = getZoneInfo(silla);
                 const isSelected = selectedSeats.some(s => s._id === silla._id);
                 const isLockedByMe = lockedSeats.some(ls => 
