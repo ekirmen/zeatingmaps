@@ -224,6 +224,13 @@ const BoleteriaMain = () => {
     }
   }, [mapa]);
 
+  // Recalcular estadísticas cuando el mapa efectivo esté disponible
+  useEffect(() => {
+    if (selectedFuncion?.id) {
+      loadEventStats(selectedFuncion.id);
+    }
+  }, [mapaLocal, selectedFuncion?.id]);
+
   const loadSavedCarts = async () => {
     try {
       const { data, error } = await supabase
@@ -462,30 +469,43 @@ const BoleteriaMain = () => {
   // Cargar plantilla para una función específica
   const loadPlantillaForFunction = async (funcion) => {
     try {
-      if (!funcion.plantilla_entradas) {
-        console.warn('⚠️ [loadPlantillaForFunction] No hay plantilla_entradas configurada');
+      // Usar plantilla embebida si existe
+      if (funcion.plantilla && typeof funcion.plantilla === 'object') {
+        console.log('✅ [loadPlantillaForFunction] Usando plantilla embebida en función');
+        setSelectedPlantilla(funcion.plantilla);
         return;
       }
 
-      console.log('🔍 [loadPlantillaForFunction] Cargando plantilla:', funcion.plantilla_entradas);
+      const plantillaId = funcion.plantilla?.id || funcion.plantilla_id || funcion.plantilla_entradas;
+      if (!plantillaId) {
+        console.warn('⚠️ [loadPlantillaForFunction] No hay identificador de plantilla en la función');
+        setSelectedPlantilla(null);
+        return;
+      }
+
+      console.log('🔍 [loadPlantillaForFunction] Cargando plantilla:', plantillaId);
 
       const { data: plantillaData, error: plantillaError } = await supabase
         .from('plantillas')
         .select('*')
-        .eq('id', funcion.plantilla_entradas)
+        .eq('id', plantillaId)
         .single();
 
       if (plantillaError) {
         console.error('❌ [loadPlantillaForFunction] Error cargando plantilla:', plantillaError);
+        setSelectedPlantilla(null);
         return;
       }
 
       if (plantillaData) {
         console.log('✅ [loadPlantillaForFunction] Plantilla cargada:', plantillaData);
         setSelectedPlantilla(plantillaData);
+      } else {
+        setSelectedPlantilla(null);
       }
     } catch (error) {
       console.error('❌ [loadPlantillaForFunction] Error cargando plantilla:', error);
+      setSelectedPlantilla(null);
     }
   };
 
@@ -493,18 +513,18 @@ const BoleteriaMain = () => {
     if (!funcionId) return;
     
     try {
-      // En lugar de consultar la tabla asientos, usar los datos del mapa
-      // que ya están cargados en el estado
+      // Usar el mapa efectivo disponible
+      const effectiveMap = mapaLocal || mapa;
       let totalSeats = 0;
       let availableSeats = 0;
       let soldSeats = 0;
       let reservedSeats = 0;
       
       // Si tenemos un mapa cargado, calcular estadísticas desde ahí
-      if (mapa && mapa.contenido && Array.isArray(mapa.contenido)) {
-        console.log('📊 [loadEventStats] Calculando estadísticas desde el mapa:', mapa.contenido);
+      if (effectiveMap && effectiveMap.contenido && Array.isArray(effectiveMap.contenido)) {
+        console.log('📊 [loadEventStats] Calculando estadísticas desde el mapa:', effectiveMap.contenido);
         
-        mapa.contenido.forEach(elemento => {
+        effectiveMap.contenido.forEach(elemento => {
           if (elemento.sillas && Array.isArray(elemento.sillas)) {
             totalSeats += elemento.sillas.length;
             
@@ -566,13 +586,15 @@ const BoleteriaMain = () => {
         reservedSeats
       });
 
-      // Notificaciones de disponibilidad
-      if (availableSeats <= 5 && availableSeats > 0) {
-        message.warning(`⚠️ Solo quedan ${availableSeats} asientos disponibles`);
-      } else if (availableSeats === 0) {
-        message.error('❌ No hay asientos disponibles');
-      } else if (availableSeats <= 10) {
-        message.info(`ℹ️ Quedan ${availableSeats} asientos disponibles`);
+      // Notificaciones de disponibilidad (solo si existen asientos)
+      if (totalSeats > 0) {
+        if (availableSeats <= 5 && availableSeats > 0) {
+          message.warning(`⚠️ Solo quedan ${availableSeats} asientos disponibles`);
+        } else if (availableSeats === 0) {
+          message.error('❌ No hay asientos disponibles');
+        } else if (availableSeats <= 10) {
+          message.info(`ℹ️ Quedan ${availableSeats} asientos disponibles`);
+        }
       }
     } catch (error) {
       console.error('Error loading event stats:', error);
@@ -899,7 +921,7 @@ const BoleteriaMain = () => {
     setSelectedEvent(selectedEventForSearch);
     setSelectedFuncion(func);
     setShowEventSearch(false);
-    loadEventStats(functionId);
+    // Recalcular estadísticas cuando el mapa/función terminen de cargar
     message.success(`Evento seleccionado: ${selectedEventForSearch?.nombre} - ${func?.sala?.nombre || 'Sala sin nombre'}`);
   };
 
@@ -1058,8 +1080,16 @@ const BoleteriaMain = () => {
                       {selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}
                     </div>
                     <div className="text-gray-600">
-                      <span>Fecha: {selectedEvent ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES') : 'N/A'}</span>
-                      <span className="ml-2">Hora: {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'N/A'}</span>
+                      <span>
+                        Fecha: {selectedEvent && selectedEvent.fecha_evento && !isNaN(new Date(selectedEvent.fecha_evento).getTime())
+                          ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES')
+                          : 'N/A'}
+                      </span>
+                      <span className="ml-2">
+                        Hora: {selectedFuncion && selectedFuncion.fecha_celebracion && !isNaN(new Date(selectedFuncion.fecha_celebracion).getTime())
+                          ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+                          : 'N/A'}
+                      </span>
                     </div>
                     {/* Información de debug */}
                     {selectedFuncion && (

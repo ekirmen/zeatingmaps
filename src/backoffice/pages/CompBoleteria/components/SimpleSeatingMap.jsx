@@ -23,13 +23,14 @@ const SimpleSeatingMap = ({
 
   // Cargar mapa directamente
   const loadMapa = async () => {
-    if (!selectedFuncion?.sala?.id) {
-      console.log('No hay sala seleccionada');
+    const salaId = selectedFuncion?.sala?.id || selectedFuncion?.sala_id;
+    if (!salaId) {
+      console.log('No hay sala seleccionada (falta sala_id o sala.id)');
       setMapa(null);
       return;
     }
 
-    console.log('Cargando mapa para sala:', selectedFuncion.sala.id);
+    console.log('Cargando mapa para sala:', salaId);
     setLoading(true);
     setError(null);
 
@@ -38,7 +39,7 @@ const SimpleSeatingMap = ({
       const { data: mapaData, error: mapaError } = await supabase
         .from('mapas')
         .select('*')
-        .eq('sala_id', selectedFuncion.sala.id)
+        .eq('sala_id', salaId)
         .single();
 
       console.log('Mapa encontrado:', mapaData);
@@ -213,6 +214,12 @@ const SimpleSeatingMap = ({
 
   const handleSeatClick = async (seat, mesa = null) => {
     try {
+      // En modo bloqueo, delegar al padre sin exigir precio ni bloquear en BD
+      if (blockMode) {
+        onSeatClick(seat, mesa);
+        return;
+      }
+
       // Verificar si hay un precio seleccionado
       if (!selectedPriceOption) {
         message.warning('Primero selecciona una zona y precio antes de elegir asientos');
