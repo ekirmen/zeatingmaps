@@ -115,6 +115,8 @@ const Funciones = () => {
   const [funciones, setFunciones] = useState([]);
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [editingFuncion, setEditingFuncion] = useState(null);
+  const LAST_FUNC_KEY = 'backoffice_last_funcion_form';
+
   const [nuevaFuncion, setNuevaFuncion] = useState({
     fechaCelebracion: '',
     zonaHoraria: 'America/Mexico_City',
@@ -162,6 +164,32 @@ const Funciones = () => {
     visibleEnBoleteria: true,
     visibleEnStore: true
   });
+
+  // Cargar último formulario usado al iniciar y cuando cambie la sala seleccionada
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(LAST_FUNC_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        setNuevaFuncion(prev => ({
+          ...prev,
+          ...saved,
+          idSala: salaSeleccionada?.id || saved.idSala || prev.idSala || null,
+        }));
+      }
+    } catch (e) {
+      console.warn('No se pudo cargar el formulario de función previo:', e);
+    }
+  }, [salaSeleccionada]);
+
+  // Persistir cambios del formulario para reutilizarlos al crear otra función
+  useEffect(() => {
+    try {
+      localStorage.setItem(LAST_FUNC_KEY, JSON.stringify(nuevaFuncion));
+    } catch (e) {
+      console.warn('No se pudo guardar el formulario de función:', e);
+    }
+  }, [nuevaFuncion]);
 
   const getEventoNombre = (eventoId) => {
     const evento = eventos.find((e) => e.id === eventoId);
@@ -349,6 +377,26 @@ const Funciones = () => {
       visibleEnBoleteria: true,
       visibleEnStore: true
     });
+  };
+
+  // Cargar último formulario guardado (helper para botón "Nueva Función")
+  const loadLastNuevaFuncion = () => {
+    try {
+      const raw = localStorage.getItem(LAST_FUNC_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        setNuevaFuncion(prev => ({
+          ...prev,
+          ...saved,
+          idSala: salaSeleccionada?.id || saved.idSala || prev.idSala || null,
+        }));
+      } else {
+        resetNuevaFuncion();
+      }
+    } catch (e) {
+      console.warn('No se pudo cargar el formulario de función previo:', e);
+      resetNuevaFuncion();
+    }
   };
 
   // Fetch eventos when sala changes
@@ -891,11 +939,11 @@ const Funciones = () => {
 
               <div className="flex items-end">
                 <button 
-                                  onClick={() => {
-                  setEditingFuncion(null);
-                  resetNuevaFuncion();
-                  setModalIsOpen(true);
-                }}
+                  onClick={() => {
+                    setEditingFuncion(null);
+                    loadLastNuevaFuncion();
+                    setModalIsOpen(true);
+                  }}
                   disabled={!recintoSeleccionado || !salaSeleccionada || !eventoSeleccionado}
                   className={`w-full px-4 py-2 rounded-md font-medium transition-colors ${
                     recintoSeleccionado && salaSeleccionada && eventoSeleccionado
@@ -1043,7 +1091,6 @@ const Funciones = () => {
         onRequestClose={() => {
           setModalIsOpen(false);
           setEditingFuncion(null);
-          resetNuevaFuncion();
         }}
         className="bg-white rounded-lg shadow-xl max-w-5xl mx-auto focus:outline-none"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"

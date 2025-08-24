@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient'; // Assuming this path is correct for your public client
 import { Input, Button, DatePicker, Select, Form, Table, Space, Tag, message } from 'antd';
-import moment from 'moment'; // For date handling with Ant Design DatePicker
+import dayjs from 'dayjs';
+import { useTenant } from '../../contexts/TenantContext';
 
 const { Option } = Select;
 
 const Descuentos = () => {
+  const { currentTenant } = useTenant();
   const [descuentos, setDescuentos] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [codigo, setCodigo] = useState('');
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFinal, setFechaFinal] = useState('');
@@ -21,15 +25,30 @@ const Descuentos = () => {
   useEffect(() => {
     fetchDescuentos();
     fetchEventos();
-  }, []);
+  }, [currentTenant?.id]);
+
+  // Filtro de búsqueda en memoria
+  useEffect(() => {
+    const term = (searchTerm || '').toLowerCase();
+    if (!term) {
+      setFiltered(descuentos);
+      return;
+    }
+    const next = (descuentos || []).filter(d => {
+      const codigo = String(d.nombreCodigo || '').toLowerCase();
+      const evento = String(d.evento?.nombre || '').toLowerCase();
+      return codigo.includes(term) || evento.includes(term);
+    });
+    setFiltered(next);
+  }, [descuentos, searchTerm]);
 
   useEffect(() => {
     // Sync form fields with state when editingId or form values change
     if (editingId) {
       form.setFieldsValue({
         codigo,
-        fechaInicio: fechaInicio ? moment(fechaInicio) : null,
-        fechaFinal: fechaFinal ? moment(fechaFinal) : null,
+        fechaInicio: fechaInicio ? dayjs(fechaInicio) : null,
+        fechaFinal: fechaFinal ? dayjs(fechaFinal) : null,
         eventoId,
         maxUsos,
       });
@@ -40,17 +59,30 @@ const Descuentos = () => {
 
 
   const fetchDescuentos = async () => {
-    const { data, error } = await supabase.from('descuentos').select('*, evento:eventos (nombre), detalles:detalles_descuento (*, zona:zonas (nombre))'); // Corrected join to 'zonas' table
+    let query = supabase
+      .from('descuentos')
+      .select('*, evento:eventos (nombre), detalles:detalles_descuento (*, zona:zonas (nombre))');
+
+    if (currentTenant?.id) {
+      query = query.eq('tenant_id', currentTenant.id);
+    }
+
+    const { data, error } = await query;
     if (error) {
       console.error('Error al cargar descuentos:', error);
       message.error('Error al cargar descuentos');
       return;
     }
-    setDescuentos(data);
+    setDescuentos(data || []);
+    setFiltered(data || []);
   };
 
   const fetchEventos = async () => {
-    const { data, error } = await supabase.from('eventos').select('id, nombre'); // Select only necessary fields
+    let query = supabase.from('eventos').select('id, nombre');
+    if (currentTenant?.id) {
+      query = query.eq('tenant_id', currentTenant.id);
+    }
+    const { data, error } = await query; // Select only necessary fields
     if (error) {
       console.error('Error al cargar eventos:', error);
       message.error('Error al cargar eventos');
@@ -91,14 +123,19 @@ const Descuentos = () => {
     loadZonas();
   }, [eventoId]);
 
-  const handleSubmit = async (values) => { // Receive values from Ant Design Form
+  const handleSubmit = async (values) => {
+    if (!currentTenant?.id) {
+      message.error('No se encontró el tenant actual. Actualiza la página e inicia sesión de nuevo.');
+      return;
+    }
     const detalles = Object.entries(zoneDetails).map(([zonaId, det]) => ({ zona: zonaId, tipo: det.tipo, valor: Number(det.cantidad) }));
     const dto = {
       nombreCodigo: values.codigo,
-      fechaInicio: values.fechaInicio ? values.fechaInicio.toISOString() : null, // Convert moment object to ISO string
-      fechaFinal: values.fechaFinal ? values.fechaFinal.toISOString() : null,   // Convert moment object to ISO string
+      fechaInicio: values.fechaInicio ? values.fechaInicio.toISOString() : null,
+      fechaFinal: values.fechaFinal ? values.fechaFinal.toISOString() : null,
       evento: values.eventoId,
       maxUsos: values.maxUsos ? Number(values.maxUsos) : 0,
+      tenant_id: currentTenant.id,
     };
     
     try {
@@ -124,8 +161,8 @@ const Descuentos = () => {
 
   const resetForm = () => {
     setCodigo('');
-    setFechaInicio('');
-    setFechaFinal('');
+    setFechaInicio(null);
+    setFechaFinal(null);
     setEventoId('');
     setMaxUsos('');
     setZoneDetails({});
@@ -135,8 +172,8 @@ const Descuentos = () => {
 
   const handleEdit = (d) => {
     setCodigo(d.nombreCodigo);
-    setFechaInicio(d.fechaInicio ? moment(d.fechaInicio) : null); // Convert to moment object
-    setFechaFinal(d.fechaFinal ? moment(d.fechaFinal) : null);   // Convert to moment object
+    setFechaInicio(d.fechaInicio ? dayjs(d.fechaInicio) : null);
+    setFechaFinal(d.fechaFinal ? dayjs(d.fechaFinal) : null);
     setEventoId(d.evento?.id || d.evento);
     setMaxUsos(d.maxUsos ?? '');
     const detalles = {};
@@ -184,8 +221,8 @@ const Descuentos = () => {
   const columns = [
     { title: 'Código', dataIndex: 'nombreCodigo', key: 'nombreCodigo' },
     { title: 'Evento', dataIndex: ['evento', 'nombre'], key: 'eventoNombre', render: text => text || 'N/A' },
-    { title: 'Inicio', dataIndex: 'fechaInicio', key: 'fechaInicio', render: text => text ? moment(text).format('YYYY-MM-DD') : 'N/A' },
-    { title: 'Fin', dataIndex: 'fechaFinal', key: 'fechaFinal', render: text => text ? moment(text).format('YYYY-MM-DD') : 'N/A' },
+    { title: 'Inicio', dataIndex: 'fechaInicio', key: 'fechaInicio', render: text => text ? dayjs(text).format('YYYY-MM-DD') : 'N/A' },
+    { title: 'Fin', dataIndex: 'fechaFinal', key: 'fechaFinal', render: text => text ? dayjs(text).format('YYYY-MM-DD') : 'N/A' },
     { title: 'Usos Max.', dataIndex: 'maxUsos', key: 'maxUsos' },
     {
       title: 'Detalles',
@@ -216,7 +253,7 @@ const Descuentos = () => {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Gestión de Descuentos</h1>
       
-      <Form form={form} layout="vertical" onFinish={handleSubmit} className="mb-8 p-6 bg-white rounded-lg shadow-md">
+      <Form form={form} layout="vertical" onFinish={handleSubmit} className="mb-4 p-6 bg-white rounded-lg shadow-md">
         <Form.Item
           name="codigo"
           label="Código de Descuento"
@@ -251,7 +288,7 @@ const Descuentos = () => {
           label="Fecha de Inicio"
           rules={[{ required: true, message: 'Por favor, seleccione la fecha de inicio' }]}
         >
-          <DatePicker showTime format="YYYY-MM-DD HH:mm" value={fechaInicio ? moment(fechaInicio) : null} onChange={date => setFechaInicio(date)} />
+          <DatePicker showTime format="YYYY-MM-DD HH:mm" value={fechaInicio || null} onChange={date => setFechaInicio(date)} />
         </Form.Item>
 
         <Form.Item
@@ -259,7 +296,7 @@ const Descuentos = () => {
           label="Fecha Final"
           rules={[{ required: true, message: 'Por favor, seleccione la fecha final' }]}
         >
-          <DatePicker showTime format="YYYY-MM-DD HH:mm" value={fechaFinal ? moment(fechaFinal) : null} onChange={date => setFechaFinal(date)} />
+          <DatePicker showTime format="YYYY-MM-DD HH:mm" value={fechaFinal || null} onChange={date => setFechaFinal(date)} />
         </Form.Item>
 
         <Form.Item
@@ -316,9 +353,18 @@ const Descuentos = () => {
         </Form.Item>
       </Form>
 
-      <h2 className="text-2xl font-bold mb-4">Listado de Descuentos</h2>
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-2xl font-bold">Listado de Descuentos</h2>
+        <Input.Search
+          placeholder="Buscar por código o evento"
+          allowClear
+          onChange={e => setSearchTerm(e.target.value)}
+          onSearch={v => setSearchTerm(v)}
+          style={{ width: 280 }}
+        />
+      </div>
       <Table 
-        dataSource={descuentos} 
+        dataSource={filtered} 
         columns={columns} 
         rowKey="id" 
         pagination={{ pageSize: 10 }}

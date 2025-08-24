@@ -936,7 +936,7 @@ const BoleteriaMain = () => {
             <Button size="small" icon={<ZoomOutOutlined />} onClick={() => setZoomLevel(prev => Math.max(prev - 0.2, 0.5))} />
           </div>
           
-          <div className="bg-white p-6 rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-white p-4 rounded-lg shadow-sm overflow-hidden">
             {blockMode && (
               <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-center space-x-2">
@@ -948,7 +948,7 @@ const BoleteriaMain = () => {
                 </p>
               </div>
             )}
-            <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}>
+            <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: '0 0' }}>
               <SimpleSeatingMap
                 selectedFuncion={selectedFuncion}
                 onSeatClick={handleSeatClick}
@@ -965,7 +965,7 @@ const BoleteriaMain = () => {
     },
     {
       key: 'productos',
-      label: 'Productos',
+      label: 'Productos y Extras',
       children: (
         <div className="p-4">
           <ProductosWidget 

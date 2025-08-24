@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, Button, Badge, Spin, message, Tooltip, Typography } from 'antd';
 import { supabase } from '../../../../supabaseClient';
 
@@ -20,6 +20,7 @@ const SimpleSeatingMap = ({
   const [lockedSeats, setLockedSeats] = useState([]);
   const [zonePrices, setZonePrices] = useState({});
   const channelRef = useRef(null);
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
   // Cargar mapa directamente
   const loadMapa = async () => {
@@ -58,6 +59,58 @@ const SimpleSeatingMap = ({
       setLoading(false);
     }
   };
+
+  // Calcular dimensiones del mapa para ajustar el contenedor
+  useEffect(() => {
+    const computeDimensions = () => {
+      if (!mapa || !mapa.contenido) {
+        setDimensions({ width: 800, height: 600 });
+        return;
+      }
+
+      let maxX = 0;
+      let maxY = 0;
+
+      const considerPoint = (x, y) => {
+        if (typeof x === 'number') maxX = Math.max(maxX, x);
+        if (typeof y === 'number') maxY = Math.max(maxY, y);
+      };
+
+      if (Array.isArray(mapa.contenido)) {
+        mapa.contenido.forEach(elemento => {
+          // Bordes de la mesa
+          if (elemento.posicion) {
+            considerPoint(elemento.posicion.x + (elemento.width || 0), elemento.posicion.y + (elemento.height || 0));
+          }
+          // Asientos
+          if (Array.isArray(elemento.sillas)) {
+            elemento.sillas.forEach(silla => {
+              const sx = silla?.posicion?.x ?? silla?.x;
+              const sy = silla?.posicion?.y ?? silla?.y;
+              considerPoint(sx, sy);
+            });
+          }
+        });
+      } else if (mapa.contenido?.zonas) {
+        mapa.contenido.zonas.forEach(zona => {
+          if (Array.isArray(zona.asientos)) {
+            zona.asientos.forEach(silla => {
+              const sx = silla?.posicion?.x ?? silla?.x;
+              const sy = silla?.posicion?.y ?? silla?.y;
+              considerPoint(sx, sy);
+            });
+          }
+        });
+      }
+
+      setDimensions({
+        width: Math.max(800, (maxX || 0) + 60),
+        height: Math.max(600, (maxY || 0) + 60)
+      });
+    };
+
+    computeDimensions();
+  }, [mapa]);
 
   // Cargar precios de zonas
   const loadZonePrices = async () => {
@@ -359,14 +412,19 @@ const SimpleSeatingMap = ({
   }
 
   return (
-    <div className="relative overflow-auto" style={{ width: '100%', height: '400px' }}>
+    <div className="relative overflow-auto" style={{ width: '100%', height: `${dimensions.height}px` }}>
 
       
-      <div className="relative" style={{ width: '600px', height: '350px' }}>
+      <div className="relative" style={{ width: `${dimensions.width}px`, height: `${dimensions.height}px` }}>
         {/* Manejar diferentes estructuras de mapa.contenido */}
         {Array.isArray(mapa.contenido) ? (
           // Si mapa.contenido es un array
-          mapa.contenido.map(elemento => (
+          [...mapa.contenido].sort((a, b) => {
+            const ay = a?.posicion?.y ?? 0; const by = b?.posicion?.y ?? 0;
+            if (ay !== by) return ay - by;
+            const ax = a?.posicion?.x ?? 0; const bx = b?.posicion?.x ?? 0;
+            return ax - bx;
+          }).map(elemento => (
             <div key={elemento._id} className="absolute">
               {/* Mesa */}
               {elemento.type === 'mesa' && (
@@ -395,6 +453,8 @@ const SimpleSeatingMap = ({
                 const isLockedByMe = lockedSeats.some(ls => 
                   ls.seat_id === silla._id && ls.session_id === (localStorage.getItem('anonSessionId') || '')
                 );
+                const sx = silla?.posicion?.x ?? silla?.x;
+                const sy = silla?.posicion?.y ?? silla?.y;
                 
                 return (
                   <Tooltip
@@ -405,8 +465,8 @@ const SimpleSeatingMap = ({
                     <div
                       className="absolute cursor-pointer hover:scale-110 transition-transform"
                       style={{
-                        left: silla.posicion.x - 15,
-                        top: silla.posicion.y - 15,
+                        left: (sx || 0) - 15,
+                        top: (sy || 0) - 15,
                         width: 30,
                         height: 30,
                         borderRadius: '50%',
@@ -440,6 +500,8 @@ const SimpleSeatingMap = ({
                 const isLockedByMe = lockedSeats.some(ls => 
                   ls.seat_id === silla._id && ls.session_id === (localStorage.getItem('anonSessionId') || '')
                 );
+                const sx = silla?.posicion?.x ?? silla?.x;
+                const sy = silla?.posicion?.y ?? silla?.y;
                 
                 return (
                   <Tooltip
@@ -450,8 +512,8 @@ const SimpleSeatingMap = ({
                     <div
                       className="absolute cursor-pointer hover:scale-110 transition-transform"
                       style={{
-                        left: silla.x - 15,
-                        top: silla.y - 15,
+                        left: (sx || 0) - 15,
+                        top: (sy || 0) - 15,
                         width: 30,
                         height: 30,
                         borderRadius: '50%',
