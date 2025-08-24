@@ -406,7 +406,7 @@ const BoleteriaMain = () => {
     try {
       const { data, error } = await supabase
         .from('funciones')
-        .select('*, salas(*)')
+        .select('*, salas(*), plantilla(*)')
         .eq('evento_id', eventId)
         .order('fecha_celebracion', { ascending: true });
 
@@ -476,9 +476,21 @@ const BoleteriaMain = () => {
         return;
       }
 
-      const plantillaId = funcion.plantilla?.id || funcion.plantilla_id || funcion.plantilla_entradas;
+      let plantillaId = funcion.plantilla?.id || funcion.plantilla_id || funcion.plantilla_entradas;
       if (!plantillaId) {
-        console.warn('⚠️ [loadPlantillaForFunction] No hay identificador de plantilla en la función');
+        console.warn('⚠️ [loadPlantillaForFunction] No hay identificador de plantilla en la función. Reintentando cargar función con plantilla...');
+        // Intentar recuperar la función con su relación de plantilla
+        if (funcion.id) {
+          const { data: funcionData, error: funcionError } = await supabase
+            .from('funciones')
+            .select('*, plantilla(*)')
+            .eq('id', funcion.id)
+            .single();
+          if (!funcionError && funcionData?.plantilla) {
+            setSelectedPlantilla(funcionData.plantilla);
+            return;
+          }
+        }
         setSelectedPlantilla(null);
         return;
       }
@@ -936,6 +948,7 @@ const BoleteriaMain = () => {
             <div className="mb-3">
               <DynamicPriceSelector
                 selectedFuncion={selectedFuncion}
+                selectedPlantilla={selectedPlantilla}
                 onPriceSelect={handlePriceOptionSelect}
                 selectedPriceId={selectedPriceOption?.id}
               />

@@ -428,8 +428,25 @@ const Funciones = () => {
       const { data, error } = await supabase
         .from('funciones')
         .select(`
-          *,
+          id,
+          fechaCelebracion:fecha_celebracion,
+          inicioVenta:inicio_venta,
+          finVenta:fin_venta,
+          pagoAPlazos:permite_pago_plazos,
+          permitirReservasWeb:permite_reserva,
+          tiempo_caducidad_reservas,
+          fecha_liberacion_reservas,
+          evento_id,
+          sala_id,
+          plantilla_entradas,
+          plantilla_comisiones,
+          plantilla_producto,
+          canales,
+          activo,
+          visible_en_boleteria,
+          visible_en_store,
           eventos!evento_id(*),
+          salas!sala_id(*),
           plantillas!plantilla_entradas(*)
         `)
         .eq('sala_id', salaSeleccionada.id)
@@ -786,8 +803,8 @@ const Funciones = () => {
       streamingShowUrl: funcion.streaming_show_url || false,
       streamingTransmissionStart: funcion.streaming_transmission_start || '',
       streamingTransmissionStop: funcion.streaming_transmission_stop || '',
-      idSala: funcion.sala_id || funcion.sala || null,
-      idPlantillaEntradas: funcion.plantilla_entradas || funcion.plantilla || null,
+      idSala: funcion.sala_id || funcion.salas?.id || funcion.sala || null,
+      idPlantillaEntradas: funcion.plantilla_entradas || funcion.plantillas?.id || funcion.plantilla || null,
       idPlantillaProductos: funcion.plantilla_producto || null,
       idSpecialProductsTemplate: funcion.plantilla_comisiones || null,
       idPlantillaCupos: funcion.plantilla_cupos || null,
@@ -815,6 +832,28 @@ const Funciones = () => {
     };
     
     setNuevaFuncion(funcionEditada);
+
+    // Sincronizar filtros superiores (recinto, sala, evento) según la función seleccionada
+    try {
+      // Encontrar sala en el contexto de recintos
+      let encontradoRecinto = null;
+      let encontradaSala = null;
+      for (const recinto of recintos) {
+        const sala = (recinto.salas || []).find(s => String(s.id) === String(funcion.sala_id || funcion.salas?.id || funcion.sala));
+        if (sala) {
+          encontradoRecinto = recinto;
+          encontradaSala = sala;
+          break;
+        }
+      }
+      if (encontradoRecinto) setRecintoSeleccionado(encontradoRecinto);
+      if (encontradaSala) setSalaSeleccionada(encontradaSala);
+      // Seleccionar evento (si está en la lista cargada)
+      const eventoSel = eventos.find(ev => String(ev.id) === String(funcion.evento_id));
+      if (eventoSel) setEventoSeleccionado(eventoSel);
+    } catch (e) {
+      console.warn('No se pudo sincronizar los filtros con la función seleccionada:', e);
+    }
     setModalIsOpen(true);
   };
 

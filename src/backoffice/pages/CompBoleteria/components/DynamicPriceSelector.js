@@ -28,6 +28,7 @@ const debeOcultarPrecioBase = eventosOcultarPrecioBase.includes(idEventoActual);
 
 const DynamicPriceSelector = ({ 
   selectedFuncion, 
+  selectedPlantilla,
   onPriceSelect, 
   selectedPriceId 
 }) => {
@@ -44,34 +45,42 @@ const DynamicPriceSelector = ({
 
     setLoading(true);
     try {
-      // Obtener la función con su plantilla asignada
-      console.log('Fetching funcion with ID:', selectedFuncion.id);
-      const { data: funcion, error: funcionError } = await supabase
-        .from('funciones')
-        .select('*, plantilla(*)')
-        .eq('id', selectedFuncion.id)
-        .single();
+      // Usar plantilla ya seleccionada si viene como prop, si no, cargar con la función
+      let plantilla = selectedPlantilla;
+      let funcion = selectedFuncion;
 
-      if (funcionError) {
-        console.error('Error loading funcion:', funcionError);
-        message.error('Error al cargar la función');
-        return;
+      if (!plantilla) {
+        console.log('Fetching funcion with ID:', selectedFuncion.id);
+        const { data: funcionData, error: funcionError } = await supabase
+          .from('funciones')
+          .select('*, plantilla(*)')
+          .eq('id', selectedFuncion.id)
+          .single();
+
+        if (funcionError) {
+          console.error('Error loading funcion:', funcionError);
+          message.error('Error al cargar la función');
+          return;
+        }
+
+        if (!funcionData) {
+          console.error('No se encontró la función');
+          message.error('No se encontró la función');
+          return;
+        }
+
+        funcion = funcionData;
+        plantilla = funcionData.plantilla;
       }
 
-      if (!funcion) {
-        console.error('No se encontró la función');
-        message.error('No se encontró la función');
-        return;
-      }
-
-      if (!funcion.plantilla) {
+      if (!plantilla) {
         console.error('La función no tiene plantilla asignada');
         message.error('La función no tiene plantilla de precios asignada');
         return;
       }
 
       console.log('Función cargada:', funcion);
-      console.log('Plantilla asignada:', funcion.plantilla);
+      console.log('Plantilla asignada:', plantilla);
 
       // Cargar las entradas disponibles para este evento
       console.log('Fetching entradas...');
@@ -101,9 +110,6 @@ const DynamicPriceSelector = ({
         message.error('Error al cargar zonas');
         return;
       }
-
-      // Usar la plantilla asignada a la función
-      const plantilla = funcion.plantilla;
 
       // Parsear los detalles de la plantilla
       let plantillaDetalles = [];
@@ -309,6 +315,19 @@ const DynamicPriceSelector = ({
 
   return (
     <div className="mb-2">
+      {/* Cabecera visible de plantilla y zona */}
+      {selectedPlantilla && (
+        <div className="mb-2">
+          <Text className="text-xs text-gray-600">Plantilla: {selectedPlantilla.nombre || selectedPlantilla.id}</Text>
+        </div>
+      )}
+
+      {/* Filtros de zona */}
+      <div className="mb-2 flex flex-wrap gap-2">
+        {generateZonaButtons()}
+      </div>
+
+      {/* Opciones */}
       <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
         {filteredOptions.map((option) => (
           <Card
