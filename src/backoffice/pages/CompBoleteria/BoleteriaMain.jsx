@@ -1400,6 +1400,7 @@ const BoleteriaMain = () => {
             </div>
           </div>
         </div>
+      </div>
       {/* Modal de búsqueda de eventos */}
       <Modal
         title="Seleccionar Evento y Función"
