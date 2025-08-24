@@ -261,7 +261,7 @@ const SimpleSeatingMap = ({
       return {
         nombre: zonePrice.nombre,
         precio: zonePrice.precio,
-        color: zonePrice.color || zonaColor || '#5C1473'
+        color: zonaColor || zonePrice.color || '#5C1473'
       };
     }
     // Si no hay precio en plantilla, usar datos embebidos de la zona del asiento

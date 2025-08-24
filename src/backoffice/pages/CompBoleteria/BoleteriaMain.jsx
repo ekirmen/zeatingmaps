@@ -952,6 +952,11 @@ const BoleteriaMain = () => {
                 onPriceSelect={handlePriceOptionSelect}
                 selectedPriceId={selectedPriceOption?.id}
               />
+              {!blockMode && !selectedPriceOption && (
+                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
+                  Primero selecciona una zona y precio antes de elegir asientos
+                </div>
+              )}
             </div>
           )}
 

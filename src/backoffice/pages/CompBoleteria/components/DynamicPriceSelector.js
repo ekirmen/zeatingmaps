@@ -1,30 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, Badge, Button, Space, Typography, Divider } from 'antd';
-import { GiftOutlined, CrownOutlined, DollarOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined } from '@ant-design/icons';
 import { supabase } from '../../../../supabaseClient';
 import { message } from 'antd'; // Added message import
 
 const { Text, Title } = Typography;
 
-// ==========================
-// 1. CONFIGURACIÓN GLOBAL
-// ==========================
-
-// Aquí defines los eventos especiales. Puedes agregar o quitar IDs fácilmente:
-const eventosOcultarIVA = ['4218', '4249', '4250', '4299', '4064','4371'];   // IDs que ocultarán el IVA
-const eventosOcultarBs = ['4249', '4250'];            // IDs que ocultarán bolívares
-const eventoEspecialEUR = ['4289', '4299','4371'];                    // Evento que usa tasa EUR
-const eventosOcultarPrecioBase = ['4218', '4249', '4250', '4299', '4064', '4371']; // IDs que ocultarán precio base y cargos
-
-// Obtener el ID del evento desde la URL:
-const urlParams = new URLSearchParams(window.location.search);
-const idEventoActual = urlParams.get('idEvento');
-
-// Flags globales
-const debeOcultarIVA = eventosOcultarIVA.includes(idEventoActual);
-const debeOcultarBs = eventosOcultarBs.includes(idEventoActual);
-const esEventoEspecial = eventoEspecialEUR.includes(idEventoActual);
-const debeOcultarPrecioBase = eventosOcultarPrecioBase.includes(idEventoActual);
+// Nota: No usamos flags globales por ID de evento en este proyecto.
 
 const DynamicPriceSelector = ({ 
   selectedFuncion, 
@@ -82,7 +64,7 @@ const DynamicPriceSelector = ({
       console.log('Función cargada:', funcion);
       console.log('Plantilla asignada:', plantilla);
 
-      // Cargar las entradas disponibles para este evento
+      // Cargar las entradas disponibles para este evento (para resolver nombres)
       console.log('Fetching entradas...');
       const { data: entradas, error: entradasError } = await supabase
         .from('entradas')
@@ -95,7 +77,7 @@ const DynamicPriceSelector = ({
         return;
       }
 
-      // Cargar las zonas del mapa (filtrar por la sala de la función)
+      // Cargar las zonas del mapa (filtrar por la sala de la función) para resolver nombres de zona
       // Resolver salaId de forma robusta
       const salaId = funcion.sala?.id || funcion.sala_id || funcion.sala;
       console.log('Fetching zonas for sala:', salaId);
@@ -144,48 +126,34 @@ const DynamicPriceSelector = ({
         });
       }
 
-      // Crear opciones de precio combinando entradas y zonas
+      // Construir mapas para resolución rápida
+      const entradasById = new Map((entradas || []).map(e => [String(e.id), e]));
+      const zonasById = new Map((zonas || []).map(z => [String(z.id), z]));
+
+      // Crear opciones ÚNICAMENTE desde los detalles de la plantilla
       const options = [];
-      
-      entradas.forEach(entrada => {
-        zonas.forEach(zona => {
-          console.log(`Buscando precio para entrada ${entrada.id} (${entrada.nombre_entrada}) y zona ${zona.id} (${zona.nombre})`);
-          
-          // Buscar precio en la plantilla - comparar tanto como string como número
-          const precioDetalle = plantillaDetalles.find(detalle => 
-            (detalle.zonaId === zona.id || detalle.zonaId === zona.id.toString()) && 
-            (detalle.productoId === entrada.id || detalle.productoId === entrada.id.toString())
-          );
-          
-          console.log('Precio detalle encontrado:', precioDetalle);
+      for (const detalle of plantillaDetalles) {
+        const zonaKey = String(detalle.zonaId ?? detalle.zona?.id ?? detalle.zona);
+        const prodKey = String(detalle.productoId ?? detalle.producto?.id ?? detalle.producto);
+        if (!zonaKey || !prodKey) continue;
+        const entrada = entradasById.get(prodKey);
+        const zona = zonasById.get(zonaKey);
+        if (!entrada || !zona) continue;
 
-          if (precioDetalle && precioDetalle.precio) {
-            // Determinar categoría basada en el nombre de la entrada
-            let category = 'regular';
-            if ((entrada.nombre_entrada && entrada.nombre_entrada.toLowerCase().includes('cortesía')) || 
-                (entrada.nombre_entrada && entrada.nombre_entrada.toLowerCase().includes('cortesia'))) {
-              category = 'cortesia';
-            } else if (entrada.nombre_entrada && entrada.nombre_entrada.toLowerCase().includes('vip')) {
-              category = 'vip';
-            } else if (entrada.nombre_entrada && entrada.nombre_entrada.toLowerCase().includes('premium')) {
-              category = 'premium';
-            }
+        if (detalle.precio == null) continue;
 
-            options.push({
-              id: `${entrada.id}_${zona.id}`,
-              entrada: entrada,
-              zona: zona,
-              precio: precioDetalle.precio,
-              comision: precioDetalle.comision || 0,
-              precioOriginal: precioDetalle.precio_original || precioDetalle.precio,
-              nombre: `${entrada.nombre_entrada} - ${zona.nombre}`,
-              color: entrada.color || '#5C1473',
-              category: category,
-              descripcion: entrada.descripcion || ''
-            });
-          }
+        options.push({
+          id: `${entrada.id}_${zona.id}`,
+          entrada,
+          zona,
+          precio: Number(detalle.precio),
+          comision: Number(detalle.comision || 0),
+          precioOriginal: Number(detalle.precio_original || detalle.precio),
+          nombre: `${entrada.nombre_entrada} - ${zona.nombre}`,
+          color: zona.color || entrada.color || '#5C1473',
+          descripcion: entrada.descripcion || ''
         });
-      });
+      }
 
       console.log('Opciones de precio generadas:', options);
       setPriceOptions(options);
@@ -208,45 +176,7 @@ const DynamicPriceSelector = ({
     onPriceSelect(priceOption);
   };
 
-  const getCategoryIcon = (category) => {
-    switch (category) {
-      case 'cortesia':
-        return <GiftOutlined style={{ color: '#52c41a' }} />;
-      case 'vip':
-        return <CrownOutlined style={{ color: '#faad14' }} />;
-      case 'premium':
-        return <DollarOutlined style={{ color: '#722ed1' }} />;
-      default:
-        return <InfoCircleOutlined style={{ color: '#1890ff' }} />;
-    }
-  };
-
-  const getCategoryLabel = (category) => {
-    switch (category) {
-      case 'cortesia':
-        return 'Cortesía';
-      case 'vip':
-        return 'VIP';
-      case 'premium':
-        return 'Premium';
-      default:
-        return 'Regular';
-    }
-  };
-
-  // Función auxiliar para determinar categoría basada en nombre de entrada
-  const getCategoryFromEntrada = (entradaNombre) => {
-    if (!entradaNombre) return 'regular';
-    const nombre = entradaNombre.toLowerCase();
-    if (nombre.includes('cortesía') || nombre.includes('cortesia')) {
-      return 'cortesia';
-    } else if (nombre.includes('vip')) {
-      return 'vip';
-    } else if (nombre.includes('premium')) {
-      return 'premium';
-    }
-    return 'regular';
-  };
+  // No usamos categorías heurísticas ni íconos genéricos. Todo viene de BD.
 
   // Generar botones dinámicos basados en zonas
   const generateZonaButtons = () => {
@@ -276,7 +206,6 @@ const DynamicPriceSelector = ({
         <Button 
           key={zonaNombre}
           type={selectedCategory === zonaNombre ? 'primary' : 'default'}
-          icon={getCategoryIcon(getCategoryFromEntrada(priceOptions.find(opt => opt.zona.nombre === zonaNombre)?.entrada.nombre_entrada))}
           onClick={() => setSelectedCategory(zonaNombre)}
         >
           {zonaNombre} ({count})
@@ -291,6 +220,17 @@ const DynamicPriceSelector = ({
   const filteredOptions = selectedCategory === 'all' 
     ? priceOptions 
     : priceOptions.filter(option => option.zona.nombre === selectedCategory);
+
+  // Agrupar opciones por zona para mostrar en un cuadro
+  const optionsByZona = useMemo(() => {
+    const groups = {};
+    filteredOptions.forEach(opt => {
+      const key = opt.zona.nombre || String(opt.zona.id);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(opt);
+    });
+    return groups;
+  }, [filteredOptions]);
 
   if (loading) {
     return (
@@ -327,49 +267,48 @@ const DynamicPriceSelector = ({
         {generateZonaButtons()}
       </div>
 
-      {/* Opciones */}
-      <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
-        {filteredOptions.map((option) => (
-          <Card
-            key={option.id}
-            size="small"
-            className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-              selectedPriceId === option.id
-                ? 'ring-2 ring-orange-500 shadow-lg'
-                : ''
-            }`}
-            onClick={() => handlePriceSelect(option)}
-          >
-            <div className="space-y-1">
-              <div>
-                <span className="ant-typography text-xs">
-                  <strong>{option.entrada.nombre_entrada}</strong>
-                </span>
+      {/* Cuadro de Zonas y Precios */}
+      <div className="border rounded-md bg-white">
+        <div className="px-3 py-2 border-b font-medium text-sm text-gray-800">Zonas y precios</div>
+        <div className="p-2 space-y-2">
+          {Object.keys(optionsByZona).length === 0 && (
+            <div className="text-xs text-gray-500 px-2 py-4 text-center">No hay opciones de precio disponibles</div>
+          )}
+          {Object.entries(optionsByZona).map(([zonaNombre, options]) => (
+            <div key={zonaNombre} className="border rounded">
+              <div className="px-3 py-2 bg-gray-50 text-xs font-semibold flex items-center justify-between">
+                <span>{zonaNombre}</span>
+                <span className="text-gray-500">{options.length} opción(es)</span>
               </div>
-              <div>
-                <span className="ant-typography ant-typography-secondary text-xs">
-                  {option.zona.nombre}
-                </span>
-              </div>
-              <div className="ant-divider ant-divider-horizontal" role="separator" style={{ margin: 2 }}></div>
-              <div className="text-center">
-                <div className="text-white px-2 py-1 rounded text-xs font-bold" style={{ backgroundColor: '#5c1473' }}>
-                  ${option.precio.toFixed(2)}
-                </div>
-                {option.comision > 0 && (
-                  <span className="ant-typography ant-typography-secondary text-xs">
-                    +${option.comision.toFixed(2)} comisión
-                  </span>
-                )}
+              <div className="divide-y">
+                {options.map((option) => (
+                  <div
+                    key={option.id}
+                    className={`px-3 py-2 text-xs flex items-center justify-between cursor-pointer hover:bg-purple-50 ${
+                      selectedPriceId === option.id ? 'bg-purple-50 ring-1 ring-purple-300' : ''
+                    }`}
+                    onClick={() => handlePriceSelect(option)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full`} style={{ backgroundColor: option.color || '#5C1473' }}></div>
+                      <div>
+                        <div className="font-medium">{option.entrada.nombre_entrada}</div>
+                        <div className="text-gray-500">{zonaNombre}</div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold">${option.precio.toFixed(2)}</div>
+                      {option.comision > 0 && (
+                        <div className="text-gray-500">+${option.comision.toFixed(2)} comisión</div>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </Card>
-        ))}
+          ))}
+        </div>
       </div>
-      
-      {/* Cuando no hay opciones, no mostramos bloque intrusivo */}
-
-
     </div>
   );
 };
