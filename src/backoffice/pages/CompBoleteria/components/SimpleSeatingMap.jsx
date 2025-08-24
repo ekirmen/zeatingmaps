@@ -459,14 +459,14 @@ const SimpleSeatingMap = ({
                   style={{
                     left:
                       elemento.shape === 'circle'
-                        ? (elemento.posicion?.x || 0) - (elemento.radius || elemento.width || 0) / 2
-                        : elemento.posicion?.x || 0,
+                        ? ((elemento.posicion?.x ?? elemento.x ?? 0) - (elemento.radius ?? (elemento.width ?? 0)) / 2)
+                        : (elemento.posicion?.x ?? elemento.x ?? 0),
                     top:
                       elemento.shape === 'circle'
-                        ? (elemento.posicion?.y || 0) - (elemento.radius || elemento.height || elemento.width || 0) / 2
-                        : elemento.posicion?.y || 0,
-                    width: elemento.shape === 'circle' ? (elemento.radius || 30) * 2 : (elemento.width || 100),
-                    height: elemento.shape === 'circle' ? (elemento.radius || 30) * 2 : (elemento.height || 60),
+                        ? ((elemento.posicion?.y ?? elemento.y ?? 0) - (elemento.radius ?? (elemento.height ?? elemento.width ?? 0)) / 2)
+                        : (elemento.posicion?.y ?? elemento.y ?? 0),
+                    width: elemento.shape === 'circle' ? (elemento.radius ?? 30) * 2 : (elemento.width ?? 100),
+                    height: elemento.shape === 'circle' ? (elemento.radius ?? 30) * 2 : (elemento.height ?? 60),
                     backgroundColor: elemento.fill || 'lightblue',
                     zIndex: 1
                   }}
@@ -529,6 +529,11 @@ const SimpleSeatingMap = ({
                 );
                 const sx = silla?.posicion?.x ?? silla?.x;
                 const sy = silla?.posicion?.y ?? silla?.y;
+                // Si hay una mesa circular padre, centrar los asientos correctamente
+                const isCircleTable = elemento?.type === 'mesa' && elemento?.shape === 'circle';
+                const chairDiameter = 30; // coincide con width/height de la silla
+                const adjustedLeft = (sx || 0) - chairDiameter / 2;
+                const adjustedTop = (sy || 0) - chairDiameter / 2;
                 
                 return (
                   <Tooltip
@@ -539,8 +544,8 @@ const SimpleSeatingMap = ({
                     <div
                       className="absolute cursor-pointer hover:scale-110 transition-transform"
                       style={{
-                        left: (sx || 0) - 15,
-                        top: (sy || 0) - 15,
+                        left: adjustedLeft,
+                        top: adjustedTop,
                         width: 30,
                         height: 30,
                         borderRadius: '50%',

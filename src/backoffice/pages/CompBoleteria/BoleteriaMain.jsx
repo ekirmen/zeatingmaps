@@ -931,6 +931,17 @@ const BoleteriaMain = () => {
       label: 'Mapa',
       children: (
         <div className="relative">
+          {/* Selector de precios arriba del mapa */}
+          {selectedFuncion && (
+            <div className="mb-3">
+              <DynamicPriceSelector
+                selectedFuncion={selectedFuncion}
+                onPriceSelect={handlePriceOptionSelect}
+                selectedPriceId={selectedPriceOption?.id}
+              />
+            </div>
+          )}
+
           <div className="absolute bottom-4 left-4 z-10 flex space-x-2">
             <Button size="small" icon={<ZoomInOutlined />} onClick={() => setZoomLevel(prev => Math.min(prev + 0.2, 3))} />
             <Button size="small" icon={<ZoomOutOutlined />} onClick={() => setZoomLevel(prev => Math.max(prev - 0.2, 0.5))} />
@@ -1110,15 +1121,6 @@ const BoleteriaMain = () => {
         <div className="flex-1 flex">
           {/* Contenido central */}
           <div className="flex-1 p-4">
-             {/* Selección de precios dinámica */}
-             {selectedFuncion && (
-               <DynamicPriceSelector
-                 selectedFuncion={selectedFuncion}
-                 onPriceSelect={handlePriceOptionSelect}
-                 selectedPriceId={selectedPriceOption?.id}
-               />
-             )}
-
              {/* Pestañas */}
              <Tabs
                activeKey={activeTab}
