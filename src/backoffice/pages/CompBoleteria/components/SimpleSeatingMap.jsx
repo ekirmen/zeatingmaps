@@ -250,19 +250,26 @@ const SimpleSeatingMap = ({
   };
 
   const getZoneInfo = (seat) => {
-    const zonaId = seat.zona || seat.zonaId;
-    if (!zonaId) return { nombre: 'Sin zona', precio: 0, color: '#f0f0f0' };
-    
-    const zonePrice = zonePrices[zonaId];
+    // Admite estructura { zona: { id, nombre, color } } o zonaId simple
+    const zonaId = seat.zona?.id || seat.zonaId || seat.zona;
+    const zonaNombre = seat.zona?.nombre;
+    const zonaColor = seat.zona?.color;
+    if (!zonaId && !zonaNombre) return { nombre: 'Sin zona', precio: 0, color: '#f0f0f0' };
+
+    const zonePrice = zonaId ? zonePrices[zonaId] : undefined;
     if (zonePrice) {
       return {
         nombre: zonePrice.nombre,
         precio: zonePrice.precio,
-        color: zonePrice.color || '#5C1473'
+        color: zonePrice.color || zonaColor || '#5C1473'
       };
     }
-    
-    return { nombre: `Zona ${zonaId}`, precio: 0, color: '#f0f0f0' };
+    // Si no hay precio en plantilla, usar datos embebidos de la zona del asiento
+    return {
+      nombre: zonaNombre || `Zona ${zonaId}`,
+      precio: 0,
+      color: zonaColor || '#f0f0f0'
+    };
   };
 
   const handleSeatClick = async (seat, mesa = null) => {
@@ -426,6 +433,23 @@ const SimpleSeatingMap = ({
             return ax - bx;
           }).map(elemento => (
             <div key={elemento._id} className="absolute">
+              {/* Fondo */}
+              {elemento.type === 'background' && (
+                <img
+                  alt="background"
+                  src={elemento.imageData || elemento.image?.data || elemento.src || ''}
+                  className="absolute"
+                  style={{
+                    left: elemento.x || elemento.posicion?.x || 0,
+                    top: elemento.y || elemento.posicion?.y || 0,
+                    width: elemento.width || dimensions.width,
+                    height: elemento.height || dimensions.height,
+                    zIndex: 0,
+                    pointerEvents: 'none'
+                  }}
+                />
+              )}
+
               {/* Mesa */}
               {elemento.type === 'mesa' && (
                 <div
@@ -433,16 +457,25 @@ const SimpleSeatingMap = ({
                     elemento.shape === 'rect' ? 'rounded-lg' : 'rounded-full'
                   }`}
                   style={{
-                    left: elemento.posicion.x,
-                    top: elemento.posicion.y,
-                    width: elemento.width,
-                    height: elemento.height,
-                    backgroundColor: 'lightblue'
+                    left:
+                      elemento.shape === 'circle'
+                        ? (elemento.posicion?.x || 0) - (elemento.radius || elemento.width || 0) / 2
+                        : elemento.posicion?.x || 0,
+                    top:
+                      elemento.shape === 'circle'
+                        ? (elemento.posicion?.y || 0) - (elemento.radius || elemento.height || elemento.width || 0) / 2
+                        : elemento.posicion?.y || 0,
+                    width: elemento.shape === 'circle' ? (elemento.radius || 30) * 2 : (elemento.width || 100),
+                    height: elemento.shape === 'circle' ? (elemento.radius || 30) * 2 : (elemento.height || 60),
+                    backgroundColor: elemento.fill || 'lightblue',
+                    zIndex: 1
                   }}
                 >
-                  <div className="text-center text-sm font-medium mt-1">
-                    {elemento.nombre}
-                  </div>
+                  {elemento.nombre && (
+                    <div className="text-center text-xs font-medium mt-1">
+                      {elemento.nombre}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -487,7 +520,7 @@ const SimpleSeatingMap = ({
                 </div>
               )}
               
-              {/* Sillas */}
+              {/* Sillas anidadas dentro de elemento */}
               {(elemento.sillas || elemento.asientos || elemento.seats || []).map(silla => {
                 const zoneInfo = getZoneInfo(silla);
                 const isSelected = selectedSeats.some(s => s._id === silla._id);
@@ -511,7 +544,7 @@ const SimpleSeatingMap = ({
                         width: 30,
                         height: 30,
                         borderRadius: '50%',
-                        backgroundColor: getSeatColor(silla),
+                        backgroundColor: silla.fill || getSeatColor(silla),
                         border: isSelected ? '3px solid #000' : isLockedByMe ? '2px solid #f59e0b' : '1px solid #666',
                         display: 'flex',
                         alignItems: 'center',
@@ -519,7 +552,8 @@ const SimpleSeatingMap = ({
                         fontSize: '12px',
                         color: 'white',
                         fontWeight: 'bold',
-                        boxShadow: isSelected ? '0 0 10px rgba(0,0,0,0.5)' : 'none'
+                        boxShadow: isSelected ? '0 0 10px rgba(0,0,0,0.5)' : 'none',
+                        zIndex: 2
                       }}
                       onClick={() => handleSeatClick(silla, elemento)}
                     >
@@ -528,6 +562,49 @@ const SimpleSeatingMap = ({
                   </Tooltip>
                 );
               })}
+
+              {/* Silla como elemento tope del array (type: 'silla') */}
+              {elemento.type === 'silla' && (() => {
+                const silla = elemento;
+                const zoneInfo = getZoneInfo(silla);
+                const isSelected = selectedSeats.some(s => s._id === silla._id);
+                const isLockedByMe = lockedSeats.some(ls => 
+                  ls.seat_id === silla._id && ls.session_id === (localStorage.getItem('anonSessionId') || '')
+                );
+                const sx = silla?.posicion?.x ?? silla?.x;
+                const sy = silla?.posicion?.y ?? silla?.y;
+                return (
+                  <Tooltip
+                    key={silla._id}
+                    title={`${silla.nombre || silla.numero} - ${zoneInfo.nombre} - $${zoneInfo.precio}`}
+                    placement="top"
+                  >
+                    <div
+                      className="absolute cursor-pointer hover:scale-110 transition-transform"
+                      style={{
+                        left: (sx || 0) - (silla.radius || 10),
+                        top: (sy || 0) - (silla.radius || 10),
+                        width: (silla.radius || 10) * 2,
+                        height: (silla.radius || 10) * 2,
+                        borderRadius: '50%',
+                        backgroundColor: silla.fill || getSeatColor(silla),
+                        border: isSelected ? '3px solid #000' : isLockedByMe ? '2px solid #f59e0b' : '1px solid #666',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        boxShadow: isSelected ? '0 0 10px rgba(0,0,0,0.5)' : 'none',
+                        zIndex: 2
+                      }}
+                      onClick={() => handleSeatClick(silla)}
+                    >
+                      {silla.nombre || silla.numero}
+                    </div>
+                  </Tooltip>
+                );
+              })()}
             </div>
           ))
         ) : mapa.contenido?.zonas ? (

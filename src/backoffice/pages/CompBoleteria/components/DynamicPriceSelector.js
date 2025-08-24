@@ -87,11 +87,13 @@ const DynamicPriceSelector = ({
       }
 
       // Cargar las zonas del mapa (filtrar por la sala de la función)
-      console.log('Fetching zonas for sala:', funcion.sala);
+      // Resolver salaId de forma robusta
+      const salaId = funcion.sala?.id || funcion.sala_id || funcion.sala;
+      console.log('Fetching zonas for sala:', salaId);
       const { data: zonas, error: zonasError } = await supabase
         .from('zonas')
         .select('*')
-        .eq('sala_id', funcion.sala.toString())
+        .eq('sala_id', salaId)
         .order('nombre');
 
       if (zonasError) {
@@ -346,32 +348,7 @@ const DynamicPriceSelector = ({
         ))}
       </div>
       
-      {filteredOptions.length === 0 && (
-        <div className="text-center py-8">
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-yellow-900 mb-2">No hay opciones de precio disponibles</h3>
-            <p className="text-yellow-700 mb-4">
-              {selectedCategory === 'all' 
-                ? 'No se encontraron opciones de precio para esta función y plantilla.'
-                : `No hay opciones de precio para la zona "${selectedCategory}" disponibles.`
-              }
-            </p>
-            <div className="text-sm text-yellow-600">
-              <p>• Verifica que la plantilla de precios tenga configurados los precios</p>
-              <p>• Asegúrate de que las entradas y zonas estén activas</p>
-              <p>• Intenta cambiar la zona de filtro</p>
-              <p>• Revisa la consola del navegador para más detalles de depuración</p>
-            </div>
-            <div className="mt-4 p-3 bg-gray-100 rounded text-xs">
-              <p><strong>Información de depuración:</strong></p>
-              <p>• Función seleccionada: {selectedFuncion?.id || 'Ninguna'} - {selectedFuncion?.sala?.nombre || 'Sin sala'}</p>
-              <p>• Plantilla asignada: {selectedFuncion?.plantilla?.id || 'Ninguna'} - {selectedFuncion?.plantilla?.nombre || 'Sin plantilla'}</p>
-              <p>• Opciones de precio cargadas: {priceOptions.length}</p>
-              <p>• Zona filtrada: {selectedCategory === 'all' ? 'Todas' : selectedCategory}</p>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Cuando no hay opciones, no mostramos bloque intrusivo */}
 
 
     </div>

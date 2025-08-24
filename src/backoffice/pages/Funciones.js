@@ -674,6 +674,8 @@ const Funciones = () => {
         streaming_show_url: nuevaFuncion.streamingShowUrl,
         streaming_transmission_start: formatTimestampField(nuevaFuncion.streamingTransmissionStart),
         streaming_transmission_stop: formatTimestampField(nuevaFuncion.streamingTransmissionStop),
+        // Persistir plantilla en ambas columnas por compatibilidad
+        plantilla: formatIntegerField(nuevaFuncion.idPlantillaEntradas),
         plantilla_entradas: formatIntegerField(nuevaFuncion.idPlantillaEntradas),
         plantilla_producto: formatIntegerField(nuevaFuncion.idPlantillaProductos),
         plantilla_comisiones: formatIntegerField(nuevaFuncion.idSpecialProductsTemplate),
