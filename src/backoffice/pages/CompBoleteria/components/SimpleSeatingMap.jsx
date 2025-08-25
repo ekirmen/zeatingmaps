@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Card, Button, Badge, Spin, message, Tooltip, Typography } from 'antd';
+import { Card, Button, Badge, message, Tooltip, Typography } from 'antd';
 import { supabase } from '../../../../supabaseClient';
 
 const { Text, Title } = Typography;
@@ -13,53 +13,14 @@ const SimpleSeatingMap = ({
   zonas = [], // Agregar prop para zonas
   selectedPlantilla = null, // Agregar prop para plantilla de precios
   selectedPriceOption = null, // Nuevo prop para el precio seleccionado
-  selectedZonaId = null
+  selectedZonaId = null,
+  mapa = null // Agregar prop para el mapa
 }) => {
-  const [mapa, setMapa] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [lockedSeats, setLockedSeats] = useState([]);
   const [zonePrices, setZonePrices] = useState({});
   const channelRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-
-  // Cargar mapa directamente
-  const loadMapa = async () => {
-    const salaId = selectedFuncion?.sala?.id || selectedFuncion?.sala_id;
-    if (!salaId) {
-      console.log('No hay sala seleccionada (falta sala_id o sala.id)');
-      setMapa(null);
-      return;
-    }
-
-    console.log('Cargando mapa para sala:', salaId);
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Cargar mapa de la sala
-      const { data: mapaData, error: mapaError } = await supabase
-        .from('mapas')
-        .select('*')
-        .eq('sala_id', salaId)
-        .single();
-
-      console.log('Mapa encontrado:', mapaData);
-
-      if (mapaError || !mapaData) {
-        console.log('No hay mapa configurado para esta sala');
-        setError('No hay mapa configurado para esta sala. Contacta al administrador.');
-        return;
-      }
-
-      setMapa(mapaData);
-    } catch (error) {
-      console.error('Error loading mapa:', error);
-      setError('Error al cargar el mapa');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Calcular dimensiones del mapa para ajustar el contenedor
   useEffect(() => {
@@ -196,7 +157,6 @@ const SimpleSeatingMap = ({
   };
 
   useEffect(() => {
-    loadMapa();
     loadZonePrices();
     loadLockedSeats();
     subscribeToRealtime();
@@ -206,11 +166,23 @@ const SimpleSeatingMap = ({
         channelRef.current.unsubscribe();
       }
     };
-  }, [selectedFuncion]);
+  }, [selectedFuncion, selectedPlantilla]);
+
+  // React to mapa prop changes
+  useEffect(() => {
+    console.log('🔄 [SimpleSeatingMap] Mapa prop changed:', mapa);
+    if (mapa) {
+      console.log('✅ [SimpleSeatingMap] Mapa recibido como prop:', mapa);
+      console.log('✅ [SimpleSeatingMap] Mapa contenido:', mapa.contenido);
+      console.log('✅ [SimpleSeatingMap] Mapa contenido es array:', Array.isArray(mapa.contenido));
+    } else {
+      console.log('❌ [SimpleSeatingMap] No hay mapa disponible');
+    }
+  }, [mapa]);
 
   useEffect(() => {
     loadZonePrices();
-  }, [selectedPlantilla]);
+  }, [selectedPlantilla, selectedFuncion]);
 
   const getSeatColor = (seat) => {
     // Si está en modo bloqueo y está seleccionado para bloquear
@@ -401,19 +373,13 @@ const SimpleSeatingMap = ({
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Spin size="large" />
-      </div>
-    );
-  }
+
 
   if (error) {
     return (
       <Card className="text-center">
         <div className="text-red-500 mb-4">{error}</div>
-        <Button onClick={loadMapa}>Reintentar</Button>
+        <Button onClick={() => window.location.reload()}>Reintentar</Button>
       </Card>
     );
   }
@@ -421,7 +387,10 @@ const SimpleSeatingMap = ({
   if (!mapa || !mapa.contenido) {
     return (
       <Card className="text-center">
-        <div className="text-gray-500">No hay mapa configurado</div>
+        <div className="text-gray-500">
+          {!mapa ? 'Esperando mapa...' : 'Mapa sin contenido configurado'}
+        </div>
+        {!mapa && <div className="text-xs text-gray-400 mt-2">El mapa se cargará automáticamente</div>}
       </Card>
     );
   }

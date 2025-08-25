@@ -37,6 +37,14 @@ const BoleteriaMain = () => {
     loading: boleteriaLoading
   } = useBoleteria();
 
+  // Debug: Log mapa changes
+  useEffect(() => {
+    console.log('🔄 [BoleteriaMain] Mapa from hook changed:', mapa);
+    console.log('🔄 [BoleteriaMain] Mapa tipo:', typeof mapa);
+    console.log('🔄 [BoleteriaMain] Mapa es null?', mapa === null);
+    console.log('🔄 [BoleteriaMain] Mapa contenido:', mapa?.contenido);
+  }, [mapa]);
+
   const {
     selectedClient,
     setSelectedClient
@@ -104,8 +112,7 @@ const BoleteriaMain = () => {
   const [showMailChimp, setShowMailChimp] = useState(false);
   const [showPushNotifications, setShowPushNotifications] = useState(false);
 
-  // Estado para el mapa
-  const [mapaLocal, setMapaLocal] = useState(null);
+
 
   // Función para obtener las imágenes del evento
   const getEventImages = () => {
@@ -243,20 +250,14 @@ const BoleteriaMain = () => {
     }
   }, [selectedFuncion]);
 
-  // Sincronizar mapa del hook con estado local
-  useEffect(() => {
-    if (mapa) {
-      setMapaLocal(mapa);
-      console.log('🔄 [useEffect] Mapa sincronizado desde hook:', mapa);
-    }
-  }, [mapa]);
+
 
   // Recalcular estadísticas cuando el mapa efectivo esté disponible
   useEffect(() => {
     if (selectedFuncion?.id) {
       loadEventStats(selectedFuncion.id);
     }
-  }, [mapaLocal, selectedFuncion?.id]);
+  }, [mapa, selectedFuncion?.id]);
 
   const loadSavedCarts = async () => {
     try {
@@ -485,8 +486,7 @@ const BoleteriaMain = () => {
       
       // Actualizar el estado del mapa local
       if (mapData) {
-        setMapaLocal(mapData);
-        console.log('✅ [loadMapaForFunction] Mapa actualizado en estado local');
+        console.log('✅ [loadMapaForFunction] Mapa cargado desde función');
       }
     } catch (error) {
       console.error('❌ [loadMapaForFunction] Error cargando mapa:', error);
@@ -552,8 +552,8 @@ const BoleteriaMain = () => {
     if (!funcionId) return;
     
     try {
-      // Usar el mapa efectivo disponible
-      const effectiveMap = mapaLocal || mapa;
+      // Usar el mapa del hook
+      const effectiveMap = mapa;
       let totalSeats = 0;
       let availableSeats = 0;
       let soldSeats = 0;
@@ -999,7 +999,7 @@ const BoleteriaMain = () => {
               <ZonesPanel
                 selectedFuncion={selectedFuncion}
                 selectedPlantilla={selectedPlantilla}
-                mapa={mapaLocal}
+                mapa={mapa}
                 onSelectPrice={handlePriceOptionSelect}
                 selectedPriceId={selectedPriceOption?.id}
                 selectedZonaId={activeZoneId}
@@ -1070,6 +1070,7 @@ const BoleteriaMain = () => {
                 selectedPlantilla={selectedPlantilla}
                 selectedPriceOption={selectedPriceOption}
                 selectedZonaId={activeZoneId}
+                mapa={mapa}
               />
             </div>
           </div>
@@ -1184,7 +1185,7 @@ const BoleteriaMain = () => {
                       <div className="text-gray-500 mt-1">
                         <span>Sala: {selectedFuncion.sala_id || selectedFuncion.sala?.id || 'Sin sala'}</span>
                         <span className="ml-2">Plantilla: {selectedPlantilla ? selectedPlantilla.nombre : 'Sin plantilla'}</span>
-                        <span className="ml-2">Mapa: {mapaLocal ? 'Cargado' : 'No cargado'}</span>
+                        <span className="ml-2">Mapa: {mapa ? 'Cargado' : 'No cargado'}</span>
                       </div>
                     </div>
                   </div>
