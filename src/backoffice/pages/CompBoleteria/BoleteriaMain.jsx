@@ -168,7 +168,7 @@ const BoleteriaMain = () => {
     loadPersistedData();
     loadSavedCarts();
     loadLastSelection(); // Cargar última selección
-  }, []);
+  }, [loadAvailableEvents, loadPlantillasPrecios, loadPersistedData, loadSavedCarts, loadLastSelection]);
 
   // Cargar datos persistidos
   const loadPersistedData = () => {
@@ -277,7 +277,7 @@ const BoleteriaMain = () => {
     if (selectedFuncion) {
       loadPlantillaForFunction(selectedFuncion);
     }
-  }, [selectedFuncion]);
+  }, [selectedFuncion, loadPlantillaForFunction]);
 
 
 
@@ -286,7 +286,7 @@ const BoleteriaMain = () => {
     if (selectedFuncion?.id) {
       loadEventStats(selectedFuncion.id);
     }
-  }, [mapa, selectedFuncion?.id]);
+  }, [mapa, selectedFuncion?.id, loadEventStats]);
 
   const loadSavedCarts = async () => {
     try {

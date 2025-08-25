@@ -104,7 +104,7 @@ export const useBoleteria = () => {
     });
     
     console.log('➕ [useBoleteria] Asiento agregado al carrito:', newItem);
-  }, [selectedFuncion?.id, saveCarritoToStorage]);
+  }, [selectedFuncion?.id, saveCarritoToStorage, setCarrito]);
 
   // Función para quitar asiento del carrito
   const removeFromCarrito = useCallback((asientoId) => {
@@ -503,7 +503,7 @@ export const useBoleteria = () => {
     };
 
     fetchEventos();
-  }, [handleEventSelect]);
+  }, [handleEventSelect, handleFunctionSelect, selectedFuncion]);
 
   return returnValue;
 };

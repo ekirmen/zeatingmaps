@@ -380,7 +380,7 @@ const ZonesPanel = ({
       setDataLoaded(true);
       loadPriceOptions();
     }
-  }, [selectedFuncion, selectedPlantilla, dataLoaded]); // Solo se ejecuta una vez
+  }, [selectedFuncion, selectedPlantilla, dataLoaded, loadPriceOptions]); // Solo se ejecuta una vez
 
   // Resetear dataLoaded cuando cambie la función para permitir recarga
   useEffect(() => {
@@ -418,7 +418,7 @@ const ZonesPanel = ({
       
       setPriceOptions([...opcionesActualizadas]);
     }
-  }, [mapa]); // Solo depende del mapa
+  }, [mapa, priceOptions, setPriceOptions]); // Solo depende del mapa
 
   const activeZona = activeZonaId ? priceOptions.find(o => o.zona.id === activeZonaId) : null;
 
