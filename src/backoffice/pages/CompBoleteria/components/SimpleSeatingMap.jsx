@@ -12,7 +12,8 @@ const SimpleSeatingMap = ({
   blockMode = false,
   zonas = [], // Agregar prop para zonas
   selectedPlantilla = null, // Agregar prop para plantilla de precios
-  selectedPriceOption = null // Nuevo prop para el precio seleccionado
+  selectedPriceOption = null, // Nuevo prop para el precio seleccionado
+  selectedZonaId = null
 }) => {
   const [mapa, setMapa] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -286,6 +287,13 @@ const SimpleSeatingMap = ({
         return;
       }
 
+      // Restringir a la zona activa si está definida
+      const seatZonaId = String(seat?.zona?.id || seat?.zonaId || seat?.zona || '');
+      if (selectedZonaId && seatZonaId && String(selectedZonaId) !== seatZonaId) {
+        message.info('La zona seleccionada no coincide con este asiento');
+        return;
+      }
+
       // Verificar si el asiento está disponible
       if (seat.estado === 'pagado' || seat.estado === 'reservado') {
         message.warning('Este asiento ya está vendido o reservado');
@@ -451,33 +459,43 @@ const SimpleSeatingMap = ({
               )}
 
               {/* Mesa */}
-              {elemento.type === 'mesa' && (
-                <div
-                  className={`absolute border-2 border-gray-300 ${
-                    elemento.shape === 'rect' ? 'rounded-lg' : 'rounded-full'
-                  }`}
-                  style={{
-                    left:
-                      elemento.shape === 'circle'
-                        ? ((elemento.posicion?.x ?? elemento.x ?? 0) - (elemento.radius ?? (elemento.width ?? 0)) / 2)
-                        : (elemento.posicion?.x ?? elemento.x ?? 0),
-                    top:
-                      elemento.shape === 'circle'
-                        ? ((elemento.posicion?.y ?? elemento.y ?? 0) - (elemento.radius ?? (elemento.height ?? elemento.width ?? 0)) / 2)
-                        : (elemento.posicion?.y ?? elemento.y ?? 0),
-                    width: elemento.shape === 'circle' ? (elemento.radius ?? 30) * 2 : (elemento.width ?? 100),
-                    height: elemento.shape === 'circle' ? (elemento.radius ?? 30) * 2 : (elemento.height ?? 60),
-                    backgroundColor: elemento.fill || 'lightblue',
-                    zIndex: 1
-                  }}
-                >
-                  {elemento.nombre && (
-                    <div className="text-center text-xs font-medium mt-1">
-                      {elemento.nombre}
-                    </div>
-                  )}
-                </div>
-              )}
+              {elemento.type === 'mesa' && (() => {
+                // Detectar si la mesa contiene sillas de la zona activa
+                const mesaTieneZonaActiva = Array.isArray(elemento.sillas) && elemento.sillas.some(s => {
+                  const zid = String(s?.zona?.id || s?.zonaId || s?.zona || '');
+                  return selectedZonaId && zid && String(selectedZonaId) === zid;
+                });
+                const zonaColorMesa = mesaTieneZonaActiva ? (elemento.sillas.find(s => String(s?.zona?.id || s?.zonaId || s?.zona || '') === String(selectedZonaId))?.zona?.color) : null;
+                return (
+                  <div
+                    className={`absolute ${
+                      elemento.shape === 'rect' ? 'rounded-lg' : 'rounded-full'
+                    }`}
+                    style={{
+                      left:
+                        elemento.shape === 'circle'
+                          ? ((elemento.posicion?.x ?? elemento.x ?? 0) - (elemento.radius ?? (elemento.width ?? 0)) / 2)
+                          : (elemento.posicion?.x ?? elemento.x ?? 0),
+                      top:
+                        elemento.shape === 'circle'
+                          ? ((elemento.posicion?.y ?? elemento.y ?? 0) - (elemento.radius ?? (elemento.height ?? elemento.width ?? 0)) / 2)
+                          : (elemento.posicion?.y ?? elemento.y ?? 0),
+                      width: elemento.shape === 'circle' ? (elemento.radius ?? 30) * 2 : (elemento.width ?? 100),
+                      height: elemento.shape === 'circle' ? (elemento.radius ?? 30) * 2 : (elemento.height ?? 60),
+                      backgroundColor: elemento.fill || 'lightblue',
+                      border: mesaTieneZonaActiva ? `2px solid ${zonaColorMesa || '#5C1473'}` : '2px solid #d1d5db',
+                      boxShadow: mesaTieneZonaActiva ? `0 0 8px ${(zonaColorMesa || '#5C1473')}55` : 'none',
+                      zIndex: 1
+                    }}
+                  >
+                    {elemento.nombre && (
+                      <div className="text-center text-xs font-medium mt-1">
+                        {elemento.nombre}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Formas genéricas (rect/circle) que no son mesas */}
               {!elemento.type && elemento.shape === 'rect' && (
@@ -535,6 +553,20 @@ const SimpleSeatingMap = ({
                 const adjustedLeft = (sx || 0) - chairDiameter / 2;
                 const adjustedTop = (sy || 0) - chairDiameter / 2;
                 
+                const isOtherZone = selectedZonaId && String(selectedZonaId) !== String(silla?.zona?.id || silla?.zonaId || silla?.zona || '');
+                const muted = isOtherZone && (silla.estado === 'disponible');
+                const borderStyle = isSelected
+                  ? '3px solid #000'
+                  : isLockedByMe
+                  ? '2px solid #f59e0b'
+                  : (!isOtherZone && zoneInfo.color)
+                  ? `2px solid ${zoneInfo.color}`
+                  : '1px solid #666';
+                const glowShadow = isSelected
+                  ? '0 0 10px rgba(0,0,0,0.5)'
+                  : (!isOtherZone && zoneInfo.color)
+                  ? `0 0 8px ${zoneInfo.color}55`
+                  : 'none';
                 return (
                   <Tooltip
                     key={silla._id}
@@ -550,14 +582,15 @@ const SimpleSeatingMap = ({
                         height: 30,
                         borderRadius: '50%',
                         backgroundColor: silla.fill || getSeatColor(silla),
-                        border: isSelected ? '3px solid #000' : isLockedByMe ? '2px solid #f59e0b' : '1px solid #666',
+                        border: borderStyle,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: '12px',
                         color: 'white',
                         fontWeight: 'bold',
-                        boxShadow: isSelected ? '0 0 10px rgba(0,0,0,0.5)' : 'none',
+                        boxShadow: glowShadow,
+                        opacity: muted ? 0.35 : 1,
                         zIndex: 2
                       }}
                       onClick={() => handleSeatClick(silla, elemento)}
@@ -578,6 +611,20 @@ const SimpleSeatingMap = ({
                 );
                 const sx = silla?.posicion?.x ?? silla?.x;
                 const sy = silla?.posicion?.y ?? silla?.y;
+                const isOtherZoneTop = selectedZonaId && String(selectedZonaId) !== String(silla?.zona?.id || silla?.zonaId || silla?.zona || '');
+                const mutedTop = isOtherZoneTop && (silla.estado === 'disponible');
+                const borderStyleTop = isSelected
+                  ? '3px solid #000'
+                  : isLockedByMe
+                  ? '2px solid #f59e0b'
+                  : (!isOtherZoneTop && zoneInfo.color)
+                  ? `2px solid ${zoneInfo.color}`
+                  : '1px solid #666';
+                const glowShadowTop = isSelected
+                  ? '0 0 10px rgba(0,0,0,0.5)'
+                  : (!isOtherZoneTop && zoneInfo.color)
+                  ? `0 0 8px ${zoneInfo.color}55`
+                  : 'none';
                 return (
                   <Tooltip
                     key={silla._id}
@@ -593,14 +640,15 @@ const SimpleSeatingMap = ({
                         height: (silla.radius || 10) * 2,
                         borderRadius: '50%',
                         backgroundColor: silla.fill || getSeatColor(silla),
-                        border: isSelected ? '3px solid #000' : isLockedByMe ? '2px solid #f59e0b' : '1px solid #666',
+                        border: borderStyleTop,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         fontSize: '12px',
                         color: 'white',
                         fontWeight: 'bold',
-                        boxShadow: isSelected ? '0 0 10px rgba(0,0,0,0.5)' : 'none',
+                        boxShadow: glowShadowTop,
+                        opacity: mutedTop ? 0.35 : 1,
                         zIndex: 2
                       }}
                       onClick={() => handleSeatClick(silla)}

@@ -4,6 +4,7 @@ import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawe
 import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
+import ZonesPanel from './components/ZonesPanel.jsx';
 import ProductosWidget from '../../../store/components/ProductosWidget';
 import PaymentModal from './PaymentModal';
 import CustomFormBuilder from './components/CustomFormBuilder';
@@ -49,6 +50,7 @@ const BoleteriaMain = () => {
   const [activeTab, setActiveTab] = useState('mapa');
   const [selectedPriceOption, setSelectedPriceOption] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [activeZoneId, setActiveZoneId] = useState(null);
   
   // Estados para funcionalidades
   const [showEventSearch, setShowEventSearch] = useState(false);
@@ -918,6 +920,13 @@ const BoleteriaMain = () => {
 
   const handlePriceOptionSelect = (priceOption) => {
     setSelectedPriceOption(priceOption);
+    // Al seleccionar precio, fijar la zona activa para filtrar asientos
+    try {
+      const zonaId = priceOption?.zona?.id || priceOption?.zonaId || priceOption?.zona;
+      if (zonaId) {
+        setActiveZoneId(String(zonaId));
+      }
+    } catch (e) {}
   };
 
   const handleEventSelectForSearch = (eventId) => {
@@ -943,14 +952,17 @@ const BoleteriaMain = () => {
       label: 'Mapa',
       children: (
         <div className="relative">
-          {/* Selector de precios arriba del mapa */}
+          {/* Zonas y precios al estilo panel agrupado */}
           {selectedFuncion && (
             <div className="mb-3">
-              <DynamicPriceSelector
+              <ZonesPanel
                 selectedFuncion={selectedFuncion}
                 selectedPlantilla={selectedPlantilla}
-                onPriceSelect={handlePriceOptionSelect}
+                mapa={mapaLocal}
+                onSelectPrice={handlePriceOptionSelect}
                 selectedPriceId={selectedPriceOption?.id}
+                selectedZonaId={activeZoneId}
+                onSelectZona={(zonaId) => setActiveZoneId(String(zonaId))}
               />
               {!blockMode && !selectedPriceOption && (
                 <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
@@ -986,6 +998,7 @@ const BoleteriaMain = () => {
                 blockMode={blockMode}
                 selectedPlantilla={selectedPlantilla}
                 selectedPriceOption={selectedPriceOption}
+                selectedZonaId={activeZoneId}
               />
             </div>
           </div>
