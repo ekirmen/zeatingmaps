@@ -38,11 +38,19 @@ export default async function handler(req, res) {
   });
   
   if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('Missing Supabase environment variables');
-    console.error('supabaseUrl:', supabaseUrl);
-    console.error('supabaseServiceKey:', supabaseServiceKey);
-    return res.status(500).json({ error: 'Server configuration error' });
+    console.error('❌ [DOWNLOAD] Variables de entorno faltantes');
+    console.error('- supabaseUrl:', supabaseUrl);
+    console.error('- supabaseServiceKey:', supabaseServiceKey);
+    console.error('❌ [DOWNLOAD] Redirigiendo a error 500');
+    return res.status(500).json({ 
+      error: 'Server configuration error',
+      details: 'Missing Supabase environment variables',
+      supabaseUrl: supabaseUrl ? 'defined' : 'undefined',
+      supabaseServiceKey: supabaseServiceKey ? 'defined' : 'undefined'
+    });
   }
+  
+  console.log('✅ [DOWNLOAD] Variables de entorno configuradas correctamente');
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     return res.status(405).json({ error: 'Method not allowed' });

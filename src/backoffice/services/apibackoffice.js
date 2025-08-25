@@ -46,11 +46,16 @@ export const fetchZonas = async () => {
 };
 
 export const fetchZonasPorSala = async (salaId) => {
+  console.log('🔍 [fetchZonasPorSala] Iniciando búsqueda de zonas para sala:', salaId);
+  
   // Obtener tenant_id del usuario autenticado
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
+    console.error('❌ [fetchZonasPorSala] Usuario no autenticado');
     throw new Error('Usuario no autenticado');
   }
+  
+  console.log('✅ [fetchZonasPorSala] Usuario autenticado:', user.id);
 
   // Obtener tenant_id del perfil del usuario
   const { data: profile, error: profileError } = await supabase
@@ -59,18 +64,37 @@ export const fetchZonasPorSala = async (salaId) => {
     .eq('id', user.id)
     .single();
   
+  console.log('🔍 [fetchZonasPorSala] Perfil obtenido:', { profile, error: profileError });
+  
   if (profileError || !profile?.tenant_id) {
+    console.error('❌ [fetchZonasPorSala] Usuario sin tenant_id válido');
     throw new Error('Usuario sin tenant_id válido');
   }
+  
+  console.log('✅ [fetchZonasPorSala] Tenant ID:', profile.tenant_id);
 
   // Filtrar zonas por sala_id y tenant_id del usuario
+  console.log('🔍 [fetchZonasPorSala] Buscando zonas en tabla zonas...');
   const { data, error } = await supabase
     .from('zonas')
     .select('*')
     .eq('sala_id', salaId)
     .eq('tenant_id', profile.tenant_id);
   
+  console.log('🔍 [fetchZonasPorSala] Resultado búsqueda zonas:', { data, error });
+  
+  if (error) {
+    console.error('❌ [fetchZonasPorSala] Error al buscar zonas:', error);
+    console.error('❌ [fetchZonasPorSala] Error details:', {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint
+    });
+  }
+  
   handleError(error);
+  console.log('✅ [fetchZonasPorSala] Zonas retornadas:', data);
   return data;
 };
 
@@ -247,35 +271,66 @@ export const createFuncion = async (data) => {
 
 // === MAPAS ===
 export const fetchMapa = async (salaId) => {
-  if (!salaId) return null;
+  if (!salaId) {
+    console.error('❌ [fetchMapa] salaId es null/undefined');
+    return null;
+  }
+
+  console.log('🔍 [fetchMapa] Iniciando búsqueda de mapa para sala:', salaId);
+  console.log('🔍 [fetchMapa] Tipo de salaId:', typeof salaId);
 
   try {
     // Cargar el mapa
+    console.log('🔍 [fetchMapa] Buscando mapa en tabla mapas...');
     const { data: mapa, error: mapaError } = await supabase
       .from('mapas')
       .select('*')
       .eq('sala_id', salaId)
       .maybeSingle();
     
-    if (mapaError) throw mapaError;
+    console.log('🔍 [fetchMapa] Resultado búsqueda mapa:', { mapa, error: mapaError });
+    
+    if (mapaError) {
+      console.error('❌ [fetchMapa] Error al buscar mapa:', mapaError);
+      console.error('❌ [fetchMapa] Error details:', {
+        code: mapaError.code,
+        message: mapaError.message,
+        details: mapaError.details,
+        hint: mapaError.hint
+      });
+      throw mapaError;
+    }
+    
+    if (!mapa) {
+      console.warn('⚠️ [fetchMapa] No se encontró mapa para sala:', salaId);
+      return null;
+    }
+    
+    console.log('✅ [fetchMapa] Mapa encontrado:', mapa);
     
     // Cargar las zonas de la sala
+    console.log('🔍 [fetchMapa] Buscando zonas para sala:', salaId);
     const { data: zonas, error: zonasError } = await supabase
       .from('zonas')
       .select('*')
       .eq('sala_id', salaId);
     
+    console.log('🔍 [fetchMapa] Resultado búsqueda zonas:', { zonas, error: zonasError });
+    
     if (zonasError) {
-      console.warn('Error al cargar zonas, continuando sin zonas:', zonasError);
+      console.warn('⚠️ [fetchMapa] Error al cargar zonas, continuando sin zonas:', zonasError);
     }
     
     // Retornar mapa con zonas incluidas
-    return {
+    const resultado = {
       ...mapa,
       zonas: zonas || []
     };
+    
+    console.log('✅ [fetchMapa] Retornando resultado final:', resultado);
+    return resultado;
   } catch (error) {
-    console.error('Error en fetchMapa:', error);
+    console.error('❌ [fetchMapa] Error general:', error);
     throw error;
   }
 };

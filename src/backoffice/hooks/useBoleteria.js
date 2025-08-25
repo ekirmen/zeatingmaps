@@ -158,6 +158,11 @@ export const useBoleteria = () => {
           console.log('📊 [useBoleteria] mapData es null?', mapData === null);
           console.log('📊 [useBoleteria] mapData.contenido:', mapData?.contenido);
           
+          if (!mapData) {
+            console.error('❌ [useBoleteria] fetchMapa retornó null/undefined');
+            console.error('❌ [useBoleteria] Verificar RLS policies para mapas');
+          }
+          
           setMapa(mapData);
           console.log('✅ [useBoleteria] Mapa estado actualizado con setMapa');
 
