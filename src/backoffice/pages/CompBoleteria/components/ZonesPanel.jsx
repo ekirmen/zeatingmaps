@@ -49,6 +49,15 @@ const ZonesPanel = ({
         if (funcionError) throw funcionError;
         funcion = funcionData;
         plantilla = funcionData?.plantilla;
+        // Fallback: si sigue sin plantilla, intentar por columna plantilla_entradas
+        if (!plantilla && funcionData?.plantilla_entradas) {
+          const { data: plantillaData } = await supabase
+            .from('plantillas')
+            .select('*')
+            .eq('id', funcionData.plantilla_entradas)
+            .single();
+          if (plantillaData) plantilla = plantillaData;
+        }
       }
       if (!plantilla) return;
 
@@ -65,22 +74,53 @@ const ZonesPanel = ({
       const entradasById = new Map((entradas || []).map((e) => [String(e.id), e]));
       const zonasById = new Map((zonas || []).map((z) => [String(z.id), z]));
 
-      let detalles = [];
-      try {
-        detalles = Array.isArray(plantilla.detalles)
-          ? plantilla.detalles
-          : JSON.parse(plantilla.detalles || '[]');
-      } catch (e) {
-        detalles = [];
-      }
+      // Normalizar detalles desde múltiples estructuras posibles
+      const normalizeDetalles = (raw) => {
+        let base = raw;
+        if (typeof base === 'string') {
+          try { base = JSON.parse(base); } catch { base = []; }
+        }
+        // si ya es array
+        if (Array.isArray(base)) return base;
+        // si es objeto con distintas llaves
+        if (base && typeof base === 'object') {
+          if (Array.isArray(base.detalles)) return base.detalles;
+          if (Array.isArray(base.precios)) return base.precios;
+          if (Array.isArray(base.items)) return base.items;
+        }
+        return [];
+      };
+
+      const detalles = normalizeDetalles(plantilla.detalles);
 
       const statsByZona = computeMapStatsByZone();
 
       const map = {};
+      const readFirst = (obj, keys) => {
+        for (const k of keys) {
+          const v = obj?.[k];
+          if (v !== undefined && v !== null && v !== '') return v;
+        }
+        return undefined;
+      };
+
+      const toNumber = (v) => {
+        const n = Number(v);
+        return isNaN(n) ? null : n;
+      };
+
       for (const d of detalles) {
-        const zonaKey = String(d.zonaId ?? d.zona?.id ?? d.zona ?? '');
-        const prodKey = String(d.productoId ?? d.producto?.id ?? d.producto ?? '');
-        if (!zonaKey || !prodKey || d.precio == null) continue;
+        const zonaCandidate = readFirst(d, ['zonaId', 'zona_id', 'zona', 'id_zona', 'idZona']);
+        const prodCandidate = readFirst(d, ['productoId', 'producto_id', 'producto', 'id_producto', 'entrada', 'entrada_id', 'idEntrada', 'productId']);
+        const priceCandidate = readFirst(d, ['precio', 'price', 'monto', 'valor', 'importe', 'precioUnitario', 'precio_unitario']);
+        const feeCandidate = readFirst(d, ['comision', 'fee', 'cargo']);
+
+        const zonaKey = zonaCandidate !== undefined ? String(zonaCandidate?.id ?? zonaCandidate) : '';
+        const prodKey = prodCandidate !== undefined ? String(prodCandidate?.id ?? prodCandidate) : '';
+        const precioNum = toNumber(priceCandidate);
+        const comisionNum = toNumber(feeCandidate) || 0;
+
+        if (!zonaKey || !prodKey || precioNum === null) continue;
         const zona = zonasById.get(zonaKey);
         const entrada = entradasById.get(prodKey);
         if (!zona || !entrada) continue;
@@ -97,8 +137,8 @@ const ZonesPanel = ({
           id: `${entrada.id}_${zona.id}`,
           entrada,
           zona,
-          precio: Number(d.precio),
-          comision: Number(d.comision || 0),
+          precio: precioNum,
+          comision: comisionNum,
           color: zona.color || entrada.color || '#5C1473',
         });
       }
