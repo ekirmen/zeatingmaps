@@ -5,6 +5,8 @@ import { fetchMapa, fetchZonasPorSala } from '../services/apibackoffice';
 
 const EVENT_KEY = 'boleteriaEventId';
 const FUNC_KEY = 'boleteriaFunctionId';
+const CART_KEY = 'boleteriaCart';
+const SELECTED_SEATS_KEY = 'boleteriaSelectedSeats';
 
 export const useBoleteria = () => {
   console.log('🚀 [useBoleteria] Hook initialized');
@@ -16,10 +18,19 @@ export const useBoleteria = () => {
   const [selectedPlantilla, setSelectedPlantilla] = useState(null);
   const [mapa, setMapa] = useState(null);
   const [zonas, setZonas] = useState([]);
-  const [carrito, setCarrito] = useState([]);
+  const [carrito, setCarrito] = useState(() => {
+    // Cargar carrito desde localStorage al inicializar
+    try {
+      const savedCart = localStorage.getItem(CART_KEY);
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.error('Error cargando carrito desde localStorage:', error);
+      return [];
+    }
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [debugInfo, setDebugInfo] = useState({});
+  const [debugInfo] = useState({});
 
   // Debug: Track mapa state changes (solo en desarrollo)
   useEffect(() => {
@@ -28,15 +39,83 @@ export const useBoleteria = () => {
     }
   }, [mapa]);
 
-  // Memoizar el setCarrito para evitar re-renderizados
+  // Restaurar carrito cuando se cargue la función
+  useEffect(() => {
+    if (selectedFuncion && carrito.length === 0) {
+      try {
+        const savedCart = localStorage.getItem(CART_KEY);
+        if (savedCart) {
+          const parsedCart = JSON.parse(savedCart);
+          // Solo restaurar si el carrito tiene items y es para la función actual
+          if (parsedCart.length > 0 && parsedCart[0]?.funcionId === selectedFuncion.id) {
+            setCarrito(parsedCart);
+            console.log('🔄 [useBoleteria] Carrito restaurado desde localStorage:', parsedCart.length, 'items');
+          }
+        }
+      } catch (error) {
+        console.error('❌ [useBoleteria] Error restaurando carrito:', error);
+      }
+    }
+  }, [selectedFuncion, carrito.length]);
+
+  // Función para guardar carrito en localStorage
+  const saveCarritoToStorage = useCallback((newCarrito) => {
+    try {
+      localStorage.setItem(CART_KEY, JSON.stringify(newCarrito));
+      console.log('💾 [useBoleteria] Carrito guardado en localStorage:', newCarrito.length, 'items');
+    } catch (error) {
+      console.error('❌ [useBoleteria] Error guardando carrito en localStorage:', error);
+    }
+  }, []);
+
+  // Memoizar el setCarrito para evitar re-renderizados y guardar en localStorage
   const setCarritoMemo = useCallback((newCarrito) => {
     setCarrito(newCarrito);
-  }, []);
+    saveCarritoToStorage(newCarrito);
+  }, [saveCarritoToStorage]);
 
   // Memoizar el setSelectedEvent para evitar re-renderizados
   const setSelectedEventMemo = useCallback((newEvent) => {
     setSelectedEvent(newEvent);
   }, []);
+
+  // Función para limpiar carrito
+  const clearCarrito = useCallback(() => {
+    setCarrito([]);
+    saveCarritoToStorage([]);
+    console.log('🗑️ [useBoleteria] Carrito limpiado');
+  }, [saveCarritoToStorage]);
+
+  // Función para agregar asiento al carrito
+  const addToCarrito = useCallback((asiento, precio, zona) => {
+    const newItem = {
+      id: asiento.id || asiento._id,
+      asiento: asiento,
+      precio: precio,
+      zona: zona,
+      funcionId: selectedFuncion?.id,
+      timestamp: Date.now()
+    };
+    
+    setCarrito(prev => {
+      const newCarrito = [...prev, newItem];
+      saveCarritoToStorage(newCarrito);
+      return newCarrito;
+    });
+    
+    console.log('➕ [useBoleteria] Asiento agregado al carrito:', newItem);
+  }, [selectedFuncion?.id, saveCarritoToStorage]);
+
+  // Función para quitar asiento del carrito
+  const removeFromCarrito = useCallback((asientoId) => {
+    setCarrito(prev => {
+      const newCarrito = prev.filter(item => item.id !== asientoId);
+      saveCarritoToStorage(newCarrito);
+      return newCarrito;
+    });
+    
+    console.log('➖ [useBoleteria] Asiento removido del carrito:', asientoId);
+  }, [saveCarritoToStorage]);
 
   // Manejar la selección de una función
   const handleFunctionSelect = useCallback(async (functionId) => {
@@ -49,7 +128,11 @@ export const useBoleteria = () => {
     setSelectedPlantilla(null);
     setMapa(null);
     setZonas([]);
-    setCarrito([]);
+    // Limpiar carrito solo si es una función diferente
+    if (selectedFuncion?.id !== functionId) {
+      setCarrito([]);
+      saveCarritoToStorage([]);
+    }
 
     // Ensure functionId is a primitive value
     if (typeof functionId === 'object' && functionId !== null) {
@@ -325,6 +408,9 @@ export const useBoleteria = () => {
     error,
     debugInfo,
     setCarrito: setCarritoMemo,
+    addToCarrito,
+    removeFromCarrito,
+    clearCarrito,
     handleEventSelect,
     handleFunctionSelect,
     setSelectedEvent: setSelectedEventMemo,
@@ -343,6 +429,9 @@ export const useBoleteria = () => {
     error,
     debugInfo,
     setCarritoMemo,
+    addToCarrito,
+    removeFromCarrito,
+    clearCarrito,
     handleEventSelect,
     handleFunctionSelect,
     setSelectedEventMemo,
