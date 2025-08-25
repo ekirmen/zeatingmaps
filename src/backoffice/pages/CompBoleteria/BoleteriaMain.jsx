@@ -1262,45 +1262,7 @@ const BoleteriaMain = () => {
                   >
                     🧪 Probar lockSeat
                   </button>
-                  <button 
-                    onClick={async () => {
-                      console.log('🔍 Debug - Probando seatLockService...');
-                      try {
-                        const { seatLockService } = await import('../../services/seatLockService');
-                        
-                        if (seatLockService) {
-                          console.log('🔍 Debug - seatLockService encontrado:', !!seatLockService);
-                          
-                          // Generar un session ID temporal
-                          const sessionId = `test_${Date.now()}`;
-                          console.log('🔍 Debug - Session ID generado:', sessionId);
-                          
-                          const result = await seatLockService.lockSeat(
-                            'test_seat_456', 
-                            selectedFuncion?.id, 
-                            sessionId, 
-                            'seleccionado'
-                          );
-                          
-                          console.log('🔍 Debug - Resultado seatLockService:', result);
-                          
-                          if (result.success) {
-                            message.success('✅ seatLockService funcionando correctamente');
-                          } else {
-                            message.warning(`⚠️ seatLockService error: ${result.error}`);
-                          }
-                        } else {
-                          message.error('❌ seatLockService no encontrado');
-                        }
-                      } catch (error) {
-                        console.error('🔍 Debug - Error en seatLockService:', error);
-                        message.error(`❌ Error en seatLockService: ${error.message}`);
-                      }
-                    }}
-                    className="px-2 py-1 bg-cyan-100 text-cyan-700 rounded text-xs hover:bg-cyan-200"
-                  >
-                    🧪 Probar seatLockService
-                  </button>
+
                   <button 
                     onClick={async () => {
                       console.log('🔍 Debug - Probando fetchMapa...');
