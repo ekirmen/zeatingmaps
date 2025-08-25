@@ -92,8 +92,14 @@ export const useBoleteria = () => {
       setSelectedFuncion(funcionMapeada);
       localStorage.setItem(FUNC_KEY, functionId);
       
-      console.log('Función seleccionada:', funcionMapeada);
-      console.log('Plantilla de la función:', funcionData.plantilla);
+      console.log('✅ [useBoleteria] Función seleccionada:', funcionMapeada);
+      console.log('📋 [useBoleteria] Plantilla de la función:', funcionData.plantilla);
+      console.log('🔍 [useBoleteria] Estructura completa de funcionData:', {
+        id: funcionData.id,
+        sala_id: funcionData.sala_id,
+        sala: funcionData.sala,
+        evento_id: funcionData.evento_id
+      });
   
       // Cargar plantilla de precios si existe
       if (funcionData.plantilla) {
@@ -134,9 +140,10 @@ export const useBoleteria = () => {
       }
   
       // Cargar mapa y zonas usando salaId robusto
-      const salaId = mappedSala?.id || mappedSala?._id || salaField || null;
+      const salaId = mappedSala?.id || mappedSala?._id || salaField || funcionData.sala_id || null;
       console.log('🔍 [useBoleteria] DEBUG - mappedSala:', mappedSala);
       console.log('🔍 [useBoleteria] DEBUG - salaField:', salaField);
+      console.log('🔍 [useBoleteria] DEBUG - funcionData.sala_id:', funcionData.sala_id);
       console.log('🔍 [useBoleteria] DEBUG - salaId calculado:', salaId);
       
       if (salaId) {

@@ -1265,6 +1265,22 @@ const BoleteriaMain = () => {
                   </button>
                   <button 
                     onClick={() => {
+                      console.log('🔍 Debug - Estructura de selectedFuncion:');
+                      if (selectedFuncion) {
+                        console.log('🔍 Debug - selectedFuncion completo:', selectedFuncion);
+                        console.log('🔍 Debug - selectedFuncion.sala:', selectedFuncion.sala);
+                        console.log('🔍 Debug - selectedFuncion.sala_id:', selectedFuncion.sala_id);
+                        console.log('🔍 Debug - selectedFuncion.sala?.id:', selectedFuncion.sala?.id);
+                        console.log('🔍 Debug - Tipo de sala:', typeof selectedFuncion.sala);
+                        console.log('🔍 Debug - Tipo de sala_id:', typeof selectedFuncion.sala_id);
+                      }
+                    }}
+                    className="px-2 py-1 bg-pink-100 text-pink-700 rounded text-xs hover:bg-pink-200"
+                  >
+                    🔍 Estructura Función
+                  </button>
+                  <button 
+                    onClick={() => {
                       console.log('🔍 Debug - Limpiando localStorage...');
                       localStorage.removeItem('boleteriaEventId');
                       localStorage.removeItem('boleteriaFunctionId');
