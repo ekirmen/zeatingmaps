@@ -302,7 +302,19 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
         onCancel();
     } catch (error) {
       console.error('Payment error:', error);
-      message.error(error.message || 'Error al procesar el pago');
+      
+      // Mensajes de error más amigables
+      let errorMessage = 'Error al procesar el pago';
+      
+      if (error.message?.includes('duplicate key value violates unique constraint')) {
+        errorMessage = '❌ Error: Uno o más asientos ya están vendidos. Por favor, selecciona otros asientos.';
+      } else if (error.message?.includes('ya está vendido')) {
+        errorMessage = `❌ ${error.message}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      message.error(errorMessage);
     } finally {
       setIsProcessing(false);
     }
