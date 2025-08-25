@@ -16,10 +16,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   });
 }
 
-// Instancias singleton
-let supabaseClient = null
-let supabaseAdminClient = null
-
 // Función para crear cliente con configuración optimizada
 const createOptimizedClient = (url, key, options = {}) => {
   if (!url || !key) {
@@ -61,12 +57,9 @@ export const getSupabaseClient = () => {
       }
       return window.__supabaseClient;
     } else {
-      // Server environment
-      if (!supabaseClient) {
-        console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente (servidor)');
-        supabaseClient = createOptimizedClient(supabaseUrl, supabaseAnonKey);
-      }
-      return supabaseClient;
+      // Server environment - create new instance each time
+      console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente (servidor)');
+      return createOptimizedClient(supabaseUrl, supabaseAnonKey);
     }
   } catch (error) {
     console.error('[SUPABASE CONFIG] Error al obtener cliente:', error);
@@ -102,17 +95,14 @@ export const getSupabaseAdminClient = () => {
       }
       return window.__supabaseAdminClient;
     } else {
-      // Server environment
-      if (!supabaseAdminClient) {
-        console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente admin (servidor)');
-        supabaseAdminClient = createOptimizedClient(supabaseUrl, serviceRoleKey, {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-          },
-        });
-      }
-      return supabaseAdminClient;
+      // Server environment - create new instance each time
+      console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente admin (servidor)');
+      return createOptimizedClient(supabaseUrl, serviceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      });
     }
   } catch (error) {
     console.error('[SUPABASE CONFIG] Error al obtener cliente admin:', error);
@@ -120,10 +110,14 @@ export const getSupabaseAdminClient = () => {
   }
 }
 
+// Crear instancias singleton solo para el navegador
+let supabaseClient = null
+let supabaseAdminClient = null
+
 // Inicializar clientes solo si las variables de entorno están disponibles
-if (supabaseUrl && supabaseAnonKey) {
+if (supabaseUrl && supabaseAnonKey && typeof window !== 'undefined') {
   try {
-    // Solo inicializar una vez
+    // Solo inicializar una vez en el navegador
     if (!supabaseClient) {
       supabaseClient = getSupabaseClient();
     }
@@ -133,10 +127,10 @@ if (supabaseUrl && supabaseAnonKey) {
   } catch (error) {
     console.error('[SUPABASE CONFIG] Error inicializando clientes:', error);
   }
-} else {
+} else if (!supabaseUrl || !supabaseAnonKey) {
   console.error('[SUPABASE CONFIG] No se pueden inicializar los clientes: variables de entorno faltantes');
 }
 
-// Exportar las instancias inicializadas
+// Exportar las instancias inicializadas (pueden ser null en servidor)
 export const supabase = supabaseClient;
 export const supabaseAdmin = supabaseAdminClient; 
