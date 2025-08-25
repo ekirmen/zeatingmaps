@@ -602,14 +602,52 @@ export const fetchPlantillasPorRecintoYSala = async (recintoId, salaId) => {
 export const createPayment = async (data) => {
   const client = supabaseAdmin || supabase;
   console.log('createPayment request:', data);
+  
+  // Validar que los asientos no estén ya vendidos
+  if (data.seats && Array.isArray(JSON.parse(data.seats))) {
+    const seats = JSON.parse(data.seats);
+    const funcionId = data.funcion;
+    
+    console.log('🔍 Validando asientos antes de crear pago:', { seats, funcionId });
+    
+    for (const seat of seats) {
+      const existingPayment = await fetchPaymentBySeat(funcionId, seat.id);
+      if (existingPayment && existingPayment.status === 'pagado') {
+        throw new Error(`El asiento ${seat.id} ya está vendido (locator: ${existingPayment.locator})`);
+      }
+    }
+  }
+  
+  // Agregar campos faltantes
+  const enrichedData = {
+    ...data,
+    tenant_id: data.tenant_id || '9dbdb86f-8424-484c-bb76-0d9fa27573c8', // Tenant por defecto
+    monto: data.monto || calculateTotalAmount(data.seats), // Calcular monto si no está presente
+    metodo_pago_id: data.metodo_pago_id || 1, // Método por defecto
+    created_at: new Date().toISOString()
+  };
+  
+  console.log('🔍 Datos enriquecidos para crear pago:', enrichedData);
+  
   const { data: result, error } = await client
     .from('payments')
-    .insert(data)
+    .insert(enrichedData)
     .select()
     .single();
   handleError(error);
   console.log('createPayment response:', { result, error });
   return result;
+};
+
+// Función auxiliar para calcular el monto total
+const calculateTotalAmount = (seatsJson) => {
+  try {
+    const seats = JSON.parse(seatsJson);
+    return seats.reduce((total, seat) => total + (seat.price || 0), 0);
+  } catch (e) {
+    console.error('Error calculando monto total:', e);
+    return 0;
+  }
 };
 
 export const updatePayment = async (id, data) => {

@@ -45,6 +45,8 @@ export const useEventsList = () => {
     setLoading(true);
     setError(null);
     try {
+      console.log('🔍 [useEventsList] Iniciando fetch de eventos...');
+      
       // Fetch all active events
       // Use explicit foreign key relationship to avoid ambiguity
       const { data, error: supabaseError } = await supabase
@@ -64,15 +66,19 @@ export const useEventsList = () => {
         .eq('oculto', false) // Only fetch events that are not hidden
         .order('fecha_evento', { ascending: true }); // Order by date
 
+      console.log('🔍 [useEventsList] Query ejecutada, resultado:', { data, error: supabaseError });
+
       if (supabaseError) {
+        console.error('🔍 [useEventsList] Error de Supabase:', supabaseError);
         throw supabaseError;
       }
 
       let rows = data || [];
+      console.log('🔍 [useEventsList] Eventos encontrados (primer intento):', rows.length);
 
       // Fallback: si no hay eventos, reintentar sin el filtro 'oculto=false'
       if (!rows.length) {
-        console.warn('[useEventsList] No se encontraron eventos con oculto=false. Reintentando con activo=true...');
+        console.warn('🔍 [useEventsList] No se encontraron eventos con oculto=false. Reintentando con activo=true...');
         const { data: dataFallback, error: errFallback } = await supabase
           .from('eventos')
           .select(`
@@ -88,8 +94,12 @@ export const useEventsList = () => {
           `)
           .eq('activo', true)
           .order('fecha_evento', { ascending: true });
+        
+        console.log('🔍 [useEventsList] Fallback query resultado:', { dataFallback, error: errFallback });
+        
         if (!errFallback && Array.isArray(dataFallback)) {
           rows = dataFallback;
+          console.log('🔍 [useEventsList] Eventos encontrados (fallback):', rows.length);
         }
       }
 
@@ -99,18 +109,25 @@ export const useEventsList = () => {
         venue: event.recintos ? event.recintos.nombre : null // Get venue name from joined table
       }));
 
+      console.log('🔍 [useEventsList] Eventos formateados:', formattedEvents);
+      console.log('🔍 [useEventsList] Total de eventos:', formattedEvents.length);
+
       setEvents(formattedEvents);
     } catch (err) {
-      console.error('Error fetching events list:', err.message);
+      console.error('🔍 [useEventsList] Error fetching events list:', err.message);
+      console.error('🔍 [useEventsList] Error completo:', err);
       setError(err);
     } finally {
       setLoading(false);
+      console.log('🔍 [useEventsList] Loading terminado');
     }
   }, []);
 
   useEffect(() => {
+    console.log('🔍 [useEventsList] useEffect ejecutado, llamando fetchAllEvents...');
     fetchAllEvents();
   }, [fetchAllEvents]);
 
+  console.log('🔍 [useEventsList] Hook retornando:', { events: events.length, loading, error });
   return { events, loading, error };
 };
