@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { message } from 'antd';
 import { supabase } from '../../supabaseClient';
-import { fetchMapa, fetchZonasPorSala } from '../../services/supabaseServices';
+import { fetchMapa, fetchZonasPorSala } from '../services/apibackoffice';
 
 const EVENT_KEY = 'boleteriaEventId';
 const FUNC_KEY = 'boleteriaFunctionId';
 
 export const useBoleteria = () => {
+  console.log('🚀 [useBoleteria] Hook initialized');
+  
   const [eventos, setEventos] = useState([]);
   const [funciones, setFunciones] = useState([]);
   const [selectedFuncion, setSelectedFuncion] = useState(null);
@@ -17,6 +19,14 @@ export const useBoleteria = () => {
   const [carrito, setCarrito] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Debug: Track mapa state changes
+  useEffect(() => {
+    console.log('🔄 [useBoleteria] Mapa state changed:', mapa);
+    console.log('🔄 [useBoleteria] Mapa tipo:', typeof mapa);
+    console.log('🔄 [useBoleteria] Mapa es null?', mapa === null);
+    console.log('🔄 [useBoleteria] Mapa contenido:', mapa?.contenido);
+  }, [mapa]);
 
   // Memoizar el setCarrito para evitar re-renderizados
   const setCarritoMemo = useCallback((newCarrito) => {
@@ -30,6 +40,7 @@ export const useBoleteria = () => {
 
   // Manejar la selección de una función
   const handleFunctionSelect = useCallback(async (functionId) => {
+    console.log('🔄 [useBoleteria] handleFunctionSelect called with function ID:', functionId);
     setLoading(true);
     setError(null);
     setSelectedFuncion(null);
@@ -133,6 +144,7 @@ export const useBoleteria = () => {
           console.log('📊 [useBoleteria] mapData.contenido:', mapData?.contenido);
           
           setMapa(mapData);
+          console.log('✅ [useBoleteria] Mapa estado actualizado con setMapa');
 
           console.log('🔍 [useBoleteria] Cargando zonas para sala:', salaId);
           const zonasData = await fetchZonasPorSala(salaId);
@@ -215,8 +227,9 @@ export const useBoleteria = () => {
     }
   }, []);
 
-  // Memoizar el handleEventSelect para evitar re-renderizados
-  const handleEventSelect = useCallback(async (eventoId) => {
+  // Manejar la selección de un evento
+  const handleEventSelect = async (eventoId) => {
+    console.log('🔄 [useBoleteria] handleEventSelect called with event ID:', eventoId);
     setLoading(true);
     setError(null);
     setSelectedEvent(null);
@@ -272,7 +285,7 @@ export const useBoleteria = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   // Memoizar el valor de retorno para evitar re-renderizados
   const returnValue = useMemo(() => ({
@@ -283,7 +296,9 @@ export const useBoleteria = () => {
     selectedPlantilla,
     setSelectedPlantilla,
     mapa,
+    zonas,
     carrito,
+    loading,
     setCarrito: setCarritoMemo,
     handleEventSelect,
     handleFunctionSelect,
@@ -297,7 +312,9 @@ export const useBoleteria = () => {
     selectedPlantilla,
     setSelectedPlantilla,
     mapa,
+    zonas,
     carrito,
+    loading,
     setCarritoMemo,
     handleEventSelect,
     handleFunctionSelect,
@@ -307,7 +324,10 @@ export const useBoleteria = () => {
 
   // Cargar eventos al inicio
   useEffect(() => {
+    console.log('🔄 [useBoleteria] useEffect for initial data loading triggered');
+    
     const fetchEventos = async () => {
+      console.log('🔄 [useBoleteria] Starting to fetch eventos');
       setLoading(true);
       setError(null);
       try {
@@ -318,14 +338,17 @@ export const useBoleteria = () => {
 
         if (error) throw error;
 
+        console.log('✅ [useBoleteria] Eventos fetched:', data?.length || 0);
         setEventos(data || []);
 
         const storedEventId = localStorage.getItem(EVENT_KEY);
-
+        console.log('🔍 [useBoleteria] Stored event ID:', storedEventId);
 
         if (storedEventId) {
           const initialEvent = data.find(e => e.id === storedEventId);
+          console.log('🔍 [useBoleteria] Initial event found:', initialEvent);
           if (initialEvent) {
+            console.log('🔄 [useBoleteria] Calling handleEventSelect for initial event');
             await handleEventSelect(storedEventId);
           }
         }
@@ -339,7 +362,7 @@ export const useBoleteria = () => {
     };
 
     fetchEventos();
-  }, [handleEventSelect]);
+  }, []);
 
   return returnValue;
 };

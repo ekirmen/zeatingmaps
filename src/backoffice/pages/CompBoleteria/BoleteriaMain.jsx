@@ -22,6 +22,8 @@ const { Title, Text } = Typography;
 const BoleteriaMain = () => {
   const location = useLocation();
   
+  console.log('🚀 [BoleteriaMain] Component mounting...');
+  
   // Usar los hooks existentes
   const {
     selectedFuncion,
@@ -36,6 +38,15 @@ const BoleteriaMain = () => {
     zonas,
     loading: boleteriaLoading
   } = useBoleteria();
+  
+  console.log('🚀 [BoleteriaMain] Hook values after initialization:', {
+    selectedFuncion: !!selectedFuncion,
+    selectedEvent: !!selectedEvent,
+    selectedPlantilla: !!selectedPlantilla,
+    mapa: !!mapa,
+    zonas: !!zonas,
+    boleteriaLoading
+  });
 
   // Debug: Log mapa changes
   useEffect(() => {
@@ -43,7 +54,20 @@ const BoleteriaMain = () => {
     console.log('🔄 [BoleteriaMain] Mapa tipo:', typeof mapa);
     console.log('🔄 [BoleteriaMain] Mapa es null?', mapa === null);
     console.log('🔄 [BoleteriaMain] Mapa contenido:', mapa?.contenido);
+    console.log('🔄 [BoleteriaMain] Mapa es array?', Array.isArray(mapa?.contenido));
   }, [mapa]);
+
+  // Debug: Log all hook state changes
+  useEffect(() => {
+    console.log('🔄 [BoleteriaMain] Hook state changed:', {
+      selectedFuncion: !!selectedFuncion,
+      selectedEvent: !!selectedEvent,
+      selectedPlantilla: !!selectedPlantilla,
+      mapa: !!mapa,
+      zonas: !!zonas,
+      boleteriaLoading
+    });
+  }, [selectedFuncion, selectedEvent, selectedPlantilla, mapa, zonas, boleteriaLoading]);
 
   const {
     selectedClient,
@@ -242,10 +266,9 @@ const BoleteriaMain = () => {
     }
   }, [selectedEvent]);
 
-  // Cargar mapa y plantilla cuando se selecciona una función
+  // Cargar plantilla cuando se selecciona una función
   useEffect(() => {
     if (selectedFuncion) {
-      loadMapaForFunction(selectedFuncion);
       loadPlantillaForFunction(selectedFuncion);
     }
   }, [selectedFuncion]);
@@ -467,31 +490,7 @@ const BoleteriaMain = () => {
     }
   };
 
-  // Cargar mapa para una función específica
-  const loadMapaForFunction = async (funcion) => {
-    try {
-      if (!funcion.sala_id && !funcion.sala?.id) {
-        console.warn('⚠️ [loadMapaForFunction] No hay sala_id disponible');
-        return;
-      }
 
-      const salaId = funcion.sala_id || funcion.sala?.id;
-      console.log('🔍 [loadMapaForFunction] Cargando mapa para sala:', salaId);
-
-      // Importar dinámicamente el servicio
-      const { fetchMapa } = await import('../../../services/supabaseServices');
-      const mapData = await fetchMapa(salaId);
-      
-      console.log('📊 [loadMapaForFunction] Mapa cargado:', mapData);
-      
-      // Actualizar el estado del mapa local
-      if (mapData) {
-        console.log('✅ [loadMapaForFunction] Mapa cargado desde función');
-      }
-    } catch (error) {
-      console.error('❌ [loadMapaForFunction] Error cargando mapa:', error);
-    }
-  };
 
   // Cargar plantilla para una función específica
   const loadPlantillaForFunction = async (funcion) => {
@@ -1194,9 +1193,9 @@ const BoleteriaMain = () => {
                     <Button
                       type="primary"
                       icon={<ReloadOutlined />}
-                      onClick={() => { if (selectedFuncion) { loadMapaForFunction(selectedFuncion); loadPlantillaForFunction(selectedFuncion); } }}
+                      onClick={() => { if (selectedFuncion) { loadPlantillaForFunction(selectedFuncion); } }}
                       className="ml-2"
-                      title="Recargar mapa y plantilla"
+                      title="Recargar plantilla"
                       loading={boleteriaLoading}
                     >
                       Recargar
