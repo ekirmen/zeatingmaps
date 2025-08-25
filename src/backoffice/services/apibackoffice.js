@@ -703,14 +703,26 @@ export const fetchPaymentByLocator = async (locator) => {
 
 export const fetchPaymentBySeat = async (funcionId, seatId) => {
   const client = supabaseAdmin || supabase;
+  
+  console.log('🔍 [fetchPaymentBySeat] Buscando asiento:', { funcionId, seatId });
+  
+  // Buscar pagos que contengan el asiento específico
   const { data, error } = await client
     .from('payments')
     .select('*, seats, funcion, event:eventos(*), user:profiles!usuario_id(*)')
     .eq('funcion', funcionId)
-    .contains('seats', [{ id: seatId }])
-    .single();
-  handleError(error);
-  return data;
+    .eq('status', 'pagado')
+    .filter('seats', 'cs', `[{"id":"${seatId}"}]`);
+  
+  console.log('🔍 [fetchPaymentBySeat] Resultado:', { data, error });
+  
+  if (error) {
+    console.error('🔍 [fetchPaymentBySeat] Error:', error);
+    return null;
+  }
+  
+  // Retornar el primer pago encontrado
+  return data && data.length > 0 ? data[0] : null;
 };
 
 // === CANALES DE VENTA ===

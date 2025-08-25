@@ -8,7 +8,15 @@ import ProtectedRoute from './components/ProtectedRoute';
 import NotFoundPage from '../components/NotFoundPage';
 
 import Event from './pages/Event';
-import EventsVenue from './pages/EventsVenue';
+// Importar con manejo de errores
+let EventsVenue;
+try {
+  EventsVenue = require('./pages/EventsVenue').default;
+  console.log('✅ [StoreApp] EventsVenue importado correctamente');
+} catch (error) {
+  console.error('❌ [StoreApp] Error importando EventsVenue:', error);
+  EventsVenue = () => <div>Error cargando página</div>;
+}
 import EventInfo from './pages/EventInfo';
 
 import BuyEvent from './pages/BuyEvent';
@@ -34,6 +42,10 @@ import { useAuth } from '../contexts/AuthContext'; // para perfil
 const StoreApp = () => {
   const location = useLocation();
   const { user, updateProfile } = useAuth();
+  
+  console.log('🚀 [StoreApp] Renderizando store...');
+  console.log('🔍 [StoreApp] Location:', location.pathname);
+  console.log('🔍 [StoreApp] User:', user);
 
   const showHeader =
     location.pathname.startsWith('/store') ||
@@ -46,8 +58,18 @@ const StoreApp = () => {
           {showHeader && <Header />}
           <div className="flex-grow">
             <Routes>
-              <Route path="/store" element={<EventsVenue groupByTags={false} />} />
-              <Route path="/store/tag/:tagSlug?" element={<EventsVenue groupByTags />} />
+              <Route path="/store" element={
+                (() => {
+                  console.log('🚀 [StoreApp] Renderizando ruta /store con EventsVenue');
+                  return <EventsVenue groupByTags={false} />;
+                })()
+              } />
+              <Route path="/store/tag/:tagSlug?" element={
+                (() => {
+                  console.log('🚀 [StoreApp] Renderizando ruta /store/tag con EventsVenue');
+                  return <EventsVenue groupByTags />;
+                })()
+              } />
               <Route path="/store/eventos/:eventSlug" element={<EventosPage />} />
               <Route path="/store/event/:eventId" element={<EventInfo />} />
 
