@@ -383,6 +383,13 @@ export const useBoleteria = () => {
           console.log('🔄 [useBoleteria] No hay evento guardado, seleccionando el primero disponible');
           await handleEventSelect(data[0].id);
         }
+        
+        // Si hay un evento guardado en localStorage, también verificar si hay función guardada
+        const storedFunctionId = localStorage.getItem(FUNC_KEY);
+        if (storedFunctionId && !selectedFuncion) {
+          console.log('🔄 [useBoleteria] Función guardada encontrada, cargando mapa...');
+          await handleFunctionSelect(storedFunctionId);
+        }
 
       } catch (err) {
         console.error("Error al cargar eventos:", err);

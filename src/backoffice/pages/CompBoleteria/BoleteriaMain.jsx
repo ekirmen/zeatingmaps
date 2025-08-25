@@ -1204,6 +1204,19 @@ const BoleteriaMain = () => {
                   </button>
                   <button 
                     onClick={() => {
+                      console.log('🔍 Debug - Verificando estado del hook...');
+                      console.log('🔍 Debug - selectedFuncion:', selectedFuncion);
+                      console.log('🔍 Debug - selectedEvent:', selectedEvent);
+                      console.log('🔍 Debug - mapa:', mapa);
+                      console.log('🔍 Debug - zonas:', zonas);
+                      console.log('🔍 Debug - boleteriaLoading:', boleteriaLoading);
+                    }}
+                    className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs hover:bg-orange-200"
+                  >
+                    🔍 Estado Hook
+                  </button>
+                  <button 
+                    onClick={() => {
                       console.log('🔍 Debug - Verificando autenticación...');
                       supabase.auth.getUser().then(({ data, error }) => {
                         console.log('🔍 Auth status:', { user: !!data?.user, error });
@@ -1219,6 +1232,36 @@ const BoleteriaMain = () => {
                     className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
                   >
                     🔐 Verificar Auth
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      console.log('🔍 Debug - Probando fetchMapa...');
+                      if (selectedFuncion) {
+                        const salaId = selectedFuncion.sala?.id || selectedFuncion.sala_id || selectedFuncion.sala;
+                        console.log('🔍 Debug - Sala ID para fetchMapa:', salaId);
+                        
+                        try {
+                          // Importar y probar fetchMapa directamente
+                          const { fetchMapa } = await import('../../services/apibackoffice');
+                          console.log('🔍 Debug - fetchMapa importado:', !!fetchMapa);
+                          
+                          const mapData = await fetchMapa(salaId);
+                          console.log('🔍 Debug - Resultado fetchMapa:', mapData);
+                          
+                          if (mapData) {
+                            message.success('✅ fetchMapa funcionando correctamente');
+                          } else {
+                            message.warning('⚠️ fetchMapa retornó null/undefined');
+                          }
+                        } catch (error) {
+                          console.error('🔍 Debug - Error en fetchMapa:', error);
+                          message.error(`❌ Error en fetchMapa: ${error.message}`);
+                        }
+                      }
+                    }}
+                    className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs hover:bg-indigo-200"
+                  >
+                    🧪 Probar fetchMapa
                   </button>
                   <button 
                     onClick={() => {
