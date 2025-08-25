@@ -59,9 +59,17 @@ const PaymentSuccess = () => {
     fetchPaymentDetails();
   }, [locator]);
 
-  const handleDownloadTickets = async () => {
+  const handleDownloadAllTickets = async () => {
     try {
       await downloadTicket(locator);
+    } catch {
+      toast.error('No se pudo descargar el ticket');
+    }
+  };
+
+  const handleDownloadSingleTicket = async (ticketId) => {
+    try {
+      await downloadTicket(locator, ticketId);
     } catch {
       toast.error('No se pudo descargar el ticket');
     }
@@ -142,15 +150,36 @@ const PaymentSuccess = () => {
             </>
           )}
         </div>
+        {!isReservation && paymentDetails?.seats?.length > 0 && (
+          <div className="my-6">
+            <div className="grid grid-cols-3 font-medium text-gray-700 py-2 border-b">
+              <span>Boleto</span>
+              <span>Método de Pago</span>
+              <span className="text-right">Acciones</span>
+            </div>
+            {paymentDetails.seats.map(seat => (
+              <div key={seat.id} className="grid grid-cols-3 items-center py-2 border-b">
+                <span>{seat.name}</span>
+                <span className="capitalize">{paymentDetails.paymentMethod}</span>
+                <button
+                  onClick={() => handleDownloadSingleTicket(seat.id)}
+                  className="justify-self-end px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                >
+                  Descargar
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8">
           {!isReservation && (
             <button
-              onClick={handleDownloadTickets}
+              onClick={handleDownloadAllTickets}
               className="flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
             >
               <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
-              Descargar Entradas
+              Descargar Todos
             </button>
           )}
           {isReservation && (
