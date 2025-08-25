@@ -57,7 +57,23 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       console.log('[Boleteria] Ticket search result:', payment);
 
-      setTicketData(payment);
+      // Parse seats if stored as JSON string
+      let seats = [];
+      if (Array.isArray(payment.seats)) {
+        seats = payment.seats;
+      } else if (typeof payment.seats === 'string') {
+        try {
+          seats = JSON.parse(payment.seats);
+        } catch {
+          try {
+            seats = JSON.parse(JSON.parse(payment.seats));
+          } catch {
+            seats = [];
+          }
+        }
+      }
+
+      setTicketData({ ...payment, seats });
       if (payment.user) setUserData(payment.user);
       if (payment.event) setEventData(payment.event);
     } catch (err) {

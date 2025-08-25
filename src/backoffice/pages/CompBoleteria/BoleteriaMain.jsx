@@ -654,11 +654,11 @@ const BoleteriaMain = () => {
     setLocatorSearchLoading(true);
     try {
       // Buscar el pago por localizador
-      const { data: payments, error } = await supabase
+      const { data: payment, error } = await supabase
         .from('payments')
         .select(`
           *,
-          user:profiles!user_id(*),
+          user:profiles!usuario_id(*),
           event:eventos(*),
           funcion:funciones(*)
         `)
@@ -671,19 +671,29 @@ const BoleteriaMain = () => {
       }
 
       // Cargar los datos del pago
-      setSelectedClient(payments.user);
-      setSelectedEvent(payments.event);
-      setSelectedFuncion(payments.funcion);
-      
-      // Cargar los asientos del pago
-      const { data: seats, error: seatsError } = await supabase
-        .from('asientos')
-        .select('*')
-        .eq('payment_id', payments.id);
+      setSelectedClient(payment.user);
+      setSelectedEvent(payment.event);
+      setSelectedFuncion(payment.funcion);
 
-      if (!seatsError && seats) {
-        setSelectedSeats(seats);
-        message.success(`Pago encontrado: ${payments.event.nombre}`);
+      // Parsear los asientos del pago (pueden venir como string JSON)
+      let seats = [];
+      if (Array.isArray(payment.seats)) {
+        seats = payment.seats;
+      } else if (typeof payment.seats === 'string') {
+        try {
+          seats = JSON.parse(payment.seats);
+        } catch {
+          try {
+            seats = JSON.parse(JSON.parse(payment.seats));
+          } catch {
+            seats = [];
+          }
+        }
+      }
+
+      setSelectedSeats(seats);
+      if (payment.event) {
+        message.success(`Pago encontrado: ${payment.event.nombre}`);
       }
 
       setShowLocatorSearch(false);
