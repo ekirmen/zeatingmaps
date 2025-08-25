@@ -34,6 +34,7 @@ const ZonesPanel = ({
   const [priceOptions, setPriceOptions] = useState([]);
   const [activeZonaId, setActiveZonaId] = useState(null);
   const [debugInfo, setDebugInfo] = useState({});
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // Función para extraer detalles de la plantilla
   const extractDetalles = useCallback((funcion, plantilla) => {
@@ -367,15 +368,23 @@ const ZonesPanel = ({
       setLoading(false);
       console.log('✅ Loading detenido');
     }
-  }, [selectedFuncion, selectedPlantilla, mapa, selectedZonaId, onPricesLoaded, extractDetalles]);
+  }, [selectedFuncion, selectedPlantilla, onPricesLoaded, extractDetalles]); // Removido mapa y selectedZonaId
 
   // Cargar datos cuando cambie la función o plantilla
   useEffect(() => {
-    if (selectedFuncion) {
-      console.log('🔄 useEffect - selectedFuncion cambió, cargando datos...');
+    if (selectedFuncion && !dataLoaded) {
+      console.log('🔄 useEffect - Primera carga de datos...');
+      setDataLoaded(true);
       loadPriceOptions();
     }
-  }, [selectedFuncion, selectedPlantilla, loadPriceOptions]);
+  }, [selectedFuncion, selectedPlantilla, dataLoaded]); // Solo se ejecuta una vez
+
+  // Resetear dataLoaded cuando cambie la función para permitir recarga
+  useEffect(() => {
+    if (selectedFuncion) {
+      setDataLoaded(false);
+    }
+  }, [selectedFuncion?.id]); // Solo cuando cambie el ID de la función
 
   // Sync external selectedZonaId → internal activeZonaId
   useEffect(() => {
@@ -385,6 +394,28 @@ const ZonesPanel = ({
       }
     }
   }, [selectedZonaId, activeZonaId, priceOptions]);
+
+  // Actualizar estadísticas cuando cambie el mapa (sin recargar todo)
+  useEffect(() => {
+    if (mapa && priceOptions.length > 0) {
+      console.log('🔄 Mapa cambió, actualizando estadísticas...');
+      const opcionesActualizadas = priceOptions.map(grupo => {
+        // Calcular estadísticas de ocupación si hay mapa
+        const asientosZona = Object.values(mapa).filter(asiento => 
+          String(asiento.zona_id) === String(grupo.zona.id)
+        );
+        
+        grupo.total = asientosZona.length;
+        grupo.vendidos = asientosZona.filter(a => a.estado === 'vendido' || a.estado === 'reservado').length;
+        grupo.reservados = asientosZona.filter(a => a.estado === 'reservado').length;
+        grupo.ocupacion = grupo.total > 0 ? Math.round((grupo.vendidos / grupo.total) * 100) : 0;
+        
+        return grupo;
+      });
+      
+      setPriceOptions([...opcionesActualizadas]);
+    }
+  }, [mapa]); // Solo depende del mapa
 
   const activeZona = activeZonaId ? priceOptions.find(o => o.zona.id === activeZonaId) : null;
 
@@ -459,6 +490,7 @@ const ZonesPanel = ({
                 console.log('🔍 Debug - Datos actuales:');
                 console.log('selectedFuncion:', selectedFuncion);
                 console.log('selectedPlantilla:', selectedPlantilla);
+                setDataLoaded(false); // Resetear para permitir recarga
                 loadPriceOptions();
               }}
               className="mt-2 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"

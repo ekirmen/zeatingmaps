@@ -1189,6 +1189,21 @@ const BoleteriaMain = () => {
                   </button>
                   <button 
                     onClick={() => {
+                      console.log('🔍 Debug - Forzando carga de mapa...');
+                      if (selectedFuncion) {
+                        console.log('🔍 Debug - Función seleccionada:', selectedFuncion);
+                        console.log('🔍 Debug - Sala de la función:', selectedFuncion.sala);
+                        console.log('🔍 Debug - Sala ID:', selectedFuncion.sala_id);
+                        // Forzar recarga de la función para cargar el mapa
+                        handleFunctionSelect(selectedFuncion.id);
+                      }
+                    }}
+                    className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200"
+                  >
+                    🗺️ Cargar Mapa
+                  </button>
+                  <button 
+                    onClick={() => {
                       console.log('🔍 Debug - Verificando autenticación...');
                       supabase.auth.getUser().then(({ data, error }) => {
                         console.log('🔍 Auth status:', { user: !!data?.user, error });

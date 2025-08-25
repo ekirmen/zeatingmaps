@@ -135,11 +135,16 @@ export const useBoleteria = () => {
   
       // Cargar mapa y zonas usando salaId robusto
       const salaId = mappedSala?.id || mappedSala?._id || salaField || null;
+      console.log('🔍 [useBoleteria] DEBUG - mappedSala:', mappedSala);
+      console.log('🔍 [useBoleteria] DEBUG - salaField:', salaField);
+      console.log('🔍 [useBoleteria] DEBUG - salaId calculado:', salaId);
+      
       if (salaId) {
         console.log('🔍 [useBoleteria] Cargando mapa para sala:', salaId);
         console.log('🔍 [useBoleteria] Tipo de salaId:', typeof salaId);
         
         try {
+          console.log('🔍 [useBoleteria] Llamando a fetchMapa con salaId:', salaId);
           const mapData = await fetchMapa(salaId);
           console.log('📊 [useBoleteria] Mapa cargado:', mapData);
           console.log('📊 [useBoleteria] Tipo de mapData:', typeof mapData);
@@ -214,6 +219,8 @@ export const useBoleteria = () => {
         console.warn('⚠️ [useBoleteria] No hay salaId disponible para cargar mapa y zonas');
         console.warn('⚠️ [useBoleteria] mappedSala:', mappedSala);
         console.warn('⚠️ [useBoleteria] salaField:', salaField);
+        console.warn('⚠️ [useBoleteria] salaField tipo:', typeof salaField);
+        console.warn('⚠️ [useBoleteria] mappedSala tipo:', typeof mappedSala);
         setMapa(null);
         setZonas([]);
       }
