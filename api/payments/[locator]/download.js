@@ -25,8 +25,14 @@ export default async function handler(req, res) {
   console.log('Query params:', req.query);
   console.log('Headers:', req.headers);
   
+  console.log('Environment check in handler:');
+  console.log('- supabaseUrl:', supabaseUrl ? 'defined' : 'undefined');
+  console.log('- supabaseServiceKey:', supabaseServiceKey ? 'defined' : 'undefined');
+  
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error('Missing Supabase environment variables');
+    console.error('supabaseUrl:', supabaseUrl);
+    console.error('supabaseServiceKey:', supabaseServiceKey);
     return res.status(500).json({ error: 'Server configuration error' });
   }
   if (req.method !== 'GET') {
