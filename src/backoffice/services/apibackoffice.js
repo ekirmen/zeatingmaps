@@ -634,7 +634,7 @@ export const createPayment = async (data) => {
     ...data,
     tenant_id: data.tenant_id || '9dbdb86f-8424-484c-bb76-0d9fa27573c8', // Tenant por defecto
     monto: data.monto || calculateTotalAmount(data.seats), // Calcular monto si no está presente
-    metodo_pago_id: data.metodo_pago_id || 1, // Método por defecto
+    payment_gateway_id: data.payment_gateway_id || '7e797aa6-ebbf-4b3a-8b5d-caa8992018f4', // Gateway por defecto (Reservas)
     created_at: new Date().toISOString()
   };
   

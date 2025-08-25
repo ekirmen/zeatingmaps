@@ -37,9 +37,13 @@ const normalizeEventData = (event) => {
 };
 
 export const useEventsList = () => {
+  console.log('🚀 [useEventsList] Hook iniciando...');
+  
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  console.log('🔍 [useEventsList] Estado inicial:', { events, loading, error });
 
   const fetchAllEvents = useCallback(async () => {
     setLoading(true);

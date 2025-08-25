@@ -10,6 +10,8 @@ import { getCmsPage } from '../services/apistore'; // Service to fetch CMS page 
 import { useEventsList } from '../hooks/useEventsList'; // <-- Corrected import path for useEventsList
 
 const EventsVenue = ({ groupByTags = true }) => {
+  console.log('🚀 [EventsVenue] Componente iniciando...');
+  
   const [widgets, setWidgets] = useState(null);
   const [loadingCms, setLoadingCms] = useState(true);
   const [errorCms, setErrorCms] = useState(null);
@@ -17,9 +19,21 @@ const EventsVenue = ({ groupByTags = true }) => {
   console.log('🚀 [EventsVenue] Componente montado');
 
   // Use the new hook to fetch the list of events
-  const { events, loading: loadingEvents, error: errorEvents } = useEventsList();
+  let events, loadingEvents, errorEvents;
   
-  console.log('🔍 [EventsVenue] Hook useEventsList resultado:', { events, loading: loadingEvents, error: errorEvents });
+  try {
+    const hookResult = useEventsList();
+    events = hookResult.events;
+    loadingEvents = hookResult.loading;
+    errorEvents = hookResult.error;
+    
+    console.log('🔍 [EventsVenue] Hook useEventsList resultado:', { events, loading: loadingEvents, error: errorEvents });
+  } catch (error) {
+    console.error('❌ [EventsVenue] Error en useEventsList:', error);
+    events = [];
+    loadingEvents = false;
+    errorEvents = error;
+  }
 
   useEffect(() => {
     const loadCmsWidgets = async () => {

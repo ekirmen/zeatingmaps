@@ -61,7 +61,14 @@ const StoreApp = () => {
               <Route path="/store" element={
                 (() => {
                   console.log('🚀 [StoreApp] Renderizando ruta /store con EventsVenue');
-                  return <EventsVenue groupByTags={false} />;
+                  try {
+                    const component = <EventsVenue groupByTags={false} />;
+                    console.log('✅ [StoreApp] EventsVenue renderizado correctamente');
+                    return component;
+                  } catch (error) {
+                    console.error('❌ [StoreApp] Error renderizando EventsVenue:', error);
+                    return <div>Error cargando página: {error.message}</div>;
+                  }
                 })()
               } />
               <Route path="/store/tag/:tagSlug?" element={
