@@ -63,12 +63,13 @@ const ZonesPanel = ({
       if (!plantilla) return;
 
       // Entradas y zonas
+      const salaId = funcion.sala?.id || funcion.sala_id || funcion.sala;
       const [{ data: entradas }, { data: zonas }] = await Promise.all([
         supabase.from('entradas').select('*').order('nombre_entrada'),
         supabase
           .from('zonas')
           .select('*')
-          .eq('sala_id', funcion.sala?.id || funcion.sala_id || funcion.sala)
+          .or(`sala_id.eq.${String(salaId)},sala.eq.${String(salaId)}`)
           .order('nombre'),
       ]);
 
@@ -122,10 +123,13 @@ const ZonesPanel = ({
         const comisionNum = toNumber(feeCandidate) || 0;
 
         if (!zonaKey || !prodKey || precioNum === null) continue;
-        const zona = zonasById.get(zonaKey);
+        let zona = zonasById.get(zonaKey);
         // Permitir fallback cuando la entrada no existe en tabla 'entradas'
         let entrada = entradasById.get(prodKey);
-        if (!zona) continue;
+        if (!zona) {
+          // Crear zona virtual si no existe en BD para poder agrupar
+          zona = { id: zonaKey, nombre: `Zona ${zonaKey}`, color: null };
+        }
         if (!entrada) {
           // Crear entrada virtual usando nombres presentes en el detalle
           const entradaNombre = readFirst(d, ['entradaNombre', 'nombreEntrada', 'nombre_entrada', 'nombre']) || `Entrada ${prodKey}`;
