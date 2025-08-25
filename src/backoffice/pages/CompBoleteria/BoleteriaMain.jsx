@@ -1014,9 +1014,24 @@ const BoleteriaMain = () => {
             </div>
           )}
 
-          <div className="absolute bottom-4 left-4 z-10 flex space-x-2">
+          <div className="absolute bottom-4 left-4 z-10 flex space-x-2 items-center">
             <Button size="small" icon={<ZoomInOutlined />} onClick={() => setZoomLevel(prev => Math.min(prev + 0.2, 3))} />
             <Button size="small" icon={<ZoomOutOutlined />} onClick={() => setZoomLevel(prev => Math.max(prev - 0.2, 0.5))} />
+            <Tooltip
+              title={
+                <div className="text-xs">
+                  <div className="font-semibold mb-1">Estado de Asientos</div>
+                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-blue-500"></div><span>Disponible</span></div>
+                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-500"></div><span>Seleccionado</span></div>
+                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-orange-500"></div><span>Bloqueado por mí</span></div>
+                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><span>Bloqueado por otro</span></div>
+                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-gray-500"></div><span>Vendido/Reservado</span></div>
+                </div>
+              }
+              placement="top"
+            >
+              <Button size="small" icon={<InfoCircleOutlined />} />
+            </Tooltip>
           </div>
           
           <div className="bg-white p-4 rounded-lg shadow-sm overflow-hidden">

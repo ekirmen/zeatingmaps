@@ -715,45 +715,7 @@ const SimpleSeatingMap = ({
         )}
       </div>
       
-      {/* Leyenda mejorada con zonas */}
-      <div className="absolute bottom-4 left-4 bg-white p-3 rounded shadow max-w-xs">
-        <div className="text-xs space-y-2">
-          <div className="font-semibold mb-2">Estado de Asientos</div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-            <span>Disponible</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-            <span>Seleccionado</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-orange-500"></div>
-            <span>Bloqueado por mí</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-red-500"></div>
-            <span>Bloqueado por otro</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-            <span>Vendido/Reservado</span>
-          </div>
-          
-          {/* Información de zonas */}
-          {Object.keys(zonePrices).length > 0 && (
-            <>
-              <div className="font-semibold mt-3 mb-2">Zonas y Precios</div>
-              {Object.entries(zonePrices).map(([zonaId, info]) => (
-                <div key={zonaId} className="flex items-center justify-between">
-                  <span className="text-xs">{info.nombre}</span>
-                  <span className="text-xs font-bold">${info.precio}</span>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-      </div>
+      {/* Leyenda movida a botón informativo en BoleteriaMain */}
     </div>
   );
 };
