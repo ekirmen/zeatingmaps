@@ -135,17 +135,44 @@ const ZonesPanel = ({
 
       // Cargar entradas y zonas desde la BD
       console.log('📥 Cargando entradas y zonas desde BD...');
-      const [{ data: entradas }, { data: zonas }] = await Promise.all([
-        supabase.from('entradas').select('*').order('nombre_entrada'),
-        supabase
-          .from('zonas')
-          .select('*')
-          .or(`sala_id.eq.${String(salaId)},sala.eq.${String(salaId)}`)
-          .order('nombre'),
+      console.log('🏢 Sala ID que se usará en la consulta:', salaId);
+      console.log('🏢 Tipo de salaId:', typeof salaId);
+      
+      // Consulta de entradas
+      const entradasQuery = supabase.from('entradas').select('*').order('nombre_entrada');
+      console.log('📦 Query entradas:', entradasQuery);
+      
+      // Consulta de zonas con más logging
+      const zonasQuery = supabase
+        .from('zonas')
+        .select('*')
+        .or(`sala_id.eq.${String(salaId)},sala.eq.${String(salaId)}`)
+        .order('nombre');
+      
+      console.log('🎯 Query zonas:', zonasQuery);
+      console.log('🎯 Query zonas SQL equivalente:', `SELECT * FROM zonas WHERE sala_id = '${salaId}' OR sala = '${salaId}' ORDER BY nombre`);
+
+      const [{ data: entradas, error: entradasError }, { data: zonas, error: zonasError }] = await Promise.all([
+        entradasQuery,
+        zonasQuery,
       ]);
 
-      console.log('📦 Entradas cargadas:', entradas);
-      console.log('🎯 Zonas cargadas:', zonas);
+      console.log('📦 Resultado entradas:', { data: entradas, error: entradasError });
+      console.log('🎯 Resultado zonas:', { data: zonas, error: zonasError });
+
+      if (entradasError) {
+        console.error('❌ Error cargando entradas:', entradasError);
+        setPriceOptions([]);
+        setDebugInfo({ error: `Error cargando entradas: ${entradasError.message}` });
+        return;
+      }
+
+      if (zonasError) {
+        console.error('❌ Error cargando zonas:', zonasError);
+        setPriceOptions([]);
+        setDebugInfo({ error: `Error cargando zonas: ${zonasError.message}` });
+        return;
+      }
 
       if (!entradas || entradas.length === 0) {
         console.log('❌ No se pudieron cargar entradas');
@@ -156,8 +183,33 @@ const ZonesPanel = ({
 
       if (!zonas || zonas.length === 0) {
         console.log('❌ No se pudieron cargar zonas');
+        console.log('🔍 Intentando consulta alternativa...');
+        
+        // Intentar consulta alternativa sin filtros
+        try {
+          const { data: todasLasZonas, error: errorTodas } = await supabase
+            .from('zonas')
+            .select('*')
+            .order('nombre');
+          
+          console.log('🔍 Todas las zonas en la BD:', todasLasZonas);
+          console.log('🔍 Error consulta alternativa:', errorTodas);
+          
+          if (todasLasZonas && todasLasZonas.length > 0) {
+            console.log('🔍 Zonas disponibles en la BD:', todasLasZonas.map(z => ({ id: z.id, nombre: z.nombre, sala_id: z.sala_id, sala: z.sala })));
+          }
+        } catch (e) {
+          console.error('❌ Error en consulta alternativa:', e);
+        }
+        
         setPriceOptions([]);
-        setDebugInfo({ error: 'No se pudieron cargar zonas', entradas, zonas });
+        setDebugInfo({ 
+          error: 'No se pudieron cargar zonas', 
+          salaId,
+          entradas, 
+          zonas,
+          sugerencia: 'Verificar que la sala tenga zonas asignadas o que el campo sala_id/sala en la tabla zonas sea correcto'
+        });
         return;
       }
 
@@ -323,7 +375,31 @@ const ZonesPanel = ({
       {debugInfo.error && (
         <Alert
           message="Error al cargar zonas"
-          description={debugInfo.error}
+          description={
+            <div>
+              <div className="mb-2">{debugInfo.error}</div>
+              {debugInfo.salaId && (
+                <div className="text-xs text-gray-600 mb-1">
+                  <strong>Sala ID:</strong> {debugInfo.salaId}
+                </div>
+              )}
+              {debugInfo.sugerencia && (
+                <div className="text-xs text-gray-600 mb-1">
+                  <strong>Sugerencia:</strong> {debugInfo.sugerencia}
+                </div>
+              )}
+              {debugInfo.entradas && (
+                <div className="text-xs text-gray-600 mb-1">
+                  <strong>Entradas cargadas:</strong> {Array.isArray(debugInfo.entradas) ? debugInfo.entradas.length : 'Error'}
+                </div>
+              )}
+              {debugInfo.zonas && (
+                <div className="text-xs text-gray-600 mb-1">
+                  <strong>Zonas cargadas:</strong> {Array.isArray(debugInfo.zonas) ? debugInfo.zonas.length : 'Error'}
+                </div>
+              )}
+            </div>
+          }
           type="error"
           showIcon
           className="mb-3"
@@ -367,6 +443,41 @@ const ZonesPanel = ({
               className="mt-2 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
             >
               🔍 Debug - Recargar
+            </button>
+            
+            <button 
+              onClick={async () => {
+                console.log('🔍 Debug - Probar consultas de BD...');
+                const salaId = selectedFuncion.sala?.id || selectedFuncion.sala_id || selectedFuncion.sala;
+                console.log('🏢 Sala ID:', salaId);
+                
+                // Probar consulta de entradas
+                const { data: entradas, error: entradasError } = await supabase
+                  .from('entradas')
+                  .select('*')
+                  .order('nombre_entrada');
+                console.log('📦 Entradas (sin filtro):', { data: entradas, error: entradasError });
+                
+                // Probar consulta de zonas sin filtro
+                const { data: zonas, error: zonasError } = await supabase
+                  .from('zonas')
+                  .select('*')
+                  .order('nombre');
+                console.log('🎯 Zonas (sin filtro):', { data: zonas, error: zonasError });
+                
+                // Probar consulta de zonas con filtro
+                if (salaId) {
+                  const { data: zonasFiltradas, error: zonasFiltradasError } = await supabase
+                    .from('zonas')
+                    .select('*')
+                    .or(`sala_id.eq.${String(salaId)},sala.eq.${String(salaId)}`)
+                    .order('nombre');
+                  console.log('🎯 Zonas filtradas por sala:', { data: zonasFiltradas, error: zonasFiltradasError });
+                }
+              }}
+              className="mt-2 ml-2 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
+            >
+              🗄️ Debug - Consultas BD
             </button>
           </div>
         )}
