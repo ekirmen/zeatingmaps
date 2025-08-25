@@ -1,4 +1,4 @@
-import { supabase } from '../../config/supabase';
+import { supabase } from '../../supabaseClient';
 
 export class ImageService {
   // Obtener imágenes de un evento
