@@ -14,8 +14,12 @@ const EventsVenue = ({ groupByTags = true }) => {
   const [loadingCms, setLoadingCms] = useState(true);
   const [errorCms, setErrorCms] = useState(null);
 
+  console.log('🚀 [EventsVenue] Componente montado');
+
   // Use the new hook to fetch the list of events
   const { events, loading: loadingEvents, error: errorEvents } = useEventsList();
+  
+  console.log('🔍 [EventsVenue] Hook useEventsList resultado:', { events, loading: loadingEvents, error: errorEvents });
 
   useEffect(() => {
     const loadCmsWidgets = async () => {

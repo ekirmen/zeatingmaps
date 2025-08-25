@@ -604,8 +604,19 @@ export const createPayment = async (data) => {
   console.log('createPayment request:', data);
   
   // Validar que los asientos no estén ya vendidos
-  if (data.seats && Array.isArray(JSON.parse(data.seats))) {
-    const seats = JSON.parse(data.seats);
+  let seats = data.seats;
+  
+  // Si seats es string, parsearlo; si ya es objeto, usarlo directamente
+  if (typeof seats === 'string') {
+    try {
+      seats = JSON.parse(seats);
+    } catch (e) {
+      console.error('Error parsing seats JSON:', e);
+      seats = [];
+    }
+  }
+  
+  if (seats && Array.isArray(seats)) {
     const funcionId = data.funcion;
     
     console.log('🔍 Validando asientos antes de crear pago:', { seats, funcionId });
@@ -640,10 +651,20 @@ export const createPayment = async (data) => {
 };
 
 // Función auxiliar para calcular el monto total
-const calculateTotalAmount = (seatsJson) => {
+const calculateTotalAmount = (seatsData) => {
   try {
-    const seats = JSON.parse(seatsJson);
-    return seats.reduce((total, seat) => total + (seat.price || 0), 0);
+    let seats = seatsData;
+    
+    // Si seats es string, parsearlo; si ya es objeto, usarlo directamente
+    if (typeof seats === 'string') {
+      seats = JSON.parse(seats);
+    }
+    
+    if (Array.isArray(seats)) {
+      return seats.reduce((total, seat) => total + (seat.price || 0), 0);
+    }
+    
+    return 0;
   } catch (e) {
     console.error('Error calculando monto total:', e);
     return 0;
