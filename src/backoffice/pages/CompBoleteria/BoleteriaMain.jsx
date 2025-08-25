@@ -1235,6 +1235,74 @@ const BoleteriaMain = () => {
                   </button>
                   <button 
                     onClick={async () => {
+                      console.log('🔍 Debug - Probando lockSeat del store...');
+                      try {
+                        const { useSeatLockStore } = await import('../../../components/seatLockStore');
+                        const lockSeat = useSeatLockStore.getState().lockSeat;
+                        
+                        if (lockSeat) {
+                          console.log('🔍 Debug - lockSeat encontrado:', !!lockSeat);
+                          const result = await lockSeat('test_seat_123', 'seleccionado', selectedFuncion?.id);
+                          console.log('🔍 Debug - Resultado lockSeat:', result);
+                          
+                          if (result) {
+                            message.success('✅ lockSeat funcionando correctamente');
+                          } else {
+                            message.warning('⚠️ lockSeat retornó false');
+                          }
+                        } else {
+                          message.error('❌ lockSeat no encontrado');
+                        }
+                      } catch (error) {
+                        console.error('🔍 Debug - Error en lockSeat:', error);
+                        message.error(`❌ Error en lockSeat: ${error.message}`);
+                      }
+                    }}
+                    className="px-2 py-1 bg-teal-100 text-teal-700 rounded text-xs hover:bg-teal-200"
+                  >
+                    🧪 Probar lockSeat
+                  </button>
+                  <button 
+                    onClick={async () => {
+                      console.log('🔍 Debug - Probando seatLockService...');
+                      try {
+                        const { seatLockService } = await import('../../services/seatLockService');
+                        
+                        if (seatLockService) {
+                          console.log('🔍 Debug - seatLockService encontrado:', !!seatLockService);
+                          
+                          // Generar un session ID temporal
+                          const sessionId = `test_${Date.now()}`;
+                          console.log('🔍 Debug - Session ID generado:', sessionId);
+                          
+                          const result = await seatLockService.lockSeat(
+                            'test_seat_456', 
+                            selectedFuncion?.id, 
+                            sessionId, 
+                            'seleccionado'
+                          );
+                          
+                          console.log('🔍 Debug - Resultado seatLockService:', result);
+                          
+                          if (result.success) {
+                            message.success('✅ seatLockService funcionando correctamente');
+                          } else {
+                            message.warning(`⚠️ seatLockService error: ${result.error}`);
+                          }
+                        } else {
+                          message.error('❌ seatLockService no encontrado');
+                        }
+                      } catch (error) {
+                        console.error('🔍 Debug - Error en seatLockService:', error);
+                        message.error(`❌ Error en seatLockService: ${error.message}`);
+                      }
+                    }}
+                    className="px-2 py-1 bg-cyan-100 text-cyan-700 rounded text-xs hover:bg-cyan-200"
+                  >
+                    🧪 Probar seatLockService
+                  </button>
+                  <button 
+                    onClick={async () => {
                       console.log('🔍 Debug - Probando fetchMapa...');
                       if (selectedFuncion) {
                         const salaId = selectedFuncion.sala?.id || selectedFuncion.sala_id || selectedFuncion.sala;
