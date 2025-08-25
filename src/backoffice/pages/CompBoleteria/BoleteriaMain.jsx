@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber } from 'antd';
 import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined } from '@ant-design/icons';
@@ -78,7 +78,7 @@ const BoleteriaMain = () => {
   const {
     selectedClient,
     setSelectedClient
-  } = useClientManagement(null);
+  } = useClientManagement();
 
   // Estados locales
   const [selectedSeats, setSelectedSeats] = useState([]);
@@ -162,7 +162,13 @@ const BoleteriaMain = () => {
   const images = getEventImages();
   const thumbnailImage = images.portada || images.obraImagen || images.banner;
 
-  // useEffect se moverá después de definir todas las funciones
+  useEffect(() => {
+    loadAvailableEvents();
+    loadPlantillasPrecios();
+    loadPersistedData();
+    loadSavedCarts();
+    loadLastSelection(); // Cargar última selección
+  }, []);
 
   // Cargar datos persistidos
   const loadPersistedData = () => {
@@ -264,14 +270,14 @@ const BoleteriaMain = () => {
     if (selectedEvent) {
       loadFunctionsForEvent(selectedEvent.id);
     }
-  }, [selectedEvent, loadFunctionsForEvent]);
+  }, [selectedEvent]);
 
   // Cargar plantilla cuando se selecciona una función
   useEffect(() => {
     if (selectedFuncion) {
       loadPlantillaForFunction(selectedFuncion);
     }
-  }, [selectedFuncion, loadPlantillaForFunction]);
+  }, [selectedFuncion]);
 
 
 
@@ -280,7 +286,7 @@ const BoleteriaMain = () => {
     if (selectedFuncion?.id) {
       loadEventStats(selectedFuncion.id);
     }
-  }, [mapa, selectedFuncion?.id, loadEventStats]);
+  }, [mapa, selectedFuncion?.id]);
 
   const loadSavedCarts = async () => {
     try {
@@ -453,7 +459,7 @@ const BoleteriaMain = () => {
     }
   };
 
-  const loadFunctionsForEvent = useCallback(async (eventId) => {
+  const loadFunctionsForEvent = async (eventId) => {
     try {
       const { data, error } = await supabase
         .from('funciones')
@@ -470,7 +476,7 @@ const BoleteriaMain = () => {
     } catch (error) {
       console.error('Error loading functions:', error);
     }
-  }, []);
+  };
 
   const loadPlantillasPrecios = async () => {
     try {
@@ -493,7 +499,7 @@ const BoleteriaMain = () => {
 
 
   // Cargar plantilla para una función específica
-  const loadPlantillaForFunction = useCallback(async (funcion) => {
+  const loadPlantillaForFunction = async (funcion) => {
     try {
       // Usar plantilla embebida si existe
       if (funcion.plantilla && typeof funcion.plantilla === 'object') {
@@ -545,9 +551,9 @@ const BoleteriaMain = () => {
       console.error('❌ [loadPlantillaForFunction] Error cargando plantilla:', error);
       setSelectedPlantilla(null);
     }
-  }, []);
+  };
 
-  const loadEventStats = useCallback(async (funcionId) => {
+  const loadEventStats = async (funcionId) => {
     if (!funcionId) return;
     
     try {
@@ -637,7 +643,7 @@ const BoleteriaMain = () => {
     } catch (error) {
       console.error('Error loading event stats:', error);
     }
-  }, [mapa]);
+  };
 
   const handleLocatorSearch = async () => {
     if (!locatorSearchValue) {

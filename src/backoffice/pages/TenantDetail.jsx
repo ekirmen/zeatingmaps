@@ -15,7 +15,7 @@ import {
   BellOutlined,
   CreditCardOutlined
 } from '@ant-design/icons';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../config/supabase';
 import { useParams, useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;

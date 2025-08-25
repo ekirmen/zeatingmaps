@@ -12,7 +12,7 @@ import {
   CreditCardOutlined,
   DatabaseOutlined
 } from '@ant-design/icons';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../config/supabase';
 
 const { Title, Text } = Typography;
 const { Option } = Select;

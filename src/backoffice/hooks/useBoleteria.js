@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { message } from 'antd';
-import { supabase, supabaseAdmin } from '../../supabaseClient';
+import { supabase, supabaseAdmin } from '../../config/supabase';
 import { fetchMapa, fetchZonasPorSala } from '../services/apibackoffice';
 
 const EVENT_KEY = 'boleteriaEventId';
@@ -104,7 +104,7 @@ export const useBoleteria = () => {
     });
     
     console.log('➕ [useBoleteria] Asiento agregado al carrito:', newItem);
-  }, [selectedFuncion?.id, saveCarritoToStorage, setCarrito]);
+  }, [selectedFuncion?.id, saveCarritoToStorage]);
 
   // Función para quitar asiento del carrito
   const removeFromCarrito = useCallback((asientoId) => {
@@ -503,7 +503,7 @@ export const useBoleteria = () => {
     };
 
     fetchEventos();
-  }, [selectedFuncion]);
+  }, [handleEventSelect]);
 
   return returnValue;
 };

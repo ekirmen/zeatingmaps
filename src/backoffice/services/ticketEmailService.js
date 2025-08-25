@@ -1,4 +1,4 @@
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../config/supabase';
 import { EmailConfigService } from './emailConfigService';
 
 export class TicketEmailService {
