@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { Card, Button, Typography, Spin, Tag, message } from 'antd';
+import { Card, Button, Typography, Spin, Tag, message, Alert } from 'antd';
 import { supabase } from '../../../../supabaseClient';
 
 const { Text } = Typography;
@@ -14,46 +14,127 @@ const ZonesPanel = ({
   onSelectZona,
   onPricesLoaded,
 }) => {
+  console.log('🚀 ZonesPanel - COMPONENTE MONTADO');
+  console.log('📋 Props recibidas:', {
+    selectedFuncion: !!selectedFuncion,
+    selectedPlantilla: !!selectedPlantilla,
+    mapa: !!mapa,
+    onSelectPrice: !!onSelectPrice,
+    selectedPriceId,
+    selectedZonaId,
+    onSelectZona: !!onSelectZona,
+    onPricesLoaded: !!onPricesLoaded
+  });
+
   const [loading, setLoading] = useState(false);
   const [priceOptions, setPriceOptions] = useState([]);
   const [activeZonaId, setActiveZonaId] = useState(null);
+  const [debugInfo, setDebugInfo] = useState({});
+
+  // Función para extraer detalles de la plantilla
+  const extractDetalles = useCallback((funcion, plantilla) => {
+    console.log('🔍 extractDetalles - Iniciando extracción...');
+    console.log('📋 Funcion:', funcion);
+    console.log('📋 Plantilla:', plantilla);
+
+    let detalles = [];
+    let source = '';
+
+    // PRIORIDAD 1: selectedPlantilla.detalles
+    if (plantilla?.detalles) {
+      source = 'selectedPlantilla.detalles';
+      try {
+        if (typeof plantilla.detalles === 'string') {
+          detalles = JSON.parse(plantilla.detalles);
+        } else {
+          detalles = plantilla.detalles;
+        }
+        console.log('✅ Detalles extraídos desde selectedPlantilla.detalles');
+      } catch (e) {
+        console.error('❌ Error parsing selectedPlantilla.detalles:', e);
+        detalles = [];
+      }
+    }
+    // PRIORIDAD 2: funcion.plantilla.detalles
+    else if (funcion?.plantilla?.detalles) {
+      source = 'funcion.plantilla.detalles';
+      try {
+        if (typeof funcion.plantilla.detalles === 'string') {
+          detalles = JSON.parse(funcion.plantilla.detalles);
+        } else {
+          detalles = funcion.plantilla.detalles;
+        }
+        console.log('✅ Detalles extraídos desde funcion.plantilla.detalles');
+      } catch (e) {
+        console.error('❌ Error parsing funcion.plantilla.detalles:', e);
+        detalles = [];
+      }
+    }
+    // PRIORIDAD 3: funcion.plantilla_entradas.detalles
+    else if (funcion?.plantilla_entradas?.detalles) {
+      source = 'funcion.plantilla_entradas.detalles';
+      try {
+        if (typeof funcion.plantilla_entradas.detalles === 'string') {
+          detalles = JSON.parse(funcion.plantilla_entradas.detalles);
+        } else {
+          detalles = funcion.plantilla_entradas.detalles;
+        }
+        console.log('✅ Detalles extraídos desde funcion.plantilla_entradas.detalles');
+      } catch (e) {
+        console.error('❌ Error parsing funcion.plantilla_entradas.detalles:', e);
+        detalles = [];
+      }
+    }
+
+    console.log('📋 Detalles extraídos:', detalles);
+    console.log('📋 Fuente:', source);
+
+    return { detalles, source };
+  }, []);
 
   const loadPriceOptions = useCallback(async () => {
-    console.log('🔍 loadPriceOptions iniciado');
+    console.log('🚀 loadPriceOptions - INICIANDO');
     console.log('📋 selectedFuncion:', selectedFuncion);
     console.log('📋 selectedPlantilla:', selectedPlantilla);
-    
-    // Verificar si tenemos los datos necesarios
+
     if (!selectedFuncion) {
       console.log('❌ No hay selectedFuncion');
       setPriceOptions([]);
+      setDebugInfo({ error: 'No hay función seleccionada' });
       return;
     }
 
-    if (!selectedPlantilla?.detalles) {
-      console.log('❌ No hay selectedPlantilla.detalles');
-      console.log('🔍 Buscando en selectedFuncion.plantilla.detalles...');
+    setLoading(true);
+    setDebugInfo({});
+
+    try {
+      // Extraer detalles de la plantilla
+      const { detalles, source } = extractDetalles(selectedFuncion, selectedPlantilla);
       
-      // Fallback: intentar obtener detalles desde la función si no hay plantilla separada
-      if (selectedFuncion.plantilla?.detalles) {
-        console.log('✅ Encontrado en selectedFuncion.plantilla.detalles');
-      } else if (selectedFuncion.plantilla_entradas?.detalles) {
-        console.log('✅ Encontrado en selectedFuncion.plantilla_entradas.detalles');
-      } else {
-        console.log('❌ No se encontraron detalles en ningún lugar');
+      if (!Array.isArray(detalles) || detalles.length === 0) {
+        console.log('❌ No hay detalles válidos en la plantilla');
         setPriceOptions([]);
+        setDebugInfo({ 
+          error: 'No hay detalles válidos en la plantilla',
+          source,
+          detalles: detalles
+        });
         return;
       }
-    } else {
-      console.log('✅ Usando selectedPlantilla.detalles');
-    }
 
-    setLoading(true);
-    try {
-      // Cargar entradas y zonas de la BD
+      // Obtener sala ID
       const salaId = selectedFuncion.sala?.id || selectedFuncion.sala_id || selectedFuncion.sala;
       console.log('🏢 Sala ID:', salaId);
-      
+
+      if (!salaId) {
+        console.log('❌ No se pudo obtener el ID de la sala');
+        setPriceOptions([]);
+        setDebugInfo({ error: 'No se pudo obtener el ID de la sala' });
+        return;
+      }
+
+      // Cargar entradas y zonas desde la BD
+      console.log('📥 Cargando entradas y zonas desde BD...');
       const [{ data: entradas }, { data: zonas }] = await Promise.all([
         supabase.from('entradas').select('*').order('nombre_entrada'),
         supabase
@@ -66,103 +147,62 @@ const ZonesPanel = ({
       console.log('📦 Entradas cargadas:', entradas);
       console.log('🎯 Zonas cargadas:', zonas);
 
-      if (!entradas || !zonas) {
-        console.log('❌ No se pudieron cargar entradas o zonas');
+      if (!entradas || entradas.length === 0) {
+        console.log('❌ No se pudieron cargar entradas');
         setPriceOptions([]);
+        setDebugInfo({ error: 'No se pudieron cargar entradas', entradas, zonas });
+        return;
+      }
+
+      if (!zonas || zonas.length === 0) {
+        console.log('❌ No se pudieron cargar zonas');
+        setPriceOptions([]);
+        setDebugInfo({ error: 'No se pudieron cargar zonas', entradas, zonas });
         return;
       }
 
       // Crear mapas para búsqueda rápida
-      const entradasById = new Map(entradas.map(e => [e.id, e]));
-      const zonasById = new Map(zonas.map(z => [z.id, z]));
+      const entradasById = new Map(entradas.map(e => [String(e.id), e]));
+      const zonasById = new Map(zonas.map(z => [String(z.id), z]));
 
       console.log('🗺️ Mapa de entradas por ID:', Array.from(entradasById.keys()));
       console.log('🎯 Mapa de zonas por ID:', Array.from(zonasById.keys()));
 
-      // Obtener detalles de la plantilla - PRIORIDAD: selectedPlantilla.detalles
-      let detalles = [];
-      let detallesSource = '';
-      
-      if (selectedPlantilla?.detalles) {
-        detallesSource = 'selectedPlantilla.detalles';
-        try {
-          detalles = typeof selectedPlantilla.detalles === 'string' 
-            ? JSON.parse(selectedPlantilla.detalles) 
-            : selectedPlantilla.detalles;
-        } catch (e) {
-          console.error('❌ Error parsing selectedPlantilla.detalles:', e);
-          detalles = [];
-        }
-      } else if (selectedFuncion.plantilla?.detalles) {
-        detallesSource = 'selectedFuncion.plantilla.detalles';
-        try {
-          detalles = typeof selectedFuncion.plantilla.detalles === 'string' 
-            ? JSON.parse(selectedFuncion.plantilla.detalles) 
-            : selectedFuncion.plantilla.detalles;
-        } catch (e) {
-          console.error('❌ Error parsing selectedFuncion.plantilla.detalles:', e);
-          detalles = [];
-        }
-      } else if (selectedFuncion.plantilla_entradas?.detalles) {
-        detallesSource = 'selectedFuncion.plantilla_entradas.detalles';
-        try {
-          detalles = typeof selectedFuncion.plantilla_entradas.detalles === 'string' 
-            ? JSON.parse(selectedFuncion.plantilla_entradas.detalles) 
-            : selectedFuncion.plantilla_entradas.detalles;
-        } catch (e) {
-          console.error('❌ Error parsing selectedFuncion.plantilla_entradas.detalles:', e);
-          detalles = [];
-        }
-      }
-
-      console.log('📋 Detalles cargados desde:', detallesSource);
-      console.log('📋 Contenido de detalles:', detalles);
-
-      if (!Array.isArray(detalles)) {
-        console.error('❌ detalles no es un array:', detalles);
-        setPriceOptions([]);
-        return;
-      }
-
-      if (detalles.length === 0) {
-        console.log('⚠️ Array de detalles está vacío');
-        setPriceOptions([]);
-        return;
-      }
-
-      // Agrupar por zona física
+      // Procesar detalles y agrupar por zona
       const zonasAgrupadas = new Map();
-      
+      let detallesProcesados = 0;
+      let detallesConError = 0;
+
       detalles.forEach((detalle, index) => {
         console.log(`🔍 Procesando detalle ${index}:`, detalle);
         
-        // Intentar diferentes nombres de campos para zonaId y entradaId
+        // Extraer campos con múltiples nombres posibles
         const zonaId = detalle.zonaId || detalle.zona_id || detalle.zona?.id || detalle.id_zona || detalle.idZona;
         const entradaId = detalle.entradaId || detalle.entrada_id || detalle.entrada?.id || detalle.id_entrada || detalle.idEntrada || detalle.productoId || detalle.producto_id;
-        const precio = detalle.precio || detalle.price || detalle.monto || detalle.valor || 0;
-        const comision = detalle.comision || detalle.fee || detalle.cargo || 0;
+        const precio = parseFloat(detalle.precio || detalle.price || detalle.monto || detalle.valor || 0);
+        const comision = parseFloat(detalle.comision || detalle.fee || detalle.cargo || 0);
 
         console.log(`  - zonaId: ${zonaId}, entradaId: ${entradaId}, precio: ${precio}`);
 
         if (!zonaId || !entradaId) {
           console.log(`  ❌ Saltando - zonaId o entradaId faltante`);
+          detallesConError++;
           return;
         }
 
         // Buscar zona y entrada en BD
-        const zona = zonasById.get(zonaId);
-        const entrada = entradasById.get(entradaId);
-
-        console.log(`  - Zona encontrada:`, zona);
-        console.log(`  - Entrada encontrada:`, entrada);
+        const zona = zonasById.get(String(zonaId));
+        const entrada = entradasById.get(String(entradaId));
 
         if (!zona) {
           console.warn(`❌ Zona ${zonaId} no encontrada en BD`);
+          detallesConError++;
           return;
         }
 
         if (!entrada) {
           console.warn(`❌ Entrada ${entradaId} no encontrada en BD`);
+          detallesConError++;
           return;
         }
 
@@ -193,19 +233,21 @@ const ZonesPanel = ({
             color: zona.color || entrada.color || '#6366f1'
           });
           console.log(`  ✅ Precio agregado a zona ${zonaId}`);
+          detallesProcesados++;
         } else {
           console.log(`  ⚠️ Entrada ${entradaId} ya existe en zona ${zonaId}`);
         }
       });
 
       console.log('🏗️ Zonas agrupadas:', zonasAgrupadas);
+      console.log(`📊 Resumen: ${detallesProcesados} detalles procesados, ${detallesConError} con error`);
 
       // Convertir a array y calcular estadísticas
       const opciones = Array.from(zonasAgrupadas.values()).map(grupo => {
         // Calcular estadísticas de ocupación si hay mapa
         if (mapa) {
           const asientosZona = Object.values(mapa).filter(asiento => 
-            asiento.zona_id === grupo.zona.id || asiento.zona === grupo.zona.id
+            String(asiento.zona_id) === String(grupo.zona.id) || String(asiento.zona) === String(grupo.zona.id)
           );
           
           grupo.total = asientosZona.length;
@@ -220,6 +262,18 @@ const ZonesPanel = ({
       console.log('🎯 Opciones de precio finales:', opciones);
       setPriceOptions(opciones);
       
+      // Actualizar información de debug
+      setDebugInfo({
+        success: true,
+        source,
+        detallesProcesados,
+        detallesConError,
+        zonasEncontradas: opciones.length,
+        salaId,
+        entradasCargadas: entradas.length,
+        zonasCargadas: zonas.length
+      });
+
       // Restaurar selección previa si existe
       if (selectedZonaId && !opciones.find(o => o.zona.id === selectedZonaId)) {
         setActiveZonaId(opciones[0]?.zona.id || null);
@@ -235,17 +289,20 @@ const ZonesPanel = ({
     } catch (error) {
       console.error('💥 Error cargando opciones de precio:', error);
       setPriceOptions([]);
+      setDebugInfo({ error: error.message || 'Error desconocido' });
       message.error('Error al cargar zonas y precios');
     } finally {
       setLoading(false);
     }
-  }, [selectedFuncion, selectedPlantilla, mapa, selectedZonaId, onPricesLoaded]);
+  }, [selectedFuncion, selectedPlantilla, mapa, selectedZonaId, onPricesLoaded, extractDetalles]);
 
+  // Cargar datos cuando cambie la función o plantilla
   useEffect(() => {
     if (selectedFuncion) {
+      console.log('🔄 useEffect - selectedFuncion cambió, cargando datos...');
       loadPriceOptions();
     }
-  }, [loadPriceOptions]);
+  }, [selectedFuncion, selectedPlantilla, loadPriceOptions]);
 
   // Sync external selectedZonaId → internal activeZonaId
   useEffect(() => {
@@ -259,19 +316,40 @@ const ZonesPanel = ({
   const activeZona = activeZonaId ? priceOptions.find(o => o.zona.id === activeZonaId) : null;
 
   if (!selectedFuncion) return null;
-  if (loading) {
-    return (
-      <div className="py-6 text-center">
-        <Spin />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-3">
+      {/* Información de Debug */}
+      {debugInfo.error && (
+        <Alert
+          message="Error al cargar zonas"
+          description={debugInfo.error}
+          type="error"
+          showIcon
+          className="mb-3"
+        />
+      )}
+
+      {debugInfo.success && (
+        <Alert
+          message="Zonas cargadas correctamente"
+          description={`${debugInfo.zonasEncontradas} zonas encontradas, ${debugInfo.detallesProcesados} precios procesados`}
+          type="success"
+          showIcon
+          className="mb-3"
+        />
+      )}
+
       {/* Barra de zonas */}
       <div className="flex items-center space-x-2 overflow-x-auto p-2 border rounded bg-white">
-        {priceOptions.length === 0 && (
+        {loading && (
+          <div className="flex items-center space-x-2">
+            <Spin size="small" />
+            <span className="text-xs text-gray-500">Cargando zonas...</span>
+          </div>
+        )}
+
+        {!loading && priceOptions.length === 0 && (
           <div className="text-xs text-gray-500 px-2 py-1">
             <div>No hay zonas configuradas en la plantilla</div>
             <div className="text-[10px] mt-1">
@@ -292,6 +370,7 @@ const ZonesPanel = ({
             </button>
           </div>
         )}
+
         {priceOptions.map((zonaData) => (
           <div
             key={zonaData.zona.id}

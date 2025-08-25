@@ -991,14 +991,15 @@ const BoleteriaMain = () => {
                 selectedPriceId={selectedPriceOption?.id}
                 selectedZonaId={activeZoneId}
                 onSelectZona={(zonaId) => setActiveZoneId(String(zonaId))}
-                onPricesLoaded={(map) => {
+                onPricesLoaded={(zonasArray) => {
+                  console.log('🎯 onPricesLoaded llamado con:', zonasArray);
                   // Intentar restaurar precio/zone seleccionado si existe en storage
                   const savedPriceId = localStorage.getItem('boleteriaSelectedPriceId');
-                  if (savedPriceId) {
-                    for (const zonaId of Object.keys(map || {})) {
-                      const opt = (map[zonaId]?.options || []).find(o => String(o.id) === String(savedPriceId));
+                  if (savedPriceId && Array.isArray(zonasArray)) {
+                    for (const zona of zonasArray) {
+                      const opt = zona.precios.find(o => String(o.id) === String(savedPriceId));
                       if (opt) {
-                        setActiveZoneId(String(zonaId));
+                        setActiveZoneId(String(zona.zona.id));
                         setSelectedPriceOption(opt);
                         break;
                       }

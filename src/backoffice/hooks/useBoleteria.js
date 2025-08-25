@@ -83,10 +83,39 @@ export const useBoleteria = () => {
   
       // Cargar plantilla de precios si existe
       if (funcionData.plantilla) {
-        console.log('Plantilla encontrada:', funcionData.plantilla);
+        console.log('✅ Plantilla encontrada:', funcionData.plantilla);
+        console.log('📋 Plantilla ID:', funcionData.plantilla.id);
+        console.log('📋 Plantilla nombre:', funcionData.plantilla.nombre);
+        console.log('📋 Plantilla detalles:', funcionData.plantilla.detalles);
+        console.log('📋 Tipo de detalles:', typeof funcionData.plantilla.detalles);
         setSelectedPlantilla(funcionData.plantilla);
       } else {
-        console.log('No hay plantilla de precios para esta función');
+        console.log('❌ No hay plantilla de precios para esta función');
+        console.log('🔍 Buscando en plantilla_entradas...');
+        
+        // Intentar cargar plantilla desde plantilla_entradas
+        if (funcionData.plantilla_entradas) {
+          try {
+            const { data: plantillaData, error: plantillaError } = await supabase
+              .from('plantillas')
+              .select('*')
+              .eq('id', funcionData.plantilla_entradas)
+              .single();
+            
+            if (plantillaError) {
+              console.error('❌ Error cargando plantilla desde plantilla_entradas:', plantillaError);
+            } else if (plantillaData) {
+              console.log('✅ Plantilla cargada desde plantilla_entradas:', plantillaData);
+              console.log('📋 Plantilla detalles:', plantillaData.detalles);
+              setSelectedPlantilla(plantillaData);
+            } else {
+              console.log('❌ No se encontró plantilla con ID:', funcionData.plantilla_entradas);
+            }
+          } catch (e) {
+            console.error('❌ Error en fallback de plantilla:', e);
+          }
+        }
+        
         setSelectedPlantilla(null);
       }
   
