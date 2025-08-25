@@ -1,23 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, rgb } from 'pdf-lib';
 import QRCode from 'qrcode';
+import { getConfig, validateConfig } from './config';
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
+// Obtener configuración
+const config = getConfig();
+const supabaseUrl = config.supabaseUrl;
+const supabaseServiceKey = config.supabaseServiceKey;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-
-console.log('Environment variables check:');
-console.log('- SUPABASE_URL:', process.env.SUPABASE_URL ? 'defined' : 'undefined');
-console.log('- REACT_APP_SUPABASE_URL:', process.env.REACT_APP_SUPABASE_URL ? 'defined' : 'undefined');
-console.log('- SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'defined' : 'undefined');
-console.log('- REACT_APP_SUPABASE_SERVICE_ROLE_KEY:', process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ? 'defined' : 'undefined');
-console.log('Final values:');
-console.log('- supabaseUrl:', supabaseUrl ? 'defined' : 'undefined');
-console.log('- supabaseServiceKey:', supabaseServiceKey ? 'defined' : 'undefined');
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Supabase environment variables are not defined');
+// Crear cliente Supabase solo si las variables están disponibles
+let supabaseAdmin = null;
+if (supabaseUrl && supabaseServiceKey) {
+  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+  console.log('✅ [DOWNLOAD] Cliente Supabase creado correctamente');
+} else {
+  console.error('❌ [DOWNLOAD] No se puede crear cliente Supabase - variables faltantes');
 }
 
 export default async function handler(req, res) {
@@ -25,62 +22,68 @@ export default async function handler(req, res) {
   console.log('🔍 [DOWNLOAD] Query params:', req.query);
   console.log('🔍 [DOWNLOAD] Headers:', req.headers);
   
-  console.log('🔍 [DOWNLOAD] Environment check:');
-  console.log('- supabaseUrl:', supabaseUrl ? 'defined' : 'undefined');
-  console.log('- supabaseServiceKey:', supabaseServiceKey ? 'defined' : 'undefined');
-  
-  // Log completo de la request
-  console.log('🔍 [DOWNLOAD] Request completa:', {
-    method: req.method,
-    url: req.url,
-    query: req.query,
-    headers: req.headers
-  });
-  
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('❌ [DOWNLOAD] Variables de entorno faltantes');
-    console.error('- supabaseUrl:', supabaseUrl);
-    console.error('- supabaseServiceKey:', supabaseServiceKey);
-    console.error('❌ [DOWNLOAD] Redirigiendo a error 500');
+  // Validar configuración
+  if (!validateConfig()) {
+    console.error('❌ [DOWNLOAD] Configuración inválida, redirigiendo a error 500');
+    res.setHeader('Content-Type', 'application/json');
     return res.status(500).json({ 
       error: 'Server configuration error',
       details: 'Missing Supabase environment variables',
-      supabaseUrl: supabaseUrl ? 'defined' : 'undefined',
-      supabaseServiceKey: supabaseServiceKey ? 'defined' : 'undefined'
+      config: {
+        supabaseUrl: !!supabaseUrl,
+        supabaseServiceKey: !!supabaseServiceKey,
+        nodeEnv: config.nodeEnv,
+        vercelEnv: config.vercelEnv
+      }
     });
   }
   
-  console.log('✅ [DOWNLOAD] Variables de entorno configuradas correctamente');
+  console.log('✅ [DOWNLOAD] Configuración validada correctamente');
+  
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
+    res.setHeader('Content-Type', 'application/json');
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { locator } = req.query;
   if (!locator) {
-    console.error('Missing locator in query params');
+    console.error('❌ [DOWNLOAD] Missing locator in query params');
+    res.setHeader('Content-Type', 'application/json');
     return res.status(400).json({ error: 'Missing locator' });
   }
 
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
   if (!token) {
-    console.error('Missing auth token in headers');
+    console.error('❌ [DOWNLOAD] Missing auth token in headers');
+    res.setHeader('Content-Type', 'application/json');
     return res.status(401).json({ error: 'Missing auth token' });
   }
 
   try {
+    console.log('🔐 [DOWNLOAD] Verificando token de autenticación...');
+    
     // Verify the user token using the access token (tolerante a mocks)
     const userResp = await supabaseAdmin?.auth?.getUser?.(token);
     const user = userResp?.data?.user || null;
     const userError = userResp?.error || null;
+    
+    console.log('🔐 [DOWNLOAD] Resultado de autenticación:', {
+      user: user ? 'presente' : 'ausente',
+      error: userError ? userError.message : 'ninguno'
+    });
+    
     if (userError || !user) {
-      console.error('Auth error:', userError);
+      console.error('❌ [DOWNLOAD] Auth error:', userError);
+      res.setHeader('Content-Type', 'application/json');
       return res.status(403).json({ error: 'Unauthorized' });
     }
 
+    console.log('✅ [DOWNLOAD] Usuario autenticado correctamente:', user.id);
+
     // Get payment data
-    console.log('Searching for payment with locator:', locator);
+    console.log('🔍 [DOWNLOAD] Buscando pago con localizador:', locator);
     const { data: payment, error } = await supabaseAdmin
       .from('payments')
       .select(`
@@ -94,24 +97,28 @@ export default async function handler(req, res) {
       .single();
 
     if (error) {
-      console.error('Database error:', error);
-      return res.status(500).json({ error: 'Database error' });
+      console.error('❌ [DOWNLOAD] Database error:', error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ error: 'Database error', details: error.message });
     }
     
     if (!payment) {
-      console.error('Payment not found for locator:', locator);
+      console.error('❌ [DOWNLOAD] Payment not found for locator:', locator);
+      res.setHeader('Content-Type', 'application/json');
       return res.status(404).json({ error: 'Payment not found' });
     }
     
-    console.log('Payment found:', payment);
+    console.log('✅ [DOWNLOAD] Pago encontrado:', payment);
 
     // --- GENERAR QR ---
-    // El QR puede ser el locator o una URL de validación
+    console.log('🎯 [DOWNLOAD] Generando código QR...');
     const qrText = `https://tusitio.com/validar-ticket/${payment.locator}`;
     const qrDataUrl = await QRCode.toDataURL(qrText, { margin: 1, width: 200 });
     const qrImageBytes = Buffer.from(qrDataUrl.split(",")[1], 'base64');
+    console.log('✅ [DOWNLOAD] Código QR generado');
 
     // --- CREAR PDF ---
+    console.log('📄 [DOWNLOAD] Creando documento PDF...');
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
     const { width, height } = page.getSize();
@@ -152,6 +159,7 @@ export default async function handler(req, res) {
     page.drawText(`Fecha de compra: ${fechaCreacion}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4) });
 
     // --- Insertar QR ---
+    console.log('🖼️ [DOWNLOAD] Insertando código QR en PDF...');
     const qrImage = await pdfDoc.embedPng(qrImageBytes);
     const qrSize = 120;
     page.drawImage(qrImage, {
@@ -173,13 +181,28 @@ export default async function handler(req, res) {
     page.drawText('• El QR es único y será validado electrónicamente.', { x: 60, y: 53, size: 9, color: rgb(0.2,0.2,0.2) });
     page.drawText('• No compartas tu ticket. Solo el primer escaneo será válido.', { x: 60, y: 41, size: 9, color: rgb(0.2,0.2,0.2) });
 
+    console.log('💾 [DOWNLOAD] Guardando PDF...');
     const pdfBytes = await pdfDoc.save();
+    console.log('✅ [DOWNLOAD] PDF generado exitosamente, tamaño:', pdfBytes.length, 'bytes');
 
+    // Asegurar que se envíen los headers correctos
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="ticket-${locator}.pdf"`);
+    res.setHeader('Content-Length', pdfBytes.length);
+    
+    console.log('📤 [DOWNLOAD] Enviando PDF al cliente...');
     return res.status(200).send(Buffer.from(pdfBytes));
+    
   } catch (err) {
-    console.error('Error generating ticket:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('❌ [DOWNLOAD] Error generando ticket:', err);
+    console.error('❌ [DOWNLOAD] Stack trace:', err.stack);
+    
+    // Asegurar que se envíe JSON y no HTML
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(500).json({ 
+      error: 'Internal server error', 
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 }

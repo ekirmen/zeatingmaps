@@ -7,18 +7,17 @@ export default async function downloadTicket(locator, ticketId) {
   const url = ticketId
     ? `${API_BASE_URL}/api/tickets/${ticketId}/download`
     : `${API_BASE_URL}/api/payments/${locator}/download`;
+    
   try {
     // Obtener token fresco de Supabase
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
     if (sessionError) {
-      console.error('Error obteniendo sesión:', sessionError);
+      console.error('❌ [DOWNLOAD] Error obteniendo sesión:', sessionError);
       // Continuar sin token si no se puede obtener la sesión
     }
 
     const token = session?.access_token;
-
-    console.log('Token obtenido de Supabase:', token ? '✅ Válido' : '❌ Faltante');
 
     console.log('🚀 [DOWNLOAD] Iniciando descarga de ticket');
     console.log('📋 Locator:', locator);
@@ -28,30 +27,52 @@ export default async function downloadTicket(locator, ticketId) {
 
     const headers = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      Accept: 'application/pdf'
+      Accept: 'application/pdf, application/json, */*'
     };
+
+    console.log('📤 [DOWNLOAD] Headers enviados:', headers);
 
     const response = await fetch(url, { headers });
 
-    console.log('Response status:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+    console.log('📥 [DOWNLOAD] Response recibida:');
+    console.log('- Status:', response.status);
+    console.log('- Status Text:', response.statusText);
+    console.log('- Headers:', Object.fromEntries(response.headers.entries()));
 
     const contentType = response.headers.get('Content-Type');
+    console.log('- Content-Type:', contentType);
+
     if (!response.ok) {
       let errorMessage = 'Failed to download ticket';
-      console.error('Response not OK:', response.status, response.statusText);
+      console.error('❌ [DOWNLOAD] Response not OK:', response.status, response.statusText);
       
       if (contentType?.includes('application/json')) {
         try {
           const data = await response.json();
           errorMessage = data?.error || data?.details || errorMessage;
-          console.error('API Error Details:', data);
+          console.error('❌ [DOWNLOAD] API Error Details:', data);
         } catch (e) {
-          console.error('Error parsing JSON response:', e);
+          console.error('❌ [DOWNLOAD] Error parsing JSON response:', e);
         }
       } else if (contentType?.includes('text/html')) {
-        console.error('API devolvió HTML en lugar de JSON/PDF');
-        errorMessage = 'Error del servidor - API devolvió HTML';
+        console.error('❌ [DOWNLOAD] API devolvió HTML en lugar de JSON/PDF');
+        
+        // Intentar leer el contenido HTML para debug
+        try {
+          const htmlContent = await response.text();
+          console.error('❌ [DOWNLOAD] Contenido HTML recibido (primeros 500 chars):', htmlContent.substring(0, 500));
+          
+          if (htmlContent.includes('Error') || htmlContent.includes('error')) {
+            errorMessage = 'Error del servidor - API devolvió página de error HTML';
+          } else {
+            errorMessage = 'Error del servidor - API devolvió HTML en lugar de PDF';
+          }
+        } catch (e) {
+          console.error('❌ [DOWNLOAD] Error leyendo contenido HTML:', e);
+          errorMessage = 'Error del servidor - API devolvió HTML';
+        }
+      } else {
+        errorMessage = `Error del servidor: ${response.status} ${response.statusText}`;
       }
       
       toast.error(errorMessage);
@@ -63,18 +84,35 @@ export default async function downloadTicket(locator, ticketId) {
        contentType.includes('application/octet-stream'));
 
     if (!validContent) {
-      console.error('Invalid content type:', contentType);
-      console.error('Content-Type recibido:', contentType);
-      console.error('Response headers completos:', Object.fromEntries(response.headers.entries()));
+      console.error('❌ [DOWNLOAD] Invalid content type:', contentType);
+      console.error('❌ [DOWNLOAD] Content-Type recibido:', contentType);
+      console.error('❌ [DOWNLOAD] Response headers completos:', Object.fromEntries(response.headers.entries()));
       
       if (contentType?.includes('text/html')) {
-        toast.error('Error del servidor - API devolvió HTML en lugar de PDF');
-        throw new Error('Server returned HTML instead of PDF');
+        // Intentar leer el contenido HTML para debug
+        try {
+          const htmlContent = await response.text();
+          console.error('❌ [DOWNLOAD] Contenido HTML recibido (primeros 500 chars):', htmlContent.substring(0, 500));
+          
+          if (htmlContent.includes('Error') || htmlContent.includes('error')) {
+            toast.error('Error del servidor - API devolvió página de error HTML');
+            throw new Error('Server returned HTML error page instead of PDF');
+          } else {
+            toast.error('Error del servidor - API devolvió HTML en lugar de PDF');
+            throw new Error('Server returned HTML instead of PDF');
+          }
+        } catch (e) {
+          console.error('❌ [DOWNLOAD] Error leyendo contenido HTML:', e);
+          toast.error('Error del servidor - API devolvió HTML en lugar de PDF');
+          throw new Error('Server returned HTML instead of PDF');
+        }
       } else {
         toast.error('No se pudo descargar el ticket - tipo de contenido inválido');
         throw new Error('Invalid content type');
       }
     }
+
+    console.log('✅ [DOWNLOAD] Content-Type válido, procesando PDF...');
 
     const arrayBuffer = await response.arrayBuffer();
     if (!arrayBuffer.byteLength) {
@@ -82,7 +120,7 @@ export default async function downloadTicket(locator, ticketId) {
       throw new Error('Empty PDF');
     }
     
-    console.log('PDF size:', arrayBuffer.byteLength, 'bytes');
+    console.log('✅ [DOWNLOAD] PDF recibido, tamaño:', arrayBuffer.byteLength, 'bytes');
     
     const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
     const blobUrl = window.URL.createObjectURL(blob);
@@ -94,25 +132,16 @@ export default async function downloadTicket(locator, ticketId) {
     document.body.removeChild(a);
     window.URL.revokeObjectURL(blobUrl);
     
-    console.log('Ticket downloaded successfully');
-    return true;
-  } catch (err) {
-    console.error('❌ [DOWNLOAD] Error descargando ticket:', err);
-    console.error('❌ [DOWNLOAD] Error name:', err.name);
-    console.error('❌ [DOWNLOAD] Error message:', err.message);
-    console.error('❌ [DOWNLOAD] Error stack:', err.stack);
+    console.log('✅ [DOWNLOAD] Ticket descargado exitosamente');
+    toast.success('Ticket descargado exitosamente');
     
-    let userMessage = 'Error al descargar ticket';
+  } catch (error) {
+    console.error('❌ [DOWNLOAD] Error descargando ticket:', error);
+    console.error('❌ [DOWNLOAD] Error name:', error.name);
+    console.error('❌ [DOWNLOAD] Error message:', error.message);
+    console.error('❌ [DOWNLOAD] Error stack:', error.stack);
     
-    if (err.message?.includes('Server returned HTML')) {
-      userMessage = 'Error del servidor - Contacte al administrador';
-    } else if (err.message?.includes('Invalid content type')) {
-      userMessage = 'Error del servidor - Formato de respuesta inválido';
-    } else {
-      userMessage = `Error al descargar ticket: ${err.message}`;
-    }
-    
-    toast.error(userMessage);
-    return false;
+    // No mostrar toast aquí ya que se maneja arriba
+    throw error;
   }
 }
