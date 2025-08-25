@@ -111,13 +111,23 @@ const ZonesPanel = ({
       // Extraer detalles de la plantilla
       const { detalles, source } = extractDetalles(selectedFuncion, selectedPlantilla);
       
+      console.log('📋 Detalles extraídos:', detalles);
+      console.log('📋 Fuente de detalles:', source);
+      console.log('📋 Tipo de detalles:', typeof detalles);
+      console.log('📋 Es array:', Array.isArray(detalles));
+      console.log('📋 Longitud:', detalles?.length);
+      
       if (!Array.isArray(detalles) || detalles.length === 0) {
         console.log('❌ No hay detalles válidos en la plantilla');
+        console.log('🔍 selectedPlantilla completo:', selectedPlantilla);
+        console.log('🔍 selectedFuncion.plantilla:', selectedFuncion.plantilla);
         setPriceOptions([]);
         setDebugInfo({ 
           error: 'No hay detalles válidos en la plantilla',
           source,
-          detalles: detalles
+          detalles: detalles,
+          selectedPlantilla: selectedPlantilla,
+          selectedFuncionPlantilla: selectedFuncion.plantilla
         });
         return;
       }
@@ -340,13 +350,18 @@ const ZonesPanel = ({
         onPricesLoaded(opciones);
       }
 
+      console.log('✅ loadPriceOptions completado exitosamente');
+      console.log('✅ Loading se va a detener ahora');
+
     } catch (error) {
       console.error('💥 Error cargando opciones de precio:', error);
       setPriceOptions([]);
       setDebugInfo({ error: error.message || 'Error desconocido' });
       message.error('Error al cargar zonas y precios');
     } finally {
+      console.log('🔄 finally: deteniendo loading...');
       setLoading(false);
+      console.log('✅ Loading detenido');
     }
   }, [selectedFuncion, selectedPlantilla, mapa, selectedZonaId, onPricesLoaded, extractDetalles]);
 
@@ -427,7 +442,7 @@ const ZonesPanel = ({
           </div>
         )}
 
-        {!loading && priceOptions.length === 0 && (
+        {!loading && priceOptions.length === 0 && !debugInfo.error && (
           <div className="text-xs text-gray-500 px-2 py-1">
             <div>No hay zonas configuradas en la plantilla</div>
             <div className="text-[10px] mt-1">
@@ -484,23 +499,25 @@ const ZonesPanel = ({
           </div>
         )}
 
-        {priceOptions.map((zonaData) => (
-          <div
-            key={zonaData.zona.id}
-            className={`px-3 py-2 rounded cursor-pointer whitespace-nowrap border ${
-              activeZonaId === zonaData.zona.id ? 'bg-purple-50 border-purple-300' : 'bg-gray-50 border-gray-200'
-            }`}
-            onClick={() => {
-              setActiveZonaId(zonaData.zona.id);
-              if (onSelectZona) onSelectZona(zonaData.zona.id);
-            }}
-          >
-            <div className="text-xs font-semibold" style={{ color: zonaData.zona.color || '#333' }}>
-              {zonaData.zona.nombre}
+        {!loading && priceOptions.length > 0 && (
+          priceOptions.map((zonaData) => (
+            <div
+              key={zonaData.zona.id}
+              className={`px-3 py-2 rounded cursor-pointer whitespace-nowrap border ${
+                activeZonaId === zonaData.zona.id ? 'bg-purple-50 border-purple-300' : 'bg-gray-50 border-gray-200'
+              }`}
+              onClick={() => {
+                setActiveZonaId(zonaData.zona.id);
+                if (onSelectZona) onSelectZona(zonaData.zona.id);
+              }}
+            >
+              <div className="text-xs font-semibold" style={{ color: zonaData.zona.color || '#333' }}>
+                {zonaData.zona.nombre}
+              </div>
+              <div className="text-[10px] text-gray-500">Ocupación: {zonaData.ocupacion || 0}%</div>
             </div>
-            <div className="text-[10px] text-gray-500">Ocupación: {zonaData.ocupacion || 0}%</div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Opciones de precio de la zona activa */}

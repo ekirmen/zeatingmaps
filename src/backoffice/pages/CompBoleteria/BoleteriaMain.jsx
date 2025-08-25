@@ -788,7 +788,12 @@ const BoleteriaMain = () => {
   };
 
   const handleSeatClick = (seat) => {
+    console.log('🪑 handleSeatClick llamado con:', seat);
+    console.log('🔍 selectedPriceOption:', selectedPriceOption);
+    console.log('🔍 blockMode:', blockMode);
+    
     if (blockMode) {
+      console.log('🔒 Modo bloqueo activo');
       setBlockedSeats(prev => {
         const isBlocked = prev.find(s => s._id === seat._id);
         if (isBlocked) {
@@ -798,6 +803,14 @@ const BoleteriaMain = () => {
         }
       });
     } else {
+      // Verificar que haya un precio seleccionado antes de permitir seleccionar asientos
+      if (!selectedPriceOption) {
+        console.log('❌ No hay precio seleccionado');
+        message.error('Primero selecciona una zona y precio antes de elegir asientos');
+        return;
+      }
+
+      console.log('✅ Precio seleccionado, procesando asiento...');
       setSelectedSeats(prev => {
         const isSelected = prev.find(s => s._id === seat._id);
         let newSeats;
