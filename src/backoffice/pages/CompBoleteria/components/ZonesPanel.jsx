@@ -12,6 +12,7 @@ const ZonesPanel = ({
   selectedPriceId,
   selectedZonaId,
   onSelectZona,
+  onPricesLoaded,
 }) => {
   const [loading, setLoading] = useState(false);
   const [zonesMap, setZonesMap] = useState({}); // zonaId -> { zona, options: [], stats }
@@ -122,8 +123,14 @@ const ZonesPanel = ({
 
         if (!zonaKey || !prodKey || precioNum === null) continue;
         const zona = zonasById.get(zonaKey);
-        const entrada = entradasById.get(prodKey);
-        if (!zona || !entrada) continue;
+        // Permitir fallback cuando la entrada no existe en tabla 'entradas'
+        let entrada = entradasById.get(prodKey);
+        if (!zona) continue;
+        if (!entrada) {
+          // Crear entrada virtual usando nombres presentes en el detalle
+          const entradaNombre = readFirst(d, ['entradaNombre', 'nombreEntrada', 'nombre_entrada', 'nombre']) || `Entrada ${prodKey}`;
+          entrada = { id: prodKey, nombre_entrada: entradaNombre };
+        }
         if (!map[zonaKey]) {
           const st = statsByZona[zonaKey] || { total: 0, vendidos: 0, reservados: 0 };
           const ocup = st.total > 0 ? Math.round(((st.vendidos + st.reservados) / st.total) * 100) : 0;
@@ -144,6 +151,11 @@ const ZonesPanel = ({
       }
 
       setZonesMap(map);
+      if (onPricesLoaded) {
+        try {
+          onPricesLoaded(map);
+        } catch {}
+      }
       if (!activeZonaId) {
         const first = Object.keys(map)[0];
         if (first) setActiveZonaId(first);

@@ -51,6 +51,7 @@ const BoleteriaMain = () => {
   const [selectedPriceOption, setSelectedPriceOption] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [activeZoneId, setActiveZoneId] = useState(null);
+  const [persistedPriceId, setPersistedPriceId] = useState(null);
   
   // Estados para funcionalidades
   const [showEventSearch, setShowEventSearch] = useState(false);
@@ -202,6 +203,30 @@ const BoleteriaMain = () => {
   useEffect(() => {
     localStorage.setItem('productosCarrito', JSON.stringify(productosCarrito));
   }, [productosCarrito]);
+
+  // Persistir selección de evento/función para mantener tras recarga
+  useEffect(() => {
+    try {
+      if (selectedEvent?.id) {
+        localStorage.setItem('boleteriaEventId', String(selectedEvent.id));
+      } else {
+        localStorage.removeItem('boleteriaEventId');
+      }
+    } catch {}
+  }, [selectedEvent]);
+
+  useEffect(() => {
+    try {
+      if (selectedFuncion?.id) {
+        localStorage.setItem('boleteriaFunctionId', String(selectedFuncion.id));
+        // Si hay un priceId persistido, reintentar seleccionarlo
+        const savedPriceId = localStorage.getItem('boleteriaSelectedPriceId');
+        if (savedPriceId) setPersistedPriceId(savedPriceId);
+      } else {
+        localStorage.removeItem('boleteriaFunctionId');
+      }
+    } catch {}
+  }, [selectedFuncion]);
 
   // Cargar funciones cuando se selecciona un evento
   useEffect(() => {
@@ -926,6 +951,9 @@ const BoleteriaMain = () => {
       if (zonaId) {
         setActiveZoneId(String(zonaId));
       }
+      if (priceOption?.id) {
+        localStorage.setItem('boleteriaSelectedPriceId', String(priceOption.id));
+      }
     } catch (e) {}
   };
 
@@ -963,6 +991,20 @@ const BoleteriaMain = () => {
                 selectedPriceId={selectedPriceOption?.id}
                 selectedZonaId={activeZoneId}
                 onSelectZona={(zonaId) => setActiveZoneId(String(zonaId))}
+                onPricesLoaded={(map) => {
+                  // Intentar restaurar precio/zone seleccionado si existe en storage
+                  const savedPriceId = localStorage.getItem('boleteriaSelectedPriceId');
+                  if (savedPriceId) {
+                    for (const zonaId of Object.keys(map || {})) {
+                      const opt = (map[zonaId]?.options || []).find(o => String(o.id) === String(savedPriceId));
+                      if (opt) {
+                        setActiveZoneId(String(zonaId));
+                        setSelectedPriceOption(opt);
+                        break;
+                      }
+                    }
+                  }
+                }}
               />
               {!blockMode && !selectedPriceOption && (
                 <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
