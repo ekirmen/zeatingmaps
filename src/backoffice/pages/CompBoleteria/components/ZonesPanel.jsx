@@ -19,14 +19,36 @@ const ZonesPanel = ({
   const [activeZonaId, setActiveZonaId] = useState(null);
 
   const loadPriceOptions = useCallback(async () => {
-    console.log('🔍 loadPriceOptions iniciado con funcion:', selectedFuncion);
+    console.log('🔍 loadPriceOptions iniciado');
+    console.log('📋 selectedFuncion:', selectedFuncion);
+    console.log('📋 selectedPlantilla:', selectedPlantilla);
     
-    if (!selectedFuncion?.plantilla?.detalles && !selectedFuncion?.plantilla_entradas) {
-      console.log('❌ No hay plantilla.detalles ni plantilla_entradas');
+    // Verificar si tenemos los datos necesarios
+    if (!selectedFuncion) {
+      console.log('❌ No hay selectedFuncion');
       setPriceOptions([]);
       return;
     }
 
+    if (!selectedPlantilla?.detalles) {
+      console.log('❌ No hay selectedPlantilla.detalles');
+      console.log('🔍 Buscando en selectedFuncion.plantilla.detalles...');
+      
+      // Fallback: intentar obtener detalles desde la función si no hay plantilla separada
+      if (selectedFuncion.plantilla?.detalles) {
+        console.log('✅ Encontrado en selectedFuncion.plantilla.detalles');
+      } else if (selectedFuncion.plantilla_entradas?.detalles) {
+        console.log('✅ Encontrado en selectedFuncion.plantilla_entradas.detalles');
+      } else {
+        console.log('❌ No se encontraron detalles en ningún lugar');
+        setPriceOptions([]);
+        return;
+      }
+    } else {
+      console.log('✅ Usando selectedPlantilla.detalles');
+    }
+
+    setLoading(true);
     try {
       // Cargar entradas y zonas de la BD
       const salaId = selectedFuncion.sala?.id || selectedFuncion.sala_id || selectedFuncion.sala;
@@ -46,6 +68,7 @@ const ZonesPanel = ({
 
       if (!entradas || !zonas) {
         console.log('❌ No se pudieron cargar entradas o zonas');
+        setPriceOptions([]);
         return;
       }
 
@@ -56,28 +79,38 @@ const ZonesPanel = ({
       console.log('🗺️ Mapa de entradas por ID:', Array.from(entradasById.keys()));
       console.log('🎯 Mapa de zonas por ID:', Array.from(zonasById.keys()));
 
-      // Obtener detalles de la plantilla
+      // Obtener detalles de la plantilla - PRIORIDAD: selectedPlantilla.detalles
       let detalles = [];
       let detallesSource = '';
       
-      if (selectedFuncion.plantilla?.detalles) {
-        detallesSource = 'plantilla.detalles';
+      if (selectedPlantilla?.detalles) {
+        detallesSource = 'selectedPlantilla.detalles';
+        try {
+          detalles = typeof selectedPlantilla.detalles === 'string' 
+            ? JSON.parse(selectedPlantilla.detalles) 
+            : selectedPlantilla.detalles;
+        } catch (e) {
+          console.error('❌ Error parsing selectedPlantilla.detalles:', e);
+          detalles = [];
+        }
+      } else if (selectedFuncion.plantilla?.detalles) {
+        detallesSource = 'selectedFuncion.plantilla.detalles';
         try {
           detalles = typeof selectedFuncion.plantilla.detalles === 'string' 
             ? JSON.parse(selectedFuncion.plantilla.detalles) 
             : selectedFuncion.plantilla.detalles;
         } catch (e) {
-          console.error('❌ Error parsing plantilla.detalles:', e);
+          console.error('❌ Error parsing selectedFuncion.plantilla.detalles:', e);
           detalles = [];
         }
       } else if (selectedFuncion.plantilla_entradas?.detalles) {
-        detallesSource = 'plantilla_entradas.detalles';
+        detallesSource = 'selectedFuncion.plantilla_entradas.detalles';
         try {
           detalles = typeof selectedFuncion.plantilla_entradas.detalles === 'string' 
             ? JSON.parse(selectedFuncion.plantilla_entradas.detalles) 
             : selectedFuncion.plantilla_entradas.detalles;
         } catch (e) {
-          console.error('❌ Error parsing plantilla_entradas.detalles:', e);
+          console.error('❌ Error parsing selectedFuncion.plantilla_entradas.detalles:', e);
           detalles = [];
         }
       }
@@ -91,16 +124,23 @@ const ZonesPanel = ({
         return;
       }
 
+      if (detalles.length === 0) {
+        console.log('⚠️ Array de detalles está vacío');
+        setPriceOptions([]);
+        return;
+      }
+
       // Agrupar por zona física
       const zonasAgrupadas = new Map();
       
       detalles.forEach((detalle, index) => {
         console.log(`🔍 Procesando detalle ${index}:`, detalle);
         
-        const zonaId = detalle.zonaId;
-        const entradaId = detalle.entradaId;
-        const precio = detalle.precio || 0;
-        const comision = detalle.comision || 0;
+        // Intentar diferentes nombres de campos para zonaId y entradaId
+        const zonaId = detalle.zonaId || detalle.zona_id || detalle.zona?.id || detalle.id_zona || detalle.idZona;
+        const entradaId = detalle.entradaId || detalle.entrada_id || detalle.entrada?.id || detalle.id_entrada || detalle.idEntrada || detalle.productoId || detalle.producto_id;
+        const precio = detalle.precio || detalle.price || detalle.monto || detalle.valor || 0;
+        const comision = detalle.comision || detalle.fee || detalle.cargo || 0;
 
         console.log(`  - zonaId: ${zonaId}, entradaId: ${entradaId}, precio: ${precio}`);
 
@@ -195,8 +235,11 @@ const ZonesPanel = ({
     } catch (error) {
       console.error('💥 Error cargando opciones de precio:', error);
       setPriceOptions([]);
+      message.error('Error al cargar zonas y precios');
+    } finally {
+      setLoading(false);
     }
-  }, [selectedFuncion, mapa, selectedZonaId, onPricesLoaded]);
+  }, [selectedFuncion, selectedPlantilla, mapa, selectedZonaId, onPricesLoaded]);
 
   useEffect(() => {
     if (selectedFuncion) {
@@ -229,7 +272,25 @@ const ZonesPanel = ({
       {/* Barra de zonas */}
       <div className="flex items-center space-x-2 overflow-x-auto p-2 border rounded bg-white">
         {priceOptions.length === 0 && (
-          <div className="text-xs text-gray-500 px-2 py-1">No hay zonas configuradas en la plantilla</div>
+          <div className="text-xs text-gray-500 px-2 py-1">
+            <div>No hay zonas configuradas en la plantilla</div>
+            <div className="text-[10px] mt-1">
+              Debug: {selectedFuncion ? 'Función seleccionada' : 'Sin función'} | 
+              {selectedPlantilla ? 'Plantilla cargada' : 'Sin plantilla'} | 
+              {selectedPlantilla?.detalles ? 'Con detalles' : 'Sin detalles'}
+            </div>
+            <button 
+              onClick={() => {
+                console.log('🔍 Debug - Datos actuales:');
+                console.log('selectedFuncion:', selectedFuncion);
+                console.log('selectedPlantilla:', selectedPlantilla);
+                loadPriceOptions();
+              }}
+              className="mt-2 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+            >
+              🔍 Debug - Recargar
+            </button>
+          </div>
         )}
         {priceOptions.map((zonaData) => (
           <div
