@@ -21,13 +21,21 @@ if (!supabaseUrl || !supabaseServiceKey) {
 }
 
 export default async function handler(req, res) {
-  console.log('Download endpoint called with method:', req.method);
-  console.log('Query params:', req.query);
-  console.log('Headers:', req.headers);
+  console.log('🚀 [DOWNLOAD] Endpoint llamado con método:', req.method);
+  console.log('🔍 [DOWNLOAD] Query params:', req.query);
+  console.log('🔍 [DOWNLOAD] Headers:', req.headers);
   
-  console.log('Environment check in handler:');
+  console.log('🔍 [DOWNLOAD] Environment check:');
   console.log('- supabaseUrl:', supabaseUrl ? 'defined' : 'undefined');
   console.log('- supabaseServiceKey:', supabaseServiceKey ? 'defined' : 'undefined');
+  
+  // Log completo de la request
+  console.log('🔍 [DOWNLOAD] Request completa:', {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    headers: req.headers
+  });
   
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error('Missing Supabase environment variables');
