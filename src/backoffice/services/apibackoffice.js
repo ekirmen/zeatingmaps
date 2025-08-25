@@ -16,6 +16,33 @@ const handleError = (error) => {
   }
 };
 
+// Helper: verifica si una columna existe en una tabla para evitar errores de esquema
+async function hasColumn(tableName, columnName) {
+  try {
+    const { error } = await supabase.from(tableName).select(columnName).limit(0);
+    if (error) {
+      const msg = `${error.message || ''}`;
+      const code = `${error.code || ''}`;
+      if (
+        code === '42703' ||
+        /column .* does not exist/i.test(msg) ||
+        /Could not find the '.*' column/i.test(msg)
+      ) {
+        return false;
+      }
+      if (code === '42P01' || /relation ".*" does not exist/i.test(msg)) return false;
+      throw error;
+    }
+    return true;
+  } catch (err) {
+    const msg = `${err.message || ''}`;
+    const code = `${err.code || ''}`;
+    if (code === '42P01' || /relation ".*" does not exist/i.test(msg)) return false;
+    if (/Could not find the '.*' column/i.test(msg)) return false;
+    return false;
+  }
+}
+
 // === ZONAS ===
 export const fetchZonas = async () => {
   // Obtener tenant_id del usuario autenticado
@@ -476,6 +503,28 @@ export const deleteEntrada = async (id) => {
 
 // Obtener página CMS por slug
 export const fetchCmsPage = async (slug) => {
+  const [hasCreatedAt, hasUpdatedAt] = await Promise.all([
+    hasColumn('cms_pages', 'created_at'),
+    hasColumn('cms_pages', 'updated_at')
+  ]);
+
+  const buildDefaultPage = () => {
+    const now = new Date().toISOString();
+    const page = {
+      id: slug,
+      nombre: slug,
+      slug: slug,
+      widgets: {
+        header: [],
+        content: [],
+        footer: []
+      }
+    };
+    if (hasCreatedAt) page.created_at = now;
+    if (hasUpdatedAt) page.updated_at = now;
+    return page;
+  };
+
   try {
     // Primero intentar buscar por slug
     let { data, error } = await supabase
@@ -498,74 +547,46 @@ export const fetchCmsPage = async (slug) => {
     // Si aún no se encuentra, crear una página por defecto
     if (!data && !error) {
       console.log('Página no encontrada, creando página por defecto');
-      const defaultPage = {
-        id: slug,
-        nombre: slug,
-        slug: slug,
-        widgets: {
-          header: [],
-          content: [],
-          footer: []
-        },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
+      const defaultPage = buildDefaultPage();
+
       // Intentar insertar la página por defecto
       const { data: newPage, error: insertError } = await supabase
         .from('cms_pages')
         .insert([defaultPage])
         .select()
         .single();
-      
+
       if (insertError) {
         console.error('Error creating default page:', insertError);
         // Si no se puede insertar, devolver la página por defecto sin guardar
         return defaultPage;
       }
-      
+
       return newPage;
     }
 
     if (error) {
       console.error('Supabase error:', error);
       // Devolver página por defecto en caso de error
-      return {
-        id: slug,
-        nombre: slug,
-        slug: slug,
-        widgets: {
-          header: [],
-          content: [],
-          footer: []
-        },
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
+      return buildDefaultPage();
     }
 
     return data;
   } catch (error) {
     console.error('Error in fetchCmsPage:', error);
     // Devolver página por defecto en caso de error
-    return {
-      id: slug,
-      nombre: slug,
-      slug: slug,
-      widgets: {
-        header: [],
-        content: [],
-        footer: []
-      },
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    return buildDefaultPage();
   }
 };
 
 // Guardar widgets en una página CMS por slug
 export const saveCmsPage = async (slug, widgets) => {
   try {
+    const [hasCreatedAt, hasUpdatedAt] = await Promise.all([
+      hasColumn('cms_pages', 'created_at'),
+      hasColumn('cms_pages', 'updated_at')
+    ]);
+
     // Primero verificar si la página existe
     let { data: existingPage, error: checkError } = await supabase
       .from('cms_pages')
@@ -579,27 +600,26 @@ export const saveCmsPage = async (slug, widgets) => {
     }
 
     let result;
-    
+    const now = new Date().toISOString();
+
     if (existingPage) {
       // Actualizar página existente
+      const updateData = { widgets };
+      if (hasUpdatedAt) updateData.updated_at = now;
       result = await supabase
         .from('cms_pages')
-        .update({ 
-          widgets,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .ilike('slug', slug);
     } else {
       // Crear nueva página
-      result = await supabase
-        .from('cms_pages')
-        .insert([{
-          slug: slug,
-          nombre: slug,
-          widgets: widgets,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }]);
+      const insertData = {
+        slug: slug,
+        nombre: slug,
+        widgets: widgets
+      };
+      if (hasCreatedAt) insertData.created_at = now;
+      if (hasUpdatedAt) insertData.updated_at = now;
+      result = await supabase.from('cms_pages').insert([insertData]);
     }
 
     if (result.error) {
