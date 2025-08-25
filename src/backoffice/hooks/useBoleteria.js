@@ -290,7 +290,7 @@ export const useBoleteria = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Memoizar el valor de retorno para evitar re-renderizados
   const returnValue = useMemo(() => ({
