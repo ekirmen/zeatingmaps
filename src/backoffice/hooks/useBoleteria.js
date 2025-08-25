@@ -123,64 +123,82 @@ export const useBoleteria = () => {
       const salaId = mappedSala?.id || mappedSala?._id || salaField || null;
       if (salaId) {
         console.log('🔍 [useBoleteria] Cargando mapa para sala:', salaId);
+        console.log('🔍 [useBoleteria] Tipo de salaId:', typeof salaId);
         
-        const mapData = await fetchMapa(salaId);
-        console.log('📊 [useBoleteria] Mapa cargado:', mapData);
-        setMapa(mapData);
+        try {
+          const mapData = await fetchMapa(salaId);
+          console.log('📊 [useBoleteria] Mapa cargado:', mapData);
+          console.log('📊 [useBoleteria] Tipo de mapData:', typeof mapData);
+          console.log('📊 [useBoleteria] mapData es null?', mapData === null);
+          console.log('📊 [useBoleteria] mapData.contenido:', mapData?.contenido);
+          
+          setMapa(mapData);
 
-        console.log('🔍 [useBoleteria] Cargando zonas para sala:', salaId);
-        const zonasData = await fetchZonasPorSala(salaId);
-        console.log('🏷️ [useBoleteria] Zonas cargadas:', zonasData);
-        setZonas(zonasData);
-        
-        // Calcular estadísticas del evento basadas en el mapa cargado
-        if (mapData && mapData.contenido && Array.isArray(mapData.contenido)) {
-          console.log('📊 [useBoleteria] Calculando estadísticas desde el mapa cargado');
-          let totalSeats = 0;
-          let availableSeats = 0;
-          let soldSeats = 0;
-          let reservedSeats = 0;
+          console.log('🔍 [useBoleteria] Cargando zonas para sala:', salaId);
+          const zonasData = await fetchZonasPorSala(salaId);
+          console.log('🏷️ [useBoleteria] Zonas cargadas:', zonasData);
+          setZonas(zonasData);
           
-          mapData.contenido.forEach(elemento => {
-            if (elemento.sillas && Array.isArray(elemento.sillas)) {
-              totalSeats += elemento.sillas.length;
-              
-              elemento.sillas.forEach(silla => {
-                switch (silla.estado) {
-                  case 'pagado':
-                  case 'vendido':
-                    soldSeats++;
-                    break;
-                  case 'reservado':
-                    reservedSeats++;
-                    break;
-                  case 'disponible':
-                  default:
-                    availableSeats++;
-                    break;
-                }
-              });
+          // Calcular estadísticas del evento basadas en el mapa cargado
+          if (mapData && mapData.contenido && Array.isArray(mapData.contenido)) {
+            console.log('📊 [useBoleteria] Calculando estadísticas desde el mapa cargado');
+            let totalSeats = 0;
+            let availableSeats = 0;
+            let soldSeats = 0;
+            let reservedSeats = 0;
+            
+            mapData.contenido.forEach(elemento => {
+              if (elemento.sillas && Array.isArray(elemento.sillas)) {
+                totalSeats += elemento.sillas.length;
+                
+                elemento.sillas.forEach(silla => {
+                  switch (silla.estado) {
+                    case 'pagado':
+                    case 'vendido':
+                      soldSeats++;
+                      break;
+                    case 'reservado':
+                      reservedSeats++;
+                      break;
+                    case 'disponible':
+                    default:
+                      availableSeats++;
+                      break;
+                  }
+                });
+              }
+            });
+            
+            console.log('✅ [useBoleteria] Estadísticas calculadas:', {
+              totalSeats,
+              availableSeats,
+              soldSeats,
+              reservedSeats
+            });
+            
+            // Mostrar notificación de disponibilidad
+            if (availableSeats <= 5 && availableSeats > 0) {
+              message.warning(`⚠️ Solo quedan ${availableSeats} asientos disponibles`);
+            } else if (availableSeats === 0) {
+              message.error('❌ No hay asientos disponibles');
+            } else if (availableSeats <= 10) {
+              message.info(`ℹ️ Quedan ${availableSeats} asientos disponibles`);
             }
-          });
-          
-          console.log('✅ [useBoleteria] Estadísticas calculadas:', {
-            totalSeats,
-            availableSeats,
-            soldSeats,
-            reservedSeats
-          });
-          
-          // Mostrar notificación de disponibilidad
-          if (availableSeats <= 5 && availableSeats > 0) {
-            message.warning(`⚠️ Solo quedan ${availableSeats} asientos disponibles`);
-          } else if (availableSeats === 0) {
-            message.error('❌ No hay asientos disponibles');
-          } else if (availableSeats <= 10) {
-            message.info(`ℹ️ Quedan ${availableSeats} asientos disponibles`);
+          } else {
+            console.log('⚠️ [useBoleteria] Mapa cargado pero sin contenido válido o no es array');
+            console.log('⚠️ [useBoleteria] mapData:', mapData);
+            console.log('⚠️ [useBoleteria] mapData.contenido:', mapData?.contenido);
+            console.log('⚠️ [useBoleteria] Es array:', Array.isArray(mapData?.contenido));
           }
+        } catch (error) {
+          console.error('❌ [useBoleteria] Error cargando mapa o zonas:', error);
+          setMapa(null);
+          setZonas([]);
         }
       } else {
         console.warn('⚠️ [useBoleteria] No hay salaId disponible para cargar mapa y zonas');
+        console.warn('⚠️ [useBoleteria] mappedSala:', mappedSala);
+        console.warn('⚠️ [useBoleteria] salaField:', salaField);
         setMapa(null);
         setZonas([]);
       }

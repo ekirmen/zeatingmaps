@@ -25,6 +25,10 @@ const ZonesPanel = ({
     onSelectZona: !!onSelectZona,
     onPricesLoaded: !!onPricesLoaded
   });
+  console.log('🔍 Mapa detallado:', mapa);
+  console.log('🔍 Tipo de mapa:', typeof mapa);
+  console.log('🔍 Mapa es null?', mapa === null);
+  console.log('🔍 Mapa es undefined?', mapa === undefined);
 
   const [loading, setLoading] = useState(false);
   const [priceOptions, setPriceOptions] = useState([]);
