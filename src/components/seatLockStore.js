@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { supabase } from '../supabaseClient';
+import { supabase, supabaseAdmin } from '../supabaseClient';
 
 function isValidUuid(value) {
   // Aceptar cualquier string no vacío, no solo UUIDs
@@ -119,7 +119,7 @@ export const useSeatLockStore = create((set, get) => ({
     const fetchInitialLocks = async () => {
       console.log('[SEAT_LOCK] Cargando bloqueos iniciales para función:', funcionId);
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseAdmin
           .from('seat_locks')
           .select('seat_id, table_id, session_id, locked_at, status, lock_type')
           .eq('funcion_id', funcionId);
@@ -304,7 +304,7 @@ export const useSeatLockStore = create((set, get) => ({
     });
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('seat_locks')
         .upsert({
           seat_id: seatId,
@@ -401,7 +401,7 @@ export const useSeatLockStore = create((set, get) => ({
     });
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('seat_locks')
         .upsert({
           table_id: tableId,
@@ -497,7 +497,7 @@ export const useSeatLockStore = create((set, get) => ({
     });
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('seat_locks')
         .delete()
         .eq('seat_id', seatId)
@@ -583,7 +583,7 @@ export const useSeatLockStore = create((set, get) => ({
     });
 
     try {
-      const { error } = await supabase
+      const { error } = await supabaseAdmin
         .from('seat_locks')
         .delete()
         .eq('table_id', tableId)
