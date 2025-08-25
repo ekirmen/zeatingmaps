@@ -26,6 +26,8 @@ const BoleteriaMain = () => {
   
   // Usar los hooks existentes
   const {
+    eventos,
+    funciones,
     selectedFuncion,
     selectedEvent,
     selectedPlantilla,
@@ -36,16 +38,21 @@ const BoleteriaMain = () => {
     handleFunctionSelect,
     mapa,
     zonas,
-    loading: boleteriaLoading
+    loading: boleteriaLoading,
+    error: boleteriaError,
+    debugInfo
   } = useBoleteria();
   
   console.log('🚀 [BoleteriaMain] Hook values after initialization:', {
+    eventos: eventos?.length || 0,
+    funciones: funciones?.length || 0,
     selectedFuncion: !!selectedFuncion,
     selectedEvent: !!selectedEvent,
     selectedPlantilla: !!selectedPlantilla,
     mapa: !!mapa,
     zonas: !!zonas,
-    boleteriaLoading
+    boleteriaLoading,
+    debugInfo
   });
 
   // Debug: Log mapa changes
@@ -1148,6 +1155,72 @@ const BoleteriaMain = () => {
 
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col">
+          {/* Debug Info */}
+          {(debugInfo && Object.keys(debugInfo).length > 0) || boleteriaError ? (
+            <div className={`border-b p-2 text-xs ${boleteriaError ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'}`}>
+              <div className="max-w-7xl mx-auto flex items-center justify-between">
+                <div>
+                  {boleteriaError && (
+                    <div className="text-red-700 mb-1">
+                      <strong>❌ Error:</strong> {boleteriaError}
+                    </div>
+                  )}
+                  {debugInfo && Object.keys(debugInfo).length > 0 && (
+                    <div>
+                      <strong>Debug Info:</strong> {JSON.stringify(debugInfo)} | 
+                      <strong>Eventos:</strong> {eventos?.length || 0} | 
+                      <strong>Funciones:</strong> {funciones?.length || 0} | 
+                      <strong>Evento Seleccionado:</strong> {selectedEvent?.nombre || 'Ninguno'} | 
+                      <strong>Función Seleccionada:</strong> {selectedFuncion?.nombre || 'Ninguna'}
+                    </div>
+                  )}
+                </div>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => {
+                      console.log('🔍 Debug - Recargando datos...');
+                      if (eventos && eventos.length > 0) {
+                        handleEventSelect(eventos[0].id);
+                      }
+                    }}
+                    className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+                  >
+                    🔄 Recargar
+                  </button>
+                  <button 
+                    onClick={() => {
+                      console.log('🔍 Debug - Verificando autenticación...');
+                      supabase.auth.getUser().then(({ data, error }) => {
+                        console.log('🔍 Auth status:', { user: !!data?.user, error });
+                        if (error) {
+                          message.error(`Error de autenticación: ${error.message}`);
+                        } else if (data?.user) {
+                          message.success(`Usuario autenticado: ${data.user.email}`);
+                        } else {
+                          message.warning('Usuario no autenticado');
+                        }
+                      });
+                    }}
+                    className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
+                  >
+                    🔐 Verificar Auth
+                  </button>
+                  <button 
+                    onClick={() => {
+                      console.log('🔍 Debug - Limpiando localStorage...');
+                      localStorage.removeItem('boleteriaEventId');
+                      localStorage.removeItem('boleteriaFunctionId');
+                      window.location.reload();
+                    }}
+                    className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200"
+                  >
+                    🗑️ Limpiar Cache
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+          
           {/* Header */}
           {/* Mensajes informativos condensos en header */}
           {selectedFuncion && (

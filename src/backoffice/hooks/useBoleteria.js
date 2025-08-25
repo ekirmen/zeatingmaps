@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { message } from 'antd';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../config/supabase';
 import { fetchMapa, fetchZonasPorSala } from '../services/apibackoffice';
 
 const EVENT_KEY = 'boleteriaEventId';
@@ -19,6 +19,7 @@ export const useBoleteria = () => {
   const [carrito, setCarrito] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState({});
 
   // Debug: Track mapa state changes
   useEffect(() => {
@@ -43,6 +44,8 @@ export const useBoleteria = () => {
     console.log('🔄 [useBoleteria] handleFunctionSelect called with function ID:', functionId);
     setLoading(true);
     setError(null);
+    setDebugInfo({ step: 'handleFunctionSelect', functionId });
+    
     setSelectedFuncion(null);
     setSelectedPlantilla(null);
     setMapa(null);
@@ -228,10 +231,12 @@ export const useBoleteria = () => {
   }, []);
 
   // Manejar la selección de un evento
-  const handleEventSelect = async (eventoId) => {
+  const handleEventSelect = useCallback(async (eventoId) => {
     console.log('🔄 [useBoleteria] handleEventSelect called with event ID:', eventoId);
     setLoading(true);
     setError(null);
+    setDebugInfo({ step: 'handleEventSelect', eventoId });
+    
     setSelectedEvent(null);
     setSelectedFuncion(null);
     setSelectedPlantilla(null);
@@ -299,6 +304,8 @@ export const useBoleteria = () => {
     zonas,
     carrito,
     loading,
+    error,
+    debugInfo,
     setCarrito: setCarritoMemo,
     handleEventSelect,
     handleFunctionSelect,
@@ -315,6 +322,8 @@ export const useBoleteria = () => {
     zonas,
     carrito,
     loading,
+    error,
+    debugInfo,
     setCarritoMemo,
     handleEventSelect,
     handleFunctionSelect,
@@ -331,6 +340,17 @@ export const useBoleteria = () => {
       setLoading(true);
       setError(null);
       try {
+        // Verificar autenticación primero
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError || !user) {
+          console.error('❌ [useBoleteria] Error de autenticación:', authError);
+          setError('Usuario no autenticado');
+          setLoading(false);
+          return;
+        }
+        
+        console.log('✅ [useBoleteria] Usuario autenticado:', user.id);
+        
         const { data, error } = await supabase
           .from('eventos')
           .select('*')
@@ -351,10 +371,15 @@ export const useBoleteria = () => {
             console.log('🔄 [useBoleteria] Calling handleEventSelect for initial event');
             await handleEventSelect(storedEventId);
           }
+        } else if (data && data.length > 0) {
+          // Si no hay evento guardado pero hay eventos disponibles, seleccionar el primero
+          console.log('🔄 [useBoleteria] No hay evento guardado, seleccionando el primero disponible');
+          await handleEventSelect(data[0].id);
         }
 
       } catch (err) {
         console.error("Error al cargar eventos:", err);
+        setError(err.message);
         message.error(`Error al cargar eventos: ${err.message}`);
       } finally {
         setLoading(false);
@@ -362,7 +387,7 @@ export const useBoleteria = () => {
     };
 
     fetchEventos();
-  }, []);
+  }, [handleEventSelect]);
 
   return returnValue;
 };
