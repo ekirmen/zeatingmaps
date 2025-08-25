@@ -21,12 +21,11 @@ export const useBoleteria = () => {
   const [error, setError] = useState(null);
   const [debugInfo, setDebugInfo] = useState({});
 
-  // Debug: Track mapa state changes
+  // Debug: Track mapa state changes (solo en desarrollo)
   useEffect(() => {
-    console.log('🔄 [useBoleteria] Mapa state changed:', mapa);
-    console.log('🔄 [useBoleteria] Mapa tipo:', typeof mapa);
-    console.log('🔄 [useBoleteria] Mapa es null?', mapa === null);
-    console.log('🔄 [useBoleteria] Mapa contenido:', mapa?.contenido);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 [useBoleteria] Mapa state changed:', mapa ? '✅ Cargado' : '❌ Null');
+    }
   }, [mapa]);
 
   // Memoizar el setCarrito para evitar re-renderizados

@@ -14,21 +14,24 @@ const ZonesPanel = ({
   onSelectZona,
   onPricesLoaded,
 }) => {
-  console.log('🚀 ZonesPanel - COMPONENTE MONTADO');
-  console.log('📋 Props recibidas:', {
-    selectedFuncion: !!selectedFuncion,
-    selectedPlantilla: !!selectedPlantilla,
-    mapa: !!mapa,
-    onSelectPrice: !!onSelectPrice,
-    selectedPriceId,
-    selectedZonaId,
-    onSelectZona: !!onSelectZona,
-    onPricesLoaded: !!onPricesLoaded
-  });
-  console.log('🔍 Mapa detallado:', mapa);
-  console.log('🔍 Tipo de mapa:', typeof mapa);
-  console.log('🔍 Mapa es null?', mapa === null);
-  console.log('🔍 Mapa es undefined?', mapa === undefined);
+  // Solo mostrar logs en desarrollo
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🚀 ZonesPanel - COMPONENTE MONTADO');
+    console.log('📋 Props recibidas:', {
+      selectedFuncion: !!selectedFuncion,
+      selectedPlantilla: !!selectedPlantilla,
+      mapa: !!mapa,
+      onSelectPrice: !!onSelectPrice,
+      selectedPriceId,
+      selectedZonaId,
+      onSelectZona: !!onSelectZona,
+      onPricesLoaded: !!onPricesLoaded
+    });
+    console.log('🔍 Mapa detallado:', mapa);
+    console.log('🔍 Tipo de mapa:', typeof mapa);
+    console.log('🔍 Mapa es null?', mapa === null);
+    console.log('🔍 Mapa es undefined?', mapa === undefined);
+  }
 
   const [loading, setLoading] = useState(false);
   const [priceOptions, setPriceOptions] = useState([]);

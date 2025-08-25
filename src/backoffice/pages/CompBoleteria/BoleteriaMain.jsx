@@ -22,7 +22,10 @@ const { Title, Text } = Typography;
 const BoleteriaMain = () => {
   const location = useLocation();
   
-  console.log('🚀 [BoleteriaMain] Component mounting...');
+  // Solo mostrar logs en desarrollo
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🚀 [BoleteriaMain] Component mounting...');
+  }
   
   // Usar los hooks existentes
   const {
@@ -43,37 +46,33 @@ const BoleteriaMain = () => {
     debugInfo
   } = useBoleteria();
   
-  console.log('🚀 [BoleteriaMain] Hook values after initialization:', {
-    eventos: eventos?.length || 0,
-    funciones: funciones?.length || 0,
-    selectedFuncion: !!selectedFuncion,
-    selectedEvent: !!selectedEvent,
-    selectedPlantilla: !!selectedPlantilla,
-    mapa: !!mapa,
-    zonas: !!zonas,
-    boleteriaLoading,
-    debugInfo
-  });
-
-  // Debug: Log mapa changes
-  useEffect(() => {
-    console.log('🔄 [BoleteriaMain] Mapa from hook changed:', mapa);
-    console.log('🔄 [BoleteriaMain] Mapa tipo:', typeof mapa);
-    console.log('🔄 [BoleteriaMain] Mapa es null?', mapa === null);
-    console.log('🔄 [BoleteriaMain] Mapa contenido:', mapa?.contenido);
-    console.log('🔄 [BoleteriaMain] Mapa es array?', Array.isArray(mapa?.contenido));
-  }, [mapa]);
-
-  // Debug: Log all hook state changes
-  useEffect(() => {
-    console.log('🔄 [BoleteriaMain] Hook state changed:', {
+  // Solo mostrar logs en desarrollo
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🚀 [BoleteriaMain] Hook values after initialization:', {
+      eventos: eventos?.length || 0,
+      funciones: funciones?.length || 0,
       selectedFuncion: !!selectedFuncion,
       selectedEvent: !!selectedEvent,
       selectedPlantilla: !!selectedPlantilla,
       mapa: !!mapa,
       zonas: !!zonas,
-      boleteriaLoading
+      boleteriaLoading,
+      debugInfo
     });
+  }
+
+  // Debug: Log mapa changes (solo en desarrollo)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 [BoleteriaMain] Mapa changed:', mapa ? '✅ Cargado' : '❌ Null');
+    }
+  }, [mapa]);
+
+  // Debug: Log all hook state changes (solo en desarrollo)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔄 [BoleteriaMain] Hook state changed');
+    }
   }, [selectedFuncion, selectedEvent, selectedPlantilla, mapa, zonas, boleteriaLoading]);
 
   const {
