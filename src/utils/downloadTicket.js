@@ -8,20 +8,14 @@ export default async function downloadTicket(locator) {
   try {
     // Obtener token fresco de Supabase
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
+
     if (sessionError) {
       console.error('Error obteniendo sesión:', sessionError);
-      toast.error('Error de autenticación');
-      throw new Error('Session error');
+      // Continuar sin token si no se puede obtener la sesión
     }
-    
+
     const token = session?.access_token;
-    
-    if (!token) {
-      toast.error('Debe iniciar sesión para descargar el ticket');
-      throw new Error('Missing auth token');
-    }
-    
+
     console.log('Token obtenido de Supabase:', token ? '✅ Válido' : '❌ Faltante');
 
     console.log('🚀 [DOWNLOAD] Iniciando descarga de ticket');
@@ -30,12 +24,12 @@ export default async function downloadTicket(locator) {
     console.log('🔑 Token obtenido:', token ? '✅ Presente' : '❌ Faltante');
     console.log('🔑 Token length:', token ? token.length : 0);
 
-    const response = await fetch(url, {
-      headers: { 
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-    });
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    };
+
+    const response = await fetch(url, { headers });
 
     console.log('Response status:', response.status);
     console.log('Response headers:', Object.fromEntries(response.headers.entries()));
@@ -108,9 +102,7 @@ export default async function downloadTicket(locator) {
     
     let userMessage = 'Error al descargar ticket';
     
-    if (err.message?.includes('Missing auth token')) {
-      userMessage = 'Debe iniciar sesión para descargar el ticket';
-    } else if (err.message?.includes('Server returned HTML')) {
+    if (err.message?.includes('Server returned HTML')) {
       userMessage = 'Error del servidor - Contacte al administrador';
     } else if (err.message?.includes('Invalid content type')) {
       userMessage = 'Error del servidor - Formato de respuesta inválido';
