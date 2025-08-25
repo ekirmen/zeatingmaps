@@ -90,16 +90,32 @@ export const useClientManagement = (setCarrito) => {
     setSearchLoading(true);
     try {
       const { data, error } = await supabase
-        .from('tickets')
-        .select('*, user:profiles(*), seats(*)')
+        .from('payments')
+        .select(`*, user:profiles!usuario_id(*), event:eventos(*), funcion:funciones(*)`)
         .eq('locator', locator)
         .single();
 
       if (error) throw error;
-      if (!data.user) throw new Error('Client information not found in ticket');
+      if (!data.user) throw new Error('Client information not found in payment');
+
+      // seats may be stored as JSON string, handle both cases
+      let seats = [];
+      if (Array.isArray(data.seats)) {
+        seats = data.seats;
+      } else if (typeof data.seats === 'string') {
+        try {
+          seats = JSON.parse(data.seats);
+        } catch {
+          try {
+            seats = JSON.parse(JSON.parse(data.seats));
+          } catch {
+            seats = [];
+          }
+        }
+      }
 
       // Map seats to cart items
-      const seatsForCart = (data.seats || []).map(seat => ({
+      const seatsForCart = seats.map(seat => ({
         _id: seat.id || seat._id,
         nombre: seat.name || seat.nombre,
         precio: seat.price || 0,
