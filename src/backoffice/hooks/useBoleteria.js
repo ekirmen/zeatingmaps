@@ -30,7 +30,7 @@ export const useBoleteria = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [debugInfo] = useState({});
+  const [debugInfo, setDebugInfo] = useState({});
 
   // Debug: Track mapa state changes (solo en desarrollo)
   useEffect(() => {
@@ -407,6 +407,7 @@ export const useBoleteria = () => {
     loading,
     error,
     debugInfo,
+    setDebugInfo,
     setCarrito: setCarritoMemo,
     addToCarrito,
     removeFromCarrito,
@@ -428,6 +429,7 @@ export const useBoleteria = () => {
     loading,
     error,
     debugInfo,
+    setDebugInfo,
     setCarritoMemo,
     addToCarrito,
     removeFromCarrito,
