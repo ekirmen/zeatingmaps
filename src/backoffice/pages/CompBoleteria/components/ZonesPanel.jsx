@@ -146,11 +146,11 @@ const ZonesPanel = ({
       const zonasQuery = supabase
         .from('zonas')
         .select('*')
-        .or(`sala_id.eq.${String(salaId)},sala.eq.${String(salaId)}`)
+        .eq('sala_id', String(salaId))
         .order('nombre');
       
       console.log('🎯 Query zonas:', zonasQuery);
-      console.log('🎯 Query zonas SQL equivalente:', `SELECT * FROM zonas WHERE sala_id = '${salaId}' OR sala = '${salaId}' ORDER BY nombre`);
+      console.log('🎯 Query zonas SQL equivalente:', `SELECT * FROM zonas WHERE sala_id = '${salaId}' ORDER BY nombre`);
 
       const [{ data: entradas, error: entradasError }, { data: zonas, error: zonasError }] = await Promise.all([
         entradasQuery,
@@ -173,6 +173,8 @@ const ZonesPanel = ({
         setDebugInfo({ error: `Error cargando zonas: ${zonasError.message}` });
         return;
       }
+
+      console.log('✅ Consultas exitosas - Entradas:', entradas?.length || 0, 'Zonas:', zonas?.length || 0);
 
       if (!entradas || entradas.length === 0) {
         console.log('❌ No se pudieron cargar entradas');
@@ -299,7 +301,7 @@ const ZonesPanel = ({
         // Calcular estadísticas de ocupación si hay mapa
         if (mapa) {
           const asientosZona = Object.values(mapa).filter(asiento => 
-            String(asiento.zona_id) === String(grupo.zona.id) || String(asiento.zona) === String(grupo.zona.id)
+            String(asiento.zona_id) === String(grupo.zona.id)
           );
           
           grupo.total = asientosZona.length;
@@ -470,7 +472,7 @@ const ZonesPanel = ({
                   const { data: zonasFiltradas, error: zonasFiltradasError } = await supabase
                     .from('zonas')
                     .select('*')
-                    .or(`sala_id.eq.${String(salaId)},sala.eq.${String(salaId)}`)
+                    .eq('sala_id', String(salaId))
                     .order('nombre');
                   console.log('🎯 Zonas filtradas por sala:', { data: zonasFiltradas, error: zonasFiltradasError });
                 }
