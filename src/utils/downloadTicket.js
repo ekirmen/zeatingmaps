@@ -2,9 +2,11 @@ import API_BASE_URL from './apiBase';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 
-export default async function downloadTicket(locator) {
-  if (!locator) throw new Error('Invalid locator');
-  const url = `${API_BASE_URL}/api/payments/${locator}/download`;
+export default async function downloadTicket(locator, ticketId) {
+  if (!locator && !ticketId) throw new Error('Invalid locator');
+  const url = ticketId
+    ? `${API_BASE_URL}/api/tickets/${ticketId}/download`
+    : `${API_BASE_URL}/api/payments/${locator}/download`;
   try {
     // Obtener token fresco de Supabase
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -25,8 +27,8 @@ export default async function downloadTicket(locator) {
     console.log('🔑 Token length:', token ? token.length : 0);
 
     const headers = {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      Accept: 'application/pdf'
     };
 
     const response = await fetch(url, { headers });

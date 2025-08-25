@@ -59,9 +59,15 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
         .eq('id', userId)
         .single();
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('Error fetching user profile:', fetchError);
-        return;
+      if (fetchError) {
+        if (fetchError.code === '42703') {
+          console.warn('Tags column missing in profiles table, skipping tag assignment');
+          return;
+        }
+        if (fetchError.code !== 'PGRST116') {
+          console.error('Error fetching user profile:', fetchError);
+          return;
+        }
       }
 
       // Combinar tags existentes con los nuevos tags del evento
@@ -74,14 +80,18 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
       // Actualizar el perfil del usuario con los nuevos tags
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ 
+        .update({
           tags: uniqueTags,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
 
       if (updateError) {
-        console.error('Error updating user tags:', updateError);
+        if (updateError.code === '42703') {
+          console.warn('Tags column missing in profiles table, skipping tag update');
+        } else {
+          console.error('Error updating user tags:', updateError);
+        }
       } else {
         console.log(`Tags del evento asignados al usuario ${userId}:`, newTags);
       }
