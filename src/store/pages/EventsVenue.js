@@ -75,6 +75,53 @@ const EventsVenue = ({ groupByTags = true }) => {
     );
   }
 
+  // Si no hay widgets CMS, mostrar eventos directamente
+  if (!widgets || !widgets.content || widgets.content.length === 0) {
+    console.log('🔍 [EventsVenue] No hay widgets CMS, mostrando eventos directamente');
+    
+    if (errorEvents) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="text-red-500 mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Error al cargar eventos</h2>
+            <p className="text-red-600 mb-2">{errorEvents.message}</p>
+            <p className="text-sm text-gray-500">Por favor, intenta recargar la página.</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (events && events.length > 0) {
+      return (
+        <div className="min-h-screen bg-gray-50 p-6">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">Eventos Disponibles</h1>
+            <EventListWidget events={events} groupByTags={groupByTags} />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-gray-400 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">No hay eventos disponibles</h2>
+          <p className="text-gray-500">No se encontraron eventos activos en este momento.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (errorCms || errorEvents) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

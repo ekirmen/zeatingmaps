@@ -629,9 +629,24 @@ export const createPayment = async (data) => {
     }
   }
   
+  // Asegurar que seats sea un string JSON
+  let seatsForDB = data.seats;
+  if (Array.isArray(seatsForDB)) {
+    seatsForDB = JSON.stringify(seatsForDB);
+  } else if (typeof seatsForDB === 'string') {
+    try {
+      // Verificar que sea JSON válido
+      JSON.parse(seatsForDB);
+    } catch (e) {
+      console.error('🔍 Error: seats no es JSON válido:', seatsForDB);
+      seatsForDB = JSON.stringify([]);
+    }
+  }
+
   // Agregar campos faltantes
   const enrichedData = {
     ...data,
+    seats: seatsForDB, // Usar la versión corregida
     tenant_id: data.tenant_id || '9dbdb86f-8424-484c-bb76-0d9fa27573c8', // Tenant por defecto
     monto: data.monto || calculateTotalAmount(data.seats), // Calcular monto si no está presente
     payment_gateway_id: data.payment_gateway_id || '7e797aa6-ebbf-4b3a-8b5d-caa8992018f4', // Gateway por defecto (Reservas)
@@ -639,6 +654,9 @@ export const createPayment = async (data) => {
   };
   
   console.log('🔍 Datos enriquecidos para crear pago:', enrichedData);
+  console.log('🔍 Tipo de seats:', typeof enrichedData.seats);
+  console.log('🔍 Seats es array:', Array.isArray(enrichedData.seats));
+  console.log('🔍 Seats contenido:', JSON.stringify(enrichedData.seats, null, 2));
   
   const { data: result, error } = await client
     .from('payments')

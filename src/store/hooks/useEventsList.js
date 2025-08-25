@@ -51,24 +51,14 @@ export const useEventsList = () => {
     try {
       console.log('🔍 [useEventsList] Iniciando fetch de eventos...');
       
-      // Fetch all active events
-      // Use explicit foreign key relationship to avoid ambiguity
+      // Fetch all active events - Consulta simplificada para debuggear
+      console.log('🔍 [useEventsList] Ejecutando consulta simple...');
+      
       const { data, error: supabaseError } = await supabase
         .from('eventos')
-        .select(`
-          id,
-          nombre,
-          fecha_evento,
-          recinto,
-          imagenes,
-          slug,
-          recintos!recinto_id (
-            nombre
-          )
-        `) // Specify the foreign key relationship explicitly
+        .select('*') // Seleccionar todo para debuggear
         .eq('activo', true) // Only fetch active events
-        .eq('oculto', false) // Only fetch events that are not hidden
-        .order('fecha_evento', { ascending: true }); // Order by date
+        .eq('oculto', false); // Only fetch events that are not hidden
 
       console.log('🔍 [useEventsList] Query ejecutada, resultado:', { data, error: supabaseError });
 
@@ -85,19 +75,8 @@ export const useEventsList = () => {
         console.warn('🔍 [useEventsList] No se encontraron eventos con oculto=false. Reintentando con activo=true...');
         const { data: dataFallback, error: errFallback } = await supabase
           .from('eventos')
-          .select(`
-            id,
-            nombre,
-            fecha_evento,
-            recinto,
-            imagenes,
-            slug,
-            recintos!recinto_id (
-              nombre
-            )
-          `)
-          .eq('activo', true)
-          .order('fecha_evento', { ascending: true });
+          .select('*') // Consulta simple para fallback
+          .eq('activo', true);
         
         console.log('🔍 [useEventsList] Fallback query resultado:', { dataFallback, error: errFallback });
         
