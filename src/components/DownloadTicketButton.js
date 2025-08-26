@@ -40,6 +40,42 @@ const DownloadTicketButton = ({ paymentId }) => {
     }
   };
 
+  const testSimpleDownload = async () => {
+    setIsLoading(true);
+    try {
+      // Probar descarga simple sin autenticación
+      const response = await fetch(`/api/payments/${paymentId}/download-simple`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const contentType = response.headers.get('Content-Type');
+      if (!contentType?.includes('application/pdf')) {
+        throw new Error(`Content-Type inválido: ${contentType}`);
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ticket-prueba-${paymentId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('✅ [SIMPLE-TEST] Descarga simple exitosa');
+      alert('✅ Descarga simple funcionando correctamente');
+      
+    } catch (error) {
+      console.error('❌ [SIMPLE-TEST] Error en descarga simple:', error);
+      alert('❌ Error en descarga simple: ' + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDownload = async () => {
     setIsLoading(true);
     try {
@@ -54,100 +90,52 @@ const DownloadTicketButton = ({ paymentId }) => {
   return (
     <div>
       <button 
-        onClick={handleDownload} 
+        onClick={handleDownload}
         disabled={isLoading}
-        style={{ marginBottom: '10px', width: '100%' }}
+        className="btn btn-primary"
       >
         {isLoading ? 'Descargando...' : 'Descargar Ticket'}
       </button>
       
-      <div style={{ display: 'flex', gap: '5px', marginBottom: '10px' }}>
+      <div style={{ marginTop: '10px' }}>
         <button 
-          onClick={testEndpoint} 
+          onClick={testEndpoint}
           disabled={isLoading}
-          style={{ 
-            fontSize: '12px', 
-            padding: '5px 10px',
-            backgroundColor: '#f0f0f0',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            flex: 1
-          }}
+          className="btn btn-secondary"
+          style={{ marginRight: '5px' }}
         >
-          🧪 Probar
+          Test Endpoint
         </button>
         
         <button 
-          onClick={runDiagnostic} 
+          onClick={runDiagnostic}
           disabled={isLoading}
-          style={{ 
-            fontSize: '12px', 
-            padding: '5px 10px',
-            backgroundColor: '#e3f2fd',
-            border: '1px solid #2196f3',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            flex: 1
-          }}
+          className="btn btn-info"
+          style={{ marginRight: '5px' }}
         >
-          🔍 Diagnóstico
+          Diagnóstico
+        </button>
+        
+        <button 
+          onClick={testSimpleDownload}
+          disabled={isLoading}
+          className="btn btn-success"
+        >
+          Test Descarga Simple
         </button>
       </div>
       
       {testResult && (
-        <div style={{ 
-          marginTop: '10px', 
-          padding: '10px', 
-          backgroundColor: testResult.success ? '#e8f5e8' : '#ffe8e8',
-          border: `1px solid ${testResult.success ? '#4caf50' : '#f44336'}`,
-          borderRadius: '4px',
-          fontSize: '12px'
-        }}>
-          {testResult.success ? (
-            <div>
-              <strong>✅ Endpoint funcionando</strong>
-              <div>Mensaje: {testResult.data.message}</div>
-              <div>Timestamp: {testResult.data.timestamp}</div>
-            </div>
-          ) : (
-            <div>
-              <strong>❌ Error en endpoint</strong>
-              <div>Error: {testResult.error}</div>
-            </div>
-          )}
+        <div style={{ marginTop: '10px', padding: '10px', backgroundColor: testResult.success ? '#d4edda' : '#f8d7da', border: '1px solid #c3e6cb', borderRadius: '4px' }}>
+          <strong>Test Result:</strong>
+          <pre>{JSON.stringify(testResult, null, 2)}</pre>
         </div>
       )}
       
       {diagnosticResult && (
-        <div style={{ 
-          marginTop: '10px', 
-          padding: '10px', 
-          backgroundColor: diagnosticResult.success ? '#e8f5e8' : '#ffe8e8',
-          border: `1px solid ${diagnosticResult.success ? '#4caf50' : '#f44336'}`,
-          borderRadius: '4px',
-          fontSize: '12px'
-        }}>
-          {diagnosticResult.success ? (
-            <div>
-              <strong>🔍 Diagnóstico del Servidor</strong>
-              <div><strong>Estado:</strong> {diagnosticResult.data.validation.isValid ? '✅ Válido' : '❌ Inválido'}</div>
-              <div><strong>Variables faltantes:</strong> {diagnosticResult.data.validation.missingVariables.length > 0 ? diagnosticResult.data.validation.missingVariables.join(', ') : 'Ninguna'}</div>
-              <div><strong>Supabase URL:</strong> {diagnosticResult.data.supabase.url}</div>
-              <div><strong>Supabase Key:</strong> {diagnosticResult.data.supabase.serviceKey}</div>
-              <div><strong>Recomendaciones:</strong></div>
-              <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
-                {diagnosticResult.data.recommendations.map((rec, index) => (
-                  <li key={index} style={{ fontSize: '11px' }}>{rec}</li>
-                ))}
-              </ul>
-            </div>
-          ) : (
-            <div>
-              <strong>❌ Error en diagnóstico</strong>
-              <div>Error: {diagnosticResult.error}</div>
-            </div>
-          )}
+        <div style={{ marginTop: '10px', padding: '10px', backgroundColor: diagnosticResult.success ? '#d4edda' : '#f8d7da', border: '1px solid #c3e6cb', borderRadius: '4px' }}>
+          <strong>Diagnóstico:</strong>
+          <pre>{JSON.stringify(diagnosticResult, null, 2)}</pre>
         </div>
       )}
     </div>
