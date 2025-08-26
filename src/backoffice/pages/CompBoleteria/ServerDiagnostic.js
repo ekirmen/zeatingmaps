@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Space, Alert, Descriptions, Tag, Spin, message } from 'antd';
 import { ReloadOutlined, CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import { buildRelativeApiUrl } from '../../../config/apiConfig';
 
 const ServerDiagnostic = () => {
   const [diagnostic, setDiagnostic] = useState(null);
@@ -12,7 +11,7 @@ const ServerDiagnostic = () => {
   const runDiagnostic = async () => {
     setLoading(true);
     try {
-      const url = buildRelativeApiUrl('payments/diagnostic');
+      const url = `/api/payments/diagnostic`;
       console.log('🔍 [DIAGNOSTIC] Ejecutando diagnóstico en:', url);
       
       const response = await fetch(url);
@@ -35,7 +34,7 @@ const ServerDiagnostic = () => {
   const runTest = async () => {
     setLoadingTest(true);
     try {
-      const url = buildRelativeApiUrl('payments/test');
+      const url = `/api/payments/test`;
       console.log('🧪 [TEST] Ejecutando prueba en:', url);
       
       const response = await fetch(url);

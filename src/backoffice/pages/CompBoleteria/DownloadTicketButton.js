@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { message, Button, Space, Tooltip } from 'antd';
 import { DownloadOutlined, FileTextOutlined } from '@ant-design/icons';
 import downloadTicket from '../../../utils/downloadTicket';
-import { buildRelativeApiUrl } from '../../../config/apiConfig';
 
 const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,7 +10,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
     setIsLoading(true);
     try {
       // Probar descarga simple sin autenticación
-      const url = buildRelativeApiUrl(`payments/${locator}/download-simple`);
+      const url = `/api/payments/${locator}/download-simple`;
       console.log('🧪 [TEST] Probando descarga simple en:', url);
       
       const response = await fetch(url);
