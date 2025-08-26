@@ -103,10 +103,6 @@ export default async function handler(req, res) {
             ),
             imagenes:evento_imagenes(*)
           )
-        ),
-        seats:payment_seats(
-          *,
-          zona:zonas(*)
         )
       `)
       .eq('locator', locator)
@@ -119,6 +115,29 @@ export default async function handler(req, res) {
     }
 
     console.log('✅ [DOWNLOAD] Pago encontrado:', payment.id);
+
+    // Get seats for this function if available
+    let seats = [];
+    if (payment.funcion?.id) {
+      console.log('🔍 [DOWNLOAD] Buscando asientos para función:', payment.funcion.id);
+      const { data: seatsData, error: seatsError } = await supabaseAdmin
+        .from('seats')
+        .select(`
+          *,
+          zona:zonas(*)
+        `)
+        .eq('funcion_id', payment.funcion.id);
+      
+      if (seatsError) {
+        console.warn('⚠️ [DOWNLOAD] Error obteniendo asientos:', seatsError);
+      } else {
+        seats = seatsData || [];
+        console.log('✅ [DOWNLOAD] Asientos encontrados:', seats.length);
+      }
+    }
+
+    // Add seats to payment object for PDF generation
+    payment.seats = seats;
 
     // Generate full PDF with payment data
     return await generateFullPDF(req, res, payment, locator);
