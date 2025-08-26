@@ -11,7 +11,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
     setIsLoading(true);
     try {
       // Probar descarga simple sin autenticación
-      const url = buildRelativeApiUrl(`payments/${locator}/download-simple`);
+      const url = buildRelativeApiUrl(`payments/${locator}/download?mode=simple`);
       console.log('🧪 [TEST] Probando descarga simple en:', url);
       
       // Verificar conectividad antes de la descarga

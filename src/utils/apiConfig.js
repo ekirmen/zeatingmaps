@@ -25,7 +25,7 @@ export const buildRelativeApiUrl = (endpoint) => {
 // Función para verificar la conectividad
 export const checkApiConnectivity = async () => {
   try {
-    const testUrl = buildRelativeApiUrl('payments/test');
+    const testUrl = buildRelativeApiUrl('payments/TEST123/diagnostic');
     const response = await fetch(testUrl, {
       method: 'GET',
       mode: 'cors',

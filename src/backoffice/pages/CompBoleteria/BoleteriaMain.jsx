@@ -1194,7 +1194,7 @@ const BoleteriaMain = () => {
             const locator = prompt('Ingresa el localizador del ticket a descargar:');
             if (locator) {
               // Crear un enlace temporal para descargar
-              const url = `/api/payments/${locator}/download-simple`;
+              const url = `/api/payments/${locator}/download?mode=simple`;
               const a = document.createElement('a');
               a.href = url;
               a.download = `ticket-${locator}.pdf`;

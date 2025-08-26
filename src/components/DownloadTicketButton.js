@@ -44,7 +44,7 @@ const DownloadTicketButton = ({ paymentId }) => {
     setIsLoading(true);
     try {
       // Probar descarga simple sin autenticación
-      const response = await fetch(`/api/payments/${paymentId}/download-simple`);
+      const response = await fetch(`/api/payments/${paymentId}/download?mode=simple`);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);

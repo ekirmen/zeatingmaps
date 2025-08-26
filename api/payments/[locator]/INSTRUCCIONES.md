@@ -47,21 +47,28 @@ Las dependencias ya están en `package.json`:
 2. Busca un pago existente
 3. Aparecerá el botón de descarga con opciones de debug
 
-### Opción 3: Endpoints de Prueba
-Puedes probar directamente estos endpoints:
+### Endpoints Disponibles
 
-```bash
-# Test básico
-GET /api/payments/TU_LOCATOR/test
+#### 1. Descarga de Tickets
+- **Descarga Simple (sin autenticación):**
+  ```
+  GET /api/payments/TU_LOCATOR/download?mode=simple
+  ```
+  
+- **Descarga Completa (con autenticación):**
+  ```
+  GET /api/payments/TU_LOCATOR/download
+  ```
+  Headers: `Authorization: Bearer TU_TOKEN`
 
-# Diagnóstico completo  
+#### 2. Diagnóstico del Sistema
+```
 GET /api/payments/TU_LOCATOR/diagnostic
+```
 
-# Descarga simple (sin auth)
-GET /api/payments/TU_LOCATOR/download-simple
-
-# Descarga completa (con auth)
-GET /api/payments/TU_LOCATOR/download
+#### 3. Prueba del Servidor
+```
+GET /api/payments/TU_LOCATOR/test
 ```
 
 ## 🔍 Diagnóstico de Problemas

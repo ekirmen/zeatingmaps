@@ -37,7 +37,7 @@ const ServerDiagnostic = () => {
   const runTest = async () => {
     setLoadingTest(true);
     try {
-      const url = buildRelativeApiUrl('payments/test');
+      const url = buildRelativeApiUrl('payments/TEST123/diagnostic');
       console.log('🧪 [TEST] Ejecutando prueba en:', url);
       
       const response = await fetch(url);
