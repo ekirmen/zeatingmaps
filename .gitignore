@@ -58,10 +58,21 @@ database.sql
 
 # Archivos con credenciales o conexiones
 *connection*.js
-*config*.js
 *secret*.js
 *password*.js
 *credential*.js
+
+# Archivos de configuración SENSIBLES (con credenciales)
+*db_config*.js
+*database_config*.js
+*email_config*.js
+*smtp_config*.js
+*aws_config*.js
+*stripe_config*.js
+*payment_config*.js
+*secret_config*.js
+*prod_config*.js
+*local_config*.js
 
 # Archivos de API keys y tokens
 *api_key*
