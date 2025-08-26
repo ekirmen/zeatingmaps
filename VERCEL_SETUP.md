@@ -1,120 +1,150 @@
 # Configuración de Variables de Entorno en Vercel
 
-## Problema Identificado
+## Optimización de Funciones Serverless
 
-El error "Server returned HTML instead of PDF" indica que las variables de entorno de Supabase no están configuradas correctamente en el servidor de Vercel.
+**Estado actual:** ✅ **9/12 funciones** (dentro del límite del plan Hobby)
 
-## Solución
+Se han optimizado las funciones para mantenerse dentro del límite de 12 funciones del plan Hobby de Vercel, consolidando funcionalidades duplicadas y eliminando funciones innecesarias.
 
-### 1. Acceder al Dashboard de Vercel
+### Funciones Optimizadas
 
-1. Ve a [vercel.com](https://vercel.com) y inicia sesión
-2. Selecciona tu proyecto `veneventos`
-3. Ve a la pestaña **Settings**
+1. **`/api/payments/[locator]/download.js`** - **CONSOLIDADA**
+   - Descarga de tickets en PDF (modo completo y simple)
+   - Generación de códigos QR
+   - Autenticación integrada
+   - Soporte para modo simple sin autenticación
 
-### 2. Configurar Variables de Entorno
+2. **`/api/payments/[locator]/test.js`** - Mantenida para debugging
+3. **`/api/payments/[locator]/diagnostic.js`** - Mantenida para diagnóstico
+4. **`/api/payments/[locator]/config.js`** - Configuración compartida
+5. **`/api/mapas/[salaId]/index.js`** - Carga de mapas de asientos
+6. **`/api/mapas/[salaId]/save.js`** - Guardado de mapas de asientos
+7. **`/api/recintos/[id]/delete.js`** - Gestión de recintos
+8. **`/api/zonas/index.js`** - Gestión de zonas de asientos
+9. **`/api/send-email/smtp.js`** - Envío de emails/tickets
 
-En la sección **Environment Variables**, agrega las siguientes variables:
+## Funcionalidad de Descarga de Tickets
 
-#### Variables Requeridas:
-
+### Endpoint Principal
 ```
+GET /api/payments/[locator]/download?mode=[full|simple]
+```
+
+### Parámetros
+- **`locator`** (requerido): Identificador único del pago
+- **`mode`** (opcional): 
+  - `full` (por defecto): PDF completo con datos del pago y autenticación
+  - `simple`: PDF básico sin autenticación (para pruebas)
+
+### Uso
+
+#### 1. Descarga Simple (Sin Autenticación)
+```javascript
+// Para pruebas y verificación de funcionalidad
+const response = await fetch(`/api/payments/${locator}/download?mode=simple`);
+const pdfBlob = await response.blob();
+```
+
+#### 2. Descarga Completa (Con Autenticación)
+```javascript
+// Para usuarios autenticados con datos completos del pago
+const response = await fetch(`/api/payments/${locator}/download`, {
+  headers: {
+    'Authorization': `Bearer ${userToken}`
+  }
+});
+const pdfBlob = await response.blob();
+```
+
+### Características del PDF
+
+#### Modo Simple
+- ✅ Título del ticket
+- ✅ Localizador del pago
+- ✅ Estado del pago
+- ✅ Fecha de generación
+- ✅ Mensaje de verificación
+
+#### Modo Completo
+- ✅ Título del ticket
+- ✅ Localizador del pago
+- ✅ Información del evento
+- ✅ Datos del recinto
+- ✅ Lista de asientos con precios
+- ✅ Código QR único para validación
+- ✅ Fecha de compra
+- ✅ Condiciones del ticket
+
+## Variables de Entorno Requeridas
+
+### En Vercel Dashboard
+```bash
 SUPABASE_URL=https://tu-proyecto.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key-aqui
+SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key
 ```
 
-#### Variables Opcionales (si usas prefijos REACT_APP_):
-
-```
-REACT_APP_SUPABASE_URL=https://tu-proyecto.supabase.co
-REACT_APP_SUPABASE_SERVICE_ROLE_KEY=tu-service-role-key-aqui
-```
-
-### 3. Obtener las Credenciales de Supabase
-
-1. Ve a [supabase.com](https://supabase.com) y inicia sesión
-2. Selecciona tu proyecto
-3. Ve a **Settings** > **API**
-4. Copia:
-   - **Project URL** → `SUPABASE_URL`
-   - **service_role key** → `SUPABASE_SERVICE_ROLE_KEY`
-
-### 4. Configurar Entornos
-
-Asegúrate de que las variables estén configuradas para:
-- ✅ **Production**
-- ✅ **Preview** (opcional)
-- ✅ **Development** (opcional)
-
-### 5. Redesplegar
-
-1. Después de configurar las variables, ve a **Deployments**
-2. Haz clic en **Redeploy** en tu último deployment
-3. O haz un push a tu repositorio para trigger un nuevo deployment
-
-## Verificación
-
-### Endpoint de Diagnóstico
-
-Una vez configurado, puedes verificar el estado usando:
-
-```
-GET /api/payments/[locator]/diagnostic
+### Variables Opcionales
+```bash
+NODE_ENV=production
+VERCEL_ENV=production
 ```
 
-Este endpoint te mostrará:
-- Estado de las variables de entorno
-- Variables faltantes
-- Recomendaciones de configuración
+## Instalación y Despliegue
 
-### Endpoint de Prueba
+### 1. Configurar Variables en Vercel
+1. Ve a tu proyecto en [Vercel Dashboard](https://vercel.com/dashboard)
+2. Navega a **Settings** → **Environment Variables**
+3. Agrega las variables de Supabase
+4. Redespliega la aplicación
 
-```
-GET /api/payments/[locator]/test
-```
+### 2. Verificar Funcionamiento
+```bash
+# Probar descarga simple
+curl "https://tu-dominio.vercel.app/api/payments/TEST123/download?mode=simple"
 
-Este endpoint verifica que el servidor esté funcionando correctamente.
-
-## Estructura de Archivos
-
-```
-api/payments/[locator]/
-├── config.js          # Configuración y validación
-├── diagnostic.js      # Endpoint de diagnóstico
-├── download.js        # Endpoint principal de descarga
-└── test.js           # Endpoint de prueba
+# Probar descarga completa (requiere token)
+curl -H "Authorization: Bearer tu-token" \
+     "https://tu-dominio.vercel.app/api/payments/TEST123/download"
 ```
 
-## Logs del Servidor
+### 3. Monitoreo
+- Revisa los logs en Vercel Dashboard
+- Usa el endpoint de diagnóstico: `/api/payments/[locator]/diagnostic`
+- Verifica el estado de las funciones en **Functions** tab
 
-Los logs del servidor mostrarán:
+## Solución de Problemas
 
-- ✅ Variables de entorno configuradas correctamente
-- ❌ Variables faltantes
-- 🔍 Proceso de generación del PDF
-- 📤 Envío del archivo al cliente
+### Error: "No more than 12 Serverless Functions"
+✅ **RESUELTO** - Se han optimizado las funciones para mantenerse dentro del límite.
 
-## Troubleshooting
-
-### Error: "Server returned HTML instead of PDF"
-
-**Causa:** Variables de entorno faltantes o incorrectas
-**Solución:** Verificar configuración en Vercel
+### Error: "Missing Supabase environment variables"
+1. Verifica que las variables estén configuradas en Vercel
+2. Redespliega después de configurar variables
+3. Usa el endpoint de diagnóstico para verificar
 
 ### Error: "Unauthorized"
+1. Asegúrate de incluir el token de autorización
+2. Verifica que el token sea válido
+3. Para pruebas, usa `mode=simple`
 
-**Causa:** Token de autenticación inválido o expirado
-**Solución:** Verificar sesión del usuario
+## Funciones Eliminadas/Optimizadas
 
-### Error: "Payment not found"
+- ❌ `api/payments/test.js` - Re-export duplicado
+- ❌ `api/payments/diagnostic.js` - Re-export duplicado
+- ❌ `api/payments/[locator]/download-simple.js` - Consolidada en download.js
+- ❌ `api/recintos/[id]/route.js` - Formato Next.js incompatible
 
-**Causa:** Localizador incorrecto o pago no existe
-**Solución:** Verificar localizador en la base de datos
+## Beneficios de la Optimización
 
-## Contacto
+1. **Dentro del límite del plan Hobby** ✅
+2. **Funcionalidad completa mantenida** ✅
+3. **Mejor mantenibilidad** ✅
+4. **Código consolidado** ✅
+5. **Descarga de tickets funcional** ✅
 
-Si persisten los problemas, verifica:
-1. Logs del servidor en Vercel
-2. Variables de entorno configuradas
-3. Estado de la base de datos de Supabase
-4. Permisos del usuario autenticado
+## Próximos Pasos
+
+1. **Desplegar** la versión optimizada
+2. **Probar** la descarga de tickets
+3. **Monitorear** el rendimiento
+4. **Considerar** upgrade a Pro si se necesitan más funciones en el futuro

@@ -22,7 +22,25 @@ export default async function handler(req, res) {
   console.log('🔍 [DOWNLOAD] Query params:', req.query);
   console.log('🔍 [DOWNLOAD] Headers:', req.headers);
   
-  // Validar configuración
+  if (req.method !== 'GET') {
+    res.setHeader('Allow', 'GET');
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { locator, mode = 'full' } = req.query;
+  if (!locator) {
+    console.error('❌ [DOWNLOAD] Missing locator in query params');
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(400).json({ error: 'Missing locator' });
+  }
+
+  // Si es modo simple, generar PDF básico sin autenticación
+  if (mode === 'simple') {
+    return await generateSimplePDF(req, res, locator);
+  }
+
+  // Para modo completo, validar configuración y autenticación
   if (!validateConfig()) {
     console.error('❌ [DOWNLOAD] Configuración inválida, redirigiendo a error 500');
     res.setHeader('Content-Type', 'application/json');
@@ -40,19 +58,6 @@ export default async function handler(req, res) {
   
   console.log('✅ [DOWNLOAD] Configuración validada correctamente');
   
-  if (req.method !== 'GET') {
-    res.setHeader('Allow', 'GET');
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { locator } = req.query;
-  if (!locator) {
-    console.error('❌ [DOWNLOAD] Missing locator in query params');
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(400).json({ error: 'Missing locator' });
-  }
-
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
   if (!token) {
@@ -99,52 +104,46 @@ export default async function handler(req, res) {
             imagenes:evento_imagenes(*)
           )
         ),
-        seats:zeatingmaps(
+        seats:payment_seats(
           *,
-          zona:zonas(
-            *
-          )
-        ),
-        usuario:profiles(
-          *
+          zona:zonas(*)
         )
       `)
       .eq('locator', locator)
       .single();
 
-    if (error) {
-      console.error('❌ [DOWNLOAD] Database error:', error);
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(500).json({ error: 'Database error', details: error.message });
-    }
-    
-    if (!payment) {
-      console.error('❌ [DOWNLOAD] Payment not found for locator:', locator);
+    if (error || !payment) {
+      console.error('❌ [DOWNLOAD] Error buscando pago:', error);
       res.setHeader('Content-Type', 'application/json');
       return res.status(404).json({ error: 'Payment not found' });
     }
-    
-    console.log('✅ [DOWNLOAD] Pago encontrado:', payment);
 
-    // --- GENERAR QR ---
-    console.log('🎯 [DOWNLOAD] Generando código QR...');
-    const qrText = `https://tusitio.com/validar-ticket/${payment.locator}`;
-    const qrDataUrl = await QRCode.toDataURL(qrText, { 
-      margin: 1, 
-      width: 200,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
+    console.log('✅ [DOWNLOAD] Pago encontrado:', payment.id);
+
+    // Generate full PDF with payment data
+    return await generateFullPDF(req, res, payment, locator);
+    
+  } catch (err) {
+    console.error('❌ [DOWNLOAD] Error generando ticket:', err);
+    console.error('❌ [DOWNLOAD] Stack trace:', err.stack);
+    
+    // Asegurar que se envíe JSON y no HTML
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(500).json({ 
+      error: 'Internal server error', 
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
-    const qrImageBytes = Buffer.from(qrDataUrl.split(",")[1], 'base64');
-    console.log('✅ [DOWNLOAD] Código QR generado');
+  }
+}
 
-    // --- CREAR PDF ---
-    console.log('📄 [DOWNLOAD] Creando documento PDF...');
-    const pdfDoc = await PDFDocument.create();
+// Función para generar PDF simple (sin autenticación)
+async function generateSimplePDF(req, res, locator) {
+  try {
+    console.log('📄 [DOWNLOAD-SIMPLE] Creando documento PDF simple...');
     
-    // Agregar fuentes estándar
+    // Crear PDF simple sin dependencias externas
+    const pdfDoc = await PDFDocument.create();
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     
@@ -152,6 +151,101 @@ export default async function handler(req, res) {
     const { width, height } = page.getSize();
 
     // Título
+    page.drawText('TICKET DE PRUEBA', {
+      x: 50,
+      y: height - 50,
+      size: 22,
+      color: rgb(0.1, 0.1, 0.1),
+      font: helveticaBold,
+    });
+
+    // Datos básicos
+    let y = height - 90;
+    page.drawText(`Localizador: ${locator}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
+    y -= 25;
+    page.drawText(`Estado: PAGADO`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
+    y -= 30;
+
+    // Información de prueba
+    page.drawText('Este es un ticket de prueba', { x: 50, y, size: 14, color: rgb(0,0,0), font: helveticaBold });
+    y -= 25;
+    page.drawText('Generado para verificar la funcionalidad', { x: 50, y, size: 12, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+    y -= 20;
+    page.drawText('de descarga de PDFs', { x: 50, y, size: 12, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+
+    // Fecha
+    const fechaCreacion = new Date().toLocaleString('es-ES');
+    page.drawText(`Fecha de generación: ${fechaCreacion}`, { x: 50, y: 80, size: 11, color: rgb(0.4,0.4,0.4), font: helveticaFont });
+
+    // Mensaje de prueba
+    page.drawText('Si puedes ver este PDF, la generación está funcionando correctamente', { 
+      x: 50, 
+      y: 50, 
+      size: 10, 
+      color: rgb(0.3,0.3,0.3), 
+      font: helveticaFont 
+    });
+
+    console.log('💾 [DOWNLOAD-SIMPLE] Guardando PDF...');
+    const pdfBytes = await pdfDoc.save();
+    console.log('✅ [DOWNLOAD-SIMPLE] PDF generado exitosamente, tamaño:', pdfBytes.length, 'bytes');
+
+    // Headers para PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="ticket-prueba-${locator}.pdf"`);
+    res.setHeader('Content-Length', pdfBytes.length);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    console.log('📤 [DOWNLOAD-SIMPLE] Enviando PDF al cliente...');
+    return res.status(200).send(Buffer.from(pdfBytes));
+    
+  } catch (err) {
+    console.error('❌ [DOWNLOAD-SIMPLE] Error generando PDF de prueba:', err);
+    console.error('❌ [DOWNLOAD-SIMPLE] Stack trace:', err.stack);
+    
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(500).json({ 
+      error: 'Error generando PDF de prueba', 
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+}
+
+// Función para generar PDF completo con datos del pago
+async function generateFullPDF(req, res, payment, locator) {
+  try {
+    console.log('📄 [DOWNLOAD] Generando PDF completo para pago:', payment.id);
+    
+    // Crear documento PDF
+    const pdfDoc = await PDFDocument.create();
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    
+    const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
+    const { width, height } = page.getSize();
+
+    // Generar QR code
+    console.log('🖼️ [DOWNLOAD] Generando código QR...');
+    const qrData = JSON.stringify({
+      locator: payment.locator,
+      paymentId: payment.id,
+      timestamp: new Date().toISOString()
+    });
+    
+    const qrImageBytes = await QRCode.toBuffer(qrData, {
+      type: 'image/png',
+      width: 200,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    });
+
+    // Título del ticket
     page.drawText('TICKET DE ENTRADA', {
       x: 50,
       y: height - 50,
@@ -241,13 +335,12 @@ export default async function handler(req, res) {
     return res.status(200).send(Buffer.from(pdfBytes));
     
   } catch (err) {
-    console.error('❌ [DOWNLOAD] Error generando ticket:', err);
+    console.error('❌ [DOWNLOAD] Error generando PDF completo:', err);
     console.error('❌ [DOWNLOAD] Stack trace:', err.stack);
     
-    // Asegurar que se envíe JSON y no HTML
     res.setHeader('Content-Type', 'application/json');
     return res.status(500).json({ 
-      error: 'Internal server error', 
+      error: 'Error generando PDF completo', 
       details: err.message,
       stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
