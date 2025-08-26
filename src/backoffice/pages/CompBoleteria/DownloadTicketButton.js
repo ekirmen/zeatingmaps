@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { message, Button, Space, Tooltip } from 'antd';
 import { DownloadOutlined, FileTextOutlined } from '@ant-design/icons';
 import downloadTicket from '../../../utils/downloadTicket';
+import { buildRelativeApiUrl } from '../../../config/apiConfig';
 
 const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,26 +11,31 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
     setIsLoading(true);
     try {
       // Probar descarga simple sin autenticación
-      const response = await fetch(`/api/payments/${locator}/download-simple`);
+      const url = buildRelativeApiUrl(`payments/${locator}/download-simple`);
+      console.log('🧪 [TEST] Probando descarga simple en:', url);
+      
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       const contentType = response.headers.get('Content-Type');
+      console.log('🧪 [TEST] Content-Type recibido:', contentType);
+      
       if (!contentType?.includes('application/pdf')) {
         throw new Error(`Content-Type inválido: ${contentType}`);
       }
       
       const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      const urlBlob = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = urlBlob;
       a.download = `ticket-prueba-${locator}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      window.URL.revokeObjectURL(urlBlob);
       
       console.log('✅ [SIMPLE-TEST] Descarga simple exitosa');
       message.success('✅ Descarga simple funcionando correctamente');
@@ -50,10 +56,11 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
 
     setIsLoading(true);
     try {
+      console.log('🚀 [DOWNLOAD] Iniciando descarga del ticket:', locator);
       await downloadTicket(locator);
       message.success('Ticket descargado con éxito');
     } catch (err) {
-      console.error('Error:', err);
+      console.error('❌ [DOWNLOAD] Error en descarga principal:', err);
       message.error('Fallo en la descarga: ' + err.message);
     } finally {
       setIsLoading(false);
@@ -99,7 +106,8 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
           }}>
             <strong>Funciones disponibles:</strong><br/>
             • Descarga principal con autenticación<br/>
-            • Descarga simple para testing
+            • Descarga simple para testing<br/>
+            • Logs detallados en consola
           </div>
         </Space>
       )}

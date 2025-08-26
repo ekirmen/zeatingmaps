@@ -1,12 +1,17 @@
-import API_BASE_URL from './apiBase';
+import { buildRelativeApiUrl } from '../config/apiConfig';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 
 export default async function downloadTicket(locator, ticketId) {
   if (!locator && !ticketId) throw new Error('Invalid locator');
-  const url = ticketId
-    ? `${API_BASE_URL}/api/tickets/${ticketId}/download`
-    : `${API_BASE_URL}/api/payments/${locator}/download`;
+  
+  // Construir URL usando la configuración que detecta el entorno
+  let url;
+  if (ticketId) {
+    url = buildRelativeApiUrl(`tickets/${ticketId}/download`);
+  } else {
+    url = buildRelativeApiUrl(`payments/${locator}/download`);
+  }
     
   try {
     // Obtener token fresco de Supabase
