@@ -2135,6 +2135,14 @@ const BoleteriaMain = () => {
                      Cargar en Carrito
                    </Button>
                  </div>
+                 
+                 {/* Información sobre funciones disponibles */}
+                 <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
+                   <strong>Funciones disponibles:</strong><br/>
+                   • Descarga principal con autenticación<br/>
+                   • Descarga simple para testing<br/>
+                   • Búsqueda y carga de pagos existentes
+                 </div>
                </div>
              )}
              
