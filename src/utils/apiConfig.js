@@ -55,7 +55,10 @@ export const diagnoseApiIssues = () => {
     issues.push('NODE_ENV no está definido');
   }
   
-  if (process.env.NODE_ENV === 'production' && !process.env.VERCEL_ENV) {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    !process.env.REACT_APP_VERCEL_ENV
+  ) {
     issues.push('VERCEL_ENV no está definido en producción');
   }
   
