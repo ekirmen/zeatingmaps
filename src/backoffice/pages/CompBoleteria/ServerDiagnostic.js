@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Space, Alert, Descriptions, Tag, Spin, message } from 'antd';
-import { ReloadOutlined, CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
-import { buildRelativeApiUrl } from '../../../utils/apiConfig';
+import { ReloadOutlined, CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, WifiOutlined } from '@ant-design/icons';
+import { buildRelativeApiUrl, checkApiConnectivity, diagnoseApiIssues } from '../../../utils/apiConfig';
 
 const ServerDiagnostic = () => {
   const [diagnostic, setDiagnostic] = useState(null);
   const [testResult, setTestResult] = useState(null);
+  const [connectivityResult, setConnectivityResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [loadingTest, setLoadingTest] = useState(false);
+  const [loadingConnectivity, setLoadingConnectivity] = useState(false);
 
   const runDiagnostic = async () => {
     setLoading(true);
     try {
-      const url = `/api/payments/diagnostic`;
+      const url = buildRelativeApiUrl('payments/diagnostic');
       console.log('🔍 [DIAGNOSTIC] Ejecutando diagnóstico en:', url);
       
       const response = await fetch(url);
@@ -35,7 +37,7 @@ const ServerDiagnostic = () => {
   const runTest = async () => {
     setLoadingTest(true);
     try {
-      const url = `/api/payments/test`;
+      const url = buildRelativeApiUrl('payments/test');
       console.log('🧪 [TEST] Ejecutando prueba en:', url);
       
       const response = await fetch(url);
@@ -55,9 +57,44 @@ const ServerDiagnostic = () => {
     }
   };
 
+  const runConnectivityTest = async () => {
+    setLoadingConnectivity(true);
+    try {
+      console.log('🔍 [CONNECTIVITY] Iniciando prueba de conectividad...');
+      const result = await checkApiConnectivity();
+      setConnectivityResult(result);
+      
+      if (result.success) {
+        message.success('Prueba de conectividad exitosa');
+      } else {
+        message.error('Error en conectividad: ' + result.error);
+      }
+    } catch (error) {
+      console.error('❌ [CONNECTIVITY] Error:', error);
+      message.error('Error en prueba de conectividad: ' + error.message);
+    } finally {
+      setLoadingConnectivity(false);
+    }
+  };
+
+  const runLocalDiagnostic = () => {
+    console.log('🔍 [LOCAL-DIAGNOSTIC] Ejecutando diagnóstico local...');
+    const result = diagnoseApiIssues();
+    
+    if (result.hasIssues) {
+      message.warning(`Se detectaron ${result.issues.length} problemas de configuración`);
+    } else {
+      message.success('Configuración local correcta');
+    }
+    
+    // Mostrar resultado en consola
+    console.log('🔍 [LOCAL-DIAGNOSTIC] Resultado:', result);
+  };
+
   useEffect(() => {
     // Ejecutar diagnóstico automáticamente al montar el componente
     runDiagnostic();
+    runLocalDiagnostic();
   }, []);
 
   const getStatusColor = (status) => {
@@ -88,6 +125,21 @@ const ServerDiagnostic = () => {
               type="default"
             >
               Probar Servidor
+            </Button>
+            <Button 
+              icon={<WifiOutlined />} 
+              onClick={runConnectivityTest} 
+              loading={loadingConnectivity}
+              type="default"
+            >
+              Probar Conectividad
+            </Button>
+            <Button 
+              onClick={runLocalDiagnostic} 
+              type="dashed"
+              size="small"
+            >
+              Diagnóstico Local
             </Button>
           </Space>
         }
@@ -236,6 +288,62 @@ const ServerDiagnostic = () => {
             )}
           </Card>
         )}
+
+        {/* Resultado de la Prueba de Conectividad */}
+        {connectivityResult && (
+          <Card title="🔌 Resultado de la Prueba de Conectividad" size="small" style={{ marginTop: '20px' }}>
+            <Alert
+              message={connectivityResult.success ? 'Conectividad Exitosa' : 'Problema de Conectividad'}
+              description={
+                connectivityResult.success 
+                  ? 'La API responde correctamente' 
+                  : `Error: ${connectivityResult.error}`
+              }
+              type={connectivityResult.success ? 'success' : 'error'}
+              showIcon
+            />
+            
+            {connectivityResult.success && connectivityResult.data && (
+              <div style={{ marginTop: '16px' }}>
+                <strong>Respuesta del servidor:</strong>
+                <pre style={{ 
+                  backgroundColor: '#f5f5f5', 
+                  padding: '8px', 
+                  borderRadius: '4px',
+                  fontSize: '12px',
+                  overflow: 'auto'
+                }}>
+                  {JSON.stringify(connectivityResult.data, null, 2)}
+                </pre>
+              </div>
+            )}
+          </Card>
+        )}
+
+        {/* Información de Debug */}
+        <Card title="🐛 Información de Debug" size="small" style={{ marginTop: '20px' }}>
+          <Alert
+            message="Logs de Consola"
+            description={
+              <div>
+                <p>Para ver información detallada de debug, abre la consola del navegador (F12) y revisa los logs con estos prefijos:</p>
+                <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                  <li><code>🔧 [APICONFIG]</code> - Configuración de la API</li>
+                  <li><code>🔗 [APICONFIG]</code> - Construcción de URLs</li>
+                  <li><code>🔍 [APICONFIG]</code> - Diagnósticos y conectividad</li>
+                  <li><code>🚀 [DOWNLOAD]</code> - Proceso de descarga</li>
+                  <li><code>🧪 [TEST]</code> - Pruebas del servidor</li>
+                </ul>
+                <p style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
+                  <strong>Tip:</strong> Si ves errores de "Failed to fetch" o problemas de CORS, 
+                  verifica que las variables de entorno estén configuradas en Vercel.
+                </p>
+              </div>
+            }
+            type="info"
+            showIcon
+          />
+        </Card>
       </Card>
     </div>
   );
