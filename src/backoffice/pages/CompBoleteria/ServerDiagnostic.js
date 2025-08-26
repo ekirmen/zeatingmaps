@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Space, Alert, Descriptions, Tag, Spin, message } from 'antd';
 import { ReloadOutlined, CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { buildRelativeApiUrl } from '../../../utils/apiConfig';
 
 const ServerDiagnostic = () => {
   const [diagnostic, setDiagnostic] = useState(null);

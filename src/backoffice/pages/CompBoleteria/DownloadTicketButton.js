@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { message, Button, Space, Tooltip } from 'antd';
 import { DownloadOutlined, FileTextOutlined } from '@ant-design/icons';
 import downloadTicket from '../../../utils/downloadTicket';
+import { buildRelativeApiUrl } from '../../../utils/apiConfig';
 
 const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
   const [isLoading, setIsLoading] = useState(false);

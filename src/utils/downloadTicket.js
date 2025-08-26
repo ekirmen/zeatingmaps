@@ -1,15 +1,16 @@
+import { buildRelativeApiUrl } from './apiConfig';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
 
 export default async function downloadTicket(locator, ticketId) {
   if (!locator && !ticketId) throw new Error('Invalid locator');
   
-  // Construir URL usando rutas relativas para Vercel
+  // Construir URL usando la configuración que detecta el entorno
   let url;
   if (ticketId) {
-    url = `/api/tickets/${ticketId}/download`;
+    url = buildRelativeApiUrl(`tickets/${ticketId}/download`);
   } else {
-    url = `/api/payments/${locator}/download`;
+    url = buildRelativeApiUrl(`payments/${locator}/download`);
   }
     
   try {
