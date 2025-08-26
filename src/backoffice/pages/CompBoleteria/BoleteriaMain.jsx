@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber } from 'antd';
-import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined, DownloadOutlined } from '@ant-design/icons';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ZonesPanel from './components/ZonesPanel.jsx';
@@ -10,6 +10,7 @@ import PaymentModal from './PaymentModal';
 import CustomFormBuilder from './components/CustomFormBuilder';
 import MailChimpIntegration from './components/MailChimpIntegration';
 import PushNotifications from './components/PushNotifications';
+import DownloadTicketButton from './DownloadTicketButton';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 import { supabase } from '../../../supabaseClient';
@@ -132,6 +133,7 @@ const BoleteriaMain = () => {
   const [showLocatorSearch, setShowLocatorSearch] = useState(false);
   const [locatorSearchValue, setLocatorSearchValue] = useState('');
   const [locatorSearchLoading, setLocatorSearchLoading] = useState(false);
+  const [foundPayment, setFoundPayment] = useState(null);
 
   // Estados para gestión de carritos
   const [showCartManagement, setShowCartManagement] = useState(false);
@@ -653,7 +655,7 @@ const BoleteriaMain = () => {
 
     setLocatorSearchLoading(true);
     try {
-      // Buscar el pago por localizador
+      // Buscar el pago por localizador con todos los detalles
       const { data: payment, error } = await supabase
         .from('payments')
         .select(`
@@ -667,8 +669,12 @@ const BoleteriaMain = () => {
 
       if (error) {
         message.error('Localizador no encontrado');
+        setFoundPayment(null);
         return;
       }
+
+      // Almacenar el pago encontrado
+      setFoundPayment(payment);
 
       // Cargar los datos del pago
       setSelectedClient(payment.user);
@@ -691,16 +697,42 @@ const BoleteriaMain = () => {
         }
       }
 
-      setSelectedSeats(seats);
+      // Asegurar que los asientos tengan la estructura correcta
+      const processedSeats = seats.map(seat => ({
+        ...seat,
+        _id: seat.id || seat._id,
+        nombre: seat.name || seat.nombre,
+        precio: seat.price || seat.precio,
+        zonaId: seat.zona || seat.zonaId,
+        mesa: seat.mesa,
+        paymentId: payment.id, // Agregar el ID del pago existente
+        locator: payment.locator // Agregar el localizador existente
+      }));
+
+      setSelectedSeats(processedSeats);
+
+      // Cargar productos si existen
+      if (payment.products && Array.isArray(payment.products)) {
+        setProductosCarrito(payment.products);
+      } else if (typeof payment.products === 'string') {
+        try {
+          const products = JSON.parse(payment.products);
+          setProductosCarrito(Array.isArray(products) ? products : []);
+        } catch {
+          setProductosCarrito([]);
+        }
+      }
+
       if (payment.event) {
-        message.success(`Pago encontrado: ${payment.event.nombre}`);
+        message.success(`Pago encontrado: ${payment.event.nombre} - Localizador: ${payment.locator}`);
       }
 
       setShowLocatorSearch(false);
       setLocatorSearchValue('');
     } catch (error) {
-      console.error('Error searching by locator:', error);
+      console.error('Error searching by localizador:', error);
       message.error('Error al buscar por localizador');
+      setFoundPayment(null);
     } finally {
       setLocatorSearchLoading(false);
     }
@@ -798,6 +830,14 @@ const BoleteriaMain = () => {
       message.warning('Selecciona al menos un asiento antes de continuar');
       return;
     }
+
+    // Verificar si ya existe un pago para estos asientos
+    const existingPayment = selectedSeats.find(seat => seat.paymentId && seat.locator);
+    
+    if (existingPayment) {
+      message.info(`Ya existe un pago con localizador: ${existingPayment.locator}. Puedes modificar o procesar el pago existente.`);
+    }
+    
     console.log('Opening payment modal');
     setIsPaymentModalVisible(true);
   };
@@ -1147,6 +1187,26 @@ const BoleteriaMain = () => {
           </div>
         </Tooltip>
         
+        <Tooltip title="Descargar ticket por localizador" placement="right">
+          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => {
+            const locator = prompt('Ingresa el localizador del ticket a descargar:');
+            if (locator) {
+              // Crear un enlace temporal para descargar
+              const url = `/api/payments/${locator}/download-simple`;
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `ticket-${locator}.pdf`;
+              a.target = '_blank';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }
+          }}>
+            <DownloadOutlined className="text-xl mb-1" />
+            <div>Descargar</div>
+          </div>
+        </Tooltip>
+        
         <Tooltip title="Gestionar carritos guardados" placement="right">
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowCartManagement(true)}>
             <ShoppingCartOutlined className="text-xl mb-1" />
@@ -1459,6 +1519,22 @@ const BoleteriaMain = () => {
                 )}
               </div>
               
+              {/* Indicador de Pago Existente */}
+              {selectedSeats.find(seat => seat.paymentId && seat.locator) && (
+                <div className="mb-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-green-600">✓</span>
+                    <span className="text-sm font-medium text-green-800">Pago Existente</span>
+                  </div>
+                  <div className="text-xs text-green-700 mt-1">
+                    Localizador: {selectedSeats.find(seat => seat.locator)?.locator}
+                  </div>
+                  <div className="text-xs text-green-600 mt-1">
+                    Puedes modificar o procesar este pago existente
+                  </div>
+                </div>
+              )}
+              
               {/* Estadísticas del Evento - Ahora en botón */}
               {selectedFuncion && (
                 <div className="mb-2">
@@ -1682,7 +1758,13 @@ const BoleteriaMain = () => {
                        !selectedClient ? 'Selecciona un cliente' :
                        !selectedPriceOption ? 'Selecciona una zona y precio' : 
                        selectedSeats.length === 0 ? 'Selecciona asientos' : 
-                       `Pagar $${calculateTotal().toFixed(2)}`}
+                       (() => {
+                         const existingPayment = selectedSeats.find(seat => seat.paymentId && seat.locator);
+                         if (existingPayment) {
+                           return `Modificar Pago ${existingPayment.locator} - $${calculateTotal().toFixed(2)}`;
+                         }
+                         return `Pagar $${calculateTotal().toFixed(2)}`;
+                       })()}
                     </Button>
                   </Tooltip>
                 </div>
@@ -1949,7 +2031,7 @@ const BoleteriaMain = () => {
            open={showLocatorSearch}
            onCancel={() => setShowLocatorSearch(false)}
            footer={null}
-           width={500}
+           width={600}
          >
            <div className="space-y-4">
              <div>
@@ -1964,10 +2046,103 @@ const BoleteriaMain = () => {
                />
              </div>
              
+             {/* Información del pago encontrado */}
+             {foundPayment && (
+               <div className="border rounded-lg p-4 bg-gray-50">
+                 <h4 className="font-medium text-lg mb-3">Pago Encontrado</h4>
+                 <div className="space-y-2 text-sm">
+                   <div><strong>Localizador:</strong> {foundPayment.locator}</div>
+                   <div><strong>Estado:</strong> {foundPayment.status}</div>
+                   <div><strong>Total:</strong> ${foundPayment.total?.toFixed(2) || '0.00'}</div>
+                   <div><strong>Fecha:</strong> {new Date(foundPayment.created_at).toLocaleString('es-ES')}</div>
+                   {foundPayment.event && (
+                     <div><strong>Evento:</strong> {foundPayment.event.nombre}</div>
+                   )}
+                   {foundPayment.user && (
+                     <div><strong>Cliente:</strong> {foundPayment.user.login || foundPayment.user.email}</div>
+                   )}
+                   
+                   {/* Detalles de asientos */}
+                   {foundPayment.seats && (
+                     <div className="mt-3">
+                       <strong>Asientos:</strong>
+                       <div className="ml-4 text-xs">
+                         {Array.isArray(foundPayment.seats) ? (
+                           foundPayment.seats.map((seat, index) => (
+                             <div key={index}>
+                               • {seat.name || seat.nombre} - ${(seat.price || seat.precio || 0).toFixed(2)}
+                             </div>
+                           ))
+                         ) : (
+                           <div>• {foundPayment.seats}</div>
+                         )}
+                       </div>
+                     </div>
+                   )}
+                   
+                   {/* Detalles de productos */}
+                   {foundPayment.products && foundPayment.products.length > 0 && (
+                     <div className="mt-3">
+                       <strong>Productos:</strong>
+                       <div className="ml-4 text-xs">
+                         {Array.isArray(foundPayment.products) ? (
+                           foundPayment.products.map((product, index) => (
+                             <div key={index}>
+                               • {product.nombre} x{product.cantidad} - ${(product.precio || 0).toFixed(2)}
+                             </div>
+                           ))
+                         ) : (
+                           <div>• {foundPayment.products}</div>
+                         )}
+                       </div>
+                     </div>
+                   )}
+                   
+                   {/* Detalles de pagos */}
+                   {foundPayment.payments && foundPayment.payments.length > 0 && (
+                     <div className="mt-3">
+                       <strong>Formas de Pago:</strong>
+                       <div className="ml-4 text-xs">
+                         {foundPayment.payments.map((payment, index) => (
+                           <div key={index}>
+                             • {payment.method} - ${payment.amount?.toFixed(2) || '0.00'}
+                           </div>
+                         ))}
+                       </div>
+                     </div>
+                   )}
+                 </div>
+                 
+                 {/* Botón de descarga */}
+                 <div className="mt-4">
+                   <DownloadTicketButton 
+                     locator={foundPayment.locator} 
+                     showDebugButtons={true}
+                   />
+                 </div>
+                 
+                 {/* Botón para cargar en el carrito */}
+                 <div className="mt-3">
+                   <Button 
+                     type="primary" 
+                     size="small"
+                     onClick={() => {
+                       message.success('Pago cargado en el carrito. Puedes modificar o procesar el pago.');
+                       setShowLocatorSearch(false);
+                     }}
+                     block
+                   >
+                     Cargar en Carrito
+                   </Button>
+                 </div>
+               </div>
+             )}
+             
              <div className="text-sm text-gray-600">
                <p>• Busca pagos existentes por su localizador</p>
                <p>• Carga automáticamente el evento, cliente y asientos</p>
                <p>• Útil para consultas y modificaciones</p>
+               <p>• Descarga tickets en formato PDF</p>
              </div>
            </div>
          </Modal>

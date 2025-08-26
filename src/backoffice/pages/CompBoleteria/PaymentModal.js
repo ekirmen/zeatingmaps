@@ -263,6 +263,9 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
 
       // Create a payment for each event
       const paymentPromises = Object.entries(seatsByEvent).map(([eventId, seats]) => {
+        // Verificar si ya existe un pago para estos asientos
+        const existingPayment = seats.find(seat => seat.paymentId && seat.locator);
+        
         const paymentData = {
           usuario_id: selectedClient.id || selectedClient._id, // Cambiar user_id por usuario_id
           event: eventId,
@@ -276,7 +279,8 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
               mesa: item.mesa?._id || null,
               ...(item.abonoGroup ? { abonoGroup: item.abonoGroup } : {})
             })),
-            locator: generateLocator(),
+            // Usar localizador existente si ya hay uno, sino generar uno nuevo
+            locator: existingPayment ? existingPayment.locator : generateLocator(),
             status: diferencia > 0 ? 'reservado' : 'pagado',
             payments: paymentEntries.map(entry => ({
               method: entry.formaPago,
@@ -285,16 +289,24 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
             ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
           };
 
-          console.log('Creating payment with data:', paymentData);
+          console.log('Payment data:', paymentData);
 
-          // Add reservation deadline if applicable
-          if (reservationType === '2') {
-            paymentData.reservationDeadline = new Date(Date.now() + 16 * 60000);
-          } else if (reservationType === '3' && selectedDate) {
-            paymentData.reservationDeadline = selectedDate.toDate();
+          // Si ya existe un pago, actualizarlo en lugar de crear uno nuevo
+          if (existingPayment) {
+            console.log('Updating existing payment:', existingPayment.paymentId);
+            return updatePayment(existingPayment.paymentId, paymentData);
+          } else {
+            console.log('Creating new payment');
+            
+            // Add reservation deadline if applicable (solo para pagos nuevos)
+            if (reservationType === '2') {
+              paymentData.reservationDeadline = new Date(Date.now() + 16 * 60000);
+            } else if (reservationType === '3' && selectedDate) {
+              paymentData.reservationDeadline = selectedDate.toDate();
+            }
+            
+            return createPayment(paymentData);
           }
-
-          return createPayment(paymentData);
         });
 
         const results = await Promise.all(paymentPromises);
