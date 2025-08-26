@@ -7,6 +7,8 @@ import StoreApp from './store/StoreApp';
 import BackofficeApp from './backoffice/BackofficeApp';
 import { getCurrentDomainConfig, shouldShowSaaS, shouldShowBackoffice, shouldShowStore } from './config/domainConfig';
 import { ThemeProvider } from './contexts/ThemeContext';
+import VercelAnalytics from './components/VercelAnalytics';
+import VercelSpeedInsights from './components/VercelSpeedInsights';
 import './index.css';
 
 // Componente de carga
@@ -113,6 +115,12 @@ const App = () => {
             }
           />
         </Routes>
+        
+        {/* Vercel Analytics - Solo en producción */}
+        <VercelAnalytics />
+        
+        {/* Vercel Speed Insights - Solo en producción */}
+        <VercelSpeedInsights />
       </ConfigProvider>
     </ThemeProvider>
   );

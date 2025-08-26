@@ -14,7 +14,6 @@
     "preview": "serve -s build",
     "eject": "react-scripts eject",
     "vercel-build": "react-scripts build",
-
     "analyze": "npm run build && npx serve -s build"
   },
   "dependencies": {
@@ -29,7 +28,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@rc-component/qrcode": "~1.0.0",
     "@supabase/supabase-js": "^2.50.0",
-
+    "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.0.0",
     "antd": "^5.26.7",
     "autoprefixer": "^10.4.21",
@@ -69,7 +68,6 @@
   },
   "devDependencies": {
     "@craco/craco": "^7.1.0",
-
     "babel-plugin-import": "^1.13.8",
     "core-js": "^3.35.0",
     "cross-env": "^10.0.0",

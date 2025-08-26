@@ -1,6 +1,7 @@
 import { buildRelativeApiUrl } from './apiConfig';
 import { toast } from 'react-hot-toast';
 import { supabase } from '../supabaseClient';
+import { trackTicketDownload, trackApiError } from './analytics';
 
 export default async function downloadTicket(locator, ticketId) {
   if (!locator && !ticketId) throw new Error('Invalid locator');
@@ -29,6 +30,9 @@ export default async function downloadTicket(locator, ticketId) {
     console.log('🔗 API URL:', url);
     console.log('🔑 Token obtenido:', token ? '✅ Presente' : '❌ Faltante');
     console.log('🔑 Token length:', token ? token.length : 0);
+    
+    // Trackear inicio de descarga
+    trackTicketDownload(locator, 'download', false, 'iniciando');
 
     const headers = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -56,6 +60,7 @@ export default async function downloadTicket(locator, ticketId) {
       let errorMessage = 'Failed to download ticket';
       console.error('❌ [DOWNLOAD] Response not OK:', response.status, response.statusText);
       
+      // Manejar diferentes tipos de respuesta de error
       if (contentType?.includes('application/json')) {
         try {
           const data = await response.json();
@@ -74,16 +79,25 @@ export default async function downloadTicket(locator, ticketId) {
           
           if (htmlContent.includes('Error') || htmlContent.includes('error')) {
             errorMessage = 'Error del servidor - API devolvió página de error HTML';
-          } else {
+          } else if (htmlContent.includes('<!doctype html>')) {
             errorMessage = 'Error del servidor - API devolvió HTML en lugar de PDF';
+          } else {
+            errorMessage = 'Error del servidor - Respuesta inesperada del servidor';
           }
         } catch (e) {
           console.error('❌ [DOWNLOAD] Error leyendo contenido HTML:', e);
           errorMessage = 'Error del servidor - API devolvió HTML en lugar de PDF';
         }
+      } else if (response.status === 404) {
+        errorMessage = 'Endpoint no encontrado (404) - Verificar configuración de API';
+        console.error('❌ [DOWNLOAD] Endpoint 404 - URL:', url);
       } else {
         errorMessage = `Error del servidor: ${response.status} ${response.statusText}`;
       }
+      
+      // Trackear error de descarga
+      trackTicketDownload(locator, 'download', false, errorMessage);
+      trackApiError(url, response.status, errorMessage);
       
       toast.error(errorMessage);
       throw new Error(errorMessage);
@@ -144,6 +158,10 @@ export default async function downloadTicket(locator, ticketId) {
     window.URL.revokeObjectURL(blobUrl);
     
     console.log('✅ [DOWNLOAD] Ticket descargado exitosamente');
+    
+    // Trackear descarga exitosa
+    trackTicketDownload(locator, 'download', true, null);
+    
     toast.success('Ticket descargado exitosamente');
     
   } catch (error) {
