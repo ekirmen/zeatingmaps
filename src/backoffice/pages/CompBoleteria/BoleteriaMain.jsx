@@ -11,6 +11,7 @@ import CustomFormBuilder from './components/CustomFormBuilder';
 import MailChimpIntegration from './components/MailChimpIntegration';
 import PushNotifications from './components/PushNotifications';
 import DownloadTicketButton from './DownloadTicketButton';
+import ServerDiagnostic from './ServerDiagnostic';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 import { supabase } from '../../../supabaseClient';
@@ -2119,6 +2120,11 @@ const BoleteriaMain = () => {
                      locator={foundPayment.locator} 
                      showDebugButtons={true}
                    />
+                 </div>
+                 
+                 {/* Diagnóstico del servidor */}
+                 <div className="mt-4">
+                   <ServerDiagnostic />
                  </div>
                  
                  {/* Botón para cargar en el carrito */}
