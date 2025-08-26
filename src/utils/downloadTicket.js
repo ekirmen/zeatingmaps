@@ -27,12 +27,17 @@ export default async function downloadTicket(locator, ticketId) {
 
     const headers = {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      Accept: 'application/pdf, application/json, */*'
+      Accept: 'application/pdf, application/json, */*',
+      'Cache-Control': 'no-cache'
     };
 
     console.log('📤 [DOWNLOAD] Headers enviados:', headers);
 
-    const response = await fetch(url, { headers });
+    const response = await fetch(url, { 
+      headers,
+      method: 'GET',
+      mode: 'cors'
+    });
 
     console.log('📥 [DOWNLOAD] Response recibida:');
     console.log('- Status:', response.status);
@@ -69,7 +74,7 @@ export default async function downloadTicket(locator, ticketId) {
           }
         } catch (e) {
           console.error('❌ [DOWNLOAD] Error leyendo contenido HTML:', e);
-          errorMessage = 'Error del servidor - API devolvió HTML';
+          errorMessage = 'Error del servidor - API devolvió HTML en lugar de PDF';
         }
       } else {
         errorMessage = `Error del servidor: ${response.status} ${response.statusText}`;
@@ -127,6 +132,7 @@ export default async function downloadTicket(locator, ticketId) {
     const a = document.createElement('a');
     a.href = blobUrl;
     a.download = `ticket-${locator}.pdf`;
+    a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -141,7 +147,11 @@ export default async function downloadTicket(locator, ticketId) {
     console.error('❌ [DOWNLOAD] Error message:', error.message);
     console.error('❌ [DOWNLOAD] Error stack:', error.stack);
     
-    // No mostrar toast aquí ya que se maneja arriba
+    // Mostrar toast de error si no se mostró antes
+    if (!error.message.includes('Server returned') && !error.message.includes('Invalid content type')) {
+      toast.error('Error al descargar el ticket: ' + error.message);
+    }
+    
     throw error;
   }
 }

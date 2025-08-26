@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { PDFDocument, rgb } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import QRCode from 'qrcode';
 import { getConfig, validateConfig } from './config';
 
@@ -82,16 +82,32 @@ export default async function handler(req, res) {
 
     console.log('✅ [DOWNLOAD] Usuario autenticado correctamente:', user.id);
 
-    // Get payment data
+    // Get payment data with more comprehensive information
     console.log('🔍 [DOWNLOAD] Buscando pago con localizador:', locator);
     const { data: payment, error } = await supabaseAdmin
       .from('payments')
       .select(`
-        locator, 
-        seats, 
-        status,
-        created_at,
-        funcion
+        *,
+        funcion:funciones(
+          *,
+          evento:eventos(
+            *,
+            recinto:recintos(
+              *,
+              imagenes:recinto_imagenes(*)
+            ),
+            imagenes:evento_imagenes(*)
+          )
+        ),
+        seats:zeatingmaps(
+          *,
+          zona:zonas(
+            *
+          )
+        ),
+        usuario:profiles(
+          *
+        )
       `)
       .eq('locator', locator)
       .single();
@@ -113,13 +129,25 @@ export default async function handler(req, res) {
     // --- GENERAR QR ---
     console.log('🎯 [DOWNLOAD] Generando código QR...');
     const qrText = `https://tusitio.com/validar-ticket/${payment.locator}`;
-    const qrDataUrl = await QRCode.toDataURL(qrText, { margin: 1, width: 200 });
+    const qrDataUrl = await QRCode.toDataURL(qrText, { 
+      margin: 1, 
+      width: 200,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    });
     const qrImageBytes = Buffer.from(qrDataUrl.split(",")[1], 'base64');
     console.log('✅ [DOWNLOAD] Código QR generado');
 
     // --- CREAR PDF ---
     console.log('📄 [DOWNLOAD] Creando documento PDF...');
     const pdfDoc = await PDFDocument.create();
+    
+    // Agregar fuentes estándar
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    
     const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
     const { width, height } = page.getSize();
 
@@ -129,34 +157,49 @@ export default async function handler(req, res) {
       y: height - 50,
       size: 22,
       color: rgb(0.1, 0.1, 0.1),
-      font: undefined,
+      font: helveticaBold,
     });
 
     // Datos principales
     let y = height - 90;
-    page.drawText(`Localizador: ${payment.locator}`, { x: 50, y, size: 13, color: rgb(0,0,0) });
+    page.drawText(`Localizador: ${payment.locator}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
     y -= 25;
-    if (payment.funcion) {
-      page.drawText(`Función ID: ${payment.funcion}`, { x: 50, y, size: 13, color: rgb(0,0,0) });
-      y -= 25;
+    
+    // Información del evento si está disponible
+    if (payment.funcion?.evento) {
+      const evento = payment.funcion.evento;
+      if (evento.nombre) {
+        page.drawText(`Evento: ${evento.nombre}`, { x: 50, y, size: 14, color: rgb(0,0,0), font: helveticaBold });
+        y -= 25;
+      }
+      if (evento.fecha) {
+        const fechaEvento = new Date(evento.fecha).toLocaleDateString('es-ES');
+        page.drawText(`Fecha: ${fechaEvento}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
+        y -= 25;
+      }
+      if (evento.recinto?.nombre) {
+        page.drawText(`Recinto: ${evento.recinto.nombre}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
+        y -= 25;
+      }
     }
-    page.drawText(`Estado: ${payment.status}`, { x: 50, y, size: 13, color: rgb(0,0,0) });
+    
+    page.drawText(`Estado: ${payment.status}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
     y -= 30;
 
     // Asientos
     if (payment.seats && payment.seats.length > 0) {
-      page.drawText('Asientos:', { x: 50, y, size: 14, color: rgb(0,0,0) });
+      page.drawText('Asientos:', { x: 50, y, size: 14, color: rgb(0,0,0), font: helveticaBold });
       y -= 20;
       payment.seats.forEach((seat, index) => {
-        const seatText = `${seat.name || seat.nombre} - ${seat.zona?.nombre || 'General'} - $${seat.price || 0}`;
-        page.drawText(seatText, { x: 70, y: y - (index * 18), size: 11, color: rgb(0.2,0.2,0.2) });
+        const seatText = `${seat.name || seat.nombre || 'Asiento'} - ${seat.zona?.nombre || 'General'} - $${seat.price || 0}`;
+        page.drawText(seatText, { x: 70, y: y - (index * 18), size: 11, color: rgb(0.2,0.2,0.2), font: helveticaFont });
       });
       y -= payment.seats.length * 18 + 10;
     }
 
     // Fecha de compra
     const fechaCreacion = new Date(payment.created_at).toLocaleString('es-ES');
-    page.drawText(`Fecha de compra: ${fechaCreacion}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4) });
+    page.drawText(`Fecha de compra: ${fechaCreacion}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4), font: helveticaFont });
 
     // --- Insertar QR ---
     console.log('🖼️ [DOWNLOAD] Insertando código QR en PDF...');
@@ -172,14 +215,15 @@ export default async function handler(req, res) {
       x: width - qrSize - 40,
       y: height - qrSize - 75,
       size: 10,
-      color: rgb(0.3,0.3,0.3)
+      color: rgb(0.3,0.3,0.3),
+      font: helveticaFont
     });
 
     // --- Condiciones ---
-    page.drawText('Condiciones:', { x: 50, y: 80, size: 10, color: rgb(0.2,0.2,0.2) });
-    page.drawText('• Presenta este ticket en la entrada del evento.', { x: 60, y: 65, size: 9, color: rgb(0.2,0.2,0.2) });
-    page.drawText('• El QR es único y será validado electrónicamente.', { x: 60, y: 53, size: 9, color: rgb(0.2,0.2,0.2) });
-    page.drawText('• No compartas tu ticket. Solo el primer escaneo será válido.', { x: 60, y: 41, size: 9, color: rgb(0.2,0.2,0.2) });
+    page.drawText('Condiciones:', { x: 50, y: 80, size: 10, color: rgb(0.2,0.2,0.2), font: helveticaBold });
+    page.drawText('• Presenta este ticket en la entrada del evento.', { x: 60, y: 65, size: 9, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+    page.drawText('• El QR es único y será validado electrónicamente.', { x: 60, y: 53, size: 9, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+    page.drawText('• No compartas tu ticket. Solo el primer escaneo será válido.', { x: 60, y: 41, size: 9, color: rgb(0.2,0.2,0.2), font: helveticaFont });
 
     console.log('💾 [DOWNLOAD] Guardando PDF...');
     const pdfBytes = await pdfDoc.save();
@@ -189,6 +233,9 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="ticket-${locator}.pdf"`);
     res.setHeader('Content-Length', pdfBytes.length);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     
     console.log('📤 [DOWNLOAD] Enviando PDF al cliente...');
     return res.status(200).send(Buffer.from(pdfBytes));
