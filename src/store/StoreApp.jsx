@@ -6,19 +6,8 @@ import BasicFooter from '../components/BasicFooter';
 import GlobalCartTimer from './components/GlobalCartTimer';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFoundPage from '../components/NotFoundPage';
-
 import Event from './pages/Event';
-// Importar con manejo de errores
-let EventsVenue;
-try {
-  EventsVenue = require('./pages/EventsVenue').default;
-  console.log('✅ [StoreApp] EventsVenue importado correctamente');
-} catch (error) {
-  console.error('❌ [StoreApp] Error importando EventsVenue:', error);
-  EventsVenue = () => <div>Error cargando página</div>;
-}
 import EventInfo from './pages/EventInfo';
-
 import BuyEvent from './pages/BuyEvent';
 import SelectSeats from './pages/SelectSeats';
 import CartPage from './pages/Cart';
@@ -46,6 +35,16 @@ const StoreApp = () => {
   console.log('🚀 [StoreApp] Renderizando store...');
   console.log('🔍 [StoreApp] Location:', location.pathname);
   console.log('🔍 [StoreApp] User:', user);
+
+  // Importar con manejo de errores
+  let EventsVenue;
+  try {
+    EventsVenue = require('./pages/EventsVenue').default;
+    console.log('✅ [StoreApp] EventsVenue importado correctamente');
+  } catch (error) {
+    console.error('❌ [StoreApp] Error importando EventsVenue:', error);
+    EventsVenue = () => <div>Error cargando página</div>;
+  }
 
   const showHeader =
     location.pathname.startsWith('/store') ||

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { message, Button, Space, Tooltip } from 'antd';
-import { DownloadOutlined, BugOutlined, TestOutlined, FileTextOutlined } from '@ant-design/icons';
+import { DownloadOutlined, BugOutlined, ExperimentOutlined, FileTextOutlined } from '@ant-design/icons';
 import downloadTicket from '../../../utils/downloadTicket';
 
 const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
@@ -120,7 +120,7 @@ const DownloadTicketButton = ({ locator, showDebugButtons = false }) => {
           <div style={{ display: 'flex', gap: '5px' }}>
             <Tooltip title="Probar endpoint de la API">
               <Button 
-                icon={<TestOutlined />}
+                icon={<ExperimentOutlined />}
                 onClick={testEndpoint}
                 disabled={isLoading}
                 size="small"
