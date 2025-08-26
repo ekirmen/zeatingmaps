@@ -144,6 +144,7 @@ const BoleteriaMain = () => {
   const [showCustomForms, setShowCustomForms] = useState(false);
   const [showMailChimp, setShowMailChimp] = useState(false);
   const [showPushNotifications, setShowPushNotifications] = useState(false);
+  const [showServerDiagnostic, setShowServerDiagnostic] = useState(false);
 
 
 
@@ -1215,13 +1216,20 @@ const BoleteriaMain = () => {
           </div>
         </Tooltip>
         
-        <Tooltip title="Exportar datos del evento" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={exportEventData}>
-            <UploadOutlined className="text-xl mb-1" />
-            <div>Exportar</div>
-          </div>
-        </Tooltip>
-      </div>
+                 <Tooltip title="Exportar datos del evento" placement="right">
+           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={exportEventData}>
+             <UploadOutlined className="text-xl mb-1" />
+             <div>Exportar</div>
+           </div>
+         </Tooltip>
+         
+         <Tooltip title="Diagnóstico del servidor" placement="right">
+           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowServerDiagnostic(true)}>
+             <InfoCircleOutlined className="text-xl mb-1" />
+             <div>Diagnóstico</div>
+           </div>
+         </Tooltip>
+       </div>
 
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col">
@@ -2282,18 +2290,30 @@ const BoleteriaMain = () => {
          <PushNotifications eventId={selectedEvent?.id} />
        </Modal>
 
-       {/* PaymentModal */}
-       <PaymentModal
-         open={isPaymentModalVisible}
-         onCancel={() => setIsPaymentModalVisible(false)}
-         carrito={selectedSeats}
-         selectedClient={selectedClient}
-         selectedFuncion={selectedFuncion}
-         selectedEvent={selectedEvent}
-         selectedAffiliate={null}
-       />
-    </div>
-  );
- };
+               {/* PaymentModal */}
+        <PaymentModal
+          open={isPaymentModalVisible}
+          onCancel={() => setIsPaymentModalVisible(false)}
+          carrito={selectedSeats}
+          selectedClient={selectedClient}
+          selectedFuncion={selectedFuncion}
+          selectedEvent={selectedEvent}
+          selectedAffiliate={null}
+        />
+        
+        {/* Modal de Diagnóstico del Servidor */}
+        <Modal
+          title="🔍 Diagnóstico del Servidor"
+          open={showServerDiagnostic}
+          onCancel={() => setShowServerDiagnostic(false)}
+          footer={null}
+          width={1000}
+          style={{ top: 20 }}
+        >
+          <ServerDiagnostic />
+        </Modal>
+     </div>
+   );
+  };
 
 export default BoleteriaMain; 

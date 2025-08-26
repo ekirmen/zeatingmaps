@@ -87,7 +87,7 @@
       "destination": "/static/:path*"
     },
     {
-      "source": "/:path*",
+      "source": "/((?!api|store|backoffice|dashboard|saas|static|payment-success).)*",
       "destination": "/index.html"
     }
   ],
