@@ -35,8 +35,10 @@ const Table = ({
       <Text
         text={name}
         width={type === 'circle' ? radius * 2 : width}
-        y={type === 'circle' ? -radius - 16 : -20}
+        height={type === 'circle' ? radius * 2 : undefined}
+        y={type === 'circle' ? -radius : -20}
         align="center"
+        verticalAlign={type === 'circle' ? 'middle' : undefined}
       />
       {chairs.map((chair) => (
         <Chair key={chair.id} {...chair} />
