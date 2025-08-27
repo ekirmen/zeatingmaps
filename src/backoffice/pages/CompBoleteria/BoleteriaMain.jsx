@@ -177,15 +177,9 @@ const BoleteriaMain = () => {
   // Cargar datos persistidos
   const loadPersistedData = () => {
     try {
-      const savedSeats = localStorage.getItem('selectedSeats');
-      if (savedSeats) {
-        setSelectedSeats(JSON.parse(savedSeats));
-      }
-      
-      const savedProducts = localStorage.getItem('productosCarrito');
-      if (savedProducts) {
-        setProductosCarrito(JSON.parse(savedProducts));
-      }
+      // No cargar automáticamente el carrito al recargar la página
+      // Solo mantener la selección de evento y función
+      console.log('🔄 [loadPersistedData] No cargando carrito automáticamente');
     } catch (error) {
       console.error('Error loading persisted data:', error);
     }
@@ -304,10 +298,34 @@ const BoleteriaMain = () => {
         return;
       }
 
-      setSavedCarts(data || []);
+      console.log('Saved carts loaded:', data);
     } catch (error) {
       console.error('Error loading saved carts:', error);
     }
+  };
+
+  // Función para limpiar carrito completamente
+  const clearCartCompletely = () => {
+    setSelectedSeats([]);
+    setProductosCarrito([]);
+    setSelectedPriceOption(null);
+    setActiveZoneId(null);
+    setSelectedDiscount(null);
+    setDiscountAmount(0);
+    
+    // Limpiar localStorage
+    localStorage.removeItem('selectedSeats');
+    localStorage.removeItem('productosCarrito');
+    localStorage.removeItem('boleteriaSelectedPriceId');
+    
+    message.success('Carrito limpiado completamente');
+  };
+
+  // Función para limpiar pago encontrado
+  const clearFoundPayment = () => {
+    setFoundPayment(null);
+    setLocatorSearchValue('');
+    message.success('Pago existente eliminado. Puedes hacer una nueva venta.');
   };
 
   const saveCurrentCart = async () => {
@@ -871,9 +889,13 @@ const BoleteriaMain = () => {
       setSelectedSeats(prev => {
         const isSelected = prev.find(s => s._id === seat._id);
         let newSeats;
+        
         if (isSelected) {
+          // Deseleccionar el asiento
           newSeats = prev.filter(s => s._id !== seat._id);
+          console.log('🔄 Asiento deseleccionado:', seat.nombre || seat.numero);
         } else {
+          // Seleccionar el asiento
           // Asegurar que el asiento tenga el precio correcto
           const seatWithPrice = {
             ...seat,
@@ -887,6 +909,7 @@ const BoleteriaMain = () => {
             } : null
           };
           newSeats = [...prev, seatWithPrice];
+          console.log('✅ Asiento seleccionado:', seat.nombre || seat.numero);
         }
         
         // Guardar en localStorage
@@ -1609,9 +1632,27 @@ const BoleteriaMain = () => {
               {/* Indicador de Pago Existente */}
               {selectedSeats.find(seat => seat.paymentId && seat.locator) && (
                 <div className="mb-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-green-600">✓</span>
-                    <span className="text-sm font-medium text-green-800">Pago Existente</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-600">✓</span>
+                      <span className="text-sm font-medium text-green-800">Pago Existente</span>
+                    </div>
+                    <Button 
+                      size="small" 
+                      type="text" 
+                      danger
+                      onClick={() => {
+                        // Limpiar el pago existente
+                        setSelectedSeats(prev => prev.map(seat => {
+                          const { paymentId, locator, ...cleanSeat } = seat;
+                          return cleanSeat;
+                        }));
+                        setProductosCarrito([]);
+                        message.success('Pago existente eliminado. Puedes hacer una nueva venta.');
+                      }}
+                    >
+                      Limpiar
+                    </Button>
                   </div>
                   <div className="text-xs text-green-700 mt-1">
                     Localizador: {selectedSeats.find(seat => seat.locator)?.locator}
@@ -1820,6 +1861,13 @@ const BoleteriaMain = () => {
                     >
                       Limpiar
                     </Button>
+                    <Button 
+                      size="small"
+                      onClick={clearCartCompletely}
+                      disabled={selectedSeats.length === 0 && productosCarrito.length === 0}
+                    >
+                      Limpiar Todo
+                    </Button>
                     {blockMode && blockedSeats.length > 0 && (
                       <Button 
                         size="small"
@@ -1843,555 +1891,20 @@ const BoleteriaMain = () => {
                     >
                       {!selectedFuncion ? 'Selecciona un evento' :
                        !selectedClient ? 'Selecciona un cliente' :
-                       !selectedPriceOption ? 'Selecciona una zona y precio' : 
-                       selectedSeats.length === 0 ? 'Selecciona asientos' : 
-                       (() => {
-                         const existingPayment = selectedSeats.find(seat => seat.paymentId && seat.locator);
-                         if (existingPayment) {
-                           return `Modificar Pago ${existingPayment.locator} - $${calculateTotal().toFixed(2)}`;
-                         }
-                         return `Pagar $${calculateTotal().toFixed(2)}`;
-                       })()}
+                       !selectedPriceOption ? 'Selecciona zona y precio' :
+                       selectedSeats.length === 0 ? 'Selecciona asientos' :
+                       'Procesar Pago'}
                     </Button>
                   </Tooltip>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Modal de búsqueda de eventos */}
-      <Modal
-        title="Seleccionar Evento y Función"
-        open={showEventSearch}
-        onCancel={() => setShowEventSearch(false)}
-        footer={null}
-        width={600}
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Evento</label>
-            <Select
-              placeholder="Selecciona un evento"
-              style={{ width: '100%' }}
-              onChange={handleEventSelectForSearch}
-              value={selectedEventForSearch?.id}
-            >
-              {availableEvents.map(event => (
-                <Option key={event.id} value={event.id}>
-                  {event.nombre} - {new Date(event.fecha_evento).toLocaleDateString('es-ES')}
-                </Option>
-              ))}
-            </Select>
-          </div>
-          
-          {selectedEventForSearch && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Función</label>
-              <Select
-                placeholder="Selecciona una función"
-                style={{ width: '100%' }}
-                onChange={handleFunctionSelectForSearch}
-                value={selectedFunctionForSearch?.id}
-              >
-                {availableFunctions.map(func => (
-                  <Option key={func.id} value={func.id}>
-                    {func.sala?.nombre || 'Sala sin nombre'} - {new Date(func.fecha_celebracion).toLocaleString('es-ES')}
-                  </Option>
-                ))}
-              </Select>
-            </div>
-          )}
-        </div>
-      </Modal>
-
-      {/* Modal de búsqueda de usuarios */}
-      <Modal
-        title="Buscar/Agregar Usuario"
-        open={showUserSearch}
-        onCancel={() => setShowUserSearch(false)}
-        footer={null}
-        width={600}
-      >
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Buscar por email</label>
-            <Input.Search
-              placeholder="Ingresa el email del usuario"
-              value={userSearchValue}
-              onChange={(e) => setUserSearchValue(e.target.value)}
-              onSearch={async (value) => {
-                if (!value) return;
-                setUserSearchLoading(true);
-                try {
-                  const { data, error } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .ilike('login', `%${value}%`)
-                    .limit(10);
                   
-                  if (error) throw error;
-                  setUserSearchResults(data || []);
-                } catch (error) {
-                  console.error('Error searching users:', error);
-                  message.error('Error al buscar usuarios');
-                } finally {
-                  setUserSearchLoading(false);
-                }
-              }}
-              loading={userSearchLoading}
-            />
-          </div>
-          
-          {userSearchResults.length > 0 && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Resultados</label>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {userSearchResults.map(user => (
-                  <div key={user.id} className="flex items-center justify-between p-3 border rounded">
-                    <div>
-                      <div className="font-medium">{user.login}</div>
-                      <div className="text-sm text-gray-500">{user.empresa || 'Sin empresa'}</div>
+                  {/* Botón de descargar tickets si hay asientos seleccionados */}
+                  {selectedSeats.length > 0 && (
+                    <div className="mt-3">
+                      <DownloadTicketButton 
+                        locator={selectedSeats.find(seat => seat.locator)?.locator || 'temp'}
+                        showDebugButtons={false}
+                        disabled={!selectedSeats.find(seat => seat.locator)}
+                      />
                     </div>
-                                         <Button 
-                       size="small" 
-                       type="primary"
-                       onClick={() => {
-                         setSelectedClient(user);
-                         message.success(`Usuario seleccionado: ${user.login}`);
-                         setShowUserSearch(false);
-                       }}
-                     >
-                       Seleccionar
-                     </Button>
-                  </div>
-                ))}
+                  )}
               </div>
-            </div>
-          )}
-          
-          <div className="border-t pt-4">
-            <Button 
-              type="dashed" 
-              block
-              onClick={() => setShowCreateUser(true)}
-            >
-              Crear Nuevo Usuario
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-             {/* Modal para crear usuario */}
-       <Modal
-         title="Crear Nuevo Usuario"
-         open={showCreateUser}
-         onCancel={() => setShowCreateUser(false)}
-         footer={null}
-         width={500}
-       >
-         <div className="space-y-4">
-           <div>
-             <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-             <Input 
-               placeholder="usuario@ejemplo.com"
-               value={newUserData.email}
-               onChange={(e) => setNewUserData(prev => ({ ...prev, email: e.target.value }))}
-             />
-           </div>
-           <div>
-             <label className="block text-sm font-medium text-gray-700 mb-2">Empresa (opcional)</label>
-             <Input 
-               placeholder="Nombre de la empresa"
-               value={newUserData.empresa}
-               onChange={(e) => setNewUserData(prev => ({ ...prev, empresa: e.target.value }))}
-             />
-           </div>
-           <div>
-             <label className="block text-sm font-medium text-gray-700 mb-2">Teléfono (opcional)</label>
-             <Input 
-               placeholder="+1 234 567 8900"
-               value={newUserData.telefono}
-               onChange={(e) => setNewUserData(prev => ({ ...prev, telefono: e.target.value }))}
-             />
-           </div>
-           <div className="flex space-x-2">
-             <Button 
-               type="primary"
-               onClick={handleCreateUser}
-             >
-               Crear Usuario
-             </Button>
-             <Button onClick={() => setShowCreateUser(false)}>
-               Cancelar
-             </Button>
-           </div>
-         </div>
-               </Modal>
-
-        {/* Modal de Descuentos */}
-        <Modal
-          title="Aplicar Descuento"
-          open={showDiscountModal}
-          onCancel={() => setShowDiscountModal(false)}
-          footer={null}
-          width={500}
-        >
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Descuento</label>
-              <Select
-                value={discountType}
-                onChange={setDiscountType}
-                style={{ width: '100%' }}
-              >
-                <Option value="percentage">Porcentaje (%)</Option>
-                <Option value="fixed">Monto Fijo ($)</Option>
-              </Select>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {discountType === 'percentage' ? 'Porcentaje de Descuento' : 'Monto de Descuento'}
-              </label>
-              <Input
-                type="number"
-                placeholder={discountType === 'percentage' ? '10' : '50.00'}
-                value={discountAmount}
-                onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
-                addonAfter={discountType === 'percentage' ? '%' : '$'}
-              />
-            </div>
-            
-            {discountAmount > 0 && (
-              <div className="p-3 bg-blue-50 rounded-lg">
-                <div className="text-sm">
-                  <div className="flex justify-between">
-                    <span>Subtotal:</span>
-                    <span>${calculateSubtotal().toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-green-600">
-                    <span>Descuento:</span>
-                    <span>-${discountType === 'percentage' ? 
-                      ((calculateSubtotal() * discountAmount) / 100).toFixed(2) : 
-                      discountAmount.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between font-bold">
-                    <span>Total:</span>
-                    <span>${calculateTotal().toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            <div className="flex space-x-2">
-              <Button 
-                type="primary"
-                onClick={() => {
-                  if (discountAmount > 0) {
-                    setSelectedDiscount(true);
-                    message.success('Descuento aplicado correctamente');
-                    setShowDiscountModal(false);
-                  } else {
-                    message.error('Ingresa un valor válido para el descuento');
-                  }
-                }}
-              >
-                Aplicar Descuento
-              </Button>
-              <Button 
-                onClick={() => {
-                  setSelectedDiscount(null);
-                  setDiscountAmount(0);
-                  setShowDiscountModal(false);
-                }}
-              >
-                Remover Descuento
-              </Button>
-            </div>
-          </div>
-        </Modal>
-
-                 {/* Modal de Búsqueda por Localizador */}
-         <Modal
-           title="Buscar por Localizador"
-           open={showLocatorSearch}
-           onCancel={() => setShowLocatorSearch(false)}
-           footer={null}
-           width={600}
-         >
-           <div className="space-y-4">
-             <div>
-               <label className="block text-sm font-medium text-gray-700 mb-2">Localizador</label>
-               <Input.Search
-                 placeholder="Ingresa el localizador del pago"
-                 value={locatorSearchValue}
-                 onChange={(e) => setLocatorSearchValue(e.target.value)}
-                 onSearch={handleLocatorSearch}
-                 loading={locatorSearchLoading}
-                 enterButton="Buscar"
-               />
-             </div>
-             
-             {/* Información del pago encontrado */}
-             {foundPayment && (
-               <div className="border rounded-lg p-4 bg-gray-50">
-                 <h4 className="font-medium text-lg mb-3">Pago Encontrado</h4>
-                 <div className="space-y-2 text-sm">
-                   <div><strong>Localizador:</strong> {foundPayment.locator}</div>
-                   <div><strong>Estado:</strong> {foundPayment.status}</div>
-                   <div><strong>Total:</strong> ${foundPayment.total?.toFixed(2) || '0.00'}</div>
-                   <div><strong>Fecha:</strong> {new Date(foundPayment.created_at).toLocaleString('es-ES')}</div>
-                   {foundPayment.event && (
-                     <div><strong>Evento:</strong> {foundPayment.event.nombre}</div>
-                   )}
-                   {foundPayment.user && (
-                     <div><strong>Cliente:</strong> {foundPayment.user.login || foundPayment.user.email}</div>
-                   )}
-                   
-                   {/* Detalles de asientos */}
-                   {foundPayment.seats && (
-                     <div className="mt-3">
-                       <strong>Asientos:</strong>
-                       <div className="ml-4 text-xs">
-                         {Array.isArray(foundPayment.seats) ? (
-                           foundPayment.seats.map((seat, index) => (
-                             <div key={index}>
-                               • {seat.name || seat.nombre} - ${(seat.price || seat.precio || 0).toFixed(2)}
-                             </div>
-                           ))
-                         ) : (
-                           <div>• {foundPayment.seats}</div>
-                         )}
-                       </div>
-                     </div>
-                   )}
-                   
-                   {/* Detalles de productos */}
-                   {foundPayment.products && foundPayment.products.length > 0 && (
-                     <div className="mt-3">
-                       <strong>Productos:</strong>
-                       <div className="ml-4 text-xs">
-                         {Array.isArray(foundPayment.products) ? (
-                           foundPayment.products.map((product, index) => (
-                             <div key={index}>
-                               • {product.nombre} x{product.cantidad} - ${(product.precio || 0).toFixed(2)}
-                             </div>
-                           ))
-                         ) : (
-                           <div>• {foundPayment.products}</div>
-                         )}
-                       </div>
-                     </div>
-                   )}
-                   
-                   {/* Detalles de pagos */}
-                   {foundPayment.payments && foundPayment.payments.length > 0 && (
-                     <div className="mt-3">
-                       <strong>Formas de Pago:</strong>
-                       <div className="ml-4 text-xs">
-                         {foundPayment.payments.map((payment, index) => (
-                           <div key={index}>
-                             • {payment.method} - ${payment.amount?.toFixed(2) || '0.00'}
-                           </div>
-                         ))}
-                       </div>
-                     </div>
-                   )}
-                 </div>
-                 
-                 {/* Botón de descarga */}
-                 <div className="mt-4">
-                   <DownloadTicketButton 
-                     locator={foundPayment.locator} 
-                     showDebugButtons={true}
-                   />
-                 </div>
-                 
-                 {/* Diagnóstico del servidor */}
-                 <div className="mt-4">
-                   <ServerDiagnostic />
-                 </div>
-                 
-                 {/* Botón para cargar en el carrito */}
-                 <div className="mt-3">
-                   <Button 
-                     type="primary" 
-                     size="small"
-                     onClick={() => {
-                       message.success('Pago cargado en el carrito. Puedes modificar o procesar el pago.');
-                       setShowLocatorSearch(false);
-                     }}
-                     block
-                   >
-                     Cargar en Carrito
-                   </Button>
-                 </div>
-                 
-                 {/* Información sobre funciones disponibles */}
-                 <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700">
-                   <strong>Funciones disponibles:</strong><br/>
-                   • Descarga principal con autenticación<br/>
-                   • Descarga simple para testing<br/>
-                   • Búsqueda y carga de pagos existentes
-                 </div>
-               </div>
-             )}
-             
-             <div className="text-sm text-gray-600">
-               <p>• Busca pagos existentes por su localizador</p>
-               <p>• Carga automáticamente el evento, cliente y asientos</p>
-               <p>• Útil para consultas y modificaciones</p>
-               <p>• Descarga tickets en formato PDF</p>
-             </div>
-           </div>
-         </Modal>
-
-             {/* Modal de Gestión de Carritos */}
-       <Modal
-         title="Gestión de Carritos Guardados"
-         open={showCartManagement}
-         onCancel={() => setShowCartManagement(false)}
-         footer={null}
-         width={800}
-       >
-         <div className="space-y-4">
-           <div className="flex justify-between items-center">
-             <h3 className="text-lg font-medium">Carritos Guardados</h3>
-             <Button 
-               type="primary" 
-               onClick={saveCurrentCart}
-               disabled={!selectedClient || (selectedSeats.length === 0 && productosCarrito.length === 0)}
-             >
-               Guardar Carrito Actual
-             </Button>
-           </div>
-           
-           {savedCarts.length === 0 ? (
-             <div className="text-center py-8">
-               <Text type="secondary">No hay carritos guardados</Text>
-             </div>
-           ) : (
-             <div className="space-y-3 max-h-96 overflow-y-auto">
-               {savedCarts.map((cart) => (
-                 <div key={cart.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                   <div className="flex justify-between items-start">
-                     <div className="flex-1">
-                       <div className="font-medium">
-                         Cliente: {cart.client_id ? `ID: ${cart.client_id}` : 'N/A'}
-                       </div>
-                       <div className="text-sm text-gray-600">
-                         Evento: {cart.event_id ? `ID: ${cart.event_id}` : 'N/A'}
-                       </div>
-                       <div className="text-sm text-gray-600">
-                         Asientos: {cart.seats?.length || 0} | Productos: {cart.products?.length || 0}
-                       </div>
-                       <div className="text-sm font-medium text-green-600">
-                         Total: ${cart.total?.toFixed(2) || '0.00'}
-                       </div>
-                       <div className="text-xs text-gray-500">
-                         {new Date(cart.created_at).toLocaleString('es-ES')}
-                       </div>
-                     </div>
-                     <div className="flex space-x-2">
-                       <Button 
-                         size="small" 
-                         type="primary"
-                         onClick={() => loadSavedCart(cart.id)}
-                       >
-                         Cargar
-                       </Button>
-                       <Button 
-                         size="small" 
-                         danger
-                         onClick={async () => {
-                           try {
-                             await supabase
-                               .from('saved_carts')
-                               .delete()
-                               .eq('id', cart.id);
-                             message.success('Carrito eliminado');
-                             loadSavedCarts();
-                           } catch (error) {
-                             message.error('Error al eliminar el carrito');
-                           }
-                         }}
-                       >
-                         Eliminar
-                       </Button>
-                     </div>
-                   </div>
-                 </div>
-               ))}
-             </div>
-           )}
-         </div>
-       </Modal>
-
-       {/* Modal de formularios personalizados */}
-       <Modal
-         title="Formularios Personalizados"
-         open={showCustomForms}
-         onCancel={() => setShowCustomForms(false)}
-         footer={null}
-         width={1200}
-         style={{ top: 20 }}
-       >
-         <CustomFormBuilder 
-           eventId={selectedEvent?.id}
-           onSave={(form) => {
-             message.success('Formulario guardado correctamente');
-             setShowCustomForms(false);
-           }}
-         />
-       </Modal>
-
-       {/* Modal de integración MailChimp */}
-       <Modal
-         title="Integración con MailChimp"
-         open={showMailChimp}
-         onCancel={() => setShowMailChimp(false)}
-         footer={null}
-         width={800}
-       >
-         <MailChimpIntegration eventId={selectedEvent?.id} />
-       </Modal>
-
-       {/* Modal de notificaciones push */}
-       <Modal
-         title="Notificaciones Push"
-         open={showPushNotifications}
-         onCancel={() => setShowPushNotifications(false)}
-         footer={null}
-         width={800}
-       >
-         <PushNotifications eventId={selectedEvent?.id} />
-       </Modal>
-
-               {/* PaymentModal */}
-        <PaymentModal
-          open={isPaymentModalVisible}
-          onCancel={() => setIsPaymentModalVisible(false)}
-          carrito={selectedSeats}
-          selectedClient={selectedClient}
-          selectedFuncion={selectedFuncion}
-          selectedEvent={selectedEvent}
-          selectedAffiliate={null}
-        />
-        
-        {/* Modal de Diagnóstico del Servidor */}
-        <Modal
-          title="🔍 Diagnóstico del Servidor"
-          open={showServerDiagnostic}
-          onCancel={() => setShowServerDiagnostic(false)}
-          footer={null}
-          width={1000}
-          style={{ top: 20 }}
-        >
-          <ServerDiagnostic />
-        </Modal>
-     </div>
-   );
-  };
-
-export default BoleteriaMain; 

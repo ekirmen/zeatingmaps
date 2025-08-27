@@ -281,7 +281,51 @@ export const useBoleteria = () => {
                   }
                 });
               }
+              
+              // También contar asientos individuales (type: 'silla')
+              if (elemento.type === 'silla') {
+                totalSeats++;
+                switch (elemento.estado) {
+                  case 'pagado':
+                  case 'vendido':
+                    soldSeats++;
+                    break;
+                  case 'reservado':
+                    reservedSeats++;
+                    break;
+                  case 'disponible':
+                  default:
+                    availableSeats++;
+                    break;
+                }
+              }
             });
+            
+            // Si no hay asientos en el formato esperado, intentar con el formato de zonas
+            if (totalSeats === 0 && mapData.contenido.zonas && Array.isArray(mapData.contenido.zonas)) {
+              console.log('🔍 [useBoleteria] Intentando calcular estadísticas desde zonas');
+              mapData.contenido.zonas.forEach(zona => {
+                if (zona.asientos && Array.isArray(zona.asientos)) {
+                  totalSeats += zona.asientos.length;
+                  
+                  zona.asientos.forEach(silla => {
+                    switch (silla.estado) {
+                      case 'pagado':
+                      case 'vendido':
+                        soldSeats++;
+                        break;
+                      case 'reservado':
+                        reservedSeats++;
+                        break;
+                      case 'disponible':
+                      default:
+                        availableSeats++;
+                        break;
+                    }
+                  });
+                }
+              });
+            }
             
             console.log('✅ [useBoleteria] Estadísticas calculadas:', {
               totalSeats,
@@ -290,13 +334,17 @@ export const useBoleteria = () => {
               reservedSeats
             });
             
-            // Mostrar notificación de disponibilidad
-            if (availableSeats <= 5 && availableSeats > 0) {
-              message.warning(`⚠️ Solo quedan ${availableSeats} asientos disponibles`);
-            } else if (availableSeats === 0) {
-              message.error('❌ No hay asientos disponibles');
-            } else if (availableSeats <= 10) {
-              message.info(`ℹ️ Quedan ${availableSeats} asientos disponibles`);
+            // Solo mostrar mensajes si realmente hay asientos y hay problemas de disponibilidad
+            if (totalSeats > 0) {
+              if (availableSeats <= 5 && availableSeats > 0) {
+                message.warning(`⚠️ Solo quedan ${availableSeats} asientos disponibles`);
+              } else if (availableSeats === 0) {
+                message.error('❌ No hay asientos disponibles');
+              } else if (availableSeats <= 10) {
+                message.info(`ℹ️ Quedan ${availableSeats} asientos disponibles`);
+              }
+            } else {
+              console.log('⚠️ [useBoleteria] No se encontraron asientos en el mapa');
             }
           } else {
             console.log('⚠️ [useBoleteria] Mapa cargado pero sin contenido válido o no es array');
