@@ -131,7 +131,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const handleEmailSearch = async (email) => {
     setSearchLoading(true);
     try {
-      // First lookup the user by email to obtain the associated id
+      // Obtener primero el usuario por email para tener su id asociado
       const { data: userResp, error: userError } = await getUserByEmail(email);
 
       if (userError || !userResp || !userResp.user) {
@@ -140,11 +140,34 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
 
       const { data, error } = await supabase
         .from('payments')
-        .select('locator, status, created_at, event:eventos(nombre), funcion:funciones(fecha:fecha_celebracion)')
+        .select(
+          `id, locator, status, created_at, event, eventData:eventos(nombre),
+           funcion:funciones(id, fecha_celebracion, evento)`
+        )
         .eq('usuario_id', userResp.user.id);
 
       if (error) throw error;
-      setEmailSearchResults(data || []);
+
+      const payments = data || [];
+
+      // Si falta información de evento, intentar completarla a partir de la función
+      for (const payment of payments) {
+        if (!payment.event && payment.funcion?.evento) {
+          await supabase
+            .from('payments')
+            .update({ event: payment.funcion.evento })
+            .eq('id', payment.id);
+          payment.event = payment.funcion.evento;
+        }
+      }
+
+      const formatted = payments.map((p) => ({
+        ...p,
+        event_name: p.eventData?.nombre || 'Sin evento',
+        funcion_fecha: p.funcion?.fecha_celebracion || null
+      }));
+
+      setEmailSearchResults(formatted);
     } catch (err) {
       message.error(err.message);
     } finally {
@@ -392,6 +415,12 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             className="mt-4"
             columns={[
               { title: 'Localizador', dataIndex: 'locator' },
+              { title: 'Evento', dataIndex: 'event_name' },
+              {
+                title: 'Función',
+                dataIndex: 'funcion_fecha',
+                render: (date) => (date ? new Date(date).toLocaleString() : '-')
+              },
               { title: 'Estado', dataIndex: 'status' },
               { title: 'Fecha', dataIndex: 'created_at', render: (date) => new Date(date).toLocaleDateString() },
               {
