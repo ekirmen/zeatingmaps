@@ -52,26 +52,26 @@ export default async function handler(req, res) {
     
     console.log('✅ [DEBUG] Configuración validada correctamente');
     
-    // 1. Verificar conectividad básica
-    console.log('🔍 [DEBUG] Probando conectividad básica...');
-    const { data: testData, error: testError } = await supabaseAdmin
+    // 1. Verificar conectividad básica y estructura de la tabla
+    console.log('🔍 [DEBUG] Verificando estructura de la tabla payments...');
+    const { data: tableInfo, error: tableError } = await supabaseAdmin
       .from('payments')
-      .select('count')
+      .select('*')
       .limit(1);
     
-    if (testError) {
-      console.error('❌ [DEBUG] Error de conectividad básica:', testError);
+    if (tableError) {
+      console.error('❌ [DEBUG] Error accediendo a tabla payments:', tableError);
       return res.status(500).json({
-        error: 'Database connectivity error',
-        details: testError.message,
-        code: testError.code
+        error: 'Database table access error',
+        details: tableError.message,
+        code: tableError.code
       });
     }
     
-    console.log('✅ [DEBUG] Conectividad básica OK');
+    console.log('✅ [DEBUG] Tabla payments accesible');
     
-    // 2. Buscar el pago específico
-    console.log('🔍 [DEBUG] Buscando pago específico...');
+    // 2. Buscar el pago específico por locator
+    console.log('🔍 [DEBUG] Buscando pago por locator:', locator);
     const { data: payment, error: paymentError } = await supabaseAdmin
       .from('payments')
       .select('*')
@@ -79,7 +79,7 @@ export default async function handler(req, res) {
       .maybeSingle();
     
     if (paymentError) {
-      console.error('❌ [DEBUG] Error buscando pago:', paymentError);
+      console.error('❌ [DEBUG] Error buscando pago por locator:', paymentError);
       return res.status(500).json({
         error: 'Database query error',
         details: paymentError.message,
@@ -88,18 +88,42 @@ export default async function handler(req, res) {
     }
     
     if (!payment) {
-      console.log('❌ [DEBUG] Pago no encontrado');
+      console.log('❌ [DEBUG] Pago no encontrado por locator');
       
       // 3. Buscar pagos similares para debug
       console.log('🔍 [DEBUG] Buscando pagos similares...');
       const { data: similarPayments, error: similarError } = await supabaseAdmin
         .from('payments')
-        .select('locator, created_at, status')
-        .limit(5)
+        .select('id, locator, created_at, status, funcion, event')
+        .limit(10)
         .order('created_at', { ascending: false });
       
       if (similarError) {
         console.error('❌ [DEBUG] Error buscando pagos similares:', similarError);
+      }
+      
+      // 4. Buscar por locator parcial (LIKE)
+      console.log('🔍 [DEBUG] Buscando por locator parcial...');
+      const { data: partialMatches, error: partialError } = await supabaseAdmin
+        .from('payments')
+        .select('id, locator, created_at, status')
+        .ilike('locator', `%${locator}%`)
+        .limit(5);
+      
+      if (partialError) {
+        console.error('❌ [DEBUG] Error buscando coincidencias parciales:', partialError);
+      }
+      
+      // 5. Verificar si hay pagos sin locator
+      console.log('🔍 [DEBUG] Verificando pagos sin locator...');
+      const { data: noLocatorPayments, error: noLocatorError } = await supabaseAdmin
+        .from('payments')
+        .select('id, locator, created_at, status')
+        .is('locator', null)
+        .limit(5);
+      
+      if (noLocatorError) {
+        console.error('❌ [DEBUG] Error verificando pagos sin locator:', noLocatorError);
       }
       
       return res.status(404).json({
@@ -108,41 +132,52 @@ export default async function handler(req, res) {
           searchedLocator: locator,
           totalPayments: similarPayments?.length || 0,
           recentPayments: similarPayments || [],
-          message: 'El pago con este localizador no existe en la base de datos'
+          partialMatches: partialMatches || [],
+          noLocatorPayments: noLocatorPayments || [],
+          message: 'El pago con este localizador no existe en la base de datos',
+          recommendations: [
+            'Verificar que el localizador esté escrito correctamente',
+            'Verificar que el pago realmente existe',
+            'Considerar crear un índice en el campo locator',
+            'Verificar que no haya pagos sin localizador'
+          ]
         }
       });
     }
     
     console.log('✅ [DEBUG] Pago encontrado:', payment.id);
     
-    // 4. Verificar relaciones
+    // 6. Verificar relaciones
     console.log('🔍 [DEBUG] Verificando relaciones...');
     const { data: funcion, error: funcionError } = await supabaseAdmin
       .from('funciones')
       .select('*')
-      .eq('id', payment.funcion_id)
+      .eq('id', payment.funcion)
       .maybeSingle();
     
     let seats = [];
     let seatsError = null;
-    if (payment.funcion_id) {
+    if (payment.funcion) {
       const { data: seatsData, error: seatsErr } = await supabaseAdmin
         .from('seats')
         .select('*')
-        .eq('funcion_id', payment.funcion_id);
+        .eq('funcion_id', payment.funcion);
       
       seats = seatsData || [];
       seatsError = seatsErr;
     }
     
-    // 5. Respuesta de debug completa
+    // 7. Respuesta de debug completa
     const debugInfo = {
       payment: {
         id: payment.id,
         locator: payment.locator,
         status: payment.status,
         created_at: payment.created_at,
-        funcion_id: payment.funcion_id
+        funcion: payment.funcion,
+        event: payment.event,
+        monto: payment.monto,
+        tenant_id: payment.tenant_id
       },
       relationships: {
         funcion: funcion ? '✅ Encontrada' : '❌ No encontrada',

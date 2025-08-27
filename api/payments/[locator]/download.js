@@ -87,24 +87,11 @@ export default async function handler(req, res) {
 
     console.log('✅ [DOWNLOAD] Usuario autenticado correctamente:', user.id);
 
-    // Get payment data with more comprehensive information
+    // Get payment data - SIMPLIFIED QUERY to avoid join issues
     console.log('🔍 [DOWNLOAD] Buscando pago con localizador:', locator);
     const { data: payment, error } = await supabaseAdmin
       .from('payments')
-      .select(`
-        *,
-        funcion:funciones(
-          *,
-          evento:eventos(
-            *,
-            recinto:recintos(
-              *,
-              imagenes:recinto_imagenes(*)
-            ),
-            imagenes:evento_imagenes(*)
-          )
-        )
-      `)
+      .select('*')
       .eq('locator', locator)
       .single();
 
@@ -118,15 +105,12 @@ export default async function handler(req, res) {
 
     // Get seats for this function if available
     let seats = [];
-    if (payment.funcion?.id) {
-      console.log('🔍 [DOWNLOAD] Buscando asientos para función:', payment.funcion.id);
+    if (payment.funcion) {
+      console.log('🔍 [DOWNLOAD] Buscando asientos para función:', payment.funcion);
       const { data: seatsData, error: seatsError } = await supabaseAdmin
         .from('seats')
-        .select(`
-          *,
-          zona:zonas(*)
-        `)
-        .eq('funcion_id', payment.funcion.id);
+        .select('*')
+        .eq('funcion_id', payment.funcion);
       
       if (seatsError) {
         console.warn('⚠️ [DOWNLOAD] Error obteniendo asientos:', seatsError);
@@ -194,7 +178,7 @@ async function generateSimplePDF(req, res, locator) {
 
     // Fecha
     const fechaCreacion = new Date().toLocaleString('es-ES');
-    page.drawText(`Fecha de generación: ${fechaCreacion}`, { x: 50, y: 80, size: 11, color: rgb(0.4,0.4,0.4), font: helveticaFont });
+    page.drawText(`Fecha de generación: ${fechaCreacion}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4), font: helveticaFont });
 
     // Mensaje de prueba
     page.drawText('Si puedes ver este PDF, la generación está funcionando correctamente', { 
@@ -278,33 +262,21 @@ async function generateFullPDF(req, res, payment, locator) {
     page.drawText(`Localizador: ${payment.locator}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
     y -= 25;
     
-    // Información del evento si está disponible
-    if (payment.funcion?.evento) {
-      const evento = payment.funcion.evento;
-      if (evento.nombre) {
-        page.drawText(`Evento: ${evento.nombre}`, { x: 50, y, size: 14, color: rgb(0,0,0), font: helveticaBold });
-        y -= 25;
-      }
-      if (evento.fecha) {
-        const fechaEvento = new Date(evento.fecha).toLocaleDateString('es-ES');
-        page.drawText(`Fecha: ${fechaEvento}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
-        y -= 25;
-      }
-      if (evento.recinto?.nombre) {
-        page.drawText(`Recinto: ${evento.recinto.nombre}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
-        y -= 25;
-      }
-    }
-    
+    // Información básica del pago
     page.drawText(`Estado: ${payment.status}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
-    y -= 30;
+    y -= 25;
+    
+    if (payment.monto) {
+      page.drawText(`Monto: $${payment.monto}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
+      y -= 25;
+    }
 
     // Asientos
     if (payment.seats && payment.seats.length > 0) {
       page.drawText('Asientos:', { x: 50, y, size: 14, color: rgb(0,0,0), font: helveticaBold });
       y -= 20;
       payment.seats.forEach((seat, index) => {
-        const seatText = `${seat.name || seat.nombre || 'Asiento'} - ${seat.zona?.nombre || 'General'} - $${seat.price || 0}`;
+        const seatText = `${seat.id || 'Asiento'} - ${seat.zona || 'General'}`;
         page.drawText(seatText, { x: 70, y: y - (index * 18), size: 11, color: rgb(0.2,0.2,0.2), font: helveticaFont });
       });
       y -= payment.seats.length * 18 + 10;
