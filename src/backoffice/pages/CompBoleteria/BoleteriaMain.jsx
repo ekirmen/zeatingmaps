@@ -86,6 +86,7 @@ const BoleteriaMain = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [blockedSeats, setBlockedSeats] = useState([]);
   const [blockMode, setBlockMode] = useState(false);
+  const [searchBySeatMode, setSearchBySeatMode] = useState(false);
   const [productosCarrito, setProductosCarrito] = useState([]);
   const [activeTab, setActiveTab] = useState('mapa');
   const [selectedPriceOption, setSelectedPriceOption] = useState(null);
@@ -667,6 +668,53 @@ const BoleteriaMain = () => {
     }
   };
 
+  const loadPaymentIntoCart = (payment) => {
+    setSelectedClient(payment.user);
+    setSelectedEvent(payment.event);
+    setSelectedFuncion(payment.funcion);
+
+    let seats = [];
+    if (Array.isArray(payment.seats)) {
+      seats = payment.seats;
+    } else if (typeof payment.seats === 'string') {
+      try {
+        seats = JSON.parse(payment.seats);
+      } catch {
+        try {
+          seats = JSON.parse(JSON.parse(payment.seats));
+        } catch {
+          seats = [];
+        }
+      }
+    }
+
+    const processedSeats = seats.map(seat => ({
+      ...seat,
+      _id: seat.id || seat._id,
+      nombre: seat.name || seat.nombre,
+      precio: seat.price || seat.precio,
+      zonaId: seat.zona || seat.zonaId,
+      mesa: seat.mesa,
+      paymentId: payment.id,
+      locator: payment.locator
+    }));
+
+    setSelectedSeats(processedSeats);
+
+    if (payment.products && Array.isArray(payment.products)) {
+      setProductosCarrito(payment.products);
+    } else if (typeof payment.products === 'string') {
+      try {
+        const products = JSON.parse(payment.products);
+        setProductosCarrito(Array.isArray(products) ? products : []);
+      } catch {
+        setProductosCarrito([]);
+      }
+    } else {
+    setProductosCarrito([]);
+    }
+  };
+
   const handleLocatorSearch = async () => {
     if (!locatorSearchValue) {
       message.error('Ingresa un localizador');
@@ -696,52 +744,7 @@ const BoleteriaMain = () => {
       // Almacenar el pago encontrado
       setFoundPayment(payment);
 
-      // Cargar los datos del pago
-      setSelectedClient(payment.user);
-      setSelectedEvent(payment.event);
-      setSelectedFuncion(payment.funcion);
-
-      // Parsear los asientos del pago (pueden venir como string JSON)
-      let seats = [];
-      if (Array.isArray(payment.seats)) {
-        seats = payment.seats;
-      } else if (typeof payment.seats === 'string') {
-        try {
-          seats = JSON.parse(payment.seats);
-        } catch {
-          try {
-            seats = JSON.parse(JSON.parse(payment.seats));
-          } catch {
-            seats = [];
-          }
-        }
-      }
-
-      // Asegurar que los asientos tengan la estructura correcta
-      const processedSeats = seats.map(seat => ({
-        ...seat,
-        _id: seat.id || seat._id,
-        nombre: seat.name || seat.nombre,
-        precio: seat.price || seat.precio,
-        zonaId: seat.zona || seat.zonaId,
-        mesa: seat.mesa,
-        paymentId: payment.id, // Agregar el ID del pago existente
-        locator: payment.locator // Agregar el localizador existente
-      }));
-
-      setSelectedSeats(processedSeats);
-
-      // Cargar productos si existen
-      if (payment.products && Array.isArray(payment.products)) {
-        setProductosCarrito(payment.products);
-      } else if (typeof payment.products === 'string') {
-        try {
-          const products = JSON.parse(payment.products);
-          setProductosCarrito(Array.isArray(products) ? products : []);
-        } catch {
-          setProductosCarrito([]);
-        }
-      }
+      loadPaymentIntoCart(payment);
 
       if (payment.event) {
         message.success(`Pago encontrado: ${payment.event.nombre} - Localizador: ${payment.locator}`);
@@ -755,6 +758,32 @@ const BoleteriaMain = () => {
       setFoundPayment(null);
     } finally {
       setLocatorSearchLoading(false);
+    }
+  };
+
+  const handleSearchSaleBySeat = async (seat) => {
+    try {
+      const { data: payment, error } = await supabase
+        .from('payments')
+        .select(`
+          *,
+          user:profiles!usuario_id(*),
+          event:eventos(*),
+          funcion:funciones(*)
+        `)
+        .contains('seats', [{ id: seat._id }])
+        .single();
+
+      if (error || !payment) {
+        message.error('Venta no encontrada para este asiento');
+        return;
+      }
+
+      loadPaymentIntoCart(payment);
+      message.success(`Venta encontrada: ${payment.locator}`);
+    } catch (err) {
+      console.error('Error searching sale by seat:', err);
+      message.error('Error al buscar la venta por asiento');
     }
   };
 
@@ -866,7 +895,16 @@ const BoleteriaMain = () => {
     console.log('🪑 handleSeatClick llamado con:', seat);
     console.log('🔍 selectedPriceOption:', selectedPriceOption);
     console.log('🔍 blockMode:', blockMode);
-    
+
+    if (searchBySeatMode) {
+      if (seat.estado !== 'pagado') {
+        message.warning('Selecciona un asiento vendido');
+        return;
+      }
+      handleSearchSaleBySeat(seat);
+      return;
+    }
+
     if (blockMode) {
       console.log('🔒 Modo bloqueo activo');
       setBlockedSeats(prev => {
@@ -973,6 +1011,13 @@ const BoleteriaMain = () => {
     setBlockMode(checked);
     if (!checked) {
       setBlockedSeats([]); // Limpiar asientos bloqueados al desactivar
+    }
+  };
+
+  const handleSearchBySeatToggle = (checked) => {
+    setSearchBySeatMode(checked);
+    if (checked) {
+      setBlockMode(false);
     }
   };
 
@@ -1133,7 +1178,8 @@ const BoleteriaMain = () => {
                   <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-500"></div><span>Seleccionado</span></div>
                   <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-orange-500"></div><span>Bloqueado por mí</span></div>
                   <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><span>Bloqueado por otro</span></div>
-                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-gray-500"></div><span>Vendido/Reservado</span></div>
+                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-gray-500"></div><span>Vendido</span></div>
+                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-400"></div><span>Reservado</span></div>
                 </div>
               }
               placement="top"
@@ -1576,6 +1622,10 @@ const BoleteriaMain = () => {
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-gray-500">Modo bloqueo:</span>
                     <input type="checkbox" checked={blockMode} onChange={(e) => handleBlockModeToggle(e.target.checked)} className="rounded" />
+                  </div>
+                  <div className="flex items-center space-x-1 ml-4">
+                    <input type="checkbox" checked={searchBySeatMode} onChange={(e) => handleSearchBySeatToggle(e.target.checked)} className="rounded" />
+                    <span className="text-xs text-gray-500">Buscar venta por asientos</span>
                   </div>
                   <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
                   <Tooltip title={<div className="text-xs"><div className="font-medium mb-2">Atajos de Teclado:</div><div>• <strong>Ctrl+E:</strong> Buscar eventos</div><div>• <strong>Ctrl+U:</strong> Buscar usuarios</div><div>• <strong>Ctrl+L:</strong> Búsqueda por localizador</div><div>• <strong>Ctrl+X:</strong> Exportar datos</div><div>• <strong>Escape:</strong> Cerrar modales</div></div>} placement="bottom">

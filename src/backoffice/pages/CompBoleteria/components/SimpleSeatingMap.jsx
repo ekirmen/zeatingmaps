@@ -212,9 +212,12 @@ const SimpleSeatingMap = ({
       return '#1890ff'; // Azul para bloqueado por mí
     }
     
-    // Si está vendido o reservado
-    if (seat.estado === 'pagado' || seat.estado === 'reservado') {
+    // Colores para estados especiales
+    if (seat.estado === 'pagado') {
       return '#d9d9d9'; // Gris para vendido
+    }
+    if (seat.estado === 'reservado') {
+      return '#facc15'; // Amarillo para reservado
     }
     
     // Color por defecto basado en la zona

@@ -30,7 +30,7 @@ const SeatingMap = ({
   // Memoizar el mapa de colores para evitar re-creación
   const colorMap = useMemo(() => ({
     pagado: "#9ca3af",
-    reservado: "#ef4444",
+    reservado: "#facc15",
     anulado: "#9ca3af",
     bloqueado: "#dc2626", // Rojo para asientos bloqueados
     disponible: "#60a5fa",
