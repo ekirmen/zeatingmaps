@@ -658,28 +658,32 @@ export const fetchPlantillasPorRecintoYSala = async (recintoId, salaId) => {
 };
 
 // === PAYMENTS ===
+// Función auxiliar para normalizar los asientos
+const parseSeatsArray = (rawSeats) => {
+  try {
+    let seats = rawSeats;
+    // Parsear repetidamente mientras el resultado siga siendo un string
+    while (typeof seats === 'string') {
+      seats = JSON.parse(seats);
+    }
+    return Array.isArray(seats) ? seats : [];
+  } catch (e) {
+    console.error('Error parsing seats JSON:', e);
+    return [];
+  }
+};
+
 export const createPayment = async (data) => {
   const client = supabaseAdmin || supabase;
   console.log('createPayment request:', data);
-  
+
   // Validar que los asientos no estén ya vendidos
-  let seats = data.seats;
-  
-  // Si seats es string, parsearlo; si ya es objeto, usarlo directamente
-  if (typeof seats === 'string') {
-    try {
-      seats = JSON.parse(seats);
-    } catch (e) {
-      console.error('Error parsing seats JSON:', e);
-      seats = [];
-    }
-  }
-  
-  if (seats && Array.isArray(seats)) {
+  const seats = parseSeatsArray(data.seats);
+  if (seats.length > 0) {
     const funcionId = data.funcion;
-    
+
     console.log('🔍 Validando asientos antes de crear pago:', { seats, funcionId });
-    
+
     for (const seat of seats) {
       const existingPayment = await fetchPaymentBySeat(funcionId, seat.id);
       if (existingPayment && existingPayment.status === 'pagado') {
@@ -687,17 +691,9 @@ export const createPayment = async (data) => {
       }
     }
   }
-  
+
   // Asegurar que seats se almacene como JSON (no string)
-  let seatsForDB = data.seats;
-  if (typeof seatsForDB === 'string') {
-    try {
-      seatsForDB = JSON.parse(seatsForDB);
-    } catch (e) {
-      console.error('🔍 Error: seats no es JSON válido:', seatsForDB);
-      seatsForDB = [];
-    }
-  }
+  const seatsForDB = parseSeatsArray(data.seats);
 
   // Agregar campos faltantes
   const enrichedData = {
@@ -708,12 +704,12 @@ export const createPayment = async (data) => {
     payment_gateway_id: data.payment_gateway_id || '7e797aa6-ebbf-4b3a-8b5d-caa8992018f4', // Gateway por defecto (Reservas)
     created_at: new Date().toISOString()
   };
-  
+
   console.log('🔍 Datos enriquecidos para crear pago:', enrichedData);
   console.log('🔍 Tipo de seats:', typeof enrichedData.seats);
   console.log('🔍 Seats es array:', Array.isArray(enrichedData.seats));
   console.log('🔍 Seats contenido:', JSON.stringify(enrichedData.seats, null, 2));
-  
+
   const { data: result, error } = await client
     .from('payments')
     .insert(enrichedData)
@@ -727,18 +723,8 @@ export const createPayment = async (data) => {
 // Función auxiliar para calcular el monto total
 const calculateTotalAmount = (seatsData) => {
   try {
-    let seats = seatsData;
-    
-    // Si seats es string, parsearlo; si ya es objeto, usarlo directamente
-    if (typeof seats === 'string') {
-      seats = JSON.parse(seats);
-    }
-    
-    if (Array.isArray(seats)) {
-      return seats.reduce((total, seat) => total + (seat.price || 0), 0);
-    }
-    
-    return 0;
+    const seats = parseSeatsArray(seatsData);
+    return seats.reduce((total, seat) => total + (seat.price || 0), 0);
   } catch (e) {
     console.error('Error calculando monto total:', e);
     return 0;
@@ -786,7 +772,7 @@ export const fetchPaymentBySeat = async (funcionId, seatId) => {
     .select('*, seats, funcion, event:eventos(*), user:profiles!usuario_id(*)')
     .eq('funcion', funcionId)
     .eq('status', 'pagado')
-    .filter('seats', 'cs', `[{"id":"${seatId}"}]`);
+    .contains('seats', [{ id: seatId }]);
   
   console.log('🔍 [fetchPaymentBySeat] Resultado:', { data, error });
   
