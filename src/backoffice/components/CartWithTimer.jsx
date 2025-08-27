@@ -3,7 +3,7 @@ import { message } from 'antd';
 import { AiOutlineClose, AiOutlineClockCircle } from 'react-icons/ai';
 
 const CartWithTimer = ({ 
-  carrito, 
+  carrito = [], 
   setCarrito, 
   onPaymentClick, 
   selectedClient,
@@ -13,15 +13,18 @@ const CartWithTimer = ({
   const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutos en segundos
   const [isVisible, setIsVisible] = useState(false);
 
+  // Asegurar que carrito sea un array
+  const safeCarrito = Array.isArray(carrito) ? carrito : [];
+
   // Calcular totales
-  const subtotal = carrito.reduce((sum, item) => sum + (item.precio || 0), 0);
+  const subtotal = safeCarrito.reduce((sum, item) => sum + (item.precio || 0), 0);
   const commission = selectedAffiliate
     ? (selectedAffiliate.base || 0) + subtotal * ((selectedAffiliate.percentage || 0) / 100)
     : 0;
   const total = subtotal - commission;
 
   // Agrupar asientos por zona y precio
-  const groupedSeats = carrito.reduce((acc, item) => {
+  const groupedSeats = safeCarrito.reduce((acc, item) => {
     const key = `${item.zona}-${item.precio}-${item.tipoPrecio}`;
     if (!acc[key]) {
       acc[key] = {
@@ -44,18 +47,18 @@ const CartWithTimer = ({
 
   // Temporizador de 15 minutos
   useEffect(() => {
-    if (carrito.length > 0) {
+    if (safeCarrito.length > 0) {
       setIsVisible(true);
       setTimeLeft(15 * 60); // Reset timer when cart has items
-      console.log('Carrito actualizado. Elementos:', carrito.length);
+      console.log('Carrito actualizado. Elementos:', safeCarrito.length);
     } else {
       setIsVisible(false);
       console.log('Carrito vacío. Ocultando componente.');
     }
-  }, [carrito.length]);
+  }, [safeCarrito.length]);
 
   useEffect(() => {
-    if (timeLeft > 0 && carrito.length > 0) {
+    if (timeLeft > 0 && safeCarrito.length > 0) {
       const timer = setInterval(() => {
         setTimeLeft(prev => {
           if (prev <= 1) {
@@ -71,7 +74,7 @@ const CartWithTimer = ({
 
       return () => clearInterval(timer);
     }
-  }, [timeLeft, carrito.length, setCarrito]);
+  }, [timeLeft, safeCarrito.length, setCarrito]);
 
   // Formatear tiempo
   const formatTime = (seconds) => {
@@ -92,7 +95,7 @@ const CartWithTimer = ({
     message.success('Carrito limpiado');
   }, [setCarrito]);
 
-  if (!isVisible || carrito.length === 0) {
+  if (!isVisible || safeCarrito.length === 0) {
     return null;
   }
 
@@ -167,7 +170,7 @@ const CartWithTimer = ({
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span>Boletos:</span>
-            <span>{carrito.length} - ${subtotal.toFixed(2)}</span>
+            <span>{safeCarrito.length} - ${subtotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
             <span>Productos:</span>

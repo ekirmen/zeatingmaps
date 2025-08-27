@@ -156,7 +156,7 @@ const RealTimeValidation = {
     }
     
     // Validar precio total
-    const totalPrice = seats.reduce((sum, seat) => sum + (seat.precio || 0), 0);
+    const totalPrice = (seats && Array.isArray(seats) ? seats.reduce((sum, seat) => sum + (seat.precio || 0), 0) : 0);
     if (totalPrice > RealTimeValidation.rules.maxPricePerTransaction) {
       warnings.push(`Precio total alto: $${totalPrice.toFixed(2)}`);
     }

@@ -220,13 +220,13 @@ const MesaSillaManager = ({
   const getTotalSillas = () => {
     switch (mesa?.shape || mesa?.type) {
       case 'rect':
-        return Object.values(sillasConfig.rect).reduce((sum, val) => sum + (val || 0), 0);
+        return (sillasConfig?.rect && typeof sillasConfig.rect === 'object' ? Object.values(sillasConfig.rect).reduce((sum, val) => sum + (val || 0), 0) : 0);
       case 'circle':
-        return sillasConfig.circle.cantidad || 0;
+        return sillasConfig?.circle?.cantidad || 0;
       case 'hexagon':
-        return sillasConfig.hexagon.lados.reduce((sum, val) => sum + (val || 0), 0);
+        return (sillasConfig?.hexagon?.lados && Array.isArray(sillasConfig.hexagon.lados) ? sillasConfig.hexagon.lados.reduce((sum, val) => sum + (val || 0), 0) : 0);
       case 'star':
-        return sillasConfig.star.puntos.reduce((sum, val) => sum + (val || 0), 0);
+        return (sillasConfig?.star?.puntos && Array.isArray(sillasConfig.star.puntos) ? sillasConfig.star.puntos.reduce((sum, val) => sum + (val || 0), 0) : 0);
       default:
         return 0;
     }

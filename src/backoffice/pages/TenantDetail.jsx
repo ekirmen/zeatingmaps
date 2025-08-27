@@ -87,7 +87,7 @@ const TenantDetail = () => {
       const totalEvents = eventsData?.length || 0;
       const activeEvents = eventsData?.filter(e => e.estado === 'activo').length || 0;
       const totalUsers = usersData?.length || 0;
-      const totalRevenue = invoicesData?.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.amount || 0), 0) || 0;
+      const totalRevenue = (invoicesData && Array.isArray(invoicesData) ? invoicesData.filter(i => i.status === 'paid').reduce((sum, i) => sum + (i.amount || 0), 0) : 0) || 0;
 
       setStats({
         totalEvents,

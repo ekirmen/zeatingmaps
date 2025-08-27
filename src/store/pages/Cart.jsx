@@ -366,7 +366,7 @@ const Cart = () => {
     const [locatorSeats, setLocatorSeats] = useState([]);
     const [savedCartsVisible, setSavedCartsVisible] = useState(false);
 
-    const itemCount = items.length + products.length;
+    const itemCount = (items && Array.isArray(items) ? items.length : 0) + (products && Array.isArray(products) ? products.length : 0);
 
     // Format price helper
     const formatPrice = (price) => {
@@ -374,8 +374,8 @@ const Cart = () => {
     };
 
     // Calculate totals
-    const subtotal = items.reduce((sum, item) => sum + (item.precio || 0), 0) +
-                    products.reduce((sum, product) => sum + (product.price || 0), 0);
+    const subtotal = (items && Array.isArray(items) ? items.reduce((sum, item) => sum + (item.precio || 0), 0) : 0) +
+                    (products && Array.isArray(products) ? products.reduce((sum, product) => sum + (product.price || 0), 0) : 0);
 
     // Handle locator found
     const handleLocatorFound = useCallback((payment, locator) => {
@@ -409,7 +409,7 @@ const Cart = () => {
         setLocatorSeats(processedSeats);
         
         // Clear current cart items if they exist
-        if (items.length > 0) {
+        if (items && Array.isArray(items) && items.length > 0) {
             clearCart();
             message.info('Carrito anterior limpiado para cargar localizador');
         }
@@ -423,8 +423,8 @@ const Cart = () => {
     }, []);
 
     // Get paid seats count
-    const paidSeats = locatorSeats.filter(seat => seat.isPaid);
-    const unpaidSeats = locatorSeats.filter(seat => !seat.isPaid);
+    const paidSeats = (locatorSeats && Array.isArray(locatorSeats) ? locatorSeats.filter(seat => seat.isPaid) : []);
+    const unpaidSeats = (locatorSeats && Array.isArray(locatorSeats) ? locatorSeats.filter(seat => !seat.isPaid) : []);
 
     // Handle checkout
     const handleCheckout = () => {
@@ -439,7 +439,7 @@ const Cart = () => {
     useEffect(() => {
         if (shouldTrackOnPage('cart') && itemCount > 0) {
             getFacebookPixelByEvent(FACEBOOK_EVENTS.VIEW_CART, {
-                content_ids: items.map(item => item.sillaId || item.id),
+                content_ids: (items && Array.isArray(items) ? items.map(item => item.sillaId || item.id) : []),
                 content_type: 'product',
                 value: subtotal,
                 currency: 'USD',
@@ -588,13 +588,13 @@ const Cart = () => {
                         )}
 
                         {/* Current Cart Seats Section */}
-                        {items.length > 0 && (
+                        {items && Array.isArray(items) && items.length > 0 && (
                             <div className="mb-6">
                                 <Title level={5} className="mb-2">
                                     <UserOutlined className="mr-2" />
-                                    Asientos Seleccionados ({items.length})
+                                    Asientos Seleccionados ({(items && Array.isArray(items) ? items.length : 0)})
                                 </Title>
-                                {items.map((item) => (
+                                {(items && Array.isArray(items) ? items.map((item) => (
                                     <Card 
                                         key={item.sillaId} 
                                         size="small" 
@@ -630,18 +630,18 @@ const Cart = () => {
                                             </div>
                                         </div>
                                     </Card>
-                                ))}
+                                )) : null)}
                             </div>
                         )}
 
                         {/* Products Section */}
-                        {products.length > 0 && (
+                        {products && Array.isArray(products) && products.length > 0 && (
                             <div>
                                 <Title level={5} className="mb-2">
                                     <ShoppingCartOutlined className="mr-2" />
-                                    Productos ({products.length})
+                                    Productos ({(products && Array.isArray(products) ? products.length : 0)})
                                 </Title>
-                                {products.map((product) => (
+                                {(products && Array.isArray(products) ? products.map((product) => (
                                     <Card 
                                         key={product.id} 
                                         size="small" 
@@ -671,7 +671,7 @@ const Cart = () => {
                                             </Text>
                                         </div>
                                     </Card>
-                                ))}
+                                )) : null)}
                             </div>
                         )}
                     </>
@@ -689,7 +689,7 @@ const Cart = () => {
                         {currentLocator && unpaidSeats.length > 0 && (
                             <div className="flex justify-between text-orange-600">
                                 <span>Pendiente de pago:</span>
-                                <span>${formatPrice(unpaidSeats.reduce((sum, seat) => sum + (seat.precio || 0), 0))}</span>
+                                <span>${formatPrice((unpaidSeats && Array.isArray(unpaidSeats) ? unpaidSeats.reduce((sum, seat) => sum + (seat.precio || 0), 0) : 0))}</span>
                             </div>
                         )}
                         <Divider />
