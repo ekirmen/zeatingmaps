@@ -1274,63 +1274,63 @@ const BoleteriaMain = () => {
       <div className="h-screen flex bg-gray-100">
         {/* Sidebar izquierda */}
         <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
-        {/* Botón de Atrás */}
-        <Tooltip title="Volver atrás" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => window.history.back()}>
-            <ArrowLeftOutlined className="text-xl mb-1" />
-            <div>Atrás</div>
-          </div>
-        </Tooltip>
-        
-        <Tooltip title="Paso 1: Buscar y seleccionar evento" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowEventSearch(true)}>
-            <SearchOutlined className="text-xl mb-1" />
-            <div>Eventos</div>
-          </div>
-        </Tooltip>
+          {/* Botón de Atrás */}
+          <Tooltip title="Volver atrás" placement="right">
+            <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => window.history.back()}>
+              <ArrowLeftOutlined className="text-xl mb-1" />
+              <div>Atrás</div>
+            </div>
+          </Tooltip>
+          
+          <Tooltip title="Paso 1: Buscar y seleccionar evento" placement="right">
+            <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowEventSearch(true)}>
+              <SearchOutlined className="text-xl mb-1" />
+              <div>Eventos</div>
+            </div>
+          </Tooltip>
 
-        <Tooltip title="Aplicar descuentos y códigos" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowDiscountModal(true)}>
-            <MoneyCollectOutlined className="text-xl mb-1" />
-            <div>Descuentos</div>
-          </div>
-        </Tooltip>
-        
-        <Tooltip title="Mapa de productos disponibles" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setActiveTab('productos')}>
-            <GiftOutlined className="text-xl mb-1" />
-            <div>Mapa Productos</div>
-          </div>
-        </Tooltip>
-        
-        <Tooltip title="Buscar por localizador" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowLocatorSearch(true)}>
-            <SearchOutlined className="text-xl mb-1" />
-            <div>Localizador</div>
-          </div>
-        </Tooltip>
-  
-        <Tooltip title="Gestionar carritos guardados" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowCartManagement(true)}>
-            <ShoppingCartOutlined className="text-xl mb-1" />
-            <div>Carritos</div>
-          </div>
-        </Tooltip>
-        
-                 <Tooltip title="Exportar datos del evento" placement="right">
-           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={exportEventData}>
-             <UploadOutlined className="text-xl mb-1" />
-             <div>Exportar</div>
-           </div>
-         </Tooltip>
-         
-         <Tooltip title="Diagnóstico del servidor" placement="right">
-           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowServerDiagnostic(true)}>
-             <InfoCircleOutlined className="text-xl mb-1" />
-             <div>Diagnóstico</div>
-           </div>
-         </Tooltip>
-       </div>
+          <Tooltip title="Aplicar descuentos y códigos" placement="right">
+            <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowDiscountModal(true)}>
+              <MoneyCollectOutlined className="text-xl mb-1" />
+              <div>Descuentos</div>
+            </div>
+          </Tooltip>
+          
+          <Tooltip title="Mapa de productos disponibles" placement="right">
+            <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setActiveTab('productos')}>
+              <GiftOutlined className="text-xl mb-1" />
+              <div>Mapa Productos</div>
+            </div>
+          </Tooltip>
+          
+          <Tooltip title="Buscar por localizador" placement="right">
+            <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowLocatorSearch(true)}>
+              <SearchOutlined className="text-xl mb-1" />
+              <div>Localizador</div>
+            </div>
+          </Tooltip>
+
+          <Tooltip title="Gestionar carritos guardados" placement="right">
+            <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowCartManagement(true)}>
+              <ShoppingCartOutlined className="text-xl mb-1" />
+              <div>Carritos</div>
+            </div>
+          </Tooltip>
+          
+          <Tooltip title="Exportar datos del evento" placement="right">
+            <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={exportEventData}>
+              <UploadOutlined className="text-xl mb-1" />
+              <div>Exportar</div>
+            </div>
+          </Tooltip>
+          
+          <Tooltip title="Diagnóstico del servidor" placement="right">
+            <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowServerDiagnostic(true)}>
+              <InfoCircleOutlined className="text-xl mb-1" />
+              <div>Diagnóstico</div>
+            </div>
+          </Tooltip>
+        </div>
 
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col">
@@ -1897,14 +1897,441 @@ const BoleteriaMain = () => {
                     </Button>
                   </Tooltip>
                   
-                  {/* Botón de descargar tickets si hay asientos seleccionados */}
-                  {selectedSeats.length > 0 && (
+                  {/* Botón de descargar tickets solo si hay asientos con localizador válido */}
+                  {selectedSeats.length > 0 && selectedSeats.some(seat => seat.locator) && (
                     <div className="mt-3">
                       <DownloadTicketButton 
-                        locator={selectedSeats.find(seat => seat.locator)?.locator || 'temp'}
+                        locator={selectedSeats.find(seat => seat.locator)?.locator}
                         showDebugButtons={false}
-                        disabled={!selectedSeats.find(seat => seat.locator)}
+                        disabled={false}
                       />
+                      <div className="text-xs text-gray-500 mt-1 text-center">
+                        Solo tickets con localizador válido
+                      </div>
                     </div>
                   )}
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modales y drawers */}
+      {/* Modal de búsqueda de eventos */}
+      <Modal
+        title="Buscar Evento"
+        open={showEventSearch}
+        onCancel={() => setShowEventSearch(false)}
+        footer={null}
+        width={800}
+      >
+        <div className="space-y-4">
+          <div className="flex space-x-2">
+            <Select
+              placeholder="Selecciona un evento"
+              style={{ width: '100%' }}
+              onChange={handleEventSelectForSearch}
+              value={selectedEventForSearch?.id}
+            >
+              {availableEvents.map(event => (
+                <Option key={event.id} value={event.id}>
+                  {event.nombre} - {new Date(event.fecha_evento).toLocaleDateString('es-ES')}
+                </Option>
+              ))}
+            </Select>
+          </div>
+          
+          {selectedEventForSearch && (
+            <div className="space-y-2">
+              <h4 className="font-medium">Funciones disponibles:</h4>
+              <Select
+                placeholder="Selecciona una función"
+                style={{ width: '100%' }}
+                onChange={handleFunctionSelectForSearch}
+                value={selectedFunctionForSearch?.id}
+              >
+                {availableFunctions.map(func => (
+                  <Option key={func.id} value={func.id}>
+                    {func.nombre} - {new Date(func.fecha_celebracion).toLocaleString('es-ES')}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Modal de búsqueda de usuarios */}
+      <Modal
+        title="Buscar o Crear Usuario"
+        open={showUserSearch}
+        onCancel={() => setShowUserSearch(false)}
+        footer={null}
+        width={600}
+      >
+        <div className="space-y-4">
+          <div className="flex space-x-2">
+            <Input.Search
+              placeholder="Buscar por email, nombre o empresa"
+              value={userSearchValue}
+              onChange={(e) => setUserSearchValue(e.target.value)}
+              onSearch={async () => {
+                if (!userSearchValue.trim()) return;
+                
+                setUserSearchLoading(true);
+                try {
+                  const { data, error } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .or(`email.ilike.%${userSearchValue}%,login.ilike.%${userSearchValue}%,nombre.ilike.%${userSearchValue}%,empresa.ilike.%${userSearchValue}%`)
+                    .limit(10);
+
+                  if (error) throw error;
+                  setUserSearchResults(data || []);
+                } catch (error) {
+                  console.error('Error searching users:', error);
+                  message.error('Error al buscar usuarios');
+                } finally {
+                  setUserSearchLoading(false);
+                }
+              }}
+              loading={userSearchLoading}
+              enterButton="Buscar"
+            />
+          </div>
+
+          {userSearchResults.length > 0 && (
+            <div className="space-y-2 max-h-40 overflow-y-auto">
+              {userSearchResults.map(user => (
+                <div key={user.id} className="flex items-center justify-between p-2 border rounded">
+                  <div>
+                    <div className="font-medium">{user.nombre || user.login}</div>
+                    <div className="text-sm text-gray-600">{user.email || user.login}</div>
+                    {user.empresa && <div className="text-xs text-gray-500">{user.empresa}</div>}
+                  </div>
+                  <Button 
+                    size="small" 
+                    type="primary"
+                    onClick={() => {
+                      setSelectedClient(user);
+                      setShowUserSearch(false);
+                      message.success('Usuario seleccionado');
+                    }}
+                  >
+                    Seleccionar
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="border-t pt-4">
+            <Button 
+              type="dashed" 
+              block
+              onClick={() => setShowCreateUser(true)}
+            >
+              Crear Nuevo Usuario
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal de creación de usuario */}
+      <Modal
+        title="Crear Nuevo Usuario"
+        open={showCreateUser}
+        onCancel={() => setShowCreateUser(false)}
+        footer={null}
+        width={500}
+      >
+        <Form layout="vertical">
+          <Form.Item label="Email" required>
+            <Input
+              value={newUserData.email}
+              onChange={(e) => setNewUserData(prev => ({ ...prev, email: e.target.value }))}
+              placeholder="email@ejemplo.com"
+            />
+          </Form.Item>
+          <Form.Item label="Empresa">
+            <Input
+              value={newUserData.empresa}
+              onChange={(e) => setNewUserData(prev => ({ ...prev, empresa: e.target.value }))}
+              placeholder="Nombre de la empresa"
+            />
+          </Form.Item>
+          <Form.Item label="Teléfono">
+            <Input
+              value={newUserData.telefono}
+              onChange={(e) => setNewUserData(prev => ({ ...prev, telefono: e.target.value }))}
+              placeholder="+34 600 000 000"
+            />
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" onClick={handleCreateUser} block>
+              Crear Usuario
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal de descuentos */}
+      <Modal
+        title="Aplicar Descuentos"
+        open={showDiscountModal}
+        onCancel={() => setShowDiscountModal(false)}
+        footer={null}
+        width={600}
+      >
+        <div className="space-y-4">
+          <div className="flex space-x-2">
+            <Select
+              placeholder="Tipo de descuento"
+              value={discountType}
+              onChange={setDiscountType}
+              style={{ width: '50%' }}
+            >
+              <Option value="percentage">Porcentaje (%)</Option>
+              <Option value="fixed">Monto fijo ($)</Option>
+            </Select>
+            <InputNumber
+              placeholder="Valor del descuento"
+              value={discountAmount}
+              onChange={setDiscountAmount}
+              style={{ width: '50%' }}
+              min={0}
+              max={discountType === 'percentage' ? 100 : undefined}
+            />
+          </div>
+          
+          {discountAmount > 0 && (
+            <div className="p-3 bg-blue-50 rounded">
+              <div className="text-sm">
+                <strong>Descuento aplicado:</strong>
+                <div className="mt-1">
+                  {discountType === 'percentage' ? 
+                    `${discountAmount}% = -$${((calculateSubtotal() * discountAmount) / 100).toFixed(2)}` :
+                    `$${discountAmount.toFixed(2)}`
+                  }
+                </div>
+                <div className="mt-2 text-lg font-bold">
+                  Total con descuento: ${calculateTotal().toFixed(2)}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex space-x-2">
+            <Button 
+              type="primary"
+              onClick={() => {
+                setSelectedDiscount({ type: discountType, amount: discountAmount });
+                setShowDiscountModal(false);
+                message.success('Descuento aplicado');
+              }}
+              disabled={discountAmount <= 0}
+            >
+              Aplicar Descuento
+            </Button>
+            <Button 
+              onClick={() => {
+                setSelectedDiscount(null);
+                setDiscountAmount(0);
+                setShowDiscountModal(false);
+                message.info('Descuento removido');
+              }}
+            >
+              Remover Descuento
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal de búsqueda por localizador */}
+      <Modal
+        title="Buscar por Localizador"
+        open={showLocatorSearch}
+        onCancel={() => setShowLocatorSearch(false)}
+        footer={null}
+        width={800}
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Localizador</label>
+            <Input.Search
+              placeholder="Ingresa el localizador del pago"
+              value={locatorSearchValue}
+              onChange={(e) => setLocatorSearchValue(e.target.value)}
+              onSearch={handleLocatorSearch}
+              loading={locatorSearchLoading}
+              enterButton="Buscar"
+            />
+          </div>
+          
+          {/* Información del pago encontrado */}
+          {foundPayment && (
+            <div className="border rounded-lg p-4 bg-gray-50">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-lg">Pago Encontrado</h4>
+                <Button 
+                  size="small" 
+                  type="text" 
+                  danger
+                  onClick={clearFoundPayment}
+                >
+                  Limpiar
+                </Button>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div><strong>Localizador:</strong> {foundPayment.locator}</div>
+                <div><strong>Estado:</strong> {foundPayment.status}</div>
+                <div><strong>Total:</strong> ${foundPayment.total?.toFixed(2) || '0.00'}</div>
+                <div><strong>Fecha:</strong> {new Date(foundPayment.created_at).toLocaleString('es-ES')}</div>
+                {foundPayment.event && (
+                  <div><strong>Evento:</strong> {foundPayment.event.nombre}</div>
+                )}
+                {foundPayment.user && (
+                  <div><strong>Cliente:</strong> {foundPayment.user.login || foundPayment.user.email}</div>
+                )}
+                
+                {/* Detalles de asientos */}
+                {foundPayment.seats && (
+                  <div className="mt-3">
+                    <strong>Asientos:</strong>
+                    <div className="ml-4 text-xs">
+                      {Array.isArray(foundPayment.seats) ? (
+                        foundPayment.seats.map((seat, index) => (
+                          <div key={index}>
+                            • {seat.name || seat.nombre} - ${(seat.price || seat.precio || 0).toFixed(2)}
+                          </div>
+                        ))
+                      ) : (
+                        <div>• {foundPayment.seats}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Detalles de productos */}
+                {foundPayment.products && foundPayment.products.length > 0 && (
+                  <div className="mt-3">
+                    <strong>Productos:</strong>
+                    <div className="ml-4 text-xs">
+                      {Array.isArray(foundPayment.products) ? (
+                        foundPayment.products.map((product, index) => (
+                          <div key={index}>
+                            • {product.nombre} x{product.cantidad} - ${(product.precio || 0).toFixed(2)}
+                          </div>
+                        ))
+                      ) : (
+                        <div>• {foundPayment.products}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {/* Detalles de pagos */}
+                {foundPayment.payments && foundPayment.payments.length > 0 && (
+                  <div className="mt-3">
+                    <strong>Formas de Pago:</strong>
+                    <div className="ml-4 text-xs">
+                      {foundPayment.payments.map((payment, index) => (
+                        <div key={index}>
+                          • {payment.method} - ${payment.amount?.toFixed(2) || '0.00'}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Botón de descarga */}
+              <div className="mt-4">
+                <DownloadTicketButton 
+                  locator={foundPayment.locator} 
+                  showDebugButtons={true}
+                />
+              </div>
+              
+              {/* Diagnóstico del servidor */}
+              <div className="mt-4">
+                <ServerDiagnostic />
+              </div>
+              
+              {/* Botón para cargar en el carrito */}
+              <div className="mt-3">
+                <Button 
+                  type="primary" 
+                  size="small"
+                  onClick={() => {
+                    message.success('Pago cargado en el carrito. Puedes modificar o procesar el pago.');
+                    setShowLocatorSearch(false);
+                  }}
+                  block
+                >
+                  Cargar en Carrito
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Modal de pago */}
+      <PaymentModal
+        visible={isPaymentModalVisible}
+        onCancel={() => setIsPaymentModalVisible(false)}
+        selectedSeats={selectedSeats}
+        selectedClient={selectedClient}
+        selectedEvent={selectedEvent}
+        selectedFuncion={selectedFuncion}
+        productosCarrito={productosCarrito}
+        selectedPriceOption={selectedPriceOption}
+        selectedDiscount={selectedDiscount}
+        discountType={discountType}
+        discountAmount={discountAmount}
+        total={calculateTotal()}
+        subtotal={calculateSubtotal()}
+        onSuccess={() => {
+          setIsPaymentModalVisible(false);
+          clearCartCompletely();
+          message.success('Pago procesado exitosamente');
+        }}
+      />
+
+      {/* Drawer de gestión de carritos */}
+      <Drawer
+        title="Gestión de Carritos Guardados"
+        open={showCartManagement}
+        onClose={() => setShowCartManagement(false)}
+        width={600}
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Aquí puedes ver y gestionar los carritos guardados para futuras referencias.
+          </p>
+          
+          {/* Lista de carritos guardados */}
+          <div className="space-y-2">
+            {/* Implementar lista de carritos guardados */}
+            <div className="text-center text-gray-500 py-8">
+              Funcionalidad en desarrollo
+            </div>
+          </div>
+        </div>
+      </Drawer>
+
+      {/* Drawer de diagnóstico del servidor */}
+      <Drawer
+        title="Diagnóstico del Servidor"
+        open={showServerDiagnostic}
+        onClose={() => setShowServerDiagnostic(false)}
+        width={800}
+      >
+        <ServerDiagnostic />
+      </Drawer>
+    </div>
+  );
+};
+
+export default BoleteriaMain;
