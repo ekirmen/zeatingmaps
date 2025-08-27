@@ -6,7 +6,11 @@ import Chair from './Chair';
 const generateChairs = (table) => {
   const chairs = [];
   const count = table.capacity || 4;
-  const radius = table.type === 'circle' ? table.radius + 30 : Math.max(table.width, table.height) / 2 + 30;
+  const seatRadius = 10; // Chair size is 20px, so radius is 10
+  const radius =
+    table.type === 'circle'
+      ? table.radius + seatRadius
+      : Math.max(table.width, table.height) / 2 + 30;
   for (let i = 0; i < count; i++) {
     const angle = (i * 360) / count;
     const rad = (angle * Math.PI) / 180;

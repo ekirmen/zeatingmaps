@@ -101,11 +101,6 @@ export const getFunciones = async (eventId) => {
       .eq('tenant_id', eventoData.tenant_id)
       .order('fecha_celebracion', { ascending: true });
 
-    // Si existe es_principal, filtrar por principales
-    if (await hasColumn('funciones', 'es_principal')) {
-      query = query.eq('es_principal', true);
-    }
-
     const { data, error } = await query;
 
     if (error) {

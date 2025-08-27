@@ -2293,13 +2293,12 @@ const BoleteriaMain = () => {
 
       {/* Modal de pago */}
       <PaymentModal
-        visible={isPaymentModalVisible}
+        open={isPaymentModalVisible}
         onCancel={() => setIsPaymentModalVisible(false)}
-        selectedSeats={selectedSeats}
+        carrito={[...selectedSeats, ...productosCarrito]}
         selectedClient={selectedClient}
         selectedEvent={selectedEvent}
         selectedFuncion={selectedFuncion}
-        productosCarrito={productosCarrito}
         selectedPriceOption={selectedPriceOption}
         selectedDiscount={selectedDiscount}
         discountType={discountType}
