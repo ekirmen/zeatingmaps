@@ -15,7 +15,9 @@ const { Option } = Select;
 
 const { Text } = Typography;
 
-const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion, selectedAffiliate, selectedEvent }) => {
+const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFuncion, selectedAffiliate, selectedEvent }) => {
+  // Ensure carrito is always an array
+  const safeCarrito = Array.isArray(carrito) ? carrito : [];
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('1');
   const [reservationType, setReservationType] = useState('1');
@@ -44,8 +46,8 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
   const [locator, setLocator] = useState('');
   const [emailToSend, setEmailToSend] = useState('');
 
-  const existingPaymentId = carrito?.[0]?.paymentId;
-  const existingLocator = carrito?.[0]?.locator;
+  const existingPaymentId = safeCarrito?.[0]?.paymentId;
+  const existingLocator = safeCarrito?.[0]?.locator;
 
   // Función para asignar tags del evento al comprador
   const assignEventTagsToUser = async (userId, eventTags) => {
@@ -135,7 +137,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
     setSelectedDate(date);
   };
 
-  const subtotal = carrito.reduce((sum, item) => sum + (item.precio || 0), 0);
+  const subtotal = safeCarrito.reduce((sum, item) => sum + (item.precio || 0), 0);
   const commission = selectedAffiliate ? (selectedAffiliate.base || 0) + subtotal * ((selectedAffiliate.percentage || 0) / 100) : 0;
   const total = subtotal - commission;
   const totalPagado = paymentEntries.reduce((sum, entry) => sum + entry.importe, 0);
@@ -252,7 +254,7 @@ const PaymentModal = ({ open, onCancel, carrito, selectedClient, selectedFuncion
 
     try {
       // Agrupar asientos por evento
-      const seatsByEvent = carrito.reduce((acc, item) => {
+      const seatsByEvent = safeCarrito.reduce((acc, item) => {
         const eventId = item.eventId || selectedEvent?.id;
         if (!acc[eventId]) {
           acc[eventId] = [];

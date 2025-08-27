@@ -7,7 +7,7 @@ import { supabase } from '../../../supabaseClient';
 import downloadTicket from '../../../utils/downloadTicket';
 
 const Cart = ({
-  carrito,
+  carrito = [],
   setCarrito,
   onPaymentClick,
   setSelectedClient,
@@ -16,6 +16,8 @@ const Cart = ({
   onSeatsUpdated,
   children,
 }) => {
+  // Ensure carrito is always an array to avoid runtime errors
+  const safeCarrito = Array.isArray(carrito) ? carrito : [];
   const addRealtimeLock = useSeatLockStore(state => state.lockSeat);
   const removeRealtimeLock = useSeatLockStore(state => state.unlockSeat);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -23,8 +25,8 @@ const Cart = ({
   const [downloadingAll, setDownloadingAll] = useState(false);
 
   const subtotal = useMemo(
-    () => carrito.reduce((sum, item) => sum + (item.precio || 0), 0),
-    [carrito]
+    () => safeCarrito.reduce((sum, item) => sum + (item.precio || 0), 0),
+    [safeCarrito]
   );
 
   const total = useMemo(() => {
@@ -35,7 +37,7 @@ const Cart = ({
   }, [subtotal, selectedAffiliate]);
 
   const groupedByFunction = useMemo(() => {
-    return carrito.reduce((acc, item) => {
+    return safeCarrito.reduce((acc, item) => {
       const key = item.funcionId || 'default';
       if (!acc[key]) {
         acc[key] = { fecha: item.funcionFecha, items: [] };
@@ -73,14 +75,14 @@ const Cart = ({
       
       return acc;
     }, {});
-  }, [carrito]);
+  }, [safeCarrito]);
 
   const handleRemoveSeat = useCallback((groupKey) => {
     // groupKey es una combinación de zona, precio y tipo
     const [zona, precio, tipoPrecio, descuentoNombre] = groupKey.split('|');
     
     setCarrito(
-      carrito.filter(
+      safeCarrito.filter(
         (item) => !(
           item.zona === zona && 
           item.precio === parseFloat(precio) &&
@@ -90,7 +92,7 @@ const Cart = ({
       )
     );
     message.success('Asientos eliminados del carrito');
-  }, [carrito, setCarrito]);
+  }, [safeCarrito, setCarrito]);
 
   const clearCart = useCallback(() => {
     setCarrito([]);
@@ -98,7 +100,7 @@ const Cart = ({
   }, [setCarrito]);
 
   const handleBlockAction = useCallback(async () => {
-    const seatsToBlock = carrito.filter(i => i.isBlocked);
+    const seatsToBlock = safeCarrito.filter(i => i.isBlocked);
 
     try {
       if (seatsToBlock.length) {
@@ -114,14 +116,14 @@ const Cart = ({
       console.error('Error blocking seats:', error);
       message.error('Error al bloquear asientos');
     }
-  }, [carrito]);
+  }, [safeCarrito]);
 
   const handleDownloadAllTickets = useCallback(async () => {
-    if (!carrito.length) return;
+    if (!safeCarrito.length) return;
     
     setDownloadingAll(true);
     try {
-      const locators = [...new Set(carrito.map(item => item.locator).filter(Boolean))];
+      const locators = [...new Set(safeCarrito.map(item => item.locator).filter(Boolean))];
       
       for (const locator of locators) {
         await downloadTicket(locator);
@@ -134,7 +136,7 @@ const Cart = ({
     } finally {
       setDownloadingAll(false);
     }
-  }, [carrito]);
+  }, [safeCarrito]);
 
   const menu = (
     <Menu>
@@ -152,14 +154,14 @@ const Cart = ({
       <div className="flex justify-between items-center mb-4 border-b pb-2">
         <h3 className="text-lg font-semibold">Carrito de Compras</h3>
         <div className="flex items-center gap-2">
-          {carrito.length > 0 && (
+          {safeCarrito.length > 0 && (
             <Dropdown overlay={menu} trigger={["click"]} visible={menuVisible} onVisibleChange={setMenuVisible} placement="bottomRight">
               <button className="text-gray-500 hover:text-gray-800" title="Opciones">
                 <AiOutlineMore size={20} />
               </button>
             </Dropdown>
           )}
-          {carrito.length > 0 && (
+          {safeCarrito.length > 0 && (
             <button
               onClick={clearCart}
               className="text-red-500 hover:text-red-700 transition"
@@ -222,7 +224,7 @@ const Cart = ({
         ))}
       </div>
 
-      {carrito.length > 0 && (
+      {safeCarrito.length > 0 && (
         <div className="mt-auto border-t pt-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
