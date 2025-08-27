@@ -3,29 +3,19 @@
 // Removed API_BASE_URL as we are now directly using Supabase for these calls
 import { supabase } from '../../supabaseClient'; // Assuming you use Supabase for data
 
-// Helper: verifica si una columna existe intentando un select del esquema PostgREST
+// Helper: verifica si una columna existe consultando information_schema
 async function hasColumn(tableName, columnName) {
   try {
-    const { error } = await supabase.from(tableName).select(columnName).limit(0);
-    if (error) {
-      const msg = `${error.message || ''}`;
-      const code = `${error.code || ''}`;
-      if (
-        code === '42703' ||
-        /column .* does not exist/i.test(msg) ||
-        /Could not find the '.*' column/i.test(msg)
-      ) {
-        return false;
-      }
-      if (code === '42P01' || /relation ".*" does not exist/i.test(msg)) return false;
-      throw error;
-    }
-    return true;
+    const { data, error } = await supabase
+      .from('information_schema.columns')
+      .select('column_name')
+      .eq('table_name', tableName)
+      .eq('column_name', columnName)
+      .maybeSingle();
+
+    if (error) return false;
+    return !!data;
   } catch (err) {
-    const msg = `${err.message || ''}`;
-    const code = `${err.code || ''}`;
-    if (code === '42P01' || /relation ".*" does not exist/i.test(msg)) return false;
-    if (/Could not find the '.*' column/i.test(msg)) return false;
     return false;
   }
 }

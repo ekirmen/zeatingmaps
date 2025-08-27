@@ -2,11 +2,6 @@ import { supabase } from '../../supabaseClient';
 import { supabaseAdmin } from '../../supabaseClient';
 import { v5 as uuidv5 } from 'uuid';
 
-const CMS_PAGE_IDS = {
-  home: 1,
-  events: 2
-};
-
 
 
 const handleError = (error) => {
@@ -16,29 +11,19 @@ const handleError = (error) => {
   }
 };
 
-// Helper: verifica si una columna existe en una tabla para evitar errores de esquema
+// Helper: verifica si una columna existe consultando information_schema
 async function hasColumn(tableName, columnName) {
   try {
-    const { error } = await supabase.from(tableName).select(columnName).limit(0);
-    if (error) {
-      const msg = `${error.message || ''}`;
-      const code = `${error.code || ''}`;
-      if (
-        code === '42703' ||
-        /column .* does not exist/i.test(msg) ||
-        /Could not find the '.*' column/i.test(msg)
-      ) {
-        return false;
-      }
-      if (code === '42P01' || /relation ".*" does not exist/i.test(msg)) return false;
-      throw error;
-    }
-    return true;
+    const { data, error } = await supabase
+      .from('information_schema.columns')
+      .select('column_name')
+      .eq('table_name', tableName)
+      .eq('column_name', columnName)
+      .maybeSingle();
+
+    if (error) return false;
+    return !!data;
   } catch (err) {
-    const msg = `${err.message || ''}`;
-    const code = `${err.code || ''}`;
-    if (code === '42P01' || /relation ".*" does not exist/i.test(msg)) return false;
-    if (/Could not find the '.*' column/i.test(msg)) return false;
     return false;
   }
 }
@@ -511,7 +496,6 @@ export const fetchCmsPage = async (slug) => {
   const buildDefaultPage = () => {
     const now = new Date().toISOString();
     const page = {
-      id: slug,
       nombre: slug,
       slug: slug,
       widgets: {
