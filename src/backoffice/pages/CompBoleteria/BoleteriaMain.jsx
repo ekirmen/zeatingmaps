@@ -2331,6 +2331,7 @@ const BoleteriaMain = () => {
         <ServerDiagnostic />
       </Drawer>
     </div>
+  </div>
   );
 };
 
