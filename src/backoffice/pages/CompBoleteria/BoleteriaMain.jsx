@@ -846,7 +846,7 @@ const BoleteriaMain = () => {
       message.warning('Selecciona una zona y precio antes de continuar');
       return;
     }
-    if (selectedSeats.length === 0) {
+    if (!selectedSeats || selectedSeats.length === 0) {
       message.warning('Selecciona al menos un asiento antes de continuar');
       return;
     }
@@ -887,12 +887,14 @@ const BoleteriaMain = () => {
 
       console.log('✅ Precio seleccionado, procesando asiento...');
       setSelectedSeats(prev => {
-        const isSelected = prev.find(s => s._id === seat._id);
+        // Asegurar que prev sea un array
+        const currentSeats = Array.isArray(prev) ? prev : [];
+        const isSelected = currentSeats.find(s => s._id === seat._id);
         let newSeats;
         
         if (isSelected) {
           // Deseleccionar el asiento
-          newSeats = prev.filter(s => s._id !== seat._id);
+          newSeats = currentSeats.filter(s => s._id !== seat._id);
           console.log('🔄 Asiento deseleccionado:', seat.nombre || seat.numero);
         } else {
           // Seleccionar el asiento
@@ -908,7 +910,7 @@ const BoleteriaMain = () => {
               category: selectedPriceOption.category
             } : null
           };
-          newSeats = [...prev, seatWithPrice];
+          newSeats = [...currentSeats, seatWithPrice];
           console.log('✅ Asiento seleccionado:', seat.nombre || seat.numero);
         }
         
@@ -921,14 +923,14 @@ const BoleteriaMain = () => {
 
   // Función para manejar el bloqueo de asientos
   const handleBlockSeats = async () => {
-    if (blockedSeats.length === 0) {
+    if (!blockedSeats || blockedSeats.length === 0) {
       message.warning('No hay asientos seleccionados para bloquear');
       return;
     }
 
     try {
       // Marcar asientos como reservados en la base de datos
-      for (const seat of blockedSeats) {
+      for (const seat of (blockedSeats || [])) {
         const { error } = await supabase
           .from('sillas')
           .update({ 
@@ -944,7 +946,7 @@ const BoleteriaMain = () => {
         }
       }
 
-      message.success(`${blockedSeats.length} asiento(s) bloqueado(s) correctamente. Los asientos ahora están reservados y no pueden ser seleccionados por otros usuarios.`);
+      message.success(`${blockedSeats?.length || 0} asiento(s) bloqueado(s) correctamente. Los asientos ahora están reservados y no pueden ser seleccionados por otros usuarios.`);
       
       // Limpiar asientos bloqueados y desactivar modo bloqueo
       setBlockedSeats([]);
@@ -964,7 +966,7 @@ const BoleteriaMain = () => {
 
   // Función para activar modo bloqueo solo cuando el carrito está vacío
   const handleBlockModeToggle = (checked) => {
-    if (checked && (selectedSeats.length > 0 || productosCarrito.length > 0)) {
+    if (checked && ((selectedSeats && selectedSeats.length > 0) || (productosCarrito && productosCarrito.length > 0))) {
       message.warning('El modo bloqueo solo se puede activar cuando el carrito está vacío');
       return;
     }
@@ -975,6 +977,11 @@ const BoleteriaMain = () => {
   };
 
   const calculateTotal = () => {
+    // Verificar que las variables estén inicializadas
+    if (!selectedSeats || !Array.isArray(selectedSeats) || !productosCarrito || !Array.isArray(productosCarrito)) {
+      return 0;
+    }
+    
     const seatsTotal = selectedSeats.reduce((sum, seat) => {
       const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
       return sum + seatPrice;
@@ -996,6 +1003,11 @@ const BoleteriaMain = () => {
   };
 
   const calculateSubtotal = () => {
+    // Verificar que las variables estén inicializadas
+    if (!selectedSeats || !Array.isArray(selectedSeats) || !productosCarrito || !Array.isArray(productosCarrito)) {
+      return 0;
+    }
+    
     const seatsTotal = selectedSeats.reduce((sum, seat) => {
       const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
       return sum + seatPrice;
@@ -1007,32 +1019,34 @@ const BoleteriaMain = () => {
 
   const handleProductAdded = (producto) => {
     setProductosCarrito(prev => {
-      const existingProduct = prev.find(p => p.id === producto.id);
+      // Asegurar que prev sea un array
+      const currentProducts = Array.isArray(prev) ? prev : [];
+      const existingProduct = currentProducts.find(p => p.id === producto.id);
       if (existingProduct) {
-        return prev.map(p => 
+        return currentProducts.map(p => 
           p.id === producto.id 
             ? { ...p, cantidad: p.cantidad + producto.cantidad }
             : p
         );
       }
-      return [...prev, { ...producto, cantidad: producto.cantidad }];
+      return [...currentProducts, { ...producto, cantidad: producto.cantidad }];
     });
   };
 
   const handleProductQuantityChange = (productId, newQuantity) => {
     if (newQuantity <= 0) {
-      setProductosCarrito(prev => prev.filter(p => p.id !== productId));
+      setProductosCarrito(prev => (Array.isArray(prev) ? prev.filter(p => p.id !== productId) : []));
     } else {
-      setProductosCarrito(prev => prev.map(p => 
+      setProductosCarrito(prev => (Array.isArray(prev) ? prev.map(p => 
         p.id === productId 
           ? { ...p, cantidad: newQuantity }
           : p
-      ));
+      ) : []));
     }
   };
 
   const handleProductRemove = (productId) => {
-    setProductosCarrito(prev => prev.filter(p => p.id !== productId));
+    setProductosCarrito(prev => (Array.isArray(prev) ? prev.filter(p => p.id !== productId) : []));
     message.success('Producto removido del carrito');
   };
 
@@ -1758,17 +1772,17 @@ const BoleteriaMain = () => {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span>Boletos:</span>
-                  <span>{selectedSeats.length}, ${selectedSeats.reduce((sum, seat) => {
+                  <span>{selectedSeats?.length || 0}, ${(selectedSeats && Array.isArray(selectedSeats) ? selectedSeats.reduce((sum, seat) => {
                     const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
                     return sum + seatPrice;
-                  }, 0).toFixed(2)}</span>
+                  }, 0) : 0).toFixed(2)}</span>
                 </div>
                 
-                                {productosCarrito.length > 0 && (
+                                {productosCarrito && Array.isArray(productosCarrito) && productosCarrito.length > 0 && (
                   <div className="mb-2">
                     <h4 className="font-medium text-gray-900 mb-2">Productos en Carrito</h4>
                     <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {productosCarrito.map((producto) => (
+                      {productosCarrito && Array.isArray(productosCarrito) && productosCarrito.map((producto) => (
                         <div key={producto.id} className="flex items-center justify-between p-2 bg-green-50 rounded">
                           <div className="flex-1">
                             <div className="font-medium text-sm">{producto.nombre}</div>
@@ -1801,7 +1815,7 @@ const BoleteriaMain = () => {
                   
                   <div className="flex justify-between">
                     <span>Productos:</span>
-                    <span>{productosCarrito.reduce((sum, p) => sum + p.cantidad, 0)}, ${productosCarrito.reduce((sum, product) => sum + ((product.precio_especial || product.precio) * product.cantidad), 0).toFixed(2)}</span>
+                    <span>{(productosCarrito && Array.isArray(productosCarrito) ? productosCarrito.reduce((sum, p) => sum + p.cantidad, 0) : 0)}, ${(productosCarrito && Array.isArray(productosCarrito) ? productosCarrito.reduce((sum, product) => sum + ((product.precio_especial || product.precio) * product.cantidad), 0) : 0).toFixed(2)}</span>
                   </div>
                  
                  <div className="border-t pt-2">
@@ -1850,7 +1864,7 @@ const BoleteriaMain = () => {
                     <Button 
                       size="small"
                       onClick={saveCurrentCart}
-                      disabled={!selectedClient || (selectedSeats.length === 0 && productosCarrito.length === 0)}
+                      disabled={!selectedClient || ((!selectedSeats || selectedSeats.length === 0) && (!productosCarrito || productosCarrito.length === 0))}
                     >
                       Guardar Carrito
                     </Button>
