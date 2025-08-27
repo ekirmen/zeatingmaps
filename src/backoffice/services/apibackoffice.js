@@ -688,17 +688,14 @@ export const createPayment = async (data) => {
     }
   }
   
-  // Asegurar que seats sea un string JSON
+  // Asegurar que seats se almacene como JSON (no string)
   let seatsForDB = data.seats;
-  if (Array.isArray(seatsForDB)) {
-    seatsForDB = JSON.stringify(seatsForDB);
-  } else if (typeof seatsForDB === 'string') {
+  if (typeof seatsForDB === 'string') {
     try {
-      // Verificar que sea JSON válido
-      JSON.parse(seatsForDB);
+      seatsForDB = JSON.parse(seatsForDB);
     } catch (e) {
       console.error('🔍 Error: seats no es JSON válido:', seatsForDB);
-      seatsForDB = JSON.stringify([]);
+      seatsForDB = [];
     }
   }
 
