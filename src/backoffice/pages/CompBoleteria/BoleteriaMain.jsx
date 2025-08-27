@@ -932,8 +932,8 @@ const BoleteriaMain = () => {
       // Marcar asientos como reservados en la base de datos
       for (const seat of (blockedSeats || [])) {
         const { error } = await supabase
-          .from('sillas')
-          .update({ 
+          .from('seats')
+          .update({
             estado: 'reservado',
             user_id: selectedClient?.id || null,
             bloqueado: true
