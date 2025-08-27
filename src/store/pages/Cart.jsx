@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, InputNumber, Modal, Input, List, Tag, Space, Typography, Divider, Badge, Alert } from 'antd';
+import { Button, Card, InputNumber, Modal, Input, List, Tag, Space, Typography, Divider, Badge, Alert, message } from 'antd';
 import { 
   ShoppingCartOutlined, 
   SaveOutlined, 
@@ -9,7 +9,8 @@ import {
   MinusOutlined,
   ClockCircleOutlined,
   UserOutlined,
-
+  DownloadOutlined,
+  SearchOutlined,
   LockOutlined
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
@@ -48,6 +49,201 @@ const Timer = ({ expiresAt }) => {
             <ClockCircleOutlined />
             <span>Expira en: {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</span>
         </div>
+    );
+};
+
+// Localizador Search Component
+const LocalizadorSearch = ({ onLocatorFound, onClearLocator, currentLocator }) => {
+    const [searchValue, setSearchValue] = useState('');
+    const [searching, setSearching] = useState(false);
+
+    const handleSearch = async () => {
+        if (!searchValue.trim()) return;
+        
+        setSearching(true);
+        try {
+            // Buscar pago por localizador
+            const response = await fetch(`/api/payments/${searchValue.trim()}/debug`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.payment) {
+                    onLocatorFound(data.payment, searchValue.trim());
+                    message.success(`Localizador encontrado: ${searchValue.trim()}`);
+                } else {
+                    message.error('Localizador no encontrado');
+                }
+            } else {
+                message.error('Error al buscar localizador');
+            }
+        } catch (error) {
+            console.error('Error searching locator:', error);
+            message.error('Error al buscar localizador');
+        } finally {
+            setSearching(false);
+        }
+    };
+
+    const handleClear = () => {
+        setSearchValue('');
+        onClearLocator();
+        message.info('Localizador limpiado');
+    };
+
+    return (
+        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex items-center space-x-2 mb-2">
+                <SearchOutlined className="text-blue-500" />
+                <Text strong className="text-blue-800">Buscar por Localizador</Text>
+            </div>
+            
+            {currentLocator ? (
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                        <Tag color="blue" className="text-sm">
+                            Localizador: {currentLocator}
+                        </Tag>
+                        <Text type="secondary" className="text-xs">
+                            Pago encontrado
+                        </Text>
+                    </div>
+                    <Button 
+                        size="small" 
+                        danger 
+                        onClick={handleClear}
+                        icon={<DeleteOutlined />}
+                    >
+                        Limpiar
+                    </Button>
+                </div>
+            ) : (
+                <div className="flex space-x-2">
+                    <Input
+                        placeholder="Ingresa el localizador (ej: S0KOUN4)"
+                        value={searchValue}
+                        onChange={(e) => setSearchValue(e.target.value)}
+                        onPressEnter={handleSearch}
+                        className="flex-1"
+                    />
+                    <Button 
+                        type="primary" 
+                        onClick={handleSearch}
+                        loading={searching}
+                        icon={<SearchOutlined />}
+                    >
+                        Buscar
+                    </Button>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// Individual Ticket Download Button
+const TicketDownloadButton = ({ seat, locator, isPaid }) => {
+    const [downloading, setDownloading] = useState(false);
+
+    const handleDownload = async () => {
+        if (!locator || !isPaid) return;
+        
+        setDownloading(true);
+        try {
+            const response = await fetch(`/api/payments/${locator}/download?mode=full`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('supabase.auth.token')}`,
+                    'Accept': 'application/pdf'
+                }
+            });
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ticket-${locator}-${seat.id || seat.sillaId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                message.success('Ticket descargado correctamente');
+            } else {
+                message.error('Error al descargar ticket');
+            }
+        } catch (error) {
+            console.error('Download error:', error);
+            message.error('Error al descargar ticket');
+        } finally {
+            setDownloading(false);
+        }
+    };
+
+    if (!locator || !isPaid) return null;
+
+    return (
+        <Button
+            type="text"
+            size="small"
+            icon={<DownloadOutlined />}
+            onClick={handleDownload}
+            loading={downloading}
+            className="text-blue-600 hover:text-blue-800"
+        >
+            Descargar
+        </Button>
+    );
+};
+
+// Bulk Tickets Download Button
+const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
+    const [downloading, setDownloading] = useState(false);
+
+    const handleBulkDownload = async () => {
+        if (!locator || paidSeats.length === 0) return;
+        
+        setDownloading(true);
+        try {
+            const response = await fetch(`/api/payments/${locator}/download?mode=bulk`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('supabase.auth.token')}`,
+                    'Accept': 'application/pdf'
+                }
+            });
+            
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `tickets-${locator}-completos.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                message.success(`${paidSeats.length} tickets descargados correctamente`);
+            } else {
+                message.error('Error al descargar tickets');
+            }
+        } catch (error) {
+            console.error('Bulk download error:', error);
+            message.error('Error al descargar tickets');
+        } finally {
+            setDownloading(false);
+        }
+    };
+
+    if (!locator || paidSeats.length === 0) return null;
+
+    return (
+        <Button
+            type="primary"
+            size="small"
+            icon={<DownloadOutlined />}
+            onClick={handleBulkDownload}
+            loading={downloading}
+            className="bg-blue-600 hover:bg-blue-700"
+            data-bulk-download
+        >
+            Descargar Todos ({paidSeats.length}/{totalSeats})
+        </Button>
     );
 };
 
@@ -99,15 +295,17 @@ const SavedCartsModal = ({ visible, onClose, savedCarts, onLoadCart, onDeleteCar
                                 actions={[
                                     <Button 
                                         key="load" 
-                                        type="link" 
-                                        onClick={() => onLoadCart(cart.id)}
+                                        type="primary" 
+                                        size="small"
+                                        onClick={() => onLoadCart(cart)}
                                     >
                                         Cargar
                                     </Button>,
                                     <Button 
                                         key="delete" 
-                                        type="link" 
-                                        danger
+                                        type="text" 
+                                        danger 
+                                        size="small"
                                         onClick={() => onDeleteCart(cart.id)}
                                     >
                                         Eliminar
@@ -115,23 +313,8 @@ const SavedCartsModal = ({ visible, onClose, savedCarts, onLoadCart, onDeleteCar
                                 ]}
                             >
                                 <List.Item.Meta
-                                    title={cart.name || `Carrito ${cart.id}`}
-                                    description={
-                                        <Space direction="vertical" size="small">
-                                            <Text type="secondary">
-                                                {new Date(cart.created_at).toLocaleString('es-ES')}
-                                            </Text>
-                                            <Space>
-                                                {cart.seats?.length > 0 && (
-                                                    <Tag color="blue">{cart.seats.length} asientos</Tag>
-                                                )}
-                                                {cart.products?.length > 0 && (
-                                                    <Tag color="green">{cart.products.length} productos</Tag>
-                                                )}
-                                                <Text strong>Total: ${cart.total?.toFixed(2) || '0.00'}</Text>
-                                            </Space>
-                                        </Space>
-                                    }
+                                    title={cart.name}
+                                    description={`${cart.seats?.length || 0} asientos, ${cart.products?.length || 0} productos`}
                                 />
                             </List.Item>
                         )}
@@ -158,99 +341,121 @@ const SavedCartsModal = ({ visible, onClose, savedCarts, onLoadCart, onDeleteCar
     );
 };
 
+// Main Cart Component
 const Cart = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { 
-        items, 
-        products, 
-        cartExpiration, 
-        toggleSeat, 
-        clearCart,
-        updateProductQuantity,
-        removeProduct,
+    const {
+        items,
+        products,
+        cartExpiration,
+        timeLeft,
         savedCarts,
         savedCartsLoading,
-        loadSavedCarts,
+        clearCart,
         loadSavedCart,
         deleteSavedCart,
-        calculateTotal,
-        getItemCount,
-        getProductsTotal,
-        getSeatsTotal
+        saveCurrentCart,
+        toggleSeat,
+        removeProduct
     } = useCartStore();
-    
-    const [facebookPixel, setFacebookPixel] = useState(null);
+
+    // Smart cart state
+    const [currentLocator, setCurrentLocator] = useState(null);
+    const [foundPayment, setFoundPayment] = useState(null);
+    const [locatorSeats, setLocatorSeats] = useState([]);
     const [savedCartsVisible, setSavedCartsVisible] = useState(false);
-    const [showAuthModal, setShowAuthModal] = useState(false);
 
-    const formatPrice = (price) =>
-        typeof price === 'number' ? price.toFixed(2) : '0.00';
+    const itemCount = items.length + products.length;
 
-    const total = calculateTotal();
-    const itemCount = getItemCount();
+    // Format price helper
+    const formatPrice = (price) => {
+        return typeof price === 'number' ? price.toFixed(2) : '0.00';
+    };
 
-    const loadFacebookPixel = useCallback(async () => {
-        try {
-            if (items.length > 0) {
-                const firstEventId = items[0]?.eventId;
-                if (firstEventId) {
-                    const pixel = await getFacebookPixelByEvent(firstEventId);
-                    setFacebookPixel(pixel);
-                }
+    // Calculate totals
+    const subtotal = items.reduce((sum, item) => sum + (item.precio || 0), 0) +
+                    products.reduce((sum, product) => sum + (product.price || 0), 0);
+
+    // Handle locator found
+    const handleLocatorFound = useCallback((payment, locator) => {
+        setCurrentLocator(locator);
+        setFoundPayment(payment);
+        
+        // Parse seats from payment
+        let seats = [];
+        if (Array.isArray(payment.seats)) {
+            seats = payment.seats;
+        } else if (typeof payment.seats === 'string') {
+            try {
+                seats = JSON.parse(payment.seats);
+            } catch {
+                seats = [];
             }
-        } catch (error) {
-            console.error('Error loading Facebook pixel:', error);
         }
-    }, [items]);
+        
+        // Process seats for display
+        const processedSeats = seats.map(seat => ({
+            ...seat,
+            id: seat.id || seat._id,
+            nombre: seat.name || seat.nombre,
+            precio: seat.price || seat.precio,
+            zona: seat.zona?.nombre || seat.zona,
+            paymentId: payment.id,
+            locator: locator,
+            isPaid: payment.status === 'pagado'
+        }));
+        
+        setLocatorSeats(processedSeats);
+        
+        // Clear current cart items if they exist
+        if (items.length > 0) {
+            clearCart();
+            message.info('Carrito anterior limpiado para cargar localizador');
+        }
+    }, [clearCart, items.length]);
 
-    useEffect(() => {
-        loadFacebookPixel();
-        loadSavedCarts();
-    }, [items, products, loadFacebookPixel, loadSavedCarts]);
+    // Handle clear locator
+    const handleClearLocator = useCallback(() => {
+        setCurrentLocator(null);
+        setFoundPayment(null);
+        setLocatorSeats([]);
+    }, []);
 
-    const handleProceedToPayment = () => {
+    // Get paid seats count
+    const paidSeats = locatorSeats.filter(seat => seat.isPaid);
+    const unpaidSeats = locatorSeats.filter(seat => !seat.isPaid);
+
+    // Handle checkout
+    const handleCheckout = () => {
         if (itemCount === 0) {
+            message.warning('El carrito está vacío');
             return;
         }
-        
-        if (!user) {
-            setShowAuthModal(true);
-            return;
-        }
-        
-        navigate('/store/payment', {
-            state: {
-                carrito: items,
-                productos: products,
-                funcionId: items[0]?.functionId || items[0]?.funcionId || null,
-            },
-        });
+        navigate('/checkout');
     };
 
-    const handleAuthSuccess = () => {
-        // El usuario se autenticó exitosamente, proceder al pago
-        handleProceedToPayment();
-    };
+    // Facebook Pixel tracking
+    useEffect(() => {
+        if (shouldTrackOnPage('cart') && itemCount > 0) {
+            getFacebookPixelByEvent(FACEBOOK_EVENTS.VIEW_CART, {
+                content_ids: items.map(item => item.sillaId || item.id),
+                content_type: 'product',
+                value: subtotal,
+                currency: 'USD',
+                num_items: itemCount
+            });
+        }
+    }, [itemCount, items, subtotal]);
+
+    if (!user) {
+        return <AuthCheck />;
+    }
 
     return (
-        <div className="bg-white shadow-md rounded-md p-4">
+        <div className="max-w-2xl mx-auto p-4">
             {/* Facebook Pixel */}
-            {facebookPixel && shouldTrackOnPage(facebookPixel, 'cart_page') && (
-                <FacebookPixel
-                    pixelId={facebookPixel.pixel_id}
-                    pixelScript={facebookPixel.pixel_script}
-                    eventName={FACEBOOK_EVENTS.ADD_TO_CART}
-                    eventData={{
-                        content_name: items.map(item => item.nombreEvento).join(', '),
-                        content_category: 'Eventos',
-                        content_ids: items.map(item => item.eventId),
-                        value: total,
-                        currency: 'USD',
-                        num_items: itemCount
-                    }}
-                />
-            )}
+            <FacebookPixel />
 
             {/* Header */}
             <div className="flex justify-between items-center mb-4 border-b pb-2">
@@ -263,6 +468,13 @@ const Cart = () => {
                 </div>
                 <Timer expiresAt={cartExpiration} />
             </div>
+
+            {/* Localizador Search */}
+            <LocalizadorSearch
+                onLocatorFound={handleLocatorFound}
+                onClearLocator={handleClearLocator}
+                currentLocator={currentLocator}
+            />
 
             {/* Quick Actions */}
             {itemCount > 0 && (
@@ -287,19 +499,100 @@ const Cart = () => {
 
             {/* Cart Items */}
             <div className="max-h-[400px] overflow-y-auto space-y-3 pr-1">
-                {itemCount === 0 ? (
+                {itemCount === 0 && !currentLocator ? (
                     <div className="text-center text-gray-500 py-8">
                         <ShoppingCartOutlined className="text-4xl mb-2" />
                         <p>No hay items en el carrito</p>
+                        <p className="text-sm mt-2">Busca un localizador o añade asientos</p>
                     </div>
                 ) : (
                     <>
-                        {/* Seats Section */}
+                        {/* Locator Seats Section */}
+                        {currentLocator && locatorSeats.length > 0 && (
+                            <div className="mb-6">
+                                <div className="flex items-center justify-between mb-3">
+                                    <Title level={5} className="mb-0">
+                                        <UserOutlined className="mr-2" />
+                                        Asientos del Localizador: {currentLocator}
+                                    </Title>
+                                    <BulkTicketsDownloadButton
+                                        locator={currentLocator}
+                                        paidSeats={paidSeats}
+                                        totalSeats={locatorSeats.length}
+                                    />
+                                </div>
+                                
+                                {locatorSeats.map((seat) => (
+                                    <Card 
+                                        key={seat.id} 
+                                        size="small" 
+                                        className="mb-2"
+                                        actions={[
+                                            <TicketDownloadButton
+                                                key="download"
+                                                seat={seat}
+                                                locator={currentLocator}
+                                                isPaid={seat.isPaid}
+                                            />,
+                                            <Button 
+                                                key="remove"
+                                                type="text" 
+                                                danger
+                                                icon={<DeleteOutlined />}
+                                                size="small"
+                                                disabled={seat.isPaid}
+                                            >
+                                                {seat.isPaid ? 'Pagado' : 'Quitar'}
+                                            </Button>
+                                        ]}
+                                    >
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex-1">
+                                                <div className="font-medium text-sm">
+                                                    {seat.nombre || `Asiento ${seat.id}`}
+                                                </div>
+                                                <div className="text-xs text-gray-600">
+                                                    {seat.zona || 'General'} - {seat.isPaid ? 'PAGADO' : 'RESERVADO'}
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="font-bold text-sm">
+                                                    ${formatPrice(seat.precio)}
+                                                </div>
+                                                {!seat.isPaid && (
+                                                    <Tag color="orange" size="small">
+                                                        Pendiente
+                                                    </Tag>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </Card>
+                                ))}
+                                
+                                {/* Payment Status Summary */}
+                                <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span>Asientos Pagados: <strong className="text-green-600">{paidSeats.length}</strong></span>
+                                        <span>Asientos Pendientes: <strong className="text-orange-600">{unpaidSeats.length}</strong></span>
+                                    </div>
+                                    {unpaidSeats.length > 0 && (
+                                        <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded">
+                                            <Text type="warning" className="text-xs">
+                                                ⚠️ Hay {unpaidSeats.length} asientos pendientes de pago. 
+                                                Los tickets solo se pueden descargar cuando estén completamente pagados.
+                                            </Text>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Current Cart Seats Section */}
                         {items.length > 0 && (
-                            <div>
+                            <div className="mb-6">
                                 <Title level={5} className="mb-2">
                                     <UserOutlined className="mr-2" />
-                                    Asientos ({items.length})
+                                    Asientos Seleccionados ({items.length})
                                 </Title>
                                 {items.map((item) => (
                                     <Card 
@@ -319,16 +612,22 @@ const Cart = () => {
                                         ]}
                                     >
                                         <div className="flex justify-between items-center">
-                                            <div>
-                                                <Text strong>{item.nombre}</Text>
-                                                <br />
-                                                <Text type="secondary">
-                                                    Zona: {item.nombreZona}
-                                                </Text>
+                                            <div className="flex-1">
+                                                <div className="font-medium text-sm">
+                                                    {item.nombre || `Asiento ${item.sillaId}`}
+                                                </div>
+                                                <div className="text-xs text-gray-600">
+                                                    {item.nombreZona || 'General'} - NUEVO
+                                                </div>
                                             </div>
-                                            <Text strong className="text-lg">
-                                                ${formatPrice(item.precio)}
-                                            </Text>
+                                            <div className="text-right">
+                                                <div className="font-bold text-sm">
+                                                    ${formatPrice(item.precio)}
+                                                </div>
+                                                <Tag color="blue" size="small">
+                                                    Nuevo
+                                                </Tag>
+                                            </div>
                                         </div>
                                     </Card>
                                 ))}
@@ -360,36 +659,15 @@ const Cart = () => {
                                         ]}
                                     >
                                         <div className="flex justify-between items-center">
-                                            <div className="flex-1">
-                                                <Text strong>{product.nombre}</Text>
+                                            <div>
+                                                <Text strong>{product.name}</Text>
                                                 <br />
                                                 <Text type="secondary">
-                                                    ${formatPrice(product.precio)} c/u
+                                                    Cantidad: {product.quantity}
                                                 </Text>
                                             </div>
-                                            <div className="flex items-center space-x-2">
-                                                <Button
-                                                    size="small"
-                                                    icon={<MinusOutlined />}
-                                                    onClick={() => updateProductQuantity(product.id, product.cantidad - 1)}
-                                                />
-                                                <InputNumber
-                                                    size="small"
-                                                    min={1}
-                                                    max={product.stock_disponible || 999}
-                                                    value={product.cantidad}
-                                                    onChange={(value) => updateProductQuantity(product.id, value)}
-                                                    style={{ width: 60 }}
-                                                />
-                                                <Button
-                                                    size="small"
-                                                    icon={<PlusOutlined />}
-                                                    onClick={() => updateProductQuantity(product.id, product.cantidad + 1)}
-                                                    disabled={product.cantidad >= (product.stock_disponible || 999)}
-                                                />
-                                            </div>
-                                            <Text strong className="text-lg ml-4">
-                                                ${formatPrice(product.precio_total)}
+                                            <Text strong className="text-lg">
+                                                ${formatPrice(product.price * product.quantity)}
                                             </Text>
                                         </div>
                                     </Card>
@@ -400,51 +678,53 @@ const Cart = () => {
                 )}
             </div>
 
-            {/* Summary */}
-            {itemCount > 0 && (
-                <div className="mt-4 border-t pt-4 space-y-3">
-                    <div className="space-y-1">
-                        {items.length > 0 && (
-                            <div className="flex justify-between">
-                                <Text>Asientos:</Text>
-                                <Text>${formatPrice(getSeatsTotal())}</Text>
-                            </div>
-                        )}
-                        {products.length > 0 && (
-                            <div className="flex justify-between">
-                                <Text>Productos:</Text>
-                                <Text>${formatPrice(getProductsTotal())}</Text>
+            {/* Summary and Checkout */}
+            {(itemCount > 0 || currentLocator) && (
+                <div className="mt-6 border-t pt-4">
+                    <div className="space-y-2 mb-4">
+                        <div className="flex justify-between">
+                            <span>Subtotal:</span>
+                            <span>${formatPrice(subtotal)}</span>
+                        </div>
+                        {currentLocator && unpaidSeats.length > 0 && (
+                            <div className="flex justify-between text-orange-600">
+                                <span>Pendiente de pago:</span>
+                                <span>${formatPrice(unpaidSeats.reduce((sum, seat) => sum + (seat.precio || 0), 0))}</span>
                             </div>
                         )}
                         <Divider />
-                        <div className="flex justify-between">
-                            <Text strong className="text-lg">Total:</Text>
-                            <Text strong className="text-lg text-blue-600">
-                                ${formatPrice(total)}
-                            </Text>
+                        <div className="flex justify-between font-bold text-lg">
+                            <span>Total a pagar:</span>
+                            <span>${formatPrice(subtotal)}</span>
                         </div>
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                        {!user && (
-                            <Alert
-                                message="Autenticación requerida"
-                                description="Debes iniciar sesión o registrarte para continuar con la compra"
-                                type="warning"
-                                showIcon
-                                icon={<LockOutlined />}
-                                className="mb-2"
-                            />
+                    <div className="flex space-x-2">
+                        {itemCount > 0 && (
+                            <Button 
+                                type="primary" 
+                                size="large" 
+                                onClick={handleCheckout}
+                                className="flex-1"
+                            >
+                                Proceder al Pago
+                            </Button>
                         )}
-                        <Button
-                            type="primary"
-                            size="large"
-                            block
-                            onClick={handleProceedToPayment}
-                            icon={user ? <ShoppingCartOutlined /> : <LockOutlined />}
-                        >
-                            {user ? 'Proceder al Pago' : 'Iniciar Sesión para Pagar'}
-                        </Button>
+                        {currentLocator && paidSeats.length > 0 && (
+                            <Button 
+                                type="default" 
+                                size="large"
+                                icon={<DownloadOutlined />}
+                                onClick={() => {
+                                    // Trigger bulk download
+                                    const downloadBtn = document.querySelector('[data-bulk-download]');
+                                    if (downloadBtn) downloadBtn.click();
+                                }}
+                                className="flex-1"
+                            >
+                                Descargar Tickets Pagados
+                            </Button>
+                        )}
                     </div>
                 </div>
             )}
@@ -457,19 +737,6 @@ const Cart = () => {
                 onLoadCart={loadSavedCart}
                 onDeleteCart={deleteSavedCart}
                 loading={savedCartsLoading}
-            />
-
-            {/* Auth Check Modal */}
-            <AuthCheck
-                visible={showAuthModal}
-                onClose={() => setShowAuthModal(false)}
-                onSuccess={handleAuthSuccess}
-                cartData={{
-                    itemCount,
-                    total,
-                    items: items.length,
-                    products: products.length
-                }}
             />
         </div>
     );

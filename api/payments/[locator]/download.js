@@ -337,3 +337,173 @@ async function generateFullPDF(req, res, payment, locator) {
     });
   }
 }
+
+// Función para generar PDF con todos los tickets (modo bulk)
+async function generateBulkPDF(req, res, locator) {
+  try {
+    console.log('📄 [DOWNLOAD-BULK] Generando PDF con todos los tickets para localizador:', locator);
+    
+    // Buscar el pago por localizador
+    const { data: payment, error } = await supabaseAdmin
+      .from('payments')
+      .select('*')
+      .eq('locator', locator)
+      .single();
+
+    if (error || !payment) {
+      console.error('❌ [DOWNLOAD-BULK] Error buscando pago:', error);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    console.log('✅ [DOWNLOAD-BULK] Pago encontrado:', payment.id);
+
+    // Parsear los asientos del pago
+    let seats = [];
+    if (Array.isArray(payment.seats)) {
+      seats = payment.seats;
+    } else if (typeof payment.seats === 'string') {
+      try {
+        seats = JSON.parse(payment.seats);
+      } catch {
+        try {
+          seats = JSON.parse(JSON.parse(payment.seats));
+        } catch {
+          seats = [];
+        }
+      }
+    }
+
+    if (seats.length === 0) {
+      console.error('❌ [DOWNLOAD-BULK] No hay asientos en el pago');
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: 'No seats found in payment' });
+    }
+
+    // Crear documento PDF
+    const pdfDoc = await PDFDocument.create();
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+    // Generar una página por cada asiento
+    for (let i = 0; i < seats.length; i++) {
+      const seat = seats[i];
+      console.log(`📄 [DOWNLOAD-BULK] Generando página ${i + 1}/${seats.length} para asiento:`, seat.id || seat._id);
+      
+      const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
+      const { width, height } = page.getSize();
+
+      // Generar QR code para este asiento específico
+      const qrData = JSON.stringify({
+        locator: payment.locator,
+        paymentId: payment.id,
+        seatId: seat.id || seat._id,
+        timestamp: new Date().toISOString()
+      });
+      
+      const qrImageBytes = await QRCode.toBuffer(qrData, {
+        type: 'image/png',
+        width: 200,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+
+      // Título del ticket
+      page.drawText('TICKET DE ENTRADA', {
+        x: 50,
+        y: height - 50,
+        size: 22,
+        color: rgb(0.1, 0.1, 0.1),
+        font: helveticaBold,
+      });
+
+      // Datos principales
+      let y = height - 90;
+      page.drawText(`Localizador: ${payment.locator}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
+      y -= 25;
+      
+      // Información del asiento
+      page.drawText(`Asiento: ${seat.name || seat.nombre || seat.id || seat._id}`, { x: 50, y, size: 14, color: rgb(0,0,0), font: helveticaBold });
+      y -= 25;
+      
+      if (seat.zona) {
+        page.drawText(`Zona: ${seat.zona}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
+        y -= 25;
+      }
+      
+      // Información básica del pago
+      page.drawText(`Estado: ${payment.status}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
+      y -= 25;
+      
+      if (payment.monto) {
+        page.drawText(`Monto: $${payment.monto}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
+        y -= 25;
+      }
+
+      // Fecha de compra
+      const fechaCreacion = new Date(payment.created_at).toLocaleString('es-ES');
+      page.drawText(`Fecha de compra: ${fechaCreacion}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4), font: helveticaFont });
+
+      // --- Insertar QR ---
+      const qrImage = await pdfDoc.embedPng(qrImageBytes);
+      const qrSize = 120;
+      page.drawImage(qrImage, {
+        x: width - qrSize - 50,
+        y: height - qrSize - 60,
+        width: qrSize,
+        height: qrSize,
+      });
+      page.drawText('Escanea para validar', {
+        x: width - qrSize - 40,
+        y: height - qrSize - 75,
+        size: 10,
+        color: rgb(0.3,0.3,0.3),
+        font: helveticaFont
+      });
+
+      // --- Condiciones ---
+      page.drawText('Condiciones:', { x: 50, y: 80, size: 10, color: rgb(0.2,0.2,0.2), font: helveticaBold });
+      page.drawText('• Presenta este ticket en la entrada del evento.', { x: 60, y: 65, size: 9, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+      page.drawText('• El QR es único y será validado electrónicamente.', { x: 60, y: 53, size: 9, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+      page.drawText('• No compartas tu ticket. Solo el primer escaneo será válido.', { x: 60, y: 41, size: 9, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+
+      // Número de página
+      page.drawText(`Página ${i + 1} de ${seats.length}`, { 
+        x: 50, 
+        y: 30, 
+        size: 10, 
+        color: rgb(0.4,0.4,0.4), 
+        font: helveticaFont 
+      });
+    }
+
+    console.log('💾 [DOWNLOAD-BULK] Guardando PDF con múltiples tickets...');
+    const pdfBytes = await pdfDoc.save();
+    console.log('✅ [DOWNLOAD-BULK] PDF generado exitosamente, tamaño:', pdfBytes.length, 'bytes');
+
+    // Asegurar que se envíen los headers correctos
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="tickets-${locator}-completos.pdf"`);
+    res.setHeader('Content-Length', pdfBytes.length);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    console.log('📤 [DOWNLOAD-BULK] Enviando PDF al cliente...');
+    return res.status(200).send(Buffer.from(pdfBytes));
+    
+  } catch (err) {
+    console.error('❌ [DOWNLOAD-BULK] Error generando PDF con múltiples tickets:', err);
+    console.error('❌ [DOWNLOAD-BULK] Stack trace:', err.stack);
+    
+    res.setHeader('Content-Type', 'application/json');
+    return res.status(500).json({ 
+      error: 'Error generando PDF con múltiples tickets', 
+      details: err.message,
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+}

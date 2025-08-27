@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber } from 'antd';
-import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined, DownloadOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined, DownloadOutlined, HistoryOutlined } from '@ant-design/icons';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ZonesPanel from './components/ZonesPanel.jsx';
@@ -1148,6 +1148,104 @@ const BoleteriaMain = () => {
     }
   ];
 
+  const handleRememberLastSale = async () => {
+    try {
+      // Buscar la última venta en la base de datos
+      const { data: lastPayment, error } = await supabase
+        .from('payments')
+        .select(`
+          *,
+          funcion:funciones(*),
+          evento:eventos(*),
+          user:profiles(*)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (error || !lastPayment) {
+        message.error('No se encontró ninguna venta reciente');
+        return;
+      }
+
+      // Cargar los datos de la última venta
+      if (lastPayment.evento) {
+        setSelectedEvent(lastPayment.evento);
+      }
+      
+      if (lastPayment.funcion) {
+        setSelectedFuncion(lastPayment.funcion);
+      }
+      
+      if (lastPayment.user) {
+        setSelectedClient(lastPayment.user);
+      }
+
+      // Parsear los asientos del pago
+      let seats = [];
+      if (Array.isArray(lastPayment.seats)) {
+        seats = lastPayment.seats;
+      } else if (typeof lastPayment.seats === 'string') {
+        try {
+          seats = JSON.parse(lastPayment.seats);
+        } catch {
+          try {
+            seats = JSON.parse(JSON.parse(lastPayment.seats));
+          } catch {
+            seats = [];
+          }
+        }
+      }
+
+      // Procesar los asientos para el carrito
+      const processedSeats = seats.map(seat => ({
+        _id: seat.id || seat._id,
+        nombre: seat.name || seat.nombre,
+        precio: seat.price || seat.precio,
+        zona: seat.zona?.nombre || seat.zona,
+        paymentId: lastPayment.id,
+        locator: lastPayment.locator,
+        isPaid: lastPayment.status === 'pagado'
+      }));
+
+      setSelectedSeats(processedSeats);
+
+      // Cargar productos si existen
+      if (lastPayment.products && Array.isArray(lastPayment.products)) {
+        setProductosCarrito(lastPayment.products);
+      } else if (typeof lastPayment.products === 'string') {
+        try {
+          const products = JSON.parse(lastPayment.products);
+          setProductosCarrito(Array.isArray(products) ? products : []);
+        } catch {
+          setProductosCarrito([]);
+        }
+      }
+
+      message.success(`Última venta cargada: ${lastPayment.locator} - ${lastPayment.evento?.nombre || 'Evento'}`);
+      
+      // Mostrar información de la venta
+      Modal.info({
+        title: 'Última Venta Cargada',
+        content: (
+          <div>
+            <p><strong>Localizador:</strong> {lastPayment.locator}</p>
+            <p><strong>Evento:</strong> {lastPayment.evento?.nombre || 'N/A'}</p>
+            <p><strong>Fecha:</strong> {new Date(lastPayment.created_at).toLocaleString('es-ES')}</p>
+            <p><strong>Estado:</strong> {lastPayment.status}</p>
+            <p><strong>Asientos:</strong> {seats.length}</p>
+            <p><strong>Monto:</strong> ${lastPayment.monto || 0}</p>
+          </div>
+        ),
+        okText: 'Entendido'
+      });
+
+    } catch (error) {
+      console.error('Error al recordar última venta:', error);
+      message.error('Error al cargar la última venta');
+    }
+  };
+
   return (
     <div>
       <div className="h-screen flex bg-gray-100">
@@ -1188,27 +1286,7 @@ const BoleteriaMain = () => {
             <div>Localizador</div>
           </div>
         </Tooltip>
-        
-        <Tooltip title="Descargar ticket por localizador" placement="right">
-          <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => {
-            const locator = prompt('Ingresa el localizador del ticket a descargar:');
-            if (locator) {
-              // Crear un enlace temporal para descargar
-              const url = `/api/payments/${locator}/download?mode=simple`;
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `ticket-${locator}.pdf`;
-              a.target = '_blank';
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-            }
-          }}>
-            <DownloadOutlined className="text-xl mb-1" />
-            <div>Descargar</div>
-          </div>
-        </Tooltip>
-        
+  
         <Tooltip title="Gestionar carritos guardados" placement="right">
           <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => setShowCartManagement(true)}>
             <ShoppingCartOutlined className="text-xl mb-1" />
