@@ -58,13 +58,12 @@ const EventsVenue = ({ groupByTags = true }) => {
             console.error('Error parsing cached widgets', err);
           }
         }
+      } finally {
+        setLoadingCms(false);
       }
-    } finally {
-      setLoadingCms(false);
-    }
-  };
-  loadCmsWidgets();
-}, []); // Empty dependency array means this runs once on mount
+    };
+    loadCmsWidgets();
+  }, []); // Empty dependency array means this runs once on mount
 
   // Display loading or error states for both CMS widgets and events
   if (loadingCms || loadingEvents) {
@@ -111,17 +110,17 @@ const EventsVenue = ({ groupByTags = true }) => {
           <div className="max-w-7xl mx-auto">
             <h1 className="text-3xl font-bold text-gray-900 mb-8">Eventos Disponibles ({events.length})</h1>
             
-                  {/* Debug Info */}
-      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="text-lg font-semibold text-blue-800 mb-2">Información de Debug:</h3>
-        <p className="text-sm text-blue-700">Total de eventos: {events?.length || 0}</p>
-        <p className="text-sm text-blue-700">Tipo de events: {typeof events}</p>
-        <p className="text-sm text-blue-700">Es array: {Array.isArray(events) ? 'Sí' : 'No'}</p>
-        <p className="text-sm text-blue-700">Primer evento: {events?.[0]?.name || events?.[0]?.nombre || 'Sin nombre'}</p>
-        <p className="text-sm text-blue-700">Estado de carga: {loadingEvents ? 'Cargando...' : 'Completado'}</p>
-        <p className="text-sm text-blue-700">Error: {errorEvents ? errorEvents.message : 'Ninguno'}</p>
-        <p className="text-sm text-blue-700">Hook ejecutado: Sí</p>
-      </div>
+            {/* Debug Info */}
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">Información de Debug:</h3>
+              <p className="text-sm text-blue-700">Total de eventos: {events?.length || 0}</p>
+              <p className="text-sm text-blue-700">Tipo de events: {typeof events}</p>
+              <p className="text-sm text-blue-700">Es array: {Array.isArray(events) ? 'Sí' : 'No'}</p>
+              <p className="text-sm text-blue-700">Primer evento: {events?.[0]?.name || events?.[0]?.nombre || 'Sin nombre'}</p>
+              <p className="text-sm text-blue-700">Estado de carga: {loadingEvents ? 'Cargando...' : 'Completado'}</p>
+              <p className="text-sm text-blue-700">Error: {errorEvents ? errorEvents.message : 'Ninguno'}</p>
+              <p className="text-sm text-blue-700">Hook ejecutado: Sí</p>
+            </div>
             
             <EventListWidget events={events} groupByTags={groupByTags} />
           </div>
