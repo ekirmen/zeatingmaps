@@ -386,10 +386,16 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     if (!pageLoaded || !selectedPage) return;
     const autoSave = async () => {
       try {
-        await saveCmsPage(selectedPage.id, widgets);
+        // Usar el slug de la página, no el ID
+        const pageSlug = selectedPage.slug || selectedPage.id;
+        console.log(`💾 [WebStudio] Auto-save para página: ${pageSlug} (ID: ${selectedPage.id})`);
+        
+        await saveCmsPage(pageSlug, widgets);
         localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
+        console.log(`✅ [WebStudio] Auto-save exitoso para: ${pageSlug}`);
       } catch (err) {
-        console.error('Auto save failed', err);
+        console.error('❌ [WebStudio] Auto save failed:', err);
+        // No hacer nada más, solo loggear el error
       }
     };
     autoSave();

@@ -793,23 +793,41 @@ export const fetchCmsPage = async (identifier) => {
   }
 };
 
-// Guardar widgets en una página CMS por slug
-export const saveCmsPage = async (slug, widgets) => {
+// Guardar widgets en una página CMS por slug o ID
+export const saveCmsPage = async (identifier, widgets) => {
   try {
     const [hasCreatedAt, hasUpdatedAt] = await Promise.all([
       hasColumn('cms_pages', 'created_at'),
       hasColumn('cms_pages', 'updated_at')
     ]);
 
-    // Primero verificar si la página existe
-    let { data: existingPage, error: checkError } = await supabase
-      .from('cms_pages')
-      .select('id')
-      .ilike('slug', slug)
-      .maybeSingle();
+    let existingPage = null;
+    let checkError = null;
+
+    // Si el identificador es un número, buscar por ID
+    if (!isNaN(identifier) && Number.isInteger(Number(identifier))) {
+      console.log(`🔍 [saveCmsPage] Buscando página por ID: ${identifier}`);
+      const result = await supabase
+        .from('cms_pages')
+        .select('id, slug')
+        .eq('id', parseInt(identifier))
+        .single();
+      existingPage = result.data;
+      checkError = result.error;
+    } else {
+      // Si es un string, buscar por slug
+      console.log(`🔍 [saveCmsPage] Buscando página por slug: ${identifier}`);
+      const result = await supabase
+        .from('cms_pages')
+        .select('id, slug')
+        .ilike('slug', identifier)
+        .maybeSingle();
+      existingPage = result.data;
+      checkError = result.error;
+    }
 
     if (checkError) {
-      console.error('Error checking page existence:', checkError);
+      console.error('❌ [saveCmsPage] Error checking page existence:', checkError);
       throw new Error('Error al verificar la página');
     }
 
@@ -818,32 +836,29 @@ export const saveCmsPage = async (slug, widgets) => {
 
     if (existingPage) {
       // Actualizar página existente
+      console.log(`✅ [saveCmsPage] Actualizando página existente: ${existingPage.slug} (ID: ${existingPage.id})`);
       const updateData = { widgets };
       if (hasUpdatedAt) updateData.updated_at = now;
+      
       result = await supabase
         .from('cms_pages')
         .update(updateData)
-        .ilike('slug', slug);
+        .eq('id', existingPage.id);
     } else {
-      // Crear nueva página
-      const insertData = {
-        slug: slug,
-        nombre: slug,
-        widgets: widgets
-      };
-      if (hasCreatedAt) insertData.created_at = now;
-      if (hasUpdatedAt) insertData.updated_at = now;
-      result = await supabase.from('cms_pages').insert([insertData]);
+      // NO crear nueva página automáticamente
+      console.warn(`⚠️ [saveCmsPage] Página no encontrada: ${identifier} - NO se creará automáticamente`);
+      throw new Error(`Página no encontrada: ${identifier}`);
     }
 
     if (result.error) {
-      console.error('Error al guardar página CMS:', result.error);
+      console.error('❌ [saveCmsPage] Error al guardar página CMS:', result.error);
       throw new Error('Error al guardar la página');
     }
 
+    console.log(`✅ [saveCmsPage] Página guardada exitosamente: ${identifier}`);
     return result.data;
   } catch (error) {
-    console.error('Error in saveCmsPage:', error);
+    console.error('❌ [saveCmsPage] Error general:', error);
     throw error;
   }
 };
