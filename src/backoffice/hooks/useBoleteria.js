@@ -154,6 +154,13 @@ export const useBoleteria = () => {
         message.warning('Función no encontrada.');
         return false;
       }
+
+      // Validar que funcionData tenga las propiedades necesarias
+      if (!funcionData.id) {
+        console.error('❌ [useBoleteria] funcionData no tiene ID:', funcionData);
+        message.error('Datos de función inválidos');
+        return false;
+      }
   
       // Mapear los campos para que coincidan con lo que espera el frontend
       const salaField = funcionData.sala;
@@ -262,10 +269,22 @@ export const useBoleteria = () => {
             let reservedSeats = 0;
             
             mapData.contenido.forEach(elemento => {
+              // Validar que elemento no sea null/undefined
+              if (!elemento || typeof elemento !== 'object') {
+                console.warn('⚠️ [useBoleteria] Elemento inválido en mapa:', elemento);
+                return;
+              }
+              
               if (elemento.sillas && Array.isArray(elemento.sillas)) {
                 totalSeats += elemento.sillas.length;
                 
                 elemento.sillas.forEach(silla => {
+                  // Validar que silla no sea null/undefined
+                  if (!silla || typeof silla !== 'object') {
+                    console.warn('⚠️ [useBoleteria] Silla inválida en elemento:', silla);
+                    return;
+                  }
+                  
                   switch (silla.estado) {
                     case 'pagado':
                     case 'vendido':

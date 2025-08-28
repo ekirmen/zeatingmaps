@@ -248,6 +248,13 @@ const ZonesPanel = ({
       detalles.forEach((detalle, index) => {
         console.log(`🔍 Procesando detalle ${index}:`, detalle);
         
+        // Validar que detalle no sea null/undefined
+        if (!detalle || typeof detalle !== 'object') {
+          console.warn(`❌ Detalle ${index} es null/undefined o no es un objeto:`, detalle);
+          detallesConError++;
+          return;
+        }
+        
         // Extraer campos con múltiples nombres posibles
         const zonaId = detalle.zonaId || detalle.zona_id || detalle.zona?.id || detalle.id_zona || detalle.idZona;
         const entradaId = detalle.entradaId || detalle.entrada_id || detalle.entrada?.id || detalle.id_entrada || detalle.idEntrada || detalle.productoId || detalle.producto_id;
@@ -274,6 +281,19 @@ const ZonesPanel = ({
 
         if (!entrada) {
           console.warn(`❌ Entrada ${entradaId} no encontrada en BD`);
+          detallesConError++;
+          return;
+        }
+
+        // Validar que zona y entrada tengan las propiedades necesarias
+        if (!zona.nombre) {
+          console.warn(`❌ Zona ${zonaId} no tiene nombre:`, zona);
+          detallesConError++;
+          return;
+        }
+
+        if (!entrada.nombre_entrada) {
+          console.warn(`❌ Entrada ${entradaId} no tiene nombre_entrada:`, entrada);
           detallesConError++;
           return;
         }
@@ -561,27 +581,35 @@ const ZonesPanel = ({
             </span>
           </div>
           <div className="divide-y">
-            {activeZona.precios.map((opt) => (
-              <div
-                key={opt.id}
-                className={`px-3 py-2 text-xs flex items-center justify-between cursor-pointer hover:bg-purple-50 ${
-                  selectedPriceId === opt.id ? 'bg-purple-50 ring-1 ring-purple-300' : ''
-                }`}
-                onClick={() => onSelectPrice(opt)}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }}></div>
-                  <div>
-                    <div className="font-medium">{opt.entrada.nombre_entrada}</div>
-                    <div className="text-gray-500">{activeZona.zona.nombre}</div>
+            {activeZona.precios.map((opt) => {
+              // Validar que opt y sus propiedades existan
+              if (!opt || !opt.entrada || !opt.entrada.nombre_entrada || !activeZona.zona || !activeZona.zona.nombre) {
+                console.warn('⚠️ ZonesPanel - opt inválida:', opt);
+                return null;
+              }
+              
+              return (
+                <div
+                  key={opt.id}
+                  className={`px-3 py-2 text-xs flex items-center justify-between cursor-pointer hover:bg-purple-50 ${
+                    selectedPriceId === opt.id ? 'bg-purple-50 ring-1 ring-purple-300' : ''
+                  }`}
+                  onClick={() => onSelectPrice(opt)}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }}></div>
+                    <div>
+                      <div className="font-medium">{opt.entrada.nombre_entrada}</div>
+                      <div className="text-gray-500">{activeZona.zona.nombre}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-bold">${opt.precio.toFixed(2)}</div>
+                    {opt.comision > 0 && <div className="text-gray-500">+${opt.comision.toFixed(2)} comisión</div>}
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-bold">${opt.precio.toFixed(2)}</div>
-                  {opt.comision > 0 && <div className="text-gray-500">+${opt.comision.toFixed(2)} comisión</div>}
-                </div>
-              </div>
-            ))}
+              );
+            }).filter(Boolean) // Filtrar elementos null
           </div>
         </div>
       )}

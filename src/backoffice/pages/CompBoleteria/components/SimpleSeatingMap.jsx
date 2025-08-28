@@ -548,7 +548,7 @@ const SimpleSeatingMap = ({
                 // Si hay una mesa circular padre, centrar los asientos correctamente
                 // NOTA: Para mesas circulares, las coordenadas de las sillas son relativas al centro de la mesa
                 const isCircleTable = elemento?.type === 'mesa' && elemento?.shape === 'circle';
-                const chairDiameter = 30; // coincide con width/height de la silla
+                const chairDiameter = 20; // Diámetro del asiento (coincide con width/height)
                 
                 // Calcular posición relativa a la mesa si es circular
                 let adjustedLeft, adjustedTop;
@@ -556,19 +556,25 @@ const SimpleSeatingMap = ({
                   // Para mesas circulares, las coordenadas de las sillas son relativas al centro de la mesa
                   const mesaCenterX = (elemento.posicion?.x ?? elemento.x ?? 0);
                   const mesaCenterY = (elemento.posicion?.y ?? elemento.y ?? 0);
-                  const mesaRadius = elemento.radius ?? 30;
+                  // Calcular el radio de la mesa basado en width/height o radius
+                  const mesaRadius = elemento.radius ?? (elemento.width ?? 60) / 2;
                   
                   // Las coordenadas de la silla son relativas al centro de la mesa
                   const sillaRelX = (sx || 0);
                   const sillaRelY = (sy || 0);
                   
-                  // Posición absoluta = centro de la mesa + posición relativa de la silla
-                  adjustedLeft = mesaCenterX + sillaRelX - chairDiameter / 2;
-                  adjustedTop = mesaCenterY + sillaRelY - chairDiameter / 2;
+                  // Posición absoluta = centro de la mesa + posición relativa de la silla - mitad del diámetro del asiento
+                  // Esto centra perfectamente el asiento en su posición relativa
+                  adjustedLeft = mesaCenterX + sillaRelX - (chairDiameter / 2);
+                  adjustedTop = mesaCenterY + sillaRelY - (chairDiameter / 2);
+                  
+                  console.log(`🔍 [Mesa Circular] Mesa: (${mesaCenterX}, ${mesaCenterY}), Radio: ${mesaRadius}`);
+                  console.log(`🔍 [Mesa Circular] Silla relativa: (${sillaRelX}, ${sillaRelY})`);
+                  console.log(`🔍 [Mesa Circular] Silla absoluta: (${adjustedLeft}, ${adjustedTop})`);
                 } else {
                   // Para mesas rectangulares, usar coordenadas absolutas
-                  adjustedLeft = (sx || 0) - chairDiameter / 2;
-                  adjustedTop = (sy || 0) - chairDiameter / 2;
+                  adjustedLeft = (sx || 0) - (chairDiameter / 2);
+                  adjustedTop = (sy || 0) - (chairDiameter / 2);
                 }
                 
                 const isOtherZone = selectedZonaId && String(selectedZonaId) !== String(silla?.zona?.id || silla?.zonaId || silla?.zona || '');
@@ -600,8 +606,8 @@ const SimpleSeatingMap = ({
                       style={{
                         left: adjustedLeft,
                         top: adjustedTop,
-                        width: 30,
-                        height: 30,
+                        width: chairDiameter,
+                        height: chairDiameter,
                         borderRadius: '50%',
                         backgroundColor: silla.fill || getSeatColor(silla),
                         border: borderStyle,
