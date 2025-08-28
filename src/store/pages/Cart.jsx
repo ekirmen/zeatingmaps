@@ -2,22 +2,21 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, InputNumber, Modal, Input, List, Tag, Space, Typography, Divider, Badge, Alert, message } from 'antd';
 import { 
-  ShoppingCartOutlined, 
-  SaveOutlined, 
-  DeleteOutlined, 
-  PlusOutlined, 
-  MinusOutlined,
-  ClockCircleOutlined,
-  UserOutlined,
-  DownloadOutlined,
-  SearchOutlined,
-  LockOutlined
+    ShoppingCartOutlined, 
+    SaveOutlined, 
+    DeleteOutlined, 
+    DownloadOutlined,
+    SearchOutlined,
+    LockOutlined,
+    TicketOutlined,
+    UserOutlined
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
-import { useAuth } from '../../contexts/AuthContext';
-import FacebookPixel from '../components/FacebookPixel';
-import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../services/facebookPixelService';
-import AuthCheck from '../components/AuthCheck';
+import { useAuth } from '../contexts/AuthContext';
+import { FacebookPixel, getFacebookPixelByEvent, FACEBOOK_EVENTS, shouldTrackOnPage } from '../components/FacebookPixel';
+import { Timer } from '../components/Timer';
+import { AuthCheck } from '../components/AuthCheck';
+import EnhancedPaymentSearch from '../components/EnhancedPaymentSearch';
 
 const { Title, Text } = Typography;
 
@@ -52,91 +51,7 @@ const Timer = ({ expiresAt }) => {
     );
 };
 
-// Localizador Search Component
-const LocalizadorSearch = ({ onLocatorFound, onClearLocator, currentLocator }) => {
-    const [searchValue, setSearchValue] = useState('');
-    const [searching, setSearching] = useState(false);
 
-    const handleSearch = async () => {
-        if (!searchValue.trim()) return;
-        
-        setSearching(true);
-        try {
-            // Buscar pago por localizador
-            const response = await fetch(`/api/payments/${searchValue.trim()}/debug`);
-            if (response.ok) {
-                const data = await response.json();
-                if (data.payment) {
-                    onLocatorFound(data.payment, searchValue.trim());
-                    message.success(`Localizador encontrado: ${searchValue.trim()}`);
-                } else {
-                    message.error('Localizador no encontrado');
-                }
-            } else {
-                message.error('Error al buscar localizador');
-            }
-        } catch (error) {
-            console.error('Error searching locator:', error);
-            message.error('Error al buscar localizador');
-        } finally {
-            setSearching(false);
-        }
-    };
-
-    const handleClear = () => {
-        setSearchValue('');
-        onClearLocator();
-        message.info('Localizador limpiado');
-    };
-
-    return (
-        <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <div className="flex items-center space-x-2 mb-2">
-                <SearchOutlined className="text-blue-500" />
-                <Text strong className="text-blue-800">Buscar por Localizador</Text>
-            </div>
-            
-            {currentLocator ? (
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                        <Tag color="blue" className="text-sm">
-                            Localizador: {currentLocator}
-                        </Tag>
-                        <Text type="secondary" className="text-xs">
-                            Pago encontrado
-                        </Text>
-                    </div>
-                    <Button 
-                        size="small" 
-                        danger 
-                        onClick={handleClear}
-                        icon={<DeleteOutlined />}
-                    >
-                        Limpiar
-                    </Button>
-                </div>
-            ) : (
-                <div className="flex space-x-2">
-                    <Input
-                        placeholder="Ingresa el localizador (ej: S0KOUN4)"
-                        value={searchValue}
-                        onChange={(e) => setSearchValue(e.target.value)}
-                        onPressEnter={handleSearch}
-                        className="flex-1"
-                    />
-                    <Button 
-                        type="primary" 
-                        onClick={handleSearch}
-                        loading={searching}
-                        icon={<SearchOutlined />}
-                    >
-                        Buscar
-                    </Button>
-                </div>
-            )}
-        </div>
-    );
-};
 
 // Individual Ticket Download Button
 const TicketDownloadButton = ({ seat, locator, isPaid }) => {
@@ -485,8 +400,8 @@ const Cart = () => {
                 <Timer expiresAt={cartExpiration} />
             </div>
 
-            {/* Localizador Search */}
-            <LocalizadorSearch
+            {/* Enhanced Payment Search */}
+            <EnhancedPaymentSearch
                 onLocatorFound={handleLocatorFound}
                 onClearLocator={handleClearLocator}
                 currentLocator={currentLocator}

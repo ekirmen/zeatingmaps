@@ -807,13 +807,51 @@ export const fetchPayments = async () => {
 
 export const fetchPaymentByLocator = async (locator) => {
   const client = supabaseAdmin || supabase;
-  const { data, error } = await client
-    .from('payments')
-    .select('*, seats, funcion')
-    .eq('locator', locator)
-    .single();
-  handleError(error);
-  return data;
+  
+  console.log('🔍 [fetchPaymentByLocator] Buscando pago por localizador:', locator);
+  
+  if (!locator) {
+    console.warn('🔍 [fetchPaymentByLocator] Localizador no proporcionado');
+    return { data: null, error: null };
+  }
+  
+  try {
+    const { data, error } = await client
+      .from('payments')
+      .select(`
+        *,
+        seats,
+        funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
+        event:eventos(id, nombre),
+        user:profiles!usuario_id(id, login, empresa, telefono)
+      `)
+      .eq('locator', locator)
+      .single();
+    
+    if (error) {
+      console.error('🔍 [fetchPaymentByLocator] Error:', error);
+      return { data: null, error };
+    }
+    
+    if (data) {
+      // Procesar los seats para incluir información adicional
+      const seats = parseSeatsArray(data.seats);
+      const processedPayment = {
+        ...data,
+        seatsCount: seats.length,
+        totalAmount: seats.reduce((sum, seat) => sum + (seat.price || 0), 0),
+        seats: seats
+      };
+      
+      console.log('🔍 [fetchPaymentByLocator] Pago encontrado:', processedPayment.id);
+      return { data: processedPayment, error: null };
+    }
+    
+    return { data: null, error: null };
+  } catch (error) {
+    console.error('🔍 [fetchPaymentByLocator] Error inesperado:', error);
+    return { data: null, error };
+  }
 };
 
 export const fetchPaymentBySeat = async (funcionId, seatId) => {
@@ -833,7 +871,7 @@ export const fetchPaymentBySeat = async (funcionId, seatId) => {
       .select('*, seats, funcion, event:eventos(*), user:profiles!usuario_id(*)')
       .eq('funcion', funcionId);
     
-    // Usar contains para buscar en el array de seats
+    // Usar contains para buscar en el array de seats - corregir el formato
     const { data, error } = await query
       .contains('seats', [{ id: seatId }])
       .or(`seats.cs.[{"_id":"${seatId}"}],seats.cs.[{"id":"${seatId}"}]`);
@@ -842,12 +880,12 @@ export const fetchPaymentBySeat = async (funcionId, seatId) => {
     
     if (error) {
       console.error('🔍 [fetchPaymentBySeat] Error:', error);
-      return null;
+      // Si hay error con contains, continuar con búsqueda manual
     }
     
-    // Si no se encuentra con contains, intentar con una búsqueda más amplia
-    if (!data || data.length === 0) {
-      console.log('🔍 [fetchPaymentBySeat] No se encontró con contains, intentando búsqueda manual...');
+    // Si no se encuentra con contains o hay error, intentar con una búsqueda más amplia
+    if (!data || data.length === 0 || error) {
+      console.log('🔍 [fetchPaymentBySeat] No se encontró con contains o hubo error, intentando búsqueda manual...');
       
       // Obtener todos los pagos para esta función y buscar manualmente
       const { data: allPayments, error: allError } = await client
@@ -879,6 +917,73 @@ export const fetchPaymentBySeat = async (funcionId, seatId) => {
   } catch (error) {
     console.error('🔍 [fetchPaymentBySeat] Error inesperado:', error);
     return null;
+  }
+};
+
+// Nueva función para buscar pagos por email de usuario
+export const fetchPaymentsByUserEmail = async (email) => {
+  const client = supabaseAdmin || supabase;
+  
+  console.log('🔍 [fetchPaymentsByUserEmail] Buscando pagos por email:', email);
+  
+  if (!email) {
+    console.warn('🔍 [fetchPaymentsByUserEmail] Email no proporcionado');
+    return { data: [], error: null };
+  }
+  
+  try {
+    // Primero buscar el usuario por email
+    const { data: user, error: userError } = await client
+      .from('profiles')
+      .select('id, login, empresa, telefono')
+      .eq('login', email)
+      .single();
+    
+    if (userError) {
+      console.error('🔍 [fetchPaymentsByUserEmail] Error buscando usuario:', userError);
+      return { data: [], error: userError };
+    }
+    
+    if (!user) {
+      console.log('🔍 [fetchPaymentsByUserEmail] Usuario no encontrado');
+      return { data: [], error: null };
+    }
+    
+    // Buscar todos los pagos del usuario
+    const { data: payments, error: paymentsError } = await client
+      .from('payments')
+      .select(`
+        *,
+        seats,
+        funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
+        event:eventos(id, nombre),
+        user:profiles!usuario_id(id, login, empresa, telefono)
+      `)
+      .eq('usuario_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (paymentsError) {
+      console.error('🔍 [fetchPaymentsByUserEmail] Error buscando pagos:', paymentsError);
+      return { data: [], error: paymentsError };
+    }
+    
+    // Procesar los pagos para incluir información adicional
+    const processedPayments = (payments || []).map(payment => {
+      const seats = parseSeatsArray(payment.seats);
+      return {
+        ...payment,
+        seatsCount: seats.length,
+        totalAmount: seats.reduce((sum, seat) => sum + (seat.price || 0), 0),
+        seats: seats
+      };
+    });
+    
+    console.log('🔍 [fetchPaymentsByUserEmail] Pagos encontrados:', processedPayments.length);
+    return { data: processedPayments, error: null, user };
+    
+  } catch (error) {
+    console.error('🔍 [fetchPaymentsByUserEmail] Error inesperado:', error);
+    return { data: [], error };
   }
 };
 
