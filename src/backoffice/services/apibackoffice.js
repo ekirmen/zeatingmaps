@@ -11,21 +11,15 @@ const handleError = (error) => {
   }
 };
 
-// Helper: verifica si una columna existe consultando information_schema
+// Helper: verifica si una columna existe - versión simplificada sin information_schema
 async function hasColumn(tableName, columnName) {
-  try {
-    const { data, error } = await supabase
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_name', tableName)
-      .eq('column_name', columnName)
-      .maybeSingle();
-
-    if (error) return false;
-    return !!data;
-  } catch (err) {
+  // Para cms_pages, sabemos que created_at existe según el schema
+  if (tableName === 'cms_pages') {
+    if (columnName === 'created_at') return true;
+    if (columnName === 'updated_at') return false; // No existe en el schema actual
     return false;
   }
+  return false;
 }
 
 // === ZONAS ===

@@ -3,59 +3,18 @@
 // Removed API_BASE_URL as we are now directly using Supabase for these calls
 import { supabase } from '../../supabaseClient'; // Assuming you use Supabase for data
 
-// Helper: verifica si una columna existe consultando information_schema
+// Helper: verifica si una columna existe - versión simplificada sin information_schema
 async function hasColumn(tableName, columnName) {
-  try {
-    const { data, error } = await supabase
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_name', tableName)
-      .eq('column_name', columnName)
-      .maybeSingle();
-
-    if (error) return false;
-    return !!data;
-  } catch (err) {
+  // Para cms_pages, sabemos que created_at existe según el schema
+  if (tableName === 'cms_pages') {
+    if (columnName === 'created_at') return true;
+    if (columnName === 'updated_at') return false; // No existe en el schema actual
     return false;
   }
+  return false;
 }
 
-// Debug: verificar estructura de webstudio_pages
-export const debugWebstudioTable = async () => {
-  try {
-    console.log('🔍 [debugWebstudioTable] Verificando estructura de webstudio_pages...');
-    
-    // Ver todas las columnas
-    const { data: columns, error: columnsError } = await supabase
-      .from('information_schema.columns')
-      .select('column_name, data_type, is_nullable')
-      .eq('table_name', 'webstudio_pages')
-      .order('ordinal_position');
 
-    if (columnsError) {
-      console.error('❌ [debugWebstudioTable] Error obteniendo columnas:', columnsError);
-      return;
-    }
-
-    console.log('🔍 [debugWebstudioTable] Columnas disponibles:', columns);
-    
-    // Ver algunas filas de ejemplo
-    const { data: sampleRows, error: rowsError } = await supabase
-      .from('webstudio_pages')
-      .select('*')
-      .limit(3);
-
-    if (rowsError) {
-      console.error('❌ [debugWebstudioTable] Error obteniendo filas de ejemplo:', rowsError);
-      return;
-    }
-
-    console.log('🔍 [debugWebstudioTable] Filas de ejemplo:', sampleRows);
-    
-  } catch (error) {
-    console.error('❌ [debugWebstudioTable] Error inesperado:', error);
-  }
-};
 
 /**
  * Fetches a CMS page by its slug directly from Supabase.
@@ -68,10 +27,10 @@ export const debugWebstudioTable = async () => {
 export const getCmsPage = async (slug) => {
   try {
     console.log('🔍 [getCmsPage] Intentando cargar página:', slug);
-    console.log('🔍 [getCmsPage] Usando tabla: webstudio_pages');
+    console.log('🔍 [getCmsPage] Usando tabla: cms_pages');
     
     const { data, error } = await supabase
-      .from('webstudio_pages') // Usar la tabla correcta de Webstudio
+      .from('cms_pages') // Usar la tabla correcta según el schema
       .select('*') // Seleccionar todas las columnas para debug
       .eq('slug', slug) // Filter by the slug
       .single(); // Expect a single result
@@ -84,11 +43,11 @@ export const getCmsPage = async (slug) => {
       throw error;
     }
     
-    // Adaptar a la estructura real de webstudio_pages
+    // Adaptar a la estructura real de cms_pages
     if (data) {
       // Crear un objeto widgets basado en los datos disponibles
       const result = {
-        widgets: {
+        widgets: data.widgets || {
           content: [
             {
               type: 'page_header',
