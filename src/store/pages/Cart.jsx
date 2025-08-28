@@ -432,6 +432,22 @@ const Cart = () => {
             message.warning('El carrito está vacío');
             return;
         }
+        
+        // Validar que todos los asientos tengan IDs válidos
+        const invalidSeats = items?.filter(item => !item.id && !item._id) || [];
+        if (invalidSeats.length > 0) {
+            message.error('Algunos asientos no tienen IDs válidos. Por favor, recarga la página.');
+            return;
+        }
+        
+        // Validar que no haya asientos duplicados
+        const seatIds = items?.map(item => item.id || item._id) || [];
+        const uniqueSeatIds = [...new Set(seatIds)];
+        if (seatIds.length !== uniqueSeatIds.length) {
+            message.error('Hay asientos duplicados en el carrito. Por favor, verifica.');
+            return;
+        }
+        
         navigate('/checkout');
     };
 

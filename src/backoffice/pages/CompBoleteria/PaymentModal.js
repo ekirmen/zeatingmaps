@@ -250,6 +250,21 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       return;
     }
 
+    // Validar que todos los asientos tengan IDs válidos
+    const invalidSeats = safeCarrito.filter(item => !item.id && !item._id);
+    if (invalidSeats.length > 0) {
+      message.error('Algunos asientos no tienen IDs válidos. Por favor, recarga la página.');
+      return;
+    }
+
+    // Verificar que no haya asientos duplicados
+    const seatIds = safeCarrito.map(item => item.id || item._id);
+    const uniqueSeatIds = [...new Set(seatIds)];
+    if (seatIds.length !== uniqueSeatIds.length) {
+      message.error('Hay asientos duplicados en el carrito. Por favor, verifica.');
+      return;
+    }
+
     setIsProcessing(true);
 
     try {
@@ -334,6 +349,12 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         errorMessage = '❌ Error: Uno o más asientos ya están vendidos. Por favor, selecciona otros asientos.';
       } else if (error.message?.includes('ya está vendido')) {
         errorMessage = `❌ ${error.message}`;
+      } else if (error.message?.includes('ya está reservado')) {
+        errorMessage = `❌ ${error.message}`;
+      } else if (error.message?.includes('Asiento sin ID válido')) {
+        errorMessage = '❌ Error: Algunos asientos no tienen IDs válidos. Por favor, verifica.';
+      } else if (error.message?.includes('invalid input syntax for type json')) {
+        errorMessage = '❌ Error: Los datos de los asientos no tienen el formato correcto. Por favor, verifica.';
       } else if (error.message) {
         errorMessage = error.message;
       }

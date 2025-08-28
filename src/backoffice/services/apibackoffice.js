@@ -662,13 +662,48 @@ export const fetchPlantillasPorRecintoYSala = async (recintoId, salaId) => {
 const parseSeatsArray = (rawSeats) => {
   try {
     let seats = rawSeats;
-    // Parsear repetidamente mientras el resultado siga siendo un string
-    while (typeof seats === 'string') {
-      seats = JSON.parse(seats);
+    
+    // Si es null o undefined, retornar array vacío
+    if (seats == null) return [];
+    
+    // Si ya es un array, validar y retornar
+    if (Array.isArray(seats)) {
+      return seats.filter(seat => seat && typeof seat === 'object');
     }
-    return Array.isArray(seats) ? seats : [];
+    
+    // Si es string, intentar parsear
+    if (typeof seats === 'string') {
+      // Limpiar el string antes de parsear
+      const cleanString = seats.trim();
+      if (cleanString === '' || cleanString === 'null' || cleanString === 'undefined') {
+        return [];
+      }
+      
+      try {
+        const parsed = JSON.parse(cleanString);
+        // Si el resultado es un array, retornarlo
+        if (Array.isArray(parsed)) {
+          return parsed.filter(seat => seat && typeof seat === 'object');
+        }
+        // Si es un objeto individual, envolverlo en array
+        if (parsed && typeof parsed === 'object') {
+          return [parsed];
+        }
+        return [];
+      } catch (parseError) {
+        console.error('Error parsing seats JSON string:', parseError, 'Raw string:', seats);
+        return [];
+      }
+    }
+    
+    // Si es un objeto individual, envolverlo en array
+    if (seats && typeof seats === 'object' && !Array.isArray(seats)) {
+      return [seats];
+    }
+    
+    return [];
   } catch (e) {
-    console.error('Error parsing seats JSON:', e);
+    console.error('Error parsing seats data:', e, 'Raw data:', rawSeats);
     return [];
   }
 };
@@ -689,18 +724,38 @@ export const createPayment = async (data) => {
       if (existingPayment && existingPayment.status === 'pagado') {
         throw new Error(`El asiento ${seat.id} ya está vendido (locator: ${existingPayment.locator})`);
       }
+      
+      // También verificar asientos reservados
+      if (existingPayment && existingPayment.status === 'reservado') {
+        throw new Error(`El asiento ${seat.id} ya está reservado (locator: ${existingPayment.locator})`);
+      }
     }
   }
 
-  // Asegurar que seats se almacene como JSON (no string)
+  // Asegurar que seats se almacene como JSON válido
   const seatsForDB = parseSeatsArray(data.seats);
+  
+  // Validar que los asientos tengan la estructura correcta
+  const validatedSeats = seatsForDB.map(seat => {
+    if (!seat.id && !seat._id) {
+      throw new Error(`Asiento sin ID válido: ${JSON.stringify(seat)}`);
+    }
+    return {
+      id: seat.id || seat._id,
+      name: seat.name || seat.nombre || 'Asiento',
+      price: parseFloat(seat.price || seat.precio || 0),
+      zona: seat.zona?.nombre || seat.zona || 'General',
+      mesa: seat.mesa?.nombre || seat.mesa || null,
+      ...(seat.abonoGroup ? { abonoGroup: seat.abonoGroup } : {})
+    };
+  });
 
   // Agregar campos faltantes
   const enrichedData = {
     ...data,
-    seats: seatsForDB, // Usar la versión corregida
+    seats: validatedSeats, // Usar la versión validada
     tenant_id: data.tenant_id || '9dbdb86f-8424-484c-bb76-0d9fa27573c8', // Tenant por defecto
-    monto: data.monto || calculateTotalAmount(data.seats), // Calcular monto si no está presente
+    monto: data.monto || calculateTotalAmount(validatedSeats), // Calcular monto si no está presente
     payment_gateway_id: data.payment_gateway_id || '7e797aa6-ebbf-4b3a-8b5d-caa8992018f4', // Gateway por defecto (Reservas)
     created_at: new Date().toISOString()
   };
@@ -766,23 +821,65 @@ export const fetchPaymentBySeat = async (funcionId, seatId) => {
   
   console.log('🔍 [fetchPaymentBySeat] Buscando asiento:', { funcionId, seatId });
   
-  // Buscar pagos que contengan el asiento específico
-  const { data, error } = await client
-    .from('payments')
-    .select('*, seats, funcion, event:eventos(*), user:profiles!usuario_id(*)')
-    .eq('funcion', funcionId)
-    .eq('status', 'pagado')
-    .contains('seats', [{ id: seatId }]);
-  
-  console.log('🔍 [fetchPaymentBySeat] Resultado:', { data, error });
-  
-  if (error) {
-    console.error('🔍 [fetchPaymentBySeat] Error:', error);
+  if (!funcionId || !seatId) {
+    console.warn('🔍 [fetchPaymentBySeat] Parámetros inválidos:', { funcionId, seatId });
     return null;
   }
   
-  // Retornar el primer pago encontrado
-  return data && data.length > 0 ? data[0] : null;
+  try {
+    // Buscar pagos que contengan el asiento específico usando múltiples estrategias
+    let query = client
+      .from('payments')
+      .select('*, seats, funcion, event:eventos(*), user:profiles!usuario_id(*)')
+      .eq('funcion', funcionId);
+    
+    // Usar contains para buscar en el array de seats
+    const { data, error } = await query
+      .contains('seats', [{ id: seatId }])
+      .or(`seats.cs.[{"_id":"${seatId}"}],seats.cs.[{"id":"${seatId}"}]`);
+    
+    console.log('🔍 [fetchPaymentBySeat] Resultado:', { data, error });
+    
+    if (error) {
+      console.error('🔍 [fetchPaymentBySeat] Error:', error);
+      return null;
+    }
+    
+    // Si no se encuentra con contains, intentar con una búsqueda más amplia
+    if (!data || data.length === 0) {
+      console.log('🔍 [fetchPaymentBySeat] No se encontró con contains, intentando búsqueda manual...');
+      
+      // Obtener todos los pagos para esta función y buscar manualmente
+      const { data: allPayments, error: allError } = await client
+        .from('payments')
+        .select('*, seats, funcion, event:eventos(*), user:profiles!usuario_id(*)')
+        .eq('funcion', funcionId);
+      
+      if (allError) {
+        console.error('🔍 [fetchPaymentBySeat] Error obteniendo todos los pagos:', allError);
+        return null;
+      }
+      
+      // Buscar manualmente en los seats de cada pago
+      for (const payment of allPayments || []) {
+        const paymentSeats = parseSeatsArray(payment.seats);
+        const foundSeat = paymentSeats.find(seat => 
+          seat.id === seatId || seat._id === seatId
+        );
+        
+        if (foundSeat) {
+          console.log('🔍 [fetchPaymentBySeat] Asiento encontrado manualmente en pago:', payment.id);
+          return payment;
+        }
+      }
+    }
+    
+    // Retornar el primer pago encontrado
+    return data && data.length > 0 ? data[0] : null;
+  } catch (error) {
+    console.error('🔍 [fetchPaymentBySeat] Error inesperado:', error);
+    return null;
+  }
 };
 
 // === CANALES DE VENTA ===
