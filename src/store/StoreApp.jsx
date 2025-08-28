@@ -26,6 +26,7 @@ import ThankYouPage from './pages/ThankYouPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiesPolicy from './pages/CookiesPolicy';
 import LegalTerms from './pages/LegalTerms';
+import CmsPage from './pages/CmsPage';
 import EventsVenue from './pages/EventsVenue'; // 👈 IMPORTACIÓN ESTÁTICA
 import TestComponent from './components/TestComponent'; // 👈 COMPONENTE DE PRUEBA
 import { useAuth } from '../contexts/AuthContext'; // para perfil
@@ -98,6 +99,7 @@ const StoreApp = () => {
               <Route path="/store/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/store/cookies-policy" element={<CookiesPolicy />} />
               <Route path="/store/legal-terms" element={<LegalTerms />} />
+              <Route path="/store/:pageSlug" element={<CmsPage />} />
               <Route path="/payment-success/:locator?" element={<PaymentSuccess />} />
               <Route path="/thank-you" element={<ThankYouPage />} />
               <Route path="/404" element={<NotFoundPage />} />
