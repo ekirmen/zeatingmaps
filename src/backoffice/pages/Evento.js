@@ -12,6 +12,7 @@ import SearchBar from '../components/Evento/SearchBar';
 import VenueSelectors from '../components/Evento/VenueSelectors';
 import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
+import { validateAndCleanJsonField, cleanEventoJsonFields, cleanEventosArray } from '../../utils/jsonValidation';
 
 
 const Evento = () => {
@@ -68,7 +69,10 @@ const Evento = () => {
       }
       
       console.log('✅ Eventos cargados:', data?.length || 0, 'eventos');
-      setEventos(data || []);
+      
+      // Limpiar campos JSON corruptos en todos los eventos cargados
+      const eventosLimpios = cleanEventosArray(data || []);
+      setEventos(eventosLimpios);
     } catch (error) {
       console.error('❌ Error cargando eventos:', error);
       setEventos([]);
@@ -174,7 +178,9 @@ const Evento = () => {
   const handleEdit = useCallback((eventoId) => {
     const eventoParaEditar = eventos.find((evento) => evento.id === eventoId);
     if (eventoParaEditar) {
-      setEventoData(eventoParaEditar);
+      // Limpiar campos JSON corruptos al cargar el evento
+      const eventoLimpio = cleanEventoJsonFields(eventoParaEditar);
+      setEventoData(eventoLimpio);
       setMenuVisible(true);
     } else {
       alert('Evento no encontrado');
@@ -285,6 +291,11 @@ const Evento = () => {
     }
   }, [eventoData]);
 
+
+
+
+
+
   const handleSave = useCallback(async () => {
     if (!eventoData) return;
 
@@ -297,12 +308,18 @@ const Evento = () => {
       delete cleanData.__v;
       delete cleanData.createdAt;
       delete cleanData.updatedAt;
+      
       // Mapear fecha -> fecha_evento (timestamp)
       if (cleanData.fecha && typeof cleanData.fecha === 'string' && cleanData.fecha.trim() !== '') {
         // Mantener como ISO o YYYY-MM-DD; la columna es timestamp
         cleanData.fecha_evento = cleanData.fecha;
       }
       delete cleanData.fecha;
+
+      // Validar y limpiar campos JSON ANTES de guardar para prevenir corrupción
+      const cleanDataValidated = cleanEventoJsonFields(cleanData);
+      Object.assign(cleanData, cleanDataValidated);
+      console.log('✅ Todos los campos JSON validados y limpiados antes del guardado');
 
       // Asegurar tenant_id
       if (currentTenant?.id) {
