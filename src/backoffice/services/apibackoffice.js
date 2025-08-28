@@ -732,7 +732,9 @@ export const fetchCmsPage = async (identifier) => {
   ]);
 
   try {
-    let { data, error } = null;
+    // Inicializar variables para evitar destructuración de null
+    let data = null;
+    let error = null;
 
     // Si el identificador es un número, buscar por ID
     if (!isNaN(identifier) && Number.isInteger(Number(identifier))) {
