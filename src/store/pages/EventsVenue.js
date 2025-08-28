@@ -9,14 +9,18 @@ import FeaturedEventsWidget from '../components/FeaturedEventsWidget'; // New fe
 import { getCmsPage, debugWebstudioTable } from '../services/apistore'; // Service to fetch CMS page data
 import { useEventsList } from '../hooks/useEventsList'; // <-- Corrected import path for useEventsList
 
-const EventsVenue = ({ groupByTags = true }) => {
-  console.log('🚀 [EventsVenue] Componente iniciando...');
-  console.log('🚀 [EventsVenue] Props recibidas:', { groupByTags });
-  console.log('🔍 [EventsVenue] Hook useEventsList disponible:', typeof useEventsList);
-  
-  const [widgets, setWidgets] = useState(null);
-  const [loadingCms, setLoadingCms] = useState(true);
-  const [errorCms, setErrorCms] = useState(null);
+const EventsVenue = () => {
+  console.log('🚀 [EventsVenue] COMPONENTE DEFINIDO - ANTES DEL TRY');
+  try {
+    console.log('🚀 [EventsVenue] Componente iniciando...');
+    
+    const [groupByTags, setGroupByTags] = useState(true);
+    const [widgets, setWidgets] = useState(null);
+    const [loadingCms, setLoadingCms] = useState(true);
+    const [errorCms, setErrorCms] = useState(null);
+    
+    console.log('🚀 [EventsVenue] Props recibidas:', { groupByTags });
+    console.log('🔍 [EventsVenue] Hook useEventsList disponible:', typeof useEventsList);
 
   console.log('🚀 [EventsVenue] Componente montado');
   console.log('🚀 [EventsVenue] Hooks useState ejecutados correctamente');
@@ -405,6 +409,33 @@ const EventsVenue = ({ groupByTags = true }) => {
   );
   
   console.log('🚀 [EventsVenue] Componente completado, retornando JSX');
+  
+  } catch (error) {
+    console.error('❌ [EventsVenue] ERROR CRÍTICO en el componente:', error);
+    console.error('❌ [EventsVenue] Stack trace:', error.stack);
+    
+    // Fallback UI en caso de error
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-500 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error en el Componente</h2>
+          <p className="text-red-600 mb-2">{error.message}</p>
+          <p className="text-sm text-gray-500">Por favor, recarga la página o contacta soporte.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            🔄 Recargar Página
+          </button>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default EventsVenue;
