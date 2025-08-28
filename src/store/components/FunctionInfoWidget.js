@@ -158,6 +158,21 @@ const FunctionInfoWidget = ({ functionId, showPricing = true, showVenueInfo = tr
         </div>
       )}
 
+      {/* Mostrar mensaje si el evento está desactivado */}
+      {eventData && (!eventData.activo || eventData.desactivado) && (
+        <div className="p-4 bg-red-50 border-b border-red-200">
+          <div className="flex items-center">
+            <svg className="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <div>
+              <h3 className="text-sm font-medium text-red-800">Evento Desactivado</h3>
+              <p className="text-xs text-red-700">Este evento está actualmente desactivado.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Function Details */}
       <div className="p-6">
         {/* Function Header */}
@@ -167,6 +182,21 @@ const FunctionInfoWidget = ({ functionId, showPricing = true, showVenueInfo = tr
             {venueData && (
               <p className="text-gray-600">{venueData.nombre}</p>
             )}
+          </div>
+        )}
+
+        {/* Mostrar mensaje si el evento está desactivado (cuando no hay banner) */}
+        {!bannerImage && eventData && (!eventData.activo || eventData.desactivado) && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-4 h-4 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-medium text-red-800">Evento Desactivado</h3>
+                <p className="text-xs text-red-700">Este evento está actualmente desactivado.</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -292,10 +322,13 @@ const FunctionInfoWidget = ({ functionId, showPricing = true, showVenueInfo = tr
         <div className="border-t border-gray-200 pt-6">
           <button
             onClick={handleSelectSeats}
-            disabled={eventData?.estadoVenta === 'agotado'}
+            disabled={eventData?.estadoVenta === 'agotado' || (eventData && (!eventData.activo || eventData.desactivado))}
             className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
-            {eventData?.estadoVenta === 'agotado' ? 'Agotado' : 'Seleccionar Asientos'}
+            {eventData && (!eventData.activo || eventData.desactivado) 
+              ? 'Evento Desactivado' 
+              : (eventData?.estadoVenta === 'agotado' ? 'Agotado' : 'Seleccionar Asientos')
+            }
           </button>
         </div>
 

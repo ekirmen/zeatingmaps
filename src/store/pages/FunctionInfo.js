@@ -152,6 +152,21 @@ const FunctionInfo = () => {
       )}
 
       <div className="max-w-4xl mx-auto p-6">
+        {/* Mostrar mensaje si el evento está desactivado */}
+        {eventData && (!eventData.activo || eventData.desactivado) && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-medium text-red-800">Evento Desactivado</h3>
+                <p className="text-sm text-red-700">Este evento está actualmente desactivado. Las funciones no están disponibles para la venta.</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Function Header (when no banner) */}
         {!bannerImage && (
           <div className="mb-8">
@@ -305,10 +320,13 @@ const FunctionInfo = () => {
             <div className="bg-white rounded-lg shadow-md p-6">
               <button
                 onClick={handleSelectSeats}
-                disabled={eventData?.estadoVenta === 'agotado'}
+                disabled={eventData?.estadoVenta === 'agotado' || (eventData && (!eventData.activo || eventData.desactivado))}
                 className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
-                {eventData?.estadoVenta === 'agotado' ? 'Agotado' : 'Seleccionar Asientos'}
+                {eventData && (!eventData.activo || eventData.desactivado) 
+                  ? 'Evento Desactivado' 
+                  : (eventData?.estadoVenta === 'agotado' ? 'Agotado' : 'Seleccionar Asientos')
+                }
               </button>
             </div>
 

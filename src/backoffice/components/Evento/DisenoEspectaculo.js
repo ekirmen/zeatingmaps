@@ -5,7 +5,6 @@ import 'react-quill/dist/quill.snow.css';
 
 const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   const [description, setDescription] = useState(eventoData.descripcionHTML || '');
-  const [showHtmlEditor, setShowHtmlEditor] = useState(false);
   // Update the image preview handling
   // Fix initial state image paths
   const getPreview = (img) => {
@@ -220,27 +219,26 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
             preserveWhitespace
             theme="snow"
           />
-          <button
-            type="button"
-            className="html-toggle mt-2 px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-            onClick={() => setShowHtmlEditor(!showHtmlEditor)}
-          >
-            {showHtmlEditor ? 'Ocultar HTML' : 'Ver HTML'}
-          </button>
-          {showHtmlEditor && (
-            <div className="mt-3">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Editor HTML:
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="html-editor w-full p-3 border border-gray-300 rounded-md font-mono text-sm"
-                rows={10}
-                placeholder="Edita el HTML aquí..."
-              />
-            </div>
-          )}
+          
+          {/* Mostrar HTML debajo del editor Quill */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Código HTML generado:
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                setEventoData(prev => ({ ...prev, descripcionHTML: e.target.value }));
+              }}
+              className="html-editor w-full p-3 border border-gray-300 rounded-md font-mono text-sm bg-gray-50"
+              rows={8}
+              placeholder="El HTML se genera automáticamente mientras escribes..."
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Este es el código HTML generado automáticamente. Puedes editarlo directamente aquí si necesitas hacer ajustes manuales.
+            </p>
+          </div>
         </div>
       </section>
 

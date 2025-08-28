@@ -689,6 +689,17 @@ const EventosPage = () => {
 
             {/* Selección de función */}
             <Card title="Seleccionar Función" className="mb-6">
+              {/* Mostrar mensaje si el evento está desactivado */}
+              {evento && (!evento.activo || evento.desactivado) && (
+                <Alert
+                  message="Evento Desactivado"
+                  description="Este evento está actualmente desactivado. Las funciones no están disponibles para la venta."
+                  type="error"
+                  showIcon
+                  className="mb-4"
+                />
+              )}
+              
               {funciones.length === 0 ? (
                 <Alert
                   message="No hay funciones disponibles"
@@ -704,6 +715,7 @@ const EventosPage = () => {
                     onChange={handleFunctionSelect}
                     className="w-full"
                     size="large"
+                    disabled={evento && (!evento.activo || evento.desactivado)}
                   >
                     {funciones.map((funcion) => (
                       <Option key={funcion.id || funcion._id} value={funcion.id || funcion._id}>
@@ -782,8 +794,9 @@ const EventosPage = () => {
                   onClick={() => setShowMap(true)}
                   className="w-full"
                   icon={<ClockCircleOutlined />}
+                  disabled={evento && (!evento.activo || evento.desactivado)}
                 >
-                  Comprar Entradas
+                  {evento && (!evento.activo || evento.desactivado) ? 'Evento Desactivado' : 'Comprar Entradas'}
                 </Button>
               </Card>
             )}

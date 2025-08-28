@@ -430,6 +430,41 @@ const Evento = () => {
                         <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                         {eventoData?.id ? 'Editando evento existente' : 'Creando nuevo evento'}
                       </p>
+                      
+                      {/* Estado del evento y botón de activación/desactivación */}
+                      {eventoData?.id && (
+                        <div className="mt-3 flex items-center gap-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-700">Estado:</span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              eventoData?.activo && !eventoData?.desactivado 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {eventoData?.activo && !eventoData?.desactivado ? 'Activo' : 'Inactivo'}
+                            </span>
+                          </div>
+                          
+                          <button
+                            onClick={() => {
+                              const newActivo = !eventoData?.activo;
+                              const newDesactivado = !newActivo;
+                              setEventoData(prev => ({
+                                ...prev,
+                                activo: newActivo,
+                                desactivado: newDesactivado
+                              }));
+                            }}
+                            className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                              eventoData?.activo && !eventoData?.desactivado
+                                ? 'bg-red-500 hover:bg-red-600 text-white'
+                                : 'bg-green-500 hover:bg-green-600 text-white'
+                            }`}
+                          >
+                            {eventoData?.activo && !eventoData?.desactivado ? 'Desactivar' : 'Activar'}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <button
