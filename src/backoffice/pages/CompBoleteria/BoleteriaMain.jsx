@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber } from 'antd';
-import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined, DownloadOutlined, HistoryOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined, DownloadOutlined, HistoryOutlined, AimOutlined, CompressOutlined } from '@ant-design/icons';
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ZonesPanel from './components/ZonesPanel.jsx';
@@ -147,7 +147,96 @@ const BoleteriaMain = () => {
   const [showPushNotifications, setShowPushNotifications] = useState(false);
   const [showServerDiagnostic, setShowServerDiagnostic] = useState(false);
 
+  // Estados para el pan y zoom
+  const mapContainerRef = useRef(null);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [lastPanPoint, setLastPanPoint] = useState(null);
 
+  // Función para resetear zoom y pan
+  const resetMapView = () => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  // Función para hacer zoom al contenido completo
+  const zoomToFit = () => {
+    if (!mapa || !mapContainerRef.current) return;
+    
+    // Calcular las dimensiones del mapa
+    let maxX = 0, maxY = 0;
+    if (mapa.contenido && Array.isArray(mapa.contenido)) {
+      mapa.contenido.forEach(elemento => {
+        if (elemento.posicion) {
+          maxX = Math.max(maxX, elemento.posicion.x + (elemento.width || 0));
+          maxY = Math.max(maxY, elemento.posicion.y + (elemento.height || 0));
+        }
+      });
+    }
+    
+    // Calcular zoom óptimo
+    const containerWidth = mapContainerRef.current.clientWidth;
+    const containerHeight = mapContainerRef.current.clientHeight;
+    const scaleX = containerWidth / (maxX + 100);
+    const scaleY = containerHeight / (maxY + 100);
+    const optimalZoom = Math.min(scaleX, scaleY, 1);
+    
+    setZoomLevel(optimalZoom);
+    setPanOffset({ x: 0, y: 0 });
+  };
+
+  // Función para manejar el inicio del pan
+  const handlePanStart = (e) => {
+    if (e.button !== 0) return; // Solo botón izquierdo del mouse
+    setIsPanning(true);
+    setLastPanPoint({ x: e.clientX, y: e.clientY });
+    e.preventDefault();
+  };
+
+  // Función para manejar el movimiento del pan
+  const handlePanMove = (e) => {
+    if (!isPanning || !lastPanPoint) return;
+    
+    const deltaX = e.clientX - lastPanPoint.x;
+    const deltaY = e.clientY - lastPanPoint.y;
+    
+    setPanOffset(prev => ({
+      x: prev.x + deltaX,
+      y: prev.y + deltaY
+    }));
+    
+    setLastPanPoint({ x: e.clientX, y: e.clientY });
+    e.preventDefault();
+  };
+
+  // Función para manejar el fin del pan
+  const handlePanEnd = () => {
+    setIsPanning(false);
+    setLastPanPoint(null);
+  };
+
+  // Agregar event listeners para el pan
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    if (!container) return;
+
+    const handleMouseDown = handlePanStart;
+    const handleMouseMove = handlePanMove;
+    const handleMouseUp = handlePanEnd;
+    const handleMouseLeave = handlePanEnd;
+
+    container.addEventListener('mousedown', handleMouseDown);
+    container.addEventListener('mousemove', handleMouseMove);
+    container.addEventListener('mouseup', handleMouseUp);
+    container.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+      container.removeEventListener('mousedown', handleMouseDown);
+      container.removeEventListener('mousemove', handleMouseMove);
+      container.removeEventListener('mouseup', handleMouseUp);
+      container.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, [isPanning, lastPanPoint]);
 
   // Función para obtener las imágenes del evento
   const getEventImages = () => {
@@ -1164,12 +1253,41 @@ const BoleteriaMain = () => {
                   Primero selecciona una zona y precio antes de elegir asientos
                 </div>
               )}
+              
+              {/* Instrucciones de navegación */}
+              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-blue-800 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">🗺️ Navegación del Mapa:</span>
+                  <span>• <kbd className="bg-white px-1 rounded">Rueda del mouse</kbd> Zoom</span>
+                  <span>• <kbd className="bg-white px-1 rounded">Click + Arrastrar</kbd> Pan</span>
+                  <span>• <kbd className="bg-white px-1 rounded">Botones</kbd> Controles adicionales</span>
+                </div>
+              </div>
             </div>
           )}
 
+          {/* Indicador de Pan */}
+          {isPanning && (
+            <div className="absolute top-4 left-4 z-20 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium animate-pulse">
+              🖱️ Arrastrando mapa...
+            </div>
+          )}
+          
           <div className="absolute bottom-4 left-4 z-10 flex space-x-2 items-center">
-            <Button size="small" icon={<ZoomInOutlined />} onClick={() => setZoomLevel(prev => Math.min(prev + 0.2, 3))} />
-            <Button size="small" icon={<ZoomOutOutlined />} onClick={() => setZoomLevel(prev => Math.max(prev - 0.2, 0.5))} />
+            {/* Controles de Zoom */}
+            <Button size="small" icon={<ZoomOutOutlined />} onClick={() => setZoomLevel(prev => Math.max(prev - 0.2, 0.5))} title="Zoom Out" />
+            <Button size="small" icon={<ZoomInOutlined />} onClick={() => setZoomLevel(prev => Math.min(prev + 0.2, 3))} title="Zoom In" />
+            
+            {/* Controles de Pan y Reset */}
+            <Button size="small" icon={<CompressOutlined />} onClick={resetMapView} title="Reset Zoom y Pan" />
+            <Button size="small" icon={<AimOutlined />} onClick={zoomToFit} title="Zoom al Contenido Completo" />
+            
+            {/* Indicador de Zoom */}
+            <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded border">
+              {Math.round(zoomLevel * 100)}%
+            </span>
+            
+            {/* Leyenda de Asientos */}
             <Tooltip
               title={
                 <div className="text-xs">
@@ -1188,32 +1306,40 @@ const BoleteriaMain = () => {
             </Tooltip>
           </div>
           
-          <div className="bg-white p-4 rounded-lg shadow-sm overflow-hidden">
-            {blockMode && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-red-800">Modo Bloqueo Activo</span>
+                      <div className="bg-white p-4 rounded-lg shadow-sm overflow-hidden">
+              {blockMode && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span className="text-sm font-medium text-red-800">Modo Bloqueo Activo</span>
+                  </div>
+                  <p className="text-xs text-red-600 mt-1">
+                    Haz clic en los asientos para seleccionarlos para bloquear. Los asientos seleccionados aparecerán en rojo.
+                  </p>
                 </div>
-                <p className="text-xs text-red-600 mt-1">
-                  Haz clic en los asientos para seleccionarlos para bloquear. Los asientos seleccionados aparecerán en rojo.
-                </p>
+              )}
+              <div 
+                ref={mapContainerRef}
+                className="relative overflow-hidden cursor-grab active:cursor-grabbing"
+                style={{ 
+                  transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`, 
+                  transformOrigin: '0 0',
+                  minHeight: '400px'
+                }}
+              >
+                <SimpleSeatingMap
+                  selectedFuncion={selectedFuncion}
+                  onSeatClick={handleSeatClick}
+                  selectedSeats={selectedSeats}
+                  blockedSeats={blockedSeats}
+                  blockMode={blockMode}
+                  selectedPlantilla={selectedPlantilla}
+                  selectedPriceOption={selectedPriceOption}
+                  selectedZonaId={activeZoneId}
+                  mapa={mapa}
+                />
               </div>
-            )}
-            <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: '0 0' }}>
-              <SimpleSeatingMap
-                selectedFuncion={selectedFuncion}
-                onSeatClick={handleSeatClick}
-                selectedSeats={selectedSeats}
-                blockedSeats={blockedSeats}
-                blockMode={blockMode}
-                selectedPlantilla={selectedPlantilla}
-                selectedPriceOption={selectedPriceOption}
-                selectedZonaId={activeZoneId}
-                mapa={mapa}
-              />
             </div>
-          </div>
         </div>
       )
     },
