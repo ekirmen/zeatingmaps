@@ -8,11 +8,11 @@ import FunctionInfoWidget from '../components/FunctionInfoWidget'; // New functi
 import FeaturedEventsWidget from '../components/FeaturedEventsWidget'; // New featured events widget
 import { getCmsPage } from '../services/apistore'; // Service to fetch CMS page data
 import { useEventsList } from '../hooks/useEventsList'; // <-- Corrected import path for useEventsList
-console.log('🔍 [EventsVenue] Hook useEventsList importado:', typeof useEventsList);
 
 const EventsVenue = ({ groupByTags = true }) => {
   console.log('🚀 [EventsVenue] Componente iniciando...');
   console.log('🚀 [EventsVenue] Props recibidas:', { groupByTags });
+  console.log('🔍 [EventsVenue] Hook useEventsList disponible:', typeof useEventsList);
   
   const [widgets, setWidgets] = useState(null);
   const [loadingCms, setLoadingCms] = useState(true);

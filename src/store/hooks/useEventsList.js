@@ -36,11 +36,10 @@ const normalizeEventData = (event) => {
   };
 };
 
-console.log('🔍 [useEventsList] Módulo cargado, función definida:', typeof useEventsList);
-
 export const useEventsList = () => {
   console.log('🚀 [useEventsList] Hook iniciando...');
   console.log('🔍 [useEventsList] React hooks disponibles:', { useState: !!useState, useEffect: !!useEffect, useCallback: !!useCallback });
+  console.log('🔍 [useEventsList] Hook definido y ejecutándose correctamente');
   
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
