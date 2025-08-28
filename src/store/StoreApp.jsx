@@ -55,11 +55,32 @@ const StoreApp = () => {
                 (() => {
                   console.log('🚀 [StoreApp] Renderizando ruta /store con EventsVenue');
                   try {
-                    const component = <EventsVenue groupByTags={false} />;
-                    console.log('✅ [StoreApp] EventsVenue renderizado correctamente');
+                    // COMPONENTE DE PRUEBA DIRECTO EN STOREAPP
+                    console.log('🚨 [StoreApp] PROBANDO COMPONENTE DIRECTO');
+                    
+                    const TestComponent = () => {
+                      console.error('🚨 [TestComponent] COMPONENTE DE PRUEBA FUNCIONANDO');
+                      alert('🚨 COMPONENTE DE PRUEBA DESDE STOREAPP FUNCIONANDO');
+                      
+                      return (
+                        <div className="min-h-screen bg-yellow-100 p-6">
+                          <div className="max-w-6xl mx-auto">
+                            <h1 className="text-3xl font-bold text-yellow-900 mb-8">🚨 COMPONENTE DE PRUEBA DESDE STOREAPP</h1>
+                            <div className="bg-yellow-200 p-4 rounded-lg border-2 border-yellow-500">
+                              <p className="text-yellow-800 font-semibold">✅ Este componente se creó directamente en StoreApp</p>
+                              <p className="text-yellow-700">✅ Si lo ves, el problema está en la importación de EventsVenue</p>
+                              <p className="text-yellow-700">✅ Timestamp: {new Date().toISOString()}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    };
+                    
+                    const component = <TestComponent />;
+                    console.log('✅ [StoreApp] TestComponent renderizado correctamente');
                     return component;
                   } catch (error) {
-                    console.error('❌ [StoreApp] Error renderizando EventsVenue:', error);
+                    console.error('❌ [StoreApp] Error renderizando TestComponent:', error);
                     return <div>Error cargando página: {error.message}</div>;
                   }
                 })()
