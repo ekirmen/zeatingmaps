@@ -1,53 +1,58 @@
 // src/store/pages/EventsVenue.js
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 const EventsVenue = ({ groupByTags = true }) => {
-  console.log('🚀 [EventsVenue] COMPONENTE DEFINIDO - ANTES DEL TRY');
-  console.log('🚀 [EventsVenue] Props recibidas:', { groupByTags });
+  // FORZAR VISIBILIDAD DEL PROBLEMA
+  console.error('🚨 [EventsVenue] ERROR FORZADO - Componente se está ejecutando');
+  console.error('🚨 [EventsVenue] Props recibidas:', { groupByTags });
+  console.error('🚨 [EventsVenue] Timestamp:', new Date().toISOString());
+  
+  // Alert para forzar visibilidad
+  if (typeof window !== 'undefined') {
+    try {
+      alert('🚨 COMPONENTE EventsVenue SE ESTÁ EJECUTANDO - groupByTags: ' + groupByTags);
+    } catch (e) {
+      console.error('Error en alert:', e);
+    }
+  }
   
   try {
     console.log('🚀 [EventsVenue] Componente iniciando...');
     
-    const [mounted, setMounted] = useState(false);
-    const [testState, setTestState] = useState('test');
-    
-    console.log('🚀 [EventsVenue] Hooks useState ejecutados correctamente');
-    console.log('🚀 [EventsVenue] Estado inicial:', { mounted, testState });
-    
-    useEffect(() => {
-      console.log('🚀 [EventsVenue] useEffect ejecutándose...');
-      setMounted(true);
-      console.log('🚀 [EventsVenue] Componente montado correctamente');
-    }, []);
-    
     console.log('🚀 [EventsVenue] Componente completado, retornando JSX');
     
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="min-h-screen bg-red-100 p-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">🔍 Componente de Prueba EventsVenue</h1>
+          <h1 className="text-3xl font-bold text-red-900 mb-8">🚨 COMPONENTE DE PRUEBA CRÍTICO</h1>
           
-                     {/* Debug Panel */}
-           <div className="bg-gray-100 p-4 rounded-lg mb-6">
-             <h3 className="text-lg font-semibold mb-2">🔍 Debug Panel Simplificado</h3>
-             <div className="space-y-2 text-sm">
-               <p><strong>Componente montado:</strong> {mounted ? '✅ Sí' : '❌ No'}</p>
-               <p><strong>Estado de prueba:</strong> {testState}</p>
-               <p><strong>Prop groupByTags:</strong> {groupByTags ? '✅ true' : '❌ false'}</p>
-               <p><strong>URL actual:</strong> {window.location.pathname}</p>
-               <p><strong>Timestamp:</strong> {new Date().toISOString()}</p>
-             </div>
-           </div>
+          {/* Debug Panel */}
+          <div className="bg-red-200 p-4 rounded-lg mb-6 border-2 border-red-500">
+            <h3 className="text-lg font-semibold mb-2 text-red-800">🚨 Debug Panel CRÍTICO</h3>
+            <div className="space-y-2 text-sm text-red-700">
+              <p><strong>Prop groupByTags:</strong> {groupByTags ? '✅ true' : '❌ false'}</p>
+              <p><strong>URL actual:</strong> {window.location.pathname}</p>
+              <p><strong>Timestamp:</strong> {new Date().toISOString()}</p>
+              <p><strong>Componente funcionando:</strong> 🚨 SÍ - CON ALERT</p>
+              <p><strong>Build ID:</strong> {Math.random().toString(36).substr(2, 9)}</p>
+            </div>
+          </div>
           
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">✅ Componente Funcionando</h2>
-            <p className="text-gray-600 mb-4">
+          <div className="bg-white rounded-lg shadow-md p-8 text-center border-2 border-red-500">
+            <h2 className="text-2xl font-semibold text-red-800 mb-4">🚨 COMPONENTE CRÍTICO FUNCIONANDO</h2>
+            <p className="text-red-600 mb-4">
               Si puedes ver este mensaje, el componente EventsVenue está funcionando correctamente.
             </p>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-red-500">
               Revisa la consola para ver los logs del componente.
             </p>
+            <div className="mt-4 p-4 bg-red-100 rounded border border-red-300">
+              <p className="text-red-800 font-semibold">🎯 DIAGNÓSTICO CRÍTICO:</p>
+              <p className="text-red-700">groupByTags = {groupByTags ? 'true' : 'false'}</p>
+              <p className="text-red-700">URL = {window.location.pathname}</p>
+              <p className="text-red-700">Build ID = {Math.random().toString(36).substr(2, 9)}</p>
+            </div>
           </div>
         </div>
       </div>
@@ -59,19 +64,19 @@ const EventsVenue = ({ groupByTags = true }) => {
     
     // Fallback UI en caso de error
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-red-100 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto p-6">
           <div className="text-red-500 mb-4">
             <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Error en el Componente</h2>
+          <h2 className="text-2xl font-bold text-red-800 mb-2">Error en el Componente</h2>
           <p className="text-red-600 mb-2">{error.message}</p>
-          <p className="text-sm text-gray-500">Por favor, recarga la página o contacta soporte.</p>
+          <p className="text-sm text-red-500">Por favor, recarga la página o contacta soporte.</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
           >
             🔄 Recargar Página
           </button>
