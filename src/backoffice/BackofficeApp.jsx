@@ -36,6 +36,7 @@ import TenantDetail from './pages/TenantDetail';
 import SaasSettings from './pages/SaasSettings';
 import LegalTerms from '../store/pages/LegalTerms';
 import Descuentos from './pages/Descuentos';
+import WebColors from './pages/WebColors';
 
 const BackofficeApp = () => {
   return (
@@ -104,6 +105,7 @@ const BackofficeApp = () => {
         <Route path="webstudio" element={<WebStudio />} />
         <Route path="pages" element={<WebStudio />} />
         <Route path="galeria" element={<Galeria />} />
+        <Route path="webcolors" element={<WebColors />} />
         
         {/* Boletería */}
         <Route path="boleteria" element={<BoleteriaMain />} />
