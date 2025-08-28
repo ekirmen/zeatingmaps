@@ -461,15 +461,7 @@ const ZonesPanel = ({
         />
       )}
 
-      {debugInfo.success && (
-        <Alert
-          message="Zonas cargadas correctamente"
-          description={`${debugInfo.zonasEncontradas} zonas encontradas, ${debugInfo.detallesProcesados} precios procesados`}
-          type="success"
-          showIcon
-          className="mb-3"
-        />
-      )}
+
 
       {/* Barra de zonas */}
       <div className="flex items-center space-x-2 overflow-x-auto p-2 border rounded bg-white">

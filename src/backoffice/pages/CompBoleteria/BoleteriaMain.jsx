@@ -1394,49 +1394,7 @@ const BoleteriaMain = () => {
 
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col">
-          {/* Debug Info */}
-          {(debugInfo && Object.keys(debugInfo).length > 0) || boleteriaError ? (
-            <div className={`border-b p-2 text-xs ${boleteriaError ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'}`}>
-              <div className="max-w-7xl mx-auto flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-blue-700 font-medium">🔧 Modo Desarrollo</span>
-                    <span className="text-blue-600 text-sm">
-                      Para diagnóstico completo, ve a <strong>Dashboard → Diagnóstico del Servidor</strong>
-                    </span>
-                  </div>
-                  {boleteriaError && (
-                    <div className="text-red-700 mt-2 text-sm">
-                      <strong>❌ Error:</strong> {boleteriaError}
-                    </div>
-                  )}
-                </div>
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => {
-                      if (eventos && eventos.length > 0) {
-                        handleEventSelect(eventos[0].id);
-                      }
-                    }}
-                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200 transition-colors"
-                  >
-                    🔄 Recargar
-                  </button>
-                  <button 
-                    onClick={() => {
-                      if (selectedFuncion) {
-                        handleFunctionSelect(selectedFuncion.id);
-                      }
-                    }}
-                    className="px-3 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200 transition-colors"
-                  >
-                    🗺️ Cargar Mapa
-                  </button>
 
-                </div>
-              </div>
-            </div>
-          ) : null}
           
           {/* Header */}
           {/* Mensajes informativos condensos en header */}
@@ -1478,7 +1436,7 @@ const BoleteriaMain = () => {
                       </div>
                     </div>
                   </div>
-                  <Button type="default" icon={<ArrowLeftOutlined />} onClick={() => window.history.back()} className="ml-4" title="Volver atrás">Atrás</Button>
+
                   {selectedFuncion && (
                     <Button
                       type="primary"
@@ -1693,77 +1651,109 @@ const BoleteriaMain = () => {
                 </div>
               )}
               
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span>Boletos:</span>
-                  <span>{selectedSeats?.length || 0}, ${(selectedSeats && Array.isArray(selectedSeats) ? selectedSeats.reduce((sum, seat) => {
-                    const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
-                    return sum + seatPrice;
-                  }, 0) : 0).toFixed(2)}</span>
-                </div>
-                
-                                {productosCarrito && Array.isArray(productosCarrito) && productosCarrito.length > 0 && (
-                  <div className="mb-2">
-                    <h4 className="font-medium text-gray-900 mb-2">Productos en Carrito</h4>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {productosCarrito && Array.isArray(productosCarrito) && productosCarrito.map((producto) => (
-                        <div key={producto.id} className="flex items-center justify-between p-2 bg-green-50 rounded">
-                          <div className="flex-1">
-                            <div className="font-medium text-sm">{producto.nombre}</div>
-                            <div className="text-xs text-gray-600">
-                              ${(producto.precio_especial || producto.precio).toFixed(2)} c/u
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <InputNumber
-                              size="small"
-                              min={1}
-                              value={producto.cantidad}
-                              onChange={(value) => handleProductQuantityChange(producto.id, value)}
-                              style={{ width: 60 }}
-                            />
-                            <Button 
-                              size="small" 
-                              type="text" 
-                              danger
-                              onClick={() => handleProductRemove(producto.id)}
-                            >
-                              ×
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                  
-                  <div className="flex justify-between">
-                    <span>Productos:</span>
-                    <span>{(productosCarrito && Array.isArray(productosCarrito) ? productosCarrito.reduce((sum, p) => sum + p.cantidad, 0) : 0)}, ${(productosCarrito && Array.isArray(productosCarrito) ? productosCarrito.reduce((sum, product) => sum + ((product.precio_especial || product.precio) * product.cantidad), 0) : 0).toFixed(2)}</span>
-                  </div>
+                             <div className="space-y-4">
+                 {/* Boletos */}
+                 <div className="flex justify-between items-center p-2 bg-blue-50 rounded-lg">
+                   <span className="flex items-center gap-2">
+                     <span className="text-blue-600">🎫</span>
+                     <span className="font-medium">Boletos:</span>
+                   </span>
+                   <span className="font-semibold text-blue-700">
+                     {selectedSeats?.length || 0} × ${(selectedSeats && Array.isArray(selectedSeats) ? selectedSeats.reduce((sum, seat) => {
+                       const seatPrice = seat.precio || selectedPriceOption?.precio || 0;
+                       return sum + seatPrice;
+                     }, 0) : 0).toFixed(2)}
+                   </span>
+                 </div>
                  
-                 <div className="border-t pt-2">
-                   <div className="flex justify-between">
-                     <span>Subtotal:</span>
-                     <span>${calculateSubtotal().toFixed(2)}</span>
+                 {/* Productos */}
+                 {productosCarrito && Array.isArray(productosCarrito) && productosCarrito.length > 0 && (
+                   <div className="mb-2">
+                     <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                       <span className="text-green-600">🛍️</span>
+                       Productos en Carrito
+                     </h4>
+                     <div className="space-y-2 max-h-32 overflow-y-auto">
+                       {productosCarrito && Array.isArray(productosCarrito) && productosCarrito.map((producto) => (
+                         <div key={producto.id} className="flex items-center justify-between p-2 bg-green-50 rounded border border-green-200">
+                           <div className="flex-1">
+                             <div className="font-medium text-sm text-green-800">{producto.nombre}</div>
+                             <div className="text-xs text-green-600">
+                               ${(producto.precio_especial || producto.precio).toFixed(2)} c/u
+                             </div>
+                           </div>
+                           <div className="flex items-center space-x-2">
+                             <InputNumber
+                               size="small"
+                               min={1}
+                               value={producto.cantidad}
+                               onChange={(value) => handleProductQuantityChange(producto.id, value)}
+                               style={{ width: 60 }}
+                               className="border-green-300"
+                             />
+                             <Button 
+                               size="small" 
+                               type="text" 
+                               danger
+                               onClick={() => handleProductRemove(producto.id)}
+                               className="text-red-600 hover:text-red-800"
+                             >
+                               ×
+                             </Button>
+                           </div>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 )}
+                   
+                 {/* Resumen de Productos */}
+                 {productosCarrito && Array.isArray(productosCarrito) && productosCarrito.length > 0 && (
+                   <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg border border-green-200">
+                     <span className="flex items-center gap-2">
+                       <span className="text-green-600">🛒</span>
+                       <span className="font-medium">Productos:</span>
+                     </span>
+                     <span className="font-semibold text-green-700">
+                       {(productosCarrito && Array.isArray(productosCarrito) ? productosCarrito.reduce((sum, p) => sum + p.cantidad, 0) : 0)} × ${(productosCarrito && Array.isArray(productosCarrito) ? productosCarrito.reduce((sum, product) => sum + ((product.precio_especial || product.precio) * product.cantidad), 0) : 0).toFixed(2)}
+                     </span>
+                   </div>
+                 )}
+                  
+                 {/* Subtotal */}
+                 <div className="border-t pt-3">
+                   <div className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                     <span className="flex items-center gap-2">
+                       <span className="text-gray-600">🛒</span>
+                       <span className="font-medium">Subtotal:</span>
+                     </span>
+                     <span className="font-semibold text-gray-700">${calculateSubtotal().toFixed(2)}</span>
                    </div>
                  </div>
                  
+                 {/* Descuento */}
                  {selectedDiscount && (
-                   <div className="flex justify-between text-green-600">
-                     <span>Descuento ({discountType === 'percentage' ? `${discountAmount}%` : `$${discountAmount}`}):</span>
-                     <span>-${discountType === 'percentage' ? 
+                   <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg border border-green-200">
+                     <span className="flex items-center gap-2">
+                       <span className="text-green-600">🎁</span>
+                       <span className="font-medium">Descuento ({discountType === 'percentage' ? `${discountAmount}%` : `$${discountAmount}`}):</span>
+                     </span>
+                     <span className="font-semibold text-green-600">-${discountType === 'percentage' ? 
                        ((calculateSubtotal() * discountAmount) / 100).toFixed(2) : 
                        discountAmount.toFixed(2)}</span>
                    </div>
                  )}
                  
-                <div className="border-t pt-2">
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>Total:</span>
-                    <span>${calculateTotal().toFixed(2)}</span>
-                  </div>
-                </div>
+                 {/* Total */}
+                 <div className="border-t pt-3">
+                   <div className="flex justify-between items-center p-3 bg-blue-600 rounded-lg">
+                     <span className="flex items-center gap-2 text-white">
+                       <span className="text-yellow-300">💰</span>
+                       <span className="font-bold text-lg">Total:</span>
+                     </span>
+                     <span className="font-bold text-2xl text-white">${calculateTotal().toFixed(2)}</span>
+                   </div>
+                 </div>
                 
                 {blockMode && (
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
