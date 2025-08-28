@@ -9,47 +9,19 @@ import {
     SearchOutlined,
     LockOutlined,
     TicketOutlined,
-    UserOutlined
+    UserOutlined,
+    ClockCircleOutlined
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { useAuth } from '../contexts/AuthContext';
 import { FacebookPixel, getFacebookPixelByEvent, FACEBOOK_EVENTS, shouldTrackOnPage } from '../components/FacebookPixel';
-import { Timer } from '../components/Timer';
+
 import { AuthCheck } from '../components/AuthCheck';
 import EnhancedPaymentSearch from '../components/EnhancedPaymentSearch';
 
 const { Title, Text } = Typography;
 
-// Enhanced Timer component
-const Timer = ({ expiresAt }) => {
-    const [remainingTime, setRemainingTime] = useState(expiresAt ? expiresAt - Date.now() : 0);
 
-    useEffect(() => {
-        if (!expiresAt) {
-            setRemainingTime(0);
-            return;
-        }
-
-        const interval = setInterval(() => {
-            const timeLeft = expiresAt - Date.now();
-            setRemainingTime(timeLeft > 0 ? timeLeft : 0);
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [expiresAt]);
-
-    if (!expiresAt || remainingTime <= 0) return null;
-
-    const minutes = Math.floor((remainingTime / 1000) / 60);
-    const seconds = Math.floor((remainingTime / 1000) % 60);
-
-    return (
-        <div className="flex items-center space-x-2 text-red-500 font-mono">
-            <ClockCircleOutlined />
-            <span>Expira en: {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</span>
-        </div>
-    );
-};
 
 
 
@@ -397,7 +369,12 @@ const Cart = () => {
                         <Badge count={itemCount} size="small" />
                     )}
                 </div>
-                <Timer expiresAt={cartExpiration} />
+                {cartExpiration && (
+                    <div className="flex items-center space-x-2 text-red-500 font-mono text-sm">
+                        <ClockCircleOutlined />
+                        <span>Expira en: {Math.max(0, Math.floor((cartExpiration - Date.now()) / 60000))}:{Math.max(0, Math.floor(((cartExpiration - Date.now()) % 60000) / 1000)).toString().padStart(2, '0')}</span>
+                    </div>
+                )}
             </div>
 
             {/* Enhanced Payment Search */}
