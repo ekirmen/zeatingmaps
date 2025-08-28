@@ -6,7 +6,8 @@ import EmailWidgetRenderer from '../components/EmailWidgets/EmailWidgetRenderer'
 import EmailTestPanel from '../components/EmailTestPanel';
 import EmailPageCreator from './EmailPageCreator';
 import SiteMap from '../components/SiteMap';
-import { fetchCmsPage, saveCmsPage } from '../services/apibackoffice';
+import { fetchCmsPage, saveCmsPage, initializeCmsPages, fetchAllCmsPages } from '../services/apibackoffice';
+import { supabase } from '../../supabaseClient';
 
 // Datos de ejemplo para las nuevas secciones - Páginas del sistema reales
 const systemPages = [
@@ -221,7 +222,12 @@ const tagCategories = [
 ];
 
 const WebStudio = ({ setSidebarCollapsed }) => {
-  const [selectedPage, setSelectedPage] = useState(systemPages[0]);
+  // Estado para páginas reales de la base de datos
+  const [cmsPages, setCmsPages] = useState([]);
+  const [loadingPages, setLoadingPages] = useState(true);
+  
+  // Estado para la página seleccionada (usando datos reales)
+  const [selectedPage, setSelectedPage] = useState(null);
   const [widgets, setWidgets] = useState(defaultWidgets);
   const [draggingIdx, setDraggingIdx] = useState(null);
   const [pageLoaded, setPageLoaded] = useState(false);
@@ -256,19 +262,113 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     type: null
   });
 
+  // Cargar páginas desde la base de datos al montar el componente
+  useEffect(() => {
+    const loadCmsPages = async () => {
+      setLoadingPages(true);
+      try {
+        // Obtener el usuario autenticado y su tenant_id
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.error('❌ [WebStudio] Usuario no autenticado');
+          toast.error('Usuario no autenticado');
+          return;
+        }
+
+        // Obtener el tenant_id del perfil del usuario
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('tenant_id')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError || !profile?.tenant_id) {
+          console.error('❌ [WebStudio] Usuario sin tenant_id válido');
+          toast.error('Usuario sin tenant válido');
+          return;
+        }
+
+        console.log('✅ [WebStudio] Tenant ID del usuario:', profile.tenant_id);
+
+        // Cargar páginas del tenant actual
+        const { data: tenantPages, error: tenantError } = await supabase
+          .from('cms_pages')
+          .select('*')
+          .eq('tenant_id', profile.tenant_id)
+          .order('nombre');
+
+        if (tenantError) {
+          console.error('❌ [WebStudio] Error cargando páginas del tenant:', tenantError);
+          toast.error('Error cargando páginas del tenant');
+          return;
+        }
+
+        // Cargar páginas del sistema (sin tenant_id o con tenant_id null)
+        const { data: systemPages, error: systemError } = await supabase
+          .from('cms_pages')
+          .select('*')
+          .or('tenant_id.is.null,tenant_id.eq.' + profile.tenant_id)
+          .in('slug', ['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'])
+          .order('nombre');
+
+        if (systemError) {
+          console.error('❌ [WebStudio] Error cargando páginas del sistema:', systemError);
+        }
+
+        // Combinar páginas del sistema y del tenant
+        const allPages = [
+          ...(systemPages || []),
+          ...(tenantPages || [])
+        ];
+
+        // Remover duplicados por ID
+        const uniquePages = allPages.filter((page, index, self) => 
+          index === self.findIndex(p => p.id === page.id)
+        );
+
+        setCmsPages(uniquePages);
+        
+        // Seleccionar la primera página por defecto
+        if (uniquePages.length > 0 && !selectedPage) {
+          setSelectedPage(uniquePages[0]);
+        }
+        
+        console.log('✅ [WebStudio] Páginas CMS cargadas:', uniquePages.length);
+        console.log('📄 [WebStudio] Páginas del sistema:', systemPages?.length || 0);
+        console.log('📄 [WebStudio] Páginas del tenant:', tenantPages?.length || 0);
+        
+      } catch (error) {
+        console.error('❌ [WebStudio] Error cargando páginas CMS:', error);
+        toast.error('Error cargando páginas CMS');
+      } finally {
+        setLoadingPages(false);
+      }
+    };
+
+    loadCmsPages();
+  }, []);
+
   useEffect(() => {
     if (setSidebarCollapsed) setSidebarCollapsed(true);
     return () => setSidebarCollapsed && setSidebarCollapsed(false);
   }, [setSidebarCollapsed]);
 
+  // Cargar widgets cuando cambie la página seleccionada
   useEffect(() => {
+    if (!selectedPage) return;
+    
     const loadPage = async () => {
       setPageLoaded(false);
       try {
-        const data = await fetchCmsPage(selectedPage.id);
+        // Si es una página del sistema, usar el slug
+        const pageIdentifier = selectedPage.slug || selectedPage.id;
+        const data = await fetchCmsPage(pageIdentifier);
         setWidgets(data.widgets || defaultWidgets);
       } catch (e) {
-        const saved = localStorage.getItem(`cms-page-${selectedPage.id}`);
+        console.error('Error cargando página:', e);
+        // Fallback a localStorage si existe
+        const pageIdentifier = selectedPage.slug || selectedPage.id;
+        const saved = localStorage.getItem(`cms-page-${pageIdentifier}`);
         if (saved) {
           setWidgets(JSON.parse(saved));
         } else {
@@ -280,12 +380,14 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     loadPage();
   }, [selectedPage]);
 
+  // Auto-guardar cuando cambien los widgets
   useEffect(() => {
-    if (!pageLoaded) return;
+    if (!pageLoaded || !selectedPage) return;
     const autoSave = async () => {
       try {
-        await saveCmsPage(selectedPage.id, widgets);
-        localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
+        const pageIdentifier = selectedPage.slug || selectedPage.id;
+        await saveCmsPage(pageIdentifier, widgets);
+        localStorage.setItem(`cms-page-${pageIdentifier}`, JSON.stringify(widgets));
       } catch (err) {
         console.error('Auto save failed', err);
       }
@@ -454,29 +556,60 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     }
 
     try {
-      // Aquí implementarías la lógica para crear la página en Supabase
-      const newPage = {
-        id: Date.now(),
-        name: newPageData.name,
-        url: newPageData.url,
-        title: newPageData.title,
-        description: newPageData.description,
-        keywords: newPageData.keywords,
-        css: newPageData.css,
-        hideFromSEO: newPageData.hideFromSEO,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        type: 'user'
-      };
+      // Obtener el tenant_id del usuario actual
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Usuario no autenticado');
+        return;
+      }
 
-      // Agregar a la lista de páginas de usuario
-      userPages.push(newPage);
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('tenant_id')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError || !profile?.tenant_id) {
+        toast.error('Usuario sin tenant válido');
+        return;
+      }
+
+      // Crear slug a partir del nombre
+      const slug = newPageData.url.replace(/^\//, '').toLowerCase().replace(/\s+/g, '-');
+      
+      // Crear la página en la base de datos
+      const { data: newPage, error } = await supabase
+        .from('cms_pages')
+        .insert([{
+          slug: slug,
+          nombre: newPageData.name,
+          widgets: {
+            header: [],
+            content: [],
+            footer: []
+          },
+          tenant_id: profile.tenant_id
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creando página:', error);
+        toast.error('Error al crear la página en la base de datos');
+        return;
+      }
+
+      // Agregar la nueva página al estado local
+      setCmsPages(prevPages => [...prevPages, newPage]);
+      
+      // Seleccionar la nueva página
+      setSelectedPage(newPage);
       
       toast.success('Página creada exitosamente');
       handleCloseNewPage();
     } catch (error) {
-      console.error('Error creating page:', error);
-      toast.error('Error al crear la página');
+      console.error('Error inesperado al crear página:', error);
+      toast.error('Error inesperado al crear la página');
     }
   };
 
@@ -487,29 +620,40 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     setEditingValue(page[field] || '');
   };
 
-  const saveEditing = () => {
+  const saveEditing = async () => {
     if (editingPage && editingField) {
-      const updatedPage = { ...editingPage, [editingField]: editingValue };
-      
-      // Actualizar en la lista correspondiente
-      if (editingPage.type === 'system') {
-        const index = systemPages.findIndex(p => p.id === editingPage.id);
-        if (index !== -1) {
-          systemPages[index] = updatedPage;
+      try {
+        const updatedPage = { ...editingPage, [editingField]: editingValue };
+        
+        // Actualizar en la base de datos
+        const { error } = await supabase
+          .from('cms_pages')
+          .update({ [editingField]: editingValue })
+          .eq('id', editingPage.id);
+        
+        if (error) {
+          console.error('Error actualizando página:', error);
+          toast.error('Error al actualizar la página');
+          return;
         }
-      } else {
-        const index = userPages.findIndex(p => p.id === editingPage.id);
-        if (index !== -1) {
-          userPages[index] = updatedPage;
+        
+        // Actualizar en el estado local
+        setCmsPages(prevPages => 
+          prevPages.map(page => 
+            page.id === editingPage.id ? updatedPage : page
+          )
+        );
+        
+        // Si es la página seleccionada, actualizarla también
+        if (selectedPage && selectedPage.id === editingPage.id) {
+          setSelectedPage(updatedPage);
         }
+        
+        toast.success('Página actualizada exitosamente');
+      } catch (error) {
+        console.error('Error inesperado al actualizar:', error);
+        toast.error('Error inesperado al actualizar la página');
       }
-      
-      // Si es la página seleccionada, actualizarla también
-      if (selectedPage && selectedPage.id === editingPage.id) {
-        setSelectedPage(updatedPage);
-      }
-      
-      toast.success('Página actualizada exitosamente');
     }
     
     setEditingPage(null);
@@ -544,7 +688,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     });
   };
 
-  const handleContextMenuAction = (action) => {
+  const handleContextMenuAction = async (action) => {
     const { item, type } = contextMenu;
     
     switch (action) {
@@ -568,9 +712,38 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         break;
       case 'delete':
         if (type === 'page') {
-          if (window.confirm(`¿Estás seguro de que quieres eliminar la página "${item.name}"?`)) {
-            // Implementar eliminación de página
-            toast.success('Página eliminada');
+          if (window.confirm(`¿Estás seguro de que quieres eliminar la página "${item.nombre || item.name}"?`)) {
+            try {
+              // Eliminar de la base de datos
+              const { error } = await supabase
+                .from('cms_pages')
+                .delete()
+                .eq('id', item.id);
+              
+              if (error) {
+                console.error('Error eliminando página:', error);
+                toast.error('Error al eliminar la página');
+                return;
+              }
+              
+              // Eliminar del estado local
+              setCmsPages(prevPages => prevPages.filter(page => page.id !== item.id));
+              
+              // Si es la página seleccionada, seleccionar otra
+              if (selectedPage && selectedPage.id === item.id) {
+                const remainingPages = cmsPages.filter(page => page.id !== item.id);
+                if (remainingPages.length > 0) {
+                  setSelectedPage(remainingPages[0]);
+                } else {
+                  setSelectedPage(null);
+                }
+              }
+              
+              toast.success('Página eliminada exitosamente');
+            } catch (error) {
+              console.error('Error inesperado al eliminar:', error);
+              toast.error('Error inesperado al eliminar la página');
+            }
           }
         } else if (type === 'component') {
           if (window.confirm(`¿Estás seguro de que quieres eliminar el componente "${item.name}"?`)) {
@@ -1380,138 +1553,155 @@ const WebStudio = ({ setSidebarCollapsed }) => {
             
             {pagesExpanded && (
               <div className="p-3 bg-white border-t border-gray-300">
-                {/* Páginas del sistema */}
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
-                    <i className="fas fa-folder"></i>
-                    Páginas del sistema
+                {loadingPages ? (
+                  <div className="text-center py-4 text-gray-500">
+                    <i className="fas fa-spinner fa-spin mr-2"></i>
+                    Cargando páginas...
                   </div>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
-                    {systemPages.map(page => (
-                      <div
-                        key={page.id}
-                        className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
-                        onClick={() => setSelectedPage(page)}
-                      >
-                        <div className="flex-1">
-                          {editingPage?.id === page.id && editingField === 'name' ? (
-                            <input
-                              type="text"
-                              value={editingValue}
-                              onChange={(e) => setEditingValue(e.target.value)}
-                              className="w-full px-2 py-1 text-sm border rounded"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') saveEditing();
-                                if (e.key === 'Escape') cancelEditing();
-                              }}
-                              autoFocus
-                            />
-                          ) : (
-                            <span className="text-sm">{page.name}</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {editingPage?.id === page.id && editingField === 'name' ? (
-                            <>
-                              <button
-                                onClick={saveEditing}
-                                className="text-green-600 hover:text-green-800 text-xs"
-                              >
-                                ✓
-                              </button>
-                              <button
-                                onClick={cancelEditing}
-                                className="text-red-600 hover:text-red-800 text-xs"
-                              >
-                                ✗
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startEditing(page, 'name');
-                              }}
-                              className="text-gray-400 hover:text-gray-600 text-xs"
-                            >
-                              ✏️
-                            </button>
-                          )}
-                        </div>
+                ) : (
+                  <>
+                    {/* Páginas del sistema */}
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
+                        <i className="fas fa-folder"></i>
+                        Páginas del sistema
                       </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Tus páginas */}
-                <div>
-                  <div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
-                    <i className="fas fa-folder"></i>
-                    Tus páginas
-                  </div>
-                  <div className="space-y-1 max-h-40 overflow-y-auto">
-                    <div
-                      className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer text-blue-600"
-                      onClick={handleNewPage}
-                    >
-                      <i className="fas fa-plus-circle"></i>
-                      <span className="text-sm">Nueva página</span>
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {cmsPages
+                          .filter(page => ['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'].includes(page.slug))
+                          .map(page => (
+                            <div
+                              key={page.id}
+                              className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer ${
+                                selectedPage?.id === page.id ? 'bg-blue-50 border border-blue-200' : ''
+                              }`}
+                              onClick={() => setSelectedPage(page)}
+                            >
+                              <div className="flex-1">
+                                {editingPage?.id === page.id && editingField === 'nombre' ? (
+                                  <input
+                                    type="text"
+                                    value={editingValue}
+                                    onChange={(e) => setEditingValue(e.target.value)}
+                                    className="w-full px-2 py-1 text-sm border rounded"
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') saveEditing();
+                                      if (e.key === 'Escape') cancelEditing();
+                                    }}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span className="text-sm">{page.nombre}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {editingPage?.id === page.id && editingField === 'nombre' ? (
+                                  <>
+                                    <button
+                                      onClick={saveEditing}
+                                      className="text-green-600 hover:text-green-800 text-xs"
+                                    >
+                                      ✓
+                                    </button>
+                                    <button
+                                      onClick={cancelEditing}
+                                      className="text-red-600 hover:text-red-800 text-xs"
+                                    >
+                                      ✗
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      startEditing(page, 'nombre');
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600 text-xs"
+                                  >
+                                    ✏️
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
                     </div>
-                    {userPages.map(page => (
-                      <div
-                        key={page.id}
-                        className="flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer"
-                        onClick={() => setSelectedPage(page)}
-                      >
-                        <div className="flex-1">
-                          {editingPage?.id === page.id && editingField === 'name' ? (
-                            <input
-                              type="text"
-                              value={editingValue}
-                              onChange={(e) => setEditingValue(e.target.value)}
-                              className="w-full px-2 py-1 text-sm border rounded"
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') saveEditing();
-                                if (e.key === 'Escape') cancelEditing();
-                              }}
-                              autoFocus
-                            />
-                          ) : (
-                            <span className="text-sm">{page.name}</span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {editingPage?.id === page.id && editingField === 'name' ? (
-                            <>
-                              <button
-                                onClick={saveEditing}
-                                className="text-green-600 hover:text-green-800 text-xs"
-                              >
-                                ✓
-                              </button>
-                              <button
-                                onClick={cancelEditing}
-                                className="text-red-600 hover:text-red-800 text-xs"
-                              >
-                                ✗
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                startEditing(page, 'name');
-                              }}
-                              className="text-gray-400 hover:text-gray-600 text-xs"
-                            >
-                              ✏️
-                            </button>
-                          )}
-                        </div>
+
+                    {/* Tus páginas */}
+                    <div>
+                      <div className="flex items-center gap-2 mb-2 text-sm font-medium text-gray-700">
+                        <i className="fas fa-folder"></i>
+                        Tus páginas
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        <div
+                          className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded cursor-pointer text-blue-600"
+                          onClick={handleNewPage}
+                        >
+                          <i className="fas fa-plus-circle"></i>
+                          <span className="text-sm">Nueva página</span>
+                        </div>
+                        {cmsPages
+                          .filter(page => !['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'].includes(page.slug))
+                          .map(page => (
+                            <div
+                              key={page.id}
+                              className={`flex items-center justify-between p-2 hover:bg-gray-100 rounded cursor-pointer ${
+                                selectedPage?.id === page.id ? 'bg-blue-50 border border-blue-200' : ''
+                              }`}
+                              onClick={() => setSelectedPage(page)}
+                            >
+                              <div className="flex-1">
+                                {editingPage?.id === page.id && editingField === 'nombre' ? (
+                                  <input
+                                    type="text"
+                                    value={editingValue}
+                                    onChange={(e) => setEditingValue(e.target.value)}
+                                    className="w-full px-2 py-1 text-sm border rounded"
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') saveEditing();
+                                      if (e.key === 'Escape') cancelEditing();
+                                    }}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span className="text-sm">{page.nombre}</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {editingPage?.id === page.id && editingField === 'nombre' ? (
+                                  <>
+                                    <button
+                                      onClick={saveEditing}
+                                      className="text-green-600 hover:text-green-800 text-xs"
+                                    >
+                                      ✓
+                                    </button>
+                                    <button
+                                      onClick={cancelEditing}
+                                      className="text-red-600 hover:text-red-800 text-xs"
+                                    >
+                                      ✗
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      startEditing(page, 'nombre');
+                                    }}
+                                    className="text-gray-400 hover:text-gray-600 text-xs"
+                                  >
+                                    ✏️
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

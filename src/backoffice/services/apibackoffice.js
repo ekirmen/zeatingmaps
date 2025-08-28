@@ -239,10 +239,29 @@ export const fetchEventoById = async (id) => {
 };
 
 export const createEvento = async (data) => {
-  const client = supabaseAdmin || supabase;
-  const { data: result, error } = await client.from('eventos').insert(data).single();
-  handleError(error);
-  return result;
+  try {
+    const client = supabaseAdmin || supabase;
+    
+    // Crear el evento
+    const { data: result, error } = await client.from('eventos').insert(data).single();
+    handleError(error);
+    
+    // Crear automáticamente la página CMS para el evento
+    if (result) {
+      console.log('🔧 [createEvento] Evento creado, creando página CMS...');
+      const cmsPage = await createCmsPageForEvent(result);
+      if (cmsPage) {
+        console.log('✅ [createEvento] Página CMS creada exitosamente para evento:', result.nombre);
+      } else {
+        console.warn('⚠️ [createEvento] No se pudo crear la página CMS para evento:', result.nombre);
+      }
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('❌ [createEvento] Error creando evento:', error);
+    throw error;
+  }
 };
 
 export const updateEvento = async (id, data) => {
@@ -986,6 +1005,214 @@ export const fetchCanalesVenta = async () => {
   const { data, error } = await supabase.from('canales_venta').select('*');
   handleError(error);
   return data;
+};
+
+// Función para inicializar las páginas del sistema y usuario en la base de datos
+export const initializeCmsPages = async () => {
+  try {
+    console.log('🔧 [initializeCmsPages] Inicializando páginas CMS...');
+    
+    // Páginas del sistema
+    const systemPages = [
+      { slug: 'inicio', nombre: 'Inicio', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'eventos', nombre: 'Eventos', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'recintos', nombre: 'Recintos', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'contacto', nombre: 'Contacto', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'acerca-de', nombre: 'Acerca de', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'terminos', nombre: 'Términos y Condiciones', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'privacidad', nombre: 'Política de Privacidad', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'faq', nombre: 'FAQ', widgets: { header: [], content: [], footer: [] } }
+    ];
+
+    // Páginas de usuario
+    const userPages = [
+      { slug: 'astrid-carolina-herrera', nombre: 'Astrid Carolina Herrera - LO QUE NO TE DIJERON DEL SEXO', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'dia-madres-pimpinela', nombre: 'DÍA DE LAS MADRES PIMPINELA', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'felipe-pelaez', nombre: 'Felipe Pelaez', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'karina', nombre: 'Karina', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'oktober-beer-fest-2024', nombre: 'Oktober Beer Fest 2024', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'promocion-dia-padre-merengazo', nombre: 'PROMOCIÓN -20% POR EL DIA DEL PADRE - MERENGAZO VALENCIA', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'promocion-dia-padre-merengazo-20', nombre: 'PROMOCIÓN 20% POR EL DIA DEL PADRE - MERENGAZO VALENCIA', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'proximos-eventos', nombre: 'Próximos Eventos', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'sin-bandera-30-abril', nombre: 'Sin Bandera 30 de Abril', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'teatro-negro-praga', nombre: 'Teatro Negro de Praga', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'oasis', nombre: 'Oasis', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'republica-dominicana', nombre: 'República Dominicana', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'usa', nombre: 'USA', widgets: { header: [], content: [], footer: [] } },
+      { slug: 'venezuela', nombre: 'Venezuela', widgets: { header: [], content: [], footer: [] } }
+    ];
+
+    // Combinar todas las páginas
+    const allPages = [...systemPages, ...userPages];
+    
+    // Insertar cada página si no existe
+    for (const page of allPages) {
+      try {
+        const { data: existingPage, error: checkError } = await supabase
+          .from('cms_pages')
+          .select('id')
+          .eq('slug', page.slug)
+          .maybeSingle();
+
+        if (checkError) {
+          console.error(`❌ [initializeCmsPages] Error verificando página ${page.slug}:`, checkError);
+          continue;
+        }
+
+        if (!existingPage) {
+          // La página no existe, crearla
+          const { data: newPage, error: insertError } = await supabase
+            .from('cms_pages')
+            .insert([{
+              slug: page.slug,
+              nombre: page.nombre,
+              widgets: page.widgets,
+              tenant_id: null // Por ahora null, se puede actualizar después
+            }])
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error(`❌ [initializeCmsPages] Error creando página ${page.slug}:`, insertError);
+          } else {
+            console.log(`✅ [initializeCmsPages] Página creada: ${page.slug} (ID: ${newPage.id})`);
+          }
+        } else {
+          console.log(`ℹ️ [initializeCmsPages] Página ya existe: ${page.slug} (ID: ${existingPage.id})`);
+        }
+      } catch (error) {
+        console.error(`❌ [initializeCmsPages] Error procesando página ${page.slug}:`, error);
+      }
+    }
+
+    console.log('✅ [initializeCmsPages] Inicialización completada');
+  } catch (error) {
+    console.error('❌ [initializeCmsPages] Error general:', error);
+  }
+};
+
+// Función para obtener todas las páginas CMS desde la base de datos
+export const fetchAllCmsPages = async () => {
+  try {
+    console.log('🔍 [fetchAllCmsPages] Obteniendo todas las páginas CMS...');
+    
+    const { data, error } = await supabase
+      .from('cms_pages')
+      .select('*')
+      .order('nombre');
+
+    if (error) {
+      console.error('❌ [fetchAllCmsPages] Error:', error);
+      throw error;
+    }
+
+    console.log(`✅ [fetchAllCmsPages] ${data?.length || 0} páginas encontradas`);
+    return data || [];
+  } catch (error) {
+    console.error('❌ [fetchAllCmsPages] Error inesperado:', error);
+    return [];
+  }
+};
+
+// Función para crear una página CMS automáticamente cuando se crea un evento
+export const createCmsPageForEvent = async (eventData) => {
+  try {
+    console.log('🔧 [createCmsPageForEvent] Creando página CMS para evento:', eventData.nombre);
+    
+    // Generar slug a partir del nombre del evento
+    const slug = eventData.nombre
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remover caracteres especiales
+      .replace(/\s+/g, '-') // Reemplazar espacios con guiones
+      .replace(/-+/g, '-') // Remover guiones múltiples
+      .trim();
+    
+    // Verificar si ya existe una página con ese slug
+    const { data: existingPage, error: checkError } = await supabase
+      .from('cms_pages')
+      .select('id')
+      .eq('slug', slug)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('❌ [createCmsPageForEvent] Error verificando slug existente:', checkError);
+      return null;
+    }
+    
+    if (existingPage) {
+      console.log('ℹ️ [createCmsPageForEvent] Ya existe una página con slug:', slug);
+      return existingPage;
+    }
+    
+    // Crear la página CMS para el evento
+    const { data: newPage, error: insertError } = await supabase
+      .from('cms_pages')
+      .insert([{
+        slug: slug,
+        nombre: eventData.nombre,
+        widgets: {
+          header: [],
+          content: [
+            {
+              type: 'event_header',
+              config: {
+                title: eventData.nombre,
+                description: eventData.descripcion || '',
+                image: eventData.imagen || null
+              }
+            },
+            {
+              type: 'event_details',
+              config: {
+                show_date: true,
+                show_location: true,
+                show_prices: true
+              }
+            }
+          ],
+          footer: []
+        },
+        tenant_id: eventData.tenant_id
+      }])
+      .select()
+      .single();
+    
+    if (insertError) {
+      console.error('❌ [createCmsPageForEvent] Error creando página CMS:', insertError);
+      return null;
+    }
+    
+    console.log('✅ [createCmsPageForEvent] Página CMS creada exitosamente:', newPage.id);
+    return newPage;
+    
+  } catch (error) {
+    console.error('❌ [createCmsPageForEvent] Error inesperado:', error);
+    return null;
+  }
+};
+
+// Función para obtener todas las páginas CMS de un tenant específico
+export const fetchCmsPagesByTenant = async (tenantId) => {
+  try {
+    console.log('🔍 [fetchCmsPagesByTenant] Obteniendo páginas CMS para tenant:', tenantId);
+    
+    const { data, error } = await supabase
+      .from('cms_pages')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .order('nombre');
+    
+    if (error) {
+      console.error('❌ [fetchCmsPagesByTenant] Error:', error);
+      throw error;
+    }
+    
+    console.log(`✅ [fetchCmsPagesByTenant] ${data?.length || 0} páginas encontradas`);
+    return data || [];
+  } catch (error) {
+    console.error('❌ [fetchCmsPagesByTenant] Error inesperado:', error);
+    return [];
+  }
 };
 
 // Puedes seguir migrando más entidades según este mismo patrón.

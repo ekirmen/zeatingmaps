@@ -534,3 +534,56 @@ export const fetchZonasBySala = async (salaId) => {
     throw error;
   }
 };
+
+/**
+ * Obtiene todas las páginas CMS de un tenant específico
+ * Esto permite mostrar las páginas de eventos en el store
+ */
+export const getAllCmsPages = async () => {
+  try {
+    console.log('🔍 [getAllCmsPages] Obteniendo todas las páginas CMS...');
+    
+    const { data, error } = await supabase
+      .from('cms_pages')
+      .select('*')
+      .order('nombre');
+
+    if (error) {
+      console.error('❌ [getAllCmsPages] Error:', error);
+      throw error;
+    }
+
+    console.log(`✅ [getAllCmsPages] ${data?.length || 0} páginas encontradas`);
+    return data || [];
+  } catch (error) {
+    console.error('❌ [getAllCmsPages] Error inesperado:', error);
+    return [];
+  }
+};
+
+/**
+ * Obtiene las páginas CMS de eventos (páginas con tenant_id)
+ * Estas son las páginas creadas automáticamente cuando se crea un evento
+ */
+export const getEventCmsPages = async () => {
+  try {
+    console.log('🔍 [getEventCmsPages] Obteniendo páginas de eventos...');
+    
+    const { data, error } = await supabase
+      .from('cms_pages')
+      .select('*')
+      .not('tenant_id', 'is', null)
+      .order('nombre');
+
+    if (error) {
+      console.error('❌ [getEventCmsPages] Error:', error);
+      throw error;
+    }
+
+    console.log(`✅ [getEventCmsPages] ${data?.length || 0} páginas de eventos encontradas`);
+    return data || [];
+  } catch (error) {
+    console.error('❌ [getEventCmsPages] Error inesperado:', error);
+    return [];
+  }
+};
