@@ -1399,166 +1399,40 @@ const BoleteriaMain = () => {
             <div className={`border-b p-2 text-xs ${boleteriaError ? 'bg-red-50 border-red-200' : 'bg-yellow-50 border-yellow-200'}`}>
               <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-blue-700 font-medium">🔧 Modo Desarrollo</span>
+                    <span className="text-blue-600 text-sm">
+                      Para diagnóstico completo, ve a <strong>Dashboard → Diagnóstico del Servidor</strong>
+                    </span>
+                  </div>
                   {boleteriaError && (
-                    <div className="text-red-700 mb-1">
+                    <div className="text-red-700 mt-2 text-sm">
                       <strong>❌ Error:</strong> {boleteriaError}
-                    </div>
-                  )}
-                  {debugInfo && Object.keys(debugInfo).length > 0 && (
-                    <div>
-                      <strong>Debug Info:</strong> {JSON.stringify(debugInfo)} | 
-                      <strong>Eventos:</strong> {eventos?.length || 0} | 
-                      <strong>Funciones:</strong> {funciones?.length || 0} | 
-                      <strong>Evento Seleccionado:</strong> {selectedEvent?.nombre || 'Ninguno'} | 
-                      <strong>Función Seleccionada:</strong> {selectedFuncion?.nombre || 'Ninguna'}
                     </div>
                   )}
                 </div>
                 <div className="flex space-x-2">
                   <button 
                     onClick={() => {
-                      console.log('🔍 Debug - Recargando datos...');
                       if (eventos && eventos.length > 0) {
                         handleEventSelect(eventos[0].id);
                       }
                     }}
-                    className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
+                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200 transition-colors"
                   >
                     🔄 Recargar
                   </button>
                   <button 
                     onClick={() => {
-                      console.log('🔍 Debug - Forzando carga de mapa...');
                       if (selectedFuncion) {
-                        console.log('🔍 Debug - Función seleccionada:', selectedFuncion);
-                        console.log('🔍 Debug - Sala de la función:', selectedFuncion.sala);
-                        console.log('🔍 Debug - Sala ID:', selectedFuncion.sala_id);
-                        // Forzar recarga de la función para cargar el mapa
                         handleFunctionSelect(selectedFuncion.id);
                       }
                     }}
-                    className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200"
+                    className="px-3 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200 transition-colors"
                   >
                     🗺️ Cargar Mapa
                   </button>
-                  <button 
-                    onClick={() => {
-                      console.log('🔍 Debug - Verificando estado del hook...');
-                      console.log('🔍 Debug - selectedFuncion:', selectedFuncion);
-                      console.log('🔍 Debug - selectedEvent:', selectedEvent);
-                      console.log('🔍 Debug - mapa:', mapa);
-                      console.log('🔍 Debug - zonas:', zonas);
-                      console.log('🔍 Debug - boleteriaLoading:', boleteriaLoading);
-                    }}
-                    className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs hover:bg-orange-200"
-                  >
-                    🔍 Estado Hook
-                  </button>
-                  <button 
-                    onClick={() => {
-                      console.log('🔍 Debug - Verificando autenticación...');
-                      supabase.auth.getUser().then(({ data, error }) => {
-                        console.log('🔍 Auth status:', { user: !!data?.user, error });
-                        if (error) {
-                          message.error(`Error de autenticación: ${error.message}`);
-                        } else if (data?.user) {
-                          message.success(`Usuario autenticado: ${data.user.email}`);
-                        } else {
-                          message.warning('Usuario no autenticado');
-                        }
-                      });
-                    }}
-                    className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
-                  >
-                    🔐 Verificar Auth
-                  </button>
-                  <button 
-                    onClick={async () => {
-                      console.log('🔍 Debug - Probando lockSeat del store...');
-                      try {
-                        const { useSeatLockStore } = await import('../../../components/seatLockStore');
-                        const lockSeat = useSeatLockStore.getState().lockSeat;
-                        
-                        if (lockSeat) {
-                          console.log('🔍 Debug - lockSeat encontrado:', !!lockSeat);
-                          const result = await lockSeat('test_seat_123', 'seleccionado', selectedFuncion?.id);
-                          console.log('🔍 Debug - Resultado lockSeat:', result);
-                          
-                          if (result) {
-                            message.success('✅ lockSeat funcionando correctamente');
-                          } else {
-                            message.warning('⚠️ lockSeat retornó false');
-                          }
-                        } else {
-                          message.error('❌ lockSeat no encontrado');
-                        }
-                      } catch (error) {
-                        console.error('🔍 Debug - Error en lockSeat:', error);
-                        message.error(`❌ Error en lockSeat: ${error.message}`);
-                      }
-                    }}
-                    className="px-2 py-1 bg-teal-100 text-teal-700 rounded text-xs hover:bg-teal-200"
-                  >
-                    🧪 Probar lockSeat
-                  </button>
 
-                  <button 
-                    onClick={async () => {
-                      console.log('🔍 Debug - Probando fetchMapa...');
-                      if (selectedFuncion) {
-                        const salaId = selectedFuncion.sala?.id || selectedFuncion.sala_id || selectedFuncion.sala;
-                        console.log('🔍 Debug - Sala ID para fetchMapa:', salaId);
-                        
-                        try {
-                          // Importar y probar fetchMapa directamente
-                          const { fetchMapa } = await import('../../services/apibackoffice');
-                          console.log('🔍 Debug - fetchMapa importado:', !!fetchMapa);
-                          
-                          const mapData = await fetchMapa(salaId);
-                          console.log('🔍 Debug - Resultado fetchMapa:', mapData);
-                          
-                          if (mapData) {
-                            message.success('✅ fetchMapa funcionando correctamente');
-                          } else {
-                            message.warning('⚠️ fetchMapa retornó null/undefined');
-                          }
-                        } catch (error) {
-                          console.error('🔍 Debug - Error en fetchMapa:', error);
-                          message.error(`❌ Error en fetchMapa: ${error.message}`);
-                        }
-                      }
-                    }}
-                    className="px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs hover:bg-indigo-200"
-                  >
-                    🧪 Probar fetchMapa
-                  </button>
-                  <button 
-                    onClick={() => {
-                      console.log('🔍 Debug - Estructura de selectedFuncion:');
-                      if (selectedFuncion) {
-                        console.log('🔍 Debug - selectedFuncion completo:', selectedFuncion);
-                        console.log('🔍 Debug - selectedFuncion.sala:', selectedFuncion.sala);
-                        console.log('🔍 Debug - selectedFuncion.sala_id:', selectedFuncion.sala_id);
-                        console.log('🔍 Debug - selectedFuncion.sala?.id:', selectedFuncion.sala?.id);
-                        console.log('🔍 Debug - Tipo de sala:', typeof selectedFuncion.sala);
-                        console.log('🔍 Debug - Tipo de sala_id:', typeof selectedFuncion.sala_id);
-                      }
-                    }}
-                    className="px-2 py-1 bg-pink-100 text-pink-700 rounded text-xs hover:bg-pink-200"
-                  >
-                    🔍 Estructura Función
-                  </button>
-                  <button 
-                    onClick={() => {
-                      console.log('🔍 Debug - Limpiando localStorage...');
-                      localStorage.removeItem('boleteriaEventId');
-                      localStorage.removeItem('boleteriaFunctionId');
-                      window.location.reload();
-                    }}
-                    className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200"
-                  >
-                    🗑️ Limpiar Cache
-                  </button>
                 </div>
               </div>
             </div>

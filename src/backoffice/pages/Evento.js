@@ -235,6 +235,56 @@ const Evento = () => {
     }
   }, [fetchEventos, currentTenant]);
 
+  const handleToggleEventStatus = useCallback(async (eventoId, evento) => {
+    try {
+      const currentActivo = evento.activo === true || evento.activo === 'true';
+      const currentDesactivado = evento.desactivado === true || evento.desactivado === 'true';
+      
+      const newActivo = !currentActivo;
+      const newDesactivado = !newActivo;
+      
+      const { error } = await supabase
+        .from('eventos')
+        .update({
+          activo: newActivo,
+          desactivado: newDesactivado
+        })
+        .eq('id', eventoId);
+
+      if (error) {
+        throw error;
+      }
+
+      // Actualizar el estado local
+      setEventos(prev => prev.map(e => 
+        e.id === eventoId 
+          ? { ...e, activo: newActivo, desactivado: newDesactivado }
+          : e
+      ));
+      
+      setEventosFiltrados(prev => prev.map(e => 
+        e.id === eventoId 
+          ? { ...e, activo: newActivo, desactivado: newDesactivado }
+          : e
+      ));
+
+      // Si el evento actual está siendo editado, actualizarlo también
+      if (eventoData?.id === eventoId) {
+        setEventoData(prev => ({
+          ...prev,
+          activo: newActivo,
+          desactivado: newDesactivado
+        }));
+      }
+
+      const statusText = newActivo ? 'activado' : 'desactivado';
+      alert(`Evento ${statusText} correctamente`);
+    } catch (error) {
+      console.error('Error al cambiar estado del evento:', error);
+      alert('Error al cambiar el estado del evento: ' + error.message);
+    }
+  }, [eventoData]);
+
   const handleSave = useCallback(async () => {
     if (!eventoData) return;
 
@@ -409,6 +459,7 @@ const Evento = () => {
           handleEdit={handleEdit}
           handleDelete={handleDelete}
           handleDuplicate={handleDuplicate}
+          onToggleEventStatus={handleToggleEventStatus}
         />
 
         {/* Modal de Configuración de Evento */}
@@ -478,17 +529,17 @@ const Evento = () => {
                 </div>
               </div>
 
-              {/* Tabs de Navegación - Diseño Mejorado */}
-              <div className="bg-gray-50/50 px-8 py-2 border-b border-gray-100">
-                <div className="flex gap-1">
+              {/* Tabs de Navegación - Diseño Minimalista Mejorado */}
+              <div className="bg-white/80 backdrop-blur-sm px-8 py-4 border-b border-gray-200/60">
+                <div className="flex gap-2">
                   {tabs.map(tab => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                      className={`px-6 py-3.5 text-sm font-semibold rounded-xl transition-all duration-300 ${
                         activeTab === tab.id
-                          ? 'bg-white text-blue-600 shadow-sm border border-gray-200'
-                          : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25'
+                          : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100/80 hover:shadow-sm'
                       }`}
                     >
                       {tab.label}

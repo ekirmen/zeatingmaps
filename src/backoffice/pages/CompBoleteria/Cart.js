@@ -152,7 +152,14 @@ const Cart = ({
   return (
     <div className="h-full flex flex-col bg-white">
       <div className="flex justify-between items-center mb-4 border-b pb-2">
-        <h3 className="text-lg font-semibold">Carrito de Compras</h3>
+        <div>
+          <h3 className="text-lg font-semibold">Carrito de Compras</h3>
+          {safeCarrito.length > 0 && (
+            <p className="text-xs text-gray-500 mt-1">
+              {safeCarrito.length} elemento{safeCarrito.length !== 1 ? 's' : ''} seleccionado{safeCarrito.length !== 1 ? 's' : ''}
+            </p>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           {safeCarrito.length > 0 && (
             <Dropdown overlay={menu} trigger={["click"]} visible={menuVisible} onVisibleChange={setMenuVisible} placement="bottomRight">
@@ -176,9 +183,16 @@ const Cart = ({
       <div className="max-h-[430px] overflow-y-auto space-y-2 pr-1">
         {Object.entries(groupedByFunction).map(([fid, group], idx) => (
           <div key={fid} className="space-y-1">
-            <div className="text-xs font-medium text-gray-600">
-              {`Función ${idx + 1}: `}
-              {group.fecha ? new Date(group.fecha).toLocaleString() : ''}
+            <div className="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded">
+              {`🎭 Función ${idx + 1}: `}
+              {group.fecha ? new Date(group.fecha).toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }) : 'Fecha no disponible'}
             </div>
             {group.items.map((item) => {
               const groupKey = `${item.zona}|${item.precio}|${item.tipoPrecio}|${item.descuentoNombre}`;
@@ -187,26 +201,43 @@ const Cart = ({
                 <Card key={groupKey} size="small" className="mb-2">
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
-                      <div className="font-medium text-sm">
-                        {item.zona} - ${item.precio.toFixed(2)}
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        <span className="text-blue-600">📍</span>
+                        <span>{item.zona}</span>
+                        <span className="text-gray-400">|</span>
+                        <span className="font-bold text-green-600">${item.precio.toFixed(2)}</span>
                       </div>
                       {item.tipoPrecio === 'descuento' && (
-                        <div className="text-xs text-green-600">
-                          Descuento: {item.descuentoNombre}
+                        <div className="text-xs text-green-600 flex items-center gap-1 mt-1">
+                          <span>🎉</span>
+                          <span>Descuento: {item.descuentoNombre}</span>
                         </div>
                       )}
-                      <div className="text-xs text-gray-500">
-                        Cantidad: {item.cantidad}
+                      <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                        <span>📊</span>
+                        <span>Cantidad: {item.cantidad}</span>
                       </div>
                       <div className="text-xs text-gray-400 mt-1">
                         {item.asientos.map(seat => {
-                          const seatName = seat.nombre || seat.nombreMesa || 'Sin nombre';
+                          const seatName = seat.nombre || 'Asiento';
                           const mesaName = seat.nombreMesa || seat.mesa_nombre || '';
-                          return (
-                            <div key={seat._id} className="text-xs">
-                              {mesaName ? `${mesaName} - ${seatName}` : seatName}
-                            </div>
-                          );
+                          
+                          // Mostrar información más clara
+                          if (mesaName) {
+                            return (
+                              <div key={seat._id} className="text-xs flex items-center gap-1">
+                                <span className="text-blue-600">🪑</span>
+                                <span>{mesaName} - {seatName}</span>
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <div key={seat._id} className="text-xs flex items-center gap-1">
+                                <span className="text-green-600">💺</span>
+                                <span>{seatName}</span>
+                              </div>
+                            );
+                          }
                         })}
                       </div>
                     </div>
@@ -226,29 +257,39 @@ const Cart = ({
 
       {safeCarrito.length > 0 && (
         <div className="mt-auto border-t pt-4">
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span>Subtotal:</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span className="flex items-center gap-2">
+                <span>🛒</span>
+                <span>Subtotal:</span>
+              </span>
+              <span className="font-medium">${subtotal.toFixed(2)}</span>
             </div>
             {selectedAffiliate && (
               <div className="flex justify-between text-sm text-gray-600">
-                <span>Comisión ({selectedAffiliate.percentage}%):</span>
-                <span>-${(subtotal * (selectedAffiliate.percentage / 100)).toFixed(2)}</span>
+                <span className="flex items-center gap-2">
+                  <span>💸</span>
+                  <span>Comisión ({selectedAffiliate.percentage}%):</span>
+                </span>
+                <span className="text-red-600">-${(subtotal * (selectedAffiliate.percentage / 100)).toFixed(2)}</span>
               </div>
             )}
-            <div className="flex justify-between font-semibold border-t pt-2">
-              <span>Total:</span>
-              <span>${total.toFixed(2)}</span>
+            <div className="flex justify-between font-semibold border-t pt-3 text-lg">
+              <span className="flex items-center gap-2">
+                <span>💰</span>
+                <span>Total:</span>
+              </span>
+              <span className="text-green-600">${total.toFixed(2)}</span>
             </div>
           </div>
           
           <Button
             type="primary"
             block
-            className="mt-4"
+            className="mt-4 h-12 text-base font-semibold"
             onClick={onPaymentClick}
             disabled={!selectedClient}
+            icon={selectedClient ? <span>💳</span> : <span>👤</span>}
           >
             {selectedClient ? 'Procesar Pago' : 'Seleccionar Cliente'}
           </Button>

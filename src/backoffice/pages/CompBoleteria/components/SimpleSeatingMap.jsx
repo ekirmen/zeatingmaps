@@ -372,7 +372,19 @@ const SimpleSeatingMap = ({
       };
       
       onSeatClick(seatWithPrice);
-      message.success(`Asiento seleccionado - ${selectedPriceOption.entrada.nombre} - $${selectedPriceOption.precio.toFixed(2)}`);
+      
+      // Crear mensaje más informativo
+      let seatInfo = '';
+      if (mesa) {
+        seatInfo = `Mesa ${mesa.nombre} - ${seat.nombre || 'Asiento'}`;
+      } else {
+        seatInfo = seat.nombre || 'Asiento';
+      }
+      
+      const zonaInfo = selectedPriceOption.zona?.nombre || 'Zona';
+      const entradaInfo = selectedPriceOption.entrada?.nombre_entrada || 'Entrada';
+      
+      message.success(`${seatInfo} - ${entradaInfo} - ${zonaInfo} - $${selectedPriceOption.precio.toFixed(2)}`);
       
     } catch (error) {
       console.error('Error al manejar selección de asiento:', error);

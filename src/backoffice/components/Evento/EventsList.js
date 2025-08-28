@@ -9,7 +9,8 @@ const EventsList = ({
   recintoSeleccionado,
   handleEdit,
   handleDelete,
-  handleDuplicate
+  handleDuplicate,
+  onToggleEventStatus
 }) => {
   if (!eventosFiltrados || eventosFiltrados.length === 0) {
     return (
@@ -45,6 +46,32 @@ const EventsList = ({
           <p className="text-sm text-gray-600 mt-1">
             {eventosFiltrados.length} evento{eventosFiltrados.length !== 1 ? 's' : ''} en {recintoSeleccionado?.nombre}
           </p>
+          
+          {/* Resumen del estado de los eventos */}
+          {eventosFiltrados.length > 0 && (
+            <div className="mt-2 flex items-center gap-4 text-xs">
+              {(() => {
+                const activeCount = eventosFiltrados.filter(e => 
+                  (e.activo === true || e.activo === 'true') && 
+                  !(e.desactivado === true || e.desactivado === 'true')
+                ).length;
+                const inactiveCount = eventosFiltrados.length - activeCount;
+                
+                return (
+                  <>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-green-600">{activeCount} activo{activeCount !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <span className="text-red-600">{inactiveCount} inactivo{inactiveCount !== 1 ? 's' : ''}</span>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
         </div>
         
         {/* Contador de eventos */}
@@ -94,6 +121,23 @@ const EventsList = ({
             actions={
               viewMode === 'grid' ? [
                 <Button 
+                  key="toggle-status"
+                  type={(() => {
+                    const isActive = evento.activo === true || evento.activo === 'true';
+                    const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
+                    return (isActive && !isDisabled) ? 'default' : 'primary';
+                  })()}
+                  size="small"
+                  onClick={() => onToggleEventStatus && onToggleEventStatus(evento.id, evento)}
+                  className="w-full"
+                >
+                  {(() => {
+                    const isActive = evento.activo === true || evento.activo === 'true';
+                    const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
+                    return (isActive && !isDisabled) ? 'Desactivar' : 'Activar';
+                  })()}
+                </Button>,
+                <Button 
                   type="primary" 
                   icon={<EditOutlined />} 
                   size="small"
@@ -121,6 +165,22 @@ const EventsList = ({
                   Eliminar
                 </Button>
               ] : [
+                <Button 
+                  key="toggle-status"
+                  type={(() => {
+                    const isActive = evento.activo === true || evento.activo === 'true';
+                    const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
+                    return (isActive && !isDisabled) ? 'default' : 'primary';
+                  })()}
+                  size="small"
+                  onClick={() => onToggleEventStatus && onToggleEventStatus(evento.id, evento)}
+                >
+                  {(() => {
+                    const isActive = evento.activo === true || evento.activo === 'true';
+                    const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
+                    return (isActive && !isDisabled) ? 'Desactivar' : 'Activar';
+                  })()}
+                </Button>,
                 <Button 
                   type="primary" 
                   icon={<EditOutlined />} 
@@ -151,14 +211,34 @@ const EventsList = ({
             <Card.Meta
               title={
                 <div className="flex items-start justify-between">
-                  <span className="font-semibold text-gray-900 truncate pr-2">
-                    {evento.nombre}
-                  </span>
-                  {evento.activo === 'true' ? (
-                    <Tag color="green" className="ml-2">Activo</Tag>
-                  ) : (
-                    <Tag color="red" className="ml-2">Inactivo</Tag>
-                  )}
+                  <div className="flex-1 min-w-0">
+                    <span className="font-semibold text-gray-900 truncate block">
+                      {evento.nombre}
+                    </span>
+                    {/* Indicador de estado más visible */}
+                    <div className="mt-1 flex items-center gap-2">
+                      {(() => {
+                        const isActive = evento.activo === true || evento.activo === 'true';
+                        const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
+                        
+                        if (isActive && !isDisabled) {
+                          return (
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-xs text-green-600 font-medium">Activo</span>
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                              <span className="text-xs text-red-600 font-medium">Inactivo</span>
+                            </div>
+                          );
+                        }
+                      })()}
+                    </div>
+                  </div>
                 </div>
               }
               description={
@@ -175,9 +255,25 @@ const EventsList = ({
                       <span>{new Date(evento.fecha_evento).toLocaleDateString('es-ES')}</span>
                     </div>
                   )}
+                  {/* Estado del evento */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-medium text-gray-500">Estado del evento:</span>
+                    {(() => {
+                      const isActive = evento.activo === true || evento.activo === 'true';
+                      const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
+                      
+                      if (isActive && !isDisabled) {
+                        return <Tag color="green" className="text-xs">Activo</Tag>;
+                      } else {
+                        return <Tag color="red" className="text-xs">Inactivo</Tag>;
+                      }
+                    })()}
+                  </div>
+                  
+                  {/* Estado de venta */}
                   {evento.estadoVenta && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-gray-500">Estado:</span>
+                      <span className="text-xs font-medium text-gray-500">Estado de venta:</span>
                       <Tag 
                         color={
                           evento.estadoVenta === 'a-la-venta' ? 'green' : 

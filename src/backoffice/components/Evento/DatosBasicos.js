@@ -25,6 +25,7 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
     nombre: eventoData?.nombre || '',
     slug: eventoData?.slug || '',
     sector: eventoData?.sector || '',
+    sectorPersonalizado: eventoData?.sectorPersonalizado || '',
     descripcion: eventoData?.descripcion || '',
     activo: eventoData?.activo ?? true,
     oculto: eventoData?.oculto ?? false,
@@ -42,6 +43,7 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
       nombre: eventoData?.nombre || '',
       slug: eventoData?.slug || '',
       sector: eventoData?.sector || '',
+      sectorPersonalizado: eventoData?.sectorPersonalizado || '',
       descripcion: eventoData?.descripcion || '',
       activo: eventoData?.activo ?? true,
       oculto: eventoData?.oculto ?? false,
@@ -70,8 +72,26 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
   };
 
   const handleSectorSelect = (label) => {
-    setForm(prev => ({ ...prev, sector: label }));
-    setEventoData(prev => ({ ...prev, sector: label }));
+    if (label === 'Otros') {
+      // Si se selecciona "Otros", limpiar el sector personalizado si no hay uno
+      if (!form.sectorPersonalizado) {
+        setForm(prev => ({ ...prev, sector: label, sectorPersonalizado: '' }));
+        setEventoData(prev => ({ ...prev, sector: label, sectorPersonalizado: '' }));
+      } else {
+        setForm(prev => ({ ...prev, sector: label }));
+        setEventoData(prev => ({ ...prev, sector: label }));
+      }
+    } else {
+      // Si se selecciona otro sector, limpiar el personalizado
+      setForm(prev => ({ ...prev, sector: label, sectorPersonalizado: '' }));
+      setEventoData(prev => ({ ...prev, sector: label, sectorPersonalizado: '' }));
+    }
+  };
+
+  const handleSectorPersonalizadoChange = (e) => {
+    const value = e.target.value;
+    setForm(prev => ({ ...prev, sectorPersonalizado: value }));
+    setEventoData(prev => ({ ...prev, sectorPersonalizado: value }));
   };
 
   const handleTagAdd = () => {
@@ -107,33 +127,47 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
 
   return (
     <div className="datos-basicos">
-      <h3>Datos Básicos del Evento</h3>
-      <form className="formulario-datos-basicos">
-        <div className="form-group">
-          <label htmlFor="nombre">Nombre del Evento:</label>
+      <div className="mb-8">
+        <h3 className="text-2xl font-bold text-gray-900 mb-2">Datos Básicos del Evento</h3>
+        <p className="text-gray-600">Configura la información fundamental de tu evento</p>
+      </div>
+      <form className="formulario-datos-basicos space-y-6">
+        <div className="form-group mb-6">
+          <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-2">
+            Nombre del Evento:
+          </label>
           <input
             type="text"
             id="nombre"
             name="nombre"
             value={form.nombre}
             onChange={handleChange}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-700 placeholder-gray-400"
+            placeholder="Ingresa el nombre de tu evento"
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor="slug">URL amigable:</label>
+        <div className="form-group mb-6">
+          <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-2">
+            URL amigable:
+          </label>
           <input
             type="text"
             id="slug"
             name="slug"
             value={form.slug}
             onChange={handleChange}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-700 placeholder-gray-400"
+            placeholder="nombre-del-evento"
           />
+          <p className="text-xs text-gray-500 mt-2">
+            Esta será la URL que aparecerá en el navegador
+          </p>
         </div>
 
         <div className="form-group">
-          <label>Sector:</label>
-          <div className="large-12 columns noPadding flex flex-wrap gap-2 mt-2">
+          <label className="block text-sm font-medium text-gray-700 mb-3">Sector:</label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
             {[
               { id: 1, label: 'Artes escénicas', icon: faMasksTheater },
               { id: 2, label: 'Cine', icon: faFilm },
@@ -145,84 +179,168 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
             ].map(s => (
               <div
                 key={s.id}
-                className={`contenedor-sector cursor-pointer p-2 border rounded flex flex-col items-center justify-center w-28 ${form.sector === s.label ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}
+                className={`contenedor-sector cursor-pointer p-4 border-2 rounded-xl flex flex-col items-center justify-center transition-all duration-200 hover:shadow-md ${
+                  form.sector === s.label 
+                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-blue-600 shadow-lg' 
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                }`}
                 onClick={() => handleSectorSelect(s.label)}
               >
-                <div className="obj-sector mb-1">
-                  <FontAwesomeIcon icon={s.icon} className="ico-sector" />
+                <div className="obj-sector mb-2">
+                  <FontAwesomeIcon icon={s.icon} className={`ico-sector text-xl ${form.sector === s.label ? 'text-white' : 'text-gray-600'}`} />
                 </div>
-                <label className="text-xs text-center">{s.label}</label>
+                <label className="text-sm font-medium text-center leading-tight">{s.label}</label>
               </div>
             ))}
           </div>
+          
+          {/* Campo de sector personalizado */}
+          {form.sector === 'Otros' && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+              <label htmlFor="sectorPersonalizado" className="block text-sm font-medium text-blue-800 mb-2">
+                Especifica tu sector:
+              </label>
+              <input
+                type="text"
+                id="sectorPersonalizado"
+                name="sectorPersonalizado"
+                value={form.sectorPersonalizado}
+                onChange={handleSectorPersonalizadoChange}
+                placeholder="Ej: Tecnología, Gastronomía, Educación..."
+                className="w-full px-4 py-3 border-2 border-blue-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-700 placeholder-gray-400"
+              />
+              <p className="text-xs text-blue-600 mt-2">
+                Escribe el nombre del sector que mejor describa tu evento
+              </p>
+            </div>
+          )}
+          
+          {/* Mostrar sector seleccionado */}
+          {form.sector && (
+            <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">Sector seleccionado:</span>
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                  {form.sector === 'Otros' && form.sectorPersonalizado 
+                    ? form.sectorPersonalizado 
+                    : form.sector
+                  }
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
-        <div className="form-group mt-4">
-          <label>Tags:</label>
-          <div className="flex items-center gap-2 mt-1">
-            <select value={selectedTag} onChange={e => setSelectedTag(e.target.value)} className="p-2 border rounded">
+        <div className="form-group mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-3">Tags:</label>
+          <div className="flex items-center gap-3 mb-3">
+            <select 
+              value={selectedTag} 
+              onChange={e => setSelectedTag(e.target.value)} 
+              className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-700"
+            >
               <option value="">Seleccionar tag</option>
               {Array.isArray(tags) && tags.map(tag => (
                 <option key={tag._id} value={tag._id}>{tag.name}</option>
               ))}
             </select>
-            <button type="button" onClick={handleTagAdd} className="px-3 py-1 bg-blue-600 text-white rounded">Añadir</button>
+            <button 
+              type="button" 
+              onClick={handleTagAdd} 
+              className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-medium transition-all duration-200 shadow-sm hover:shadow-md"
+            >
+              Añadir
+            </button>
           </div>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {Array.isArray(form.tags) && form.tags.length > 0 ? (
               form.tags.map(id => {
                 const t = tags.find(tag => tag._id === id);
                 return (
-                  <span key={id} className="bg-gray-200 px-2 py-1 rounded flex items-center">
-                    {t ? t.name : id}
-                    <button type="button" className="ml-2" onClick={() => handleRemoveTag(id)}>&times;</button>
+                  <span key={id} className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 px-3 py-2 rounded-full flex items-center gap-2 border border-blue-200">
+                    <span className="text-sm font-medium">{t ? t.name : id}</span>
+                    <button 
+                      type="button" 
+                      className="w-5 h-5 bg-blue-200 hover:bg-blue-300 text-blue-700 rounded-full flex items-center justify-center text-xs font-bold transition-colors" 
+                      onClick={() => handleRemoveTag(id)}
+                    >
+                      ×
+                    </button>
                   </span>
                 );
               })
             ) : (
-              <span className="text-gray-500 text-sm">No hay tags seleccionados</span>
+              <span className="text-gray-500 text-sm italic">No hay tags seleccionados</span>
             )}
           </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Los tags ayudan a categorizar y encontrar tu evento más fácilmente
+          </p>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="descripcion">Descripción:</label>
+        <div className="form-group mb-6">
+          <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-2">
+            Descripción:
+          </label>
           <textarea
             id="descripcion"
             name="descripcion"
             value={form.descripcion}
             onChange={handleChange}
+            rows={4}
+            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-700 placeholder-gray-400 resize-none"
+            placeholder="Describe brevemente tu evento..."
           />
+          <p className="text-xs text-gray-500 mt-2">
+            Una descripción clara ayuda a los usuarios a entender de qué se trata tu evento
+          </p>
         </div>
 
-        <div className="form-group checkboxes">
-          <label>
-            <input
-              type="checkbox"
-              name="activo"
-              checked={form.activo}
-              onChange={handleChange}
-            />
-            Activo
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              name="oculto"
-              checked={form.oculto}
-              onChange={handleChange}
-            />
-            Oculto
-          </label>
-          <label>
-            <input
-              type="checkbox"
-              name="desactivado"
-              checked={form.desactivado}
-              onChange={handleChange}
-            />
-            Desactivado
-          </label>
+        <div className="form-group mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-3">Configuración del Evento:</label>
+          <div className="space-y-3">
+            <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+              <input
+                type="checkbox"
+                name="activo"
+                checked={form.activo}
+                onChange={handleChange}
+                className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">Activo</span>
+                <p className="text-xs text-gray-500">El evento estará disponible para los usuarios</p>
+              </div>
+            </label>
+            
+            <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+              <input
+                type="checkbox"
+                name="oculto"
+                checked={form.oculto}
+                onChange={handleChange}
+                className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">Oculto</span>
+                <p className="text-xs text-gray-500">El evento no aparecerá en listados públicos</p>
+              </div>
+            </label>
+            
+            <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+              <input
+                type="checkbox"
+                name="desactivado"
+                checked={form.desactivado}
+                onChange={handleChange}
+                className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">Desactivado</span>
+                <p className="text-xs text-gray-500">El evento estará completamente deshabilitado</p>
+              </div>
+            </label>
+          </div>
         </div>
       </form>
     </div>
