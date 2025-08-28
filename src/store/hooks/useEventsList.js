@@ -67,8 +67,21 @@ export const useEventsList = () => {
       const { data, error: supabaseError } = await supabase
         .from('eventos')
         .select(`
-          *,
-          recintos:recinto(id, nombre, direccion, ciudad, pais)
+          id,
+          nombre,
+          fecha_evento,
+          recinto,
+          recinto_id,
+          activo,
+          oculto,
+          tenant_id,
+          slug,
+          tags,
+          imagenes,
+          descripcion,
+          "estadoVenta",
+          "modoVenta",
+          created_at
         `)
         .eq('activo', true) // Only fetch active events
         .eq('oculto', false); // Only fetch events that are not hidden
@@ -89,8 +102,21 @@ export const useEventsList = () => {
         const { data: dataFallback, error: errFallback } = await supabase
           .from('eventos')
           .select(`
-            *,
-            recintos:recinto(id, nombre, direccion, ciudad, pais)
+            id,
+            nombre,
+            fecha_evento,
+            recinto,
+            recinto_id,
+            activo,
+            oculto,
+            tenant_id,
+            slug,
+            tags,
+            imagenes,
+            descripcion,
+            "estadoVenta",
+            "modoVenta",
+            created_at
           `)
           .eq('activo', true);
         
@@ -102,15 +128,45 @@ export const useEventsList = () => {
         }
       }
 
+      // Obtener información de recintos por separado
+      const recintoIds = [...new Set([
+        ...(rows || []).map(e => e.recinto).filter(Boolean),
+        ...(rows || []).map(e => e.recinto_id).filter(Boolean)
+      ])];
+      
+      let recintosData = {};
+      if (recintoIds.length > 0) {
+        console.log('🔍 [useEventsList] Obteniendo información de recintos:', recintoIds);
+        const { data: recintos, error: recintosError } = await supabase
+          .from('recintos')
+          .select('id, nombre, direccion, ciudad, pais')
+          .in('id', recintoIds);
+        
+        if (!recintosError && recintos) {
+          recintosData = recintos.reduce((acc, recinto) => {
+            acc[recinto.id] = recinto;
+            return acc;
+          }, {});
+          console.log('🔍 [useEventsList] Recintos obtenidos:', recintosData);
+        } else {
+          console.error('🔍 [useEventsList] Error obteniendo recintos:', recintosError);
+        }
+      }
+
       // Map raw Supabase data to the format expected by EventListWidget
-      const formattedEvents = rows.map(event => ({
-        ...normalizeEventData(event),
-        venue: event.recintos ? event.recintos.nombre : null, // Get venue name from joined table
-        venueInfo: event.recintos || null, // Include full venue info
-        estadoVenta: event.estado_venta || 'disponible', // Include sale status
-        descripcion: event.descripcion || '',
-        tags: event.tags || []
-      }));
+      const formattedEvents = rows.map(event => {
+        const recintoId = event.recinto || event.recinto_id;
+        const recintoInfo = recintosData[recintoId];
+        
+        return {
+          ...normalizeEventData(event),
+          venue: recintoInfo ? recintoInfo.nombre : null, // Get venue name from separate query
+          venueInfo: recintoInfo || null, // Include full venue info
+          estadoVenta: event.estadoVenta || 'disponible', // Include sale status
+          descripcion: event.descripcion || '',
+          tags: event.tags || []
+        };
+      });
 
       console.log('🔍 [useEventsList] Eventos formateados:', formattedEvents);
       console.log('🔍 [useEventsList] Total de eventos:', formattedEvents.length);

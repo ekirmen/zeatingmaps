@@ -26,6 +26,7 @@ import ThankYouPage from './pages/ThankYouPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiesPolicy from './pages/CookiesPolicy';
 import LegalTerms from './pages/LegalTerms';
+import EventsVenue from './pages/EventsVenue'; // 👈 IMPORTACIÓN ESTÁTICA
 import { useAuth } from '../contexts/AuthContext'; // para perfil
 
 const StoreApp = () => {
@@ -36,15 +37,8 @@ const StoreApp = () => {
   console.log('🔍 [StoreApp] Location:', location.pathname);
   console.log('🔍 [StoreApp] User:', user);
 
-  // Importar con manejo de errores
-  let EventsVenue;
-  try {
-    EventsVenue = require('./pages/EventsVenue').default;
-    console.log('✅ [StoreApp] EventsVenue importado correctamente');
-  } catch (error) {
-    console.error('❌ [StoreApp] Error importando EventsVenue:', error);
-    EventsVenue = () => <div>Error cargando página</div>;
-  }
+  // EventsVenue ya está importado estáticamente arriba
+  console.log('✅ [StoreApp] EventsVenue importado correctamente');
 
   const showHeader =
     location.pathname.startsWith('/store') ||
