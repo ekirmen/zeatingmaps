@@ -9,35 +9,8 @@ import SiteMap from '../components/SiteMap';
 import { fetchCmsPage, saveCmsPage, fetchAllCmsPages } from '../services/apibackoffice';
 import { supabase } from '../../supabaseClient';
 
-// Datos de ejemplo para las nuevas secciones - Páginas del sistema reales
-const systemPages = [
-  { id: 1, name: 'Inicio', url: '/', type: 'system' },
-  { id: 2, name: 'Eventos', url: '/eventos', type: 'system' },
-  { id: 3, name: 'Recintos', url: '/recintos', type: 'system' },
-  { id: 4, name: 'Contacto', url: '/contacto', type: 'system' },
-  { id: 5, name: 'Acerca de', url: '/acerca-de', type: 'system' },
-  { id: 6, name: 'Términos y Condiciones', url: '/terminos', type: 'system' },
-  { id: 7, name: 'Política de Privacidad', url: '/privacidad', type: 'system' },
-  { id: 8, name: 'FAQ', url: '/faq', type: 'system' }
-];
-
-// Páginas de usuario reales (sin correos de prueba)
-const userPages = [
-  { id: 101, name: 'Astrid Carolina Herrera - LO QUE NO TE DIJERON DEL SEXO', url: '/astrid-carolina-herrera', type: 'user' },
-  { id: 102, name: 'DÍA DE LAS MADRES PIMPINELA', url: '/dia-madres-pimpinela', type: 'user' },
-  { id: 103, name: 'Felipe Pelaez', url: '/felipe-pelaez', type: 'user' },
-  { id: 104, name: 'Karina', url: '/karina', type: 'user' },
-  { id: 105, name: 'Oktober Beer Fest 2024', url: '/oktober-beer-fest-2024', type: 'user' },
-  { id: 106, name: 'PROMOCIÓN -20% POR EL DIA DEL PADRE - MERENGAZO VALENCIA', url: '/promocion-dia-padre-merengazo', type: 'user' },
-  { id: 107, name: 'PROMOCIÓN 20% POR EL DIA DEL PADRE - MERENGAZO VALENCIA', url: '/promocion-dia-padre-merengazo-20', type: 'user' },
-  { id: 108, name: 'Próximos Eventos', url: '/proximos-eventos', type: 'user' },
-  { id: 109, name: 'Sin Bandera 30 de Abril', url: '/sin-bandera-30-abril', type: 'user' },
-  { id: 110, name: 'Teatro Negro de Praga', url: '/teatro-negro-praga', type: 'user' },
-  { id: 111, name: 'Oasis', url: '/oasis', type: 'user' },
-  { id: 112, name: 'República Dominicana', url: '/republica-dominicana', type: 'user' },
-  { id: 113, name: 'USA', url: '/usa', type: 'user' },
-  { id: 114, name: 'Venezuela', url: '/venezuela', type: 'user' }
-];
+// Las páginas ahora se cargan dinámicamente desde la base de datos
+// No necesitamos arrays estáticos
 
 // Eliminar menú de componentes - solo mantener páginas y correos
 const headerComponents = [];
@@ -229,6 +202,9 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   // Estado para la página seleccionada (usando datos reales)
   const [selectedPage, setSelectedPage] = useState(null);
   const [widgets, setWidgets] = useState(defaultWidgets);
+  
+  // Estado para manejar errores de carga
+  const [loadError, setLoadError] = useState(null);
   const [draggingIdx, setDraggingIdx] = useState(null);
   const [pageLoaded, setPageLoaded] = useState(false);
 
@@ -307,7 +283,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         const { data: systemPages, error: systemError } = await supabase
           .from('cms_pages')
           .select('*')
-          .or('tenant_id.is.null,tenant_id.eq.' + profile.tenant_id)
+          .or(`tenant_id.is.null,tenant_id.eq.${profile.tenant_id}`)
           .in('slug', ['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'])
           .order('nombre');
 
@@ -321,16 +297,28 @@ const WebStudio = ({ setSidebarCollapsed }) => {
           ...(tenantPages || [])
         ];
 
-        // Remover duplicados por ID
-        const uniquePages = allPages.filter((page, index, self) => 
-          index === self.findIndex(p => p.id === page.id)
-        );
+        // Remover duplicados por ID y validar que tengan campos requeridos
+        const uniquePages = allPages
+          .filter((page, index, self) => 
+            index === self.findIndex(p => p.id === page.id)
+          )
+          .map(page => ({
+            ...page,
+            nombre: page.nombre || 'Sin nombre',
+            slug: page.slug || `page-${page.id}`,
+            widgets: page.widgets || { header: [], content: [], footer: [] }
+          }));
 
         setCmsPages(uniquePages);
         
         // Seleccionar la primera página por defecto
         if (uniquePages.length > 0 && !selectedPage) {
-          setSelectedPage(uniquePages[0]);
+          const firstPage = uniquePages[0];
+          // Asegurarse de que la página tenga todos los campos necesarios
+          if (firstPage && firstPage.id) {
+            setSelectedPage(firstPage);
+            console.log('✅ [WebStudio] Primera página seleccionada:', firstPage);
+          }
         }
         
         console.log('✅ [WebStudio] Páginas CMS cargadas:', uniquePages.length);
@@ -339,6 +327,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         
       } catch (error) {
         console.error('❌ [WebStudio] Error cargando páginas CMS:', error);
+        setLoadError(error.message);
         toast.error('Error cargando páginas CMS');
       } finally {
         setLoadingPages(false);
@@ -360,15 +349,13 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     const loadPage = async () => {
       setPageLoaded(false);
       try {
-        // Si es una página del sistema, usar el slug
-        const pageIdentifier = selectedPage.slug || selectedPage.id;
-        const data = await fetchCmsPage(pageIdentifier);
+        // Usar el ID de la página para cargar desde la base de datos
+        const data = await fetchCmsPage(selectedPage.id);
         setWidgets(data.widgets || defaultWidgets);
       } catch (e) {
         console.error('Error cargando página:', e);
         // Fallback a localStorage si existe
-        const pageIdentifier = selectedPage.slug || selectedPage.id;
-        const saved = localStorage.getItem(`cms-page-${pageIdentifier}`);
+        const saved = localStorage.getItem(`cms-page-${selectedPage.id}`);
         if (saved) {
           setWidgets(JSON.parse(saved));
         } else {
@@ -385,9 +372,8 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     if (!pageLoaded || !selectedPage) return;
     const autoSave = async () => {
       try {
-        const pageIdentifier = selectedPage.slug || selectedPage.id;
-        await saveCmsPage(pageIdentifier, widgets);
-        localStorage.setItem(`cms-page-${pageIdentifier}`, JSON.stringify(widgets));
+        await saveCmsPage(selectedPage.id, widgets);
+        localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
       } catch (err) {
         console.error('Auto save failed', err);
       }
@@ -479,6 +465,11 @@ const WebStudio = ({ setSidebarCollapsed }) => {
 
   const handleSave = async () => {
     try {
+      if (!selectedPage) {
+        toast.error('No hay página seleccionada');
+        return;
+      }
+      
       console.log('Guardando página...', selectedPage.id, widgets);
       await saveCmsPage(selectedPage.id, widgets);
       localStorage.setItem(`cms-page-${selectedPage.id}`, JSON.stringify(widgets));
@@ -490,6 +481,10 @@ const WebStudio = ({ setSidebarCollapsed }) => {
   };
 
   const handleClearCache = () => {
+    if (!selectedPage) {
+      toast.error('No hay página seleccionada');
+      return;
+    }
     localStorage.removeItem(`cms-page-${selectedPage.id}`);
     toast.success('Cache limpia');
   };
@@ -1558,6 +1553,17 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                     <i className="fas fa-spinner fa-spin mr-2"></i>
                     Cargando páginas...
                   </div>
+                ) : loadError ? (
+                  <div className="text-center py-4 text-red-500">
+                    <p className="text-sm mb-2">Error al cargar páginas:</p>
+                    <p className="text-xs">{loadError}</p>
+                    <button 
+                      onClick={() => window.location.reload()} 
+                      className="mt-2 px-3 py-1 bg-red-100 text-red-700 rounded text-xs hover:bg-red-200"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
                 ) : (
                   <>
                     {/* Páginas del sistema */}
@@ -1568,7 +1574,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                       </div>
                       <div className="space-y-1 max-h-40 overflow-y-auto">
                         {cmsPages
-                          .filter(page => ['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'].includes(page.slug))
+                          .filter(page => page && page.id && ['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'].includes(page.slug))
                           .map(page => (
                             <div
                               key={page.id}
@@ -1591,7 +1597,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                                     autoFocus
                                   />
                                 ) : (
-                                  <span className="text-sm">{page.nombre}</span>
+                                  <span className="text-sm">{page.nombre || 'Sin nombre'}</span>
                                 )}
                               </div>
                               <div className="flex items-center gap-1">
@@ -1642,7 +1648,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                           <span className="text-sm">Nueva página</span>
                         </div>
                         {cmsPages
-                          .filter(page => !['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'].includes(page.slug))
+                          .filter(page => page && page.id && !['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'].includes(page.slug))
                           .map(page => (
                             <div
                               key={page.id}
@@ -1665,7 +1671,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
                                     autoFocus
                                   />
                                 ) : (
-                                  <span className="text-sm">{page.nombre}</span>
+                                  <span className="text-sm">{page.nombre || 'Sin nombre'}</span>
                                 )}
                               </div>
                               <div className="flex items-center gap-1">
@@ -1873,27 +1879,39 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         </div>
 
         {/* Page Info */}
-        <div className="mt-6 space-y-2 text-sm">
-          <div>
-            <label className="block text-gray-600">Nombre</label>
-            <input className="border w-full px-2 py-1 rounded" value={selectedPage.name} readOnly />
+        {selectedPage && (
+          <div className="mt-6 space-y-2 text-sm">
+            <div>
+              <label className="block text-gray-600">Nombre</label>
+              <input className="border w-full px-2 py-1 rounded" value={selectedPage.nombre || selectedPage.name || ''} readOnly />
+            </div>
+            <div>
+              <label className="block text-gray-600">URL</label>
+              <input className="border w-full px-2 py-1 rounded" value={selectedPage.slug || selectedPage.url || ''} readOnly />
+            </div>
           </div>
-          <div>
-            <label className="block text-gray-600">URL</label>
-            <input className="border w-full px-2 py-1 rounded" value={selectedPage.url} readOnly />
-          </div>
-        </div>
+        )}
 
         <div className="mt-6 space-y-2">
           <button
             onClick={handleSave}
-            className="bg-green-600 hover:bg-green-700 text-white w-full py-2 rounded"
+            disabled={!selectedPage}
+            className={`w-full py-2 rounded transition-colors ${
+              selectedPage 
+                ? 'bg-green-600 hover:bg-green-700 text-white' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
             Guardar página
           </button>
           <button
             onClick={handleClearCache}
-            className="bg-gray-400 hover:bg-gray-500 text-white w-full py-2 rounded"
+            disabled={!selectedPage}
+            className={`w-full py-2 rounded transition-colors ${
+              selectedPage 
+                ? 'bg-gray-400 hover:bg-gray-500 text-white' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
             Limpiar cache
           </button>
@@ -1905,27 +1923,37 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         {/* Header con nombre de página seleccionada */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">
-            {selectedPage ? selectedPage.name : 'Selecciona una página'}
+            {selectedPage ? (selectedPage.nombre || selectedPage.name) : 'Selecciona una página'}
           </h1>
           {selectedPage && (
             <p className="text-gray-600">
-              URL: {selectedPage.url} • Tipo: {selectedPage.type === 'system' ? 'Página del sistema' : selectedPage.type === 'email' ? 'Correo electrónico' : 'Página personalizada'}
+              URL: /{selectedPage.slug || selectedPage.url} • Tipo: {
+                ['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'].includes(selectedPage.slug) 
+                  ? 'Página del sistema' 
+                  : 'Página personalizada'
+              }
             </p>
           )}
         </div>
 
-        {['header', 'content', 'footer'].map((area) => (
-          <div key={area} className="mb-6">
-            <h2 className="font-semibold mb-2 capitalize">{area}</h2>
-            <div className="bg-white p-3 border rounded min-h-[80px]">
-              {widgets[area]?.length > 0 ? (
-                widgets[area].map((w, idx) => renderWidget(area, w, idx))
-              ) : (
-                <p className="text-sm text-gray-500">Sin widgets</p>
-              )}
+        {selectedPage ? (
+          ['header', 'content', 'footer'].map((area) => (
+            <div key={area} className="mb-6">
+              <h2 className="font-semibold mb-2 capitalize">{area}</h2>
+              <div className="bg-white p-3 border rounded min-h-[80px]">
+                {widgets[area]?.length > 0 ? (
+                  widgets[area].map((w, idx) => renderWidget(area, w, idx))
+                ) : (
+                  <p className="text-sm text-gray-500">Sin widgets</p>
+                )}
+              </div>
             </div>
+          ))
+        ) : (
+          <div className="text-center py-12 text-gray-500">
+            <p className="text-lg">Selecciona una página para comenzar a editar</p>
           </div>
-        ))}
+        )}
 
         {/* Settings Panel */}
         {showSettings && renderSettingsPanel()}
