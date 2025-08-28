@@ -1,7 +1,7 @@
 // src/hooks/useEventsList.js (or similar path)
 
 import { useState, useEffect, useCallback } from 'react'; // Corrected import syntax
-import { supabase } from '../../supabaseClient'; // Adjust path as necessary
+import { getSupabaseClient } from '../../config/supabase'; // Use the centralized config
 // Removed unused imports: isUuid and isNumericId
 
 // Helper to normalize event data if needed, similar to what you have
@@ -53,6 +53,12 @@ export const useEventsList = () => {
       
       // Fetch all active events - Consulta simplificada para debuggear
       console.log('🔍 [useEventsList] Ejecutando consulta simple...');
+      
+      const supabase = getSupabaseClient();
+      console.log('🔍 [useEventsList] Cliente Supabase obtenido:', !!supabase);
+      if (!supabase) {
+        throw new Error('Cliente de Supabase no disponible');
+      }
       
       const { data, error: supabaseError } = await supabase
         .from('eventos')
@@ -118,6 +124,7 @@ export const useEventsList = () => {
 
   useEffect(() => {
     console.log('🔍 [useEventsList] useEffect ejecutado, llamando fetchAllEvents...');
+    console.log('🔍 [useEventsList] Supabase cliente disponible:', !!supabase);
     fetchAllEvents();
   }, [fetchAllEvents]);
 

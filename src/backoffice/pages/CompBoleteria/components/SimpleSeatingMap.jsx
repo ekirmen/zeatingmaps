@@ -437,6 +437,7 @@ const SimpleSeatingMap = ({
               {/* Mesa */}
               {elemento.type === 'mesa' && (() => {
                 // Detectar si la mesa contiene sillas de la zona activa
+                // NOTA: Los textos de las mesas ahora están perfectamente centrados usando transform: translate(-50%, -50%)
                 const mesaTieneZonaActiva = Array.isArray(elemento.sillas) && elemento.sillas.some(s => {
                   const zid = String(s?.zona?.id || s?.zonaId || s?.zona || '');
                   return selectedZonaId && zid && String(selectedZonaId) === zid;
@@ -465,7 +466,16 @@ const SimpleSeatingMap = ({
                     }}
                   >
                     {elemento.nombre && (
-                      <div className="text-center text-xs font-medium mt-1">
+                      <div 
+                        className="absolute text-xs font-medium text-center w-full"
+                        style={{
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          pointerEvents: 'none',
+                          zIndex: 2
+                        }}
+                      >
                         {elemento.nombre}
                       </div>
                     )}
@@ -524,10 +534,30 @@ const SimpleSeatingMap = ({
                 const sx = silla?.posicion?.x ?? silla?.x;
                 const sy = silla?.posicion?.y ?? silla?.y;
                 // Si hay una mesa circular padre, centrar los asientos correctamente
+                // NOTA: Para mesas circulares, las coordenadas de las sillas son relativas al centro de la mesa
                 const isCircleTable = elemento?.type === 'mesa' && elemento?.shape === 'circle';
                 const chairDiameter = 30; // coincide con width/height de la silla
-                const adjustedLeft = (sx || 0) - chairDiameter / 2;
-                const adjustedTop = (sy || 0) - chairDiameter / 2;
+                
+                // Calcular posición relativa a la mesa si es circular
+                let adjustedLeft, adjustedTop;
+                if (isCircleTable) {
+                  // Para mesas circulares, las coordenadas de las sillas son relativas al centro de la mesa
+                  const mesaCenterX = (elemento.posicion?.x ?? elemento.x ?? 0);
+                  const mesaCenterY = (elemento.posicion?.y ?? elemento.y ?? 0);
+                  const mesaRadius = elemento.radius ?? 30;
+                  
+                  // Las coordenadas de la silla son relativas al centro de la mesa
+                  const sillaRelX = (sx || 0);
+                  const sillaRelY = (sy || 0);
+                  
+                  // Posición absoluta = centro de la mesa + posición relativa de la silla
+                  adjustedLeft = mesaCenterX + sillaRelX - chairDiameter / 2;
+                  adjustedTop = mesaCenterY + sillaRelY - chairDiameter / 2;
+                } else {
+                  // Para mesas rectangulares, usar coordenadas absolutas
+                  adjustedLeft = (sx || 0) - chairDiameter / 2;
+                  adjustedTop = (sy || 0) - chairDiameter / 2;
+                }
                 
                 const isOtherZone = selectedZonaId && String(selectedZonaId) !== String(silla?.zona?.id || silla?.zonaId || silla?.zona || '');
                 const muted = isOtherZone && (silla.estado === 'disponible');
@@ -623,10 +653,10 @@ const SimpleSeatingMap = ({
                           : 'cursor-pointer hover:scale-110'
                       }`}
                       style={{
-                        left: (sx || 0) - (silla.radius || 10),
-                        top: (sy || 0) - (silla.radius || 10),
-                        width: (silla.radius || 10) * 2,
-                        height: (silla.radius || 10) * 2,
+                        left: (sx || 0) - (silla.radius || 15),
+                        top: (sy || 0) - (silla.radius || 15),
+                        width: (silla.radius || 15) * 2,
+                        height: (silla.radius || 15) * 2,
                         borderRadius: '50%',
                         backgroundColor: silla.fill || getSeatColor(silla),
                         border: borderStyleTop,
