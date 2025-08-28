@@ -20,6 +20,43 @@ async function hasColumn(tableName, columnName) {
   }
 }
 
+// Debug: verificar estructura de webstudio_pages
+export const debugWebstudioTable = async () => {
+  try {
+    console.log('🔍 [debugWebstudioTable] Verificando estructura de webstudio_pages...');
+    
+    // Ver todas las columnas
+    const { data: columns, error: columnsError } = await supabase
+      .from('information_schema.columns')
+      .select('column_name, data_type, is_nullable')
+      .eq('table_name', 'webstudio_pages')
+      .order('ordinal_position');
+
+    if (columnsError) {
+      console.error('❌ [debugWebstudioTable] Error obteniendo columnas:', columnsError);
+      return;
+    }
+
+    console.log('🔍 [debugWebstudioTable] Columnas disponibles:', columns);
+    
+    // Ver algunas filas de ejemplo
+    const { data: sampleRows, error: rowsError } = await supabase
+      .from('webstudio_pages')
+      .select('*')
+      .limit(3);
+
+    if (rowsError) {
+      console.error('❌ [debugWebstudioTable] Error obteniendo filas de ejemplo:', rowsError);
+      return;
+    }
+
+    console.log('🔍 [debugWebstudioTable] Filas de ejemplo:', sampleRows);
+    
+  } catch (error) {
+    console.error('❌ [debugWebstudioTable] Error inesperado:', error);
+  }
+};
+
 /**
  * Fetches a CMS page by its slug directly from Supabase.
  * This is used by EventsVenue to load the home page widgets.
@@ -30,20 +67,59 @@ async function hasColumn(tableName, columnName) {
  */
 export const getCmsPage = async (slug) => {
   try {
+    console.log('🔍 [getCmsPage] Intentando cargar página:', slug);
+    console.log('🔍 [getCmsPage] Usando tabla: webstudio_pages');
+    
     const { data, error } = await supabase
-      .from('cms_pages') // Assuming you have a 'cms_pages' table in Supabase
-      .select('widgets') // Select only the 'widgets' column
+      .from('webstudio_pages') // Usar la tabla correcta de Webstudio
+      .select('*') // Seleccionar todas las columnas para debug
       .eq('slug', slug) // Filter by the slug
       .single(); // Expect a single result
 
+    console.log('🔍 [getCmsPage] Resultado de la consulta:', { data, error });
+
     if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found, which is fine
-      console.error('Error fetching CMS page from Supabase:', error.message);
+      console.error('❌ [getCmsPage] Error fetching CMS page from Supabase:', error.message);
+      console.error('❌ [getCmsPage] Error details:', { code: error.code, details: error.details, hint: error.hint });
       throw error;
     }
-    // Supabase returns null if single() finds no row, so return an empty widgets object as fallback
-    return data || { widgets: { content: [] } };
+    
+    // Adaptar a la estructura real de webstudio_pages
+    if (data) {
+      // Crear un objeto widgets basado en los datos disponibles
+      const result = {
+        widgets: {
+          content: [
+            {
+              type: 'page_header',
+              title: data.nombre || 'Página sin título',
+              description: data.descripcion || '',
+              meta: {
+                title: data.meta_title,
+                description: data.meta_description,
+                keywords: data.meta_keywords,
+                og_image: data.og_image
+              }
+            }
+          ]
+        },
+        // Incluir datos originales para debug
+        original_data: data
+      };
+      
+      console.log('🔍 [getCmsPage] Página encontrada, creando widgets sintéticos:', result);
+      return result;
+    }
+    
+    // Si no hay datos, retornar estructura vacía
+    const emptyResult = { 
+      widgets: { content: [] },
+      original_data: null 
+    };
+    console.log('🔍 [getCmsPage] No se encontró página, retornando estructura vacía:', emptyResult);
+    return emptyResult;
   } catch (error) {
-    console.error('Unexpected error in getCmsPage:', error);
+    console.error('❌ [getCmsPage] Unexpected error:', error);
     throw error;
   }
 };

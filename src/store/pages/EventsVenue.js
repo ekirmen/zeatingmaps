@@ -6,7 +6,7 @@ import FaqWidget from '../components/FaqWidget'; // Your FaqWidget component
 import VenueInfoWidget from '../components/VenueInfoWidget'; // New venue info widget
 import FunctionInfoWidget from '../components/FunctionInfoWidget'; // New function info widget
 import FeaturedEventsWidget from '../components/FeaturedEventsWidget'; // New featured events widget
-import { getCmsPage } from '../services/apistore'; // Service to fetch CMS page data
+import { getCmsPage, debugWebstudioTable } from '../services/apistore'; // Service to fetch CMS page data
 import { useEventsList } from '../hooks/useEventsList'; // <-- Corrected import path for useEventsList
 
 const EventsVenue = ({ groupByTags = true }) => {
@@ -64,16 +64,36 @@ const EventsVenue = ({ groupByTags = true }) => {
       setLoadingCms(true);
       setErrorCms(null);
       try {
+        console.log('🔍 [EventsVenue] Intentando cargar página CMS: home');
+        
+        // Debug: verificar estructura de la tabla webstudio_pages
+        await debugWebstudioTable();
+        
         const data = await getCmsPage('home');
-        setWidgets(data.widgets);
-        localStorage.setItem('cms-page-home', JSON.stringify(data.widgets));
+        console.log('🔍 [EventsVenue] Página CMS cargada:', data);
+        
+        if (data && data.widgets && data.widgets.content && data.widgets.content.length > 0) {
+          setWidgets(data.widgets);
+          localStorage.setItem('cms-page-home', JSON.stringify(data.widgets));
+          console.log('🔍 [EventsVenue] Widgets CMS cargados exitosamente');
+        } else {
+          console.log('🔍 [EventsVenue] No hay widgets CMS, usando eventos como fallback');
+          setWidgets({ content: [] });
+        }
       } catch (e) {
-        console.error('Error fetching CMS page:', e);
+        console.error('❌ [EventsVenue] Error fetching CMS page:', e);
+        console.error('❌ [EventsVenue] Error details:', {
+          message: e.message,
+          code: e.code,
+          details: e.details,
+          hint: e.hint
+        });
         setErrorCms(e);
         const saved = localStorage.getItem('cms-page-home');
         if (saved) {
           try {
             setWidgets(JSON.parse(saved));
+            console.log('🔍 [EventsVenue] Usando widgets cacheados del localStorage');
           } catch (err) {
             console.error('Error parsing cached widgets', err);
           }
@@ -252,6 +272,39 @@ const EventsVenue = ({ groupByTags = true }) => {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Debug Panel */}
+      <div className="max-w-6xl mx-auto px-6 py-4">
+        <div className="bg-gray-100 p-4 rounded-lg mb-6">
+          <h3 className="text-lg font-semibold mb-2">🔍 Debug Panel</h3>
+          <div className="space-y-2 text-sm">
+            <p><strong>Componente montado:</strong> {mounted ? '✅ Sí' : '❌ No'}</p>
+            <p><strong>Hook useEventsList disponible:</strong> {typeof useEventsList === 'function' ? '✅ Sí' : '❌ No'}</p>
+            <p><strong>Estado de eventos:</strong> {loadingEvents ? '🔄 Cargando...' : events.length > 0 ? `✅ ${events.length} eventos` : '❌ Sin eventos'}</p>
+            <p><strong>Estado de CMS:</strong> {loadingCms ? '🔄 Cargando...' : errorCms ? `❌ Error: ${errorCms.message}` : '✅ CMS cargado'}</p>
+            <p><strong>Widgets CMS:</strong> {widgets && widgets.content ? `${widgets.content.length} widgets` : '❌ Sin widgets'}</p>
+            <p><strong>Error CMS:</strong> {errorCms ? errorCms.message : '✅ Sin errores'}</p>
+            <p><strong>URL actual:</strong> {window.location.pathname}</p>
+            <p><strong>Cliente Supabase:</strong> {typeof window !== 'undefined' && window.supabase ? '✅ Disponible' : '❌ No disponible'}</p>
+          </div>
+          
+          {/* Botón para probar CMS manualmente */}
+          <button 
+            onClick={async () => {
+              try {
+                console.log('🔍 [Debug] Probando CMS manualmente...');
+                const { debugWebstudioTable } = await import('../services/apistore');
+                await debugWebstudioTable();
+              } catch (err) {
+                console.error('Error en debug manual:', err);
+              }
+            }}
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            🔍 Probar CMS Manualmente
+          </button>
         </div>
       </div>
 
