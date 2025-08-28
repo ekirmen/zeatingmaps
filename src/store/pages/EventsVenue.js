@@ -17,9 +17,24 @@ const EventsVenue = ({ groupByTags = true }) => {
   const [errorCms, setErrorCms] = useState(null);
 
   console.log('🚀 [EventsVenue] Componente montado');
+  console.log('🚀 [EventsVenue] Hooks useState ejecutados correctamente');
 
   // Use the new hook to fetch the list of events
-  const { events, loading: loadingEvents, error: errorEvents } = useEventsList();
+  console.log('🔍 [EventsVenue] ANTES de llamar useEventsList...');
+  
+  let events, loadingEvents, errorEvents;
+  try {
+    const hookResult = useEventsList();
+    events = hookResult.events;
+    loadingEvents = hookResult.loading;
+    errorEvents = hookResult.error;
+    console.log('🔍 [EventsVenue] Hook useEventsList ejecutado exitosamente');
+  } catch (error) {
+    console.error('❌ [EventsVenue] Error al ejecutar useEventsList:', error);
+    events = [];
+    loadingEvents = false;
+    errorEvents = error;
+  }
   
   console.log('🔍 [EventsVenue] Hook useEventsList resultado:', { 
     events: events?.length || 0, 
@@ -29,6 +44,8 @@ const EventsVenue = ({ groupByTags = true }) => {
     eventsType: typeof events,
     eventsIsArray: Array.isArray(events)
   });
+  
+  console.log('🚀 [EventsVenue] Hook useEventsList completado, continuando con el componente...');
 
     // Monitor events changes
   useEffect(() => {

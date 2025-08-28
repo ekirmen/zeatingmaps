@@ -38,14 +38,17 @@ const normalizeEventData = (event) => {
 
 export const useEventsList = () => {
   console.log('🚀 [useEventsList] Hook iniciando...');
+  console.log('🔍 [useEventsList] React hooks disponibles:', { useState: !!useState, useEffect: !!useEffect, useCallback: !!useCallback });
   
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
   console.log('🔍 [useEventsList] Estado inicial:', { events, loading, error });
+  console.log('🔍 [useEventsList] Hook useState ejecutado correctamente');
 
   const fetchAllEvents = useCallback(async () => {
+    console.log('🔍 [useEventsList] fetchAllEvents callback creado');
     setLoading(true);
     setError(null);
     try {
@@ -125,6 +128,7 @@ export const useEventsList = () => {
   useEffect(() => {
     console.log('🔍 [useEventsList] useEffect ejecutado, llamando fetchAllEvents...');
     console.log('🔍 [useEventsList] Supabase cliente disponible:', !!supabase);
+    console.log('🔍 [useEventsList] fetchAllEvents función:', typeof fetchAllEvents);
     fetchAllEvents();
   }, [fetchAllEvents]);
 
@@ -134,5 +138,6 @@ export const useEventsList = () => {
     error,
     sampleEvent: events.length > 0 ? events[0] : null
   });
+  console.log('🔍 [useEventsList] Hook completado, retornando resultado');
   return { events, loading, error };
 };
