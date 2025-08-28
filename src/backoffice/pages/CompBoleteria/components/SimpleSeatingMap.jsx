@@ -185,17 +185,27 @@ const SimpleSeatingMap = ({
   }, [selectedPlantilla, selectedFuncion]);
 
   const getSeatColor = (seat) => {
+    // IMPORTANTE: Los asientos vendidos SIEMPRE se mantienen en gris
+    if (seat.estado === 'pagado') {
+      return '#9ca3af'; // Gris oscuro para vendido - NO CAMBIA
+    }
+    
+    // NARANJA para asientos reservados
+    if (seat.estado === 'reservado') {
+      return '#ff8c00'; // Naranja para reservado
+    }
+    
     // Si está en modo bloqueo y está seleccionado para bloquear
     if (blockMode && blockedSeats.some(s => s._id === seat._id)) {
       return '#ff4d4f'; // Rojo para asientos seleccionados en modo bloqueo
     }
     
-    // Si está seleccionado por el usuario actual (modo normal)
+    // AMARILLO para asientos seleccionados por el usuario actual
     if (selectedSeats.some(s => s._id === seat._id)) {
-      return '#52c41a'; // Verde para seleccionado
+      return '#facc15'; // Amarillo para seleccionado
     }
     
-    // Si está bloqueado por otro usuario
+    // ROJO para asientos bloqueados por otro usuario
     const sessionId = localStorage.getItem('anonSessionId');
     const isLockedByOther = lockedSeats.some(ls => 
       ls.seat_id === seat._id && ls.session_id !== sessionId
@@ -212,17 +222,9 @@ const SimpleSeatingMap = ({
       return '#1890ff'; // Azul para bloqueado por mí
     }
     
-    // Colores para estados especiales
-    if (seat.estado === 'pagado') {
-      return '#d9d9d9'; // Gris para vendido
-    }
-    if (seat.estado === 'reservado') {
-      return '#facc15'; // Amarillo para reservado
-    }
-    
-    // Color por defecto basado en la zona
+    // VERDE para asientos disponibles
     const zoneInfo = getZoneInfo(seat);
-    return zoneInfo.color || '#f0f0f0';
+    return '#52c41a'; // Verde para disponible
   };
 
   const getZoneInfo = (seat) => {
@@ -250,6 +252,12 @@ const SimpleSeatingMap = ({
 
   const handleSeatClick = async (seat, mesa = null) => {
     try {
+      // IMPORTANTE: Verificar si el asiento está vendido o reservado ANTES de cualquier otra lógica
+      if (seat.estado === 'pagado' || seat.estado === 'reservado') {
+        message.warning('Este asiento ya está vendido o reservado y no se puede seleccionar');
+        return;
+      }
+
       // En modo bloqueo, delegar al padre sin exigir precio ni bloquear en BD
       if (blockMode) {
         onSeatClick(seat, mesa);
@@ -542,7 +550,11 @@ const SimpleSeatingMap = ({
                     placement="top"
                   >
                     <div
-                      className="absolute cursor-pointer hover:scale-110 transition-transform"
+                      className={`absolute transition-transform ${
+                        silla.estado === 'pagado' || silla.estado === 'reservado'
+                          ? 'cursor-not-allowed opacity-60'
+                          : 'cursor-pointer hover:scale-110'
+                      }`}
                       style={{
                         left: adjustedLeft,
                         top: adjustedTop,
@@ -561,7 +573,12 @@ const SimpleSeatingMap = ({
                         opacity: muted ? 0.35 : 1,
                         zIndex: 2
                       }}
-                      onClick={() => handleSeatClick(silla, elemento)}
+                      onClick={() => {
+                        // Solo permitir click si NO está vendido o reservado
+                        if (silla.estado !== 'pagado' && silla.estado !== 'reservado') {
+                          handleSeatClick(silla, elemento);
+                        }
+                      }}
                     >
                       {silla.nombre || silla.numero}
                     </div>
@@ -600,7 +617,11 @@ const SimpleSeatingMap = ({
                     placement="top"
                   >
                     <div
-                      className="absolute cursor-pointer hover:scale-110 transition-transform"
+                      className={`absolute transition-transform ${
+                        silla.estado === 'pagado' || silla.estado === 'reservado'
+                          ? 'cursor-not-allowed opacity-60'
+                          : 'cursor-pointer hover:scale-110'
+                      }`}
                       style={{
                         left: (sx || 0) - (silla.radius || 10),
                         top: (sy || 0) - (silla.radius || 10),
@@ -619,7 +640,12 @@ const SimpleSeatingMap = ({
                         opacity: mutedTop ? 0.35 : 1,
                         zIndex: 2
                       }}
-                      onClick={() => handleSeatClick(silla)}
+                      onClick={() => {
+                        // Solo permitir click si NO está vendido o reservado
+                        if (silla.estado !== 'pagado' && silla.estado !== 'reservado') {
+                          handleSeatClick(silla);
+                        }
+                      }}
                     >
                       {silla.nombre || silla.numero}
                     </div>
@@ -649,7 +675,11 @@ const SimpleSeatingMap = ({
                     placement="top"
                   >
                     <div
-                      className="absolute cursor-pointer hover:scale-110 transition-transform"
+                      className={`absolute transition-transform ${
+                        silla.estado === 'pagado' || silla.estado === 'reservado'
+                          ? 'cursor-not-allowed opacity-60'
+                          : 'cursor-pointer hover:scale-110'
+                      }`}
                       style={{
                         left: (sx || 0) - 15,
                         top: (sy || 0) - 15,
@@ -666,7 +696,12 @@ const SimpleSeatingMap = ({
                         fontWeight: 'bold',
                         boxShadow: isSelected ? '0 0 10px rgba(0,0,0,0.5)' : 'none'
                       }}
-                      onClick={() => handleSeatClick(silla)}
+                      onClick={() => {
+                        // Solo permitir click si NO está vendido o reservado
+                        if (silla.estado !== 'pagado' && silla.estado !== 'reservado') {
+                          handleSeatClick(silla);
+                        }
+                      }}
                     >
                       {silla.nombre || silla.numero}
                     </div>
