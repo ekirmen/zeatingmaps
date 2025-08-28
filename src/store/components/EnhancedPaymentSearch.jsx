@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Input, Button, Radio, Tag, Space, Typography, message } from 'antd';
-import { SearchOutlined, UserOutlined, TicketOutlined, DeleteOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, FileTextOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
 
@@ -125,7 +125,7 @@ const EnhancedPaymentSearch = ({ onLocatorFound, onClearLocator, currentLocator 
                             size="small"
                         >
                             <Radio.Button value="locator">
-                                <TicketOutlined /> Por Localizador
+                                <FileTextOutlined /> Por Localizador
                             </Radio.Button>
                             <Radio.Button value="email">
                                 <UserOutlined /> Por Email

@@ -8,7 +8,7 @@ import {
     DownloadOutlined,
     SearchOutlined,
     LockOutlined,
-    TicketOutlined,
+    FileTextOutlined,
     UserOutlined,
     ClockCircleOutlined
 } from '@ant-design/icons';

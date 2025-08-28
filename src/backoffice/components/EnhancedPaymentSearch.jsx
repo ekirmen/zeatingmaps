@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Input, Button, Tabs, Table, message, Card, Tag, Space, Typography, Divider } from 'antd';
-import { SearchOutlined, UserOutlined, TicketOutlined, CalendarOutlined, DollarOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, FileTextOutlined, CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import { fetchPaymentByLocator, fetchPaymentsByUserEmail } from '../services/apibackoffice';
 
 const { TabPane } = Tabs;
@@ -115,7 +115,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
       dataIndex: 'locator',
       key: 'locator',
       render: (locator) => (
-        <Tag color="blue" icon={<TicketOutlined />}>
+        <Tag color="blue" icon={<FileTextOutlined />}>
           {locator}
         </Tag>
       ),
@@ -198,7 +198,7 @@ const EnhancedPaymentSearch = ({ onPaymentSelect, onUserSelect }) => {
         <TabPane 
           tab={
             <span>
-              <TicketOutlined />
+              <FileTextOutlined />
               Buscar por Localizador
             </span>
           } 
