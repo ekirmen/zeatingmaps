@@ -49,8 +49,8 @@ const App = () => {
   // Configurar tema de Ant Design según el tenant o dominio
   const theme = {
     token: {
-      colorPrimary: config.theme.primaryColor,
-      colorSuccess: config.theme.secondaryColor,
+      colorPrimary: config?.theme?.primaryColor || '#1890ff',
+      colorSuccess: config?.theme?.secondaryColor || '#52c41a',
     },
   };
 

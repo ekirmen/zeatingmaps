@@ -53,7 +53,7 @@ export const TenantProvider = ({ children }) => {
             // Establecer configuración basada en el tenant real
             const mainConfig = {
               id: mainTenant.id,
-              name: mainTenant.company_name,
+              name: mainTenant.company_name || 'Sistema Veneeventos',
               theme: {
                 primaryColor: mainTenant.primary_color || '#1890ff',
                 secondaryColor: mainTenant.secondary_color || '#52c41a',

@@ -156,7 +156,7 @@ export const useBoleteria = () => {
       }
 
       // Validar que funcionData tenga las propiedades necesarias
-      if (!funcionData.id) {
+      if (!funcionData || !funcionData.id) {
         console.error('❌ [useBoleteria] funcionData no tiene ID:', funcionData);
         message.error('Datos de función inválidos');
         return false;
@@ -420,8 +420,8 @@ export const useBoleteria = () => {
         .single();
 
       if (eventoError) throw eventoError;
-      if (!eventoData) {
-        message.warning('Evento no encontrado.');
+      if (!eventoData || !eventoData.id) {
+        message.warning('Evento no encontrado o datos inválidos.');
         return { success: false };
       }
 
@@ -437,7 +437,7 @@ export const useBoleteria = () => {
 
       if (funcionesError) throw funcionesError;
 
-      const funcionesMapeadas = (funcionesData || []).map(funcion => ({
+      const funcionesMapeadas = (funcionesData || []).filter(funcion => funcion && funcion.id).map(funcion => ({
         ...funcion,
         sala: (typeof funcion.sala === 'object' && funcion.sala !== null) ? funcion.sala : (funcion.sala ? { id: funcion.sala } : null),
         fechaCelebracion: funcion.fecha_celebracion,
@@ -540,14 +540,14 @@ export const useBoleteria = () => {
         const storedEventId = localStorage.getItem(EVENT_KEY);
         console.log('🔍 [useBoleteria] Stored event ID:', storedEventId);
 
-        if (storedEventId) {
-          const initialEvent = data.find(e => e.id === storedEventId);
+        if (storedEventId && data && Array.isArray(data)) {
+          const initialEvent = data.find(e => e && e.id === storedEventId);
           console.log('🔍 [useBoleteria] Initial event found:', initialEvent);
-          if (initialEvent) {
+          if (initialEvent && initialEvent.id) {
             console.log('🔄 [useBoleteria] Calling handleEventSelect for initial event');
             await handleEventSelect(storedEventId);
           }
-        } else if (data && data.length > 0) {
+        } else if (data && Array.isArray(data) && data.length > 0 && data[0] && data[0].id) {
           // Si no hay evento guardado pero hay eventos disponibles, seleccionar el primero
           console.log('🔄 [useBoleteria] No hay evento guardado, seleccionando el primero disponible');
           await handleEventSelect(data[0].id);

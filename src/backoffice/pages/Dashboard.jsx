@@ -40,7 +40,7 @@ const Dashboard = () => {
       // Cargar estadísticas con filtrado automático por tenant
       const [eventsCount, usersCount, productsCount] = await Promise.all([
         addTenantFilter(supabase.from('eventos').select('id', { count: 'exact' })),
-        addTenantFilter(supabase.from('usuarios').select('id', { count: 'exact' })),
+        addTenantFilter(supabase.from('profiles').select('id', { count: 'exact' })),
         addTenantFilter(supabase.from('productos').select('id', { count: 'exact' }))
       ]);
 
