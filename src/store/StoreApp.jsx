@@ -27,8 +27,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiesPolicy from './pages/CookiesPolicy';
 import LegalTerms from './pages/LegalTerms';
 import CmsPage from './pages/CmsPage';
-import EventsVenue from './pages/EventsVenue'; // 👈 IMPORTACIÓN ESTÁTICA
-import TestComponent from './components/TestComponent'; // 👈 COMPONENTE DE PRUEBA
+import EventsVenue from './pages/EventsVenue';
 import { useAuth } from '../contexts/AuthContext'; // para perfil
 
 const StoreApp = () => {
@@ -38,9 +37,6 @@ const StoreApp = () => {
   console.log('🚀 [StoreApp] Renderizando store...');
   console.log('🔍 [StoreApp] Location:', location.pathname);
   console.log('🔍 [StoreApp] User:', user);
-
-  // EventsVenue ya está importado estáticamente arriba
-  console.log('✅ [StoreApp] EventsVenue importado correctamente');
 
   const showHeader =
     location.pathname.startsWith('/store') ||
@@ -53,28 +49,8 @@ const StoreApp = () => {
           {showHeader && <Header />}
           <div className="flex-grow">
             <Routes>
-              <Route path="/store" element={
-                (() => {
-                  console.log('🚀 [StoreApp] Renderizando ruta /store con EventsVenue');
-                  try {
-                    // COMPONENTE DE PRUEBA IMPORTADO
-                    console.log('🚨 [StoreApp] PROBANDO COMPONENTE IMPORTADO');
-                    
-                    const component = <TestComponent />;
-                    console.log('✅ [StoreApp] TestComponent importado renderizado correctamente');
-                    return component;
-                  } catch (error) {
-                    console.error('❌ [StoreApp] Error renderizando TestComponent:', error);
-                    return <div>Error cargando página: {error.message}</div>;
-                  }
-                })()
-              } />
-              <Route path="/store/tag/:tagSlug?" element={
-                (() => {
-                  console.log('🚀 [StoreApp] Renderizando ruta /store/tag con EventsVenue');
-                  return <EventsVenue groupByTags />;
-                })()
-              } />
+              <Route path="/store" element={<EventsVenue />} />
+              <Route path="/store/tag/:tagSlug?" element={<EventsVenue groupByTags />} />
               <Route path="/store/eventos/:eventSlug" element={<EventosPage />} />
               <Route path="/store/event/:eventId" element={<EventInfo />} />
 

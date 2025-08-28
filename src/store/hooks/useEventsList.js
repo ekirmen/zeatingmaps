@@ -184,7 +184,6 @@ export const useEventsList = () => {
 
   useEffect(() => {
     console.log('🔍 [useEventsList] useEffect ejecutado, llamando fetchAllEvents...');
-    console.log('🔍 [useEventsList] Supabase cliente disponible:', !!supabase);
     console.log('🔍 [useEventsList] fetchAllEvents función:', typeof fetchAllEvents);
     fetchAllEvents();
   }, [fetchAllEvents]);
