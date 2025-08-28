@@ -2,8 +2,9 @@
 
 import React, { useEffect, useState } from 'react';
 
-const EventsVenue = () => {
+const EventsVenue = ({ groupByTags = true }) => {
   console.log('🚀 [EventsVenue] COMPONENTE DEFINIDO - ANTES DEL TRY');
+  console.log('🚀 [EventsVenue] Props recibidas:', { groupByTags });
   
   try {
     console.log('🚀 [EventsVenue] Componente iniciando...');
@@ -27,16 +28,17 @@ const EventsVenue = () => {
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-8">🔍 Componente de Prueba EventsVenue</h1>
           
-          {/* Debug Panel */}
-          <div className="bg-gray-100 p-4 rounded-lg mb-6">
-            <h3 className="text-lg font-semibold mb-2">🔍 Debug Panel Simplificado</h3>
-            <div className="space-y-2 text-sm">
-              <p><strong>Componente montado:</strong> {mounted ? '✅ Sí' : '❌ No'}</p>
-              <p><strong>Estado de prueba:</strong> {testState}</p>
-              <p><strong>URL actual:</strong> {window.location.pathname}</p>
-              <p><strong>Timestamp:</strong> {new Date().toISOString()}</p>
-            </div>
-          </div>
+                     {/* Debug Panel */}
+           <div className="bg-gray-100 p-4 rounded-lg mb-6">
+             <h3 className="text-lg font-semibold mb-2">🔍 Debug Panel Simplificado</h3>
+             <div className="space-y-2 text-sm">
+               <p><strong>Componente montado:</strong> {mounted ? '✅ Sí' : '❌ No'}</p>
+               <p><strong>Estado de prueba:</strong> {testState}</p>
+               <p><strong>Prop groupByTags:</strong> {groupByTags ? '✅ true' : '❌ false'}</p>
+               <p><strong>URL actual:</strong> {window.location.pathname}</p>
+               <p><strong>Timestamp:</strong> {new Date().toISOString()}</p>
+             </div>
+           </div>
           
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">✅ Componente Funcionando</h2>
