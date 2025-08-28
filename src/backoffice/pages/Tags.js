@@ -42,6 +42,7 @@ const Tags = () => {
       if (eventError) {
         console.warn('Error loading event tags:', eventError);
       } else {
+        console.log('🔍 [Tags] Tags de eventos cargados:', eventData);
         setEventTags(eventData || []);
       }
 
@@ -55,6 +56,7 @@ const Tags = () => {
       if (userError) {
         console.warn('Error loading user tags:', userError);
       } else {
+        console.log('🔍 [Tags] Tags de usuarios cargados:', userData);
         setUserTags(userData || []);
       }
     } catch (error) {
@@ -184,7 +186,7 @@ const Tags = () => {
 
   const renderTagList = (tags, type) => (
     <div className="space-y-4">
-      {tags.map(tag => (
+      {Array.isArray(tags) && tags.map(tag => (
         <Card key={tag.id} size="small">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">

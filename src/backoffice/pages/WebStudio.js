@@ -6,7 +6,7 @@ import EmailWidgetRenderer from '../components/EmailWidgets/EmailWidgetRenderer'
 import EmailTestPanel from '../components/EmailTestPanel';
 import EmailPageCreator from './EmailPageCreator';
 import SiteMap from '../components/SiteMap';
-import { fetchCmsPage, saveCmsPage, initializeCmsPages, fetchAllCmsPages } from '../services/apibackoffice';
+import { fetchCmsPage, saveCmsPage, fetchAllCmsPages } from '../services/apibackoffice';
 import { supabase } from '../../supabaseClient';
 
 // Datos de ejemplo para las nuevas secciones - Páginas del sistema reales

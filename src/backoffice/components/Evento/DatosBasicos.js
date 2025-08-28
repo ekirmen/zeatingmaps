@@ -6,6 +6,21 @@ import { useTags } from '../../contexts/TagContext';
 const MAX_TAGS = 3;
 
 const DatosBasicos = ({ eventoData, setEventoData }) => {
+  // Función para normalizar el campo tags
+  const normalizeTags = (tags) => {
+    if (!tags) return [];
+    if (Array.isArray(tags)) return tags;
+    if (typeof tags === 'string') {
+      try {
+        const parsed = JSON.parse(tags);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  };
+
   const [form, setForm] = useState({
     nombre: eventoData?.nombre || '',
     slug: eventoData?.slug || '',
@@ -14,11 +29,15 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
     activo: eventoData?.activo ?? true,
     oculto: eventoData?.oculto ?? false,
     desactivado: eventoData?.desactivado ?? false,
-    tags: eventoData?.tags || []
+    tags: normalizeTags(eventoData?.tags)
   });
 
   // Sync local form state whenever the selected event changes
   useEffect(() => {
+    console.log('🔍 [DatosBasicos] eventoData recibido:', eventoData);
+    console.log('🔍 [DatosBasicos] tags originales:', eventoData?.tags);
+    console.log('🔍 [DatosBasicos] tags normalizados:', normalizeTags(eventoData?.tags));
+    
     setForm({
       nombre: eventoData?.nombre || '',
       slug: eventoData?.slug || '',
@@ -27,7 +46,7 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
       activo: eventoData?.activo ?? true,
       oculto: eventoData?.oculto ?? false,
       desactivado: eventoData?.desactivado ?? false,
-      tags: eventoData?.tags || []
+      tags: normalizeTags(eventoData?.tags)
     });
   }, [eventoData]);
 
@@ -62,14 +81,26 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
       return;
     }
 
-    const updated = [...form.tags, selectedTag];
+    // Asegurar que form.tags sea un array
+    const currentTags = Array.isArray(form.tags) ? form.tags : [];
+    const updated = [...currentTags, selectedTag];
+    
+    console.log('🔍 [DatosBasicos] Añadiendo tag:', selectedTag);
+    console.log('🔍 [DatosBasicos] Tags actualizados:', updated);
+    
     setForm(prev => ({ ...prev, tags: updated }));
     setEventoData(prev => ({ ...prev, tags: updated }));
     setSelectedTag('');
   };
 
   const handleRemoveTag = (id) => {
-    const updated = form.tags.filter(t => t !== id);
+    // Asegurar que form.tags sea un array
+    const currentTags = Array.isArray(form.tags) ? form.tags : [];
+    const updated = currentTags.filter(t => t !== id);
+    
+    console.log('🔍 [DatosBasicos] Eliminando tag:', id);
+    console.log('🔍 [DatosBasicos] Tags actualizados:', updated);
+    
     setForm(prev => ({ ...prev, tags: updated }));
     setEventoData(prev => ({ ...prev, tags: updated }));
   };
@@ -131,22 +162,26 @@ const DatosBasicos = ({ eventoData, setEventoData }) => {
           <div className="flex items-center gap-2 mt-1">
             <select value={selectedTag} onChange={e => setSelectedTag(e.target.value)} className="p-2 border rounded">
               <option value="">Seleccionar tag</option>
-              {tags.map(tag => (
+              {Array.isArray(tags) && tags.map(tag => (
                 <option key={tag._id} value={tag._id}>{tag.name}</option>
               ))}
             </select>
             <button type="button" onClick={handleTagAdd} className="px-3 py-1 bg-blue-600 text-white rounded">Añadir</button>
           </div>
           <div className="mt-2 flex flex-wrap gap-2">
-            {form.tags.map(id => {
-              const t = tags.find(tag => tag._id === id);
-              return (
-                <span key={id} className="bg-gray-200 px-2 py-1 rounded flex items-center">
-                  {t ? t.name : id}
-                  <button type="button" className="ml-2" onClick={() => handleRemoveTag(id)}>&times;</button>
-                </span>
-              );
-            })}
+            {Array.isArray(form.tags) && form.tags.length > 0 ? (
+              form.tags.map(id => {
+                const t = tags.find(tag => tag._id === id);
+                return (
+                  <span key={id} className="bg-gray-200 px-2 py-1 rounded flex items-center">
+                    {t ? t.name : id}
+                    <button type="button" className="ml-2" onClick={() => handleRemoveTag(id)}>&times;</button>
+                  </span>
+                );
+              })
+            ) : (
+              <span className="text-gray-500 text-sm">No hay tags seleccionados</span>
+            )}
           </div>
         </div>
 

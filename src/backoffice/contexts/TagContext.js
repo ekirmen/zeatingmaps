@@ -10,10 +10,13 @@ export const TagProvider = ({ children }) => {
   useEffect(() => {
     const loadTags = async () => {
       try {
+        console.log('🔍 [TagContext] Iniciando carga de tags...');
         const data = await fetchTags();
+        console.log('🔍 [TagContext] Tags cargados:', data);
         setTags(data);
       } catch (error) {
         console.error('Error al obtener tags:', error.message);
+        setTags([]);
       } finally {
         setLoading(false);
       }
@@ -21,6 +24,9 @@ export const TagProvider = ({ children }) => {
 
     loadTags();
   }, []);
+
+  // Log para debuggear el estado de los tags
+  console.log('🔍 [TagContext] Estado actual:', { tags, loading, tagsCount: tags.length });
 
   return (
     <TagContext.Provider value={{ tags, setTags, loading }}>
