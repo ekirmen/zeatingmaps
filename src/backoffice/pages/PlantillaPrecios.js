@@ -53,8 +53,33 @@ const PlantillaPrecios = () => {
   useEffect(() => {
     if (!recinto) return;
     const fetchEntradas = async () => {
-      const { data, error } = await supabase.from('entradas').select('*').eq('recinto', recinto.id);
-      setEntradas(!error ? data : []);
+      try {
+        // Usar la nueva función que filtra por tenant
+        const { data, error } = await supabase
+          .from('entradas')
+          .select('*')
+          .eq('recinto', recinto.id);
+        
+        if (error) {
+          console.error('Error cargando entradas:', error);
+          setEntradas([]);
+          return;
+        }
+        
+        console.log('🔍 [PlantillaPrecios] Entradas cargadas para recinto:', recinto.id, 'Total:', data?.length || 0);
+        if (data && data.length > 0) {
+          console.log('🔍 [PlantillaPrecios] Detalles de entradas:', data.map(e => ({
+            id: e.id,
+            nombre: e.nombre_entrada,
+            tipo: e.tipo_producto,
+            tenant_id: e.tenant_id
+          })));
+        }
+        setEntradas(data || []);
+      } catch (error) {
+        console.error('Error inesperado cargando entradas:', error);
+        setEntradas([]);
+      }
     };
     fetchEntradas();
   }, [recinto]);

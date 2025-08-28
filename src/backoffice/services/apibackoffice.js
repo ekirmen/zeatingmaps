@@ -468,35 +468,260 @@ export const setSeatsBlocked = async (seatIds, bloqueado) => {
 
 // === ENTRADAS ===
 export const fetchEntradas = async () => {
-  const { data, error } = await supabase.from('entradas').select('*');
-  handleError(error);
-  return data;
+  try {
+    // Obtener el usuario autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.warn('Usuario no autenticado, retornando entradas vacías');
+      return [];
+    }
+
+    // Obtener el tenant_id del perfil del usuario
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('tenant_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.tenant_id) {
+      console.warn('Usuario sin tenant_id válido, retornando entradas vacías');
+      return [];
+    }
+
+    console.log('🔍 [apibackoffice] Obteniendo entradas para tenant:', profile.tenant_id);
+
+    const { data, error } = await supabase
+      .from('entradas')
+      .select('*')
+      .eq('tenant_id', profile.tenant_id)
+      .order('nombre_entrada');
+
+    if (error) {
+      console.error('Error fetching entradas:', error);
+      throw new Error('Error fetching entradas: ' + error.message);
+    }
+
+    console.log('🔍 [apibackoffice] Entradas obtenidas:', data);
+    return data || [];
+  } catch (error) {
+    console.error('Error in fetchEntradas:', error);
+    return [];
+  }
+};
+
+export const fetchEntradasByRecinto = async (recintoId) => {
+  try {
+    // Obtener el usuario autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.warn('Usuario no autenticado, retornando entradas vacías');
+      return [];
+    }
+
+    // Obtener el tenant_id del perfil del usuario
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('tenant_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.tenant_id) {
+      console.warn('Usuario sin tenant_id válido, retornando entradas vacías');
+      return [];
+    }
+
+    console.log('🔍 [apibackoffice] Obteniendo entradas para recinto:', recintoId, 'tenant:', profile.tenant_id);
+
+    const { data, error } = await supabase
+      .from('entradas')
+      .select('*')
+      .eq('recinto', recintoId)
+      .eq('tenant_id', profile.tenant_id)
+      .order('nombre_entrada');
+
+    if (error) {
+      console.error('Error fetching entradas by recinto:', error);
+      throw new Error('Error fetching entradas by recinto: ' + error.message);
+    }
+
+    console.log('🔍 [apibackoffice] Entradas por recinto obtenidas:', data);
+    return data || [];
+  } catch (error) {
+    console.error('Error in fetchEntradasByRecinto:', error);
+    return [];
+  }
 };
 
 export const fetchEntradaById = async (id) => {
-  const { data, error } = await supabase.from('entradas').select('*').eq('id', id).single();
-  handleError(error);
-  return data;
+  try {
+    // Obtener el usuario autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    // Obtener el tenant_id del perfil del usuario
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('tenant_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.tenant_id) {
+      throw new Error('Usuario sin tenant_id válido');
+    }
+
+    const { data, error } = await supabase
+      .from('entradas')
+      .select('*')
+      .eq('id', id)
+      .eq('tenant_id', profile.tenant_id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching entrada by id:', error);
+      throw new Error('Error fetching entrada by id: ' + error.message);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error in fetchEntradaById:', error);
+    throw error;
+  }
 };
 
 export const createEntrada = async (data) => {
-  const client = supabaseAdmin || supabase;
-  const { data: result, error } = await client.from('entradas').insert(data).single();
-  handleError(error);
-  return result;
+  try {
+    // Obtener el usuario autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    // Obtener el tenant_id del perfil del usuario
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('tenant_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.tenant_id) {
+      throw new Error('Usuario sin tenant_id válido');
+    }
+
+    // Asignar tenant_id a la entrada
+    const entradaWithTenant = {
+      ...data,
+      tenant_id: profile.tenant_id
+    };
+
+    console.log('🔍 [apibackoffice] Creando entrada con tenant_id:', profile.tenant_id);
+
+    const { data: result, error } = await supabase
+      .from('entradas')
+      .insert([entradaWithTenant])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating entrada:', error);
+      throw new Error('Error creating entrada: ' + error.message);
+    }
+
+    console.log('🔍 [apibackoffice] Entrada creada exitosamente:', result);
+    return result;
+  } catch (error) {
+    console.error('Error in createEntrada:', error);
+    throw error;
+  }
 };
 
 export const updateEntrada = async (id, data) => {
-  const client = supabaseAdmin || supabase;
-  const { data: result, error } = await client.from('entradas').update(data).eq('id', id).single();
-  handleError(error);
-  return result;
+  try {
+    // Obtener el usuario autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    // Obtener el tenant_id del perfil del usuario
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('tenant_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.tenant_id) {
+      throw new Error('Usuario sin tenant_id válido');
+    }
+
+    // Asegurar que el tenant_id se mantenga
+    const entradaWithTenant = {
+      ...data,
+      tenant_id: profile.tenant_id
+    };
+
+    console.log('🔍 [apibackoffice] Actualizando entrada con tenant_id:', profile.tenant_id);
+
+    const { data: result, error } = await supabase
+      .from('entradas')
+      .update(entradaWithTenant)
+      .eq('id', id)
+      .eq('tenant_id', profile.tenant_id) // Solo actualizar entradas del tenant actual
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating entrada:', error);
+      throw new Error('Error updating entrada: ' + error.message);
+    }
+
+    console.log('🔍 [apibackoffice] Entrada actualizada exitosamente:', result);
+    return result;
+  } catch (error) {
+    console.error('Error in updateEntrada:', error);
+    throw error;
+  }
 };
 
 export const deleteEntrada = async (id) => {
-  const client = supabaseAdmin || supabase;
-  const { error } = await client.from('entradas').delete().eq('id', id);
-  handleError(error);
+  try {
+    // Obtener el usuario autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    // Obtener el tenant_id del perfil del usuario
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('tenant_id')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile?.tenant_id) {
+      throw new Error('Usuario sin tenant_id válido');
+    }
+
+    console.log('🔍 [apibackoffice] Eliminando entrada con tenant_id:', profile.tenant_id);
+
+    const { error } = await supabase
+      .from('entradas')
+      .delete()
+      .eq('id', id)
+      .eq('tenant_id', profile.tenant_id); // Solo eliminar entradas del tenant actual
+
+    if (error) {
+      console.error('Error deleting entrada:', error);
+      throw new Error('Error deleting entrada: ' + error.message);
+    }
+
+    console.log('🔍 [apibackoffice] Entrada eliminada exitosamente');
+    return { success: true };
+  } catch (error) {
+    console.error('Error in deleteEntrada:', error);
+    throw error;
+  }
 };
 
 // Obtener página CMS por slug
