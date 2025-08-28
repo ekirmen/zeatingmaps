@@ -743,9 +743,9 @@ export const fetchCmsPage = async (identifier) => {
         .from('cms_pages')
         .select('*')
         .eq('id', parseInt(identifier))
-        .single();
-      data = result.data;
-      error = result.error;
+        .maybeSingle();
+      data = result?.data || null;
+      error = result?.error || null;
     } else {
       // Si es un string, buscar por slug
       console.log(`🔍 [fetchCmsPage] Buscando página por slug: ${identifier}`);
@@ -754,8 +754,8 @@ export const fetchCmsPage = async (identifier) => {
         .select('*')
         .ilike('slug', identifier)
         .maybeSingle();
-      data = result.data;
-      error = result.error;
+      data = result?.data || null;
+      error = result?.error || null;
 
       // Si no se encuentra por slug, buscar por nombre como fallback
       if (!data && !error) {
@@ -765,8 +765,8 @@ export const fetchCmsPage = async (identifier) => {
           .select('*')
           .ilike('nombre', identifier)
           .maybeSingle();
-        data = fallback.data;
-        error = fallback.error;
+        data = fallback?.data || null;
+        error = fallback?.error || null;
       }
     }
 
@@ -813,9 +813,9 @@ export const saveCmsPage = async (identifier, widgets) => {
         .from('cms_pages')
         .select('id, slug')
         .eq('id', parseInt(identifier))
-        .single();
-      existingPage = result.data;
-      checkError = result.error;
+        .maybeSingle();
+      existingPage = result?.data || null;
+      checkError = result?.error || null;
     } else {
       // Si es un string, buscar por slug
       console.log(`🔍 [saveCmsPage] Buscando página por slug: ${identifier}`);
@@ -824,8 +824,8 @@ export const saveCmsPage = async (identifier, widgets) => {
         .select('id, slug')
         .ilike('slug', identifier)
         .maybeSingle();
-      existingPage = result.data;
-      checkError = result.error;
+      existingPage = result?.data || null;
+      checkError = result?.error || null;
     }
 
     if (checkError) {
