@@ -724,80 +724,72 @@ export const deleteEntrada = async (id) => {
   }
 };
 
-// Obtener página CMS por slug
-export const fetchCmsPage = async (slug) => {
+// Obtener página CMS por ID o slug
+export const fetchCmsPage = async (identifier) => {
   const [hasCreatedAt, hasUpdatedAt] = await Promise.all([
     hasColumn('cms_pages', 'created_at'),
     hasColumn('cms_pages', 'updated_at')
   ]);
 
-  const buildDefaultPage = () => {
-    const now = new Date().toISOString();
-    const page = {
-      nombre: slug,
-      slug: slug,
-      widgets: {
-        header: [],
-        content: [],
-        footer: []
-      }
-    };
-    if (hasCreatedAt) page.created_at = now;
-    if (hasUpdatedAt) page.updated_at = now;
-    return page;
-  };
-
   try {
-    // Primero intentar buscar por slug
-    let { data, error } = await supabase
-      .from('cms_pages')
-      .select('*')
-      .ilike('slug', slug)
-      .maybeSingle();
+    let { data, error } = null;
 
-    // Si no se encuentra por slug, buscar por nombre
-    if (!data && !error) {
-      const fallback = await supabase
+    // Si el identificador es un número, buscar por ID
+    if (!isNaN(identifier) && Number.isInteger(Number(identifier))) {
+      console.log(`🔍 [fetchCmsPage] Buscando página por ID: ${identifier}`);
+      const result = await supabase
         .from('cms_pages')
         .select('*')
-        .ilike('nombre', slug)
-        .maybeSingle();
-      data = fallback.data;
-      error = fallback.error;
-    }
-
-    // Si aún no se encuentra, crear una página por defecto
-    if (!data && !error) {
-      console.log('Página no encontrada, creando página por defecto');
-      const defaultPage = buildDefaultPage();
-
-      // Intentar insertar la página por defecto
-      const { data: newPage, error: insertError } = await supabase
-        .from('cms_pages')
-        .insert([defaultPage])
-        .select()
+        .eq('id', parseInt(identifier))
         .single();
+      data = result.data;
+      error = result.error;
+    } else {
+      // Si es un string, buscar por slug
+      console.log(`🔍 [fetchCmsPage] Buscando página por slug: ${identifier}`);
+      const result = await supabase
+        .from('cms_pages')
+        .select('*')
+        .ilike('slug', identifier)
+        .maybeSingle();
+      data = result.data;
+      error = result.error;
 
-      if (insertError) {
-        console.error('Error creating default page:', insertError);
-        // Si no se puede insertar, devolver la página por defecto sin guardar
-        return defaultPage;
+      // Si no se encuentra por slug, buscar por nombre como fallback
+      if (!data && !error) {
+        console.log(`🔍 [fetchCmsPage] Fallback: buscando por nombre: ${identifier}`);
+        const fallback = await supabase
+          .from('cms_pages')
+          .select('*')
+          .ilike('nombre', identifier)
+          .maybeSingle();
+        data = fallback.data;
+        error = fallback.error;
       }
-
-      return newPage;
     }
 
+    // Si se encuentra la página, retornarla
+    if (data) {
+      console.log(`✅ [fetchCmsPage] Página encontrada: ${data.slug} (ID: ${data.id})`);
+      return data;
+    }
+
+    // Si no se encuentra, NO crear página automáticamente
+    if (!error) {
+      console.warn(`⚠️ [fetchCmsPage] Página no encontrada: ${identifier} - NO se creará automáticamente`);
+      return null;
+    }
+
+    // Si hay error de Supabase, logearlo
     if (error) {
-      console.error('Supabase error:', error);
-      // Devolver página por defecto en caso de error
-      return buildDefaultPage();
+      console.error('❌ [fetchCmsPage] Error de Supabase:', error);
+      return null;
     }
 
-    return data;
+    return null;
   } catch (error) {
-    console.error('Error in fetchCmsPage:', error);
-    // Devolver página por defecto en caso de error
-    return buildDefaultPage();
+    console.error('❌ [fetchCmsPage] Error general:', error);
+    return null;
   }
 };
 

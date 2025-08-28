@@ -351,9 +351,23 @@ const WebStudio = ({ setSidebarCollapsed }) => {
       try {
         // Usar el ID de la página para cargar desde la base de datos
         const data = await fetchCmsPage(selectedPage.id);
-        setWidgets(data.widgets || defaultWidgets);
+        
+        if (data) {
+          // Página encontrada en la base de datos
+          console.log(`✅ [WebStudio] Página cargada desde BD: ${data.slug} (ID: ${data.id})`);
+          setWidgets(data.widgets || defaultWidgets);
+        } else {
+          // Página no encontrada, usar localStorage como fallback
+          console.log(`⚠️ [WebStudio] Página no encontrada en BD, usando localStorage: ${selectedPage.id}`);
+          const saved = localStorage.getItem(`cms-page-${selectedPage.id}`);
+          if (saved) {
+            setWidgets(JSON.parse(saved));
+          } else {
+            setWidgets(defaultWidgets);
+          }
+        }
       } catch (e) {
-        console.error('Error cargando página:', e);
+        console.error('❌ [WebStudio] Error cargando página:', e);
         // Fallback a localStorage si existe
         const saved = localStorage.getItem(`cms-page-${selectedPage.id}`);
         if (saved) {
