@@ -27,6 +27,10 @@ const LoadingSpinner = () => (
 
 // Componente principal de la aplicación
 const App = () => {
+  // TEST: Log simple para verificar si App.jsx funciona
+  console.log('🚀 [App.jsx] Componente principal ejecutándose');
+  console.log('🚀 [App.jsx] Timestamp:', new Date().toISOString());
+  
   const { loading, error, domainConfig, isMainDomain } = useTenant();
   
   // Usar configuración dinámica del tenant si está disponible, sino usar configuración estática del dominio
