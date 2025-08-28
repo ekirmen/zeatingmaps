@@ -100,7 +100,17 @@ const EventsVenue = ({ groupByTags = true }) => {
       return (
         <div className="min-h-screen bg-gray-50 p-6">
           <div className="max-w-7xl mx-auto">
-            <h1 className="text-3xl font-bold text-gray-900 mb-8">Eventos Disponibles</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-8">Eventos Disponibles ({events.length})</h1>
+            
+            {/* Debug Info */}
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">Información de Debug:</h3>
+              <p className="text-sm text-blue-700">Total de eventos: {events.length}</p>
+              <p className="text-sm text-blue-700">Primer evento: {events[0]?.name || events[0]?.nombre || 'Sin nombre'}</p>
+              <p className="text-sm text-blue-700">Estado de carga: {loadingEvents ? 'Cargando...' : 'Completado'}</p>
+              <p className="text-sm text-blue-700">Error: {errorEvents ? errorEvents.message : 'Ninguno'}</p>
+            </div>
+            
             <EventListWidget events={events} groupByTags={groupByTags} />
           </div>
         </div>

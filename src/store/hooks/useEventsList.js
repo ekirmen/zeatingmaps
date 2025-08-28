@@ -56,7 +56,10 @@ export const useEventsList = () => {
       
       const { data, error: supabaseError } = await supabase
         .from('eventos')
-        .select('*') // Seleccionar todo para debuggear
+        .select(`
+          *,
+          recintos:recinto(id, nombre, direccion, ciudad, pais)
+        `)
         .eq('activo', true) // Only fetch active events
         .eq('oculto', false); // Only fetch events that are not hidden
 
@@ -75,7 +78,10 @@ export const useEventsList = () => {
         console.warn('🔍 [useEventsList] No se encontraron eventos con oculto=false. Reintentando con activo=true...');
         const { data: dataFallback, error: errFallback } = await supabase
           .from('eventos')
-          .select('*') // Consulta simple para fallback
+          .select(`
+            *,
+            recintos:recinto(id, nombre, direccion, ciudad, pais)
+          `)
           .eq('activo', true);
         
         console.log('🔍 [useEventsList] Fallback query resultado:', { dataFallback, error: errFallback });
@@ -89,7 +95,11 @@ export const useEventsList = () => {
       // Map raw Supabase data to the format expected by EventListWidget
       const formattedEvents = rows.map(event => ({
         ...normalizeEventData(event),
-        venue: event.recintos ? event.recintos.nombre : null // Get venue name from joined table
+        venue: event.recintos ? event.recintos.nombre : null, // Get venue name from joined table
+        venueInfo: event.recintos || null, // Include full venue info
+        estadoVenta: event.estado_venta || 'disponible', // Include sale status
+        descripcion: event.descripcion || '',
+        tags: event.tags || []
       }));
 
       console.log('🔍 [useEventsList] Eventos formateados:', formattedEvents);
@@ -111,6 +121,11 @@ export const useEventsList = () => {
     fetchAllEvents();
   }, [fetchAllEvents]);
 
-  console.log('🔍 [useEventsList] Hook retornando:', { events: events.length, loading, error });
+  console.log('🔍 [useEventsList] Hook retornando:', { 
+    events: events.length, 
+    loading, 
+    error,
+    sampleEvent: events.length > 0 ? events[0] : null
+  });
   return { events, loading, error };
 };

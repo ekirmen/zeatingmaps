@@ -370,12 +370,22 @@ const Cart = () => {
                         <Badge count={itemCount} size="small" />
                     )}
                 </div>
-                {cartExpiration && (
-                    <div className="flex items-center space-x-2 text-red-500 font-mono text-sm">
-                        <ClockCircleOutlined />
-                        <span>Expira en: {Math.max(0, Math.floor((cartExpiration - Date.now()) / 60000))}:{Math.max(0, Math.floor(((cartExpiration - Date.now()) % 60000) / 1000)).toString().padStart(2, '0')}</span>
-                    </div>
-                )}
+                <div className="flex items-center space-x-2">
+                    {cartExpiration && (
+                        <div className="flex items-center space-x-2 text-red-500 font-mono text-sm">
+                            <ClockCircleOutlined />
+                            <span>Expira en: {Math.max(0, Math.floor((cartExpiration - Date.now()) / 60000))}:{Math.max(0, Math.floor(((cartExpiration - Date.now()) % 60000) / 1000)).toString().padStart(2, '0')}</span>
+                        </div>
+                    )}
+                    <Button 
+                        type="default" 
+                        size="small"
+                        onClick={() => navigate('/store')}
+                        className="ml-4"
+                    >
+                        Ver Eventos
+                    </Button>
+                </div>
             </div>
 
             {/* Enhanced Payment Search */}
@@ -413,6 +423,14 @@ const Cart = () => {
                         <ShoppingCartOutlined className="text-4xl mb-2" />
                         <p>No hay items en el carrito</p>
                         <p className="text-sm mt-2">Busca un localizador o añade asientos</p>
+                        <Button 
+                            type="primary" 
+                            size="large"
+                            onClick={() => navigate('/store')}
+                            className="mt-4"
+                        >
+                            Explorar Eventos
+                        </Button>
                     </div>
                 ) : (
                     <>

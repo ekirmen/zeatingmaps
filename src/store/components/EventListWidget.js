@@ -58,7 +58,7 @@ function EventListWidget({ events }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map((event) => {
           const images = getEventImages(event);
-          let displayImageUrl = `https://placehold.co/400x300/E0F2F7/000?text=${event.nombre ? event.nombre.charAt(0) : 'E'}`;
+          let displayImageUrl = `https://placehold.co/400x300/E0F2F7/000?text=${(event.name || event.nombre) ? (event.name || event.nombre).charAt(0) : 'E'}`;
           
           if (images) {
             displayImageUrl = images.obraImagen || images.portada || images.banner || displayImageUrl;
@@ -74,11 +74,11 @@ function EventListWidget({ events }) {
               <div className="relative h-48 overflow-hidden">
                 <img
                   src={displayImageUrl}
-                  alt={event.nombre || 'Evento'}
+                  alt={event.name || event.nombre || 'Evento'}
                   className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                   onError={(e) => {
                     e.target.onerror = null;
-                    e.target.src = `https://placehold.co/400x300/E0F2F7/000?text=${event.nombre || 'Evento'}`;
+                    e.target.src = `https://placehold.co/400x300/E0F2F7/000?text=${event.name || event.nombre || 'Evento'}`;
                   }}
                 />
                 {/* Event Status Badge */}
@@ -100,7 +100,7 @@ function EventListWidget({ events }) {
               {/* Event Content */}
               <div className="p-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                  {event.nombre}
+                  {event.name || event.nombre}
                 </h3>
                 
                 {/* Event Date */}
@@ -108,7 +108,7 @@ function EventListWidget({ events }) {
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  {formatEventDate(event.fecha_evento)}
+                  {formatEventDate(event.date || event.fecha_evento)}
                 </div>
 
                 {/* Venue Information */}
