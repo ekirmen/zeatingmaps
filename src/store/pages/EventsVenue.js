@@ -8,9 +8,11 @@ import FunctionInfoWidget from '../components/FunctionInfoWidget'; // New functi
 import FeaturedEventsWidget from '../components/FeaturedEventsWidget'; // New featured events widget
 import { getCmsPage } from '../services/apistore'; // Service to fetch CMS page data
 import { useEventsList } from '../hooks/useEventsList'; // <-- Corrected import path for useEventsList
+console.log('🔍 [EventsVenue] Hook useEventsList importado:', typeof useEventsList);
 
 const EventsVenue = ({ groupByTags = true }) => {
   console.log('🚀 [EventsVenue] Componente iniciando...');
+  console.log('🚀 [EventsVenue] Props recibidas:', { groupByTags });
   
   const [widgets, setWidgets] = useState(null);
   const [loadingCms, setLoadingCms] = useState(true);
@@ -18,6 +20,7 @@ const EventsVenue = ({ groupByTags = true }) => {
 
   console.log('🚀 [EventsVenue] Componente montado');
   console.log('🚀 [EventsVenue] Hooks useState ejecutados correctamente');
+  console.log('🚀 [EventsVenue] Estado inicial:', { widgets, loadingCms, errorCms });
 
   // Use the new hook to fetch the list of events
   console.log('🔍 [EventsVenue] ANTES de llamar useEventsList...');
@@ -221,6 +224,9 @@ const EventsVenue = ({ groupByTags = true }) => {
       ))
     : null; // If no widgets or content, return null
 
+  console.log('🚀 [EventsVenue] Iniciando render del JSX...');
+  console.log('🚀 [EventsVenue] Variables para render:', { events, loadingEvents, errorEvents, widgets });
+  
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
@@ -344,6 +350,8 @@ const EventsVenue = ({ groupByTags = true }) => {
       </div>
     </div>
   );
+  
+  console.log('🚀 [EventsVenue] Componente completado, retornando JSX');
 };
 
 export default EventsVenue;
