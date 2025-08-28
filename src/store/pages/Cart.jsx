@@ -13,8 +13,9 @@ import {
     ClockCircleOutlined
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
-import { useAuth } from '../contexts/AuthContext';
-import { FacebookPixel, getFacebookPixelByEvent, FACEBOOK_EVENTS, shouldTrackOnPage } from '../components/FacebookPixel';
+import { useAuth } from '../../contexts/AuthContext';
+import FacebookPixel from '../components/FacebookPixel';
+import { getFacebookPixelByEvent, FACEBOOK_EVENTS, shouldTrackOnPage } from '../services/facebookPixelService';
 
 import { AuthCheck } from '../components/AuthCheck';
 import EnhancedPaymentSearch from '../components/EnhancedPaymentSearch';
