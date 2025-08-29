@@ -1,5 +1,5 @@
 import React, { useRef, useCallback } from 'react';
-import { Stage, Layer, Circle, Rect, Text, Line } from 'react-konva';
+import { Stage, Layer, Circle, Rect, Text, Line, Image } from 'react-konva';
 import { useSeatLockStore } from './seatLockStore';
 import { useSeatColors } from '../hooks/useSeatColors';
 import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
@@ -33,6 +33,17 @@ const SeatingMapUnified = ({
   // Usar hook de sincronización para obtener asientos con estado real
   const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(mapa, funcionId);
 
+  const useImageLoader = (url) => {
+    const [img, setImg] = React.useState(null);
+    React.useEffect(() => {
+      if (!url) return;
+      const image = new window.Image();
+      image.src = url;
+      image.onload = () => setImg(image);
+    }, [url]);
+    return [img];
+  };
+
   const handleSeatClick = useCallback(
     (seat) => {
       console.log('🪑 [SEATING_MAP] Asiento clickeado:', {
@@ -59,7 +70,7 @@ const SeatingMapUnified = ({
       // Llamar a la función de toggle del asiento
       if (onSeatToggle) {
         console.log('✅ [SEATING_MAP] Llamando a onSeatToggle con asiento:', seat);
-        onSeatToggle(seat);
+        onSeatToggle({ ...seat, funcionId });
       } else {
         console.warn('⚠️ [SEATING_MAP] onSeatToggle no está definido');
       }
@@ -213,6 +224,27 @@ if (Array.isArray(mapa?.contenido)) {
   // Create a set of found seat IDs for quick lookup
   const foundSeatIds = new Set(foundSeats.map(seat => seat._id));
 
+  // Background images
+  const backgroundElements = Array.isArray(mapa?.contenido)
+    ? mapa.contenido.filter(el => el.type === 'background' && el.showInWeb !== false)
+    : mapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
+
+  const BackgroundImage = ({ config }) => {
+    const [img] = useImageLoader(config.imageUrl);
+    if (!img) return null;
+    return (
+      <Image
+        image={img}
+        x={config.position?.x || config.posicion?.x || 0}
+        y={config.position?.y || config.posicion?.y || 0}
+        scaleX={config.scale || 1}
+        scaleY={config.scale || 1}
+        opacity={config.opacity ?? 1}
+        listening={false}
+      />
+    );
+  };
+
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <SeatStatusLegend />
@@ -225,34 +257,66 @@ if (Array.isArray(mapa?.contenido)) {
         ref={stageRef}
       >
         <Layer>
+          {/* Background images */}
+          {backgroundElements.map(bg => (
+            <BackgroundImage key={bg._id || bg.id} config={bg} />
+          ))}
+
           {/* Renderizar mesas primero (para que estén detrás de las sillas) */}
           {validatedMesas.map((mesa) => {
             if (mesa.shape === 'circle') {
+              const centerX = mesa.x || mesa.posicion?.x || 0;
+              const centerY = mesa.y || mesa.posicion?.y || 0;
+              const radius = mesa.radius || (mesa.width || 60) / 2;
               return (
-                <Circle
-                  key={`mesa_${mesa._id}`}
-                  x={mesa.x || mesa.posicion?.x || 0}
-                  y={mesa.y || mesa.posicion?.y || 0}
-                  radius={mesa.radius || (mesa.width || 60) / 2}
-                  fill="#f0f0f0"
-                  stroke="#666"
-                  strokeWidth={2}
-                  opacity={0.8}
-                />
+                <React.Fragment key={`mesa_${mesa._id}`}>
+                  <Circle
+                    x={centerX}
+                    y={centerY}
+                    radius={radius}
+                    fill="#f0f0f0"
+                    stroke="#666"
+                    strokeWidth={2}
+                    opacity={0.8}
+                  />
+                  <Text
+                    x={centerX - radius}
+                    y={centerY - 7}
+                    width={radius * 2}
+                    align="center"
+                    text={mesa.nombre || ''}
+                    fontSize={14}
+                    fill="#000"
+                  />
+                </React.Fragment>
               );
             } else if (mesa.shape === 'rect') {
+              const x = mesa.x || mesa.posicion?.x || 0;
+              const y = mesa.y || mesa.posicion?.y || 0;
+              const width = mesa.width || 120;
+              const height = mesa.height || 80;
               return (
-                <Rect
-                  key={`mesa_${mesa._id}`}
-                  x={mesa.x || mesa.posicion?.x || 0}
-                  y={mesa.y || mesa.posicion?.y || 0}
-                  width={mesa.width || 120}
-                  height={mesa.height || 80}
-                  fill="#f0f0f0"
-                  stroke="#666"
-                  strokeWidth={2}
-                  opacity={0.8}
-                />
+                <React.Fragment key={`mesa_${mesa._id}`}>
+                  <Rect
+                    x={x}
+                    y={y}
+                    width={width}
+                    height={height}
+                    fill="#f0f0f0"
+                    stroke="#666"
+                    strokeWidth={2}
+                    opacity={0.8}
+                  />
+                  <Text
+                    x={x}
+                    y={y + height / 2 - 7}
+                    width={width}
+                    align="center"
+                    text={mesa.nombre || ''}
+                    fontSize={14}
+                    fill="#000"
+                  />
+                </React.Fragment>
               );
             }
             return null;
@@ -260,8 +324,9 @@ if (Array.isArray(mapa?.contenido)) {
 
           {/* Renderizar asientos */}
           {validatedSeats.map((seat) => {
-            const seatColor = getSeatColor(seat);
-            const borderColor = getBorderColor(seat);
+            const isSelected = selectedSeats.includes(seat._id);
+            const seatColor = getSeatColor(seat, null, isSelected, selectedSeats);
+            const borderColor = getBorderColor(isSelected, null);
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
             
             return (
