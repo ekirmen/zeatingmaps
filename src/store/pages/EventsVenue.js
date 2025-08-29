@@ -13,11 +13,11 @@ const EventsVenue = ({ groupByTags = true }) => {
   useEffect(() => {
     const load = async () => {
       try {
-        const data = await getCmsPage('home');
+        const data = await getCmsPage('store');
         setWidgets(data.widgets);
-        localStorage.setItem('cms-page-home', JSON.stringify(data.widgets));
+        localStorage.setItem('cms-page-store', JSON.stringify(data.widgets));
       } catch (e) {
-        const saved = localStorage.getItem('cms-page-home');
+        const saved = localStorage.getItem('cms-page-store');
         if (saved) {
           try {
             setWidgets(JSON.parse(saved));
