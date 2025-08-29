@@ -12,8 +12,14 @@ import { getFacebookPixelByEvent } from '../services/facebookPixelService';
 
 const Pay = () => {
   const navigate = useNavigate();
-  const { cart: cartItems, clearCart } = useCartStore();
-  const total = cartItems.reduce((sum, item) => sum + (item.precio || 0), 0);
+  // useCartStore almacena los asientos seleccionados en la propiedad `items`
+  // En algunos contextos `cart` no existe y producía `undefined`, generando
+  // errores al intentar usar `reduce`. Se usa `items` y se asegura un arreglo.
+  const { items: cartItems, clearCart } = useCartStore();
+  const total = (cartItems || []).reduce(
+    (sum, item) => sum + (item.precio || 0),
+    0
+  );
   const [selectedGateway, setSelectedGateway] = useState(null);
   const [availableGateways, setAvailableGateways] = useState([]);
   const [loadingGateways, setLoadingGateways] = useState(true);
