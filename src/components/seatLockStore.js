@@ -273,10 +273,10 @@ export const useSeatLockStore = create((set, get) => ({
       console.warn('[SEAT_LOCK] funcion_id inválido');
       return false;
     }
-    // Normalizar como string (soporta numérico o UUID)
-    const funcionIdVal = String(funcionIdRaw).trim();
-    if (!funcionIdVal) {
-      console.warn('[SEAT_LOCK] funcion_id vacío tras normalización');
+    // Normalizar como número (schema: integer)
+    const funcionIdVal = parseInt(funcionIdRaw, 10);
+    if (!Number.isFinite(funcionIdVal) || funcionIdVal <= 0) {
+      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionIdRaw);
       return false;
     }
 
@@ -369,9 +369,9 @@ export const useSeatLockStore = create((set, get) => ({
       console.warn('[SEAT_LOCK] funcion_id inválido');
       return false;
     }
-    const funcionIdVal = String(funcionIdRaw).trim();
-    if (!funcionIdVal) {
-      console.warn('[SEAT_LOCK] funcion_id vacío tras normalización');
+    const funcionIdVal = parseInt(funcionIdRaw, 10);
+    if (!Number.isFinite(funcionIdVal) || funcionIdVal <= 0) {
+      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionIdRaw);
       return false;
     }
 
@@ -545,9 +545,9 @@ export const useSeatLockStore = create((set, get) => ({
       console.warn('[SEAT_LOCK] funcion_id inválido');
       return false;
     }
-    const funcionIdVal = String(funcionIdRaw).trim();
-    if (!funcionIdVal) {
-      console.warn('[SEAT_LOCK] funcion_id vacío tras normalización');
+    const funcionIdVal = parseInt(funcionIdRaw, 10);
+    if (!Number.isFinite(funcionIdVal) || funcionIdVal <= 0) {
+      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionIdRaw);
       return false;
     }
 
