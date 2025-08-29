@@ -94,8 +94,10 @@ const EventosPage = ({ forceShowMap = false }) => {
 
         // Si hay una función en los parámetros de URL, seleccionarla
         const funcionParam = searchParams.get('funcion');
-                 if (funcionParam && funcionesData) {
-           const funcion = funcionesData.find(f => f.id === funcionParam || f._id === funcionParam);
+        if (funcionParam && funcionesData) {
+          const funcion = funcionesData.find(
+            f => String(f.id) === funcionParam || String(f._id) === funcionParam
+          );
           if (funcion) {
             const fid = funcion.id || funcion._id;
             setSelectedFunctionId(fid);
