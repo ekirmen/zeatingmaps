@@ -183,7 +183,8 @@ const Cart = () => {
             return;
         }
         
-        navigate('/checkout');
+        // Redirect to the payment page within the store
+        navigate('/store/payment');
     };
 
     // Facebook Pixel tracking
