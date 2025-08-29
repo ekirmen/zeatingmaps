@@ -1,14 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, InputNumber, Modal, Input, List, Tag, Space, Typography, Divider, Badge, Alert, message } from 'antd';
-import { 
-    ShoppingCartOutlined, 
-    SaveOutlined, 
-    DeleteOutlined, 
+import {
+    ShoppingCartOutlined,
+    SaveOutlined,
+    DeleteOutlined,
     DownloadOutlined,
-    SearchOutlined,
-    LockOutlined,
-    FileTextOutlined,
     UserOutlined,
     ClockCircleOutlined
 } from '@ant-design/icons';
@@ -18,7 +15,6 @@ import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent, FACEBOOK_EVENTS, shouldTrackOnPage } from '../services/facebookPixelService';
 
 import AuthCheck from '../components/AuthCheck';
-import EnhancedPaymentSearch from '../components/EnhancedPaymentSearch';
 
 const { Title, Text } = Typography;
 
@@ -249,9 +245,8 @@ const Cart = () => {
     } = useCartStore();
 
     // Smart cart state
-    const [currentLocator, setCurrentLocator] = useState(null);
-    const [foundPayment, setFoundPayment] = useState(null);
-    const [locatorSeats, setLocatorSeats] = useState([]);
+    const [currentLocator] = useState(null);
+    const [locatorSeats] = useState([]);
     const [savedCartsVisible, setSavedCartsVisible] = useState(false);
 
     const itemCount = (items && Array.isArray(items) ? items.length : 0) + (products && Array.isArray(products) ? products.length : 0);
@@ -265,50 +260,6 @@ const Cart = () => {
     const subtotal = (items && Array.isArray(items) ? items.reduce((sum, item) => sum + (item.precio || 0), 0) : 0) +
                     (products && Array.isArray(products) ? products.reduce((sum, product) => sum + (product.price || 0), 0) : 0);
 
-    // Handle locator found
-    const handleLocatorFound = useCallback((payment, locator) => {
-        setCurrentLocator(locator);
-        setFoundPayment(payment);
-        
-        // Parse seats from payment
-        let seats = [];
-        if (Array.isArray(payment.seats)) {
-            seats = payment.seats;
-        } else if (typeof payment.seats === 'string') {
-            try {
-                seats = JSON.parse(payment.seats);
-            } catch {
-                seats = [];
-            }
-        }
-        
-        // Process seats for display
-        const processedSeats = seats.map(seat => ({
-            ...seat,
-            id: seat.id || seat._id,
-            nombre: seat.name || seat.nombre,
-            precio: seat.price || seat.precio,
-            zona: seat.zona?.nombre || seat.zona,
-            paymentId: payment.id,
-            locator: locator,
-            isPaid: payment.status === 'pagado'
-        }));
-        
-        setLocatorSeats(processedSeats);
-        
-        // Clear current cart items if they exist
-        if (items && Array.isArray(items) && items.length > 0) {
-            clearCart();
-            message.info('Carrito anterior limpiado para cargar localizador');
-        }
-    }, [clearCart, items.length]);
-
-    // Handle clear locator
-    const handleClearLocator = useCallback(() => {
-        setCurrentLocator(null);
-        setFoundPayment(null);
-        setLocatorSeats([]);
-    }, []);
 
     // Get paid seats count
     const paidSeats = (locatorSeats && Array.isArray(locatorSeats) ? locatorSeats.filter(seat => seat.isPaid) : []);
@@ -388,12 +339,6 @@ const Cart = () => {
                 </div>
             </div>
 
-            {/* Enhanced Payment Search */}
-            <EnhancedPaymentSearch
-                onLocatorFound={handleLocatorFound}
-                onClearLocator={handleClearLocator}
-                currentLocator={currentLocator}
-            />
 
             {/* Quick Actions */}
             {itemCount > 0 && (
@@ -422,7 +367,7 @@ const Cart = () => {
                     <div className="text-center text-gray-500 py-8">
                         <ShoppingCartOutlined className="text-4xl mb-2" />
                         <p>No hay items en el carrito</p>
-                        <p className="text-sm mt-2">Busca un localizador o añade asientos</p>
+                        <p className="text-sm mt-2">Añade asientos al carrito</p>
                         <Button 
                             type="primary" 
                             size="large"
