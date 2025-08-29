@@ -49,36 +49,37 @@ const StoreApp = () => {
           {showHeader && <Header />}
           <div className="flex-grow">
             <Routes>
-              <Route path="/store" element={<EventsVenue />} />
-              <Route path="/store/tag/:tagSlug?" element={<EventsVenue groupByTags />} />
-              <Route path="/store/eventos/:eventSlug" element={<EventosPage />} />
-              <Route path="/store/event/:eventId" element={<EventInfo />} />
+                {/* Render CMS home page by default */}
+                <Route index element={<CmsPage slug="store" />} />
+              <Route path="tag/:tagSlug?" element={<EventsVenue groupByTags />} />
+              <Route path="eventos/:eventSlug" element={<EventosPage />} />
+              <Route path="event/:eventId" element={<EventInfo />} />
 
-              <Route path="/store/event/:eventId/full" element={<Event />} />
-              <Route path="/store/buy-event/:id" element={<BuyEvent />} />
-              <Route path="/store/select-seats/:salaId" element={<SelectSeats />} />
-              <Route path="/store/select-seats/:salaId/:funcionId" element={<SelectSeats />} />
-              <Route path="/store/seat-selection/:funcionId" element={<SeatSelectionPage />} />
-              <Route path="/store/cart" element={<CartPage />} />
-              <Route path="/store/payment" element={
+              <Route path="event/:eventId/full" element={<Event />} />
+              <Route path="buy-event/:id" element={<BuyEvent />} />
+              <Route path="select-seats/:salaId" element={<SelectSeats />} />
+              <Route path="select-seats/:salaId/:funcionId" element={<SelectSeats />} />
+              <Route path="seat-selection/:funcionId" element={<SeatSelectionPage />} />
+              <Route path="cart" element={<CartPage />} />
+              <Route path="payment" element={
                 <ProtectedRoute redirectTo="/store/login">
                   <Pay />
                 </ProtectedRoute>
               } />
-              <Route path="/store/login" element={<StoreLogin />} />
-              <Route path="/store/register" element={<Register />} />
-              <Route path="/store/forgot-password" element={<ForgotPassword />} />
-              <Route path="/store/reset-password" element={<ResetPassword />} />
-              <Route path="/store/search-map" element={<EventSearchMap />} />
-              <Route path="/store/faq" element={<FaqPage />} />
-              <Route path="/store/perfil" element={<Profile userData={user} onUpdateProfile={updateProfile} />} />
-              <Route path="/store/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/store/cookies-policy" element={<CookiesPolicy />} />
-              <Route path="/store/legal-terms" element={<LegalTerms />} />
-              <Route path="/store/:pageSlug" element={<CmsPage />} />
-              <Route path="/payment-success/:locator?" element={<PaymentSuccess />} />
-              <Route path="/thank-you" element={<ThankYouPage />} />
-              <Route path="/404" element={<NotFoundPage />} />
+              <Route path="login" element={<StoreLogin />} />
+              <Route path="register" element={<Register />} />
+              <Route path="forgot-password" element={<ForgotPassword />} />
+              <Route path="reset-password" element={<ResetPassword />} />
+              <Route path="search-map" element={<EventSearchMap />} />
+              <Route path="faq" element={<FaqPage />} />
+              <Route path="perfil" element={<Profile userData={user} onUpdateProfile={updateProfile} />} />
+              <Route path="privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="cookies-policy" element={<CookiesPolicy />} />
+              <Route path="legal-terms" element={<LegalTerms />} />
+              <Route path=":pageSlug" element={<CmsPage />} />
+              <Route path="payment-success/:locator?" element={<PaymentSuccess />} />
+              <Route path="thank-you" element={<ThankYouPage />} />
+              <Route path="404" element={<NotFoundPage />} />
               <Route path="*" element={<Navigate to="/store" replace />} />
             </Routes>
           </div>

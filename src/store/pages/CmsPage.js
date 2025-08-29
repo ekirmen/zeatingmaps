@@ -3,8 +3,9 @@ import { useParams } from 'react-router-dom';
 import { getCmsPage } from '../services/apistore';
 import NotFoundPage from '../../components/NotFoundPage';
 
-const CmsPage = () => {
-  const { pageSlug } = useParams();
+const CmsPage = ({ slug }) => {
+  const params = useParams();
+  const pageSlug = slug || params.pageSlug; // fallback to route param if no prop
   const [pageData, setPageData] = useState(null);
   const [loading, setLoading] = useState(true);
 
