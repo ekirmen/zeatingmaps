@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, InputNumber, Modal, Input, List, Tag, Space, Typography, Divider, Badge, Alert, message } from 'antd';
+import { Button, Card, InputNumber, Tag, Typography, Divider, message } from 'antd';
 import {
-    ShoppingCartOutlined,
-    SaveOutlined,
     DeleteOutlined,
     DownloadOutlined,
     UserOutlined,
-    ClockCircleOutlined
+    ShoppingCartOutlined
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { useAuth } from '../../contexts/AuthContext';
@@ -131,100 +129,6 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
     );
 };
 
-// Saved Carts Modal
-const SavedCartsModal = ({ visible, onClose, savedCarts, onLoadCart, onDeleteCart, loading }) => {
-    const [cartName, setCartName] = useState('');
-    const [showSaveModal, setShowSaveModal] = useState(false);
-    const { saveCurrentCart } = useCartStore();
-
-    const handleSaveCart = async () => {
-        if (!cartName.trim()) {
-            return;
-        }
-        await saveCurrentCart(cartName);
-        setCartName('');
-        setShowSaveModal(false);
-    };
-
-    return (
-        <>
-            <Modal
-                title="Carritos Guardados"
-                open={visible}
-                onCancel={onClose}
-                footer={[
-                    <Button key="save" type="primary" onClick={() => setShowSaveModal(true)}>
-                        Guardar Carrito Actual
-                    </Button>,
-                    <Button key="close" onClick={onClose}>
-                        Cerrar
-                    </Button>
-                ]}
-                width={600}
-            >
-                {loading ? (
-                    <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-                        <Text className="mt-2">Cargando carritos...</Text>
-                    </div>
-                ) : savedCarts.length === 0 ? (
-                    <div className="text-center py-8">
-                        <Text type="secondary">No hay carritos guardados</Text>
-                    </div>
-                ) : (
-                    <List
-                        dataSource={savedCarts}
-                        renderItem={(cart) => (
-                            <List.Item
-                                actions={[
-                                    <Button 
-                                        key="load" 
-                                        type="primary" 
-                                        size="small"
-                                        onClick={() => onLoadCart(cart)}
-                                    >
-                                        Cargar
-                                    </Button>,
-                                    <Button 
-                                        key="delete" 
-                                        type="text" 
-                                        danger 
-                                        size="small"
-                                        onClick={() => onDeleteCart(cart.id)}
-                                    >
-                                        Eliminar
-                                    </Button>
-                                ]}
-                            >
-                                <List.Item.Meta
-                                    title={cart.name}
-                                    description={`${cart.seats?.length || 0} asientos, ${cart.products?.length || 0} productos`}
-                                />
-                            </List.Item>
-                        )}
-                    />
-                )}
-            </Modal>
-
-            <Modal
-                title="Guardar Carrito"
-                open={showSaveModal}
-                onCancel={() => setShowSaveModal(false)}
-                onOk={handleSaveCart}
-                okText="Guardar"
-                cancelText="Cancelar"
-            >
-                <Input
-                    placeholder="Nombre del carrito"
-                    value={cartName}
-                    onChange={(e) => setCartName(e.target.value)}
-                    onPressEnter={handleSaveCart}
-                />
-            </Modal>
-        </>
-    );
-};
-
 // Main Cart Component
 const Cart = () => {
     const navigate = useNavigate();
@@ -232,14 +136,7 @@ const Cart = () => {
     const {
         items,
         products,
-        cartExpiration,
-        timeLeft,
-        savedCarts,
-        savedCartsLoading,
         clearCart,
-        loadSavedCart,
-        deleteSavedCart,
-        saveCurrentCart,
         toggleSeat,
         removeProduct
     } = useCartStore();
@@ -247,7 +144,6 @@ const Cart = () => {
     // Smart cart state
     const [currentLocator] = useState(null);
     const [locatorSeats] = useState([]);
-    const [savedCartsVisible, setSavedCartsVisible] = useState(false);
 
     const itemCount = (items && Array.isArray(items) ? items.length : 0) + (products && Array.isArray(products) ? products.length : 0);
 
@@ -273,14 +169,14 @@ const Cart = () => {
         }
         
         // Validar que todos los asientos tengan IDs válidos
-        const invalidSeats = items?.filter(item => !item.id && !item._id) || [];
+        const invalidSeats = items?.filter(item => !(item.id || item._id || item.sillaId)) || [];
         if (invalidSeats.length > 0) {
             message.error('Algunos asientos no tienen IDs válidos. Por favor, recarga la página.');
             return;
         }
-        
+
         // Validar que no haya asientos duplicados
-        const seatIds = items?.map(item => item.id || item._id) || [];
+        const seatIds = items?.map(item => item.id || item._id || item.sillaId) || [];
         const uniqueSeatIds = [...new Set(seatIds)];
         if (seatIds.length !== uniqueSeatIds.length) {
             message.error('Hay asientos duplicados en el carrito. Por favor, verifica.');
@@ -312,47 +208,12 @@ const Cart = () => {
             {/* Facebook Pixel */}
             <FacebookPixel />
 
-            {/* Header */}
-            <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <div className="flex items-center space-x-2">
-                    <ShoppingCartOutlined className="text-xl text-blue-500" />
-                    <Title level={4} className="mb-0">Carrito de Compras</Title>
-                    {itemCount > 0 && (
-                        <Badge count={itemCount} size="small" />
-                    )}
-                </div>
-                <div className="flex items-center space-x-2">
-                    {cartExpiration && (
-                        <div className="flex items-center space-x-2 text-red-500 font-mono text-sm">
-                            <ClockCircleOutlined />
-                            <span>Expira en: {Math.max(0, Math.floor((cartExpiration - Date.now()) / 60000))}:{Math.max(0, Math.floor(((cartExpiration - Date.now()) % 60000) / 1000)).toString().padStart(2, '0')}</span>
-                        </div>
-                    )}
-                    <Button 
-                        type="default" 
-                        size="small"
-                        onClick={() => navigate('/store')}
-                        className="ml-4"
-                    >
-                        Ver Eventos
-                    </Button>
-                </div>
-            </div>
-
-
             {/* Quick Actions */}
             {itemCount > 0 && (
                 <div className="mb-4 flex space-x-2">
-                    <Button 
-                        icon={<SaveOutlined />} 
+                    <Button
+                        icon={<DeleteOutlined />}
                         size="small"
-                        onClick={() => setSavedCartsVisible(true)}
-                    >
-                        Guardar
-                    </Button>
-                    <Button 
-                        icon={<DeleteOutlined />} 
-                        size="small" 
                         danger
                         onClick={clearCart}
                     >
@@ -601,15 +462,6 @@ const Cart = () => {
                 </div>
             )}
 
-            {/* Saved Carts Modal */}
-            <SavedCartsModal
-                visible={savedCartsVisible}
-                onClose={() => setSavedCartsVisible(false)}
-                savedCarts={savedCarts}
-                onLoadCart={loadSavedCart}
-                onDeleteCart={deleteSavedCart}
-                loading={savedCartsLoading}
-            />
         </div>
     );
 };
