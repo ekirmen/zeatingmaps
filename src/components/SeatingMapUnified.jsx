@@ -325,10 +325,19 @@ if (Array.isArray(mapa?.contenido)) {
           {/* Renderizar asientos */}
           {validatedSeats.map((seat) => {
             const isSelected = selectedSeats.includes(seat._id);
-            const seatColor = getSeatColor(seat, null, isSelected, selectedSeats);
+            const locked = isSeatLocked ? isSeatLocked(seat._id) : false;
+            const lockedByMe = isSeatLockedByMe ? isSeatLockedByMe(seat._id) : false;
+
+            let seatEstado = seat.estado;
+            if (locked) {
+              seatEstado = lockedByMe ? 'bloqueado_por_mi' : 'bloqueado_por_otro';
+            }
+
+            const seatData = { ...seat, estado: seatEstado };
+            const seatColor = getSeatColor(seatData, null, isSelected, selectedSeats);
             const borderColor = getBorderColor(isSelected, null);
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
-            
+
             return (
               <React.Fragment key={`seat_${seat._id}`}>
                 {/* Asiento */}
@@ -339,11 +348,11 @@ if (Array.isArray(mapa?.contenido)) {
                   fill={seatColor}
                   stroke={borderColor}
                   strokeWidth={2}
-                  onClick={() => handleSeatClick(seat)}
-                  onTap={() => handleSeatClick(seat)}
+                  onClick={() => handleSeatClick(seatData)}
+                  onTap={() => handleSeatClick(seatData)}
                   style={{ cursor: 'pointer' }}
                 />
-                
+
                 {/* Nombre del asiento centrado en el círculo */}
                 <Text
                   x={(seat.x || seat.posicion?.x || 0) - 10}
@@ -354,6 +363,9 @@ if (Array.isArray(mapa?.contenido)) {
                   fontFamily="Arial"
                   align="center"
                   width={20}
+                  onClick={() => handleSeatClick(seatData)}
+                  onTap={() => handleSeatClick(seatData)}
+                  style={{ cursor: 'pointer' }}
                 />
               </React.Fragment>
             );

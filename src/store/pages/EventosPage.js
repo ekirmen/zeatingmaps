@@ -50,7 +50,17 @@ const EventosPage = ({ forceShowMap = false }) => {
   const getItemCount = useCartStore((state) => state.getItemCount);
   const {
     subscribeToFunction,
-    unsubscribe
+    unsubscribe,
+    lockSeat,
+    unlockSeat,
+    lockTable,
+    unlockTable,
+    isSeatLocked,
+    isSeatLockedByMe,
+    isTableLocked,
+    isTableLockedByMe,
+    isAnySeatInTableLocked,
+    areAllSeatsInTableLockedByMe
   } = useSeatLockStore();
 
   // Suscribirse a función
@@ -569,22 +579,22 @@ const EventosPage = ({ forceShowMap = false }) => {
                         <SeatingMapUnified
                           mapa={mapa}
                           funcionId={selectedFunctionId}
+                          lockSeat={lockSeat}
+                          unlockSeat={unlockSeat}
+                          lockTable={lockTable}
+                          unlockTable={unlockTable}
+                          isSeatLocked={isSeatLocked}
+                          isSeatLockedByMe={isSeatLockedByMe}
+                          isTableLocked={isTableLocked}
+                          isTableLockedByMe={isTableLockedByMe}
+                          isAnySeatInTableLocked={isAnySeatInTableLocked}
+                          areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
                           onSeatToggle={handleSeatToggle}
                           onTableToggle={(table) => {
                             console.log('Mesa seleccionada:', table);
                           }}
-                          isSeatLocked={() => false}
-                          isSeatLockedByMe={() => false}
-                          lockSeat={() => Promise.resolve(true)}
-                          unlockSeat={() => Promise.resolve(true)}
-                          isTableLocked={() => false}
-                          isTableLockedByMe={() => false}
-                          lockTable={() => Promise.resolve(true)}
-                          unlockTable={() => Promise.resolve(true)}
-                          isAnySeatInTableLocked={() => false}
-                          areAllSeatsInTableLockedByMe={() => false}
                           foundSeats={[]}
-                          selectedSeats={cartItems.map(item => item.sillaId)}
+                          selectedSeats={cartItems.map(item => item.sillaId || item.id || item._id)}
                         />
                       </div>
                     ) : (
