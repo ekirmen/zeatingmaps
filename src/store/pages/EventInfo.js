@@ -61,9 +61,8 @@ const EventInfo = () => {
         setFunciones(Array.isArray(data) ? data : []);
         if (Array.isArray(data) && data.length === 1) {
           const fid = data[0].id || data[0]._id;
+          // Auto-select the only available function but stay on this page
           setSelectedFunctionId(fid);
-          const eventPath = (evento && evento.slug) ? evento.slug : eventId;
-          navigate(`/store/event/${eventPath}/map?funcion=${fid}`, { replace: true });
         }
       } catch (err) {
         console.error('Error fetching funciones:', err);
