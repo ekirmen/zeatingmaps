@@ -2,12 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getCmsPage } from '../services/apistore';
 import NotFoundPage from '../../components/NotFoundPage';
+import EventListWidget from '../components/EventListWidget';
+import FaqWidget from '../components/FaqWidget';
+import FeaturedEventsWidget from '../components/FeaturedEventsWidget';
+import VenueInfoWidget from '../components/VenueInfoWidget';
+import FunctionInfoWidget from '../components/FunctionInfoWidget';
+import { useEventsList } from '../hooks/useEventsList';
 
 const CmsPage = ({ slug }) => {
   const params = useParams();
   const pageSlug = slug || params.pageSlug;
   const [pageData, setPageData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { events } = useEventsList();
 
   useEffect(() => {
     async function fetchPage() {
@@ -32,6 +39,8 @@ const CmsPage = ({ slug }) => {
   }
 
   const renderWidget = (widget, index) => {
+    const config = widget.config || {};
+
     switch (widget.type) {
       case 'page_header':
         return (
@@ -46,12 +55,20 @@ const CmsPage = ({ slug }) => {
         );
       case 'html':
         return (
-          <div
-            key={index}
-            dangerouslySetInnerHTML={{ __html: widget.html }}
-          />
+          <div key={index} dangerouslySetInnerHTML={{ __html: widget.html }} />
         );
+      case 'Listado de eventos':
+        return <EventListWidget key={index} events={events} {...config} />;
+      case 'Eventos Destacados':
+        return <FeaturedEventsWidget key={index} {...config} />;
+      case 'Preguntas frecuentes':
+        return <FaqWidget key={index} {...config} />;
+      case 'Información de Recinto':
+        return <VenueInfoWidget key={index} venueId={config.venueId} {...config} />;
+      case 'Información de Función':
+        return <FunctionInfoWidget key={index} functionId={config.functionId} {...config} />;
       default:
+        console.warn(`[CmsPage] Tipo de widget desconocido: ${widget.type}`);
         return null;
     }
   };
