@@ -120,6 +120,18 @@ export const getSupabaseAdminClient = () => {
   }
 }
 
+// Determina si debemos inicializar el cliente admin en el navegador
+const shouldInitAdminClient = () => {
+  if (typeof window === 'undefined') return true;
+  const path = window.location.pathname || '';
+  return (
+    path.startsWith('/dashboard') ||
+    path.startsWith('/backoffice') ||
+    path.startsWith('/admin') ||
+    path.startsWith('/saas')
+  );
+};
+
 // Inicializar clientes solo si las variables de entorno están disponibles
 if (supabaseUrl && supabaseAnonKey) {
   try {
@@ -127,7 +139,7 @@ if (supabaseUrl && supabaseAnonKey) {
     if (!supabaseClient) {
       supabaseClient = getSupabaseClient();
     }
-    if (!supabaseAdminClient && serviceRoleKey) {
+    if (!supabaseAdminClient && serviceRoleKey && shouldInitAdminClient()) {
       supabaseAdminClient = getSupabaseAdminClient();
     }
   } catch (error) {

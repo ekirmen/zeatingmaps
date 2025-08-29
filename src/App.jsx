@@ -9,6 +9,7 @@ import { getCurrentDomainConfig, shouldShowSaaS, shouldShowBackoffice, shouldSho
 import { ThemeProvider } from './contexts/ThemeContext';
 import VercelAnalytics from './components/VercelAnalytics';
 import VercelSpeedInsights from './components/VercelSpeedInsights';
+import LegalTerms from './store/pages/LegalTerms';
 import './index.css';
 
 // Componente de carga
@@ -89,6 +90,8 @@ const App = () => {
           )}
 
           {/* Ruta principal - Redirigir según configuración */}
+          <Route path="/terminos" element={<LegalTerms />} />
+          {/* Redirección por defecto */}
           <Route path="/" element={
             <Navigate
               to={
