@@ -113,20 +113,28 @@ export const getFunciones = async (eventId) => {
 
     console.log('[getFunciones DEBUG] Evento encontrado, tenant_id:', eventoData.tenant_id);
 
-    // Construir query base - SIN JOIN para evitar conflictos de relaciones
-    let query = supabase
+    // Construir query base usando columnas nuevas (evento_id/sala_id)
+    let { data, error } = await supabase
       .from('funciones')
       .select(`
         id,
         fecha_celebracion,
-        evento,
-        sala
+        evento_id,
+        sala_id
       `)
-      .eq('evento', eventId)
+      .eq('evento_id', eventId)
       .eq('tenant_id', eventoData.tenant_id)
       .order('fecha_celebracion', { ascending: true });
 
-    const { data, error } = await query;
+    // Si la columna evento_id no existe (esquema antiguo), reintentar con nombres viejos
+    if (error && /evento_id/.test(error.message)) {
+      ({ data, error } = await supabase
+        .from('funciones')
+        .select(`id, fecha_celebracion, evento, sala`)
+        .eq('evento', eventId)
+        .eq('tenant_id', eventoData.tenant_id)
+        .order('fecha_celebracion', { ascending: true }));
+    }
 
     if (error) {
       console.error('[getFunciones DEBUG] Error fetching funciones:', error.message);
@@ -136,7 +144,7 @@ export const getFunciones = async (eventId) => {
     console.log('[getFunciones DEBUG] Funciones encontradas:', data?.length || 0, 'funciones');
 
     // Obtener información de salas por separado para evitar conflictos de relaciones
-    const salasIds = [...new Set((data || []).map(f => f.sala).filter(Boolean))];
+    const salasIds = [...new Set((data || []).map(f => f.sala_id || f.sala).filter(Boolean))];
     let salasData = {};
     
     if (salasIds.length > 0) {
@@ -154,19 +162,22 @@ export const getFunciones = async (eventId) => {
     }
 
     // Transformar datos al formato esperado por el frontend
-    const transformedData = (data || []).map(funcion => ({
-      id: funcion.id,
-      fecha_celebracion: funcion.fecha_celebracion,
-      evento: funcion.evento,
-      sala: funcion.sala,
-      sala_nombre: salasData[funcion.sala]?.nombre || 'Sala sin nombre',
-      // Crear un objeto plantilla básico si no existe
-      plantilla: {
-        id: null,
-        nombre: 'Plantilla Básica',
-        detalles: []
-      }
-    }));
+    const transformedData = (data || []).map(funcion => {
+      const salaId = funcion.sala_id ?? funcion.sala;
+      return {
+        id: funcion.id,
+        fecha_celebracion: funcion.fecha_celebracion,
+        evento: funcion.evento_id ?? funcion.evento,
+        sala: salaId,
+        sala_nombre: salasData[salaId]?.nombre || 'Sala sin nombre',
+        // Crear un objeto plantilla básico si no existe
+        plantilla: {
+          id: null,
+          nombre: 'Plantilla Básica',
+          detalles: []
+        }
+      };
+    });
 
     console.log('[getFunciones DEBUG] Datos transformados:', transformedData);
     return transformedData;
@@ -186,11 +197,11 @@ export const getFunciones = async (eventId) => {
 export const getFuncion = async (functionId) => {
   try {
     // Primero obtener la función para obtener su tenant_id
-    const { data: funcionData, error: funcionError } = await supabase
-      .from('funciones')
-      .select('tenant_id, evento')
-      .eq('id', functionId)
-      .single();
+      const { data: funcionData, error: funcionError } = await supabase
+        .from('funciones')
+        .select('tenant_id, evento_id')
+        .eq('id', functionId)
+        .single();
 
     if (funcionError && funcionError.code !== 'PGRST116') {
       console.error('Error fetching funcion tenant:', funcionError.message);
@@ -201,22 +212,41 @@ export const getFuncion = async (functionId) => {
       return null;
     }
 
-    // Ahora obtener la función completa filtrando por tenant_id
-    const { data, error } = await supabase
-      .from('funciones')
-      .select(`
-        id,
-        fecha_celebracion,
-        evento,
-        sala,
-        salas (
+      // Ahora obtener la función completa filtrando por tenant_id
+      let { data, error } = await supabase
+        .from('funciones')
+        .select(`
           id,
-          nombre
-        )
-      `)
-      .eq('id', functionId)
-      .eq('tenant_id', funcionData.tenant_id)
-      .single();
+          fecha_celebracion,
+          evento_id,
+          sala_id,
+          salas (
+            id,
+            nombre
+          )
+        `)
+        .eq('id', functionId)
+        .eq('tenant_id', funcionData.tenant_id)
+        .single();
+
+      // Fallback para esquemas antiguos
+      if (error && /evento_id/.test(error.message)) {
+        ({ data, error } = await supabase
+          .from('funciones')
+          .select(`
+            id,
+            fecha_celebracion,
+            evento,
+            sala,
+            salas (
+              id,
+              nombre
+            )
+          `)
+          .eq('id', functionId)
+          .eq('tenant_id', funcionData.tenant_id)
+          .single());
+      }
 
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching single function:', error.message);
@@ -226,21 +256,22 @@ export const getFuncion = async (functionId) => {
     if (!data) return null;
 
     // Transformar datos al formato esperado por el frontend
-    const transformedData = {
-      id: data.id,
-      fecha_celebracion: data.fecha_celebracion,
-      evento: data.evento,
-      sala: data.sala,
-      sala_nombre: data.salas?.nombre || 'Sala sin nombre',
-      // Crear un objeto plantilla básico si no existe
-      plantilla: {
-        id: null,
-        nombre: 'Plantilla Básica',
-        detalles: []
-      }
-    };
+      const salaId = data.sala_id ?? data.sala;
+      const transformedData = {
+        id: data.id,
+        fecha_celebracion: data.fecha_celebracion,
+        evento: data.evento_id ?? data.evento,
+        sala: salaId,
+        sala_nombre: data.salas?.nombre || 'Sala sin nombre',
+        // Crear un objeto plantilla básico si no existe
+        plantilla: {
+          id: null,
+          nombre: 'Plantilla Básica',
+          detalles: []
+        }
+      };
 
-    return transformedData;
+      return transformedData;
   } catch (error) {
     console.error('Unexpected error in getFuncion:', error);
     throw error;
