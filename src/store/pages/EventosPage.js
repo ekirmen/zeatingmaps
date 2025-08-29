@@ -315,28 +315,36 @@ const EventosPage = () => {
   const handleSeatToggle = useCallback(
     (silla) => {
       const sillaId = silla._id || silla.id;
-      const zona = mapa?.zonas?.find(z =>
-        z.asientos?.some(a => a._id === sillaId)
-      );
-      const zonaId = zona?.id;
-      if (!sillaId || !zonaId || !selectedFunctionId) return;
+
+      const zona =
+        mapa?.zonas?.find(z => z.asientos?.some(a => a._id === sillaId)) ||
+        mapa?.contenido?.find(el =>
+          el.sillas?.some(a => a._id === sillaId) && (el.zona || el.zonaId)
+        ) ||
+        silla.zona || {};
+
+      const zonaId = zona?.id || zona?.zonaId || silla.zonaId;
+      if (!sillaId || !selectedFunctionId) return;
 
       const nombreZona = zona?.nombre || 'Zona';
-      
+
       // OBTENER PRECIO DE LA PLANTILLA
       let precio = 10; // Precio por defecto
-      
+
       if (plantillaPrecios && plantillaPrecios.detalles) {
         try {
-          const detalles = typeof plantillaPrecios.detalles === 'string' 
-            ? JSON.parse(plantillaPrecios.detalles) 
+          const detalles = typeof plantillaPrecios.detalles === 'string'
+            ? JSON.parse(plantillaPrecios.detalles)
             : plantillaPrecios.detalles;
-          
+
           // Buscar precio por zona
-          const precioZona = detalles.find(d => 
-            d.zona_id === zonaId || d.zona_nombre === nombreZona
+          const precioZona = detalles.find(d =>
+            d.zona_id === zonaId ||
+            d.zonaId === zonaId ||
+            d.zona_nombre === nombreZona ||
+            d.zonaNombre === nombreZona
           );
-          
+
           if (precioZona) {
             precio = precioZona.precio || precio;
             console.log('[PRECIOS] Precio encontrado para zona:', precioZona);
@@ -345,13 +353,13 @@ const EventosPage = () => {
           console.warn('[PRECIOS] Error parsing detalles:', e);
         }
       }
-      
+
       console.log('[PRECIOS] Precio final para asiento:', precio);
 
       // Verificar si el asiento ya está en el carrito
       const cartItems = useCartStore.getState().items;
       const exists = cartItems.some(item => item.sillaId === sillaId);
-      
+
       if (exists) {
         // Si está en el carrito, quitarlo
         removeFromCart(sillaId);
@@ -367,7 +375,7 @@ const EventosPage = () => {
         });
       }
     },
-    [selectedFunctionId, mapa, toggleSeat, removeFromCart]
+    [selectedFunctionId, mapa, toggleSeat, removeFromCart, plantillaPrecios]
   );
 
   const handleFunctionSelect = (functionId) => {
