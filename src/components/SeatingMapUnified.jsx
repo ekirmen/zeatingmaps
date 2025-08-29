@@ -279,16 +279,16 @@ if (Array.isArray(mapa?.contenido)) {
                   style={{ cursor: 'pointer' }}
                 />
                 
-                {/* Nombre del asiento */}
+                {/* Nombre del asiento centrado en el círculo */}
                 <Text
-                  x={(seat.x || seat.posicion?.x || 0) - 15}
-                  y={(seat.y || seat.posicion?.y || 0) + 20}
+                  x={(seat.x || seat.posicion?.x || 0) - 10}
+                  y={(seat.y || seat.posicion?.y || 0) - 6}
                   text={seatName}
                   fontSize={10}
                   fill="#333"
                   fontFamily="Arial"
                   align="center"
-                  width={30}
+                  width={20}
                 />
               </React.Fragment>
             );

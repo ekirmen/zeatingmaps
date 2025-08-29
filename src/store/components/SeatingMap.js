@@ -77,11 +77,13 @@ const SeatingMap = ({ mapa, zonas = [], onClickSilla }) => {
                     onClick={() => onClickSilla(silla, elemento)}
                   />
                   <Text
-                    x={silla.posicion.x + 12}
+                    x={silla.posicion.x - 10}
                     y={silla.posicion.y - 6}
                     text={silla.nombre || silla.numero || ''}
                     fontSize={12}
                     fill="black"
+                    width={20}
+                    align="center"
                   />
                 </React.Fragment>
               );
