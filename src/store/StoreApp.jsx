@@ -49,7 +49,7 @@ const StoreApp = () => {
           {showHeader && <Header />}
           <div className="flex-grow">
             <Routes>
-              <Route path="/store" element={<EventsVenue />} />
+              <Route path="/store" element={<CmsPage slug="store" />} />
               <Route path="/store/tag/:tagSlug?" element={<EventsVenue groupByTags />} />
               <Route path="/store/eventos/:eventSlug" element={<EventosPage />} />
               <Route path="/store/event/:eventId" element={<EventInfo />} />
