@@ -52,7 +52,8 @@ const StoreApp = () => {
                 {/* Render CMS home page by default */}
                 <Route index element={<CmsPage slug="store" />} />
               <Route path="tag/:tagSlug?" element={<EventsVenue groupByTags />} />
-              <Route path="eventos/:eventSlug" element={<EventosPage />} />
+              <Route path="eventos/:eventSlug" element={<EventInfo />} />
+              <Route path="eventos/:eventSlug/map" element={<EventosPage forceShowMap />} />
               <Route path="event/:eventId" element={<EventInfo />} />
 
               <Route path="event/:eventId/full" element={<Event />} />
