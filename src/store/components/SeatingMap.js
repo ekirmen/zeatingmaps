@@ -84,6 +84,9 @@ const SeatingMap = ({ mapa, zonas = [], onClickSilla }) => {
                     fill="black"
                     width={20}
                     align="center"
+                    onClick={() => onClickSilla(silla, elemento)}
+                    onTap={() => onClickSilla(silla, elemento)}
+                    style={{ cursor: 'pointer' }}
                   />
                 </React.Fragment>
               );
