@@ -33,7 +33,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
         });
         
         // ESTRUCTURA EXACTA DEL JSON DEL USUARIO
-        // Si es una mesa con sillas
+        // Caso 1: Mesa con un arreglo de sillas
         if (elemento._id && elemento.sillas && Array.isArray(elemento.sillas)) {
           console.log(`✅ [MAPA_SYNC] Mesa válida encontrada: ${elemento.nombre} con ${elemento.sillas.length} sillas`);
           
@@ -64,6 +64,24 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
               console.warn(`⚠️ [MAPA_SYNC] Silla ${sillaIndex + 1} sin ID válido:`, silla);
             }
           });
+        // Caso 2: Asiento individual suelto (no dentro de una mesa)
+        } else if (elemento._id && elemento.type === 'silla') {
+          const seatData = {
+            ...elemento,
+            mesa_id: null,
+            mesa_nombre: null,
+            zona: elemento.zona || null,
+            x: elemento.posicion?.x || elemento.x || 0,
+            y: elemento.posicion?.y || elemento.y || 0,
+            estado: elemento.estado || 'disponible',
+            status: elemento.estado === 'disponible' ? 'available' : 'occupied',
+            _id: elemento._id,
+            nombre: elemento.nombre || elemento.numero || elemento._id,
+            width: elemento.width || 20,
+            height: elemento.height || 20
+          };
+          allSeats.push(seatData);
+          console.log(`🪑 [MAPA_SYNC] Asiento suelto extraído:`, seatData);
         } else {
           console.log(`ℹ️ [MAPA_SYNC] Elemento ${index} no es una mesa válida:`, {
             tieneId: !!elemento._id,
