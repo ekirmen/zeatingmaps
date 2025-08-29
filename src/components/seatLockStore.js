@@ -268,16 +268,15 @@ export const useSeatLockStore = create((set, get) => ({
     const topic = get().channel?.topic;
     const sessionId = normalizeSessionId(await getSessionId());
 
-    const funcionId = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
-    if (!funcionId) {
+    const funcionIdRaw = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
+    if (!funcionIdRaw) {
       console.warn('[SEAT_LOCK] funcion_id inválido');
       return false;
     }
-
-    // Validar que funcionId sea un número válido
-    const funcionIdNum = parseInt(funcionId);
-    if (isNaN(funcionIdNum) || funcionIdNum <= 0) {
-      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionId);
+    // Normalizar como string (soporta numérico o UUID)
+    const funcionIdVal = String(funcionIdRaw).trim();
+    if (!funcionIdVal) {
+      console.warn('[SEAT_LOCK] funcion_id vacío tras normalización');
       return false;
     }
 
@@ -297,7 +296,7 @@ export const useSeatLockStore = create((set, get) => ({
 
     console.log('[SEAT_LOCK] Intentando bloquear asiento:', {
       seat_id: seatId,
-      funcion_id: funcionIdNum,
+      funcion_id: funcionIdVal,
       session_id: sessionId,
       status,
       lock_type: 'seat'
@@ -308,7 +307,7 @@ export const useSeatLockStore = create((set, get) => ({
         .from('seat_locks')
         .upsert({
           seat_id: seatId,
-          funcion_id: funcionIdNum,
+          funcion_id: funcionIdVal,
           session_id: sessionId,
           locked_at: lockedAt,
           expires_at: expiresAt,
@@ -332,7 +331,7 @@ export const useSeatLockStore = create((set, get) => ({
           ...currentSeats.filter((s) => s.seat_id !== seatId),
           {
             seat_id: seatId,
-            funcion_id: funcionIdNum,
+            funcion_id: funcionIdVal,
             session_id: sessionId,
             locked_at: lockedAt,
             expires_at: expiresAt,
@@ -365,16 +364,14 @@ export const useSeatLockStore = create((set, get) => ({
     const topic = get().channel?.topic;
     const sessionId = normalizeSessionId(await getSessionId());
 
-    const funcionId = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
-    if (!funcionId) {
+    const funcionIdRaw = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
+    if (!funcionIdRaw) {
       console.warn('[SEAT_LOCK] funcion_id inválido');
       return false;
     }
-
-    // Validar que funcionId sea un número válido
-    const funcionIdNum = parseInt(funcionId);
-    if (isNaN(funcionIdNum) || funcionIdNum <= 0) {
-      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionId);
+    const funcionIdVal = String(funcionIdRaw).trim();
+    if (!funcionIdVal) {
+      console.warn('[SEAT_LOCK] funcion_id vacío tras normalización');
       return false;
     }
 
@@ -492,7 +489,7 @@ export const useSeatLockStore = create((set, get) => ({
 
     console.log('[SEAT_LOCK] Intentando desbloquear asiento:', {
       seat_id: seatId,
-      funcion_id: funcionIdNum,
+      funcion_id: funcionIdVal,
       session_id: sessionId
     });
 
@@ -501,7 +498,7 @@ export const useSeatLockStore = create((set, get) => ({
         .from('seat_locks')
         .delete()
         .eq('seat_id', seatId)
-        .eq('funcion_id', funcionIdNum)
+        .eq('funcion_id', funcionIdVal)
         .eq('session_id', sessionId)
         .eq('lock_type', 'seat');
     
@@ -543,16 +540,14 @@ export const useSeatLockStore = create((set, get) => ({
     const topic = get().channel?.topic;
     const sessionId = normalizeSessionId(await getSessionId());
 
-    const funcionId = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
-    if (!funcionId) {
+    const funcionIdRaw = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
+    if (!funcionIdRaw) {
       console.warn('[SEAT_LOCK] funcion_id inválido');
       return false;
     }
-
-    // Validar que funcionId sea un número válido
-    const funcionIdNum = parseInt(funcionId);
-    if (isNaN(funcionIdNum) || funcionIdNum <= 0) {
-      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionId);
+    const funcionIdVal = String(funcionIdRaw).trim();
+    if (!funcionIdVal) {
+      console.warn('[SEAT_LOCK] funcion_id vacío tras normalización');
       return false;
     }
 
@@ -578,7 +573,7 @@ export const useSeatLockStore = create((set, get) => ({
 
     console.log('[SEAT_LOCK] Intentando desbloquear mesa:', {
       table_id: tableId,
-      funcion_id: funcionIdNum,
+      funcion_id: funcionIdVal,
       session_id: sessionId
     });
 
@@ -587,7 +582,7 @@ export const useSeatLockStore = create((set, get) => ({
         .from('seat_locks')
         .delete()
         .eq('table_id', tableId)
-        .eq('funcion_id', funcionIdNum)
+        .eq('funcion_id', funcionIdVal)
         .eq('session_id', sessionId)
         .eq('lock_type', 'table');
     

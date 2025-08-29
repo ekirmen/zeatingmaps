@@ -5,13 +5,15 @@ import { useRefParam } from '../../contexts/RefContext';
 import { fetchMapa } from '../services/apistore';
 import SeatSelectionTimer from '../components/SeatSelectionTimer';
 import { useSeatLockStore } from '../../components/seatLockStore';
+import { useCartStore } from '../cartStore';
 const SelectSeats = () => {
   const { salaId, funcionId } = useParams();
   const navigate = useNavigate();
   const { refParam } = useRefParam();
   const [mapa, setMapa] = useState(null);
   const [mesas, setMesas] = useState([]);
-  const [selectedSeats, setSelectedSeats] = useState([]);
+  // Carrito global (persistente)
+  const { items, toggleSeat, clearCart } = useCartStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
@@ -69,20 +71,24 @@ const SelectSeats = () => {
 
     if (isSeatLockedByMe(seat._id)) {
       await unlockSeat(seat._id, funcionId);
-      setSelectedSeats(selectedSeats.filter((s) => s._id !== seat._id));
+      // Quitar del carrito global
+      await toggleSeat({ ...seat, funcionId });
     } else {
       const ok = await lockSeat(seat._id, 'seleccionado', funcionId);
-      if (ok) setSelectedSeats([...selectedSeats, seat]);
+      if (ok) {
+        // Añadir al carrito global
+        await toggleSeat({ ...seat, funcionId });
+      }
     }
   };
 
   const irAPagar = () => {
     const path = refParam ? `/store/payment?ref=${refParam}` : '/store/payment';
-    navigate(path, { state: { carrito: selectedSeats, funcionId } });
+    navigate(path, { state: { carrito: items, funcionId } });
   };
 
   const handleSeatsCleared = () => {
-    setSelectedSeats([]);
+    clearCart();
   };
 
   const handleTimeExpired = () => {
@@ -179,15 +185,15 @@ const SelectSeats = () => {
       </div>
       <div className="w-[300px] overflow-y-auto p-4 bg-white">
         <SeatSelectionTimer
-          selectedSeats={selectedSeats}
+          selectedSeats={items}
           onSeatsCleared={handleSeatsCleared}
           onTimeExpired={handleTimeExpired}
         />
         <h2 className="text-lg font-semibold mb-2">Carrito</h2>
         <ul className="mb-4">
-          {selectedSeats.map((seat) => (
-            <li key={seat._id}>
-              {seat.nombre} - {seat.zona} - ${seat.precio}
+          {(items || []).map((seat) => (
+            <li key={seat._id || seat.id || seat.sillaId}>
+              {seat.nombre} - {seat.zona || seat.nombreZona || 'General'} - ${seat.precio}
             </li>
           ))}
         </ul>

@@ -74,7 +74,9 @@ export const useCartStore = create(
               newState.functionId = null;
             }
             set(newState);
-            await useSeatLockStore.getState().unlockSeat(seatId);
+            await useSeatLockStore
+              .getState()
+              .unlockSeat(seatId, seat.functionId || seat.funcionId || get().functionId);
             toast.success('Asiento eliminado del carrito');
           } else {
             const updated = [...items, seat];
@@ -168,7 +170,12 @@ export const useCartStore = create(
             newState.functionId = null;
           }
           set(newState);
-          await useSeatLockStore.getState().unlockSeat(seatId);
+          await useSeatLockStore
+            .getState()
+            .unlockSeat(
+              seatId,
+              get().functionId
+            );
           toast.success('Asiento eliminado del carrito');
         },
 

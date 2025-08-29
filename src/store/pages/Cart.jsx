@@ -8,11 +8,11 @@ import {
     ShoppingCartOutlined
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
-import { useAuth } from '../../contexts/AuthContext';
+// Nota: El carrito debe ser visible incluso en modo incógnito (sin login)
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent, FACEBOOK_EVENTS, shouldTrackOnPage } from '../services/facebookPixelService';
 
-import AuthCheck from '../components/AuthCheck';
+// import AuthCheck from '../components/AuthCheck';
 
 const { Title, Text } = Typography;
 
@@ -132,7 +132,6 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
 // Main Cart Component
 const Cart = () => {
     const navigate = useNavigate();
-    const { user } = useAuth();
     const {
         items,
         products,
@@ -200,9 +199,7 @@ const Cart = () => {
         }
     }, [itemCount, items, subtotal]);
 
-    if (!user) {
-        return <AuthCheck />;
-    }
+    // El carrito se muestra sin requerir sesión; el login se solicita al pagar
 
     return (
         <div className="max-w-2xl mx-auto p-4">

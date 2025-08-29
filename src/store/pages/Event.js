@@ -107,30 +107,48 @@ function EventPage() {
   }, [evento?.id]);
 
   const handleSeatToggle = useCallback(
-    (silla) => {
+    async (silla) => {
       const sillaId = silla._id || silla.id;
       if (!sillaId || !selectedFunctionId) return;
 
+      // Si está bloqueado por otro usuario, no permitir acción
+      if (isSeatLocked(sillaId) && !isSeatLockedByMe(sillaId)) return;
+
+      // Resolver zona y precio
       const zona =
         mapa?.zonas?.find(z => z.asientos?.some(a => a._id === sillaId)) ||
         mapa?.contenido?.find(el => el.sillas?.some(a => a._id === sillaId) && el.zona) ||
         silla.zona || {};
       const zonaId = zona?.id || silla.zonaId;
-
       const nombreZona = zona?.nombre || 'Zona';
       const detalle = priceTemplate?.detalles?.find(d => d.zonaId === zonaId);
       const precio = detalle?.precio || 0;
 
-      toggleSeat({
-        sillaId,
-        zonaId,
-        precio,
-        nombre: silla.nombre || silla.numero || silla._id,
-        nombreZona,
-        functionId: selectedFunctionId,
-      });
+      // Alternar bloqueo en DB + carrito
+      if (isSeatLockedByMe(sillaId)) {
+        await unlockSeat(sillaId, selectedFunctionId);
+        await toggleSeat({
+          sillaId,
+          zonaId,
+          precio,
+          nombre: silla.nombre || silla.numero || silla._id,
+          nombreZona,
+          functionId: selectedFunctionId,
+        });
+      } else {
+        const ok = await lockSeat(sillaId, 'seleccionado', selectedFunctionId);
+        if (!ok) return;
+        await toggleSeat({
+          sillaId,
+          zonaId,
+          precio,
+          nombre: silla.nombre || silla.numero || silla._id,
+          nombreZona,
+          functionId: selectedFunctionId,
+        });
+      }
     },
-    [selectedFunctionId, mapa, priceTemplate, toggleSeat]
+    [selectedFunctionId, mapa, priceTemplate, toggleSeat, isSeatLocked, isSeatLockedByMe, lockSeat, unlockSeat]
   );
 
   if (error) return <div className="text-red-600 py-4">{error.message}</div>;
