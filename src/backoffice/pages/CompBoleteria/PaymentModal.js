@@ -251,14 +251,14 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     }
 
     // Validar que todos los asientos tengan IDs válidos
-    const invalidSeats = safeCarrito.filter(item => !item.id && !item._id);
+    const invalidSeats = safeCarrito.filter(item => !(item.id || item._id || item.sillaId));
     if (invalidSeats.length > 0) {
       message.error('Algunos asientos no tienen IDs válidos. Por favor, recarga la página.');
       return;
     }
 
     // Verificar que no haya asientos duplicados
-    const seatIds = safeCarrito.map(item => item.id || item._id);
+    const seatIds = safeCarrito.map(item => item.id || item._id || item.sillaId);
     const uniqueSeatIds = [...new Set(seatIds)];
     if (seatIds.length !== uniqueSeatIds.length) {
       message.error('Hay asientos duplicados en el carrito. Por favor, verifica.');
@@ -289,7 +289,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           funcion: selectedFuncion.id || selectedFuncion._id,
           processed_by: isUuid(user?.id) ? user.id : null,
           seats: seats.map(item => ({
-              id: item.id || item._id,
+              id: item.id || item._id || item.sillaId,
               name: item.nombre,
               price: item.precio,
               zona: item.zonaId || (item.zona?._id || null),
