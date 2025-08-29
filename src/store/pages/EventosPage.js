@@ -21,7 +21,7 @@ import DiagnosticReport from '../../components/DiagnosticReport';
 const { Option } = Select;
 const { TabPane } = Tabs;
 
-const EventosPage = () => {
+const EventosPage = ({ forceShowMap = false }) => {
   useCartRestore();
   const { eventSlug } = useParams();
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ const EventosPage = () => {
   const [diagnosticReport, setDiagnosticReport] = useState(null);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
   const [isDiagnosing, setIsDiagnosing] = useState(false);
-  const [showMap, setShowMap] = useState(false);
+  const [showMap, setShowMap] = useState(forceShowMap);
   const [activeTab, setActiveTab] = useState('seats');
 
   const [venueInfo, setVenueInfo] = useState(null);

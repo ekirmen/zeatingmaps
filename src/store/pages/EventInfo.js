@@ -7,8 +7,9 @@ import { getFunciones } from '../services/apistore';
 import formatDateString from '../../utils/formatDateString';
 
 const EventInfo = () => {
-  const { eventId } = useParams();
+  const { eventId, eventSlug } = useParams();
   const navigate = useNavigate();
+  const eventParam = eventSlug || eventId;
 
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
@@ -33,11 +34,11 @@ const EventInfo = () => {
           `);
         
         const { data, error } = await (
-          isUuid(eventId)
-            ? query.eq('id', eventId)
-            : isNumericId(eventId)
-              ? query.eq('id', parseInt(eventId, 10))
-              : query.ilike('slug', eventId)
+          isUuid(eventParam)
+            ? query.eq('id', eventParam)
+            : isNumericId(eventParam)
+              ? query.eq('id', parseInt(eventParam, 10))
+              : query.ilike('slug', eventParam)
         ).maybeSingle();
         
         if (error) throw error;
@@ -49,12 +50,12 @@ const EventInfo = () => {
         setLoading(false);
       }
     };
-    if (eventId) fetchEvento();
-  }, [eventId]);
+    if (eventParam) fetchEvento();
+  }, [eventParam]);
 
   useEffect(() => {
     const fetchFuncionesData = async () => {
-      const id = evento?.id || (isUuid(eventId) ? eventId : parseInt(eventId));
+      const id = evento?.id || (isUuid(eventParam) ? eventParam : parseInt(eventParam));
       if (!id) return;
       try {
         const data = await getFunciones(id);
@@ -69,12 +70,12 @@ const EventInfo = () => {
       }
     };
     if (evento) fetchFuncionesData();
-  }, [evento, eventId, navigate]);
+  }, [evento, eventParam, navigate]);
 
   const handleSelect = () => {
     if (selectedFunctionId) {
-      const eventPath = (evento && evento.slug) ? evento.slug : eventId;
-      navigate(`/store/event/${eventPath}/map?funcion=${selectedFunctionId}`);
+      const eventPath = (evento && evento.slug) ? evento.slug : eventParam;
+      navigate(`/store/eventos/${eventPath}/map?funcion=${selectedFunctionId}`);
     }
   };
 
