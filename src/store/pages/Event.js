@@ -29,6 +29,7 @@ function EventPage() {
   const [facebookPixel, setFacebookPixel] = useState(null);
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
+  const cartItems = useCartStore((state) => state.items);
   const {
     isSeatLocked,
     isSeatLockedByMe,
@@ -108,11 +109,13 @@ function EventPage() {
   const handleSeatToggle = useCallback(
     (silla) => {
       const sillaId = silla._id || silla.id;
-      const zona = mapa?.zonas?.find(z =>
-        z.asientos?.some(a => a._id === sillaId)
-      );
-      const zonaId = zona?.id;
-      if (!sillaId || !zonaId || !selectedFunctionId) return;
+      if (!sillaId || !selectedFunctionId) return;
+
+      const zona =
+        mapa?.zonas?.find(z => z.asientos?.some(a => a._id === sillaId)) ||
+        mapa?.contenido?.find(el => el.sillas?.some(a => a._id === sillaId) && el.zona) ||
+        silla.zona || {};
+      const zonaId = zona?.id || silla.zonaId;
 
       const nombreZona = zona?.nombre || 'Zona';
       const detalle = priceTemplate?.detalles?.find(d => d.zonaId === zonaId);
@@ -196,6 +199,7 @@ function EventPage() {
                 console.log('Mesa clickeada:', table);
               }}
               onSeatInfo={() => {}}
+              selectedSeats={cartItems.map(item => item.sillaId || item.id || item._id)}
             />
           ) : (
             <div className="text-gray-500 text-center py-6">
