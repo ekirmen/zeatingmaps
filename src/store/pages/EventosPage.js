@@ -32,6 +32,7 @@ const EventosPage = ({ forceShowMap = false }) => {
   const [funciones, setFunciones] = useState([]);
   const [selectedFunctionId, setSelectedFunctionId] = useState(null);
   const [mapa, setMapa] = useState(null);
+  const [mapLoading, setMapLoading] = useState(false);
   const [plantillaPrecios, setPlantillaPrecios] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -123,13 +124,15 @@ const EventosPage = ({ forceShowMap = false }) => {
   // Cargar mapa y plantilla de precios
   useEffect(() => {
     const fetchMap = async () => {
+      setMapLoading(true);
       try {
         console.log('[MAPA] Iniciando carga de mapa para función:', selectedFunctionId);
-        
+
         if (!selectedFunctionId) {
           console.warn('[MAPA] No hay función seleccionada');
           setMapa(null);
           setPlantillaPrecios(null);
+          setMapLoading(false);
           return;
         }
 
@@ -138,16 +141,17 @@ const EventosPage = ({ forceShowMap = false }) => {
           console.warn('[MAPA] No se encontró la función:', selectedFunctionId);
           setMapa(null);
           setPlantillaPrecios(null);
+          setMapLoading(false);
           return;
         }
 
         console.log('[MAPA] Función encontrada:', funcion);
         console.log('[MAPA] Estructura completa de la función:', JSON.stringify(funcion, null, 2));
-        
+
         // CARGAR PLANTILLA DE PRECIOS
         console.log('[PRECIOS] Cargando plantilla de precios...');
         let plantillaData = null;
-        
+
         if (funcion.plantilla) {
           // Si la función ya tiene plantilla embebida
           plantillaData = funcion.plantilla;
@@ -160,7 +164,7 @@ const EventosPage = ({ forceShowMap = false }) => {
               .select('*')
               .eq('id', funcion.plantilla_id)
               .maybeSingle();
-            
+
             if (plantillaError) throw plantillaError;
             if (plantilla) {
               plantillaData = plantilla;
@@ -170,12 +174,12 @@ const EventosPage = ({ forceShowMap = false }) => {
             console.warn('[PRECIOS] Error cargando plantilla:', plantillaErr);
           }
         }
-        
+
         setPlantillaPrecios(plantillaData);
-        
+
         // MEJORAR LÓGICA PARA OBTENER SALA ID
         let salaId = null;
-        
+
         // Opción 1: Buscar en sala directa
         if (funcion.sala) {
           if (typeof funcion.sala === 'object') {
@@ -186,13 +190,13 @@ const EventosPage = ({ forceShowMap = false }) => {
             console.log('[MAPA] Sala encontrada en funcion.sala (directo):', salaId);
           }
         }
-        
+
         // Opción 2: Buscar en sala_id
         if (!salaId && funcion.sala_id) {
           salaId = funcion.sala_id;
           console.log('[MAPA] Sala encontrada en funcion.sala_id:', salaId);
         }
-        
+
         // Opción 3: Buscar en recinto.sala
         if (!salaId && funcion.recinto && typeof funcion.recinto === 'object') {
           salaId = funcion.recinto.sala?.id || funcion.recinto.sala?._id || funcion.recinto.sala;
@@ -208,11 +212,12 @@ const EventosPage = ({ forceShowMap = false }) => {
             keys: Object.keys(funcion)
           });
           setMapa(null);
+          setMapLoading(false);
           return;
         }
 
         console.log('[MAPA] ✅ Sala ID encontrado:', salaId);
-        
+
         const mapData = await fetchMapa(salaId);
         if (!mapData) {
           console.warn('[MAPA] No se encontró mapa para salaId=', salaId);
@@ -220,15 +225,14 @@ const EventosPage = ({ forceShowMap = false }) => {
           console.warn('1. La sala no tiene un mapa configurado');
           console.warn('2. Problemas de permisos o RLS');
           console.warn('3. La tabla mapas no existe o no es accesible');
-          
 
-          
           setMapa(null);
+          setMapLoading(false);
           return;
         }
-        
+
         console.log('[MAPA] Mapa cargado exitosamente:', mapData);
-        
+
         // Transform the map data to match SeatingMapUnified expectations
         if (mapData && mapData.contenido) {
           // If contenido is a string, parse it
@@ -239,15 +243,16 @@ const EventosPage = ({ forceShowMap = false }) => {
             } catch (e) {
               console.error('Error parsing mapa contenido:', e);
               setMapa(null);
+              setMapLoading(false);
               return;
             }
           }
-          
+
           // Transform the data structure to match SeatingMapUnified expectations
           const allSeats = [];
           const mesas = [];
           const zonas = [];
-          
+
           // Procesar contenido del mapa
           (Array.isArray(contenido) ? contenido : [contenido]).forEach(item => {
             if (item.type === 'mesa' && item.sillas) {
@@ -272,7 +277,7 @@ const EventosPage = ({ forceShowMap = false }) => {
               });
             }
           });
-          
+
           // Si no hay zonas definidas, crear zona por defecto
           if (zonas.length === 0) {
             zonas.push({
@@ -287,14 +292,14 @@ const EventosPage = ({ forceShowMap = false }) => {
               zona.asientos = allSeats.filter(silla => silla.zonaId === zona.id);
             });
           }
-          
+
           const transformedMap = {
             ...mapData,
             zonas: zonas,
             // NO transformar contenido, mantener el array original
             contenido: mapData.contenido
           };
-          
+
           console.log('Original map data:', mapData);
           console.log('Parsed contenido:', contenido);
           console.log('Extracted seats:', allSeats);
@@ -309,6 +314,8 @@ const EventosPage = ({ forceShowMap = false }) => {
         console.error('[MAPA] Stack trace:', err.stack);
         setError(err);
         setMapa(null);
+      } finally {
+        setMapLoading(false);
       }
     };
     if (selectedFunctionId) fetchMap();
@@ -553,31 +560,33 @@ const EventosPage = ({ forceShowMap = false }) => {
                      title="Selecciona tus asientos" 
                      className="h-full"
                    >
-                                         {mapa ? (
-                       <div className="h-96 overflow-auto relative">
-                         <SeatingMapUnified
-                           mapa={mapa}
-                           funcionId={selectedFunctionId}
-                           onSeatToggle={handleSeatToggle}
-                           onTableToggle={(table) => {
-                             console.log('Mesa seleccionada:', table);
-                           }}
-                           isSeatLocked={() => false}
-                           isSeatLockedByMe={() => false}
-                           lockSeat={() => Promise.resolve(true)}
-                           unlockSeat={() => Promise.resolve(true)}
-                           isTableLocked={() => false}
-                           isTableLockedByMe={() => false}
-                           lockTable={() => Promise.resolve(true)}
-                           unlockTable={() => Promise.resolve(true)}
-                           isAnySeatInTableLocked={() => false}
-                           areAllSeatsInTableLockedByMe={() => false}
-                           foundSeats={[]}
-                           selectedSeats={cartItems.map(item => item.sillaId)}
-                         />
-                         
-                         
-                        </div>
+                    {mapLoading ? (
+                      <div className="flex items-center justify-center h-96 text-gray-500">
+                        Cargando mapa...
+                      </div>
+                    ) : mapa ? (
+                      <div className="h-96 overflow-auto relative">
+                        <SeatingMapUnified
+                          mapa={mapa}
+                          funcionId={selectedFunctionId}
+                          onSeatToggle={handleSeatToggle}
+                          onTableToggle={(table) => {
+                            console.log('Mesa seleccionada:', table);
+                          }}
+                          isSeatLocked={() => false}
+                          isSeatLockedByMe={() => false}
+                          lockSeat={() => Promise.resolve(true)}
+                          unlockSeat={() => Promise.resolve(true)}
+                          isTableLocked={() => false}
+                          isTableLockedByMe={() => false}
+                          lockTable={() => Promise.resolve(true)}
+                          unlockTable={() => Promise.resolve(true)}
+                          isAnySeatInTableLocked={() => false}
+                          areAllSeatsInTableLockedByMe={() => false}
+                          foundSeats={[]}
+                          selectedSeats={cartItems.map(item => item.sillaId)}
+                        />
+                      </div>
                     ) : (
                       <div className="flex items-center justify-center h-96 text-gray-500">
                         <div className="text-center">
