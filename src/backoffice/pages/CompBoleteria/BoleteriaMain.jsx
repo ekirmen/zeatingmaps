@@ -1220,93 +1220,110 @@ const BoleteriaMain = () => {
       key: 'mapa',
       label: 'Mapa',
       children: (
-        <div className="relative">
-          {/* Zonas y precios al estilo panel agrupado */}
+        <div className="flex h-full">
+          {/* Panel izquierdo - Zonas y precios */}
           {selectedFuncion && (
-            <div className="mb-3">
-              <ZonesPanel
-                selectedFuncion={selectedFuncion}
-                selectedPlantilla={selectedPlantilla}
-                mapa={mapa}
-                onSelectPrice={handlePriceOptionSelect}
-                selectedPriceId={selectedPriceOption?.id}
-                selectedZonaId={activeZoneId}
-                onSelectZona={(zonaId) => setActiveZoneId(String(zonaId))}
-                onPricesLoaded={(zonasArray) => {
-                  console.log('🎯 onPricesLoaded llamado con:', zonasArray);
-                  // Intentar restaurar precio/zone seleccionado si existe en storage
-                  const savedPriceId = localStorage.getItem('boleteriaSelectedPriceId');
-                  if (savedPriceId && Array.isArray(zonasArray)) {
-                    for (const zona of zonasArray) {
-                      const opt = zona.precios.find(o => String(o.id) === String(savedPriceId));
-                      if (opt) {
-                        setActiveZoneId(String(zona.zona.id));
-                        setSelectedPriceOption(opt);
-                        break;
+            <div className="w-80 bg-white border-r border-gray-200 p-4 overflow-y-auto">
+              <div className="mb-4">
+                <h3 className="text-sm font-semibold mb-3 text-gray-700">Zonas y Precios</h3>
+                <ZonesPanel
+                  selectedFuncion={selectedFuncion}
+                  selectedPlantilla={selectedPlantilla}
+                  mapa={mapa}
+                  onSelectPrice={handlePriceOptionSelect}
+                  selectedPriceId={selectedPriceOption?.id}
+                  selectedZonaId={activeZoneId}
+                  onSelectZona={(zonaId) => setActiveZoneId(String(zonaId))}
+                  onPricesLoaded={(zonasArray) => {
+                    console.log('🎯 onPricesLoaded llamado con:', zonasArray);
+                    // Intentar restaurar precio/zone seleccionado si existe en storage
+                    const savedPriceId = localStorage.getItem('boleteriaSelectedPriceId');
+                    if (savedPriceId && Array.isArray(zonasArray)) {
+                      for (const zona of zonasArray) {
+                        const opt = zona.precios.find(o => String(o.id) === String(savedPriceId));
+                        if (opt) {
+                          setActiveZoneId(String(zona.zona.id));
+                          setSelectedPriceOption(opt);
+                          break;
+                        }
                       }
                     }
-                  }
-                }}
-              />
+                  }}
+                />
+              </div>
+              
               {!blockMode && !selectedPriceOption && (
-                <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm">
+                <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-xs">
                   Primero selecciona una zona y precio antes de elegir asientos
                 </div>
               )}
               
               {/* Instrucciones de navegación */}
-              <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-blue-800 text-sm">
+              <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-blue-800 text-xs">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">🗺️ Navegación del Mapa:</span>
-                  <span>• <kbd className="bg-white px-1 rounded">Rueda del mouse</kbd> Zoom</span>
+                  <span className="font-medium">🗺️ Navegación:</span>
+                  <span>• <kbd className="bg-white px-1 rounded">Rueda</kbd> Zoom</span>
                   <span>• <kbd className="bg-white px-1 rounded">Click + Arrastrar</kbd> Pan</span>
-                  <span>• <kbd className="bg-white px-1 rounded">Botones</kbd> Controles adicionales</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Indicador de Pan */}
-          {isPanning && (
-            <div className="absolute top-4 left-4 z-20 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium animate-pulse">
-              🖱️ Arrastrando mapa...
+          {/* Panel derecho - Mapa */}
+          <div className="flex-1 relative bg-white">
+            {/* Indicador de Pan */}
+            {isPanning && (
+              <div className="absolute top-4 left-4 z-20 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-medium animate-pulse">
+                🖱️ Arrastrando mapa...
+              </div>
+            )}
+            
+            {/* Controles de zoom en la esquina inferior izquierda */}
+            <div className="absolute bottom-4 left-4 z-10 flex space-x-2 items-center">
+              <Button size="small" icon={<ZoomOutOutlined />} onClick={() => setZoomLevel(prev => Math.max(prev - 0.2, 0.5))} title="Zoom Out" />
+              <Button size="small" icon={<ZoomInOutlined />} onClick={() => setZoomLevel(prev => Math.min(prev + 0.2, 3))} title="Zoom In" />
+              <Button size="small" icon={<CompressOutlined />} onClick={resetMapView} title="Reset" />
+              <Button size="small" icon={<AimOutlined />} onClick={zoomToFit} title="Fit" />
+              <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded border">
+                {Math.round(zoomLevel * 100)}%
+              </span>
+              
+              {/* Información de Navegación */}
+              <Tooltip
+                title={
+                  <div className="text-xs">
+                    <div className="font-semibold mb-1">🗺️ Navegación del Mapa:</div>
+                    <div className="flex items-center space-x-2"><kbd className="bg-white px-1 rounded">Rueda del mouse</kbd><span>Zoom</span></div>
+                    <div className="flex items-center space-x-2"><kbd className="bg-white px-1 rounded">Click + Arrastrar</kbd><span>Pan</span></div>
+                    <div className="flex items-center space-x-2"><kbd className="bg-white px-1 rounded">Botones</kbd><span>Controles adicionales</span></div>
+                  </div>
+                }
+                placement="top"
+              >
+                <Button size="small" icon={<QuestionCircleOutlined />} />
+              </Tooltip>
+              
+              {/* Leyenda de Asientos */}
+              <Tooltip
+                title={
+                  <div className="text-xs">
+                    <div className="font-semibold mb-1">Estado de Asientos</div>
+                    <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-blue-500"></div><span>Disponible</span></div>
+                    <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-500"></div><span>Seleccionado</span></div>
+                    <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-orange-500"></div><span>Bloqueado por mí</span></div>
+                    <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><span>Bloqueado por otro</span></div>
+                    <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-gray-500"></div><span>Vendido</span></div>
+                    <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-400"></div><span>Reservado</span></div>
+                  </div>
+                }
+                placement="top"
+              >
+                <Button size="small" icon={<InfoCircleOutlined />} />
+              </Tooltip>
             </div>
-          )}
-          
-          <div className="absolute bottom-4 left-4 z-10 flex space-x-2 items-center">
-            {/* Controles de Zoom */}
-            <Button size="small" icon={<ZoomOutOutlined />} onClick={() => setZoomLevel(prev => Math.max(prev - 0.2, 0.5))} title="Zoom Out" />
-            <Button size="small" icon={<ZoomInOutlined />} onClick={() => setZoomLevel(prev => Math.min(prev + 0.2, 3))} title="Zoom In" />
             
-            {/* Controles de Pan y Reset */}
-            <Button size="small" icon={<CompressOutlined />} onClick={resetMapView} title="Reset Zoom y Pan" />
-            <Button size="small" icon={<AimOutlined />} onClick={zoomToFit} title="Zoom al Contenido Completo" />
-            
-            {/* Indicador de Zoom */}
-            <span className="text-xs text-gray-600 bg-white px-2 py-1 rounded border">
-              {Math.round(zoomLevel * 100)}%
-            </span>
-            
-            {/* Leyenda de Asientos */}
-            <Tooltip
-              title={
-                <div className="text-xs">
-                  <div className="font-semibold mb-1">Estado de Asientos</div>
-                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-blue-500"></div><span>Disponible</span></div>
-                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-500"></div><span>Seleccionado</span></div>
-                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-orange-500"></div><span>Bloqueado por mí</span></div>
-                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><span>Bloqueado por otro</span></div>
-                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-gray-500"></div><span>Vendido</span></div>
-                  <div className="flex items-center space-x-2"><div className="w-3 h-3 rounded-full bg-yellow-400"></div><span>Reservado</span></div>
-                </div>
-              }
-              placement="top"
-            >
-              <Button size="small" icon={<InfoCircleOutlined />} />
-            </Tooltip>
-          </div>
-          
-                      <div className="bg-white p-4 rounded-lg shadow-sm overflow-hidden">
+            {/* Contenedor del mapa */}
+            <div className="h-full p-4">
               {blockMode && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
                   <div className="flex items-center space-x-2">
@@ -1320,11 +1337,10 @@ const BoleteriaMain = () => {
               )}
               <div 
                 ref={mapContainerRef}
-                className="relative overflow-hidden cursor-grab active:cursor-grabbing"
+                className="relative overflow-hidden cursor-grab active:cursor-grabbing h-full"
                 style={{ 
                   transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`, 
-                  transformOrigin: '0 0',
-                  minHeight: '400px'
+                  transformOrigin: '0 0'
                 }}
               >
                 <SimpleSeatingMap
@@ -1340,6 +1356,7 @@ const BoleteriaMain = () => {
                 />
               </div>
             </div>
+          </div>
         </div>
       )
     },
@@ -1600,19 +1617,27 @@ const BoleteriaMain = () => {
         {/* Área principal */}
         <div className="flex-1 flex">
           {/* Contenido central */}
-          <div className="flex-1 p-4">
+          <div className="flex-1 flex flex-col">
              {/* Pestañas */}
-             <Tabs
-               activeKey={activeTab}
-               onChange={setActiveTab}
-               items={tabItems}
-               className="bg-white rounded-lg shadow-sm"
-             />
+             <div className="bg-white border-b border-gray-200">
+               <Tabs
+                 activeKey={activeTab}
+                 onChange={setActiveTab}
+                 items={tabItems}
+                 className="px-4"
+               />
+             </div>
+             
+             {/* Contenido de las pestañas */}
+             <div className="flex-1 overflow-hidden">
+               {activeTab === 'mapa' && tabItems[0].children}
+               {activeTab === 'productos' && tabItems[1].children}
+             </div>
            </div>
 
           {/* Panel lateral derecho */}
-          <div className="w-80 bg-white shadow-lg">
-            <div className="p-4">
+          <div className="w-80 bg-white shadow-lg flex flex-col">
+            <div className="p-4 flex-1 overflow-y-auto">
               
               {/* Información del Cliente */}
               <div className="mb-2 p-2 bg-blue-50 rounded-lg">
@@ -1898,8 +1923,11 @@ const BoleteriaMain = () => {
                   </div>
                 )}
               </div>
-              
-              <div className="mt-6 space-y-2">
+            </div>
+            
+            {/* Botones fijos en la parte inferior */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
+              <div className="space-y-2">
                 <div className="flex space-x-2">
                     <Button 
                       size="small"
@@ -1964,8 +1992,8 @@ const BoleteriaMain = () => {
                       </div>
                     </div>
                   )}
-              </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
