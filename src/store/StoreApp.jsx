@@ -29,6 +29,7 @@ import LegalTerms from './pages/LegalTerms';
 import CmsPage from './pages/CmsPage';
 import EventsVenue from './pages/EventsVenue';
 import { useAuth } from '../contexts/AuthContext'; // para perfil
+import { useCartStore } from './cartStore';
 
 const StoreApp = () => {
   const location = useLocation();
@@ -39,6 +40,11 @@ const StoreApp = () => {
   console.log('🔍 [StoreApp] Location:', location.pathname);
   console.log('🔍 [StoreApp] User:', user);
 
+  // Restaurar timer del carrito tras recarga
+  React.useEffect(() => {
+    restoreTimer();
+  }, [restoreTimer]);
+
   const showHeader =
     location.pathname.startsWith('/store') ||
     location.pathname.startsWith('/payment-success');
@@ -47,10 +53,6 @@ const StoreApp = () => {
   return (
     <RefProvider> {/* 👈 ENVOLVER AQUÍ */}
         <div className="min-h-screen flex flex-col">
-          {/* Restaurar timer del carrito tras recarga */}
-          {React.useEffect(() => {
-            restoreTimer();
-          }, [restoreTimer])}
           {showHeader && <Header />}
           <div className="flex-grow">
             <Routes>
