@@ -357,7 +357,7 @@ if (Array.isArray(mapa?.contenido)) {
              });
 
             const seatData = { ...seat, estado: seatEstado };
-            const seatColor = getSeatColor(seatData, null, isSelected, selectedSeats);
+            const seatColor = getSeatColor(seatData, null, isSelected, selectedSeats, lockedSeatsState);
             const borderColor = getBorderColor(isSelected, null);
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
 
