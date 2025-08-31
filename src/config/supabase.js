@@ -16,12 +16,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   });
 }
 
-// Instancias singleton con flags de inicialización
-let supabaseClient = null
-let supabaseAdminClient = null
-let isInitializing = false
-let isAdminInitializing = false
-
 // Función para crear cliente con configuración optimizada
 const createOptimizedClient = (url, key, options = {}) => {
   if (!url || !key) {
@@ -34,7 +28,7 @@ const createOptimizedClient = (url, key, options = {}) => {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      storageKey: 'supabase-auth-token',
+      storageKey: options.storageKey || 'supabase-auth-token',
       ...options.auth
     },
     global: {
@@ -46,133 +40,44 @@ const createOptimizedClient = (url, key, options = {}) => {
   })
 }
 
-// Función para obtener el cliente principal
+// Variables globales para almacenar las instancias
+let clientInstance = null;
+let adminInstance = null;
+
+// Función para obtener o crear el cliente principal
 export const getSupabaseClient = () => {
-  try {
-    if (typeof window !== 'undefined') {
-      // Browser environment
-      if (!window.__supabaseClient && !isInitializing) {
-        isInitializing = true;
-        console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente');
-        const client = createOptimizedClient(supabaseUrl, supabaseAnonKey);
-        if (client) {
-          window.__supabaseClient = client;
-        } else {
-          console.error('[SUPABASE CONFIG] No se pudo crear el cliente');
-          isInitializing = false;
-          return null;
-        }
-        isInitializing = false;
-      }
-      return window.__supabaseClient;
-    } else {
-      // Server environment
-      if (!supabaseClient && !isInitializing) {
-        isInitializing = true;
-        console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente (servidor)');
-        supabaseClient = createOptimizedClient(supabaseUrl, supabaseAnonKey);
-        isInitializing = false;
-      }
-      return supabaseClient;
-    }
-  } catch (error) {
-    console.error('[SUPABASE CONFIG] Error al obtener cliente:', error);
-    isInitializing = false;
-    return null;
+  // Solo crear la instancia si no existe
+  if (!clientInstance) {
+    console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente');
+    clientInstance = createOptimizedClient(supabaseUrl, supabaseAnonKey);
   }
+  return clientInstance;
 }
 
-// Función para obtener el cliente admin
+// Función para obtener o crear el cliente admin
 export const getSupabaseAdminClient = () => {
-  try {
-    if (!serviceRoleKey) {
-      console.warn('[SUPABASE CONFIG] Service role key no encontrada');
-      return null;
-    }
-
-    if (typeof window !== 'undefined') {
-      // Browser environment
-      if (!window.__supabaseAdminClient && !isAdminInitializing) {
-        isAdminInitializing = true;
-        console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente admin');
-        const client = createOptimizedClient(supabaseUrl, serviceRoleKey, {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-            storageKey: 'supabase-admin-token',
-          },
-        });
-        if (client) {
-          window.__supabaseAdminClient = client;
-        } else {
-          console.error('[SUPABASE CONFIG] No se pudo crear el cliente admin');
-          isAdminInitializing = false;
-          return null;
-        }
-        isAdminInitializing = false;
-      }
-      return window.__supabaseAdminClient;
-    } else {
-      // Server environment
-      if (!supabaseAdminClient && !isAdminInitializing) {
-        isAdminInitializing = true;
-        console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente admin (servidor)');
-        supabaseAdminClient = createOptimizedClient(supabaseUrl, serviceRoleKey, {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-          },
-        });
-        isAdminInitializing = false;
-      }
-      return supabaseAdminClient;
-    }
-  } catch (error) {
-    console.error('[SUPABASE CONFIG] Error al obtener cliente admin:', error);
-    isAdminInitializing = false;
+  if (!serviceRoleKey) {
+    console.warn('[SUPABASE CONFIG] Service role key no encontrada');
     return null;
   }
+
+  // Solo crear la instancia si no existe
+  if (!adminInstance) {
+    console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente admin');
+    adminInstance = createOptimizedClient(supabaseUrl, serviceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+      storageKey: 'supabase-admin-token'
+    });
+  }
+  return adminInstance;
 }
 
-// Determina si debemos inicializar el cliente admin en el navegador
-const shouldInitAdminClient = () => {
-  if (typeof window === 'undefined') return true;
-  const path = window.location.pathname || '';
-  return (
-    path.startsWith('/dashboard') ||
-    path.startsWith('/backoffice') ||
-    path.startsWith('/admin') ||
-    path.startsWith('/saas')
-  );
-};
+// Crear las instancias inmediatamente
+const supabase = getSupabaseClient();
+const supabaseAdmin = getSupabaseAdminClient();
 
-// Inicializar clientes solo una vez
-let isInitialized = false;
-
-const initializeClients = () => {
-  if (isInitialized) return;
-  
-  if (supabaseUrl && supabaseAnonKey) {
-    try {
-      // Solo inicializar una vez
-      if (!supabaseClient && !isInitializing) {
-        supabaseClient = getSupabaseClient();
-      }
-      if (!supabaseAdminClient && serviceRoleKey && shouldInitAdminClient() && !isAdminInitializing) {
-        supabaseAdminClient = getSupabaseAdminClient();
-      }
-      isInitialized = true;
-    } catch (error) {
-      console.error('[SUPABASE CONFIG] Error inicializando clientes:', error);
-    }
-  } else {
-    console.error('[SUPABASE CONFIG] No se pueden inicializar los clientes: variables de entorno faltantes');
-  }
-};
-
-// Inicializar inmediatamente
-initializeClients();
-
-// Exportar las instancias inicializadas
-export const supabase = supabaseClient;
-export const supabaseAdmin = supabaseAdminClient; 
+// Exportar las instancias
+export { supabase, supabaseAdmin }; 
