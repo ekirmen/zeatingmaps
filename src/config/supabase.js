@@ -16,9 +16,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   });
 }
 
-// Instancias singleton
+// Instancias singleton con flags de inicialización
 let supabaseClient = null
 let supabaseAdminClient = null
+let isInitializing = false
+let isAdminInitializing = false
 
 // Función para crear cliente con configuración optimizada
 const createOptimizedClient = (url, key, options = {}) => {
@@ -49,27 +51,33 @@ export const getSupabaseClient = () => {
   try {
     if (typeof window !== 'undefined') {
       // Browser environment
-      if (!window.__supabaseClient) {
+      if (!window.__supabaseClient && !isInitializing) {
+        isInitializing = true;
         console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente');
         const client = createOptimizedClient(supabaseUrl, supabaseAnonKey);
         if (client) {
           window.__supabaseClient = client;
         } else {
           console.error('[SUPABASE CONFIG] No se pudo crear el cliente');
+          isInitializing = false;
           return null;
         }
+        isInitializing = false;
       }
       return window.__supabaseClient;
     } else {
       // Server environment
-      if (!supabaseClient) {
+      if (!supabaseClient && !isInitializing) {
+        isInitializing = true;
         console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente (servidor)');
         supabaseClient = createOptimizedClient(supabaseUrl, supabaseAnonKey);
+        isInitializing = false;
       }
       return supabaseClient;
     }
   } catch (error) {
     console.error('[SUPABASE CONFIG] Error al obtener cliente:', error);
+    isInitializing = false;
     return null;
   }
 }
@@ -84,7 +92,8 @@ export const getSupabaseAdminClient = () => {
 
     if (typeof window !== 'undefined') {
       // Browser environment
-      if (!window.__supabaseAdminClient) {
+      if (!window.__supabaseAdminClient && !isAdminInitializing) {
+        isAdminInitializing = true;
         console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente admin');
         const client = createOptimizedClient(supabaseUrl, serviceRoleKey, {
           auth: {
@@ -97,13 +106,16 @@ export const getSupabaseAdminClient = () => {
           window.__supabaseAdminClient = client;
         } else {
           console.error('[SUPABASE CONFIG] No se pudo crear el cliente admin');
+          isAdminInitializing = false;
           return null;
         }
+        isAdminInitializing = false;
       }
       return window.__supabaseAdminClient;
     } else {
       // Server environment
-      if (!supabaseAdminClient) {
+      if (!supabaseAdminClient && !isAdminInitializing) {
+        isAdminInitializing = true;
         console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente admin (servidor)');
         supabaseAdminClient = createOptimizedClient(supabaseUrl, serviceRoleKey, {
           auth: {
@@ -111,11 +123,13 @@ export const getSupabaseAdminClient = () => {
             persistSession: false,
           },
         });
+        isAdminInitializing = false;
       }
       return supabaseAdminClient;
     }
   } catch (error) {
     console.error('[SUPABASE CONFIG] Error al obtener cliente admin:', error);
+    isAdminInitializing = false;
     return null;
   }
 }
@@ -132,22 +146,32 @@ const shouldInitAdminClient = () => {
   );
 };
 
-// Inicializar clientes solo si las variables de entorno están disponibles
-if (supabaseUrl && supabaseAnonKey) {
-  try {
-    // Solo inicializar una vez
-    if (!supabaseClient) {
-      supabaseClient = getSupabaseClient();
+// Inicializar clientes solo una vez
+let isInitialized = false;
+
+const initializeClients = () => {
+  if (isInitialized) return;
+  
+  if (supabaseUrl && supabaseAnonKey) {
+    try {
+      // Solo inicializar una vez
+      if (!supabaseClient && !isInitializing) {
+        supabaseClient = getSupabaseClient();
+      }
+      if (!supabaseAdminClient && serviceRoleKey && shouldInitAdminClient() && !isAdminInitializing) {
+        supabaseAdminClient = getSupabaseAdminClient();
+      }
+      isInitialized = true;
+    } catch (error) {
+      console.error('[SUPABASE CONFIG] Error inicializando clientes:', error);
     }
-    if (!supabaseAdminClient && serviceRoleKey && shouldInitAdminClient()) {
-      supabaseAdminClient = getSupabaseAdminClient();
-    }
-  } catch (error) {
-    console.error('[SUPABASE CONFIG] Error inicializando clientes:', error);
+  } else {
+    console.error('[SUPABASE CONFIG] No se pueden inicializar los clientes: variables de entorno faltantes');
   }
-} else {
-  console.error('[SUPABASE CONFIG] No se pueden inicializar los clientes: variables de entorno faltantes');
-}
+};
+
+// Inicializar inmediatamente
+initializeClients();
 
 // Exportar las instancias inicializadas
 export const supabase = supabaseClient;

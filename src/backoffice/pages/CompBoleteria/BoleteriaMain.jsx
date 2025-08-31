@@ -23,6 +23,7 @@ const { Title, Text } = Typography;
 
 const BoleteriaMain = () => {
   const location = useLocation();
+  const [isMounted, setIsMounted] = useState(false);
   
   // Usar los hooks existentes
   const {
@@ -93,6 +94,14 @@ const BoleteriaMain = () => {
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState(null);
 
+  // Control de montaje del componente
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
+
   // Funciones básicas
   const resetMapView = () => {
     setZoomLevel(1);
@@ -131,6 +140,8 @@ const BoleteriaMain = () => {
 
   // Event listeners para el pan
   useEffect(() => {
+    if (!isMounted) return;
+    
     const container = mapContainerRef.current;
     if (!container) return;
 
@@ -150,7 +161,7 @@ const BoleteriaMain = () => {
       container.removeEventListener('mouseup', handleMouseUp);
       container.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, [isPanning, lastPanPoint]);
+  }, [isMounted, isPanning, lastPanPoint]);
 
   // Funciones de cálculo
   const calculateTotal = () => {
@@ -496,6 +507,11 @@ const BoleteriaMain = () => {
       )
     }
   ];
+
+  // Si el componente no está montado, no renderizar nada
+  if (!isMounted) {
+    return <div className="flex items-center justify-center h-screen">Cargando...</div>;
+  }
 
   return (
     <div>
