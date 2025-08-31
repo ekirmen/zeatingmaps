@@ -147,9 +147,21 @@ const SimpleSeatingMap = ({
   // Suscribirse a cambios en tiempo real
   const subscribeToRealtime = () => {
     if (!selectedFuncion?.id) return;
+    const channelName = `seat-locks-${selectedFuncion.id}`;
+
+    // Evitar suscripción múltiple al mismo canal
+    const existingChannel = supabase
+      .getChannels()
+      .find(ch => ch.topic === channelName);
+
+    if (existingChannel) {
+      console.log('Reutilizando canal existente:', channelName);
+      channelRef.current = existingChannel;
+      return;
+    }
 
     const channel = supabase
-      .channel(`seat-locks-${selectedFuncion.id}`)
+      .channel(channelName)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
@@ -157,14 +169,14 @@ const SimpleSeatingMap = ({
         filter: `funcion_id=eq.${selectedFuncion.id}`
       }, (payload) => {
         console.log('Cambio en tiempo real:', payload);
-        
+
         if (payload.eventType === 'INSERT') {
           setLockedSeats(prev => [...prev, payload.new]);
         } else if (payload.eventType === 'DELETE') {
           setLockedSeats(prev => prev.filter(seat => seat.seat_id !== payload.old.seat_id));
         } else if (payload.eventType === 'UPDATE') {
-          setLockedSeats(prev => 
-            prev.map(seat => 
+          setLockedSeats(prev =>
+            prev.map(seat =>
               seat.seat_id === payload.new.seat_id ? payload.new : seat
             )
           );
@@ -183,6 +195,9 @@ const SimpleSeatingMap = ({
     return () => {
       if (channelRef.current) {
         channelRef.current.unsubscribe();
+        // Remover completamente el canal para permitir nuevas suscripciones
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
       }
     };
   }, [selectedFuncion, selectedPlantilla]);
