@@ -62,10 +62,148 @@ async function initializeSession() {
 
 initializeSession();
 
+// Función para obtener configuraciones de tiempo
+function getSeatSettings() {
+  const lockExpirationMinutes = parseInt(localStorage.getItem('cart_lock_minutes') || '15', 10);
+  const preserveTimeMinutes = parseInt(localStorage.getItem('seat_preserve_time') || '5', 10);
+  const warningTimeMinutes = parseInt(localStorage.getItem('seat_warning_time') || '3', 10);
+  const enableAutoCleanup = localStorage.getItem('seat_auto_cleanup') !== 'false';
+  const enableRestoration = localStorage.getItem('seat_restoration') !== 'false';
+  
+  return {
+    lockExpirationMinutes,
+    preserveTimeMinutes,
+    warningTimeMinutes,
+    enableAutoCleanup,
+    enableRestoration
+  };
+}
+
+// Función para limpiar bloqueos abandonados de forma inteligente
+async function cleanupAbandonedLocks() {
+  try {
+    console.log('🧹 [CLEANUP] Iniciando limpieza inteligente de bloqueos...');
+    
+    const settings = getSeatSettings();
+    if (!settings.enableAutoCleanup) {
+      console.log('⏸️ [CLEANUP] Limpieza automática deshabilitada');
+      return;
+    }
+    
+    const now = new Date();
+    const preserveTimeAgo = new Date(now.getTime() - settings.preserveTimeMinutes * 60 * 1000);
+    const lockExpirationAgo = new Date(now.getTime() - settings.lockExpirationMinutes * 60 * 1000);
+    
+    // 1. Limpiar bloqueos de más del tiempo de expiración (limpieza completa)
+    const { data: oldLocks, error: oldError } = await supabase
+      .from('seat_locks')
+      .delete()
+      .lt('locked_at', lockExpirationAgo.toISOString())
+      .neq('status', 'pagado');
+
+    if (oldError) {
+      console.error('❌ [CLEANUP] Error limpiando bloqueos antiguos:', oldError);
+    } else {
+      console.log('✅ [CLEANUP] Bloqueos antiguos eliminados:', oldLocks?.length || 0);
+    }
+
+    // 2. Marcar como "expirando" bloqueos entre tiempo de preservación y expiración
+    const { data: expiringLocks, error: expiringError } = await supabase
+      .from('seat_locks')
+      .update({ status: 'expirando' })
+      .lt('locked_at', preserveTimeAgo.toISOString())
+      .gte('locked_at', lockExpirationAgo.toISOString())
+      .eq('status', 'seleccionado');
+
+    if (expiringError) {
+      console.error('❌ [CLEANUP] Error marcando bloqueos expirando:', expiringError);
+    } else {
+      console.log('⚠️ [CLEANUP] Bloqueos marcados como expirando:', expiringLocks?.length || 0);
+    }
+
+  } catch (error) {
+    console.error('❌ [CLEANUP] Error inesperado en limpieza inteligente:', error);
+  }
+}
+
+// Función para limpiar bloqueos de una sesión específica (solo si han pasado más del tiempo de preservación)
+async function cleanupSessionLocks(sessionId) {
+  try {
+    console.log('🧹 [CLEANUP] Verificando bloqueos de sesión:', sessionId);
+    
+    const settings = getSeatSettings();
+    const now = new Date();
+    const preserveTimeAgo = new Date(now.getTime() - settings.preserveTimeMinutes * 60 * 1000);
+    
+    // Solo limpiar si han pasado más del tiempo de preservación desde el último bloqueo
+    const { data: recentLocks, error: checkError } = await supabase
+      .from('seat_locks')
+      .select('locked_at')
+      .eq('session_id', sessionId)
+      .gte('locked_at', preserveTimeAgo.toISOString())
+      .neq('status', 'pagado');
+
+    if (checkError) {
+      console.error('❌ [CLEANUP] Error verificando bloqueos recientes:', checkError);
+      return;
+    }
+
+    // Si hay bloqueos recientes (< tiempo de preservación), no limpiar
+    if (recentLocks && recentLocks.length > 0) {
+      console.log(`⏰ [CLEANUP] Bloqueos recientes encontrados (últimos ${settings.preserveTimeMinutes} min), preservando...`);
+      return;
+    }
+
+    // Si no hay bloqueos recientes, limpiar todos los de esta sesión
+    const { data, error } = await supabase
+      .from('seat_locks')
+      .delete()
+      .eq('session_id', sessionId)
+      .neq('status', 'pagado');
+
+    if (error) {
+      console.error('❌ [CLEANUP] Error limpiando bloqueos de sesión:', error);
+    } else {
+      console.log('✅ [CLEANUP] Bloqueos de sesión eliminados:', data?.length || 0);
+    }
+  } catch (error) {
+    console.error('❌ [CLEANUP] Error inesperado limpiando sesión:', error);
+  }
+}
+
+// Función para restaurar bloqueos de una sesión (cuando el usuario regresa)
+async function restoreSessionLocks(sessionId) {
+  try {
+    console.log('🔄 [CLEANUP] Restaurando bloqueos de sesión:', sessionId);
+    
+    const settings = getSeatSettings();
+    if (!settings.enableRestoration) {
+      console.log('⏸️ [CLEANUP] Restauración deshabilitada');
+      return;
+    }
+    
+    // Restaurar bloqueos que estaban "expirando"
+    const { data, error } = await supabase
+      .from('seat_locks')
+      .update({ status: 'seleccionado' })
+      .eq('session_id', sessionId)
+      .eq('status', 'expirando');
+
+    if (error) {
+      console.error('❌ [CLEANUP] Error restaurando bloqueos:', error);
+    } else {
+      console.log('✅ [CLEANUP] Bloqueos restaurados:', data?.length || 0);
+    }
+  } catch (error) {
+    console.error('❌ [CLEANUP] Error inesperado restaurando bloqueos:', error);
+  }
+}
+
 export const useSeatLockStore = create((set, get) => ({
   lockedSeats: [],
   lockedTables: [], // Nuevo: para bloquear mesas completas
   channel: null,
+  cleanupInterval: null, // Intervalo para limpieza automática
 
   setLockedSeats: (seats) => {
     console.log('[SEAT_LOCK] setLockedSeats invocado:', seats);
@@ -79,6 +217,68 @@ export const useSeatLockStore = create((set, get) => ({
     // Validar que tables sea un array
     const validTables = Array.isArray(tables) ? tables : [];
     set({ lockedTables: validTables });
+  },
+
+  // Función para iniciar limpieza automática
+  startAutoCleanup: (intervalMinutes = 5) => {
+    console.log(`🔄 [CLEANUP] Iniciando limpieza automática cada ${intervalMinutes} minutos...`);
+    
+    // Limpiar bloqueos abandonados con intervalo configurable
+    const interval = setInterval(cleanupAbandonedLocks, intervalMinutes * 60 * 1000);
+    
+    // Limpiar bloqueos de la sesión actual al salir
+    const handleBeforeUnload = async () => {
+      const sessionId = await getSessionId();
+      if (sessionId) {
+        await cleanupSessionLocks(sessionId);
+      }
+    };
+
+    // Limpiar bloqueos de la sesión actual al cambiar de página
+    const handlePageHide = async () => {
+      const sessionId = await getSessionId();
+      if (sessionId) {
+        await cleanupSessionLocks(sessionId);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handlePageHide);
+
+    set({ cleanupInterval: interval });
+
+    // Retornar función para limpiar los event listeners
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handlePageHide);
+    };
+  },
+
+  // Función para detener limpieza automática
+  stopAutoCleanup: () => {
+    const { cleanupInterval } = get();
+    if (cleanupInterval) {
+      clearInterval(cleanupInterval);
+      set({ cleanupInterval: null });
+      console.log('🛑 [CLEANUP] Limpieza automática detenida');
+    }
+  },
+
+  // Función para limpiar bloqueos de la sesión actual
+  cleanupCurrentSession: async () => {
+    const sessionId = await getSessionId();
+    if (sessionId) {
+      await cleanupSessionLocks(sessionId);
+    }
+  },
+
+  // Función para restaurar bloqueos de la sesión actual
+  restoreCurrentSession: async () => {
+    const sessionId = await getSessionId();
+    if (sessionId) {
+      await restoreSessionLocks(sessionId);
+    }
   },
 
   subscribeToFunction: (funcionId) => {
@@ -402,7 +602,7 @@ export const useSeatLockStore = create((set, get) => ({
         .from('seat_locks')
         .upsert({
           table_id: tableId,
-          funcion_id: funcionIdNum,
+          funcion_id: funcionIdVal,
           session_id: sessionId,
           locked_at: lockedAt,
           expires_at: expiresAt,
@@ -423,7 +623,7 @@ export const useSeatLockStore = create((set, get) => ({
             ...currentTables.filter((t) => t.table_id !== tableId),
             {
               table_id: tableId,
-              funcion_id: funcionIdNum,
+              funcion_id: funcionIdVal,
               session_id: sessionId,
               locked_at: lockedAt,
               expires_at: expiresAt,

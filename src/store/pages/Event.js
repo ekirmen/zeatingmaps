@@ -11,11 +11,14 @@ import {
 import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
+import { useSeatCleanup } from '../../hooks/useSeatCleanup';
+import SeatStatusNotification from '../../components/SeatStatusNotification';
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent, shouldTrackOnPage, FACEBOOK_EVENTS } from '../services/facebookPixelService';
 
 function EventPage() {
     useCartRestore();
+    useSeatCleanup(); // Activar sistema de limpieza automática
   const { eventSlug } = useParams();
   const [searchParams] = useSearchParams();
   const funcionParam = searchParams.get('funcion');
@@ -170,6 +173,9 @@ function EventPage() {
           }}
         />
       )}
+
+      {/* Notificaciones de estado de asientos */}
+      <SeatStatusNotification />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="lg:col-span-2 bg-white p-6 rounded shadow">

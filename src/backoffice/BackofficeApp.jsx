@@ -38,6 +38,7 @@ import SaasSettings from './pages/SaasSettings';
 import LegalTerms from '../store/pages/LegalTerms';
 import Descuentos from './pages/Descuentos';
 import WebColors from './pages/WebColors';
+import SeatSettings from './pages/SeatSettings';
 
 const BackofficeApp = () => {
   return (
@@ -119,6 +120,7 @@ const BackofficeApp = () => {
         
         {/* Configuración */}
         <Route path="settings" element={<SystemSettings />} />
+        <Route path="seat-settings" element={<SeatSettings />} />
         <Route path="printer-settings" element={<PrinterSettings />} />
         <Route path="audit-logs" element={<AuditLogs />} />
         <Route path="refund-management" element={<RefundManagement />} />
