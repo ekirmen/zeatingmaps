@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { message, Modal, Button } from 'antd';
+import { message, Modal, Button, Tabs } from 'antd';
 import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
 
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
 import ZonesAndPrices from './CompBoleteria/ZonesAndPrices';
+import CompactBoleteria from './CompBoleteria/CompactBoleteria';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
@@ -17,6 +18,8 @@ import { supabase } from '../../supabaseClient';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import { fetchPaymentBySeat } from '../services/apibackoffice';
 import downloadTicket from '../../utils/downloadTicket';
+
+const { TabPane } = Tabs;
 
 const Boleteria = () => {
   const {
@@ -34,6 +37,7 @@ const Boleteria = () => {
   } = useBoleteria();
 
   const [foundSeats, setFoundSeats] = React.useState([]);
+  const [activeTab, setActiveTab] = useState('compact'); // Cambiar a 'compact' por defecto
 
   const {
     selectedClient,
@@ -79,247 +83,191 @@ const Boleteria = () => {
     };
   }, [selectedFuncion, subscribeToFunction, unsubscribe]);
 
-  const handleSeatToggle = useCallback((seat) => {
-    const exists = carrito.some(item => item._id === seat._id);
-    if (exists) {
-      setCarrito(prev => prev.filter(item => item._id !== seat._id));
-    } else {
-      if (!selectedClient) {
-        message.info('Seleccione un cliente antes de agregar asientos');
-      }
-      setCarrito(prev => [...prev, { ...seat, funcionId: selectedFuncion.id || selectedFuncion._id }]);
-    }
-  }, [carrito, selectedClient, selectedFuncion]);
+  const handleSeatToggle = useCallback(
+    async (silla) => {
+      const sillaId = silla._id || silla.id;
+      if (!sillaId || !selectedFuncion) return;
 
-  const handleSeatInfo = useCallback(async (seat) => {
-    if (!selectedFuncion) return;
-    try {
-      const data = await fetchPaymentBySeat(selectedFuncion.id || selectedFuncion._id, seat._id);
-      if (data) {
-        setSeatPayment(data);
-        setIsSeatModalVisible(true);
+      // Si está bloqueado por otro usuario, no permitir acción
+      if (isSeatLocked(sillaId) && !isSeatLockedByMe(sillaId)) return;
+
+      // Resolver zona y precio
+      const zona =
+        mapa?.zonas?.find(z => z.asientos?.some(a => a._id === sillaId)) ||
+        mapa?.contenido?.find(el => el.sillas?.some(a => a._id === sillaId) && el.zona) ||
+        silla.zona || {};
+      const zonaId = zona?.id || silla.zonaId;
+      const nombreZona = zona?.nombre || 'Zona';
+      const detalle = selectedPlantilla?.detalles?.find(d => d.zonaId === zonaId);
+      const precio = detalle?.precio || 0;
+
+      // Alternar bloqueo en DB + carrito
+      if (isSeatLockedByMe(sillaId)) {
+        await unlockSeat(sillaId, selectedFuncion.id || selectedFuncion._id);
+        await toggleSeat({
+          sillaId,
+          zonaId,
+          precio,
+          nombre: silla.nombre || silla.numero || silla._id,
+          nombreZona,
+          functionId: selectedFuncion.id || selectedFuncion._id,
+        });
       } else {
-        message.error('Ticket no encontrado');
+        const ok = await lockSeat(sillaId, 'seleccionado', selectedFuncion.id || selectedFuncion._id);
+        if (!ok) return;
+        await toggleSeat({
+          sillaId,
+          zonaId,
+          precio,
+          nombre: silla.nombre || silla.numero || silla._id,
+          nombreZona,
+          functionId: selectedFuncion.id || selectedFuncion._id,
+        });
       }
-    } catch (err) {
-      console.error('Seat info error:', err);
-      message.error('Error al buscar ticket');
-    }
-  }, [selectedFuncion]);
-
-  const loadPaymentIntoPOS = useCallback(async (payment) => {
-    if (!payment) return;
-    if (payment.event) setSelectedEvent(payment.event);
-    if (payment.funcion) await handleFunctionSelect(payment.funcion);
-    if (payment.user) {
-      setSelectedClient(payment.user);
-    }
-    if (payment.seats) {
-      setCarrito(
-        payment.seats.map(seat => ({
-          _id: seat.id || seat._id,
-          nombre: seat.name,
-          precio: seat.price || 0,
-          nombreMesa: seat.mesa?.nombre || '',
-          zona: seat.zona?.nombre || 'General',
-          status: payment.status,
-          paymentId: payment.id,
-          locator: payment.locator,
-          funcionId: payment.funcion?.id || payment.funcion,
-          funcionFecha: payment.funcion?.fechaCelebracion,
-        }))
-      );
-    }
-    setIsSeatModalVisible(false);
-    message.success('Ticket cargado correctamente');
-  }, [setSelectedEvent, handleFunctionSelect, setSelectedClient, setCarrito]);
-
-  const handleDownloadSeatTicket = useCallback(async () => {
-    if (!seatPayment?.locator) return;
-    try {
-      await downloadTicket(seatPayment.locator);
-    } catch {
-      message.error('Error al descargar ticket');
-    }
-  }, [seatPayment]);
-  
-
-  useEffect(() => {
-    const loadAbonos = async () => {
-      if (selectedClient?.id) {
-        try {
-          const { data, error } = await supabase
-            .from('abonos')
-            .select('*')
-            .eq('usuario_id', selectedClient.id);
-
-          if (error) throw error;
-
-          setClientAbonos((data || []).map(a => ({
-            ...a,
-            packageType: a.package_type,
-            seat: a.seat_id
-          })));
-        } catch (err) {
-          console.error('Error loading abonos', err);
-          setClientAbonos([]);
-        }
-      } else {
-        setClientAbonos([]);
-      }
-    };
-    loadAbonos();
-  }, [selectedClient]);
-
-  useEffect(() => {
-    const cleanupLocks = () => {
-      unlockSeatRef.current = seatLockStore.unlockSeat;
-      carrito.forEach(i => unlockSeatRef.current(i._id, i.funcionId).catch(() => {}));
-    };
-    window.addEventListener('beforeunload', cleanupLocks);
-    return () => {
-      window.removeEventListener('beforeunload', cleanupLocks);
-    };
-  }, [carrito, seatLockStore]);
-
-  
-  const handleClientManagement = useCallback(() => setIsSearchModalVisible(true), []);
-
-  const onEventSelect = useCallback(async (eventoId) => {
-    const { success, funciones: funcs = [] } = await handleEventSelect(eventoId);
-    if (success) {
-      setIsFunctionsModalVisible(true);
-      if (funcs.length === 1) await handleFunctionSelect(funcs[0]);
-    }
-  }, [handleEventSelect, handleFunctionSelect]);
-
-  const onFunctionSelect = useCallback(async (funcion) => {
-    const success = await handleFunctionSelect(funcion);
-    if (success) setIsFunctionsModalVisible(false);
-  }, [handleFunctionSelect]);
-
-  const handleSeatsUpdated = useCallback((ids, estado) => {
-    zonesRef.current?.onSeatsUpdated(ids, estado);
-  }, []);
-
-  const allTicketsPaid = useMemo(() => 
-    carrito?.length > 0 && carrito.every(ticket => ticket.status === 'pagado'), 
-    [carrito]
+    },
+    [selectedFuncion, mapa, selectedPlantilla, toggleSeat, isSeatLocked, isSeatLockedByMe, lockSeat, unlockSeat]
   );
 
-  const clientModalsProps = useMemo(() => ({
-    isSearchModalVisible,
-    searchLoading,
-    searchResults,
-    paymentResults,
-    onSearchCancel: () => {
-      setIsSearchModalVisible(false);
-      clearSearchResults();
-    },
-    onClientSelect: (client) => {
-      setSelectedClient(client);
-      setIsSearchModalVisible(false);
-      clearSearchResults();
-    },
-    onAddClient: async (values) => {
-      try {
-        const newClient = await handleAddClient({ ...values, perfil: 'cliente' });
-        if (newClient) {
-          setSelectedClient(newClient);
-          setIsSearchModalVisible(false);
-          message.success('Cliente agregado exitosamente');
+  const toggleSeat = useCallback(
+    (seatData) => {
+      setCarrito(prev => {
+        const existingIndex = prev.findIndex(item => item.sillaId === seatData.sillaId);
+        if (existingIndex >= 0) {
+          // Remover del carrito
+          const newCart = prev.filter((_, index) => index !== existingIndex);
+          localStorage.setItem('boleteriaCart', JSON.stringify(newCart));
+          return newCart;
+        } else {
+          // Añadir al carrito
+          const newCart = [...prev, seatData];
+          localStorage.setItem('boleteriaCart', JSON.stringify(newCart));
+          return newCart;
         }
-      } catch (error) {
-        console.error('Error adding client:', error);
-        message.error(error.message || 'Error al agregar cliente');
-      }
+      });
     },
-    handleUnifiedSearch: async (searchTerm) => {
-      if (!searchTerm?.trim()) return message.warning('Por favor ingrese un término de búsqueda');
-      try {
-        const result = await handleUnifiedSearch(searchTerm);
-        console.log('Search result:', result);
-        if (result?.type === 'clients') {
-          setSearchResults(result.data);
-        } else if (result?.type === 'payments') {
-          setPaymentResults(result.data);
-        }
-      } catch (error) {
-        console.error('Search error:', error);
-        message.error('Error en la búsqueda');
-      }
-    }
-  }), [isSearchModalVisible, searchLoading, searchResults, paymentResults, clearSearchResults, setSelectedClient, handleAddClient, handleUnifiedSearch, setSearchResults, setPaymentResults]);
+    [setCarrito]
+  );
 
-  const functionModalProps = useMemo(() => ({
-    visible: isFunctionsModalVisible,
-    onCancel: () => setIsFunctionsModalVisible(false),
-    funciones,
-    onFunctionSelect
-  }), [isFunctionsModalVisible, funciones, onFunctionSelect]);
+  const allTicketsPaid = carrito.length > 0 && carrito.every(ticket => ticket.pagado);
 
-  const paymentModalProps = useMemo(() => ({
-    open: isPaymentModalVisible,
-    onCancel: () => setIsPaymentModalVisible(false),
-    carrito,
-    selectedClient,
-    selectedFuncion,
-    selectedAffiliate,
-    selectedEvent
-  }), [isPaymentModalVisible, carrito, selectedClient, selectedFuncion, selectedAffiliate, selectedEvent]);
-
-  // Memoizar las props de ZonesAndPrices para evitar re-renderizados
-  const zonesAndPricesProps = useMemo(() => ({
-    ref: zonesRef,
+  const leftMenuProps = useMemo(() => ({
     eventos,
     selectedEvent,
-    onEventSelect,
+    onEventSelect: handleEventSelect,
+    funciones,
+    selectedFuncion,
+    onFunctionSelect: handleFunctionSelect,
+    onShowFunctions: () => setIsFunctionsModalVisible(true),
+    selectedPlantilla,
+    setSelectedPlantilla,
+    selectedClient,
+    setSelectedClient,
+    onShowUserSearch: () => setIsSearchModalVisible(true),
+    onShowPaymentModal: () => setIsPaymentModalVisible(true),
+    selectedAffiliate,
+    setSelectedAffiliate,
+    clientAbonos,
+    setClientAbonos,
+    carrito,
+    setCarrito,
+    foundSeats,
+    setFoundSeats,
+    searchResults,
+    paymentResults,
+    searchLoading,
+    handleAddClient,
+    handleUnifiedSearch,
+    clearSearchResults,
+    handleLocatorSearch,
+    onShowSeatModal: () => setIsSeatModalVisible(true),
+    seatPayment,
+    setSeatPayment,
+    onShowFunctions: () => setIsFunctionsModalVisible(true),
+    setSelectedEvent
+  }), [selectedClient, setCarrito, setSelectedClient, handleFunctionSelect, setSelectedEvent]);
+
+  const zonesAndPricesProps = useMemo(() => ({
+    eventos,
+    selectedEvent,
+    onEventSelect: handleEventSelect,
     funciones,
     onShowFunctions: () => setIsFunctionsModalVisible(true),
     selectedFuncion,
+    carrito,
+    setCarrito,
+    selectedPlantilla,
     selectedClient,
     abonos: clientAbonos,
-    carrito,
-    setCarrito,
-    selectedPlantilla,
     selectedAffiliate,
     setSelectedAffiliate,
-    showSeatingMap: true
-  }), [
-    eventos,
-    selectedEvent,
-    onEventSelect,
-    funciones,
-    selectedFuncion,
-    selectedClient,
-    clientAbonos,
-    carrito,
-    setCarrito,
-    selectedPlantilla,
-    selectedAffiliate,
-    setSelectedAffiliate
-  ]);
+    showSeatingMap: activeTab === 'map'
+  }), [selectedEvent, handleEventSelect, funciones, selectedFuncion, carrito, setCarrito, selectedPlantilla, selectedClient, clientAbonos, selectedAffiliate, setSelectedAffiliate, activeTab]);
 
-  // Memoizar las props del Cart
   const cartProps = useMemo(() => ({
     carrito,
     setCarrito,
-    onSeatsUpdated: handleSeatsUpdated,
     selectedClient,
-    onPaymentClick: () => setIsPaymentModalVisible(true),
     setSelectedClient,
-    selectedAffiliate
-  }), [carrito, setCarrito, handleSeatsUpdated, selectedClient, setSelectedClient, selectedAffiliate]);
+    onShowPaymentModal: () => setIsPaymentModalVisible(true),
+    selectedAffiliate,
+    setSelectedAffiliate,
+    clientAbonos,
+    setClientAbonos,
+    onShowUserSearch: () => setIsSearchModalVisible(true),
+    onShowSeatModal: () => setIsSeatModalVisible(true),
+    seatPayment,
+    setSeatPayment
+  }), [carrito, setCarrito, selectedClient, setSelectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment]);
 
-  // Memoizar las props del LeftMenu
-  const leftMenuProps = useMemo(() => ({
+  const clientModalsProps = useMemo(() => ({
+    isSearchModalVisible,
+    setIsSearchModalVisible,
+    searchResults,
+    paymentResults,
+    searchLoading,
+    handleAddClient,
+    handleUnifiedSearch,
+    clearSearchResults,
+    handleLocatorSearch,
     selectedClient,
-    onClientRemove: () => setSelectedClient(null),
-    setCarrito,
     setSelectedClient,
+    showCreateUser: false,
+    setShowCreateUser: () => {},
+    newUserData: {},
+    setNewUserData: () => {},
+    userSearchValue: '',
+    setUserSearchValue: () => {},
+    userSearchResults: [],
+    setUserSearchResults: () => {},
+    userSearchLoading: false,
+    setUserSearchLoading: () => {}
+  }), [isSearchModalVisible, setIsSearchModalVisible, searchResults, paymentResults, searchLoading, handleAddClient, handleUnifiedSearch, clearSearchResults, handleLocatorSearch, selectedClient, setSelectedClient]);
+
+  const functionModalProps = useMemo(() => ({
+    isVisible: isFunctionsModalVisible,
+    onClose: () => setIsFunctionsModalVisible(false),
+    funciones,
+    selectedFuncion,
     onFunctionSelect: handleFunctionSelect,
-    setSelectedEvent
-  }), [selectedClient, setCarrito, setSelectedClient, handleFunctionSelect, setSelectedEvent]);
+    selectedEvent
+  }), [isFunctionsModalVisible, setIsFunctionsModalVisible, funciones, selectedFuncion, handleFunctionSelect, selectedEvent]);
+
+  const paymentModalProps = useMemo(() => ({
+    isVisible: isPaymentModalVisible,
+    onClose: () => setIsPaymentModalVisible(false),
+    carrito,
+    setCarrito,
+    selectedClient,
+    setSelectedClient,
+    selectedAffiliate,
+    setSelectedAffiliate,
+    clientAbonos,
+    setClientAbonos,
+    onShowUserSearch: () => setIsSearchModalVisible(true),
+    onShowSeatModal: () => setIsSeatModalVisible(true),
+    seatPayment,
+    setSeatPayment
+  }), [isPaymentModalVisible, setIsPaymentModalVisible, carrito, setCarrito, selectedClient, setSelectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment]);
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -342,19 +290,47 @@ const Boleteria = () => {
 
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col">
+        {/* Tabs para cambiar entre vistas */}
+        <div className="bg-white border-b border-gray-200">
+          <Tabs 
+            activeKey={activeTab} 
+            onChange={setActiveTab}
+            className="px-4"
+          >
+            <TabPane tab="Vista Compacta" key="compact" />
+            <TabPane tab="Mapa Interactivo" key="map" />
+          </Tabs>
+        </div>
+
         {/* Área de trabajo principal */}
         <div className="flex-1 flex">
-          {/* Panel izquierdo - Zonas y precios */}
-          <div className="flex-1 bg-white border-r border-gray-200 overflow-auto">
-            <ZonesAndPrices {...zonesAndPricesProps} />
-          </div>
+          {activeTab === 'compact' ? (
+            // Vista compacta - todo en una pantalla
+            <div className="flex-1 overflow-auto">
+              <CompactBoleteria
+                selectedFuncion={selectedFuncion}
+                mapa={mapa}
+                zonas={mapa?.zonas || []}
+                plantillaPrecios={selectedPlantilla}
+                onSeatClick={handleSeatToggle}
+              />
+            </div>
+          ) : (
+            // Vista con mapa interactivo
+            <>
+              {/* Panel izquierdo - Zonas y precios */}
+              <div className="flex-1 bg-white border-r border-gray-200 overflow-auto">
+                <ZonesAndPrices {...zonesAndPricesProps} />
+              </div>
 
-          {/* Panel derecho - Carrito */}
-          <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
-            <Cart {...cartProps}>
-              {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
-            </Cart>
-          </div>
+              {/* Panel derecho - Carrito */}
+              <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
+                <Cart {...cartProps}>
+                  {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
+                </Cart>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -364,17 +340,17 @@ const Boleteria = () => {
       <Modal
         open={isSeatModalVisible}
         onCancel={() => setIsSeatModalVisible(false)}
-        footer={[
-          <Button key="load" type="primary" onClick={() => loadPaymentIntoPOS(seatPayment)}>Cargar en POS</Button>,
-          seatPayment?.status === 'pagado' ? (
-            <Button key="dl" onClick={handleDownloadSeatTicket}>Descargar Ticket</Button>
-          ) : null
-        ]}
+        footer={null}
+        width={800}
+        title="Información del Asiento"
       >
         {seatPayment && (
-          <div className="space-y-2">
-            <p><strong>Localizador:</strong> {seatPayment.locator}</p>
-            <p><strong>Estado:</strong> {seatPayment.status}</p>
+          <div>
+            <p><strong>Asiento:</strong> {seatPayment.sillaId}</p>
+            <p><strong>Estado:</strong> {seatPayment.estado}</p>
+            <p><strong>Precio:</strong> ${seatPayment.precio}</p>
+            <p><strong>Cliente:</strong> {seatPayment.cliente}</p>
+            <p><strong>Fecha de Pago:</strong> {new Date(seatPayment.fecha_pago).toLocaleString()}</p>
           </div>
         )}
       </Modal>

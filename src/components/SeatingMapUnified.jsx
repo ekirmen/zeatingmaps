@@ -63,10 +63,33 @@ const SeatingMapUnified = ({
         return;
       }
 
-      // Verificar que el asiento esté disponible
-      if (seat.estado !== 'disponible') {
-        console.warn('❌ [SEATING_MAP] Asiento no disponible:', seat.estado);
+      // Verificar si está seleccionado por otro usuario
+      const isSelectedByOther = seat.estado === 'seleccionado_por_otro';
+      if (isSelectedByOther) {
+        console.warn('❌ [SEATING_MAP] Asiento seleccionado por otro usuario, no se puede interactuar');
+        // Aquí podrías mostrar un mensaje al usuario
         return;
+      }
+
+      // Verificar si está vendido o reservado
+      if (seat.estado === 'vendido' || seat.estado === 'reservado') {
+        console.warn('❌ [SEATING_MAP] Asiento vendido o reservado:', seat.estado);
+        return;
+      }
+
+      // Verificar si está seleccionado por el usuario actual
+      const isSelectedByMe = selectedSeats.includes(seat._id);
+      
+      // Permitir deseleccionar si está seleccionado por mí
+      if (isSelectedByMe) {
+        console.log('🔄 [SEATING_MAP] Deseleccionando asiento:', seat._id);
+      } else {
+        // Solo permitir seleccionar si está disponible
+        if (seat.estado !== 'disponible') {
+          console.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
+          return;
+        }
+        console.log('✅ [SEATING_MAP] Seleccionando asiento:', seat._id);
       }
 
       // Llamar a la función de toggle del asiento
@@ -80,7 +103,7 @@ const SeatingMapUnified = ({
       // Llamar a la función de información del asiento si existe
       if (onSeatInfo) onSeatInfo(seat);
     },
-    [onSeatToggle, onSeatInfo]
+    [onSeatToggle, onSeatInfo, selectedSeats, funcionId]
   );
 
 
