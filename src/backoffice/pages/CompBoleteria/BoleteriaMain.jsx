@@ -1539,43 +1539,34 @@ const BoleteriaMain = () => {
       <div className="flex-1 flex flex-col">
 
           
-          {/* Header */}
-          {/* Mensajes informativos condensos en header */}
+          {/* Header - Compacto */}
           {selectedFuncion && (
-            <div className="bg-white shadow-sm border-b px-4 py-1">
+            <div className="bg-white shadow-sm border-b px-3 py-1">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
                   <div className="flex items-center space-x-2">
                     {selectedEvent && (thumbnailImage || selectedEvent.imagen_url) ? (
                       <img 
                         src={thumbnailImage ? resolveImageUrl(thumbnailImage) : selectedEvent.imagen_url} 
                         alt={selectedEvent.nombre}
-                        className="w-16 h-16 object-cover rounded-lg mr-3"
+                        className="w-8 h-8 object-cover rounded mr-2"
                         onError={(e) => {
                           e.target.src = '/assets/logo.png';
                         }}
                       />
                     ) : (
-                      <Avatar size="large" src="/assets/logo.png" alt="Event" />
+                      <Avatar size="small" src="/assets/logo.png" alt="Event" />
                     )}
                     <div className="text-xs">
                       <div className="font-medium">{selectedEvent ? selectedEvent.nombre : 'Selecciona un evento'}</div>
-                      <div className="text-gray-600">
-                        <span>
-                          Fecha: {selectedEvent && selectedEvent.fecha_evento && !isNaN(new Date(selectedEvent.fecha_evento).getTime())
-                            ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES')
-                            : 'N/A'}
-                        </span>
-                        <span className="ml-2">
-                          Hora: {selectedFuncion && selectedFuncion.fecha_celebracion && !isNaN(new Date(selectedFuncion.fecha_celebracion).getTime())
-                            ? new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
-                            : 'N/A'}
-                        </span>
-                      </div>
-                      <div className="text-gray-500 mt-1">
-                        <span>Sala: {selectedFuncion.sala_id || selectedFuncion.sala?.id || 'Sin sala'}</span>
-                        <span className="ml-2">Plantilla: {selectedPlantilla ? selectedPlantilla.nombre : 'Sin plantilla'}</span>
-                        <span className="ml-2">Mapa: {mapa ? 'Cargado' : 'No cargado'}</span>
+                      <div className="text-gray-500 text-xs">
+                        {selectedEvent && selectedEvent.fecha_evento && !isNaN(new Date(selectedEvent.fecha_evento).getTime())
+                          ? new Date(selectedEvent.fecha_evento).toLocaleDateString('es-ES')
+                          : 'N/A'} | 
+                        {selectedFuncion && selectedFuncion.fecha_celebracion && !isNaN(new Date(selectedFuncion.fecha_celebracion).getTime())
+                          ? ` ${new Date(selectedFuncion.fecha_celebracion).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+                          : ' N/A'} | 
+                        Sala: {selectedFuncion.sala_id || selectedFuncion.sala?.id || 'N/A'}
                       </div>
                     </div>
                   </div>
@@ -1583,28 +1574,26 @@ const BoleteriaMain = () => {
                   {selectedFuncion && (
                     <Button
                       type="primary"
+                      size="small"
                       icon={<ReloadOutlined />}
                       onClick={() => { if (selectedFuncion) { loadPlantillaForFunction(selectedFuncion); } }}
-                      className="ml-2"
                       title="Recargar plantilla"
                       loading={boleteriaLoading}
-                    >
-                      Recargar
-                    </Button>
+                    />
                   )}
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500">Modo bloqueo:</span>
+                <div className="flex items-center space-x-2 text-xs">
+                  <div className="flex items-center space-x-1">
+                    <span className="text-gray-500">Bloqueo:</span>
                     <input type="checkbox" checked={blockMode} onChange={(e) => handleBlockModeToggle(e.target.checked)} className="rounded" />
                   </div>
-                  <div className="flex items-center space-x-1 ml-4">
+                  <div className="flex items-center space-x-1">
                     <input type="checkbox" checked={searchBySeatMode} onChange={(e) => handleSearchBySeatToggle(e.target.checked)} className="rounded" />
-                    <span className="text-xs text-gray-500">Buscar venta por asientos</span>
+                    <span className="text-gray-500">Buscar venta</span>
                   </div>
-                  <span className="text-xs text-gray-500">{zoomLevel.toFixed(1)}X</span>
+                  <span className="text-gray-500">{zoomLevel.toFixed(1)}X</span>
                   <Tooltip title={<div className="text-xs"><div className="font-medium mb-2">Atajos de Teclado:</div><div>• <strong>Ctrl+E:</strong> Buscar eventos</div><div>• <strong>Ctrl+U:</strong> Buscar usuarios</div><div>• <strong>Ctrl+L:</strong> Búsqueda por localizador</div><div>• <strong>Ctrl+X:</strong> Exportar datos</div><div>• <strong>Escape:</strong> Cerrar modales</div></div>} placement="bottom">
-                    <QuestionCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help text-sm ml-2" />
+                    <QuestionCircleOutlined className="text-gray-400 hover:text-blue-500 cursor-help" />
                   </Tooltip>
                 </div>
               </div>
@@ -2412,7 +2401,6 @@ const BoleteriaMain = () => {
         <ServerDiagnostic />
       </Drawer>
     </div>
-  </div>
   );
 };
 

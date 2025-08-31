@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSeatLockStore } from './seatLockStore';
 import { useTheme } from '../contexts/ThemeContext';
 
 const SeatLockDebug = ({ funcionId }) => {
+  const [isVisible, setIsVisible] = useState(true);
   const { 
     lockedSeats, 
     lockedTables, 
@@ -23,9 +24,32 @@ const SeatLockDebug = ({ funcionId }) => {
     unsubscribe();
   };
 
+  if (!isVisible) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <button 
+          onClick={() => setIsVisible(true)}
+          className="bg-blue-500 text-white p-2 rounded-full shadow-lg hover:bg-blue-600"
+          title="Show Debug Panel"
+        >
+          🔍
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed bottom-4 right-4 bg-white border rounded-lg p-4 shadow-lg max-w-sm z-50">
-      <h3 className="font-bold text-sm mb-2">🔍 Debug Seat Locks</h3>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="font-bold text-sm">🔍 Debug Seat Locks</h3>
+        <button 
+          onClick={() => setIsVisible(false)}
+          className="text-gray-500 hover:text-gray-700 text-lg font-bold"
+          title="Close Debug Panel"
+        >
+          ×
+        </button>
+      </div>
       
       <div className="text-xs space-y-1">
         <div>Funcion ID: {funcionId || 'N/A'}</div>
