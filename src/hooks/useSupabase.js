@@ -15,7 +15,8 @@ export const useSupabase = () => {
 
         // Obtener clientes
         const client = getSupabaseClient();
-        const adminClient = getSupabaseAdminClient();
+        // Solo crear el cliente admin en entorno servidor
+        const adminClient = typeof window === 'undefined' ? getSupabaseAdminClient() : null;
 
         if (!client) {
           throw new Error('No se pudo inicializar el cliente de Supabase');
