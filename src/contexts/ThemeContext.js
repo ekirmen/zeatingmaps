@@ -35,20 +35,25 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('themeColors', JSON.stringify(theme));
   }, [theme]);
 
-  // Cargar tema del tenant desde Supabase y mezclarlo con localStorage
+  // Cargar tema del tenant desde Supabase solo una vez al inicio, sin interferir con realtime
   useEffect(() => {
-    (async () => {
+    // Solo ejecutar si no hay tema guardado y hay un tenant
+    const hasLocalTheme = localStorage.getItem('themeColors');
+    if (hasLocalTheme || !currentTenant?.id) return;
+    
+    // Usar setTimeout para no bloquear el render inicial
+    const timer = setTimeout(async () => {
       try {
-        const tenantId = currentTenant?.id || localStorage.getItem('currentTenantId');
-        if (!tenantId) return;
-        const remote = await getTenantThemeSettings(tenantId);
+        const remote = await getTenantThemeSettings(currentTenant.id);
         if (remote && typeof remote === 'object') {
           setTheme(prev => ({ ...prev, ...remote }));
         }
       } catch (e) {
-        // Silencioso
+        console.warn('[ThemeContext] Error loading remote theme:', e);
       }
-    })();
+    }, 2000); // Esperar 2 segundos para no interferir con la carga inicial
+    
+    return () => clearTimeout(timer);
   }, [currentTenant?.id]);
 
   const updateTheme = updates => {

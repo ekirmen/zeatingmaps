@@ -4,6 +4,7 @@ import { useSeatLockStore } from './seatLockStore';
 import { useSeatColors } from '../hooks/useSeatColors';
 import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
 import SeatStatusLegend from './SeatStatusLegend';
+import SeatLockDebug from './SeatLockDebug';
 
 const SeatingMapUnified = ({
   funcionId,
@@ -249,6 +250,7 @@ if (Array.isArray(mapa?.contenido)) {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <SeatStatusLegend />
+      <SeatLockDebug funcionId={funcionId} />
       <Stage
         width={maxX + 50}
         height={maxY + 50}

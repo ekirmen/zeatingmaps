@@ -391,7 +391,7 @@ export const useSeatLockStore = create((set, get) => ({
 
     console.log('[SEAT_LOCK] Intentando bloquear mesa:', {
       table_id: tableId,
-      funcion_id: funcionIdNum,
+      funcion_id: funcionIdVal,
       session_id: sessionId,
       status,
       lock_type: 'table'
