@@ -1,18 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Row, Col, Table, Button, Modal, Form, Input, Select, Tag, Space, Typography, Alert, Tabs, message, InputNumber, Tooltip, Switch } from 'antd';
-import { 
-  SettingOutlined,
-  DollarOutlined,
-  EditOutlined,
-  SaveOutlined,
-  PlusOutlined,
-  DeleteOutlined,
-  GlobalOutlined,
-  SafetyCertificateOutlined,
-  CreditCardOutlined,
-  DatabaseOutlined
-} from '@ant-design/icons';
-import { supabase } from '../../config/supabase';
+import { Card, Form, Input, Button, Select, Switch, Divider, message, Space, Typography, Row, Col, Alert, Tag, Tooltip, Modal, InputNumber, Upload, Image, Tabs, Table } from 'antd';
+import { PlusOutlined, DeleteOutlined, EditOutlined, SaveOutlined, EyeOutlined, EyeInvisibleOutlined, UploadOutlined, InfoCircleOutlined, SettingOutlined, UserOutlined, TeamOutlined, DollarOutlined, GlobalOutlined, LockOutlined, MailOutlined, PhoneOutlined, HomeOutlined, BankOutlined, CreditCardOutlined, SafetyCertificateOutlined, RocketOutlined, CrownOutlined, StarOutlined, TrophyOutlined, GiftOutlined, FireOutlined, ThunderboltOutlined, HeartOutlined, SmileOutlined, CheckCircleOutlined, ExclamationCircleOutlined, WarningOutlined, StopOutlined, MinusCircleOutlined, PlusCircleOutlined, ReloadOutlined, DownloadOutlined, UploadOutlined as UploadIcon, FileTextOutlined, DatabaseOutlined, CloudOutlined, KeyOutlined, ShieldOutlined, BugOutlined, ToolOutlined, BuildOutlined, ExperimentOutlined, BulbOutlined, LightbulbOutlined, ThunderboltFilled, RocketFilled, CrownFilled, StarFilled, TrophyFilled, GiftFilled, FireFilled, HeartFilled, SmileFilled, CheckCircleFilled, ExclamationCircleFilled, WarningFilled, StopFilled, MinusCircleFilled, PlusCircleFilled, ReloadFilled, DownloadFilled, FileTextFilled, DatabaseFilled, CloudFilled, KeyFilled, ShieldFilled, BugFilled, ToolFilled, BuildFilled, ExperimentFilled, BulbFilled, LightbulbFilled } from '@ant-design/icons';
+import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { Option } = Select;

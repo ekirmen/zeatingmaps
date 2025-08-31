@@ -16,22 +16,20 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
-  <React.StrictMode>
-    <I18nextProvider i18n={i18n}>
-      <Router>
-        <AuthProvider>
-          <TenantProvider>
-            <ThemeProvider>
-              <HeaderProvider>
-                <FooterProvider>
-                  <App />
-                  <SpeedInsights />
-                </FooterProvider>
-              </HeaderProvider>
-            </ThemeProvider>
-          </TenantProvider>
-        </AuthProvider>
-      </Router>
-    </I18nextProvider>
-  </React.StrictMode>
+  <I18nextProvider i18n={i18n}>
+    <Router>
+      <AuthProvider>
+        <TenantProvider>
+          <ThemeProvider>
+            <HeaderProvider>
+              <FooterProvider>
+                <App />
+                <SpeedInsights />
+              </FooterProvider>
+            </HeaderProvider>
+          </ThemeProvider>
+        </TenantProvider>
+      </AuthProvider>
+    </Router>
+  </I18nextProvider>
 );
