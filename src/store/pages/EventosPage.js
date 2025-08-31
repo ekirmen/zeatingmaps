@@ -265,7 +265,7 @@ const EventosPage = ({ forceShowMap = false }) => {
 
           // Procesar contenido del mapa
           (Array.isArray(contenido) ? contenido : [contenido]).forEach(item => {
-            if (item.type === 'mesa' && item.sillas) {
+            if (item.type === 'mesa' && Array.isArray(item.sillas) && item.sillas.length > 0) {
               mesas.push(item);
               item.sillas.forEach(silla => {
                 allSeats.push({

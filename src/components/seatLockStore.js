@@ -454,16 +454,15 @@ export const useSeatLockStore = create((set, get) => ({
     const topic = get().channel?.topic;
     const sessionId = normalizeSessionId(await getSessionId());
 
-    const funcionId = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
-    if (!funcionId) {
+    const funcionIdRaw = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
+    if (!funcionIdRaw) {
       console.warn('[SEAT_LOCK] funcion_id inválido');
       return false;
     }
-
     // Validar que funcionId sea un número válido
-    const funcionIdNum = parseInt(funcionId);
-    if (isNaN(funcionIdNum) || funcionIdNum <= 0) {
-      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionId);
+    const funcionIdVal = parseInt(funcionIdRaw, 10);
+    if (!Number.isFinite(funcionIdVal) || funcionIdVal <= 0) {
+      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionIdRaw);
       return false;
     }
 
