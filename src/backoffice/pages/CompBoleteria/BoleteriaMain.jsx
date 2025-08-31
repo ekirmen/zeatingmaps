@@ -24,6 +24,24 @@ const { Title, Text } = Typography;
 const BoleteriaMain = () => {
   const location = useLocation();
   const [isMounted, setIsMounted] = useState(false);
+  const hasMountedRef = useRef(false);
+  
+  // Debug: Track component mounting
+  useEffect(() => {
+    if (!hasMountedRef.current) {
+      console.log('🚀 [BoleteriaMain] Componente montado por primera vez');
+      hasMountedRef.current = true;
+      setIsMounted(true);
+    } else {
+      console.log('🔄 [BoleteriaMain] Componente re-renderizado');
+    }
+    
+    return () => {
+      console.log('🧹 [BoleteriaMain] Componente desmontado');
+      hasMountedRef.current = false;
+      setIsMounted(false);
+    };
+  }, []);
   
   // Usar los hooks existentes
   const {
@@ -48,6 +66,17 @@ const BoleteriaMain = () => {
     selectedClient,
     setSelectedClient
   } = useClientManagement();
+
+  // Debug: Track map loading
+  useEffect(() => {
+    console.log('🗺️ [BoleteriaMain] Mapa actualizado:', {
+      hasMapa: !!mapa,
+      mapaType: typeof mapa,
+      mapaContent: mapa?.contenido?.length || 0,
+      loading: boleteriaLoading,
+      error: boleteriaError
+    });
+  }, [mapa, boleteriaLoading, boleteriaError]);
 
   // Estados locales básicos
   const [selectedSeats, setSelectedSeats] = useState([]);
@@ -93,14 +122,6 @@ const BoleteriaMain = () => {
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState(null);
-
-  // Control de montaje del componente
-  useEffect(() => {
-    setIsMounted(true);
-    return () => {
-      setIsMounted(false);
-    };
-  }, []);
 
   // Funciones básicas
   const resetMapView = () => {

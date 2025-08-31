@@ -22,6 +22,25 @@ const SimpleSeatingMap = ({
   const channelRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
 
+  // Debug: Track map prop changes
+  useEffect(() => {
+    console.log('🔄 [SimpleSeatingMap] Mapa prop changed:', mapa);
+    console.log('🔄 [SimpleSeatingMap] Mapa type:', typeof mapa);
+    console.log('🔄 [SimpleSeatingMap] Mapa is null?', mapa === null);
+    console.log('🔄 [SimpleSeatingMap] Mapa is undefined?', mapa === undefined);
+    console.log('🔄 [SimpleSeatingMap] Mapa contenido:', mapa?.contenido);
+    console.log('🔄 [SimpleSeatingMap] Mapa contenido type:', typeof mapa?.contenido);
+    console.log('🔄 [SimpleSeatingMap] Mapa contenido is array?', Array.isArray(mapa?.contenido));
+    
+    if (!mapa) {
+      console.log('❌ [SimpleSeatingMap] No hay mapa disponible');
+    } else if (!mapa.contenido) {
+      console.log('❌ [SimpleSeatingMap] Mapa sin contenido');
+    } else {
+      console.log('✅ [SimpleSeatingMap] Mapa válido con contenido');
+    }
+  }, [mapa]);
+
   // Calcular dimensiones del mapa para ajustar el contenedor
   useEffect(() => {
     const computeDimensions = () => {
@@ -167,18 +186,6 @@ const SimpleSeatingMap = ({
       }
     };
   }, [selectedFuncion, selectedPlantilla]);
-
-  // React to mapa prop changes
-  useEffect(() => {
-    console.log('🔄 [SimpleSeatingMap] Mapa prop changed:', mapa);
-    if (mapa) {
-      console.log('✅ [SimpleSeatingMap] Mapa recibido como prop:', mapa);
-      console.log('✅ [SimpleSeatingMap] Mapa contenido:', mapa.contenido);
-      console.log('✅ [SimpleSeatingMap] Mapa contenido es array:', Array.isArray(mapa.contenido));
-    } else {
-      console.log('❌ [SimpleSeatingMap] No hay mapa disponible');
-    }
-  }, [mapa]);
 
   useEffect(() => {
     loadZonePrices();
