@@ -56,6 +56,12 @@ export const getSupabaseClient = () => {
 
 // Función para obtener o crear el cliente admin
 export const getSupabaseAdminClient = () => {
+  // Evitar crear la instancia en el navegador
+  if (typeof window !== 'undefined') {
+    console.warn('[SUPABASE CONFIG] Cliente admin no disponible en el navegador');
+    return null;
+  }
+
   if (!serviceRoleKey) {
     console.warn('[SUPABASE CONFIG] Service role key no encontrada');
     return null;
@@ -77,7 +83,8 @@ export const getSupabaseAdminClient = () => {
 
 // Crear las instancias inmediatamente y exportarlas
 const supabase = getSupabaseClient();
-const supabaseAdmin = getSupabaseAdminClient();
+// Solo crear el cliente admin en entorno servidor
+const supabaseAdmin = typeof window === 'undefined' ? getSupabaseAdminClient() : null;
 
 // Exportar las instancias
-export { supabase, supabaseAdmin }; 
+export { supabase, supabaseAdmin };
