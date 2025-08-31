@@ -40,18 +40,18 @@ const createOptimizedClient = (url, key, options = {}) => {
   })
 }
 
-// Variables globales para almacenar las instancias
-let clientInstance = null;
-let adminInstance = null;
+// Singleton pattern usando variables de módulo
+let _clientInstance = null;
+let _adminInstance = null;
 
 // Función para obtener o crear el cliente principal
 export const getSupabaseClient = () => {
   // Solo crear la instancia si no existe
-  if (!clientInstance) {
+  if (!_clientInstance) {
     console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente');
-    clientInstance = createOptimizedClient(supabaseUrl, supabaseAnonKey);
+    _clientInstance = createOptimizedClient(supabaseUrl, supabaseAnonKey);
   }
-  return clientInstance;
+  return _clientInstance;
 }
 
 // Función para obtener o crear el cliente admin
@@ -62,9 +62,9 @@ export const getSupabaseAdminClient = () => {
   }
 
   // Solo crear la instancia si no existe
-  if (!adminInstance) {
+  if (!_adminInstance) {
     console.log('[SUPABASE CONFIG] Creando nueva instancia del cliente admin');
-    adminInstance = createOptimizedClient(supabaseUrl, serviceRoleKey, {
+    _adminInstance = createOptimizedClient(supabaseUrl, serviceRoleKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
@@ -72,10 +72,10 @@ export const getSupabaseAdminClient = () => {
       storageKey: 'supabase-admin-token'
     });
   }
-  return adminInstance;
+  return _adminInstance;
 }
 
-// Crear las instancias inmediatamente
+// Crear las instancias inmediatamente y exportarlas
 const supabase = getSupabaseClient();
 const supabaseAdmin = getSupabaseAdminClient();
 

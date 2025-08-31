@@ -93,6 +93,20 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
     }
   }, [funcionId]);
 
+  // Memoize the cart check to prevent unnecessary re-subscriptions
+  const checkCartForLockedSeats = useCallback((updatedSeats) => {
+    if (cart && cart.length > 0) {
+      const lockedIds = updatedSeats.map(s => s.seat_id);
+      cart.forEach(item => {
+        const seatId = item.sillaId || item.id || item._id;
+        if (!lockedIds.includes(seatId)) {
+          toast.error('Un asiento de tu carrito fue bloqueado o comprado por otro usuario.');
+          removeFromCart(seatId);
+        }
+      });
+    }
+  }, [cart, removeFromCart]);
+
   useEffect(() => {
     if (!enabled || !funcionId) {
       console.warn('[SEAT_LOCK_HOOK] Hook deshabilitado o sin funcionId');
@@ -141,18 +155,8 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
               updatedSeats = updatedSeats.filter(s => s.seat_id !== payload.old.seat_id);
             }
 
-            // --- NUEVO: Si algún asiento del carrito ya no está disponible, avisar y eliminarlo ---
-            if (cart && cart.length > 0) {
-              const lockedIds = updatedSeats.map(s => s.seat_id);
-              cart.forEach(item => {
-                const seatId = item.sillaId || item.id || item._id;
-                if (!lockedIds.includes(seatId)) {
-                  toast.error('Un asiento de tu carrito fue bloqueado o comprado por otro usuario.');
-                  removeFromCart(seatId);
-                }
-              });
-            }
-            // --- FIN NUEVO ---
+            // Check cart for locked seats using memoized function
+            checkCartForLockedSeats(updatedSeats);
 
             return updatedSeats;
           });
@@ -179,7 +183,7 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
         isSubscribedRef.current = false;
       }
     };
-  }, [funcionId, enabled, fetchLockedSeats, cart, removeFromCart]);
+  }, [funcionId, enabled, fetchLockedSeats, checkCartForLockedSeats]);
 
   const isSeatLocked = useCallback((seatId) => {
     return lockedSeats.some(s => s.seat_id === seatId);

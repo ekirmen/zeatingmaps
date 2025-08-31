@@ -1,9 +1,16 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../../supabaseClient';
 
 export function useSeatRealtime({ funcionId, onSeatUpdate }) {
   const channelRef = useRef(null);
   const isSubscribedRef = useRef(false);
+
+  // Memoize the callback to prevent unnecessary re-subscriptions
+  const memoizedOnSeatUpdate = useCallback((payload) => {
+    if (onSeatUpdate && typeof onSeatUpdate === 'function') {
+      onSeatUpdate(payload);
+    }
+  }, [onSeatUpdate]);
 
   useEffect(() => {
     if (!funcionId) {
@@ -51,9 +58,7 @@ export function useSeatRealtime({ funcionId, onSeatUpdate }) {
             // does not exist in your 'seats' table schema.
             // Instead, use columns like `payload.new.status`, `payload.new.locked_by`, etc.
 
-            if (onSeatUpdate && typeof onSeatUpdate === 'function') {
-              onSeatUpdate(payload);
-            }
+            memoizedOnSeatUpdate(payload);
           }
         )
         .subscribe((status) => {
@@ -78,5 +83,5 @@ export function useSeatRealtime({ funcionId, onSeatUpdate }) {
         isSubscribedRef.current = false;
       }
     };
-  }, [funcionId, onSeatUpdate]); // Added onSeatUpdate to dependencies for completeness
+  }, [funcionId, memoizedOnSeatUpdate]); // Only depend on funcionId and memoized callback
 }
