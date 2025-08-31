@@ -27,7 +27,7 @@ const SeatingMapUnified = ({
 }) => {
   const channel = useSeatLockStore(state => state.channel);
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
-  const { getSeatColor, getBorderColor } = useSeatColors();
+  const { getSeatColor, getBorderColor } = useSeatColors(funcionId);
   
   // Referencia al stage de Konva
   const stageRef = useRef(null);

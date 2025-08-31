@@ -38,7 +38,8 @@ const SeatLockDebug = ({ funcionId }) => {
         <div>Selected Me: <span style={{color: theme.seatSelectedMe}}>●</span> {theme.seatSelectedMe}</div>
         <div>Selected Other: <span style={{color: theme.seatSelectedOther}}>●</span> {theme.seatSelectedOther}</div>
         <div>Blocked: <span style={{color: theme.seatBlocked}}>●</span> {theme.seatBlocked}</div>
-        <div>Sold: <span style={{color: theme.seatSoldReserved}}>●</span> {theme.seatSoldReserved}</div>
+        <div>Sold: <span style={{color: theme.seatSold}}>●</span> {theme.seatSold}</div>
+        <div>Reserved: <span style={{color: theme.seatReserved}}>●</span> {theme.seatReserved}</div>
         
         {lockedSeats?.length > 0 && (
           <div className="mt-2">
@@ -69,11 +70,13 @@ const SeatLockDebug = ({ funcionId }) => {
       
       <div className="mt-2 text-xs">
         <div className="font-semibold">🧪 Test Colors:</div>
-        <div className="grid grid-cols-2 gap-1 mt-1">
+        <div className="grid grid-cols-3 gap-1 mt-1">
           <div style={{backgroundColor: theme.seatAvailable, color: 'white', padding: '2px', borderRadius: '2px', textAlign: 'center'}}>Available</div>
           <div style={{backgroundColor: theme.seatSelectedMe, color: 'white', padding: '2px', borderRadius: '2px', textAlign: 'center'}}>Selected Me</div>
           <div style={{backgroundColor: theme.seatSelectedOther, color: 'white', padding: '2px', borderRadius: '2px', textAlign: 'center'}}>Selected Other</div>
           <div style={{backgroundColor: theme.seatBlocked, color: 'white', padding: '2px', borderRadius: '2px', textAlign: 'center'}}>Blocked</div>
+          <div style={{backgroundColor: theme.seatSold, color: 'white', padding: '2px', borderRadius: '2px', textAlign: 'center'}}>Sold</div>
+          <div style={{backgroundColor: theme.seatReserved, color: 'white', padding: '2px', borderRadius: '2px', textAlign: 'center'}}>Reserved</div>
         </div>
         
         <div className="mt-2 font-semibold">🔍 Debug Info:</div>

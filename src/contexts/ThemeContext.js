@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { useTenant } from './TenantContext';
 import { getTenantThemeSettings } from '../backoffice/services/themeSettingsService';
+import { EventThemeService } from '../backoffice/services/eventThemeService';
 
 const defaultColors = {
   headerBg: '#ffffff',
@@ -13,7 +14,8 @@ const defaultColors = {
   seatSelectedMe: '#1890ff',
   seatSelectedOther: '#faad14',
   seatBlocked: '#ff4d4f',
-  seatSoldReserved: '#8c8c8c'
+  seatSold: '#8c8c8c',
+  seatReserved: '#722ed1'
 };
 
 const ThemeContext = createContext({
@@ -60,8 +62,20 @@ export const ThemeProvider = ({ children }) => {
     setTheme(prev => ({ ...prev, ...updates }));
   };
 
+  const getEventTheme = async (eventId) => {
+    if (!currentTenant?.id || !eventId) return theme;
+    
+    try {
+      const eventTheme = await EventThemeService.getEventThemeOrDefault(eventId, currentTenant.id, theme);
+      return eventTheme;
+    } catch (error) {
+      console.warn('[ThemeContext] Error getting event theme:', error);
+      return theme;
+    }
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, updateTheme }}>
+    <ThemeContext.Provider value={{ theme, updateTheme, getEventTheme }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -2,9 +2,31 @@
 // Se usa en Store, Boletería y Crear Mapa
 
 import { useTheme } from '../contexts/ThemeContext';
+import { useState, useEffect } from 'react';
 
-export const useSeatColors = () => {
-  const { theme } = useTheme();
+export const useSeatColors = (eventId = null) => {
+  const { theme, getEventTheme } = useTheme();
+  const [eventTheme, setEventTheme] = useState(theme);
+
+  // Cargar tema del evento si se especifica
+  useEffect(() => {
+    if (!eventId) {
+      setEventTheme(theme);
+      return;
+    }
+
+    const loadEventTheme = async () => {
+      try {
+        const eventColors = await getEventTheme(eventId);
+        setEventTheme(eventColors);
+      } catch (error) {
+        console.warn('[useSeatColors] Error loading event theme:', error);
+        setEventTheme(theme);
+      }
+    };
+
+    loadEventTheme();
+  }, [eventId, theme, getEventTheme]);
   // Función para obtener el color automático de un asiento
   const getSeatColor = (seat, zona, isSelected, selectedSeats = []) => {
     const seatId = seat._id || seat.id;
@@ -17,24 +39,27 @@ export const useSeatColors = () => {
       selectedSeats: selectedSeats.length
     });
     
-    // SISTEMA DE COLORES UNIFICADO
-    if (isSelectedByMe) {
-      console.log(`🎨 [useSeatColors] ${seatId} -> Selected Me (${theme.seatSelectedMe})`);
-      return theme.seatSelectedMe || '#3b82f6';
-    } else if (seat.estado === 'seleccionado_por_otro') {
-      console.log(`🎨 [useSeatColors] ${seatId} -> Selected Other (${theme.seatSelectedOther})`);
-      return theme.seatSelectedOther || '#eab308';
-    } else if (seat.estado === 'bloqueado_por_mi' || seat.estado === 'bloqueado_por_otro') {
-      console.log(`🎨 [useSeatColors] ${seatId} -> Blocked (${theme.seatBlocked})`);
-      return theme.seatBlocked || '#ef4444';
-    } else if (seat.estado === 'vendido' || seat.estado === 'reservado') {
-      console.log(`🎨 [useSeatColors] ${seatId} -> Sold (${theme.seatSoldReserved})`);
-      return theme.seatSoldReserved || '#6b7280';
-    } else {
-      // 🎨 Color de la zona = Disponible
-      console.log(`🎨 [useSeatColors] ${seatId} -> Available (${theme.seatAvailable})`);
-      return zona?.color || theme.seatAvailable || '#4CAF50';
-    }
+                 // SISTEMA DE COLORES UNIFICADO
+             if (isSelectedByMe) {
+               console.log(`🎨 [useSeatColors] ${seatId} -> Selected Me (${eventTheme.seatSelectedMe})`);
+               return eventTheme.seatSelectedMe || '#3b82f6';
+             } else if (seat.estado === 'seleccionado_por_otro') {
+               console.log(`🎨 [useSeatColors] ${seatId} -> Selected Other (${eventTheme.seatSelectedOther})`);
+               return eventTheme.seatSelectedOther || '#eab308';
+             } else if (seat.estado === 'bloqueado_por_mi' || seat.estado === 'bloqueado_por_otro') {
+               console.log(`🎨 [useSeatColors] ${seatId} -> Blocked (${eventTheme.seatBlocked})`);
+               return eventTheme.seatBlocked || '#ef4444';
+             } else if (seat.estado === 'vendido') {
+               console.log(`🎨 [useSeatColors] ${seatId} -> Sold (${eventTheme.seatSold})`);
+               return eventTheme.seatSold || '#6b7280';
+             } else if (seat.estado === 'reservado') {
+               console.log(`🎨 [useSeatColors] ${seatId} -> Reserved (${eventTheme.seatReserved})`);
+               return eventTheme.seatReserved || '#722ed1';
+             } else {
+               // 🎨 Color de la zona = Disponible
+               console.log(`🎨 [useSeatColors] ${seatId} -> Available (${eventTheme.seatAvailable})`);
+               return zona?.color || eventTheme.seatAvailable || '#4CAF50';
+             }
   };
 
   // Función para obtener el color de una zona

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { upsertTenantThemeSettings } from '../services/themeSettingsService';
+import EventThemePanel from '../components/EventThemePanel';
 
 const ColorInput = ({ label, value, onChange }) => (
   <div className="mb-4">
@@ -58,7 +59,8 @@ const WebColors = () => {
     seatSelectedMe: theme.seatSelectedMe || '#1890ff',
     seatSelectedOther: theme.seatSelectedOther || '#faad14',
     seatBlocked: theme.seatBlocked || '#ff4d4f',
-    seatSoldReserved: theme.seatSoldReserved || '#8c8c8c'
+    seatSold: theme.seatSold || '#8c8c8c',
+    seatReserved: theme.seatReserved || '#722ed1'
   });
 
   const handleColorChange = (key, value) => {
@@ -126,7 +128,8 @@ const WebColors = () => {
         { key: 'seatSelectedMe', label: 'Seleccionado por mí' },
         { key: 'seatSelectedOther', label: 'Seleccionado por otro' },
         { key: 'seatBlocked', label: 'Bloqueado' },
-        { key: 'seatSoldReserved', label: 'Vendido/Reservado' }
+        { key: 'seatSold', label: 'Vendido' },
+        { key: 'seatReserved', label: 'Reservado' }
       ]
     }
   ];
@@ -139,12 +142,13 @@ const WebColors = () => {
   const Preview = () => (
     <div className="mt-6 p-4 border rounded">
       <h3 className="font-semibold mb-2">Previsualización rápida</h3>
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-6 gap-4">
         <div className="flex items-center gap-2"><SeatDot color={colors.seatAvailable} /> <span>Disponible</span></div>
         <div className="flex items-center gap-2"><SeatDot color={colors.seatSelectedMe} /> <span>Seleccionado por mí</span></div>
         <div className="flex items-center gap-2"><SeatDot color={colors.seatSelectedOther} /> <span>Seleccionado por otro</span></div>
         <div className="flex items-center gap-2"><SeatDot color={colors.seatBlocked} /> <span>Bloqueado</span></div>
-        <div className="flex items-center gap-2"><SeatDot color={colors.seatSoldReserved} /> <span>Vendido/Reservado</span></div>
+        <div className="flex items-center gap-2"><SeatDot color={colors.seatSold} /> <span>Vendido</span></div>
+        <div className="flex items-center gap-2"><SeatDot color={colors.seatReserved} /> <span>Reservado</span></div>
       </div>
     </div>
   );
@@ -167,7 +171,8 @@ const WebColors = () => {
       seatSelectedMe: '#1890ff',
       seatSelectedOther: '#faad14',
       seatBlocked: '#ff4d4f',
-      seatSoldReserved: '#8c8c8c',
+      seatSold: '#8c8c8c',
+      seatReserved: '#722ed1',
     };
     Object.keys(reset).forEach(k => updateTheme({ [k]: reset[k] }));
     setColors(prev => ({ ...prev, ...reset }));
@@ -188,6 +193,12 @@ const WebColors = () => {
           className={`px-3 py-1 rounded ${activeTab === 'advanced' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
         >
           Personalización avanzada
+        </button>
+        <button
+          onClick={() => setActiveTab('events')}
+          className={`px-3 py-1 rounded ${activeTab === 'events' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+        >
+          Colores por Evento
         </button>
       </div>
 
@@ -222,6 +233,10 @@ const WebColors = () => {
             </details>
           ))}
         </div>
+      )}
+
+      {activeTab === 'events' && (
+        <EventThemePanel />
       )}
 
       <Preview />

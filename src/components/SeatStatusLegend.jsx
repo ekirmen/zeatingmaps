@@ -27,8 +27,12 @@ const SeatStatusLegend = () => {
           <span>Bloqueado</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: theme.seatSoldReserved || '#8c8c8c' }}></div>
-          <span>Vendido/Reservado</span>
+          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: theme.seatSold || '#8c8c8c' }}></div>
+          <span>Vendido</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: theme.seatReserved || '#722ed1' }}></div>
+          <span>Reservado</span>
         </div>
       </Space>
     </div>
