@@ -4,6 +4,7 @@ import { ConfigProvider } from 'antd';
 import { useTenant } from './contexts/TenantContext';
 import TenantErrorBoundary from './components/TenantErrorBoundary';
 import StoreApp from './store/StoreApp';
+import MapShortRoute from './store/pages/MapShortRoute';
 import BackofficeApp from './backoffice/BackofficeApp';
 import { getCurrentDomainConfig, shouldShowSaaS, shouldShowBackoffice, shouldShowStore } from './config/domainConfig';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -86,6 +87,7 @@ const App = () => {
               <Route path="/store/*" element={<StoreApp />} />
               <Route path="/eventos/*" element={<StoreApp />} />
               <Route path="/comprar/*" element={<StoreApp />} />
+              <Route path="/r/map" element={<MapShortRoute />} />
             </>
           )}
 
