@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useTenant } from '../../contexts/TenantContext';
+import { upsertTenantThemeSettings } from '../services/themeSettingsService';
 
 const ColorInput = ({ label, value, onChange }) => (
   <div className="mb-4">
@@ -24,6 +26,7 @@ const ColorInput = ({ label, value, onChange }) => (
 
 const WebColors = () => {
   const { theme, updateTheme } = useTheme();
+  const { currentTenant } = useTenant();
   const [activeTab, setActiveTab] = useState('basic');
   const [colors, setColors] = useState({
     headerBg: theme.headerBg || '#ffffff',
@@ -49,7 +52,13 @@ const WebColors = () => {
     borderColor: '#dce0e0',
     notifications: '#e94243',
     spinner: '#e94243',
-    thumb: '#9dc51e'
+    thumb: '#9dc51e',
+    // Seat status colors
+    seatAvailable: theme.seatAvailable || '#4CAF50',
+    seatSelectedMe: theme.seatSelectedMe || '#1890ff',
+    seatSelectedOther: theme.seatSelectedOther || '#faad14',
+    seatBlocked: theme.seatBlocked || '#ff4d4f',
+    seatSoldReserved: theme.seatSoldReserved || '#8c8c8c'
   });
 
   const handleColorChange = (key, value) => {
@@ -109,12 +118,59 @@ const WebColors = () => {
         { key: 'spinner', label: 'Color spinner' },
         { key: 'thumb', label: 'Color pulgar arriba' }
       ]
+    },
+    {
+      title: 'Mapa de asientos',
+      fields: [
+        { key: 'seatAvailable', label: 'Disponible' },
+        { key: 'seatSelectedMe', label: 'Seleccionado por mí' },
+        { key: 'seatSelectedOther', label: 'Seleccionado por otro' },
+        { key: 'seatBlocked', label: 'Bloqueado' },
+        { key: 'seatSoldReserved', label: 'Vendido/Reservado' }
+      ]
     }
   ];
 
-  const handleSave = () => {
+  // Mini preview del mapa
+  const SeatDot = ({ color }) => (
+    <div style={{ width: 16, height: 16, borderRadius: '50%', backgroundColor: color }} />
+  );
+
+  const Preview = () => (
+    <div className="mt-6 p-4 border rounded">
+      <h3 className="font-semibold mb-2">Previsualización rápida</h3>
+      <div className="grid grid-cols-5 gap-4">
+        <div className="flex items-center gap-2"><SeatDot color={colors.seatAvailable} /> <span>Disponible</span></div>
+        <div className="flex items-center gap-2"><SeatDot color={colors.seatSelectedMe} /> <span>Seleccionado por mí</span></div>
+        <div className="flex items-center gap-2"><SeatDot color={colors.seatSelectedOther} /> <span>Seleccionado por otro</span></div>
+        <div className="flex items-center gap-2"><SeatDot color={colors.seatBlocked} /> <span>Bloqueado</span></div>
+        <div className="flex items-center gap-2"><SeatDot color={colors.seatSoldReserved} /> <span>Vendido/Reservado</span></div>
+      </div>
+    </div>
+  );
+
+  const handleSave = async () => {
     updateTheme(colors);
-    alert('Colores guardados');
+    try {
+      if (currentTenant?.id) {
+        await upsertTenantThemeSettings(currentTenant.id, colors);
+      }
+      alert('Colores guardados');
+    } catch (e) {
+      alert('Guardado local OK. Error al guardar en servidor');
+    }
+  };
+
+  const handleReset = () => {
+    const reset = {
+      seatAvailable: '#4CAF50',
+      seatSelectedMe: '#1890ff',
+      seatSelectedOther: '#faad14',
+      seatBlocked: '#ff4d4f',
+      seatSoldReserved: '#8c8c8c',
+    };
+    Object.keys(reset).forEach(k => updateTheme({ [k]: reset[k] }));
+    setColors(prev => ({ ...prev, ...reset }));
   };
 
   return (
@@ -168,9 +224,16 @@ const WebColors = () => {
         </div>
       )}
 
-      <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded" onClick={handleSave}>
-        Guardar
-      </button>
+      <Preview />
+
+      <div className="mt-4 flex gap-2">
+        <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={handleSave}>
+          Guardar
+        </button>
+        <button className="bg-gray-100 px-4 py-2 rounded" onClick={handleReset}>
+          Resetear por defecto
+        </button>
+      </div>
     </div>
   );
 };

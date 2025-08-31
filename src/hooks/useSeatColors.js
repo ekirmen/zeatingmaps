@@ -1,7 +1,10 @@
 // Hook compartido para manejar colores automáticos de asientos
 // Se usa en Store, Boletería y Crear Mapa
 
+import { useTheme } from '../contexts/ThemeContext';
+
 export const useSeatColors = () => {
+  const { theme } = useTheme();
   // Función para obtener el color automático de un asiento
   const getSeatColor = (seat, zona, isSelected, selectedSeats = []) => {
     const seatId = seat._id || seat.id;
@@ -9,16 +12,16 @@ export const useSeatColors = () => {
     
     // SISTEMA DE COLORES UNIFICADO
     if (isSelectedByMe) {
-      return '#3b82f6'; // 🔵 Azul = Seleccionado por mí
+      return theme.seatSelectedMe || '#3b82f6';
     } else if (seat.estado === 'seleccionado_por_otro') {
-      return '#eab308'; // 🟡 Amarillo = Seleccionado por otro
+      return theme.seatSelectedOther || '#eab308';
     } else if (seat.estado === 'bloqueado_por_mi' || seat.estado === 'bloqueado_por_otro') {
-      return '#ef4444'; // 🔴 Rojo = Bloqueado (por mí o por otro)
+      return theme.seatBlocked || '#ef4444';
     } else if (seat.estado === 'vendido' || seat.estado === 'reservado') {
-      return '#6b7280'; // ⚫ Gris = Vendido/Reservado
+      return theme.seatSoldReserved || '#6b7280';
     } else {
       // 🎨 Color de la zona = Disponible
-      return zona?.color || '#4CAF50';
+      return zona?.color || theme.seatAvailable || '#4CAF50';
     }
   };
 
@@ -45,15 +48,15 @@ export const useSeatColors = () => {
 
   // Función para obtener el color de selección
   const getSelectionColor = (isSelected) => {
-    return isSelected ? '#3b82f6' : 'transparent';
+    return isSelected ? (theme.seatSelectedMe || '#3b82f6') : 'transparent';
   };
 
   // Función para obtener el color de borde
   const getBorderColor = (isSelected, zona) => {
     if (isSelected) {
-      return '#3b82f6'; // Azul para seleccionado
+      return theme.seatSelectedMe || '#3b82f6';
     }
-    return zona?.color || '#2d3748'; // Color de zona o negro por defecto
+    return zona?.color || '#2d3748';
   };
 
   return {

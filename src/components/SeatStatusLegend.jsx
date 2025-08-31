@@ -1,31 +1,33 @@
 import React, { useState } from 'react';
 import { InfoCircleOutlined } from '@ant-design/icons';
 import { Button, Popover, Space } from 'antd';
+import { useTheme } from '../contexts/ThemeContext';
 
 const SeatStatusLegend = () => {
   const [visible, setVisible] = useState(false);
+  const { theme } = useTheme();
 
   const legendContent = (
     <div style={{ padding: '8px' }}>
       <Space direction="vertical" size="small">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#52c41a' }}></div>
+          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: theme.seatAvailable || '#52c41a' }}></div>
           <span>Disponible</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#1890ff' }}></div>
+          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: theme.seatSelectedMe || '#1890ff' }}></div>
           <span>Seleccionado por mí</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#faad14' }}></div>
+          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: theme.seatSelectedOther || '#faad14' }}></div>
           <span>Seleccionado por otro</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#ff4d4f' }}></div>
+          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: theme.seatBlocked || '#ff4d4f' }}></div>
           <span>Bloqueado</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: '#8c8c8c' }}></div>
+          <div style={{ width: '16px', height: '16px', borderRadius: '50%', backgroundColor: theme.seatSoldReserved || '#8c8c8c' }}></div>
           <span>Vendido/Reservado</span>
         </div>
       </Space>

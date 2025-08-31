@@ -4,7 +4,12 @@ import { toast } from 'react-hot-toast';
 import { useSeatLockStore } from '../components/seatLockStore';
 import { supabase } from '../supabaseClient';
 
-const LOCK_EXPIRATION_TIME_MS = 15 * 60 * 1000; // 15 minutos
+const getLockExpirationMs = () => {
+  const saved = parseInt(localStorage.getItem('cart_lock_minutes') || '15', 10);
+  const minutes = Number.isFinite(saved) ? Math.max(1, Math.min(120, saved)) : 15;
+  return minutes * 60 * 1000;
+};
+const LOCK_EXPIRATION_TIME_MS = getLockExpirationMs();
 let timer = null;
 
 export const useCartStore = create(
@@ -87,9 +92,9 @@ export const useCartStore = create(
             
             // Solo iniciar el temporizador si es el primer item
             if (items.length === 0 && get().products.length === 0) {
-              const newExpiration = Date.now() + LOCK_EXPIRATION_TIME_MS;
+              const newExpiration = Date.now() + getLockExpirationMs();
               newState.cartExpiration = newExpiration;
-              newState.timeLeft = Math.floor(LOCK_EXPIRATION_TIME_MS / 1000);
+              newState.timeLeft = Math.floor(getLockExpirationMs() / 1000);
               startExpirationTimer();
             }
             
@@ -149,11 +154,11 @@ export const useCartStore = create(
 
         // Enhanced cart management
         addToCart: (seats, funcionId) => {
-          const newExpiration = Date.now() + LOCK_EXPIRATION_TIME_MS;
+          const newExpiration = Date.now() + getLockExpirationMs();
           set({
             items: seats,
             cartExpiration: newExpiration,
-            timeLeft: Math.floor(LOCK_EXPIRATION_TIME_MS / 1000),
+            timeLeft: Math.floor(getLockExpirationMs() / 1000),
             functionId: funcionId,
           });
           startExpirationTimer();

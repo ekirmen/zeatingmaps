@@ -21,6 +21,7 @@ import Galeria from './pages/Galeria';
 import CreateIva from './pages/CreateIva';
 import Tags from './pages/Tags';
 import WebStudio from './pages/WebStudio';
+import PagesSettings from './pages/PagesSettings';
 import EmailCampaigns from './pages/EmailCampaigns';
 import Abonos from './pages/Abonos';
 import Plano from './pages/Plano';
@@ -103,7 +104,7 @@ const BackofficeApp = () => {
         <Route path="banner-ads" element={<WebStudio />} />
         <Route path="legal-texts" element={<LegalTerms />} />
         <Route path="webstudio" element={<WebStudio />} />
-        <Route path="pages" element={<WebStudio />} />
+        <Route path="pages" element={<PagesSettings />} />
         <Route path="galeria" element={<Galeria />} />
         <Route path="webcolors" element={<WebColors />} />
         
