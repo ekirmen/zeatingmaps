@@ -332,7 +332,7 @@ const EventosPage = ({ forceShowMap = false }) => {
   }, [selectedFunctionId, funciones]); // Added funciones to dependency array
 
   const handleSeatToggle = useCallback(
-    (silla) => {
+    async (silla) => {
       const sillaId = silla._id || silla.id;
 
       const zona =
@@ -375,15 +375,21 @@ const EventosPage = ({ forceShowMap = false }) => {
 
       console.log('[PRECIOS] Precio final para asiento:', precio);
 
+      // Si está bloqueado por otro usuario, no permitir acción
+      if (isSeatLocked(sillaId) && !isSeatLockedByMe(sillaId)) return;
+
       // Verificar si el asiento ya está en el carrito
-      const cartItems = useCartStore.getState().items;
-      const exists = cartItems.some(item => item.sillaId === sillaId);
+      const cartItemsState = useCartStore.getState().items;
+      const exists = cartItemsState.some(item => item.sillaId === sillaId);
 
       if (exists) {
-        // Si está en el carrito, quitarlo
+        // Deselección: desbloquear en DB y quitar del carrito
+        await unlockSeat(sillaId, selectedFunctionId);
         removeFromCart(sillaId);
       } else {
-        // Si no está en el carrito, agregarlo
+        // Selección: bloquear en DB con status 'seleccionado' y añadir al carrito
+        const ok = await lockSeat(sillaId, 'seleccionado', selectedFunctionId);
+        if (!ok) return;
         toggleSeat({
           sillaId,
           zonaId,
@@ -394,7 +400,7 @@ const EventosPage = ({ forceShowMap = false }) => {
         });
       }
     },
-    [selectedFunctionId, mapa, toggleSeat, removeFromCart, plantillaPrecios]
+    [selectedFunctionId, mapa, toggleSeat, removeFromCart, plantillaPrecios, isSeatLocked, isSeatLockedByMe, lockSeat, unlockSeat]
   );
 
   const handleFunctionSelect = (functionId) => {
