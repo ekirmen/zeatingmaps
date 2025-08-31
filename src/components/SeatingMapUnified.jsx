@@ -352,7 +352,8 @@ if (Array.isArray(mapa?.contenido)) {
                seatEstado: seatEstado,
                locked,
                lockedByMe,
-               lockStatus: locked ? lockedSeatsState.find(l => l.seat_id === seat._id)?.status : null
+               lockStatus: locked ? lockedSeatsState.find(l => l.seat_id === seat._id)?.status : null,
+               lockData: locked ? lockedSeatsState.find(l => l.seat_id === seat._id) : null
              });
 
             const seatData = { ...seat, estado: seatEstado };

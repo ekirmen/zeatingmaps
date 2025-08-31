@@ -75,6 +75,13 @@ const SeatLockDebug = ({ funcionId }) => {
           <div style={{backgroundColor: theme.seatSelectedOther, color: 'white', padding: '2px', borderRadius: '2px', textAlign: 'center'}}>Selected Other</div>
           <div style={{backgroundColor: theme.seatBlocked, color: 'white', padding: '2px', borderRadius: '2px', textAlign: 'center'}}>Blocked</div>
         </div>
+        
+        <div className="mt-2 font-semibold">🔍 Debug Info:</div>
+        <div className="text-xs">
+          <div>Session ID: {lockedSeats?.[0]?.session_id?.slice(0, 8) || 'N/A'}</div>
+          <div>Total Locks: {lockedSeats?.length || 0}</div>
+          <div>Channel Status: {channel?.topic ? 'Connected' : 'Disconnected'}</div>
+        </div>
       </div>
     </div>
   );
