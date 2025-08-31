@@ -4,15 +4,11 @@ import {
   UserOutlined, 
   ShoppingCartOutlined, 
   CheckCircleOutlined, 
-  ClockCircleOutlined,
   DollarOutlined,
-  EyeOutlined,
   ReloadOutlined
 } from '@ant-design/icons';
 import { useSeatLockStore } from '../../../components/seatLockStore';
 import { useTheme } from '../../../contexts/ThemeContext';
-import { supabase } from '../../../supabaseClient';
-import CompactSeatingMap from './CompactSeatingMap';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -58,7 +54,14 @@ const CompactBoleteria = ({
 
   // Calcular estadísticas de asientos
   const calculateSeatStats = useCallback(() => {
-    if (!mapa?.contenido) return;
+    console.log('🔄 [CompactBoleteria] Calculando estadísticas...');
+    console.log('🗺️ [CompactBoleteria] Mapa:', mapa);
+    console.log('🔒 [CompactBoleteria] Asientos bloqueados:', lockedSeats);
+    
+    if (!mapa?.contenido) {
+      console.log('❌ [CompactBoleteria] No hay contenido en el mapa');
+      return;
+    }
 
     let stats = {
       total: 0,
@@ -157,6 +160,9 @@ const CompactBoleteria = ({
       zoneData[zonaId].precio = detalle?.precio || 0;
     });
 
+    console.log('📊 [CompactBoleteria] Estadísticas calculadas:', stats);
+    console.log('🏷️ [CompactBoleteria] Datos por zona:', zoneData);
+
     setSeatStats(stats);
     setZoneStats(Object.values(zoneData));
   }, [mapa, lockedSeats, plantillaPrecios]);
@@ -190,15 +196,21 @@ const CompactBoleteria = ({
     return zone.total > 0 ? Math.round((occupied / zone.total) * 100) : 0;
   };
 
-  // Función para manejar clic en asiento (placeholder para futuras funcionalidades)
+  // Función para manejar clic en asiento
   const handleSeatClick = (seat) => {
     if (onSeatClick) {
       onSeatClick(seat);
     }
   };
 
+  console.log('🎨 [CompactBoleteria] Renderizando componente...');
+  console.log('📊 [CompactBoleteria] Estadísticas actuales:', seatStats);
+  console.log('🏷️ [CompactBoleteria] Zonas:', zoneStats);
+
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
+      <Title level={2} className="mb-4">🎫 Boletería Compacta</Title>
+      
       {/* Header con estadísticas generales */}
       <Card className="mb-4">
         <Row gutter={[16, 16]} align="middle">
@@ -252,8 +264,8 @@ const CompactBoleteria = ({
 
       {/* Tabs para cambiar entre vistas */}
       <Tabs activeKey={activeTab} onChange={setActiveTab} className="mb-4">
-        <TabPane tab="Estadísticas" key="stats" />
-        <TabPane tab="Mapa Visual" key="map" />
+        <TabPane tab="📊 Estadísticas" key="stats" />
+        <TabPane tab="🗺️ Mapa Visual" key="map" />
       </Tabs>
 
       {activeTab === 'stats' ? (
@@ -344,7 +356,7 @@ const CompactBoleteria = ({
 
           {/* Leyenda de colores */}
           <Card className="mt-4" size="small">
-            <Title level={5}>Leyenda de Estados</Title>
+            <Title level={5}>🎨 Leyenda de Estados</Title>
             <Row gutter={[16, 8]}>
               <Col>
                 <Space>
@@ -396,11 +408,10 @@ const CompactBoleteria = ({
         </>
       ) : (
         /* Vista del mapa visual */
-        <CompactSeatingMap
-          mapa={mapa}
-          selectedFuncion={selectedFuncion}
-          onSeatClick={handleSeatClick}
-        />
+        <div className="text-center p-8">
+          <Title level={3}>🗺️ Mapa Visual</Title>
+          <Text>Esta funcionalidad estará disponible próximamente</Text>
+        </div>
       )}
 
       {/* Botón de actualizar */}
@@ -411,7 +422,7 @@ const CompactBoleteria = ({
           onClick={calculateSeatStats}
           loading={loading}
         >
-          Actualizar Estadísticas
+          🔄 Actualizar Estadísticas
         </Button>
       </div>
     </div>

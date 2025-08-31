@@ -6,6 +6,7 @@ import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
 import ZonesAndPrices from './CompBoleteria/ZonesAndPrices';
 import CompactBoleteria from './CompBoleteria/CompactBoleteria';
+import TestCompactBoleteria from './CompBoleteria/TestCompactBoleteria';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
@@ -271,6 +272,12 @@ const Boleteria = () => {
 
   return (
     <div className="flex h-screen bg-gray-50">
+      {/* Debug info */}
+      {console.log('🎫 [Boleteria] Renderizando componente...')}
+      {console.log('🎫 [Boleteria] Active tab:', activeTab)}
+      {console.log('🎫 [Boleteria] Selected function:', selectedFuncion)}
+      {console.log('🎫 [Boleteria] Mapa:', mapa)}
+      
       {/* Sidebar izquierdo */}
       <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
@@ -297,8 +304,8 @@ const Boleteria = () => {
             onChange={setActiveTab}
             className="px-4"
           >
-            <TabPane tab="Vista Compacta" key="compact" />
-            <TabPane tab="Mapa Interactivo" key="map" />
+            <TabPane tab="🎫 Vista Compacta" key="compact" />
+            <TabPane tab="🗺️ Mapa Interactivo" key="map" />
           </Tabs>
         </div>
 
@@ -307,17 +314,16 @@ const Boleteria = () => {
           {activeTab === 'compact' ? (
             // Vista compacta - todo en una pantalla
             <div className="flex-1 overflow-auto">
-              <CompactBoleteria
+              {console.log('🎫 [Boleteria] Renderizando vista compacta')}
+              <TestCompactBoleteria
                 selectedFuncion={selectedFuncion}
                 mapa={mapa}
-                zonas={mapa?.zonas || []}
-                plantillaPrecios={selectedPlantilla}
-                onSeatClick={handleSeatToggle}
               />
             </div>
           ) : (
             // Vista con mapa interactivo
             <>
+              {console.log('🎫 [Boleteria] Renderizando vista mapa interactivo')}
               {/* Panel izquierdo - Zonas y precios */}
               <div className="flex-1 bg-white border-r border-gray-200 overflow-auto">
                 <ZonesAndPrices {...zonesAndPricesProps} />
