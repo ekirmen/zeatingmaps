@@ -331,20 +331,29 @@ if (Array.isArray(mapa?.contenido)) {
             const locked = isSeatLocked ? isSeatLocked(seat._id) : false;
             const lockedByMe = isSeatLockedByMe ? isSeatLockedByMe(seat._id) : false;
 
-            // Determinar estado visual según lock.status
-            let seatEstado = seat.estado;
-            if (locked) {
-              const lock = Array.isArray(lockedSeatsState)
-                ? lockedSeatsState.find(l => l.seat_id === seat._id)
-                : null;
-              const lockStatus = lock?.status || 'bloqueado';
-              const isSeleccionado = String(lockStatus).toLowerCase() === 'seleccionado';
-              if (isSeleccionado) {
-                seatEstado = lockedByMe ? 'seleccionado_por_mi' : 'seleccionado_por_otro';
-              } else {
-                seatEstado = lockedByMe ? 'bloqueado_por_mi' : 'bloqueado_por_otro';
-              }
-            }
+                         // Determinar estado visual según lock.status
+             let seatEstado = seat.estado;
+             if (locked) {
+               const lock = Array.isArray(lockedSeatsState)
+                 ? lockedSeatsState.find(l => l.seat_id === seat._id)
+                 : null;
+               const lockStatus = lock?.status || 'bloqueado';
+               const isSeleccionado = String(lockStatus).toLowerCase() === 'seleccionado';
+               if (isSeleccionado) {
+                 seatEstado = lockedByMe ? 'seleccionado_por_mi' : 'seleccionado_por_otro';
+               } else {
+                 seatEstado = lockedByMe ? 'bloqueado_por_mi' : 'bloqueado_por_otro';
+               }
+             }
+
+             // Debug: mostrar el estado del asiento
+             console.log(`🪑 [SEAT_COLOR] Asiento ${seat._id}:`, {
+               estadoOriginal: seat.estado,
+               seatEstado: seatEstado,
+               locked,
+               lockedByMe,
+               lockStatus: locked ? lockedSeatsState.find(l => l.seat_id === seat._id)?.status : null
+             });
 
             const seatData = { ...seat, estado: seatEstado };
             const seatColor = getSeatColor(seatData, null, isSelected, selectedSeats);
