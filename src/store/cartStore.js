@@ -159,6 +159,34 @@ export const useCartStore = create(
           startExpirationTimer();
         },
 
+        // Restaurar temporizador después de recarga
+        restoreTimer: async () => {
+          const { cartExpiration, items } = get();
+          if (!cartExpiration) return;
+          const remaining = Math.floor((cartExpiration - Date.now()) / 1000);
+          if (remaining > 0) {
+            set({ timeLeft: remaining });
+            startExpirationTimer();
+          } else {
+            // Expirado: liberar asientos y limpiar
+            for (const s of items) {
+              await useSeatLockStore
+                .getState()
+                .unlockSeat(
+                  s._id || s.id || s.sillaId,
+                  s.functionId || s.funcionId || get().functionId
+                );
+            }
+            set({
+              items: [],
+              products: [],
+              functionId: null,
+              cartExpiration: null,
+              timeLeft: 0,
+            });
+          }
+        },
+
         removeFromCart: async (seatId) => {
           const { items } = get();
           const filtered = items.filter(item => (item._id || item.id) !== seatId);

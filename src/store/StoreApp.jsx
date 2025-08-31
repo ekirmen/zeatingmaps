@@ -33,6 +33,7 @@ import { useAuth } from '../contexts/AuthContext'; // para perfil
 const StoreApp = () => {
   const location = useLocation();
   const { user, updateProfile } = useAuth();
+  const restoreTimer = useCartStore((s) => s.restoreTimer);
   
   console.log('🚀 [StoreApp] Renderizando store...');
   console.log('🔍 [StoreApp] Location:', location.pathname);
@@ -46,6 +47,10 @@ const StoreApp = () => {
   return (
     <RefProvider> {/* 👈 ENVOLVER AQUÍ */}
         <div className="min-h-screen flex flex-col">
+          {/* Restaurar timer del carrito tras recarga */}
+          {React.useEffect(() => {
+            restoreTimer();
+          }, [restoreTimer])}
           {showHeader && <Header />}
           <div className="flex-grow">
             <Routes>
