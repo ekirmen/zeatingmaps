@@ -222,7 +222,11 @@ const EventThemePanel = () => {
                     </div>
                     
                     <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
-                      Fecha: {new Date(event.fecha).toLocaleDateString()}
+                      {event.fecha_evento ? (
+                        `Fecha del evento: ${new Date(event.fecha_evento).toLocaleDateString()}`
+                      ) : (
+                        `Creado: ${new Date(event.created_at).toLocaleDateString()} (sin fecha de evento)`
+                      )}
                     </div>
 
                     {hasCustomTheme && (

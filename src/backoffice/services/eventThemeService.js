@@ -40,7 +40,7 @@ export class EventThemeService {
    * @param {string} eventName - Nombre del evento
    * @returns {Promise<Object>} Configuración creada/actualizada
    */
-  static async upsertEventThemeSettings(eventId, tenantId, themeSettings, eventName = null) {
+  static async upsertEventThemeSettings(eventId, tenantId, themeSettings, eventName) {
     try {
       const { data, error } = await supabase
         .from('event_theme_settings')
@@ -48,7 +48,12 @@ export class EventThemeService {
           event_id: eventId,
           tenant_id: tenantId,
           event_name: eventName,
-          ...themeSettings
+          seat_available: themeSettings.seat_available,
+          seat_selected_me: themeSettings.seat_selected_me,
+          seat_selected_other: themeSettings.seat_selected_other,
+          seat_blocked: themeSettings.seat_blocked,
+          seat_sold: themeSettings.seat_sold,
+          seat_reserved: themeSettings.seat_reserved
         }, {
           onConflict: 'event_id,tenant_id'
         })
@@ -68,9 +73,9 @@ export class EventThemeService {
   }
 
   /**
-   * Obtener todas las configuraciones de tema por evento para un tenant
+   * Obtener todas las configuraciones de tema para un tenant
    * @param {string} tenantId - ID del tenant
-   * @returns {Promise<Array>} Lista de configuraciones
+   * @returns {Promise<Array>} Lista de configuraciones de tema
    */
   static async getAllEventThemeSettings(tenantId) {
     try {
@@ -125,15 +130,26 @@ export class EventThemeService {
    */
   static async getAvailableEvents(tenantId) {
     try {
+      // Usar SQL raw para manejar eventos sin fecha_evento
       const { data, error } = await supabase
-        .from('eventos')
-        .select('id, nombre, fecha')
-        .eq('tenant_id', tenantId)
-        .order('fecha', { ascending: false });
+        .rpc('get_available_events_with_fallback', { 
+          tenant_id_param: tenantId 
+        });
 
       if (error) {
-        console.error('[EventThemeService] Error getting events:', error);
-        throw error;
+        // Fallback: consulta simple si la función RPC no existe
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('eventos')
+          .select('id, nombre, fecha_evento, created_at')
+          .eq('tenant_id', tenantId)
+          .order('created_at', { ascending: false });
+
+        if (fallbackError) {
+          console.error('[EventThemeService] Error getting events (fallback):', fallbackError);
+          throw fallbackError;
+        }
+
+        return fallbackData || [];
       }
 
       return data || [];

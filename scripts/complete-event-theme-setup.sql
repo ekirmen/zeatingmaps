@@ -1,37 +1,25 @@
--- Crear tabla para configuraciones de tema por evento
-CREATE TABLE IF NOT EXISTS public.event_theme_settings (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  event_id UUID NOT NULL REFERENCES public.eventos(id) ON DELETE CASCADE,
-  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
-  -- Colores específicos del evento
-  seat_available VARCHAR(7) DEFAULT '#4CAF50',
-  seat_selected_me VARCHAR(7) DEFAULT '#1890ff',
-  seat_selected_other VARCHAR(7) DEFAULT '#faad14',
-  seat_blocked VARCHAR(7) DEFAULT '#ff4d4f',
-  seat_sold VARCHAR(7) DEFAULT '#8c8c8c',
-  seat_reserved VARCHAR(7) DEFAULT '#722ed1',
-  -- Metadatos
-  event_name VARCHAR(255),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  UNIQUE(event_id, tenant_id)
-);
+-- Script para completar la configuración del sistema de temas por evento
+-- Ejecutar después de que la tabla event_theme_settings ya esté creada
 
--- Crear índices para mejorar rendimiento
-CREATE INDEX IF NOT EXISTS idx_event_theme_settings_event_id ON public.event_theme_settings(event_id);
-CREATE INDEX IF NOT EXISTS idx_event_theme_settings_tenant_id ON public.event_theme_settings(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_event_theme_settings_tenant_event ON public.event_theme_settings(tenant_id, event_id);
+-- 1. Crear la función que falta para el trigger
+CREATE OR REPLACE FUNCTION public.update_event_theme_settings_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
--- Habilitar RLS
+-- 2. Habilitar RLS en la tabla
 ALTER TABLE public.event_theme_settings ENABLE ROW LEVEL SECURITY;
 
--- Eliminar políticas existentes si existen (para evitar conflictos)
+-- 3. Eliminar políticas existentes si existen (para evitar conflictos)
 DROP POLICY IF EXISTS "Users can view event theme settings for their tenant" ON public.event_theme_settings;
 DROP POLICY IF EXISTS "Users can insert event theme settings for their tenant" ON public.event_theme_settings;
 DROP POLICY IF EXISTS "Users can update event theme settings for their tenant" ON public.event_theme_settings;
 DROP POLICY IF EXISTS "Users can delete event theme settings for their tenant" ON public.event_theme_settings;
 
--- Política RLS: usuarios solo pueden ver/editar configuraciones de su tenant
+-- 4. Crear políticas RLS
 CREATE POLICY "Users can view event theme settings for their tenant" ON public.event_theme_settings
   FOR SELECT USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
 
@@ -44,23 +32,7 @@ CREATE POLICY "Users can update event theme settings for their tenant" ON public
 CREATE POLICY "Users can delete event theme settings for their tenant" ON public.event_theme_settings
   FOR DELETE USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);
 
--- Trigger para actualizar updated_at automáticamente
-CREATE OR REPLACE FUNCTION public.update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = NOW();
-  RETURN NEW;
-END;
-$$ language 'plpgsql';
-
--- Eliminar trigger existente si existe
-DROP TRIGGER IF EXISTS update_event_theme_settings_updated_at ON public.event_theme_settings;
-
-CREATE TRIGGER update_event_theme_settings_updated_at 
-  BEFORE UPDATE ON public.event_theme_settings 
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
--- Función para obtener o crear configuración de tema para un evento
+-- 5. Crear función para obtener o crear configuración de tema para un evento
 CREATE OR REPLACE FUNCTION public.get_or_create_event_theme_settings(
   event_id_param UUID,
   tenant_id_param UUID
@@ -85,7 +57,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Función RPC para obtener eventos con fallback de fecha
+-- 6. Crear función RPC para obtener eventos con fallback de fecha
 CREATE OR REPLACE FUNCTION public.get_available_events_with_fallback(tenant_id_param UUID)
 RETURNS TABLE(
   id UUID,
@@ -108,7 +80,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Comentarios para documentar
+-- 7. Agregar comentarios para documentar
 COMMENT ON TABLE public.event_theme_settings IS 'Configuraciones de colores personalizados por evento y tenant';
+COMMENT ON FUNCTION public.update_event_theme_settings_updated_at IS 'Función para actualizar automáticamente updated_at en event_theme_settings';
 COMMENT ON FUNCTION public.get_or_create_event_theme_settings IS 'Obtiene o crea configuración de tema para un evento';
 COMMENT ON FUNCTION public.get_available_events_with_fallback IS 'Obtiene eventos ordenados por fecha_evento o created_at como fallback';
+
+-- 8. Verificar que todo esté funcionando
+SELECT 
+  'Tabla event_theme_settings' as item,
+  CASE WHEN EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'event_theme_settings') 
+       THEN '✅ Creada' ELSE '❌ No existe' END as status
+UNION ALL
+SELECT 
+  'RLS habilitado' as item,
+  CASE WHEN EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'event_theme_settings' AND row_security = 'YES') 
+       THEN '✅ Habilitado' ELSE '❌ No habilitado' END as status
+UNION ALL
+SELECT 
+  'Políticas RLS' as item,
+  CASE WHEN EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'event_theme_settings') 
+       THEN '✅ Configuradas' ELSE '❌ No configuradas' END as status
+UNION ALL
+SELECT 
+  'Función update_event_theme_settings_updated_at' as item,
+  CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_event_theme_settings_updated_at') 
+       THEN '✅ Creada' ELSE '❌ No existe' END as status
+UNION ALL
+SELECT 
+  'Función get_available_events_with_fallback' as item,
+  CASE WHEN EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'get_available_events_with_fallback') 
+       THEN '✅ Creada' ELSE '❌ No existe' END as status;

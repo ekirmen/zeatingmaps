@@ -1,34 +1,60 @@
--- Script para verificar la estructura de la tabla eventos
--- Ejecutar primero para ver qué columnas existen
+-- Script simple para verificar la estructura exacta de las tablas
+-- Ejecutar este script primero para identificar los nombres correctos de las columnas
 
--- 1. Verificar la estructura de la tabla
+-- 1. Verificar estructura de la tabla eventos
 SELECT 
+  'eventos' as tabla,
   column_name,
   data_type,
-  is_nullable,
-  column_default
+  is_nullable
 FROM information_schema.columns 
 WHERE table_name = 'eventos' 
-AND table_schema = 'public'
 ORDER BY ordinal_position;
 
--- 2. Verificar si existen las columnas JSON específicas
+-- 2. Verificar estructura de la tabla tenants
 SELECT 
+  'tenants' as tabla,
   column_name,
-  data_type
+  data_type,
+  is_nullable
 FROM information_schema.columns 
-WHERE table_name = 'eventos' 
-AND table_schema = 'public'
-AND column_name IN ('imagenes', 'datosComprador', 'datosBoleto', 'analytics', 'otrasOpciones', 'tags')
-ORDER BY column_name;
+WHERE table_name = 'tenants' 
+ORDER BY ordinal_position;
 
--- 3. Verificar el primer evento para ver la estructura real
+-- 3. Verificar estructura de la tabla event_theme_settings (si existe)
 SELECT 
+  'event_theme_settings' as tabla,
+  column_name,
+  data_type,
+  is_nullable
+FROM information_schema.columns 
+WHERE table_name = 'event_theme_settings' 
+ORDER BY ordinal_position;
+
+-- 4. Verificar si las tablas existen
+SELECT 
+  table_name,
+  table_type
+FROM information_schema.tables 
+WHERE table_name IN ('eventos', 'tenants', 'event_theme_settings')
+ORDER BY table_name;
+
+-- 5. Verificar datos de ejemplo en tenants (sin JOIN)
+SELECT 
+  'tenants' as tabla,
+  *
+FROM tenants
+LIMIT 3;
+
+-- 6. Verificar datos de ejemplo en eventos (sin JOIN)
+SELECT 
+  'eventos' as tabla,
   id,
   nombre,
-  -- Solo seleccionar columnas que sabemos que existen
-  CASE WHEN "imagenes" IS NOT NULL THEN 'EXISTE' ELSE 'NO EXISTE' END as imagenes_exists,
-  CASE WHEN "datosComprador" IS NOT NULL THEN 'EXISTE' ELSE 'NO EXISTE' END as datosComprador_exists,
-  CASE WHEN "datosBoleto" IS NOT NULL THEN 'EXISTE' ELSE 'NO EXISTE' END as datosBoleto_exists
-FROM eventos 
-LIMIT 1;
+  tenant_id,
+  fecha_evento,
+  activo,
+  oculto,
+  created_at
+FROM eventos
+LIMIT 3;
