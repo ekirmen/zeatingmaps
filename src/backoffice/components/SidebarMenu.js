@@ -189,6 +189,7 @@ const SidebarMenu = ({ collapsed }) => {
         // { title: 'Banners de publicidad', path: '/dashboard/banner-ads', icon: faImage }, // OCULTO
         { title: 'Textos legales', path: '/dashboard/legal-texts', icon: faFileAlt },
         { title: 'Web Studio', path: '/dashboard/webstudio', icon: faPalette },
+        { title: 'Configuración de Asientos', path: '/dashboard/seat-settings', icon: faCog },
         { title: 'Páginas', path: '/dashboard/pages', icon: faFileAlt },
         { title: 'Colores Web', path: '/dashboard/webcolors', icon: faPalette }
         // { title: 'Repositorio de imágenes', path: '/dashboard/galeria', icon: faImage } // OCULTO
