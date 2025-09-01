@@ -5,6 +5,7 @@
   "engines": {
     "node": "22.x"
   },
+  "packageManager": "npm@11.4.2",
   "homepage": "/store",
   "scripts": {
     "start": "craco start",
