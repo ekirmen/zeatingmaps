@@ -39,9 +39,9 @@ const CompactBoleteria = ({
   // Cargar tema del evento
   useEffect(() => {
     const loadEventTheme = async () => {
-      if (selectedFuncion?.evento) {
+      if (selectedFuncion?.evento_id) {
         try {
-          const eventSpecificTheme = await getEventTheme(selectedFuncion.evento);
+          const eventSpecificTheme = await getEventTheme(selectedFuncion.evento_id);
           setEventTheme(eventSpecificTheme);
         } catch (error) {
           console.error('Error loading event theme:', error);

@@ -131,6 +131,8 @@ const SimpleSeatingMap = ({
   }, [selectedPlantilla, selectedFuncion]);
 
   const getSeatColor = (seat) => {
+    const sessionId = localStorage.getItem('anonSessionId');
+    
     // IMPORTANTE: Los asientos vendidos SIEMPRE se mantienen en gris
     if (seat.estado === 'pagado') {
       return '#9ca3af'; // Gris oscuro para vendido - NO CAMBIA
@@ -147,12 +149,14 @@ const SimpleSeatingMap = ({
     }
     
     // AMARILLO para asientos seleccionados por el usuario actual
-    if (selectedSeats.some(s => s._id === seat._id)) {
+    const isSelectedByMe = lockedSeats.some(ls => 
+      ls.seat_id === seat._id && ls.session_id === sessionId
+    );
+    if (isSelectedByMe) {
       return '#facc15'; // Amarillo para seleccionado
     }
     
     // ROJO para asientos bloqueados por otro usuario
-    const sessionId = localStorage.getItem('anonSessionId');
     const isLockedByOther = lockedSeats.some(ls => 
       ls.seat_id === seat._id && ls.session_id !== sessionId
     );
@@ -211,17 +215,23 @@ const SimpleSeatingMap = ({
       }
 
       // Verificar si ya está seleccionado por el usuario actual
-      const isAlreadySelected = selectedSeats.some(s => s._id === seat._id);
       const sessionId = localStorage.getItem('anonSessionId') || crypto.randomUUID();
       if (!localStorage.getItem('anonSessionId')) {
         localStorage.setItem('anonSessionId', sessionId);
       }
+
+      // Usar lockedSeats para determinar si el asiento ya está seleccionado por el usuario actual
+      const isAlreadySelected = lockedSeats.some(ls => 
+        ls.seat_id === seat._id && ls.session_id === sessionId
+      );
 
       console.log('🔍 [SimpleSeatingMap] Estado del asiento:', {
         seatId: seat._id,
         isAlreadySelected,
         selectedSeatsCount: selectedSeats.length,
         selectedSeatsIds: selectedSeats.map(s => s._id),
+        lockedSeatsCount: lockedSeats.length,
+        lockedSeatsIds: lockedSeats.map(ls => ls.seat_id),
         sessionId
       });
 
@@ -256,7 +266,13 @@ const SimpleSeatingMap = ({
 
         // Llamar al callback del padre para deseleccionar
         console.log('📞 Llamando onSeatClick para deseleccionar:', seat._id);
-        onSeatClick(seat, mesa);
+        // Buscar el asiento en selectedSeats para obtener la información de precio
+        const selectedSeatWithPrice = selectedSeats.find(s => s._id === seat._id);
+        if (selectedSeatWithPrice) {
+          onSeatClick(selectedSeatWithPrice, mesa);
+        } else {
+          onSeatClick(seat, mesa);
+        }
         message.success('Asiento deseleccionado');
         return;
       } else {
