@@ -108,74 +108,84 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
   }, [cart, removeFromCart]);
 
   useEffect(() => {
-    if (!enabled || !funcionId) {
-      console.warn('[SEAT_LOCK_HOOK] Hook deshabilitado o sin funcionId');
-      setLockedSeats([]);
-      return;
-    }
+    let isActive = true;
 
-    // Limpia canal anterior si existe
-    if (channelRef.current) {
-      console.log('[SEAT_LOCK_HOOK] Limpiando canal anterior');
-      supabase.removeChannel(channelRef.current);
-      channelRef.current = null;
-      isSubscribedRef.current = false;
-    }
+    const setupRealtime = async () => {
+      if (!enabled || !funcionId) {
+        console.warn('[SEAT_LOCK_HOOK] Hook deshabilitado o sin funcionId');
+        setLockedSeats([]);
+        return;
+      }
 
-    fetchLockedSeats();
+      // Limpia canal anterior si existe y espera a que se elimine
+      if (channelRef.current) {
+        console.log('[SEAT_LOCK_HOOK] Limpiando canal anterior');
+        await supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+        isSubscribedRef.current = false;
+      }
 
-    // Solo crear nuevo canal si no hay uno activo
-    if (!isSubscribedRef.current) {
-      const channelName = `seat-locks-realtime-${funcionId}`;
-      console.log(`[SEAT_LOCK_HOOK] Creando canal: ${channelName}`);
-      
-      const channel = supabase.channel(channelName);
-      channelRef.current = channel;
+      // Cargar bloqueos iniciales antes de suscribirnos
+      await fetchLockedSeats();
 
-      channel.on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'seat_locks',
-          filter: `funcion_id=eq.${funcionId}`,
-        },
-        (payload) => {
-          console.log('[SEAT_LOCK_HOOK] Payload realtime recibido:', payload);
-          setLockedSeats(currentSeats => {
-            let updatedSeats = [...currentSeats];
-            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-              const idx = updatedSeats.findIndex(s => s.seat_id === payload.new.seat_id);
-              if (idx > -1) {
-                updatedSeats[idx] = payload.new;
-              } else {
-                updatedSeats.push(payload.new);
-              }
-            } else if (payload.eventType === 'DELETE') {
-              updatedSeats = updatedSeats.filter(s => s.seat_id !== payload.old.seat_id);
+      // Solo crear nuevo canal si no hay uno activo
+      if (!isSubscribedRef.current && isActive) {
+        const channelName = `seat-locks-realtime-${funcionId}`;
+        console.log(`[SEAT_LOCK_HOOK] Creando canal: ${channelName}`);
+
+        const channel = supabase.channel(channelName);
+        channelRef.current = channel;
+
+        channel
+          .on(
+            'postgres_changes',
+            {
+              event: '*',
+              schema: 'public',
+              table: 'seat_locks',
+              filter: `funcion_id=eq.${funcionId}`,
+            },
+            (payload) => {
+              console.log('[SEAT_LOCK_HOOK] Payload realtime recibido:', payload);
+              setLockedSeats(currentSeats => {
+                let updatedSeats = [...currentSeats];
+                if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                  const idx = updatedSeats.findIndex(s => s.seat_id === payload.new.seat_id);
+                  if (idx > -1) {
+                    updatedSeats[idx] = payload.new;
+                  } else {
+                    updatedSeats.push(payload.new);
+                  }
+                } else if (payload.eventType === 'DELETE') {
+                  updatedSeats = updatedSeats.filter(s => s.seat_id !== payload.old.seat_id);
+                }
+
+                // Check cart for locked seats using memoized function
+                checkCartForLockedSeats(updatedSeats);
+
+                return updatedSeats;
+              });
             }
-
-            // Check cart for locked seats using memoized function
-            checkCartForLockedSeats(updatedSeats);
-
-            return updatedSeats;
+          )
+          .subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+              console.log(`[SEAT_LOCK_HOOK] ✅ Suscrito al canal ${channelName}`);
+              isSubscribedRef.current = true;
+            } else if (status === 'CHANNEL_ERROR') {
+              console.warn('[SEAT_LOCK_HOOK] ⚠️ Error en el canal, intentando reconectar...');
+              isSubscribedRef.current = false;
+            } else if (status === 'CLOSED') {
+              console.log(`[SEAT_LOCK_HOOK] ℹ️ Canal ${channelName} cerrado.`);
+              isSubscribedRef.current = false;
+            }
           });
-        }
-      ).subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          console.log(`[SEAT_LOCK_HOOK] ✅ Suscrito al canal ${channelName}`);
-          isSubscribedRef.current = true;
-        } else if (status === 'CHANNEL_ERROR') {
-          console.warn('[SEAT_LOCK_HOOK] ⚠️ Error en el canal, intentando reconectar...');
-          isSubscribedRef.current = false;
-        } else if (status === 'CLOSED') {
-          console.log(`[SEAT_LOCK_HOOK] ℹ️ Canal ${channelName} cerrado.`);
-          isSubscribedRef.current = false;
-        }
-      });
-    }
+      }
+    };
+
+    setupRealtime();
 
     return () => {
+      isActive = false;
       if (channelRef.current) {
         console.log('[SEAT_LOCK_HOOK] Limpiando canal en cleanup');
         supabase.removeChannel(channelRef.current);
