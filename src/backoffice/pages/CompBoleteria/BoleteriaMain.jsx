@@ -104,10 +104,39 @@ const BoleteriaMain = () => {
           
           // Sincronizar selectedSeats con los bloqueos actuales
           const lockedSeatIds = (data || []).map(lock => lock.seat_id);
+          console.log('🔄 [BoleteriaMain] Sincronizando selectedSeats con lockedSeats:', {
+            lockedSeatIds,
+            currentSelectedSeats: Array.isArray(prev) ? prev.map(s => s._id) : []
+          });
           setSelectedSeats(prev => {
             const currentSeats = Array.isArray(prev) ? prev : [];
             // Mantener solo los asientos que están bloqueados en la BD
-            return currentSeats.filter(seat => lockedSeatIds.includes(seat._id));
+            const filteredSeats = currentSeats.filter(seat => lockedSeatIds.includes(seat._id));
+            
+            // Si hay bloqueos pero no hay asientos en el carrito, crear asientos básicos
+            if (lockedSeatIds.length > 0 && filteredSeats.length === 0 && selectedPriceOption) {
+              console.log('⚠️ [BoleteriaMain] Hay bloqueos pero no hay asientos en carrito, creando asientos básicos');
+              const basicSeats = lockedSeatIds.map(seatId => ({
+                _id: seatId,
+                precio: selectedPriceOption?.precio || 0,
+                precioInfo: selectedPriceOption ? {
+                  entrada: selectedPriceOption.entrada,
+                  zona: selectedPriceOption.zona,
+                  comision: selectedPriceOption.comision,
+                  precioOriginal: selectedPriceOption.precioOriginal,
+                  category: selectedPriceOption.category
+                } : null
+              }));
+              console.log('✅ [BoleteriaMain] Asientos básicos creados:', basicSeats.map(s => s._id));
+              return basicSeats;
+            }
+            
+            console.log('✅ [BoleteriaMain] Sincronización completada:', {
+              antes: currentSeats.length,
+              despues: filteredSeats.length,
+              asientosFiltrados: filteredSeats.map(s => s._id)
+            });
+            return filteredSeats;
           });
         }
       } catch (error) {
@@ -464,6 +493,10 @@ const BoleteriaMain = () => {
         return newState;
       });
     } else if (action === 'unlock') {
+      console.log('🔄 [BoleteriaMain] Procesando unlock para seatId:', seatId);
+      console.log('🔄 [BoleteriaMain] Estado actual lockedSeats:', lockedSeats.map(ls => ls.seat_id));
+      console.log('🔄 [BoleteriaMain] Estado actual selectedSeats:', selectedSeats.map(s => s._id));
+      
       // Remover el bloqueo del estado local
       setLockedSeats(prev => {
         const newState = prev.filter(lock => lock.seat_id !== seatId);
@@ -478,6 +511,76 @@ const BoleteriaMain = () => {
         return newState;
       });
     }
+  };
+
+  // Función para sincronizar manualmente el carrito con los bloqueos
+  const syncCartWithLocks = () => {
+    console.log('🔄 [BoleteriaMain] Sincronizando manualmente carrito con bloqueos');
+    console.log('🔄 [BoleteriaMain] LockedSeats:', lockedSeats.map(ls => ls.seat_id));
+    console.log('🔄 [BoleteriaMain] SelectedSeats:', selectedSeats.map(s => s._id));
+    
+    const lockedSeatIds = lockedSeats.map(lock => lock.seat_id);
+    
+    setSelectedSeats(prev => {
+      const currentSeats = Array.isArray(prev) ? prev : [];
+      // Mantener solo los asientos que están bloqueados en la BD
+      const filteredSeats = currentSeats.filter(seat => lockedSeatIds.includes(seat._id));
+      
+      // Si hay bloqueos pero no hay asientos en el carrito, crear asientos básicos
+      if (lockedSeatIds.length > 0 && filteredSeats.length === 0 && selectedPriceOption) {
+        console.log('⚠️ [BoleteriaMain] Hay bloqueos pero no hay asientos en carrito, creando asientos básicos');
+        const basicSeats = lockedSeatIds.map(seatId => ({
+          _id: seatId,
+          precio: selectedPriceOption?.precio || 0,
+          precioInfo: selectedPriceOption ? {
+            entrada: selectedPriceOption.entrada,
+            zona: selectedPriceOption.zona,
+            comision: selectedPriceOption.comision,
+            precioOriginal: selectedPriceOption.precioOriginal,
+            category: selectedPriceOption.category
+          } : null
+        }));
+        console.log('✅ [BoleteriaMain] Asientos básicos creados:', basicSeats.map(s => s._id));
+        return basicSeats;
+      }
+      
+      console.log('✅ [BoleteriaMain] Sincronización manual completada:', {
+        antes: currentSeats.length,
+        despues: filteredSeats.length,
+        asientosFiltrados: filteredSeats.map(s => s._id)
+      });
+      return filteredSeats;
+    });
+    
+    message.success('Carrito sincronizado con bloqueos de asientos');
+  };
+
+  // Función para forzar la deselección de un asiento específico
+  const forceDeselectSeat = async (seatId) => {
+    console.log('🔄 [BoleteriaMain] Forzando deselección del asiento:', seatId);
+    
+    const sessionId = localStorage.getItem('anonSessionId');
+    
+    // Remover de la base de datos
+    const { error: unlockError } = await supabase
+      .from('seat_locks')
+      .delete()
+      .eq('seat_id', seatId)
+      .eq('funcion_id', parseInt(selectedFuncion.id))
+      .eq('session_id', sessionId)
+      .eq('lock_type', 'seat');
+
+    if (unlockError) {
+      console.error('❌ Error al desbloquear asiento:', unlockError);
+      message.error('Error al deseleccionar el asiento');
+      return;
+    }
+    
+    // Remover del estado local
+    setLockedSeats(prev => prev.filter(lock => lock.seat_id !== seatId));
+    setSelectedSeats(prev => prev.filter(seat => seat._id !== seatId));
+    
+    message.success(`Asiento ${seatId} deseleccionado forzadamente`);
   };
 
   const handleBlockModeToggle = (checked) => {
@@ -1077,6 +1180,22 @@ const BoleteriaMain = () => {
                        }}
                      >
                        Limpiar Cache
+                     </Button>
+                     <Button 
+                       size="small"
+                       type="default"
+                       onClick={syncCartWithLocks}
+                     >
+                       Sincronizar Carrito
+                     </Button>
+                     <Button 
+                       size="small"
+                       type="default"
+                       danger
+                       onClick={() => forceDeselectSeat('silla_1755825682843_3')}
+                       disabled={!lockedSeats.some(ls => ls.seat_id === 'silla_1755825682843_3')}
+                     >
+                       Deseleccionar Silla 15
                      </Button>
                     {blockMode && blockedSeats.length > 0 && (
                       <Button 
