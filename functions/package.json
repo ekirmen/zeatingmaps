@@ -7,6 +7,9 @@
     "serve": "npm run build",
     "start": "npm run shell",
   },
+  "engines": {
+    "node": "20.x"
+  },
   "packageManager": "npm@11.4.2",
   "main": "lib/index.js",
   "devDependencies": {
