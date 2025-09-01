@@ -266,14 +266,42 @@ const BoleteriaMain = () => {
   };
 
   // Funciones de manejo
-  const clearCartCompletely = () => {
+  const clearCartCompletely = async () => {
+    console.log('🧹 [BoleteriaMain] Limpiando carrito completamente');
+    
+    // Limpiar bloqueos de la base de datos
+    if (selectedFuncion?.id) {
+      try {
+        const sessionId = localStorage.getItem('anonSessionId');
+        if (sessionId) {
+          const { error } = await supabase
+            .from('seat_locks')
+            .delete()
+            .eq('funcion_id', selectedFuncion.id)
+            .eq('session_id', sessionId)
+            .eq('lock_type', 'seat');
+          
+          if (error) {
+            console.error('❌ Error limpiando bloqueos:', error);
+          } else {
+            console.log('✅ Bloqueos limpiados de la base de datos');
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error inesperado limpiando bloqueos:', error);
+      }
+    }
+    
+    // Limpiar estados locales
     setSelectedSeats([]);
     setProductosCarrito([]);
     setSelectedPriceOption(null);
     setActiveZoneId(null);
     setSelectedDiscount(null);
     setDiscountAmount(0);
-    message.success('Carrito limpiado completamente');
+    setLockedSeats([]);
+    
+    message.success('Carrito y bloqueos limpiados completamente');
   };
 
   const handlePriceOptionSelect = (priceOption) => {
@@ -307,48 +335,63 @@ const BoleteriaMain = () => {
         return;
       }
 
-      setSelectedSeats(prev => {
-        const currentSeats = Array.isArray(prev) ? prev : [];
-        const isSelected = currentSeats.find(s => s._id === seat._id);
-        let newSeats;
-        
-        if (isSelected) {
-          // Deselección: el asiento ya fue desbloqueado en la BD por SimpleSeatingMap
-          newSeats = currentSeats.filter(s => s._id !== seat._id);
-          console.log('✅ Asiento removido del carrito:', seat._id);
-        } else {
-          // Selección: el asiento ya fue bloqueado en la BD por SimpleSeatingMap
-          const seatWithPrice = {
-            ...seat,
-            precio: selectedPriceOption?.precio || 0,
-            precioInfo: selectedPriceOption ? {
-              entrada: selectedPriceOption.entrada,
-              zona: selectedPriceOption.zona,
-              comision: selectedPriceOption.comision,
-              precioOriginal: selectedPriceOption.precioOriginal,
-              category: selectedPriceOption.category
-            } : null
-          };
-          newSeats = [...currentSeats, seatWithPrice];
-          console.log('✅ Asiento agregado al carrito:', seat._id);
-        }
-        
-        return newSeats;
-      });
+             setSelectedSeats(prev => {
+         const currentSeats = Array.isArray(prev) ? prev : [];
+         const isSelected = currentSeats.find(s => s._id === seat._id);
+         let newSeats;
+         
+         if (isSelected) {
+           // Deselección: el asiento ya fue desbloqueado en la BD por SimpleSeatingMap
+           newSeats = currentSeats.filter(s => s._id !== seat._id);
+           console.log('✅ [BoleteriaMain] Asiento removido del carrito:', seat._id, 'Nuevo estado:', newSeats.length, 'asientos');
+         } else {
+           // Selección: el asiento ya fue bloqueado en la BD por SimpleSeatingMap
+           const seatWithPrice = {
+             ...seat,
+             precio: selectedPriceOption?.precio || 0,
+             precioInfo: selectedPriceOption ? {
+               entrada: selectedPriceOption.entrada,
+               zona: selectedPriceOption.zona,
+               comision: selectedPriceOption.comision,
+               precioOriginal: selectedPriceOption.precioOriginal,
+               category: selectedPriceOption.category
+             } : null
+           };
+           newSeats = [...currentSeats, seatWithPrice];
+           console.log('✅ [BoleteriaMain] Asiento agregado al carrito:', seat._id, 'Nuevo estado:', newSeats.length, 'asientos');
+         }
+         
+         return newSeats;
+       });
     }
   };
 
   // Callback para manejar cambios en bloqueos desde SimpleSeatingMap
   const handleLockChange = (action, seatId, lockData) => {
+    console.log('🔄 [BoleteriaMain] handleLockChange llamado:', { action, seatId, lockData });
+    
     if (action === 'lock') {
       // Agregar el bloqueo al estado local
       setLockedSeats(prev => {
         const filtered = prev.filter(lock => lock.seat_id !== seatId);
-        return [...filtered, lockData];
+        const newState = [...filtered, lockData];
+        console.log('✅ [BoleteriaMain] Bloqueo agregado. Nuevo estado:', newState.length, 'bloqueos');
+        return newState;
       });
     } else if (action === 'unlock') {
       // Remover el bloqueo del estado local
-      setLockedSeats(prev => prev.filter(lock => lock.seat_id !== seatId));
+      setLockedSeats(prev => {
+        const newState = prev.filter(lock => lock.seat_id !== seatId);
+        console.log('✅ [BoleteriaMain] Bloqueo removido. Nuevo estado:', newState.length, 'bloqueos');
+        return newState;
+      });
+      
+      // También remover el asiento del carrito si está ahí
+      setSelectedSeats(prev => {
+        const newState = prev.filter(seat => seat._id !== seatId);
+        console.log('✅ [BoleteriaMain] Asiento removido del carrito. Nuevo estado:', newState.length, 'asientos');
+        return newState;
+      });
     }
   };
 
@@ -931,14 +974,25 @@ const BoleteriaMain = () => {
               {/* Botones fijos en la parte inferior */}
               <div className="p-4 border-t border-gray-200 bg-gray-50">
                 <div className="space-y-2">
-                  <div className="flex space-x-2">
-                    <Button 
-                      size="small"
-                      onClick={clearCartCompletely}
-                      disabled={selectedSeats.length === 0 && productosCarrito.length === 0}
-                    >
-                      Limpiar Todo
-                    </Button>
+                                     <div className="flex space-x-2">
+                     <Button 
+                       size="small"
+                       onClick={clearCartCompletely}
+                       disabled={selectedSeats.length === 0 && productosCarrito.length === 0}
+                     >
+                       Limpiar Todo
+                     </Button>
+                     <Button 
+                       size="small"
+                       onClick={() => {
+                         console.log('🧹 Limpiando cache del navegador...');
+                         localStorage.removeItem('anonSessionId');
+                         message.success('Cache limpiado. Recarga la página.');
+                         setTimeout(() => window.location.reload(), 1000);
+                       }}
+                     >
+                       Limpiar Cache
+                     </Button>
                     {blockMode && blockedSeats.length > 0 && (
                       <Button 
                         size="small"
@@ -1064,15 +1118,15 @@ const BoleteriaMain = () => {
         </div>
       </Drawer>
 
-      {/* Drawer de diagnóstico del servidor */}
-      <Drawer
-        title="Diagnóstico del Servidor"
-        open={showServerDiagnostic}
-        onClose={() => setShowServerDiagnostic(false)}
-        width={800}
-      >
-        <ServerDiagnostic />
-      </Drawer>
+             {/* Drawer de diagnóstico del servidor */}
+       <Drawer
+         title="Diagnóstico del Servidor"
+         open={showServerDiagnostic}
+         onClose={() => setShowServerDiagnostic(false)}
+         width={800}
+       >
+         <ServerDiagnostic selectedFuncion={selectedFuncion} />
+       </Drawer>
     </div>
   );
 };

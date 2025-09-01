@@ -219,6 +219,8 @@ const SimpleSeatingMap = ({
 
       // Si ya está seleccionado, deseleccionarlo
       if (isAlreadySelected) {
+        console.log('🔄 [SimpleSeatingMap] Deseleccionando asiento:', seat._id);
+        
         // Desbloquear el asiento en la base de datos
         const { error: unlockError } = await supabase
           .from('seat_locks')
@@ -229,16 +231,23 @@ const SimpleSeatingMap = ({
           .eq('lock_type', 'seat');
 
         if (unlockError) {
-          console.error('Error al desbloquear asiento:', unlockError);
+          console.error('❌ Error al desbloquear asiento:', unlockError);
+          message.error('Error al deseleccionar el asiento');
+          return;
         } else {
           console.log('✅ Asiento desbloqueado en la base de datos');
+          
           // Notificar al componente padre sobre el cambio
           if (onLockChange) {
+            console.log('📞 Llamando onLockChange con unlock para:', seat._id);
             onLockChange('unlock', seat._id);
+          } else {
+            console.warn('⚠️ onLockChange no está definido');
           }
         }
 
         // Llamar al callback del padre para deseleccionar
+        console.log('📞 Llamando onSeatClick para deseleccionar:', seat._id);
         onSeatClick(seat, mesa);
         message.success('Asiento deseleccionado');
         return;
