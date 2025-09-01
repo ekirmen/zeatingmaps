@@ -217,6 +217,14 @@ const SimpleSeatingMap = ({
         localStorage.setItem('anonSessionId', sessionId);
       }
 
+      console.log('🔍 [SimpleSeatingMap] Estado del asiento:', {
+        seatId: seat._id,
+        isAlreadySelected,
+        selectedSeatsCount: selectedSeats.length,
+        selectedSeatsIds: selectedSeats.map(s => s._id),
+        sessionId
+      });
+
       // Si ya está seleccionado, deseleccionarlo
       if (isAlreadySelected) {
         console.log('🔄 [SimpleSeatingMap] Deseleccionando asiento:', seat._id);
@@ -251,6 +259,8 @@ const SimpleSeatingMap = ({
         onSeatClick(seat, mesa);
         message.success('Asiento deseleccionado');
         return;
+      } else {
+        console.log('⚠️ [SimpleSeatingMap] Asiento NO está seleccionado, procediendo con selección:', seat._id);
       }
 
       // Verificar si hay un precio seleccionado

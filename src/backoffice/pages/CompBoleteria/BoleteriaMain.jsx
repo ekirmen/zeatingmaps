@@ -119,6 +119,91 @@ const BoleteriaMain = () => {
     loadLockedSeats();
   }, [selectedFuncion?.id]);
 
+  // Real-time subscription para seat_locks
+  useEffect(() => {
+    if (!selectedFuncion?.id) return;
+
+    const sessionId = localStorage.getItem('anonSessionId');
+    console.log('🔌 [BoleteriaMain] Iniciando suscripción real-time para seat_locks, función:', selectedFuncion.id);
+
+    const channel = supabase
+      .channel(`seat-locks-realtime-${selectedFuncion.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'seat_locks',
+          filter: `funcion_id=eq.${selectedFuncion.id}`
+        },
+        (payload) => {
+          console.log('📡 [BoleteriaMain] Real-time update recibido:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            // Nuevo bloqueo creado
+            const newLock = payload.new;
+            if (newLock.session_id === sessionId) {
+              // Es nuestro bloqueo, actualizar lockedSeats
+              setLockedSeats(prev => {
+                const filtered = prev.filter(lock => lock.seat_id !== newLock.seat_id);
+                return [...filtered, newLock];
+              });
+              
+              // También actualizar selectedSeats si no está ya ahí
+              setSelectedSeats(prev => {
+                const isAlreadySelected = prev.find(seat => seat._id === newLock.seat_id);
+                if (!isAlreadySelected && selectedPriceOption) {
+                  const seatWithPrice = {
+                    _id: newLock.seat_id,
+                    precio: selectedPriceOption?.precio || 0,
+                    precioInfo: selectedPriceOption ? {
+                      entrada: selectedPriceOption.entrada,
+                      zona: selectedPriceOption.zona,
+                      comision: selectedPriceOption.comision,
+                      precioOriginal: selectedPriceOption.precioOriginal,
+                      category: selectedPriceOption.category
+                    } : null
+                  };
+                  return [...prev, seatWithPrice];
+                }
+                return prev;
+              });
+            }
+          } else if (payload.eventType === 'DELETE') {
+            // Bloqueo eliminado
+            const deletedLock = payload.old;
+            if (deletedLock.session_id === sessionId) {
+              // Es nuestro bloqueo, remover de lockedSeats
+              setLockedSeats(prev => prev.filter(lock => lock.seat_id !== deletedLock.seat_id));
+              
+              // También remover de selectedSeats
+              setSelectedSeats(prev => prev.filter(seat => seat._id !== deletedLock.seat_id));
+            }
+          } else if (payload.eventType === 'UPDATE') {
+            // Bloqueo actualizado
+            const updatedLock = payload.new;
+            const oldLock = payload.old;
+            
+            if (updatedLock.session_id === sessionId) {
+              // Es nuestro bloqueo, actualizar lockedSeats
+              setLockedSeats(prev => {
+                const filtered = prev.filter(lock => lock.seat_id !== updatedLock.seat_id);
+                return [...filtered, updatedLock];
+              });
+            }
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('📡 [BoleteriaMain] Estado de suscripción real-time:', status);
+      });
+
+    return () => {
+      console.log('🔌 [BoleteriaMain] Desconectando suscripción real-time');
+      supabase.removeChannel(channel);
+    };
+  }, [selectedFuncion?.id, selectedPriceOption]);
+
   // Estados locales básicos
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [blockedSeats, setBlockedSeats] = useState([]);
