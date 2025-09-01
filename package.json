@@ -1,10 +1,7 @@
 {
   "name": "ekirmen",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
-  "engines": {
-    "node": "22.x"
-  },
   "packageManager": "npm@11.4.2",
   "homepage": "/store",
   "scripts": {
