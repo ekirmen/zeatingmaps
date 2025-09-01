@@ -14,7 +14,7 @@
       "DISABLE_ESLINT_PLUGIN": "true",
       "SKIP_PREFLIGHT_CHECK": "true",
       "NODE_ENV": "production",
-      "NODE_VERSION": "18.x"
+      "NODE_VERSION": "22.x"
     }
   },
   "rewrites": [
