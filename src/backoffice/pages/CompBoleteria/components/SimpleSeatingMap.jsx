@@ -14,10 +14,11 @@ const SimpleSeatingMap = ({
   selectedPlantilla = null, // Agregar prop para plantilla de precios
   selectedPriceOption = null, // Nuevo prop para el precio seleccionado
   selectedZonaId = null,
-  mapa = null // Agregar prop para el mapa
+  mapa = null, // Agregar prop para el mapa
+  lockedSeats = [], // Prop para bloqueos sincronizados con el padre
+  onLockChange = null // Callback para notificar cambios en bloqueos
 }) => {
   const [error, setError] = useState(null);
-  const [lockedSeats, setLockedSeats] = useState([]);
   const [zonePrices, setZonePrices] = useState({});
   const channelRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -125,83 +126,6 @@ const SimpleSeatingMap = ({
     }
   };
 
-  // Cargar asientos bloqueados
-  const loadLockedSeats = async () => {
-    if (!selectedFuncion?.id) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('seat_locks')
-        .select('seat_id, session_id, locked_at, status, expires_at')
-        .eq('funcion_id', selectedFuncion.id);
-
-      if (error) throw error;
-
-      console.log('Asientos bloqueados cargados:', data);
-      setLockedSeats(data || []);
-    } catch (error) {
-      console.error('Error loading locked seats:', error);
-    }
-  };
-
-  // Suscribirse a cambios en tiempo real
-  const subscribeToRealtime = () => {
-    if (!selectedFuncion?.id) return;
-    const channelName = `seat-locks-${selectedFuncion.id}`;
-
-    // Evitar suscripción múltiple al mismo canal
-    const existingChannel = supabase
-      .getChannels()
-      .find(ch => ch.topic === channelName);
-
-    if (existingChannel) {
-      console.log('Reutilizando canal existente:', channelName);
-      channelRef.current = existingChannel;
-      return;
-    }
-
-    const channel = supabase
-      .channel(channelName)
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'seat_locks',
-        filter: `funcion_id=eq.${selectedFuncion.id}`
-      }, (payload) => {
-        console.log('Cambio en tiempo real:', payload);
-
-        if (payload.eventType === 'INSERT') {
-          setLockedSeats(prev => [...prev, payload.new]);
-        } else if (payload.eventType === 'DELETE') {
-          setLockedSeats(prev => prev.filter(seat => seat.seat_id !== payload.old.seat_id));
-        } else if (payload.eventType === 'UPDATE') {
-          setLockedSeats(prev =>
-            prev.map(seat =>
-              seat.seat_id === payload.new.seat_id ? payload.new : seat
-            )
-          );
-        }
-      })
-      .subscribe();
-
-    channelRef.current = channel;
-  };
-
-  useEffect(() => {
-    loadZonePrices();
-    loadLockedSeats();
-    subscribeToRealtime();
-
-    return () => {
-      if (channelRef.current) {
-        channelRef.current.unsubscribe();
-        // Remover completamente el canal para permitir nuevas suscripciones
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-    };
-  }, [selectedFuncion, selectedPlantilla]);
-
   useEffect(() => {
     loadZonePrices();
   }, [selectedPlantilla, selectedFuncion]);
@@ -306,6 +230,12 @@ const SimpleSeatingMap = ({
 
         if (unlockError) {
           console.error('Error al desbloquear asiento:', unlockError);
+        } else {
+          console.log('✅ Asiento desbloqueado en la base de datos');
+          // Notificar al componente padre sobre el cambio
+          if (onLockChange) {
+            onLockChange('unlock', seat._id);
+          }
         }
 
         // Llamar al callback del padre para deseleccionar
@@ -354,6 +284,27 @@ const SimpleSeatingMap = ({
         return;
       }
 
+      // Obtener el tenant_id actual
+      const getCurrentTenantId = () => {
+        try {
+          const tenantId = localStorage.getItem('currentTenantId');
+          if (tenantId) return tenantId;
+          
+          if (typeof window !== 'undefined' && window.__TENANT_CONTEXT__) {
+            const globalTenantId = window.__TENANT_CONTEXT__.getTenantId?.();
+            if (globalTenantId) return globalTenantId;
+          }
+          
+          console.warn('⚠️ No se pudo obtener el tenant_id para el bloqueo de asiento.');
+          return null;
+        } catch (error) {
+          console.warn('No se pudo obtener el tenant ID:', error);
+          return null;
+        }
+      };
+
+      const tenantId = getCurrentTenantId();
+
       // Bloquear asiento en la base de datos
       const lockData = {
         seat_id: seat._id,
@@ -364,6 +315,11 @@ const SimpleSeatingMap = ({
         status: 'locked',
         lock_type: 'seat' // Agregar el tipo de bloqueo requerido por las políticas
       };
+
+      // Agregar tenant_id si está disponible
+      if (tenantId) {
+        lockData.tenant_id = tenantId;
+      }
 
       console.log('Intentando bloquear asiento con datos:', lockData);
 
@@ -376,6 +332,12 @@ const SimpleSeatingMap = ({
         console.error('Datos enviados:', lockData);
         message.error('Error al seleccionar el asiento');
         return;
+      } else {
+        console.log('✅ Asiento bloqueado en la base de datos');
+        // Notificar al componente padre sobre el cambio
+        if (onLockChange) {
+          onLockChange('lock', seat._id, lockData);
+        }
       }
 
       // Crear objeto de asiento con precio y información del precio seleccionado

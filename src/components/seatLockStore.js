@@ -1,6 +1,32 @@
 import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
 
+// Función helper para obtener el tenant_id actual
+const getCurrentTenantId = () => {
+  try {
+    // Intentar obtener el tenant del localStorage (si se guardó previamente)
+    const tenantId = localStorage.getItem('currentTenantId');
+    if (tenantId) {
+      return tenantId;
+    }
+    
+    // Si no hay tenant en localStorage, intentar obtenerlo del contexto global
+    if (typeof window !== 'undefined' && window.__TENANT_CONTEXT__) {
+      const globalTenantId = window.__TENANT_CONTEXT__.getTenantId?.();
+      if (globalTenantId) {
+        return globalTenantId;
+      }
+    }
+    
+    // Si no se puede obtener el tenant, mostrar advertencia
+    console.warn('⚠️ No se pudo obtener el tenant_id para el bloqueo de asiento.');
+    return null;
+  } catch (error) {
+    console.warn('No se pudo obtener el tenant ID:', error);
+    return null;
+  }
+};
+
 function isValidUuid(value) {
   // Aceptar cualquier string no vacío, no solo UUIDs
   return typeof value === 'string' && value.trim() !== '';
@@ -494,26 +520,37 @@ export const useSeatLockStore = create((set, get) => ({
     const lockedAt = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
+    // Obtener el tenant_id actual
+    const tenantId = getCurrentTenantId();
+    
     console.log('[SEAT_LOCK] Intentando bloquear asiento:', {
       seat_id: seatId,
       funcion_id: funcionIdVal,
       session_id: sessionId,
       status,
-      lock_type: 'seat'
+      lock_type: 'seat',
+      tenant_id: tenantId
     });
 
     try {
+      const lockData = {
+        seat_id: seatId,
+        funcion_id: funcionIdVal,
+        session_id: sessionId,
+        locked_at: lockedAt,
+        expires_at: expiresAt,
+        status,
+        lock_type: 'seat',
+      };
+
+      // Agregar tenant_id si está disponible
+      if (tenantId) {
+        lockData.tenant_id = tenantId;
+      }
+
       const { error } = await supabase
         .from('seat_locks')
-        .upsert({
-          seat_id: seatId,
-          funcion_id: funcionIdVal,
-          session_id: sessionId,
-          locked_at: lockedAt,
-          expires_at: expiresAt,
-          status,
-          lock_type: 'seat',
-        });
+        .upsert(lockData);
 
       if (error) {
         console.error('[SEAT_LOCK] Error al bloquear asiento:', error);
@@ -589,26 +626,37 @@ export const useSeatLockStore = create((set, get) => ({
     const lockedAt = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
+    // Obtener el tenant_id actual
+    const tenantId = getCurrentTenantId();
+    
     console.log('[SEAT_LOCK] Intentando bloquear mesa:', {
       table_id: tableId,
       funcion_id: funcionIdVal,
       session_id: sessionId,
       status,
-      lock_type: 'table'
+      lock_type: 'table',
+      tenant_id: tenantId
     });
 
     try {
+      const lockData = {
+        table_id: tableId,
+        funcion_id: funcionIdVal,
+        session_id: sessionId,
+        locked_at: lockedAt,
+        expires_at: expiresAt,
+        status,
+        lock_type: 'table',
+      };
+
+      // Agregar tenant_id si está disponible
+      if (tenantId) {
+        lockData.tenant_id = tenantId;
+      }
+
       const { error } = await supabase
         .from('seat_locks')
-        .upsert({
-          table_id: tableId,
-          funcion_id: funcionIdVal,
-          session_id: sessionId,
-          locked_at: lockedAt,
-          expires_at: expiresAt,
-          status,
-          lock_type: 'table',
-        });
+        .upsert(lockData);
 
       if (error) {
         console.error('[SEAT_LOCK] Error al bloquear mesa:', error);

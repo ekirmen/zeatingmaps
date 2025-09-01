@@ -45,16 +45,44 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
       const sessionId = localStorage.getItem('anonSessionId') || crypto.randomUUID();
       localStorage.setItem('anonSessionId', sessionId);
       
+      // Obtener el tenant_id actual
+      const getCurrentTenantId = () => {
+        try {
+          const tenantId = localStorage.getItem('currentTenantId');
+          if (tenantId) return tenantId;
+          
+          if (typeof window !== 'undefined' && window.__TENANT_CONTEXT__) {
+            const globalTenantId = window.__TENANT_CONTEXT__.getTenantId?.();
+            if (globalTenantId) return globalTenantId;
+          }
+          
+          console.warn('⚠️ No se pudo obtener el tenant_id para el bloqueo de asiento.');
+          return null;
+        } catch (error) {
+          console.warn('No se pudo obtener el tenant ID:', error);
+          return null;
+        }
+      };
+
+      const tenantId = getCurrentTenantId();
+      
+      const lockData = {
+        seat_id: seatId,
+        funcion_id: funcionId,
+        session_id: sessionId,
+        status: 'locked',
+        locked_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes
+      };
+
+      // Agregar tenant_id si está disponible
+      if (tenantId) {
+        lockData.tenant_id = tenantId;
+      }
+      
       const { error } = await supabase
         .from('seat_locks')
-        .insert({
-          seat_id: seatId,
-          funcion_id: funcionId,
-          session_id: sessionId,
-          status: 'locked',
-          locked_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes
-        });
+        .insert(lockData);
 
       if (error) {
         console.error('[SEAT_LOCK_HOOK] Error al bloquear asiento:', error);

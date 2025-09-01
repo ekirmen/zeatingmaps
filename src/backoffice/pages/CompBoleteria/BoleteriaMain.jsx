@@ -78,10 +78,52 @@ const BoleteriaMain = () => {
     });
   }, [mapa, boleteriaLoading, boleteriaError]);
 
+  // Cargar bloqueos de asientos cuando cambie la función seleccionada
+  useEffect(() => {
+    const loadLockedSeats = async () => {
+      if (!selectedFuncion?.id) {
+        setLockedSeats([]);
+        return;
+      }
+
+      try {
+        const sessionId = localStorage.getItem('anonSessionId');
+        const { data, error } = await supabase
+          .from('seat_locks')
+          .select('seat_id, session_id, locked_at, status, expires_at')
+          .eq('funcion_id', selectedFuncion.id)
+          .eq('session_id', sessionId)
+          .eq('lock_type', 'seat');
+
+        if (error) {
+          console.error('Error cargando bloqueos:', error);
+          setLockedSeats([]);
+        } else {
+          console.log('✅ Bloqueos cargados:', data?.length || 0);
+          setLockedSeats(data || []);
+          
+          // Sincronizar selectedSeats con los bloqueos actuales
+          const lockedSeatIds = (data || []).map(lock => lock.seat_id);
+          setSelectedSeats(prev => {
+            const currentSeats = Array.isArray(prev) ? prev : [];
+            // Mantener solo los asientos que están bloqueados en la BD
+            return currentSeats.filter(seat => lockedSeatIds.includes(seat._id));
+          });
+        }
+      } catch (error) {
+        console.error('Error inesperado cargando bloqueos:', error);
+        setLockedSeats([]);
+      }
+    };
+
+    loadLockedSeats();
+  }, [selectedFuncion?.id]);
+
   // Estados locales básicos
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [blockedSeats, setBlockedSeats] = useState([]);
   const [blockMode, setBlockMode] = useState(false);
+  const [lockedSeats, setLockedSeats] = useState([]);
   const [searchBySeatMode, setSearchBySeatMode] = useState(false);
   const [productosCarrito, setProductosCarrito] = useState([]);
   const [activeTab, setActiveTab] = useState('mapa');
@@ -271,8 +313,11 @@ const BoleteriaMain = () => {
         let newSeats;
         
         if (isSelected) {
+          // Deselección: el asiento ya fue desbloqueado en la BD por SimpleSeatingMap
           newSeats = currentSeats.filter(s => s._id !== seat._id);
+          console.log('✅ Asiento removido del carrito:', seat._id);
         } else {
+          // Selección: el asiento ya fue bloqueado en la BD por SimpleSeatingMap
           const seatWithPrice = {
             ...seat,
             precio: selectedPriceOption?.precio || 0,
@@ -285,10 +330,25 @@ const BoleteriaMain = () => {
             } : null
           };
           newSeats = [...currentSeats, seatWithPrice];
+          console.log('✅ Asiento agregado al carrito:', seat._id);
         }
         
         return newSeats;
       });
+    }
+  };
+
+  // Callback para manejar cambios en bloqueos desde SimpleSeatingMap
+  const handleLockChange = (action, seatId, lockData) => {
+    if (action === 'lock') {
+      // Agregar el bloqueo al estado local
+      setLockedSeats(prev => {
+        const filtered = prev.filter(lock => lock.seat_id !== seatId);
+        return [...filtered, lockData];
+      });
+    } else if (action === 'unlock') {
+      // Remover el bloqueo del estado local
+      setLockedSeats(prev => prev.filter(lock => lock.seat_id !== seatId));
     }
   };
 
@@ -508,6 +568,8 @@ const BoleteriaMain = () => {
                   selectedPriceOption={selectedPriceOption}
                   selectedZonaId={activeZoneId}
                   mapa={mapa}
+                  lockedSeats={lockedSeats}
+                  onLockChange={handleLockChange}
                 />
               </div>
             </div>
