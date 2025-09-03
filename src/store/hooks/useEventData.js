@@ -408,41 +408,8 @@ const useEventData = (eventIdOrSlug) => {
 
         let dbOperationSuccess = false;
 
-        const databaseInstance = await db;
-        const authInstanceResolved = await auth;
-
-        if (!databaseInstance) {
-            console.error("[useEventData DEBUG] Firebase Database no está inicializado o habilitado.");
-            alert("Hubo un problema con la conexión a la base de datos. Por favor, recarga la página.");
-            return;
-        }
-
-        if (!authInstanceResolved) {
-            console.error("[useEventData DEBUG] Firebase Auth no está inicializado o habilitado.");
-            alert("Hubo un problema con la autenticación. Por favor, recarga la página.");
-            return;
-        }
-
-        if (!isAuthReady) {
-            console.warn("[useEventData DEBUG] Firebase Auth no está listo aún.");
-            alert("La sesión no está lista. Por favor, espera un momento y vuelve a intentarlo.");
-            return;
-        }
-
-        if (!authInstanceResolved.currentUser) {
-            try {
-                console.log("[useEventData DEBUG] Intentando iniciar sesión anónimamente para carrito.");
-                const userCredential = await signInAnonymously(authInstanceResolved);
-                setCurrentUserId(userCredential.user.uid);
-                console.log("[useEventData DEBUG] Sesión anónima iniciada con UID:", userCredential.user.uid);
-            } catch (error) {
-                console.error("[useEventData DEBUG] Error al iniciar sesión anónimamente para carrito:", error);
-                alert("No pudimos preparar tu sesión para modificar el carrito. Por favor, intenta de nuevo.");
-                return;
-            }
-        }
-
-        let currentUserIdResolved = currentUserId || authInstanceResolved.currentUser?.uid;
+        // Firebase authentication removed - using Supabase only
+        console.log("[useEventData DEBUG] Usando Supabase para gestión de asientos.");
 
         if (isAdding) {
             console.log(`[useEventData DEBUG] Reservando asiento ${silla._id} en Supabase.`);
@@ -524,53 +491,9 @@ const useEventData = (eventIdOrSlug) => {
         isNumericId
     ]);
 
-    useEffect(() => {
-        let unsubscribe;
-        const setupAuthListener = async () => {
-            try {
-                const authInstance = await auth;
-                if (authInstance) {
-                    unsubscribe = onAuthStateChanged(authInstance, (user) => {
-                        if (user) {
-                            setCurrentUserId(user.uid);
-                            console.log('[useEventData DEBUG] Firebase Auth State Changed: User logged in:', user.uid);
-                        } else {
-                            setCurrentUserId(null);
-                            console.log('[useEventData DEBUG] Firebase Auth State Changed: User logged out.');
-                        }
-                        setIsAuthReady(true);
-                        console.log('[useEventData DEBUG] Firebase Auth Ready.');
-                    });
-                } else {
-                    setIsAuthReady(true);
-                    console.log('[useEventData DEBUG] Firebase Auth no inicializado, marcando como listo.');
-                }
-            } catch (error) {
-                console.error("[useEventData DEBUG] Error al configurar el listener de Firebase Auth:", error);
-                setIsAuthReady(true);
-            }
-        };
+    // Firebase Auth useEffect removed - using Supabase only
 
-        setupAuthListener();
-
-        return () => {
-            if (unsubscribe) {
-                unsubscribe();
-                console.log('[useEventData DEBUG] Firebase Auth listener desuscrito.');
-            }
-        };
-    }, [auth]);
-
-    useEffect(() => {
-        let isMounted = true;
-        isFirebaseEnabled().then(enabled => {
-            if (isMounted) {
-                setFirebaseEnabled(enabled);
-                console.log(`[useEventData DEBUG] Firebase habilitado: ${enabled}`);
-            }
-        });
-        return () => { isMounted = false; };
-    }, []);
+    // Firebase enabled check removed - using Supabase only
 
     useEffect(() => {
         if (eventIdOrSlug) {
@@ -612,8 +535,7 @@ const useEventData = (eventIdOrSlug) => {
 
     useEffect(() => { fetchPayments().then(setPagos).catch(() => setPagos([])); }, []);
 
-    // useFirebaseSeatLocks(selectedFunctionId, zonas, setMapa, cartRef, setCart, firebaseEnabled);
-    // useSeatRealtime({ funcionId: firebaseEnabled ? null : selectedFunctionId, onSeatUpdate: () => {} });
+    // Firebase hooks removed - using Supabase only
     useEffect(() => () => clearInterval(timerRef.current), []);
 
     return {
