@@ -108,7 +108,9 @@ const BoleteriaMain = () => {
           const lockedSeatIds = (data || []).map(lock => lock.seat_id);
           console.log('🔄 [BoleteriaMain] Sincronizando selectedSeats con lockedSeats:', {
             lockedSeatIds,
-            currentSelectedSeats: Array.isArray(prev) ? prev.map(s => s._id) : []
+            currentSelectedSeats: Array.isArray(selectedSeats)
+              ? selectedSeats.map(s => s._id)
+              : []
           });
           setSelectedSeats(prev => {
             const currentSeats = Array.isArray(prev) ? prev : [];
