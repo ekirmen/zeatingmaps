@@ -3,7 +3,7 @@ import { Card, Button, Space, Alert, Descriptions, Tag, Spin, message, Divider, 
 import { ReloadOutlined, CheckCircleOutlined, CloseCircleOutlined, InfoCircleOutlined, WifiOutlined, BugOutlined } from '@ant-design/icons';
 import { buildRelativeApiUrl, checkApiConnectivity, diagnoseApiIssues } from '../../../utils/apiConfig';
 import { useBoleteria } from '../../hooks/useBoleteria';
-import { supabase } from '../../../supabaseClient';
+import { supabase } from '../../../../supabaseClient';
 
 const { Title, Text } = Typography;
 

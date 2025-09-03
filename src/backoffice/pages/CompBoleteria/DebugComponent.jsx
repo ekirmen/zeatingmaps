@@ -71,7 +71,7 @@ const DebugComponent = () => {
     try {
       // Test imports that might cause issues
       const testImports = [
-        () => import('../../../supabaseClient'),
+        () => import('../../../../supabaseClient'),
         () => import('../../hooks/useBoleteria'),
         () => import('../../../contexts/TenantContext'),
         () => import('../../../contexts/ThemeContext'),

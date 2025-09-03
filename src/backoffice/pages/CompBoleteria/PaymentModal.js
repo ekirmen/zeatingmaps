@@ -8,7 +8,7 @@ import { useAuth } from '../../../contexts/AuthContext';
 import { isUuid } from '../../../utils/isUuid';
 import API_BASE_URL from '../../../utils/apiBase';
 import downloadTicket from '../../../utils/downloadTicket';
-import { supabase } from '../../../supabaseClient';
+import { supabase } from '../../../../supabaseClient';
 
 const { TabPane } = Tabs;
 const { Option } = Select;

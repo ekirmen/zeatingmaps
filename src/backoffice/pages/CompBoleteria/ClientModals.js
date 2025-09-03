@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Modal, Input, Table, Tag, Tabs, Form, Button, Divider, message } from 'antd';
 import { AiOutlineSearch, AiOutlineUserAdd } from 'react-icons/ai';
-import { supabase } from '../../../supabaseClient';
-import { supabaseAdmin } from '../../../supabaseClient';
+import { supabase } from '../../../../supabaseClient';
+import { supabaseAdmin } from '../../../../supabaseClient';
 
 const ClientModals = ({
   isSearchModalVisible,

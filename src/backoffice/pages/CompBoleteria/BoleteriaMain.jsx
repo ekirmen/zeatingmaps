@@ -16,7 +16,7 @@ import DebugComponent from './DebugComponent';
 import ErrorBoundary from './ErrorBoundary';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
-import { supabase } from '../../../supabaseClient';
+import { supabase } from '../../../../supabaseClient';
 import resolveImageUrl from '../../../utils/resolveImageUrl';
 
 const { Search } = Input;
