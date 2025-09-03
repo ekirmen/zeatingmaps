@@ -39,6 +39,7 @@ import LegalTerms from '../store/pages/LegalTerms';
 import Descuentos from './pages/Descuentos';
 import WebColors from './pages/WebColors';
 import SeatSettings from './pages/SeatSettings';
+import DebugPage from './pages/CompBoleteria/DebugPage';
 
 const BackofficeApp = () => {
   return (
@@ -111,6 +112,7 @@ const BackofficeApp = () => {
         
         {/* Boletería */}
         <Route path="boleteria" element={<BoleteriaMain />} />
+        <Route path="boleteria/debug" element={<DebugPage />} />
         
         {/* Panel SaaS */}
         <Route path="saas" element={<SaasDashboard />} />

@@ -12,6 +12,8 @@ import MailChimpIntegration from './components/MailChimpIntegration';
 import PushNotifications from './components/PushNotifications';
 import DownloadTicketButton from './DownloadTicketButton';
 import ServerDiagnostic from './ServerDiagnostic';
+import DebugComponent from './DebugComponent';
+import ErrorBoundary from './ErrorBoundary';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 import { supabase } from '../../../supabaseClient';
@@ -828,8 +830,12 @@ const BoleteriaMain = () => {
   }
 
   return (
-    <div>
-      <div className="h-screen flex bg-gray-100">
+    <ErrorBoundary>
+      <div>
+        {/* Debug Component - Solo en desarrollo */}
+        {process.env.NODE_ENV === 'development' && <DebugComponent />}
+        
+        <div className="h-screen flex bg-gray-100">
         {/* Sidebar izquierda */}
         <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
           {/* Botón de Atrás */}
@@ -1331,7 +1337,8 @@ const BoleteriaMain = () => {
        >
          <ServerDiagnostic selectedFuncion={selectedFuncion} />
        </Drawer>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 };
 
