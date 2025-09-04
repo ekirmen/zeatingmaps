@@ -10,6 +10,44 @@ module.exports = {
         test: /setupProxy\.js$/,
         use: 'ignore-loader'
       });
+
+      // Configurar fallbacks para módulos de Node.js
+      webpackConfig.resolve.fallback = {
+        ...webpackConfig.resolve.fallback,
+        "http": false,
+        "https": false,
+        "stream": false,
+        "crypto": false,
+        "fs": false,
+        "path": false,
+        "os": false,
+        "url": false,
+        "zlib": false,
+        "querystring": false,
+        "net": false,
+        "tls": false,
+        "child_process": false,
+        "cluster": false,
+        "dgram": false,
+        "dns": false,
+        "domain": false,
+        "events": false,
+        "http2": false,
+        "https": false,
+        "module": false,
+        "process": false,
+        "punycode": false,
+        "readline": false,
+        "repl": false,
+        "string_decoder": false,
+        "sys": false,
+        "timers": false,
+        "tty": false,
+        "util": false,
+        "v8": false,
+        "vm": false,
+        "worker_threads": false
+      };
       
       // Optimizar para producción
       if (process.env.NODE_ENV === 'production') {
