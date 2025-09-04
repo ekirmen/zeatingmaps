@@ -14,7 +14,7 @@
     "build:fast": "cross-env GENERATE_SOURCEMAP=false CI=false DISABLE_ESLINT_PLUGIN=true SKIP_PREFLIGHT_CHECK=true craco build",
     "preview": "serve -s build",
     "eject": "react-scripts eject",
-    "vercel-build": "react-scripts build",
+    "vercel-build": "craco build",
     "analyze": "npm run build && npx serve -s build"
   },
   "dependencies": {
