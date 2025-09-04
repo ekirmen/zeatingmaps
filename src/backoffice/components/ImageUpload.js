@@ -1,6 +1,6 @@
 // src/components/ImageUpload.js
 import React, { useState } from 'react';
-import API_BASE_URL from '../utils/apiBase';
+import API_BASE_URL from '../../utils/apiBase';
 
 const ImageUpload = () => {
   const [selectedFile, setSelectedFile] = useState(null);

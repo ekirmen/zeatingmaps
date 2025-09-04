@@ -5,7 +5,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import { SortableItem } from './SortableItem';
-import { supabase } from '../../../../../supabaseClient';
+import { supabase } from '../../../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { Option } = Select;

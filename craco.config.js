@@ -3,6 +3,19 @@ const path = require('path');
 module.exports = {
   webpack: {
     configure: (webpackConfig) => {
+      // Excluir api-routes del build
+      webpackConfig.module.rules.push({
+        test: /\.js$/,
+        include: path.resolve(__dirname, 'src/api-routes'),
+        use: 'ignore-loader'
+      });
+      
+      // Excluir setupProxy.js del build (solo para desarrollo)
+      webpackConfig.module.rules.push({
+        test: /setupProxy\.js$/,
+        use: 'ignore-loader'
+      });
+      
       // Optimizar para producción
       if (process.env.NODE_ENV === 'production') {
         // Deshabilitar source maps en producción si no se especifica GENERATE_SOURCEMAP
@@ -92,7 +105,7 @@ module.exports = {
     ],
     plugins: [
       // Optimizar imports
-      ['import', { libraryName: 'antd', style: true }],
+      ['import', { libraryName: 'antd' }],
     ],
   },
   // Optimizar PostCSS

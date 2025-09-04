@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, Badge, Button, Space, Typography, Divider } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
-import { supabase } from '../../../../../supabaseClient';
+import { supabase } from '../../../../supabaseClient';
 import { message } from 'antd'; // Added message import
 
 const { Text, Title } = Typography;

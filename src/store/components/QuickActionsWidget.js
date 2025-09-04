@@ -7,7 +7,7 @@ import {
   HistoryOutlined,
   PlusOutlined,
   UserOutlined,
-  PackageOutlined
+  GiftOutlined
 } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import SavedCartsWidget from './SavedCartsWidget';
@@ -62,7 +62,7 @@ const QuickActionsWidget = () => {
                 )}
                 {productsCount > 0 && (
                   <div className="flex items-center space-x-2">
-                    <PackageOutlined className="text-green-500" />
+                    <GiftOutlined className="text-green-500" />
                     <Text>{productsCount} productos</Text>
                   </div>
                 )}

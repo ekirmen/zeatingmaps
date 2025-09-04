@@ -3,7 +3,7 @@ import { Button, message, Dropdown, Menu, Modal, Card, Avatar } from 'antd';
 import { AiOutlineClose, AiOutlineMore } from 'react-icons/ai';
 import { createOrUpdateSeat, unlockSeat as updateSeatStatusInDB } from '../../services/supabaseSeats';
 import { useSeatLockStore } from '../../../components/seatLockStore';
-import { supabase } from '../../../../supabaseClient';
+import { supabase } from '../../../supabaseClient';
 import downloadTicket from '../../../utils/downloadTicket';
 
 const Cart = ({

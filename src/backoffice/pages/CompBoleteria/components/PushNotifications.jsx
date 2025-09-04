@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Switch, Input, Select, Typography, Space, message, Alert } from 'antd';
 import { BellOutlined, SendOutlined, SettingOutlined } from '@ant-design/icons';
-import { supabase } from '../../../../../supabaseClient';
+import { supabase } from '../../../../supabaseClient';
 
 const { Title, Text } = Typography;
 const { Option } = Select;

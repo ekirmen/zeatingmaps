@@ -29,6 +29,7 @@ const Boleteria = () => {
     selectedFuncion,
     selectedEvent,
     selectedPlantilla,
+    setSelectedPlantilla,
     mapa,
     carrito,
     setCarrito,
@@ -197,12 +198,14 @@ const Boleteria = () => {
     carrito,
     setCarrito,
     selectedPlantilla,
+    setSelectedPlantilla,
     selectedClient,
+    setSelectedClient,
     abonos: clientAbonos,
     selectedAffiliate,
     setSelectedAffiliate,
     showSeatingMap: activeTab === 'map'
-  }), [selectedEvent, handleEventSelect, funciones, selectedFuncion, carrito, setCarrito, selectedPlantilla, selectedClient, clientAbonos, selectedAffiliate, setSelectedAffiliate, activeTab]);
+  }), [selectedEvent, handleEventSelect, funciones, selectedFuncion, carrito, setCarrito, selectedPlantilla, setSelectedPlantilla, selectedClient, setSelectedClient, clientAbonos, selectedAffiliate, setSelectedAffiliate, activeTab]);
 
   const cartProps = useMemo(() => ({
     carrito,

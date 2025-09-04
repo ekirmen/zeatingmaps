@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, Button, Badge, message, Tooltip, Typography } from 'antd';
-import { supabase } from '../../../../../supabaseClient';
+import { supabase } from '../../../../supabaseClient';
 
 const { Text, Title } = Typography;
 

@@ -23,7 +23,7 @@ import {
   EyeOutlined,
   UploadOutlined,
   LinkOutlined
-} from '@react-icons/all-files/antd';
+} from '@ant-design/icons';
 import { ImageService } from '../services/imageService';
 
 const { Option } = Select;
