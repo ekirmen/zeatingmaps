@@ -125,21 +125,10 @@ module.exports = {
   },
   babel: {
     presets: [
-      [
-        '@babel/preset-env',
-        {
-          targets: {
-            node: 'current',
-          },
-          useBuiltIns: 'usage',
-          corejs: 3,
-        },
-      ],
+      '@babel/preset-env',
+      '@babel/preset-react'
     ],
-    plugins: [
-      // Optimizar imports
-      ['import', { libraryName: 'antd' }],
-    ],
+    plugins: []
   },
   // Optimizar PostCSS
   style: {
