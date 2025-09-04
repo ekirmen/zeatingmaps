@@ -125,10 +125,19 @@ module.exports = {
   },
   babel: {
     presets: [
-      '@babel/preset-env',
+      ['@babel/preset-env', {
+        targets: {
+          browsers: ['> 1%', 'last 2 versions', 'not ie <= 11']
+        },
+        modules: false,
+        useBuiltIns: 'entry',
+        corejs: 3
+      }],
       '@babel/preset-react'
     ],
-    plugins: []
+    plugins: [
+      '@babel/plugin-transform-runtime'
+    ]
   },
   // Optimizar PostCSS
   style: {
