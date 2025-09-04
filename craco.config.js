@@ -3,12 +3,7 @@ const path = require('path');
 module.exports = {
   webpack: {
     configure: (webpackConfig) => {
-      // Excluir api-routes del build
-      webpackConfig.module.rules.push({
-        test: /\.js$/,
-        include: path.resolve(__dirname, 'src/api-routes'),
-        use: 'ignore-loader'
-      });
+
       
       // Excluir setupProxy.js del build (solo para desarrollo)
       webpackConfig.module.rules.push({
