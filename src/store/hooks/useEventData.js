@@ -3,10 +3,65 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { fetchMapa, fetchPlantillaPrecios, getFunciones, getMapaPorEvento, fetchDescuentoPorCodigo } from '../services/apistore';
 import { fetchZonasPorSala } from '../../services/supabaseServices';
-import { fetchSeatsByFuncion, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
 import { supabase } from '../../supabaseClient';
-import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
+
+// Inline functions to avoid circular dependency
+const fetchSeatsByFuncion = async (funcionId) => {
+  try {
+    const { data, error } = await supabase
+      .from('seats')
+      .select('*')
+      .eq('funcion_id', funcionId);
+
+    if (error) {
+      console.error('Error fetching seats by function:', error.message);
+      return [];
+    }
+    return data;
+  } catch (error) {
+    console.error('Unexpected error fetching seats by function:', error.message);
+    return [];
+  }
+};
+
+const createOrUpdateSeat = async (seatData) => {
+  try {
+    const { data, error } = await supabase
+      .from('seats')
+      .upsert(seatData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error creating/updating seat:', error.message);
+      throw error;
+    }
+    return data;
+  } catch (error) {
+    console.error('Unexpected error creating/updating seat:', error.message);
+    throw error;
+  }
+};
+
+const fetchPayments = async (funcionId) => {
+  try {
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('funcion_id', funcionId);
+
+    if (error) {
+      console.error('Error fetching payments:', error.message);
+      return [];
+    }
+    return data;
+  } catch (error) {
+    console.error('Unexpected error fetching payments:', error.message);
+    return [];
+  }
+};
+
 import { isUuid, isNumericId } from '../../utils/isUuid';
 import getZonaColor from '../../utils/getZonaColor';
 // Firebase imports removed - using Supabase only
@@ -475,6 +530,7 @@ const useEventData = (eventIdOrSlug) => {
         }
 
     }, [
+
         selectedFunctionId,
         plantillaPrecios,
         zonas,

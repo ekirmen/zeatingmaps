@@ -5,7 +5,7 @@ import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomI
 import SimpleSeatingMap from './components/SimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ZonesPanel from './components/ZonesPanel.jsx';
-import ProductosWidget from '../../../store/components/ProductosWidget';
+import ProductosWidget from './components/ProductosWidget';
 import PaymentModal from './PaymentModal';
 import CustomFormBuilder from './components/CustomFormBuilder';
 import MailChimpIntegration from './components/MailChimpIntegration';
