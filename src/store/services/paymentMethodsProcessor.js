@@ -1,25 +1,55 @@
+import { createPaymentTransaction as createSupabaseTransaction, updatePaymentTransactionStatus as updateSupabaseTransactionStatus } from './paymentGatewaysService';
+
 // Funciones temporales para transacciones - se pueden implementar más tarde
 const createPaymentTransaction = async (data) => {
-  // Generar UUID válido
-  const generateUUID = () => {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  };
+  try {
+    // Generar UUID válido para gateway_id si no existe
+    const generateUUID = () => {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
 
-  return {
-    id: generateUUID(),
-    ...data,
-    status: 'pending',
-    created_at: new Date().toISOString()
-  };
+    // Si gatewayId no es un UUID válido, generar uno
+    let gatewayId = data.gatewayId;
+    if (!gatewayId || typeof gatewayId === 'string' && !gatewayId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+      gatewayId = generateUUID();
+    }
+
+    // Usar la función real de Supabase
+    return await createSupabaseTransaction({
+      ...data,
+      gatewayId: gatewayId
+    });
+  } catch (error) {
+    console.error('Error creating payment transaction:', error);
+    // Fallback a función temporal si falla
+    const generateUUID = () => {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+
+    return {
+      id: generateUUID(),
+      ...data,
+      status: 'pending',
+      created_at: new Date().toISOString()
+    };
+  }
 };
 
 const updatePaymentTransactionStatus = async (id, status, response = null) => {
-  console.log(`Transaction ${id} updated to ${status}`, response);
-  return { id, status, response, updated_at: new Date().toISOString() };
+  try {
+    return await updateSupabaseTransactionStatus(id, status, response);
+  } catch (error) {
+    console.error('Error updating payment transaction:', error);
+    return { id, status, response, updated_at: new Date().toISOString() };
+  }
 };
 
 /**
