@@ -376,16 +376,20 @@ export const createPaymentMethodProcessor = (method) => {
  */
 export const processPaymentMethod = async (method, paymentData) => {
   try {
+    console.log('🔍 Processing payment method:', method.method_id);
     const processor = createPaymentMethodProcessor(method);
     
     // Validar pago
     const validation = await processor.validatePayment(paymentData);
+    console.log('🔍 Validation result:', validation);
     if (!validation.valid) {
       throw new Error(`Validación fallida: ${validation.errors.join(', ')}`);
     }
 
     // Procesar pago
+    console.log('🔍 Processing payment...');
     const result = await processor.processPayment(paymentData);
+    console.log('🔍 Payment processing result:', result);
     return result;
   } catch (error) {
     console.error('Error processing payment:', error);

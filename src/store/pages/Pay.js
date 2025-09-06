@@ -92,9 +92,11 @@ const Pay = () => {
       };
 
       const result = await processPaymentMethod(selectedGateway, paymentData);
+      console.log('🔍 Payment result:', result);
       setPaymentResult(result);
 
       if (result.success) {
+        console.log('✅ Payment successful, redirecting...');
         // Enviar notificación de éxito
         await createPaymentSuccessNotification({
           id: result.transactionId,
@@ -115,8 +117,11 @@ const Pay = () => {
           // Para transferencias, mostrar información
           navigate('/payment-manual', { state: { result } });
         } else {
+          console.log('🔄 Redirecting to payment success page...');
           navigate('/payment-success', { state: { result } });
         }
+      } else {
+        console.log('❌ Payment failed or success is false:', result);
       }
     } catch (error) {
       console.error('Error processing payment:', error);
