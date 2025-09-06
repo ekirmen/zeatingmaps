@@ -118,7 +118,7 @@ const Pay = () => {
           navigate('/payment-manual', { state: { result } });
         } else {
           console.log('🔄 Redirecting to payment success page...');
-          navigate('/payment-success', { state: { result } });
+          navigate('/payment-success', { state: { result, locator: result.locator } });
         }
       } else {
         console.log('❌ Payment failed or success is false:', result);

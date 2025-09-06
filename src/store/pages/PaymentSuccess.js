@@ -38,21 +38,33 @@ const PaymentSuccess = () => {
     if (!locator) return;
 
     const fetchPaymentDetails = async () => {
-      const { data: payment, error } = await supabase
-        .from('payments')
-        .select(`*, event:eventos (id, otrasOpciones), seats, funcion`)
-        .eq('locator', locator)
+      // Buscar en payment_transactions usando el locator como order_id
+      const { data: transaction, error: transactionError } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .eq('order_id', locator)
         .single();
 
-      if (error || !payment) {
-        console.error('Error fetching payment details:', error);
+      if (transactionError || !transaction) {
+        console.error('Error fetching payment transaction:', transactionError);
         return;
       }
 
-      const amount = payment.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
-      const paymentMethod = payment.payments?.map(p => p.method).join(', ') || '';
+      // Simular datos de pago para compatibilidad con el componente existente
+      const payment = {
+        id: transaction.id,
+        locator: transaction.order_id,
+        amount: transaction.amount,
+        status: transaction.status,
+        paymentMethod: 'Método de pago procesado',
+        created_at: transaction.created_at,
+        // Datos simulados para compatibilidad
+        event: { otrasOpciones: {} },
+        seats: [],
+        funcion: null
+      };
 
-      setPaymentDetails({ ...payment, amount, paymentMethod });
+      setPaymentDetails(payment);
       setEventOptions(payment.event?.otrasOpciones || {});
     };
 

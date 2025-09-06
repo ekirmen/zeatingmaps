@@ -13,6 +13,12 @@ export class EventThemeService {
    */
   static async getEventThemeSettings(eventId, tenantId) {
     try {
+      // Si eventId no es un UUID válido, no hacer la consulta
+      if (!eventId || typeof eventId !== 'string' || !eventId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+        console.warn('[EventThemeService] EventId is not a valid UUID:', eventId);
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('event_theme_settings')
         .select('*')

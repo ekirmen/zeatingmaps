@@ -94,6 +94,9 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
       // Determinar si es una reserva basado en el método de pago o configuración
       const isReservation = this.method.method_id === 'reserva' || paymentData.isReservation;
       
+      // Generar locator único
+      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
       return {
         success: true,
         transactionId: transaction.id,
@@ -101,7 +104,8 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
         status: isReservation ? 'reservado' : 'pending',
         message: isReservation ? 'Reserva creada correctamente' : 'Pago procesado correctamente',
         gatewayResponse: mockStripeResponse,
-        isReservation: isReservation
+        isReservation: isReservation,
+        locator: locator
       };
     } catch (error) {
       console.error('Error procesando pago con Stripe:', error);
@@ -153,13 +157,17 @@ class PayPalMethodProcessor extends PaymentMethodProcessor {
         ]
       };
 
+      // Generar locator único
+      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
       return {
         success: true,
         transactionId: transaction.id,
         gatewayTransactionId: mockPayPalResponse.id,
         status: 'pending',
         message: 'Redirigiendo a PayPal...',
-        gatewayResponse: mockPayPalResponse
+        gatewayResponse: mockPayPalResponse,
+        locator: locator
       };
     } catch (error) {
       console.error('Error procesando pago con PayPal:', error);
@@ -181,13 +189,17 @@ class ApplePayMethodProcessor extends PaymentMethodProcessor {
         currency: paymentData.currency || 'USD'
       });
 
+      // Generar locator único
+      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
       return {
         success: true,
         transactionId: transaction.id,
         gatewayTransactionId: `apple_${Math.random().toString(36).substr(2, 9)}`,
         status: 'completed',
         message: 'Pago con Apple Pay completado',
-        gatewayResponse: { status: 'success' }
+        gatewayResponse: { status: 'success' },
+        locator: locator
       };
     } catch (error) {
       console.error('Error procesando pago con Apple Pay:', error);
@@ -209,13 +221,17 @@ class GooglePayMethodProcessor extends PaymentMethodProcessor {
         currency: paymentData.currency || 'USD'
       });
 
+      // Generar locator único
+      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
       return {
         success: true,
         transactionId: transaction.id,
         gatewayTransactionId: `google_${Math.random().toString(36).substr(2, 9)}`,
         status: 'completed',
         message: 'Pago con Google Pay completado',
-        gatewayResponse: { status: 'success' }
+        gatewayResponse: { status: 'success' },
+        locator: locator
       };
     } catch (error) {
       console.error('Error procesando pago con Google Pay:', error);
@@ -237,6 +253,9 @@ class TransferenciaMethodProcessor extends PaymentMethodProcessor {
         currency: paymentData.currency || 'USD'
       });
 
+      // Generar locator único
+      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
       return {
         success: true,
         transactionId: transaction.id,
@@ -246,7 +265,8 @@ class TransferenciaMethodProcessor extends PaymentMethodProcessor {
         gatewayResponse: { 
           status: 'pending',
           instructions: 'Complete la transferencia usando los datos bancarios proporcionados'
-        }
+        },
+        locator: locator
       };
     } catch (error) {
       console.error('Error procesando transferencia bancaria:', error);
@@ -268,13 +288,17 @@ class PagoMovilMethodProcessor extends PaymentMethodProcessor {
         currency: paymentData.currency || 'USD'
       });
 
+      // Generar locator único
+      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
       return {
         success: true,
         transactionId: transaction.id,
         gatewayTransactionId: `mobile_${Math.random().toString(36).substr(2, 9)}`,
         status: 'completed',
         message: 'Pago móvil procesado correctamente',
-        gatewayResponse: { status: 'success' }
+        gatewayResponse: { status: 'success' },
+        locator: locator
       };
     } catch (error) {
       console.error('Error procesando pago móvil:', error);
@@ -296,6 +320,9 @@ class EfectivoTiendaMethodProcessor extends PaymentMethodProcessor {
         currency: paymentData.currency || 'USD'
       });
 
+      // Generar locator único
+      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
       return {
         success: true,
         transactionId: transaction.id,
@@ -308,7 +335,8 @@ class EfectivoTiendaMethodProcessor extends PaymentMethodProcessor {
         },
         requiresRedirect: false,
         requiresAction: false,
-        requiresManualConfirmation: true
+        requiresManualConfirmation: true,
+        locator: locator
       };
     } catch (error) {
       console.error('Error procesando pago en efectivo en tienda:', error);
@@ -330,6 +358,9 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
         currency: paymentData.currency || 'USD'
       });
 
+      // Generar locator único
+      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
       return {
         success: true,
         transactionId: transaction.id,
@@ -339,7 +370,8 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
         gatewayResponse: { status: 'success' },
         requiresRedirect: false,
         requiresAction: false,
-        requiresManualConfirmation: false
+        requiresManualConfirmation: false,
+        locator: locator
       };
     } catch (error) {
       console.error('Error procesando pago en efectivo:', error);
