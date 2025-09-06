@@ -4,7 +4,7 @@ import { Modal, Card, Button, Space, Alert, Spin, Divider, message } from 'antd'
 import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { getActivePaymentMethods, validatePaymentMethodConfig } from '../services/paymentMethodsService';
-import { processPayment } from '../services/paymentProcessors';
+import { processPaymentMethod } from '../services/paymentMethodsProcessor';
 import { createPaymentSuccessNotification } from '../services/paymentNotifications';
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent } from '../services/facebookPixelService';
@@ -80,31 +80,26 @@ const Pay = () => {
     try {
       setProcessingPayment(true);
       
-      // Obtener precio con comisiones
-      const priceWithFees = pricesWithFees[selectedGateway.id];
-      const finalAmount = priceWithFees ? priceWithFees.precioTotal : total;
-      
       const paymentData = {
         orderId: `ORDER-${Date.now()}`,
-        amount: finalAmount,
+        amount: total,
         currency: 'USD',
         items: cartItems,
         user: {
           id: 'user-id', // Obtener del contexto de autenticación
           email: 'user@example.com'
-        },
-        gatewayFees: priceWithFees
+        }
       };
 
-      const result = await processPayment(selectedGateway, paymentData);
+      const result = await processPaymentMethod(selectedGateway, paymentData);
       setPaymentResult(result);
 
       if (result.success) {
         // Enviar notificación de éxito
         await createPaymentSuccessNotification({
           id: result.transactionId,
-          amount: finalAmount,
-          payment_gateways: { name: selectedGateway.name }
+          amount: total,
+          payment_gateways: { name: getMethodName(selectedGateway.method_id) }
         });
 
         // Limpiar carrito
@@ -148,7 +143,7 @@ const Pay = () => {
         type: 'reservation'
       };
 
-      const result = await processPayment(selectedGateway, reservationData);
+      const result = await processPaymentMethod(selectedGateway, reservationData);
       setPaymentResult(result);
 
       if (result.success) {
@@ -351,21 +346,14 @@ const Pay = () => {
                       block
                       loading={processingPayment}
                       disabled={!selectedGateway || processingPayment}
-                      onClick={
-                        selectedGateway?.type === 'reservation' 
-                          ? handleProcessReservation 
-                          : handleProcessPayment
-                      }
+                      onClick={handleProcessPayment}
                     >
-                      {processingPayment ? 'Procesando...' : 
-                       selectedGateway?.type === 'reservation' 
-                         ? 'Hacer Reserva' 
-                         : 'Procesar Pago'}
+                      {processingPayment ? 'Procesando...' : 'Procesar Pago'}
                     </Button>
 
                     {selectedGateway && (
                       <div className="text-xs text-gray-500 text-center">
-                        Pagando con {selectedGateway.name}
+                        Pagando con {getMethodName(selectedGateway.method_id)}
                       </div>
                     )}
                   </div>
