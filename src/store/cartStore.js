@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'react-hot-toast';
-import { useSeatLockStore } from '../components/seatLockStore';
 import { supabase } from '../supabaseClient';
 
 const getLockExpirationMs = () => {
@@ -79,6 +78,8 @@ export const useCartStore = create(
               newState.functionId = null;
             }
             set(newState);
+            // Importación lazy para evitar dependencias circulares
+            const { useSeatLockStore } = await import('../components/seatLockStore');
             await useSeatLockStore
               .getState()
               .unlockSeat(seatId, seat.functionId || seat.funcionId || get().functionId);
@@ -174,6 +175,7 @@ export const useCartStore = create(
             startExpirationTimer();
           } else {
             // Expirado: liberar asientos y limpiar
+            const { useSeatLockStore } = await import('../components/seatLockStore');
             for (const s of items) {
               await useSeatLockStore
                 .getState()
@@ -203,6 +205,7 @@ export const useCartStore = create(
             newState.functionId = null;
           }
           set(newState);
+          const { useSeatLockStore } = await import('../components/seatLockStore');
           await useSeatLockStore
             .getState()
             .unlockSeat(
@@ -214,6 +217,7 @@ export const useCartStore = create(
 
         clearCart: async () => {
           const { items } = get();
+          const { useSeatLockStore } = await import('../components/seatLockStore');
           for (const s of items) {
             await useSeatLockStore
               .getState()
