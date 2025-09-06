@@ -2,6 +2,16 @@ import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import API_BASE_URL from '../../../utils/apiBase';
 import { FaFacebookF } from 'react-icons/fa';
+import { supabase } from '../../../supabaseClient';
+import {
+  CreditCardOutlined,
+  BankOutlined,
+  MobileOutlined,
+  DollarOutlined,
+  AppleOutlined,
+  AndroidOutlined,
+  ShopOutlined
+} from '@ant-design/icons';
 
 /**
  * Advanced options for an event.  Handles optional messages and payment
@@ -42,16 +52,106 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
     }
   });
 
+  // Métodos de pago disponibles con iconos
+  const availableMethods = [
+    {
+      id: 'stripe',
+      name: 'Stripe',
+      icon: <CreditCardOutlined style={{ color: '#6772e5' }} />,
+      description: 'Tarjetas de crédito y débito',
+      recommended: true
+    },
+    {
+      id: 'paypal',
+      name: 'PayPal',
+      icon: <DollarOutlined style={{ color: '#0070ba' }} />,
+      description: 'Pagos a través de PayPal',
+      recommended: true
+    },
+    {
+      id: 'apple_pay',
+      name: 'Apple Pay',
+      icon: <AppleOutlined style={{ color: '#000000' }} />,
+      description: 'Pagos para usuarios iOS',
+      recommended: true
+    },
+    {
+      id: 'google_pay',
+      name: 'Google Pay',
+      icon: <AndroidOutlined style={{ color: '#4285f4' }} />,
+      description: 'Pagos para usuarios Android',
+      recommended: true
+    },
+    {
+      id: 'transferencia',
+      name: 'Transferencia Bancaria',
+      icon: <BankOutlined style={{ color: '#52c41a' }} />,
+      description: 'Transferencias bancarias directas',
+      recommended: false
+    },
+    {
+      id: 'pago_movil',
+      name: 'Pago Móvil',
+      icon: <MobileOutlined style={{ color: '#1890ff' }} />,
+      description: 'Pagos móviles (MercadoPago, etc.)',
+      recommended: false
+    },
+    {
+      id: 'efectivo_tienda',
+      name: 'Pago en Efectivo en Tienda',
+      icon: <ShopOutlined style={{ color: '#fa8c16' }} />,
+      description: 'Pagos en efectivo en tienda física',
+      recommended: false
+    },
+    {
+      id: 'efectivo',
+      name: 'Efectivo',
+      icon: <DollarOutlined style={{ color: '#fa8c16' }} />,
+      description: 'Pagos en efectivo',
+      recommended: false
+    }
+  ];
+
   // Fetch available payment methods on mount
   useEffect(() => {
     const fetchMetodos = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/metodos_pago`);
-        const data = await res.json();
-        setMetodos(data);
+        // Cargar métodos de pago desde Supabase
+        const { data: methods, error } = await supabase
+          .from('payment_methods_global')
+          .select('*');
 
-        const activos = data.filter(m => m.activo).map(m => m.metodo);
-        if (activos.length) {
+        if (error && error.code !== 'PGRST116') { // PGRST116 = tabla no existe
+          console.warn('Error loading payment methods:', error);
+        }
+
+        // Si no hay datos en la BD, usar los métodos por defecto
+        if (!methods || methods.length === 0) {
+          setMetodos(availableMethods.map(method => ({
+            _id: method.id,
+            metodo: method.name,
+            activo: true,
+            icon: method.icon,
+            description: method.description
+          })));
+        } else {
+          // Combinar con los métodos disponibles
+          const combinedMethods = availableMethods.map(method => {
+            const savedMethod = methods.find(m => m.method_id === method.id);
+            return {
+              _id: method.id,
+              metodo: method.name,
+              activo: savedMethod ? savedMethod.enabled : true,
+              icon: method.icon,
+              description: method.description
+            };
+          });
+          setMetodos(combinedMethods);
+        }
+
+        // Activar todos los métodos por defecto si no hay configuración específica del evento
+        const activos = availableMethods.map(m => m.id);
+        if (!eventoData?.otrasOpciones?.metodosPagoPermitidos?.length) {
           setForm(prev => ({
             ...prev,
             otrasOpciones: {
@@ -69,6 +169,14 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         }
       } catch (e) {
         console.error('Error cargando métodos de pago', e);
+        // Fallback a métodos por defecto
+        setMetodos(availableMethods.map(method => ({
+          _id: method.id,
+          metodo: method.name,
+          activo: true,
+          icon: method.icon,
+          description: method.description
+        })));
       }
     };
     fetchMetodos();
@@ -267,15 +375,20 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           {' '}Métodos de pago permitidos
         </label>
         {form.otrasOpciones.habilitarMetodosPago && (
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             {metodos.map(m => (
-              <label key={m._id} className="inline-flex items-center gap-2">
+              <label key={m._id} className="inline-flex items-center gap-3 p-2 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={form.otrasOpciones.metodosPagoPermitidos.includes(m.metodo)}
-                  onChange={() => handleMetodoToggle(m.metodo)}
+                  checked={form.otrasOpciones.metodosPagoPermitidos.includes(m._id)}
+                  onChange={() => handleMetodoToggle(m._id)}
+                  className="mr-2"
                 />
-                {m.metodo}
+                <span className="text-lg">{m.icon}</span>
+                <div className="flex flex-col">
+                  <span className="font-medium">{m.metodo}</span>
+                  <span className="text-sm text-gray-500">{m.description}</span>
+                </div>
               </label>
             ))}
           </div>

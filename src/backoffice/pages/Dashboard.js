@@ -26,6 +26,7 @@ import {
   ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
+import PaymentMethodsConfig from '../components/PaymentMethodsConfig';
 
 const { Title, Text } = Typography;
 
@@ -577,6 +578,13 @@ const Dashboard = () => {
               )}
             />
           </Card>
+        </Col>
+      </Row>
+
+      {/* Configuración de Métodos de Pago */}
+      <Row gutter={[16, 16]} className="mt-8">
+        <Col xs={24}>
+          <PaymentMethodsConfig />
         </Col>
       </Row>
 
