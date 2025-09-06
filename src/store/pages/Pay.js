@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Modal, Card, Button, Space, Alert, Spin, Divider, message } from 'antd';
 import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
-import { getActivePaymentGateways, validateGatewayConfig, calculatePriceWithFees } from '../services/paymentGatewaysService';
+import { getActivePaymentMethods, validatePaymentMethodConfig } from '../services/paymentMethodsService';
 import { processPayment } from '../services/paymentProcessors';
 import { createPaymentSuccessNotification } from '../services/paymentNotifications';
 import FacebookPixel from '../components/FacebookPixel';
@@ -21,8 +21,8 @@ const Pay = () => {
     0
   );
   const [selectedGateway, setSelectedGateway] = useState(null);
-  const [availableGateways, setAvailableGateways] = useState([]);
-  const [loadingGateways, setLoadingGateways] = useState(true);
+  const [availableMethods, setAvailableMethods] = useState([]);
+  const [loadingMethods, setLoadingMethods] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [paymentResult, setPaymentResult] = useState(null);
   const [facebookPixel, setFacebookPixel] = useState(null);
@@ -31,31 +31,21 @@ const Pay = () => {
   useEffect(() => {
     const loadGateways = async () => {
       try {
-        setLoadingGateways(true);
-        const gateways = await getActivePaymentGateways();
-        const validGateways = gateways.filter(gateway => {
-          const validation = validateGatewayConfig(gateway);
+        setLoadingMethods(true);
+        const methods = await getActivePaymentMethods();
+        const validMethods = methods.filter(method => {
+          const validation = validatePaymentMethodConfig(method);
           return validation.valid;
         });
-        setAvailableGateways(validGateways);
+        setAvailableMethods(validMethods);
         
-        // Calcular precios con comisiones para cada pasarela
-        const feesPromises = validGateways.map(async (gateway) => {
-          const priceWithFees = await calculatePriceWithFees(total, gateway.id);
-          return { gatewayId: gateway.id, ...priceWithFees };
-        });
-        
-        const feesResults = await Promise.all(feesPromises);
-        const feesMap = {};
-        feesResults.forEach(result => {
-          feesMap[result.gatewayId] = result;
-        });
-        setPricesWithFees(feesMap);
+        // Por ahora, no calculamos comisiones específicas
+        // Esto se puede implementar más tarde usando la tabla comisiones_tasas
       } catch (error) {
         console.error('Error loading payment gateways:', error);
         message.error('Error al cargar métodos de pago');
       } finally {
-        setLoadingGateways(false);
+        setLoadingMethods(false);
       }
     };
     const loadFacebookPixel = async () => {
@@ -77,8 +67,8 @@ const Pay = () => {
     loadFacebookPixel();
   }, [cartItems, total]);
 
-  const handlePaymentMethodSelect = (gateway) => {
-    setSelectedGateway(gateway);
+  const handlePaymentMethodSelect = (method) => {
+    setSelectedGateway(method);
   };
 
   const handleProcessPayment = async () => {
@@ -173,29 +163,48 @@ const Pay = () => {
     }
   };
 
-  const getGatewayIcon = (type) => {
+  const getMethodIcon = (methodId) => {
     const icons = {
       stripe: <CreditCardOutlined style={{ color: '#6772e5' }} />,
       paypal: <DollarOutlined style={{ color: '#0070ba' }} />,
-      transfer: <BankOutlined style={{ color: '#52c41a' }} />,
-      mobile_payment: <MobileOutlined style={{ color: '#1890ff' }} />,
-      zelle: <DollarOutlined style={{ color: '#6f42c1' }} />,
-      reservation: <ClockCircleOutlined style={{ color: '#fa8c16' }} />
+      apple_pay: <CreditCardOutlined style={{ color: '#000000' }} />,
+      google_pay: <CreditCardOutlined style={{ color: '#4285f4' }} />,
+      transferencia: <BankOutlined style={{ color: '#52c41a' }} />,
+      pago_movil: <MobileOutlined style={{ color: '#1890ff' }} />,
+      efectivo_tienda: <DollarOutlined style={{ color: '#fa8c16' }} />,
+      efectivo: <DollarOutlined style={{ color: '#fa8c16' }} />
     };
-    return icons[type] || <DollarOutlined />;
+    return icons[methodId] || <DollarOutlined />;
   };
 
-  const getGatewayDescription = (type) => {
-    const descriptions = {
-      stripe: 'Pago seguro con tarjeta de crédito o débito',
-      paypal: 'Pago rápido y seguro con PayPal',
-      transfer: 'Transferencia bancaria directa',
-      mobile_payment: 'Pago móvil (MercadoPago, etc.)',
-      zelle: 'Transferencia Zelle instantánea',
-      reservation: 'Reserva sin pago inmediato'
+  const getMethodName = (methodId) => {
+    const names = {
+      stripe: 'Stripe',
+      paypal: 'PayPal',
+      apple_pay: 'Apple Pay',
+      google_pay: 'Google Pay',
+      transferencia: 'Transferencia Bancaria',
+      pago_movil: 'Pago Móvil',
+      efectivo_tienda: 'Pago en Efectivo en Tienda',
+      efectivo: 'Efectivo'
     };
-    return descriptions[type] || '';
+    return names[methodId] || methodId;
   };
+
+  const getMethodDescription = (methodId) => {
+    const descriptions = {
+      stripe: 'Tarjetas de crédito y débito',
+      paypal: 'Pagos a través de PayPal',
+      apple_pay: 'Pagos para usuarios iOS',
+      google_pay: 'Pagos para usuarios Android',
+      transferencia: 'Transferencias bancarias directas',
+      pago_movil: 'Pagos móviles (MercadoPago, etc.)',
+      efectivo_tienda: 'Pagos en efectivo en tienda física',
+      efectivo: 'Pagos en efectivo'
+    };
+    return descriptions[methodId] || 'Método de pago';
+  };
+
 
   const getPriceWithFees = (gateway) => {
     const priceWithFees = pricesWithFees[gateway.id];
@@ -252,12 +261,12 @@ const Pay = () => {
               <div className="lg:col-span-2">
                 <h2 className="text-xl font-semibold mb-4">Métodos de Pago</h2>
                 
-                {loadingGateways ? (
+                {loadingMethods ? (
                   <div className="text-center py-8">
                     <Spin size="large" />
                     <p className="mt-4 text-gray-600">Cargando métodos de pago...</p>
                   </div>
-                ) : availableGateways.length === 0 ? (
+                ) : availableMethods.length === 0 ? (
                   <Alert
                     message="No hay métodos de pago disponibles"
                     description="Por favor, contacta al administrador para configurar los métodos de pago."
@@ -266,46 +275,35 @@ const Pay = () => {
                   />
                 ) : (
                   <div className="space-y-4">
-                    {availableGateways.map((gateway) => {
-                      const priceInfo = getPriceWithFees(gateway);
-                      const isSelected = selectedGateway?.id === gateway.id;
+                    {availableMethods.map((method) => {
+                      const isSelected = selectedGateway?.method_id === method.method_id;
                       
                       return (
                         <Card
-                          key={gateway.id}
+                          key={method.method_id}
                           className={`cursor-pointer transition-all duration-200 ${
                             isSelected
                               ? 'ring-2 ring-blue-500 border-blue-500'
                               : 'hover:shadow-md'
                           }`}
-                          onClick={() => handlePaymentMethodSelect(gateway)}
+                          onClick={() => handlePaymentMethodSelect(method)}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
                               <div className="text-2xl">
-                                {getGatewayIcon(gateway.type)}
+                                {getMethodIcon(method.method_id)}
                               </div>
                               <div>
-                                <h3 className="font-semibold text-lg">{gateway.name}</h3>
+                                <h3 className="font-semibold text-lg">{getMethodName(method.method_id)}</h3>
                                 <p className="text-gray-600 text-sm">
-                                  {getGatewayDescription(gateway.type)}
+                                  {getMethodDescription(method.method_id)}
                                 </p>
-                                {priceInfo.hasFees && (
-                                  <div className="text-xs text-gray-500 mt-1">
-                                    Comisión: ${priceInfo.fees.toFixed(2)}
-                                  </div>
-                                )}
                               </div>
                             </div>
                             <div className="text-right">
                               <div className="text-lg font-semibold">
-                                ${priceInfo.finalPrice.toFixed(2)}
+                                ${total.toFixed(2)}
                               </div>
-                              {priceInfo.hasFees && (
-                                <div className="text-xs text-gray-500 line-through">
-                                  ${priceInfo.originalPrice.toFixed(2)}
-                                </div>
-                              )}
                             </div>
                           </div>
                         </Card>
