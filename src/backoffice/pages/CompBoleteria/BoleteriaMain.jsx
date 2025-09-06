@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber } from 'antd';
 import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined, DownloadOutlined, HistoryOutlined, AimOutlined, CompressOutlined } from '@ant-design/icons';
-import SimpleSeatingMap from './components/SimpleSeatingMap';
+import LazySimpleSeatingMap from './LazySimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ZonesPanel from './components/ZonesPanel.jsx';
 import ProductosWidget from '../../../store/components/ProductosWidget';
@@ -426,11 +426,11 @@ const BoleteriaMain = () => {
          let newSeats;
          
          if (isSelected) {
-           // Deselección: el asiento ya fue desbloqueado en la BD por SimpleSeatingMap
+           // Deselección: el asiento ya fue desbloqueado en la BD por LazySimpleSeatingMap
            newSeats = currentSeats.filter(s => s._id !== seat._id);
            console.log('✅ [BoleteriaMain] Asiento removido del carrito:', seat._id, 'Nuevo estado:', newSeats.length, 'asientos');
          } else {
-           // Selección: el asiento ya fue bloqueado en la BD por SimpleSeatingMap
+           // Selección: el asiento ya fue bloqueado en la BD por LazySimpleSeatingMap
            const seatWithPrice = {
              ...seat,
              precio: selectedPriceOption?.precio || 0,
@@ -451,7 +451,7 @@ const BoleteriaMain = () => {
     }
   };
 
-  // Callback para manejar cambios en bloqueos desde SimpleSeatingMap
+  // Callback para manejar cambios en bloqueos desde LazySimpleSeatingMap
   const handleLockChange = (action, seatId, lockData) => {
     console.log('🔄 [BoleteriaMain] handleLockChange llamado:', { action, seatId, lockData });
     
@@ -686,7 +686,7 @@ const BoleteriaMain = () => {
                   transformOrigin: '0 0'
                 }}
               >
-                <SimpleSeatingMap
+                <LazySimpleSeatingMap
                   selectedFuncion={selectedFuncion}
                   onSeatClick={handleSeatClick}
                   selectedSeats={selectedSeats}
