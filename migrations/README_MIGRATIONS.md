@@ -2,9 +2,9 @@
 
 ## Orden de Ejecución
 
-Ejecuta esta migración en Supabase SQL Editor:
+Ejecuta estas migraciones en Supabase SQL Editor en el siguiente orden:
 
-### Única Migración Necesaria
+### 1. Primero: Configurar Métodos de Pago
 ```sql
 -- Ejecutar: migrations/020_final_payment_methods_setup.sql
 ```
@@ -12,6 +12,16 @@ Esto:
 - Agrega la columna `tenant_id` si no existe
 - Actualiza registros existentes con el tenant_id correcto
 - Crea/actualiza todos los métodos de pago usando UPSERT
+
+### 2. Segundo: Arreglar Estructura de Transacciones
+```sql
+-- Ejecutar: migrations/021_fix_payment_transactions_structure.sql
+```
+Esto:
+- Verifica y corrige la estructura de la tabla `payment_transactions`
+- Asegura que `order_id` sea VARCHAR y `gateway_id` sea UUID
+- Crea la tabla si no existe
+- Habilita RLS y crea políticas
 
 ### 3. Tercero: Verificar Configuración
 ```sql
