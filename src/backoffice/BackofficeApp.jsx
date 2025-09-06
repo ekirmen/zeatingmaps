@@ -2,7 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import BackofficeLayout from './components/BackofficeLayout';
 import Dashboard from './pages/Dashboard';
-import BoleteriaMain from './pages/CompBoleteria/BoleteriaMain';
+import BoleteriaMain from './pages/CompBoleteria/BoleteriaMainCustomDesign';
 import Evento from './pages/Evento';
 import Usuarios from './pages/Usuarios';
 import PaymentGateways from './pages/PaymentGateways';

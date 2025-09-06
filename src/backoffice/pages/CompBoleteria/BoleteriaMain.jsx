@@ -726,9 +726,9 @@ const BoleteriaMain = () => {
 
   return (
     <div>
-      <div className="h-screen flex bg-gray-100">
+      <div className="h-screen flex" style={{backgroundColor: '#f5f5f5'}}>
         {/* Sidebar izquierda */}
-        <div className="w-16 bg-gray-800 flex flex-col items-center py-4 space-y-4">
+        <div className="w-16 flex flex-col items-center py-4 space-y-4" style={{backgroundColor: '#1f2937'}}>
           {/* Botón de Atrás */}
           <Tooltip title="Volver atrás" placement="right">
             <div className="text-white text-xs text-center cursor-pointer hover:bg-gray-700 p-2 rounded" onClick={() => window.history.back()}>
