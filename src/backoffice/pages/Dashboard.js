@@ -218,10 +218,7 @@ const Dashboard = () => {
     try {
       const { data, error } = await supabase
         .from('payment_transactions')
-        .select(`
-          *,
-          payment_gateways (name)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -522,7 +519,7 @@ const Dashboard = () => {
                 },
                 {
                   title: 'Pasarela',
-                  dataIndex: ['payment_gateways', 'name'],
+                  dataIndex: 'gateway_id',
                   key: 'gateway'
                 },
                 {

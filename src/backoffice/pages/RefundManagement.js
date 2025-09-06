@@ -152,7 +152,7 @@ const RefundManagement = () => {
     },
     {
       title: 'Pasarela',
-      dataIndex: ['payment_transactions', 'payment_gateways', 'name'],
+      dataIndex: ['payment_transactions', 'gateway_id'],
       key: 'gateway',
       render: (name) => name || 'N/A'
     },
@@ -297,7 +297,7 @@ const RefundManagement = () => {
         {selectedRefund && (
           <div>
             <p>Procesando reembolso de ${selectedRefund.amount}...</p>
-            <p>Pasarela: {selectedRefund.payment_transactions?.payment_gateways?.name}</p>
+            <p>Pasarela: {selectedRefund.payment_transactions?.gateway_id}</p>
           </div>
         )}
       </Modal>

@@ -91,13 +91,17 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
         client_secret: `pi_${Math.random().toString(36).substr(2, 9)}_secret_${Math.random().toString(36).substr(2, 9)}`
       };
 
+      // Determinar si es una reserva basado en el método de pago o configuración
+      const isReservation = this.method.method_id === 'reserva' || paymentData.isReservation;
+      
       return {
         success: true,
         transactionId: transaction.id,
         gatewayTransactionId: mockStripeResponse.id,
-        status: 'pending',
-        message: 'Pago procesado correctamente',
-        gatewayResponse: mockStripeResponse
+        status: isReservation ? 'reservado' : 'pending',
+        message: isReservation ? 'Reserva creada correctamente' : 'Pago procesado correctamente',
+        gatewayResponse: mockStripeResponse,
+        isReservation: isReservation
       };
     } catch (error) {
       console.error('Error procesando pago con Stripe:', error);

@@ -101,7 +101,7 @@ export const createPaymentSuccessNotification = async (transaction) => {
       data: {
         transactionId: transaction.id,
         amount: transaction.amount,
-        gateway: transaction.payment_gateways?.name
+        gateway: transaction.gateway_id
       }
     };
 
@@ -134,7 +134,7 @@ export const createPaymentFailureNotification = async (transaction) => {
       data: {
         transactionId: transaction.id,
         amount: transaction.amount,
-        gateway: transaction.payment_gateways?.name
+        gateway: transaction.gateway_id
       }
     };
 

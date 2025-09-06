@@ -312,10 +312,7 @@ export const getPaymentTransactionsByOrder = async (orderId) => {
   try {
     const { data, error } = await supabase
       .from('payment_transactions')
-      .select(`
-        *,
-        payment_gateways (name, type)
-      `)
+      .select('*')
       .eq('order_id', orderId)
       .order('created_at', { ascending: false });
 

@@ -99,7 +99,7 @@ const Pay = () => {
         await createPaymentSuccessNotification({
           id: result.transactionId,
           amount: total,
-          payment_gateways: { name: getMethodName(selectedGateway.method_id) }
+          gateway_id: selectedGateway.method_id
         });
 
         // Limpiar carrito

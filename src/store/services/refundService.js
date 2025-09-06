@@ -196,10 +196,7 @@ export const getAllRefunds = async (filters = {}) => {
       .from('refunds')
       .select(`
         *,
-        payment_transactions (
-          *,
-          payment_gateways (name, type)
-        )
+        payment_transactions (*)
       `);
 
     if (filters.status) {

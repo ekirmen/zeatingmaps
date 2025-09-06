@@ -89,7 +89,7 @@ const PaymentAnalytics = () => {
         .from('payment_transactions')
         .select(`
           *,
-          payment_gateways (name, type)
+          *
         `);
 
       if (filters.dateRange) {
@@ -121,7 +121,7 @@ const PaymentAnalytics = () => {
         .from('payment_transactions')
         .select(`
           *,
-          payment_gateways (name, type)
+          *
         `)
         .eq('status', 'completed');
 
@@ -129,7 +129,7 @@ const PaymentAnalytics = () => {
 
       // Agrupar por gateway
       const gatewayStats = data.reduce((acc, transaction) => {
-        const gatewayName = transaction.payment_gateways?.name || 'Unknown';
+        const gatewayName = transaction.gateway_id || 'Unknown';
         if (!acc[gatewayName]) {
           acc[gatewayName] = {
             name: gatewayName,
@@ -516,11 +516,11 @@ const PaymentAnalytics = () => {
                 },
                 {
                   title: 'Pasarela',
-                  dataIndex: ['payment_gateways', 'name'],
+                  dataIndex: 'gateway_id',
                   key: 'gateway',
                   render: (name, record) => (
                     <Space>
-                      {getGatewayIcon(record.payment_gateways?.type)}
+                      {getGatewayIcon(record.gateway_id)}
                       {name}
                     </Space>
                   )

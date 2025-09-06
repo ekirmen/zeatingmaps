@@ -21,7 +21,7 @@ const PaymentSuccess = () => {
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [eventOptions, setEventOptions] = useState({});
 
-  const isReservation = paymentDetails?.status === 'reservado';
+  const isReservation = paymentDetails?.status === 'reservado' || paymentDetails?.status === 'pending';
 
   useEffect(() => {
     clearCart();
@@ -150,6 +150,28 @@ const PaymentSuccess = () => {
             </>
           )}
         </div>
+        
+        {isReservation && (
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+            <div className="flex">
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  <strong>Reserva temporal:</strong> Tienes tiempo limitado para completar el pago.
+                </p>
+                <p className="text-sm text-yellow-700 mt-2">
+                  <strong>Tiempo para pagar:</strong> {paymentDetails?.tiempo_caducidad_reservas ? 
+                    `${Math.abs(paymentDetails.tiempo_caducidad_reservas)} minutos` : 
+                    'Contacta para más información'
+                  }
+                </p>
+                <p className="text-sm text-yellow-700 mt-1">
+                  <strong>Contacto:</strong> +1 (555) 123-4567
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {!isReservation && paymentDetails?.seats?.length > 0 && (
           <div className="my-6">
             <div className="grid grid-cols-3 font-medium text-gray-700 py-2 border-b">
