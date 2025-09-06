@@ -1,14 +1,25 @@
 // Funciones temporales para transacciones - se pueden implementar más tarde
 const createPaymentTransaction = async (data) => {
+  // Generar UUID válido
+  const generateUUID = () => {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  };
+
   return {
-    id: `txn_${Math.random().toString(36).substr(2, 9)}`,
-    ...data
+    id: generateUUID(),
+    ...data,
+    status: 'pending',
+    created_at: new Date().toISOString()
   };
 };
 
 const updatePaymentTransactionStatus = async (id, status, response = null) => {
   console.log(`Transaction ${id} updated to ${status}`, response);
-  return { id, status, response };
+  return { id, status, response, updated_at: new Date().toISOString() };
 };
 
 /**
@@ -38,7 +49,7 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
       // Crear transacción en nuestra base de datos
       const transaction = await createPaymentTransaction({
         orderId: paymentData.orderId,
-        gatewayId: this.method.method_id,
+        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
         currency: paymentData.currency || 'USD'
       });
@@ -90,7 +101,7 @@ class PayPalMethodProcessor extends PaymentMethodProcessor {
     try {
       const transaction = await createPaymentTransaction({
         orderId: paymentData.orderId,
-        gatewayId: this.method.method_id,
+        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
         currency: paymentData.currency || 'USD'
       });
@@ -131,7 +142,7 @@ class ApplePayMethodProcessor extends PaymentMethodProcessor {
     try {
       const transaction = await createPaymentTransaction({
         orderId: paymentData.orderId,
-        gatewayId: this.method.method_id,
+        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
         currency: paymentData.currency || 'USD'
       });
@@ -159,7 +170,7 @@ class GooglePayMethodProcessor extends PaymentMethodProcessor {
     try {
       const transaction = await createPaymentTransaction({
         orderId: paymentData.orderId,
-        gatewayId: this.method.method_id,
+        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
         currency: paymentData.currency || 'USD'
       });
@@ -187,7 +198,7 @@ class TransferenciaMethodProcessor extends PaymentMethodProcessor {
     try {
       const transaction = await createPaymentTransaction({
         orderId: paymentData.orderId,
-        gatewayId: this.method.method_id,
+        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
         currency: paymentData.currency || 'USD'
       });
@@ -218,7 +229,7 @@ class PagoMovilMethodProcessor extends PaymentMethodProcessor {
     try {
       const transaction = await createPaymentTransaction({
         orderId: paymentData.orderId,
-        gatewayId: this.method.method_id,
+        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
         currency: paymentData.currency || 'USD'
       });
@@ -246,7 +257,7 @@ class EfectivoTiendaMethodProcessor extends PaymentMethodProcessor {
     try {
       const transaction = await createPaymentTransaction({
         orderId: paymentData.orderId,
-        gatewayId: this.method.method_id,
+        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
         currency: paymentData.currency || 'USD'
       });
@@ -277,7 +288,7 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
     try {
       const transaction = await createPaymentTransaction({
         orderId: paymentData.orderId,
-        gatewayId: this.method.method_id,
+        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
         currency: paymentData.currency || 'USD'
       });
