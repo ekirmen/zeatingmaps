@@ -6,6 +6,7 @@ import BoleteriaMain from './pages/CompBoleteria/BoleteriaMainCustomDesign';
 import Evento from './pages/Evento';
 import Usuarios from './pages/Usuarios';
 import PaymentGateways from './pages/PaymentGateways';
+import ComisionesTasas from './pages/ComisionesTasas';
 import PaymentAnalytics from './pages/PaymentAnalytics';
 import RefundManagement from './pages/RefundManagement';
 import Reports from './pages/Reports';
@@ -61,7 +62,7 @@ const BackofficeApp = () => {
         <Route path="productos" element={<Productos />} />
         <Route path="plantillas-productos" element={<PlantillasProductos />} />
         <Route path="donaciones" element={<Entrada />} />
-        <Route path="comisiones" element={<PaymentGateways />} />
+        <Route path="comisiones" element={<ComisionesTasas />} />
         <Route path="seguros" element={<PaymentGateways />} />
         <Route path="envio" element={<PaymentGateways />} />
         <Route path="eventos" element={<Evento />} />
