@@ -213,8 +213,30 @@ const PaymentMethodsConfig = () => {
   // Función para desencriptar datos sensibles
   const decryptSensitiveData = (encryptedData) => {
     try {
+      // Si no hay datos encriptados, retornar objeto vacío
+      if (!encryptedData || encryptedData === '{}' || encryptedData === '') {
+        return {};
+      }
+      
+      // Si ya es un objeto JSON válido, retornarlo directamente
+      if (typeof encryptedData === 'object') {
+        return encryptedData;
+      }
+      
+      // Si es una cadena que parece JSON válido, parsearla directamente
+      if (typeof encryptedData === 'string' && encryptedData.startsWith('{')) {
+        return JSON.parse(encryptedData);
+      }
+      
+      // Intentar desencriptar
       const bytes = CryptoJS.AES.decrypt(encryptedData, SECRET_KEY);
-      return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+      const decryptedString = bytes.toString(CryptoJS.enc.Utf8);
+      
+      if (!decryptedString) {
+        return {};
+      }
+      
+      return JSON.parse(decryptedString);
     } catch (error) {
       console.error('Error decrypting data:', error);
       return {};
