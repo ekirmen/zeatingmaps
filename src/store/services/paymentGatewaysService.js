@@ -267,7 +267,12 @@ export const createPaymentTransaction = async (transactionData) => {
         currency: transactionData.currency || 'USD',
         status: 'pending',
         gateway_transaction_id: transactionData.gatewayTransactionId,
-        gateway_response: transactionData.gatewayResponse
+        gateway_response: transactionData.gatewayResponse,
+        locator: transactionData.locator,
+        tenant_id: transactionData.tenantId,
+        user_id: transactionData.userId,
+        evento_id: transactionData.eventoId,
+        funcion_id: transactionData.funcionId
       })
       .select()
       .single();

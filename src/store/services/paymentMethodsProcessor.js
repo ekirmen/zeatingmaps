@@ -18,11 +18,19 @@ const createPaymentTransaction = async (data) => {
       gatewayId = generateUUID();
     }
 
-    // Usar la función real de Supabase
-    return await createSupabaseTransaction({
+    // Preparar datos completos para la transacción
+    const transactionData = {
       ...data,
-      gatewayId: gatewayId
-    });
+      gatewayId: gatewayId,
+      locator: data.locator,
+      tenantId: data.tenantId,
+      userId: data.userId,
+      eventoId: data.eventoId,
+      funcionId: data.funcionId
+    };
+
+    // Usar la función real de Supabase
+    return await createSupabaseTransaction(transactionData);
   } catch (error) {
     console.error('Error creating payment transaction:', error);
     // Fallback a función temporal si falla
@@ -81,7 +89,12 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenant?.id,
+        userId: paymentData.user?.id,
+        eventoId: paymentData.evento?.id,
+        funcionId: paymentData.funcion?.id
       });
 
       // Simulación de respuesta de Stripe
@@ -94,9 +107,6 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
       // Determinar si es una reserva basado en el método de pago o configuración
       const isReservation = this.method.method_id === 'reserva' || paymentData.isReservation;
       
-      // Generar locator único
-      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
       return {
         success: true,
         transactionId: transaction.id,
@@ -105,7 +115,7 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
         message: isReservation ? 'Reserva creada correctamente' : 'Pago procesado correctamente',
         gatewayResponse: mockStripeResponse,
         isReservation: isReservation,
-        locator: locator
+        locator: paymentData.locator
       };
     } catch (error) {
       console.error('Error procesando pago con Stripe:', error);
@@ -141,7 +151,12 @@ class PayPalMethodProcessor extends PaymentMethodProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenant?.id,
+        userId: paymentData.user?.id,
+        eventoId: paymentData.evento?.id,
+        funcionId: paymentData.funcion?.id
       });
 
       // Simulación de respuesta de PayPal
@@ -157,9 +172,6 @@ class PayPalMethodProcessor extends PaymentMethodProcessor {
         ]
       };
 
-      // Generar locator único
-      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
       return {
         success: true,
         transactionId: transaction.id,
@@ -167,7 +179,7 @@ class PayPalMethodProcessor extends PaymentMethodProcessor {
         status: 'pending',
         message: 'Redirigiendo a PayPal...',
         gatewayResponse: mockPayPalResponse,
-        locator: locator
+        locator: paymentData.locator
       };
     } catch (error) {
       console.error('Error procesando pago con PayPal:', error);
@@ -186,12 +198,14 @@ class ApplePayMethodProcessor extends PaymentMethodProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenant?.id,
+        userId: paymentData.user?.id,
+        eventoId: paymentData.evento?.id,
+        funcionId: paymentData.funcion?.id
       });
 
-      // Generar locator único
-      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
       return {
         success: true,
         transactionId: transaction.id,
@@ -199,7 +213,7 @@ class ApplePayMethodProcessor extends PaymentMethodProcessor {
         status: 'completed',
         message: 'Pago con Apple Pay completado',
         gatewayResponse: { status: 'success' },
-        locator: locator
+        locator: paymentData.locator
       };
     } catch (error) {
       console.error('Error procesando pago con Apple Pay:', error);
@@ -218,12 +232,14 @@ class GooglePayMethodProcessor extends PaymentMethodProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenant?.id,
+        userId: paymentData.user?.id,
+        eventoId: paymentData.evento?.id,
+        funcionId: paymentData.funcion?.id
       });
 
-      // Generar locator único
-      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
       return {
         success: true,
         transactionId: transaction.id,
@@ -231,7 +247,7 @@ class GooglePayMethodProcessor extends PaymentMethodProcessor {
         status: 'completed',
         message: 'Pago con Google Pay completado',
         gatewayResponse: { status: 'success' },
-        locator: locator
+        locator: paymentData.locator
       };
     } catch (error) {
       console.error('Error procesando pago con Google Pay:', error);
@@ -250,12 +266,14 @@ class TransferenciaMethodProcessor extends PaymentMethodProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenant?.id,
+        userId: paymentData.user?.id,
+        eventoId: paymentData.evento?.id,
+        funcionId: paymentData.funcion?.id
       });
 
-      // Generar locator único
-      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
       return {
         success: true,
         transactionId: transaction.id,
@@ -266,7 +284,7 @@ class TransferenciaMethodProcessor extends PaymentMethodProcessor {
           status: 'pending',
           instructions: 'Complete la transferencia usando los datos bancarios proporcionados'
         },
-        locator: locator
+        locator: paymentData.locator
       };
     } catch (error) {
       console.error('Error procesando transferencia bancaria:', error);
@@ -285,12 +303,14 @@ class PagoMovilMethodProcessor extends PaymentMethodProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenant?.id,
+        userId: paymentData.user?.id,
+        eventoId: paymentData.evento?.id,
+        funcionId: paymentData.funcion?.id
       });
 
-      // Generar locator único
-      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
       return {
         success: true,
         transactionId: transaction.id,
@@ -298,7 +318,7 @@ class PagoMovilMethodProcessor extends PaymentMethodProcessor {
         status: 'completed',
         message: 'Pago móvil procesado correctamente',
         gatewayResponse: { status: 'success' },
-        locator: locator
+        locator: paymentData.locator
       };
     } catch (error) {
       console.error('Error procesando pago móvil:', error);
@@ -317,12 +337,14 @@ class EfectivoTiendaMethodProcessor extends PaymentMethodProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenant?.id,
+        userId: paymentData.user?.id,
+        eventoId: paymentData.evento?.id,
+        funcionId: paymentData.funcion?.id
       });
 
-      // Generar locator único
-      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
       return {
         success: true,
         transactionId: transaction.id,
@@ -336,7 +358,7 @@ class EfectivoTiendaMethodProcessor extends PaymentMethodProcessor {
         requiresRedirect: false,
         requiresAction: false,
         requiresManualConfirmation: true,
-        locator: locator
+        locator: paymentData.locator
       };
     } catch (error) {
       console.error('Error procesando pago en efectivo en tienda:', error);
@@ -355,12 +377,14 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.method.id || `gateway_${this.method.method_id}`,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenant?.id,
+        userId: paymentData.user?.id,
+        eventoId: paymentData.evento?.id,
+        funcionId: paymentData.funcion?.id
       });
 
-      // Generar locator único
-      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
-      
       return {
         success: true,
         transactionId: transaction.id,
@@ -371,7 +395,7 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
         requiresRedirect: false,
         requiresAction: false,
         requiresManualConfirmation: false,
-        locator: locator
+        locator: paymentData.locator
       };
     } catch (error) {
       console.error('Error procesando pago en efectivo:', error);

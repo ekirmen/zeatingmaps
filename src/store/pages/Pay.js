@@ -8,14 +8,19 @@ import { processPaymentMethod } from '../services/paymentMethodsProcessor';
 import { createPaymentSuccessNotification } from '../services/paymentNotifications';
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent } from '../services/facebookPixelService';
+import { useAuth } from '../../contexts/AuthContext';
+import { useTenant } from '../../contexts/TenantContext';
 
 
 const Pay = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { currentTenant } = useTenant();
+  
   // useCartStore almacena los asientos seleccionados en la propiedad `items`
   // En algunos contextos `cart` no existe y producía `undefined`, generando
   // errores al intentar usar `reduce`. Se usa `items` y se asegura un arreglo.
-  const { items: cartItems, clearCart } = useCartStore();
+  const { items: cartItems, clearCart, functionId } = useCartStore();
   const total = (cartItems || []).reduce(
     (sum, item) => sum + (item.precio || 0),
     0
@@ -80,14 +85,27 @@ const Pay = () => {
     try {
       setProcessingPayment(true);
       
+      // Generar locator único
+      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      
       const paymentData = {
-        orderId: `ORDER-${Date.now()}`,
+        orderId: locator,
         amount: total,
         currency: 'USD',
         items: cartItems,
+        locator: locator,
         user: {
-          id: 'user-id', // Obtener del contexto de autenticación
-          email: 'user@example.com'
+          id: user?.id || null,
+          email: user?.email || null
+        },
+        tenant: {
+          id: currentTenant?.id || null
+        },
+        funcion: {
+          id: functionId || null
+        },
+        evento: {
+          id: cartItems[0]?.eventId || null
         }
       };
 
