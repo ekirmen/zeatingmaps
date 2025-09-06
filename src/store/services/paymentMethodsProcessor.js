@@ -305,7 +305,10 @@ class EfectivoTiendaMethodProcessor extends PaymentMethodProcessor {
         gatewayResponse: { 
           status: 'pending',
           instructions: 'Visite nuestra tienda física para completar el pago en efectivo'
-        }
+        },
+        requiresRedirect: false,
+        requiresAction: false,
+        requiresManualConfirmation: true
       };
     } catch (error) {
       console.error('Error procesando pago en efectivo en tienda:', error);
@@ -333,7 +336,10 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
         gatewayTransactionId: `cash_${Math.random().toString(36).substr(2, 9)}`,
         status: 'completed',
         message: 'Pago en efectivo completado',
-        gatewayResponse: { status: 'success' }
+        gatewayResponse: { status: 'success' },
+        requiresRedirect: false,
+        requiresAction: false,
+        requiresManualConfirmation: false
       };
     } catch (error) {
       console.error('Error procesando pago en efectivo:', error);

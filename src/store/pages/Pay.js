@@ -110,12 +110,12 @@ const Pay = () => {
           window.location.href = result.approvalUrl;
         } else if (result.requiresAction) {
           // Para Stripe, mostrar formulario de tarjeta
-          navigate('/payment/confirm', { state: { result } });
+          navigate('/payment-confirm', { state: { result } });
         } else if (result.requiresManualConfirmation) {
           // Para transferencias, mostrar información
-          navigate('/payment/manual', { state: { result } });
+          navigate('/payment-manual', { state: { result } });
         } else {
-          navigate('/payment/success', { state: { result } });
+          navigate('/payment-success', { state: { result } });
         }
       }
     } catch (error) {
