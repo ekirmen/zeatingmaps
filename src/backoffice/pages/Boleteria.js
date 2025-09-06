@@ -37,7 +37,7 @@ const Boleteria = () => {
     setSelectedEvent
   } = useBoleteria();
 
-  const [foundSeats, setFoundSeats] = React.useState([]);
+  const [foundSeats, setFoundSeats] = useState([]);
   const [activeTab, setActiveTab] = useState('compact'); // Cambiar a 'compact' por defecto
 
   const {
