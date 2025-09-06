@@ -1,4 +1,15 @@
-import { createPaymentTransaction, updatePaymentTransactionStatus } from './paymentGatewaysService';
+// Funciones temporales para transacciones - se pueden implementar más tarde
+const createPaymentTransaction = async (data) => {
+  return {
+    id: `txn_${Math.random().toString(36).substr(2, 9)}`,
+    ...data
+  };
+};
+
+const updatePaymentTransactionStatus = async (id, status, response = null) => {
+  console.log(`Transaction ${id} updated to ${status}`, response);
+  return { id, status, response };
+};
 
 /**
  * Procesador base para todos los métodos de pago
