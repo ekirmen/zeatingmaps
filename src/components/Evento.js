@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../utils/apiBase';
 import resolveImageUrl from '../utils/resolveImageUrl';
@@ -7,12 +7,6 @@ import resolveImageUrl from '../utils/resolveImageUrl';
 const Evento = () => {
   const { token } = useAuth();
   const navigate = useNavigate();
-  
-  const [eventoData, setEventoData] = useState({
-    imagenes: { espectaculo: [] }
-  });
-  const [files, setFiles] = useState({});
-  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     // Clean and verify token
@@ -34,13 +28,14 @@ const Evento = () => {
         return;
       }
 
-      // const result = await saveEvento(eventoData, `Bearer ${cleanToken}`, files);
-      console.log('Evento data:', eventoData);
+      const result = await saveEvento(eventoData, `Bearer ${cleanToken}`, files);
       // ... rest of your submit handler
     } catch (error) {
       console.error('Submit error:', error);
     }
   };
+
+  const [imagePreview, setImagePreview] = useState(null);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];

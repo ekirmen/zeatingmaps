@@ -3,68 +3,16 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { fetchMapa, fetchPlantillaPrecios, getFunciones, getMapaPorEvento, fetchDescuentoPorCodigo } from '../services/apistore';
 import { fetchZonasPorSala } from '../../services/supabaseServices';
+import { fetchSeatsByFuncion, createOrUpdateSeat } from '../../backoffice/services/supabaseSeats';
 import { supabase } from '../../supabaseClient';
+import { fetchPayments } from '../../backoffice/services/apibackoffice';
 import { loadGtm, loadMetaPixel } from '../utils/analytics';
-
-// Inline functions to avoid circular dependency
-const fetchSeatsByFuncion = async (funcionId) => {
-  try {
-    const { data, error } = await supabase
-      .from('seats')
-      .select('*')
-      .eq('funcion_id', funcionId);
-
-    if (error) {
-      console.error('Error fetching seats by function:', error.message);
-      return [];
-    }
-    return data;
-  } catch (error) {
-    console.error('Unexpected error fetching seats by function:', error.message);
-    return [];
-  }
-};
-
-const createOrUpdateSeat = async (seatData) => {
-  try {
-    const { data, error } = await supabase
-      .from('seats')
-      .upsert(seatData)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating/updating seat:', error.message);
-      throw error;
-    }
-    return data;
-  } catch (error) {
-    console.error('Unexpected error creating/updating seat:', error.message);
-    throw error;
-  }
-};
-
-const fetchPayments = async (funcionId) => {
-  try {
-    const { data, error } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('funcion_id', funcionId);
-
-    if (error) {
-      console.error('Error fetching payments:', error.message);
-      return [];
-    }
-    return data;
-  } catch (error) {
-    console.error('Unexpected error fetching payments:', error.message);
-    return [];
-  }
-};
-
 import { isUuid, isNumericId } from '../../utils/isUuid';
 import getZonaColor from '../../utils/getZonaColor';
-// Firebase imports removed - using Supabase only
+import { onAuthStateChanged } from 'firebase/auth';
+import { ref, runTransaction, set } from 'firebase/database';
+import { db, isFirebaseEnabled, auth } from '../../services/firebaseClient';
+import { signInAnonymously } from 'firebase/auth';
 import { useCartStore } from '../cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 
@@ -90,7 +38,8 @@ const useEventData = (eventIdOrSlug) => {
         const savedTime = localStorage.getItem(`timer-${eventIdOrSlug}-${selectedFunctionId || 'none'}`);
         return savedTime ? parseInt(savedTime, 10) : 0;
     });
-    // Firebase state removed - using Supabase only
+    const [firebaseEnabled, setFirebaseEnabled] = useState(false);
+    const [firebaseAuthReady, setFirebaseAuthReady] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [isAuthReady, setIsAuthReady] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -463,21 +412,112 @@ const useEventData = (eventIdOrSlug) => {
 
         let dbOperationSuccess = false;
 
-        // Firebase authentication removed - using Supabase only
-        console.log("[useEventData DEBUG] Usando Supabase para gestión de asientos.");
+        const databaseInstance = await db;
+        const authInstanceResolved = await auth;
+
+        if (!databaseInstance) {
+            console.error("[useEventData DEBUG] Firebase Database no está inicializado o habilitado.");
+            alert("Hubo un problema con la conexión a la base de datos. Por favor, recarga la página.");
+            return;
+        }
+
+        if (!authInstanceResolved) {
+            console.error("[useEventData DEBUG] Firebase Auth no está inicializado o habilitado.");
+            alert("Hubo un problema con la autenticación. Por favor, recarga la página.");
+            return;
+        }
+
+        if (!isAuthReady) {
+            console.warn("[useEventData DEBUG] Firebase Auth no está listo aún.");
+            alert("La sesión no está lista. Por favor, espera un momento y vuelve a intentarlo.");
+            return;
+        }
+
+        if (!authInstanceResolved.currentUser) {
+            try {
+                console.log("[useEventData DEBUG] Intentando iniciar sesión anónimamente para carrito.");
+                const userCredential = await signInAnonymously(authInstanceResolved);
+                setCurrentUserId(userCredential.user.uid);
+                console.log("[useEventData DEBUG] Sesión anónima iniciada con UID:", userCredential.user.uid);
+            } catch (error) {
+                console.error("[useEventData DEBUG] Error al iniciar sesión anónimamente para carrito:", error);
+                alert("No pudimos preparar tu sesión para modificar el carrito. Por favor, intenta de nuevo.");
+                return;
+            }
+        }
+
+        let currentUserIdResolved = currentUserId || authInstanceResolved.currentUser?.uid;
 
         if (isAdding) {
-            console.log(`[useEventData DEBUG] Reservando asiento ${silla._id} en Supabase.`);
-            try {
-                await Promise.all([
-                    createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'seleccionado' }),
-                    useSeatLockStore.getState().lockSeat(silla._id, 'seleccionado', selectedFunctionId)
-                ]);
-                dbOperationSuccess = true;
-                console.log(`[useEventData DEBUG] Asiento ${silla._id} reservado en Supabase.`);
-            } catch (err) {
-                console.error('[useEventData DEBUG] Error al reservar asiento en Supabase:', err);
-                alert('Lo siento, el asiento ya no está disponible. Por favor, intenta de nuevo.');
+            if (!firebaseEnabled) {
+                console.log(`[useEventData DEBUG] Firebase deshabilitado. Reservando asiento ${silla._id} en Supabase.`);
+                try {
+                    await Promise.all([
+                        createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'seleccionado' }),
+                        useSeatLockStore.getState().lockSeat(silla._id, 'seleccionado', selectedFunctionId)
+                    ]);
+                    dbOperationSuccess = true;
+                    console.log(`[useEventData DEBUG] Asiento ${silla._id} reservado en Supabase.`);
+                } catch (err) {
+                    console.error('[useEventData DEBUG] Error al reservar asiento en Supabase (Firebase deshabilitado):', err);
+                    alert('Lo siento, el asiento ya no está disponible. Por favor, intenta de nuevo.');
+                }
+            } else {
+                const seatRef = ref(databaseInstance, `seats/${selectedFunctionId}/${silla._id}`);
+                const forzarRegistro = evento?.otrasOpciones?.registroObligatorioAntesSeleccion ?? false;
+
+                if (!currentUserIdResolved) {
+                    if (forzarRegistro) {
+                        alert("Debes iniciar sesión o registrarte para seleccionar un asiento.");
+                        return;
+                    } else {
+                        try {
+                            console.log("[useEventData DEBUG] Intentando iniciar sesión anónimamente para selección de asiento.");
+                            const userCredential = await signInAnonymously(authInstanceResolved);
+                            currentUserIdResolved = userCredential.user.uid;
+                            setCurrentUserId(currentUserIdResolved);
+                            console.log("[useEventData DEBUG] Sesión anónima iniciada con UID:", currentUserIdResolved);
+                        } catch (error) {
+                            console.error("[useEventData DEBUG] Error al iniciar sesión anónimamente:", error.code, error.message);
+                            alert("No pudimos preparar tu sesión para seleccionar asientos. Por favor, intenta de nuevo.");
+                            return;
+                        }
+                    }
+                }
+
+                if (!currentUserIdResolved) {
+                    alert("Hubo un problema con tu sesión. Por favor, recarga la página e intenta de nuevo.");
+                    return;
+                }
+
+                console.log(`[useEventData DEBUG] Intentando transacción de Firebase para asiento ${silla._id}.`);
+                try {
+                    const { committed } = await runTransaction(seatRef, (currentSeatData) => {
+                        if (currentSeatData === null || currentSeatData.status === "available") {
+                            return {
+                                status: "occupied",
+                                reservedBy: currentUserIdResolved,
+                                timestamp: Date.now(),
+                                seatDetails: seatItemData
+                            };
+                        } else {
+                            console.log(`[useEventData DEBUG] Transacción abortada: Asiento ${silla._id} no disponible.`);
+                            return undefined;
+                        }
+                    });
+
+                    if (committed) {
+                        const cartSeatRef = ref(databaseInstance, `in-cart/${currentUserIdResolved}/${silla._id}`);
+                        await set(cartSeatRef, seatItemData);
+                        dbOperationSuccess = true;
+                        console.log(`[useEventData DEBUG] Asiento ${silla._id} ocupado en Firebase.`);
+                    } else {
+                        alert('Lo siento, el asiento acaba de ser tomado por otra persona. Por favor, elige otro.');
+                    }
+                } catch (error) {
+                    console.error(`[useEventData DEBUG] Error en transacción de Firebase para asiento ${silla._id}:`, error);
+                    alert('Hubo un error al intentar seleccionar el asiento. Por favor, inténtalo de nuevo.');
+                }
             }
 
             if (dbOperationSuccess) {
@@ -486,16 +526,36 @@ const useEventData = (eventIdOrSlug) => {
             }
 
         } else { // Removing from cart
+            const userId = currentUserIdResolved;
             console.log(`[useEventData DEBUG] Quitando silla ${silla._id} del carrito.`);
-            try {
-                await Promise.all([
-                    createOrUpdateSeat(silla._id, selectedFunctionId, zonaId, { status: 'disponible' }),
-                    useSeatLockStore.getState().unlockSeat(silla._id)
-                ]);
-                dbOperationSuccess = true;
-                console.log(`[useEventData DEBUG] Asiento ${silla._id} liberado en Supabase.`);
-            } catch (error) {
-                console.error(`[useEventData DEBUG] Error al liberar asiento en Supabase ${silla._id}:`, error);
+
+            if (firebaseEnabled && userId) {
+                const seatRef = ref(databaseInstance, `seats/${selectedFunctionId}/${silla._id}`);
+                const cartSeatRef = ref(databaseInstance, `in-cart/${userId}/${silla._id}`);
+
+                try {
+                    await set(cartSeatRef, null);
+                    console.log(`[useEventData DEBUG] Asiento ${silla._id} eliminado de in-cart en Firebase.`);
+                    const { committed } = await runTransaction(seatRef, (currentSeatData) => {
+                        if (currentSeatData && currentSeatData.reservedBy === userId && currentSeatData.status === "occupied") {
+                            return {
+                                status: "available",
+                                reservedBy: null,
+                                timestamp: Date.now(),
+                                seatDetails: null
+                            };
+                        } else {
+                            console.log(`[useEventData DEBUG] Transacción de liberación abortada: Asiento ${silla._id} no en estado esperado.`);
+                            return undefined;
+                        }
+                    });
+                    if (committed) {
+                        dbOperationSuccess = true;
+                        console.log(`[useEventData DEBUG] Asiento ${silla._id} liberado en Firebase.`);
+                    }
+                } catch (error) {
+                    console.error(`[useEventData DEBUG] Error al liberar asiento en Firebase ${silla._id}:`, error);
+                }
             }
 
             try {
@@ -530,14 +590,16 @@ const useEventData = (eventIdOrSlug) => {
         }
 
     }, [
-
         selectedFunctionId,
+        firebaseEnabled,
         plantillaPrecios,
         zonas,
         appliedDiscount,
         eventIdOrSlug,
         startTimer,
         evento?.otrasOpciones?.registroObligatorioAntesSeleccion,
+        db,
+        auth,
         currentUserId,
         isAuthReady,
         toggleSeat,
@@ -547,9 +609,53 @@ const useEventData = (eventIdOrSlug) => {
         isNumericId
     ]);
 
-    // Firebase Auth useEffect removed - using Supabase only
+    useEffect(() => {
+        let unsubscribe;
+        const setupAuthListener = async () => {
+            try {
+                const authInstance = await auth;
+                if (authInstance) {
+                    unsubscribe = onAuthStateChanged(authInstance, (user) => {
+                        if (user) {
+                            setCurrentUserId(user.uid);
+                            console.log('[useEventData DEBUG] Firebase Auth State Changed: User logged in:', user.uid);
+                        } else {
+                            setCurrentUserId(null);
+                            console.log('[useEventData DEBUG] Firebase Auth State Changed: User logged out.');
+                        }
+                        setIsAuthReady(true);
+                        console.log('[useEventData DEBUG] Firebase Auth Ready.');
+                    });
+                } else {
+                    setIsAuthReady(true);
+                    console.log('[useEventData DEBUG] Firebase Auth no inicializado, marcando como listo.');
+                }
+            } catch (error) {
+                console.error("[useEventData DEBUG] Error al configurar el listener de Firebase Auth:", error);
+                setIsAuthReady(true);
+            }
+        };
 
-    // Firebase enabled check removed - using Supabase only
+        setupAuthListener();
+
+        return () => {
+            if (unsubscribe) {
+                unsubscribe();
+                console.log('[useEventData DEBUG] Firebase Auth listener desuscrito.');
+            }
+        };
+    }, [auth]);
+
+    useEffect(() => {
+        let isMounted = true;
+        isFirebaseEnabled().then(enabled => {
+            if (isMounted) {
+                setFirebaseEnabled(enabled);
+                console.log(`[useEventData DEBUG] Firebase habilitado: ${enabled}`);
+            }
+        });
+        return () => { isMounted = false; };
+    }, []);
 
     useEffect(() => {
         if (eventIdOrSlug) {
@@ -591,7 +697,8 @@ const useEventData = (eventIdOrSlug) => {
 
     useEffect(() => { fetchPayments().then(setPagos).catch(() => setPagos([])); }, []);
 
-    // Firebase hooks removed - using Supabase only
+    // useFirebaseSeatLocks(selectedFunctionId, zonas, setMapa, cartRef, setCart, firebaseEnabled);
+    // useSeatRealtime({ funcionId: firebaseEnabled ? null : selectedFunctionId, onSeatUpdate: () => {} });
     useEffect(() => () => clearInterval(timerRef.current), []);
 
     return {

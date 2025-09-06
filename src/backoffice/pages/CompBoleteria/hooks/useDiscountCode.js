@@ -1,27 +1,6 @@
 import { useState } from 'react';
 import { message } from 'antd';
-import { supabase } from '../../../../supabaseClient';
-
-// Inline function to avoid circular dependency
-const fetchDescuentoPorCodigo = async (codigo) => {
-  try {
-    const { data, error } = await supabase
-      .from('descuentos')
-      .select('*')
-      .eq('codigo', codigo)
-      .eq('activo', true)
-      .single();
-
-    if (error) {
-      throw new Error('Descuento no encontrado');
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error fetching discount:', error);
-    throw error;
-  }
-};
+import { fetchDescuentoPorCodigo } from '../../../../store/services/apistore';
 
 export const useDiscountCode = () => {
   const [discountCode, setDiscountCode] = useState('');

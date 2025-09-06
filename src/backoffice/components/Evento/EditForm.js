@@ -7,6 +7,7 @@ import API_BASE_URL from '../../../utils/apiBase';
 import resolveImageUrl from '../../../utils/resolveImageUrl';
 import OpcionesAvanzadas from './OpcionesAvanzadas';
 import FacebookPixelConfig from './FacebookPixelConfig';
+import './EditForm.css';
 
 const EditForm = ({
   activeTab,

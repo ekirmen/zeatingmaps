@@ -1,19 +1,8 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTenant } from '../../contexts/TenantContext';
-import { supabase } from '../../supabaseClient';
+import { upsertTenantThemeSettings } from '../services/themeSettingsService';
 import EventThemePanel from '../components/EventThemePanel';
-
-// Inline function to avoid circular dependency
-const upsertTenantThemeSettings = async (tenantId, theme) => {
-  if (!tenantId) throw new Error('tenantId requerido');
-  const payload = { tenant_id: tenantId, theme };
-  const { error } = await supabase
-    .from('tenant_theme_settings')
-    .upsert(payload, { onConflict: 'tenant_id' });
-  if (error) throw error;
-  return true;
-};
 
 const ColorInput = ({ label, value, onChange }) => (
   <div className="mb-4">

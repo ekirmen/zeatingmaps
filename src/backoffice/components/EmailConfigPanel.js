@@ -18,7 +18,7 @@ import {
 import {
   MailOutlined,
   SettingOutlined,
-  ExperimentOutlined,
+  TestOutlined,
   SaveOutlined,
   InfoCircleOutlined,
   SecurityScanOutlined
@@ -290,7 +290,7 @@ const EmailConfigPanel = () => {
           <div className="flex justify-end space-x-4">
             <Button
               type="default"
-              icon={<ExperimentOutlined />}
+              icon={<TestOutlined />}
               onClick={handleTest}
               loading={testing}
               size="large"

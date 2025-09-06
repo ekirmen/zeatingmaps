@@ -18,7 +18,7 @@ import {
   Card,
   Badge
 } from 'antd';
-import { createZona, updateZona, deleteZona } from '../../backoffice/services/apibackoffice';
+import { createZona, updateZona, deleteZona } from '../../services/apibackoffice';
 import {
   PlusOutlined,
   EditOutlined,

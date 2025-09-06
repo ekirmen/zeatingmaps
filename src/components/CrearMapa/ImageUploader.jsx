@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Upload, message, Image, Space, Typography } from 'antd';
 import { UploadOutlined, DeleteOutlined } from '@ant-design/icons';
-import { supabase } from '../../supabaseClient';
+import { supabase } from '../../../supabaseClient';
 
 const { Text } = Typography;
 

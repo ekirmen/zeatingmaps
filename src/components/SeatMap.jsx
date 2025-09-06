@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from "react";
+/* Removed Firebase imports as per user request */
+// import { getDatabaseInstance } from "../services/firebaseClient";
+// import { ref, onValue, off, update } from "firebase/database";
 import useSeatLocksArray from "../store/hooks/useSeatLocksArray";
 import getCartSessionId from "../utils/getCartSessionId";
 import "./SeatMap.css";
@@ -7,13 +10,14 @@ const SeatMap = ({ funcionId, onSeatToggle }) => {
   const [seats, setSeats] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState({});
   const [loading, setLoading] = useState(true);
+  const [firebaseEnabled] = useState(true); // Assume Firebase enabled
 
-  useSeatLocksArray(funcionId, setSeats, getCartSessionId, false); // Firebase disabled
+  useSeatLocksArray(funcionId, setSeats, getCartSessionId, firebaseEnabled);
 
   useEffect(() => {
     if (!funcionId) return;
 
-    // Using Supabase for seat management
+    // Removed Firebase fetching logic as per user request
     setSeats([]);
     setSelectedSeats({});
     setLoading(false);
@@ -21,7 +25,7 @@ const SeatMap = ({ funcionId, onSeatToggle }) => {
 
   const handleSeatSelect = (seatId) => {
     if (!seatId) return;
-    // Seat selection logic using Supabase
+    // Simplified seat selection logic without Firebase
     const currentSeat = seats.find((s) => s.id === seatId);
     if (!currentSeat) return;
 

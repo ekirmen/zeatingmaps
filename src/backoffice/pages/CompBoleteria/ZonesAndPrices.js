@@ -34,9 +34,7 @@ const ZonesAndPrices = ({
   carrito,
   setCarrito,
   selectedPlantilla,
-  setSelectedPlantilla,
   selectedClient,
-  setSelectedClient,
   abonos = [],
   selectedAffiliate,
   setSelectedAffiliate,
@@ -104,21 +102,27 @@ const ZonesAndPrices = ({
 
   // Restaurar estado guardado al cargar
   useEffect(() => {
-    if (eventos.length > 0 && funciones.length > 0) {
-      const savedState = useBoleteriaMemory.restoreState(eventos, funciones, []);
+    if (eventos.length > 0 && funciones.length > 0 && plantillas.length > 0) {
+      const savedState = useBoleteriaMemory.restoreState(eventos, funciones, plantillas);
       if (savedState) {
         console.log('🔄 [MEMORIA] Restaurando estado guardado:', savedState);
         
         // Restaurar evento
         if (savedState.selectedEvent) {
-          onEventSelect(savedState.selectedEvent);
+          setSelectedEvent(savedState.selectedEvent);
           console.log('✅ [MEMORIA] Evento restaurado:', savedState.selectedEvent.nombre);
         }
         
         // Restaurar función
         if (savedState.selectedFuncion) {
-          // La función se seleccionará automáticamente cuando se seleccione el evento
+          setSelectedFuncion(savedState.selectedFuncion);
           console.log('✅ [MEMORIA] Función restaurada:', savedState.selectedFuncion.nombre);
+          
+          // Cargar automáticamente el mapa para la función restaurada
+          if (savedState.selectedFuncion.sala?.id) {
+            console.log('🗺️ [MEMORIA] Cargando mapa automáticamente para sala:', savedState.selectedFuncion.sala.id);
+            // El useEffect de fetchMapa se ejecutará automáticamente
+          }
         }
         
         // Restaurar plantilla
@@ -130,7 +134,7 @@ const ZonesAndPrices = ({
         message.success('Estado anterior restaurado automáticamente');
       }
     }
-  }, [eventos, funciones, onEventSelect, setSelectedPlantilla]);
+  }, [eventos, funciones, plantillas]);
   
   // Guardar estado cuando cambie
   useEffect(() => {

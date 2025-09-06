@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRecintoSala } from '../contexts/RecintoSalaContext';
 import { supabase } from '../../supabaseClient';
+import './PopupCrearPlantilla.css';
 
 const PopupCrearPlantilla = ({ closePopup }) => {
   const { recinto, sala } = useRecintoSala();

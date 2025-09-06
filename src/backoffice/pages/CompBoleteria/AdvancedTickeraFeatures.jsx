@@ -33,8 +33,7 @@ import {
   DollarOutlined,
   EyeOutlined,
   EditOutlined,
-  DeleteOutlined,
-  StarOutlined
+  DeleteOutlined
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -437,7 +436,7 @@ const AdvancedTickeraFeatures = ({
     <Modal
       title={
         <div className="flex items-center space-x-2">
-          <StarOutlined style={{ color: '#1890ff' }} />
+          <MagicOutlined style={{ color: '#1890ff' }} />
           <span>Funcionalidades Avanzadas de Tickera</span>
         </div>
       }

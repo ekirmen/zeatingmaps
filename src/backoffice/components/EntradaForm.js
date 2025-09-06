@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useRecinto } from '../contexts/RecintoContext';
-import { useIva } from '../contexts/IvaContext';  // Asegúrate de que la ruta sea correcta
+import React, { useState, useContext } from 'react';
+import { RecintoContext } from '../context/RecintoContext';
+import { useIva } from '../context/IvaContext';  // Asegúrate de que la ruta sea correcta
 
 const EntradaForm = ({ onClose, onSave }) => {
-  const { recintos } = useRecinto();
+  const { recintos } = useContext(RecintoContext);
   const { ivaList } = useIva();  // Usa el hook useIva correctamente
 
   const [selectedRecinto, setSelectedRecinto] = useState('');

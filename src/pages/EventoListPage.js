@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchEventos } from '../services/supabaseEventoService';
-import EventoForm from '../components/EventoForm';
+import EventoForm from '../components/Evento/EventoForm';
 
 const EventoListPage = () => {
   const [eventos, setEventos] = useState([]);

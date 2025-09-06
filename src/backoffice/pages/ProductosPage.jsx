@@ -12,7 +12,7 @@ import {
 import DashboardLayout from '../components/DashboardLayout';
 import DataTable from '../components/DataTable';
 import { supabase } from '../../supabaseClient';
-import resolveImageUrl from '../../utils/resolveImageUrl';
+import { resolveImageUrl } from '../../utils/resolveImageUrl';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const { Text } = Typography;

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { message } from 'antd';
 import API_BASE_URL from '../utils/apiBase';
 
 const Login = ({ onLogin }) => {
   const [login, setLogin] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,7 +25,7 @@ const Login = ({ onLogin }) => {
         onLogin(data.userId); // Call the login function with user ID
 
         message.success('Inicio de sesión exitoso');
-        navigate('/store'); // Redirigir a la página de la tienda
+        history.push('/store'); // Redirigir a la página de la tienda
       } else {
         message.error(data.message);
       }
