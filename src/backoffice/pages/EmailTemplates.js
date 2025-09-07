@@ -21,7 +21,7 @@ import {
   EyeOutlined,
   CopyOutlined,
   SettingOutlined,
-  PaletteOutlined
+  BgColorsOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
@@ -256,7 +256,7 @@ const EmailTemplates = () => {
       {/* Header */}
       <div className="mb-8">
         <Title level={2}>
-          <PaletteOutlined className="mr-2" />
+          <BgColorsOutlined className="mr-2" />
           Plantillas de Email
         </Title>
         <Text type="secondary">Diseña y personaliza las plantillas de email para tus reportes programados</Text>

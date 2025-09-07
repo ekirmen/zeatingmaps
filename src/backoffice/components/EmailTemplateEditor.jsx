@@ -21,7 +21,7 @@ import {
   Collapse
 } from 'antd';
 import { 
-  PaletteOutlined, 
+  BgColorsOutlined, 
   UploadOutlined, 
   SaveOutlined, 
   EyeOutlined,
@@ -406,7 +406,7 @@ const EmailTemplateEditor = ({
           <Divider />
 
           <Title level={4}>
-            <PaletteOutlined className="mr-2" />
+            <BgColorsOutlined className="mr-2" />
             Configuración de Diseño
           </Title>
 
