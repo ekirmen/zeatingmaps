@@ -36,7 +36,7 @@ const LocatorSearchModal = ({ open, onCancel }) => {
             fecha_celebracion,
             evento_id,
             sala_id,
-            plantilla_id
+            plantilla
           )
         `)
         .eq('locator', value.trim())
