@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import resolveImageUrl from '../../utils/resolveImageUrl';
 
 function EventListWidget({ events }) {
   const navigate = useNavigate();
@@ -61,7 +62,10 @@ function EventListWidget({ events }) {
           let displayImageUrl = `https://placehold.co/400x300/E0F2F7/000?text=${(event.name || event.nombre) ? (event.name || event.nombre).charAt(0) : 'E'}`;
           
           if (images) {
-            displayImageUrl = images.obraImagen || images.portada || images.banner || displayImageUrl;
+            const raw = images.obraImagen || images.portada || images.banner;
+            if (raw) {
+              displayImageUrl = resolveImageUrl(raw, 'eventos') || raw;
+            }
           }
 
           return (
@@ -74,6 +78,8 @@ function EventListWidget({ events }) {
               <div className="relative h-48 overflow-hidden">
                 <img
                   src={displayImageUrl}
+                  loading="lazy"
+                  crossOrigin="anonymous"
                   alt={event.name || event.nombre || 'Evento'}
                   className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                   onError={(e) => {

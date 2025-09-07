@@ -187,7 +187,10 @@ const VenueInfo = () => {
                     let displayImageUrl = `https://placehold.co/300x200/E0F2F7/000?text=${event.nombre?.charAt(0) || 'E'}`;
                     
                     if (images) {
-                      displayImageUrl = images.obraImagen || images.portada || images.banner || displayImageUrl;
+                      const raw = images.obraImagen || images.portada || images.banner;
+                      if (raw) {
+                        displayImageUrl = resolveImageUrl(raw, 'eventos') || raw;
+                      }
                     }
 
                     return (
@@ -200,6 +203,8 @@ const VenueInfo = () => {
                         <div className="relative h-32">
                           <img
                             src={displayImageUrl}
+                            loading="lazy"
+                            crossOrigin="anonymous"
                             alt={event.nombre}
                             className="w-full h-full object-cover"
                             onError={(e) => {

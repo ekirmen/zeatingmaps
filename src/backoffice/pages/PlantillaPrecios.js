@@ -34,6 +34,58 @@ const PlantillaPrecios = () => {
     fetchRecintos();
   }, []);
 
+  /* ------------------------- CARGAR PLANTILLAS DE PRECIOS ------------------------- */
+  useEffect(() => {
+    const fetchPlantillasPrecios = async () => {
+      try {
+        // Cargar plantillas principales
+        const { data: plantillasData, error: plantillasError } = await supabase
+          .from('plantillas')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (plantillasError) {
+          console.warn('Error loading plantillas:', plantillasError.message);
+        }
+
+        // Cargar plantillas de precios específicas
+        const { data: preciosData, error: preciosError } = await supabase
+          .from('plantillas_precios')
+          .select(`
+            *,
+            plantillas:plantilla_id(nombre, descripcion),
+            zonas:zona_id(nombre, color),
+            entradas:entrada_id(nombre_entrada, precio_base)
+          `)
+          .order('created_at', { ascending: false });
+
+        if (preciosError) {
+          console.warn('Error loading plantillas_precios:', preciosError.message);
+        }
+
+        // Combinar datos
+        const combinedPlantillas = (plantillasData || []).map(plantilla => ({
+          ...plantilla,
+          tipo: 'plantilla_principal',
+          precios_detalle: (preciosData || []).filter(p => p.plantilla_id === plantilla.id)
+        }));
+
+        console.log('📋 Plantillas cargadas:', {
+          principales: plantillasData?.length || 0,
+          precios: preciosData?.length || 0,
+          combinadas: combinedPlantillas.length
+        });
+
+        setPlantillas(combinedPlantillas);
+
+      } catch (error) {
+        console.error('Error loading plantillas:', error);
+      }
+    };
+
+    fetchPlantillasPrecios();
+  }, []);
+
   /* ------------------------- ACTUALIZAR SALAS ------------------------ */
   useEffect(() => {
     if (recinto) setSalas(recinto.salas || []);

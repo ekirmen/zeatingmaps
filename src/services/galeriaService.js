@@ -1,6 +1,60 @@
 import API_BASE_URL from '../utils/apiBase';
+import { supabase } from '../supabaseClient';
+import { useTenant } from '../contexts/TenantContext';
+
 const API_BASE_URL_WITH_API = API_BASE_URL + '/api';
 
+// 🖼️ NUEVA FUNCIONALIDAD: Conectar con tablas galeria e imagenes
+export const fetchImagenesFromDB = async (tenantId = null) => {
+  try {
+    // Cargar desde tabla galeria
+    let galeriaQuery = supabase
+      .from('galeria')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (tenantId) {
+      galeriaQuery = galeriaQuery.eq('tenant_id', tenantId);
+    }
+
+    const { data: galeriaData, error: galeriaError } = await galeriaQuery;
+
+    if (galeriaError) {
+      console.warn('Error loading galeria:', galeriaError.message);
+    }
+
+    // Cargar desde tabla imagenes
+    let imagenesQuery = supabase
+      .from('imagenes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (tenantId) {
+      imagenesQuery = imagenesQuery.eq('tenant_id', tenantId);
+    }
+
+    const { data: imagenesData, error: imagenesError } = await imagenesQuery;
+
+    if (imagenesError) {
+      console.warn('Error loading imagenes:', imagenesError.message);
+    }
+
+    // Combinar datos de ambas tablas
+    const allImages = [
+      ...(galeriaData || []).map(img => ({ ...img, source: 'galeria' })),
+      ...(imagenesData || []).map(img => ({ ...img, source: 'imagenes' }))
+    ];
+
+    console.log('🖼️ Imágenes cargadas desde base de datos:', allImages.length);
+    return allImages;
+
+  } catch (error) {
+    console.error('Error fetching images from database:', error);
+    return [];
+  }
+};
+
+// 🖼️ FUNCIONALIDAD ORIGINAL (mantener compatibilidad)
 export const fetchImagenes = async (token) => {
   const authHeader = token && !token.startsWith('Bearer ')
     ? `Bearer ${token}`

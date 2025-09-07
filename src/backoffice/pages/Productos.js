@@ -71,15 +71,79 @@ const Productos = () => {
 
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('plantillas_productos')
-        .select('*')
-        .eq('evento_id', eventoSeleccionado)
-        .eq('activo', true)
-        .order('nombre', { ascending: true });
+      // 🛍️ CARGAR PRODUCTOS DESDE MÚLTIPLES TABLAS
+      const [plantillasData, productosData, productosEventosData] = await Promise.all([
+        // Plantillas de productos (tabla actual)
+        supabase
+          .from('plantillas_productos')
+          .select('*')
+          .eq('evento_id', eventoSeleccionado)
+          .eq('activo', true)
+          .order('nombre', { ascending: true }),
+        
+        // Productos generales
+        supabase
+          .from('productos')
+          .select('*')
+          .eq('activo', true)
+          .order('nombre', { ascending: true }),
+        
+        // Productos específicos del evento
+        supabase
+          .from('productos_eventos')
+          .select(`
+            *,
+            productos:producto_id(nombre, descripcion, precio_base, categoria)
+          `)
+          .eq('evento_id', eventoSeleccionado)
+          .eq('activo', true)
+          .order('created_at', { ascending: false })
+      ]);
 
-      if (error) throw error;
-      setProductos(data || []);
+      // ✅ COMBINAR PRODUCTOS DE TODAS LAS FUENTES
+      let allProductos = [];
+
+      // Agregar plantillas de productos
+      if (plantillasData.data) {
+        const plantillasWithSource = plantillasData.data.map(p => ({
+          ...p,
+          source: 'plantillas_productos',
+          tipo: 'plantilla'
+        }));
+        allProductos = [...allProductos, ...plantillasWithSource];
+        console.log('✅ Plantillas de productos cargadas:', plantillasWithSource.length);
+      }
+
+      // Agregar productos generales
+      if (productosData.data) {
+        const productosWithSource = productosData.data.map(p => ({
+          ...p,
+          source: 'productos',
+          tipo: 'producto_general'
+        }));
+        allProductos = [...allProductos, ...productosWithSource];
+        console.log('✅ Productos generales cargados:', productosWithSource.length);
+      }
+
+      // Agregar productos específicos del evento
+      if (productosEventosData.data) {
+        const productosEventosWithSource = productosEventosData.data.map(p => ({
+          ...p,
+          source: 'productos_eventos',
+          tipo: 'producto_evento',
+          // Usar datos del producto relacionado si está disponible
+          nombre: p.productos?.nombre || p.nombre,
+          descripcion: p.productos?.descripcion || p.descripcion,
+          precio_base: p.productos?.precio_base || p.precio_base,
+          categoria: p.productos?.categoria || p.categoria
+        }));
+        allProductos = [...allProductos, ...productosEventosWithSource];
+        console.log('✅ Productos del evento cargados:', productosEventosWithSource.length);
+      }
+
+      setProductos(allProductos);
+      console.log('🛍️ Total de productos cargados:', allProductos.length);
+
     } catch (error) {
       console.error('Error cargando productos:', error);
       message.error('Error al cargar productos');

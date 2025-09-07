@@ -78,85 +78,228 @@ const AdminNotificationCenter = () => {
 
   const loadSystemAlerts = async () => {
     try {
-      // Alertas críticas del sistema - DATOS ESTÁTICOS (no consulta BD)
-      const alerts = [
-        {
-          id: 1,
-          type: 'warning',
-          title: 'Pagos Pendientes',
-          message: 'Hay 5 transacciones pendientes de confirmación',
-          priority: 'high',
-          time: 'Hace 30 min'
-        },
-        {
-          id: 2,
-          type: 'error',
-          title: 'Error de Sistema',
-          message: 'Problema de conectividad con pasarela Stripe',
-          priority: 'critical',
-          time: 'Hace 1 hora'
-        },
-        {
-          id: 3,
-          type: 'info',
-          title: 'Nuevo Usuario',
-          message: 'Se ha registrado un nuevo administrador',
-          priority: 'medium',
-          time: 'Hace 2 horas'
-        },
-        {
-          id: 4,
-          type: 'success',
-          title: 'Venta Exitosa',
-          message: 'Se han vendido 25 tickets para el evento principal',
-          priority: 'low',
-          time: 'Hace 3 horas'
-        }
-      ];
+      // 🔔 CONECTAR CON TABLA REAL system_alerts
+      const { data: alertsData, error } = await supabase
+        .from('system_alerts')
+        .select('*')
+        .eq('active', true)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.warn('Tabla system_alerts no disponible, usando datos estáticos:', error.message);
+        
+        // Fallback a datos estáticos si la tabla no existe
+        const staticAlerts = [
+          {
+            id: 1,
+            type: 'warning',
+            title: 'Pagos Pendientes',
+            message: 'Hay 5 transacciones pendientes de confirmación',
+            priority: 'high',
+            time: 'Hace 30 min',
+            created_at: new Date(Date.now() - 30 * 60 * 1000).toISOString()
+          },
+          {
+            id: 2,
+            type: 'error',
+            title: 'Error de Sistema',
+            message: 'Problema de conectividad con pasarela Stripe',
+            priority: 'critical',
+            time: 'Hace 1 hora',
+            created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString()
+          },
+          {
+            id: 3,
+            type: 'info',
+            title: 'Nuevo Usuario',
+            message: 'Se ha registrado un nuevo administrador',
+            priority: 'medium',
+            time: 'Hace 2 horas',
+            created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            id: 4,
+            type: 'success',
+            title: 'Venta Exitosa',
+            message: 'Se han vendido 25 tickets para el evento principal',
+            priority: 'low',
+            time: 'Hace 3 horas',
+            created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+          }
+        ];
+        
+        setSystemAlerts(staticAlerts);
+        console.log('System alerts loaded (static fallback):', staticAlerts.length);
+        return;
+      }
+
+      // ✅ CONEXIÓN EXITOSA CON TABLA REAL
+      const formattedAlerts = (alertsData || []).map(alert => ({
+        id: alert.id,
+        type: alert.type || 'info',
+        title: alert.title || 'Alerta del Sistema',
+        message: alert.message || 'Sin descripción',
+        priority: alert.priority || 'medium',
+        time: formatTimeAgo(alert.created_at),
+        created_at: alert.created_at,
+        active: alert.active,
+        category: alert.category
+      }));
       
-      // Establecer alertas estáticas (no consulta BD)
-      setSystemAlerts(alerts);
-      
-      // Log para debugging
-      console.log('System alerts loaded (static data):', alerts.length);
+      setSystemAlerts(formattedAlerts);
+      console.log('✅ System alerts loaded from database:', formattedAlerts.length);
       
     } catch (error) {
       console.error('Error loading system alerts:', error);
-      // En caso de error, establecer array vacío
       setSystemAlerts([]);
     }
   };
 
+  // Función auxiliar para formatear tiempo
+  const formatTimeAgo = (dateString) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Hace un momento';
+    if (diffInMinutes < 60) return `Hace ${diffInMinutes} min`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `Hace ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `Hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`;
+  };
+
   const subscribeToNotifications = () => {
-    // La tabla admin_notifications no existe, simular la funcionalidad
-    console.log('[NOTIFICATIONS] Admin notifications table not available, using simulated subscription');
-    
-    // Simular suscripción exitosa
-    console.log('[NOTIFICATIONS] Estado de suscripción: SUBSCRIBED (simulated)');
-    
-    // Retornar función de limpieza simulada
-    return () => {
-      console.log('[NOTIFICATIONS] Canal desuscrito exitosamente (simulated)');
-    };
+    try {
+      // 🔔 SUSCRIPCIÓN EN TIEMPO REAL A admin_notifications
+      const notificationsChannel = supabase
+        .channel('admin_notifications_channel')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'admin_notifications'
+          },
+          (payload) => {
+            console.log('🔔 Nueva notificación recibida:', payload.new);
+            setNotifications(prev => [payload.new, ...prev]);
+            setUnreadCount(prev => prev + 1);
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'admin_notifications'
+          },
+          (payload) => {
+            console.log('🔔 Notificación actualizada:', payload.new);
+            setNotifications(prev => 
+              prev.map(n => n.id === payload.new.id ? payload.new : n)
+            );
+          }
+        )
+        .subscribe();
+
+      // 🔔 SUSCRIPCIÓN EN TIEMPO REAL A system_alerts
+      const alertsChannel = supabase
+        .channel('system_alerts_channel')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'system_alerts'
+          },
+          (payload) => {
+            console.log('🚨 Nueva alerta del sistema:', payload.new);
+            if (payload.new.active) {
+              setSystemAlerts(prev => [payload.new, ...prev]);
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'system_alerts'
+          },
+          (payload) => {
+            console.log('🚨 Alerta del sistema actualizada:', payload.new);
+            setSystemAlerts(prev => 
+              prev.map(a => a.id === payload.new.id ? payload.new : a)
+            );
+          }
+        )
+        .subscribe();
+
+      console.log('✅ Suscripciones en tiempo real activadas');
+      
+      // Retornar función de limpieza
+      return () => {
+        notificationsChannel.unsubscribe();
+        alertsChannel.unsubscribe();
+        console.log('🔔 Suscripciones desactivadas');
+      };
+      
+    } catch (error) {
+      console.warn('Error setting up real-time subscriptions:', error);
+      
+      // Fallback a simulación si hay error
+      console.log('[NOTIFICATIONS] Using simulated subscription due to error');
+      return () => {
+        console.log('[NOTIFICATIONS] Simulated subscription cleaned up');
+      };
+    }
   };
 
   const markAsRead = async (notificationId) => {
     try {
-      // La tabla admin_notifications no existe, simular la funcionalidad
-      console.log('Marking notification as read (simulated):', notificationId);
+      // ✅ CONECTAR CON TABLA REAL admin_notifications
+      const { error } = await supabase
+        .from('admin_notifications')
+        .update({ read: true, read_at: new Date().toISOString() })
+        .eq('id', notificationId);
+
+      if (error) {
+        console.warn('Error updating notification in database, using local update:', error.message);
+        
+        // Fallback a actualización local si hay error
+        setNotifications(prev => 
+          prev.map(n => 
+            n.id === notificationId ? { ...n, read: true } : n
+          )
+        );
+        setUnreadCount(prev => Math.max(0, prev - 1));
+        return;
+      }
+
+      // ✅ ACTUALIZACIÓN EXITOSA EN BASE DE DATOS
+      setNotifications(prev => 
+        prev.map(n => 
+          n.id === notificationId ? { ...n, read: true, read_at: new Date().toISOString() } : n
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
       
+      console.log('✅ Notificación marcada como leída en base de datos');
+      
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+      
+      // Fallback a actualización local
       setNotifications(prev => 
         prev.map(n => 
           n.id === notificationId ? { ...n, read: true } : n
         )
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
-      
-      // Simular éxito
-      console.log('Notification marked as read successfully (simulated)');
-      
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
     }
   };
 

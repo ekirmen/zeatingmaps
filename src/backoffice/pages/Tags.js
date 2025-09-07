@@ -46,10 +46,17 @@ const Tags = () => {
         setEventTags(eventData || []);
       }
 
-      // Cargar tags de usuarios
+      // Cargar tags de usuarios con relaciones
       const { data: userData, error: userError } = await supabase
         .from('user_tags')
-        .select('*')
+        .select(`
+          *,
+          relations:user_tag_relations(
+            id,
+            user_id,
+            profiles:user_id(id, nombre, email)
+          )
+        `)
         .eq('tenant_id', currentTenant.id)
         .order('name', { ascending: true });
 
@@ -57,7 +64,16 @@ const Tags = () => {
         console.warn('Error loading user tags:', userError);
       } else {
         console.log('🔍 [Tags] Tags de usuarios cargados:', userData);
-        setUserTags(userData || []);
+        
+        // Procesar datos para incluir estadísticas de uso
+        const processedUserTags = (userData || []).map(tag => ({
+          ...tag,
+          usage_count: tag.relations?.length || 0,
+          users: tag.relations?.map(r => r.profiles).filter(Boolean) || []
+        }));
+        
+        setUserTags(processedUserTags);
+        console.log('✅ Tags de usuarios procesados con estadísticas:', processedUserTags.length);
       }
     } catch (error) {
       console.error('Error loading tags:', error);

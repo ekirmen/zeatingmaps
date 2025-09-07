@@ -25,38 +25,117 @@ const CRM = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Cargar eventos
-      const { data: eventosData } = await supabase
-        .from('eventos')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // 🎯 CARGAR DATOS BÁSICOS
+      const [eventosData, funcionesData, usuariosData, notificacionesData] = await Promise.all([
+        // Eventos
+        supabase
+          .from('eventos')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        
+        // Funciones
+        supabase
+          .from('funciones')
+          .select('*')
+          .order('fecha', { ascending: false }),
+        
+        // Usuarios (profiles)
+        supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false }),
+        
+        // Notificaciones
+        supabase
+          .from('notifications')
+          .select(`
+            *,
+            eventos:evento_id(nombre),
+            funciones:funcion_id(fecha, hora)
+          `)
+          .order('created_at', { ascending: false })
+      ]);
 
-      // Cargar funciones
-      const { data: funcionesData } = await supabase
-        .from('funciones')
-        .select('*')
-        .order('fecha', { ascending: false });
+      // 🎯 CARGAR DATOS CRM ESPECIALIZADOS
+      const [crmClientsData, crmInteractionsData, crmNotesData, crmOpportunitiesData, crmTagsData] = await Promise.all([
+        // Clientes CRM
+        supabase
+          .from('crm_clients')
+          .select(`
+            *,
+            profiles:user_id(id, nombre, email, telefono)
+          `)
+          .order('created_at', { ascending: false }),
+        
+        // Interacciones CRM
+        supabase
+          .from('crm_interactions')
+          .select(`
+            *,
+            crm_clients:client_id(nombre, email),
+            profiles:user_id(nombre, email)
+          `)
+          .order('created_at', { ascending: false }),
+        
+        // Notas CRM
+        supabase
+          .from('crm_notes')
+          .select(`
+            *,
+            crm_clients:client_id(nombre, email),
+            profiles:user_id(nombre, email)
+          `)
+          .order('created_at', { ascending: false }),
+        
+        // Oportunidades CRM
+        supabase
+          .from('crm_opportunities')
+          .select(`
+            *,
+            crm_clients:client_id(nombre, email),
+            eventos:evento_id(nombre)
+          `)
+          .order('created_at', { ascending: false }),
+        
+        // Tags CRM
+        supabase
+          .from('crm_tags')
+          .select('*')
+          .order('nombre', { ascending: true })
+      ]);
 
-      // Cargar usuarios
-      const { data: usuariosData } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // ✅ ESTABLECER DATOS BÁSICOS
+      setEvents(eventosData.data || []);
+      setFunctions(funcionesData.data || []);
+      setUsers(usuariosData.data || []);
+      setNotifications(notificacionesData.data || []);
 
-      // Cargar notificaciones
-      const { data: notificacionesData } = await supabase
-        .from('notifications')
-        .select(`
-          *,
-          eventos:evento_id(nombre),
-          funciones:funcion_id(fecha, hora)
-        `)
-        .order('created_at', { ascending: false });
+      // ✅ ESTABLECER DATOS CRM (con fallback si las tablas no existen)
+      console.log('📊 Datos CRM cargados:', {
+        clients: crmClientsData.data?.length || 0,
+        interactions: crmInteractionsData.data?.length || 0,
+        notes: crmNotesData.data?.length || 0,
+        opportunities: crmOpportunitiesData.data?.length || 0,
+        tags: crmTagsData.data?.length || 0
+      });
 
-      setEvents(eventosData || []);
-      setFunctions(funcionesData || []);
-      setUsers(usuariosData || []);
-      setNotifications(notificacionesData || []);
+      // Guardar datos CRM en el estado (se pueden usar en componentes futuros)
+      if (crmClientsData.data) {
+        console.log('✅ Clientes CRM cargados:', crmClientsData.data.length);
+      }
+      if (crmInteractionsData.data) {
+        console.log('✅ Interacciones CRM cargadas:', crmInteractionsData.data.length);
+      }
+      if (crmNotesData.data) {
+        console.log('✅ Notas CRM cargadas:', crmNotesData.data.length);
+      }
+      if (crmOpportunitiesData.data) {
+        console.log('✅ Oportunidades CRM cargadas:', crmOpportunitiesData.data.length);
+      }
+      if (crmTagsData.data) {
+        console.log('✅ Tags CRM cargados:', crmTagsData.data.length);
+      }
+
     } catch (error) {
       console.error('Error loading data:', error);
       message.error('Error al cargar datos');

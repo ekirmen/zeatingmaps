@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { upsertTenantThemeSettings } from '../services/themeSettingsService';
 import EventThemePanel from '../components/EventThemePanel';
+import { supabase } from '../../supabaseClient';
+import { message } from 'antd';
 
 const ColorInput = ({ label, value, onChange }) => (
   <div className="mb-4">
@@ -29,6 +31,7 @@ const WebColors = () => {
   const { theme, updateTheme } = useTheme();
   const { currentTenant } = useTenant();
   const [activeTab, setActiveTab] = useState('basic');
+  const [loading, setLoading] = useState(false);
   const [colors, setColors] = useState({
     headerBg: theme.headerBg || '#ffffff',
     headerText: theme.headerText || '#000000',
@@ -62,6 +65,106 @@ const WebColors = () => {
     seatSold: theme.seatSold || '#8c8c8c',
     seatReserved: theme.seatReserved || '#722ed1'
   });
+
+  // 🎨 CARGAR COLORES DESDE webstudio_colors
+  useEffect(() => {
+    loadWebStudioColors();
+  }, [currentTenant?.id]);
+
+  const loadWebStudioColors = async () => {
+    if (!currentTenant?.id) return;
+    
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('webstudio_colors')
+        .select('*')
+        .eq('tenant_id', currentTenant.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.warn('Error loading webstudio colors:', error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        const webstudioColors = data[0];
+        console.log('🎨 Colores WebStudio cargados:', webstudioColors);
+        
+        // Actualizar colores locales con datos de la base de datos
+        const updatedColors = {
+          ...colors,
+          ...webstudioColors.colors,
+          ...webstudioColors.seat_colors
+        };
+        
+        setColors(updatedColors);
+        
+        // Actualizar tema global
+        updateTheme(updatedColors);
+        
+        message.success('Colores cargados desde la base de datos');
+      }
+      
+    } catch (error) {
+      console.error('Error loading webstudio colors:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 🎨 GUARDAR COLORES EN webstudio_colors
+  const saveWebStudioColors = async () => {
+    if (!currentTenant?.id) {
+      message.warning('No hay tenant seleccionado');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Separar colores de asientos del resto
+      const seatColors = {
+        seatAvailable: colors.seatAvailable,
+        seatSelectedMe: colors.seatSelectedMe,
+        seatSelectedOther: colors.seatSelectedOther,
+        seatBlocked: colors.seatBlocked,
+        seatSold: colors.seatSold,
+        seatReserved: colors.seatReserved
+      };
+      
+      const generalColors = Object.fromEntries(
+        Object.entries(colors).filter(([key]) => !key.startsWith('seat'))
+      );
+
+      const colorData = {
+        tenant_id: currentTenant.id,
+        colors: generalColors,
+        seat_colors: seatColors,
+        updated_at: new Date().toISOString()
+      };
+
+      // Upsert en webstudio_colors
+      const { error } = await supabase
+        .from('webstudio_colors')
+        .upsert(colorData, { 
+          onConflict: 'tenant_id',
+          ignoreDuplicates: false 
+        });
+
+      if (error) throw error;
+
+      console.log('✅ Colores WebStudio guardados:', colorData);
+      message.success('Colores guardados exitosamente');
+      
+    } catch (error) {
+      console.error('Error saving webstudio colors:', error);
+      message.error('Error al guardar los colores');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleColorChange = (key, value) => {
     setColors(prev => ({ ...prev, [key]: value }));
@@ -156,12 +259,18 @@ const WebColors = () => {
   const handleSave = async () => {
     updateTheme(colors);
     try {
+      // 🎨 GUARDAR EN webstudio_colors (nueva funcionalidad)
+      await saveWebStudioColors();
+      
+      // 🎨 GUARDAR EN tenant_theme_settings (funcionalidad existente)
       if (currentTenant?.id) {
         await upsertTenantThemeSettings(currentTenant.id, colors);
       }
-      alert('Colores guardados');
+      
+      message.success('Colores guardados en ambas ubicaciones');
     } catch (e) {
-      alert('Guardado local OK. Error al guardar en servidor');
+      console.error('Error saving colors:', e);
+      message.error('Error al guardar los colores');
     }
   };
 

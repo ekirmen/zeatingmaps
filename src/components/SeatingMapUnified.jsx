@@ -5,6 +5,7 @@ import { useSeatColors } from '../hooks/useSeatColors';
 import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
 import SeatStatusLegend from './SeatStatusLegend';
 import SeatLockDebug from './SeatLockDebug';
+import resolveImageUrl from '../utils/resolveImageUrl';
 
 const SeatingMapUnified = ({
   funcionId,
@@ -40,6 +41,8 @@ const SeatingMapUnified = ({
     React.useEffect(() => {
       if (!url) return;
       const image = new window.Image();
+      // Habilitar cache de CDN y uso de canvas seguro
+      image.crossOrigin = 'anonymous';
       image.src = url;
       image.onload = () => setImg(image);
     }, [url]);
@@ -255,7 +258,22 @@ if (Array.isArray(mapa?.contenido)) {
     : mapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
 
   const BackgroundImage = ({ config }) => {
-    const [img] = useImageLoader(config.imageUrl);
+    // Resolver la URL desde múltiples posibles campos
+    let rawUrl = config.imageUrl
+      || config.url
+      || config.src
+      || config.image?.url
+      || config.image?.publicUrl
+      || config.imageData
+      || config.image?.data
+      || '';
+
+    // Si es una ruta relativa de Storage, construir la URL pública (bucket 'productos')
+    if (rawUrl && !/^https?:\/\//i.test(rawUrl) && !/^data:/i.test(rawUrl)) {
+      rawUrl = resolveImageUrl(rawUrl, 'productos') || rawUrl;
+    }
+
+    const [img] = useImageLoader(rawUrl);
     if (!img) return null;
     return (
       <Image

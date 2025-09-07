@@ -59,21 +59,47 @@ const Entrada = () => {
       setTickets([]);
       return;
     }
-    const { data, error } = await supabase
-      .from("entradas")
-      .select("*")
-      .eq("recinto", formData.recinto);
+    
+    try {
+      // 🎫 CARGAR ENTRADAS CON INFORMACIÓN RELACIONADA
+      const { data, error } = await supabase
+        .from("entradas")
+        .select(`
+          *,
+          recintos:recinto(id, nombre, direccion),
+          ivas:iva(id, porcentaje, nombre)
+        `)
+        .eq("recinto", formData.recinto);
 
-    if (error) {
-      console.error("Error al cargar tickets:", error.message);
+      if (error) {
+        console.error("Error al cargar tickets:", error.message);
+        setTickets([]);
+      } else {
+        // Procesar datos con información relacionada
+        const mapped = (data || []).map(t => ({
+          ...t,
+          tipo: t.tipo_producto,
+          _id: t.id,
+          // Información del recinto
+          recinto_nombre: t.recintos?.nombre || 'Sin recinto',
+          recinto_direccion: t.recintos?.direccion || '',
+          // Información del IVA
+          iva_info: t.ivas ? {
+            porcentaje: t.ivas.porcentaje,
+            nombre: t.ivas.nombre
+          } : null,
+          // Estadísticas calculadas
+          precio_con_iva: t.precio_base ? 
+            (t.precio_base * (1 + (t.ivas?.porcentaje || 0) / 100)).toFixed(2) : 
+            null
+        }));
+        
+        setTickets(mapped);
+        console.log('🎫 Entradas cargadas con información relacionada:', mapped.length);
+      }
+    } catch (error) {
+      console.error('Error loading tickets:', error);
       setTickets([]);
-    } else {
-      const mapped = data.map(t => ({
-        ...t,
-        tipo: t.tipo_producto,
-        _id: t.id
-      }));
-      setTickets(mapped);
     }
   }, [formData.recinto]);
 

@@ -7,17 +7,35 @@ export const emailCampaignService = {
   // Obtener todas las campañas
   async getCampaigns() {
     try {
+      // 📧 CARGAR CAMPAÑAS CON DATOS RELACIONADOS
       const { data, error } = await supabaseClient
         .from('email_campaigns')
         .select(`
           *,
           events:eventos(id, nombre),
-          channels:canales_venta(id, nombre, url)
+          channels:canales_venta(id, nombre, url),
+          templates:email_templates(id, nombre, tipo),
+          logs:email_logs(id, estado, fecha_envio)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      
+      // ✅ PROCESAR DATOS DE CAMPAÑAS
+      const processedCampaigns = (data || []).map(campaign => ({
+        ...campaign,
+        // Calcular estadísticas de logs
+        total_enviados: campaign.logs?.length || 0,
+        total_exitosos: campaign.logs?.filter(log => log.estado === 'enviado').length || 0,
+        total_fallidos: campaign.logs?.filter(log => log.estado === 'fallido').length || 0,
+        // Información de plantilla
+        template_name: campaign.templates?.nombre || 'Sin plantilla',
+        template_type: campaign.templates?.tipo || 'personalizada'
+      }));
+
+      console.log('📧 Campañas de email cargadas:', processedCampaigns.length);
+      return processedCampaigns;
+      
     } catch (error) {
       console.error('Error fetching campaigns:', error);
       toast.error('Error al cargar las campañas');
@@ -34,17 +52,111 @@ export const emailCampaignService = {
           *,
           events:eventos(id, nombre),
           channels:canales_venta(id, nombre, url),
-          widgets:campaign_widgets(*)
+          widgets:campaign_widgets(*),
+          templates:email_templates(id, nombre, tipo, contenido),
+          logs:email_logs(id, estado, fecha_envio, destinatario)
         `)
         .eq('id', id)
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // ✅ PROCESAR DATOS DE CAMPAÑA ESPECÍFICA
+      const processedCampaign = {
+        ...data,
+        // Estadísticas detalladas
+        estadisticas: {
+          total_enviados: data.logs?.length || 0,
+          exitosos: data.logs?.filter(log => log.estado === 'enviado').length || 0,
+          fallidos: data.logs?.filter(log => log.estado === 'fallido').length || 0,
+          pendientes: data.logs?.filter(log => log.estado === 'pendiente').length || 0
+        },
+        // Información de plantilla
+        template_info: data.templates ? {
+          id: data.templates.id,
+          nombre: data.templates.nombre,
+          tipo: data.templates.tipo,
+          contenido: data.templates.contenido
+        } : null
+      };
+
+      console.log('📧 Campaña específica cargada:', processedCampaign.nombre);
+      return processedCampaign;
+      
     } catch (error) {
       console.error('Error fetching campaign:', error);
       toast.error('Error al cargar la campaña');
       return null;
+    }
+  },
+
+  // 📧 GESTIÓN DE PLANTILLAS DE EMAIL
+  async getEmailTemplates() {
+    try {
+      const { data, error } = await supabaseClient
+        .from('email_templates')
+        .select('*')
+        .order('nombre', { ascending: true });
+
+      if (error) throw error;
+      
+      console.log('📧 Plantillas de email cargadas:', data?.length || 0);
+      return data || [];
+      
+    } catch (error) {
+      console.error('Error fetching email templates:', error);
+      toast.error('Error al cargar las plantillas');
+      return [];
+    }
+  },
+
+  async createEmailTemplate(templateData) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('email_templates')
+        .insert([templateData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      console.log('✅ Plantilla de email creada:', data.nombre);
+      toast.success('Plantilla creada exitosamente');
+      return data;
+      
+    } catch (error) {
+      console.error('Error creating email template:', error);
+      toast.error('Error al crear la plantilla');
+      return null;
+    }
+  },
+
+  // 📧 GESTIÓN DE LOGS DE EMAIL
+  async getEmailLogs(campaignId = null) {
+    try {
+      let query = supabaseClient
+        .from('email_logs')
+        .select(`
+          *,
+          campaigns:email_campaigns(nombre, tipo)
+        `)
+        .order('fecha_envio', { ascending: false });
+
+      if (campaignId) {
+        query = query.eq('campaign_id', campaignId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      
+      console.log('📧 Logs de email cargados:', data?.length || 0);
+      return data || [];
+      
+    } catch (error) {
+      console.error('Error fetching email logs:', error);
+      toast.error('Error al cargar los logs');
+      return [];
     }
   },
 

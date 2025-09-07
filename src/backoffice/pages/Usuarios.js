@@ -24,16 +24,47 @@ const Usuarios = () => {
   const fetchProfiles = async () => {
     setLoading(true);
     try {
+      // 👥 CARGAR USUARIOS CON INFORMACIÓN DE TENANTS
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select(`
+          *,
+          user_tenants:user_tenants(
+            id,
+            tenant_id,
+            role,
+            status,
+            tenants:tenant_id(
+              id,
+              nombre,
+              dominio
+            )
+          )
+        `)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error al cargar perfiles:', error.message);
         toast.error('Error al cargar usuarios');
       } else {
-        setProfiles(data || []);
+        // Procesar datos para incluir información de tenants
+        const processedProfiles = (data || []).map(profile => ({
+          ...profile,
+          // Información de tenants
+          tenants_info: profile.user_tenants?.map(ut => ({
+            tenant_id: ut.tenant_id,
+            role: ut.role,
+            status: ut.status,
+            tenant_name: ut.tenants?.nombre,
+            tenant_domain: ut.tenants?.dominio
+          })) || [],
+          // Estadísticas
+          total_tenants: profile.user_tenants?.length || 0,
+          active_tenants: profile.user_tenants?.filter(ut => ut.status === 'active').length || 0
+        }));
+
+        setProfiles(processedProfiles);
+        console.log('👥 Usuarios cargados con información de tenants:', processedProfiles.length);
       }
     } catch (error) {
       console.error('Error:', error);

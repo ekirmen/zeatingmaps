@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, Button, Badge, message, Tooltip, Typography } from 'antd';
 import { supabase } from '../../../../supabaseClient';
+import resolveImageUrl from '../../../../utils/resolveImageUrl';
 import { useSeatColors } from '../../../../hooks/useSeatColors';
 
 const { Text, Title } = Typography;
@@ -447,21 +448,29 @@ const SimpleSeatingMap = ({
           }).map(elemento => (
             <div key={elemento._id} className="absolute">
               {/* Fondo */}
-              {elemento.type === 'background' && (
-                <img
-                  alt="background"
-                  src={elemento.imageData || elemento.image?.data || elemento.src || ''}
-                  className="absolute"
-                  style={{
-                    left: elemento.x || elemento.posicion?.x || 0,
-                    top: elemento.y || elemento.posicion?.y || 0,
-                    width: elemento.width || dimensions.width,
-                    height: elemento.height || dimensions.height,
-                    zIndex: 0,
-                    pointerEvents: 'none'
-                  }}
-                />
-              )}
+              {elemento.type === 'background' && (() => {
+                let rawUrl = elemento.imageData || elemento.image?.data || elemento.src || elemento.url || elemento.imageUrl || '';
+                if (rawUrl && !/^https?:\/\//i.test(rawUrl) && !/^data:/i.test(rawUrl)) {
+                  rawUrl = resolveImageUrl(rawUrl, 'productos') || rawUrl;
+                }
+                return (
+                  <img
+                    alt="background"
+                    src={rawUrl}
+                    loading="lazy"
+                    crossOrigin="anonymous"
+                    className="absolute"
+                    style={{
+                      left: elemento.x || elemento.posicion?.x || 0,
+                      top: elemento.y || elemento.posicion?.y || 0,
+                      width: elemento.width || dimensions.width,
+                      height: elemento.height || dimensions.height,
+                      zIndex: 0,
+                      pointerEvents: 'none'
+                    }}
+                  />
+                );
+              })()}
 
               {/* Mesa */}
               {elemento.type === 'mesa' && (() => {
