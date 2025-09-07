@@ -34,9 +34,9 @@ const LocatorSearchModal = ({ open, onCancel }) => {
           funcion:funciones(
             id,
             fecha_celebracion,
-            evento,
-            sala,
-            plantilla
+            evento_id,
+            sala_id,
+            plantilla_id
           )
         `)
         .eq('locator', value.trim())
