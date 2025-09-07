@@ -323,9 +323,30 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                 <>
                   <Button
                     type="primary"
-                    onClick={() => {
+                    onClick={async () => {
                       // Enviar al carrito para completar venta
-                      if (searchResult.funcion && searchResult.event) {
+                      if (searchResult.funcion) {
+                        let eventData = searchResult.event;
+                        
+                        // Si no hay evento pero hay evento_id en la función, buscarlo
+                        if (!eventData && searchResult.funcion.evento_id) {
+                          try {
+                            const { data: event, error } = await supabase
+                              .from('eventos')
+                              .select('*')
+                              .eq('id', searchResult.funcion.evento_id)
+                              .single();
+                            
+                            if (error) {
+                              console.error('Error fetching event:', error);
+                            } else {
+                              eventData = event;
+                            }
+                          } catch (e) {
+                            console.error('Error fetching event:', e);
+                          }
+                        }
+                        
                         // Crear asientos desde gateway_response
                         const seats = [];
                         if (searchResult.gateway_response) {
@@ -351,7 +372,7 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                           amount: searchResult.amount,
                           currency: searchResult.currency,
                           status: searchResult.status,
-                          event: searchResult.event,
+                          event: eventData,
                           funcion: searchResult.funcion,
                           seats: seats,
                           user_id: searchResult.user_id,
@@ -368,7 +389,7 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                         message.success('Transacción cargada en el carrito para completar venta');
                         onCancel();
                       } else {
-                        message.error('No se pudo cargar la transacción: faltan datos del evento o función');
+                        message.error('No se pudo cargar la transacción: falta información de la función');
                       }
                     }}
                   >
