@@ -367,19 +367,16 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                           }
                         }
                         
-                        // Si no hay asientos en gateway_response, buscar en seat_locks
-                        if (seats.length === 0 && searchResult.funcion_id) {
-                          console.log('🔍 Buscando asientos en seat_locks...');
-                          console.log('🔍 funcion_id:', searchResult.funcion_id);
-                          console.log('🔍 user_id:', searchResult.user_id);
+                        // Si no hay asientos en gateway_response, buscar en seat_locks por locator
+                        if (seats.length === 0 && searchResult.locator) {
+                          console.log('🔍 Buscando asientos en seat_locks por locator...');
+                          console.log('🔍 locator:', searchResult.locator);
                           
                           try {
                             const { data: seatLocks, error } = await supabase
                               .from('seat_locks')
                               .select('*')
-                              .eq('funcion_id', searchResult.funcion_id)
-                              .eq('session_id', searchResult.user_id)
-                              .in('status', ['locked', 'seleccionado', 'Blocked', 'blocked', 'LOCKED', 'SELECTED']);
+                              .eq('locator', searchResult.locator);
                             
                             console.log('🔍 Query seat_locks result:', { seatLocks, error });
                             
@@ -430,6 +427,7 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                                   lock_type: lock.lock_type,
                                   locked_at: lock.locked_at,
                                   expires_at: lock.expires_at,
+                                  locator: lock.locator, // Incluir el locator
                                   // Campos adicionales para compatibilidad
                                   sillaId: lock.seat_id,
                                   zonaNombre: zonaNombre
@@ -437,10 +435,10 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                               });
                               
                               seats.push(...seatLocksAsSeats);
-                              console.log('✅ Asientos encontrados en seat_locks:', seatLocksAsSeats.length);
+                              console.log('✅ Asientos encontrados en seat_locks por locator:', seatLocksAsSeats.length);
                               console.log('✅ Asientos convertidos:', seatLocksAsSeats);
                             } else {
-                              console.log('⚠️ No se encontraron seat_locks para esta función y usuario');
+                              console.log('⚠️ No se encontraron seat_locks para este locator');
                             }
                           } catch (e) {
                             console.error('Error loading seat_locks:', e);
@@ -478,9 +476,48 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                     Completar Venta
                   </Button>
                   <Button
-                    onClick={() => {
-                      // Anular transacción
-                      message.warning('Funcionalidad de anulación en desarrollo');
+                    danger
+                    onClick={async () => {
+                      // Anular transacción pendiente
+                      try {
+                        // Actualizar estado en payment_transactions
+                        const { error: updateError } = await supabase
+                          .from('payment_transactions')
+                          .update({ 
+                            status: 'cancelled',
+                            updated_at: new Date().toISOString()
+                          })
+                          .eq('id', searchResult.id);
+                        
+                        if (updateError) {
+                          console.error('Error actualizando payment_transactions:', updateError);
+                          message.error('Error al anular la transacción');
+                          return;
+                        }
+                        
+                        // Actualizar estado en seat_locks
+                        const { error: locksError } = await supabase
+                          .from('seat_locks')
+                          .update({ 
+                            status: 'anulado',
+                            updated_at: new Date().toISOString()
+                          })
+                          .eq('locator', searchResult.locator);
+                        
+                        if (locksError) {
+                          console.error('Error actualizando seat_locks:', locksError);
+                          message.warning('Transacción anulada pero puede haber problemas con los asientos');
+                        } else {
+                          message.success('Transacción pendiente y asientos anulados correctamente');
+                        }
+                        
+                        // Recargar la búsqueda para mostrar el nuevo estado
+                        onSearch(searchResult.locator);
+                        
+                      } catch (error) {
+                        console.error('Error anulando transacción:', error);
+                        message.error('Error al anular la transacción');
+                      }
                     }}
                   >
                     Anular Transacción
@@ -522,9 +559,48 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                     Reintentar Pago
                   </Button>
                   <Button
-                    onClick={() => {
+                    danger
+                    onClick={async () => {
                       // Anular transacción
-                      message.warning('Funcionalidad de anulación en desarrollo');
+                      try {
+                        // Actualizar estado en payment_transactions
+                        const { error: updateError } = await supabase
+                          .from('payment_transactions')
+                          .update({ 
+                            status: 'cancelled',
+                            updated_at: new Date().toISOString()
+                          })
+                          .eq('id', searchResult.id);
+                        
+                        if (updateError) {
+                          console.error('Error actualizando payment_transactions:', updateError);
+                          message.error('Error al anular la transacción');
+                          return;
+                        }
+                        
+                        // Actualizar estado en seat_locks
+                        const { error: locksError } = await supabase
+                          .from('seat_locks')
+                          .update({ 
+                            status: 'anulado',
+                            updated_at: new Date().toISOString()
+                          })
+                          .eq('locator', searchResult.locator);
+                        
+                        if (locksError) {
+                          console.error('Error actualizando seat_locks:', locksError);
+                          message.warning('Transacción anulada pero puede haber problemas con los asientos');
+                        } else {
+                          message.success('Transacción y asientos anulados correctamente');
+                        }
+                        
+                        // Recargar la búsqueda para mostrar el nuevo estado
+                        onSearch(searchResult.locator);
+                        
+                      } catch (error) {
+                        console.error('Error anulando transacción:', error);
+                        message.error('Error al anular la transacción');
+                      }
                     }}
                   >
                     Anular Transacción

@@ -17,7 +17,7 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
         .from('seat_locks')
         .select('*')
         .eq('funcion_id', funcionId)
-        .eq('status', 'locked');
+        .in('status', ['locked', 'seleccionado', 'seleccionado_por_otro', 'vendido', 'reservado', 'anulado']);
 
       if (error) {
         console.error('[SEAT_LOCK_HOOK] Error al obtener asientos bloqueados:', error);
@@ -26,11 +26,33 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
 
       const now = new Date();
       const validSeats = data.filter(item => {
+        // Para estados permanentes (locked, vendido, reservado, anulado), no verificar expiración
+        if (['locked', 'vendido', 'reservado', 'anulado'].includes(item.status)) {
+          return true;
+        }
+        // Para estados temporales (seleccionado), verificar expiración
         if (!item.expires_at) return false;
         return new Date(item.expires_at) > now;
       });
 
-      console.log('[SEAT_LOCK_HOOK] Cargando asientos bloqueados:', validSeats);
+      // Debug mejorado con información de estados
+      const statusCounts = validSeats.reduce((acc, seat) => {
+        acc[seat.status] = (acc[seat.status] || 0) + 1;
+        return acc;
+      }, {});
+      
+      console.log('[SEAT_LOCK_HOOK] Cargando asientos bloqueados:', {
+        total: validSeats.length,
+        statusCounts,
+        seats: validSeats.map(s => ({
+          seat_id: s.seat_id,
+          status: s.status,
+          lock_type: s.lock_type,
+          locator: s.locator,
+          expires_at: s.expires_at,
+          session_id: s.session_id
+        }))
+      });
       setLockedSeats(validSeats);
     } catch (e) {
       console.error('[SEAT_LOCK_HOOK] Error al obtener asientos bloqueados:', e);
@@ -70,9 +92,10 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
         seat_id: seatId,
         funcion_id: funcionId,
         session_id: sessionId,
-        status: 'locked',
+        status: 'seleccionado', // Usar estado temporal para selección
         locked_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutes
+        lock_type: 'seat'
       };
 
       // Agregar tenant_id si está disponible

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Card, Button, Badge, message, Tooltip, Typography } from 'antd';
 import { supabase } from '../../../../supabaseClient';
+import { useSeatColors } from '../../../../hooks/useSeatColors';
 
 const { Text, Title } = Typography;
 
 const SimpleSeatingMap = ({ 
   selectedFuncion, 
+  selectedEvent = null, // Agregar prop para evento (necesario para colores)
   onSeatClick, 
   selectedSeats = [], 
   blockedSeats = [],
@@ -130,54 +132,25 @@ const SimpleSeatingMap = ({
     loadZonePrices();
   }, [selectedPlantilla, selectedFuncion]);
 
+  // Usar el hook unificado de colores para consistencia con el store
+  const { getSeatColor: getUnifiedSeatColor } = useSeatColors(selectedEvent?.id);
+  
   const getSeatColor = (seat) => {
     const sessionId = localStorage.getItem('anonSessionId');
     
-    // IMPORTANTE: Los asientos vendidos SIEMPRE se mantienen en gris
-    if (seat.estado === 'pagado') {
-      return '#9ca3af'; // Gris oscuro para vendido - NO CAMBIA
-    }
+    // Preparar datos para el hook unificado
+    const selectedSeatIds = selectedSeats.map(s => s._id);
+    const lockedSeatsForHook = lockedSeats.map(lock => ({
+      seat_id: lock.seat_id,
+      session_id: lock.session_id,
+      status: lock.status
+    }));
     
-    // NARANJA para asientos reservados
-    if (seat.estado === 'reservado') {
-      return '#ff8c00'; // Naranja para reservado
-    }
+    // Obtener información de zona
+    const zonaInfo = getZoneInfo(seat);
     
-    // Si está en modo bloqueo y está seleccionado para bloquear
-    if (blockMode && blockedSeats.some(s => s._id === seat._id)) {
-      return '#ff4d4f'; // Rojo para asientos seleccionados en modo bloqueo
-    }
-    
-    // AMARILLO para asientos seleccionados por el usuario actual
-    const isSelectedByMe = lockedSeats.some(ls => 
-      ls.seat_id === seat._id && ls.session_id === sessionId && 
-      (ls.status === 'seleccionado' || ls.status === 'SELECTED')
-    );
-    if (isSelectedByMe) {
-      return '#facc15'; // Amarillo para seleccionado
-    }
-    
-    // ROJO para asientos bloqueados por otro usuario
-    const isLockedByOther = lockedSeats.some(ls => 
-      ls.seat_id === seat._id && ls.session_id !== sessionId && 
-      (ls.status === 'locked' || ls.status === 'Blocked' || ls.status === 'blocked' || ls.status === 'LOCKED')
-    );
-    if (isLockedByOther) {
-      return '#ff4d4f'; // Rojo para bloqueado por otro
-    }
-    
-    // Si está bloqueado por el usuario actual
-    const isLockedByMe = lockedSeats.some(ls => 
-      ls.seat_id === seat._id && ls.session_id === sessionId && 
-      (ls.status === 'locked' || ls.status === 'Blocked' || ls.status === 'blocked' || ls.status === 'LOCKED')
-    );
-    if (isLockedByMe) {
-      return '#1890ff'; // Azul para bloqueado por mí
-    }
-    
-    // VERDE para asientos disponibles
-    const zoneInfo = getZoneInfo(seat);
-    return '#52c41a'; // Verde para disponible
+    // Usar el hook unificado que maneja todos los casos
+    return getUnifiedSeatColor(seat, zonaInfo, selectedSeatIds.includes(seat._id), selectedSeatIds, lockedSeatsForHook);
   };
 
   const getZoneInfo = (seat) => {
@@ -228,14 +201,26 @@ const SimpleSeatingMap = ({
         ls.seat_id === seat._id && ls.session_id === sessionId
       );
 
+      // Debug mejorado con información de estados
+      const currentLock = lockedSeats.find(ls => ls.seat_id === seat._id);
       console.log('🔍 [SimpleSeatingMap] Estado del asiento:', {
         seatId: seat._id,
+        seatEstado: seat.estado,
         isAlreadySelected,
+        currentLock: currentLock ? {
+          status: currentLock.status,
+          lock_type: currentLock.lock_type,
+          locator: currentLock.locator,
+          expires_at: currentLock.expires_at,
+          session_id: currentLock.session_id
+        } : null,
         selectedSeatsCount: selectedSeats.length,
         selectedSeatsIds: selectedSeats.map(s => s._id),
         lockedSeatsCount: lockedSeats.length,
         lockedSeatsIds: lockedSeats.map(ls => ls.seat_id),
-        sessionId
+        sessionId,
+        isPermanent: currentLock?.status === 'locked' || currentLock?.status === 'vendido' || currentLock?.status === 'reservado' || currentLock?.status === 'anulado',
+        isTemporary: currentLock?.status === 'seleccionado'
       });
 
       // Si ya está seleccionado, deseleccionarlo
@@ -343,6 +328,15 @@ const SimpleSeatingMap = ({
 
       const tenantId = getCurrentTenantId();
 
+      // Generar locator temporal para este bloqueo
+      const generateTempLocator = () => {
+        const timestamp = Date.now();
+        const eventId = selectedEvent?.id || 'UNKNOWN';
+        const functionId = selectedFuncion?.id || 'UNKNOWN';
+        const clientId = Math.random().toString(36).substr(2, 9).toUpperCase();
+        return `TEMP-${timestamp}-${eventId}-${functionId}-${clientId}`;
+      };
+
       // Bloquear asiento en la base de datos
       const lockData = {
         seat_id: seat._id,
@@ -350,8 +344,9 @@ const SimpleSeatingMap = ({
         session_id: sessionId,
         locked_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutos
-        status: 'locked',
-        lock_type: 'seat' // Agregar el tipo de bloqueo requerido por las políticas
+        status: 'seleccionado',
+        lock_type: 'seat', // Agregar el tipo de bloqueo requerido por las políticas
+        locator: generateTempLocator() // Agregar locator temporal
       };
 
       // Agregar tenant_id si está disponible

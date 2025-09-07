@@ -314,6 +314,36 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
 
           console.log('Payment data:', paymentData);
 
+          // Actualizar seat_locks con el locator final y estado correcto antes de crear el pago
+          if (paymentData.locator) {
+            try {
+              // Determinar el estado final basado en el tipo de pago
+              let finalStatus = 'vendido'; // Por defecto vendido
+              if (reservationType === '2' || reservationType === '3') {
+                finalStatus = 'reservado'; // Si es reserva temporal o con fecha
+              }
+              
+              const { error: updateLocksError } = await supabase
+                .from('seat_locks')
+                .update({ 
+                  locator: paymentData.locator,
+                  status: finalStatus,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('funcion_id', paymentData.funcion)
+                .eq('session_id', paymentData.usuario_id)
+                .like('locator', 'TEMP-%');
+              
+              if (updateLocksError) {
+                console.error('Error actualizando seat_locks con locator final:', updateLocksError);
+              } else {
+                console.log(`✅ Seat_locks actualizados con locator final: ${paymentData.locator}, estado: ${finalStatus}`);
+              }
+            } catch (e) {
+              console.error('Error actualizando seat_locks:', e);
+            }
+          }
+
           // Si ya existe un pago, actualizarlo en lugar de crear uno nuevo
           if (existingPayment) {
             console.log('Updating existing payment:', existingPayment.paymentId);

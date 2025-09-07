@@ -37,41 +37,83 @@ export const useSeatColors = (eventId = null) => {
     // Verificar si está bloqueado/seleccionado por otro usuario
     const lockInfo = lockedSeats.find(lock => lock.seat_id === seatId);
     const isLockedByOther = lockInfo && lockInfo.session_id !== currentSessionId;
+    
+    // Distinguir entre locked permanente y seleccionado temporal
+    const isPermanentlyLocked = lockInfo && lockInfo.status === 'locked';
+    const isTemporarilySelected = lockInfo && lockInfo.status === 'seleccionado';
     const isSelectedByOther = lockInfo && lockInfo.session_id !== currentSessionId && 
                              (lockInfo.status === 'seleccionado' || lockInfo.status === 'selected');
     
-    // Debug: mostrar qué estado está recibiendo
+    // Debug: mostrar qué estado está recibiendo (actualizado con nuevos estados)
     console.log(`🎨 [useSeatColors] Asiento ${seatId}:`, {
       estado: seat.estado,
       isSelectedByMe,
       isLockedByOther,
       isSelectedByOther,
-      lockInfo,
+      isPermanentlyLocked,
+      isTemporarilySelected,
+      lockInfo: lockInfo ? {
+        status: lockInfo.status,
+        lock_type: lockInfo.lock_type,
+        locator: lockInfo.locator,
+        expires_at: lockInfo.expires_at,
+        session_id: lockInfo.session_id
+      } : null,
       currentSessionId,
-      selectedSeats: selectedSeats.length
+      selectedSeats: selectedSeats.length,
+      zonaInfo: zona ? {
+        id: zona.id,
+        nombre: zona.nombre,
+        color: zona.color
+      } : null
     });
     
-    // SISTEMA DE COLORES UNIFICADO
-    if (isSelectedByMe) {
-      console.log(`🎨 [useSeatColors] ${seatId} -> Selected Me (${eventTheme.seatSelectedMe})`);
-      return eventTheme.seatSelectedMe || '#3b82f6';
-    } else if (isSelectedByOther) {
-      console.log(`🎨 [useSeatColors] ${seatId} -> Selected Other (${eventTheme.seatSelectedOther})`);
-      return eventTheme.seatSelectedOther || '#eab308';
-    } else if (seat.estado === 'seleccionado_por_otro' || isLockedByOther) {
-      console.log(`🎨 [useSeatColors] ${seatId} -> Blocked (${eventTheme.seatBlocked})`);
-      return eventTheme.seatBlocked || '#ef4444';
-    } else if (seat.estado === 'vendido') {
+    // SISTEMA DE COLORES UNIFICADO - PRIORIDAD CORRECTA
+    // 1. VENDIDO (máxima prioridad)
+    if (seat.estado === 'vendido' || seat.estado === 'pagado') {
       console.log(`🎨 [useSeatColors] ${seatId} -> Sold (${eventTheme.seatSold})`);
-      return eventTheme.seatSold || '#6b7280';
-    } else if (seat.estado === 'reservado') {
+      return eventTheme.seatSold || '#8c8c8c';
+    }
+    
+    // 2. RESERVADO
+    if (seat.estado === 'reservado') {
       console.log(`🎨 [useSeatColors] ${seatId} -> Reserved (${eventTheme.seatReserved})`);
       return eventTheme.seatReserved || '#722ed1';
-    } else {
-      // 🎨 Color de la zona = Disponible
-      console.log(`🎨 [useSeatColors] ${seatId} -> Available (${eventTheme.seatAvailable})`);
-      return zona?.color || eventTheme.seatAvailable || '#4CAF50';
     }
+    
+    // 3. ANULADO
+    if (seat.estado === 'anulado') {
+      console.log(`🎨 [useSeatColors] ${seatId} -> Cancelled (${eventTheme.seatCancelled || '#ff6b6b'})`);
+      return eventTheme.seatCancelled || '#ff6b6b';
+    }
+    
+    // 4. BLOQUEADO PERMANENTEMENTE (desde boleteria)
+    if (isPermanentlyLocked || seat.estado === 'locked') {
+      console.log(`🎨 [useSeatColors] ${seatId} -> Permanently Locked (${eventTheme.seatBlocked})`);
+      return eventTheme.seatBlocked || '#ff4d4f';
+    }
+    
+    // 5. BLOQUEADO POR OTRO USUARIO (temporal)
+    if (seat.estado === 'seleccionado_por_otro' || (isLockedByOther && !isPermanentlyLocked)) {
+      console.log(`🎨 [useSeatColors] ${seatId} -> Blocked by Other (${eventTheme.seatBlocked})`);
+      return eventTheme.seatBlocked || '#ff4d4f';
+    }
+    
+    // 6. SELECCIONADO POR OTRO USUARIO (temporal)
+    if (isSelectedByOther && !isPermanentlyLocked) {
+      console.log(`🎨 [useSeatColors] ${seatId} -> Selected Other (${eventTheme.seatSelectedOther})`);
+      return eventTheme.seatSelectedOther || '#faad14';
+    }
+    
+    // 7. SELECCIONADO POR MÍ (temporal)
+    if (isSelectedByMe && !isPermanentlyLocked) {
+      console.log(`🎨 [useSeatColors] ${seatId} -> Selected Me (${eventTheme.seatSelectedMe})`);
+      return eventTheme.seatSelectedMe || '#1890ff';
+    }
+    
+    // 8. DISPONIBLE (por defecto)
+    console.log(`🎨 [useSeatColors] ${seatId} -> Available (${eventTheme.seatAvailable})`);
+    return zona?.color || eventTheme.seatAvailable || '#4CAF50';
   };
 
   // Función para obtener el color de una zona

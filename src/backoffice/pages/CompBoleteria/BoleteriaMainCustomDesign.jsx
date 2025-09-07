@@ -96,12 +96,13 @@ const BoleteriaMainCustomDesign = () => {
           .from('seat_locks')
           .select('*')
           .eq('funcion_id', selectedFuncion.id)
-          .in('status', ['locked', 'seleccionado', 'Blocked', 'blocked', 'LOCKED', 'SELECTED']);
+                .in('status', ['locked', 'seleccionado', 'seleccionado_por_otro', 'vendido', 'reservado', 'anulado']);
         
         if (error) {
           console.error('Error cargando todos los asientos bloqueados:', error);
         } else {
           console.log('✅ Todos los asientos bloqueados cargados:', allLockedSeats?.length || 0);
+          console.log('✅ Asientos con locator:', allLockedSeats?.filter(s => s.locator).length || 0);
           setLockedSeats(allLockedSeats || []);
         }
       } catch (e) {
@@ -196,17 +197,19 @@ const BoleteriaMainCustomDesign = () => {
     }
 
     if (blockMode) {
-      // En modo bloqueo, manejar bloqueo/desbloqueo
-      const isCurrentlyBlocked = blockedSeats.find(s => s._id === seat._id);
+      // En modo bloqueo, manejar bloqueo/desbloqueo permanente en seat_locks
+      const isCurrentlyBlocked = lockedSeats.some(ls => 
+        ls.seat_id === seat._id && ls.status === 'locked'
+      );
       
       if (isCurrentlyBlocked) {
-        // Desbloquear
-        setBlockedSeats(prev => prev.filter(s => s._id !== seat._id));
-        message.success(`Asiento ${seat.nombre || seat._id} desbloqueado`);
+        // Desbloquear permanentemente
+        handleUnlockSeat(seat._id);
+        message.success(`Asiento ${seat.nombre || seat._id} desbloqueado permanentemente`);
       } else {
-        // Bloquear
-        setBlockedSeats(prev => [...prev, seat]);
-        message.success(`Asiento ${seat.nombre || seat._id} bloqueado`);
+        // Bloquear permanentemente
+        handleLockSeat(seat._id);
+        message.success(`Asiento ${seat.nombre || seat._id} bloqueado permanentemente`);
       }
     } else {
       // En modo normal, manejar selección para carrito
@@ -232,6 +235,80 @@ const BoleteriaMainCustomDesign = () => {
         
         return newSeats;
       });
+    }
+  };
+
+  // Funciones para manejar bloqueo permanente de asientos
+  const handleLockSeat = async (seatId) => {
+    try {
+      const sessionId = localStorage.getItem('anonSessionId') || crypto.randomUUID();
+      
+      const lockData = {
+        seat_id: seatId,
+        funcion_id: parseInt(selectedFuncion.id),
+        session_id: sessionId,
+        locked_at: new Date().toISOString(),
+        expires_at: null, // Sin expiración para bloqueo permanente
+        status: 'locked', // Estado permanente
+        lock_type: 'seat',
+        locator: null // Sin locator para bloqueo permanente
+      };
+
+      // Agregar tenant_id si está disponible
+      if (tenantId) {
+        lockData.tenant_id = tenantId;
+      }
+
+      const { error: lockError } = await supabase
+        .from('seat_locks')
+        .upsert(lockData);
+
+      if (lockError) {
+        console.error('Error al bloquear asiento permanentemente:', lockError);
+        message.error('Error al bloquear el asiento');
+      } else {
+        console.log('✅ Asiento bloqueado permanentemente en la base de datos');
+        // Recargar lockedSeats para reflejar el cambio
+        const { data: updatedLocks } = await supabase
+          .from('seat_locks')
+          .select('*')
+          .eq('funcion_id', selectedFuncion.id)
+          .in('status', ['locked', 'seleccionado', 'seleccionado_por_otro', 'vendido', 'reservado', 'anulado']);
+        
+        setLockedSeats(updatedLocks || []);
+      }
+    } catch (error) {
+      console.error('Error inesperado bloqueando asiento:', error);
+      message.error('Error al bloquear el asiento');
+    }
+  };
+
+  const handleUnlockSeat = async (seatId) => {
+    try {
+      const { error: unlockError } = await supabase
+        .from('seat_locks')
+        .delete()
+        .eq('seat_id', seatId)
+        .eq('funcion_id', parseInt(selectedFuncion.id))
+        .eq('status', 'locked'); // Solo desbloquear los permanentes
+
+      if (unlockError) {
+        console.error('Error al desbloquear asiento permanentemente:', unlockError);
+        message.error('Error al desbloquear el asiento');
+      } else {
+        console.log('✅ Asiento desbloqueado permanentemente de la base de datos');
+        // Recargar lockedSeats para reflejar el cambio
+        const { data: updatedLocks } = await supabase
+          .from('seat_locks')
+          .select('*')
+          .eq('funcion_id', selectedFuncion.id)
+          .in('status', ['locked', 'seleccionado', 'seleccionado_por_otro', 'vendido', 'reservado', 'anulado']);
+        
+        setLockedSeats(updatedLocks || []);
+      }
+    } catch (error) {
+      console.error('Error inesperado desbloqueando asiento:', error);
+      message.error('Error al desbloquear el asiento');
     }
   };
 
@@ -473,6 +550,7 @@ const BoleteriaMainCustomDesign = () => {
                 >
                   <LazySimpleSeatingMap
                     selectedFuncion={selectedFuncion}
+                    selectedEvent={selectedEvent}
                     onSeatClick={handleSeatClick}
                     selectedSeats={selectedSeats}
                     blockedSeats={blockedSeats}

@@ -15,7 +15,8 @@ const defaultColors = {
   seatSelectedOther: '#faad14',
   seatBlocked: '#ff4d4f',
   seatSold: '#8c8c8c',
-  seatReserved: '#722ed1'
+  seatReserved: '#722ed1',
+  seatCancelled: '#ff6b6b'
 };
 
 const ThemeContext = createContext({

@@ -354,29 +354,44 @@ if (Array.isArray(mapa?.contenido)) {
             const locked = isSeatLocked ? isSeatLocked(seat._id) : false;
             const lockedByMe = isSeatLockedByMe ? isSeatLockedByMe(seat._id) : false;
 
-                         // Determinar estado visual según lock.status
+                         // Determinar estado visual según lock.status (consistente con boleteria)
              let seatEstado = seat.estado;
              if (locked) {
                const lock = Array.isArray(lockedSeatsState)
                  ? lockedSeatsState.find(l => l.seat_id === seat._id)
                  : null;
-               const lockStatus = lock?.status || 'bloqueado';
-               const isSeleccionado = String(lockStatus).toLowerCase() === 'seleccionado';
-               if (isSeleccionado) {
-                 seatEstado = lockedByMe ? 'seleccionado_por_mi' : 'seleccionado_por_otro';
+               const lockStatus = lock?.status || 'locked';
+               
+               // Usar estados estándar consistentes con boleteria
+               if (lockStatus === 'seleccionado') {
+                 seatEstado = lockedByMe ? 'seleccionado' : 'seleccionado_por_otro';
+               } else if (lockStatus === 'locked') {
+                 seatEstado = 'locked'; // Bloqueo permanente
+               } else if (lockStatus === 'vendido') {
+                 seatEstado = 'vendido';
+               } else if (lockStatus === 'reservado') {
+                 seatEstado = 'reservado';
+               } else if (lockStatus === 'anulado') {
+                 seatEstado = 'anulado';
                } else {
-                 seatEstado = lockedByMe ? 'bloqueado_por_mi' : 'bloqueado_por_otro';
+                 seatEstado = lockedByMe ? 'seleccionado' : 'seleccionado_por_otro';
                }
              }
 
-             // Debug: mostrar el estado del asiento
+             // Debug: mostrar el estado del asiento (actualizado con nuevos estados)
+             const lockData = locked ? lockedSeatsState.find(l => l.seat_id === seat._id) : null;
              console.log(`🪑 [SEAT_COLOR] Asiento ${seat._id}:`, {
                estadoOriginal: seat.estado,
                seatEstado: seatEstado,
                locked,
                lockedByMe,
-               lockStatus: locked ? lockedSeatsState.find(l => l.seat_id === seat._id)?.status : null,
-               lockData: locked ? lockedSeatsState.find(l => l.seat_id === seat._id) : null
+               lockStatus: lockData?.status || null,
+               lockType: lockData?.lock_type || null,
+               locator: lockData?.locator || null,
+               expiresAt: lockData?.expires_at || null,
+               isPermanent: lockData?.status === 'locked' || lockData?.status === 'vendido' || lockData?.status === 'reservado' || lockData?.status === 'anulado',
+               isTemporary: lockData?.status === 'seleccionado',
+               lockData: lockData
              });
 
             const seatData = { ...seat, estado: seatEstado };

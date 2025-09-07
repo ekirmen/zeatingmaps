@@ -689,6 +689,7 @@ const BoleteriaMain = () => {
               >
                 <LazySimpleSeatingMap
                   selectedFuncion={selectedFuncion}
+                  selectedEvent={selectedEvent}
                   onSeatClick={handleSeatClick}
                   selectedSeats={selectedSeats}
                   blockedSeats={blockedSeats}
