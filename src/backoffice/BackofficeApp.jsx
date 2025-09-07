@@ -11,6 +11,7 @@ import PaymentAnalytics from './pages/PaymentAnalytics';
 import RefundManagement from './pages/RefundManagement';
 import Reports from './pages/Reports';
 import ScheduledReports from './pages/ScheduledReports';
+import EmailTemplates from './pages/EmailTemplates';
 import SystemSettings from './pages/SystemSettings';
 import AuditLogs from './pages/AuditLogs';
 import PrinterSettings from './pages/PrinterSettings';
@@ -101,6 +102,7 @@ const BackofficeApp = () => {
         {/* Informes */}
         <Route path="reports" element={<Reports />} />
         <Route path="scheduled-reports" element={<ScheduledReports />} />
+        <Route path="email-templates" element={<EmailTemplates />} />
         
         {/* Personalización */}
         <Route path="sites" element={<WebStudio />} />

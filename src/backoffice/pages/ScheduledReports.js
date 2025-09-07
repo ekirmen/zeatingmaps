@@ -48,6 +48,7 @@ const ScheduledReports = () => {
   const [scheduledReports, setScheduledReports] = useState([]);
   const [events, setEvents] = useState([]);
   const [reportTemplates, setReportTemplates] = useState([]);
+  const [emailTemplates, setEmailTemplates] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingReport, setEditingReport] = useState(null);
   const [form] = Form.useForm();
@@ -93,7 +94,8 @@ const ScheduledReports = () => {
       await Promise.all([
         loadScheduledReports(),
         loadEvents(),
-        loadReportTemplates()
+        loadReportTemplates(),
+        loadEmailTemplates()
       ]);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -149,6 +151,23 @@ const ScheduledReports = () => {
       setReportTemplates(data || []);
     } catch (error) {
       console.error('Error loading report templates:', error);
+    }
+  };
+
+  const loadEmailTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('email_templates')
+        .select('*')
+        .eq('tenant_id', currentTenant?.id)
+        .eq('activo', true)
+        .order('es_predeterminado', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setEmailTemplates(data || []);
+    } catch (error) {
+      console.error('Error loading email templates:', error);
     }
   };
 
@@ -467,6 +486,26 @@ const ScheduledReports = () => {
               </Form.Item>
             </Col>
           </Row>
+
+          <Form.Item
+            name="email_template_id"
+            label="Plantilla de Email"
+            rules={[{ required: true, message: 'Por favor selecciona una plantilla de email' }]}
+          >
+            <Select placeholder="Selecciona una plantilla de email">
+              {emailTemplates.map(template => (
+                <Option key={template.id} value={template.id}>
+                  <Space>
+                    <Text>{template.nombre}</Text>
+                    {template.es_predeterminado && <Tag color="gold" size="small">Predeterminada</Tag>}
+                    <Tag color="blue" size="small">
+                      {reportTypes.find(rt => rt.value === template.tipo_reporte)?.label}
+                    </Tag>
+                  </Space>
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
 
           <Row gutter={16}>
             <Col span={12}>
