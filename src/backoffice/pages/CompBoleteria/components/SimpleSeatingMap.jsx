@@ -573,9 +573,10 @@ const SimpleSeatingMap = ({
                 let adjustedLeft, adjustedTop;
                 if (isCircleTable) {
                   // Para mesas circulares, calcular automáticamente las posiciones en la circunferencia
+                  // IMPORTANTE: Usar el mismo cálculo de centro que la mesa para mantener consistencia
+                  const mesaRadius = elemento.radius ?? (elemento.width ?? 60) / 2;
                   const mesaCenterX = (elemento.posicion?.x ?? elemento.x ?? 0);
                   const mesaCenterY = (elemento.posicion?.y ?? elemento.y ?? 0);
-                  const mesaRadius = elemento.radius ?? (elemento.width ?? 60) / 2;
                   
                   // Obtener todas las sillas de esta mesa para calcular distribución uniforme
                   const todasLasSillas = elemento.sillas || elemento.asientos || elemento.seats || [];
@@ -584,12 +585,13 @@ const SimpleSeatingMap = ({
                   
                   if (totalSillas > 0 && indiceSilla >= 0) {
                     // Calcular ángulo para distribución uniforme en la circunferencia
+                    // Empezar desde la parte superior (12 en punto) para mejor distribución visual
                     const anguloPorSilla = (2 * Math.PI) / totalSillas;
-                    const anguloSilla = anguloPorSilla * indiceSilla;
+                    const anguloSilla = anguloPorSilla * indiceSilla - (Math.PI / 2); // -90° para empezar arriba
                     
                     // Calcular posición en la circunferencia
                     // Radio de la circunferencia = radio de la mesa + margen para los asientos
-                    const radioCircunferencia = mesaRadius + 15; // 15px de margen
+                    const radioCircunferencia = mesaRadius + 20; // 20px de margen para mejor separación
                     const sillaX = mesaCenterX + Math.cos(anguloSilla) * radioCircunferencia;
                     const sillaY = mesaCenterY + Math.sin(anguloSilla) * radioCircunferencia;
                     
