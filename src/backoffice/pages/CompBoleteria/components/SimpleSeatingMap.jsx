@@ -571,55 +571,14 @@ const SimpleSeatingMap = ({
                 
                 // Calcular posición relativa a la mesa si es circular
                 let adjustedLeft, adjustedTop;
-                if (isCircleTable) {
-                  // Para mesas circulares, calcular automáticamente las posiciones en la circunferencia
-                  // IMPORTANTE: Usar el mismo cálculo de centro que la mesa para mantener consistencia
-                  const mesaRadius = elemento.radius ?? (elemento.width ?? 60) / 2;
-                  
-                  // Calcular el centro de la mesa usando EXACTAMENTE la misma lógica que el renderizado de la mesa
-                  // La mesa se renderiza con offset, así que necesito calcular el centro real
-                  const mesaLeft = (elemento.posicion?.x ?? elemento.x ?? 0) - mesaRadius;
-                  const mesaTop = (elemento.posicion?.y ?? elemento.y ?? 0) - mesaRadius;
-                  const mesaCenterX = mesaLeft + mesaRadius; // Centro real de la mesa renderizada
-                  const mesaCenterY = mesaTop + mesaRadius;  // Centro real de la mesa renderizada
-                  
-                  // Obtener todas las sillas de esta mesa para calcular distribución uniforme
-                  const todasLasSillas = elemento.sillas || elemento.asientos || elemento.seats || [];
-                  const totalSillas = todasLasSillas.length;
-                  const indiceSilla = todasLasSillas.findIndex(s => s._id === silla._id);
-                  
-                  if (totalSillas > 0 && indiceSilla >= 0) {
-                    // Calcular ángulo para distribución uniforme en la circunferencia
-                    // Empezar desde la parte superior (12 en punto) para mejor distribución visual
-                    const anguloPorSilla = (2 * Math.PI) / totalSillas;
-                    const anguloSilla = anguloPorSilla * indiceSilla - (Math.PI / 2); // -90° para empezar arriba
-                    
-                    // Calcular posición en la circunferencia
-                    // Radio de la circunferencia = radio de la mesa + margen para los asientos
-                    const radioCircunferencia = mesaRadius + 25; // 25px de margen para mejor separación visual
-                    const sillaX = mesaCenterX + Math.cos(anguloSilla) * radioCircunferencia;
-                    const sillaY = mesaCenterY + Math.sin(anguloSilla) * radioCircunferencia;
-                    
-                    // Centrar el asiento en su posición calculada
-                    adjustedLeft = sillaX - (chairDiameter / 2);
-                    adjustedTop = sillaY - (chairDiameter / 2);
-                    
-                    console.log(`🔍 [Mesa Circular] Mesa: (${mesaCenterX}, ${mesaCenterY}), Radio: ${mesaRadius}`);
-                    console.log(`🔍 [Mesa Circular] Silla ${indiceSilla + 1}/${totalSillas}, Ángulo: ${(anguloSilla * 180 / Math.PI).toFixed(1)}°`);
-                    console.log(`🔍 [Mesa Circular] Radio circunferencia: ${radioCircunferencia}`);
-                    console.log(`🔍 [Mesa Circular] Posición calculada: (${sillaX.toFixed(1)}, ${sillaY.toFixed(1)})`);
-                    console.log(`🔍 [Mesa Circular] Posición final: (${adjustedLeft.toFixed(1)}, ${adjustedTop.toFixed(1)})`);
-                  } else {
-                    // Fallback: usar coordenadas originales si no se puede calcular
-                    adjustedLeft = (sx || 0) - (chairDiameter / 2);
-                    adjustedTop = (sy || 0) - (chairDiameter / 2);
-                    console.warn('⚠️ [Mesa Circular] No se pudo calcular posición automática, usando coordenadas originales');
-                  }
-                } else {
-                  // Para mesas rectangulares, usar coordenadas absolutas
-                  adjustedLeft = (sx || 0) - (chairDiameter / 2);
-                  adjustedTop = (sy || 0) - (chairDiameter / 2);
-                }
+                // Para TODAS las mesas (circulares y rectangulares), usar coordenadas originales
+                // Esto permite que las sillas se posicionen exactamente donde fueron diseñadas
+                adjustedLeft = (sx || 0) - (chairDiameter / 2);
+                adjustedTop = (sy || 0) - (chairDiameter / 2);
+                
+                console.log(`🔍 [Silla] Posición original: (${sx || 0}, ${sy || 0})`);
+                console.log(`🔍 [Silla] Posición ajustada: (${adjustedLeft}, ${adjustedTop})`);
+                console.log(`🔍 [Silla] Mesa tipo: ${isCircleTable ? 'Circular' : 'Rectangular'}`);
                 
                 const isOtherZone = selectedZonaId && String(selectedZonaId) !== String(silla?.zona?.id || silla?.zonaId || silla?.zona || '');
                 const muted = isOtherZone && (silla.estado === 'disponible');
