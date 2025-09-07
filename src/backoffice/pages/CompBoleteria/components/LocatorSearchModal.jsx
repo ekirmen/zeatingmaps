@@ -369,6 +369,10 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                         
                         // Si no hay asientos en gateway_response, buscar en seat_locks
                         if (seats.length === 0 && searchResult.funcion_id) {
+                          console.log('🔍 Buscando asientos en seat_locks...');
+                          console.log('🔍 funcion_id:', searchResult.funcion_id);
+                          console.log('🔍 user_id:', searchResult.user_id);
+                          
                           try {
                             const { data: seatLocks, error } = await supabase
                               .from('seat_locks')
@@ -376,6 +380,8 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                               .eq('funcion_id', searchResult.funcion_id)
                               .eq('session_id', searchResult.user_id)
                               .in('status', ['locked', 'seleccionado']);
+                            
+                            console.log('🔍 Query seat_locks result:', { seatLocks, error });
                             
                             if (error) {
                               console.error('Error fetching seat_locks:', error);
@@ -392,6 +398,9 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                               
                               seats.push(...seatLocksAsSeats);
                               console.log('✅ Asientos encontrados en seat_locks:', seatLocksAsSeats.length);
+                              console.log('✅ Asientos convertidos:', seatLocksAsSeats);
+                            } else {
+                              console.log('⚠️ No se encontraron seat_locks para esta función y usuario');
                             }
                           } catch (e) {
                             console.error('Error loading seat_locks:', e);
