@@ -87,6 +87,30 @@ const BoleteriaMainCustomDesign = () => {
   useEffect(() => {
     setIsMounted(true);
     
+    // Cargar todos los asientos bloqueados para mostrar colores correctos
+    const loadAllLockedSeats = async () => {
+      if (!selectedFuncion?.id) return;
+      
+      try {
+        const { data: allLockedSeats, error } = await supabase
+          .from('seat_locks')
+          .select('*')
+          .eq('funcion_id', selectedFuncion.id)
+          .in('status', ['locked', 'seleccionado']);
+        
+        if (error) {
+          console.error('Error cargando todos los asientos bloqueados:', error);
+        } else {
+          console.log('✅ Todos los asientos bloqueados cargados:', allLockedSeats?.length || 0);
+          setLockedSeats(allLockedSeats || []);
+        }
+      } catch (e) {
+        console.error('Error cargando asientos bloqueados:', e);
+      }
+    };
+    
+    loadAllLockedSeats();
+    
     // Listener para cargar transacciones pendientes desde el localizador
     const handleLoadPendingTransaction = async (event) => {
       const transactionData = event.detail;
@@ -153,7 +177,7 @@ const BoleteriaMainCustomDesign = () => {
     return () => {
       window.removeEventListener('loadPendingTransaction', handleLoadPendingTransaction);
     };
-  }, []);
+  }, [selectedFuncion?.id]);
 
   // Función para manejar selección de precios
   const handlePriceOptionSelect = (priceOption) => {
