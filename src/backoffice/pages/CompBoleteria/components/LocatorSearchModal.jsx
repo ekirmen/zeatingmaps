@@ -236,7 +236,7 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                 </div>
               )}
 
-              {/* Seats Info */}
+              {/* Seats Info - Clickeable para cargar en carrito */}
               {(searchResult.seats || searchResult.gateway_response) && (
                 <div>
                   <Text strong className="flex items-center">
@@ -244,8 +244,41 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                     Asientos ({parseSeats(searchResult.seats || searchResult.gateway_response).length}):
                   </Text>
                   <div className="ml-6">
+                    <div className="mb-2 text-xs text-gray-500">
+                      🎯 Haz click en cualquier asiento para cargar TODA la transacción completa
+                    </div>
                     {parseSeats(searchResult.seats || searchResult.gateway_response).map((seat, index) => (
-                      <div key={index} className="flex justify-between items-center py-1">
+                      <div 
+                        key={index} 
+                        className="flex justify-between items-center py-2 px-2 rounded hover:bg-blue-50 cursor-pointer transition-colors border border-transparent hover:border-blue-200"
+                        onClick={() => {
+                          // 🎯 CARGAR TODA LA TRANSACCIÓN COMPLETA al hacer click en cualquier asiento
+                          const allSeats = parseSeats(searchResult.seats || searchResult.gateway_response);
+                          const seatsData = allSeats.map((seatItem, seatIndex) => ({
+                            _id: seatItem.id || seatItem._id || `seat_${seatIndex}`,
+                            nombre: seatItem.name || seatItem.nombre || seatItem.seat_name || `Asiento ${seatIndex + 1}`,
+                            precio: seatItem.price || seatItem.precio || seatItem.amount || 0,
+                            zona: seatItem.zona || seatItem.zonaNombre || 'General',
+                            zonaId: seatItem.zonaId || seatItem.zona?.id || 'general',
+                            mesa: seatItem.mesa || null,
+                            locator: searchResult.locator,
+                            transactionId: searchResult.id,
+                            status: searchResult.status
+                          }));
+                          
+                          // Disparar evento para cargar TODA la transacción
+                          window.dispatchEvent(new CustomEvent('loadSeatToCart', {
+                            detail: {
+                              seats: seatsData,
+                              transaction: searchResult,
+                              action: 'loadCompleteTransaction',
+                              clickedSeat: seat.name || seat.nombre || seat.seat_name || `Asiento ${index + 1}`
+                            }
+                          }));
+                          
+                          message.success(`🎫 Transacción completa cargada: ${seatsData.length} asientos desde ${searchResult.locator}`);
+                        }}
+                      >
                         <span className="font-medium">
                           {seat.name || seat.nombre || seat.seat_name || `Asiento ${index + 1}`}
                         </span>
@@ -254,6 +287,40 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                         </span>
                       </div>
                     ))}
+                    <div className="mt-2">
+                      <Button 
+                        type="primary" 
+                        size="small"
+                        onClick={() => {
+                          // Cargar todos los asientos en el carrito
+                          const allSeats = parseSeats(searchResult.seats || searchResult.gateway_response);
+                          const seatsData = allSeats.map((seat, index) => ({
+                            _id: seat.id || seat._id || `seat_${index}`,
+                            nombre: seat.name || seat.nombre || seat.seat_name || `Asiento ${index + 1}`,
+                            precio: seat.price || seat.precio || seat.amount || 0,
+                            zona: seat.zona || seat.zonaNombre || 'General',
+                            zonaId: seat.zonaId || seat.zona?.id || 'general',
+                            mesa: seat.mesa || null,
+                            locator: searchResult.locator,
+                            transactionId: searchResult.id,
+                            status: searchResult.status
+                          }));
+                          
+                          // Disparar evento para cargar todos los asientos
+                          window.dispatchEvent(new CustomEvent('loadSeatToCart', {
+                            detail: {
+                              seats: seatsData,
+                              transaction: searchResult,
+                              action: 'addAllSeats'
+                            }
+                          }));
+                          
+                          message.success(`${seatsData.length} asientos cargados en el carrito`);
+                        }}
+                      >
+                        Cargar Todos los Asientos
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}

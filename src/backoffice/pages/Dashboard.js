@@ -35,7 +35,9 @@ const Dashboard = () => {
   const [stats, setStats] = useState({
     totalRevenue: 0,
     totalTickets: 0,
+    soldTickets: 0,
     activeUsers: 0,
+    newUsersThisWeek: 0,
     pendingPayments: 0,
     todaySales: 0,
     thisWeekSales: 0,

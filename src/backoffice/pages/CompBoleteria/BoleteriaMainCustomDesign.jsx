@@ -173,11 +173,117 @@ const BoleteriaMainCustomDesign = () => {
       }
     };
     
-    window.addEventListener('loadPendingTransaction', handleLoadPendingTransaction);
-    
-    return () => {
-      window.removeEventListener('loadPendingTransaction', handleLoadPendingTransaction);
-    };
+          window.addEventListener('loadPendingTransaction', handleLoadPendingTransaction);
+          
+          // Listener para cargar asientos desde el localizador
+          const handleLoadSeatToCart = async (event) => {
+            const { seat, seats, transaction, action, clickedSeat } = event.detail;
+            console.log('🛒 Cargando asiento(s) en carrito:', { seat, seats, action, clickedSeat });
+            
+            try {
+              if (action === 'loadCompleteTransaction' && seats) {
+                // 🎯 CARGAR TODA LA TRANSACCIÓN COMPLETA
+                console.log(`🎫 Cargando transacción completa desde localizador ${transaction.locator}`);
+                console.log(`🎯 Asiento clickeado: ${clickedSeat}`);
+                console.log(`📋 Total de asientos a cargar: ${seats.length}`);
+                
+                // Limpiar carrito actual y cargar toda la transacción
+                setSelectedSeats(seats);
+                
+                // Cargar cliente si está disponible
+                if (transaction.user_id) {
+                  try {
+                    const { data: user, error } = await supabase
+                      .from('profiles')
+                      .select('*')
+                      .eq('id', transaction.user_id)
+                      .single();
+                    
+                    if (!error && user) {
+                      setSelectedClient(user);
+                      console.log('✅ Cliente cargado:', user.nombre || user.name || user.email);
+                    }
+                  } catch (e) {
+                    console.error('Error loading client:', e);
+                  }
+                }
+                
+                // Cargar evento y función si están disponibles
+                if (transaction.event) {
+                  setSelectedEvent(transaction.event);
+                  console.log('✅ Evento cargado:', transaction.event.nombre);
+                }
+                
+                if (transaction.funcion) {
+                  setSelectedFuncion(transaction.funcion);
+                  console.log('✅ Función cargada:', transaction.funcion.id);
+                }
+                
+                console.log('🎉 Transacción completa cargada exitosamente');
+                
+              } else if (action === 'addSeat' && seat) {
+                // Agregar asiento individual (funcionalidad anterior)
+                setSelectedSeats(prev => {
+                  const currentSeats = Array.isArray(prev) ? prev : [];
+                  const exists = currentSeats.find(s => s._id === seat._id);
+                  if (exists) {
+                    message.warning('Este asiento ya está en el carrito');
+                    return currentSeats;
+                  }
+                  return [...currentSeats, seat];
+                });
+                
+                // Cargar cliente si está disponible
+                if (transaction.user_id) {
+                  try {
+                    const { data: user, error } = await supabase
+                      .from('profiles')
+                      .select('*')
+                      .eq('id', transaction.user_id)
+                      .single();
+                    
+                    if (!error && user) {
+                      setSelectedClient(user);
+                    }
+                  } catch (e) {
+                    console.error('Error loading client:', e);
+                  }
+                }
+                
+              } else if (action === 'addAllSeats' && seats) {
+                // Agregar todos los asientos (funcionalidad anterior)
+                setSelectedSeats(seats);
+                
+                // Cargar cliente si está disponible
+                if (transaction.user_id) {
+                  try {
+                    const { data: user, error } = await supabase
+                      .from('profiles')
+                      .select('*')
+                      .eq('id', transaction.user_id)
+                      .single();
+                    
+                    if (!error && user) {
+                      setSelectedClient(user);
+                    }
+                  } catch (e) {
+                    console.error('Error loading client:', e);
+                  }
+                }
+              }
+              
+            } catch (error) {
+              console.error('Error loading seat to cart:', error);
+              message.error('Error al cargar el asiento en el carrito');
+            }
+          };
+          
+          window.addEventListener('loadSeatToCart', handleLoadSeatToCart);
+          
+          return () => {
+            window.removeEventListener('loadPendingTransaction', handleLoadPendingTransaction);
+            window.removeEventListener('loadSeatToCart', handleLoadSeatToCart);
+          };
   }, [selectedFuncion?.id]);
 
   // Función para manejar selección de precios
