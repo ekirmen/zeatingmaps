@@ -480,14 +480,12 @@ const SimpleSeatingMap = ({
                       elemento.shape === 'rect' ? 'rounded-lg' : 'rounded-full'
                     }`}
                     style={{
-                      left:
-                        elemento.shape === 'circle'
-                          ? ((elemento.posicion?.x ?? elemento.x ?? 0) - (elemento.radius ?? (elemento.width ?? 0)) / 2)
-                          : (elemento.posicion?.x ?? elemento.x ?? 0),
-                      top:
-                        elemento.shape === 'circle'
-                          ? ((elemento.posicion?.y ?? elemento.y ?? 0) - (elemento.radius ?? (elemento.height ?? elemento.width ?? 0)) / 2)
-                          : (elemento.posicion?.y ?? elemento.y ?? 0),
+                      left: elemento.shape === 'circle'
+                        ? ((elemento.posicion?.x ?? elemento.x ?? 0) - (elemento.radius ?? (elemento.width ?? 0)) / 2)
+                        : (elemento.posicion?.x ?? elemento.x ?? 0),
+                      top: elemento.shape === 'circle'
+                        ? ((elemento.posicion?.y ?? elemento.y ?? 0) - (elemento.radius ?? (elemento.height ?? elemento.width ?? 0)) / 2)
+                        : (elemento.posicion?.y ?? elemento.y ?? 0),
                       width: elemento.shape === 'circle' ? (elemento.radius ?? 30) * 2 : (elemento.width ?? 100),
                       height: elemento.shape === 'circle' ? (elemento.radius ?? 30) * 2 : (elemento.height ?? 60),
                       backgroundColor: elemento.fill || 'lightblue',

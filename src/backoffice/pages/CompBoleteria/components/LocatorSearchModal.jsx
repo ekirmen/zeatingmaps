@@ -25,12 +25,11 @@ const LocatorSearchModal = ({ open, onCancel }) => {
     try {
       console.log('[LocatorSearch] Searching for locator:', value);
       
-      // Search in payment_transactions table
+      // Search in payment_transactions table (FIXED: removed user relation)
       const { data: payment, error: paymentError } = await supabase
         .from('payment_transactions')
         .select(`
           *,
-          user:profiles!user_id(*),
           event:eventos(*),
           funcion:funciones(
             id,
@@ -220,7 +219,7 @@ const LocatorSearchModal = ({ open, onCancel }) => {
               )}
 
               {/* User Info */}
-              {searchResult.user && (
+              {searchResult.user_id && (
                 <div>
                   <Text strong className="flex items-center">
                     <UserOutlined className="mr-2" />
@@ -228,16 +227,11 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                   </Text>
                   <div className="ml-6">
                     <div className="font-medium">
-                      {searchResult.user.nombre || searchResult.user.name || searchResult.user.full_name || searchResult.user.email || 'Usuario'}
+                      Usuario ID: {searchResult.user_id}
                     </div>
                     <div className="text-gray-500 text-sm">
-                      {searchResult.user.email}
+                      Información de usuario no disponible
                     </div>
-                    {searchResult.user.telefono && (
-                      <div className="text-gray-500 text-sm">
-                        Tel: {searchResult.user.telefono}
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
