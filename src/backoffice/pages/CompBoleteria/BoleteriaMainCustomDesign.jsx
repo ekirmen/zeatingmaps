@@ -88,33 +88,64 @@ const BoleteriaMainCustomDesign = () => {
     setIsMounted(true);
     
     // Listener para cargar transacciones pendientes desde el localizador
-    const handleLoadPendingTransaction = (event) => {
+    const handleLoadPendingTransaction = async (event) => {
       const transactionData = event.detail;
       console.log('🔄 Cargando transacción pendiente:', transactionData);
       
-      // Cargar evento y función
-      if (transactionData.event) {
-        setSelectedEvent(transactionData.event);
+      try {
+        // Cargar evento y función
+        if (transactionData.event) {
+          setSelectedEvent(transactionData.event);
+          console.log('✅ Evento cargado:', transactionData.event.nombre);
+        }
+        
+        if (transactionData.funcion) {
+          setSelectedFuncion(transactionData.funcion);
+          console.log('✅ Función cargada:', transactionData.funcion.id);
+        }
+        
+        // Cargar asientos
+        if (transactionData.seats && transactionData.seats.length > 0) {
+          setSelectedSeats(transactionData.seats);
+          message.success(`${transactionData.seats.length} asientos cargados desde la transacción pendiente`);
+          console.log('✅ Asientos cargados:', transactionData.seats);
+        } else {
+          console.log('⚠️ No hay asientos en la transacción');
+          message.warning('Esta transacción no tiene asientos asociados');
+        }
+        
+        // Cargar información del cliente si está disponible
+        if (transactionData.user_id) {
+          try {
+            // Buscar el usuario por ID
+            const { data: user, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', transactionData.user_id)
+              .single();
+            
+            if (error) {
+              console.error('Error fetching user:', error);
+              message.warning('Cliente ID: ' + transactionData.user_id + ' (información no disponible)');
+            } else if (user) {
+              setSelectedClient(user);
+              message.success(`Cliente cargado: ${user.nombre || user.name || user.email}`);
+              console.log('✅ Cliente cargado:', user);
+            }
+          } catch (e) {
+            console.error('Error loading client:', e);
+            message.warning('Cliente ID: ' + transactionData.user_id + ' (error al cargar)');
+          }
+        }
+        
+        // Mostrar información de la transacción
+        message.success(`Transacción pendiente cargada: ${transactionData.locator}`);
+        console.log('✅ Transacción completamente cargada');
+        
+      } catch (error) {
+        console.error('Error loading pending transaction:', error);
+        message.error('Error al cargar la transacción pendiente');
       }
-      
-      if (transactionData.funcion) {
-        setSelectedFuncion(transactionData.funcion);
-      }
-      
-      // Cargar asientos
-      if (transactionData.seats && transactionData.seats.length > 0) {
-        setSelectedSeats(transactionData.seats);
-        message.success(`${transactionData.seats.length} asientos cargados desde la transacción pendiente`);
-      }
-      
-      // Cargar información del cliente si está disponible
-      if (transactionData.user_id) {
-        // Aquí podrías buscar el usuario por ID y cargarlo
-        message.info('Cliente ID: ' + transactionData.user_id);
-      }
-      
-      // Mostrar información de la transacción
-      message.info(`Transacción pendiente cargada: ${transactionData.locator}`);
     };
     
     window.addEventListener('loadPendingTransaction', handleLoadPendingTransaction);
