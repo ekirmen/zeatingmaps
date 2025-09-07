@@ -15,6 +15,7 @@ import ServerDiagnostic from './ServerDiagnostic';
 import LocatorSearchModal from './components/LocatorSearchModal';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
+import { useTenant } from '../../../contexts/TenantContext';
 import { supabase } from '../../../supabaseClient';
 import resolveImageUrl from '../../../utils/resolveImageUrl';
 import '../../../styles/design-system.css';
@@ -25,6 +26,7 @@ const { Title, Text } = Typography;
 
 const BoleteriaMainCustomDesign = () => {
   const location = useLocation();
+  const { currentTenant } = useTenant();
   const [isMounted, setIsMounted] = useState(false);
   const [activeTab, setActiveTab] = useState('mapa');
   const [showEventSearch, setShowEventSearch] = useState(false);
@@ -361,8 +363,8 @@ const BoleteriaMainCustomDesign = () => {
       };
 
       // Agregar tenant_id si está disponible
-      if (tenantId) {
-        lockData.tenant_id = tenantId;
+      if (currentTenant?.id) {
+        lockData.tenant_id = currentTenant.id;
       }
 
       const { error: lockError } = await supabase
@@ -1013,6 +1015,10 @@ const BoleteriaMainCustomDesign = () => {
       <LocatorSearchModal
         open={showLocatorSearch}
         onCancel={() => setShowLocatorSearch(false)}
+        onSearch={(locator) => {
+          // Recargar la búsqueda del localizador
+          setLocatorSearchValue(locator);
+        }}
       />
 
       <Modal

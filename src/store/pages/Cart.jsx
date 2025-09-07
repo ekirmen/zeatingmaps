@@ -461,15 +461,14 @@ const Cart = () => {
                 </div>
             </div>
 
+            {/* Login Modal */}
+            <LoginModal
+                visible={showLoginModal}
+                onClose={() => setShowLoginModal(false)}
+                onLoginSuccess={handleLoginSuccess}
+                title="Iniciar Sesión para Continuar"
+            />
         </div>
-
-        {/* Login Modal */}
-        <LoginModal
-            visible={showLoginModal}
-            onClose={() => setShowLoginModal(false)}
-            onLoginSuccess={handleLoginSuccess}
-            title="Iniciar Sesión para Continuar"
-        />
     );
 };
 

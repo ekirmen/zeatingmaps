@@ -92,7 +92,7 @@ module.exports = {
     ],
     plugins: [
       // Optimizar imports
-      ['import', { libraryName: 'antd', style: true }],
+      ['import', { libraryName: 'antd', style: false }],
     ],
   },
   // Optimizar PostCSS

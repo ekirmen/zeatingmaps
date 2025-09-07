@@ -36,6 +36,14 @@ const SeatingMapUnified = ({
   // Usar hook de sincronización para obtener asientos con estado real
   const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(mapa, funcionId);
 
+  // Background images - memoized to prevent unnecessary re-renders (moved before any returns)
+  const backgroundElements = useMemo(() => {
+    if (!mapa) return [];
+    return Array.isArray(mapa?.contenido)
+      ? mapa.contenido.filter(el => el.type === 'background' && el.showInWeb !== false)
+      : mapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
+  }, [mapa?.contenido]);
+
   const useImageLoader = (url) => {
     const [img, setImg] = React.useState(null);
     
@@ -275,13 +283,6 @@ if (Array.isArray(mapa?.contenido)) {
 
   // Create a set of found seat IDs for quick lookup
   const foundSeatIds = new Set(foundSeats.map(seat => seat._id));
-
-  // Background images - memoized to prevent unnecessary re-renders
-  const backgroundElements = useMemo(() => {
-    return Array.isArray(mapa?.contenido)
-      ? mapa.contenido.filter(el => el.type === 'background' && el.showInWeb !== false)
-      : mapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
-  }, [mapa?.contenido]);
 
   const BackgroundImage = React.memo(({ config }) => {
     // Resolver la URL desde múltiples posibles campos

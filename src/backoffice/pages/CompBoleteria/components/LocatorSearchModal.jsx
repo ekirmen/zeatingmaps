@@ -6,7 +6,7 @@ import { supabase } from '../../../../supabaseClient';
 const { Text, Title } = Typography;
 const { Search } = Input;
 
-const LocatorSearchModal = ({ open, onCancel }) => {
+const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
   const [searchValue, setSearchValue] = useState('');
   const [loading, setLoading] = useState(false);
   const [searchResult, setSearchResult] = useState(null);
