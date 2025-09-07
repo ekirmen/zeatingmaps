@@ -325,8 +325,51 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                     type="primary"
                     onClick={() => {
                       // Enviar al carrito para completar venta
-                      message.success('Transacción enviada al carrito para completar venta');
-                      onCancel();
+                      if (searchResult.funcion && searchResult.event) {
+                        // Crear asientos desde gateway_response
+                        const seats = [];
+                        if (searchResult.gateway_response) {
+                          try {
+                            const responseData = typeof searchResult.gateway_response === 'string' 
+                              ? JSON.parse(searchResult.gateway_response) 
+                              : searchResult.gateway_response;
+                            
+                            if (responseData.seats && Array.isArray(responseData.seats)) {
+                              seats.push(...responseData.seats);
+                            } else if (responseData.seat && responseData.seat.name) {
+                              seats.push(responseData.seat);
+                            }
+                          } catch (e) {
+                            console.error('Error parsing gateway_response:', e);
+                          }
+                        }
+                        
+                        // Crear objeto de transacción para el carrito
+                        const transactionData = {
+                          id: searchResult.id,
+                          locator: searchResult.locator,
+                          amount: searchResult.amount,
+                          currency: searchResult.currency,
+                          status: searchResult.status,
+                          event: searchResult.event,
+                          funcion: searchResult.funcion,
+                          seats: seats,
+                          user_id: searchResult.user_id,
+                          created_at: searchResult.created_at,
+                          payment_method: searchResult.payment_method,
+                          gateway_name: searchResult.gateway_name
+                        };
+                        
+                        // Emitir evento personalizado para cargar en el carrito
+                        window.dispatchEvent(new CustomEvent('loadPendingTransaction', {
+                          detail: transactionData
+                        }));
+                        
+                        message.success('Transacción cargada en el carrito para completar venta');
+                        onCancel();
+                      } else {
+                        message.error('No se pudo cargar la transacción: faltan datos del evento o función');
+                      }
                     }}
                   >
                     Completar Venta

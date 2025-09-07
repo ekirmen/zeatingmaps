@@ -86,6 +86,42 @@ const BoleteriaMainCustomDesign = () => {
 
   useEffect(() => {
     setIsMounted(true);
+    
+    // Listener para cargar transacciones pendientes desde el localizador
+    const handleLoadPendingTransaction = (event) => {
+      const transactionData = event.detail;
+      console.log('🔄 Cargando transacción pendiente:', transactionData);
+      
+      // Cargar evento y función
+      if (transactionData.event) {
+        setSelectedEvent(transactionData.event);
+      }
+      
+      if (transactionData.funcion) {
+        setSelectedFuncion(transactionData.funcion);
+      }
+      
+      // Cargar asientos
+      if (transactionData.seats && transactionData.seats.length > 0) {
+        setSelectedSeats(transactionData.seats);
+        message.success(`${transactionData.seats.length} asientos cargados desde la transacción pendiente`);
+      }
+      
+      // Cargar información del cliente si está disponible
+      if (transactionData.user_id) {
+        // Aquí podrías buscar el usuario por ID y cargarlo
+        message.info('Cliente ID: ' + transactionData.user_id);
+      }
+      
+      // Mostrar información de la transacción
+      message.info(`Transacción pendiente cargada: ${transactionData.locator}`);
+    };
+    
+    window.addEventListener('loadPendingTransaction', handleLoadPendingTransaction);
+    
+    return () => {
+      window.removeEventListener('loadPendingTransaction', handleLoadPendingTransaction);
+    };
   }, []);
 
   // Función para manejar selección de precios
