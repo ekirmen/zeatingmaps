@@ -571,8 +571,6 @@ const SimpleSeatingMap = ({
                 
                 // Calcular posición relativa a la mesa si es circular
                 let adjustedLeft, adjustedTop;
-                // Para TODAS las mesas (circulares y rectangulares), usar coordenadas originales
-                // Esto permite que las sillas se posicionen exactamente donde fueron diseñadas
                 adjustedLeft = (sx || 0) - (chairDiameter / 2);
                 adjustedTop = (sy || 0) - (chairDiameter / 2);
                 
