@@ -231,8 +231,14 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
 
   const paymentStatus = getPaymentStatus();
 
-  // Generate a random 7 character locator consisting of letters and numbers
-  const generateLocator = () => generateRandomLocator();
+  // Generate locator with format: ORDER-{timestamp}-{eventId}-{functionId}-{clientId}
+  const generateLocator = () => {
+    const timestamp = Date.now();
+    const eventId = selectedEvent?.id || 'UNKNOWN';
+    const functionId = selectedFuncion?.id || 'UNKNOWN';
+    const clientId = generateRandomLocator();
+    return `ORDER-${timestamp}-${eventId}-${functionId}-${clientId}`;
+  };
 
   const handlePaymentOrReservation = async () => {
     if (!selectedClient) {

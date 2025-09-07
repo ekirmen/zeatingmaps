@@ -12,6 +12,7 @@ import MailChimpIntegration from './components/MailChimpIntegration';
 import PushNotifications from './components/PushNotifications';
 import DownloadTicketButton from './DownloadTicketButton';
 import ServerDiagnostic from './ServerDiagnostic';
+import LocatorSearchModal from './components/LocatorSearchModal';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 import { supabase } from '../../../supabaseClient';
@@ -341,10 +342,12 @@ const BoleteriaMainCustomDesign = () => {
 
               <ZonesPanel 
                 selectedFuncion={selectedFuncion}
+                selectedPlantilla={selectedPlantilla}
                 selectedZonaId={null}
-                onZonaSelect={() => {}}
+                onSelectZona={() => {}}
+                onSelectPrice={() => {}}
                 mapa={mapa}
-                zonas={zonas}
+                onPricesLoaded={() => {}}
               />
             </div>
 
@@ -586,16 +589,10 @@ const BoleteriaMainCustomDesign = () => {
         </div>
       </Modal>
 
-      <Modal
-        title="Buscar por Localizador"
+      <LocatorSearchModal
         open={showLocatorSearch}
         onCancel={() => setShowLocatorSearch(false)}
-        footer={null}
-      >
-        <div className="text-center text-gray-500 py-xl">
-          Funcionalidad de búsqueda por localizador en desarrollo
-        </div>
-      </Modal>
+      />
 
       <Modal
         title="Gestión de Carrito"

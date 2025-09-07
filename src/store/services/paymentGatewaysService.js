@@ -272,7 +272,8 @@ export const createPaymentTransaction = async (transactionData) => {
         tenant_id: transactionData.tenantId,
         user_id: transactionData.userId,
         evento_id: transactionData.eventoId,
-        funcion_id: transactionData.funcionId
+        funcion_id: transactionData.funcionId,
+        payment_method: transactionData.paymentMethod || transactionData.method || 'unknown'
       })
       .select()
       .single();

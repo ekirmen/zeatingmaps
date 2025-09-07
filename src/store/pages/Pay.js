@@ -85,8 +85,12 @@ const Pay = () => {
     try {
       setProcessingPayment(true);
       
-      // Generar locator único
-      const locator = `ORDER-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      // Generar locator único con formato: ORDER-{timestamp}-{eventId}-{functionId}-{clientId}
+      const timestamp = Date.now();
+      const eventIdValue = cartItems[0]?.eventId || 'UNKNOWN';
+      const functionIdValue = functionId || 'UNKNOWN';
+      const clientId = Math.random().toString(36).substr(2, 9).toUpperCase();
+      const locator = `ORDER-${timestamp}-${eventIdValue}-${functionIdValue}-${clientId}`;
       
       const paymentData = {
         orderId: locator,

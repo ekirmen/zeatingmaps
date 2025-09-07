@@ -14,6 +14,15 @@ const ZonesPanel = ({
   onSelectZona,
   onPricesLoaded,
 }) => {
+  // Safety check for required props
+  if (typeof onSelectPrice !== 'function') {
+    console.warn('ZonesPanel: onSelectPrice is not a function, using fallback');
+    onSelectPrice = () => {};
+  }
+  if (typeof onSelectZona !== 'function') {
+    console.warn('ZonesPanel: onSelectZona is not a function, using fallback');
+    onSelectZona = () => {};
+  }
   // Solo mostrar logs en desarrollo
   if (process.env.NODE_ENV === 'development') {
     console.log('🚀 ZonesPanel - COMPONENTE MONTADO');
@@ -559,7 +568,11 @@ const ZonesPanel = ({
               }`}
               onClick={() => {
                 setActiveZonaId(zonaData.zona.id);
-                if (onSelectZona) onSelectZona(zonaData.zona.id);
+                if (typeof onSelectZona === 'function') {
+                  onSelectZona(zonaData.zona.id);
+                } else {
+                  console.error('onSelectZona is not a function:', typeof onSelectZona);
+                }
               }}
             >
               <div className="text-xs font-semibold" style={{ color: zonaData.zona.color || '#333' }}>
@@ -590,7 +603,13 @@ const ZonesPanel = ({
                     className={`px-3 py-2 text-xs flex items-center justify-between cursor-pointer hover:bg-purple-50 ${
                       selectedPriceId === opt.id ? 'bg-purple-50 ring-1 ring-purple-300' : ''
                     }`}
-                    onClick={() => onSelectPrice(opt)}
+                    onClick={() => {
+                      if (typeof onSelectPrice === 'function') {
+                        onSelectPrice(opt);
+                      } else {
+                        console.error('onSelectPrice is not a function:', typeof onSelectPrice);
+                      }
+                    }}
                   >
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: opt.color }}></div>

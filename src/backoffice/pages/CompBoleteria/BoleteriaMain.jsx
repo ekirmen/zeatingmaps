@@ -12,6 +12,7 @@ import MailChimpIntegration from './components/MailChimpIntegration';
 import PushNotifications from './components/PushNotifications';
 import DownloadTicketButton from './DownloadTicketButton';
 import ServerDiagnostic from './ServerDiagnostic';
+import LocatorSearchModal from './components/LocatorSearchModal';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 import { supabase } from '../../../supabaseClient';
@@ -1158,17 +1159,10 @@ const BoleteriaMain = () => {
       </Modal>
 
       {/* Modal de búsqueda por localizador */}
-      <Modal
-        title="Buscar por Localizador"
+      <LocatorSearchModal
         open={showLocatorSearch}
         onCancel={() => setShowLocatorSearch(false)}
-        footer={null}
-        width={800}
-      >
-        <div className="text-center text-gray-500 py-8">
-          Funcionalidad en desarrollo
-        </div>
-      </Modal>
+      />
 
       {/* Modal de pago */}
       <PaymentModal

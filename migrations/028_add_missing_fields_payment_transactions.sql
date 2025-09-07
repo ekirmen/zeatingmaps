@@ -7,7 +7,8 @@ ADD COLUMN IF NOT EXISTS locator VARCHAR(255),
 ADD COLUMN IF NOT EXISTS tenant_id UUID,
 ADD COLUMN IF NOT EXISTS user_id UUID,
 ADD COLUMN IF NOT EXISTS evento_id UUID,
-ADD COLUMN IF NOT EXISTS funcion_id INTEGER;
+ADD COLUMN IF NOT EXISTS funcion_id INTEGER,
+ADD COLUMN IF NOT EXISTS payment_method VARCHAR(100);
 
 -- Add foreign key constraints (with error handling)
 DO $$
@@ -59,6 +60,7 @@ CREATE INDEX IF NOT EXISTS idx_payment_transactions_tenant_id ON payment_transac
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_user_id ON payment_transactions(user_id);
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_evento_id ON payment_transactions(evento_id);
 CREATE INDEX IF NOT EXISTS idx_payment_transactions_funcion_id ON payment_transactions(funcion_id);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_payment_method ON payment_transactions(payment_method);
 
 -- Update existing records with tenant_id (use first available tenant)
 DO $$
