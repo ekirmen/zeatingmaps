@@ -285,7 +285,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       }, {});
 
       // Create a payment for each event
-      const paymentPromises = Object.entries(seatsByEvent).map(([eventId, seats]) => {
+      const paymentPromises = Object.entries(seatsByEvent).map(async ([eventId, seats]) => {
         // Verificar si ya existe un pago para estos asientos
         const existingPayment = seats.find(seat => seat.paymentId && seat.locator);
         
