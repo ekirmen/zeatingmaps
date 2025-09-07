@@ -386,15 +386,31 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                             if (error) {
                               console.error('Error fetching seat_locks:', error);
                             } else if (seatLocks && seatLocks.length > 0) {
-                              // Convertir seat_locks a formato de asientos
-                              const seatLocksAsSeats = seatLocks.map(lock => ({
-                                id: lock.seat_id,
-                                name: lock.seat_id.replace('silla_', '').replace(/_/g, ' '),
-                                status: lock.status,
-                                lock_type: lock.lock_type,
-                                locked_at: lock.locked_at,
-                                expires_at: lock.expires_at
-                              }));
+                              // Convertir seat_locks a formato de asientos con información completa
+                              const seatLocksAsSeats = seatLocks.map(lock => {
+                                // Extraer información del seat_id
+                                const seatIdParts = lock.seat_id.split('_');
+                                const seatNumber = seatIdParts[seatIdParts.length - 1];
+                                
+                                return {
+                                  id: lock.seat_id,
+                                  _id: lock.seat_id,
+                                  nombre: `Asiento ${seatNumber}`,
+                                  name: `Asiento ${seatNumber}`,
+                                  precio: 10.00, // Precio por defecto, se puede ajustar
+                                  price: 10.00,
+                                  zona: 'ORO', // Zona por defecto
+                                  zonaId: 'ORO',
+                                  mesa: null,
+                                  status: lock.status,
+                                  lock_type: lock.lock_type,
+                                  locked_at: lock.locked_at,
+                                  expires_at: lock.expires_at,
+                                  // Campos adicionales para compatibilidad
+                                  sillaId: lock.seat_id,
+                                  zonaNombre: 'ORO'
+                                };
+                              });
                               
                               seats.push(...seatLocksAsSeats);
                               console.log('✅ Asientos encontrados en seat_locks:', seatLocksAsSeats.length);
