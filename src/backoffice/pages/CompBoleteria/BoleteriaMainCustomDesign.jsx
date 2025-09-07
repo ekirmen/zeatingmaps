@@ -51,6 +51,8 @@ const BoleteriaMainCustomDesign = () => {
   const [eventStats, setEventStats] = useState({});
   const [isPanning, setIsPanning] = useState(false);
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
+  const [selectedPriceOption, setSelectedPriceOption] = useState(null);
+  const [activeZoneId, setActiveZoneId] = useState(null);
 
   const {
     eventos,
@@ -83,6 +85,13 @@ const BoleteriaMainCustomDesign = () => {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Función para manejar selección de precios
+  const handlePriceOptionSelect = (priceOption) => {
+    console.log('🎯 [BoleteriaMainCustomDesign] handlePriceOptionSelect llamado con:', priceOption);
+    setSelectedPriceOption(priceOption);
+    message.success(`Precio seleccionado: ${priceOption.entrada.nombre_entrada} - $${priceOption.precio}`);
+  };
 
   // Función para manejar clics en asientos
   const handleSeatClick = (seat) => {
@@ -343,12 +352,21 @@ const BoleteriaMainCustomDesign = () => {
               <ZonesPanel 
                 selectedFuncion={selectedFuncion}
                 selectedPlantilla={selectedPlantilla}
-                selectedZonaId={null}
-                onSelectZona={() => {}}
-                onSelectPrice={() => {}}
+                selectedZonaId={activeZoneId}
+                onSelectZona={(zonaId) => setActiveZoneId(String(zonaId))}
+                onSelectPrice={handlePriceOptionSelect}
+                selectedPriceId={selectedPriceOption?.id}
                 mapa={mapa}
-                onPricesLoaded={() => {}}
+                onPricesLoaded={(zonasArray) => {
+                  console.log('🎯 onPricesLoaded llamado con:', zonasArray);
+                }}
               />
+              
+              {!blockMode && !selectedPriceOption && (
+                <div className="mb-md p-sm bg-warning-light border border-warning rounded-md text-warning-dark text-xs">
+                  ⚠️ Primero selecciona una zona y precio antes de elegir asientos
+                </div>
+              )}
             </div>
 
             {/* Área del mapa */}
@@ -368,8 +386,8 @@ const BoleteriaMainCustomDesign = () => {
                     blockMode={blockMode}
                     zonas={zonas}
                     selectedPlantilla={selectedPlantilla}
-                    selectedPriceOption={null}
-                    selectedZonaId={null}
+                    selectedPriceOption={selectedPriceOption}
+                    selectedZonaId={activeZoneId}
                     mapa={mapa}
                     lockedSeats={lockedSeats}
                     onLockChange={handleLockChange}
