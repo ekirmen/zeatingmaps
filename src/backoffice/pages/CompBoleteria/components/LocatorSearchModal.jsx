@@ -315,6 +315,100 @@ const LocatorSearchModal = ({ open, onCancel }) => {
           </Card>
         )}
 
+        {/* Acciones según el estado */}
+        {searchResult && (
+          <div className="mt-4">
+            <div className="flex flex-wrap gap-2">
+              {searchResult.status === 'pending' && (
+                <>
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      // Enviar al carrito para completar venta
+                      message.success('Transacción enviada al carrito para completar venta');
+                      onCancel();
+                    }}
+                  >
+                    Completar Venta
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      // Anular transacción
+                      message.warning('Funcionalidad de anulación en desarrollo');
+                    }}
+                  >
+                    Anular Transacción
+                  </Button>
+                </>
+              )}
+              
+              {searchResult.status === 'completed' && (
+                <>
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      // Descargar tickets
+                      message.success('Descargando tickets...');
+                    }}
+                  >
+                    Descargar Tickets
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      // Ver detalles completos
+                      message.info('Mostrando detalles completos de la venta');
+                    }}
+                  >
+                    Ver Detalles Completos
+                  </Button>
+                </>
+              )}
+              
+              {searchResult.status === 'failed' && (
+                <>
+                  <Button
+                    type="primary"
+                    onClick={() => {
+                      // Reintentar pago
+                      message.info('Reintentando pago...');
+                    }}
+                  >
+                    Reintentar Pago
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      // Anular transacción
+                      message.warning('Funcionalidad de anulación en desarrollo');
+                    }}
+                  >
+                    Anular Transacción
+                  </Button>
+                </>
+              )}
+              
+              {/* Acciones generales */}
+              <Button
+                onClick={() => {
+                  // Imprimir información
+                  window.print();
+                }}
+              >
+                Imprimir
+              </Button>
+              
+              <Button
+                onClick={() => {
+                  // Copiar localizador
+                  navigator.clipboard.writeText(searchResult.locator);
+                  message.success('Localizador copiado al portapapeles');
+                }}
+              >
+                Copiar Localizador
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Instructions */}
         {!searchResult && !loading && !error && (
           <div className="text-center py-8 text-gray-500">
