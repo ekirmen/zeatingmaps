@@ -34,7 +34,6 @@ const LocatorSearchModal = ({ open, onCancel }) => {
           event:eventos(*),
           funcion:funciones(
             id,
-            nombre,
             fecha_celebracion,
             hora_inicio,
             evento,
@@ -213,7 +212,7 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                     Función:
                   </Text>
                   <div className="ml-6">
-                    <div className="font-medium">{searchResult.funcion.nombre}</div>
+                    <div className="font-medium">Función ID: {searchResult.funcion.id}</div>
                     <div className="text-gray-500 text-sm">
                       {formatDate(searchResult.funcion.fecha_celebracion)}
                     </div>

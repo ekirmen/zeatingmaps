@@ -178,6 +178,7 @@ const ZonesPanel = ({
       
       console.log('🎯 Query zonas:', zonasQuery);
       console.log('🎯 Query zonas SQL equivalente:', `SELECT * FROM zonas WHERE sala_id = '${salaId}' ORDER BY nombre`);
+      console.log('🎯 Sala ID tipo:', typeof salaId, 'Valor:', salaId);
 
       const [{ data: entradas, error: entradasError }, { data: zonas, error: zonasError }] = await Promise.all([
         entradasQuery,
