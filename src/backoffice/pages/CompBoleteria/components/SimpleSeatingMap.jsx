@@ -575,8 +575,13 @@ const SimpleSeatingMap = ({
                   // Para mesas circulares, calcular automáticamente las posiciones en la circunferencia
                   // IMPORTANTE: Usar el mismo cálculo de centro que la mesa para mantener consistencia
                   const mesaRadius = elemento.radius ?? (elemento.width ?? 60) / 2;
-                  const mesaCenterX = (elemento.posicion?.x ?? elemento.x ?? 0);
-                  const mesaCenterY = (elemento.posicion?.y ?? elemento.y ?? 0);
+                  
+                  // Calcular el centro de la mesa usando EXACTAMENTE la misma lógica que el renderizado de la mesa
+                  // La mesa se renderiza con offset, así que necesito calcular el centro real
+                  const mesaLeft = (elemento.posicion?.x ?? elemento.x ?? 0) - mesaRadius;
+                  const mesaTop = (elemento.posicion?.y ?? elemento.y ?? 0) - mesaRadius;
+                  const mesaCenterX = mesaLeft + mesaRadius; // Centro real de la mesa renderizada
+                  const mesaCenterY = mesaTop + mesaRadius;  // Centro real de la mesa renderizada
                   
                   // Obtener todas las sillas de esta mesa para calcular distribución uniforme
                   const todasLasSillas = elemento.sillas || elemento.asientos || elemento.seats || [];
@@ -591,7 +596,7 @@ const SimpleSeatingMap = ({
                     
                     // Calcular posición en la circunferencia
                     // Radio de la circunferencia = radio de la mesa + margen para los asientos
-                    const radioCircunferencia = mesaRadius + 20; // 20px de margen para mejor separación
+                    const radioCircunferencia = mesaRadius + 25; // 25px de margen para mejor separación visual
                     const sillaX = mesaCenterX + Math.cos(anguloSilla) * radioCircunferencia;
                     const sillaY = mesaCenterY + Math.sin(anguloSilla) * radioCircunferencia;
                     
@@ -601,6 +606,7 @@ const SimpleSeatingMap = ({
                     
                     console.log(`🔍 [Mesa Circular] Mesa: (${mesaCenterX}, ${mesaCenterY}), Radio: ${mesaRadius}`);
                     console.log(`🔍 [Mesa Circular] Silla ${indiceSilla + 1}/${totalSillas}, Ángulo: ${(anguloSilla * 180 / Math.PI).toFixed(1)}°`);
+                    console.log(`🔍 [Mesa Circular] Radio circunferencia: ${radioCircunferencia}`);
                     console.log(`🔍 [Mesa Circular] Posición calculada: (${sillaX.toFixed(1)}, ${sillaY.toFixed(1)})`);
                     console.log(`🔍 [Mesa Circular] Posición final: (${adjustedLeft.toFixed(1)}, ${adjustedTop.toFixed(1)})`);
                   } else {
