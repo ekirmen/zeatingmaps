@@ -386,11 +386,35 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                             if (error) {
                               console.error('Error fetching seat_locks:', error);
                             } else if (seatLocks && seatLocks.length > 0) {
+                              // Buscar información de zonas desde el mapa
+                              let zonasInfo = {};
+                              try {
+                                const { data: zonas, error: zonasError } = await supabase
+                                  .from('zonas')
+                                  .select('*')
+                                  .eq('funcion_id', searchResult.funcion_id);
+                                
+                                if (!zonasError && zonas) {
+                                  zonasInfo = zonas.reduce((acc, zona) => {
+                                    acc[zona.id] = zona;
+                                    return acc;
+                                  }, {});
+                                  console.log('✅ Zonas encontradas:', zonasInfo);
+                                }
+                              } catch (e) {
+                                console.error('Error fetching zonas:', e);
+                              }
+                              
                               // Convertir seat_locks a formato de asientos con información completa
                               const seatLocksAsSeats = seatLocks.map(lock => {
                                 // Extraer información del seat_id
                                 const seatIdParts = lock.seat_id.split('_');
                                 const seatNumber = seatIdParts[seatIdParts.length - 1];
+                                
+                                // Buscar información de la zona (usar la primera zona disponible como fallback)
+                                const primeraZona = Object.values(zonasInfo)[0];
+                                const zonaNombre = primeraZona?.nombre || 'ORO';
+                                const zonaId = primeraZona?.id || 'ORO';
                                 
                                 return {
                                   id: lock.seat_id,
@@ -399,8 +423,8 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                                   name: `Asiento ${seatNumber}`,
                                   precio: 10.00, // Precio por defecto, se puede ajustar
                                   price: 10.00,
-                                  zona: 'ORO', // Zona por defecto
-                                  zonaId: 'ORO',
+                                  zona: zonaNombre,
+                                  zonaId: zonaId,
                                   mesa: null,
                                   status: lock.status,
                                   lock_type: lock.lock_type,
@@ -408,7 +432,7 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                                   expires_at: lock.expires_at,
                                   // Campos adicionales para compatibilidad
                                   sillaId: lock.seat_id,
-                                  zonaNombre: 'ORO'
+                                  zonaNombre: zonaNombre
                                 };
                               });
                               
