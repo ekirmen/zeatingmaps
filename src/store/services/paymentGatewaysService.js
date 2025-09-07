@@ -258,6 +258,23 @@ export const getPaymentGatewayByType = async (type) => {
  */
 export const createPaymentTransaction = async (transactionData) => {
   try {
+    // Get gateway name if gateway_id is provided
+    let gatewayName = transactionData.gatewayName || 'unknown';
+    if (transactionData.gatewayId && !transactionData.gatewayName) {
+      try {
+        const { data: gateway } = await supabase
+          .from('payment_gateways')
+          .select('name')
+          .eq('id', transactionData.gatewayId)
+          .single();
+        if (gateway) {
+          gatewayName = gateway.name;
+        }
+      } catch (gatewayError) {
+        console.warn('Could not fetch gateway name:', gatewayError);
+      }
+    }
+
     const { data, error } = await supabase
       .from('payment_transactions')
       .insert({
@@ -273,7 +290,8 @@ export const createPaymentTransaction = async (transactionData) => {
         user_id: transactionData.userId,
         evento_id: transactionData.eventoId,
         funcion_id: transactionData.funcionId,
-        payment_method: transactionData.paymentMethod || transactionData.method || 'unknown'
+        payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
+        gateway_name: gatewayName
       })
       .select()
       .single();

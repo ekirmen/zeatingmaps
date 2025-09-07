@@ -95,7 +95,8 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
         userId: paymentData.user?.id,
         eventoId: paymentData.evento?.id,
         funcionId: paymentData.funcion?.id,
-        paymentMethod: this.method.method_name || this.method.name || 'stripe'
+        paymentMethod: this.method.method_name || this.method.name || 'stripe',
+        gatewayName: this.method.name || this.method.method_name || 'Stripe'
       });
 
       // Simulación de respuesta de Stripe
