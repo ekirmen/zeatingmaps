@@ -54,12 +54,7 @@ const CompactBoleteria = ({
 
   // Calcular estadísticas de asientos
   const calculateSeatStats = useCallback(() => {
-    console.log('🔄 [CompactBoleteria] Calculando estadísticas...');
-    console.log('🗺️ [CompactBoleteria] Mapa:', mapa);
-    console.log('🔒 [CompactBoleteria] Asientos bloqueados:', lockedSeats);
-    
     if (!mapa?.contenido) {
-      console.log('❌ [CompactBoleteria] No hay contenido en el mapa');
       return;
     }
 
@@ -160,9 +155,6 @@ const CompactBoleteria = ({
       zoneData[zonaId].precio = detalle?.precio || 0;
     });
 
-    console.log('📊 [CompactBoleteria] Estadísticas calculadas:', stats);
-    console.log('🏷️ [CompactBoleteria] Datos por zona:', zoneData);
-
     setSeatStats(stats);
     setZoneStats(Object.values(zoneData));
   }, [mapa, lockedSeats, plantillaPrecios]);
@@ -202,10 +194,6 @@ const CompactBoleteria = ({
       onSeatClick(seat);
     }
   };
-
-  console.log('🎨 [CompactBoleteria] Renderizando componente...');
-  console.log('📊 [CompactBoleteria] Estadísticas actuales:', seatStats);
-  console.log('🏷️ [CompactBoleteria] Zonas:', zoneStats);
 
   return (
     <div className="p-4 bg-gray-50 min-h-screen">

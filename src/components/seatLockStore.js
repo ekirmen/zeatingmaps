@@ -232,14 +232,12 @@ export const useSeatLockStore = create((set, get) => ({
   cleanupInterval: null, // Intervalo para limpieza automática
 
   setLockedSeats: (seats) => {
-    console.log('[SEAT_LOCK] setLockedSeats invocado:', seats);
     // Validar que seats sea un array
     const validSeats = Array.isArray(seats) ? seats : [];
     set({ lockedSeats: validSeats });
   },
 
   setLockedTables: (tables) => {
-    console.log('[SEAT_LOCK] setLockedTables invocado:', tables);
     // Validar que tables sea un array
     const validTables = Array.isArray(tables) ? tables : [];
     set({ lockedTables: validTables });
@@ -308,10 +306,7 @@ export const useSeatLockStore = create((set, get) => ({
   },
 
   subscribeToFunction: (funcionId) => {
-    console.log('[SEAT_LOCK] Suscribiéndose a función:', funcionId);
-
     if (!funcionId) {
-      console.warn('[SEAT_LOCK] funcion_id inválido, cancelando suscripción.');
       get().unsubscribe();
       set({ lockedSeats: [], lockedTables: [] });
       return;
@@ -319,7 +314,6 @@ export const useSeatLockStore = create((set, get) => ({
 
     // Verificar que supabase esté disponible
     if (!supabase) {
-      console.error('[SEAT_LOCK] Cliente Supabase no disponible');
       return;
     }
 
@@ -328,22 +322,19 @@ export const useSeatLockStore = create((set, get) => ({
     
     // Si ya estamos suscritos al canal correcto, no hacer nada
     if (currentChannel && currentChannel.topic === expectedTopic) {
-      console.log('[SEAT_LOCK] Ya suscrito a esta función:', expectedTopic);
       return;
     }
 
     // Limpiar suscripción anterior si existe
     if (currentChannel) {
-      console.log('[SEAT_LOCK] Desuscribiendo canal anterior:', currentChannel.topic);
       try {
         currentChannel.unsubscribe();
       } catch (error) {
-        console.warn('[SEAT_LOCK] Error al desuscribir canal anterior:', error);
+        // Error silencioso
       }
     }
 
     const fetchInitialLocks = async () => {
-      console.log('[SEAT_LOCK] Cargando bloqueos iniciales para función:', funcionId);
       try {
         const { data, error } = await supabase
           .from('seat_locks')
@@ -351,11 +342,8 @@ export const useSeatLockStore = create((set, get) => ({
           .eq('funcion_id', funcionId);
 
         if (error) {
-          console.error('[SEAT_LOCK] Error al obtener bloqueos iniciales:', error);
           set({ lockedSeats: [], lockedTables: [] });
         } else {
-          console.log('[SEAT_LOCK] Bloqueos iniciales cargados:', data);
-          console.log('📊 [SEAT_LOCK] Total de bloqueos encontrados:', data?.length || 0);
           // Validar que data sea un array
           const validData = Array.isArray(data) ? data : [];
           
@@ -363,16 +351,12 @@ export const useSeatLockStore = create((set, get) => ({
           const seatLocks = validData.filter(lock => lock.lock_type === 'seat' || !lock.lock_type);
           const tableLocks = validData.filter(lock => lock.lock_type === 'table');
           
-          console.log('🪑 [SEAT_LOCK] Bloqueos de asientos:', seatLocks.length);
-          console.log('🪑 [SEAT_LOCK] Bloqueos de mesas:', tableLocks.length);
-          
           set({ 
             lockedSeats: seatLocks,
             lockedTables: tableLocks
           });
         }
       } catch (error) {
-        console.error('[SEAT_LOCK] Error inesperado al cargar bloqueos iniciales:', error);
         set({ lockedSeats: [], lockedTables: [] });
       }
     };
@@ -382,7 +366,6 @@ export const useSeatLockStore = create((set, get) => ({
       // Verificar si ya existe un canal con el mismo topic antes de crear uno nuevo
       const existingChannel = supabase.getChannels().find(ch => ch.topic === expectedTopic);
       if (existingChannel) {
-        console.log('[SEAT_LOCK] Canal ya existe, reutilizando:', expectedTopic);
         set({ channel: existingChannel });
         return;
       }
@@ -398,7 +381,6 @@ export const useSeatLockStore = create((set, get) => ({
             filter: `funcion_id=eq.${funcionId}`,
           },
           (payload) => {
-            console.log('[SEAT_LOCK] Evento realtime recibido:', payload);
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
               set((state) => {
                 const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
@@ -442,25 +424,18 @@ export const useSeatLockStore = create((set, get) => ({
           }
         )
         .subscribe((status) => {
-          console.log('[SEAT_LOCK] Estado de suscripción:', status);
-          if (status === 'SUBSCRIBED') {
-            console.log('[SEAT_LOCK] Canal suscrito exitosamente:', expectedTopic);
-          } else if (status === 'CHANNEL_ERROR') {
-            console.error('[SEAT_LOCK] Error en el canal:', expectedTopic);
-          }
+          // Estado de suscripción manejado silenciosamente
         });
 
-      console.log('[SEAT_LOCK] Canal suscrito:', newChannel.topic);
       set({ channel: newChannel });
     } catch (error) {
-      console.error('[SEAT_LOCK] Error al suscribirse al canal:', error);
+      // Error silencioso
     }
   },
 
   unsubscribe: () => {
     const { channel } = get();
     if (channel) {
-      console.log('[SEAT_LOCK] Desuscribiendo canal:', channel.topic);
       try {
         // Verificar si el canal aún existe antes de desuscribirse
         const existingChannels = supabase.getChannels();
@@ -468,16 +443,11 @@ export const useSeatLockStore = create((set, get) => ({
         
         if (channelExists) {
           channel.unsubscribe();
-          console.log('[SEAT_LOCK] Canal desuscrito exitosamente:', channel.topic);
-        } else {
-          console.log('[SEAT_LOCK] Canal ya no existe, no es necesario desuscribirse:', channel.topic);
         }
       } catch (error) {
-        console.warn('[SEAT_LOCK] Error al desuscribir canal:', error);
+        // Error silencioso
       }
       set({ channel: null, lockedSeats: [], lockedTables: [] });
-    } else {
-      console.log('[SEAT_LOCK] No hay canal activo para desuscribir');
     }
   },
 

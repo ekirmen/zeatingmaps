@@ -12,6 +12,8 @@ import { useCartStore } from '../cartStore';
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent, FACEBOOK_EVENTS, shouldTrackOnPage } from '../services/facebookPixelService';
 import LoginModal from '../components/LoginModal';
+import ValidationWidget from '../../components/ValidationWidget';
+import VisualNotifications from '../../utils/VisualNotifications';
 import { useAuth } from '../../contexts/AuthContext';
 
 // import AuthCheck from '../components/AuthCheck';
@@ -103,12 +105,15 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
                 message.success(`${paidSeats.length} tickets descargados correctamente`);
+                VisualNotifications.show('purchaseComplete', `${paidSeats.length} tickets descargados correctamente`);
             } else {
                 message.error('Error al descargar tickets');
+                VisualNotifications.show('error', 'Error al descargar tickets');
             }
         } catch (error) {
             console.error('Bulk download error:', error);
             message.error('Error al descargar tickets');
+            VisualNotifications.show('error', 'Error al descargar tickets');
         } finally {
             setDownloading(false);
         }
@@ -158,6 +163,7 @@ const Cart = () => {
     // Calculate totals
     const subtotal = (items && Array.isArray(items) ? items.reduce((sum, item) => sum + (item.precio || 0), 0) : 0) +
                     (products && Array.isArray(products) ? products.reduce((sum, product) => sum + (product.price || 0), 0) : 0);
+    const totalPrice = subtotal;
 
 
     // Get paid seats count
@@ -467,6 +473,26 @@ const Cart = () => {
                 onClose={() => setShowLoginModal(false)}
                 onLoginSuccess={handleLoginSuccess}
                 title="Iniciar Sesión para Continuar"
+            />
+
+            {/* Widget de Validación en Tiempo Real */}
+            <ValidationWidget
+                selectedSeats={items}
+                selectedClient={user}
+                paymentData={{
+                    method: 'pending',
+                    amount: totalPrice,
+                    clientId: user?.id
+                }}
+                onValidationChange={(validation) => {
+                    if (validation.errors.length > 0) {
+                        VisualNotifications.show('error', validation.errors[0]);
+                    } else if (validation.warnings.length > 0) {
+                        VisualNotifications.show('validationWarning', validation.warnings[0]);
+                    }
+                }}
+                showNotifications={true}
+                position="bottom-left"
             />
         </div>
     );

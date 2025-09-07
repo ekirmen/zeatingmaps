@@ -25,24 +25,11 @@ const SimpleSeatingMap = ({
   const [zonePrices, setZonePrices] = useState({});
   const channelRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
-  // Debug: Track map prop changes
+  // Track map prop changes silently
   useEffect(() => {
-    console.log('🔄 [SimpleSeatingMap] Mapa prop changed:', mapa);
-    console.log('🔄 [SimpleSeatingMap] Mapa type:', typeof mapa);
-    console.log('🔄 [SimpleSeatingMap] Mapa is null?', mapa === null);
-    console.log('🔄 [SimpleSeatingMap] Mapa is undefined?', mapa === undefined);
-    console.log('🔄 [SimpleSeatingMap] Mapa contenido:', mapa?.contenido);
-    console.log('🔄 [SimpleSeatingMap] Mapa contenido type:', typeof mapa?.contenido);
-    console.log('🔄 [SimpleSeatingMap] Mapa contenido is array?', Array.isArray(mapa?.contenido));
-    
-    if (!mapa) {
-      console.log('❌ [SimpleSeatingMap] No hay mapa disponible');
-    } else if (!mapa.contenido) {
-      console.log('❌ [SimpleSeatingMap] Mapa sin contenido');
-    } else {
-      console.log('✅ [SimpleSeatingMap] Mapa válido con contenido');
-    }
+    // Map prop changes tracked silently
   }, [mapa]);
 
   // Calcular dimensiones del mapa para ajustar el contenedor
@@ -55,10 +42,18 @@ const SimpleSeatingMap = ({
 
       let maxX = 0;
       let maxY = 0;
+      let minX = 0;
+      let minY = 0;
 
       const considerPoint = (x, y) => {
-        if (typeof x === 'number') maxX = Math.max(maxX, x);
-        if (typeof y === 'number') maxY = Math.max(maxY, y);
+        if (typeof x === 'number') {
+          maxX = Math.max(maxX, x);
+          minX = Math.min(minX, x);
+        }
+        if (typeof y === 'number') {
+          maxY = Math.max(maxY, y);
+          minY = Math.min(minY, y);
+        }
       };
 
       if (Array.isArray(mapa.contenido)) {
@@ -88,9 +83,18 @@ const SimpleSeatingMap = ({
         });
       }
 
+      // Calcular dimensiones considerando coordenadas negativas
+      const totalWidth = Math.max(800, (maxX - minX) + 60);
+      const totalHeight = Math.max(600, (maxY - minY) + 60);
+      
       setDimensions({
-        width: Math.max(800, (maxX || 0) + 60),
-        height: Math.max(600, (maxY || 0) + 60)
+        width: totalWidth,
+        height: totalHeight
+      });
+      
+      setOffset({
+        x: Math.abs(minX),
+        y: Math.abs(minY)
       });
     };
 
@@ -436,7 +440,11 @@ const SimpleSeatingMap = ({
     <div className="relative overflow-auto" style={{ width: '100%', height: `${dimensions.height}px` }}>
 
       
-      <div className="relative" style={{ width: `${dimensions.width}px`, height: `${dimensions.height}px` }}>
+      <div className="relative" style={{ 
+        width: `${dimensions.width}px`, 
+        height: `${dimensions.height}px`,
+        transform: `translate(${offset.x}px, ${offset.y}px)`
+      }}>
         {/* Manejar diferentes estructuras de mapa.contenido */}
         {Array.isArray(mapa.contenido) ? (
           // Si mapa.contenido es un array
@@ -576,12 +584,33 @@ const SimpleSeatingMap = ({
                 
                 // Calcular posición relativa a la mesa si es circular
                 let adjustedLeft, adjustedTop;
-                adjustedLeft = (sx || 0) - (chairDiameter / 2);
-                adjustedTop = (sy || 0) - (chairDiameter / 2);
                 
-                console.log(`🔍 [Silla] Posición original: (${sx || 0}, ${sy || 0})`);
-                console.log(`🔍 [Silla] Posición ajustada: (${adjustedLeft}, ${adjustedTop})`);
-                console.log(`🔍 [Silla] Mesa tipo: ${isCircleTable ? 'Circular' : 'Rectangular'}`);
+                if (isCircleTable) {
+                  // Para mesas circulares, las coordenadas de las sillas son relativas al centro de la mesa
+                  const mesaCenterX = (elemento.posicion?.x ?? elemento.x ?? 0);
+                  const mesaCenterY = (elemento.posicion?.y ?? elemento.y ?? 0);
+                  const mesaRadius = elemento.radius ?? (elemento.width ?? 0) / 2;
+                  
+                  // Calcular posición absoluta de la silla
+                  const absoluteX = mesaCenterX + (sx || 0);
+                  const absoluteY = mesaCenterY + (sy || 0);
+                  
+                  // Ajustar para centrar la silla
+                  adjustedLeft = absoluteX - (chairDiameter / 2);
+                  adjustedTop = absoluteY - (chairDiameter / 2);
+                  
+                  // Asegurar que no queden coordenadas negativas
+                  adjustedLeft = Math.max(0, adjustedLeft);
+                  adjustedTop = Math.max(0, adjustedTop);
+                } else {
+                  // Para mesas rectangulares o sillas independientes
+                  adjustedLeft = (sx || 0) - (chairDiameter / 2);
+                  adjustedTop = (sy || 0) - (chairDiameter / 2);
+                  
+                  // Asegurar que no queden coordenadas negativas
+                  adjustedLeft = Math.max(0, adjustedLeft);
+                  adjustedTop = Math.max(0, adjustedTop);
+                }
                 
                 const isOtherZone = selectedZonaId && String(selectedZonaId) !== String(silla?.zona?.id || silla?.zonaId || silla?.zona || '');
                 const muted = isOtherZone && (silla.estado === 'disponible');
@@ -677,8 +706,8 @@ const SimpleSeatingMap = ({
                           : 'cursor-pointer hover:scale-110'
                       }`}
                       style={{
-                        left: (sx || 0) - (silla.radius || 15),
-                        top: (sy || 0) - (silla.radius || 15),
+                        left: Math.max(0, (sx || 0) - (silla.radius || 15)),
+                        top: Math.max(0, (sy || 0) - (silla.radius || 15)),
                         width: (silla.radius || 15) * 2,
                         height: (silla.radius || 15) * 2,
                         borderRadius: '50%',

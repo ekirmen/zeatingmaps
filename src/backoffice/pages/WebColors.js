@@ -63,7 +63,8 @@ const WebColors = () => {
     seatSelectedOther: theme.seatSelectedOther || '#faad14',
     seatBlocked: theme.seatBlocked || '#ff4d4f',
     seatSold: theme.seatSold || '#8c8c8c',
-    seatReserved: theme.seatReserved || '#722ed1'
+    seatReserved: theme.seatReserved || '#722ed1',
+    seatCancelled: theme.seatCancelled || '#ff6b6b'
   });
 
   // 🎨 CARGAR COLORES DESDE webstudio_colors
@@ -232,7 +233,8 @@ const WebColors = () => {
         { key: 'seatSelectedOther', label: 'Seleccionado por otro' },
         { key: 'seatBlocked', label: 'Bloqueado' },
         { key: 'seatSold', label: 'Vendido' },
-        { key: 'seatReserved', label: 'Reservado' }
+        { key: 'seatReserved', label: 'Reservado' },
+        { key: 'seatCancelled', label: 'Cancelado' }
       ]
     }
   ];
@@ -252,6 +254,7 @@ const WebColors = () => {
         <div className="flex items-center gap-2"><SeatDot color={colors.seatBlocked} /> <span>Bloqueado</span></div>
         <div className="flex items-center gap-2"><SeatDot color={colors.seatSold} /> <span>Vendido</span></div>
         <div className="flex items-center gap-2"><SeatDot color={colors.seatReserved} /> <span>Reservado</span></div>
+        <div className="flex items-center gap-2"><SeatDot color={colors.seatCancelled} /> <span>Cancelado</span></div>
       </div>
     </div>
   );

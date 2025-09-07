@@ -5,6 +5,7 @@ import { useSeatColors } from '../hooks/useSeatColors';
 import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
 import SeatStatusLegend from './SeatStatusLegend';
 import SeatLockDebug from './SeatLockDebug';
+import VisualNotifications from '../utils/VisualNotifications';
 import resolveImageUrl from '../utils/resolveImageUrl';
 
 const SeatingMapUnified = ({
@@ -35,6 +36,9 @@ const SeatingMapUnified = ({
   
   // Usar hook de sincronización para obtener asientos con estado real
   const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(mapa, funcionId);
+  
+  // Memoizar los asientos sincronizados para evitar re-renders innecesarios
+  const memoizedSeats = useMemo(() => syncedSeats, [syncedSeats]);
 
   // Background images - memoized to prevent unnecessary re-renders (moved before any returns)
   const backgroundElements = useMemo(() => {
@@ -44,42 +48,49 @@ const SeatingMapUnified = ({
       : mapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
   }, [mapa?.contenido]);
 
-  const useImageLoader = (url) => {
-    const [img, setImg] = React.useState(null);
+  const [mapImage, setMapImage] = React.useState(null);
+  
+  React.useEffect(() => {
+    if (!mapa?.imagen_fondo) {
+      setMapImage(null);
+      return;
+    }
     
-    React.useEffect(() => {
-      if (!url) {
-        setImg(null);
-        return;
-      }
-      
-      const image = new window.Image();
-      // Habilitar cache de CDN y uso de canvas seguro
-      image.crossOrigin = 'anonymous';
-      image.loading = 'lazy'; // Lazy loading para mejor rendimiento
-      
-      const handleLoad = () => {
-        setImg(image);
-      };
-      
-      const handleError = () => {
-        console.warn('Error loading background image:', url);
-        setImg(null);
-      };
-      
-      image.addEventListener('load', handleLoad);
-      image.addEventListener('error', handleError);
-      
-      image.src = url;
-      
-      return () => {
-        image.removeEventListener('load', handleLoad);
-        image.removeEventListener('error', handleError);
-      };
-    }, [url]);
+    const url = resolveImageUrl(mapa.imagen_fondo);
     
-    return [img];
-  };
+    // Verificar si la imagen ya está en cache
+    const cachedImage = new window.Image();
+    cachedImage.src = url;
+    
+    if (cachedImage.complete) {
+      setMapImage(cachedImage);
+      return;
+    }
+    
+    const image = new window.Image();
+    // Habilitar cache de CDN y uso de canvas seguro
+    image.crossOrigin = 'anonymous';
+    image.loading = 'lazy'; // Lazy loading para mejor rendimiento
+    
+    const handleLoad = () => {
+      setMapImage(image);
+    };
+    
+    const handleError = () => {
+      console.warn('Error loading background image:', url);
+      setMapImage(null);
+    };
+    
+    image.addEventListener('load', handleLoad);
+    image.addEventListener('error', handleError);
+    
+    image.src = url;
+    
+    return () => {
+      image.removeEventListener('load', handleLoad);
+      image.removeEventListener('error', handleError);
+    };
+  }, [mapa?.imagen_fondo]);
 
   const handleSeatClick = useCallback(
     (seat) => {
@@ -172,19 +183,9 @@ const SeatingMapUnified = ({
   }, []);
 
      // Usar asientos sincronizados del hook
-  const allSeats = syncedSeats;
+  const allSeats = memoizedSeats;
   
-  console.log('🪑 [SEATING_MAP] Asientos sincronizados recibidos:', {
-    total: allSeats.length,
-    asientos: allSeats.map(s => ({
-      id: s._id,
-      nombre: s.nombre,
-      numero: s.numero,
-      zona: s.zona,
-      estado: s.estado,
-      posicion: s.posicion
-    }))
-  });
+  // Log removido para evitar spam en consola
   
   // Crear zonas basadas en los asientos sincronizados
   const zonas = [];
@@ -207,7 +208,7 @@ const SeatingMapUnified = ({
     
     zonas.push(...zonasMap.values());
     
-    console.log('🏷️ [SEATING_MAP] Zonas creadas:', zonas);
+    // Log removido para evitar spam en consola
   }
 
            // Usar zonas creadas directamente
@@ -221,7 +222,7 @@ if (Array.isArray(mapa?.contenido)) {
     return item && item._id && item.nombre && item.shape;
   });
   
-  console.log('Mesas extraídas del contenido:', mesas);
+  // Log removido para evitar spam en consola
 } else {
   mesas = mapa?.contenido?.mesas || mapa?.contenido?.tables || [];
 }
@@ -304,7 +305,7 @@ if (Array.isArray(mapa?.contenido)) {
       return url;
     }, [config.imageUrl, config.url, config.src, config.image?.url, config.image?.publicUrl, config.imageData, config.image?.data]);
 
-    const [img] = useImageLoader(rawUrl);
+    const img = mapImage;
     
     const imageProps = useMemo(() => ({
       x: config.position?.x || config.posicion?.x || 0,
@@ -341,7 +342,7 @@ if (Array.isArray(mapa?.contenido)) {
           {/* Background images */}
           {backgroundElements.map(bg => (
             <BackgroundImage 
-              key={bg._id || bg.id || `bg_${bg.imageUrl || bg.url || bg.src}`} 
+              key={`bg_${bg._id || bg.id || bg.imageUrl || bg.url || bg.src}`} 
               config={bg} 
             />
           ))}

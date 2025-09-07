@@ -13,6 +13,8 @@ import PushNotifications from './components/PushNotifications';
 import DownloadTicketButton from './DownloadTicketButton';
 import ServerDiagnostic from './ServerDiagnostic';
 import LocatorSearchModal from './components/LocatorSearchModal';
+import ValidationWidget from '../../../components/ValidationWidget';
+import VisualNotifications from '../../../utils/VisualNotifications';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 import { useTenant } from '../../../contexts/TenantContext';
@@ -40,6 +42,7 @@ const BoleteriaMainCustomDesign = () => {
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [blockedSeats, setBlockedSeats] = useState([]);
   const [lockedSeats, setLockedSeats] = useState([]);
+  const [paymentData, setPaymentData] = useState(null);
   const [discountType, setDiscountType] = useState('percentage');
   const [discountValue, setDiscountValue] = useState(0);
   const [foundPayment, setFoundPayment] = useState(null);
@@ -222,6 +225,7 @@ const BoleteriaMainCustomDesign = () => {
                 }
                 
                 console.log('🎉 Transacción completa cargada exitosamente');
+                VisualNotifications.show('purchaseComplete', 'Transacción cargada exitosamente');
                 
               } else if (action === 'addSeat' && seat) {
                 // Agregar asiento individual (funcionalidad anterior)
@@ -230,6 +234,7 @@ const BoleteriaMainCustomDesign = () => {
                   const exists = currentSeats.find(s => s._id === seat._id);
                   if (exists) {
                     message.warning('Este asiento ya está en el carrito');
+                    VisualNotifications.show('seatBlocked', 'Este asiento ya está en el carrito');
                     return currentSeats;
                   }
                   return [...currentSeats, seat];
@@ -290,14 +295,12 @@ const BoleteriaMainCustomDesign = () => {
 
   // Función para manejar selección de precios
   const handlePriceOptionSelect = (priceOption) => {
-    console.log('🎯 [BoleteriaMainCustomDesign] handlePriceOptionSelect llamado con:', priceOption);
     setSelectedPriceOption(priceOption);
     message.success(`Precio seleccionado: ${priceOption.entrada.nombre_entrada} - $${priceOption.precio}`);
   };
 
   // Función para manejar clics en asientos
   const handleSeatClick = (seat) => {
-    console.log('🎯 [BoleteriaMain] handleSeatClick llamado con:', seat);
     
     if (!selectedFuncion) {
       message.warning('Por favor selecciona una función primero');
@@ -329,7 +332,6 @@ const BoleteriaMainCustomDesign = () => {
         if (isSelected) {
           // Deselección: el asiento ya fue desbloqueado en la BD por LazySimpleSeatingMap
           newSeats = currentSeats.filter(s => s._id !== seat._id);
-          console.log('✅ [BoleteriaMain] Asiento removido del carrito:', seat._id, 'Nuevo estado:', newSeats.length, 'asientos');
         } else {
           // Selección: el asiento ya fue bloqueado en la BD por LazySimpleSeatingMap
           const seatWithPrice = {
@@ -338,7 +340,6 @@ const BoleteriaMainCustomDesign = () => {
             precioInfo: null
           };
           newSeats = [...currentSeats, seatWithPrice];
-          console.log('✅ [BoleteriaMain] Asiento agregado al carrito:', seat._id, 'Nuevo estado:', newSeats.length, 'asientos');
         }
         
         return newSeats;
@@ -422,7 +423,6 @@ const BoleteriaMainCustomDesign = () => {
 
   // Callback para manejar cambios en bloqueos desde LazySimpleSeatingMap
   const handleLockChange = (action, seatId, lockData) => {
-    console.log('🔄 [BoleteriaMain] handleLockChange llamado:', { action, seatId, lockData });
     
     if (action === 'lock') {
       // Agregar el bloqueo al estado local
@@ -565,6 +565,7 @@ const BoleteriaMainCustomDesign = () => {
               <div>Diagnóstico</div>
             </div>
           </Tooltip>
+
         </div>
 
         {/* Contenido principal */}
@@ -1121,6 +1122,24 @@ const BoleteriaMainCustomDesign = () => {
       >
         <ServerDiagnostic selectedFuncion={selectedFuncion} />
       </Modal>
+
+
+      {/* Widget de Validación en Tiempo Real */}
+      <ValidationWidget
+        selectedSeats={selectedSeats}
+        selectedClient={selectedClient}
+        paymentData={paymentData}
+        onValidationChange={(validation) => {
+          // Callback para manejar cambios en la validación
+          if (validation.errors.length > 0) {
+            VisualNotifications.show('error', validation.errors[0]);
+          } else if (validation.warnings.length > 0) {
+            VisualNotifications.show('validationWarning', validation.warnings[0]);
+          }
+        }}
+        showNotifications={true}
+        position="bottom-right"
+      />
     </div>
   );
 };

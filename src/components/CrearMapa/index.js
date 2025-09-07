@@ -279,6 +279,100 @@ export const crearMapaUtils = {
           tags: ['plantilla', 'restaurante', 'gastronomía'],
           notes: 'Plantilla para restaurantes con mesas y sillas'
         }
+      },
+      
+      concierto: {
+        nombre: 'Concierto',
+        descripcion: 'Configuración para conciertos y eventos musicales',
+        contenido: {
+          elementos: [],
+          zonas: [
+            { id: 'zona_1', nombre: 'Floor', color: '#FF6B6B', precio: 200.00 },
+            { id: 'zona_2', nombre: 'Tier 1', color: '#4ECDC4', precio: 150.00 },
+            { id: 'zona_3', nombre: 'Tier 2', color: '#96CEB4', precio: 100.00 },
+            { id: 'zona_4', nombre: 'VIP', color: '#FFD700', precio: 300.00 }
+          ],
+          configuracion: {
+            gridSize: 25,
+            showGrid: true,
+            snapToGrid: true,
+            background: null,
+            dimensions: { width: 1600, height: 1000 },
+            seatSize: { width: 50, height: 45 },
+            spacing: { x: 55, y: 50 }
+          }
+        },
+        estado: 'draft',
+        metadata: {
+          version: '1.0.0',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          author: 'Sistema',
+          tags: ['plantilla', 'concierto', 'música'],
+          notes: 'Plantilla para conciertos con zonas diferenciadas'
+        }
+      },
+      
+      estadio: {
+        nombre: 'Estadio Deportivo',
+        descripcion: 'Configuración para estadios y arenas deportivas',
+        contenido: {
+          elementos: [],
+          zonas: [
+            { id: 'zona_1', nombre: 'Field', color: '#FF6B6B', precio: 80.00 },
+            { id: 'zona_2', nombre: 'Stands', color: '#4ECDC4', precio: 60.00 },
+            { id: 'zona_3', nombre: 'Premium', color: '#96CEB4', precio: 120.00 }
+          ],
+          configuracion: {
+            gridSize: 15,
+            showGrid: true,
+            snapToGrid: true,
+            background: null,
+            dimensions: { width: 2000, height: 1200 },
+            seatSize: { width: 35, height: 30 },
+            spacing: { x: 38, y: 33 }
+          }
+        },
+        estado: 'draft',
+        metadata: {
+          version: '1.0.0',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          author: 'Sistema',
+          tags: ['plantilla', 'estadio', 'deportes'],
+          notes: 'Plantilla para estadios deportivos con alta capacidad'
+        }
+      },
+      
+      conferencia: {
+        nombre: 'Conferencia',
+        descripcion: 'Configuración para conferencias y eventos corporativos',
+        contenido: {
+          elementos: [],
+          zonas: [
+            { id: 'zona_1', nombre: 'Main', color: '#FF6B6B', precio: 100.00 },
+            { id: 'zona_2', nombre: 'Side', color: '#4ECDC4', precio: 80.00 },
+            { id: 'zona_3', nombre: 'VIP', color: '#96CEB4', precio: 150.00 }
+          ],
+          configuracion: {
+            gridSize: 20,
+            showGrid: true,
+            snapToGrid: true,
+            background: null,
+            dimensions: { width: 1200, height: 800 },
+            seatSize: { width: 45, height: 40 },
+            spacing: { x: 50, y: 45 }
+          }
+        },
+        estado: 'draft',
+        metadata: {
+          version: '1.0.0',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          author: 'Sistema',
+          tags: ['plantilla', 'conferencia', 'corporativo'],
+          notes: 'Plantilla para conferencias y eventos empresariales'
+        }
       }
     };
     

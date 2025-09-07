@@ -94,7 +94,7 @@ const GlobalCartTimer = () => {
   return (
     <>
       {/* Temporizador flotante */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed top-1/2 right-6 z-50 transform -translate-y-1/2">
         <Tooltip 
           title={
             <div className="text-center">

@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Alert, 
-  notification, 
   Badge, 
   Tooltip, 
   Button, 
   Space, 
   Typography,
   Card,
-  Tag,
   Progress,
   Divider
 } from 'antd';
@@ -17,203 +15,22 @@ import {
   ExclamationCircleOutlined, 
   WarningOutlined,
   InfoCircleOutlined,
-  CloseCircleOutlined,
   BellOutlined,
   EyeOutlined,
   EyeInvisibleOutlined
 } from '@ant-design/icons';
-import VisualNotifications from '../../utils/VisualNotifications';
+import VisualNotifications from '../utils/VisualNotifications';
 
 const { Text, Title } = Typography;
 
-// ===== SISTEMA DE NOTIFICACIONES VISUALES =====
-// Usando el sistema importado de VisualNotifications
-
-// ===== SISTEMA DE VALIDACIONES EN TIEMPO REAL =====
-const RealTimeValidation = {
-  // Configuración por defecto
-  defaultRules: {
-    maxSeatsPerUser: 10,
-    maxSeatsPerTransaction: 20,
-    minTimeBetweenReservations: 300000, // 5 minutos
-    maxReservationTime: 900000, // 15 minutos
-    requireClientInfo: true,
-    requirePaymentMethod: true,
-    maxPricePerTransaction: 5000, // $5000
-    allowConsecutiveSeats: true,
-    maxGapBetweenSeats: 3,
-    enableRealTimeValidation: true,
-    showValidationWarnings: true,
-    autoBlockInvalidSeats: false
-  },
-
-  // Obtener configuración actual (desde localStorage o usar defaults)
-  getRules: () => {
-    try {
-      const savedSettings = localStorage.getItem('validationSettings');
-      if (savedSettings) {
-        const parsedSettings = JSON.parse(savedSettings);
-        return { ...RealTimeValidation.defaultRules, ...parsedSettings };
-      }
-    } catch (error) {
-      console.error('Error loading validation settings:', error);
-    }
-    return RealTimeValidation.defaultRules;
-  },
-
-  // Actualizar configuración
-  updateRules: (newRules) => {
-    localStorage.setItem('validationSettings', JSON.stringify(newRules));
-  },
-
-  validateSeatSelection: (seats, userId, eventId, currentSeats = []) => {
-    const rules = RealTimeValidation.getRules();
-    const errors = [];
-    const warnings = [];
-    
-    // Verificar si las validaciones están habilitadas
-    if (!rules.enableRealTimeValidation) {
-      return {
-        isValid: true,
-        errors: [],
-        warnings: [],
-        totalPrice: 0
-      };
-    }
-    
-    // Validar límite de asientos por usuario
-    if (seats.length > rules.maxSeatsPerUser) {
-      errors.push(`Máximo ${rules.maxSeatsPerUser} asientos por usuario`);
-    }
-    
-    // Validar límite de asientos por transacción
-    if (seats.length > rules.maxSeatsPerTransaction) {
-      errors.push(`Máximo ${rules.maxSeatsPerTransaction} asientos por transacción`);
-    }
-    
-    // Validar que no haya asientos duplicados
-    const seatIds = seats.map(s => s._id);
-    if (new Set(seatIds).size !== seatIds.length) {
-      errors.push('No se pueden seleccionar asientos duplicados');
-    }
-    
-    // Validar asientos consecutivos si está habilitado
-    if (rules.allowConsecutiveSeats && seats.length > 1) {
-      const sortedSeats = seats.sort((a, b) => {
-        const rowA = a.nombre?.match(/^[A-Z]+/)?.[0] || '';
-        const rowB = b.nombre?.match(/^[A-Z]+/)?.[0] || '';
-        if (rowA !== rowB) return rowA.localeCompare(rowB);
-        
-        const numA = parseInt(a.nombre?.match(/\d+/)?.[0] || '0');
-        const numB = parseInt(b.nombre?.match(/\d+/)?.[0] || '0');
-        return numA - numB;
-      });
-      
-      for (let i = 1; i < sortedSeats.length; i++) {
-        const prevSeat = sortedSeats[i - 1];
-        const currSeat = sortedSeats[i];
-        
-        const prevRow = prevSeat.nombre?.match(/^[A-Z]+/)?.[0] || '';
-        const currRow = currSeat.nombre?.match(/^[A-Z]+/)?.[0] || '';
-        
-        if (prevRow === currRow) {
-          const prevNum = parseInt(prevSeat.nombre?.match(/\d+/)?.[0] || '0');
-          const currNum = parseInt(currSeat.nombre?.match(/\d+/)?.[0] || '0');
-          const gap = currNum - prevNum;
-          
-          if (gap > rules.maxGapBetweenSeats) {
-            warnings.push(`Gap grande entre asientos: ${prevSeat.nombre} y ${currSeat.nombre}`);
-          }
-        }
-      }
-    }
-    
-    // Validar precio total
-    const totalPrice = (seats && Array.isArray(seats) ? seats.reduce((sum, seat) => sum + (seat.precio || 0), 0) : 0);
-    if (totalPrice > rules.maxPricePerTransaction) {
-      warnings.push(`Precio total alto: $${totalPrice.toFixed(2)}`);
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      warnings,
-      totalPrice
-    };
-  },
-
-  validatePayment: (paymentData) => {
-    const rules = RealTimeValidation.getRules();
-    const errors = [];
-    const warnings = [];
-    
-    // Validaciones básicas
-    if (rules.requirePaymentMethod && !paymentData.method) {
-      errors.push('Método de pago requerido');
-    }
-    
-    if (rules.requireClientInfo && !paymentData.clientId) {
-      errors.push('Información del cliente requerida');
-    }
-    
-    if (paymentData.amount <= 0) {
-      errors.push('Monto inválido');
-    }
-    
-    // Validaciones de monto mejoradas
-    if (paymentData.amount > 5000) {
-      errors.push('Monto excede el límite máximo permitido ($5,000)');
-    } else if (paymentData.amount > 2000) {
-      warnings.push('Transacción de alto valor ($' + paymentData.amount.toFixed(2) + '), se requiere documentación adicional');
-    } else if (paymentData.amount > 1000) {
-      warnings.push('Transacción de valor medio ($' + paymentData.amount.toFixed(2) + '), verificar documentación');
-    }
-    
-    // Validación de método de pago específico
-    if (paymentData.method) {
-      const method = paymentData.method.toLowerCase();
-      
-      // Validaciones específicas por método
-      if (method.includes('efectivo') && paymentData.amount > 1000) {
-        warnings.push('Pago en efectivo por monto alto, considerar método alternativo');
-      }
-      
-      if (method.includes('transferencia') && paymentData.amount < 100) {
-        warnings.push('Transferencia por monto bajo, considerar pago en efectivo');
-      }
-      
-      if (method.includes('tarjeta') && paymentData.amount > 3000) {
-        warnings.push('Pago con tarjeta por monto alto, verificar límites');
-      }
-    }
-    
-    // Validación de datos adicionales
-    if (paymentData.clientId && paymentData.amount > 1000) {
-      // Verificar si el cliente tiene historial de transacciones altas
-      warnings.push('Cliente con transacción de alto valor, revisar historial');
-    }
-    
-    // Validación de frecuencia de transacciones
-    if (paymentData.frequency && paymentData.frequency === 'high') {
-      warnings.push('Cliente con alta frecuencia de transacciones, verificar patrón');
-    }
-    
-    return {
-      isValid: errors.length === 0,
-      errors,
-      warnings,
-      riskLevel: paymentData.amount > 2000 ? 'high' : paymentData.amount > 1000 ? 'medium' : 'low'
-    };
-  }
-};
-
-// ===== COMPONENTE PRINCIPAL =====
-const RealTimeValidationComponent = ({ 
+// ===== COMPONENTE DE VALIDACIÓN FLOTANTE =====
+const ValidationWidget = ({ 
   selectedSeats = [], 
   selectedClient, 
   paymentData,
   onValidationChange,
-  showNotifications = true
+  showNotifications = true,
+  position = 'bottom-right' // 'bottom-right', 'bottom-left', 'top-right', 'top-left'
 }) => {
   const [validationResults, setValidationResults] = useState({
     seats: { isValid: true, errors: [], warnings: [], totalPrice: 0 },
@@ -233,11 +50,36 @@ const RealTimeValidationComponent = ({
       return;
     }
 
-    const seatValidation = RealTimeValidation.validateSeatSelection(
-      selectedSeats, 
-      selectedClient?.id, 
-      'current-event'
-    );
+    // Validación básica de asientos
+    const errors = [];
+    const warnings = [];
+    let totalPrice = 0;
+
+    // Validar límite de asientos
+    if (selectedSeats.length > 10) {
+      errors.push('Máximo 10 asientos por usuario');
+    } else if (selectedSeats.length > 5) {
+      warnings.push('Selección de muchos asientos');
+    }
+
+    // Calcular precio total
+    selectedSeats.forEach(seat => {
+      if (seat.precio) {
+        totalPrice += parseFloat(seat.precio);
+      }
+    });
+
+    // Validar precio total
+    if (totalPrice > 1000) {
+      warnings.push('Transacción de alto valor');
+    }
+
+    const seatValidation = {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      totalPrice
+    };
 
     setValidationResults(prev => ({
       ...prev,
@@ -267,7 +109,30 @@ const RealTimeValidationComponent = ({
   useEffect(() => {
     if (!paymentData) return;
 
-    const paymentValidation = RealTimeValidation.validatePayment(paymentData);
+    const errors = [];
+    const warnings = [];
+
+    if (!paymentData.method) {
+      errors.push('Método de pago requerido');
+    }
+    
+    if (!paymentData.clientId) {
+      errors.push('Información del cliente requerida');
+    }
+    
+    if (paymentData.amount <= 0) {
+      errors.push('Monto inválido');
+    }
+    
+    if (paymentData.amount > 1000) {
+      warnings.push('Transacción de alto valor, verificar documentación');
+    }
+
+    const paymentValidation = {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
     
     setValidationResults(prev => ({
       ...prev,
@@ -280,7 +145,7 @@ const RealTimeValidationComponent = ({
         VisualNotifications.show('error', paymentValidation.errors[0]);
         setNotificationCount(prev => prev + 1);
       } else if (paymentValidation.warnings.length > 0) {
-        VisualNotifications.show('validationWarning', paymentValidation.warnings[0]);
+        VisualNotifications.show('paymentWarning', paymentValidation.warnings[0]);
         setNotificationCount(prev => prev + 1);
       }
     }
@@ -316,13 +181,31 @@ const RealTimeValidationComponent = ({
     }
   };
 
+  const getPositionStyle = () => {
+    const baseStyle = {
+      position: 'fixed',
+      zIndex: 50
+    };
+
+    switch (position) {
+      case 'bottom-left':
+        return { ...baseStyle, bottom: '16px', left: '16px' };
+      case 'top-right':
+        return { ...baseStyle, top: '16px', right: '16px' };
+      case 'top-left':
+        return { ...baseStyle, top: '16px', left: '16px' };
+      default: // bottom-right
+        return { ...baseStyle, bottom: '16px', right: '16px' };
+    }
+  };
+
   // ===== RENDERIZADO =====
   if (selectedSeats.length === 0 && !paymentData) {
     return null;
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div style={getPositionStyle()}>
       {/* Botón principal con badge */}
       <Tooltip title="Validaciones en Tiempo Real">
         <Badge count={notificationCount} size="small">
@@ -499,8 +382,8 @@ const RealTimeValidationComponent = ({
             <Divider />
             <div>
               <Text type="secondary" className="text-xs">
-                <strong>Reglas activas:</strong> Máx. {RealTimeValidation.rules.maxSeatsPerUser} asientos por usuario, 
-                Máx. {RealTimeValidation.rules.maxSeatsPerTransaction} por transacción
+                <strong>Reglas activas:</strong> Máx. 10 asientos por usuario, 
+                Máx. 20 por transacción
               </Text>
             </div>
           </div>
@@ -510,6 +393,4 @@ const RealTimeValidationComponent = ({
   );
 };
 
-// ===== EXPORTAR FUNCIONES UTILITARIAS =====
-export { VisualNotifications, RealTimeValidation };
-export default RealTimeValidationComponent;
+export default ValidationWidget;

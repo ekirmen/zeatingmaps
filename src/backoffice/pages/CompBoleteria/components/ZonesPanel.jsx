@@ -16,30 +16,10 @@ const ZonesPanel = ({
 }) => {
   // Safety check for required props
   if (typeof onSelectPrice !== 'function') {
-    console.warn('ZonesPanel: onSelectPrice is not a function, using fallback');
     onSelectPrice = () => {};
   }
   if (typeof onSelectZona !== 'function') {
-    console.warn('ZonesPanel: onSelectZona is not a function, using fallback');
     onSelectZona = () => {};
-  }
-  // Solo mostrar logs en desarrollo
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🚀 ZonesPanel - COMPONENTE MONTADO');
-    console.log('📋 Props recibidas:', {
-      selectedFuncion: !!selectedFuncion,
-      selectedPlantilla: !!selectedPlantilla,
-      mapa: !!mapa,
-      onSelectPrice: !!onSelectPrice,
-      selectedPriceId,
-      selectedZonaId,
-      onSelectZona: !!onSelectZona,
-      onPricesLoaded: !!onPricesLoaded
-    });
-    console.log('🔍 Mapa detallado:', mapa);
-    console.log('🔍 Tipo de mapa:', typeof mapa);
-    console.log('🔍 Mapa es null?', mapa === null);
-    console.log('🔍 Mapa es undefined?', mapa === undefined);
   }
 
   const [loading, setLoading] = useState(false);
@@ -397,16 +377,13 @@ const ZonesPanel = ({
       setDebugInfo({ error: error.message || 'Error desconocido' });
       message.error('Error al cargar zonas y precios');
     } finally {
-      console.log('🔄 finally: deteniendo loading...');
       setLoading(false);
-      console.log('✅ Loading detenido');
     }
   }, [selectedFuncion, selectedPlantilla, onPricesLoaded, extractDetalles]); // Removido mapa y selectedZonaId
 
   // Cargar datos cuando cambie la función o plantilla
   useEffect(() => {
     if (selectedFuncion && !dataLoaded) {
-      console.log('🔄 useEffect - Primera carga de datos...');
       setDataLoaded(true);
       loadPriceOptions();
     }
