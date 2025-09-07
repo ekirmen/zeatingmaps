@@ -10,6 +10,7 @@ import ComisionesTasas from './pages/ComisionesTasas';
 import PaymentAnalytics from './pages/PaymentAnalytics';
 import RefundManagement from './pages/RefundManagement';
 import Reports from './pages/Reports';
+import ScheduledReports from './pages/ScheduledReports';
 import SystemSettings from './pages/SystemSettings';
 import AuditLogs from './pages/AuditLogs';
 import PrinterSettings from './pages/PrinterSettings';
@@ -99,6 +100,7 @@ const BackofficeApp = () => {
         
         {/* Informes */}
         <Route path="reports" element={<Reports />} />
+        <Route path="scheduled-reports" element={<ScheduledReports />} />
         
         {/* Personalización */}
         <Route path="sites" element={<WebStudio />} />

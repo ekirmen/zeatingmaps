@@ -116,10 +116,10 @@ const Reports = () => {
         .from('payments')
         .select(`
           *,
-          user:profiles!user_id(*),
+          user:profiles!usuario_id(*),
           event:eventos(*)
         `)
-        .eq('status', 'completed');
+        .eq('status', 'pagado');
 
       if (filters.dateRange) {
         query = query
@@ -193,12 +193,20 @@ const Reports = () => {
         .from('payments')
         .select(`
           *,
-          user:profiles!user_id(*),
+          user:profiles!usuario_id(*),
           event:eventos(*)
         `);
 
       if (filters.status !== 'all') {
-        query = query.eq('status', filters.status);
+        // Map status values to match database values
+        const statusMap = {
+          'completed': 'pagado',
+          'pending': 'pendiente',
+          'failed': 'fallido',
+          'reserved': 'reservado'
+        };
+        const dbStatus = statusMap[filters.status] || filters.status;
+        query = query.eq('status', dbStatus);
       }
 
       if (filters.dateRange) {
@@ -452,16 +460,16 @@ const Reports = () => {
     },
     {
       title: 'Monto',
-      dataIndex: 'amount',
-      key: 'amount',
-      render: (amount) => `$${parseFloat(amount || 0).toFixed(2)}`
+      dataIndex: 'monto',
+      key: 'monto',
+      render: (monto) => `$${parseFloat(monto || 0).toFixed(2)}`
     },
     {
       title: 'Estado',
       dataIndex: 'status',
       key: 'status',
       render: (status) => (
-        <Tag color={status === 'completed' ? 'green' : 'orange'}>
+        <Tag color={status === 'pagado' ? 'green' : status === 'pendiente' ? 'orange' : status === 'fallido' ? 'red' : 'blue'}>
           {status?.toUpperCase() || 'N/A'}
         </Tag>
       )
@@ -544,9 +552,9 @@ const Reports = () => {
     },
     {
       title: 'Monto',
-      dataIndex: 'amount',
-      key: 'amount',
-      render: (amount) => `$${parseFloat(amount || 0).toFixed(2)}`
+      dataIndex: 'monto',
+      key: 'monto',
+      render: (monto) => `$${parseFloat(monto || 0).toFixed(2)}`
     },
     {
       title: 'Estado',
@@ -554,9 +562,10 @@ const Reports = () => {
       key: 'status',
       render: (status) => (
         <Tag color={
-          status === 'completed' ? 'green' : 
-          status === 'pending' ? 'orange' : 
-          status === 'failed' ? 'red' : 'gray'
+          status === 'pagado' ? 'green' : 
+          status === 'pendiente' ? 'orange' : 
+          status === 'fallido' ? 'red' : 
+          status === 'reservado' ? 'blue' : 'gray'
         }>
           {status?.toUpperCase() || 'N/A'}
         </Tag>
@@ -720,7 +729,7 @@ const Reports = () => {
     
     switch (selectedReport) {
       case 'sales':
-        const totalSales = data.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+        const totalSales = data.reduce((sum, item) => sum + parseFloat(item.monto || 0), 0);
         const avgSale = data.length > 0 ? totalSales / data.length : 0;
         return {
           total: data.length,
@@ -745,8 +754,8 @@ const Reports = () => {
           newThisWeek: newUsers
         };
       case 'payments':
-        const completedPayments = data.filter(p => p.status === 'completed').length;
-        const totalAmount = data.reduce((sum, p) => sum + parseFloat(p.amount || 0), 0);
+        const completedPayments = data.filter(p => p.status === 'pagado').length;
+        const totalAmount = data.reduce((sum, p) => sum + parseFloat(p.monto || 0), 0);
         return {
           total: data.length,
           completed: completedPayments,
@@ -898,9 +907,10 @@ const Reports = () => {
                     style={{ width: '100%', marginTop: 8 }}
                   >
                     <Option value="all">Todos</Option>
-                    <Option value="completed">Completados</Option>
+                    <Option value="completed">Pagados</Option>
                     <Option value="pending">Pendientes</Option>
                     <Option value="failed">Fallidos</Option>
+                    <Option value="reserved">Reservados</Option>
                   </Select>
                 </Col>
               )}

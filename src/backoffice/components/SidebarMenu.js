@@ -175,9 +175,13 @@ const SidebarMenu = ({ collapsed }) => {
     // }, // OCULTO
     {
       title: 'Informes',
-      path: '/dashboard/reports',
       icon: faFileAlt,
-      type: 'link'
+      type: 'submenu',
+      submenuId: 'reports',
+      items: [
+        { title: 'Reportes Detallados', path: '/dashboard/reports', icon: faChartBar },
+        { title: 'Programar Correo', path: '/dashboard/scheduled-reports', icon: faEnvelope }
+      ]
     },
     {
       title: 'Personalización',

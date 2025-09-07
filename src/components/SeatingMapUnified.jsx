@@ -1,4 +1,4 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useMemo } from 'react';
 import { Stage, Layer, Circle, Rect, Text, Line, Image } from 'react-konva';
 import { useSeatLockStore } from './seatLockStore';
 import { useSeatColors } from '../hooks/useSeatColors';
@@ -38,14 +38,38 @@ const SeatingMapUnified = ({
 
   const useImageLoader = (url) => {
     const [img, setImg] = React.useState(null);
+    
     React.useEffect(() => {
-      if (!url) return;
+      if (!url) {
+        setImg(null);
+        return;
+      }
+      
       const image = new window.Image();
       // Habilitar cache de CDN y uso de canvas seguro
       image.crossOrigin = 'anonymous';
+      image.loading = 'lazy'; // Lazy loading para mejor rendimiento
+      
+      const handleLoad = () => {
+        setImg(image);
+      };
+      
+      const handleError = () => {
+        console.warn('Error loading background image:', url);
+        setImg(null);
+      };
+      
+      image.addEventListener('load', handleLoad);
+      image.addEventListener('error', handleError);
+      
       image.src = url;
-      image.onload = () => setImg(image);
+      
+      return () => {
+        image.removeEventListener('load', handleLoad);
+        image.removeEventListener('error', handleError);
+      };
     }, [url]);
+    
     return [img];
   };
 
@@ -252,41 +276,53 @@ if (Array.isArray(mapa?.contenido)) {
   // Create a set of found seat IDs for quick lookup
   const foundSeatIds = new Set(foundSeats.map(seat => seat._id));
 
-  // Background images
-  const backgroundElements = Array.isArray(mapa?.contenido)
-    ? mapa.contenido.filter(el => el.type === 'background' && el.showInWeb !== false)
-    : mapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
+  // Background images - memoized to prevent unnecessary re-renders
+  const backgroundElements = useMemo(() => {
+    return Array.isArray(mapa?.contenido)
+      ? mapa.contenido.filter(el => el.type === 'background' && el.showInWeb !== false)
+      : mapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
+  }, [mapa?.contenido]);
 
-  const BackgroundImage = ({ config }) => {
+  const BackgroundImage = React.memo(({ config }) => {
     // Resolver la URL desde múltiples posibles campos
-    let rawUrl = config.imageUrl
-      || config.url
-      || config.src
-      || config.image?.url
-      || config.image?.publicUrl
-      || config.imageData
-      || config.image?.data
-      || '';
+    const rawUrl = useMemo(() => {
+      let url = config.imageUrl
+        || config.url
+        || config.src
+        || config.image?.url
+        || config.image?.publicUrl
+        || config.imageData
+        || config.image?.data
+        || '';
 
-    // Si es una ruta relativa de Storage, construir la URL pública (bucket 'productos')
-    if (rawUrl && !/^https?:\/\//i.test(rawUrl) && !/^data:/i.test(rawUrl)) {
-      rawUrl = resolveImageUrl(rawUrl, 'productos') || rawUrl;
-    }
+      // Si es una ruta relativa de Storage, construir la URL pública (bucket 'productos')
+      if (url && !/^https?:\/\//i.test(url) && !/^data:/i.test(url)) {
+        url = resolveImageUrl(url, 'productos') || url;
+      }
+      
+      return url;
+    }, [config.imageUrl, config.url, config.src, config.image?.url, config.image?.publicUrl, config.imageData, config.image?.data]);
 
     const [img] = useImageLoader(rawUrl);
+    
+    const imageProps = useMemo(() => ({
+      x: config.position?.x || config.posicion?.x || 0,
+      y: config.position?.y || config.posicion?.y || 0,
+      scaleX: config.scale || 1,
+      scaleY: config.scale || 1,
+      opacity: config.opacity ?? 1,
+      listening: false
+    }), [config.position?.x, config.posicion?.x, config.position?.y, config.posicion?.y, config.scale, config.opacity]);
+
     if (!img) return null;
+    
     return (
       <Image
         image={img}
-        x={config.position?.x || config.posicion?.x || 0}
-        y={config.position?.y || config.posicion?.y || 0}
-        scaleX={config.scale || 1}
-        scaleY={config.scale || 1}
-        opacity={config.opacity ?? 1}
-        listening={false}
+        {...imageProps}
       />
     );
-  };
+  });
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
@@ -303,7 +339,10 @@ if (Array.isArray(mapa?.contenido)) {
         <Layer>
           {/* Background images */}
           {backgroundElements.map(bg => (
-            <BackgroundImage key={bg._id || bg.id} config={bg} />
+            <BackgroundImage 
+              key={bg._id || bg.id || `bg_${bg.imageUrl || bg.url || bg.src}`} 
+              config={bg} 
+            />
           ))}
 
           {/* Renderizar mesas primero (para que estén detrás de las sillas) */}
