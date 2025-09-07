@@ -150,7 +150,8 @@ const SimpleSeatingMap = ({
     
     // AMARILLO para asientos seleccionados por el usuario actual
     const isSelectedByMe = lockedSeats.some(ls => 
-      ls.seat_id === seat._id && ls.session_id === sessionId
+      ls.seat_id === seat._id && ls.session_id === sessionId && 
+      (ls.status === 'seleccionado' || ls.status === 'SELECTED')
     );
     if (isSelectedByMe) {
       return '#facc15'; // Amarillo para seleccionado
@@ -158,7 +159,8 @@ const SimpleSeatingMap = ({
     
     // ROJO para asientos bloqueados por otro usuario
     const isLockedByOther = lockedSeats.some(ls => 
-      ls.seat_id === seat._id && ls.session_id !== sessionId
+      ls.seat_id === seat._id && ls.session_id !== sessionId && 
+      (ls.status === 'locked' || ls.status === 'Blocked' || ls.status === 'blocked' || ls.status === 'LOCKED')
     );
     if (isLockedByOther) {
       return '#ff4d4f'; // Rojo para bloqueado por otro
@@ -166,7 +168,8 @@ const SimpleSeatingMap = ({
     
     // Si está bloqueado por el usuario actual
     const isLockedByMe = lockedSeats.some(ls => 
-      ls.seat_id === seat._id && ls.session_id === sessionId
+      ls.seat_id === seat._id && ls.session_id === sessionId && 
+      (ls.status === 'locked' || ls.status === 'Blocked' || ls.status === 'blocked' || ls.status === 'LOCKED')
     );
     if (isLockedByMe) {
       return '#1890ff'; // Azul para bloqueado por mí

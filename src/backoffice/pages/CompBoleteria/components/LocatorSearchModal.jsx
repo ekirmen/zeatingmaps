@@ -379,7 +379,7 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                               .select('*')
                               .eq('funcion_id', searchResult.funcion_id)
                               .eq('session_id', searchResult.user_id)
-                              .in('status', ['locked', 'seleccionado']);
+                              .in('status', ['locked', 'seleccionado', 'Blocked', 'blocked', 'LOCKED', 'SELECTED']);
                             
                             console.log('🔍 Query seat_locks result:', { seatLocks, error });
                             

@@ -96,7 +96,7 @@ const BoleteriaMainCustomDesign = () => {
           .from('seat_locks')
           .select('*')
           .eq('funcion_id', selectedFuncion.id)
-          .in('status', ['locked', 'seleccionado']);
+          .in('status', ['locked', 'seleccionado', 'Blocked', 'blocked', 'LOCKED', 'SELECTED']);
         
         if (error) {
           console.error('Error cargando todos los asientos bloqueados:', error);
