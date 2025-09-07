@@ -90,6 +90,54 @@ export const emailCampaignService = {
     }
   },
 
+  // Crear nueva campaña
+  async createCampaign(campaignData) {
+    try {
+      const { data, error } = await supabaseClient
+        .from('email_campaigns')
+        .insert({
+          nombre: campaignData.nombre,
+          tipo: campaignData.tipo || 'newsletter',
+          estado: 'draft',
+          configuracion: campaignData.configuracion || {}
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      console.log('📧 Nueva campaña creada:', data.nombre);
+      toast.success('Campaña creada exitosamente');
+      return data;
+      
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      toast.error('Error al crear la campaña');
+      return null;
+    }
+  },
+
+  // Eliminar campaña
+  async deleteCampaign(id) {
+    try {
+      const { error } = await supabaseClient
+        .from('email_campaigns')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      console.log('📧 Campaña eliminada:', id);
+      toast.success('Campaña eliminada exitosamente');
+      return true;
+      
+    } catch (error) {
+      console.error('Error deleting campaign:', error);
+      toast.error('Error al eliminar la campaña');
+      return false;
+    }
+  },
+
   // 📧 GESTIÓN DE PLANTILLAS DE EMAIL
   async getEmailTemplates() {
     try {

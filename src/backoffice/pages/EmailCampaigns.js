@@ -1,6 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { AiOutlinePlus, AiOutlineSearch, AiOutlineDelete, AiOutlineCopy, AiOutlineBarChart, AiOutlineEdit } from 'react-icons/ai';
+import { 
+  AiOutlinePlus, 
+  AiOutlineSearch, 
+  AiOutlineDelete, 
+  AiOutlineCopy, 
+  AiOutlineBarChart, 
+  AiOutlineEdit,
+  AiOutlineMail,
+  AiOutlineCalendar,
+  AiOutlineEye,
+  AiOutlineSend
+} from 'react-icons/ai';
 import { emailCampaignService } from '../services/emailCampaignService';
 
 const EmailCampaigns = ({ setSidebarCollapsed }) => {
@@ -30,8 +41,10 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
         status: campaign.estado,
         sentDate: campaign.fecha_envio ? new Date(campaign.fecha_envio).toLocaleString('es-ES') : '-',
         type: campaign.tipo,
-        opened: `${campaign.total_enviados || 0}/${campaign.total_enviados || 0}`,
-        sent: campaign.total_enviados || 0
+        opened: `${campaign.total_exitosos || 0}/${campaign.total_enviados || 0}`,
+        sent: campaign.total_enviados || 0,
+        template_name: campaign.template_name || 'Sin plantilla',
+        template_type: campaign.template_type || 'personalizada'
       }));
       setCampaigns(formattedCampaigns);
     } catch (error) {
@@ -89,26 +102,47 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'sended':
-        return 'bg-green-100 text-green-800';
+      case 'enviado':
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'draft':
-        return 'bg-yellow-100 text-yellow-800';
+      case 'borrador':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'sending':
-        return 'bg-blue-100 text-blue-800';
+      case 'enviando':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
       case 'sended':
+      case 'enviado':
         return 'Enviado';
       case 'draft':
+      case 'borrador':
         return 'Borrador';
       case 'sending':
+      case 'enviando':
         return 'Enviando';
       default:
         return 'Desconocido';
+    }
+  };
+
+  const getTypeText = (type) => {
+    switch (type) {
+      case 'newsletter':
+        return 'Newsletter';
+      case 'invitacion':
+        return 'Invitación';
+      case 'recordatorio':
+        return 'Recordatorio';
+      case 'promocional':
+        return 'Promocional';
+      default:
+        return type || 'Personalizada';
     }
   };
 
@@ -125,271 +159,360 @@ const EmailCampaigns = ({ setSidebarCollapsed }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando campañas...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container-body form-wrapper">
-      {/* Script variables */}
-      <script type="text/javascript">
-        {`
-          var esAdministrador = false;
-          var idCompany = 50;
-          var idOrganizationPreSelected = parseInt();
-          var idVenuePreSelected = parseInt("");
-          var idEventPreSelected = parseInt("");
-          var litEventPreSelected = "";
-          var idHallPreSelected = parseInt("");
-          var idSessionPreSelected = parseInt("");
-          var idCampaignPreSelected = parseInt("");
-          var isSeasonPass = ("" === "true");
-          var languageSelectedUser = "es_MX";
-        `}
-      </script>
-
-      {/* Header */}
-      <div className="row">
-        <div className="columns large-12 medium-12 small-12 title-page-wrapper">
-          <div className="title-name">
-            <h3>Campañas de mailing</h3>
-          </div>
-          
-          <div className="actions">
-            <button 
-              id="btnNewCampaign" 
-              className="button primary" 
-              title="Nueva campaña de correo electrónico" 
-              onClick={handleNewCampaign}
-            >
-              <AiOutlinePlus className="mr-2" />
-              Añadir nuevo
-            </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Campañas de Email</h1>
+              <p className="mt-2 text-gray-600">Gestiona tus campañas de marketing por email</p>
+            </div>
+            <div className="mt-4 sm:mt-0">
+              <button 
+                onClick={handleNewCampaign}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+              >
+                <AiOutlinePlus className="mr-2 h-4 w-4" />
+                Nueva Campaña
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Table Container */}
-      <div className="row form-white">
-        <div className="columns large-12 small-12">
-          <div id="mailingCampaignsTable_wrapper" className="dataTables_wrapper dt-foundation no-footer">
-            
-            {/* Table Controls */}
-            <div className="row grid-x">
-              <div className="small-6 columns cell">
-                <div className="dataTables_length" id="mailingCampaignsTable_length">
-                  <label>
-                    Mostrar 
-                    <select 
-                      name="mailingCampaignsTable_length" 
-                      aria-controls="mailingCampaignsTable" 
-                      className=""
-                      value={itemsPerPage}
-                      onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
-                    >
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
-                  </label>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <AiOutlineMail className="h-6 w-6 text-blue-600" />
                 </div>
-              </div>
-              
-              <div className="small-6 columns cell">
-                <div id="mailingCampaignsTable_filter" className="dataTables_filter">
-                  <label>
-                    <AiOutlineSearch className="mr-2" />
-                    <input 
-                      type="search" 
-                      className="" 
-                      placeholder="" 
-                      aria-controls="mailingCampaignsTable"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </label>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Total Campañas</dt>
+                    <dd className="text-lg font-medium text-gray-900">{campaigns.length}</dd>
+                  </dl>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Table */}
-            <table id="mailingCampaignsTable" aria-labelledby="mailingCampaignsTable" className="dataTable no-footer" aria-describedby="mailingCampaignsTable_info">
-              <thead>
-                <tr>
-                  <th scope="col" className="sorting" tabIndex="0" aria-controls="mailingCampaignsTable" rowSpan="1" colSpan="1" aria-label="ID: Activar para ordenar la columna de manera ascendente" style={{ width: '1rem' }}>ID</th>
-                  <th scope="col" className="sorting sorting_asc" tabIndex="0" aria-controls="mailingCampaignsTable" rowSpan="1" colSpan="1" aria-label="Campaña: Activar para ordenar la columna de manera descendente" aria-sort="ascending">Campaña</th>
-                  <th scope="col" className="sorting" tabIndex="0" aria-controls="mailingCampaignsTable" rowSpan="1" colSpan="1" aria-label="Estado: Activar para ordenar la columna de manera ascendente" style={{ width: '4rem' }}>Estado</th>
-                  <th scope="col" className="sorting" tabIndex="0" aria-controls="mailingCampaignsTable" rowSpan="1" colSpan="1" aria-label="Enviado: Activar para ordenar la columna de manera ascendente" style={{ width: '8rem' }}>Enviado</th>
-                  <th scope="col" className="sorting_disabled" rowSpan="1" colSpan="1" aria-label="Tipo" style={{ width: '10rem' }}>
-                    <select 
-                      style={{ marginBottom: '0px' }} 
-                      id="flType" 
-                      name="flType" 
-                      value={filterType}
-                      onChange={(e) => setFilterType(e.target.value)}
-                    >
-                      <option value="0">Todo</option>
-                      <option value="4">Newsletter</option>
-                      <option value="1">Invitación</option>
-                      <option value="2">Renovación del abono de temporada</option>
-                      <option value="3">Información sobre el abono de temporada</option>
-                    </select>
-                  </th>
-                  <th scope="col" className="sorting" tabIndex="0" aria-controls="mailingCampaignsTable" rowSpan="1" colSpan="1" aria-label="Abierto: Activar para ordenar la columna de manera ascendente" style={{ width: '4rem' }}>Abierto</th>
-                  <th scope="col" className="btn-action sorting_disabled" rowSpan="1" colSpan="1" aria-label="&nbsp;" style={{ width: '2rem' }}>&nbsp;</th>
-                  <th scope="col" className="btn-action sorting_disabled" rowSpan="1" colSpan="1" aria-label="&nbsp;" style={{ width: '2rem' }}>&nbsp;</th>
-                  <th scope="col" className="btn-action sorting_disabled" rowSpan="1" colSpan="1" aria-label="&nbsp;" style={{ width: '2rem' }}>&nbsp;</th>
-                  <th scope="col" className="btn-action-big sorting_disabled" rowSpan="1" colSpan="1" aria-label="&nbsp;">&nbsp;</th>
-                </tr>
-              </thead>
-              
-              <tbody>
-                {currentCampaigns.map((campaign, index) => (
-                  <tr key={campaign.id} className={index % 2 === 0 ? 'odd' : 'even'}>
-                    <td>
-                      <div className="wid-ellipsis">{campaign.id}</div>
-                    </td>
-                    <td className="sorting_1">
-                      <div className="wid-ellipsis">{campaign.name}</div>
-                    </td>
-                    <td>
-                      <div className="wid-ellipsis">
-                        <div className="cont-tags-visual mailing-campaings">
-                          <div className={`tag ${getStatusColor(campaign.status)}`}>
-                            {getStatusText(campaign.status)}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="wid-ellipsis">{campaign.sentDate}</div>
-                    </td>
-                    <td>
-                      <div className="wid-ellipsis">{campaign.type}</div>
-                    </td>
-                    <td>{campaign.opened}</td>
-                    <td className="btn-action">
-                      <a 
-                        className="dynamic-tooltip disabled delete-btn tpd-hideOnClickOutside" 
-                        title="" 
-                        href="#" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleDeleteCampaign(campaign.id);
-                        }}
-                      >
-                        <AiOutlineDelete className="icono-tabla" />
-                      </a>
-                    </td>
-                    <td className="btn-action">
-                      <a 
-                        className="dynamic-tooltip tpd-hideOnClickOutside" 
-                        title="" 
-                        href="#" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleCopyCampaign(campaign.id);
-                        }}
-                      >
-                        <AiOutlineCopy className="icono-tabla" />
-                      </a>
-                    </td>
-                    <td className="btn-action">
-                      <a 
-                        className="dynamic-tooltip tpd-hideOnClickOutside" 
-                        title="" 
-                        href="#" 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleShowCharts(campaign.id);
-                        }}
-                      >
-                        <AiOutlineBarChart className="icono-tabla" />
-                      </a>
-                    </td>
-                    <td className="btn-action-big">
-                      <button 
-                        className="button tiny secondary expanded" 
-                        title="Editar campaña" 
-                        onClick={() => handleEditCampaign(campaign.id)}
-                      >
-                        <AiOutlineEdit className="mr-1" />
-                        Editar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {/* Pagination */}
-            <div className="row grid-x">
-              <div className="small-6 columns cell">
-                <div className="dataTables_info" id="mailingCampaignsTable_info" role="status" aria-live="polite">
-                  {startIndex + 1} al {Math.min(endIndex, filteredCampaigns.length)} de {filteredCampaigns.length}
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <AiOutlineSend className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Enviadas</dt>
+                    <dd className="text-lg font-medium text-gray-900">
+                      {campaigns.filter(c => c.status === 'sended' || c.status === 'enviado').length}
+                    </dd>
+                  </dl>
                 </div>
               </div>
-              <div className="small-6 columns cell">
-                <div className="dataTables_paginate paging_simple_numbers" id="mailingCampaignsTable_paginate">
-                  <ul className="pagination">
-                    <li className={`paginate_button previous ${currentPage === 1 ? 'unavailable disabled' : ''}`} aria-controls="mailingCampaignsTable" tabIndex="0" id="mailingCampaignsTable_previous">
-                      <button 
-                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                        disabled={currentPage === 1}
-                        className="flex items-center"
-                      >
-                        <AiOutlineSearch className="transform rotate-180" />
-                      </button>
-                    </li>
+            </div>
+          </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="p-5">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <AiOutlineCalendar className="h-6 w-6 text-yellow-600" />
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-gray-500 truncate">Borradores</dt>
+                    <dd className="text-lg font-medium text-gray-900">
+                      {campaigns.filter(c => c.status === 'draft' || c.status === 'borrador').length}
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <AiOutlineEye className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Tasa Apertura</dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {campaigns.length > 0 ? 
+                      Math.round((campaigns.reduce((acc, c) => acc + (c.sent || 0), 0) / campaigns.length) * 100) || 0
+                      : 0}%
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filters and Search */}
+        <div className="bg-white shadow rounded-lg mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <AiOutlineSearch className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Buscar campañas..."
+                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                
+                <select
+                  className="block w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                >
+                  <option value="0">Todos los tipos</option>
+                  <option value="newsletter">Newsletter</option>
+                  <option value="invitacion">Invitación</option>
+                  <option value="recordatorio">Recordatorio</option>
+                  <option value="promocional">Promocional</option>
+                </select>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-500">Mostrar:</span>
+                <select
+                  className="block px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Campaigns Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Campaña
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Tipo
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Plantilla
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Enviado
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Aperturas
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentCampaigns.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                      <AiOutlineMail className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                      <p className="text-lg font-medium">No hay campañas</p>
+                      <p className="text-sm">Crea tu primera campaña de email para comenzar</p>
+                    </td>
+                  </tr>
+                ) : (
+                  currentCampaigns.map((campaign) => (
+                    <tr key={campaign.id} className="hover:bg-gray-50 transition-colors duration-150">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                              <AiOutlineMail className="h-5 w-5 text-blue-600" />
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {campaign.name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              ID: {campaign.id.slice(0, 8)}...
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border ${getStatusColor(campaign.status)}`}>
+                          {getStatusText(campaign.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {getTypeText(campaign.type)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {campaign.template_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {campaign.sentDate}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {campaign.opened}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => handleEditCampaign(campaign.id)}
+                            className="text-blue-600 hover:text-blue-900 p-1 rounded-md hover:bg-blue-50 transition-colors duration-150"
+                            title="Editar campaña"
+                          >
+                            <AiOutlineEdit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleCopyCampaign(campaign.id)}
+                            className="text-gray-600 hover:text-gray-900 p-1 rounded-md hover:bg-gray-50 transition-colors duration-150"
+                            title="Copiar campaña"
+                          >
+                            <AiOutlineCopy className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleShowCharts(campaign.id)}
+                            className="text-green-600 hover:text-green-900 p-1 rounded-md hover:bg-green-50 transition-colors duration-150"
+                            title="Ver estadísticas"
+                          >
+                            <AiOutlineBarChart className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteCampaign(campaign.id)}
+                            className="text-red-600 hover:text-red-900 p-1 rounded-md hover:bg-red-50 transition-colors duration-150"
+                            title="Eliminar campaña"
+                          >
+                            <AiOutlineDelete className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+              <div className="flex-1 flex justify-between sm:hidden">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Anterior
+                </button>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Siguiente
+                </button>
+              </div>
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-700">
+                    Mostrando <span className="font-medium">{startIndex + 1}</span> a{' '}
+                    <span className="font-medium">{Math.min(endIndex, filteredCampaigns.length)}</span> de{' '}
+                    <span className="font-medium">{filteredCampaigns.length}</span> resultados
+                  </p>
+                </div>
+                <div>
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="sr-only">Anterior</span>
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
                     
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       const pageNum = i + 1;
                       return (
-                        <li key={pageNum} className={`paginate_button ${currentPage === pageNum ? 'current' : ''}`} aria-controls="mailingCampaignsTable" tabIndex="0">
-                          <button 
-                            onClick={() => setCurrentPage(pageNum)}
-                            className={currentPage === pageNum ? 'font-bold' : ''}
-                          >
-                            {pageNum}
-                          </button>
-                        </li>
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                            currentPage === pageNum
+                              ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                              : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
                       );
                     })}
                     
                     {totalPages > 5 && (
                       <>
-                        <li className="paginate_button unavailable disabled" aria-controls="mailingCampaignsTable" tabIndex="0" id="mailingCampaignsTable_ellipsis">
-                          …
-                        </li>
-                        <li className="paginate_button" aria-controls="mailingCampaignsTable" tabIndex="0">
-                          <button onClick={() => setCurrentPage(totalPages)}>
-                            {totalPages}
-                          </button>
-                        </li>
+                        <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                          ...
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(totalPages)}
+                          className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                        >
+                          {totalPages}
+                        </button>
                       </>
                     )}
                     
-                    <li className={`paginate_button next ${currentPage === totalPages ? 'unavailable disabled' : ''}`} aria-controls="mailingCampaignsTable" tabIndex="0" id="mailingCampaignsTable_next">
-                      <button 
-                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                        disabled={currentPage === totalPages}
-                        className="flex items-center"
-                      >
-                        <AiOutlineSearch />
-                      </button>
-                    </li>
-                  </ul>
+                    <button
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="sr-only">Siguiente</span>
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default EmailCampaigns; 
+export default EmailCampaigns;

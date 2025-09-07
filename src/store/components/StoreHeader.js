@@ -199,52 +199,58 @@ const Header = ({ onLogin, onLogout }) => {
   console.log('Modal will render with className: account-modal and wrapClassName: account-modal-wrapper');
   
   return (
-    <header className="header-custom py-4 shadow-md" style={{ backgroundColor: theme.headerBg, color: theme.headerText }}>
-      <div className="container mx-auto flex justify-between items-center px-4">
-        <LinkWithRef to="/store" className="text-xl font-bold flex items-center gap-2">
-          {header.logoUrl && (
-            <img src={header.logoUrl} alt="Logo" className="h-6 w-auto" />
-          )}
-          {header.companyName}
-        </LinkWithRef>
+    <header className="store-header">
+      <div className="store-container">
+        <div className="flex justify-between items-center py-4">
+          <LinkWithRef to="/store" className="store-header logo">
+            {header.logoUrl && (
+              <img src={header.logoUrl} alt="Logo" className="store-header logo img" />
+            )}
+            {header.companyName}
+          </LinkWithRef>
 
-        <nav className="flex gap-4 text-sm">
-          <LinkWithRef to="/store" className="hover:underline">{t('header.home')}</LinkWithRef>
-          <LinkWithRef to="/store/cart" className="hover:underline">{t('header.cart')}</LinkWithRef>
-          {localStorage.getItem('token') && (
-            <LinkWithRef to="/store/perfil" className="hover:underline">
-              {t('header.profile')}
-            </LinkWithRef>
-          )}
-        </nav>
+          <nav className="store-header nav">
+            <LinkWithRef to="/store">{t('header.home')}</LinkWithRef>
+            <LinkWithRef to="/store/cart">{t('header.cart')}</LinkWithRef>
+            {localStorage.getItem('token') && (
+              <LinkWithRef to="/store/perfil">
+                {t('header.profile')}
+              </LinkWithRef>
+            )}
+          </nav>
 
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder={t('search.placeholder')}
-            size="small"
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-          />
-          <Button onClick={handleSearch} size="small">{t('search.button')}</Button>
-          <select value={i18n.language} onChange={e => i18n.changeLanguage(e.target.value)} className="border rounded px-1 text-sm">
-            <option value="es">ES</option>
-            <option value="en">EN</option>
-          </select>
-        </div>
-
-        <div className="space-x-2">
-          {localStorage.getItem('token') ? (
-            <Button onClick={handleLogout} style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}>
-              {t('header.logout')}
-            </Button>
-          ) : (
-            <Button
-              onClick={openAccountModal}
-              style={{ backgroundColor: theme.primary, color: theme.btnPrimaryText, borderColor: theme.primary }}
+          <div className="store-header search-container">
+            <input
+              type="text"
+              placeholder={t('search.placeholder')}
+              className="store-header search-input"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+            <button onClick={handleSearch} className="store-header search-button">
+              {t('search.button')}
+            </button>
+            <select 
+              value={i18n.language} 
+              onChange={e => i18n.changeLanguage(e.target.value)} 
+              className="store-header language-selector"
             >
-              {t('header.account')}
-            </Button>
-          )}
+              <option value="es">ES</option>
+              <option value="en">EN</option>
+            </select>
+          </div>
+
+          <div className="flex gap-2">
+            {localStorage.getItem('token') ? (
+              <button onClick={handleLogout} className="store-button store-button-outline">
+                {t('header.logout')}
+              </button>
+            ) : (
+              <button onClick={openAccountModal} className="store-button store-button-primary">
+                {t('header.account')}
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

@@ -10,6 +10,7 @@ import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent } from '../services/facebookPixelService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
+import LoginModal from '../components/LoginModal';
 
 
 const Pay = () => {
@@ -32,6 +33,14 @@ const Pay = () => {
   const [paymentResult, setPaymentResult] = useState(null);
   const [facebookPixel, setFacebookPixel] = useState(null);
   const [pricesWithFees, setPricesWithFees] = useState({});
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    if (!user) {
+      setShowLoginModal(true);
+    }
+  }, [user]);
 
   useEffect(() => {
     const loadGateways = async () => {
@@ -68,12 +77,21 @@ const Pay = () => {
       }
     };
 
-    loadGateways();
-    loadFacebookPixel();
-  }, [cartItems, total]);
+    // Only load data if user is authenticated
+    if (user) {
+      loadGateways();
+      loadFacebookPixel();
+    }
+  }, [cartItems, total, user]);
 
   const handlePaymentMethodSelect = (method) => {
     setSelectedGateway(method);
+  };
+
+  // Handle successful login
+  const handleLoginSuccess = (user) => {
+    setShowLoginModal(false);
+    // The component will automatically reload payment methods after user state changes
   };
 
   const handleProcessPayment = async () => {
@@ -242,20 +260,20 @@ const Pay = () => {
 
   if (!cartItems || cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Carrito Vacío</h2>
-          <p className="text-gray-600 mb-6">No hay productos en tu carrito</p>
-          <Button type="primary" onClick={() => navigate('/store')}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+        <div className="store-text-center">
+          <h2 className="store-text-2xl store-font-bold store-text-gray-900 mb-4">Carrito Vacío</h2>
+          <p className="store-text-gray-600 mb-6">No hay productos en tu carrito</p>
+          <button onClick={() => navigate('/store')} className="store-button store-button-primary">
             Continuar Comprando
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen py-8" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
       {facebookPixel && (
         <FacebookPixel
           pixelId={facebookPixel}
@@ -269,127 +287,138 @@ const Pay = () => {
           }}
         />
       )}
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-          {/* Header */}
-          <div className="bg-blue-600 text-white px-6 py-4">
-            <h1 className="text-2xl font-bold">Finalizar Compra</h1>
-            <p className="text-blue-100">Selecciona tu método de pago</p>
-          </div>
+      <div className="store-container">
+        <div className="store-container-sm">
+          <div className="store-card">
+            {/* Header */}
+            <div className="store-card-header" style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)', color: 'white' }}>
+              <h1 className="store-text-2xl store-font-bold">Finalizar Compra</h1>
+              <p className="store-text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Selecciona tu método de pago</p>
+            </div>
 
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Métodos de Pago */}
-              <div className="lg:col-span-2">
-                <h2 className="text-xl font-semibold mb-4">Métodos de Pago</h2>
-                
-                {loadingMethods ? (
-                  <div className="text-center py-8">
-                    <Spin size="large" />
-                    <p className="mt-4 text-gray-600">Cargando métodos de pago...</p>
-                  </div>
-                ) : availableMethods.length === 0 ? (
-                  <Alert
-                    message="No hay métodos de pago disponibles"
-                    description="Por favor, contacta al administrador para configurar los métodos de pago."
-                    type="warning"
-                    showIcon
-                  />
-                ) : (
-                  <div className="space-y-4">
-                    {availableMethods.map((method) => {
-                      const isSelected = selectedGateway?.method_id === method.method_id;
-                      
-                      return (
-                        <Card
-                          key={method.method_id}
-                          className={`cursor-pointer transition-all duration-200 ${
-                            isSelected
-                              ? 'ring-2 ring-blue-500 border-blue-500'
-                              : 'hover:shadow-md'
-                          }`}
-                          onClick={() => handlePaymentMethodSelect(method)}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-4">
-                              <div className="text-2xl">
-                                {getMethodIcon(method.method_id)}
-                              </div>
-                              <div>
-                                <h3 className="font-semibold text-lg">{getMethodName(method.method_id)}</h3>
-                                <p className="text-gray-600 text-sm">
-                                  {getMethodDescription(method.method_id)}
-                                </p>
+            <div className="store-card-body">
+              <div className="store-grid store-grid-auto">
+                {/* Métodos de Pago */}
+                <div className="store-space-y-6">
+                  <h2 className="store-text-xl store-font-semibold">Métodos de Pago</h2>
+                  
+                  {loadingMethods ? (
+                    <div className="store-text-center py-8">
+                      <div className="store-loading"></div>
+                      <p className="mt-4 store-text-gray-600">Cargando métodos de pago...</p>
+                    </div>
+                  ) : availableMethods.length === 0 ? (
+                    <div className="store-alert store-alert-warning">
+                      <div>
+                        <h4 className="store-font-semibold">No hay métodos de pago disponibles</h4>
+                        <p className="store-text-sm">Por favor, contacta al administrador para configurar los métodos de pago.</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="store-space-y-4">
+                      {availableMethods.map((method) => {
+                        const isSelected = selectedGateway?.method_id === method.method_id;
+                        
+                        return (
+                          <div
+                            key={method.method_id}
+                            className={`store-payment-method ${isSelected ? 'selected' : ''}`}
+                            onClick={() => handlePaymentMethodSelect(method)}
+                          >
+                            <div className="store-payment-method-icon">
+                              {getMethodIcon(method.method_id)}
+                            </div>
+                            <div className="store-payment-method-info">
+                              <div className="store-payment-method-name">{getMethodName(method.method_id)}</div>
+                              <div className="store-payment-method-description">
+                                {getMethodDescription(method.method_id)}
                               </div>
                             </div>
-                            <div className="text-right">
-                              <div className="text-lg font-semibold">
-                                ${total.toFixed(2)}
-                              </div>
+                            <div className="store-text-lg store-font-semibold store-text-primary">
+                              ${total.toFixed(2)}
                             </div>
                           </div>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              {/* Resumen de Compra */}
-              <div className="lg:col-span-1">
-                <Card title="Resumen de Compra" className="sticky top-4">
-                  <div className="space-y-3">
-                    {cartItems.map((item, index) => (
-                      <div key={index} className="flex justify-between text-sm">
-                        <span>{item.nombreEvento}</span>
-                        <span>${item.precio.toFixed(2)}</span>
-                      </div>
-                    ))}
-
-                    <Divider />
-
-                    <div className="flex justify-between items-center text-lg font-bold">
-                      <span>Total</span>
-                      <span>${total.toFixed(2)}</span>
+                        );
+                      })}
                     </div>
+                  )}
+                </div>
 
-                    {selectedGateway && pricesWithFees[selectedGateway.id]?.hasFees && (
-                      <>
-                        <div className="flex justify-between text-sm text-gray-600">
-                          <span>Comisión ({selectedGateway.name})</span>
-                          <span>+${pricesWithFees[selectedGateway.id].comision.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-lg font-bold text-blue-600">
-                          <span>Total Final</span>
-                          <span>${pricesWithFees[selectedGateway.id].precioTotal.toFixed(2)}</span>
-                        </div>
-                      </>
-                    )}
-
-                    {/* Botón de Pago */}
-                    <Button
-                      type="primary"
-                      size="large"
-                      block
-                      loading={processingPayment}
-                      disabled={!selectedGateway || processingPayment}
-                      onClick={handleProcessPayment}
-                    >
-                      {processingPayment ? 'Procesando...' : 'Procesar Pago'}
-                    </Button>
-
-                    {selectedGateway && (
-                      <div className="text-xs text-gray-500 text-center">
-                        Pagando con {getMethodName(selectedGateway.method_id)}
-                      </div>
-                    )}
+                {/* Resumen de Compra */}
+                <div className="store-card">
+                  <div className="store-card-header">
+                    <h3 className="store-text-lg store-font-semibold">Resumen de Compra</h3>
                   </div>
-                </Card>
+                  <div className="store-card-body">
+                    <div className="store-space-y-3">
+                      {cartItems.map((item, index) => (
+                        <div key={index} className="flex justify-between store-text-sm">
+                          <span>{item.nombreEvento}</span>
+                          <span>${item.precio.toFixed(2)}</span>
+                        </div>
+                      ))}
+
+                      <div className="border-t border-gray-200 pt-3"></div>
+
+                      <div className="flex justify-between items-center store-text-lg store-font-bold">
+                        <span>Total</span>
+                        <span>${total.toFixed(2)}</span>
+                      </div>
+
+                      {selectedGateway && pricesWithFees[selectedGateway.id]?.hasFees && (
+                        <>
+                          <div className="flex justify-between store-text-sm store-text-gray-600">
+                            <span>Comisión ({selectedGateway.name})</span>
+                            <span>+${pricesWithFees[selectedGateway.id].comision.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between items-center store-text-lg store-font-bold store-text-primary">
+                            <span>Total Final</span>
+                            <span>${pricesWithFees[selectedGateway.id].precioTotal.toFixed(2)}</span>
+                          </div>
+                        </>
+                      )}
+
+                      {/* Botón de Pago */}
+                      <button
+                        className="store-button store-button-primary store-button-lg store-button-block"
+                        disabled={!selectedGateway || processingPayment}
+                        onClick={handleProcessPayment}
+                      >
+                        {processingPayment ? (
+                          <>
+                            <div className="store-loading"></div>
+                            Procesando...
+                          </>
+                        ) : (
+                          'Procesar Pago'
+                        )}
+                      </button>
+
+                      {selectedGateway && (
+                        <div className="store-text-xs store-text-gray-500 store-text-center">
+                          Pagando con {getMethodName(selectedGateway.method_id)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal
+        visible={showLoginModal}
+        onClose={() => {
+          setShowLoginModal(false);
+          // If user closes modal without logging in, redirect to cart
+          navigate('/store/cart');
+        }}
+        onLoginSuccess={handleLoginSuccess}
+        title="Iniciar Sesión para Pagar"
+      />
     </div>
   );
 };

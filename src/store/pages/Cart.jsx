@@ -11,6 +11,8 @@ import { useCartStore } from '../cartStore';
 // Nota: El carrito debe ser visible incluso en modo incógnito (sin login)
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent, FACEBOOK_EVENTS, shouldTrackOnPage } from '../services/facebookPixelService';
+import LoginModal from '../components/LoginModal';
+import { useAuth } from '../../contexts/AuthContext';
 
 // import AuthCheck from '../components/AuthCheck';
 
@@ -132,6 +134,7 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
 // Main Cart Component
 const Cart = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const {
         items,
         products,
@@ -143,6 +146,7 @@ const Cart = () => {
     // Smart cart state
     const [currentLocator] = useState(null);
     const [locatorSeats] = useState([]);
+    const [showLoginModal, setShowLoginModal] = useState(false);
 
     const itemCount = (items && Array.isArray(items) ? items.length : 0) + (products && Array.isArray(products) ? products.length : 0);
 
@@ -182,7 +186,20 @@ const Cart = () => {
             return;
         }
         
+        // Check if user is authenticated
+        if (!user) {
+            setShowLoginModal(true);
+            return;
+        }
+        
         // Redirect to the payment page within the store
+        navigate('/store/payment');
+    };
+
+    // Handle successful login
+    const handleLoginSuccess = (user) => {
+        setShowLoginModal(false);
+        // After successful login, proceed to payment
         navigate('/store/payment');
     };
 
@@ -202,119 +219,106 @@ const Cart = () => {
     // El carrito se muestra sin requerir sesión; el login se solicita al pagar
 
     return (
-        <div className="max-w-2xl mx-auto p-4">
+        <div className="store-container store-container-sm">
             {/* Facebook Pixel */}
             <FacebookPixel />
 
-            {/* Quick Actions */}
-            {itemCount > 0 && (
-                <div className="mb-4 flex space-x-2">
-                    <Button
-                        icon={<DeleteOutlined />}
-                        size="small"
-                        danger
-                        onClick={clearCart}
-                    >
-                        Limpiar
-                    </Button>
+            <div className="store-card">
+                <div className="store-card-header">
+                    <h1 className="store-text-2xl store-font-bold store-text-center">Carrito de Compras</h1>
                 </div>
-            )}
+                
+                <div className="store-card-body">
+                    {/* Quick Actions */}
+                    {itemCount > 0 && (
+                        <div className="store-space-y-4 mb-6">
+                            <button
+                                onClick={clearCart}
+                                className="store-button store-button-error store-button-sm"
+                            >
+                                <DeleteOutlined />
+                                Limpiar Carrito
+                            </button>
+                        </div>
+                    )}
 
-            {/* Cart Items */}
-            <div className="max-h-[400px] overflow-y-auto space-y-3 pr-1">
-                {itemCount === 0 && !currentLocator ? (
-                    <div className="text-center text-gray-500 py-8">
-                        <ShoppingCartOutlined className="text-4xl mb-2" />
-                        <p>No hay items en el carrito</p>
-                        <p className="text-sm mt-2">Añade asientos al carrito</p>
-                        <Button 
-                            type="primary" 
-                            size="large"
-                            onClick={() => navigate('/store')}
-                            className="mt-4"
-                        >
-                            Explorar Eventos
-                        </Button>
-                    </div>
+                    {/* Cart Items */}
+                    <div className="max-h-[400px] overflow-y-auto store-space-y-4">
+                        {itemCount === 0 && !currentLocator ? (
+                            <div className="store-text-center store-text-gray-500 py-8">
+                                <ShoppingCartOutlined className="text-4xl mb-2" />
+                                <p className="store-text-lg store-font-medium">No hay items en el carrito</p>
+                                <p className="store-text-sm store-text-gray-400 mt-2">Añade asientos al carrito</p>
+                                <button 
+                                    onClick={() => navigate('/store')}
+                                    className="store-button store-button-primary store-button-lg mt-4"
+                                >
+                                    Explorar Eventos
+                                </button>
+                            </div>
                 ) : (
                     <>
-                        {/* Locator Seats Section */}
-                        {currentLocator && locatorSeats.length > 0 && (
-                            <div className="mb-6">
-                                <div className="flex items-center justify-between mb-3">
-                                    <Title level={5} className="mb-0">
-                                        <UserOutlined className="mr-2" />
-                                        Asientos del Localizador: {currentLocator}
-                                    </Title>
-                                    <BulkTicketsDownloadButton
-                                        locator={currentLocator}
-                                        paidSeats={paidSeats}
-                                        totalSeats={locatorSeats.length}
-                                    />
-                                </div>
+                            {/* Locator Seats Section */}
+                            {currentLocator && locatorSeats.length > 0 && (
+                                <div className="store-space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="store-text-lg store-font-semibold store-text-gray-900">
+                                            <UserOutlined className="mr-2" />
+                                            Asientos del Localizador: {currentLocator}
+                                        </h3>
+                                        <BulkTicketsDownloadButton
+                                            locator={currentLocator}
+                                            paidSeats={paidSeats}
+                                            totalSeats={locatorSeats.length}
+                                        />
+                                    </div>
                                 
-                                {locatorSeats.map((seat) => (
-                                    <Card 
-                                        key={seat.id} 
-                                        size="small" 
-                                        className="mb-2"
-                                        actions={[
-                                            <TicketDownloadButton
-                                                key="download"
-                                                seat={seat}
-                                                locator={currentLocator}
-                                                isPaid={seat.isPaid}
-                                            />,
-                                            <Button 
-                                                key="remove"
-                                                type="text" 
-                                                danger
-                                                icon={<DeleteOutlined />}
-                                                size="small"
-                                                disabled={seat.isPaid}
-                                            >
-                                                {seat.isPaid ? 'Pagado' : 'Quitar'}
-                                            </Button>
-                                        ]}
-                                    >
-                                        <div className="flex justify-between items-center">
-                                            <div className="flex-1">
-                                                <div className="font-medium text-sm">
+                                    {locatorSeats.map((seat) => (
+                                        <div key={seat.id} className="store-cart-item">
+                                            <div className="store-cart-item-header">
+                                                <div className="store-cart-item-title">
                                                     {seat.nombre || `Asiento ${seat.id}`}
                                                 </div>
-                                                <div className="text-xs text-gray-600">
-                                                    {seat.zona || 'General'} - {seat.isPaid ? 'PAGADO' : 'RESERVADO'}
-                                                </div>
-                                            </div>
-                                            <div className="text-right">
-                                                <div className="font-bold text-sm">
+                                                <div className="store-cart-item-price">
                                                     ${formatPrice(seat.precio)}
                                                 </div>
+                                            </div>
+                                            <div className="store-text-sm store-text-gray-600 mb-3">
+                                                {seat.zona || 'General'} - {seat.isPaid ? 'PAGADO' : 'RESERVADO'}
+                                            </div>
+                                            <div className="store-cart-item-actions">
+                                                <TicketDownloadButton
+                                                    seat={seat}
+                                                    locator={currentLocator}
+                                                    isPaid={seat.isPaid}
+                                                />
+                                                <button 
+                                                    disabled={seat.isPaid}
+                                                    className={`store-button store-button-sm ${seat.isPaid ? 'store-button-ghost' : 'store-button-error'}`}
+                                                >
+                                                    <DeleteOutlined />
+                                                    {seat.isPaid ? 'Pagado' : 'Quitar'}
+                                                </button>
                                                 {!seat.isPaid && (
-                                                    <Tag color="orange" size="small">
-                                                        Pendiente
-                                                    </Tag>
+                                                    <span className="store-badge store-badge-warning">Pendiente</span>
                                                 )}
                                             </div>
                                         </div>
-                                    </Card>
-                                ))}
+                                    ))}
                                 
-                                {/* Payment Status Summary */}
-                                <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                                    <div className="flex justify-between items-center text-sm">
-                                        <span>Asientos Pagados: <strong className="text-green-600">{paidSeats.length}</strong></span>
-                                        <span>Asientos Pendientes: <strong className="text-orange-600">{unpaidSeats.length}</strong></span>
-                                    </div>
-                                    {unpaidSeats.length > 0 && (
-                                        <div className="mt-2 p-2 bg-orange-50 border border-orange-200 rounded">
-                                            <Text type="warning" className="text-xs">
+                                    {/* Payment Status Summary */}
+                                    <div className="store-alert store-alert-info">
+                                        <div className="flex justify-between items-center store-text-sm">
+                                            <span>Asientos Pagados: <strong className="store-text-success">{paidSeats.length}</strong></span>
+                                            <span>Asientos Pendientes: <strong className="store-text-warning">{unpaidSeats.length}</strong></span>
+                                        </div>
+                                        {unpaidSeats.length > 0 && (
+                                            <div className="store-alert store-alert-warning mt-3">
                                                 ⚠️ Hay {unpaidSeats.length} asientos pendientes de pago. 
                                                 Los tickets solo se pueden descargar cuando estén completamente pagados.
-                                            </Text>
-                                        </div>
-                                    )}
-                                </div>
+                                            </div>
+                                        )}
+                                    </div>
                             </div>
                         )}
 
@@ -409,58 +413,63 @@ const Cart = () => {
                 )}
             </div>
 
-            {/* Summary and Checkout */}
-            {(itemCount > 0 || currentLocator) && (
-                <div className="mt-6 border-t pt-4">
-                    <div className="space-y-2 mb-4">
-                        <div className="flex justify-between">
-                            <span>Subtotal:</span>
-                            <span>${formatPrice(subtotal)}</span>
-                        </div>
-                        {currentLocator && unpaidSeats.length > 0 && (
-                            <div className="flex justify-between text-orange-600">
-                                <span>Pendiente de pago:</span>
-                                <span>${formatPrice((unpaidSeats && Array.isArray(unpaidSeats) ? unpaidSeats.reduce((sum, seat) => sum + (seat.precio || 0), 0) : 0))}</span>
+                    {/* Summary and Checkout */}
+                    {(itemCount > 0 || currentLocator) && (
+                        <div className="store-cart-summary">
+                            <div className="store-space-y-3 mb-4">
+                                <div className="store-cart-summary-row">
+                                    <span className="store-text-gray-600">Subtotal:</span>
+                                    <span className="store-font-semibold">${formatPrice(subtotal)}</span>
+                                </div>
+                                {currentLocator && unpaidSeats.length > 0 && (
+                                    <div className="store-cart-summary-row store-text-warning">
+                                        <span>Pendiente de pago:</span>
+                                        <span>${formatPrice((unpaidSeats && Array.isArray(unpaidSeats) ? unpaidSeats.reduce((sum, seat) => sum + (seat.precio || 0), 0) : 0))}</span>
+                                    </div>
+                                )}
+                                <div className="store-cart-summary-total">
+                                    <span>Total a pagar:</span>
+                                    <span>${formatPrice(subtotal)}</span>
+                                </div>
                             </div>
-                        )}
-                        <Divider />
-                        <div className="flex justify-between font-bold text-lg">
-                            <span>Total a pagar:</span>
-                            <span>${formatPrice(subtotal)}</span>
-                        </div>
-                    </div>
 
-                    <div className="flex space-x-2">
-                        {itemCount > 0 && (
-                            <Button 
-                                type="primary" 
-                                size="large" 
-                                onClick={handleCheckout}
-                                className="flex-1"
-                            >
-                                Proceder al Pago
-                            </Button>
-                        )}
-                        {currentLocator && paidSeats.length > 0 && (
-                            <Button 
-                                type="default" 
-                                size="large"
-                                icon={<DownloadOutlined />}
-                                onClick={() => {
-                                    // Trigger bulk download
-                                    const downloadBtn = document.querySelector('[data-bulk-download]');
-                                    if (downloadBtn) downloadBtn.click();
-                                }}
-                                className="flex-1"
-                            >
-                                Descargar Tickets Pagados
-                            </Button>
-                        )}
-                    </div>
+                            <div className="store-space-x-4">
+                                {itemCount > 0 && (
+                                    <button 
+                                        onClick={handleCheckout}
+                                        className="store-button store-button-primary store-button-lg store-button-block"
+                                    >
+                                        Proceder al Pago
+                                    </button>
+                                )}
+                                {currentLocator && paidSeats.length > 0 && (
+                                    <button 
+                                        onClick={() => {
+                                            // Trigger bulk download
+                                            const downloadBtn = document.querySelector('[data-bulk-download]');
+                                            if (downloadBtn) downloadBtn.click();
+                                        }}
+                                        className="store-button store-button-secondary store-button-lg store-button-block"
+                                    >
+                                        <DownloadOutlined />
+                                        Descargar Tickets Pagados
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
 
         </div>
+
+        {/* Login Modal */}
+        <LoginModal
+            visible={showLoginModal}
+            onClose={() => setShowLoginModal(false)}
+            onLoginSuccess={handleLoginSuccess}
+            title="Iniciar Sesión para Continuar"
+        />
     );
 };
 

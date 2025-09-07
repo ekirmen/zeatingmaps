@@ -6,6 +6,7 @@ import BasicFooter from '../components/BasicFooter';
 import GlobalCartTimer from './components/GlobalCartTimer';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFoundPage from '../components/NotFoundPage';
+import './styles/store-design.css'; // Modern design system
 import Event from './pages/Event';
 import EventInfo from './pages/EventInfo';
 import BuyEvent from './pages/BuyEvent';
@@ -69,11 +70,7 @@ const StoreApp = () => {
               <Route path="select-seats/:salaId/:funcionId" element={<SelectSeats />} />
               <Route path="seat-selection/:funcionId" element={<SeatSelectionPage />} />
               <Route path="cart" element={<CartPage />} />
-              <Route path="payment" element={
-                <ProtectedRoute redirectTo="/store/login">
-                  <Pay />
-                </ProtectedRoute>
-              } />
+              <Route path="payment" element={<Pay />} />
               <Route path="login" element={<StoreLogin />} />
               <Route path="register" element={<Register />} />
               <Route path="forgot-password" element={<ForgotPassword />} />

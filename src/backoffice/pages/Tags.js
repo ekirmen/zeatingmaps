@@ -46,17 +46,10 @@ const Tags = () => {
         setEventTags(eventData || []);
       }
 
-      // Cargar tags de usuarios con relaciones
+      // Cargar tags de usuarios (simplificado para evitar errores de relación)
       const { data: userData, error: userError } = await supabase
         .from('user_tags')
-        .select(`
-          *,
-          relations:user_tag_relations(
-            id,
-            user_id,
-            profiles:user_id(id, nombre, email)
-          )
-        `)
+        .select('*')
         .eq('tenant_id', currentTenant.id)
         .order('name', { ascending: true });
 
@@ -65,11 +58,31 @@ const Tags = () => {
       } else {
         console.log('🔍 [Tags] Tags de usuarios cargados:', userData);
         
-        // Procesar datos para incluir estadísticas de uso
-        const processedUserTags = (userData || []).map(tag => ({
-          ...tag,
-          usage_count: tag.relations?.length || 0,
-          users: tag.relations?.map(r => r.profiles).filter(Boolean) || []
+        // Cargar relaciones por separado para evitar errores de relación
+        const processedUserTags = await Promise.all((userData || []).map(async (tag) => {
+          try {
+            const { data: relations } = await supabase
+              .from('user_tag_relations')
+              .select(`
+                id,
+                user_id,
+                profiles:user_id(id, nombre, email)
+              `)
+              .eq('tag_id', tag.id);
+            
+            return {
+              ...tag,
+              usage_count: relations?.length || 0,
+              users: relations?.map(r => r.profiles).filter(Boolean) || []
+            };
+          } catch (error) {
+            console.warn('Error loading relations for tag:', tag.id, error);
+            return {
+              ...tag,
+              usage_count: 0,
+              users: []
+            };
+          }
         }));
         
         setUserTags(processedUserTags);
