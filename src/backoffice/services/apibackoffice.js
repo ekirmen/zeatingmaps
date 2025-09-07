@@ -295,7 +295,7 @@ export const createFuncion = async (data) => {
 };
 
 // === MAPAS ===
-export const fetchMapa = async (salaId) => {
+export const fetchMapa = async (salaId, funcionId = null) => {
   if (!salaId) {
     console.error('❌ [fetchMapa] salaId es null/undefined');
     return null;
@@ -303,6 +303,7 @@ export const fetchMapa = async (salaId) => {
 
   console.log('🔍 [fetchMapa] Iniciando búsqueda de mapa para sala:', salaId);
   console.log('🔍 [fetchMapa] Tipo de salaId:', typeof salaId);
+  console.log('🔍 [fetchMapa] FuncionId:', funcionId);
 
   try {
     // Cargar el mapa
@@ -346,9 +347,19 @@ export const fetchMapa = async (salaId) => {
       console.warn('⚠️ [fetchMapa] Error al cargar zonas, continuando sin zonas:', zonasError);
     }
     
-    // Retornar mapa con zonas incluidas
+    // Cargar asientos reservados/vendidos si se proporciona funcionId
+    let reservedSeats = {};
+    if (funcionId) {
+      console.log('🔍 [fetchMapa] Cargando asientos reservados para función:', funcionId);
+      reservedSeats = await loadReservedSeats(funcionId);
+    }
+    
+    // Aplicar estados de asientos reservados al mapa
+    const mapaConEstados = applySeatStates(mapa, reservedSeats);
+    
+    // Retornar mapa con zonas incluidas y estados de asientos
     const resultado = {
-      ...mapa,
+      ...mapaConEstados,
       zonas: zonas || []
     };
     
@@ -357,6 +368,170 @@ export const fetchMapa = async (salaId) => {
   } catch (error) {
     console.error('❌ [fetchMapa] Error general:', error);
     throw error;
+  }
+};
+
+// Función para cargar asientos reservados desde payment_transactions
+const loadReservedSeats = async (funcionId) => {
+  try {
+    console.log('🔍 [loadReservedSeats] Cargando asientos reservados para función:', funcionId);
+    
+    // Buscar transacciones pendientes (reservadas) para esta función
+    const { data: transactions, error } = await supabase
+      .from('payment_transactions')
+      .select('*')
+      .eq('funcion_id', funcionId)
+      .in('status', ['pending', 'reserved'])
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('❌ [loadReservedSeats] Error cargando transacciones:', error);
+      return {};
+    }
+    
+    console.log('🔍 [loadReservedSeats] Transacciones encontradas:', transactions?.length || 0);
+    
+    // También buscar en la tabla payments para compatibilidad
+    const { data: payments, error: paymentsError } = await supabase
+      .from('payments')
+      .select('seats, status, funcion')
+      .eq('funcion', funcionId)
+      .in('status', ['reservado', 'pagado'])
+      .order('created_at', { ascending: false });
+    
+    if (paymentsError) {
+      console.warn('⚠️ [loadReservedSeats] Error cargando payments:', paymentsError);
+    }
+    
+    console.log('🔍 [loadReservedSeats] Payments encontrados:', payments?.length || 0);
+    
+    // Crear mapa de asientos reservados
+    const reservedSeats = {};
+    
+    // Procesar transacciones de payment_transactions
+    if (transactions) {
+      transactions.forEach(transaction => {
+        console.log('🔍 [loadReservedSeats] Procesando transacción:', transaction.id, 'Status:', transaction.status);
+        
+        // Para payment_transactions, necesitamos extraer los asientos del gateway_response
+        if (transaction.gateway_response && typeof transaction.gateway_response === 'object') {
+          const seats = transaction.gateway_response.seats || [];
+          console.log('🔍 [loadReservedSeats] Asientos en gateway_response:', seats.length);
+          
+          seats.forEach(seat => {
+            if (seat.id) {
+              reservedSeats[seat.id] = {
+                estado: transaction.status === 'pending' ? 'reservado' : 'pagado',
+                transactionId: transaction.id,
+                locator: transaction.locator,
+                createdAt: transaction.created_at
+              };
+              console.log('✅ [loadReservedSeats] Asiento reservado:', seat.id, 'Estado:', reservedSeats[seat.id].estado);
+            }
+          });
+        }
+        
+        // Si no hay asientos en gateway_response, intentar buscar por locator en payments
+        if (!transaction.gateway_response?.seats && transaction.locator) {
+          console.log('🔍 [loadReservedSeats] Buscando asientos por locator:', transaction.locator);
+          
+          // Buscar en payments por locator
+          const { data: paymentByLocator, error: locatorError } = await supabase
+            .from('payments')
+            .select('seats, status')
+            .eq('locator', transaction.locator)
+            .single();
+          
+          if (!locatorError && paymentByLocator && paymentByLocator.seats) {
+            console.log('✅ [loadReservedSeats] Encontrado payment por locator con asientos:', paymentByLocator.seats.length);
+            
+            paymentByLocator.seats.forEach(seat => {
+              if (seat.id) {
+                reservedSeats[seat.id] = {
+                  estado: transaction.status === 'pending' ? 'reservado' : 'pagado',
+                  transactionId: transaction.id,
+                  locator: transaction.locator,
+                  createdAt: transaction.created_at
+                };
+                console.log('✅ [loadReservedSeats] Asiento reservado por locator:', seat.id);
+              }
+            });
+          }
+        }
+      });
+    }
+    
+    // Procesar payments directamente
+    if (payments) {
+      payments.forEach(payment => {
+        if (payment.seats && Array.isArray(payment.seats)) {
+          payment.seats.forEach(seat => {
+            if (seat.id) {
+              reservedSeats[seat.id] = {
+                estado: payment.status === 'reservado' ? 'reservado' : 'pagado',
+                paymentId: payment.id,
+                createdAt: payment.created_at
+              };
+              console.log('✅ [loadReservedSeats] Asiento desde payments:', seat.id, 'Estado:', reservedSeats[seat.id].estado);
+            }
+          });
+        }
+      });
+    }
+    
+    console.log('✅ [loadReservedSeats] Total asientos reservados cargados:', Object.keys(reservedSeats).length);
+    console.log('🔍 [loadReservedSeats] Asientos reservados:', Object.keys(reservedSeats));
+    return reservedSeats;
+    
+  } catch (error) {
+    console.error('❌ [loadReservedSeats] Error general:', error);
+    return {};
+  }
+};
+
+// Función para aplicar estados de asientos al mapa
+const applySeatStates = (mapa, reservedSeats) => {
+  if (!mapa || !mapa.contenido || Object.keys(reservedSeats).length === 0) {
+    return mapa;
+  }
+  
+  console.log('🔍 [applySeatStates] Aplicando estados a mapa con', Object.keys(reservedSeats).length, 'asientos reservados');
+  
+  try {
+    const contenido = Array.isArray(mapa.contenido) ? mapa.contenido : JSON.parse(mapa.contenido);
+    
+    // Recorrer el contenido del mapa y aplicar estados
+    const contenidoConEstados = contenido.map(elemento => {
+      if (elemento.sillas && Array.isArray(elemento.sillas)) {
+        const sillasConEstado = elemento.sillas.map(silla => {
+          const seatId = silla.id || silla._id;
+          if (seatId && reservedSeats[seatId]) {
+            return {
+              ...silla,
+              estado: reservedSeats[seatId].estado,
+              transactionId: reservedSeats[seatId].transactionId,
+              locator: reservedSeats[seatId].locator
+            };
+          }
+          return silla;
+        });
+        
+        return {
+          ...elemento,
+          sillas: sillasConEstado
+        };
+      }
+      return elemento;
+    });
+    
+    return {
+      ...mapa,
+      contenido: contenidoConEstados
+    };
+    
+  } catch (error) {
+    console.error('❌ [applySeatStates] Error aplicando estados:', error);
+    return mapa;
   }
 };
 

@@ -240,8 +240,8 @@ export const useBoleteria = () => {
         console.log('🔍 [useBoleteria] Tipo de salaId:', typeof salaId);
         
         try {
-          console.log('🔍 [useBoleteria] Llamando a fetchMapa con salaId:', salaId);
-          const mapData = await fetchMapa(salaId);
+          console.log('🔍 [useBoleteria] Llamando a fetchMapa con salaId:', salaId, 'y funcionId:', funcionData.id);
+          const mapData = await fetchMapa(salaId, funcionData.id);
           console.log('📊 [useBoleteria] Mapa cargado:', mapData);
           console.log('📊 [useBoleteria] Tipo de mapData:', typeof mapData);
           console.log('📊 [useBoleteria] mapData es null?', mapData === null);
