@@ -53,6 +53,8 @@ const BoleteriaMainCustomDesign = () => {
   const [lastPanPoint, setLastPanPoint] = useState({ x: 0, y: 0 });
   const [selectedPriceOption, setSelectedPriceOption] = useState(null);
   const [activeZoneId, setActiveZoneId] = useState(null);
+  const [selectedDiscount, setSelectedDiscount] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   const {
     eventos,
@@ -590,9 +592,62 @@ const BoleteriaMainCustomDesign = () => {
         open={showEventSearch}
         onCancel={() => setShowEventSearch(false)}
         footer={null}
+        width={800}
       >
-        <div className="text-center text-gray-500 py-xl">
-          Funcionalidad de búsqueda de eventos en desarrollo
+        <div className="space-y-4">
+          <Search
+            placeholder="Buscar eventos por nombre, fecha o ubicación..."
+            allowClear
+            enterButton="Buscar"
+            size="large"
+            onSearch={(value) => {
+              console.log('Buscando eventos:', value);
+              message.info(`Buscando eventos: "${value}"`);
+            }}
+          />
+          
+          <div className="max-h-96 overflow-y-auto">
+            {eventos && eventos.length > 0 ? (
+              <div className="space-y-2">
+                {eventos.map((evento) => (
+                  <Card
+                    key={evento.id}
+                    size="small"
+                    hoverable
+                    onClick={() => {
+                      setSelectedEvent(evento);
+                      setShowEventSearch(false);
+                      message.success(`Evento seleccionado: ${evento.nombre}`);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex items-center space-x-3">
+                      {evento.imagenes && (
+                        <Avatar
+                          size={40}
+                          src={resolveImageUrl(evento.imagenes)}
+                          icon={<EyeOutlined />}
+                        />
+                      )}
+                      <div className="flex-1">
+                        <div className="font-medium">{evento.nombre}</div>
+                        <div className="text-sm text-gray-500">
+                          {evento.fecha_inicio && new Date(evento.fecha_inicio).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {evento.descripcion && evento.descripcion.substring(0, 100)}...
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center text-gray-500 py-8">
+                No hay eventos disponibles
+              </div>
+            )}
+          </div>
         </div>
       </Modal>
 
@@ -600,10 +655,83 @@ const BoleteriaMainCustomDesign = () => {
         title="Aplicar Descuentos"
         open={showDiscountModal}
         onCancel={() => setShowDiscountModal(false)}
-        footer={null}
+        footer={[
+          <Button key="cancel" onClick={() => setShowDiscountModal(false)}>
+            Cancelar
+          </Button>,
+          <Button
+            key="apply"
+            type="primary"
+            onClick={() => {
+              if (discountValue > 0) {
+                setSelectedDiscount({
+                  type: discountType,
+                  amount: discountValue,
+                  description: discountType === 'percentage' ? `${discountValue}% de descuento` : `$${discountValue} de descuento`
+                });
+                setShowDiscountModal(false);
+                message.success('Descuento aplicado correctamente');
+              } else {
+                message.warning('Ingresa un valor de descuento válido');
+              }
+            }}
+          >
+            Aplicar Descuento
+          </Button>
+        ]}
+        width={600}
       >
-        <div className="text-center text-gray-500 py-xl">
-          Funcionalidad de descuentos en desarrollo
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Tipo de Descuento</label>
+            <Select
+              value={discountType}
+              onChange={setDiscountType}
+              style={{ width: '100%' }}
+              options={[
+                { value: 'percentage', label: 'Porcentaje (%)' },
+                { value: 'fixed', label: 'Monto Fijo ($)' }
+              ]}
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Valor del Descuento {discountType === 'percentage' ? '(%)' : '($)'}
+            </label>
+            <InputNumber
+              value={discountValue}
+              onChange={setDiscountValue}
+              min={0}
+              max={discountType === 'percentage' ? 100 : undefined}
+              style={{ width: '100%' }}
+              placeholder={discountType === 'percentage' ? 'Ej: 10' : 'Ej: 5.00'}
+            />
+          </div>
+          
+          {discountValue > 0 && (
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+              <div className="text-sm text-blue-800">
+                <strong>Resumen del Descuento:</strong>
+              </div>
+              <div className="text-sm text-blue-700 mt-1">
+                {discountType === 'percentage' 
+                  ? `${discountValue}% de descuento`
+                  : `$${discountValue.toFixed(2)} de descuento`
+                }
+              </div>
+              {selectedPriceOption && (
+                <div className="text-xs text-blue-600 mt-2">
+                  Precio original: ${selectedPriceOption.precio}
+                  <br />
+                  Precio con descuento: ${discountType === 'percentage' 
+                    ? (selectedPriceOption.precio * (1 - discountValue / 100)).toFixed(2)
+                    : Math.max(0, selectedPriceOption.precio - discountValue).toFixed(2)
+                  }
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </Modal>
 
@@ -617,9 +745,89 @@ const BoleteriaMainCustomDesign = () => {
         open={showCartManagement}
         onCancel={() => setShowCartManagement(false)}
         footer={null}
+        width={600}
       >
-        <div className="text-center text-gray-500 py-xl">
-          Funcionalidad de gestión de carrito en desarrollo
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">Carritos Guardados</h3>
+            <Button
+              type="primary"
+              onClick={() => {
+                // Guardar carrito actual
+                const cartData = {
+                  id: Date.now(),
+                  timestamp: new Date().toISOString(),
+                  event: selectedEvent?.nombre,
+                  function: selectedFuncion?.nombre,
+                  seats: selectedSeats,
+                  total: selectedSeats.reduce((sum, seat) => sum + (selectedPriceOption?.precio || 0), 0),
+                  status: 'guardado'
+                };
+                
+                // Guardar en localStorage
+                const savedCarts = JSON.parse(localStorage.getItem('savedCarts') || '[]');
+                savedCarts.push(cartData);
+                localStorage.setItem('savedCarts', JSON.stringify(savedCarts));
+                
+                message.success('Carrito guardado correctamente');
+              }}
+            >
+              Guardar Carrito Actual
+            </Button>
+          </div>
+          
+          <div className="space-y-2">
+            {(() => {
+              const savedCarts = JSON.parse(localStorage.getItem('savedCarts') || '[]');
+              return savedCarts.length > 0 ? (
+                savedCarts.map((cart) => (
+                  <Card key={cart.id} size="small" className="hover:shadow-md">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="font-medium">{cart.event}</div>
+                        <div className="text-sm text-gray-500">{cart.function}</div>
+                        <div className="text-xs text-gray-400">
+                          {cart.seats.length} asientos • ${cart.total}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {new Date(cart.timestamp).toLocaleString()}
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button
+                          size="small"
+                          onClick={() => {
+                            // Cargar carrito
+                            setSelectedSeats(cart.seats);
+                            message.success('Carrito cargado');
+                            setShowCartManagement(false);
+                          }}
+                        >
+                          Cargar
+                        </Button>
+                        <Button
+                          size="small"
+                          danger
+                          onClick={() => {
+                            // Eliminar carrito
+                            const updatedCarts = savedCarts.filter(c => c.id !== cart.id);
+                            localStorage.setItem('savedCarts', JSON.stringify(updatedCarts));
+                            message.success('Carrito eliminado');
+                          }}
+                        >
+                          Eliminar
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center text-gray-500 py-8">
+                  No hay carritos guardados
+                </div>
+              );
+            })()}
+          </div>
         </div>
       </Modal>
 
@@ -628,10 +836,9 @@ const BoleteriaMainCustomDesign = () => {
         open={showServerDiagnostic}
         onCancel={() => setShowServerDiagnostic(false)}
         footer={null}
+        width={800}
       >
-        <div className="text-center text-gray-500 py-xl">
-          Funcionalidad de diagnóstico en desarrollo
-        </div>
+        <ServerDiagnostic selectedFuncion={selectedFuncion} />
       </Modal>
     </div>
   );
