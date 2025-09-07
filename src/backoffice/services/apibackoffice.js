@@ -410,7 +410,7 @@ const loadReservedSeats = async (funcionId) => {
     
     // Procesar transacciones de payment_transactions
     if (transactions) {
-      transactions.forEach(transaction => {
+      for (const transaction of transactions) {
         console.log('🔍 [loadReservedSeats] Procesando transacción:', transaction.id, 'Status:', transaction.status);
         
         // Para payment_transactions, necesitamos extraer los asientos del gateway_response
@@ -435,30 +435,34 @@ const loadReservedSeats = async (funcionId) => {
         if (!transaction.gateway_response?.seats && transaction.locator) {
           console.log('🔍 [loadReservedSeats] Buscando asientos por locator:', transaction.locator);
           
-          // Buscar en payments por locator
-          const { data: paymentByLocator, error: locatorError } = await supabase
-            .from('payments')
-            .select('seats, status')
-            .eq('locator', transaction.locator)
-            .single();
-          
-          if (!locatorError && paymentByLocator && paymentByLocator.seats) {
-            console.log('✅ [loadReservedSeats] Encontrado payment por locator con asientos:', paymentByLocator.seats.length);
+          try {
+            // Buscar en payments por locator
+            const { data: paymentByLocator, error: locatorError } = await supabase
+              .from('payments')
+              .select('seats, status')
+              .eq('locator', transaction.locator)
+              .single();
             
-            paymentByLocator.seats.forEach(seat => {
-              if (seat.id) {
-                reservedSeats[seat.id] = {
-                  estado: transaction.status === 'pending' ? 'reservado' : 'pagado',
-                  transactionId: transaction.id,
-                  locator: transaction.locator,
-                  createdAt: transaction.created_at
-                };
-                console.log('✅ [loadReservedSeats] Asiento reservado por locator:', seat.id);
-              }
-            });
+            if (!locatorError && paymentByLocator && paymentByLocator.seats) {
+              console.log('✅ [loadReservedSeats] Encontrado payment por locator con asientos:', paymentByLocator.seats.length);
+              
+              paymentByLocator.seats.forEach(seat => {
+                if (seat.id) {
+                  reservedSeats[seat.id] = {
+                    estado: transaction.status === 'pending' ? 'reservado' : 'pagado',
+                    transactionId: transaction.id,
+                    locator: transaction.locator,
+                    createdAt: transaction.created_at
+                  };
+                  console.log('✅ [loadReservedSeats] Asiento reservado por locator:', seat.id);
+                }
+              });
+            }
+          } catch (locatorError) {
+            console.warn('⚠️ [loadReservedSeats] Error buscando por locator:', locatorError);
           }
         }
-      });
+      }
     }
     
     // Procesar payments directamente
