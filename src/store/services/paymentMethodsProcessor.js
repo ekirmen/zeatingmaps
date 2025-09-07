@@ -84,6 +84,13 @@ class PaymentMethodProcessor {
 class StripeMethodProcessor extends PaymentMethodProcessor {
   async processPayment(paymentData) {
     try {
+      // Preparar respuesta de gateway con asientos
+      const gatewayResponse = {
+        seats: paymentData.items || [], // Guardar los asientos en gateway_response
+        payment_method: this.method.method_name || this.method.name || 'stripe',
+        timestamp: new Date().toISOString()
+      };
+
       // Crear transacción en nuestra base de datos
       const transaction = await createPaymentTransaction({
         orderId: paymentData.orderId,
@@ -96,7 +103,8 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
         eventoId: paymentData.evento?.id,
         funcionId: paymentData.funcion?.id,
         paymentMethod: this.method.method_name || this.method.name || 'stripe',
-        gatewayName: this.method.name || this.method.method_name || 'Stripe'
+        gatewayName: this.method.name || this.method.method_name || 'Stripe',
+        gatewayResponse: gatewayResponse // Incluir los asientos en gateway_response
       });
 
       // Simulación de respuesta de Stripe

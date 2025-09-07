@@ -347,8 +347,10 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                           }
                         }
                         
-                        // Crear asientos desde gateway_response
+                        // Crear asientos desde gateway_response o seat_locks
                         const seats = [];
+                        
+                        // Primero intentar desde gateway_response
                         if (searchResult.gateway_response) {
                           try {
                             const responseData = typeof searchResult.gateway_response === 'string' 
@@ -362,6 +364,37 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                             }
                           } catch (e) {
                             console.error('Error parsing gateway_response:', e);
+                          }
+                        }
+                        
+                        // Si no hay asientos en gateway_response, buscar en seat_locks
+                        if (seats.length === 0 && searchResult.funcion_id) {
+                          try {
+                            const { data: seatLocks, error } = await supabase
+                              .from('seat_locks')
+                              .select('*')
+                              .eq('funcion_id', searchResult.funcion_id)
+                              .eq('session_id', searchResult.user_id)
+                              .in('status', ['locked', 'seleccionado']);
+                            
+                            if (error) {
+                              console.error('Error fetching seat_locks:', error);
+                            } else if (seatLocks && seatLocks.length > 0) {
+                              // Convertir seat_locks a formato de asientos
+                              const seatLocksAsSeats = seatLocks.map(lock => ({
+                                id: lock.seat_id,
+                                name: lock.seat_id.replace('silla_', '').replace(/_/g, ' '),
+                                status: lock.status,
+                                lock_type: lock.lock_type,
+                                locked_at: lock.locked_at,
+                                expires_at: lock.expires_at
+                              }));
+                              
+                              seats.push(...seatLocksAsSeats);
+                              console.log('✅ Asientos encontrados en seat_locks:', seatLocksAsSeats.length);
+                            }
+                          } catch (e) {
+                            console.error('Error loading seat_locks:', e);
                           }
                         }
                         
