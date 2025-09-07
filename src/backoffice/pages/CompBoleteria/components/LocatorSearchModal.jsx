@@ -25,17 +25,16 @@ const LocatorSearchModal = ({ open, onCancel }) => {
     try {
       console.log('[LocatorSearch] Searching for locator:', value);
       
-      // Search in payments table
+      // Search in payment_transactions table
       const { data: payment, error: paymentError } = await supabase
-        .from('payments')
+        .from('payment_transactions')
         .select(`
           *,
-          user:profiles!usuario_id(*),
+          user:profiles!user_id(*),
           event:eventos(*),
           funcion:funciones(
             id,
             fecha_celebracion,
-            hora_inicio,
             evento,
             sala,
             plantilla
@@ -229,7 +228,7 @@ const LocatorSearchModal = ({ open, onCancel }) => {
                   </Text>
                   <div className="ml-6">
                     <div className="font-medium">
-                      {searchResult.user.nombre || searchResult.user.email}
+                      {searchResult.user.nombre || searchResult.user.name || searchResult.user.full_name || searchResult.user.email || 'Usuario'}
                     </div>
                     <div className="text-gray-500 text-sm">
                       {searchResult.user.email}
@@ -244,20 +243,20 @@ const LocatorSearchModal = ({ open, onCancel }) => {
               )}
 
               {/* Seats Info */}
-              {searchResult.seats && (
+              {(searchResult.seats || searchResult.gateway_response) && (
                 <div>
                   <Text strong className="flex items-center">
                     <DollarOutlined className="mr-2" />
-                    Asientos ({parseSeats(searchResult.seats).length}):
+                    Asientos ({parseSeats(searchResult.seats || searchResult.gateway_response).length}):
                   </Text>
                   <div className="ml-6">
-                    {parseSeats(searchResult.seats).map((seat, index) => (
+                    {parseSeats(searchResult.seats || searchResult.gateway_response).map((seat, index) => (
                       <div key={index} className="flex justify-between items-center py-1">
                         <span className="font-medium">
-                          {seat.name || seat.nombre || `Asiento ${index + 1}`}
+                          {seat.name || seat.nombre || seat.seat_name || `Asiento ${index + 1}`}
                         </span>
                         <span className="text-green-600 font-bold">
-                          {formatCurrency(seat.price || seat.precio)}
+                          {formatCurrency(seat.price || seat.precio || seat.amount)}
                         </span>
                       </div>
                     ))}
@@ -266,21 +265,50 @@ const LocatorSearchModal = ({ open, onCancel }) => {
               )}
 
               {/* Payment Info */}
-              {searchResult.payments && Array.isArray(searchResult.payments) && (
-                <div>
-                  <Text strong>Métodos de Pago:</Text>
-                  <div className="ml-6">
-                    {searchResult.payments.map((payment, index) => (
-                      <div key={index} className="flex justify-between items-center py-1">
-                        <span className="font-medium">{payment.method}</span>
-                        <span className="text-green-600 font-bold">
-                          {formatCurrency(payment.amount)}
-                        </span>
-                      </div>
-                    ))}
+              <div>
+                <Text strong className="flex items-center">
+                  <DollarOutlined className="mr-2" />
+                  Información de Pago:
+                </Text>
+                <div className="ml-6">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="font-medium">Monto:</span>
+                    <span className="text-green-600 font-bold">
+                      {formatCurrency(searchResult.amount)}
+                    </span>
                   </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="font-medium">Moneda:</span>
+                    <span className="text-gray-600">{searchResult.currency || 'USD'}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="font-medium">Estado:</span>
+                    <span className={`font-bold ${
+                      searchResult.status === 'pending' ? 'text-yellow-600' :
+                      searchResult.status === 'completed' ? 'text-green-600' :
+                      searchResult.status === 'failed' ? 'text-red-600' :
+                      'text-gray-600'
+                    }`}>
+                      {searchResult.status === 'pending' ? 'Pendiente' :
+                       searchResult.status === 'completed' ? 'Completado' :
+                       searchResult.status === 'failed' ? 'Fallido' :
+                       searchResult.status}
+                    </span>
+                  </div>
+                  {searchResult.payment_method && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="font-medium">Método:</span>
+                      <span className="text-gray-600">{searchResult.payment_method}</span>
+                    </div>
+                  )}
+                  {searchResult.gateway_name && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="font-medium">Gateway:</span>
+                      <span className="text-gray-600">{searchResult.gateway_name}</span>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Created Date */}
               <div>

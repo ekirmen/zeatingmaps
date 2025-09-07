@@ -572,24 +572,41 @@ const SimpleSeatingMap = ({
                 // Calcular posición relativa a la mesa si es circular
                 let adjustedLeft, adjustedTop;
                 if (isCircleTable) {
-                  // Para mesas circulares, las coordenadas de las sillas son relativas al centro de la mesa
+                  // Para mesas circulares, calcular automáticamente las posiciones en la circunferencia
                   const mesaCenterX = (elemento.posicion?.x ?? elemento.x ?? 0);
                   const mesaCenterY = (elemento.posicion?.y ?? elemento.y ?? 0);
-                  // Calcular el radio de la mesa basado en width/height o radius
                   const mesaRadius = elemento.radius ?? (elemento.width ?? 60) / 2;
                   
-                  // Las coordenadas de la silla son relativas al centro de la mesa
-                  const sillaRelX = (sx || 0);
-                  const sillaRelY = (sy || 0);
+                  // Obtener todas las sillas de esta mesa para calcular distribución uniforme
+                  const todasLasSillas = elemento.sillas || elemento.asientos || elemento.seats || [];
+                  const totalSillas = todasLasSillas.length;
+                  const indiceSilla = todasLasSillas.findIndex(s => s._id === silla._id);
                   
-                  // Posición absoluta = centro de la mesa + posición relativa de la silla - mitad del diámetro del asiento
-                  // Esto centra perfectamente el asiento en su posición relativa
-                  adjustedLeft = mesaCenterX + sillaRelX - (chairDiameter / 2);
-                  adjustedTop = mesaCenterY + sillaRelY - (chairDiameter / 2);
-                  
-                  console.log(`🔍 [Mesa Circular] Mesa: (${mesaCenterX}, ${mesaCenterY}), Radio: ${mesaRadius}`);
-                  console.log(`🔍 [Mesa Circular] Silla relativa: (${sillaRelX}, ${sillaRelY})`);
-                  console.log(`🔍 [Mesa Circular] Silla absoluta: (${adjustedLeft}, ${adjustedTop})`);
+                  if (totalSillas > 0 && indiceSilla >= 0) {
+                    // Calcular ángulo para distribución uniforme en la circunferencia
+                    const anguloPorSilla = (2 * Math.PI) / totalSillas;
+                    const anguloSilla = anguloPorSilla * indiceSilla;
+                    
+                    // Calcular posición en la circunferencia
+                    // Radio de la circunferencia = radio de la mesa + margen para los asientos
+                    const radioCircunferencia = mesaRadius + 15; // 15px de margen
+                    const sillaX = mesaCenterX + Math.cos(anguloSilla) * radioCircunferencia;
+                    const sillaY = mesaCenterY + Math.sin(anguloSilla) * radioCircunferencia;
+                    
+                    // Centrar el asiento en su posición calculada
+                    adjustedLeft = sillaX - (chairDiameter / 2);
+                    adjustedTop = sillaY - (chairDiameter / 2);
+                    
+                    console.log(`🔍 [Mesa Circular] Mesa: (${mesaCenterX}, ${mesaCenterY}), Radio: ${mesaRadius}`);
+                    console.log(`🔍 [Mesa Circular] Silla ${indiceSilla + 1}/${totalSillas}, Ángulo: ${(anguloSilla * 180 / Math.PI).toFixed(1)}°`);
+                    console.log(`🔍 [Mesa Circular] Posición calculada: (${sillaX.toFixed(1)}, ${sillaY.toFixed(1)})`);
+                    console.log(`🔍 [Mesa Circular] Posición final: (${adjustedLeft.toFixed(1)}, ${adjustedTop.toFixed(1)})`);
+                  } else {
+                    // Fallback: usar coordenadas originales si no se puede calcular
+                    adjustedLeft = (sx || 0) - (chairDiameter / 2);
+                    adjustedTop = (sy || 0) - (chairDiameter / 2);
+                    console.warn('⚠️ [Mesa Circular] No se pudo calcular posición automática, usando coordenadas originales');
+                  }
                 } else {
                   // Para mesas rectangulares, usar coordenadas absolutas
                   adjustedLeft = (sx || 0) - (chairDiameter / 2);
