@@ -395,6 +395,7 @@ const ModernEventPage = () => {
                   <SeatingMapUnified
                     mapa={mapa}
                     funcionId={selectedFunctionId}
+                    selectedSeats={cartItems.map(item => item.sillaId || item._id || item.id)}
                     onSeatToggle={handleSeatToggle}
                     isSeatLocked={isSeatLocked}
                     isSeatLockedByMe={isSeatLockedByMe}

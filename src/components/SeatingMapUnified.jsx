@@ -309,7 +309,26 @@ if (Array.isArray(mapa?.contenido)) {
       return url;
     }, [config.imageUrl, config.url, config.src, config.image?.url, config.image?.publicUrl, config.imageData, config.image?.data]);
 
-    const img = mapImage;
+    const [bgImg, setBgImg] = React.useState(null);
+
+    React.useEffect(() => {
+      if (!rawUrl) {
+        setBgImg(null);
+        return;
+      }
+      const image = new window.Image();
+      image.crossOrigin = 'anonymous';
+      image.loading = 'lazy';
+      const onLoad = () => setBgImg(image);
+      const onError = () => setBgImg(null);
+      image.addEventListener('load', onLoad);
+      image.addEventListener('error', onError);
+      image.src = rawUrl;
+      return () => {
+        image.removeEventListener('load', onLoad);
+        image.removeEventListener('error', onError);
+      };
+    }, [rawUrl]);
     
     const imageProps = useMemo(() => ({
       x: config.position?.x || config.posicion?.x || 0,
@@ -320,13 +339,10 @@ if (Array.isArray(mapa?.contenido)) {
       listening: false
     }), [config.position?.x, config.posicion?.x, config.position?.y, config.posicion?.y, config.scale, config.opacity]);
 
-    if (!img) return null;
+    if (!bgImg) return null;
     
     return (
-      <Image
-        image={img}
-        {...imageProps}
-      />
+      <Image image={bgImg} {...imageProps} />
     );
   });
 
