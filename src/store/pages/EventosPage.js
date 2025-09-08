@@ -17,6 +17,7 @@ import ProductosWidget from '../components/ProductosWidget';
 import { diagnoseMapaAccess, testMapaQuery, generateDiagnosticReport } from '../../utils/databaseDiagnostics';
 import { getZonaColor } from '../../utils/getZonaColor';
 import DiagnosticReport from '../../components/DiagnosticReport';
+import EventImage from '../components/EventImage';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -465,6 +466,20 @@ const EventosPage = ({ forceShowMap = false }) => {
   const images = getEventImages();
   const bannerImage = images.banner || images.portada || images.obraImagen;
   const thumbnailImage = images.portada || images.obraImagen || images.banner;
+  
+  // Función para obtener URL de imagen con fallback
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    
+    try {
+      const resolvedUrl = resolveImageUrl(imagePath, 'eventos');
+      console.log('🖼️ [EVENT_IMAGE] Resolved URL:', resolvedUrl);
+      return resolvedUrl;
+    } catch (error) {
+      console.error('Error resolving image URL:', error);
+      return null;
+    }
+  };
 
   if (loading) {
     return (
@@ -664,20 +679,25 @@ const EventosPage = ({ forceShowMap = false }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Banner del evento */}
-      {bannerImage && (
-        <div className="relative h-64 md:h-96 bg-cover bg-center" 
-             style={{ backgroundImage: `url(${resolveImageUrl(bannerImage)})` }}>
-          <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center text-white">
-              <h1 className="text-4xl md:text-6xl font-bold mb-4">{evento.nombre}</h1>
-              {evento.descripcion && (
-                <p className="text-xl md:text-2xl max-w-2xl mx-auto">{evento.descripcion}</p>
-              )}
-            </div>
+      <div className="relative h-64 md:h-96">
+        <EventImage
+          event={evento}
+          imageType="banner"
+          className="w-full h-full"
+          showDebug={true}
+        />
+        
+        {/* Overlay con contenido */}
+        <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center text-white">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">{evento.nombre}</h1>
+            {evento.descripcion && (
+              <p className="text-xl md:text-2xl max-w-2xl mx-auto">{evento.descripcion}</p>
+            )}
           </div>
         </div>
-      )}
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

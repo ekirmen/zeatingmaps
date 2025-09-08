@@ -11,9 +11,11 @@ import {
 } from '@ant-design/icons';
 import DashboardLayout from '../components/DashboardLayout';
 import DataTable from '../components/DataTable';
+import EventForm from '../components/EventForm';
 import { supabase } from '../../supabaseClient';
-import { resolveImageUrl } from '../../utils/resolveImageUrl';
+import { resolveImageUrl, resolveEventImageWithTenant } from '../../utils/resolveImageUrl';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
+import { useTenant } from '../../contexts/TenantContext';
 
 const EventosPage = () => {
   const [eventos, setEventos] = useState([]);
@@ -21,7 +23,11 @@ const EventosPage = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
+  const [showEventForm, setShowEventForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [formLoading, setFormLoading] = useState(false);
   const { addTenantFilter } = useTenantFilter();
+  const { currentTenant } = useTenant();
 
   useEffect(() => {
     loadEventos();
@@ -71,6 +77,55 @@ const EventosPage = () => {
     }
   };
 
+  // Manejar creación/edición de eventos
+  const handleCreateEvent = () => {
+    setEditingEvent(null);
+    setShowEventForm(true);
+  };
+
+  const handleEditEvent = (event) => {
+    setEditingEvent(event);
+    setShowEventForm(true);
+  };
+
+  const handleSaveEvent = async (eventData) => {
+    setFormLoading(true);
+    try {
+      if (editingEvent) {
+        // Actualizar evento existente
+        const { error } = await supabase
+          .from('eventos')
+          .update(eventData)
+          .eq('id', editingEvent.id);
+
+        if (error) throw error;
+        message.success('Evento actualizado correctamente');
+      } else {
+        // Crear nuevo evento
+        const { error } = await supabase
+          .from('eventos')
+          .insert([eventData]);
+
+        if (error) throw error;
+        message.success('Evento creado correctamente');
+      }
+
+      setShowEventForm(false);
+      setEditingEvent(null);
+      loadEventos();
+    } catch (error) {
+      console.error('Error saving evento:', error);
+      message.error('Error al guardar el evento');
+    } finally {
+      setFormLoading(false);
+    }
+  };
+
+  const handleCancelForm = () => {
+    setShowEventForm(false);
+    setEditingEvent(null);
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'active': return 'green';
@@ -94,21 +149,37 @@ const EventosPage = () => {
       title: 'Evento',
       dataIndex: 'nombre',
       key: 'nombre',
-      render: (text, record) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Avatar
-            size={40}
-            src={record.imagen ? resolveImageUrl(record.imagen) : null}
-            icon={<CalendarOutlined />}
-          />
-          <div>
-            <div style={{ fontWeight: '500' }}>{text}</div>
-            <div style={{ fontSize: '12px', color: '#666' }}>
-              {record.fecha} • {record.ubicacion}
+      render: (text, record) => {
+        // Obtener imagen usando la nueva estructura
+        let imageUrl = null;
+        if (record.imagenes) {
+          try {
+            const images = typeof record.imagenes === 'string' 
+              ? JSON.parse(record.imagenes) 
+              : record.imagenes;
+            imageUrl = resolveEventImageWithTenant(record, 'banner', currentTenant?.id) ||
+                      resolveEventImageWithTenant(record, 'portada', currentTenant?.id);
+          } catch (error) {
+            console.error('Error parsing event images:', error);
+          }
+        }
+
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Avatar
+              size={40}
+              src={imageUrl}
+              icon={<CalendarOutlined />}
+            />
+            <div>
+              <div style={{ fontWeight: '500' }}>{text}</div>
+              <div style={{ fontSize: '12px', color: '#666' }}>
+                {record.fecha_evento} • {record.ubicacion}
+              </div>
             </div>
           </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       title: 'Estado',
@@ -141,6 +212,7 @@ const EventosPage = () => {
           <Button 
             type="link" 
             icon={<EditOutlined />}
+            onClick={() => handleEditEvent(record)}
           >
             Editar
           </Button>
@@ -171,7 +243,7 @@ const EventosPage = () => {
         showSearch={true}
         searchPlaceholder="Buscar eventos..."
         addButtonText="Crear Evento"
-        onAdd={() => console.log('Crear evento')}
+        onAdd={handleCreateEvent}
       />
 
       {/* Modal para ver detalles del evento */}
@@ -184,15 +256,31 @@ const EventosPage = () => {
       >
         {selectedEvent && (
           <div>
-            {selectedEvent.imagen && (
-              <div style={{ marginBottom: '16px' }}>
-                <Image
-                  src={resolveImageUrl(selectedEvent.imagen)}
-                  alt={selectedEvent.nombre}
-                  style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
-                />
-              </div>
-            )}
+            {(() => {
+              // Obtener imagen usando la nueva estructura
+              let imageUrl = null;
+              if (selectedEvent.imagenes) {
+                try {
+                  const images = typeof selectedEvent.imagenes === 'string' 
+                    ? JSON.parse(selectedEvent.imagenes) 
+                    : selectedEvent.imagenes;
+                  imageUrl = resolveEventImageWithTenant(selectedEvent, 'banner', currentTenant?.id) ||
+                            resolveEventImageWithTenant(selectedEvent, 'portada', currentTenant?.id);
+                } catch (error) {
+                  console.error('Error parsing event images:', error);
+                }
+              }
+
+              return imageUrl && (
+                <div style={{ marginBottom: '16px' }}>
+                  <Image
+                    src={imageUrl}
+                    alt={selectedEvent.nombre}
+                    style={{ width: '100%', maxHeight: '200px', objectFit: 'cover' }}
+                  />
+                </div>
+              );
+            })()}
             <div style={{ marginBottom: '8px' }}>
               <strong>Nombre:</strong> {selectedEvent.nombre}
             </div>
@@ -200,7 +288,7 @@ const EventosPage = () => {
               <strong>Descripción:</strong> {selectedEvent.descripcion}
             </div>
             <div style={{ marginBottom: '8px' }}>
-              <strong>Fecha:</strong> {selectedEvent.fecha}
+              <strong>Fecha:</strong> {selectedEvent.fecha_evento}
             </div>
             <div style={{ marginBottom: '8px' }}>
               <strong>Ubicación:</strong> {selectedEvent.ubicacion}
@@ -233,6 +321,23 @@ const EventosPage = () => {
       >
         <p>¿Estás seguro de que quieres eliminar el evento "{eventToDelete?.nombre}"?</p>
         <p>Esta acción no se puede deshacer.</p>
+      </Modal>
+
+      {/* Modal para crear/editar evento */}
+      <Modal
+        title={editingEvent ? 'Editar Evento' : 'Crear Nuevo Evento'}
+        visible={showEventForm}
+        onCancel={handleCancelForm}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        <EventForm
+          eventData={editingEvent}
+          onSave={handleSaveEvent}
+          onCancel={handleCancelForm}
+          loading={formLoading}
+        />
       </Modal>
     </DashboardLayout>
   );

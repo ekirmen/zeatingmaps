@@ -1,5 +1,5 @@
 // Función para resolver URLs de imágenes desde Supabase Storage
-export default function resolveImageUrl(imagePath, bucket = 'eventos') {
+export default function resolveImageUrl(imagePath, bucket = 'eventos', tenantId = null, eventId = null) {
   if (!imagePath) {
     return null;
   }
@@ -20,21 +20,102 @@ export default function resolveImageUrl(imagePath, bucket = 'eventos') {
   // Limpiar la ruta de la imagen
   const cleanPath = imagePath.startsWith('/') ? imagePath.slice(1) : imagePath;
   
+  // Nueva estructura: tenant_id/event_id/image_name
+  let finalPath = cleanPath;
+  
+  if (tenantId && eventId) {
+    // Si tenemos tenant_id y event_id, usar la nueva estructura
+    finalPath = `${tenantId}/${eventId}/${cleanPath}`;
+    console.log('🖼️ [resolveImageUrl] Nueva estructura:', finalPath);
+  } else if (tenantId) {
+    // Si solo tenemos tenant_id, usar estructura por empresa
+    finalPath = `${tenantId}/${cleanPath}`;
+    console.log('🖼️ [resolveImageUrl] Estructura por empresa:', finalPath);
+  }
+  
   // Construir la URL completa para Supabase Storage
-  const storageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${cleanPath}`;
+  const storageUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${finalPath}`;
   
   return storageUrl;
 }
 
 // Función específica para imágenes de eventos
-export function resolveEventImageUrl(eventId, imageName) {
+export function resolveEventImageUrl(eventId, imageName, tenantId = null) {
   if (!eventId || !imageName) {
     return null;
   }
   
-  // Construir la ruta: eventos/{eventId}/{imageName}
-  const imagePath = `${eventId}/${imageName}`;
-  return resolveImageUrl(imagePath, 'eventos');
+  // Nueva estructura: tenant_id/event_id/image_name
+  return resolveImageUrl(imageName, 'eventos', tenantId, eventId);
+}
+
+// Función para obtener URL de imagen de evento con tenant_id
+export function resolveEventImageWithTenant(event, imageType, tenantId) {
+  if (!event || !tenantId) {
+    return null;
+  }
+  
+  // Obtener imágenes del evento
+  let images = {};
+  try {
+    if (typeof event.imagenes === 'string') {
+      images = JSON.parse(event.imagenes);
+    } else {
+      images = event.imagenes || {};
+    }
+  } catch (e) {
+    console.error('Error parsing event images:', e);
+    return null;
+  }
+  
+  // Obtener la imagen específica
+  const imageData = images[imageType] || images.portada || images.obraImagen || images.banner;
+  
+  if (!imageData) {
+    return null;
+  }
+  
+  // Si la imagen ya tiene bucket específico, usarlo
+  if (imageData.bucket) {
+    const imagePath = imageData.url || imageData.publicUrl || imageData.src;
+    return resolveImageUrl(imagePath, imageData.bucket);
+  }
+  
+  // Si no, usar la nueva estructura en bucket 'eventos'
+  const imagePath = imageData.url || imageData.publicUrl || imageData.src;
+  return resolveImageUrl(imagePath, 'eventos', tenantId, event.id);
+}
+
+// Función para obtener URL de imagen con bucket por tenant
+export function resolveEventImageWithTenantBucket(event, imageType, tenantId) {
+  if (!event || !tenantId) {
+    return null;
+  }
+  
+  // Obtener imágenes del evento
+  let images = {};
+  try {
+    if (typeof event.imagenes === 'string') {
+      images = JSON.parse(event.imagenes);
+    } else {
+      images = event.imagenes || {};
+    }
+  } catch (e) {
+    console.error('Error parsing event images:', e);
+    return null;
+  }
+  
+  // Obtener la imagen específica
+  const imageData = images[imageType] || images.portada || images.obraImagen || images.banner;
+  
+  if (!imageData) {
+    return null;
+  }
+  
+  const imagePath = imageData.url || imageData.publicUrl || imageData.src;
+  const bucketName = `tenant-${tenantId}`;
+  
+  return resolveImageUrl(imagePath, bucketName);
 }
 
 // Función para obtener todas las imágenes de un evento

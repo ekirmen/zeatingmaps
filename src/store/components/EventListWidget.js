@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import resolveImageUrl from '../../utils/resolveImageUrl';
+import EventImage from './EventImage';
 
 function EventListWidget({ events }) {
   const navigate = useNavigate();
@@ -24,6 +25,20 @@ function EventListWidget({ events }) {
     } catch (e) {
       console.error('Error parsing event images:', e);
       return {};
+    }
+  };
+
+  // Función para obtener URL de imagen con fallback
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null;
+    
+    try {
+      const resolvedUrl = resolveImageUrl(imagePath, 'eventos');
+      console.log('🖼️ [EVENT_LIST] Resolved URL:', resolvedUrl);
+      return resolvedUrl;
+    } catch (error) {
+      console.error('Error resolving image URL:', error);
+      return null;
     }
   };
 
@@ -59,13 +74,12 @@ function EventListWidget({ events }) {
       <div className="store-grid store-grid-auto">
         {events.map((event) => {
           const images = getEventImages(event);
-          let displayImageUrl = `https://placehold.co/400x300/E0F2F7/000?text=${(event.name || event.nombre) ? (event.name || event.nombre).charAt(0) : 'E'}`;
+          const rawImage = images.obraImagen || images.portada || images.banner;
+          const displayImageUrl = rawImage ? getImageUrl(rawImage) : `https://placehold.co/400x300/E0F2F7/000?text=${(event.name || event.nombre) ? (event.name || event.nombre).charAt(0) : 'E'}`;
           
-          if (images) {
-            const raw = images.obraImagen || images.portada || images.banner;
-            if (raw) {
-              displayImageUrl = resolveImageUrl(raw, 'eventos') || raw;
-            }
+          // Debug info para desarrollo
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🖼️ [EVENT_CARD] Event:', event.nombre, 'Images:', images, 'Raw:', rawImage, 'URL:', displayImageUrl);
           }
 
           return (
@@ -76,17 +90,13 @@ function EventListWidget({ events }) {
             >
               {/* Event Image */}
               <div className="relative overflow-hidden">
-                <img
-                  src={displayImageUrl}
-                  loading="lazy"
-                  crossOrigin="anonymous"
-                  alt={event.name || event.nombre || 'Evento'}
+                <EventImage
+                  event={event}
+                  imageType="portada"
                   className="store-event-card-image"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = `https://placehold.co/400x300/E0F2F7/000?text=${event.name || event.nombre || 'Evento'}`;
-                  }}
+                  showDebug={true}
                 />
+                
                 {/* Event Status Badge */}
                 {event.estadoVenta && (
                   <div className="absolute top-3 right-3">
