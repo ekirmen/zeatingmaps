@@ -157,11 +157,22 @@ const ModernEventPage = () => {
       try {
         setMapLoading(true);
         console.log('🗺️ [ModernEventPage] Cargando mapa para función:', selectedFunctionId);
-        
+
+        // Obtener sala_id de la función seleccionada (soporta esquemas nuevo y antiguo)
+        const selectedFuncion = funciones.find(f => (f.id || f._id) === selectedFunctionId);
+        const salaId = selectedFuncion?.sala_id ?? selectedFuncion?.sala;
+
+        if (!salaId) {
+          console.warn('⚠️ [ModernEventPage] No se pudo determinar sala_id para la función:', selectedFunctionId);
+          setMapa(null);
+          setMapLoading(false);
+          return;
+        }
+
         const { data: mapaData, error: mapaError } = await supabase
           .from('mapas')
           .select('*')
-          .eq('funcion_id', selectedFunctionId)
+          .eq('sala_id', salaId)
           .maybeSingle();
 
         console.log('🔍 [ModernEventPage] Respuesta de mapas:', { mapaData, mapaError });
