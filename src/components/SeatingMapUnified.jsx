@@ -30,6 +30,10 @@ const SeatingMapUnified = ({
   const channel = useSeatLockStore(state => state.channel);
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const { getSeatColor, getBorderColor } = useSeatColors(funcionId);
+
+  // Controlar visibilidad del panel de depuración de locks (oculto por defecto)
+  const shouldShowSeatLockDebug =
+    typeof window !== 'undefined' && window.__SHOW_SEAT_LOCK_DEBUG === true;
   
   // Referencia al stage de Konva
   const stageRef = useRef(null);
@@ -329,7 +333,7 @@ if (Array.isArray(mapa?.contenido)) {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <SeatStatusLegend />
-      <SeatLockDebug funcionId={funcionId} />
+      {shouldShowSeatLockDebug && <SeatLockDebug funcionId={funcionId} />}
       <Stage
         width={maxX + 50}
         height={maxY + 50}

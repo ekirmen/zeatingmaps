@@ -13,15 +13,17 @@ const EventImage = ({
   const [imageLoaded, setImageLoaded] = useState(false);
   const { currentTenant } = useTenant();
 
-  // Debug inicial - siempre ejecutar para verificar si el componente se renderiza
-  console.log('🖼️ [EventImage] Component initialized:', {
-    eventId: event?.id,
-    eventName: event?.nombre || event?.name,
-    imageType,
-    tenantId: currentTenant?.id,
-    hasTenant: !!currentTenant,
-    showDebug
-  });
+  const DEBUG = showDebug === true && process.env.NODE_ENV === 'development';
+  if (DEBUG) {
+    console.log('🖼️ [EventImage] Component initialized:', {
+      eventId: event?.id,
+      eventName: event?.nombre || event?.name,
+      imageType,
+      tenantId: currentTenant?.id,
+      hasTenant: !!currentTenant,
+      showDebug
+    });
+  }
 
   // Función para obtener imágenes del evento
   const getEventImages = () => {
@@ -44,7 +46,7 @@ const EventImage = ({
     
     try {
       const resolvedUrl = resolveImageUrl(imagePath, 'eventos');
-      if (showDebug) {
+      if (DEBUG) {
         console.log('🖼️ [EventImage] Resolved URL:', resolvedUrl);
       }
       return resolvedUrl;
@@ -62,7 +64,7 @@ const EventImage = ({
     ? resolveEventImageWithTenant(event, imageType, currentTenant.id)
     : imagePath ? getImageUrl(imagePath) : null;
   
-  if (showDebug) {
+  if (DEBUG) {
     console.log('🖼️ [EventImage] Debug info:', {
       eventId: event?.id,
       tenantId: currentTenant?.id,
@@ -87,7 +89,7 @@ const EventImage = ({
   };
 
   const handleImageLoad = () => {
-    console.log('🖼️ [EventImage] Image loaded successfully:', imageUrl);
+    if (DEBUG) console.log('🖼️ [EventImage] Image loaded successfully:', imageUrl);
     setImageLoaded(true);
   };
 

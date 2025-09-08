@@ -34,6 +34,7 @@ const Header = ({ onLogin, onLogout }) => {
   const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   useEffect(() => {
+    const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
       const current = data.session?.user;
@@ -44,7 +45,7 @@ const Header = ({ onLogin, onLogout }) => {
     checkSession();
     
     // Debug: Log initial state
-    console.log('Header component mounted, initial modal state:', isAccountModalVisible);
+    if (DEBUG) console.log('Header component mounted, initial modal state:', isAccountModalVisible);
   }, [isAccountModalVisible]);
 
   const handleRegister = async () => {
@@ -199,7 +200,8 @@ const Header = ({ onLogin, onLogout }) => {
   console.log('Modal visibility state:', isAccountModalVisible);
   console.log('Modal mode state:', accountMode);
   console.log('Modal will render with these props:', { isAccountModalVisible, accountMode, formData, registerData });
-  console.log('Modal will render with className: account-modal and wrapClassName: account-modal-wrapper');
+  const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
+  if (DEBUG) console.log('Modal will render with className: account-modal and wrapClassName: account-modal-wrapper');
   
   return (
     <header className="store-header">

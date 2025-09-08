@@ -43,18 +43,23 @@ const ModernEventPage = () => {
   // Detectar si estamos en la vista del mapa
   const isMapView = location.pathname.includes('/map');
 
+  // Flag de depuración global (desactivado por defecto)
+  const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
+
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
   const [selectedFunctionId, setSelectedFunctionId] = useState(null);
   
-  // Debug logs (moved after variable declarations)
-  console.log('🔍 [ModernEventPage] Debug info:', {
-    isMapView,
-    selectedFunctionId,
-    eventSlug,
-    pathname: location.pathname,
-    searchParams: searchParams.toString()
-  });
+  // Debug logs (controlados por flag)
+  if (DEBUG) {
+    console.log('🔍 [ModernEventPage] Debug info:', {
+      isMapView,
+      selectedFunctionId,
+      eventSlug,
+      pathname: location.pathname,
+      searchParams: searchParams.toString()
+    });
+  }
   const [mapa, setMapa] = useState(null);
   const [mapLoading, setMapLoading] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -146,17 +151,17 @@ const ModernEventPage = () => {
 
   // Cargar mapa cuando estemos en la vista del mapa
   useEffect(() => {
-    console.log('🔍 [ModernEventPage] useEffect mapa - isMapView:', isMapView, 'selectedFunctionId:', selectedFunctionId);
+    if (DEBUG) console.log('🔍 [ModernEventPage] useEffect mapa - isMapView:', isMapView, 'selectedFunctionId:', selectedFunctionId);
     
     if (!isMapView || !selectedFunctionId) {
-      console.log('⚠️ [ModernEventPage] No cargando mapa - condiciones no cumplidas');
+      if (DEBUG) console.log('⚠️ [ModernEventPage] No cargando mapa - condiciones no cumplidas');
       return;
     }
     
     const fetchMapa = async () => {
       try {
         setMapLoading(true);
-        console.log('🗺️ [ModernEventPage] Cargando mapa para función:', selectedFunctionId);
+        if (DEBUG) console.log('🗺️ [ModernEventPage] Cargando mapa para función:', selectedFunctionId);
 
         // Obtener sala_id de la función seleccionada (soporta esquemas nuevo y antiguo)
         const selectedFuncion = funciones.find(f => (f.id || f._id) === selectedFunctionId);
@@ -175,15 +180,15 @@ const ModernEventPage = () => {
           .eq('sala_id', salaId)
           .maybeSingle();
 
-        console.log('🔍 [ModernEventPage] Respuesta de mapas:', { mapaData, mapaError });
+        if (DEBUG) console.log('🔍 [ModernEventPage] Respuesta de mapas:', { mapaData, mapaError });
 
         if (mapaError) throw mapaError;
         
         if (mapaData) {
           setMapa(mapaData);
-          console.log('✅ [ModernEventPage] Mapa cargado:', mapaData.id);
+          if (DEBUG) console.log('✅ [ModernEventPage] Mapa cargado:', mapaData.id);
         } else {
-          console.log('⚠️ [ModernEventPage] No se encontró mapa para la función:', selectedFunctionId);
+          if (DEBUG) console.log('⚠️ [ModernEventPage] No se encontró mapa para la función:', selectedFunctionId);
         }
       } catch (err) {
         console.error('❌ [ModernEventPage] Error cargando mapa:', err);
@@ -433,7 +438,7 @@ const ModernEventPage = () => {
           event={evento}
           imageType="logoHorizontal"
           className="w-full h-full object-cover"
-          showDebug={true}
+          showDebug={DEBUG}
         />
         
         {/* Overlay con gradiente */}

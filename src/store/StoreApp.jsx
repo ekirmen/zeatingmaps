@@ -40,9 +40,12 @@ const StoreApp = () => {
   const { user, updateProfile } = useAuth();
   const restoreTimer = useCartStore((s) => s.restoreTimer);
   
-  console.log('🚀 [StoreApp] Renderizando store...');
-  console.log('🔍 [StoreApp] Location:', location.pathname);
-  console.log('🔍 [StoreApp] User:', user);
+  const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
+  if (DEBUG) {
+    console.log('🚀 [StoreApp] Renderizando store...');
+    console.log('🔍 [StoreApp] Location:', location.pathname);
+    console.log('🔍 [StoreApp] User:', user);
+  }
 
   // Restaurar timer del carrito tras recarga
   React.useEffect(() => {
