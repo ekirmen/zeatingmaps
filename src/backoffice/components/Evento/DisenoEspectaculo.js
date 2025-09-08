@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import API_BASE_URL from '../../../utils/apiBase';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
 import { supabase } from '../../../supabaseClient';
 import { useTenant } from '../../../contexts/TenantContext';
 import resolveImageUrl, { resolveEventImageWithTenant } from '../../../utils/resolveImageUrl';
 
 const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
-  const [description, setDescription] = useState(eventoData.descripcionHTML || '');
   const { currentTenant } = useTenant();
   const [uploading, setUploading] = useState(false);
   
@@ -56,6 +53,13 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
     banner: getPreview(eventoData.imagenes?.banner, 'banner'),
     obraImagen: getPreview(eventoData.imagenes?.obraImagen, 'obraImagen'),
     portada: getPreview(eventoData.imagenes?.portada, 'portada'),
+    logoHorizontal: getPreview(eventoData.imagenes?.logoHorizontal, 'logoHorizontal'),
+    logoVertical: getPreview(eventoData.imagenes?.logoVertical, 'logoVertical'),
+    bannerPublicidad: getPreview(eventoData.imagenes?.bannerPublicidad, 'bannerPublicidad'),
+    logoCuadrado: getPreview(eventoData.imagenes?.logoCuadrado, 'logoCuadrado'),
+    logoPassbook: getPreview(eventoData.imagenes?.logoPassbook, 'logoPassbook'),
+    passbookBanner: getPreview(eventoData.imagenes?.passbookBanner, 'passbookBanner'),
+    icono: getPreview(eventoData.imagenes?.icono, 'icono'),
     espectaculo: Array.isArray(eventoData.imagenes?.espectaculo)
       ? eventoData.imagenes.espectaculo.map(img => getPreview(img, 'espectaculo')).filter(Boolean)
       : []
@@ -69,6 +73,13 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
         banner: getPreview(eventoData.imagenes?.banner, 'banner'),
         obraImagen: getPreview(eventoData.imagenes?.obraImagen, 'obraImagen'),
         portada: getPreview(eventoData.imagenes?.portada, 'portada'),
+        logoHorizontal: getPreview(eventoData.imagenes?.logoHorizontal, 'logoHorizontal'),
+        logoVertical: getPreview(eventoData.imagenes?.logoVertical, 'logoVertical'),
+        bannerPublicidad: getPreview(eventoData.imagenes?.bannerPublicidad, 'bannerPublicidad'),
+        logoCuadrado: getPreview(eventoData.imagenes?.logoCuadrado, 'logoCuadrado'),
+        logoPassbook: getPreview(eventoData.imagenes?.logoPassbook, 'logoPassbook'),
+        passbookBanner: getPreview(eventoData.imagenes?.passbookBanner, 'passbookBanner'),
+        icono: getPreview(eventoData.imagenes?.icono, 'icono'),
         espectaculo: Array.isArray(eventoData.imagenes?.espectaculo)
           ? eventoData.imagenes.espectaculo.map(img => getPreview(img, 'espectaculo')).filter(Boolean)
           : []
@@ -77,74 +88,6 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   }, [eventoData?.imagenes, currentTenant?.id, eventoData?.id]);
   
   // Store uploaded images when saving instead of immediately
-  const modules = {
-    toolbar: {
-      container: [
-        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-        [{ 'font': [] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        [{ 'color': [] }, { 'background': [] }],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-        [{ 'align': [] }],
-        ['link', 'image'],
-        ['clean'],
-        [{ 'indent': '-1' }, { 'indent': '+1' }],
-        [{ 'script': 'sub' }, { 'script': 'super' }],
-        ['blockquote', 'code-block'],
-      ],
-      handlers: {
-        image: imageHandler
-      }
-    }
-  };
-
-  function imageHandler() {
-    const quill = this.quill;
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
-
-    input.onchange = async () => {
-      const file = input.files[0];
-      const formData = new FormData();
-      formData.append('file', file); // Changed from 'image' to 'file'
-      console.log('File details:', {
-        name: file.name,
-        type: file.type,
-        size: file.size
-      });
-
-      try {
-        const token = localStorage.getItem('token');
-        console.log('Token for upload:', token);
-
-        if (!token) {
-          throw new Error('No se encontró el token de autenticación');
-        }
-
-        const response = await fetch(`${API_BASE_URL}/api/events/upload`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `${token}`
-          },
-          body: formData
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Error al subir la imagen');
-        }
-
-        const result = await response.json();
-        const range = quill.getSelection(true);
-        quill.insertEmbed(range.index, 'image', result.url);
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        alert('Error al subir la imagen: ' + error.message);
-      }
-    };
-  }
 
   // Nueva función para subir imagen a Supabase Storage
   const uploadImageToSupabase = async (file, imageType) => {
@@ -339,37 +282,16 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   return (
     <div className="diseno-container space-y-6">
       <section className="description-section space-y-2">
-        <h4 className="font-semibold">Descripción HTML</h4>
-        <div className="editor-container">
-          <ReactQuill
-            value={description}
-            onChange={handleDescriptionChange}
-            modules={modules}
-            placeholder="Escribe aquí"
-            preserveWhitespace
-            theme="snow"
-          />
-          
-          {/* Mostrar HTML debajo del editor Quill */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Código HTML generado:
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => {
-                setDescription(e.target.value);
-                setEventoData(prev => ({ ...prev, descripcionHTML: e.target.value }));
-              }}
-              className="html-editor w-full p-3 border border-gray-300 rounded-md font-mono text-sm bg-gray-50"
-              rows={8}
-              placeholder="El HTML se genera automáticamente mientras escribes..."
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Este es el código HTML generado automáticamente. Puedes editarlo directamente aquí si necesitas hacer ajustes manuales.
-            </p>
-          </div>
-        </div>
+        <h4 className="font-semibold">Descripción</h4>
+        <textarea
+          value={eventoData.descripcion || ''}
+          onChange={(e) => {
+            setEventoData(prev => ({ ...prev, descripcion: e.target.value }));
+          }}
+          className="w-full p-3 border border-gray-300 rounded-md"
+          rows={6}
+          placeholder="Escribe la descripción del evento aquí..."
+        />
       </section>
 
       <section className="summary-section">
@@ -388,14 +310,26 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
 
         <div className="image-upload-grid grid grid-cols-1 md:grid-cols-3 gap-4">
           {console.log('🖼️ [DisenoEspectaculo] Renderizando previews:', imagesPreviews)}
-          {['banner', 'obraImagen', 'portada'].map((type) => (
+          {[
+            { type: 'banner', label: 'Banner (2560x1713)' },
+            { type: 'obraImagen', label: 'Imagen de obra (1200x1800)' },
+            { type: 'portada', label: 'Portada (2400x1256)' },
+            { type: 'logoHorizontal', label: 'Logo horizontal (640x200)' },
+            { type: 'logoVertical', label: 'Logo vertical (400x600)' },
+            { type: 'bannerPublicidad', label: 'Banner publicidad (500x700)' },
+            { type: 'logoCuadrado', label: 'Logo cuadrado (600x600)' },
+            { type: 'logoPassbook', label: 'Logo passbook (450x150)' },
+            { type: 'passbookBanner', label: 'Passbook banner (753x200)' },
+            { type: 'icono', label: 'Icono (360x360)' }
+          ].map(({ type, label }) => (
             <div key={type} className="image-upload-item flex flex-col gap-2 items-start">
-              <h5 className="font-medium">
-                {type === 'banner' ? 'Banner (2560x1713)' :
-                    type === 'obraImagen' ? 'Imagen de obra (1200x1800)' :
-                    'Portada (2400x1256)'}
-              </h5>
-              <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ width: type === 'obraImagen' ? '200px' : '320px', height: type === 'obraImagen' ? '300px' : (type === 'portada' ? '167px' : '214px') }}>
+              <h5 className="font-medium">{label}</h5>
+              <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ 
+                width: type === 'logoVertical' || type === 'bannerPublicidad' ? '200px' : '320px', 
+                height: type === 'logoVertical' || type === 'bannerPublicidad' ? '300px' : 
+                       type === 'portada' ? '167px' : 
+                       type === 'logoHorizontal' || type === 'logoPassbook' || type === 'passbookBanner' ? '100px' : '214px' 
+              }}>
                 {imagesPreviews[type] ? (
                   <img 
                     src={imagesPreviews[type]} 
