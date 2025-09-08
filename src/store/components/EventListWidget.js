@@ -86,7 +86,7 @@ function EventListWidget({ events }) {
           return (
             <div
               key={event.id}
-              className="store-event-card"
+              className="store-event-card cursor-pointer"
               onClick={() => handleViewDetails(event.slug)}
             >
               {/* Event Image */}

@@ -247,7 +247,8 @@ const ModernStorePage = () => {
                 <Col key={event.id} xs={24} sm={12} lg={8} xl={6}>
                   <Card
                     hoverable
-                    className="h-full shadow-lg border-0 overflow-hidden transition-all duration-300 hover:shadow-xl"
+                    className="h-full shadow-lg border-0 overflow-hidden transition-all duration-300 hover:shadow-xl cursor-pointer"
+                    onClick={() => handleEventClick(event)}
                     cover={
                       <div className="relative h-48 overflow-hidden">
                         <EventImage
@@ -279,7 +280,10 @@ const ModernStorePage = () => {
                       <Button 
                         type="primary" 
                         icon={<EyeOutlined />}
-                        onClick={() => handleEventClick(event)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEventClick(event);
+                        }}
                         block
                       >
                         Ver Detalles
