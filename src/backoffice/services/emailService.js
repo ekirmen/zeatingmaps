@@ -30,9 +30,21 @@ const EMAIL_CONFIG = {
 
 // Email Service Class
 class EmailService {
-  constructor() {
+  constructor(tenantId = null) {
     this.provider = process.env.REACT_APP_EMAIL_PROVIDER || 'sendgrid';
     this.config = EMAIL_CONFIG[this.provider];
+    this.tenantId = tenantId;
+  }
+
+  // Obtener configuración activa (tenant o global)
+  async getActiveConfig() {
+    try {
+      const { TenantEmailConfigService } = await import('./tenantEmailConfigService');
+      return await TenantEmailConfigService.getActiveEmailConfig(this.tenantId);
+    } catch (error) {
+      console.error('Error obteniendo configuración activa:', error);
+      return this.config;
+    }
   }
 
   // Enviar email usando SendGrid
@@ -136,6 +148,15 @@ class EmailService {
   // Método principal para enviar emails
   async sendEmail(to, subject, html, text = null) {
     try {
+      // Obtener configuración activa (tenant o global)
+      const activeConfig = await this.getActiveConfig();
+      
+      // Si hay configuración específica del tenant, usar SMTP
+      if (activeConfig && activeConfig.smtp_host) {
+        return await this.sendWithTenantSMTP(to, subject, html, text, activeConfig);
+      }
+      
+      // Si no, usar el proveedor configurado por defecto
       switch (this.provider) {
         case 'sendgrid':
           return await this.sendWithSendGrid(to, subject, html, text);
@@ -148,6 +169,51 @@ class EmailService {
       }
     } catch (error) {
       console.error('Email sending error:', error);
+      throw error;
+    }
+  }
+
+  // Enviar email usando configuración específica del tenant
+  async sendWithTenantSMTP(to, subject, html, text = null, config = null) {
+    try {
+      const activeConfig = config || await this.getActiveConfig();
+      
+      if (!activeConfig || !activeConfig.smtp_host) {
+        throw new Error('No hay configuración SMTP disponible');
+      }
+
+      const response = await fetch('/api/send-email/smtp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to,
+          subject,
+          html,
+          text: text || html.replace(/<[^>]*>/g, ''),
+          from: activeConfig.from_email,
+          smtpConfig: {
+            host: activeConfig.smtp_host,
+            port: activeConfig.smtp_port,
+            secure: activeConfig.smtp_secure,
+            auth: {
+              user: activeConfig.smtp_user,
+              pass: activeConfig.smtp_pass
+            }
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`SMTP error: ${errorData.error || response.status}`);
+      }
+
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('Tenant SMTP error:', error);
       throw error;
     }
   }
@@ -402,6 +468,8 @@ class EmailService {
           throw new Error('SMTP configuration incomplete');
         }
         break;
+      default:
+        throw new Error(`Unsupported email provider: ${this.provider}`);
     }
   }
 

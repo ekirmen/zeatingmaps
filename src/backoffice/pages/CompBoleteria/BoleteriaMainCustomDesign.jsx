@@ -365,22 +365,22 @@ const BoleteriaMainCustomDesign = () => {
           let tipoPrecio = 'normal';
           let descuentoNombre = '';
 
-          // Aplicar descuento si corresponde
-          if (appliedDiscount?.detalles && zonaId != null) {
-            const d = appliedDiscount.detalles.find(dt => {
-              const id = typeof dt.zona === 'object' ? dt.zona?._id : dt.zona;
-              return String(id) === String(zonaId);
-            });
-            if (d) {
-              if (d.tipo === 'porcentaje') {
-                finalPrice = Math.max(0, basePrice - (basePrice * d.valor) / 100);
-              } else {
-                finalPrice = Math.max(0, basePrice - d.valor);
-              }
-              tipoPrecio = 'descuento';
-              descuentoNombre = appliedDiscount.nombreCodigo;
-            }
-          }
+          // Aplicar descuento si corresponde (comentado hasta implementar appliedDiscount)
+          // if (appliedDiscount?.detalles && zonaId != null) {
+          //   const d = appliedDiscount.detalles.find(dt => {
+          //     const id = typeof dt.zona === 'object' ? dt.zona?._id : dt.zona;
+          //     return String(id) === String(zonaId);
+          //   });
+          //   if (d) {
+          //     if (d.tipo === 'porcentaje') {
+          //       finalPrice = Math.max(0, basePrice - (basePrice * d.valor) / 100);
+          //     } else {
+          //       finalPrice = Math.max(0, basePrice - d.valor);
+          //     }
+          //     tipoPrecio = 'descuento';
+          //     descuentoNombre = appliedDiscount.nombreCodigo;
+          //   }
+          // }
 
           const seatWithPrice = {
             ...seat,

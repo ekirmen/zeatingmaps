@@ -28,7 +28,7 @@ import formatDateString from '../../utils/formatDateString';
 import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
-import { useSeatLocksArray } from '../hooks/useSeatLocksArray';
+import useSeatLocksArray from '../hooks/useSeatLocksArray';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import Cart from './Cart';
 import EventImage from '../components/EventImage';

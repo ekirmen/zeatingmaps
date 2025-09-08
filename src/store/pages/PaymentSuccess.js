@@ -152,15 +152,15 @@ const PaymentSuccess = () => {
 
       <div className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
-        <div className="text-center mb-8">
-          <FontAwesomeIcon icon={faCheckCircle} className="mx-auto h-16 w-16 text-green-500" />
-          <h2 className="mt-4 text-3xl font-bold text-gray-900">
-            {isReservation ? '¡Reserva Exitosa!' : '¡Pago Exitoso!'}
-          </h2>
-          <p className="mt-2 text-lg text-gray-600">
-            {isReservation ? 'Tu reserva ha sido registrada con éxito' : 'Tu compra ha sido registrada con éxito'}
-          </p>
-        </div>
+          <div className="text-center mb-8">
+            <FontAwesomeIcon icon={faCheckCircle} className="mx-auto h-16 w-16 text-green-500" />
+            <h2 className="mt-4 text-3xl font-bold text-gray-900">
+              {isReservation ? '¡Reserva Exitosa!' : '¡Pago Exitoso!'}
+            </h2>
+            <p className="mt-2 text-lg text-gray-600">
+              {isReservation ? 'Tu reserva ha sido registrada con éxito' : 'Tu compra ha sido registrada con éxito'}
+            </p>
+          </div>
 
         <div className="border-t border-b border-gray-200 py-4 my-6">
           <div className="flex justify-between items-center mb-4">
@@ -269,7 +269,7 @@ const PaymentSuccess = () => {
           <div
             className="mt-8 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm"
             dangerouslySetInnerHTML={{ __html: String(eventOptions.observacionesEmail.texto || '') }}
-          />
+          ></div>
         )}
 
         {emailSent && (
@@ -278,6 +278,7 @@ const PaymentSuccess = () => {
             <p className="mt-1">Guarda tu localizador para futuras referencias</p>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

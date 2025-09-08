@@ -42,6 +42,7 @@ import LegalTerms from '../store/pages/LegalTerms';
 import Descuentos from './pages/Descuentos';
 import WebColors from './pages/WebColors';
 import SeatSettings from './pages/SeatSettings';
+import TenantEmailConfigPanel from './components/TenantEmailConfigPanel';
 
 const BackofficeApp = () => {
   return (
@@ -127,6 +128,7 @@ const BackofficeApp = () => {
         <Route path="settings" element={<SystemSettings />} />
         <Route path="seat-settings" element={<SeatSettings />} />
         <Route path="printer-settings" element={<PrinterSettings />} />
+        <Route path="email-config" element={<TenantEmailConfigPanel />} />
         <Route path="audit-logs" element={<AuditLogs />} />
         <Route path="refund-management" element={<RefundManagement />} />
         <Route path="payment-analytics" element={<PaymentAnalytics />} />
