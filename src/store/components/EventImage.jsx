@@ -64,7 +64,8 @@ const EventImage = ({
   }
   
   // Texto para fallback
-  const fallbackChar = fallbackText || (event?.nombre || event?.name || 'E').charAt(0);
+  const eventName = event?.nombre || event?.name || 'E';
+  const fallbackChar = fallbackText || (typeof eventName === 'string' ? eventName.charAt(0) : 'E');
   
   // URL de fallback
   const fallbackUrl = `https://placehold.co/400x300/E0F2F7/000?text=${fallbackChar}`;

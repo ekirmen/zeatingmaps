@@ -1,6 +1,6 @@
 // Función para resolver URLs de imágenes desde Supabase Storage
 export default function resolveImageUrl(imagePath, bucket = 'eventos', tenantId = null, eventId = null) {
-  if (!imagePath) {
+  if (!imagePath || typeof imagePath !== 'string') {
     return null;
   }
 

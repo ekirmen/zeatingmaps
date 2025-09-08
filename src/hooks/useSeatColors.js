@@ -65,14 +65,14 @@ export const useSeatColors = (eventId = null) => {
       return eventTheme.seatBlocked || '#ff4d4f';
     }
     
-    // 5. BLOQUEADO POR OTRO USUARIO (temporal)
-    if (seat.estado === 'seleccionado_por_otro' || (isLockedByOther && !isPermanentlyLocked)) {
-      return eventTheme.seatBlocked || '#ff4d4f';
+    // 5. SELECCIONADO POR OTRO USUARIO (temporal) - PRIORIDAD ALTA
+    if (seat.estado === 'seleccionado_por_otro' || (isSelectedByOther && !isPermanentlyLocked)) {
+      return eventTheme.seatSelectedOther || '#faad14';
     }
     
-    // 6. SELECCIONADO POR OTRO USUARIO (temporal)
-    if (isSelectedByOther && !isPermanentlyLocked) {
-      return eventTheme.seatSelectedOther || '#faad14';
+    // 6. BLOQUEADO POR OTRO USUARIO (temporal) - PRIORIDAD BAJA
+    if (isLockedByOther && !isPermanentlyLocked && !isSelectedByOther) {
+      return eventTheme.seatBlocked || '#ff4d4f';
     }
     
     // 7. SELECCIONADO POR MÍ (temporal)

@@ -86,8 +86,8 @@ const ValidationWidget = ({
       seats: seatValidation
     }));
 
-    // Notificaciones automáticas
-    if (showNotifications) {
+    // Notificaciones automáticas (deshabilitadas para evitar spam)
+    if (showNotifications && false) { // Deshabilitado temporalmente
       if (seatValidation.errors.length > 0) {
         VisualNotifications.show('error', seatValidation.errors[0]);
         setNotificationCount(prev => prev + 1);
@@ -139,8 +139,8 @@ const ValidationWidget = ({
       payment: paymentValidation
     }));
 
-    // Notificaciones automáticas
-    if (showNotifications) {
+    // Notificaciones automáticas (deshabilitadas para evitar spam)
+    if (showNotifications && false) { // Deshabilitado temporalmente
       if (paymentValidation.errors.length > 0) {
         VisualNotifications.show('error', paymentValidation.errors[0]);
         setNotificationCount(prev => prev + 1);

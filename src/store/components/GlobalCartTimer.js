@@ -94,7 +94,7 @@ const GlobalCartTimer = () => {
   return (
     <>
       {/* Temporizador flotante */}
-      <div className="fixed top-1/2 right-6 z-50 transform -translate-y-1/2">
+      <div className="fixed top-6 right-6 z-50">
         <Tooltip 
           title={
             <div className="text-center">
@@ -135,7 +135,7 @@ const GlobalCartTimer = () => {
 
         {/* Texto del tiempo restante */}
         <div 
-          className="absolute -top-8 right-0 bg-white px-2 py-1 rounded shadow-md text-sm font-bold"
+          className="absolute -top-8 right-0 bg-white px-2 py-1 rounded shadow-md text-sm font-bold whitespace-nowrap"
           style={{ color: getTimerColor() }}
         >
           {formatTime(timeLeft)}

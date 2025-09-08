@@ -75,7 +75,8 @@ function EventListWidget({ events }) {
         {events.map((event) => {
           const images = getEventImages(event);
           const rawImage = images.obraImagen || images.portada || images.banner;
-          const displayImageUrl = rawImage ? getImageUrl(rawImage) : `https://placehold.co/400x300/E0F2F7/000?text=${(event.name || event.nombre) ? (event.name || event.nombre).charAt(0) : 'E'}`;
+          const eventName = event.name || event.nombre || 'E';
+          const displayImageUrl = rawImage ? getImageUrl(rawImage) : `https://placehold.co/400x300/E0F2F7/000?text=${typeof eventName === 'string' ? eventName.charAt(0) : 'E'}`;
           
           // Debug info para desarrollo
           if (process.env.NODE_ENV === 'development') {
