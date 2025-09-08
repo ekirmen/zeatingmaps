@@ -1,25 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Button, Card, Select, message, Spin, Alert, Row, Col, Badge, Divider, Tag, Descriptions, Timeline, Statistic, Progress } from 'antd';
+import { Button, Card, message, Spin, Alert, Badge, Tag, Descriptions, Statistic } from 'antd';
 import { 
   CalendarOutlined, 
   EnvironmentOutlined, 
   ClockCircleOutlined, 
   ShoppingCartOutlined,
-  StarOutlined,
   ShareAltOutlined,
   HeartOutlined,
   InfoCircleOutlined,
   UserOutlined,
   SettingOutlined,
-  EyeOutlined,
   EyeInvisibleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
   ExclamationCircleOutlined,
   TrophyOutlined,
   TeamOutlined,
-  DollarOutlined,
   TagsOutlined,
   FileTextOutlined,
   BarChartOutlined,
@@ -35,7 +32,6 @@ import SeatingMapUnified from '../../components/SeatingMapUnified';
 import Cart from './Cart';
 import EventImage from '../components/EventImage';
 
-const { Option } = Select;
 
 const ModernEventPage = () => {
   useCartRestore();
@@ -46,8 +42,12 @@ const ModernEventPage = () => {
   
   // Detectar si estamos en la vista del mapa
   const isMapView = location.pathname.includes('/map');
+
+  const [evento, setEvento] = useState(null);
+  const [funciones, setFunciones] = useState([]);
+  const [selectedFunctionId, setSelectedFunctionId] = useState(null);
   
-  // Debug logs
+  // Debug logs (moved after variable declarations)
   console.log('🔍 [ModernEventPage] Debug info:', {
     isMapView,
     selectedFunctionId,
@@ -55,15 +55,10 @@ const ModernEventPage = () => {
     pathname: location.pathname,
     searchParams: searchParams.toString()
   });
-
-  const [evento, setEvento] = useState(null);
-  const [funciones, setFunciones] = useState([]);
-  const [selectedFunctionId, setSelectedFunctionId] = useState(null);
   const [mapa, setMapa] = useState(null);
   const [mapLoading, setMapLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showMap, setShowMap] = useState(false);
   const [venueInfo, setVenueInfo] = useState(null);
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
@@ -76,8 +71,6 @@ const ModernEventPage = () => {
     unsubscribe,
     lockSeat,
     unlockSeat,
-    lockTable,
-    unlockTable,
     isSeatLocked,
     isSeatLockedByMe,
     isTableLocked,
@@ -127,12 +120,10 @@ const ModernEventPage = () => {
           if (funcion) {
             const fid = funcion.id || funcion._id;
             setSelectedFunctionId(fid);
-            setShowMap(true);
           }
         } else if (funcionesData && funcionesData.length === 1) {
           const fid = funcionesData[0].id || funcionesData[0]._id;
           setSelectedFunctionId(fid);
-          setShowMap(true);
         }
       } catch (err) {
         console.error('Error fetching evento:', err);
@@ -196,7 +187,6 @@ const ModernEventPage = () => {
 
   const handleFunctionSelect = (functionId) => {
     setSelectedFunctionId(functionId);
-    setShowMap(true);
   };
 
   const handleSeatToggle = async (sillaId) => {
@@ -223,13 +213,12 @@ const ModernEventPage = () => {
     }
   };
 
-  const handleProceedToCart = () => {
-    if (getItemCount() === 0) {
-      message.warning('No hay items en el carrito');
-      return;
-    }
-    navigate('/store/cart');
+  const handleTableToggle = (table) => {
+    console.log('Mesa seleccionada:', table);
+    // Por ahora solo mostrar información de la mesa
+    // En el futuro se puede implementar lógica para seleccionar toda la mesa
   };
+
 
   // Funciones para parsear campos JSON
   const parseJsonField = (field) => {
@@ -263,25 +252,6 @@ const ModernEventPage = () => {
     return parseJsonField(evento.otrasOpciones) || {};
   };
 
-  const getEstadoPersonalizado = () => {
-    return parseJsonField(evento.estadoPersonalizado) || {};
-  };
-
-  const getSectorPersonalizado = () => {
-    return parseJsonField(evento.sectorPersonalizado) || {};
-  };
-
-  const getMostrarDatosBoleto = () => {
-    return parseJsonField(evento.mostrarDatosBoleto) || {};
-  };
-
-  const getMostrarDatosComprador = () => {
-    return parseJsonField(evento.mostrarDatosComprador) || {};
-  };
-
-  const getDescripcionEstado = () => {
-    return parseJsonField(evento.descripcionEstado) || {};
-  };
 
   // Función para obtener el estado visual del evento
   const getEventStatus = () => {
