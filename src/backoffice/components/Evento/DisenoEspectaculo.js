@@ -2,18 +2,28 @@ import React, { useState } from 'react';
 import API_BASE_URL from '../../../utils/apiBase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { supabase } from '../../../supabaseClient';
+import { useTenant } from '../../../contexts/TenantContext';
+import resolveImageUrl, { resolveEventImageWithTenant } from '../../../utils/resolveImageUrl';
 
 const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   const [description, setDescription] = useState(eventoData.descripcionHTML || '');
-  // Update the image preview handling
-  // Fix initial state image paths
-  const getPreview = (img) => {
+  const { currentTenant } = useTenant();
+  const [uploading, setUploading] = useState(false);
+  
+  // Update the image preview handling for new bucket structure
+  const getPreview = (img, imageType) => {
     if (typeof img === 'string') {
       // If it's already an absolute URL, return it unchanged
       if (/^https?:\/\//i.test(img)) {
         return img;
       }
-      // Otherwise prefix with the API base URL
+      // Try to resolve using new tenant structure
+      if (currentTenant?.id && eventoData?.id) {
+        const resolvedUrl = resolveEventImageWithTenant(eventoData, imageType, currentTenant.id);
+        if (resolvedUrl) return resolvedUrl;
+      }
+      // Fallback to old API base URL
       return `${API_BASE_URL}${img}`;
     }
     if (img instanceof File) {
@@ -23,11 +33,11 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   };
 
   const [imagesPreviews, setImagesPreviews] = useState({
-    banner: getPreview(eventoData.imagenes?.banner),
-    obraImagen: getPreview(eventoData.imagenes?.obraImagen),
-    portada: getPreview(eventoData.imagenes?.portada),
+    banner: getPreview(eventoData.imagenes?.banner, 'banner'),
+    obraImagen: getPreview(eventoData.imagenes?.obraImagen, 'obraImagen'),
+    portada: getPreview(eventoData.imagenes?.portada, 'portada'),
     espectaculo: Array.isArray(eventoData.imagenes?.espectaculo)
-      ? eventoData.imagenes.espectaculo.map(img => getPreview(img)).filter(Boolean)
+      ? eventoData.imagenes.espectaculo.map(img => getPreview(img, 'espectaculo')).filter(Boolean)
       : []
   });
   
@@ -101,18 +111,68 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
     };
   }
 
-  const handleImageChange = (e, imageType) => {
+  // Nueva función para subir imagen a Supabase Storage
+  const uploadImageToSupabase = async (file, imageType) => {
+    if (!currentTenant?.id) {
+      throw new Error('No tenant ID available');
+    }
+
+    const bucketName = `tenant-${currentTenant.id}`;
+    const eventId = eventoData?.id || 'temp';
+    const fileName = `${imageType}_${Date.now()}.${file.name.split('.').pop()}`;
+    const filePath = `${eventId}/${fileName}`;
+
+    try {
+      console.log('🚀 [DisenoEspectaculo] Subiendo imagen:', {
+        bucketName,
+        filePath,
+        fileName,
+        imageType,
+        fileSize: file.size
+      });
+
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+
+      console.log('✅ [DisenoEspectaculo] Imagen subida exitosamente:', publicUrl);
+
+      return {
+        url: filePath,
+        publicUrl: publicUrl,
+        bucket: bucketName,
+        fileName: fileName,
+        size: file.size,
+        type: file.type
+      };
+    } catch (error) {
+      console.error('❌ [DisenoEspectaculo] Error subiendo imagen:', error);
+      throw error;
+    }
+  };
+
+  const handleImageChange = async (e, imageType) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/png'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      alert('Solo se permiten imágenes JPG o PNG');
+      alert('Solo se permiten imágenes JPG, PNG o WebP');
       return;
     }
 
-    if (file.size > 1 * 1024 * 1024) {
-      alert('La imagen debe pesar menos de 1MB');
+    if (file.size > 5 * 1024 * 1024) { // Aumentado a 5MB
+      alert('La imagen debe pesar menos de 5MB');
       return;
     }
 
@@ -124,7 +184,8 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
 
     const previewUrl = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => {
+    
+    img.onload = async () => {
       const reqDim = dimensions[imageType];
       if (reqDim && (img.width !== reqDim.width || img.height !== reqDim.height)) {
         alert(`La imagen debe medir ${reqDim.width}x${reqDim.height}px`);
@@ -132,36 +193,78 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
         return;
       }
 
-      if (imageType === 'espectaculo') {
-        setImagesPreviews(prev => ({
-          ...prev,
-          espectaculo: [...prev.espectaculo, previewUrl]
-        }));
-      } else {
-        setImagesPreviews(prev => ({
-          ...prev,
-          [imageType]: previewUrl
-        }));
-      }
-
-      setEventoData(prev => ({
-        ...prev,
-        imagenes: {
-          ...prev.imagenes,
-          [imageType]: imageType === 'espectaculo'
-            ? [...(prev.imagenes?.espectaculo || []), file]
-            : file
+      try {
+        setUploading(true);
+        
+        // Subir imagen a Supabase Storage
+        const imageData = await uploadImageToSupabase(file, imageType);
+        
+        // Actualizar preview con URL pública
+        if (imageType === 'espectaculo') {
+          setImagesPreviews(prev => ({
+            ...prev,
+            espectaculo: [...prev.espectaculo, imageData.publicUrl]
+          }));
+        } else {
+          setImagesPreviews(prev => ({
+            ...prev,
+            [imageType]: imageData.publicUrl
+          }));
         }
-      }));
+
+        // Actualizar datos del evento con metadatos de la imagen
+        setEventoData(prev => ({
+          ...prev,
+          imagenes: {
+            ...prev.imagenes,
+            [imageType]: imageType === 'espectaculo'
+              ? [...(prev.imagenes?.espectaculo || []), imageData]
+              : imageData
+          }
+        }));
+
+        console.log('✅ [DisenoEspectaculo] Imagen procesada exitosamente');
+        
+      } catch (error) {
+        console.error('❌ [DisenoEspectaculo] Error procesando imagen:', error);
+        alert(`Error al subir la imagen: ${error.message}`);
+        URL.revokeObjectURL(previewUrl);
+      } finally {
+        setUploading(false);
+      }
     };
+    
     img.onerror = () => {
       URL.revokeObjectURL(previewUrl);
       alert('No se pudo leer la imagen');
+      setUploading(false);
     };
+    
     img.src = previewUrl;
   };
 
   const deleteEspectaculoImage = async (index) => {
+    const imageToDelete = eventoData.imagenes?.espectaculo?.[index];
+    
+    // Eliminar de Supabase Storage si tiene datos de bucket
+    if (imageToDelete?.bucket && imageToDelete?.url) {
+      try {
+        console.log('🗑️ [DisenoEspectaculo] Eliminando imagen de Supabase:', imageToDelete.url);
+        
+        const { error } = await supabase.storage
+          .from(imageToDelete.bucket)
+          .remove([imageToDelete.url]);
+
+        if (error) throw error;
+        
+        console.log('✅ [DisenoEspectaculo] Imagen eliminada de Supabase Storage');
+      } catch (error) {
+        console.error('❌ [DisenoEspectaculo] Error eliminando imagen de Supabase:', error);
+        // Continuar con la eliminación local aunque falle en Supabase
+      }
+    }
+
+    // Actualizar estado local
     const updatedPreviews = imagesPreviews.espectaculo.filter((_, i) => i !== index);
     const updatedData = eventoData.imagenes?.espectaculo?.filter((_, i) => i !== index);
 
@@ -178,19 +281,7 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
       }
     }));
 
-    // Si la imagen tiene un ID o URL identificable en el backend, envía un DELETE
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/events/delete-image/${eventoData._id}?index=${index}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-
-      if (!response.ok) throw new Error('Error eliminando imagen');
-      console.log('Imagen eliminada');
-    } catch (err) {
-      console.error('Error al eliminar imagen:', err);
-    }
+    console.log('✅ [DisenoEspectaculo] Imagen eliminada del estado local');
   };
 
   const handleDescriptionChange = (value) => {
@@ -274,10 +365,17 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
               <div className="upload-buttons flex items-center gap-2 mt-1">
                 <input
                   type="file"
-                  accept=".jpg,.jpeg"
+                  accept=".jpg,.jpeg,.png,.webp"
                   onChange={(e) => handleImageChange(e, type)}
-                  className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
+                  disabled={uploading}
+                  className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
                 />
+                {uploading && (
+                  <div className="flex items-center gap-2 text-sm text-blue-600">
+                    <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                    Subiendo...
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -298,12 +396,21 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
               </div>
             ))}
           </div>
-          <input
-            type="file"
-            accept=".jpg,.jpeg"
-            onChange={(e) => handleImageChange(e, 'espectaculo')}
-            className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp"
+              onChange={(e) => handleImageChange(e, 'espectaculo')}
+              disabled={uploading}
+              className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
+            />
+            {uploading && (
+              <div className="flex items-center gap-2 text-sm text-blue-600">
+                <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                Subiendo...
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="video-section flex flex-col gap-2 mt-4">
