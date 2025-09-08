@@ -59,7 +59,8 @@ const EventImage = ({
       imageType,
       imagePath,
       imageUrl,
-      images: getEventImages()
+      images: getEventImages(),
+      imageData: images[imageType] || images.portada || images.obraImagen || images.banner
     });
   }
   

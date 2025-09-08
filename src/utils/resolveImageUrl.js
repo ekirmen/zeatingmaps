@@ -51,7 +51,7 @@ export function resolveEventImageUrl(eventId, imageName, tenantId = null) {
 
 // Función para obtener URL de imagen de evento con tenant_id
 export function resolveEventImageWithTenant(event, imageType, tenantId) {
-  if (!event || !tenantId) {
+  if (!event) {
     return null;
   }
   
@@ -81,9 +81,20 @@ export function resolveEventImageWithTenant(event, imageType, tenantId) {
     return resolveImageUrl(imagePath, imageData.bucket);
   }
   
-  // Si no, usar la nueva estructura en bucket 'eventos'
-  const imagePath = imageData.url || imageData.publicUrl || imageData.src;
-  return resolveImageUrl(imagePath, 'eventos', tenantId, event.id);
+  // Si la imagen ya tiene publicUrl, usarlo directamente
+  if (imageData.publicUrl) {
+    return imageData.publicUrl;
+  }
+  
+  // Si tenemos tenant_id, usar la nueva estructura en bucket 'eventos'
+  if (tenantId && event.id) {
+    const imagePath = imageData.url || imageData.src;
+    return resolveImageUrl(imagePath, 'eventos', tenantId, event.id);
+  }
+  
+  // Fallback: usar la estructura antigua
+  const imagePath = imageData.url || imageData.src;
+  return resolveImageUrl(imagePath, 'eventos');
 }
 
 // Función para obtener URL de imagen con bucket por tenant

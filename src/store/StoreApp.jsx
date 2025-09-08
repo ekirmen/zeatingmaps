@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { RefProvider } from '../contexts/RefContext'; // 👈 IMPORTANTE
+import { TenantProvider } from '../contexts/TenantContext'; // 👈 IMPORTANTE
 import Header from './components/StoreHeader';
 import BasicFooter from '../components/BasicFooter';
 import GlobalCartTimer from './components/GlobalCartTimer';
@@ -52,46 +53,48 @@ const StoreApp = () => {
   const showFooter = location.pathname.startsWith('/store');
 
   return (
-    <RefProvider> {/* 👈 ENVOLVER AQUÍ */}
-        <div className="min-h-screen flex flex-col">
-          {showHeader && <Header />}
-          <div className="flex-grow">
-            <Routes>
-                {/* Render CMS home page by default */}
-                <Route index element={<CmsPage slug="store" />} />
-              <Route path="tag/:tagSlug?" element={<EventsVenue groupByTags />} />
-              <Route path="eventos/:eventSlug" element={<EventInfo />} />
-              <Route path="eventos/:eventSlug/map" element={<EventosPage forceShowMap />} />
-              <Route path="event/:eventId" element={<EventInfo />} />
+    <TenantProvider> {/* 👈 ENVOLVER CON TENANT PROVIDER */}
+      <RefProvider> {/* 👈 ENVOLVER AQUÍ */}
+          <div className="min-h-screen flex flex-col">
+            {showHeader && <Header />}
+            <div className="flex-grow">
+              <Routes>
+                  {/* Render CMS home page by default */}
+                  <Route index element={<CmsPage slug="store" />} />
+                <Route path="tag/:tagSlug?" element={<EventsVenue groupByTags />} />
+                <Route path="eventos/:eventSlug" element={<EventInfo />} />
+                <Route path="eventos/:eventSlug/map" element={<EventosPage forceShowMap />} />
+                <Route path="event/:eventId" element={<EventInfo />} />
 
-              <Route path="event/:eventId/full" element={<Event />} />
-              <Route path="buy-event/:id" element={<BuyEvent />} />
-              <Route path="select-seats/:salaId" element={<SelectSeats />} />
-              <Route path="select-seats/:salaId/:funcionId" element={<SelectSeats />} />
-              <Route path="seat-selection/:funcionId" element={<SeatSelectionPage />} />
-              <Route path="cart" element={<CartPage />} />
-              <Route path="payment" element={<Pay />} />
-              <Route path="login" element={<StoreLogin />} />
-              <Route path="register" element={<Register />} />
-              <Route path="forgot-password" element={<ForgotPassword />} />
-              <Route path="reset-password" element={<ResetPassword />} />
-              <Route path="search-map" element={<EventSearchMap />} />
-              <Route path="faq" element={<FaqPage />} />
-              <Route path="perfil" element={<Profile userData={user} onUpdateProfile={updateProfile} />} />
-              <Route path="privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="cookies-policy" element={<CookiesPolicy />} />
-              <Route path="legal-terms" element={<LegalTerms />} />
-              <Route path=":pageSlug" element={<CmsPage />} />
-              <Route path="payment-success/:locator?" element={<PaymentSuccess />} />
-              <Route path="thank-you" element={<ThankYouPage />} />
-              <Route path="404" element={<NotFoundPage />} />
-              <Route path="*" element={<Navigate to="/store" replace />} />
-            </Routes>
+                <Route path="event/:eventId/full" element={<Event />} />
+                <Route path="buy-event/:id" element={<BuyEvent />} />
+                <Route path="select-seats/:salaId" element={<SelectSeats />} />
+                <Route path="select-seats/:salaId/:funcionId" element={<SelectSeats />} />
+                <Route path="seat-selection/:funcionId" element={<SeatSelectionPage />} />
+                <Route path="cart" element={<CartPage />} />
+                <Route path="payment" element={<Pay />} />
+                <Route path="login" element={<StoreLogin />} />
+                <Route path="register" element={<Register />} />
+                <Route path="forgot-password" element={<ForgotPassword />} />
+                <Route path="reset-password" element={<ResetPassword />} />
+                <Route path="search-map" element={<EventSearchMap />} />
+                <Route path="faq" element={<FaqPage />} />
+                <Route path="perfil" element={<Profile userData={user} onUpdateProfile={updateProfile} />} />
+                <Route path="privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="cookies-policy" element={<CookiesPolicy />} />
+                <Route path="legal-terms" element={<LegalTerms />} />
+                <Route path=":pageSlug" element={<CmsPage />} />
+                <Route path="payment-success/:locator?" element={<PaymentSuccess />} />
+                <Route path="thank-you" element={<ThankYouPage />} />
+                <Route path="404" element={<NotFoundPage />} />
+                <Route path="*" element={<Navigate to="/store" replace />} />
+              </Routes>
+            </div>
+            {showFooter && <BasicFooter />}
+            <GlobalCartTimer />
           </div>
-          {showFooter && <BasicFooter />}
-          <GlobalCartTimer />
-        </div>
-    </RefProvider>
+      </RefProvider>
+    </TenantProvider>
   );
 };
 
