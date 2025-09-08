@@ -1,50 +1,146 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import API_BASE_URL from '../../../utils/apiBase';
+import { supabase } from '../../../supabaseClient';
+import { useTenant } from '../../../contexts/TenantContext';
+import resolveImageUrl, { resolveEventImageWithTenant } from '../../../utils/resolveImageUrl';
 
 const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
   const [selectedFormat, setSelectedFormat] = useState('pdf');
   const [pdfOption, setPdfOption] = useState('single');
+  const { currentTenant } = useTenant();
+  const [uploading, setUploading] = useState(false);
   
   // Update initial state with existing images
-  const getPreview = (img) => {
+  const getPreview = (img, imageType) => {
+    // Si es un objeto con publicUrl (de Supabase)
+    if (img && typeof img === 'object' && img.publicUrl) {
+      return img.publicUrl;
+    }
+    
+    // Si es un objeto con url (de Supabase)
+    if (img && typeof img === 'object' && img.url) {
+      // Si ya es una URL completa, devolverla
+      if (/^https?:\/\//i.test(img.url)) {
+        return img.url;
+      }
+      // Si es una ruta relativa, construir URL completa
+      const bucketName = img.bucket || `tenant-${currentTenant?.id}`;
+      const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+      return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${img.url}`;
+    }
+    
+    // Si es un string
     if (typeof img === 'string') {
       // Leave absolute URLs untouched
       if (/^https?:\/\//i.test(img)) {
         return img;
       }
+      // Try to resolve using new tenant structure
+      if (currentTenant?.id && eventoData?.id) {
+        const resolvedUrl = resolveEventImageWithTenant(eventoData, imageType, currentTenant.id);
+        if (resolvedUrl) return resolvedUrl;
+      }
       // Otherwise prefix with API base URL
       return `${API_BASE_URL}${img}`;
     }
+    
     if (img instanceof File) {
       return URL.createObjectURL(img);
     }
+    
     return null;
   };
 
   const [imagesPreviews, setImagesPreviews] = useState({
-    logoHorizontal: getPreview(eventoData.imagenes?.logoHorizontal),
-    banner: getPreview(eventoData.imagenes?.banner),
-    logoVertical: getPreview(eventoData.imagenes?.logoVertical),
-    bannerPublicidad: getPreview(eventoData.imagenes?.bannerPublicidad),
-    logoCuadrado: getPreview(eventoData.imagenes?.logoCuadrado),
-    logoPassbook: getPreview(eventoData.imagenes?.logoPassbook),
-    passBookBanner: getPreview(eventoData.imagenes?.passBookBanner),
-    icono: getPreview(eventoData.imagenes?.icono)
+    logoHorizontal: getPreview(eventoData.imagenes?.logoHorizontal, 'logoHorizontal'),
+    banner: getPreview(eventoData.imagenes?.banner, 'banner'),
+    logoVertical: getPreview(eventoData.imagenes?.logoVertical, 'logoVertical'),
+    bannerPublicidad: getPreview(eventoData.imagenes?.bannerPublicidad, 'bannerPublicidad'),
+    logoCuadrado: getPreview(eventoData.imagenes?.logoCuadrado, 'logoCuadrado'),
+    logoPassbook: getPreview(eventoData.imagenes?.logoPassbook, 'logoPassbook'),
+    passBookBanner: getPreview(eventoData.imagenes?.passBookBanner, 'passBookBanner'),
+    icono: getPreview(eventoData.imagenes?.icono, 'icono')
   });
 
+  // Sincronizar previews cuando cambien los datos del evento
+  useEffect(() => {
+    if (eventoData?.imagenes) {
+      console.log('🔄 [ConfiguracionBoletas] Sincronizando previews:', eventoData.imagenes);
+      setImagesPreviews({
+        logoHorizontal: getPreview(eventoData.imagenes?.logoHorizontal, 'logoHorizontal'),
+        banner: getPreview(eventoData.imagenes?.banner, 'banner'),
+        logoVertical: getPreview(eventoData.imagenes?.logoVertical, 'logoVertical'),
+        bannerPublicidad: getPreview(eventoData.imagenes?.bannerPublicidad, 'bannerPublicidad'),
+        logoCuadrado: getPreview(eventoData.imagenes?.logoCuadrado, 'logoCuadrado'),
+        logoPassbook: getPreview(eventoData.imagenes?.logoPassbook, 'logoPassbook'),
+        passBookBanner: getPreview(eventoData.imagenes?.passBookBanner, 'passBookBanner'),
+        icono: getPreview(eventoData.imagenes?.icono, 'icono')
+      });
+    }
+  }, [eventoData?.imagenes, currentTenant?.id, eventoData?.id]);
 
-  const handleImageChange = (e, imageType) => {
+  // Nueva función para subir imagen a Supabase Storage
+  const uploadImageToSupabase = async (file, imageType) => {
+    if (!currentTenant?.id) {
+      throw new Error('No tenant ID available');
+    }
+
+    const bucketName = `tenant-${currentTenant.id}`;
+    const eventId = eventoData?.id || 'temp';
+    const fileName = `${imageType}_${Date.now()}.${file.name.split('.').pop()}`;
+    const filePath = `${eventId}/${fileName}`;
+
+    try {
+      console.log('🚀 [ConfiguracionBoletas] Subiendo imagen:', {
+        bucketName,
+        filePath,
+        fileName,
+        imageType,
+        fileSize: file.size
+      });
+
+      const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+
+      console.log('✅ [ConfiguracionBoletas] Imagen subida exitosamente:', publicUrl);
+
+      return {
+        url: filePath,
+        publicUrl: publicUrl,
+        bucket: bucketName,
+        fileName: fileName,
+        size: file.size,
+        type: file.type
+      };
+    } catch (error) {
+      console.error('❌ [ConfiguracionBoletas] Error subiendo imagen:', error);
+      throw error;
+    }
+  };
+
+  const handleImageChange = async (e, imageType) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/png'];
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      alert('Solo se permiten imágenes JPG o PNG');
+      alert('Solo se permiten imágenes JPG, PNG o WebP');
       return;
     }
 
-    if (file.size > 1 * 1024 * 1024) {
-      alert('La imagen debe pesar menos de 1MB');
+    if (file.size > 5 * 1024 * 1024) { // Aumentado a 5MB
+      alert('La imagen debe pesar menos de 5MB');
       return;
     }
 
@@ -61,7 +157,8 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
 
     const previewUrl = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => {
+    
+    img.onload = async () => {
       const reqDim = dimensions[imageType];
       if (reqDim && (img.width !== reqDim.width || img.height !== reqDim.height)) {
         alert(`La imagen debe medir ${reqDim.width}x${reqDim.height}px`);
@@ -69,19 +166,48 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
         return;
       }
 
-      setImagesPreviews(prev => ({ ...prev, [imageType]: previewUrl }));
-      setEventoData(prev => ({
-        ...prev,
-        imagenes: {
-          ...prev.imagenes,
-          [imageType]: file
-        }
-      }));
+      try {
+        setUploading(true);
+        
+        // Subir imagen a Supabase Storage
+        const imageData = await uploadImageToSupabase(file, imageType);
+        
+        // Actualizar preview con URL pública
+        setImagesPreviews(prev => ({
+          ...prev,
+          [imageType]: imageData.publicUrl
+        }));
+
+        // Actualizar datos del evento con metadatos de la imagen
+        setEventoData(prev => {
+          const newData = {
+            ...prev,
+            imagenes: {
+              ...prev.imagenes,
+              [imageType]: imageData
+            }
+          };
+          console.log('📝 [ConfiguracionBoletas] Actualizando eventoData:', newData.imagenes);
+          return newData;
+        });
+
+        console.log('✅ [ConfiguracionBoletas] Imagen procesada exitosamente');
+        
+      } catch (error) {
+        console.error('❌ [ConfiguracionBoletas] Error procesando imagen:', error);
+        alert(`Error al subir la imagen: ${error.message}`);
+        URL.revokeObjectURL(previewUrl);
+      } finally {
+        setUploading(false);
+      }
     };
+    
     img.onerror = () => {
       URL.revokeObjectURL(previewUrl);
       alert('No se pudo leer la imagen');
+      setUploading(false);
     };
+    
     img.src = previewUrl;
   };
 
@@ -188,11 +314,18 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
             <div className="upload-buttons">
               <input
                 type="file"
-                accept=".jpg,.png"
+                accept=".jpg,.png,.webp"
                 onChange={(e) => handleImageChange(e, 'logoHorizontal')}
                 id="logoHorizontal"
-                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
+                disabled={uploading}
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
               />
+              {uploading && (
+                <div className="flex items-center gap-2 text-sm text-blue-600 mt-1">
+                  <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                  Subiendo...
+                </div>
+              )}
             </div>
           </div>
 
@@ -208,11 +341,18 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
             <div className="upload-buttons">
               <input
                 type="file"
-                accept=".jpg,.png"
+                accept=".jpg,.png,.webp"
                 onChange={(e) => handleImageChange(e, 'banner')}
                 id="banner"
-                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
+                disabled={uploading}
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
               />
+              {uploading && (
+                <div className="flex items-center gap-2 text-sm text-blue-600 mt-1">
+                  <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                  Subiendo...
+                </div>
+              )}
             </div>
           </div>
 
@@ -228,11 +368,18 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
             <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
-                accept=".jpg,.png"
+                accept=".jpg,.png,.webp"
                 onChange={(e) => handleImageChange(e, 'logoVertical')}
                 id="logoVertical"
-                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
+                disabled={uploading}
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
               />
+              {uploading && (
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                  Subiendo...
+                </div>
+              )}
             </div>
           </div>
 
@@ -248,11 +395,18 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
             <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
-                accept=".jpg,.png"
+                accept=".jpg,.png,.webp"
                 onChange={(e) => handleImageChange(e, 'bannerPublicidad')}
                 id="bannerPublicidad"
-                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
+                disabled={uploading}
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
               />
+              {uploading && (
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                  Subiendo...
+                </div>
+              )}
             </div>
           </div>
 
@@ -268,11 +422,18 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
             <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
-                accept=".jpg,.png"
+                accept=".jpg,.png,.webp"
                 onChange={(e) => handleImageChange(e, 'logoCuadrado')}
                 id="logoCuadrado"
-                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
+                disabled={uploading}
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
               />
+              {uploading && (
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                  Subiendo...
+                </div>
+              )}
             </div>
           </div>
 
@@ -288,11 +449,18 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
             <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
-                accept=".jpg,.png"
+                accept=".jpg,.png,.webp"
                 onChange={(e) => handleImageChange(e, 'logoPassbook')}
                 id="logoPassbook"
-                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
+                disabled={uploading}
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
               />
+              {uploading && (
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                  Subiendo...
+                </div>
+              )}
             </div>
           </div>
 
@@ -308,11 +476,18 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
             <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
-                accept=".jpg,.png"
+                accept=".jpg,.png,.webp"
                 onChange={(e) => handleImageChange(e, 'passBookBanner')}
                 id="passBookBanner"
-                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
+                disabled={uploading}
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
               />
+              {uploading && (
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <div className="animate-spin w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full"></div>
+                  Subiendo...
+                </div>
+              )}
             </div>
           </div>
 
@@ -328,10 +503,11 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
             <div className="upload-buttons flex items-center gap-2 mt-1">
               <input
                 type="file"
-                accept=".jpg,.png"
+                accept=".jpg,.png,.webp"
                 onChange={(e) => handleImageChange(e, 'icono')}
                 id="icono"
-                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded"
+                disabled={uploading}
+                className="file:px-3 file:py-1 file:border file:border-gray-300 file:rounded disabled:opacity-50"
               />
             </div>
           </div>
