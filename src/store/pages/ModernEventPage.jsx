@@ -46,6 +46,15 @@ const ModernEventPage = () => {
   
   // Detectar si estamos en la vista del mapa
   const isMapView = location.pathname.includes('/map');
+  
+  // Debug logs
+  console.log('🔍 [ModernEventPage] Debug info:', {
+    isMapView,
+    selectedFunctionId,
+    eventSlug,
+    pathname: location.pathname,
+    searchParams: searchParams.toString()
+  });
 
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
@@ -146,7 +155,12 @@ const ModernEventPage = () => {
 
   // Cargar mapa cuando estemos en la vista del mapa
   useEffect(() => {
-    if (!isMapView || !selectedFunctionId) return;
+    console.log('🔍 [ModernEventPage] useEffect mapa - isMapView:', isMapView, 'selectedFunctionId:', selectedFunctionId);
+    
+    if (!isMapView || !selectedFunctionId) {
+      console.log('⚠️ [ModernEventPage] No cargando mapa - condiciones no cumplidas');
+      return;
+    }
     
     const fetchMapa = async () => {
       try {
@@ -159,13 +173,15 @@ const ModernEventPage = () => {
           .eq('funcion_id', selectedFunctionId)
           .maybeSingle();
 
+        console.log('🔍 [ModernEventPage] Respuesta de mapas:', { mapaData, mapaError });
+
         if (mapaError) throw mapaError;
         
         if (mapaData) {
           setMapa(mapaData);
           console.log('✅ [ModernEventPage] Mapa cargado:', mapaData.id);
         } else {
-          console.log('⚠️ [ModernEventPage] No se encontró mapa para la función');
+          console.log('⚠️ [ModernEventPage] No se encontró mapa para la función:', selectedFunctionId);
         }
       } catch (err) {
         console.error('❌ [ModernEventPage] Error cargando mapa:', err);
@@ -365,9 +381,9 @@ const ModernEventPage = () => {
           </div>
 
           {/* Layout del mapa y carrito */}
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', minHeight: '600px' }}>
             {/* Mapa de asientos - 2/3 del ancho */}
-            <div className="flex-1 lg:w-2/3">
+            <div style={{ flex: '2', minWidth: '0' }}>
               <Card 
                 title={
                   <div className="flex items-center">
@@ -376,6 +392,7 @@ const ModernEventPage = () => {
                   </div>
                 }
                 className="shadow-lg border-0"
+                style={{ height: '100%' }}
               >
                 {mapLoading ? (
                   <div className="flex items-center justify-center h-96">
@@ -409,7 +426,7 @@ const ModernEventPage = () => {
             </div>
 
             {/* Carrito - 1/3 del ancho */}
-            <div className="w-full lg:w-1/3 lg:max-w-sm">
+            <div style={{ flex: '1', minWidth: '300px', maxWidth: '400px' }}>
               <Cart
                 items={cartItems}
                 removeFromCart={removeFromCart}
