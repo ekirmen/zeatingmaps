@@ -123,8 +123,35 @@ const PaymentSuccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <FontAwesomeIcon icon={faCheckCircle} className="text-green-600 text-xl" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">
+                  {isReservation ? 'Reserva Confirmada' : 'Compra Exitosa'}
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {isReservation ? 'Tu reserva ha sido registrada' : 'Tu compra ha sido procesada'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                {isReservation ? 'Reservado' : 'Pagado'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-lg p-8">
         <div className="text-center mb-8">
           <FontAwesomeIcon icon={faCheckCircle} className="mx-auto h-16 w-16 text-green-500" />
           <h2 className="mt-4 text-3xl font-bold text-gray-900">
@@ -210,7 +237,8 @@ const PaymentSuccess = () => {
           {!isReservation && (
             <button
               onClick={handleDownloadAllTickets}
-              className="flex items-center justify-center px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              className="flex items-center justify-center px-6 py-3 store-button store-button-primary"
+              style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)' }}
             >
               <FontAwesomeIcon icon={faTicketAlt} className="mr-2" />
               Descargar Todos
@@ -219,7 +247,8 @@ const PaymentSuccess = () => {
           {isReservation && (
             <button
               onClick={handleContinuePayment}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              className="px-6 py-3 store-button store-button-primary"
+              style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)' }}
             >
               Completar Pago
             </button>
@@ -230,7 +259,7 @@ const PaymentSuccess = () => {
               const path = refParam ? `/store?ref=${refParam}` : '/store';
               navigate(path);
             }}
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+            className="px-6 py-3 store-button store-button-secondary"
           >
             Volver al Inicio
           </button>

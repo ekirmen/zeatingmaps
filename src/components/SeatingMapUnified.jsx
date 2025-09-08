@@ -25,11 +25,35 @@ const SeatingMapUnified = ({
   onTableToggle,
   onSeatInfo,
   foundSeats = [],
-  selectedSeats = []
+  selectedSeats = [],
+  lockedSeats = []
 }) => {
   const channel = useSeatLockStore(state => state.channel);
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const { getSeatColor, getBorderColor } = useSeatColors(funcionId);
+
+  // Combinar locks temporales del store con locks permanentes de la BD
+  const allLockedSeats = useMemo(() => {
+    const tempLocks = lockedSeatsState || [];
+    const permanentLocks = lockedSeats || [];
+    
+    // Crear un mapa para evitar duplicados
+    const lockMap = new Map();
+    
+    // Agregar locks temporales primero (tienen prioridad)
+    tempLocks.forEach(lock => {
+      lockMap.set(lock.seat_id, lock);
+    });
+    
+    // Agregar locks permanentes si no existen temporales
+    permanentLocks.forEach(lock => {
+      if (!lockMap.has(lock.seat_id)) {
+        lockMap.set(lock.seat_id, lock);
+      }
+    });
+    
+    return Array.from(lockMap.values());
+  }, [lockedSeatsState, lockedSeats]);
 
   // Controlar visibilidad del panel de depuración de locks (oculto por defecto)
   const shouldShowSeatLockDebug =
@@ -436,8 +460,8 @@ if (Array.isArray(mapa?.contenido)) {
                          // Determinar estado visual según lock.status (consistente con boleteria)
              let seatEstado = seat.estado;
              if (locked) {
-               const lock = Array.isArray(lockedSeatsState)
-                 ? lockedSeatsState.find(l => l.seat_id === seat._id)
+               const lock = Array.isArray(allLockedSeats)
+                 ? allLockedSeats.find(l => l.seat_id === seat._id)
                  : null;
                const lockStatus = lock?.status || 'locked';
                
@@ -458,7 +482,7 @@ if (Array.isArray(mapa?.contenido)) {
              }
 
              // Debug: mostrar el estado del asiento (actualizado con nuevos estados)
-             const lockData = locked ? lockedSeatsState.find(l => l.seat_id === seat._id) : null;
+             const lockData = locked ? allLockedSeats.find(l => l.seat_id === seat._id) : null;
              console.log(`🪑 [SEAT_COLOR] Asiento ${seat._id}:`, {
                estadoOriginal: seat.estado,
                seatEstado: seatEstado,
@@ -474,7 +498,7 @@ if (Array.isArray(mapa?.contenido)) {
              });
 
             const seatData = { ...seat, estado: seatEstado };
-            const seatColor = getSeatColor(seatData, null, isSelected, selectedSeats, lockedSeatsState);
+            const seatColor = getSeatColor(seatData, null, isSelected, selectedSeats, allLockedSeats);
             const borderColor = getBorderColor(isSelected, null);
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
 

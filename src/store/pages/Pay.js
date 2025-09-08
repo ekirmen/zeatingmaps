@@ -288,7 +288,7 @@ const Pay = () => {
         />
       )}
       <div className="store-container">
-        <div className="store-container-sm">
+        <div className="store-container-sm mx-auto">
           <div className="store-card">
             {/* Header */}
             <div className="store-card-header" style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)', color: 'white' }}>
@@ -351,6 +351,19 @@ const Pay = () => {
                   </div>
                   <div className="store-card-body">
                     <div className="store-space-y-3">
+                      {/* Información de zona y asientos */}
+                      <div className="bg-blue-50 p-3 rounded-lg mb-4">
+                        <h4 className="font-semibold text-blue-900 mb-2">Asientos Seleccionados</h4>
+                        {cartItems.map((item, index) => (
+                          <div key={index} className="flex justify-between store-text-sm mb-1">
+                            <span className="text-blue-800">
+                              {item.zonaNombre || 'Zona'} - {item.nombreAsiento || `Asiento ${index + 1}`}
+                            </span>
+                            <span className="font-medium">${item.precio.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      
                       {cartItems.map((item, index) => (
                         <div key={index} className="flex justify-between store-text-sm">
                           <span>{item.nombreEvento}</span>
@@ -382,7 +395,7 @@ const Pay = () => {
                       <button
                         className="store-button store-button-primary store-button-lg store-button-block"
                         disabled={!selectedGateway || processingPayment}
-                        onClick={handleProcessPayment}
+                        onClick={() => navigate('/store/cart')}
                       >
                         {processingPayment ? (
                           <>
@@ -390,7 +403,7 @@ const Pay = () => {
                             Procesando...
                           </>
                         ) : (
-                          'Procesar Pago'
+                          'Guardar en Carrito para Pagar Después'
                         )}
                       </button>
 

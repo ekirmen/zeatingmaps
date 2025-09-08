@@ -28,6 +28,7 @@ import formatDateString from '../../utils/formatDateString';
 import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
+import { useSeatLocksArray } from '../hooks/useSeatLocksArray';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import Cart from './Cart';
 import EventImage from '../components/EventImage';
@@ -83,6 +84,9 @@ const ModernEventPage = () => {
     isAnySeatInTableLocked,
     areAllSeatsInTableLockedByMe
   } = useSeatLockStore();
+
+  // Cargar datos reales de seat_locks desde la base de datos
+  const { lockedSeats: realLockedSeats } = useSeatLocksArray(selectedFunctionId, null, !!selectedFunctionId);
 
   // Cargar evento y funciones
   useEffect(() => {
@@ -337,7 +341,15 @@ const ModernEventPage = () => {
                 >
                   Volver a Evento
                 </Button>
-                <h1 className="text-2xl font-bold text-gray-900">{evento.nombre}</h1>
+                <div className="flex items-center space-x-3">
+                  <EventImage
+                    event={evento}
+                    imageType="banner"
+                    className="w-12 h-8 object-cover rounded"
+                    showDebug={false}
+                  />
+                  <h1 className="text-2xl font-bold text-gray-900">{evento.nombre}</h1>
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <Badge status={eventStatus.status} text={eventStatus.text} />
@@ -404,6 +416,7 @@ const ModernEventPage = () => {
                     isAnySeatInTableLocked={isAnySeatInTableLocked}
                     areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
                     onTableToggle={handleTableToggle}
+                    lockedSeats={realLockedSeats}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-96">
