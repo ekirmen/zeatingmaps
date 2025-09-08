@@ -25,7 +25,6 @@ import {
   TeamOutlined
 } from '@ant-design/icons';
 import { TenantEmailConfigService } from '../services/tenantEmailConfigService';
-import { useTenant } from '../../contexts/TenantContext';
 import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
@@ -43,7 +42,7 @@ const TenantEmailConfigPanel = () => {
   const [activeTab, setActiveTab] = useState('tenant');
   const [userRole, setUserRole] = useState('user');
   
-  const { currentTenant } = useTenant();
+  // const { currentTenant } = useTenant();
 
   const loadUserRole = useCallback(async () => {
     try {
@@ -170,15 +169,13 @@ const TenantEmailConfigPanel = () => {
         </div>
 
         {/* Información del tenant actual */}
-        {currentTenant && (
-          <Alert
-            message={`Configurando correo para: ${currentTenant.company_name || currentTenant.name}`}
-            description={`Tenant ID: ${currentTenant.id}`}
-            type="info"
-            showIcon
-            className="mb-6"
-          />
-        )}
+        <Alert
+          message="Configuración de Correo Electrónico"
+          description="Configura las opciones de correo para reportes y notificaciones"
+          type="info"
+          showIcon
+          className="mb-6"
+        />
 
         {/* Tabs para configuración del tenant vs global */}
         <Tabs 

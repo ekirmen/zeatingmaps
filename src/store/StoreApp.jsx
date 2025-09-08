@@ -5,7 +5,6 @@ import { TenantProvider } from '../contexts/TenantContext'; // 👈 IMPORTANTE
 import Header from './components/StoreHeader';
 import BasicFooter from '../components/BasicFooter';
 import GlobalCartTimer from './components/GlobalCartTimer';
-import ProtectedRoute from './components/ProtectedRoute';
 import NotFoundPage from '../components/NotFoundPage';
 import './styles/store-design.css'; // Modern design system
 import Event from './pages/Event';
@@ -23,7 +22,6 @@ import ResetPassword from './pages/ResetPassword';
 import EventSearchMap from './pages/EventSearchMap';
 import PaymentSuccess from './pages/PaymentSuccess';
 import Profile from './pages/profile.js';
-import EventosPage from './pages/EventosPage';
 import ModernEventPage from './pages/ModernEventPage';
 import ModernStorePage from './pages/ModernStorePage';
 import ThankYouPage from './pages/ThankYouPage';
@@ -55,7 +53,9 @@ const StoreApp = () => {
   const showHeader =
     location.pathname.startsWith('/store') ||
     location.pathname.startsWith('/payment-success');
-  const showFooter = location.pathname.startsWith('/store');
+  const showFooter = 
+    location.pathname.startsWith('/store') ||
+    location.pathname.startsWith('/payment-success');
 
   return (
     <TenantProvider> {/* 👈 ENVOLVER CON TENANT PROVIDER */}

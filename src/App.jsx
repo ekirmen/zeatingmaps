@@ -6,8 +6,6 @@ import TenantErrorBoundary from './components/TenantErrorBoundary';
 import StoreApp from './store/StoreApp';
 import MapShortRoute from './store/pages/MapShortRoute';
 import BackofficeApp from './backoffice/BackofficeApp';
-import PaymentSuccess from './store/pages/PaymentSuccess';
-import { RefProvider } from './contexts/RefContext';
 import { getCurrentDomainConfig, shouldShowSaaS, shouldShowBackoffice, shouldShowStore } from './config/domainConfig';
 import { ThemeProvider } from './contexts/ThemeContext';
 import VercelAnalytics from './components/VercelAnalytics';
@@ -90,11 +88,6 @@ const App = () => {
               <Route path="/eventos/*" element={<StoreApp />} />
               <Route path="/comprar/*" element={<StoreApp />} />
               <Route path="/r/map" element={<MapShortRoute />} />
-              <Route path="/payment-success/:locator?" element={
-                <RefProvider>
-                  <PaymentSuccess />
-                </RefProvider>
-              } />
             </>
           )}
 

@@ -10,7 +10,6 @@ import { useCartStore } from '../../store/cartStore';
 import downloadTicket from '../../utils/downloadTicket';
 
 const PaymentSuccess = () => {
-  const addToCart = useCartStore(state => state.addToCart);
   const clearCart = useCartStore(state => state.clearCart);
   const params = useParams();
   const location = useLocation();
@@ -88,30 +87,30 @@ const PaymentSuccess = () => {
   };
 
   const handleContinuePayment = async () => {
-    const { data: payment, error } = await supabase
-      .from('payments')
-      .select(`*, seats, funcion`)
-      .eq('locator', locator)
-      .single();
+    try {
+      // Buscar en payment_transactions usando el locator como order_id
+      const { data: transaction, error: transactionError } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .eq('order_id', locator)
+        .single();
 
-    if (error || !payment) {
-      console.error('Load reservation error:', error);
-      toast.error('No se pudo cargar la reserva');
-      return;
+      if (transactionError || !transaction) {
+        console.error('Load reservation error:', transactionError);
+        toast.error('No se pudo cargar la reserva');
+        return;
+      }
+
+      // Si es una reserva, redirigir al carrito para completar el pago
+      if (transaction.status === 'pending' || transaction.status === 'reservado') {
+        navigate('/store/cart');
+      } else {
+        toast.error('Esta transacción ya ha sido procesada');
+      }
+    } catch (error) {
+      console.error('Error loading reservation:', error);
+      toast.error('Error al cargar la reserva');
     }
-
-    addToCart(
-      payment.seats.map(seat => ({
-        _id: seat.id,
-        nombre: seat.name,
-        precio: seat.price,
-        nombreMesa: seat.mesa?.nombre || '',
-        zona: seat.zona?.id || seat.zona,
-        zonaNombre: seat.zona?.nombre || ''
-      })),
-      payment.funcion?.id || payment.funcion
-    );
-    navigate('/store/payment');
   };
 
   if (!locator) {

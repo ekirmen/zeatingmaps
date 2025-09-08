@@ -213,10 +213,13 @@ const SidebarMenu = ({ collapsed }) => {
       icon: faGlobe,
       type: 'submenu',
       submenuId: 'saas',
-      items: [
-        { title: 'Dashboard SaaS', path: '/dashboard/saas', icon: faChartBar },
-        { title: 'Configuración', path: '/dashboard/saas/settings', icon: faCog }
-      ]
+        items: [
+          { title: 'Dashboard SaaS', path: '/dashboard/saas', icon: faChartBar },
+          { title: 'Facturación', path: '/dashboard/saas/billing', icon: faCreditCard },
+          { title: 'Pasarelas de Pago', path: '/dashboard/saas/payment-gateways', icon: faCreditCard },
+          { title: 'Roles y Permisos', path: '/dashboard/saas/roles', icon: faUsers },
+          { title: 'Configuración', path: '/dashboard/saas/settings', icon: faCog }
+        ]
     }
   ];
 

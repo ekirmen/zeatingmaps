@@ -43,6 +43,9 @@ import Descuentos from './pages/Descuentos';
 import WebColors from './pages/WebColors';
 import SeatSettings from './pages/SeatSettings';
 import TenantEmailConfigPanel from './components/TenantEmailConfigPanel';
+import BillingDashboard from '../saas/components/BillingDashboard';
+import PaymentGatewayConfig from '../saas/components/PaymentGatewayConfig';
+import RoleManagement from '../saas/components/RoleManagement';
 
 const BackofficeApp = () => {
   return (
@@ -121,6 +124,9 @@ const BackofficeApp = () => {
         {/* Panel SaaS */}
         <Route path="saas" element={<SaasDashboard />} />
         <Route path="saas/settings" element={<SaasSettings />} />
+        <Route path="saas/billing" element={<BillingDashboard />} />
+        <Route path="saas/payment-gateways" element={<PaymentGatewayConfig />} />
+        <Route path="saas/roles" element={<RoleManagement />} />
 
         <Route path="tenant/:id" element={<TenantDetail />} />
         
