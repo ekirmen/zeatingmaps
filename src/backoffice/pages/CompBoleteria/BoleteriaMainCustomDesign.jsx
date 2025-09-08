@@ -335,10 +335,47 @@ const BoleteriaMainCustomDesign = () => {
           newSeats = currentSeats.filter(s => s._id !== seat._id);
         } else {
           // Selección: el asiento ya fue bloqueado en la BD por LazySimpleSeatingMap
+          // Calcular precio basado en plantilla y descuentos
+          const zonaId = seat?.zona?.id || seat?.zonaId || seat?.zona;
+          // Buscar detalle de precio por zona en la plantilla seleccionada
+          const detalleZona = Array.isArray(detallesPlantilla)
+            ? detallesPlantilla.find(d => {
+                const id = d.zonaId || (typeof d.zona === 'object' ? d.zona?._id : d.zona);
+                return String(id) === String(zonaId);
+              })
+            : null;
+
+          const basePrice = detalleZona?.precio ?? selectedPriceOption?.precio ?? 0;
+          let finalPrice = basePrice;
+          let tipoPrecio = 'normal';
+          let descuentoNombre = '';
+
+          // Aplicar descuento si corresponde
+          if (appliedDiscount?.detalles && zonaId != null) {
+            const d = appliedDiscount.detalles.find(dt => {
+              const id = typeof dt.zona === 'object' ? dt.zona?._id : dt.zona;
+              return String(id) === String(zonaId);
+            });
+            if (d) {
+              if (d.tipo === 'porcentaje') {
+                finalPrice = Math.max(0, basePrice - (basePrice * d.valor) / 100);
+              } else {
+                finalPrice = Math.max(0, basePrice - d.valor);
+              }
+              tipoPrecio = 'descuento';
+              descuentoNombre = appliedDiscount.nombreCodigo;
+            }
+          }
+
           const seatWithPrice = {
             ...seat,
-            precio: 0,
-            precioInfo: null
+            precio: finalPrice,
+            precioInfo: {
+              base: basePrice,
+              tipoPrecio,
+              descuentoNombre,
+              zonaId: zonaId || null,
+            }
           };
           newSeats = [...currentSeats, seatWithPrice];
         }

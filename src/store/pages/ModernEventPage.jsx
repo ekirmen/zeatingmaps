@@ -205,23 +205,29 @@ const ModernEventPage = () => {
     setSelectedFunctionId(functionId);
   };
 
-  const handleSeatToggle = async (sillaId) => {
+  const handleSeatToggle = async (seatOrId) => {
     if (!selectedFunctionId) return;
 
-    if (isSeatLocked(sillaId) && !isSeatLockedByMe(sillaId)) return;
+    const seatId = typeof seatOrId === 'string' ? seatOrId : (seatOrId?._id || seatOrId?.id);
+    if (!seatId) {
+      console.warn('⚠️ [ModernEventPage] seatId inválido en handleSeatToggle:', seatOrId);
+      return;
+    }
+
+    if (isSeatLocked(seatId) && !isSeatLockedByMe(seatId)) return;
 
     const cartItemsState = useCartStore.getState().items;
-    const exists = cartItemsState.some(item => item.sillaId === sillaId);
+    const exists = cartItemsState.some(item => item.sillaId === seatId);
 
     if (exists) {
-      await unlockSeat(sillaId, selectedFunctionId);
-      removeFromCart(sillaId);
+      await unlockSeat(seatId, selectedFunctionId);
+      removeFromCart(seatId);
     } else {
-      const ok = await lockSeat(sillaId, 'seleccionado', selectedFunctionId);
+      const ok = await lockSeat(seatId, 'seleccionado', selectedFunctionId);
       if (!ok) return;
       toggleSeat({
-        sillaId,
-        nombre: `Asiento ${sillaId}`,
+        sillaId: seatId,
+        nombre: `Asiento ${seatId}`,
         precio: 50, // Precio por defecto
         nombreZona: 'General',
         functionId: selectedFunctionId,
