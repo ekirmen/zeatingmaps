@@ -13,6 +13,16 @@ const EventImage = ({
   const [imageLoaded, setImageLoaded] = useState(false);
   const { currentTenant } = useTenant();
 
+  // Debug inicial - siempre ejecutar para verificar si el componente se renderiza
+  console.log('🖼️ [EventImage] Component initialized:', {
+    eventId: event?.id,
+    eventName: event?.nombre || event?.name,
+    imageType,
+    tenantId: currentTenant?.id,
+    hasTenant: !!currentTenant,
+    showDebug
+  });
+
   // Función para obtener imágenes del evento
   const getEventImages = () => {
     if (!event?.imagenes) return {};

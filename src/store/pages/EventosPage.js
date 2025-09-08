@@ -45,6 +45,14 @@ const EventosPage = ({ forceShowMap = false }) => {
 
   const [venueInfo, setVenueInfo] = useState(null);
 
+  // Debug inicial
+  console.log('🎭 [EventosPage] Component initialized:', {
+    eventSlug,
+    forceShowMap,
+    loading,
+    hasEvento: !!evento
+  });
+
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const cartItems = useCartStore((state) => state.items);
@@ -88,6 +96,15 @@ const EventosPage = ({ forceShowMap = false }) => {
         if (!eventData) throw new Error('Evento no encontrado');
         
         setEvento(eventData);
+        
+        // Debug del evento cargado
+        console.log('🎭 [EventosPage] Evento cargado:', {
+          id: eventData.id,
+          nombre: eventData.nombre,
+          slug: eventData.slug,
+          hasImagenes: !!eventData.imagenes,
+          imagenes: eventData.imagenes
+        });
 
         // Cargar recinto de forma explícita usando recinto_id o recinto
         const recintoId = eventData.recinto_id || eventData.recinto || null;
