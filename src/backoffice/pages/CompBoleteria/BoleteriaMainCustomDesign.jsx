@@ -82,6 +82,21 @@ const BoleteriaMainCustomDesign = () => {
     debugInfo
   } = useBoleteria();
 
+  // Normalizar detalles de la plantilla para evitar ReferenceError
+  const detallesPlantilla = React.useMemo(() => {
+    try {
+      const raw = selectedPlantilla?.detalles;
+      if (Array.isArray(raw)) return raw;
+      if (typeof raw === 'string') {
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  }, [selectedPlantilla]);
+
   const {
     selectedClient,
     setSelectedClient,

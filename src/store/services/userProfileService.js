@@ -4,25 +4,55 @@ import { supabase } from '../../supabaseClient';
 // Obtener perfil completo del usuario
 export const getUserProfile = async (userId) => {
   try {
-    const { data, error } = await supabase
+    // Paso 1: perfil básico sin joins
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select(`
-        *,
-        user_tenants!inner(
-          role,
-          permissions,
-          tenants(
-            company_name,
-            subdomain,
-            domain
-          )
-        )
-      `)
+      .select('*')
       .eq('id', userId)
       .single();
 
-    if (error) throw error;
-    return data;
+    if (profileError) throw profileError;
+
+    // Paso 2: intentar vista overview (si existe)
+    let tenantsInfo = [];
+    try {
+      const { data: overview } = await supabase
+        .from('user_tenants_overview')
+        .select('role,permissions,company_name,subdomain,domain')
+        .eq('user_id', userId);
+      if (Array.isArray(overview)) {
+        tenantsInfo = overview;
+      }
+    } catch (_) {
+      // Paso 3: fallback a tablas crudas sin joins
+      try {
+        const { data: ut } = await supabase
+          .from('user_tenants')
+          .select('role,permissions,tenant_id')
+          .eq('user_id', userId);
+        if (Array.isArray(ut) && ut.length > 0) {
+          const tenantIds = ut.map(t => t.tenant_id).filter(Boolean);
+          if (tenantIds.length > 0) {
+            const { data: tenants } = await supabase
+              .from('tenants')
+              .select('id,company_name,subdomain,domain')
+              .in('id', tenantIds);
+            const mapById = new Map((tenants || []).map(t => [t.id, t]));
+            tenantsInfo = ut.map(t => ({
+              role: t.role,
+              permissions: t.permissions,
+              company_name: mapById.get(t.tenant_id)?.company_name || null,
+              subdomain: mapById.get(t.tenant_id)?.subdomain || null,
+              domain: mapById.get(t.tenant_id)?.domain || null,
+            }));
+          }
+        }
+      } catch (_) {
+        // silenciar, devolveremos solo el perfil
+      }
+    }
+
+    return { ...profile, tenants: tenantsInfo };
   } catch (error) {
     console.error('Error al obtener perfil:', error);
     throw error;
@@ -34,20 +64,7 @@ export const getUserPurchases = async (userId) => {
   try {
     const { data, error } = await supabase
       .from('sales')
-      .select(`
-        *,
-        events(
-          name,
-          date,
-          venue,
-          image_url
-        ),
-        tickets(
-          id,
-          seat_number,
-          section
-        )
-      `)
+      .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -61,23 +78,20 @@ export const getUserPurchases = async (userId) => {
 
 // Obtener reservas del usuario
 export const getUserReservations = async (userId) => {
-  try {
-    const { data, error } = await supabase
-      .from('reservations')
-      .select(`
-        *,
-        events(
-          name,
-          date,
-          venue,
-          image_url
-        )
-      `)
-      .eq('user_id', userId)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false });
+  // intentar con 'reservations' y fallback a 'reservas'
+  const tryFetch = async (table) => supabase
+    .from(table)
+    .select('*')
+    .eq('user_id', userId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
 
-    if (error) throw error;
+  try {
+    let { data, error } = await tryFetch('reservations');
+    if (error) {
+      ({ data, error } = await tryFetch('reservas'));
+      if (error) throw error;
+    }
     return data || [];
   } catch (error) {
     console.error('Error al obtener reservas:', error);
@@ -90,17 +104,7 @@ export const getUserFavorites = async (userId) => {
   try {
     const { data, error } = await supabase
       .from('user_favorites')
-      .select(`
-        *,
-        events(
-          id,
-          name,
-          date,
-          venue,
-          image_url,
-          description
-        )
-      `)
+      .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
@@ -117,13 +121,7 @@ export const getUserActivityHistory = async (userId) => {
   try {
     const { data, error } = await supabase
       .from('user_activity_log')
-      .select(`
-        *,
-        events(
-          name,
-          date
-        )
-      `)
+      .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(20);
@@ -161,27 +159,27 @@ export const updateUserProfile = async (userId, profileData) => {
 // Obtener estadísticas del usuario
 export const getUserStats = async (userId) => {
   try {
-    // Estadísticas de compras
-    const { data: purchases, error: purchasesError } = await supabase
-      .from('sales')
-      .select('total_amount, status')
-      .eq('user_id', userId);
+    let purchases = [];
+    let reservations = [];
+    let favorites = [];
 
-    // Estadísticas de reservas
-    const { data: reservations, error: reservationsError } = await supabase
-      .from('reservations')
-      .select('status')
-      .eq('user_id', userId);
+    try {
+      const res = await supabase.from('sales').select('total_amount,status').eq('user_id', userId);
+      purchases = res.data || [];
+    } catch (_) {}
 
-    // Estadísticas de favoritos
-    const { data: favorites, error: favoritesError } = await supabase
-      .from('user_favorites')
-      .select('id')
-      .eq('user_id', userId);
+    try {
+      let res = await supabase.from('reservations').select('status').eq('user_id', userId);
+      if (res.error) {
+        res = await supabase.from('reservas').select('status').eq('user_id', userId);
+      }
+      reservations = res.data || [];
+    } catch (_) {}
 
-    if (purchasesError || reservationsError || favoritesError) {
-      throw new Error('Error al obtener estadísticas');
-    }
+    try {
+      const res = await supabase.from('user_favorites').select('id').eq('user_id', userId);
+      favorites = res.data || [];
+    } catch (_) {}
 
     const totalSpent = purchases
       .filter(p => p.status === 'completed')
