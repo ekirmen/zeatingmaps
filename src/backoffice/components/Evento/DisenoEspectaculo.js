@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import API_BASE_URL from '../../../utils/apiBase';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -13,6 +13,24 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   
   // Update the image preview handling for new bucket structure
   const getPreview = (img, imageType) => {
+    // Si es un objeto con publicUrl (de Supabase)
+    if (img && typeof img === 'object' && img.publicUrl) {
+      return img.publicUrl;
+    }
+    
+    // Si es un objeto con url (de Supabase)
+    if (img && typeof img === 'object' && img.url) {
+      // Si ya es una URL completa, devolverla
+      if (/^https?:\/\//i.test(img.url)) {
+        return img.url;
+      }
+      // Si es una ruta relativa, construir URL completa
+      const bucketName = img.bucket || `tenant-${currentTenant?.id}`;
+      const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
+      return `${supabaseUrl}/storage/v1/object/public/${bucketName}/${img.url}`;
+    }
+    
+    // Si es un string
     if (typeof img === 'string') {
       // If it's already an absolute URL, return it unchanged
       if (/^https?:\/\//i.test(img)) {
@@ -26,9 +44,11 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
       // Fallback to old API base URL
       return `${API_BASE_URL}${img}`;
     }
+    
     if (img instanceof File) {
       return URL.createObjectURL(img);
     }
+    
     return null;
   };
 
@@ -40,6 +60,21 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
       ? eventoData.imagenes.espectaculo.map(img => getPreview(img, 'espectaculo')).filter(Boolean)
       : []
   });
+
+  // Sincronizar previews cuando cambien los datos del evento
+  useEffect(() => {
+    if (eventoData?.imagenes) {
+      console.log('🔄 [DisenoEspectaculo] Sincronizando previews:', eventoData.imagenes);
+      setImagesPreviews({
+        banner: getPreview(eventoData.imagenes?.banner, 'banner'),
+        obraImagen: getPreview(eventoData.imagenes?.obraImagen, 'obraImagen'),
+        portada: getPreview(eventoData.imagenes?.portada, 'portada'),
+        espectaculo: Array.isArray(eventoData.imagenes?.espectaculo)
+          ? eventoData.imagenes.espectaculo.map(img => getPreview(img, 'espectaculo')).filter(Boolean)
+          : []
+      });
+    }
+  }, [eventoData?.imagenes, currentTenant?.id, eventoData?.id]);
   
   // Store uploaded images when saving instead of immediately
   const modules = {
@@ -213,15 +248,19 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
         }
 
         // Actualizar datos del evento con metadatos de la imagen
-        setEventoData(prev => ({
-          ...prev,
-          imagenes: {
-            ...prev.imagenes,
-            [imageType]: imageType === 'espectaculo'
-              ? [...(prev.imagenes?.espectaculo || []), imageData]
-              : imageData
-          }
-        }));
+        setEventoData(prev => {
+          const newData = {
+            ...prev,
+            imagenes: {
+              ...prev.imagenes,
+              [imageType]: imageType === 'espectaculo'
+                ? [...(prev.imagenes?.espectaculo || []), imageData]
+                : imageData
+            }
+          };
+          console.log('📝 [DisenoEspectaculo] Actualizando eventoData:', newData.imagenes);
+          return newData;
+        });
 
         console.log('✅ [DisenoEspectaculo] Imagen procesada exitosamente');
         
@@ -348,6 +387,7 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
         <h4 className="font-semibold">Contenidos</h4>
 
         <div className="image-upload-grid grid grid-cols-1 md:grid-cols-3 gap-4">
+          {console.log('🖼️ [DisenoEspectaculo] Renderizando previews:', imagesPreviews)}
           {['banner', 'obraImagen', 'portada'].map((type) => (
             <div key={type} className="image-upload-item flex flex-col gap-2 items-start">
               <h5 className="font-medium">
@@ -357,7 +397,13 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
               </h5>
               <div className="image-preview border border-gray-300 flex items-center justify-center" style={{ width: type === 'obraImagen' ? '200px' : '320px', height: type === 'obraImagen' ? '300px' : (type === 'portada' ? '167px' : '214px') }}>
                 {imagesPreviews[type] ? (
-                  <img src={imagesPreviews[type]} alt={`Preview ${type}`} />
+                  <img 
+                    src={imagesPreviews[type]} 
+                    alt={`Preview ${type}`} 
+                    onLoad={() => console.log(`✅ [DisenoEspectaculo] Imagen ${type} cargada:`, imagesPreviews[type])}
+                    onError={() => console.error(`❌ [DisenoEspectaculo] Error cargando imagen ${type}:`, imagesPreviews[type])}
+                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                  />
                 ) : (
                   <div className="placeholder text-sm text-gray-500">Esperando imagen</div>
                 )}
