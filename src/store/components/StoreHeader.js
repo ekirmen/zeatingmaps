@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Modal, Input, Button, message } from 'antd';
+import { Modal, Input, Button, message, Drawer } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { registerUser, loginUser } from '../services/authService';
@@ -9,6 +9,7 @@ import LinkWithRef from './LinkWithRef';
 import { SITE_URL } from '../../utils/siteUrl';
 import { useRefParam } from '../../contexts/RefContext';
 import { useHeader } from '../../contexts/HeaderContext';
+import { MenuOutlined, SearchOutlined, UserOutlined, ShoppingCartOutlined, HomeOutlined } from '@ant-design/icons';
 
 const Header = ({ onLogin, onLogout }) => {
   const { t, i18n } = useTranslation();
@@ -29,6 +30,8 @@ const Header = ({ onLogin, onLogout }) => {
   const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
   const [passwordData, setPasswordData] = useState({ newPassword: '', confirmPassword: '' });
   const [searchTerm, setSearchTerm] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -202,14 +205,16 @@ const Header = ({ onLogin, onLogout }) => {
     <header className="store-header">
       <div className="store-container">
         <div className="flex justify-between items-center py-4">
+          {/* Logo */}
           <LinkWithRef to="/store" className="store-header logo">
             {header.logoUrl && (
               <img src={header.logoUrl} alt="Logo" className="store-header logo img" />
             )}
-            {header.companyName}
+            <span className="hidden sm:inline">{header.companyName}</span>
           </LinkWithRef>
 
-          <nav className="store-header nav">
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex store-header nav">
             <LinkWithRef to="/store">{t('header.home')}</LinkWithRef>
             <LinkWithRef to="/store/cart">{t('header.cart')}</LinkWithRef>
             {localStorage.getItem('token') && (
@@ -219,7 +224,8 @@ const Header = ({ onLogin, onLogout }) => {
             )}
           </nav>
 
-          <div className="store-header search-container">
+          {/* Desktop Search */}
+          <div className="hidden md:flex store-header search-container">
             <input
               type="text"
               placeholder={t('search.placeholder')}
@@ -240,7 +246,8 @@ const Header = ({ onLogin, onLogout }) => {
             </select>
           </div>
 
-          <div className="flex gap-2">
+          {/* Desktop Auth */}
+          <div className="hidden lg:flex gap-2">
             {localStorage.getItem('token') ? (
               <button onClick={handleLogout} className="store-button store-button-outline">
                 {t('header.logout')}
@@ -251,8 +258,139 @@ const Header = ({ onLogin, onLogout }) => {
               </button>
             )}
           </div>
+
+          {/* Mobile Actions */}
+          <div className="flex lg:hidden items-center gap-2">
+            {/* Mobile Search Toggle */}
+            <button 
+              onClick={() => setIsSearchVisible(!isSearchVisible)}
+              className="store-header mobile-action-btn"
+            >
+              <SearchOutlined />
+            </button>
+            
+            {/* Mobile Cart */}
+            <LinkWithRef to="/store/cart" className="store-header mobile-action-btn">
+              <ShoppingCartOutlined />
+            </LinkWithRef>
+            
+            {/* Mobile Menu Toggle */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="store-header mobile-action-btn"
+            >
+              <MenuOutlined />
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Search Bar */}
+        {isSearchVisible && (
+          <div className="md:hidden pb-4">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder={t('search.placeholder')}
+                className="store-header search-input flex-1"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              <button onClick={handleSearch} className="store-header search-button">
+                {t('search.button')}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Mobile Menu Drawer */}
+      <Drawer
+        title={
+          <div className="flex items-center gap-2">
+            {header.logoUrl && (
+              <img src={header.logoUrl} alt="Logo" className="h-6 w-auto" />
+            )}
+            {header.companyName}
+          </div>
+        }
+        placement="right"
+        onClose={() => setIsMobileMenuOpen(false)}
+        open={isMobileMenuOpen}
+        width={280}
+        className="mobile-menu-drawer"
+      >
+        <div className="flex flex-col space-y-4">
+          {/* Navigation Links */}
+          <div className="space-y-2">
+            <LinkWithRef 
+              to="/store" 
+              className="mobile-menu-link"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <HomeOutlined className="mr-2" />
+              {t('header.home')}
+            </LinkWithRef>
+            
+            <LinkWithRef 
+              to="/store/cart" 
+              className="mobile-menu-link"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <ShoppingCartOutlined className="mr-2" />
+              {t('header.cart')}
+            </LinkWithRef>
+            
+            {localStorage.getItem('token') && (
+              <LinkWithRef 
+                to="/store/perfil" 
+                className="mobile-menu-link"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <UserOutlined className="mr-2" />
+                {t('header.profile')}
+              </LinkWithRef>
+            )}
+          </div>
+
+          {/* Language Selector */}
+          <div className="pt-4 border-t">
+            <label className="block text-sm font-medium mb-2">Idioma</label>
+            <select 
+              value={i18n.language} 
+              onChange={e => i18n.changeLanguage(e.target.value)} 
+              className="w-full p-2 border rounded"
+            >
+              <option value="es">Español</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+
+          {/* Auth Section */}
+          <div className="pt-4 border-t">
+            {localStorage.getItem('token') ? (
+              <button 
+                onClick={() => {
+                  handleLogout();
+                  setIsMobileMenuOpen(false);
+                }} 
+                className="w-full store-button store-button-outline"
+              >
+                {t('header.logout')}
+              </button>
+            ) : (
+              <button 
+                onClick={() => {
+                  openAccountModal();
+                  setIsMobileMenuOpen(false);
+                }} 
+                className="w-full store-button store-button-primary"
+              >
+                {t('header.account')}
+              </button>
+            )}
+          </div>
+        </div>
+      </Drawer>
 
       {/* Modal Cuenta */}
       {console.log('Rendering modal with state:', isAccountModalVisible)}

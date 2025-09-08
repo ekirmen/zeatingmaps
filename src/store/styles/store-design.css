@@ -918,6 +918,111 @@
   }
 }
 
+/* Mobile Header Styles */
+.store-header .mobile-action-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  border-radius: var(--store-radius-md);
+  padding: var(--store-space-2);
+  cursor: pointer;
+  transition: var(--store-transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+}
+
+.store-header .mobile-action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.store-header .mobile-action-btn svg {
+  font-size: 16px;
+}
+
+/* Mobile Menu Drawer Styles */
+.mobile-menu-drawer .ant-drawer-header {
+  background: linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-drawer .ant-drawer-header .ant-drawer-title {
+  color: white;
+  font-weight: 600;
+}
+
+.mobile-menu-drawer .ant-drawer-close {
+  color: white;
+}
+
+.mobile-menu-drawer .ant-drawer-body {
+  padding: var(--store-space-6);
+}
+
+.mobile-menu-link {
+  display: flex;
+  align-items: center;
+  padding: var(--store-space-3) var(--store-space-4);
+  color: var(--store-gray-700);
+  text-decoration: none;
+  border-radius: var(--store-radius-md);
+  transition: var(--store-transition);
+  font-weight: 500;
+}
+
+.mobile-menu-link:hover {
+  background: var(--store-gray-100);
+  color: var(--store-primary);
+}
+
+.mobile-menu-link svg {
+  font-size: 16px;
+  margin-right: var(--store-space-2);
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+  .store-header .nav {
+    display: none;
+  }
+  
+  .store-header .search-container {
+    display: none;
+  }
+  
+  .store-header .flex.gap-2:not(.lg\\:hidden) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .store-header .logo span {
+    display: none;
+  }
+  
+  .store-header .container {
+    padding: 0 var(--store-space-3);
+  }
+  
+  .store-header .flex.justify-between {
+    gap: var(--store-space-2);
+  }
+}
+
+@media (max-width: 640px) {
+  .store-header .mobile-action-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: var(--store-space-1);
+  }
+  
+  .store-header .mobile-action-btn svg {
+    font-size: 14px;
+  }
+}
+
 /* Dark Mode Support */
 @media (prefers-color-scheme: dark) {
   :root {
