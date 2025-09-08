@@ -391,24 +391,36 @@ const Pay = () => {
                         </>
                       )}
 
-                      {/* Botón de Pago */}
-                      <button
-                        className="store-button store-button-primary store-button-lg store-button-block"
-                        disabled={!selectedGateway || processingPayment}
-                        onClick={() => navigate('/store/cart')}
-                      >
-                        {processingPayment ? (
-                          <>
-                            <div className="store-loading"></div>
-                            Procesando...
-                          </>
-                        ) : (
-                          'Guardar en Carrito para Pagar Después'
-                        )}
-                      </button>
+                      {/* Botones de Acción */}
+                      <div className="space-y-3">
+                        {/* Botón Principal - Procesar Pago */}
+                        <button
+                          className="store-button store-button-primary store-button-lg store-button-block"
+                          disabled={!selectedGateway || processingPayment}
+                          onClick={handleProcessPayment}
+                        >
+                          {processingPayment ? (
+                            <>
+                              <div className="store-loading"></div>
+                              Procesando...
+                            </>
+                          ) : (
+                            'Procesar Pago'
+                          )}
+                        </button>
+
+                        {/* Botón Secundario - Guardar en Carrito */}
+                        <button
+                          className="store-button store-button-default store-button-lg store-button-block"
+                          disabled={processingPayment}
+                          onClick={() => navigate('/store/cart')}
+                        >
+                          Guardar en Carrito para Pagar Después
+                        </button>
+                      </div>
 
                       {selectedGateway && (
-                        <div className="store-text-xs store-text-gray-500 store-text-center">
+                        <div className="store-text-xs store-text-gray-500 store-text-center mt-2">
                           Pagando con {getMethodName(selectedGateway.method_id)}
                         </div>
                       )}
