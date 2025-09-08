@@ -15,6 +15,7 @@ import ServerDiagnostic from './ServerDiagnostic';
 import LocatorSearchModal from './components/LocatorSearchModal';
 import ValidationWidget from '../../../components/ValidationWidget';
 import VisualNotifications from '../../../utils/VisualNotifications';
+import EventImage from '../../../store/components/EventImage';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 import { useTenant } from '../../../contexts/TenantContext';
@@ -900,17 +901,18 @@ const BoleteriaMainCustomDesign = () => {
                     className="cursor-pointer"
                   >
                     <div className="flex items-center space-x-3">
-                      {evento.imagenes && (
-                        <Avatar
-                          size={40}
-                          src={resolveImageUrl(evento.imagenes)}
-                          icon={<EyeOutlined />}
+                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+                        <EventImage
+                          event={evento}
+                          imageType="logoHorizontal"
+                          className="w-full h-full object-cover"
+                          showDebug={false}
                         />
-                      )}
+                      </div>
                       <div className="flex-1">
                         <div className="font-medium">{evento.nombre}</div>
                         <div className="text-sm text-gray-500">
-                          {evento.fecha_inicio && new Date(evento.fecha_inicio).toLocaleDateString()}
+                          {evento.fecha_evento && new Date(evento.fecha_evento).toLocaleDateString()}
                         </div>
                         <div className="text-xs text-gray-400">
                           {evento.descripcion && evento.descripcion.substring(0, 100)}...

@@ -25,6 +25,7 @@ import PaymentSuccess from './pages/PaymentSuccess';
 import Profile from './pages/profile.js';
 import EventosPage from './pages/EventosPage';
 import ModernEventPage from './pages/ModernEventPage';
+import ModernStorePage from './pages/ModernStorePage';
 import ThankYouPage from './pages/ThankYouPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiesPolicy from './pages/CookiesPolicy';
@@ -60,8 +61,8 @@ const StoreApp = () => {
             {showHeader && <Header />}
             <div className="flex-grow">
               <Routes>
-                  {/* Render CMS home page by default */}
-                  <Route index element={<CmsPage slug="store" />} />
+                  {/* Render modern store page by default */}
+                  <Route index element={<ModernStorePage />} />
                 <Route path="tag/:tagSlug?" element={<EventsVenue groupByTags />} />
                 <Route path="eventos/:eventSlug" element={<ModernEventPage />} />
                 <Route path="eventos/:eventSlug/map" element={<ModernEventPage />} />

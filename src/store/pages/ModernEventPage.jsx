@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { Button, Card, Select, message, Spin, Alert, Row, Col, Badge, Divider } from 'antd';
+import { Button, Card, Select, message, Spin, Alert, Row, Col, Badge, Divider, Tag, Descriptions, Timeline, Statistic, Progress } from 'antd';
 import { 
   CalendarOutlined, 
   EnvironmentOutlined, 
@@ -9,7 +9,20 @@ import {
   StarOutlined,
   ShareAltOutlined,
   HeartOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
+  UserOutlined,
+  SettingOutlined,
+  EyeOutlined,
+  EyeInvisibleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ExclamationCircleOutlined,
+  TrophyOutlined,
+  TeamOutlined,
+  DollarOutlined,
+  TagsOutlined,
+  FileTextOutlined,
+  BarChartOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import { getFunciones } from '../services/apistore';
@@ -163,6 +176,79 @@ const ModernEventPage = () => {
     navigate('/store/cart');
   };
 
+  // Funciones para parsear campos JSON
+  const parseJsonField = (field) => {
+    if (!field) return null;
+    try {
+      return typeof field === 'string' ? JSON.parse(field) : field;
+    } catch (e) {
+      console.error('Error parsing JSON field:', e);
+      return null;
+    }
+  };
+
+  const getEventTags = () => {
+    const tags = parseJsonField(evento.tags);
+    return Array.isArray(tags) ? tags : [];
+  };
+
+  const getAnalytics = () => {
+    return parseJsonField(evento.analytics) || {};
+  };
+
+  const getDatosBoleto = () => {
+    return parseJsonField(evento.datosBoleto) || {};
+  };
+
+  const getDatosComprador = () => {
+    return parseJsonField(evento.datosComprador) || {};
+  };
+
+  const getOtrasOpciones = () => {
+    return parseJsonField(evento.otrasOpciones) || {};
+  };
+
+  const getEstadoPersonalizado = () => {
+    return parseJsonField(evento.estadoPersonalizado) || {};
+  };
+
+  const getSectorPersonalizado = () => {
+    return parseJsonField(evento.sectorPersonalizado) || {};
+  };
+
+  const getMostrarDatosBoleto = () => {
+    return parseJsonField(evento.mostrarDatosBoleto) || {};
+  };
+
+  const getMostrarDatosComprador = () => {
+    return parseJsonField(evento.mostrarDatosComprador) || {};
+  };
+
+  const getDescripcionEstado = () => {
+    return parseJsonField(evento.descripcionEstado) || {};
+  };
+
+  // Función para obtener el estado visual del evento
+  const getEventStatus = () => {
+    if (evento.desactivado) return { status: 'error', text: 'Desactivado', icon: <CloseCircleOutlined /> };
+    if (!evento.activo) return { status: 'warning', text: 'Inactivo', icon: <ExclamationCircleOutlined /> };
+    if (evento.estadoVenta === 'a-la-venta') return { status: 'success', text: 'A la Venta', icon: <CheckCircleOutlined /> };
+    if (evento.estadoVenta === 'agotado') return { status: 'error', text: 'Agotado', icon: <CloseCircleOutlined /> };
+    if (evento.estadoVenta === 'pronto') return { status: 'processing', text: 'Pronto', icon: <ClockCircleOutlined /> };
+    return { status: 'default', text: 'Disponible', icon: <InfoCircleOutlined /> };
+  };
+
+  // Función para obtener el modo de venta
+  const getModoVenta = () => {
+    const modos = {
+      'normal': { text: 'Venta Normal', color: 'blue' },
+      'preventa': { text: 'Preventa', color: 'orange' },
+      'especial': { text: 'Venta Especial', color: 'purple' },
+      'gratis': { text: 'Evento Gratuito', color: 'green' }
+    };
+    return modos[evento.modoVenta] || { text: evento.modoVenta || 'Normal', color: 'default' };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -184,13 +270,21 @@ const ModernEventPage = () => {
     );
   }
 
+  const eventStatus = getEventStatus();
+  const modoVenta = getModoVenta();
+  const tags = getEventTags();
+  const analytics = getAnalytics();
+  const datosBoleto = getDatosBoleto();
+  const datosComprador = getDatosComprador();
+  const otrasOpciones = getOtrasOpciones();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
       <div className="relative h-96 md:h-[500px] overflow-hidden">
         <EventImage
           event={evento}
-          imageType="banner"
+          imageType="logoHorizontal"
           className="w-full h-full object-cover"
           showDebug={true}
         />
@@ -203,12 +297,35 @@ const ModernEventPage = () => {
           <div className="w-full px-4 pb-8">
             <div className="max-w-7xl mx-auto">
               <div className="text-white">
+                <div className="flex items-center gap-4 mb-4">
+                  <Badge 
+                    status={eventStatus.status} 
+                    text={eventStatus.text}
+                    className="text-white"
+                  />
+                  <Tag color={modoVenta.color} className="text-sm">
+                    {modoVenta.text}
+                  </Tag>
+                  {evento.oculto && (
+                    <Tag color="red" icon={<EyeInvisibleOutlined />}>
+                      Oculto
+                    </Tag>
+                  )}
+                </div>
+                
                 <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
                   {evento.nombre}
                 </h1>
+                
                 {evento.descripcion && (
-                  <p className="text-xl md:text-2xl max-w-3xl opacity-90 leading-relaxed">
+                  <p className="text-xl md:text-2xl max-w-3xl opacity-90 leading-relaxed mb-6">
                     {evento.descripcion}
+                  </p>
+                )}
+
+                {evento.resumenDescripcion && (
+                  <p className="text-lg max-w-3xl opacity-80 leading-relaxed">
+                    {evento.resumenDescripcion}
                   </p>
                 )}
                 
@@ -224,9 +341,12 @@ const ModernEventPage = () => {
                       <span className="font-medium">{venueInfo.nombre}</span>
                     </div>
                   )}
-                  <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-                    <span className="font-medium">Estado: {evento.estadoVenta || 'Disponible'}</span>
-                  </div>
+                  {evento.sector && (
+                    <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
+                      <TeamOutlined className="text-white mr-2" />
+                      <span className="font-medium">{evento.sector}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -236,9 +356,104 @@ const ModernEventPage = () => {
 
       {/* Contenido principal */}
       <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contenido principal */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-2">
+            {/* Información básica del evento */}
+            <Card 
+              title={
+                <div className="flex items-center">
+                  <InfoCircleOutlined className="text-blue-500 mr-2" />
+                  <span className="text-xl font-semibold">Información del Evento</span>
+                </div>
+              }
+              className="mb-8 shadow-lg border-0"
+            >
+              <Descriptions column={2} bordered>
+                <Descriptions.Item label="Nombre" span={2}>
+                  <strong>{evento.nombre}</strong>
+                </Descriptions.Item>
+                <Descriptions.Item label="Fecha del Evento">
+                  {formatDateString(evento.fecha_evento)}
+                </Descriptions.Item>
+                <Descriptions.Item label="Recinto">
+                  {venueInfo ? venueInfo.nombre : `ID: ${evento.recinto}`}
+                </Descriptions.Item>
+                <Descriptions.Item label="Sala">
+                  {evento.sala ? `ID: ${evento.sala}` : 'No especificada'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Sector">
+                  {evento.sector || 'No especificado'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Estado de Venta">
+                  <Badge status={eventStatus.status} text={eventStatus.text} />
+                </Descriptions.Item>
+                <Descriptions.Item label="Modo de Venta">
+                  <Tag color={modoVenta.color}>{modoVenta.text}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="Activo">
+                  <Badge 
+                    status={evento.activo ? 'success' : 'error'} 
+                    text={evento.activo ? 'Sí' : 'No'} 
+                  />
+                </Descriptions.Item>
+                <Descriptions.Item label="Oculto">
+                  <Badge 
+                    status={evento.oculto ? 'error' : 'success'} 
+                    text={evento.oculto ? 'Sí' : 'No'} 
+                  />
+                </Descriptions.Item>
+                <Descriptions.Item label="Desactivado">
+                  <Badge 
+                    status={evento.desactivado ? 'error' : 'success'} 
+                    text={evento.desactivado ? 'Sí' : 'No'} 
+                  />
+                </Descriptions.Item>
+                <Descriptions.Item label="Creado">
+                  {formatDateString(evento.created_at)}
+                </Descriptions.Item>
+              </Descriptions>
+            </Card>
+
+            {/* Descripción HTML */}
+            {evento.descripcionHTML && (
+              <Card 
+                title={
+                  <div className="flex items-center">
+                    <FileTextOutlined className="text-green-500 mr-2" />
+                    <span className="text-xl font-semibold">Descripción del Evento</span>
+                  </div>
+                }
+                className="mb-8 shadow-lg border-0"
+              >
+                <div 
+                  className="prose max-w-none"
+                  dangerouslySetInnerHTML={{ __html: evento.descripcionHTML }}
+                />
+              </Card>
+            )}
+
+            {/* Tags */}
+            {tags.length > 0 && (
+              <Card 
+                title={
+                  <div className="flex items-center">
+                    <TagsOutlined className="text-purple-500 mr-2" />
+                    <span className="text-xl font-semibold">Etiquetas</span>
+                  </div>
+                }
+                className="mb-8 shadow-lg border-0"
+              >
+                <div className="flex flex-wrap gap-2">
+                  {tags.map((tag, index) => (
+                    <Tag key={index} color="blue">
+                      {tag}
+                    </Tag>
+                  ))}
+                </div>
+              </Card>
+            )}
+
             {/* Funciones disponibles */}
             <Card 
               title={
@@ -249,128 +464,273 @@ const ModernEventPage = () => {
               }
               className="mb-8 shadow-lg border-0"
             >
-              <div className="space-y-4">
-                {funciones.map((funcion) => (
-                  <div 
-                    key={funcion.id || funcion._id}
-                    className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
-                      selectedFunctionId === (funcion.id || funcion._id)
-                        ? 'border-blue-500 bg-blue-50 shadow-md'
-                        : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
-                    }`}
-                    onClick={() => handleFunctionSelect(funcion.id || funcion._id)}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-                          {new Date(funcion.fecha).getDate()}
-                        </div>
-                        <div>
-                          <h3 className="text-xl font-semibold text-gray-800">
-                            {formatDateString(funcion.fecha)}
-                          </h3>
-                          <p className="text-gray-600 flex items-center">
-                            <ClockCircleOutlined className="mr-1" />
-                            {funcion.hora}
-                          </p>
-                          {venueInfo && (
-                            <p className="text-gray-500 text-sm flex items-center">
-                              <EnvironmentOutlined className="mr-1" />
-                              {venueInfo.nombre}
+              {funciones.length === 0 ? (
+                <Alert
+                  message="No hay funciones disponibles"
+                  description="Este evento no tiene funciones programadas."
+                  type="warning"
+                  showIcon
+                />
+              ) : (
+                <div className="space-y-4">
+                  {funciones.map((funcion) => (
+                    <div 
+                      key={funcion.id || funcion._id}
+                      className={`p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                        selectedFunctionId === (funcion.id || funcion._id)
+                          ? 'border-blue-500 bg-blue-50 shadow-md'
+                          : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                      }`}
+                      onClick={() => handleFunctionSelect(funcion.id || funcion._id)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
+                            {new Date(funcion.fecha).getDate()}
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-semibold text-gray-800">
+                              {formatDateString(funcion.fecha)}
+                            </h3>
+                            <p className="text-gray-600 flex items-center">
+                              <ClockCircleOutlined className="mr-1" />
+                              {funcion.hora}
                             </p>
-                          )}
+                            {venueInfo && (
+                              <p className="text-gray-500 text-sm flex items-center">
+                                <EnvironmentOutlined className="mr-1" />
+                                {venueInfo.nombre}
+                              </p>
+                            )}
+                          </div>
                         </div>
+                        <Button 
+                          type={selectedFunctionId === (funcion.id || funcion._id) ? 'primary' : 'default'}
+                          size="large"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFunctionSelect(funcion.id || funcion._id);
+                          }}
+                          className="px-8"
+                        >
+                          {selectedFunctionId === (funcion.id || funcion._id) ? 'Seleccionado' : 'Seleccionar'}
+                        </Button>
                       </div>
-                      <Button 
-                        type={selectedFunctionId === (funcion.id || funcion._id) ? 'primary' : 'default'}
-                        size="large"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFunctionSelect(funcion.id || funcion._id);
-                        }}
-                        className="px-8"
-                      >
-                        {selectedFunctionId === (funcion.id || funcion._id) ? 'Seleccionado' : 'Seleccionar'}
-                      </Button>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </Card>
 
-            {/* Mapa de asientos */}
-            {showMap && selectedFunctionId && (
+            {/* Configuración de datos del boleto */}
+            {Object.keys(datosBoleto).length > 0 && (
               <Card 
                 title={
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <CalendarOutlined className="text-green-500 mr-2" />
-                      <span className="text-xl font-semibold">Selección de Asientos</span>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                        <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                        {getItemCount()} asientos seleccionados
-                      </div>
-                      <Button 
-                        type="primary" 
-                        icon={<ShoppingCartOutlined />}
-                        onClick={handleProceedToCart}
-                        disabled={getItemCount() === 0}
-                        size="large"
-                      >
-                        Ver Carrito
-                      </Button>
-                    </div>
+                  <div className="flex items-center">
+                    <SettingOutlined className="text-orange-500 mr-2" />
+                    <span className="text-xl font-semibold">Configuración del Boleto</span>
                   </div>
                 }
                 className="mb-8 shadow-lg border-0"
               >
-                {mapLoading ? (
-                  <div className="flex items-center justify-center h-96">
-                    <Spin size="large" />
-                    <span className="ml-4 text-gray-600">Cargando mapa de asientos...</span>
+                <Descriptions column={2} bordered>
+                  {Object.entries(datosBoleto).map(([key, value]) => (
+                    <Descriptions.Item key={key} label={key}>
+                      {typeof value === 'boolean' ? (
+                        <Badge status={value ? 'success' : 'error'} text={value ? 'Sí' : 'No'} />
+                      ) : (
+                        String(value)
+                      )}
+                    </Descriptions.Item>
+                  ))}
+                </Descriptions>
+              </Card>
+            )}
+
+            {/* Configuración de datos del comprador */}
+            {Object.keys(datosComprador).length > 0 && (
+              <Card 
+                title={
+                  <div className="flex items-center">
+                    <UserOutlined className="text-cyan-500 mr-2" />
+                    <span className="text-xl font-semibold">Configuración del Comprador</span>
                   </div>
-                ) : mapa ? (
-                  <div className="h-96 overflow-auto relative bg-gray-50 rounded-lg">
-                    <SeatingMapUnified
-                      mapa={mapa}
-                      funcionId={selectedFunctionId}
-                      lockSeat={lockSeat}
-                      unlockSeat={unlockSeat}
-                      lockTable={lockTable}
-                      unlockTable={unlockTable}
-                      isSeatLocked={isSeatLocked}
-                      isSeatLockedByMe={isSeatLockedByMe}
-                      isTableLocked={isTableLocked}
-                      isTableLockedByMe={isTableLockedByMe}
-                      isAnySeatInTableLocked={isAnySeatInTableLocked}
-                      areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
-                      onSeatToggle={handleSeatToggle}
-                      onTableToggle={(table) => {
-                        console.log('Mesa seleccionada:', table);
-                      }}
-                      foundSeats={[]}
-                      selectedSeats={cartItems.map(item => item.sillaId || item.id || item._id)}
-                    />
+                }
+                className="mb-8 shadow-lg border-0"
+              >
+                <Descriptions column={2} bordered>
+                  {Object.entries(datosComprador).map(([key, value]) => (
+                    <Descriptions.Item key={key} label={key}>
+                      {typeof value === 'boolean' ? (
+                        <Badge status={value ? 'success' : 'error'} text={value ? 'Sí' : 'No'} />
+                      ) : (
+                        String(value)
+                      )}
+                    </Descriptions.Item>
+                  ))}
+                </Descriptions>
+              </Card>
+            )}
+
+            {/* Otras opciones */}
+            {Object.keys(otrasOpciones).length > 0 && (
+              <Card 
+                title={
+                  <div className="flex items-center">
+                    <SettingOutlined className="text-gray-500 mr-2" />
+                    <span className="text-xl font-semibold">Otras Opciones</span>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-center h-96 text-gray-500">
-                    <div className="text-center">
-                      <CalendarOutlined className="text-6xl mb-4 opacity-50" />
-                      <p className="text-lg font-semibold mb-2">No hay mapa disponible</p>
-                      <p className="text-sm">No se encontró un mapa de asientos para esta función</p>
-                    </div>
+                }
+                className="mb-8 shadow-lg border-0"
+              >
+                <Descriptions column={2} bordered>
+                  {Object.entries(otrasOpciones).map(([key, value]) => (
+                    <Descriptions.Item key={key} label={key}>
+                      {typeof value === 'boolean' ? (
+                        <Badge status={value ? 'success' : 'error'} text={value ? 'Sí' : 'No'} />
+                      ) : typeof value === 'object' ? (
+                        <pre className="text-xs bg-gray-100 p-2 rounded">
+                          {JSON.stringify(value, null, 2)}
+                        </pre>
+                      ) : (
+                        String(value)
+                      )}
+                    </Descriptions.Item>
+                  ))}
+                </Descriptions>
+              </Card>
+            )}
+
+            {/* Analytics */}
+            {Object.keys(analytics).length > 0 && (
+              <Card 
+                title={
+                  <div className="flex items-center">
+                    <BarChartOutlined className="text-green-500 mr-2" />
+                    <span className="text-xl font-semibold">Analytics</span>
                   </div>
-                )}
+                }
+                className="mb-8 shadow-lg border-0"
+              >
+                <Descriptions column={2} bordered>
+                  {Object.entries(analytics).map(([key, value]) => (
+                    <Descriptions.Item key={key} label={key}>
+                      {typeof value === 'boolean' ? (
+                        <Badge status={value ? 'success' : 'error'} text={value ? 'Sí' : 'No'} />
+                      ) : (
+                        String(value)
+                      )}
+                    </Descriptions.Item>
+                  ))}
+                </Descriptions>
               </Card>
             )}
           </div>
 
-          {/* Panel lateral - Carrito */}
+          {/* Panel lateral */}
           <div className="lg:col-span-1">
-            <div className="sticky top-8">
-              <Cart />
+            <div className="sticky top-8 space-y-6">
+              {/* Estadísticas del evento */}
+              <Card 
+                title={
+                  <div className="flex items-center">
+                    <TrophyOutlined className="text-yellow-500 mr-2" />
+                    <span className="font-semibold">Estadísticas</span>
+                  </div>
+                }
+                className="shadow-lg border-0"
+              >
+                <div className="space-y-4">
+                  <Statistic 
+                    title="Funciones" 
+                    value={funciones.length} 
+                    prefix={<CalendarOutlined />}
+                  />
+                  <Statistic 
+                    title="Estado" 
+                    value={eventStatus.text}
+                    prefix={eventStatus.icon}
+                  />
+                  {venueInfo && (
+                    <Statistic 
+                      title="Recinto" 
+                      value={venueInfo.nombre}
+                      prefix={<EnvironmentOutlined />}
+                    />
+                  )}
+                </div>
+              </Card>
+
+              {/* Acciones */}
+              <Card 
+                title={
+                  <div className="flex items-center">
+                    <SettingOutlined className="text-blue-500 mr-2" />
+                    <span className="font-semibold">Acciones</span>
+                  </div>
+                }
+                className="shadow-lg border-0"
+              >
+                <div className="space-y-3">
+                  <Button 
+                    type="primary" 
+                    block 
+                    icon={<CalendarOutlined />}
+                    onClick={() => navigate(`/store/eventos/${eventSlug}/map`)}
+                  >
+                    Ver Mapa de Asientos
+                  </Button>
+                  
+                  <Button 
+                    block 
+                    icon={<ShareAltOutlined />}
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      message.success('Enlace copiado al portapapeles');
+                    }}
+                  >
+                    Compartir Evento
+                  </Button>
+                  
+                  <Button 
+                    block 
+                    icon={<HeartOutlined />}
+                    onClick={() => message.info('Función de favoritos próximamente')}
+                  >
+                    Agregar a Favoritos
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Información técnica */}
+              <Card 
+                title={
+                  <div className="flex items-center">
+                    <InfoCircleOutlined className="text-gray-500 mr-2" />
+                    <span className="font-semibold">Información Técnica</span>
+                  </div>
+                }
+                className="shadow-lg border-0"
+              >
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">ID del Evento:</span>
+                    <code className="text-xs">{evento.id}</code>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Slug:</span>
+                    <code className="text-xs">{evento.slug}</code>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Tenant ID:</span>
+                    <code className="text-xs">{evento.tenant_id}</code>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Usuario ID:</span>
+                    <code className="text-xs">{evento.usuario_id}</code>
+                  </div>
+                </div>
+              </Card>
             </div>
           </div>
         </div>
