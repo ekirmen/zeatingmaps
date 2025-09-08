@@ -24,6 +24,7 @@ import EventSearchMap from './pages/EventSearchMap';
 import PaymentSuccess from './pages/PaymentSuccess';
 import Profile from './pages/profile.js';
 import EventosPage from './pages/EventosPage';
+import ModernEventPage from './pages/ModernEventPage';
 import ThankYouPage from './pages/ThankYouPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiesPolicy from './pages/CookiesPolicy';
@@ -62,8 +63,8 @@ const StoreApp = () => {
                   {/* Render CMS home page by default */}
                   <Route index element={<CmsPage slug="store" />} />
                 <Route path="tag/:tagSlug?" element={<EventsVenue groupByTags />} />
-                <Route path="eventos/:eventSlug" element={<EventInfo />} />
-                <Route path="eventos/:eventSlug/map" element={<EventosPage forceShowMap />} />
+                <Route path="eventos/:eventSlug" element={<ModernEventPage />} />
+                <Route path="eventos/:eventSlug/map" element={<ModernEventPage />} />
                 <Route path="event/:eventId" element={<EventInfo />} />
 
                 <Route path="event/:eventId/full" element={<Event />} />
