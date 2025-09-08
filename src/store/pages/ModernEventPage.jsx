@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button, Card, Select, message, Spin, Alert, Row, Col, Badge, Divider, Tag, Descriptions, Timeline, Statistic, Progress } from 'antd';
 import { 
   CalendarOutlined, 
@@ -22,7 +22,8 @@ import {
   DollarOutlined,
   TagsOutlined,
   FileTextOutlined,
-  BarChartOutlined
+  BarChartOutlined,
+  ArrowLeftOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import { getFunciones } from '../services/apistore';
@@ -41,6 +42,10 @@ const ModernEventPage = () => {
   const { eventSlug } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+  
+  // Detectar si estamos en la vista del mapa
+  const isMapView = location.pathname.includes('/map');
 
   const [evento, setEvento] = useState(null);
   const [funciones, setFunciones] = useState([]);
@@ -138,6 +143,40 @@ const ModernEventPage = () => {
     subscribeToFunction(selectedFunctionId);
     return () => unsubscribe();
   }, [selectedFunctionId, subscribeToFunction, unsubscribe]);
+
+  // Cargar mapa cuando estemos en la vista del mapa
+  useEffect(() => {
+    if (!isMapView || !selectedFunctionId) return;
+    
+    const fetchMapa = async () => {
+      try {
+        setMapLoading(true);
+        console.log('🗺️ [ModernEventPage] Cargando mapa para función:', selectedFunctionId);
+        
+        const { data: mapaData, error: mapaError } = await supabase
+          .from('mapas')
+          .select('*')
+          .eq('funcion_id', selectedFunctionId)
+          .maybeSingle();
+
+        if (mapaError) throw mapaError;
+        
+        if (mapaData) {
+          setMapa(mapaData);
+          console.log('✅ [ModernEventPage] Mapa cargado:', mapaData.id);
+        } else {
+          console.log('⚠️ [ModernEventPage] No se encontró mapa para la función');
+        }
+      } catch (err) {
+        console.error('❌ [ModernEventPage] Error cargando mapa:', err);
+        message.error('Error al cargar el mapa de asientos');
+      } finally {
+        setMapLoading(false);
+      }
+    };
+
+    fetchMapa();
+  }, [isMapView, selectedFunctionId]);
 
   const handleFunctionSelect = (functionId) => {
     setSelectedFunctionId(functionId);
@@ -274,6 +313,116 @@ const ModernEventPage = () => {
   const modoVenta = getModoVenta();
   const tags = getEventTags();
   const analytics = getAnalytics();
+
+  // Si estamos en la vista del mapa, mostrar el mapa y el carrito
+  if (isMapView) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          {/* Header con información básica del evento */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-4">
+                <Button 
+                  icon={<ArrowLeftOutlined />} 
+                  onClick={() => navigate(`/store/eventos/${eventSlug}`)}
+                >
+                  Volver a Evento
+                </Button>
+                <h1 className="text-2xl font-bold text-gray-900">{evento.nombre}</h1>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Badge status={eventStatus.status} text={eventStatus.text} />
+                <Tag color={modoVenta.color}>{modoVenta.text}</Tag>
+              </div>
+            </div>
+            
+            {/* Información de la función */}
+            {selectedFunctionId && (
+              <div className="bg-white p-4 rounded-lg shadow-sm">
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-2">
+                    <CalendarOutlined className="text-blue-500" />
+                    <span className="font-medium">
+                      {funciones.find(f => f.id === selectedFunctionId)?.fecha || 'Fecha no disponible'}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <ClockCircleOutlined className="text-green-500" />
+                    <span className="font-medium">
+                      {funciones.find(f => f.id === selectedFunctionId)?.hora || 'Hora no disponible'}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <EnvironmentOutlined className="text-red-500" />
+                    <span className="font-medium">
+                      {evento.recinto || 'Recinto no disponible'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Layout del mapa y carrito */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Mapa de asientos - 2/3 del ancho */}
+            <div className="lg:col-span-2">
+              <Card 
+                title={
+                  <div className="flex items-center">
+                    <ShoppingCartOutlined className="text-blue-500 mr-2" />
+                    <span className="font-semibold">Selección de Asientos</span>
+                  </div>
+                }
+                className="shadow-lg border-0"
+              >
+                {mapLoading ? (
+                  <div className="flex items-center justify-center h-96">
+                    <Spin size="large" />
+                    <span className="ml-3">Cargando mapa de asientos...</span>
+                  </div>
+                ) : mapa ? (
+                  <SeatingMapUnified
+                    mapa={mapa}
+                    funcionId={selectedFunctionId}
+                    onSeatToggle={handleSeatToggle}
+                    isSeatLocked={isSeatLocked}
+                    isSeatLockedByMe={isSeatLockedByMe}
+                    isTableLocked={isTableLocked}
+                    isTableLockedByMe={isTableLockedByMe}
+                    isAnySeatInTableLocked={isAnySeatInTableLocked}
+                    areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
+                    onTableToggle={handleTableToggle}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-96">
+                    <Alert
+                      message="No hay mapa disponible"
+                      description="Este evento no tiene un mapa de asientos configurado."
+                      type="warning"
+                      showIcon
+                    />
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Carrito - 1/3 del ancho */}
+            <div className="lg:col-span-1">
+              <Cart
+                items={cartItems}
+                removeFromCart={removeFromCart}
+                getItemCount={getItemCount}
+                selectedFunctionId={selectedFunctionId}
+                evento={evento}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const datosBoleto = getDatosBoleto();
   const datosComprador = getDatosComprador();
   const otrasOpciones = getOtrasOpciones();
@@ -676,7 +825,13 @@ const ModernEventPage = () => {
                     type="primary" 
                     block 
                     icon={<CalendarOutlined />}
-                    onClick={() => navigate(`/store/eventos/${eventSlug}/map`)}
+                    onClick={() => {
+                      // Si hay una función seleccionada, incluirla en la URL
+                      const url = selectedFunctionId 
+                        ? `/store/eventos/${eventSlug}/map?funcion=${selectedFunctionId}`
+                        : `/store/eventos/${eventSlug}/map`;
+                      navigate(url);
+                    }}
                   >
                     Ver Mapa de Asientos
                   </Button>
