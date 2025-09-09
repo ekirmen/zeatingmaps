@@ -484,27 +484,22 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                                 const seatIdParts = lock.seat_id.split('_');
                                 const seatNumber = seatIdParts[seatIdParts.length - 1];
                                 
-                                // Buscar información de la zona correcta
-                                // Intentar encontrar la zona que corresponde al asiento
-                                let zonaAsignada = null;
-                                let precioAsignado = 10.00;
+                                // Usar información de zona guardada en seat_locks si está disponible
+                                let zonaNombre = lock.zona_nombre || 'ORO';
+                                let zonaId = lock.zona_id || 'ORO';
+                                let precioAsignado = lock.precio || 10.00;
                                 
-                                // Buscar en las zonas disponibles para encontrar la correcta
-                                for (const zona of Object.values(zonasInfo)) {
-                                  // Si el asiento está en esta zona, usarla
-                                  if (zona.nombre && zona.nombre !== 'Sin zona') {
-                                    zonaAsignada = zona;
-                                    break;
+                                // Si no hay información de zona guardada, buscar en las zonas disponibles
+                                if (!lock.zona_nombre || !lock.zona_id) {
+                                  // Buscar en las zonas disponibles para encontrar la correcta
+                                  for (const zona of Object.values(zonasInfo)) {
+                                    if (zona.nombre && zona.nombre !== 'Sin zona') {
+                                      zonaNombre = zona.nombre;
+                                      zonaId = zona.id;
+                                      break;
+                                    }
                                   }
                                 }
-                                
-                                // Si no se encontró zona específica, usar la primera disponible
-                                if (!zonaAsignada) {
-                                  zonaAsignada = Object.values(zonasInfo)[0];
-                                }
-                                
-                                const zonaNombre = zonaAsignada?.nombre || 'ORO';
-                                const zonaId = zonaAsignada?.id || 'ORO';
                                 
                                 return {
                                   id: lock.seat_id,
