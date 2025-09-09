@@ -7,6 +7,7 @@ import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ZonesPanel from './components/ZonesPanel.jsx';
 import ProductosWidget from '../../../store/components/ProductosWidget';
 import PaymentModal from './PaymentModal';
+import ClientModals from './ClientModals';
 import CustomFormBuilder from './components/CustomFormBuilder';
 import MailChimpIntegration from './components/MailChimpIntegration';
 import PushNotifications from './components/PushNotifications';
@@ -37,6 +38,8 @@ const BoleteriaMainCustomDesign = () => {
   const [showLocatorSearch, setShowLocatorSearch] = useState(false);
   const [showCartManagement, setShowCartManagement] = useState(false);
   const [showServerDiagnostic, setShowServerDiagnostic] = useState(false);
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [blockMode, setBlockMode] = useState(false);
@@ -794,7 +797,11 @@ const BoleteriaMainCustomDesign = () => {
                     </div>
                   ) : (
                     <div className="text-center">
-                      <Button size="small" type="primary">
+                      <Button 
+                        size="small" 
+                        type="primary"
+                        onClick={() => setShowClientModal(true)}
+                      >
                         Seleccionar Cliente
                       </Button>
                       <div className="text-xs text-gray-500 mt-xs">
@@ -882,6 +889,8 @@ const BoleteriaMainCustomDesign = () => {
                     size="large" 
                     block
                     className="bg-secondary hover:bg-secondary-hover"
+                    onClick={() => setShowPaymentModal(true)}
+                    disabled={selectedSeats.length === 0 || !selectedClient}
                   >
                     Proceder al Pago
                   </Button>
@@ -1193,6 +1202,34 @@ const BoleteriaMainCustomDesign = () => {
         }}
         showNotifications={true}
         position="bottom-right"
+      />
+
+      {/* Modales de Cliente y Pago */}
+      <ClientModals
+        showClientModal={showClientModal}
+        setShowClientModal={setShowClientModal}
+        selectedClient={selectedClient}
+        setSelectedClient={setSelectedClient}
+        onClientSelect={(client) => {
+          setSelectedClient(client);
+          setShowClientModal(false);
+        }}
+      />
+
+      <PaymentModal
+        open={showPaymentModal}
+        onCancel={() => setShowPaymentModal(false)}
+        carrito={selectedSeats}
+        selectedClient={selectedClient}
+        selectedFuncion={selectedFuncion}
+        selectedAffiliate={selectedAffiliate}
+        selectedEvent={selectedEvent}
+        onPaymentComplete={() => {
+          setShowPaymentModal(false);
+          setSelectedSeats([]);
+          setSelectedClient(null);
+          message.success('Pago completado exitosamente');
+        }}
       />
     </div>
   );

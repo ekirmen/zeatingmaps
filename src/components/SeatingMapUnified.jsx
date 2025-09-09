@@ -37,6 +37,10 @@ const SeatingMapUnified = ({
     const tempLocks = lockedSeatsState || [];
     const permanentLocks = lockedSeats || [];
     
+    console.log('🎫 [SEATING_MAP] Temp locks:', tempLocks.length);
+    console.log('🎫 [SEATING_MAP] Permanent locks:', permanentLocks.length);
+    console.log('🎫 [SEATING_MAP] Permanent locks data:', permanentLocks);
+    
     // Crear un mapa para evitar duplicados
     const lockMap = new Map();
     
@@ -52,7 +56,9 @@ const SeatingMapUnified = ({
       }
     });
     
-    return Array.from(lockMap.values());
+    const result = Array.from(lockMap.values());
+    console.log('🎫 [SEATING_MAP] Combined locks:', result.length);
+    return result;
   }, [lockedSeatsState, lockedSeats]);
 
   // Controlar visibilidad del panel de depuración de locks (oculto por defecto)
@@ -498,8 +504,12 @@ if (Array.isArray(mapa?.contenido)) {
              });
 
             const seatData = { ...seat, estado: seatEstado };
-            const seatColor = getSeatColor(seatData, null, isSelected, selectedSeats, allLockedSeats);
-            const borderColor = getBorderColor(isSelected, null);
+            
+            // Buscar la zona del asiento
+            const seatZona = zonas.find(z => z.asientos.some(a => a._id === seat._id)) || zonas[0];
+            
+            const seatColor = getSeatColor(seatData, seatZona, isSelected, selectedSeats, allLockedSeats);
+            const borderColor = getBorderColor(isSelected, seatZona);
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
 
             return (

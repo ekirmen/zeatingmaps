@@ -87,6 +87,17 @@ const ModernEventPage = () => {
 
   // Cargar datos reales de seat_locks desde la base de datos
   const { lockedSeats: realLockedSeats } = useSeatLocksArray(selectedFunctionId, null, !!selectedFunctionId);
+  
+  // Debug: Log de seat_locks cargados
+  useEffect(() => {
+    console.log('🎫 [STORE] Debug - realLockedSeats:', realLockedSeats);
+    console.log('🎫 [STORE] Debug - selectedFunctionId:', selectedFunctionId);
+    if (realLockedSeats && realLockedSeats.length > 0) {
+      console.log('🎫 [STORE] Seat locks cargados:', realLockedSeats);
+    } else {
+      console.log('🎫 [STORE] No hay seat locks cargados para función:', selectedFunctionId);
+    }
+  }, [realLockedSeats, selectedFunctionId]);
 
   // Cargar evento y funciones
   useEffect(() => {
