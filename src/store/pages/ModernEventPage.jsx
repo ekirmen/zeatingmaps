@@ -27,6 +27,7 @@ import { getFunciones } from '../services/apistore';
 import formatDateString from '../../utils/formatDateString';
 import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
+import useSelectedSeatsStore from '../../stores/useSelectedSeatsStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
 import useSeatLocksArray from '../hooks/useSeatLocksArray';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
@@ -71,6 +72,14 @@ const ModernEventPage = () => {
   const removeFromCart = useCartStore((state) => state.removeFromCart);
   const cartItems = useCartStore((state) => state.items);
   const getItemCount = useCartStore((state) => state.getItemCount);
+  
+  // Store unificado para sincronización con boletería
+  const {
+    selectedSeats,
+    addSeat: addSeatToUnified,
+    removeSeat: removeSeatFromUnified,
+    syncWithSeatLocks
+  } = useSelectedSeatsStore();
 
   const {
     subscribeToFunction,
@@ -98,6 +107,14 @@ const ModernEventPage = () => {
       console.log('🎫 [STORE] No hay seat locks cargados para función:', selectedFunctionId);
     }
   }, [realLockedSeats, selectedFunctionId]);
+
+  // Sincronización automática con seat_locks
+  useEffect(() => {
+    if (realLockedSeats && realLockedSeats.length > 0) {
+      console.log('🔄 [STORE] Sincronizando con seat_locks:', realLockedSeats);
+      syncWithSeatLocks(realLockedSeats);
+    }
+  }, [realLockedSeats, syncWithSeatLocks]);
 
   // Cargar evento y funciones
   useEffect(() => {
@@ -231,15 +248,26 @@ const ModernEventPage = () => {
 
     if (isSeatLocked(seatId) && !isSeatLockedByMe(seatId)) return;
 
-    const cartItemsState = useCartStore.getState().items;
-    const exists = cartItemsState.some(item => item.sillaId === seatId);
+    const exists = selectedSeats.some(seat => seat._id === seatId);
 
     if (exists) {
       await unlockSeat(seatId, selectedFunctionId);
-      removeFromCart(seatId);
+      removeSeatFromUnified(seatId);
+      removeFromCart(seatId); // Mantener compatibilidad con carrito existente
     } else {
       const ok = await lockSeat(seatId, 'seleccionado', selectedFunctionId);
       if (!ok) return;
+      
+      // Crear objeto de asiento para el store unificado
+      const seatData = {
+        _id: seatId,
+        nombre: `Asiento ${seatId}`,
+        precio: 50, // Precio por defecto
+        zona: { nombre: 'General' },
+        functionId: selectedFunctionId,
+      };
+      
+      addSeatToUnified(seatData);
       toggleSeat({
         sillaId: seatId,
         nombre: `Asiento ${seatId}`,
@@ -418,7 +446,7 @@ const ModernEventPage = () => {
                   <SeatingMapUnified
                     mapa={mapa}
                     funcionId={selectedFunctionId}
-                    selectedSeats={cartItems.map(item => item.sillaId || item._id || item.id)}
+                    selectedSeats={selectedSeats.map(seat => seat._id || seat.id)}
                     onSeatToggle={handleSeatToggle}
                     isSeatLocked={isSeatLocked}
                     isSeatLockedByMe={isSeatLockedByMe}

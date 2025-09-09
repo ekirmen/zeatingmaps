@@ -22,6 +22,7 @@ import { useClientManagement } from '../../hooks/useClientManagement';
 import { useTenant } from '../../../contexts/TenantContext';
 import { supabase } from '../../../supabaseClient';
 import resolveImageUrl from '../../../utils/resolveImageUrl';
+import useSelectedSeatsStore from '../../../stores/useSelectedSeatsStore';
 import '../../../styles/design-system.css';
 
 const { Search } = Input;
@@ -43,7 +44,27 @@ const BoleteriaMainCustomDesign = () => {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [blockMode, setBlockMode] = useState(false);
-  const [selectedSeats, setSelectedSeats] = useState([]);
+  // Usar el store unificado para asientos seleccionados
+  const {
+    selectedSeats,
+    setSelectedSeats,
+    addSeat,
+    removeSeat,
+    toggleSeat: toggleSeatStore,
+    clearSeats,
+    setSelectedClient,
+    selectedClient,
+    setSelectedEvent,
+    selectedEvent,
+    setSelectedFuncion,
+    selectedFuncion,
+    setSelectedAffiliate,
+    selectedAffiliate,
+    getSeatCount,
+    getTotalPrice,
+    isSeatSelected,
+    syncWithSeatLocks
+  } = useSelectedSeatsStore();
   const [blockedSeats, setBlockedSeats] = useState([]);
   const [lockedSeats, setLockedSeats] = useState([]);
   const [paymentData, setPaymentData] = useState(null);
@@ -248,16 +269,12 @@ const BoleteriaMainCustomDesign = () => {
                 
               } else if (action === 'addSeat' && seat) {
                 // Agregar asiento individual (funcionalidad anterior)
-                setSelectedSeats(prev => {
-                  const currentSeats = Array.isArray(prev) ? prev : [];
-                  const exists = currentSeats.find(s => s._id === seat._id);
-                  if (exists) {
-                    message.warning('Este asiento ya está en el carrito');
-                    VisualNotifications.show('seatBlocked', 'Este asiento ya está en el carrito');
-                    return currentSeats;
-                  }
-                  return [...currentSeats, seat];
-                });
+                if (isSeatSelected(seat._id)) {
+                  message.warning('Este asiento ya está en el carrito');
+                  VisualNotifications.show('seatBlocked', 'Este asiento ya está en el carrito');
+                } else {
+                  addSeat(seat);
+                }
                 
                 // Cargar cliente si está disponible
                 if (transaction.user_id) {
@@ -343,63 +360,56 @@ const BoleteriaMainCustomDesign = () => {
       }
     } else {
       // En modo normal, manejar selección para carrito
-      setSelectedSeats(prev => {
-        const currentSeats = Array.isArray(prev) ? prev : [];
-        const isSelected = currentSeats.find(s => s._id === seat._id);
-        let newSeats;
+      if (isSeatSelected(seat._id)) {
+        // Deselección: el asiento ya fue desbloqueado en la BD por LazySimpleSeatingMap
+        removeSeat(seat._id);
+      } else {
+        // Selección: el asiento ya fue bloqueado en la BD por LazySimpleSeatingMap
+        // Calcular precio basado en plantilla y descuentos
+        const zonaId = seat?.zona?.id || seat?.zonaId || seat?.zona;
+        // Buscar detalle de precio por zona en la plantilla seleccionada
+        const detalleZona = Array.isArray(detallesPlantilla)
+          ? detallesPlantilla.find(d => {
+              const id = d.zonaId || (typeof d.zona === 'object' ? d.zona?._id : d.zona);
+              return String(id) === String(zonaId);
+            })
+          : null;
+
+        const basePrice = detalleZona?.precio ?? selectedPriceOption?.precio ?? 0;
+        let finalPrice = basePrice;
+        let tipoPrecio = 'normal';
+        let descuentoNombre = '';
+
+        // Aplicar descuento si corresponde (comentado hasta implementar appliedDiscount)
+        // if (appliedDiscount?.detalles && zonaId != null) {
+        //   const d = appliedDiscount.detalles.find(dt => {
+        //     const id = typeof dt.zona === 'object' ? dt.zona?._id : dt.zona;
+        //     return String(id) === String(zonaId);
+        //   });
+        //   if (d) {
+        //     if (d.tipo === 'porcentaje') {
+        //       finalPrice = Math.max(0, basePrice - (basePrice * d.valor) / 100);
+        //     } else {
+        //       finalPrice = Math.max(0, basePrice - d.valor);
+        //     }
+        //     tipoPrecio = 'descuento';
+        //     descuentoNombre = appliedDiscount.nombreCodigo;
+        //   }
+        // }
+
+        const seatWithPrice = {
+          ...seat,
+          precio: finalPrice,
+          precioInfo: {
+            base: basePrice,
+            tipoPrecio,
+            descuentoNombre,
+            zonaId: zonaId || null,
+          }
+        };
         
-        if (isSelected) {
-          // Deselección: el asiento ya fue desbloqueado en la BD por LazySimpleSeatingMap
-          newSeats = currentSeats.filter(s => s._id !== seat._id);
-        } else {
-          // Selección: el asiento ya fue bloqueado en la BD por LazySimpleSeatingMap
-          // Calcular precio basado en plantilla y descuentos
-          const zonaId = seat?.zona?.id || seat?.zonaId || seat?.zona;
-          // Buscar detalle de precio por zona en la plantilla seleccionada
-          const detalleZona = Array.isArray(detallesPlantilla)
-            ? detallesPlantilla.find(d => {
-                const id = d.zonaId || (typeof d.zona === 'object' ? d.zona?._id : d.zona);
-                return String(id) === String(zonaId);
-              })
-            : null;
-
-          const basePrice = detalleZona?.precio ?? selectedPriceOption?.precio ?? 0;
-          let finalPrice = basePrice;
-          let tipoPrecio = 'normal';
-          let descuentoNombre = '';
-
-          // Aplicar descuento si corresponde (comentado hasta implementar appliedDiscount)
-          // if (appliedDiscount?.detalles && zonaId != null) {
-          //   const d = appliedDiscount.detalles.find(dt => {
-          //     const id = typeof dt.zona === 'object' ? dt.zona?._id : dt.zona;
-          //     return String(id) === String(zonaId);
-          //   });
-          //   if (d) {
-          //     if (d.tipo === 'porcentaje') {
-          //       finalPrice = Math.max(0, basePrice - (basePrice * d.valor) / 100);
-          //     } else {
-          //       finalPrice = Math.max(0, basePrice - d.valor);
-          //     }
-          //     tipoPrecio = 'descuento';
-          //     descuentoNombre = appliedDiscount.nombreCodigo;
-          //   }
-          // }
-
-          const seatWithPrice = {
-            ...seat,
-            precio: finalPrice,
-            precioInfo: {
-              base: basePrice,
-              tipoPrecio,
-              descuentoNombre,
-              zonaId: zonaId || null,
-            }
-          };
-          newSeats = [...currentSeats, seatWithPrice];
-        }
-        
-        return newSeats;
-      });
+        addSeat(seatWithPrice);
+      }
     }
   };
 
