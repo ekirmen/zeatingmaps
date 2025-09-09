@@ -18,7 +18,6 @@ const PaymentSuccess = () => {
   const navigate = useNavigate();
   const { refParam } = useRefParam();
   const [paymentDetails, setPaymentDetails] = useState(null);
-  const [eventOptions, setEventOptions] = useState({});
 
   const isReservation = paymentDetails?.status === 'reservado' || paymentDetails?.status === 'pending';
 
@@ -75,23 +74,6 @@ const PaymentSuccess = () => {
     fetchPaymentDetails();
   }, [locator]);
 
-  // Función para simular datos de pago (mantener compatibilidad)
-  const getPaymentData = () => {
-    if (!paymentDetails) return null;
-    
-    return {
-      id: paymentDetails.id,
-      locator: paymentDetails.locator || paymentDetails.order_id,
-      amount: paymentDetails.amount,
-      status: paymentDetails.status,
-      paymentMethod: paymentDetails.payment_method || 'Método de pago procesado',
-      created_at: paymentDetails.created_at,
-      seats: paymentDetails.seats || [],
-      // Datos simulados para compatibilidad
-      event: { otrasOpciones: {} },
-      funcion: null
-    };
-  };
 
   const handleDownloadAllTickets = async () => {
     try {
@@ -101,13 +83,6 @@ const PaymentSuccess = () => {
     }
   };
 
-  const handleDownloadSingleTicket = async (ticketId) => {
-    try {
-      await downloadTicket(locator, ticketId);
-    } catch {
-      toast.error('No se pudo descargar el ticket');
-    }
-  };
 
   const handleContinuePayment = async () => {
     try {
@@ -295,12 +270,6 @@ const PaymentSuccess = () => {
           </button>
         </div>
 
-        {eventOptions.observacionesEmail?.mostrar && (
-          <div
-            className="mt-8 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 text-sm"
-            dangerouslySetInnerHTML={{ __html: String(eventOptions.observacionesEmail.texto || '') }}
-          ></div>
-        )}
 
         {emailSent && (
           <div className="mt-8 text-center text-sm text-gray-500">

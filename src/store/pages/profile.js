@@ -1,21 +1,19 @@
 // src/store/pages/Profile.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Card, Avatar, Descriptions, Button, message, Tabs, 
-  List, Tag, Space, Row, Col, Statistic, Divider,
-  Timeline, Empty, Spin, Alert, Image, Badge, Input
+  List, Tag, Space, Row, Col, Statistic,
+  Timeline, Empty, Spin, Alert, Input
 } from 'antd';
 import { 
   UserOutlined, ShoppingOutlined, CalendarOutlined, 
   CreditCardOutlined, HeartOutlined, SettingOutlined,
-  EditOutlined, SaveOutlined, CloseOutlined, DollarOutlined,
+  EditOutlined, SaveOutlined, CloseOutlined,
   FileTextOutlined, ClockCircleOutlined
 } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
-import { useMultiTenant } from '../../hooks/useMultiTenant';
 import { 
   getUserProfile, 
-  getUserPurchases, 
   getUserPurchasesWithSeats,
   getUserReservations, 
   getUserFavorites,
@@ -28,7 +26,6 @@ const { TabPane } = Tabs;
 
 const Profile = () => {
   const { user, logout } = useAuth();
-  const { activeTenant } = useMultiTenant();
   const [editing, setEditing] = useState(false);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -39,13 +36,7 @@ const Profile = () => {
   const [stats, setStats] = useState({});
   const [editForm, setEditForm] = useState({});
 
-  useEffect(() => {
-    if (user) {
-      loadUserData();
-    }
-  }, [user]);
-
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     setLoading(true);
     try {
       // Cargar todos los datos en paralelo
@@ -97,7 +88,13 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      loadUserData();
+    }
+  }, [user, loadUserData]);
 
   const handleSave = async () => {
     try {
@@ -124,12 +121,6 @@ const Profile = () => {
     message.success('Sesión cerrada correctamente');
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount || 0);
-  };
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('es-ES', {

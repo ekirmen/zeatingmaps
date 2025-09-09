@@ -1,4 +1,4 @@
-import { createPaymentTransaction as createSupabaseTransaction, updatePaymentTransactionStatus as updateSupabaseTransactionStatus } from './paymentGatewaysService';
+import { createPaymentTransaction as createSupabaseTransaction } from './paymentGatewaysService';
 
 // Funciones temporales para transacciones - se pueden implementar más tarde
 const createPaymentTransaction = async (data) => {
@@ -7,14 +7,14 @@ const createPaymentTransaction = async (data) => {
     const generateUUID = () => {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0;
-        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+        const v = c === 'x' ? r : ((r & 0x3) | 0x8);
         return v.toString(16);
       });
     };
 
     // Si gatewayId no es un UUID válido, generar uno
     let gatewayId = data.gatewayId;
-    if (!gatewayId || typeof gatewayId === 'string' && !gatewayId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+    if (!gatewayId || (typeof gatewayId === 'string' && !gatewayId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))) {
       gatewayId = generateUUID();
     }
 
@@ -37,7 +37,7 @@ const createPaymentTransaction = async (data) => {
     const generateUUID = () => {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
         const r = Math.random() * 16 | 0;
-        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+        const v = c === 'x' ? r : ((r & 0x3) | 0x8);
         return v.toString(16);
       });
     };
@@ -51,14 +51,14 @@ const createPaymentTransaction = async (data) => {
   }
 };
 
-const updatePaymentTransactionStatus = async (id, status, response = null) => {
-  try {
-    return await updateSupabaseTransactionStatus(id, status, response);
-  } catch (error) {
-    console.error('Error updating payment transaction:', error);
-    return { id, status, response, updated_at: new Date().toISOString() };
-  }
-};
+// const updatePaymentTransactionStatus = async (id, status, response = null) => {
+//   try {
+//     return await updateSupabaseTransactionStatus(id, status, response);
+//   } catch (error) {
+//     console.error('Error updating payment transaction:', error);
+//     return { id, status, response, updated_at: new Date().toISOString() };
+//   }
+// };
 
 /**
  * Procesador base para todos los métodos de pago

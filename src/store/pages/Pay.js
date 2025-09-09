@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Modal, Card, Button, Space, Alert, Spin, Divider, message } from 'antd';
-import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined, ClockCircleOutlined } from '@ant-design/icons';
+import { message } from 'antd';
+import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { getActivePaymentMethods, validatePaymentMethodConfig } from '../services/paymentMethodsService';
 import { processPaymentMethod } from '../services/paymentMethodsProcessor';
@@ -30,9 +30,8 @@ const Pay = () => {
   const [availableMethods, setAvailableMethods] = useState([]);
   const [loadingMethods, setLoadingMethods] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [paymentResult, setPaymentResult] = useState(null);
   const [facebookPixel, setFacebookPixel] = useState(null);
-  const [pricesWithFees, setPricesWithFees] = useState({});
+  const [pricesWithFees] = useState({});
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Check authentication on component mount
@@ -137,7 +136,6 @@ const Pay = () => {
       console.log('🔍 Result requiresRedirect:', result.requiresRedirect);
       console.log('🔍 Result requiresAction:', result.requiresAction);
       console.log('🔍 Result requiresManualConfirmation:', result.requiresManualConfirmation);
-      setPaymentResult(result);
 
       if (result.success) {
         console.log('✅ Payment successful, redirecting...');
@@ -175,37 +173,6 @@ const Pay = () => {
     }
   };
 
-  const handleProcessReservation = async () => {
-    if (!selectedGateway) {
-      message.error('Por favor selecciona un método de pago');
-      return;
-    }
-
-    try {
-      setProcessingPayment(true);
-      
-      const reservationData = {
-        orderId: `RESERVATION-${Date.now()}`,
-        amount: total,
-        currency: 'USD',
-        items: cartItems,
-        type: 'reservation'
-      };
-
-      const result = await processPaymentMethod(selectedGateway, reservationData);
-      setPaymentResult(result);
-
-      if (result.success) {
-        clearCart();
-        navigate('/store/reservation/success', { state: { result } });
-      }
-    } catch (error) {
-      console.error('Error processing reservation:', error);
-      message.error('Error al procesar la reserva');
-    } finally {
-      setProcessingPayment(false);
-    }
-  };
 
   const getMethodIcon = (methodId) => {
     const icons = {
@@ -250,17 +217,6 @@ const Pay = () => {
   };
 
 
-  const getPriceWithFees = (gateway) => {
-    const priceWithFees = pricesWithFees[gateway.id];
-    if (!priceWithFees) return total;
-    
-    return {
-      originalPrice: priceWithFees.precioBase,
-      fees: priceWithFees.comision,
-      finalPrice: priceWithFees.precioTotal,
-      hasFees: priceWithFees.comision > 0
-    };
-  };
 
   if (!cartItems || cartItems.length === 0) {
     return (
