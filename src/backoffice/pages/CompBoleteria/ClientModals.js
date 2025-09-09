@@ -15,6 +15,12 @@ const ClientModals = ({
   handleUnifiedSearch,
   clearSearchResults,
 }) => {
+  console.log('🔍 [ClientModals] Props recibidas:', {
+    isSearchModalVisible,
+    searchResults: searchResults?.length || 0,
+    paymentResults: paymentResults?.length || 0,
+    searchLoading
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('search');
   const [form] = Form.useForm();

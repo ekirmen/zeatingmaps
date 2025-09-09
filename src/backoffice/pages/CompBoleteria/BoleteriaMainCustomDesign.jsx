@@ -118,9 +118,11 @@ const BoleteriaMainCustomDesign = () => {
   }, [selectedPlantilla]);
 
   const {
-    searchUsers,
-    createUser,
-    loading: clientLoading
+    searchResults,
+    paymentResults,
+    searchLoading,
+    handleUnifiedSearch,
+    clearSearchResults
   } = useClientManagement();
 
   useEffect(() => {
@@ -804,7 +806,10 @@ const BoleteriaMainCustomDesign = () => {
                       <Button 
                         size="small" 
                         type="primary"
-                        onClick={() => setShowClientModal(true)}
+                        onClick={() => {
+                          console.log('🔍 [BOLETERIA] Abriendo modal de cliente');
+                          setShowClientModal(true);
+                        }}
                       >
                         Seleccionar Cliente
                       </Button>
@@ -1210,14 +1215,18 @@ const BoleteriaMainCustomDesign = () => {
 
       {/* Modales de Cliente y Pago */}
       <ClientModals
-        showClientModal={showClientModal}
-        setShowClientModal={setShowClientModal}
-        selectedClient={selectedClient}
-        setSelectedClient={setSelectedClient}
+        isSearchModalVisible={showClientModal}
+        searchResults={searchResults}
+        paymentResults={paymentResults}
+        searchLoading={searchLoading}
+        onSearchCancel={() => setShowClientModal(false)}
         onClientSelect={(client) => {
           setSelectedClient(client);
           setShowClientModal(false);
         }}
+        onAddClient={() => {}}
+        handleUnifiedSearch={handleUnifiedSearch}
+        clearSearchResults={clearSearchResults}
       />
 
       <PaymentModal
