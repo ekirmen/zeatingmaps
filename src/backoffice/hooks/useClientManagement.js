@@ -16,18 +16,11 @@ export const useClientManagement = (setCarrito) => {
   const handleClientSearch = async (searchTerm) => {
     setSearchLoading(true);
     try {
-      let { data, error } = await supabase
-        .from('profiles_with_auth')
+      // Usar directamente la tabla profiles
+      const { data, error } = await supabase
+        .from('profiles')
         .select('id, login, nombre, apellido, telefono, empresa, email')
         .or(`login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
-
-      if (error && error.code === '42P01') {
-        // relation does not exist, try profiles instead
-        ({ data, error } = await supabase
-          .from('profiles')
-          .select('id, login, nombre, apellido, telefono, empresa, email')
-          .or(`login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`));
-      }
 
       if (error) {
         console.error('Search error:', error);

@@ -36,21 +36,12 @@ const ClientModals = ({
         await handleUnifiedSearch(searchTerm);
       } else {
         // Fallback to direct search if handleUnifiedSearch is not provided
-        let { data, error } = await supabase
-          .from('profiles_with_auth')
-          .select('id, login, nombre, telefono, empresa, email')
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, login, nombre, apellido, telefono, empresa, email')
           .or(
-            `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
+            `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
           );
-
-        if (error && error.code === '42P01') {
-          ({ data, error } = await supabase
-            .from('profile_view')
-            .select('id, login, nombre, telefono, empresa, email')
-            .or(
-              `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
-            ));
-        }
 
         if (error) throw error;
 
