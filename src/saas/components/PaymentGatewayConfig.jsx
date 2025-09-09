@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Select, Switch, message, Alert, Space, Typography, Row, Col, Tabs, Badge, Table } from 'antd';
+import { Card, Form, Input, Button, Select, Switch, message, Alert, Space, Typography, Row, Col, Tabs, Badge, Table, Spin } from 'antd';
 import { 
   CreditCardOutlined, 
   CheckCircleOutlined, 
   DollarOutlined,
-  SecurityScanOutlined
+  SecurityScanOutlined,
+  ReloadOutlined
 } from '@ant-design/icons';
 import paymentGatewayService from '../services/paymentGatewayService';
 
@@ -16,6 +17,7 @@ const PaymentGatewayConfig = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [testingConnection, setTestingConnection] = useState({});
   const [activeTab, setActiveTab] = useState('stripe');
   const [gatewayConfigs, setGatewayConfigs] = useState({});
   const [paymentStats, setPaymentStats] = useState({});
@@ -65,6 +67,42 @@ const PaymentGatewayConfig = () => {
       message.error(`Error al configurar ${activeTab.toUpperCase()}: ${error.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTestConnection = async () => {
+    try {
+      setTestingConnection(prev => ({ ...prev, [activeTab]: true }));
+      
+      const formValues = form.getFieldsValue();
+      const tenant_id = 'current-tenant'; // En un caso real, obtener del contexto de usuario
+      
+      const endpoint = activeTab === 'stripe' 
+        ? '/api/test-stripe-connection' 
+        : '/api/test-paypal-connection';
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          config: formValues,
+          tenant_id
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        message.success(`✅ Conexión exitosa con ${activeTab.toUpperCase()}: ${result.message}`);
+      } else {
+        message.error(`❌ Error de conexión con ${activeTab.toUpperCase()}: ${result.error}`);
+      }
+    } catch (error) {
+      message.error(`Error al probar conexión con ${activeTab.toUpperCase()}: ${error.message}`);
+    } finally {
+      setTestingConnection(prev => ({ ...prev, [activeTab]: false }));
     }
   };
 
@@ -160,6 +198,22 @@ const PaymentGatewayConfig = () => {
             <Switch checkedChildren="Activo" unCheckedChildren="Inactivo" />
           </Form.Item>
         </Col>
+        <Col span={24}>
+          <Space>
+            <Button 
+              type="default"
+              icon={<ReloadOutlined />}
+              onClick={handleTestConnection}
+              loading={testingConnection.stripe}
+              disabled={!form.getFieldValue('secret_key') || !form.getFieldValue('publishable_key')}
+            >
+              Probar Conexión
+            </Button>
+            <Text type="secondary">
+              Verifica que las credenciales sean correctas antes de guardar
+            </Text>
+          </Space>
+        </Col>
       </Row>
     </Form>
   );
@@ -215,6 +269,22 @@ const PaymentGatewayConfig = () => {
           <Form.Item name="is_active" valuePropName="checked" initialValue={false}>
             <Switch checkedChildren="Activo" unCheckedChildren="Inactivo" />
           </Form.Item>
+        </Col>
+        <Col span={24}>
+          <Space>
+            <Button 
+              type="default"
+              icon={<ReloadOutlined />}
+              onClick={handleTestConnection}
+              loading={testingConnection.paypal}
+              disabled={!form.getFieldValue('client_id') || !form.getFieldValue('client_secret')}
+            >
+              Probar Conexión
+            </Button>
+            <Text type="secondary">
+              Verifica que las credenciales sean correctas antes de guardar
+            </Text>
+          </Space>
         </Col>
       </Row>
     </Form>
@@ -378,17 +448,27 @@ const PaymentGatewayConfig = () => {
         <div style={{ marginTop: '24px', textAlign: 'right' }}>
           <Space>
             <Button 
+              icon={<ReloadOutlined />} 
+              onClick={handleTestConnection}
+              loading={testingConnection[activeTab]}
+              disabled={activeTab === 'stats'}
+            >
+              Probar Conexión
+            </Button>
+            <Button 
               icon={<SecurityScanOutlined />} 
               onClick={handleTestGateway}
               loading={testing}
+              disabled={activeTab === 'stats'}
             >
-              Probar Pasarela
+              Probar Pago
             </Button>
             <Button 
               type="primary" 
               icon={<CheckCircleOutlined />} 
               onClick={() => form.submit()}
               loading={loading}
+              disabled={activeTab === 'stats'}
             >
               Guardar Configuración
             </Button>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber } from 'antd';
+import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber, Spin, Progress } from 'antd';
 import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined, DownloadOutlined, HistoryOutlined, AimOutlined, CompressOutlined } from '@ant-design/icons';
 import LazySimpleSeatingMap from './LazySimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
@@ -83,11 +83,14 @@ const BoleteriaMainCustomDesign = () => {
     // Variables del store unificado
     selectedFuncion,
     selectedEvent,
+    setSelectedEvent,
+    setSelectedFuncion,
     selectedClient,
     setSelectedClient,
     selectedAffiliate,
     setSelectedAffiliate,
     selectedSeats,
+    setSelectedSeats,
     addSeat,
     removeSeat,
     clearSeats,
@@ -559,8 +562,34 @@ const BoleteriaMainCustomDesign = () => {
     return <div className="flex items-center justify-center min-h-screen">Error: {error}</div>;
   }
 
-  if (!selectedFuncion) {
-    return <div className="flex items-center justify-center min-h-screen">Por favor selecciona una función</div>;
+  // Evitar parpadeo: mostrar loader mientras carga o restaura selección
+  if (loading || !selectedFuncion) {
+    const step = debugInfo?.step || '';
+    const progressMap = {
+      'Starting to fetch eventos': 15,
+      'handleEventSelect': 30,
+      'handleFunctionSelect': 45,
+      'fetchMapa': 65,
+      'loadReservedSeats': 80,
+      'fetchZonasPorSala': 90
+    };
+    const base = loading ? 10 : 0;
+    const computed = progressMap[step] ?? base;
+    const percent = (!loading && selectedFuncion) ? 100 : Math.min(99, computed);
+
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        {loading ? (
+          <div className="flex flex-col items-center gap-4">
+            <Spin size="large" />
+            <div className="text-gray-600">Cargando…</div>
+            <Progress type="circle" percent={percent} width={80} />
+          </div>
+        ) : (
+          'Por favor selecciona una función'
+        )}
+      </div>
+    );
   }
 
   return (

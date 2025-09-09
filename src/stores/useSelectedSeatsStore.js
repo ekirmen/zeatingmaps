@@ -52,6 +52,10 @@ const useSelectedSeatsStore = create(
         set({ selectedSeats: Array.isArray(seats) ? seats : [] });
       },
       
+      setSelectedSeats: (seats) => {
+        set({ selectedSeats: Array.isArray(seats) ? seats : [] });
+      },
+      
       // Acciones para cliente
       setSelectedClient: (client) => {
         set({ selectedClient: client });

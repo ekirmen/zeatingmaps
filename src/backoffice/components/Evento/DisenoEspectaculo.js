@@ -267,7 +267,6 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
   };
 
   const handleDescriptionChange = (value) => {
-    setDescription(value);
     setEventoData(prev => ({ ...prev, descripcionHTML: value }));
   };
 
