@@ -5,6 +5,7 @@ import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomI
 import LazySimpleSeatingMap from './LazySimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ZonesPanel from './components/ZonesPanel.jsx';
+import GridSaleMode from './components/GridSaleMode';
 import ProductosWidget from '../../../store/components/ProductosWidget';
 import PaymentModal from './PaymentModal';
 import ClientModals from './ClientModals';
@@ -697,47 +698,77 @@ const BoleteriaMainCustomDesign = () => {
 
           {/* Área de trabajo */}
           <div className="flex-1 flex">
-            {/* Panel izquierdo - Zonas y Precios */}
-            <div className="w-80 bg-white border-r border-gray-200 p-md overflow-y-auto">
-              <h3 className="text-sm font-semibold mb-md text-gray-700">Zonas y Precios</h3>
-              
-              {!selectedFuncion ? (
-                <div className="mb-md p-sm bg-warning-light border border-warning rounded-md text-warning-dark text-xs">
-                  ⚠️ Selecciona una función para ver las zonas disponibles
-                </div>
-              ) : (
-                <div className="mb-md p-sm bg-info-light border border-info rounded-md text-info-dark text-xs">
-                  ✅ Función seleccionada: {selectedFuncion.nombre}
-                  <div className="mt-xs">
-                    <span>• <kbd className="bg-white px-xs rounded-sm">Rueda</kbd> Zoom</span>
-                    <span>• <kbd className="bg-white px-xs rounded-sm">Click + Arrastrar</kbd> Pan</span>
+            {/* Panel izquierdo - Zonas y Precios (solo para modo mapa) */}
+            {selectedEvent?.modoVenta !== 'grid' && (
+              <div className="w-80 bg-white border-r border-gray-200 p-md overflow-y-auto">
+                <h3 className="text-sm font-semibold mb-md text-gray-700">Zonas y Precios</h3>
+                
+                {!selectedFuncion ? (
+                  <div className="mb-md p-sm bg-warning-light border border-warning rounded-md text-warning-dark text-xs">
+                    ⚠️ Selecciona una función para ver las zonas disponibles
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="mb-md p-sm bg-info-light border border-info rounded-md text-info-dark text-xs">
+                    ✅ Función seleccionada: {selectedFuncion.nombre}
+                    <div className="mt-xs">
+                      <span>• <kbd className="bg-white px-xs rounded-sm">Rueda</kbd> Zoom</span>
+                      <span>• <kbd className="bg-white px-xs rounded-sm">Click + Arrastrar</kbd> Pan</span>
+                    </div>
+                  </div>
+                )}
 
-              <ZonesPanel 
-                selectedFuncion={selectedFuncion}
-                selectedPlantilla={selectedPlantilla}
-                selectedZonaId={activeZoneId}
-                onSelectZona={(zonaId) => setActiveZoneId(String(zonaId))}
-                onSelectPrice={handlePriceOptionSelect}
-                selectedPriceId={selectedPriceOption?.id}
-                mapa={mapa}
-                onPricesLoaded={(zonasArray) => {
-                  console.log('🎯 onPricesLoaded llamado con:', zonasArray);
-                }}
-              />
-              
-              {!blockMode && !selectedPriceOption && (
-                <div className="mb-md p-sm bg-warning-light border border-warning rounded-md text-warning-dark text-xs">
-                  ⚠️ Primero selecciona una zona y precio antes de elegir asientos
-                </div>
-              )}
-            </div>
+                <ZonesPanel 
+                  selectedFuncion={selectedFuncion}
+                  selectedPlantilla={selectedPlantilla}
+                  selectedZonaId={activeZoneId}
+                  onSelectZona={(zonaId) => setActiveZoneId(String(zonaId))}
+                  onSelectPrice={handlePriceOptionSelect}
+                  selectedPriceId={selectedPriceOption?.id}
+                  mapa={mapa}
+                  onPricesLoaded={(zonasArray) => {
+                    console.log('🎯 onPricesLoaded llamado con:', zonasArray);
+                  }}
+                />
+                
+                {!blockMode && !selectedPriceOption && (
+                  <div className="mb-md p-sm bg-warning-light border border-warning rounded-md text-warning-dark text-xs">
+                    ⚠️ Primero selecciona una zona y precio antes de elegir asientos
+                  </div>
+                )}
+              </div>
+            )}
 
-            {/* Área del mapa */}
+            {/* Área del mapa o modo grid */}
             <div className="flex-1 relative bg-white">
-              {mapa && (
+              {selectedEvent?.modoVenta === 'grid' ? (
+                // Modo Grid - Venta sin mapa
+                <div className="p-4">
+                  <GridSaleMode
+                    evento={selectedEvent}
+                    funcion={selectedFuncion}
+                    onAddToCart={(item) => {
+                      // Convertir item del modo grid al formato del carrito
+                      const cartItem = {
+                        sillaId: item.id,
+                        nombre: item.descripcion,
+                        precio: item.precio,
+                        nombreZona: item.zona_nombre,
+                        functionId: item.funcion_id,
+                        cantidad: item.cantidad,
+                        tipo: 'grid'
+                      };
+                      addSeat(cartItem);
+                    }}
+                    onRemoveFromCart={(itemId) => {
+                      removeSeat(itemId);
+                    }}
+                    cartItems={selectedSeats}
+                    loading={loading}
+                    selectedClient={selectedClient}
+                    onClientSelect={() => setShowClientModal(true)}
+                  />
+                </div>
+              ) : mapa ? (
                 <div
                   style={{ 
                     transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`, 
@@ -759,6 +790,23 @@ const BoleteriaMainCustomDesign = () => {
                     lockedSeats={lockedSeats}
                     onLockChange={handleLockChange}
                   />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-96">
+                  <div className="text-center">
+                    <div className="text-gray-500 mb-2">
+                      {selectedEvent?.modoVenta === 'grid' 
+                        ? 'Modo Grid activado - No se requiere mapa'
+                        : 'No hay mapa disponible'
+                      }
+                    </div>
+                    <div className="text-sm text-gray-400">
+                      {selectedEvent?.modoVenta === 'grid'
+                        ? 'Las entradas se venden por zona sin selección específica de asientos'
+                        : 'Este evento no tiene un mapa de asientos configurado'
+                      }
+                    </div>
+                  </div>
                 </div>
               )}
 

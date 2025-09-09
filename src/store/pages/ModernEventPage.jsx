@@ -33,6 +33,7 @@ import useSeatLocksArray from '../hooks/useSeatLocksArray';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import Cart from './Cart';
 import EventImage from '../components/EventImage';
+import GridSaleMode from '../components/GridSaleMode';
 
 
 const ModernEventPage = () => {
@@ -431,13 +432,39 @@ const ModernEventPage = () => {
                 title={
                   <div className="flex items-center">
                     <ShoppingCartOutlined className="text-blue-500 mr-2" />
-                    <span className="font-semibold">Selección de Asientos</span>
+                    <span className="font-semibold">
+                      {evento?.modoVenta === 'grid' ? 'Selección de Entradas' : 'Selección de Asientos'}
+                    </span>
                   </div>
                 }
                 className="shadow-lg border-0"
                 style={{ height: '100%' }}
               >
-                {mapLoading ? (
+                {evento?.modoVenta === 'grid' ? (
+                  // Modo Grid - Venta sin mapa
+                  <GridSaleMode
+                    evento={evento}
+                    funcion={funciones.find(f => f.id === selectedFunctionId)}
+                    onAddToCart={(item) => {
+                      // Convertir item del modo grid al formato del carrito
+                      const cartItem = {
+                        sillaId: item.id,
+                        nombre: item.descripcion,
+                        precio: item.precio,
+                        nombreZona: item.zona_nombre,
+                        functionId: item.funcion_id,
+                        cantidad: item.cantidad,
+                        tipo: 'grid'
+                      };
+                      toggleSeat(cartItem);
+                    }}
+                    onRemoveFromCart={(itemId) => {
+                      removeFromCart(itemId);
+                    }}
+                    cartItems={cartItems}
+                    loading={mapLoading}
+                  />
+                ) : mapLoading ? (
                   <div className="flex items-center justify-center h-96">
                     <Spin size="large" />
                     <span className="ml-3">Cargando mapa de asientos...</span>
