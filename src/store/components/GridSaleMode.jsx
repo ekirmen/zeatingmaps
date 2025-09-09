@@ -26,31 +26,45 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
       setLoadingZonas(true);
       setError(null);
 
-      // Cargar zonas del evento
+      // Cargar zonas del evento (usando sala_id del evento)
       const { data: zonasData, error: zonasError } = await supabase
         .from('zonas')
         .select('*')
-        .eq('evento_id', evento.id)
-        .eq('is_active', true)
+        .eq('sala_id', evento.sala)
         .order('nombre');
 
       if (zonasError) throw zonasError;
 
       setZonas(zonasData || []);
 
-      // Cargar precios de la función
-      const { data: preciosData, error: preciosError } = await supabase
-        .from('precios')
+      // Cargar plantillas (precios) del evento
+      const { data: plantillasData, error: plantillasError } = await supabase
+        .from('plantillas')
         .select('*')
-        .eq('funcion_id', funcion.id)
-        .eq('is_active', true);
+        .eq('recinto', evento.recinto)
+        .eq('sala', evento.sala);
 
-      if (preciosError) throw preciosError;
+      if (plantillasError) throw plantillasError;
 
-      // Organizar precios por zona
+      // Procesar precios desde el JSON de detalles
       const preciosPorZona = {};
-      preciosData?.forEach(precio => {
-        preciosPorZona[precio.zona_id] = precio;
+      plantillasData?.forEach(plantilla => {
+        try {
+          const detalles = JSON.parse(plantilla.detalles || '[]');
+          detalles.forEach(detalle => {
+            if (detalle.zonaId && detalle.precio) {
+              preciosPorZona[detalle.zonaId] = {
+                precio: detalle.precio,
+                comision: detalle.comision || 0,
+                precioGeneral: detalle.precioGeneral || 0,
+                canales: detalle.canales || [],
+                orden: detalle.orden || 0
+              };
+            }
+          });
+        } catch (parseError) {
+          console.warn('Error parseando detalles de plantilla:', parseError);
+        }
       });
 
       setPrecios(preciosPorZona);
@@ -244,7 +258,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
                       <Text strong>Cantidad:</Text>
                       <InputNumber
                         min={0}
-                        max={zona.capacidad || 999}
+                        max={zona.aforo || 999}
                         value={cantidadActual}
                         onChange={(value) => handleCantidadChange(zona.id, value)}
                         className="w-full"
@@ -252,9 +266,9 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
                         addonBefore={<MinusOutlined />}
                         addonAfter={<PlusOutlined />}
                       />
-                      {zona.capacidad && (
+                      {zona.aforo && (
                         <Text type="secondary" className="text-xs">
-                          Disponible: {zona.capacidad} entradas
+                          Disponible: {zona.aforo} entradas
                         </Text>
                       )}
                     </Space>

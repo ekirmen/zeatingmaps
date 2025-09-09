@@ -47,41 +47,56 @@ El **Modo Grid** permite vender entradas por zona sin necesidad de un mapa de as
 ```sql
 -- Tabla de zonas
 CREATE TABLE zonas (
-  id UUID PRIMARY KEY,
-  evento_id UUID REFERENCES eventos(id),
+  id SERIAL PRIMARY KEY,
   nombre VARCHAR(255) NOT NULL,
-  descripcion TEXT,
-  capacidad INTEGER,
-  is_active BOOLEAN DEFAULT true
+  aforo NUMERIC,
+  color TEXT,
+  numerada BOOLEAN,
+  sala_id TEXT,
+  tenant_id UUID
 );
 
--- Tabla de precios
-CREATE TABLE precios (
-  id UUID PRIMARY KEY,
-  funcion_id UUID REFERENCES funciones(id),
-  zona_id UUID REFERENCES zonas(id),
-  precio DECIMAL(10,2) NOT NULL,
-  descripcion TEXT,
-  is_active BOOLEAN DEFAULT true
+-- Tabla de plantillas (contiene precios en JSON)
+CREATE TABLE plantillas (
+  id SERIAL PRIMARY KEY,
+  nombre VARCHAR(255) NOT NULL,
+  detalles TEXT, -- JSON con precios por zona
+  recinto INTEGER REFERENCES recintos(id),
+  sala INTEGER REFERENCES salas(id),
+  tenant_id UUID
 );
+```
+
+### **Estructura JSON de Precios**
+```json
+{
+  "detalles": [
+    {
+      "zonaId": 22,
+      "entradaId": "4d80ae04-a6a3-4c47-b0fb-fe36dd1e0f92",
+      "precio": 10,
+      "comision": 0,
+      "precioGeneral": 0,
+      "canales": [4, 2, 3],
+      "orden": 0
+    }
+  ]
+}
 ```
 
 ### **Configuración del Evento**
 ```javascript
 // En el dashboard, el evento debe tener:
 evento.modoVenta = 'grid'
+evento.recinto = 67  // ID del recinto
+evento.sala = 52     // ID de la sala
 
-// Zonas configuradas:
-evento.zonas = [
-  {
-    id: 'zona-1',
-    nombre: 'General',
-    capacidad: 1000,
-    precios: [
-      { funcion_id: 'funcion-1', precio: 50.00 }
-    ]
-  }
-]
+// Zonas en la tabla 'zonas':
+// - id: 22, nombre: 'General', aforo: 1000, sala_id: '52'
+// - id: 23, nombre: 'VIP', aforo: 200, sala_id: '52'
+
+// Precios en la tabla 'plantillas' (campo detalles):
+// JSON con precios por zonaId
 ```
 
 ## 📱 **Interfaz de Usuario**
