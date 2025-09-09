@@ -14,6 +14,7 @@ export const useClientManagement = (setCarrito) => {
   const [paymentResults, setPaymentResults] = useState([]);
 
   const handleClientSearch = async (searchTerm) => {
+    console.log('🔍 [useClientManagement] Buscando clientes con término:', searchTerm);
     setSearchLoading(true);
     try {
       // Usar directamente la tabla profiles
@@ -26,6 +27,8 @@ export const useClientManagement = (setCarrito) => {
         console.error('Search error:', error);
         throw error;
       }
+      
+      console.log('✅ [useClientManagement] Resultados encontrados:', data?.length || 0);
       
       return (data || []).map((p) => ({
         id: p.id,
@@ -165,16 +168,24 @@ export const useClientManagement = (setCarrito) => {
 
   const handleUnifiedSearch = async (searchTerm) => {
     setSearchLoading(true);
+    setClientError(null);
     try {
       const clients = await handleClientSearch(searchTerm);
       if (clients.length > 0) {
+        setSearchResults(clients);
+        setPaymentResults([]);
         return { type: 'clients', data: clients };
       }
 
       const payments = await handlePaymentSearch(searchTerm);
+      setSearchResults([]);
+      setPaymentResults(payments);
       return { type: 'payments', data: payments };
     } catch (error) {
       console.error('Search error:', error);
+      setClientError(error.message);
+      setSearchResults([]);
+      setPaymentResults([]);
       throw error;
     } finally {
       setSearchLoading(false);

@@ -26,6 +26,7 @@ const ClientModals = ({
   const [form] = Form.useForm();
 
   const handleSearch = async () => {
+    console.log('🔍 [ClientModals] Iniciando búsqueda con término:', searchTerm);
     if (!searchTerm.trim()) {
       message.warning('Please enter a search term');
       return;
@@ -33,6 +34,7 @@ const ClientModals = ({
 
     try {
       if (handleUnifiedSearch) {
+        console.log('🔍 [ClientModals] Usando handleUnifiedSearch');
         await handleUnifiedSearch(searchTerm);
       } else {
         // Fallback to direct search if handleUnifiedSearch is not provided

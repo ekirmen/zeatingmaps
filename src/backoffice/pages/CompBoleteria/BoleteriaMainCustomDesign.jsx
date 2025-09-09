@@ -122,6 +122,7 @@ const BoleteriaMainCustomDesign = () => {
     paymentResults,
     searchLoading,
     handleUnifiedSearch,
+    handleAddClient,
     clearSearchResults
   } = useClientManagement();
 
@@ -1224,7 +1225,7 @@ const BoleteriaMainCustomDesign = () => {
           setSelectedClient(client);
           setShowClientModal(false);
         }}
-        onAddClient={() => {}}
+        onAddClient={handleAddClient}
         handleUnifiedSearch={handleUnifiedSearch}
         clearSearchResults={clearSearchResults}
       />
