@@ -59,11 +59,11 @@ export const getUserProfile = async (userId) => {
   }
 };
 
-// Obtener compras del usuario
+// Obtener compras del usuario (desde payment_transactions)
 export const getUserPurchases = async (userId) => {
   try {
     const { data, error } = await supabase
-      .from('sales')
+      .from('payment_transactions')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -72,6 +72,46 @@ export const getUserPurchases = async (userId) => {
     return data || [];
   } catch (error) {
     console.error('Error al obtener compras:', error);
+    return [];
+  }
+};
+
+// Obtener compras con asientos del usuario
+export const getUserPurchasesWithSeats = async (userId) => {
+  try {
+    const { data: transactions, error } = await supabase
+      .from('payment_transactions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Para cada transacción, obtener sus asientos
+    const transactionsWithSeats = await Promise.all(
+      (transactions || []).map(async (transaction) => {
+        try {
+          const { data: seats, error: seatsError } = await supabase
+            .from('seat_locks')
+            .select('seat_id, table_id, status, locked_at, expires_at')
+            .eq('locator', transaction.locator);
+
+          if (seatsError) {
+            console.warn('Error getting seats for transaction:', seatsError);
+            return { ...transaction, seats: [] };
+          }
+
+          return { ...transaction, seats: seats || [] };
+        } catch (error) {
+          console.warn('Error processing seats for transaction:', error);
+          return { ...transaction, seats: [] };
+        }
+      })
+    );
+
+    return transactionsWithSeats;
+  } catch (error) {
+    console.error('Error al obtener compras con asientos:', error);
     return [];
   }
 };
@@ -164,7 +204,8 @@ export const getUserStats = async (userId) => {
     let favorites = [];
 
     try {
-      const res = await supabase.from('sales').select('total_amount,status').eq('user_id', userId);
+      // Usar payment_transactions en lugar de sales
+      const res = await supabase.from('payment_transactions').select('amount,status').eq('user_id', userId);
       purchases = res.data || [];
     } catch (_) {}
 
@@ -183,7 +224,7 @@ export const getUserStats = async (userId) => {
 
     const totalSpent = purchases
       .filter(p => p.status === 'completed')
-      .reduce((sum, p) => sum + (p.total_amount || 0), 0);
+      .reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
 
     const activeReservations = reservations.filter(r => r.status === 'active').length;
     const totalFavorites = favorites.length;
@@ -193,7 +234,9 @@ export const getUserStats = async (userId) => {
       totalSpent,
       activeReservations,
       totalFavorites,
-      completedPurchases: purchases.filter(p => p.status === 'completed').length
+      completedPurchases: purchases.filter(p => p.status === 'completed').length,
+      pendingPurchases: purchases.filter(p => p.status === 'pending').length,
+      failedPurchases: purchases.filter(p => p.status === 'failed').length
     };
   } catch (error) {
     console.error('Error al obtener estadísticas:', error);
@@ -202,7 +245,9 @@ export const getUserStats = async (userId) => {
       totalSpent: 0,
       activeReservations: 0,
       totalFavorites: 0,
-      completedPurchases: 0
+      completedPurchases: 0,
+      pendingPurchases: 0,
+      failedPurchases: 0
     };
   }
 };

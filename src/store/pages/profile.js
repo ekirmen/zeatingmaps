@@ -16,6 +16,7 @@ import { useMultiTenant } from '../../hooks/useMultiTenant';
 import { 
   getUserProfile, 
   getUserPurchases, 
+  getUserPurchasesWithSeats,
   getUserReservations, 
   getUserFavorites,
   getUserActivityHistory,
@@ -57,7 +58,7 @@ const Profile = () => {
         statsData
       ] = await Promise.all([
         getUserProfile(user.id),
-        getUserPurchases(user.id),
+        getUserPurchasesWithSeats(user.id), // Usar la nueva función con asientos
         getUserReservations(user.id),
         getUserFavorites(user.id),
         getUserActivityHistory(user.id),
@@ -237,11 +238,14 @@ const Profile = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Compras"
+              title="Compras Totales"
               value={stats.totalPurchases || 0}
               prefix={<ShoppingOutlined />}
               valueStyle={{ color: '#3f8600' }}
             />
+            <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+              Completadas: {stats.completedPurchases || 0} | Pendientes: {stats.pendingPurchases || 0}
+            </div>
           </Card>
         </Col>
         <Col span={6}>
@@ -345,7 +349,9 @@ const Profile = () => {
                 renderItem={purchase => (
                   <List.Item
                     actions={[
-                      <Button size="small">Ver Detalles</Button>,
+                      <Button size="small" href={`/store/payment-success/${purchase.locator}`}>
+                        Ver Detalles
+                      </Button>,
                       <Button size="small">Descargar Ticket</Button>
                     ]}
                   >
@@ -353,28 +359,32 @@ const Profile = () => {
                       avatar={
                         <Avatar 
                           size={64}
-                          src={purchase.events?.image_url}
                           icon={<ShoppingOutlined />}
                         />
                       }
-                      title={purchase.events?.name || 'Evento'}
+                      title={`Transacción ${purchase.locator}`}
                       description={
                         <Space direction="vertical" size="small">
                           <div>
-                            <CalendarOutlined /> {formatDate(purchase.events?.date)}
+                            <CalendarOutlined /> {formatDate(purchase.created_at)}
                           </div>
                           <div>
-                            <FileTextOutlined /> {purchase.tickets?.length || 0} tickets
+                            <FileTextOutlined /> {purchase.seats?.length || 0} asientos
                           </div>
                           <div>
-                            <CreditCardOutlined /> Orden: {purchase.id}
+                            <CreditCardOutlined /> {purchase.payment_method || 'Método de pago'}
                           </div>
+                          {purchase.seats && purchase.seats.length > 0 && (
+                            <div>
+                              <strong>Asientos:</strong> {purchase.seats.map(seat => seat.seat_id).join(', ')}
+                            </div>
+                          )}
                         </Space>
                       }
                     />
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#52c41a' }}>
-                        {formatCurrency(purchase.total_amount)}
+                        ${purchase.amount}
                       </div>
                       <Tag color={getStatusColor(purchase.status)}>
                         {purchase.status}
@@ -551,4 +561,5 @@ const Profile = () => {
   );
 };
 
+export default Profile;
 export default Profile;

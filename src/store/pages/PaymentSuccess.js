@@ -37,38 +37,61 @@ const PaymentSuccess = () => {
     if (!locator) return;
 
     const fetchPaymentDetails = async () => {
-      // Buscar en payment_transactions usando el locator como order_id
-      const { data: transaction, error: transactionError } = await supabase
-        .from('payment_transactions')
-        .select('*')
-        .eq('order_id', locator)
-        .single();
+      try {
+        // Usar la función RPC para obtener transacción con asientos
+        const { data: transactionWithSeats, error: rpcError } = await supabase
+          .rpc('get_transaction_with_seats', { locator_param: locator });
 
-      if (transactionError || !transaction) {
-        console.error('Error fetching payment transaction:', transactionError);
-        return;
+        if (rpcError) {
+          console.error('Error fetching transaction with seats:', rpcError);
+          // Fallback a búsqueda normal
+          const { data: transaction, error: transactionError } = await supabase
+            .from('payment_transactions')
+            .select('*')
+            .eq('order_id', locator)
+            .single();
+
+          if (transactionError || !transaction) {
+            console.error('Error fetching payment transaction:', transactionError);
+            return;
+          }
+          setPaymentDetails(transaction);
+          return;
+        }
+
+        if (transactionWithSeats?.transaction) {
+          setPaymentDetails({
+            ...transactionWithSeats.transaction,
+            seats: transactionWithSeats.seats || []
+          });
+        } else {
+          console.error('No transaction found for locator:', locator);
+        }
+      } catch (error) {
+        console.error('Error in fetchPaymentDetails:', error);
       }
-
-      // Simular datos de pago para compatibilidad con el componente existente
-      const payment = {
-        id: transaction.id,
-        locator: transaction.order_id,
-        amount: transaction.amount,
-        status: transaction.status,
-        paymentMethod: 'Método de pago procesado',
-        created_at: transaction.created_at,
-        // Datos simulados para compatibilidad
-        event: { otrasOpciones: {} },
-        seats: [],
-        funcion: null
-      };
-
-      setPaymentDetails(payment);
-      setEventOptions(payment.event?.otrasOpciones || {});
     };
 
     fetchPaymentDetails();
   }, [locator]);
+
+  // Función para simular datos de pago (mantener compatibilidad)
+  const getPaymentData = () => {
+    if (!paymentDetails) return null;
+    
+    return {
+      id: paymentDetails.id,
+      locator: paymentDetails.locator || paymentDetails.order_id,
+      amount: paymentDetails.amount,
+      status: paymentDetails.status,
+      paymentMethod: paymentDetails.payment_method || 'Método de pago procesado',
+      created_at: paymentDetails.created_at,
+      seats: paymentDetails.seats || [],
+      // Datos simulados para compatibilidad
+      event: { otrasOpciones: {} },
+      funcion: null
+    };
+  };
 
   const handleDownloadAllTickets = async () => {
     try {
@@ -212,23 +235,31 @@ const PaymentSuccess = () => {
         
         {!isReservation && paymentDetails?.seats?.length > 0 && (
           <div className="my-6">
-            <div className="grid grid-cols-3 font-medium text-gray-700 py-2 border-b">
-              <span>Boleto</span>
-              <span>Método de Pago</span>
-              <span className="text-right">Acciones</span>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Asientos Seleccionados</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {paymentDetails.seats.map((seat, index) => (
+                <div key={seat.seat_id || index} className="bg-gray-50 p-4 rounded-lg border">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        Asiento: {seat.seat_id || `Asiento ${index + 1}`}
+                      </p>
+                      {seat.table_id && (
+                        <p className="text-sm text-gray-600">
+                          Mesa: {seat.table_id}
+                        </p>
+                      )}
+                      <p className="text-sm text-gray-500">
+                        Estado: {seat.status}
+                      </p>
+                    </div>
+                    <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
+                      Confirmado
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
-            {paymentDetails.seats.map(seat => (
-              <div key={seat.id} className="grid grid-cols-3 items-center py-2 border-b">
-                <span>{seat.name}</span>
-                <span className="capitalize">{paymentDetails.paymentMethod}</span>
-                <button
-                  onClick={() => handleDownloadSingleTicket(seat.id)}
-                  className="justify-self-end px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 transition"
-                >
-                  Descargar
-                </button>
-              </div>
-            ))}
           </div>
         )}
 

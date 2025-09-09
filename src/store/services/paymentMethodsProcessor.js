@@ -107,6 +107,20 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
         gatewayResponse: gatewayResponse // Incluir los asientos en gateway_response
       });
 
+      // Conectar asientos con el localizador
+      if (paymentData.user?.id && paymentData.funcion?.id) {
+        try {
+          const { updateSeatsWithLocator } = await import('./seatLocatorService');
+          const seatIds = paymentData.items?.map(item => item.seatId).filter(Boolean) || [];
+          if (seatIds.length > 0) {
+            await updateSeatsWithLocator(seatIds, paymentData.locator, paymentData.user.id);
+            console.log('🔗 Connected seats with locator:', seatIds);
+          }
+        } catch (error) {
+          console.warn('Could not connect seats with locator:', error);
+        }
+      }
+
       // Simulación de respuesta de Stripe
       const mockStripeResponse = {
         id: `pi_${Math.random().toString(36).substr(2, 9)}`,
