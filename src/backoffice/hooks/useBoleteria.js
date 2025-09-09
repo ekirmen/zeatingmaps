@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { message } from 'antd';
 import { supabase, supabaseAdmin } from '../../supabaseClient';
 import { fetchMapa, fetchZonasPorSala } from '../services/apibackoffice';
+import useSelectedSeatsStore from '../../stores/useSelectedSeatsStore';
 
 const EVENT_KEY = 'boleteriaEventId';
 const FUNC_KEY = 'boleteriaFunctionId';
@@ -11,10 +12,16 @@ const SELECTED_SEATS_KEY = 'boleteriaSelectedSeats';
 export const useBoleteria = () => {
   console.log('🚀 [useBoleteria] Hook initialized');
   
+  // Usar el store unificado para selectedFuncion y selectedEvent
+  const {
+    selectedFuncion,
+    selectedEvent,
+    setSelectedFuncion,
+    setSelectedEvent
+  } = useSelectedSeatsStore();
+  
   const [eventos, setEventos] = useState([]);
   const [funciones, setFunciones] = useState([]);
-  const [selectedFuncion, setSelectedFuncion] = useState(null);
-  const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedPlantilla, setSelectedPlantilla] = useState(null);
   const [mapa, setMapa] = useState(null);
   const [zonas, setZonas] = useState([]);
@@ -77,7 +84,7 @@ export const useBoleteria = () => {
   // Memoizar el setSelectedEvent para evitar re-renderizados
   const setSelectedEventMemo = useCallback((newEvent) => {
     setSelectedEvent(newEvent);
-  }, []);
+  }, [setSelectedEvent]);
 
   // Función para limpiar carrito
   const clearCarrito = useCallback(() => {
