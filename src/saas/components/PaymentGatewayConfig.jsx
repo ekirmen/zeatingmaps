@@ -54,9 +54,6 @@ const PaymentGatewayConfig = () => {
         case 'paypal':
           await paymentGatewayService.configurePayPal(values);
           break;
-        case 'mercadopago':
-          await paymentGatewayService.configureMercadoPago(values);
-          break;
         default:
           throw new Error('Pasarela no soportada');
       }
@@ -99,8 +96,7 @@ const PaymentGatewayConfig = () => {
   const getGatewayIcon = (gateway) => {
     const icons = {
       stripe: '💳',
-      paypal: '🅿️',
-      mercadopago: '🟢'
+      paypal: '🅿️'
     };
     return icons[gateway] || '💳';
   };
@@ -224,62 +220,7 @@ const PaymentGatewayConfig = () => {
     </Form>
   );
 
-  const renderMercadoPagoConfig = () => (
-    <Form form={form} layout="vertical" onFinish={handleSaveConfig}>
-      <Row gutter={[16, 16]}>
-        <Col span={12}>
-          <Form.Item
-            name="access_token"
-            label="Access Token"
-            rules={[{ required: true, message: 'Access Token requerido' }]}
-          >
-            <Input.Password placeholder="Access Token de MercadoPago" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="public_key"
-            label="Public Key"
-            rules={[{ required: true, message: 'Public Key requerido' }]}
-          >
-            <Input placeholder="Public Key de MercadoPago" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="webhook_url"
-            label="URL del Webhook"
-          >
-            <Input placeholder="https://tu-dominio.com/webhook/mercadopago" />
-          </Form.Item>
-        </Col>
-        <Col span={12}>
-          <Form.Item
-            name="currency"
-            label="Moneda"
-            initialValue="MXN"
-          >
-            <Select>
-              <Option value="MXN">MXN - Peso Mexicano</Option>
-              <Option value="ARS">ARS - Peso Argentino</Option>
-              <Option value="BRL">BRL - Real Brasileño</Option>
-              <Option value="CLP">CLP - Peso Chileno</Option>
-            </Select>
-          </Form.Item>
-        </Col>
-        <Col span={24}>
-          <Form.Item name="sandbox_mode" valuePropName="checked" initialValue={true}>
-            <Switch checkedChildren="Modo Sandbox" unCheckedChildren="Modo Producción" />
-          </Form.Item>
-        </Col>
-        <Col span={24}>
-          <Form.Item name="is_active" valuePropName="checked" initialValue={false}>
-            <Switch checkedChildren="Activo" unCheckedChildren="Inactivo" />
-          </Form.Item>
-        </Col>
-      </Row>
-    </Form>
-  );
+  // MercadoPago eliminado
 
   const renderGatewayStats = () => {
     const columns = [
@@ -418,28 +359,7 @@ const PaymentGatewayConfig = () => {
             {renderPayPalConfig()}
           </TabPane>
 
-          <TabPane 
-            tab={
-              <Space>
-                <span style={{ fontSize: '16px' }}>🟢</span>
-                <span>MercadoPago</span>
-                <Badge 
-                  status={getGatewayStatus('mercadopago').color} 
-                  text={getGatewayStatus('mercadopago').status === 'active' ? 'Activo' : 'Inactivo'} 
-                />
-              </Space>
-            } 
-            key="mercadopago"
-          >
-            <Alert
-              message="Configuración de MercadoPago"
-              description="MercadoPago es la mejor opción para pagos en América Latina con soporte para múltiples métodos locales."
-              type="info"
-              showIcon
-              style={{ marginBottom: '16px' }}
-            />
-            {renderMercadoPagoConfig()}
-          </TabPane>
+          {/* Tab MercadoPago eliminado */}
 
           <TabPane 
             tab={

@@ -219,6 +219,59 @@ src/saas/components/
 └── RoleManagement.jsx         # Gestión de roles y permisos ✅ IMPLEMENTADO
 ```
 
+### 🔎 Estado operativo de componentes SaaS
+
+- **BillingDashboard**
+  - [x] Implementado (UI y servicios)
+  - [x] Rutas en Backoffice
+  - [x] RLS/Policies en tablas de billing
+  - [ ] Conexión a datos reales (validar fuentes definitivas de ingresos por tenant)
+  - [ ] QA end-to-end (casos: suscripción activa, vencida, impaga)
+
+- **NotificationCenter**
+  - [x] Implementado (UI y servicio)
+  - [x] Rutas en Backoffice
+  - [x] RLS/Policies en `notifications`
+  - [ ] Conexión realtime (canal Supabase Realtime/SSE) habilitada en prod
+  - [ ] QA (recepción por tipo: sistema, soporte, facturación)
+
+- **AuditLogs**
+  - [x] Implementado (UI y servicio)
+  - [x] Rutas en Backoffice
+  - [x] Tablas y RLS con `created_at` correcto
+  - [ ] Inyección de logs desde acciones críticas del Backoffice/Store (crear/editar/borrar)
+  - [ ] QA (paginación, filtros por fecha/usuario/tenant)
+
+- **SupportTickets**
+  - [x] Implementado (UI y servicio)
+  - [x] Rutas en Backoffice
+  - [x] RLS/Policies en `support_tickets`
+  - [ ] Notificaciones al crear/actualizar ticket
+  - [ ] QA (ciclo de vida: abierto/en progreso/cerrado)
+
+- **AdvancedAnalytics**
+  - [x] Implementado (UI y servicio)
+  - [x] Rutas en Backoffice
+  - [x] Cálculos internos (sin externos)
+  - [ ] Integración opcional con analytics externos (Google/Mixpanel) si se requiere
+  - [ ] QA (validación de métricas por rango y por tenant)
+
+- **PaymentGatewayConfig**
+  - [x] Implementado (UI y servicio)
+  - [x] Rutas en Backoffice
+  - [x] Tablas y RLS (`payment_gateway_configs`)
+  - [ ] Pruebas con credenciales reales por tenant (Stripe/PayPal)
+  - [ ] QA (ciclo alta/baja/edición y prueba de conexión)
+
+- **RoleManagement**
+  - [x] Implementado (UI y servicio)
+  - [x] Rutas en Backoffice
+  - [x] Tablas y RLS (`custom_roles`, `access_policies`)
+  - [ ] Aplicación efectiva de permisos en vistas y acciones (enforcement)
+  - [ ] QA (matriz de permisos por rol/tenant)
+
+> Nota: Los puntos marcados como pendientes son operativos (conexión de datos reales, pruebas con credenciales y QA). La base técnica y de UI ya está implementada.
+
 ### 📁 **Database Tables**
 ```sql
 -- ✅ TODAS LAS TABLAS IMPLEMENTADAS

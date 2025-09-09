@@ -44,27 +44,7 @@ const BoleteriaMainCustomDesign = () => {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [blockMode, setBlockMode] = useState(false);
-  // Usar el store unificado para asientos seleccionados
-  const {
-    selectedSeats,
-    setSelectedSeats,
-    addSeat,
-    removeSeat,
-    toggleSeat: toggleSeatStore,
-    clearSeats,
-    setSelectedClient,
-    selectedClient,
-    setSelectedEvent,
-    selectedEvent,
-    setSelectedFuncion,
-    selectedFuncion,
-    setSelectedAffiliate,
-    selectedAffiliate,
-    getSeatCount,
-    getTotalPrice,
-    isSeatSelected,
-    syncWithSeatLocks
-  } = useSelectedSeatsStore();
+  // Las variables del store unificado ahora vienen del hook useBoleteria
   const [blockedSeats, setBlockedSeats] = useState([]);
   const [lockedSeats, setLockedSeats] = useState([]);
   const [paymentData, setPaymentData] = useState(null);
@@ -99,7 +79,22 @@ const BoleteriaMainCustomDesign = () => {
     zonas,
     loading,
     error,
-    debugInfo
+    debugInfo,
+    // Variables del store unificado
+    selectedFuncion,
+    selectedEvent,
+    selectedClient,
+    setSelectedClient,
+    selectedAffiliate,
+    setSelectedAffiliate,
+    selectedSeats,
+    addSeat,
+    removeSeat,
+    clearSeats,
+    getSeatCount,
+    getTotalPrice,
+    isSeatSelected,
+    syncWithSeatLocks
   } = useBoleteria();
 
   // Normalizar detalles de la plantilla para evitar ReferenceError

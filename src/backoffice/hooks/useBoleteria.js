@@ -17,7 +17,19 @@ export const useBoleteria = () => {
     selectedFuncion,
     selectedEvent,
     setSelectedFuncion,
-    setSelectedEvent
+    setSelectedEvent,
+    selectedClient,
+    setSelectedClient,
+    selectedAffiliate,
+    setSelectedAffiliate,
+    selectedSeats,
+    addSeat,
+    removeSeat,
+    clearSeats,
+    getSeatCount,
+    getTotalPrice,
+    isSeatSelected,
+    syncWithSeatLocks
   } = useSelectedSeatsStore();
   
   const [eventos, setEventos] = useState([]);
@@ -489,7 +501,20 @@ export const useBoleteria = () => {
     handleEventSelect,
     handleFunctionSelect,
     setSelectedEvent: setSelectedEventMemo,
-    setSelectedFuncion
+    setSelectedFuncion,
+    // Variables del store unificado
+    selectedClient,
+    setSelectedClient,
+    selectedAffiliate,
+    setSelectedAffiliate,
+    selectedSeats,
+    addSeat,
+    removeSeat,
+    clearSeats,
+    getSeatCount,
+    getTotalPrice,
+    isSeatSelected,
+    syncWithSeatLocks
   }), [
     eventos,
     funciones,
@@ -511,7 +536,20 @@ export const useBoleteria = () => {
     handleEventSelect,
     handleFunctionSelect,
     setSelectedEventMemo,
-    setSelectedFuncion
+    setSelectedFuncion,
+    // Variables del store unificado
+    selectedClient,
+    setSelectedClient,
+    selectedAffiliate,
+    setSelectedAffiliate,
+    selectedSeats,
+    addSeat,
+    removeSeat,
+    clearSeats,
+    getSeatCount,
+    getTotalPrice,
+    isSeatSelected,
+    syncWithSeatLocks
   ]);
 
   // Cargar eventos al inicio
