@@ -118,8 +118,6 @@ const BoleteriaMainCustomDesign = () => {
   }, [selectedPlantilla]);
 
   const {
-    selectedClient,
-    setSelectedClient,
     searchUsers,
     createUser,
     loading: clientLoading
