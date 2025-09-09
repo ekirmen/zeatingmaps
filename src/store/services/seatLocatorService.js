@@ -63,14 +63,33 @@ class SeatLocatorService {
    */
   async updateSeatsWithLocator(seatIds, locator, userId) {
     try {
-      const { data, error } = await supabase
+      // Primero intentar con user_id
+      let { data, error } = await supabase
         .from('seat_locks')
         .update({ 
           locator: locator,
           user_id: userId
         })
         .in('seat_id', seatIds)
+        .eq('user_id', userId)
         .select();
+      
+      // Si no hay resultados, intentar con session_id
+      if (!data || data.length === 0) {
+        console.log('🔍 Trying with session_id instead of user_id');
+        const result = await supabase
+          .from('seat_locks')
+          .update({ 
+            locator: locator,
+            user_id: userId
+          })
+          .in('seat_id', seatIds)
+          .eq('session_id', userId.toString())
+          .select();
+        
+        data = result.data;
+        error = result.error;
+      }
       
       if (error) throw error;
       

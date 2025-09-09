@@ -352,7 +352,13 @@ const Profile = () => {
                       <Button size="small" href={`/store/payment-success/${purchase.locator}`}>
                         Ver Detalles
                       </Button>,
-                      <Button size="small">Descargar Ticket</Button>
+                      <Button 
+                        size="small" 
+                        disabled={purchase.status !== 'completed'}
+                        title={purchase.status !== 'completed' ? 'Solo disponible para pagos completados' : 'Descargar ticket'}
+                      >
+                        Descargar Ticket
+                      </Button>
                     ]}
                   >
                     <List.Item.Meta
