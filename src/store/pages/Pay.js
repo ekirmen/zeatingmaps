@@ -133,6 +133,10 @@ const Pay = () => {
 
       const result = await processPaymentMethod(selectedGateway, paymentData);
       console.log('🔍 Payment result:', result);
+      console.log('🔍 Result success:', result.success);
+      console.log('🔍 Result requiresRedirect:', result.requiresRedirect);
+      console.log('🔍 Result requiresAction:', result.requiresAction);
+      console.log('🔍 Result requiresManualConfirmation:', result.requiresManualConfirmation);
       setPaymentResult(result);
 
       if (result.success) {
@@ -152,13 +156,13 @@ const Pay = () => {
           window.location.href = result.approvalUrl;
         } else if (result.requiresAction) {
           // Para Stripe, mostrar formulario de tarjeta
-          navigate('/payment-confirm', { state: { result } });
+          navigate('/store/payment-confirm', { state: { result } });
         } else if (result.requiresManualConfirmation) {
           // Para transferencias, mostrar información
-          navigate('/payment-manual', { state: { result } });
+          navigate('/store/payment-manual', { state: { result } });
         } else {
           console.log('🔄 Redirecting to payment success page...');
-          navigate('/payment-success', { state: { result, locator: result.locator } });
+          navigate('/store/payment-success', { state: { result, locator: result.locator } });
         }
       } else {
         console.log('❌ Payment failed or success is false:', result);
@@ -193,7 +197,7 @@ const Pay = () => {
 
       if (result.success) {
         clearCart();
-        navigate('/reservation/success', { state: { result } });
+        navigate('/store/reservation/success', { state: { result } });
       }
     } catch (error) {
       console.error('Error processing reservation:', error);
