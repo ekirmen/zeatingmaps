@@ -45,18 +45,18 @@ export const useSeatColors = (eventId = null) => {
                              (lockInfo.status === 'seleccionado' || lockInfo.status === 'selected');
     
     // SISTEMA DE COLORES UNIFICADO - PRIORIDAD CORRECTA
-    // 1. VENDIDO (máxima prioridad)
-    if (seat.estado === 'vendido' || seat.estado === 'pagado') {
+    // 1. VENDIDO (máxima prioridad) - desde seat_locks o estado del asiento
+    if (lockInfo?.status === 'vendido' || seat.estado === 'vendido' || seat.estado === 'pagado') {
       return eventTheme.seatSold || '#8c8c8c';
     }
     
-    // 2. RESERVADO
-    if (seat.estado === 'reservado') {
+    // 2. RESERVADO - desde seat_locks o estado del asiento
+    if (lockInfo?.status === 'reservado' || seat.estado === 'reservado') {
       return eventTheme.seatReserved || '#722ed1';
     }
     
-    // 3. ANULADO
-    if (seat.estado === 'anulado') {
+    // 3. ANULADO - desde seat_locks o estado del asiento
+    if (lockInfo?.status === 'anulado' || seat.estado === 'anulado') {
       return eventTheme.seatCancelled || '#ff6b6b';
     }
     
@@ -66,7 +66,7 @@ export const useSeatColors = (eventId = null) => {
     }
     
     // 5. SELECCIONADO POR OTRO USUARIO (temporal) - PRIORIDAD ALTA
-    if (seat.estado === 'seleccionado_por_otro' || (isSelectedByOther && !isPermanentlyLocked)) {
+    if (isSelectedByOther && !isPermanentlyLocked) {
       return eventTheme.seatSelectedOther || '#faad14';
     }
     

@@ -453,17 +453,26 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                               // Buscar información de zonas desde el mapa
                               let zonasInfo = {};
                               try {
-                                const { data: zonas, error: zonasError } = await supabase
-                                  .from('zonas')
-                                  .select('*')
-                                  .eq('funcion_id', searchResult.funcion_id);
+                                // Primero obtener la sala_id de la función
+                                const { data: funcion, error: funcionError } = await supabase
+                                  .from('funciones')
+                                  .select('sala_id')
+                                  .eq('id', searchResult.funcion_id)
+                                  .single();
                                 
-                                if (!zonasError && zonas) {
-                                  zonasInfo = zonas.reduce((acc, zona) => {
-                                    acc[zona.id] = zona;
-                                    return acc;
-                                  }, {});
-                                  console.log('✅ Zonas encontradas:', zonasInfo);
+                                if (!funcionError && funcion) {
+                                  const { data: zonas, error: zonasError } = await supabase
+                                    .from('zonas')
+                                    .select('*')
+                                    .eq('sala_id', funcion.sala_id);
+                                
+                                  if (!zonasError && zonas) {
+                                    zonasInfo = zonas.reduce((acc, zona) => {
+                                      acc[zona.id] = zona;
+                                      return acc;
+                                    }, {});
+                                    console.log('✅ Zonas encontradas:', zonasInfo);
+                                  }
                                 }
                               } catch (e) {
                                 console.error('Error fetching zonas:', e);
@@ -475,18 +484,35 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                                 const seatIdParts = lock.seat_id.split('_');
                                 const seatNumber = seatIdParts[seatIdParts.length - 1];
                                 
-                                // Buscar información de la zona (usar la primera zona disponible como fallback)
-                                const primeraZona = Object.values(zonasInfo)[0];
-                                const zonaNombre = primeraZona?.nombre || 'ORO';
-                                const zonaId = primeraZona?.id || 'ORO';
+                                // Buscar información de la zona correcta
+                                // Intentar encontrar la zona que corresponde al asiento
+                                let zonaAsignada = null;
+                                let precioAsignado = 10.00;
+                                
+                                // Buscar en las zonas disponibles para encontrar la correcta
+                                for (const zona of Object.values(zonasInfo)) {
+                                  // Si el asiento está en esta zona, usarla
+                                  if (zona.nombre && zona.nombre !== 'Sin zona') {
+                                    zonaAsignada = zona;
+                                    break;
+                                  }
+                                }
+                                
+                                // Si no se encontró zona específica, usar la primera disponible
+                                if (!zonaAsignada) {
+                                  zonaAsignada = Object.values(zonasInfo)[0];
+                                }
+                                
+                                const zonaNombre = zonaAsignada?.nombre || 'ORO';
+                                const zonaId = zonaAsignada?.id || 'ORO';
                                 
                                 return {
                                   id: lock.seat_id,
                                   _id: lock.seat_id,
                                   nombre: `Asiento ${seatNumber}`,
                                   name: `Asiento ${seatNumber}`,
-                                  precio: 10.00, // Precio por defecto, se puede ajustar
-                                  price: 10.00,
+                                  precio: precioAsignado,
+                                  price: precioAsignado,
                                   zona: zonaNombre,
                                   zonaId: zonaId,
                                   mesa: null,
