@@ -779,7 +779,7 @@ const BoleteriaMainCustomDesign = () => {
 
             {/* Área del mapa o modo grid */}
             <div className="flex-1 relative bg-white">
-              {!canBoleteriaAccess ? (
+              {!getEstadoVentaInfo(selectedEvent?.estadoVenta)?.boleteria?.canAccessBoleteria ? (
                 <div className="flex items-center justify-center h-96 w-full">
                   <div className="text-center text-gray-600">
                     <div className="text-lg font-medium mb-2">No disponible</div>

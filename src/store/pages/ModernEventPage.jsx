@@ -36,7 +36,7 @@ import Cart from './Cart';
 import EventImage from '../components/EventImage';
 import GridSaleMode from '../components/GridSaleMode';
 import { getEstadoVentaInfo } from '../../utils/estadoVenta';
-import { useCountdown, formatCountdown } from '../../utils/countdown';
+import { useCountdown, formatCountdown, findNextStart } from '../../utils/countdown';
 import NotFound from './NotFound';
 
 
@@ -375,6 +375,12 @@ const ModernEventPage = () => {
     return modos[evento.modoVenta] || { text: evento.modoVenta || 'Normal', color: 'default' };
   };
 
+  // Hook para countdown - debe estar antes de cualquier early return
+  const countdownTarget = evento?.estadoVenta === 'proximamente-countdown' 
+    ? (findNextStart(funcionesForCountdown, 'internet') || findNextStart(funcionesForCountdown, 'boxOffice'))
+    : null;
+  const cd = useCountdown(countdownTarget);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -404,14 +410,6 @@ const ModernEventPage = () => {
     const ev = getEstadoVentaInfo(evento.estadoVenta);
     return ev?.store?.icon === '✔';
   })();
-  const countdownTarget = (() => {
-    if (evento.estadoVenta === 'proximamente-countdown') {
-      const { findNextStart } = require('../../utils/countdown');
-      return findNextStart(funcionesForCountdown, 'internet') || findNextStart(funcionesForCountdown, 'boxOffice');
-    }
-    return null;
-  })();
-  const cd = useCountdown(countdownTarget);
 
   // Si estamos en la vista del mapa, mostrar el mapa y el carrito
   if (isMapView) {
