@@ -63,10 +63,10 @@ const Register = () => {
             onChange={handleChange}
             className="border rounded-l px-2"
           >
-            <option value="+58">\uD83C\uDDFB\uD83C\uDDEA +58</option>
-            <option value="+1">\uD83C\uDDFA\uD83C\uDDF8 +1</option>
-            <option value="+52">\uD83C\uDDF2\uD83C\uDDFD +52</option>
-            <option value="+34">\uD83C\uDDEA\uD83C\uDDF8 +34</option>
+            <option value="+58">+58</option>
+            <option value="+1">+1</option>
+            <option value="+52">+52</option>
+            <option value="+34">+34</option>
           </select>
           <Input
             name="phone"
