@@ -103,7 +103,7 @@ const Pay = () => {
       setProcessingPayment(true);
       
       // Generar locator simple de 8 caracteres (números y letras)
-      const { generateSimpleLocator } = await import('../utils/generateLocator');
+      const { generateSimpleLocator } = await import('../../utils/generateLocator');
       const locator = generateSimpleLocator();
       
       const paymentData = {
