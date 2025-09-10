@@ -112,9 +112,8 @@ export default async function handler(req, res) {
   }
 }
 
-// Función para generar código de entrada
+// Función para generar código de entrada simple de 8 caracteres
 function generateTicketCode() {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substr(2, 5);
-  return `TKT-${timestamp}-${random}`.toUpperCase();
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  return Array.from({ length: 8 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
 }

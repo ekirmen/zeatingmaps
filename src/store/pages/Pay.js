@@ -102,12 +102,9 @@ const Pay = () => {
     try {
       setProcessingPayment(true);
       
-      // Generar locator único con formato: ORDER-{timestamp}-{eventId}-{functionId}-{clientId}
-      const timestamp = Date.now();
-      const eventIdValue = cartItems[0]?.eventId || 'UNKNOWN';
-      const functionIdValue = functionId || 'UNKNOWN';
-      const clientId = Math.random().toString(36).substr(2, 9).toUpperCase();
-      const locator = `ORDER-${timestamp}-${eventIdValue}-${functionIdValue}-${clientId}`;
+      // Generar locator simple de 8 caracteres (números y letras)
+      const { generateSimpleLocator } = await import('../utils/generateLocator');
+      const locator = generateSimpleLocator();
       
       const paymentData = {
         orderId: locator,

@@ -3,7 +3,7 @@ import { Modal, Tabs, Input, Button, Radio, DatePicker, Select, Table, message }
 import { AiOutlineDelete } from 'react-icons/ai';
 import { Typography } from 'antd';
 import { createPayment, updatePayment } from '../../services/apibackoffice';
-import generateRandomLocator from '../../../utils/generateLocator';
+import { generateSimpleLocator } from '../../../utils/generateLocator';
 import { useAuth } from '../../../contexts/AuthContext';
 import { isUuid } from '../../../utils/isUuid';
 import API_BASE_URL from '../../../utils/apiBase';
@@ -231,13 +231,9 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
 
   const paymentStatus = getPaymentStatus();
 
-  // Generate locator with format: ORDER-{timestamp}-{eventId}-{functionId}-{clientId}
+  // Generate simple locator of 8 characters (numbers and letters)
   const generateLocator = () => {
-    const timestamp = Date.now();
-    const eventId = selectedEvent?.id || 'UNKNOWN';
-    const functionId = selectedFuncion?.id || 'UNKNOWN';
-    const clientId = generateRandomLocator();
-    return `ORDER-${timestamp}-${eventId}-${functionId}-${clientId}`;
+    return generateSimpleLocator();
   };
 
   const handlePaymentOrReservation = async () => {

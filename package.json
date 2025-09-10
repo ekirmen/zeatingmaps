@@ -21,6 +21,7 @@
     "test:production": "node scripts/test-production.js",
     "check:production": "node scripts/check-production.js",
     "test:api-explorer": "node scripts/test-api-explorer.js",
+    "test:locators": "node scripts/test-locators.js",
     "start:dev": "node scripts/start-dev.js",
     "deploy:dev": "scripts\\deploy.bat dev",
     "deploy:prod": "scripts\\deploy.bat prod",

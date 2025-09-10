@@ -333,13 +333,10 @@ const SimpleSeatingMap = ({
 
       const tenantId = getCurrentTenantId();
 
-      // Generar locator temporal para este bloqueo
+      // Generar locator temporal simple de 8 caracteres
       const generateTempLocator = () => {
-        const timestamp = Date.now();
-        const eventId = selectedEvent?.id || 'UNKNOWN';
-        const functionId = selectedFuncion?.id || 'UNKNOWN';
-        const clientId = Math.random().toString(36).substr(2, 9).toUpperCase();
-        return `TEMP-${timestamp}-${eventId}-${functionId}-${clientId}`;
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        return Array.from({ length: 8 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
       };
 
       // Bloquear asiento en la base de datos
