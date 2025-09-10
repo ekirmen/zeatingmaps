@@ -1,6 +1,119 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "build",
-  "framework": "create-react-app"
+  "framework": "create-react-app",
+  "build": {
+    "env": {
+      "CI": "false",
+      "GENERATE_SOURCEMAP": "false",
+      "DISABLE_ESLINT_PLUGIN": "true",
+      "SKIP_PREFLIGHT_CHECK": "true",
+      "NODE_ENV": "production"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/store/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/store/manifest.json",
+      "destination": "/manifest.json"
+    },
+    {
+      "source": "/store/logo192.png",
+      "destination": "/logo192.png"
+    },
+    {
+      "source": "/store/logo512.png",
+      "destination": "/logo512.png"
+    },
+    {
+      "source": "/store/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/payment-success/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/backoffice/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/backoffice/manifest.json",
+      "destination": "/manifest.json"
+    },
+    {
+      "source": "/backoffice/logo192.png",
+      "destination": "/logo192.png"
+    },
+    {
+      "source": "/backoffice/logo512.png",
+      "destination": "/logo512.png"
+    },
+    {
+      "source": "/backoffice/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dashboard/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/dashboard/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/saas/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/saas/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/((?!store|backoffice|dashboard|saas|static|payment-success).)*",
+      "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/404",
+      "destination": "/index.html",
+      "statusCode": 404
+    }
+  ],
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
 }
