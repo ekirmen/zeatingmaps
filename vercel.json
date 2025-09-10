@@ -2,51 +2,5 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "build",
-  "framework": "create-react-app",
-  "rewrites": [
-    {
-      "source": "/static/:path*",
-      "destination": "/static/:path*"
-    },
-    {
-      "source": "/manifest.json",
-      "destination": "/manifest.json"
-    },
-    {
-      "source": "/favicon.ico",
-      "destination": "/favicon.ico"
-    },
-    {
-      "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
-      "destination": "/$1"
-    },
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    },
-    {
-      "source": "/store/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/dashboard/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/saas/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/backoffice/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/payment-success/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
+  "framework": "create-react-app"
 }
