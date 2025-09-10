@@ -26,52 +26,27 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
       setLoadingZonas(true);
       setError(null);
 
-      // Cargar zonas del evento (usando sala_id del evento)
-      const { data: zonasData, error: zonasError } = await supabase
-        .from('zonas')
-        .select('*')
-        .eq('sala_id', evento.sala)
-        .order('nombre');
-
-      if (zonasError) throw zonasError;
-
-      setZonas(zonasData || []);
-
-      // Cargar plantillas (precios) del evento
-      const { data: plantillasData, error: plantillasError } = await supabase
-        .from('plantillas')
-        .select('*')
-        .eq('recinto', evento.recinto)
-        .eq('sala', evento.sala);
-
-      if (plantillasError) throw plantillasError;
-
-      // Procesar precios desde el JSON de detalles
-      const preciosPorZona = {};
-      plantillasData?.forEach(plantilla => {
-        try {
-          const detalles = JSON.parse(plantilla.detalles || '[]');
-          detalles.forEach(detalle => {
-            if (detalle.zonaId && detalle.precio) {
-              preciosPorZona[detalle.zonaId] = {
-                precio: detalle.precio,
-                comision: detalle.comision || 0,
-                precioGeneral: detalle.precioGeneral || 0,
-                canales: detalle.canales || [],
-                orden: detalle.orden || 0
-              };
-            }
-          });
-        } catch (parseError) {
-          console.warn('Error parseando detalles de plantilla:', parseError);
-        }
+      // Usar endpoint de Vercel para cargar zonas y precios
+      const response = await fetch('/api/grid-sale/load-zonas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ evento })
       });
 
-      setPrecios(preciosPorZona);
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Error cargando zonas');
+      }
+
+      setZonas(result.data.zonas || []);
+      setPrecios(result.data.precios || {});
 
       // Inicializar cantidades
       const cantidadesIniciales = {};
-      zonasData?.forEach(zona => {
+      result.data.zonas?.forEach(zona => {
         cantidadesIniciales[zona.id] = 0;
       });
       setCantidades(cantidadesIniciales);

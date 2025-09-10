@@ -1,123 +1,81 @@
 {
-  "buildCommand": "npm run vercel-build",
-  "outputDirectory": "build",
-  "framework": "create-react-app",
-  "build": {
-    "env": {
-      "CI": "false",
-      "GENERATE_SOURCEMAP": "false",
-      "DISABLE_ESLINT_PLUGIN": "true",
-      "SKIP_PREFLIGHT_CHECK": "true",
-      "NODE_ENV": "production"
+  "version": 2,
+  "builds": [
+    {
+      "src": "pages/api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "env": {
+    "SUPABASE_URL": "@supabase_url",
+    "SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+    "STRIPE_SECRET_KEY": "@stripe_secret_key",
+    "STRIPE_PUBLISHABLE_KEY": "@stripe_publishable_key",
+    "PAYPAL_CLIENT_ID": "@paypal_client_id",
+    "PAYPAL_CLIENT_SECRET": "@paypal_client_secret"
+  },
+  "functions": {
+    "pages/api/**/*.js": {
+      "maxDuration": 30
     }
   },
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    },
-    {
-      "source": "/store/static/:path*",
-      "destination": "/static/:path*"
-    },
-    {
-      "source": "/store/manifest.json",
-      "destination": "/manifest.json"
-    },
-    {
-      "source": "/store/logo192.png",
-      "destination": "/logo192.png"
-    },
-    {
-      "source": "/store/logo512.png",
-      "destination": "/logo512.png"
-    },
-    {
-      "source": "/store/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/payment-success/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/backoffice/static/:path*",
-      "destination": "/static/:path*"
-    },
-    {
-      "source": "/backoffice/manifest.json",
-      "destination": "/manifest.json"
-    },
-    {
-      "source": "/backoffice/logo192.png",
-      "destination": "/logo192.png"
-    },
-    {
-      "source": "/backoffice/logo512.png",
-      "destination": "/logo512.png"
-    },
-    {
-      "source": "/backoffice/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/dashboard/static/:path*",
-      "destination": "/static/:path*"
-    },
-    {
-      "source": "/dashboard/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/saas/static/:path*",
-      "destination": "/static/:path*"
-    },
-    {
-      "source": "/saas/:path*",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/static/:path*",
-      "destination": "/static/:path*"
-    },
-    {
-      "source": "/((?!api|store|backoffice|dashboard|saas|static|payment-success).)*",
-      "destination": "/index.html"
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/404",
-      "destination": "/index.html",
-      "statusCode": 404
-    }
-  ],
   "headers": [
     {
-      "source": "/static/(.*)",
+      "source": "/api/(.*)",
       "headers": [
         {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
         }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/grid-sale/(.*)",
+      "destination": "/api/grid-sale/$1"
     },
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
+      "source": "/api/events/(.*)",
+      "destination": "/api/events/$1"
+    },
+    {
+      "source": "/api/saas/(.*)",
+      "destination": "/api/saas/$1"
+    },
+    {
+      "source": "/api/analytics/(.*)",
+      "destination": "/api/analytics/$1"
+    },
+    {
+      "source": "/api/payment/(.*)",
+      "destination": "/api/payment/$1"
     }
   ]
 }
