@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "pages/api/**/*.js",
+      "src": "api/**/*.js",
       "use": "@vercel/node"
     },
     {
@@ -33,7 +33,7 @@
     "PAYPAL_CLIENT_SECRET": "@paypal_client_secret"
   },
   "functions": {
-    "pages/api/**/*.js": {
+    "api/**/*.js": {
       "maxDuration": 30
     }
   },
@@ -54,28 +54,6 @@
           "value": "Content-Type, Authorization"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/grid-sale/(.*)",
-      "destination": "/api/grid-sale/$1"
-    },
-    {
-      "source": "/api/events/(.*)",
-      "destination": "/api/events/$1"
-    },
-    {
-      "source": "/api/saas/(.*)",
-      "destination": "/api/saas/$1"
-    },
-    {
-      "source": "/api/analytics/(.*)",
-      "destination": "/api/analytics/$1"
-    },
-    {
-      "source": "/api/payment/(.*)",
-      "destination": "/api/payment/$1"
     }
   ]
 }
