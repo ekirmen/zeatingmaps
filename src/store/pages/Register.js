@@ -30,13 +30,22 @@ const Register = () => {
       if (formData.password.length < 6) {
         throw new Error(t('errors.password_min_length', 'M\u00ednimo 6 caracteres'));
       }
-      await registerUser({
+      const { user, session } = await registerUser({
         email: formData.email.trim(),
         password: formData.password.trim(),
         phone: `${formData.phoneCode}${formData.phone}`,
       });
-      message.success(t('register.success'));
-      navigate('/store/login');
+      
+      // Si el registro fue exitoso y tenemos una sesión, iniciar sesión automáticamente
+      if (session && session.access_token) {
+        const token = session.access_token;
+        localStorage.setItem('token', token);
+        message.success(t('register.success') + ' - ' + t('login.success'));
+        navigate('/store');
+      } else {
+        message.success(t('register.success'));
+        navigate('/store/login');
+      }
     } catch (error) {
       console.error('Register error:', error);
       message.error(error.message || t('errors.register', 'Error al registrar usuario'));
