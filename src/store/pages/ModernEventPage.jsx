@@ -600,10 +600,10 @@ const ModernEventPage = () => {
                         <CalendarOutlined className="text-white mr-2" />
                         <span className="font-medium text-sm">{formatDateString(evento.fecha_evento)}</span>
                       </div>
-                      {selectedFunction && (
+                      {selectedFunctionId && funciones.find(f => f.id === selectedFunctionId) && (
                         <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
                           <ClockCircleOutlined className="text-white mr-2" />
-                          <span className="font-medium text-sm">{selectedFunction.hora}</span>
+                          <span className="font-medium text-sm">{funciones.find(f => f.id === selectedFunctionId).hora}</span>
                         </div>
                       )}
                       {venueInfo && (
