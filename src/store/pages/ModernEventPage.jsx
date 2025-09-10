@@ -568,7 +568,7 @@ const ModernEventPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
-      <div className="relative h-96 md:h-[500px] overflow-hidden">
+      <div className="relative h-64 md:h-80 overflow-hidden">
         <EventImage
           event={evento}
           imageType="logoHorizontal"
@@ -581,45 +581,71 @@ const ModernEventPage = () => {
         
         {/* Contenido del hero */}
         <div className="absolute inset-0 flex items-end">
-          <div className="w-full px-4 pb-8">
-            <div className="max-w-7xl mx-auto">
+          <div className="w-full px-4 pb-6">
+            <div className="max-w-7xl mx-auto w-full">
               <div className="text-white">
-                
-                
-                <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
-                  {evento.nombre}
-                </h1>
-                
-                {evento.descripcion && (
-                  <p className="text-xl md:text-2xl max-w-3xl opacity-90 leading-relaxed mb-6">
-                    {evento.descripcion}
-                  </p>
-                )}
-
-                {evento.resumenDescripcion && (
-                  <p className="text-lg max-w-3xl opacity-80 leading-relaxed">
-                    {evento.resumenDescripcion}
-                  </p>
-                )}
-                
-                {/* Información rápida */}
-                <div className="flex flex-wrap gap-6 mt-6">
-                  <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-                    <CalendarOutlined className="text-white mr-2" />
-                    <span className="font-medium">{formatDateString(evento.fecha_evento)}</span>
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                  <div>
+                    <h1 className="text-3xl md:text-5xl font-bold leading-tight">
+                      {evento.nombre}
+                    </h1>
+                    {evento.descripcion && (
+                      <p className="text-base md:text-lg max-w-2xl opacity-90 leading-relaxed mt-2">
+                        {evento.descripcion}
+                      </p>
+                    )}
+                    {/* Información rápida */}
+                    <div className="flex flex-wrap gap-3 mt-3">
+                      <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
+                        <CalendarOutlined className="text-white mr-2" />
+                        <span className="font-medium text-sm">{formatDateString(evento.fecha_evento)}</span>
+                      </div>
+                      {venueInfo && (
+                        <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
+                          <EnvironmentOutlined className="text-white mr-2" />
+                          <span className="font-medium text-sm">{venueInfo.nombre}</span>
+                        </div>
+                      )}
+                      {evento.sector && (
+                        <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
+                          <TeamOutlined className="text-white mr-2" />
+                          <span className="font-medium text-sm">{evento.sector}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {venueInfo && (
-                    <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-                      <EnvironmentOutlined className="text-white mr-2" />
-                      <span className="font-medium">{venueInfo.nombre}</span>
+                  <div className="flex flex-col items-stretch gap-3">
+                    <div className="flex items-center gap-3 justify-end">
+                      <Badge status={eventStatus.status} text={<span className="text-white">{eventStatus.text}</span>} className="text-white" />
+                      <Tag color={modoVenta.color} className="text-sm">{modoVenta.text}</Tag>
+                      {evento.estadoVenta === 'proximamente-countdown' && countdownTarget && cd.remaining > 0 && (
+                        <Tag color="geekblue" className="text-sm">📅 {formatCountdown(cd)}</Tag>
+                      )}
                     </div>
-                  )}
-                  {evento.sector && (
-                    <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-4 py-2">
-                      <TeamOutlined className="text-white mr-2" />
-                      <span className="font-medium">{evento.sector}</span>
+                    <div className="flex items-center gap-2 justify-end">
+                      <Button 
+                        type="primary" 
+                        size="large"
+                        disabled={!canStoreAccess}
+                        onClick={() => {
+                          const url = selectedFunctionId 
+                            ? `/store/eventos/${eventSlug}/map?funcion=${selectedFunctionId}`
+                            : `/store/eventos/${eventSlug}/map`;
+                          navigate(url);
+                        }}
+                      >
+                        Ver Mapa de Asientos
+                      </Button>
+                      <Button 
+                        size="large"
+                        icon={<ShareAltOutlined />}
+                        onClick={() => {
+                          navigator.clipboard.writeText(window.location.href);
+                          message.success('Enlace copiado al portapapeles');
+                        }}
+                      />
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -643,7 +669,7 @@ const ModernEventPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contenido principal */}
           <div className="lg:col-span-2">
-            {/* Información básica del evento - solo admin */}
+            {/* Información básica del evento - solo admin (estilo tickera) */}
             {isTenantAdmin && (
               <Card 
                 title={
@@ -652,9 +678,9 @@ const ModernEventPage = () => {
                     <span className="text-xl font-semibold">Información del Evento</span>
                   </div>
                 }
-                className="mb-8 shadow-lg border-0"
+                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
               >
-                <Descriptions column={2} bordered>
+                <Descriptions column={2} bordered size="small">
                   <Descriptions.Item label="Nombre" span={2}>
                     <strong>{evento.nombre}</strong>
                   </Descriptions.Item>
@@ -710,7 +736,7 @@ const ModernEventPage = () => {
                     <span className="text-xl font-semibold">Descripción del Evento</span>
                   </div>
                 }
-                className="mb-8 shadow-lg border-0"
+                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
               >
                 <div 
                   className="prose max-w-none"
@@ -728,7 +754,7 @@ const ModernEventPage = () => {
                     <span className="text-xl font-semibold">Etiquetas</span>
                   </div>
                 }
-                className="mb-8 shadow-lg border-0"
+                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
               >
                 <div className="flex flex-wrap gap-2">
                   {tags.map((tag, index) => (
@@ -748,7 +774,7 @@ const ModernEventPage = () => {
                   <span className="text-xl font-semibold">Funciones Disponibles</span>
                 </div>
               }
-              className="mb-8 shadow-lg border-0"
+              className="mb-6 shadow-sm border border-gray-200 rounded-xl"
             >
               {funciones.length === 0 ? (
                 <Alert
@@ -817,9 +843,9 @@ const ModernEventPage = () => {
                     <span className="text-xl font-semibold">Configuración del Boleto</span>
                   </div>
                 }
-                className="mb-8 shadow-lg border-0"
+                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
               >
-                <Descriptions column={2} bordered>
+                <Descriptions column={2} bordered size="small">
                   {Object.entries(datosBoleto).map(([key, value]) => (
                     <Descriptions.Item key={key} label={key}>
                       {typeof value === 'boolean' ? (
@@ -844,9 +870,9 @@ const ModernEventPage = () => {
                     <span className="text-xl font-semibold">Otras Opciones</span>
                   </div>
                 }
-                className="mb-8 shadow-lg border-0"
+                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
               >
-                <Descriptions column={2} bordered>
+                <Descriptions column={2} bordered size="small">
                   {Object.entries(otrasOpciones).map(([key, value]) => (
                     <Descriptions.Item key={key} label={key}>
                       {typeof value === 'boolean' ? (
@@ -873,9 +899,9 @@ const ModernEventPage = () => {
                     <span className="text-xl font-semibold">Analytics</span>
                   </div>
                 }
-                className="mb-8 shadow-lg border-0"
+                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
               >
-                <Descriptions column={2} bordered>
+                <Descriptions column={2} bordered size="small">
                   {Object.entries(analytics).map(([key, value]) => (
                     <Descriptions.Item key={key} label={key}>
                       {typeof value === 'boolean' ? (
@@ -902,7 +928,7 @@ const ModernEventPage = () => {
                       <span className="font-semibold">Estadísticas</span>
                     </div>
                   }
-                  className="shadow-lg border-0"
+                  className="shadow-sm border border-gray-200 rounded-xl"
                 >
                   <div className="space-y-4">
                     <Statistic 
@@ -934,7 +960,7 @@ const ModernEventPage = () => {
                     <span className="font-semibold">Acciones</span>
                   </div>
                 }
-                className="shadow-lg border-0"
+                className="shadow-sm border border-gray-200 rounded-xl"
               >
                 <div className="space-y-3">
                   <Button 
@@ -963,14 +989,6 @@ const ModernEventPage = () => {
                   >
                     Compartir Evento
                   </Button>
-                  
-                  <Button 
-                    block 
-                    icon={<HeartOutlined />}
-                    onClick={() => message.info('Función de favoritos próximamente')}
-                  >
-                    Agregar a Favoritos
-                  </Button>
                 </div>
               </Card>
 
@@ -983,7 +1001,7 @@ const ModernEventPage = () => {
                       <span className="font-semibold">Información Técnica</span>
                     </div>
                   }
-                  className="shadow-lg border-0"
+                  className="shadow-sm border border-gray-200 rounded-xl"
                 >
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">

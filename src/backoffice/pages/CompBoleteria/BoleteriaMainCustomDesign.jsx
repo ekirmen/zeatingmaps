@@ -69,6 +69,7 @@ const BoleteriaMainCustomDesign = () => {
   const [selectedDiscount, setSelectedDiscount] = useState(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [funcionesForCountdown, setFuncionesForCountdown] = useState([]);
+  const [showSeatLegend, setShowSeatLegend] = useState(false);
 
   const {
     eventos,
@@ -583,7 +584,7 @@ const BoleteriaMainCustomDesign = () => {
   }
 
   // Evitar parpadeo: mostrar loader mientras carga o restaura selección
-  if (loading || !selectedFuncion) {
+  if (loading) {
     const step = debugInfo?.step || '';
     const progressMap = {
       'Starting to fetch eventos': 15,
@@ -599,15 +600,11 @@ const BoleteriaMainCustomDesign = () => {
 
     return (
       <div className="flex items-center justify-center min-h-screen">
-        {loading ? (
-          <div className="flex flex-col items-center gap-4">
-            <Spin size="large" />
-            <div className="text-gray-600">Cargando…</div>
-            <Progress type="circle" percent={percent} width={80} />
-          </div>
-        ) : (
-          'Por favor selecciona una función'
-        )}
+        <div className="flex flex-col items-center gap-4">
+          <Spin size="large" />
+          <div className="text-gray-600">Cargando…</div>
+          <Progress type="circle" percent={percent} width={80} />
+        </div>
       </div>
     );
   }
@@ -875,20 +872,33 @@ const BoleteriaMainCustomDesign = () => {
                 </div>
               </div>
 
-              {/* Leyenda de asientos */}
-              <div className="absolute bottom-md left-md z-20 bg-white p-md rounded-lg shadow-lg">
-                <div className="text-xs">
-                  <div className="font-medium mb-sm">Estado de Asientos:</div>
+              {/* Botón para mostrar/ocultar leyenda */}
+              <div className="fixed bottom-4 left-4 z-20 md:bottom-6 md:left-6">
+                <Button 
+                  size="small" 
+                  onClick={() => setShowSeatLegend(v => !v)}
+                  className="shadow-lg"
+                >
+                  {showSeatLegend ? 'Ocultar estado' : 'Estado asientos'}
+                </Button>
+              </div>
+
+              {/* Leyenda de asientos (colapsable) */}
+              {showSeatLegend && (
+                <div className="fixed bottom-16 left-4 z-20 bg-white p-4 rounded-lg shadow-lg md:bottom-20 md:left-6">
                   <div className="text-xs">
-                    <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-info"></div><span>Disponible</span></div>
-                    <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-warning"></div><span>Seleccionado</span></div>
-                    <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-warning-dark"></div><span>Bloqueado por mí</span></div>
-                    <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-error"></div><span>Bloqueado por otro</span></div>
-                    <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-gray-500"></div><span>Vendido</span></div>
-                    <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-warning-light"></div><span>Reservado</span></div>
+                    <div className="font-medium mb-sm">Estado de Asientos:</div>
+                    <div className="text-xs">
+                      <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-info"></div><span>Disponible</span></div>
+                      <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-warning"></div><span>Seleccionado</span></div>
+                      <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-warning-dark"></div><span>Bloqueado por mí</span></div>
+                      <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-error"></div><span>Bloqueado por otro</span></div>
+                      <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-gray-500"></div><span>Vendido</span></div>
+                      <div className="flex items-center gap-sm"><div className="w-3 h-3 rounded-full bg-warning-light"></div><span>Reservado</span></div>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Indicador de modo bloqueo */}
               {blockMode && (
