@@ -1,48 +1,95 @@
 {
-  "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run vercel-build",
   "outputDirectory": "build",
   "framework": "create-react-app",
-  "routes": [
+  "build": {
+    "env": {
+      "CI": "false",
+      "GENERATE_SOURCEMAP": "false",
+      "DISABLE_ESLINT_PLUGIN": "true",
+      "SKIP_PREFLIGHT_CHECK": "true",
+      "NODE_ENV": "production"
+    }
+  },
+   "rewrites": [
+     {
+       "source": "/static/:path*",
+       "destination": "/static/:path*"
+     },
+     {
+       "source": "/manifest.json",
+       "destination": "/manifest.json"
+     },
+     {
+       "source": "/favicon.ico",
+       "destination": "/favicon.ico"
+     },
+     {
+       "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
+       "destination": "/$1"
+     },
+     {
+       "source": "/api/:path*",
+       "destination": "/api/:path*"
+     },
+     {
+       "source": "/store/:path*",
+       "destination": "/index.html"
+     },
+     {
+       "source": "/dashboard/:path*",
+       "destination": "/index.html"
+     },
+     {
+       "source": "/saas/:path*",
+       "destination": "/index.html"
+     },
+     {
+       "source": "/backoffice/:path*",
+       "destination": "/index.html"
+     },
+     {
+       "source": "/payment-success/:path*",
+       "destination": "/index.html"
+     },
+     {
+       "source": "/(.*)",
+       "destination": "/index.html"
+     }
+   ],
+  "redirects": [
     {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
+      "source": "/404",
+      "destination": "/index.html",
+      "statusCode": 404
+    }
+  ],
+  "headers": [
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
     },
     {
-      "src": "/manifest.json",
-      "dest": "/manifest.json"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/favicon.ico"
-    },
-    {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
-      "dest": "/$1"
-    },
-    {
-      "src": "/store/(.*)",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/dashboard/(.*)",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/saas/(.*)",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/backoffice/(.*)",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/payment-success/(.*)",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
     }
   ]
 }
