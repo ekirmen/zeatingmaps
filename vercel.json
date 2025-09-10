@@ -1,30 +1,121 @@
 {
-  "version": 2,
-  "functions": {
-    "api/**/*.js": {
-      "maxDuration": 30
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "build",
+  "framework": "create-react-app",
+  "build": {
+    "env": {
+      "CI": "false",
+      "GENERATE_SOURCEMAP": "false",
+      "DISABLE_ESLINT_PLUGIN": "true",
+      "SKIP_PREFLIGHT_CHECK": "true",
+      "NODE_ENV": "production"
     }
   },
-  "env": {
-    "SUPABASE_URL": "@react_SUPABASE_URL",
-    "SUPABASE_ANON_KEY": "@react_SUPABASE_ANON_KEY",
-    "SUPABASE_SERVICE_ROLE_KEY": "@react_SUPABASE_SERVICE_ROLE_KEY"
-  },
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    },
+    {
+      "source": "/store/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/store/manifest.json",
+      "destination": "/manifest.json"
+    },
+    {
+      "source": "/store/logo192.png",
+      "destination": "/logo192.png"
+    },
+    {
+      "source": "/store/logo512.png",
+      "destination": "/logo512.png"
+    },
+    {
+      "source": "/store/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/payment-success/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/backoffice/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/backoffice/manifest.json",
+      "destination": "/manifest.json"
+    },
+    {
+      "source": "/backoffice/logo192.png",
+      "destination": "/logo192.png"
+    },
+    {
+      "source": "/backoffice/logo512.png",
+      "destination": "/logo512.png"
+    },
+    {
+      "source": "/backoffice/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dashboard/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/dashboard/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/saas/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/saas/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/static/:path*",
+      "destination": "/static/:path*"
+    },
+    {
+      "source": "/((?!api|store|backoffice|dashboard|saas|static|payment-success).)*",
+      "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/404",
+      "destination": "/index.html",
+      "statusCode": 404
+    }
+  ],
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/static/(.*)",
       "headers": [
         {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
         },
         {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
+          "key": "X-Frame-Options",
+          "value": "DENY"
         },
         {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
         }
       ]
     }

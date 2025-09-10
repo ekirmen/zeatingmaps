@@ -114,3 +114,4 @@ local.env
 dev_*
 debug_*
 test_*
+.vercel
