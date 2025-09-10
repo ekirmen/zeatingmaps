@@ -3,50 +3,50 @@
   "buildCommand": "npm run build",
   "outputDirectory": "build",
   "framework": "create-react-app",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/static/(.*)",
-      "dest": "/static/$1"
+      "source": "/static/:path*",
+      "destination": "/static/:path*"
     },
     {
-      "src": "/manifest.json",
-      "dest": "/manifest.json"
+      "source": "/manifest.json",
+      "destination": "/manifest.json"
     },
     {
-      "src": "/favicon.ico",
-      "dest": "/favicon.ico"
+      "source": "/favicon.ico",
+      "destination": "/favicon.ico"
     },
     {
-      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
-      "dest": "/$1"
+      "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot))",
+      "destination": "/$1"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
     },
     {
-      "src": "/store/(.*)",
-      "dest": "/index.html"
+      "source": "/store/:path*",
+      "destination": "/index.html"
     },
     {
-      "src": "/dashboard/(.*)",
-      "dest": "/index.html"
+      "source": "/dashboard/:path*",
+      "destination": "/index.html"
     },
     {
-      "src": "/saas/(.*)",
-      "dest": "/index.html"
+      "source": "/saas/:path*",
+      "destination": "/index.html"
     },
     {
-      "src": "/backoffice/(.*)",
-      "dest": "/index.html"
+      "source": "/backoffice/:path*",
+      "destination": "/index.html"
     },
     {
-      "src": "/payment-success/(.*)",
-      "dest": "/index.html"
+      "source": "/payment-success/:path*",
+      "destination": "/index.html"
     },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
