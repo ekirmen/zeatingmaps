@@ -20,6 +20,7 @@
     "test:quick": "node scripts/quick-test.js",
     "test:production": "node scripts/test-production.js",
     "check:production": "node scripts/check-production.js",
+    "test:api-explorer": "node scripts/test-api-explorer.js",
     "start:dev": "node scripts/start-dev.js",
     "deploy:dev": "scripts\\deploy.bat dev",
     "deploy:prod": "scripts\\deploy.bat prod",

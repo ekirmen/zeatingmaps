@@ -46,6 +46,7 @@ import TenantEmailConfigPanel from './components/TenantEmailConfigPanel';
 import BillingDashboard from '../saas/components/BillingDashboard';
 import PaymentGatewayConfig from '../saas/components/PaymentGatewayConfig';
 import RoleManagement from '../saas/components/RoleManagement';
+import ApiExplorer from '../saas/pages/ApiExplorer';
 
 const BackofficeApp = () => {
   return (
@@ -127,6 +128,7 @@ const BackofficeApp = () => {
         <Route path="saas/billing" element={<BillingDashboard />} />
         <Route path="saas/payment-gateways" element={<PaymentGatewayConfig />} />
         <Route path="saas/roles" element={<RoleManagement />} />
+        <Route path="saas/api-explorer" element={<ApiExplorer />} />
 
         <Route path="tenant/:id" element={<TenantDetail />} />
         

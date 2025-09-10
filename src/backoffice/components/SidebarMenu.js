@@ -23,7 +23,7 @@ import {
   faBox,
   faCalendar,
   faUsersCog,
-  
+  faCode,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import EventSearch from './EventSearch';
@@ -218,6 +218,7 @@ const SidebarMenu = ({ collapsed }) => {
           { title: 'Facturación', path: '/dashboard/saas/billing', icon: faCreditCard },
           { title: 'Pasarelas de Pago', path: '/dashboard/saas/payment-gateways', icon: faCreditCard },
           { title: 'Roles y Permisos', path: '/dashboard/saas/roles', icon: faUsers },
+          { title: 'API Explorer', path: '/dashboard/saas/api-explorer', icon: faCode },
           { title: 'Configuración', path: '/dashboard/saas/settings', icon: faCog }
         ]
     }
