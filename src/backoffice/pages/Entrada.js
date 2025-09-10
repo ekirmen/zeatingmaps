@@ -191,21 +191,21 @@ const Entrada = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header Principal */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
-          <div className="px-8 py-6">
-            <div className="flex items-start sm:items-center justify-between gap-4">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Entradas</h1>
-                <p className="text-lg text-gray-600">Crea y administra las entradas para tus recintos y eventos</p>
+                <h1 className="text-2xl font-bold text-gray-900 mb-1">Gestión de Entradas</h1>
+                <p className="text-sm text-gray-600">Crea y administra las entradas para tus recintos y eventos</p>
               </div>
               <button
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-md transition-all duration-200 font-semibold flex items-center gap-2"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium flex items-center gap-2"
                 onClick={() => setShowPopup(true)}
                 disabled={!formData.recinto}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
                 Crear Entrada
@@ -215,14 +215,13 @@ const Entrada = () => {
         </div>
 
         {/* Selector de Recinto + Estado a la derecha */}
-        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-4">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-800 mb-1">Seleccionar Recinto</h3>
-              <p className="text-sm text-gray-600 mb-3">Selecciona un recinto para gestionar sus entradas y plantillas de precios</p>
+              <h3 className="text-base font-semibold text-gray-800 mb-2">Seleccionar Recinto</h3>
               <div className="flex items-center gap-3">
-                <label className="text-sm font-medium text-gray-700 min-w-[80px]">Recinto:</label>
-                <div className="flex-1">
+                <label className="text-sm font-medium text-gray-700 min-w-[70px]">Recinto:</label>
+                <div className="flex-1 max-w-md">
                   <RecintoSelector
                     recintos={recintos}
                     recintoSeleccionado={formData.recinto}
@@ -232,12 +231,11 @@ const Entrada = () => {
               </div>
             </div>
             {formData.recinto && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 min-w-[200px]">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-2 min-w-[180px]">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                   <span className="text-sm font-medium text-blue-800">Recinto seleccionado</span>
                 </div>
-                <p className="text-sm text-blue-700 mt-1"></p>
               </div>
             )}
           </div>
@@ -245,16 +243,16 @@ const Entrada = () => {
 
         {/* Estado de la Selección */}
         {!formData.recinto && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
-            <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center mb-4">
+            <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
+              <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-yellow-800 mb-1">
+            <h3 className="text-base font-semibold text-yellow-800 mb-1">
               Selecciona un Recinto
             </h3>
-            <p className="text-yellow-700 text-sm">
+            <p className="text-yellow-700 text-xs">
               Para crear entradas, primero debes seleccionar un recinto del selector superior
             </p>
           </div>
@@ -262,17 +260,17 @@ const Entrada = () => {
 
         {/* Lista de Tickets */}
         {formData.recinto && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-4 py-3 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Entradas del Recinto</h2>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <h2 className="text-base font-semibold text-gray-900">Entradas del Recinto</h2>
+                  <p className="text-xs text-gray-600 mt-1">
                     {tickets.length} entrada{tickets.length !== 1 ? 's' : ''} configurada{tickets.length !== 1 ? 's' : ''}
                   </p>
                 </div>
                 {tickets.length === 0 && (
-                  <div className="text-sm text-gray-500">
+                  <div className="text-xs text-gray-500">
                     No hay entradas configuradas
                   </div>
                 )}
@@ -280,7 +278,7 @@ const Entrada = () => {
             </div>
             
             {tickets.length > 0 && (
-              <div className="p-4">
+              <div className="p-3">
                 <TicketsList
                   tickets={tickets}
                   onEdit={handleEditTicket}
