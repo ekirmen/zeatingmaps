@@ -1,5 +1,6 @@
 import React from 'react';
-import resolveImageUrl from '../../../utils/resolveImageUrl';
+import resolveImageUrl, { resolveEventImageWithTenant } from '../../../utils/resolveImageUrl';
+import { useTenant } from '../../../contexts/TenantContext';
 import { Card, Tag, Button } from 'antd';
 import { EditOutlined, DeleteOutlined, CopyOutlined, CalendarOutlined, EnvironmentOutlined } from '@ant-design/icons';
 
@@ -12,6 +13,16 @@ const EventsList = ({
   handleDuplicate,
   onToggleEventStatus
 }) => {
+  const { currentTenant } = useTenant();
+
+  const resolveBestImage = (evento) => {
+    const tryTypes = ['banner', 'obraImagen', 'portada', 'logoHorizontal', 'logoCuadrado'];
+    for (const t of tryTypes) {
+      const url = resolveEventImageWithTenant(evento, t, currentTenant?.id);
+      if (url) return url;
+    }
+    return null;
+  };
   if (!eventosFiltrados || eventosFiltrados.length === 0) {
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
@@ -103,18 +114,21 @@ const EventsList = ({
             cover={
               viewMode === 'grid' && (
                 <div className="h-48 bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center overflow-hidden">
-                  {evento.imagenes?.banner ? (
-                    <img
-                      src={resolveImageUrl(evento.imagenes.banner)}
-                      alt={evento.nombre}
-                      className="object-cover w-full h-full"
-                    />
-                  ) : (
-                    <div className="text-center text-gray-400">
-                      <CalendarOutlined className="text-4xl mb-2" />
-                      <p className="text-sm">Sin imagen</p>
-                    </div>
-                  )}
+                  {(() => {
+                    const img = resolveBestImage(evento);
+                    return img ? (
+                      <img
+                        src={img}
+                        alt={evento.nombre}
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <div className="text-center text-gray-400">
+                        <CalendarOutlined className="text-4xl mb-2" />
+                        <p className="text-sm">Sin imagen</p>
+                      </div>
+                    );
+                  })()}
                 </div>
               )
             }
@@ -255,40 +269,37 @@ const EventsList = ({
                       <span>{new Date(evento.fecha_evento).toLocaleDateString('es-ES')}</span>
                     </div>
                   )}
-                  {/* Estado del evento */}
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-gray-500">Estado del evento:</span>
+                  {/* Estados compactos en una sola línea */}
+                  <div className="flex items-center gap-3 text-xs">
                     {(() => {
                       const isActive = evento.activo === true || evento.activo === 'true';
                       const isDisabled = evento.desactivado === true || evento.desactivado === 'true';
-                      
-                      if (isActive && !isDisabled) {
-                        return <Tag color="green" className="text-xs">Activo</Tag>;
-                      } else {
-                        return <Tag color="red" className="text-xs">Inactivo</Tag>;
-                      }
+                      const activeTag = isActive && !isDisabled ? (
+                        <Tag color="green" className="text-xs m-0">Activo</Tag>
+                      ) : (
+                        <Tag color="red" className="text-xs m-0">Inactivo</Tag>
+                      );
+                      const ventaColor = evento.estadoVenta === 'a-la-venta' ? 'green' : 
+                        evento.estadoVenta === 'agotado' ? 'red' : 
+                        evento.estadoVenta === 'proximamente' ? 'blue' : 'default';
+                      const ventaLabel = evento.estadoVenta === 'a-la-venta' ? 'A la venta' :
+                        evento.estadoVenta === 'agotado' ? 'Agotado' :
+                        evento.estadoVenta === 'proximamente' ? 'Próximamente' : evento.estadoVenta;
+                      return (
+                        <>
+                          <span className="text-gray-500">Estado:</span>
+                          {activeTag}
+                          {evento.estadoVenta && (
+                            <>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-gray-500">Venta:</span>
+                              <Tag color={ventaColor} className="text-xs m-0">{ventaLabel}</Tag>
+                            </>
+                          )}
+                        </>
+                      );
                     })()}
                   </div>
-                  
-                  {/* Estado de venta */}
-                  {evento.estadoVenta && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-gray-500">Estado de venta:</span>
-                      <Tag 
-                        color={
-                          evento.estadoVenta === 'a-la-venta' ? 'green' : 
-                          evento.estadoVenta === 'agotado' ? 'red' : 
-                          evento.estadoVenta === 'proximamente' ? 'blue' : 'default'
-                        }
-                        className="text-xs"
-                      >
-                        {evento.estadoVenta === 'a-la-venta' ? 'A la venta' :
-                         evento.estadoVenta === 'agotado' ? 'Agotado' :
-                         evento.estadoVenta === 'proximamente' ? 'Próximamente' :
-                         evento.estadoVenta}
-                      </Tag>
-                    </div>
-                  )}
                 </div>
               }
             />

@@ -361,7 +361,6 @@ const DisenoEspectaculo = ({ eventoData, setEventoData }) => {
         </div>
 
         <div className="image-upload-item flex flex-col gap-2 mt-4">
-          <h5 className="font-medium">Imágenes del espectáculo</h5>
           <div className="gallery-preview grid grid-cols-2 md:grid-cols-3 gap-2">
             {imagesPreviews.espectaculo.map((img, index) => (
               <div key={index} className="thumbnail-container relative">

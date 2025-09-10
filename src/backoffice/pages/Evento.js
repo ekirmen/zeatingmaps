@@ -404,20 +404,16 @@ const Evento = () => {
           </div>
         </div>
 
-        {/* Selectores de Recinto y Sala */}
+        {/* Selectores de Recinto y Sala + Acciones (una sola línea) */}
         <VenueSelectors
           recintos={recintos}
           recintoSeleccionado={recintoSeleccionado}
           handleRecintoChange={handleRecintoChange}
           salaSeleccionada={salaSeleccionada}
           setSalaSeleccionada={setSalaSeleccionada}
-        />
-
-        {/* Barra de Herramientas */}
-        {recintoSeleccionado && salaSeleccionada && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-              <div className="flex-1">
+          rightContent={recintoSeleccionado && (
+            <>
+              <div className="hidden lg:block min-w-[320px]">
                 <SearchBar
                   searchTerm={searchTerm}
                   handleSearch={handleSearch}
@@ -425,48 +421,42 @@ const Evento = () => {
                   handleEdit={handleEdit}
                 />
               </div>
-              
-              <div className="flex items-center gap-4">
-                {/* Toggle de Vista */}
-                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
-                  <button 
-                    onClick={() => toggleView('grid')} 
-                    className={`p-2 rounded-md transition-colors ${
-                      viewMode === 'grid' 
-                        ? 'bg-white text-blue-600 shadow-sm' 
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                    title="Vista de cuadrícula"
-                  >
-                    <FontAwesomeIcon icon={faThLarge} />
-                  </button>
-                  <button 
-                    onClick={() => toggleView('list')} 
-                    className={`p-2 rounded-md transition-colors ${
-                      viewMode === 'list' 
-                        ? 'bg-white text-blue-600 shadow-sm' 
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                    title="Vista de lista"
-                  >
-                    <FontAwesomeIcon icon={faList} />
-                  </button>
-                </div>
-
-                {/* Botón Crear Evento */}
-                <button
-                  onClick={handleCreateEventClick}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-md transition-all duration-200 font-semibold flex items-center gap-2"
+              <div className="flex items-center gap-2 bg-gray-100 rounded-lg p-1">
+                <button 
+                  onClick={() => toggleView('grid')} 
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'grid' 
+                      ? 'bg-white text-blue-600 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  title="Vista de cuadrícula"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                  Crear Evento
+                  <FontAwesomeIcon icon={faThLarge} />
+                </button>
+                <button 
+                  onClick={() => toggleView('list')} 
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'list' 
+                      ? 'bg-white text-blue-600 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  title="Vista de lista"
+                >
+                  <FontAwesomeIcon icon={faList} />
                 </button>
               </div>
-            </div>
-          </div>
-        )}
+              <button
+                onClick={handleCreateEventClick}
+                className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-sm transition-all duration-200 font-semibold flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Crear Evento
+              </button>
+            </>
+          )}
+        />
 
         {/* Lista de Eventos */}
         <EventsList

@@ -5,11 +5,13 @@ const VenueSelectors = ({
   recintoSeleccionado, 
   handleRecintoChange,
   salaSeleccionada,
-  setSalaSeleccionada
+  setSalaSeleccionada,
+  rightContent
 }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex items-start lg:items-center justify-between gap-6">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Selector de Recinto */}
         <div className="flex-1">
           <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -78,23 +80,13 @@ const VenueSelectors = ({
             )}
           </div>
         )}
-      </div>
-
-      {/* Estado de la Selección */}
-      {recintoSeleccionado && salaSeleccionada && (
-        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-            <div>
-              <p className="text-sm font-medium text-green-800">Recinto y Sala Seleccionados</p>
-              <p className="text-sm text-green-700">
-                {recintoSeleccionado.nombre} → {salaSeleccionada.nombre}
-              </p>
-            </div>
-          </div>
         </div>
-      )}
 
+        {/* Contenido derecho (buscador, vista, crear) */}
+        {rightContent && (
+          <div className="flex items-center gap-3 flex-shrink-0">{rightContent}</div>
+        )}
+      </div>
       {/* Instrucciones */}
       {(!recintoSeleccionado || !salaSeleccionada) && (
         <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">

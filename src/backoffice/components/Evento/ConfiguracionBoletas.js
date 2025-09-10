@@ -240,54 +240,49 @@ const ConfiguracionBoletas = ({ eventoData, setEventoData }) => {
       
       <section className="ticket-formats space-y-4">
         <h4 className="font-semibold">Formatos de boleta</h4>
-        
-        <div className="format-option">
-          <label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
             <input
               type="checkbox"
               checked={selectedFormat === 'pdf'}
               onChange={() => setSelectedFormat('pdf')}
+              className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2"
             />
-            Permitir boletas en formato PDF
+            <span className="text-sm text-gray-700">Permitir boletas en formato PDF</span>
           </label>
-          
           {selectedFormat === 'pdf' && (
-            <div className="sub-options">
-              <label>
+            <div className="pl-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label className="flex items-center gap-2">
                 <input
                   type="radio"
                   name="pdfOption"
                   value="all"
                   checked={pdfOption === 'all'}
                   onChange={(e) => setPdfOption(e.target.value)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                Todas las entradas en el mismo PDF
+                <span className="text-sm text-gray-700">Todas las entradas en el mismo PDF</span>
               </label>
-              <label>
+              <label className="flex items-center gap-2">
                 <input
                   type="radio"
                   name="pdfOption"
                   value="single"
                   checked={pdfOption === 'single'}
                   onChange={(e) => setPdfOption(e.target.value)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
                 />
-                Un PDF por entrada
+                <span className="text-sm text-gray-700">Un PDF por entrada</span>
               </label>
             </div>
           )}
-        </div>
-
-        <div className="format-option">
-          <label>
-            <input type="checkbox" />
-            Permitir boletas en Passbook o Wallet (e-tickets)
+          <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+            <input type="checkbox" className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2" />
+            <span className="text-sm text-gray-700">Permitir boletas en Passbook o Wallet (e-tickets)</span>
           </label>
-        </div>
-
-        <div className="format-option">
-          <label>
-            <input type="checkbox" />
-            Permitir impresión en taquilla
+          <label className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+            <input type="checkbox" className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2" />
+            <span className="text-sm text-gray-700">Permitir impresión en taquilla</span>
           </label>
         </div>
       </section>
