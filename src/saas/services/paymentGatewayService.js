@@ -71,6 +71,8 @@ class PaymentGatewayService {
   // Configurar Stripe
   async configureStripe(config, tenantId = null) {
     try {
+      const currentTenantId = tenantId || this.getCurrentTenantId();
+      
       const stripeConfig = {
         secret_key: config.secret_key,
         publishable_key: config.publishable_key,
@@ -80,7 +82,7 @@ class PaymentGatewayService {
         test_mode: config.test_mode || true
       };
 
-      return await this.saveGatewayConfig('stripe', stripeConfig, tenantId);
+      return await this.saveGatewayConfig('stripe', stripeConfig, currentTenantId);
     } catch (error) {
       console.error('Error configuring Stripe:', error);
       throw error;
@@ -90,6 +92,8 @@ class PaymentGatewayService {
   // Configurar PayPal
   async configurePayPal(config, tenantId = null) {
     try {
+      const currentTenantId = tenantId || this.getCurrentTenantId();
+      
       const paypalConfig = {
         client_id: config.client_id,
         client_secret: config.client_secret,
@@ -99,7 +103,7 @@ class PaymentGatewayService {
         sandbox_mode: config.sandbox_mode || true
       };
 
-      return await this.saveGatewayConfig('paypal', paypalConfig, tenantId);
+      return await this.saveGatewayConfig('paypal', paypalConfig, currentTenantId);
     } catch (error) {
       console.error('Error configuring PayPal:', error);
       throw error;
@@ -279,10 +283,13 @@ class PaymentGatewayService {
   // Obtener configuración de todas las pasarelas
   async getAllGatewayConfigs(tenantId = null) {
     try {
+      // Si no se especifica tenantId, usar el tenant actual del contexto
+      const currentTenantId = tenantId || this.getCurrentTenantId();
+      
       const { data, error } = await supabase
         .from('payment_gateway_configs')
         .select('*')
-        .eq('tenant_id', tenantId || 'global');
+        .eq('tenant_id', currentTenantId);
 
       if (error) throw error;
 
@@ -299,6 +306,23 @@ class PaymentGatewayService {
       console.error('Error getting all gateway configs:', error);
       return {};
     }
+  }
+
+  // Obtener el tenant actual del contexto
+  getCurrentTenantId() {
+    // Intentar obtener del contexto de React o localStorage
+    try {
+      const tenantData = localStorage.getItem('currentTenant');
+      if (tenantData) {
+        const tenant = JSON.parse(tenantData);
+        return tenant.id;
+      }
+    } catch (error) {
+      console.warn('No se pudo obtener tenant actual:', error);
+    }
+    
+    // Fallback: usar 'global' si no hay tenant específico
+    return 'global';
   }
 
   // Verificar configuración de pasarela

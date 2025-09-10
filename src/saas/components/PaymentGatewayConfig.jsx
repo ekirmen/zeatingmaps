@@ -5,7 +5,8 @@ import {
   CheckCircleOutlined, 
   DollarOutlined,
   SecurityScanOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  UserOutlined
 } from '@ant-design/icons';
 import paymentGatewayService from '../services/paymentGatewayService';
 
@@ -21,11 +22,25 @@ const PaymentGatewayConfig = () => {
   const [activeTab, setActiveTab] = useState('stripe');
   const [gatewayConfigs, setGatewayConfigs] = useState({});
   const [paymentStats, setPaymentStats] = useState({});
+  const [currentTenant, setCurrentTenant] = useState(null);
 
   useEffect(() => {
+    loadCurrentTenant();
     loadGatewayConfigs();
     loadPaymentStats();
   }, []);
+
+  const loadCurrentTenant = () => {
+    try {
+      const tenantData = localStorage.getItem('currentTenant');
+      if (tenantData) {
+        const tenant = JSON.parse(tenantData);
+        setCurrentTenant(tenant);
+      }
+    } catch (error) {
+      console.warn('No se pudo cargar tenant actual:', error);
+    }
+  };
 
   const loadGatewayConfigs = async () => {
     try {
@@ -378,8 +393,32 @@ const PaymentGatewayConfig = () => {
           <Text type="secondary">
             Configura las pasarelas de pago para procesar suscripciones automáticamente
           </Text>
+          {currentTenant && (
+            <div style={{ marginTop: '8px' }}>
+              <Badge 
+                status="processing" 
+                text={
+                  <Space>
+                    <UserOutlined />
+                    <Text strong>Configuración para:</Text>
+                    <Text code>{currentTenant.nombre || currentTenant.name || 'Tenant Actual'}</Text>
+                  </Space>
+                } 
+              />
+            </div>
+          )}
         </Col>
       </Row>
+
+      {currentTenant && (
+        <Alert
+          message="Configuración por Tenant"
+          description={`Las claves de pago que configures aquí serán específicas para ${currentTenant.nombre || currentTenant.name || 'este tenant'}. Cada tenant tiene sus propias credenciales de Stripe, PayPal, etc.`}
+          type="info"
+          showIcon
+          style={{ marginBottom: '16px' }}
+        />
+      )}
 
       <Card>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
