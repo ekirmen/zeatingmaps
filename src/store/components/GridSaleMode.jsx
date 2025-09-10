@@ -211,7 +211,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
                     {precio ? (
                       <div className="text-center">
                         <Text className="text-2xl font-bold text-green-600">
-                          ${precio.precio.toLocaleString()}
+                          ${precio.precio ? precio.precio.toLocaleString() : '0'}
                         </Text>
                         {precio.descripcion && (
                           <div className="text-sm text-gray-500 mt-1">
@@ -281,7 +281,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
             </div>
             <div className="text-right">
               <Text className="text-xl font-bold text-green-600">
-                Total: ${getTotalPrecio().toLocaleString()}
+                Total: ${(getTotalPrecio() || 0).toLocaleString()}
               </Text>
             </div>
           </div>

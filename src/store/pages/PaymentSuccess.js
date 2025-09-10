@@ -181,7 +181,7 @@ const PaymentSuccess = () => {
               )}
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Fecha:</span>
-                <span>{new Date(paymentDetails.created_at).toLocaleString()}</span>
+                <span>{paymentDetails.created_at ? new Date(paymentDetails.created_at).toLocaleString() : 'Fecha no disponible'}</span>
               </div>
             </>
           )}

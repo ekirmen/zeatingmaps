@@ -73,7 +73,7 @@ const EventSearchMap = () => {
               // Highlight the selected function
               style={{ backgroundColor: selectedFunc?.id === fn.id ? '#e6f7ff' : 'transparent' }}
             >
-              {new Date(fn.fechaCelebracion).toLocaleString()}
+              {fn.fechaCelebracion ? new Date(fn.fechaCelebracion).toLocaleString() : 'Fecha no disponible'}
             </List.Item>
           )}
         />
@@ -82,7 +82,7 @@ const EventSearchMap = () => {
       {/* ✨ FIX: Use selectedFunc to show details about the selected map */}
       {mapa && selectedFunc && (
         <div className="border p-4">
-           <h3>Mapa de asientos para la función del {new Date(selectedFunc.fechaCelebracion).toLocaleString()}</h3>
+           <h3>Mapa de asientos para la función del {selectedFunc.fechaCelebracion ? new Date(selectedFunc.fechaCelebracion).toLocaleString() : 'fecha no disponible'}</h3>
           <SeatingMap mapa={mapa} onClickSilla={() => {}} />
         </div>
       )}
