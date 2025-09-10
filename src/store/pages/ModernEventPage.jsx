@@ -449,13 +449,13 @@ const ModernEventPage = () => {
                   <div className="flex items-center space-x-2">
                     <CalendarOutlined className="text-blue-500" />
                     <span className="font-medium">
-                      {funciones.find(f => f.id === selectedFunctionId)?.fecha || 'Fecha no disponible'}
+                      {funciones.find(f => f.id === selectedFunctionId)?.fecha || formatDateString(evento.fecha_evento)}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <ClockCircleOutlined className="text-green-500" />
                     <span className="font-medium">
-                      {funciones.find(f => f.id === selectedFunctionId)?.hora || 'Hora no disponible'}
+                      {funciones.find(f => f.id === selectedFunctionId)?.hora || '--:--'}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -485,6 +485,7 @@ const ModernEventPage = () => {
                 className="shadow-lg border-0"
                 style={{ height: '100%' }}
               >
+                <div style={{ width: '850px', height: '650px', overflow: 'auto' }}>
                 {!canStoreAccess ? (
                   <NotFound title="404" message={`Este evento no está disponible (${eventStatus.text}).`} homePath="/store" />
                 ) : evento?.modoVenta === 'grid' ? (
@@ -541,6 +542,7 @@ const ModernEventPage = () => {
                     />
                   </div>
                 )}
+                </div>
               </Card>
             </div>
 
@@ -584,7 +586,7 @@ const ModernEventPage = () => {
               <div className="text-white">
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                   <div>
-                    <h1 className="text-3xl md:text-5xl font-bold leading-tight">
+                    <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                       {evento.nombre}
                     </h1>
                     {evento.descripcion && (
@@ -598,10 +600,22 @@ const ModernEventPage = () => {
                         <CalendarOutlined className="text-white mr-2" />
                         <span className="font-medium text-sm">{formatDateString(evento.fecha_evento)}</span>
                       </div>
+                      {selectedFunction && (
+                        <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
+                          <ClockCircleOutlined className="text-white mr-2" />
+                          <span className="font-medium text-sm">{selectedFunction.hora}</span>
+                        </div>
+                      )}
                       {venueInfo && (
                         <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
                           <EnvironmentOutlined className="text-white mr-2" />
                           <span className="font-medium text-sm">{venueInfo.nombre}</span>
+                        </div>
+                      )}
+                      {venueInfo && venueInfo.direccion && (
+                        <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
+                          <EnvironmentOutlined className="text-white mr-2" />
+                          <span className="font-medium text-sm">{venueInfo.direccion}</span>
                         </div>
                       )}
                       {evento.sector && (
@@ -620,28 +634,18 @@ const ModernEventPage = () => {
                         <Tag color="geekblue" className="text-sm">📅 {formatCountdown(cd)}</Tag>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 justify-end">
+                    <div className="flex items-center gap-3 justify-end">
                       <Button 
                         type="primary" 
-                        size="large"
-                        disabled={!canStoreAccess}
-                        onClick={() => {
-                          const url = selectedFunctionId 
-                            ? `/store/eventos/${eventSlug}/map?funcion=${selectedFunctionId}`
-                            : `/store/eventos/${eventSlug}/map`;
-                          navigate(url);
-                        }}
-                      >
-                        Ver Mapa de Asientos
-                      </Button>
-                      <Button 
                         size="large"
                         icon={<ShareAltOutlined />}
                         onClick={() => {
                           navigator.clipboard.writeText(window.location.href);
                           message.success('Enlace copiado al portapapeles');
                         }}
-                      />
+                      >
+                        Compartir
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -767,9 +771,24 @@ const ModernEventPage = () => {
             {/* Funciones disponibles */}
             <Card 
               title={
-                <div className="flex items-center">
-                  <CalendarOutlined className="text-blue-500 mr-2" />
-                  <span className="text-xl font-semibold">Funciones Disponibles</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <CalendarOutlined className="text-blue-500 mr-2" />
+                    <span className="text-xl font-semibold">Funciones Disponibles</span>
+                  </div>
+                  <Button 
+                    type="primary" 
+                    size="large"
+                    disabled={!canStoreAccess}
+                    onClick={() => {
+                      const url = selectedFunctionId 
+                        ? `/store/eventos/${eventSlug}/map?funcion=${selectedFunctionId}`
+                        : `/store/eventos/${eventSlug}/map`;
+                      navigate(url);
+                    }}
+                  >
+                    Ver Mapa de Asientos
+                  </Button>
                 </div>
               }
               className="mb-6 shadow-sm border border-gray-200 rounded-xl"
@@ -832,30 +851,6 @@ const ModernEventPage = () => {
               )}
             </Card>
 
-            {/* Configuración de datos del boleto */}
-            {Object.keys(datosBoleto).length > 0 && (
-              <Card 
-                title={
-                  <div className="flex items-center">
-                    <SettingOutlined className="text-orange-500 mr-2" />
-                    <span className="text-xl font-semibold">Configuración del Boleto</span>
-                  </div>
-                }
-                className="mb-6 shadow-sm border border-gray-200 rounded-xl"
-              >
-                <Descriptions column={2} bordered size="small">
-                  {Object.entries(datosBoleto).map(([key, value]) => (
-                    <Descriptions.Item key={key} label={key}>
-                      {typeof value === 'boolean' ? (
-                        <Badge status={value ? 'success' : 'error'} text={value ? 'Sí' : 'No'} />
-                      ) : (
-                        String(value)
-                      )}
-                    </Descriptions.Item>
-                  ))}
-                </Descriptions>
-              </Card>
-            )}
 
             {/* Configuración del Comprador eliminada */}
 
@@ -950,45 +945,6 @@ const ModernEventPage = () => {
                 </Card>
               )}
 
-              {/* Acciones */}
-              <Card 
-                title={
-                  <div className="flex items-center">
-                    <SettingOutlined className="text-blue-500 mr-2" />
-                    <span className="font-semibold">Acciones</span>
-                  </div>
-                }
-                className="shadow-sm border border-gray-200 rounded-xl"
-              >
-                <div className="space-y-3">
-                  <Button 
-                    type="primary" 
-                    block 
-                    icon={<CalendarOutlined />}
-                    disabled={!canStoreAccess}
-                    onClick={() => {
-                      // Si hay una función seleccionada, incluirla en la URL
-                      const url = selectedFunctionId 
-                        ? `/store/eventos/${eventSlug}/map?funcion=${selectedFunctionId}`
-                        : `/store/eventos/${eventSlug}/map`;
-                      navigate(url);
-                    }}
-                  >
-                    Ver Mapa de Asientos
-                  </Button>
-                  
-                  <Button 
-                    block 
-                    icon={<ShareAltOutlined />}
-                    onClick={() => {
-                      navigator.clipboard.writeText(window.location.href);
-                      message.success('Enlace copiado al portapapeles');
-                    }}
-                  >
-                    Compartir Evento
-                  </Button>
-                </div>
-              </Card>
 
               {/* Información técnica - solo admin */}
               {isTenantAdmin && (
@@ -1018,6 +974,28 @@ const ModernEventPage = () => {
                       <span className="text-gray-600">Usuario ID:</span>
                       <code className="text-xs">{evento.usuario_id}</code>
                     </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Video de YouTube */}
+              {evento.url_video && (
+                <Card 
+                  title={
+                    <div className="flex items-center">
+                      <span className="text-xl font-semibold">Video del Evento</span>
+                    </div>
+                  }
+                  className="mb-6 shadow-sm border border-gray-200 rounded-xl"
+                >
+                  <div className="aspect-video w-full">
+                    <iframe
+                      src={evento.url_video}
+                      title="Video del Evento"
+                      className="w-full h-full rounded-lg"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
                   </div>
                 </Card>
               )}

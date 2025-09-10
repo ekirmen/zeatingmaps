@@ -358,16 +358,13 @@ const Cart = () => {
                                                     {item.nombre || `Asiento ${item.sillaId}`}
                                                 </div>
                                                 <div className="text-xs text-gray-600">
-                                                    {item.nombreZona || 'General'} - NUEVO
+                                                    {item.nombreZona || 'General'}{item.nombreMesa ? ` - Mesa ${item.nombreMesa}` : ''}
                                                 </div>
                                             </div>
                                             <div className="text-right">
                                                 <div className="font-bold text-sm">
                                                     ${formatPrice(item.precio)}
                                                 </div>
-                                                <Tag color="blue" size="small">
-                                                    Nuevo
-                                                </Tag>
                                             </div>
                                         </div>
                                     </Card>

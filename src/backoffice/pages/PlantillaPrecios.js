@@ -789,7 +789,7 @@ const PlantillaPrecios = () => {
               {salas.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
             </select>
           )}
-                     <button className="bg-blue-600 text-white px-4 py-2 rounded" disabled={!recinto || !sala} onClick={openModal}>Añadir Plantilla</button>
+          <button className="bg-blue-600 text-white px-4 py-2 rounded" disabled={!recinto || !sala} onClick={openModal}>Añadir Plantilla</button>
         </div>
 
         <h3 className="font-semibold mb-2">Plantillas Guardadas</h3>
@@ -832,18 +832,10 @@ const PlantillaPrecios = () => {
                 </div>
               </div>
               
-              {/* Resumen de canales con jerarquía de prioridades */}
+              {/* Resumen de canales */}
               {canalesVenta.length > 0 && (
                 <div className="mt-3 pt-3 border-t border-gray-200">
-                  <div className="font-medium mb-2">Resumen de canales (con jerarquía de prioridades):</div>
-                  
-                  {/* Explicación de prioridades */}
-                  <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-                    <div className="font-medium mb-1">⚠️ Jerarquía de prioridades:</div>
-                    <div>• <strong>Prioridad ALTA:</strong> Estado del canal en el sistema (activo/inactivo)</div>
-                    <div>• <strong>Prioridad MEDIA:</strong> Selección del canal en la plantilla</div>
-                    <div>• <strong>Resultado:</strong> Solo se muestran precios si AMBAS condiciones se cumplen</div>
-                  </div>
+                  <div className="font-medium mb-2">Resumen de canales:</div>
                   
                   <div className="flex flex-wrap gap-2">
                     {canalesVenta.map(canal => {
