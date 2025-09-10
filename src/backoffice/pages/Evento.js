@@ -391,14 +391,7 @@ const Evento = () => {
                 <p className="text-lg text-gray-600">
                   Crea y administra eventos para tus recintos y salas
                 </p>
-                {currentTenant && (
-                  <div className="mt-3 inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span className="text-sm font-medium">
-                      Tenant: {currentTenant.company_name || currentTenant.id}
-                    </span>
-                  </div>
-                )}
+                
               </div>
             </div>
           </div>
@@ -484,10 +477,6 @@ const Evento = () => {
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900">Configuración de Evento</h2>
-                      <p className="text-gray-500 mt-1 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                        {eventoData?.id ? 'Editando evento existente' : 'Creando nuevo evento'}
-                      </p>
                       
                       {/* Estado del evento y botón de activación/desactivación */}
                       {eventoData?.id && (
@@ -567,14 +556,7 @@ const Evento = () => {
               {/* Footer con Botones - Diseño Mejorado */}
               <div className="bg-white border-t border-gray-100 px-8 py-6">
                 <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-500 flex items-center gap-2">
-                    {currentTenant && (
-                      <>
-                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        <span>Tenant: {currentTenant.company_name || currentTenant.id}</span>
-                      </>
-                    )}
-                  </div>
+                  <div className="text-sm text-gray-500 flex items-center gap-2"></div>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setMenuVisible(false)}

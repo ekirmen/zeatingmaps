@@ -195,12 +195,10 @@ const Entrada = () => {
         {/* Header Principal */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
           <div className="px-8 py-6">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Gestión de Entradas</h1>
-                <p className="text-lg text-gray-600">
-                  Crea y administra las entradas para tus recintos y eventos
-                </p>
+                <p className="text-lg text-gray-600">Crea y administra las entradas para tus recintos y eventos</p>
               </div>
               <button
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg shadow-md transition-all duration-200 font-semibold flex items-center gap-2"
@@ -216,13 +214,33 @@ const Entrada = () => {
           </div>
         </div>
 
-        {/* Selector de Recinto */}
-        <div className="mb-8">
-          <RecintoSelector
-            recintos={recintos}
-            recintoSeleccionado={formData.recinto}
-            onChange={(value) => setFormData({ ...formData, recinto: value })}
-          />
+        {/* Selector de Recinto + Estado a la derecha */}
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-gray-800 mb-2">Seleccionar Recinto</h3>
+              <p className="text-sm text-gray-600 mb-4">Selecciona un recinto para gestionar sus entradas y plantillas de precios</p>
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-gray-700 min-w-[80px]">Recinto:</label>
+                <div className="flex-1">
+                  <RecintoSelector
+                    recintos={recintos}
+                    recintoSeleccionado={formData.recinto}
+                    onChange={(value) => setFormData({ ...formData, recinto: value })}
+                  />
+                </div>
+              </div>
+            </div>
+            {formData.recinto && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 min-w-[260px]">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-blue-800">Recinto seleccionado</span>
+                </div>
+                <p className="text-sm text-blue-700 mt-1"></p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Estado de la Selección */}

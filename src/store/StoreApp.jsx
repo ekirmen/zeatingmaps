@@ -5,7 +5,7 @@ import { TenantProvider } from '../contexts/TenantContext'; // 👈 IMPORTANTE
 import Header from './components/StoreHeader';
 import BasicFooter from '../components/BasicFooter';
 import GlobalCartTimer from './components/GlobalCartTimer';
-import NotFoundPage from '../components/NotFoundPage';
+import NotFound from './pages/NotFound';
 import './styles/store-design.css'; // Modern design system
 import Event from './pages/Event';
 import EventInfo from './pages/EventInfo';
@@ -91,8 +91,8 @@ const StoreApp = () => {
                 <Route path=":pageSlug" element={<CmsPage />} />
                 <Route path="payment-success/:locator?" element={<PaymentSuccess />} />
                 <Route path="thank-you" element={<ThankYouPage />} />
-                <Route path="404" element={<NotFoundPage />} />
-                <Route path="*" element={<Navigate to="/store" replace />} />
+                <Route path="404" element={<NotFound />} />
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
             {showFooter && <BasicFooter />}

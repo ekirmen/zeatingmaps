@@ -23,6 +23,7 @@ import {
   ArrowLeftOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
+import { useAuth } from '../../contexts/AuthContext';
 import { getFunciones } from '../services/apistore';
 import formatDateString from '../../utils/formatDateString';
 import { useCartStore } from '../../store/cartStore';
@@ -34,6 +35,9 @@ import SeatingMapUnified from '../../components/SeatingMapUnified';
 import Cart from './Cart';
 import EventImage from '../components/EventImage';
 import GridSaleMode from '../components/GridSaleMode';
+import { getEstadoVentaInfo } from '../../utils/estadoVenta';
+import { useCountdown, formatCountdown } from '../../utils/countdown';
+import NotFound from './NotFound';
 
 
 const ModernEventPage = () => {
@@ -68,6 +72,9 @@ const ModernEventPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [venueInfo, setVenueInfo] = useState(null);
+  const { user } = useAuth();
+  const [isTenantAdmin, setIsTenantAdmin] = useState(false);
+  const [funcionesForCountdown, setFuncionesForCountdown] = useState([]);
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
@@ -148,6 +155,7 @@ const ModernEventPage = () => {
         // Obtener funciones
         const funcionesData = await getFunciones(eventData.id);
         setFunciones(funcionesData || []);
+        setFuncionesForCountdown(funcionesData || []);
 
         // Seleccionar función automáticamente
         const funcionParam = searchParams.get('funcion');
@@ -174,6 +182,26 @@ const ModernEventPage = () => {
     
     if (eventSlug) fetchData();
   }, [eventSlug, searchParams]);
+
+  // Cargar perfil para conocer permisos (tenant_admin)
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        if (!user?.id) return;
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('perfil')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (!error && data?.perfil) {
+          setIsTenantAdmin(String(data.perfil).toLowerCase() === 'tenant_admin');
+        }
+      } catch (e) {
+        // ignore silently
+      }
+    };
+    loadProfile();
+  }, [user, supabase]);
 
   // Suscribirse a función
   useEffect(() => {
@@ -323,10 +351,17 @@ const ModernEventPage = () => {
   const getEventStatus = () => {
     if (evento.desactivado) return { status: 'error', text: 'Desactivado', icon: <CloseCircleOutlined /> };
     if (!evento.activo) return { status: 'warning', text: 'Inactivo', icon: <ExclamationCircleOutlined /> };
-    if (evento.estadoVenta === 'a-la-venta') return { status: 'success', text: 'A la Venta', icon: <CheckCircleOutlined /> };
-    if (evento.estadoVenta === 'agotado') return { status: 'error', text: 'Agotado', icon: <CloseCircleOutlined /> };
-    if (evento.estadoVenta === 'pronto') return { status: 'processing', text: 'Pronto', icon: <ClockCircleOutlined /> };
-    return { status: 'default', text: 'Disponible', icon: <InfoCircleOutlined /> };
+    const ev = getEstadoVentaInfo(evento.estadoVenta);
+    const statusMap = {
+      'A la venta': { status: 'success', icon: <CheckCircleOutlined /> },
+      'Solo en taquilla': { status: 'processing', icon: <InfoCircleOutlined /> },
+      'Agotado': { status: 'error', icon: <CloseCircleOutlined /> },
+      'Próximamente': { status: 'processing', icon: <ClockCircleOutlined /> },
+      'Próximamente con cuenta atrás': { status: 'processing', icon: <ClockCircleOutlined /> },
+      'Estado personalizado': { status: 'default', icon: <InfoCircleOutlined /> },
+    };
+    const mapped = statusMap[ev.label] || { status: 'default', icon: <InfoCircleOutlined /> };
+    return { status: mapped.status, text: ev.label, icon: mapped.icon };
   };
 
   // Función para obtener el modo de venta
@@ -365,6 +400,18 @@ const ModernEventPage = () => {
   const modoVenta = getModoVenta();
   const tags = getEventTags();
   const analytics = getAnalytics();
+  const canStoreAccess = (() => {
+    const ev = getEstadoVentaInfo(evento.estadoVenta);
+    return ev?.store?.icon === '✔';
+  })();
+  const countdownTarget = (() => {
+    if (evento.estadoVenta === 'proximamente-countdown') {
+      const { findNextStart } = require('../../utils/countdown');
+      return findNextStart(funcionesForCountdown, 'internet') || findNextStart(funcionesForCountdown, 'boxOffice');
+    }
+    return null;
+  })();
+  const cd = useCountdown(countdownTarget);
 
   // Si estamos en la vista del mapa, mostrar el mapa y el carrito
   if (isMapView) {
@@ -440,7 +487,9 @@ const ModernEventPage = () => {
                 className="shadow-lg border-0"
                 style={{ height: '100%' }}
               >
-                {evento?.modoVenta === 'grid' ? (
+                {!canStoreAccess ? (
+                  <NotFound title="404" message={`Este evento no está disponible (${eventStatus.text}).`} homePath="/store" />
+                ) : evento?.modoVenta === 'grid' ? (
                   // Modo Grid - Venta sin mapa
                   <GridSaleMode
                     evento={evento}
@@ -535,21 +584,7 @@ const ModernEventPage = () => {
           <div className="w-full px-4 pb-8">
             <div className="max-w-7xl mx-auto">
               <div className="text-white">
-                <div className="flex items-center gap-4 mb-4">
-                  <Badge 
-                    status={eventStatus.status} 
-                    text={eventStatus.text}
-                    className="text-white"
-                  />
-                  <Tag color={modoVenta.color} className="text-sm">
-                    {modoVenta.text}
-                  </Tag>
-                  {evento.oculto && (
-                    <Tag color="red" icon={<EyeInvisibleOutlined />}>
-                      Oculto
-                    </Tag>
-                  )}
-                </div>
+                
                 
                 <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight">
                   {evento.nombre}
@@ -594,64 +629,77 @@ const ModernEventPage = () => {
 
       {/* Contenido principal */}
       <div className="max-w-7xl mx-auto px-4 py-12">
+        {/* Estado del evento (bajado desde el hero) */}
+        <div className="flex items-center gap-4 mb-6">
+          <Badge status={eventStatus.status} text={eventStatus.text} />
+          <Tag color={modoVenta.color} className="text-sm">{modoVenta.text}</Tag>
+          {evento.estadoVenta === 'proximamente-countdown' && countdownTarget && cd.remaining > 0 && (
+            <Tag color="geekblue" className="text-sm">📅 {formatCountdown(cd)}</Tag>
+          )}
+          {evento.oculto && (
+            <Tag color="red" icon={<EyeInvisibleOutlined />}>Oculto</Tag>
+          )}
+        </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contenido principal */}
           <div className="lg:col-span-2">
-            {/* Información básica del evento */}
-            <Card 
-              title={
-                <div className="flex items-center">
-                  <InfoCircleOutlined className="text-blue-500 mr-2" />
-                  <span className="text-xl font-semibold">Información del Evento</span>
-                </div>
-              }
-              className="mb-8 shadow-lg border-0"
-            >
-              <Descriptions column={2} bordered>
-                <Descriptions.Item label="Nombre" span={2}>
-                  <strong>{evento.nombre}</strong>
-                </Descriptions.Item>
-                <Descriptions.Item label="Fecha del Evento">
-                  {formatDateString(evento.fecha_evento)}
-                </Descriptions.Item>
-                <Descriptions.Item label="Recinto">
-                  {venueInfo ? venueInfo.nombre : `ID: ${evento.recinto}`}
-                </Descriptions.Item>
-                <Descriptions.Item label="Sala">
-                  {evento.sala ? `ID: ${evento.sala}` : 'No especificada'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Sector">
-                  {evento.sector || 'No especificado'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Estado de Venta">
-                  <Badge status={eventStatus.status} text={eventStatus.text} />
-                </Descriptions.Item>
-                <Descriptions.Item label="Modo de Venta">
-                  <Tag color={modoVenta.color}>{modoVenta.text}</Tag>
-                </Descriptions.Item>
-                <Descriptions.Item label="Activo">
-                  <Badge 
-                    status={evento.activo ? 'success' : 'error'} 
-                    text={evento.activo ? 'Sí' : 'No'} 
-                  />
-                </Descriptions.Item>
-                <Descriptions.Item label="Oculto">
-                  <Badge 
-                    status={evento.oculto ? 'error' : 'success'} 
-                    text={evento.oculto ? 'Sí' : 'No'} 
-                  />
-                </Descriptions.Item>
-                <Descriptions.Item label="Desactivado">
-                  <Badge 
-                    status={evento.desactivado ? 'error' : 'success'} 
-                    text={evento.desactivado ? 'Sí' : 'No'} 
-                  />
-                </Descriptions.Item>
-                <Descriptions.Item label="Creado">
-                  {formatDateString(evento.created_at)}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
+            {/* Información básica del evento - solo admin */}
+            {isTenantAdmin && (
+              <Card 
+                title={
+                  <div className="flex items-center">
+                    <InfoCircleOutlined className="text-blue-500 mr-2" />
+                    <span className="text-xl font-semibold">Información del Evento</span>
+                  </div>
+                }
+                className="mb-8 shadow-lg border-0"
+              >
+                <Descriptions column={2} bordered>
+                  <Descriptions.Item label="Nombre" span={2}>
+                    <strong>{evento.nombre}</strong>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Fecha del Evento">
+                    {formatDateString(evento.fecha_evento)}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Recinto">
+                    {venueInfo ? venueInfo.nombre : `ID: ${evento.recinto}`}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Sala">
+                    {evento.sala ? `ID: ${evento.sala}` : 'No especificada'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Sector">
+                    {evento.sector || 'No especificado'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Estado de Venta">
+                    <Badge status={eventStatus.status} text={eventStatus.text} />
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Modo de Venta">
+                    <Tag color={modoVenta.color}>{modoVenta.text}</Tag>
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Activo">
+                    <Badge 
+                      status={evento.activo ? 'success' : 'error'} 
+                      text={evento.activo ? 'Sí' : 'No'} 
+                    />
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Oculto">
+                    <Badge 
+                      status={evento.oculto ? 'error' : 'success'} 
+                      text={evento.oculto ? 'Sí' : 'No'} 
+                    />
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Desactivado">
+                    <Badge 
+                      status={evento.desactivado ? 'error' : 'success'} 
+                      text={evento.desactivado ? 'Sí' : 'No'} 
+                    />
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Creado">
+                    {formatDateString(evento.created_at)}
+                  </Descriptions.Item>
+                </Descriptions>
+              </Card>
+            )}
 
             {/* Descripción HTML */}
             {evento.descripcionHTML && (
@@ -785,33 +833,10 @@ const ModernEventPage = () => {
               </Card>
             )}
 
-            {/* Configuración de datos del comprador */}
-            {Object.keys(datosComprador).length > 0 && (
-              <Card 
-                title={
-                  <div className="flex items-center">
-                    <UserOutlined className="text-cyan-500 mr-2" />
-                    <span className="text-xl font-semibold">Configuración del Comprador</span>
-                  </div>
-                }
-                className="mb-8 shadow-lg border-0"
-              >
-                <Descriptions column={2} bordered>
-                  {Object.entries(datosComprador).map(([key, value]) => (
-                    <Descriptions.Item key={key} label={key}>
-                      {typeof value === 'boolean' ? (
-                        <Badge status={value ? 'success' : 'error'} text={value ? 'Sí' : 'No'} />
-                      ) : (
-                        String(value)
-                      )}
-                    </Descriptions.Item>
-                  ))}
-                </Descriptions>
-              </Card>
-            )}
+            {/* Configuración del Comprador eliminada */}
 
-            {/* Otras opciones */}
-            {Object.keys(otrasOpciones).length > 0 && (
+            {/* Otras opciones - solo admin */}
+            {isTenantAdmin && Object.keys(otrasOpciones).length > 0 && (
               <Card 
                 title={
                   <div className="flex items-center">
@@ -839,8 +864,8 @@ const ModernEventPage = () => {
               </Card>
             )}
 
-            {/* Analytics */}
-            {Object.keys(analytics).length > 0 && (
+            {/* Analytics - solo admin */}
+            {isTenantAdmin && Object.keys(analytics).length > 0 && (
               <Card 
                 title={
                   <div className="flex items-center">
@@ -868,36 +893,38 @@ const ModernEventPage = () => {
           {/* Panel lateral */}
           <div className="lg:col-span-1">
             <div className="sticky top-8 space-y-6">
-              {/* Estadísticas del evento */}
-              <Card 
-                title={
-                  <div className="flex items-center">
-                    <TrophyOutlined className="text-yellow-500 mr-2" />
-                    <span className="font-semibold">Estadísticas</span>
-                  </div>
-                }
-                className="shadow-lg border-0"
-              >
-                <div className="space-y-4">
-                  <Statistic 
-                    title="Funciones" 
-                    value={funciones.length} 
-                    prefix={<CalendarOutlined />}
-                  />
-                  <Statistic 
-                    title="Estado" 
-                    value={eventStatus.text}
-                    prefix={eventStatus.icon}
-                  />
-                  {venueInfo && (
+              {/* Estadísticas del evento - solo admin */}
+              {isTenantAdmin && (
+                <Card 
+                  title={
+                    <div className="flex items-center">
+                      <TrophyOutlined className="text-yellow-500 mr-2" />
+                      <span className="font-semibold">Estadísticas</span>
+                    </div>
+                  }
+                  className="shadow-lg border-0"
+                >
+                  <div className="space-y-4">
                     <Statistic 
-                      title="Recinto" 
-                      value={venueInfo.nombre}
-                      prefix={<EnvironmentOutlined />}
+                      title="Funciones" 
+                      value={funciones.length} 
+                      prefix={<CalendarOutlined />}
                     />
-                  )}
-                </div>
-              </Card>
+                    <Statistic 
+                      title="Estado" 
+                      value={eventStatus.text}
+                      prefix={eventStatus.icon}
+                    />
+                    {venueInfo && (
+                      <Statistic 
+                        title="Recinto" 
+                        value={venueInfo.nombre}
+                        prefix={<EnvironmentOutlined />}
+                      />
+                    )}
+                  </div>
+                </Card>
+              )}
 
               {/* Acciones */}
               <Card 
@@ -914,6 +941,7 @@ const ModernEventPage = () => {
                     type="primary" 
                     block 
                     icon={<CalendarOutlined />}
+                    disabled={!canStoreAccess}
                     onClick={() => {
                       // Si hay una función seleccionada, incluirla en la URL
                       const url = selectedFunctionId 
@@ -946,35 +974,37 @@ const ModernEventPage = () => {
                 </div>
               </Card>
 
-              {/* Información técnica */}
-              <Card 
-                title={
-                  <div className="flex items-center">
-                    <InfoCircleOutlined className="text-gray-500 mr-2" />
-                    <span className="font-semibold">Información Técnica</span>
+              {/* Información técnica - solo admin */}
+              {isTenantAdmin && (
+                <Card 
+                  title={
+                    <div className="flex items-center">
+                      <InfoCircleOutlined className="text-gray-500 mr-2" />
+                      <span className="font-semibold">Información Técnica</span>
+                    </div>
+                  }
+                  className="shadow-lg border-0"
+                >
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">ID del Evento:</span>
+                      <code className="text-xs">{evento.id}</code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Slug:</span>
+                      <code className="text-xs">{evento.slug}</code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tenant ID:</span>
+                      <code className="text-xs">{evento.tenant_id}</code>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Usuario ID:</span>
+                      <code className="text-xs">{evento.usuario_id}</code>
+                    </div>
                   </div>
-                }
-                className="shadow-lg border-0"
-              >
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">ID del Evento:</span>
-                    <code className="text-xs">{evento.id}</code>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Slug:</span>
-                    <code className="text-xs">{evento.slug}</code>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Tenant ID:</span>
-                    <code className="text-xs">{evento.tenant_id}</code>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Usuario ID:</span>
-                    <code className="text-xs">{evento.usuario_id}</code>
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              )}
             </div>
           </div>
         </div>

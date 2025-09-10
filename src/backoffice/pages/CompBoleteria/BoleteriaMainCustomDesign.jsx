@@ -18,6 +18,8 @@ import LocatorSearchModal from './components/LocatorSearchModal';
 import ValidationWidget from '../../../components/ValidationWidget';
 import VisualNotifications from '../../../utils/VisualNotifications';
 import EventImage from '../../../store/components/EventImage';
+import { getEstadoVentaInfo } from '../../../utils/estadoVenta';
+import { useCountdown, formatCountdown, findNextStart } from '../../../utils/countdown';
 import { useBoleteria } from '../../hooks/useBoleteria';
 import { useClientManagement } from '../../hooks/useClientManagement';
 import { useTenant } from '../../../contexts/TenantContext';
@@ -66,6 +68,7 @@ const BoleteriaMainCustomDesign = () => {
   const [activeZoneId, setActiveZoneId] = useState(null);
   const [selectedDiscount, setSelectedDiscount] = useState(null);
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [funcionesForCountdown, setFuncionesForCountdown] = useState([]);
 
   const {
     eventos,
@@ -324,6 +327,22 @@ const BoleteriaMainCustomDesign = () => {
             window.removeEventListener('loadSeatToCart', handleLoadSeatToCart);
           };
   }, [selectedFuncion?.id]);
+
+  // Preparar countdown para "Próximamente con cuenta atrás"
+  useEffect(() => {
+    try {
+      const funcs = Array.isArray(funciones) ? funciones : [];
+      setFuncionesForCountdown(funcs);
+    } catch {}
+  }, [funciones]);
+
+  const countdownTarget = (() => {
+    if (selectedEvent?.estadoVenta === 'proximamente-countdown') {
+      return findNextStart(funcionesForCountdown, 'internet') || findNextStart(funcionesForCountdown, 'boxOffice');
+    }
+    return null;
+  })();
+  const cd = useCountdown(countdownTarget);
 
   // Función para manejar selección de precios
   const handlePriceOptionSelect = (priceOption) => {
@@ -685,6 +704,29 @@ const BoleteriaMainCustomDesign = () => {
                     {blockMode ? 'Desactivar' : 'Activar'}
                   </Button>
                 </div>
+                {selectedEvent && (
+                  <div className="hidden md:flex items-center gap-xs px-sm py-xs bg-gray-50 border border-gray-200 rounded-md">
+                    {(() => {
+                      const ev = getEstadoVentaInfo(selectedEvent.estadoVenta);
+                      return (
+                        <>
+                          <span className="text-gray-600">Estado:</span>
+                          <span className="font-medium">{ev.label}</span>
+                          <span className="text-gray-400">•</span>
+                          <span className="text-gray-600">Boletería:</span>
+                          <span className="font-medium">{ev.boleteria.icon} {ev.boleteria.message}</span>
+                          {selectedEvent?.estadoVenta === 'proximamente-countdown' && countdownTarget && cd.remaining > 0 && (
+                            <>
+                              <span className="text-gray-400">•</span>
+                              <span className="text-gray-600">Comienza en:</span>
+                              <span className="font-medium">{formatCountdown(cd)}</span>
+                            </>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
                 <div className="flex items-center gap-sm">
                   <span className="text-gray-500">Buscar venta</span>
                 </div>
@@ -740,7 +782,14 @@ const BoleteriaMainCustomDesign = () => {
 
             {/* Área del mapa o modo grid */}
             <div className="flex-1 relative bg-white">
-              {selectedEvent?.modoVenta === 'grid' ? (
+              {!canBoleteriaAccess ? (
+                <div className="flex items-center justify-center h-96 w-full">
+                  <div className="text-center text-gray-600">
+                    <div className="text-lg font-medium mb-2">No disponible</div>
+                    <div className="text-sm">Este evento no está habilitado para boletería ({getEstadoVentaInfo(selectedEvent?.estadoVenta)?.label}).</div>
+                  </div>
+                </div>
+              ) : selectedEvent?.modoVenta === 'grid' ? (
                 // Modo Grid - Venta sin mapa
                 <div className="p-4">
                   <GridSaleMode

@@ -43,7 +43,7 @@ const Productos = () => {
       try {
         const { data, error } = await supabase
           .from('eventos')
-          .select('id, nombre, fecha_evento, recintos(nombre)')
+          .select('id, nombre, fecha_evento, recinto')
           .order('fecha_evento', { ascending: false });
 
         if (error) throw error;
@@ -342,8 +342,7 @@ const Productos = () => {
                     <div>
                       <div className="font-medium">{evento.nombre}</div>
                       <div className="text-sm text-gray-500">
-                        {new Date(evento.fecha_evento).toLocaleDateString()} - 
-                        {evento.recintos?.nombre}
+                        {new Date(evento.fecha_evento).toLocaleDateString()}
                       </div>
                     </div>
                   </Option>

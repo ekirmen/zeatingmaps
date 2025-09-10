@@ -107,20 +107,13 @@ const App = () => {
             />
           } />
 
-          {/* Ruta de fallback - Redirigir según configuración */}
+          {/* Ruta de fallback global -> 404 de Store si el store está activo; de lo contrario, redirigir al dashboard */}
           <Route
             path="*"
             element={
-              <Navigate
-                to={
-                  finalShowSaaS
-                    ? "/dashboard"
-                    : finalShowStore
-                    ? "/store"
-                    : "/dashboard"
-                }
-                replace
-              />
+              finalShowStore
+                ? <Navigate to="/store/404" replace />
+                : <Navigate to="/dashboard" replace />
             }
           />
         </Routes>

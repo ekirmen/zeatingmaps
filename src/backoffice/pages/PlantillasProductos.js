@@ -252,20 +252,7 @@ const PlantillasProductos = () => {
       key: 'precio_base',
       render: (precio) => `$${parseFloat(precio).toFixed(2)}`
     },
-    {
-      title: 'Recinto',
-      dataIndex: 'recinto_id',
-      key: 'recinto',
-      render: (recintoId) => {
-        const recinto = recintos.find(r => r.id === recintoId);
-        return recinto ? (
-          <div className="flex items-center">
-            <HomeOutlined className="mr-1" />
-            {recinto.nombre}
-          </div>
-        ) : 'N/A';
-      }
-    },
+    // Nota: si la tabla no tiene recinto_id, ocultamos esta columna
     {
       title: 'Sala',
       dataIndex: 'sala_id',
