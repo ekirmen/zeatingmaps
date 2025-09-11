@@ -841,7 +841,7 @@ const BoleteriaMainCustomDesign = () => {
             <div className="flex-1 relative bg-white">
               {(() => {
                 const ev = getEstadoVentaInfo(selectedEvent?.estadoVenta);
-                const canBoleteriaAccess = !!(ev && ev.boleteria && ev.boleteria.icon === '✔') && selectedEvent?.visible_en_boleteria !== false;
+                const canBoleteriaAccess = ev?.boleteria?.icon === '✔' && selectedEvent?.visible_en_boleteria !== false;
                 return !canBoleteriaAccess ? (
                   <div className="flex items-center justify-center h-96 w-full">
                     <div className="text-center text-gray-600">
