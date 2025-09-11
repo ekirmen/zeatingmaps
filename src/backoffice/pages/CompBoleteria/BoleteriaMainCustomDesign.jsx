@@ -55,6 +55,16 @@ const BoleteriaMainCustomDesign = () => {
   const [discountValue, setDiscountValue] = useState(0);
   const [foundPayment, setFoundPayment] = useState(null);
   const [locatorSearchValue, setLocatorSearchValue] = useState('');
+  // Derivar locator actual desde estado disponible (transacción/selecciones)
+  const currentLocator = React.useMemo(() => {
+    // Prioridad: selectedSeats -> seat_locks en carrito -> transaction data si existiese
+    if (Array.isArray(selectedSeats) && selectedSeats.length > 0) {
+      const withLocator = selectedSeats.find(s => s.locator);
+      if (withLocator?.locator) return withLocator.locator;
+    }
+    // Extender aquí si se guarda transaction/locator en estado
+    return null;
+  }, [selectedSeats]);
   const [locatorSearchLoading, setLocatorSearchLoading] = useState(false);
   const [userSearchValue, setUserSearchValue] = useState('');
   const [userSearchResults, setUserSearchResults] = useState([]);
@@ -957,19 +967,19 @@ const BoleteriaMainCustomDesign = () => {
                   <h4 className="font-medium text-gray-900 mb-sm flex items-center justify-between">
                     <span>Asientos Seleccionados</span>
                     {/* Descargar todos los tickets juntos (bulk) */}
-                    {locator && (
+                    {currentLocator && (
                       <Button
                         size="small"
                         icon={<DownloadOutlined />}
                         onClick={async () => {
                           try {
-                            const res = await fetch(`/api/payments/${locator}/download?mode=bulk`, { headers: { Accept: 'application/pdf' } });
+                            const res = await fetch(`/api/payments/${currentLocator}/download?mode=bulk`, { headers: { Accept: 'application/pdf' } });
                             if (!res.ok) throw new Error('Descarga fallida');
                             const blob = await res.blob();
                             const url = window.URL.createObjectURL(blob);
                             const a = document.createElement('a');
                             a.href = url;
-                            a.download = `tickets-${locator}.pdf`;
+                            a.download = `tickets-${currentLocator}.pdf`;
                             document.body.appendChild(a);
                             a.click();
                             window.URL.revokeObjectURL(url);
@@ -992,7 +1002,7 @@ const BoleteriaMainCustomDesign = () => {
                             <div className="text-xs text-gray-500">Zona: {seat.zona?.nombre || 'Sin zona'}</div>
                           </div>
                           <div className="flex items-center gap-sm">
-                            {locator && (seat.isPaid || seat.status === 'vendido' || seat.pagado === true) ? (
+                            {currentLocator && (seat.isPaid || seat.status === 'vendido' || seat.pagado === true) ? (
                               <Tooltip title="Imprimir ticket">
                                 <Button
                                   type="text"
@@ -1000,13 +1010,13 @@ const BoleteriaMainCustomDesign = () => {
                                   icon={<DownloadOutlined className="text-green-600" />}
                                   onClick={async () => {
                                     try {
-                                      const res = await fetch(`/api/payments/${locator}/download?mode=full`, { headers: { Accept: 'application/pdf' } });
+                                      const res = await fetch(`/api/payments/${currentLocator}/download?mode=full`, { headers: { Accept: 'application/pdf' } });
                                       if (!res.ok) throw new Error('Descarga fallida');
                                       const blob = await res.blob();
                                       const url = window.URL.createObjectURL(blob);
                                       const a = document.createElement('a');
                                       a.href = url;
-                                      a.download = `ticket-${locator}-${seat._id || index}.pdf`;
+                                      a.download = `ticket-${currentLocator}-${seat._id || index}.pdf`;
                                       document.body.appendChild(a);
                                       a.click();
                                       window.URL.revokeObjectURL(url);

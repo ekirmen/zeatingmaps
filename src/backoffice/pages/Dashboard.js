@@ -240,7 +240,7 @@ const Dashboard = () => {
   const loadRecentEvents = async () => {
     try {
       const { data, error } = await supabase
-        .from('eventos')
+        .from('eventos_con_funciones_activas')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(5);
@@ -255,7 +255,7 @@ const Dashboard = () => {
   const loadUpcomingEvents = async () => {
     try {
       const { data, error } = await supabase
-        .from('eventos')
+        .from('eventos_con_funciones_activas')
         .select('*')
         .gte('fecha_evento', new Date().toISOString())
         .order('fecha_evento', { ascending: true })

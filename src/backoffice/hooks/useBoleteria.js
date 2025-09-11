@@ -434,7 +434,7 @@ export const useBoleteria = () => {
 
     try {
       const { data: eventoData, error: eventoError } = await supabase
-        .from('eventos')
+        .from('eventos_con_funciones_activas')
         .select('*')
         .eq('id', eventoId)
         .single();
@@ -576,7 +576,7 @@ export const useBoleteria = () => {
         console.log('✅ [useBoleteria] Usuario autenticado:', user.id);
         
         const { data, error } = await supabase
-          .from('eventos')
+          .from('eventos_con_funciones_activas')
           .select('*')
           .order('nombre', { ascending: true });
 

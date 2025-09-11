@@ -71,10 +71,6 @@ const PlantillaPrecios = () => {
         }));
 
         
-          principales: plantillasData?.length || 0,
-          precios: preciosData?.length || 0,
-          combinadas: combinedPlantillas.length
-        });
 
         setPlantillas(combinedPlantillas);
 
@@ -120,12 +116,13 @@ const PlantillaPrecios = () => {
         
         
         if (data && data.length > 0) {
-          
+          const mapped = data.map(e => ({
             id: e.id,
             nombre: e.nombre_entrada,
             tipo: e.tipo_producto,
             tenant_id: e.tenant_id
-          })));
+          }));
+          // Si se usa en otro lugar, podríamos setearlo; por ahora mantenemos data original
         }
         setEntradas(data || []);
       } catch (error) {
@@ -347,12 +344,7 @@ const PlantillaPrecios = () => {
       return;
     }
 
-    
-      nombre: nombrePlantilla,
-      recinto: recinto.id,
-      sala: sala.id,
-      detalles: detallesValidos,
-    });
+    // Datos de la plantilla
 
     const payload = {
       nombre: nombrePlantilla.trim(),
@@ -561,12 +553,6 @@ const PlantillaPrecios = () => {
       const zona = zonas.find(z => z.id === item.zonaId);
       
       
-        item,
-        entrada,
-        zona,
-        detalle
-      });
-      
       return (
         <tr key={idx} className="hover:bg-gray-50">
           <td className="px-6 py-3 font-medium">{zona?.nombre || item.zona || 'Zona no encontrada'}</td>
@@ -612,12 +598,7 @@ const PlantillaPrecios = () => {
                 
                 // Debug: Log de la jerarquía de prioridades
                 if (detalle.zonaId && detalle.entradaId) {
-                  
-                    activoEnSistema: isActivoEnSistema,
-                    seleccionadoEnPlantilla: isSeleccionadoEnPlantilla,
-                    resultadoFinal: isActivo,
-                    prioridad: isActivoEnSistema ? 'SISTEMA' : 'PLANTILLA'
-                  });
+                  // debug omitido
                 }
                 
                 // Determinar el color y estilo del botón según el estado

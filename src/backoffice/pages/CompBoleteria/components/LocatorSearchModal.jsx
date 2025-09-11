@@ -399,7 +399,7 @@ const LocatorSearchModal = ({ open, onCancel, onSearch }) => {
                         if (!eventData && searchResult.funcion.evento_id) {
                           try {
                             const { data: event, error } = await supabase
-                              .from('eventos')
+                              .from('eventos_con_funciones_activas')
                               .select('*')
                               .eq('id', searchResult.funcion.evento_id)
                               .single();

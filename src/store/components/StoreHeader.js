@@ -248,8 +248,11 @@ const Header = ({ onLogin, onLogout }) => {
             </select>
           </div>
 
-          {/* Desktop Auth */}
-          <div className="hidden lg:flex gap-2">
+          {/* Desktop Auth + Cart */}
+          <div className="hidden lg:flex items-center gap-2">
+            <LinkWithRef to="/store/cart" className="store-button store-button-outline">
+              {t('header.cart')}
+            </LinkWithRef>
             {localStorage.getItem('token') ? (
               <button onClick={handleLogout} className="store-button store-button-outline">
                 {t('header.logout')}

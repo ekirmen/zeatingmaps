@@ -42,7 +42,7 @@ const Productos = () => {
     const fetchEventos = async () => {
       try {
         const { data, error } = await supabase
-          .from('eventos')
+          .from('eventos_con_funciones_activas')
           .select('id, nombre, fecha_evento, recinto')
           .order('fecha_evento', { ascending: false });
 

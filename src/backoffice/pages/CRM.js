@@ -29,7 +29,7 @@ const CRM = () => {
       const [eventosData, funcionesData, usuariosData, notificacionesData] = await Promise.all([
         // Eventos
         supabase
-          .from('eventos')
+          .from('eventos_con_funciones_activas')
           .select('*')
           .order('created_at', { ascending: false }),
         
