@@ -251,6 +251,7 @@ async function generateFullPDF(req, res, payment, locator) {
     // --- CARGAR IMÁGENES DEL EVENTO ---
     console.log('🖼️ [DOWNLOAD] Cargando imágenes del evento...');
     let eventImages = {};
+    let venueData = null;
     
     try {
       // Obtener datos del evento desde el pago
@@ -281,21 +282,45 @@ async function generateFullPDF(req, res, payment, locator) {
           }
         }
       }
+
+      // Cargar información del recinto si está disponible en el evento
+      try {
+        const recintoId = eventData?.recinto_id || eventData?.recinto || payment.funcion?.recinto_id || null;
+        if (recintoId) {
+          const { data: rec, error: recErr } = await supabaseAdmin
+            .from('recintos')
+            .select('id, nombre, direccion, ciudad, pais')
+            .eq('id', recintoId)
+            .maybeSingle();
+          if (!recErr) venueData = rec;
+        }
+      } catch (recError) {
+        console.warn('⚠️ [DOWNLOAD] Error cargando recinto:', recError.message);
+      }
     } catch (imgError) {
       console.warn('⚠️ [DOWNLOAD] Error procesando imágenes del evento:', imgError.message);
     }
 
     // --- LAYOUT DEL TICKET ---
     
-    // 1. IMAGEN SUPERIOR (logoHorizontal) - arriba, medio-izquierdo
-    if (eventImages.logoHorizontal) {
-      const topImageSize = 80;
-      page.drawImage(eventImages.logoHorizontal, {
-        x: 50,
-        y: height - 120,
-        width: topImageSize,
-        height: topImageSize * 0.3, // Mantener proporción horizontal
-      });
+    // 1. IMAGEN SUPERIOR (logoHorizontal) o placeholder [1]
+    {
+      const topImageWidth = 140;
+      const topImageHeight = 42; // proporción aprox 3.33:1
+      const topX = 50;
+      const topY = height - 120;
+      if (eventImages.logoHorizontal) {
+        page.drawImage(eventImages.logoHorizontal, {
+          x: topX,
+          y: topY,
+          width: topImageWidth,
+          height: topImageHeight,
+        });
+      } else {
+        // Placeholder con número 1
+        page.drawRectangle({ x: topX, y: topY, width: topImageWidth, height: topImageHeight, color: rgb(0.95,0.95,0.95), borderColor: rgb(0.8,0.8,0.8), borderWidth: 1 });
+        page.drawText('1', { x: topX + topImageWidth/2 - 6, y: topY + topImageHeight/2 - 8, size: 16, color: rgb(0.6,0.6,0.6), font: helveticaBold });
+      }
     }
 
     // 2. TÍTULO DEL TICKET
@@ -318,6 +343,20 @@ async function generateFullPDF(req, res, payment, locator) {
     if (payment.monto) {
       page.drawText(`Monto: $${payment.monto}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
       y -= 25;
+    }
+
+    // 3.1 RECINTO (si disponible)
+    if (venueData?.nombre) {
+      page.drawText(`Recinto: ${venueData.nombre}`, { x: 50, y, size: 12, color: rgb(0.1,0.1,0.1), font: helveticaBold });
+      y -= 18;
+      const direccion = [venueData.direccion, venueData.ciudad, venueData.pais].filter(Boolean).join(', ');
+      if (direccion) {
+        page.drawText(direccion, { x: 50, y, size: 11, color: rgb(0.3,0.3,0.3), font: helveticaFont });
+        y -= 20;
+      }
+    } else {
+      page.drawText('Recinto: no existe', { x: 50, y, size: 12, color: rgb(0.85,0.1,0.1), font: helveticaBold });
+      y -= 20;
     }
 
     // 4. QR CODE Y INFORMACIÓN IMPORTANTE (centro-derecho)
@@ -351,43 +390,72 @@ async function generateFullPDF(req, res, payment, locator) {
       font: helveticaFont
     });
 
-    // 5. ASIENTOS (lado izquierdo)
+    // 5. ASIENTOS (lado izquierdo) con mesa/fila/asiento
     if (payment.seats && payment.seats.length > 0) {
       page.drawText('Asientos:', { x: 50, y, size: 14, color: rgb(0,0,0), font: helveticaBold });
       y -= 20;
-      payment.seats.forEach((seat, index) => {
-        const seatText = `${seat.id || 'Asiento'} - ${seat.zona || 'General'}`;
-        page.drawText(seatText, { x: 70, y: y - (index * 18), size: 11, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+      let seatY = y;
+      payment.seats.forEach((seat) => {
+        const zonaTxt = seat.zonaNombre || seat.zona || null;
+        const mesaTxt = seat.mesaNombre || seat.mesa || null;
+        const filaTxt = seat.fila || seat.row || null;
+        const asientoId = seat.name || seat.nombre || seat.numero || seat.id || seat._id || null;
+
+        page.drawText(`Zona: ${zonaTxt || 'no existe'}`, { x: 70, y: seatY, size: 11, color: zonaTxt ? rgb(0.2,0.2,0.2) : rgb(0.85,0.1,0.1), font: helveticaFont });
+        seatY -= 16;
+        page.drawText(`Mesa: ${mesaTxt || 'no existe'}`, { x: 70, y: seatY, size: 11, color: mesaTxt ? rgb(0.2,0.2,0.2) : rgb(0.85,0.1,0.1), font: helveticaFont });
+        seatY -= 16;
+        page.drawText(`Fila: ${filaTxt || 'no existe'}`, { x: 70, y: seatY, size: 11, color: filaTxt ? rgb(0.2,0.2,0.2) : rgb(0.85,0.1,0.1), font: helveticaFont });
+        seatY -= 16;
+        page.drawText(`Asiento: ${asientoId || 'no existe'}`, { x: 70, y: seatY, size: 11, color: asientoId ? rgb(0.2,0.2,0.2) : rgb(0.85,0.1,0.1), font: helveticaFont });
+        seatY -= 22; // espacio entre asientos
       });
-      y -= payment.seats.length * 18 + 10;
+      y = seatY - 10;
     }
 
-    // 6. IMAGEN MEDIA (portada) - centro del ticket
-    if (eventImages.portada) {
-      const middleImageSize = 100;
-      page.drawImage(eventImages.portada, {
-        x: width / 2 - middleImageSize / 2,
-        y: y - middleImageSize - 20,
-        width: middleImageSize,
-        height: middleImageSize,
-      });
-      y -= middleImageSize + 30;
+    // 6. IMAGEN MEDIA (portada) en centro del lado izquierdo o placeholder [2]
+    {
+      const midSize = 110;
+      const midX = 60; // lado izquierdo
+      const midY = y - midSize - 20;
+      if (eventImages.portada) {
+        page.drawImage(eventImages.portada, { x: midX, y: midY, width: midSize, height: midSize });
+      } else {
+        page.drawRectangle({ x: midX, y: midY, width: midSize, height: midSize, color: rgb(0.95,0.95,0.95), borderColor: rgb(0.8,0.8,0.8), borderWidth: 1 });
+        page.drawText('2', { x: midX + midSize/2 - 8, y: midY + midSize/2 - 10, size: 20, color: rgb(0.6,0.6,0.6), font: helveticaBold });
+      }
+      y -= midSize + 30;
     }
 
     // 7. FECHA DE COMPRA
     const fechaCreacion = new Date(payment.created_at).toLocaleString('es-ES');
     page.drawText(`Fecha de compra: ${fechaCreacion}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4), font: helveticaFont });
 
-    // 8. IMAGEN INFERIOR (banner) - abajo del ticket
-    if (eventImages.banner) {
-      const bottomImageSize = 120;
-      page.drawImage(eventImages.banner, {
-        x: width / 2 - bottomImageSize / 2,
-        y: 150,
-        width: bottomImageSize,
-        height: bottomImageSize * 0.4, // Mantener proporción horizontal
-      });
+    // 8. IMAGEN INFERIOR (banner) - abajo del ticket o placeholder [3]
+    {
+      const bottomImageWidth = 260;
+      const bottomImageHeight = 90;
+      const bx = width / 2 - bottomImageWidth / 2;
+      const by = 150;
+      if (eventImages.banner) {
+        page.drawImage(eventImages.banner, { x: bx, y: by, width: bottomImageWidth, height: bottomImageHeight });
+      } else {
+        page.drawRectangle({ x: bx, y: by, width: bottomImageWidth, height: bottomImageHeight, color: rgb(0.95,0.95,0.95), borderColor: rgb(0.8,0.8,0.8), borderWidth: 1 });
+        page.drawText('3', { x: bx + bottomImageWidth/2 - 8, y: by + bottomImageHeight/2 - 10, size: 20, color: rgb(0.6,0.6,0.6), font: helveticaBold });
+      }
     }
+
+    // 8.1 CÓDIGO TEXTO DEL QR (debajo del QR)
+    try {
+      const qrText = payment.locator || 'QR-SIN-CODIGO';
+      page.drawText(qrText, {
+        x: qrX,
+        y: qrY - 52,
+        size: 10,
+        color: rgb(0.15,0.15,0.15),
+        font: helveticaFont
+      });
+    } catch {}
 
     // 9. CONDICIONES (abajo)
     page.drawText('Condiciones:', { x: 50, y: 100, size: 10, color: rgb(0.2,0.2,0.2), font: helveticaBold });
