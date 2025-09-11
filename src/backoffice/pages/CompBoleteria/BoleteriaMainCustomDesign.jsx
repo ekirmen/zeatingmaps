@@ -15,7 +15,7 @@ import PushNotifications from './components/PushNotifications';
 import DownloadTicketButton from './DownloadTicketButton';
 import ServerDiagnostic from './ServerDiagnostic';
 import LocatorSearchModal from './components/LocatorSearchModal';
-import ValidationWidget from '../../../components/ValidationWidget';
+// import ValidationWidget from '../../../components/ValidationWidget';
 import VisualNotifications from '../../../utils/VisualNotifications';
 import EventImage from '../../../store/components/EventImage';
 import { getEstadoVentaInfo } from '../../../utils/estadoVenta';
@@ -1382,22 +1382,7 @@ const BoleteriaMainCustomDesign = () => {
       </Modal>
 
 
-      {/* Widget de Validación en Tiempo Real */}
-      <ValidationWidget
-        selectedSeats={selectedSeats}
-        selectedClient={selectedClient}
-        paymentData={paymentData}
-        onValidationChange={(validation) => {
-          // Callback para manejar cambios en la validación
-          if (validation.errors.length > 0) {
-            VisualNotifications.show('error', validation.errors[0]);
-          } else if (validation.warnings.length > 0) {
-            VisualNotifications.show('validationWarning', validation.warnings[0]);
-          }
-        }}
-        showNotifications={true}
-        position="bottom-right"
-      />
+      {/* Widget de Validación en Tiempo Real (deshabilitado por solicitud) */}
 
       {/* Modales de Cliente y Pago */}
       <ClientModals

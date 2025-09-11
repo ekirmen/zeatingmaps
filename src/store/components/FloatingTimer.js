@@ -63,7 +63,7 @@ const FloatingTimer = () => {
   return (
     <>
       {/* Temporizador flotante */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-4 right-4 z-50">
         <Tooltip 
           title={
             <div className="text-center">
@@ -104,7 +104,7 @@ const FloatingTimer = () => {
 
         {/* Texto del tiempo restante */}
         <div 
-          className="absolute -top-8 right-0 bg-white px-2 py-1 rounded shadow-md text-sm font-bold"
+          className="absolute -top-8 right-0 bg-white px-2 py-1 rounded shadow-md text-sm font-bold whitespace-nowrap"
           style={{ color: getTimerColor() }}
         >
           {formatTime(timeLeft)}

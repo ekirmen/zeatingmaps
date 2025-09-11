@@ -12,7 +12,7 @@ import { useCartStore } from '../cartStore';
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent, FACEBOOK_EVENTS, shouldTrackOnPage } from '../services/facebookPixelService';
 import LoginModal from '../components/LoginModal';
-import ValidationWidget from '../../components/ValidationWidget';
+// import ValidationWidget from '../../components/ValidationWidget';
 import VisualNotifications from '../../utils/VisualNotifications';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -472,25 +472,7 @@ const Cart = () => {
                 title="Iniciar Sesión para Continuar"
             />
 
-            {/* Widget de Validación en Tiempo Real */}
-            <ValidationWidget
-                selectedSeats={items}
-                selectedClient={user}
-                paymentData={{
-                    method: 'pending',
-                    amount: totalPrice,
-                    clientId: user?.id
-                }}
-                onValidationChange={(validation) => {
-                    if (validation.errors.length > 0) {
-                        VisualNotifications.show('error', validation.errors[0]);
-                    } else if (validation.warnings.length > 0) {
-                        VisualNotifications.show('validationWarning', validation.warnings[0]);
-                    }
-                }}
-                showNotifications={true}
-                position="bottom-left"
-            />
+            {/* Widget de Validación en Tiempo Real (deshabilitado por solicitud) */}
         </div>
     );
 };
