@@ -443,30 +443,45 @@ const ModernEventPage = () => {
             </div>
             
             {/* Información de la función */}
-            {selectedFunctionId && (
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="flex items-center space-x-6">
-                  <div className="flex items-center space-x-2">
-                    <CalendarOutlined className="text-blue-500" />
-                    <span className="font-medium">
-                      {funciones.find(f => f.id === selectedFunctionId)?.fecha || formatDateString(evento.fecha_evento)}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <ClockCircleOutlined className="text-green-500" />
-                    <span className="font-medium">
-                      {funciones.find(f => f.id === selectedFunctionId)?.hora || '--:--'}
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <EnvironmentOutlined className="text-red-500" />
-                    <span className="font-medium">
-                      {evento.recinto || 'Recinto no disponible'}
-                    </span>
+            {(() => {
+              const funcionSel = funciones.find(f => String(f.id) === String(selectedFunctionId));
+              const fechaRaw = funcionSel?.fechaCelebracion || funcionSel?.fecha_celebracion || funcionSel?.fecha || evento?.fecha_evento || null;
+              const fechaTxt = fechaRaw ? formatDateString(fechaRaw) : '—';
+              const horaTxt = (() => {
+                if (funcionSel?.hora) return funcionSel.hora;
+                if (fechaRaw) {
+                  try {
+                    const d = new Date(fechaRaw);
+                    if (!isNaN(d.getTime())) {
+                      const hh = String(d.getHours()).padStart(2, '0');
+                      const mm = String(d.getMinutes()).padStart(2, '0');
+                      return `${hh}:${mm}`;
+                    }
+                  } catch (_) {}
+                }
+                return '--:--';
+              })();
+              const recintoTxt = venueInfo?.nombre || evento?.recintos?.nombre || evento?.recinto_nombre || 'Recinto no disponible';
+
+              return (
+                <div className="bg-white p-4 rounded-lg shadow-sm">
+                  <div className="flex items-center space-x-6">
+                    <div className="flex items-center space-x-2">
+                      <CalendarOutlined className="text-blue-500" />
+                      <span className="font-medium">{fechaTxt}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <ClockCircleOutlined className="text-green-500" />
+                      <span className="font-medium">{horaTxt}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <EnvironmentOutlined className="text-red-500" />
+                      <span className="font-medium">{recintoTxt}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
           </div>
 
           {/* Layout del mapa y carrito */}
