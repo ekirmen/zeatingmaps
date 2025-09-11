@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, Button, InputNumber, Select, Space, Typography, Divider, Alert, Spin, Row, Col, Badge } from 'antd';
+import { Card, Button, InputNumber, Select, Space, Typography, Divider, Alert, Spin, Row, Col, Badge, Tag } from 'antd';
 import { ShoppingCartOutlined, PlusOutlined, MinusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 
@@ -224,6 +224,8 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
           const precio = precioData;
           const cantidadEnCarrito = getCantidadEnCarrito(zona.id);
           const cantidadActual = cantidades[zona.id] || 0;
+          const aforoNum = typeof zona.aforo === 'number' ? zona.aforo : Number(zona.aforo || 0);
+          const isAgotado = aforoNum <= 0;
 
           return (
             <Col xs={24} sm={24} md={24} lg={24} key={zona.id}>
@@ -243,7 +245,9 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
 
                   <div className="min-w-[140px] flex items-baseline justify-center gap-2">
                     <Text strong>PRECIO:</Text>
-                    {precio ? (
+                    {isAgotado ? (
+                      <Tag color="red">AGOTADO</Tag>
+                    ) : precio ? (
                       <Text className="text-2xl font-bold text-green-600">
                         ${precio.precio ? precio.precio.toLocaleString() : '0'}
                       </Text>
@@ -254,20 +258,27 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
 
                   <div className="flex items-center gap-2">
                     <Text strong>CANTIDAD:</Text>
-                    <Button icon={<MinusOutlined />} onClick={() => decreaseCantidad(zona.id)} disabled={cantidadActual <= 0} />
+                    <Button icon={<MinusOutlined />} onClick={() => decreaseCantidad(zona.id)} disabled={isAgotado || cantidadActual <= 0} />
                     <InputNumber
                       min={0}
-                      max={zona.aforo || 999}
+                      max={aforoNum > 0 ? aforoNum : 0}
                       value={cantidadActual}
                       onChange={(value) => handleCantidadChange(zona.id, value)}
                       className="w-24"
                       size="large"
+                      disabled={isAgotado}
                     />
-                    <Button icon={<PlusOutlined />} onClick={() => increaseCantidad(zona.id)} />
-                    {zona.aforo && (
-                      <Text type="secondary" className="text-xs ml-2">
-                        Disponible: {zona.aforo} entradas
-                      </Text>
+                    <Button icon={<PlusOutlined />} onClick={() => increaseCantidad(zona.id)} disabled={isAgotado} />
+                    {Number.isFinite(aforoNum) && (
+                      isAgotado ? (
+                        <Text type="danger" className="text-xs ml-2 text-red-600">
+                          AGOTADO
+                        </Text>
+                      ) : (
+                        <Text type="secondary" className="text-xs ml-2">
+                          Disponible: {aforoNum} entradas
+                        </Text>
+                      )
                     )}
                   </div>
 
@@ -276,7 +287,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
                       type="primary"
                       icon={<PlusOutlined />}
                       onClick={() => handleAddToCart(zona)}
-                      disabled={cantidadActual <= 0 || !precio || !(precio?.precio > 0)}
+                      disabled={isAgotado || cantidadActual <= 0 || !precio || !(precio?.precio > 0)}
                       loading={loading}
                     >
                       Agregar al Carrito
