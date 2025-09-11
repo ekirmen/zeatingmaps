@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useLocation } from 'react-router-dom';
 import { message, Input, Button, Modal, Select, Card, Avatar, Badge, Tabs, Drawer, Form, Space, Typography, Tooltip, InputNumber, Spin, Progress } from 'antd';
 import { SearchOutlined, UserOutlined, ShoppingCartOutlined, GiftOutlined, ZoomInOutlined, ZoomOutOutlined, FullscreenOutlined, SettingOutlined, EyeOutlined, UploadOutlined, ReloadOutlined, CloseOutlined, MoneyCollectOutlined, InfoCircleOutlined, QuestionCircleOutlined, FormOutlined, MailOutlined, BellOutlined, ArrowLeftOutlined, DownloadOutlined, HistoryOutlined, AimOutlined, CompressOutlined } from '@ant-design/icons';
+import ErrorBoundary from '../../components/ErrorBoundary';
 import LazySimpleSeatingMap from './LazySimpleSeatingMap';
 import DynamicPriceSelector from './components/DynamicPriceSelector';
 import ZonesPanel from './components/ZonesPanel.jsx';
@@ -55,16 +56,6 @@ const BoleteriaMainCustomDesign = () => {
   const [discountValue, setDiscountValue] = useState(0);
   const [foundPayment, setFoundPayment] = useState(null);
   const [locatorSearchValue, setLocatorSearchValue] = useState('');
-  // Derivar locator actual desde estado disponible (transacción/selecciones)
-  const currentLocator = React.useMemo(() => {
-    // Prioridad: selectedSeats -> seat_locks en carrito -> transaction data si existiese
-    if (Array.isArray(selectedSeats) && selectedSeats.length > 0) {
-      const withLocator = selectedSeats.find(s => s.locator);
-      if (withLocator?.locator) return withLocator.locator;
-    }
-    // Extender aquí si se guarda transaction/locator en estado
-    return null;
-  }, [selectedSeats]);
   const [locatorSearchLoading, setLocatorSearchLoading] = useState(false);
   const [userSearchValue, setUserSearchValue] = useState('');
   const [userSearchResults, setUserSearchResults] = useState([]);
@@ -81,12 +72,47 @@ const BoleteriaMainCustomDesign = () => {
   const [funcionesForCountdown, setFuncionesForCountdown] = useState([]);
   const [showSeatLegend, setShowSeatLegend] = useState(false);
 
-  const boleteriaData = useBoleteria();
+  // Inicialización segura del hook useBoleteria
+  let boleteriaData = null;
+  try {
+    boleteriaData = useBoleteria();
+  } catch (error) {
+    console.error('Error inicializando useBoleteria:', error);
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Alert
+          message="Error de Inicialización"
+          description="Ha ocurrido un error al cargar la boletería. Por favor, recarga la página."
+          type="error"
+          showIcon
+          action={
+            <Button size="small" danger onClick={() => window.location.reload()}>
+              Recargar
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
   
   // Verificar que el hook se inicializó correctamente
   if (!boleteriaData || typeof boleteriaData !== 'object') {
     console.error('Error: useBoleteria no se inicializó correctamente');
-    return <div className="flex items-center justify-center min-h-screen">Error de inicialización</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Alert
+          message="Error de Inicialización"
+          description="El sistema de boletería no se pudo inicializar correctamente."
+          type="error"
+          showIcon
+          action={
+            <Button size="small" danger onClick={() => window.location.reload()}>
+              Recargar
+            </Button>
+          }
+        />
+      </div>
+    );
   }
 
   const {
@@ -122,6 +148,22 @@ const BoleteriaMainCustomDesign = () => {
     isSeatSelected = () => false,
     syncWithSeatLocks = () => {}
   } = boleteriaData;
+
+  // Derivar locator actual desde estado disponible (transacción/selecciones)
+  const currentLocator = React.useMemo(() => {
+    try {
+      // Prioridad: selectedSeats -> seat_locks en carrito -> transaction data si existiese
+      if (Array.isArray(selectedSeats) && selectedSeats.length > 0) {
+        const withLocator = selectedSeats.find(s => s.locator);
+        if (withLocator?.locator) return withLocator.locator;
+      }
+      // Extender aquí si se guarda transaction/locator en estado
+      return null;
+    } catch (error) {
+      console.error('Error calculando currentLocator:', error);
+      return null;
+    }
+  }, [selectedSeats]);
 
   // Normalizar detalles de la plantilla para evitar ReferenceError
   const detallesPlantilla = React.useMemo(() => {
@@ -1437,4 +1479,13 @@ const BoleteriaMainCustomDesign = () => {
   );
 };
 
-export default BoleteriaMainCustomDesign;
+// Componente principal envuelto en ErrorBoundary
+const BoleteriaMainCustomDesignWithErrorBoundary = () => {
+  return (
+    <ErrorBoundary>
+      <BoleteriaMainCustomDesign />
+    </ErrorBoundary>
+  );
+};
+
+export default BoleteriaMainCustomDesignWithErrorBoundary;
