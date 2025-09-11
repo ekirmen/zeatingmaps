@@ -332,17 +332,95 @@ const GridSaleMode = ({
         />
       )}
 
-      {/* Tabla de zonas */}
-      <Card className="mb-4">
-        <Table
-          columns={columns}
-          dataSource={zonas}
-          rowKey="id"
-          pagination={false}
-          size="small"
-          scroll={{ x: 600 }}
-        />
-      </Card>
+      {/* Zonas en tarjetas (modo store) */}
+      <Row gutter={[16, 16]}>
+        {zonas
+          .slice()
+          .sort((a, b) => {
+            const ordenA = precios[a.id]?.orden ?? 0;
+            const ordenB = precios[b.id]?.orden ?? 0;
+            if (ordenA !== ordenB) return ordenA - ordenB;
+            const nombreCompare = (a.nombre || '').localeCompare(b.nombre || '');
+            if (nombreCompare !== 0) return nombreCompare;
+            const precioA = precios[a.id]?.precio ?? Infinity;
+            const precioB = precios[b.id]?.precio ?? Infinity;
+            return precioA - precioB;
+          })
+          .map((zona) => {
+            const precio = precios[zona.id];
+            const cantidadActual = cantidades[zona.id] || 0;
+            const cantidadEnCarrito = getCantidadEnCarrito(zona.id);
+            const aforoNum = typeof zona.aforo === 'number' ? zona.aforo : Number(zona.aforo || 0);
+            const isAgotado = aforoNum <= 0;
+
+            return (
+              <Col xs={24} sm={24} md={24} lg={24} key={zona.id}>
+                <Card className={`zona-card ${cantidadEnCarrito > 0 ? 'zona-selected' : ''}`} hoverable>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2 min-w-[120px]">
+                      <Text strong>ZONA:</Text>
+                      <Title level={4} className="mb-0">{zona.nombre}</Title>
+                    </div>
+
+                    <div className="flex items-center gap-2 min-w-[140px]">
+                      <Text strong>PRECIO:</Text>
+                      {isAgotado ? (
+                        <Tag color="red">AGOTADO</Tag>
+                      ) : precio ? (
+                        <Text className="text-2xl font-bold text-green-600">
+                          ${precio.precio ? precio.precio.toLocaleString() : '0'}
+                        </Text>
+                      ) : (
+                        <Tag color="red">Sin precio</Tag>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 min-w-[200px]">
+                      <Text strong>CANTIDAD:</Text>
+                      <Button icon={<MinusOutlined />} onClick={() => setCantidades(prev => ({ ...prev, [zona.id]: Math.max(0, (prev[zona.id] || 0) - 1) }))} disabled={isAgotado || cantidadActual <= 0} />
+                      <InputNumber
+                        min={0}
+                        max={aforoNum > 0 ? aforoNum : 0}
+                        value={cantidadActual}
+                        onChange={(value) => handleCantidadChange(zona.id, value)}
+                        className="w-24"
+                        size="large"
+                        disabled={isAgotado}
+                      />
+                      <Button icon={<PlusOutlined />} onClick={() => setCantidades(prev => ({ ...prev, [zona.id]: Math.max(0, (prev[zona.id] || 0) + 1) }))} disabled={isAgotado} />
+                      {Number.isFinite(aforoNum) && (
+                        isAgotado ? (
+                          <Text type="danger" className="text-xs ml-2 text-red-600">AGOTADO</Text>
+                        ) : (
+                          <Text type="secondary" className="text-xs ml-2">Disponible: {aforoNum} entradas</Text>
+                        )
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="primary"
+                        icon={<PlusOutlined />}
+                        onClick={() => handleAddToCart(zona)}
+                        disabled={isAgotado || cantidadActual <= 0 || !precio || !(precio?.precio > 0) || !selectedClient}
+                        loading={loading}
+                      >
+                        Agregar al Carrito
+                      </Button>
+                      {cantidadEnCarrito > 0 && (
+                        <Badge count={cantidadEnCarrito} color="green">
+                          <Button type="link" onClick={() => handleRemoveFromCart(zona.id)} className="text-green-600">
+                            En carrito: {cantidadEnCarrito}
+                          </Button>
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            );
+          })}
+      </Row>
 
       {/* Resumen del carrito */}
       {cartItems.length > 0 && (
