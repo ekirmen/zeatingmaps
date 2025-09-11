@@ -17,6 +17,7 @@ import { supabase } from '../../supabaseClient';
 import formatDateString from '../../utils/formatDateString';
 import EventImage from '../components/EventImage';
 import { useTenant } from '../../contexts/TenantContext';
+import { useAuth } from '../../hooks/useAuth';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -24,6 +25,7 @@ const { Option } = Select;
 const ModernStorePage = () => {
   const navigate = useNavigate();
   const { currentTenant } = useTenant();
+  const { isTenantAdmin } = useAuth();
   
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -345,8 +347,10 @@ const ModernStorePage = () => {
 
                       {/* Información adicional */}
                       <div className="flex justify-between items-center text-xs text-gray-500 pt-2 border-t">
-                        <span>Creado: {formatDateString(event.created_at)}</span>
-                        <span>ID: {event.id.slice(0, 8)}...</span>
+                        <span>Fecha de celebración: {formatDateString(event.fecha_evento || event.fechaCelebracion || event.fecha || event.created_at)}</span>
+                        {isTenantAdmin() && (
+                          <span>ID: {String(event.id).slice(0, 8)}...</span>
+                        )}
                       </div>
                     </div>
                   </Card>

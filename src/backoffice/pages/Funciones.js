@@ -996,6 +996,24 @@ const Funciones = () => {
                 </button>
               </div>
             </div>
+
+            {/* Línea compacta con selección actual: Recinto | Sala | Evento */}
+            {(recintoSeleccionado || salaSeleccionada || eventoSeleccionado) && (
+              <div className="mt-4 px-6 py-3 bg-gray-50 rounded-md border border-gray-200 flex flex-wrap items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-600 font-medium">Recinto</span>
+                  <span className="text-gray-900">{recintoSeleccionado?.nombre || '-'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-600 font-medium">Sala</span>
+                  <span className="text-gray-900">{salaSeleccionada?.nombre || '-'}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-600 font-medium">Evento</span>
+                  <span className="text-gray-900">{eventoSeleccionado?.nombre || '-'}</span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Tabla */}
@@ -1133,7 +1151,7 @@ const Funciones = () => {
           setModalIsOpen(false);
           setEditingFuncion(null);
         }}
-        className="bg-white rounded-lg shadow-xl max-w-5xl mx-auto focus:outline-none"
+        className="bg-white rounded-lg shadow-xl max-w-7xl mx-auto w-full focus:outline-none"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
         style={{
           content: {
