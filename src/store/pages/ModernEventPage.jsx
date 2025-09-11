@@ -485,7 +485,7 @@ const ModernEventPage = () => {
                 className="shadow-lg border-0"
                 style={{ height: '100%' }}
               >
-                <div style={{ width: '850px', height: '650px', overflow: 'auto' }}>
+                <div style={{ width: '100%', height: '100%' }}>
                 {!canStoreAccess ? (
                   <NotFound title="404" message={`Este evento no está disponible (${eventStatus.text}).`} homePath="/store" />
                 ) : evento?.modoVenta === 'grid' ? (

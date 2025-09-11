@@ -954,22 +954,76 @@ const BoleteriaMainCustomDesign = () => {
 
                 {/* Asientos seleccionados */}
                 <div className="mb-md">
-                  <h4 className="font-medium text-gray-900 mb-sm">Asientos Seleccionados</h4>
+                  <h4 className="font-medium text-gray-900 mb-sm flex items-center justify-between">
+                    <span>Asientos Seleccionados</span>
+                    {/* Descargar todos los tickets juntos (bulk) */}
+                    {locator && (
+                      <Button
+                        size="small"
+                        icon={<DownloadOutlined />}
+                        onClick={async () => {
+                          try {
+                            const res = await fetch(`/api/payments/${locator}/download?mode=bulk`, { headers: { Accept: 'application/pdf' } });
+                            if (!res.ok) throw new Error('Descarga fallida');
+                            const blob = await res.blob();
+                            const url = window.URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `tickets-${locator}.pdf`;
+                            document.body.appendChild(a);
+                            a.click();
+                            window.URL.revokeObjectURL(url);
+                            document.body.removeChild(a);
+                          } catch (e) {
+                            message.error('Error al descargar tickets');
+                          }
+                        }}
+                      >
+                        Descargar todos
+                      </Button>
+                    )}
+                  </h4>
                   {selectedSeats.length > 0 ? (
                     <div className="space-y-sm">
                       {selectedSeats.map((seat, index) => (
                         <div key={seat._id || index} className="flex items-center justify-between p-sm bg-info-light rounded-md">
                           <div>
-                            <div className="font-medium text-sm">
-                              {seat.nombre || seat._id}
-                            </div>
-                            <div className="text-xs text-gray-500">
-                              Zona: {seat.zona?.nombre || 'Sin zona'}
-                            </div>
+                            <div className="font-medium text-sm">{seat.nombre || seat._id}</div>
+                            <div className="text-xs text-gray-500">Zona: {seat.zona?.nombre || 'Sin zona'}</div>
                           </div>
-                          <div className="text-right">
-                            <div className="font-bold text-sm">
-                              ${seat.precio?.toFixed(2) || '0.00'}
+                          <div className="flex items-center gap-sm">
+                            {locator && (seat.isPaid || seat.status === 'vendido' || seat.pagado === true) ? (
+                              <Tooltip title="Imprimir ticket">
+                                <Button
+                                  type="text"
+                                  className="text-green-600"
+                                  icon={<DownloadOutlined className="text-green-600" />}
+                                  onClick={async () => {
+                                    try {
+                                      const res = await fetch(`/api/payments/${locator}/download?mode=full`, { headers: { Accept: 'application/pdf' } });
+                                      if (!res.ok) throw new Error('Descarga fallida');
+                                      const blob = await res.blob();
+                                      const url = window.URL.createObjectURL(blob);
+                                      const a = document.createElement('a');
+                                      a.href = url;
+                                      a.download = `ticket-${locator}-${seat._id || index}.pdf`;
+                                      document.body.appendChild(a);
+                                      a.click();
+                                      window.URL.revokeObjectURL(url);
+                                      document.body.removeChild(a);
+                                    } catch (e) {
+                                      message.error('Error al descargar ticket');
+                                    }
+                                  }}
+                                />
+                              </Tooltip>
+                            ) : (
+                              <Tooltip title="Disponible tras pago">
+                                <Button type="text" icon={<DownloadOutlined />} disabled />
+                              </Tooltip>
+                            )}
+                            <div className="text-right">
+                              <div className="font-bold text-sm">${seat.precio?.toFixed(2) || '0.00'}</div>
                             </div>
                           </div>
                         </div>

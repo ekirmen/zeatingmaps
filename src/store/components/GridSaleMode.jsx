@@ -228,7 +228,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
           return (
             <Col xs={24} sm={24} md={24} lg={24} key={zona.id}>
               <Card className={`zona-card ${cantidadEnCarrito > 0 ? 'zona-selected' : ''}`} hoverable>
-                <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-6 text-center">
                   <div className="flex items-center gap-2 min-w-[200px]">
                     <Text strong>ZONA:</Text>
                     <Title level={4} className="mb-0">
@@ -271,7 +271,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
                     )}
                   </div>
 
-                  <div className="ml-auto">
+                  <div>
                     <Button
                       type="primary"
                       icon={<PlusOutlined />}
