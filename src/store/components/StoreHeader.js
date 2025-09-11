@@ -415,13 +415,7 @@ const Header = ({ onLogin, onLogout }) => {
       {/* Modal Cuenta */}
       
       <Modal
-        title={
-          accountMode === 'login'
-            ? t('header.login')
-            : accountMode === 'register'
-            ? t('header.signup')
-            : t('header.forgot')
-        }
+        title={null}
         open={isAccountModalVisible}
         zIndex={1000}
         style={{ position: 'relative' }}
@@ -444,12 +438,7 @@ const Header = ({ onLogin, onLogout }) => {
         okButtonProps={{ type: 'primary' }}
         cancelButtonProps={{ type: 'default' }}
         wrapClassName="account-modal-wrapper"
-        className="account-modal"
-        titleRender={(title) => (
-          <div style={{ color: theme.headerText, fontWeight: 'bold' }}>
-            {title}
-          </div>
-        )}
+        className="account-modal store-modal"
         onCancel={() => {
           setIsAccountModalVisible(false);
           setAccountMode('login');
@@ -458,83 +447,399 @@ const Header = ({ onLogin, onLogout }) => {
           setForgotEmail('');
           setError('');
         }}
-        footer={[
-          <Button
-            key="submit"
-            type="primary"
-            block
-            onClick={
-              accountMode === 'login'
-                ? handleLogin
-                : accountMode === 'register'
-                ? handleRegister
-                : handleForgotPassword
-            }
-          >
-            {accountMode === 'login'
-              ? t('header.login')
-              : accountMode === 'register'
-              ? t('header.register')
-              : t('button.continue')}
-          </Button>,
-        ]}
+        footer={null}
       >
-        {accountMode === 'login' && (
-          <>
-            {error && <div className="text-red-500 mb-4">{error}</div>}
-            <Input placeholder={t('header.email')} name="email" value={formData.email} onChange={handleInputChange} className="mb-4" />
-            <Input.Password placeholder={t('password.new')} name="password" value={formData.password} onChange={handleInputChange} />
-            <div className="mt-2 text-sm space-x-4">
-              <span className="cursor-pointer text-blue-600 hover:underline" onClick={() => setAccountMode('forgot')}>{t('header.forgot')}</span>
-              <span className="cursor-pointer text-blue-600 hover:underline" onClick={() => setAccountMode('register')}>{t('header.register')}</span>
-            </div>
-          </>
-        )}
-        {accountMode === 'register' && (
-          <>
-            <Input
-              placeholder={t('header.email')}
-              value={registerData.email}
-              onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-              className="mb-4"
-            />
-            <div className="flex mb-4">
-              <select
-                value={registerData.phoneCode}
-                onChange={(e) => setRegisterData({ ...registerData, phoneCode: e.target.value })}
-                className="border rounded-l px-2"
-              >
-                <option value="+58">🇻🇪 +58</option>
-                <option value="+1">🇺🇸 +1</option>
-                <option value="+52">🇲🇽 +52</option>
-                <option value="+34">🇪🇸 +34</option>
-              </select>
-              <Input
-                placeholder={t('profile.phone')}
-                value={registerData.phone}
-                onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
-                className="flex-1 rounded-l-none"
-              />
-            </div>
-            <Input.Password
-              placeholder={t('password.new')}
-              value={registerData.password}
-              onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-              className="mb-4"
-            />
-            <div className="mt-2 text-sm">
-              <span className="cursor-pointer text-blue-600 hover:underline" onClick={() => setAccountMode('login')}>{t('header.login')}</span>
-            </div>
-          </>
-        )}
-        {accountMode === 'forgot' && (
-          <>
-            <Input type="email" placeholder={t('forgot.placeholder')} value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} className="mb-4" />
-            <div className="mt-2 text-sm">
-              <span className="cursor-pointer text-blue-600 hover:underline" onClick={() => setAccountMode('login')}>{t('header.login')}</span>
-            </div>
-          </>
-        )}
+        {/* Header personalizado */}
+        <div className="store-text-center">
+          <UserOutlined className="store-text-2xl store-text-primary mb-2" />
+          <div className="store-text-lg store-font-semibold">
+            {accountMode === 'login' ? 'Iniciar Sesión para Continuar' : 
+             accountMode === 'register' ? 'Crear Cuenta Nueva' : 
+             'Recuperar Contraseña'}
+          </div>
+          <div className="store-text-sm store-text-gray-600">
+            {accountMode === 'login' ? 'Accede a tu cuenta para continuar' :
+             accountMode === 'register' ? 'Crea tu cuenta para comenzar' :
+             'Te enviaremos un enlace para restablecer tu contraseña'}
+          </div>
+        </div>
+
+        {/* Pestañas */}
+        <div className="flex border-b mb-6">
+          <button
+            className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
+              accountMode === 'login' 
+                ? 'border-b-2 border-blue-500 text-blue-600' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setAccountMode('login')}
+          >
+            Iniciar Sesión
+          </button>
+          <button
+            className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
+              accountMode === 'register' 
+                ? 'border-b-2 border-blue-500 text-blue-600' 
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+            onClick={() => setAccountMode('register')}
+          >
+            Crear Cuenta
+          </button>
+        </div>
+
+        {/* Contenido del formulario */}
+        <form id={accountMode} className="ant-form ant-form-vertical ant-form-large">
+          {accountMode === 'login' && (
+            <>
+              {error && <div className="text-red-500 mb-4 text-center">{error}</div>}
+              <div className="ant-form-item ant-form-item-has-success">
+                <div className="ant-row ant-form-item-row">
+                  <div className="ant-col ant-form-item-label">
+                    <label htmlFor="login_email" className="ant-form-item-required" title="Correo electrónico">
+                      Correo electrónico
+                    </label>
+                  </div>
+                  <div className="ant-col ant-form-item-control">
+                    <div className="ant-form-item-control-input">
+                      <div className="ant-form-item-control-input-content">
+                        <span className="ant-input-affix-wrapper ant-input-affix-wrapper-lg ant-input-outlined ant-input-status-success">
+                          <span className="ant-input-prefix">
+                            <span role="img" aria-label="mail" className="anticon anticon-mail">
+                              <svg viewBox="64 64 896 896" focusable="false" data-icon="mail" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                                <path d="M928 160H96c-17.7 0-32 14.3-32 32v640c0 17.7 14.3 32 32 32h832c17.7 0 32-14.3 32-32V192c0-17.7-14.3-32-32-32zm-40 110.8V792H136V270.8l-27.6-21.5 39.3-50.5 42.8 33.3h643.1l42.8-33.3 39.3 50.5-27.7 21.5zM833.6 232L512 482 190.4 232l-42.8-33.3-39.3 50.5 27.6 21.5 341.6 265.6a55.99 55.99 0 0068.7 0L888 270.8l27.6-21.5-39.3-50.5-42.7 33.2z"></path>
+                              </svg>
+                            </span>
+                          </span>
+                          <input
+                            autoComplete="email"
+                            placeholder="tu@email.com"
+                            id="login_email"
+                            aria-required="true"
+                            className="ant-input ant-input-lg"
+                            type="text"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                          />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="ant-form-item ant-form-item-has-success">
+                <div className="ant-row ant-form-item-row">
+                  <div className="ant-col ant-form-item-label">
+                    <label htmlFor="login_password" className="ant-form-item-required" title="Contraseña">
+                      Contraseña
+                    </label>
+                  </div>
+                  <div className="ant-col ant-form-item-control">
+                    <div className="ant-form-item-control-input">
+                      <div className="ant-form-item-control-input-content">
+                        <span className="ant-input-affix-wrapper ant-input-affix-wrapper-lg ant-input-outlined ant-input-status-success ant-input-password">
+                          <span className="ant-input-prefix">
+                            <span role="img" aria-label="lock" className="anticon anticon-lock">
+                              <svg viewBox="64 64 896 896" focusable="false" data-icon="lock" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                                <path d="M832 464h-68V240c0-70.7-57.3-128-128-128H388c-70.7 0-128 57.3-128 128v224h-68c-17.7 0-32 14.3-32 32v384c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V496c0-17.7-14.3-32-32-32zM332 240c0-30.9 25.1-56 56-56h248c30.9 0 56 25.1 56 56v224H332V240zm460 600H232V536h560v304zM484 701v53c0 4.4 3.6 8 8 8h40c4.4 0 8-3.6 8-8v-53a48.01 48.01 0 10-56 0z"></path>
+                              </svg>
+                            </span>
+                          </span>
+                          <input
+                            autoComplete="current-password"
+                            placeholder="Tu contraseña"
+                            id="login_password"
+                            aria-required="true"
+                            type="password"
+                            className="ant-input ant-input-lg"
+                            name="password"
+                            value={formData.password}
+                            onChange={handleInputChange}
+                          />
+                          <span className="ant-input-suffix">
+                            <span role="img" aria-label="eye" tabIndex="-1" className="anticon anticon-eye ant-input-password-icon">
+                              <svg viewBox="64 64 896 896" focusable="false" data-icon="eye" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                                <path d="M942.2 486.2C847.4 286.5 704.1 186 512 186c-192.2 0-335.4 100.5-430.2 300.3a60.3 60.3 0 000 51.5C176.6 737.5 319.9 838 512 838c192.2 0 335.4-100.5 430.2-300.3 7.7-16.2 7.7-35 0-51.5zM512 766c-161.3 0-279.4-81.8-362.7-254C232.6 339.8 350.7 258 512 258c161.3 0 279.4 81.8 362.7 254C791.5 684.2 673.4 766 512 766zm-4-430c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm0 288c-61.9 0-112-50.1-112-112s50.1-112 112-112 112 50.1 112 112-50.1 112-112 112z"></path>
+                              </svg>
+                            </span>
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="ant-form-item mb-4">
+                <div className="ant-row ant-form-item-row">
+                  <div className="ant-col ant-form-item-control">
+                    <div className="ant-form-item-control-input">
+                      <div className="ant-form-item-control-input-content">
+                        <button 
+                          type="submit" 
+                          className="store-button store-button-primary store-button-lg store-button-block"
+                          onClick={handleLogin}
+                        >
+                          Iniciar Sesión
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="text-center mb-4">
+                <button 
+                  type="button" 
+                  className="ant-btn ant-btn-link ant-btn-color-link ant-btn-variant-link ant-btn-lg text-blue-600"
+                  onClick={() => setAccountMode('forgot')}
+                >
+                  ¿No tienes contraseña? Enviar enlace de acceso
+                </button>
+              </div>
+              <div className="ant-divider ant-divider-horizontal ant-divider-with-text ant-divider-with-text-center" role="separator">
+                <span className="ant-divider-inner-text">
+                  <span className="ant-typography ant-typography-secondary text-sm">o</span>
+                </span>
+              </div>
+              <div className="text-center">
+                <span className="ant-typography ant-typography-secondary text-sm">
+                  ¿No tienes cuenta? 
+                  <button 
+                    type="button"
+                    className="ant-typography text-blue-600 cursor-pointer hover:underline ml-1"
+                    onClick={() => setAccountMode('register')}
+                  >
+                    Crear cuenta nueva
+                  </button>
+                </span>
+              </div>
+              <div className="text-center mt-4">
+                <a className="ant-typography text-sm text-gray-500" href="/store/forgot-password">
+                  ¿Olvidaste tu contraseña?
+                </a>
+              </div>
+            </>
+          )}
+
+          {accountMode === 'register' && (
+            <>
+              {error && <div className="text-red-500 mb-4 text-center">{error}</div>}
+              <div className="ant-form-item ant-form-item-has-success">
+                <div className="ant-row ant-form-item-row">
+                  <div className="ant-col ant-form-item-label">
+                    <label htmlFor="register_email" className="ant-form-item-required" title="Correo electrónico">
+                      Correo electrónico
+                    </label>
+                  </div>
+                  <div className="ant-col ant-form-item-control">
+                    <div className="ant-form-item-control-input">
+                      <div className="ant-form-item-control-input-content">
+                        <span className="ant-input-affix-wrapper ant-input-affix-wrapper-lg ant-input-outlined ant-input-status-success">
+                          <span className="ant-input-prefix">
+                            <span role="img" aria-label="mail" className="anticon anticon-mail">
+                              <svg viewBox="64 64 896 896" focusable="false" data-icon="mail" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                                <path d="M928 160H96c-17.7 0-32 14.3-32 32v640c0 17.7 14.3 32 32 32h832c17.7 0 32-14.3 32-32V192c0-17.7-14.3-32-32-32zm-40 110.8V792H136V270.8l-27.6-21.5 39.3-50.5 42.8 33.3h643.1l42.8-33.3 39.3 50.5-27.7 21.5zM833.6 232L512 482 190.4 232l-42.8-33.3-39.3 50.5 27.6 21.5 341.6 265.6a55.99 55.99 0 0068.7 0L888 270.8l27.6-21.5-39.3-50.5-42.7 33.2z"></path>
+                              </svg>
+                            </span>
+                          </span>
+                          <input
+                            autoComplete="email"
+                            placeholder="tu@email.com"
+                            id="register_email"
+                            aria-required="true"
+                            className="ant-input ant-input-lg"
+                            type="text"
+                            value={registerData.email}
+                            onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                          />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="ant-form-item ant-form-item-has-success">
+                <div className="ant-row ant-form-item-row">
+                  <div className="ant-col ant-form-item-label">
+                    <label htmlFor="register_phone" className="ant-form-item-required" title="Teléfono">
+                      Teléfono
+                    </label>
+                  </div>
+                  <div className="ant-col ant-form-item-control">
+                    <div className="ant-form-item-control-input">
+                      <div className="ant-form-item-control-input-content">
+                        <div className="flex">
+                          <select
+                            value={registerData.phoneCode}
+                            onChange={(e) => setRegisterData({ ...registerData, phoneCode: e.target.value })}
+                            className="border border-gray-300 rounded-l-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            <option value="+58">🇻🇪 +58</option>
+                            <option value="+1">🇺🇸 +1</option>
+                            <option value="+52">🇲🇽 +52</option>
+                            <option value="+34">🇪🇸 +34</option>
+                          </select>
+                          <input
+                            placeholder="Número de teléfono"
+                            id="register_phone"
+                            aria-required="true"
+                            className="ant-input ant-input-lg flex-1 rounded-l-none"
+                            type="tel"
+                            value={registerData.phone}
+                            onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="ant-form-item ant-form-item-has-success">
+                <div className="ant-row ant-form-item-row">
+                  <div className="ant-col ant-form-item-label">
+                    <label htmlFor="register_password" className="ant-form-item-required" title="Contraseña">
+                      Contraseña
+                    </label>
+                  </div>
+                  <div className="ant-col ant-form-item-control">
+                    <div className="ant-form-item-control-input">
+                      <div className="ant-form-item-control-input-content">
+                        <span className="ant-input-affix-wrapper ant-input-affix-wrapper-lg ant-input-outlined ant-input-status-success ant-input-password">
+                          <span className="ant-input-prefix">
+                            <span role="img" aria-label="lock" className="anticon anticon-lock">
+                              <svg viewBox="64 64 896 896" focusable="false" data-icon="lock" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                                <path d="M832 464h-68V240c0-70.7-57.3-128-128-128H388c-70.7 0-128 57.3-128 128v224h-68c-17.7 0-32 14.3-32 32v384c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V496c0-17.7-14.3-32-32-32zM332 240c0-30.9 25.1-56 56-56h248c30.9 0 56 25.1 56 56v224H332V240zm460 600H232V536h560v304zM484 701v53c0 4.4 3.6 8 8 8h40c4.4 0 8-3.6 8-8v-53a48.01 48.01 0 10-56 0z"></path>
+                              </svg>
+                            </span>
+                          </span>
+                          <input
+                            autoComplete="new-password"
+                            placeholder="Tu contraseña"
+                            id="register_password"
+                            aria-required="true"
+                            type="password"
+                            className="ant-input ant-input-lg"
+                            value={registerData.password}
+                            onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                          />
+                          <span className="ant-input-suffix">
+                            <span role="img" aria-label="eye" tabIndex="-1" className="anticon anticon-eye ant-input-password-icon">
+                              <svg viewBox="64 64 896 896" focusable="false" data-icon="eye" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                                <path d="M942.2 486.2C847.4 286.5 704.1 186 512 186c-192.2 0-335.4 100.5-430.2 300.3a60.3 60.3 0 000 51.5C176.6 737.5 319.9 838 512 838c192.2 0 335.4-100.5 430.2-300.3 7.7-16.2 7.7-35 0-51.5zM512 766c-161.3 0-279.4-81.8-362.7-254C232.6 339.8 350.7 258 512 258c161.3 0 279.4 81.8 362.7 254C791.5 684.2 673.4 766 512 766zm-4-430c-97.2 0-176 78.8-176 176s78.8 176 176 176 176-78.8 176-176-78.8-176-176-176zm0 288c-61.9 0-112-50.1-112-112s50.1-112 112-112 112 50.1 112 112-50.1 112-112 112z"></path>
+                              </svg>
+                            </span>
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="ant-form-item mb-4">
+                <div className="ant-row ant-form-item-row">
+                  <div className="ant-col ant-form-item-control">
+                    <div className="ant-form-item-control-input">
+                      <div className="ant-form-item-control-input-content">
+                        <button 
+                          type="submit" 
+                          className="store-button store-button-primary store-button-lg store-button-block"
+                          onClick={handleRegister}
+                        >
+                          Crear Cuenta
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="ant-divider ant-divider-horizontal ant-divider-with-text ant-divider-with-text-center" role="separator">
+                <span className="ant-divider-inner-text">
+                  <span className="ant-typography ant-typography-secondary text-sm">o</span>
+                </span>
+              </div>
+              <div className="text-center">
+                <span className="ant-typography ant-typography-secondary text-sm">
+                  ¿Ya tienes cuenta? 
+                  <button 
+                    type="button"
+                    className="ant-typography text-blue-600 cursor-pointer hover:underline ml-1"
+                    onClick={() => setAccountMode('login')}
+                  >
+                    Iniciar sesión
+                  </button>
+                </span>
+              </div>
+            </>
+          )}
+
+          {accountMode === 'forgot' && (
+            <>
+              <div className="ant-form-item ant-form-item-has-success">
+                <div className="ant-row ant-form-item-row">
+                  <div className="ant-col ant-form-item-label">
+                    <label htmlFor="forgot_email" className="ant-form-item-required" title="Correo electrónico">
+                      Correo electrónico
+                    </label>
+                  </div>
+                  <div className="ant-col ant-form-item-control">
+                    <div className="ant-form-item-control-input">
+                      <div className="ant-form-item-control-input-content">
+                        <span className="ant-input-affix-wrapper ant-input-affix-wrapper-lg ant-input-outlined ant-input-status-success">
+                          <span className="ant-input-prefix">
+                            <span role="img" aria-label="mail" className="anticon anticon-mail">
+                              <svg viewBox="64 64 896 896" focusable="false" data-icon="mail" width="1em" height="1em" fill="currentColor" aria-hidden="true">
+                                <path d="M928 160H96c-17.7 0-32 14.3-32 32v640c0 17.7 14.3 32 32 32h832c17.7 0 32-14.3 32-32V192c0-17.7-14.3-32-32-32zm-40 110.8V792H136V270.8l-27.6-21.5 39.3-50.5 42.8 33.3h643.1l42.8-33.3 39.3 50.5-27.7 21.5zM833.6 232L512 482 190.4 232l-42.8-33.3-39.3 50.5 27.6 21.5 341.6 265.6a55.99 55.99 0 0068.7 0L888 270.8l27.6-21.5-39.3-50.5-42.7 33.2z"></path>
+                              </svg>
+                            </span>
+                          </span>
+                          <input
+                            autoComplete="email"
+                            placeholder="tu@email.com"
+                            id="forgot_email"
+                            aria-required="true"
+                            className="ant-input ant-input-lg"
+                            type="email"
+                            value={forgotEmail}
+                            onChange={(e) => setForgotEmail(e.target.value)}
+                          />
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="ant-form-item mb-4">
+                <div className="ant-row ant-form-item-row">
+                  <div className="ant-col ant-form-item-control">
+                    <div className="ant-form-item-control-input">
+                      <div className="ant-form-item-control-input-content">
+                        <button 
+                          type="submit" 
+                          className="store-button store-button-primary store-button-lg store-button-block"
+                          onClick={handleForgotPassword}
+                        >
+                          Enviar Enlace
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="text-center">
+                <span className="ant-typography ant-typography-secondary text-sm">
+                  ¿Recordaste tu contraseña? 
+                  <button 
+                    type="button"
+                    className="ant-typography text-blue-600 cursor-pointer hover:underline ml-1"
+                    onClick={() => setAccountMode('login')}
+                  >
+                    Iniciar sesión
+                  </button>
+                </span>
+              </div>
+            </>
+          )}
+        </form>
       </Modal>
 
       {/* Modal Nueva Contraseña */}

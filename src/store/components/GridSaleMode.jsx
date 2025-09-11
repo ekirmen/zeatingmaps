@@ -230,20 +230,15 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
           return (
             <Col xs={24} sm={24} md={24} lg={24} key={zona.id}>
               <Card className={`zona-card ${cantidadEnCarrito > 0 ? 'zona-selected' : ''}`} hoverable>
-                <div className="flex flex-wrap items-center justify-center gap-6 text-center">
-                  <div className="flex items-baseline gap-2 min-w-[100px]">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 min-w-[120px]">
                     <Text strong>ZONA:</Text>
                     <Title level={4} className="mb-0">
                       {zona.nombre}
                     </Title>
-                    {zona.descripcion && (
-                      <Text type="secondary" className="text-sm">
-                        {zona.descripcion}
-                      </Text>
-                    )}
                   </div>
 
-                  <div className="min-w-[140px] flex items-baseline justify-center gap-2">
+                  <div className="flex items-center gap-2 min-w-[140px]">
                     <Text strong>PRECIO:</Text>
                     {isAgotado ? (
                       <Tag color="red">AGOTADO</Tag>
@@ -256,7 +251,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-[200px]">
                     <Text strong>CANTIDAD:</Text>
                     <Button icon={<MinusOutlined />} onClick={() => decreaseCantidad(zona.id)} disabled={isAgotado || cantidadActual <= 0} />
                     <InputNumber
@@ -282,7 +277,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
                     )}
                   </div>
 
-                  <div>
+                  <div className="flex items-center gap-2">
                     <Button
                       type="primary"
                       icon={<PlusOutlined />}
@@ -292,15 +287,14 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
                     >
                       Agregar al Carrito
                     </Button>
+                    {cantidadEnCarrito > 0 && (
+                      <Badge count={cantidadEnCarrito} color="green">
+                        <Button type="link" onClick={() => handleRemoveFromCart(zona.id)} className="text-green-600">
+                          En carrito: {cantidadEnCarrito}
+                        </Button>
+                      </Badge>
+                    )}
                   </div>
-
-                  {cantidadEnCarrito > 0 && (
-                    <Badge count={cantidadEnCarrito} color="green">
-                      <Button type="link" onClick={() => handleRemoveFromCart(zona.id)} className="text-green-600">
-                        En carrito: {cantidadEnCarrito}
-                      </Button>
-                    </Badge>
-                  )}
                 </div>
               </Card>
             </Col>

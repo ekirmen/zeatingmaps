@@ -1099,3 +1099,221 @@
     color: var(--store-gray-800);
   }
 }
+
+/* Account Modal Styles */
+.store-modal .ant-modal-content {
+  border-radius: 12px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.store-modal .ant-modal-header {
+  border-bottom: none;
+  padding: 24px 24px 0 24px;
+}
+
+.store-modal .ant-modal-body {
+  padding: 0 24px 24px 24px;
+}
+
+.store-text-center {
+  text-align: center;
+}
+
+.store-text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.store-text-lg {
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.store-text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.store-text-primary {
+  color: var(--store-primary);
+}
+
+.store-text-gray-600 {
+  color: var(--store-gray-600);
+}
+
+.store-font-semibold {
+  font-weight: 600;
+}
+
+.store-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.store-button-primary {
+  background-color: var(--store-primary);
+  color: white;
+}
+
+.store-button-primary:hover {
+  background-color: var(--store-primary-hover);
+  color: white;
+}
+
+.store-button-lg {
+  padding: 12px 24px;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  height: auto;
+}
+
+.store-button-block {
+  width: 100%;
+}
+
+/* Tab styles */
+.store-modal .flex.border-b button {
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.store-modal .flex.border-b button:hover {
+  background-color: var(--store-gray-50);
+}
+
+/* Form styles */
+.store-modal .ant-form-item {
+  margin-bottom: 16px;
+}
+
+.store-modal .ant-form-item-label {
+  padding-bottom: 4px;
+}
+
+.store-modal .ant-form-item-label > label {
+  font-weight: 500;
+  color: var(--store-gray-700);
+}
+
+.store-modal .ant-input-affix-wrapper {
+  border-radius: 8px;
+  border: 1px solid var(--store-gray-300);
+  transition: all 0.2s ease-in-out;
+}
+
+.store-modal .ant-input-affix-wrapper:hover {
+  border-color: var(--store-primary);
+}
+
+.store-modal .ant-input-affix-wrapper:focus-within {
+  border-color: var(--store-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.store-modal .ant-input {
+  border: none;
+  box-shadow: none;
+  padding: 12px 16px;
+}
+
+.store-modal .ant-input:focus {
+  border: none;
+  box-shadow: none;
+}
+
+.store-modal .ant-input-prefix {
+  margin-right: 8px;
+  color: var(--store-gray-400);
+}
+
+.store-modal .ant-input-suffix {
+  margin-left: 8px;
+  color: var(--store-gray-400);
+}
+
+.store-modal .ant-divider {
+  margin: 16px 0;
+}
+
+.store-modal .ant-divider-inner-text {
+  color: var(--store-gray-500);
+  font-size: 0.875rem;
+}
+
+/* Link styles */
+.store-modal .ant-btn-link {
+  padding: 0;
+  height: auto;
+  font-size: 0.875rem;
+}
+
+.store-modal .ant-btn-link:hover {
+  background: none;
+  color: var(--store-primary-hover);
+}
+
+/* Phone input styles */
+.store-modal .flex select {
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.store-modal .flex input.rounded-l-none {
+  border-left: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* Grid Sale Mode - Single Line Layout */
+.zona-card .flex.items-center.justify-between {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 1rem;
+}
+
+.zona-card .flex.items-center.justify-between > div {
+  flex-shrink: 0;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+  .zona-card .flex.items-center.justify-between {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .zona-card .flex.items-center.justify-between > div {
+    justify-content: center;
+    text-align: center;
+  }
+  
+  .zona-card .flex.items-center.justify-between > div:last-child {
+    margin-top: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .zona-card .flex.items-center.justify-between {
+    gap: 0.5rem;
+  }
+  
+  .zona-card .min-w-\[120px\],
+  .zona-card .min-w-\[140px\],
+  .zona-card .min-w-\[200px\] {
+    min-width: auto;
+  }
+}
