@@ -968,6 +968,21 @@
   background: #ffffff;
 }
 
+/* Force readable colors for mobile menu links and icons */
+.mobile-menu-drawer .mobile-menu-link,
+.mobile-menu-drawer .mobile-menu-link * {
+  color: var(--store-gray-900) !important;
+}
+
+.mobile-menu-drawer .mobile-menu-link:hover,
+.mobile-menu-drawer .mobile-menu-link:hover * {
+  color: var(--store-primary) !important;
+}
+
+.mobile-menu-drawer .anticon {
+  color: currentColor;
+}
+
 /* Hide mobile drawer on desktop */
 @media (min-width: 1024px) {
   .mobile-menu-drawer {
@@ -1019,6 +1034,12 @@
   
   .store-header .flex.gap-2:not(.lg\\:hidden) {
     display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .store-header .mobile-actions {
+    display: none !important;
   }
 }
 

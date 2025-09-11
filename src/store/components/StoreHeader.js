@@ -273,7 +273,7 @@ const Header = ({ onLogin, onLogout }) => {
           </div>
 
           {/* Mobile Actions */}
-          <div className="flex lg:hidden items-center gap-2">
+          <div className="mobile-actions flex lg:hidden items-center gap-2">
             {/* Mobile Search Toggle */}
             <button 
               onClick={() => setIsSearchVisible(!isSearchVisible)}
