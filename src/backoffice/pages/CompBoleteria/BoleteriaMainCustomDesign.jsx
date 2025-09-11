@@ -852,6 +852,15 @@ const BoleteriaMainCustomDesign = () => {
                 ) : selectedEvent?.modoVenta === 'grid' ? (
                   // Modo Grid - Venta sin mapa
                   <div className="p-4">
+                    {(() => {
+                      console.log('🔍 [BoleteriaMain] GridSaleMode props:', {
+                        evento: selectedEvent,
+                        funcion: selectedFuncion,
+                        hasEvento: !!selectedEvent,
+                        hasFuncion: !!selectedFuncion
+                      });
+                      return null;
+                    })()}
                     <GridSaleMode
                       evento={selectedEvent}
                       funcion={selectedFuncion}

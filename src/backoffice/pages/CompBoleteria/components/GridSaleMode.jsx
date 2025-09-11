@@ -32,13 +32,15 @@ const GridSaleMode = ({
       funcion: funcion
     });
     
-    if (!evento?.id || !funcion?.id) {
-      console.log('❌ [GridSaleMode] Missing required data, skipping load');
+    if (!evento?.id) {
+      console.log('❌ [GridSaleMode] Missing evento data, skipping load');
       return;
     }
     
+    // En modo Grid, no necesitamos función específica
+    console.log('✅ [GridSaleMode] Loading zonas for evento (modo grid)');
     loadZonasAndPrecios();
-  }, [evento?.id, funcion?.id]);
+  }, [evento?.id]);
 
   const loadZonasAndPrecios = async () => {
     try {
@@ -119,16 +121,17 @@ const GridSaleMode = ({
     }
 
     const item = {
-      id: `grid_${zona.id}_${funcion.id}`,
+      id: `grid_${zona.id}_${evento.id}`,
       zona_id: zona.id,
       zona_nombre: zona.nombre,
-      funcion_id: funcion.id,
+      funcion_id: funcion?.id || null,
+      evento_id: evento.id,
       precio: precio.precio,
       cantidad: cantidad,
       tipo: 'grid',
-      descripcion: `${zona.nombre} - ${funcion.nombre || 'Función'}`,
-      fecha: funcion.fecha,
-      hora: funcion.hora
+      descripcion: `${zona.nombre} - ${evento.nombre || 'Evento'}`,
+      fecha: funcion?.fecha || evento.fecha_evento,
+      hora: funcion?.hora || null
     };
 
     onAddToCart(item);
@@ -143,12 +146,12 @@ const GridSaleMode = ({
   };
 
   const handleRemoveFromCart = (zonaId) => {
-    const itemId = `grid_${zonaId}_${funcion.id}`;
+    const itemId = `grid_${zonaId}_${evento.id}`;
     onRemoveFromCart(itemId);
   };
 
   const getCantidadEnCarrito = (zonaId) => {
-    const itemId = `grid_${zonaId}_${funcion.id}`;
+    const itemId = `grid_${zonaId}_${evento.id}`;
     const item = cartItems.find(item => item.id === itemId);
     return item ? item.cantidad : 0;
   };
