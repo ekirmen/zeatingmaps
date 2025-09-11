@@ -604,11 +604,6 @@ const ModernEventPage = () => {
                     <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                       {evento.nombre}
                     </h1>
-                    {evento.descripcion && (
-                      <p className="text-base md:text-lg max-w-2xl opacity-90 leading-relaxed mt-2">
-                        {evento.descripcion}
-                      </p>
-                    )}
                     {/* Información rápida */}
                     <div className="flex flex-wrap gap-3 mt-3">
                       <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
@@ -640,6 +635,11 @@ const ModernEventPage = () => {
                         </div>
                       )}
                     </div>
+                    {evento.descripcion && (
+                      <p className="text-base md:text-lg max-w-2xl opacity-90 leading-relaxed mt-2">
+                        {evento.descripcion}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col items-stretch gap-3">
                     <div className="flex items-center gap-3 justify-end">
@@ -786,24 +786,9 @@ const ModernEventPage = () => {
             {/* Funciones disponibles */}
             <Card 
               title={
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <CalendarOutlined className="text-blue-500 mr-2" />
-                    <span className="text-xl font-semibold">Funciones Disponibles</span>
-                  </div>
-                  <Button 
-                    type="primary" 
-                    size="large"
-                    disabled={!canStoreAccess}
-                    onClick={() => {
-                      const url = selectedFunctionId 
-                        ? `/store/eventos/${eventSlug}/map?funcion=${selectedFunctionId}`
-                        : `/store/eventos/${eventSlug}/map`;
-                      navigate(url);
-                    }}
-                  >
-                    Ver Mapa de Asientos
-                  </Button>
+                <div className="flex items-center">
+                  <CalendarOutlined className="text-blue-500 mr-2" />
+                  <span className="text-xl font-semibold">Funciones Disponibles</span>
                 </div>
               }
               className="mb-6 shadow-sm border border-gray-200 rounded-xl"
@@ -825,20 +810,27 @@ const ModernEventPage = () => {
                           ? 'border-blue-500 bg-blue-50 shadow-md'
                           : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
                       }`}
-                      onClick={() => handleFunctionSelect(funcion.id || funcion._id)}
+                      onClick={() => {
+                        handleFunctionSelect(funcion.id || funcion._id);
+                        const fid = funcion.id || funcion._id;
+                        const url = fid
+                          ? `/store/eventos/${eventSlug}/map?funcion=${fid}`
+                          : `/store/eventos/${eventSlug}/map`;
+                        navigate(url);
+                      }}
                     >
                       <div className="flex justify-between items-center">
                         <div className="flex items-center space-x-4">
                           <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg">
-                            {new Date(funcion.fecha).getDate()}
+                            {(() => { try { const d = new Date(funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha); return isNaN(d.getTime()) ? '' : d.getDate(); } catch(_) { return ''; } })()}
                           </div>
                           <div>
                             <h3 className="text-xl font-semibold text-gray-800">
-                              {formatDateString(funcion.fecha)}
+                              {formatDateString(funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha)}
                             </h3>
                             <p className="text-gray-600 flex items-center">
                               <ClockCircleOutlined className="mr-1" />
-                              {funcion.hora}
+                              {(() => { if (funcion.hora) return funcion.hora; const raw = funcion.fechaCelebracion || funcion.fecha_celebracion || funcion.fecha; if (!raw) return '--:--'; try { const d = new Date(raw); if (isNaN(d.getTime())) return '--:--'; const hh = String(d.getHours()).padStart(2,'0'); const mm = String(d.getMinutes()).padStart(2,'0'); return `${hh}:${mm}`; } catch(_) { return '--:--'; } })()}
                             </p>
                             {venueInfo && (
                               <p className="text-gray-500 text-sm flex items-center">
@@ -848,17 +840,7 @@ const ModernEventPage = () => {
                             )}
                           </div>
                         </div>
-                        <Button 
-                          type={selectedFunctionId === (funcion.id || funcion._id) ? 'primary' : 'default'}
-                          size="large"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleFunctionSelect(funcion.id || funcion._id);
-                          }}
-                          className="px-8"
-                        >
-                          {selectedFunctionId === (funcion.id || funcion._id) ? 'Seleccionado' : 'Seleccionar'}
-                        </Button>
+                        {/* Botón retirado: navegación automática al seleccionar */}
                       </div>
                     </div>
                   ))}
