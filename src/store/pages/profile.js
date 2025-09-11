@@ -359,7 +359,7 @@ const Profile = () => {
                           icon={<ShoppingOutlined />}
                         />
                       }
-                      title={`Transacción ${purchase.locator}`}
+                      title={`Localizador ${purchase.locator}`}
                       description={
                         <Space direction="vertical" size="small">
                           <div>
