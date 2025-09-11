@@ -25,7 +25,17 @@ const GridSaleMode = ({
 
   // Cargar zonas y precios del evento
   useEffect(() => {
-    if (!evento?.id || !funcion?.id) return;
+    console.log('🔄 [GridSaleMode] useEffect triggered:', { 
+      eventoId: evento?.id, 
+      funcionId: funcion?.id,
+      evento: evento,
+      funcion: funcion
+    });
+    
+    if (!evento?.id || !funcion?.id) {
+      console.log('❌ [GridSaleMode] Missing required data, skipping load');
+      return;
+    }
     
     loadZonasAndPrecios();
   }, [evento?.id, funcion?.id]);
