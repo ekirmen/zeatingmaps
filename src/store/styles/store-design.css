@@ -959,13 +959,27 @@
 
 .mobile-menu-drawer .ant-drawer-body {
   padding: var(--store-space-6);
+  background: #ffffff;
+  color: var(--store-gray-900);
+}
+
+/* Improve contrast inside drawer */
+.mobile-menu-drawer .ant-drawer-content {
+  background: #ffffff;
+}
+
+/* Hide mobile drawer on desktop */
+@media (min-width: 1024px) {
+  .mobile-menu-drawer {
+    display: none !important;
+  }
 }
 
 .mobile-menu-link {
   display: flex;
   align-items: center;
   padding: var(--store-space-3) var(--store-space-4);
-  color: var(--store-gray-700);
+  color: var(--store-gray-900);
   text-decoration: none;
   border-radius: var(--store-radius-md);
   transition: var(--store-transition);
@@ -973,13 +987,24 @@
 }
 
 .mobile-menu-link:hover {
-  background: var(--store-gray-100);
+  background: var(--store-gray-50);
   color: var(--store-primary);
 }
 
 .mobile-menu-link svg {
   font-size: 16px;
   margin-right: var(--store-space-2);
+}
+
+/* Buttons inside drawer */
+.mobile-menu-drawer .store-button.store-button-outline {
+  border-color: var(--store-primary);
+  color: var(--store-primary);
+}
+
+.mobile-menu-drawer label,
+.mobile-menu-drawer select {
+  color: var(--store-gray-900);
 }
 
 /* Responsive Breakpoints */

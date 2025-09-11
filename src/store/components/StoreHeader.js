@@ -32,6 +32,17 @@ const Header = ({ onLogin, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  
+  // Close mobile drawer automatically on desktop viewport
+  useEffect(() => {
+    const handler = () => {
+      if (window.innerWidth >= 1024 && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, [isMobileMenuOpen]);
 
   useEffect(() => {
     const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
@@ -271,6 +282,21 @@ const Header = ({ onLogin, onLogout }) => {
               <SearchOutlined />
             </button>
             
+            {/* Mobile Account */}
+            {localStorage.getItem('token') ? (
+              <LinkWithRef to="/store/perfil" className="store-header mobile-action-btn">
+                <UserOutlined />
+              </LinkWithRef>
+            ) : (
+              <button 
+                onClick={openAccountModal}
+                className="store-header mobile-action-btn"
+                aria-label="Cuenta"
+              >
+                <UserOutlined />
+              </button>
+            )}
+
             {/* Mobile Cart */}
             <LinkWithRef to="/store/cart" className="store-header mobile-action-btn">
               <ShoppingCartOutlined />

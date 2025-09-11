@@ -105,6 +105,20 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
     onRemoveFromCart(itemId);
   };
 
+  const increaseCantidad = (zonaId) => {
+    setCantidades(prev => ({
+      ...prev,
+      [zonaId]: Math.max(0, (prev[zonaId] || 0) + 1)
+    }));
+  };
+
+  const decreaseCantidad = (zonaId) => {
+    setCantidades(prev => ({
+      ...prev,
+      [zonaId]: Math.max(0, (prev[zonaId] || 0) - 1)
+    }));
+  };
+
   const getCantidadEnCarrito = (zonaId) => {
     const itemId = `grid_${zonaId}_${funcion.id}`;
     const item = cartItems.find(item => item.id === itemId);
@@ -161,24 +175,30 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
 
   return (
     <div className="grid-sale-mode">
-      <div className="mb-6">
-        <Title level={3} className="flex items-center gap-2">
-          <ShoppingCartOutlined />
-          Selecciona tus entradas
-        </Title>
-        <Text type="secondary">
-          Elige la cantidad de entradas que deseas para cada zona
-        </Text>
-      </div>
-
       <Row gutter={[16, 16]}>
-        {zonas.map(zona => {
-          const precio = precios[zona.id];
+        {[...zonas].sort((a, b) => {
+          const ordenA = precios[a.id]?.orden;
+          const ordenB = precios[b.id]?.orden;
+          if (typeof ordenA === 'number' || typeof ordenB === 'number') {
+            if (typeof ordenA !== 'number') return 1;
+            if (typeof ordenB !== 'number') return -1;
+            if (ordenA !== ordenB) return ordenA - ordenB;
+          }
+          const precioA = (precios[a.id]?.precio ?? (typeof a.precio === 'number' ? a.precio : (Array.isArray(a.precios) ? a.precios[0]?.precio : undefined))) ?? Number.MAX_SAFE_INTEGER;
+          const precioB = (precios[b.id]?.precio ?? (typeof b.precio === 'number' ? b.precio : (Array.isArray(b.precios) ? b.precios[0]?.precio : undefined))) ?? Number.MAX_SAFE_INTEGER;
+          if (a?.nombre && b?.nombre && a.nombre !== b.nombre) {
+            return a.nombre.localeCompare(b.nombre);
+          }
+          return precioA - precioB;
+        }).map(zona => {
+          let precioData = precios[zona.id] || zona.precio || (Array.isArray(zona.precios) ? zona.precios[0] : null);
+          if (typeof precioData === 'number') precioData = { precio: precioData };
+          const precio = precioData;
           const cantidadEnCarrito = getCantidadEnCarrito(zona.id);
           const cantidadActual = cantidades[zona.id] || 0;
 
           return (
-            <Col xs={24} sm={12} lg={8} key={zona.id}>
+            <Col xs={24} sm={24} md={24} lg={24} key={zona.id}>
               <Card
                 className={`zona-card ${cantidadEnCarrito > 0 ? 'zona-selected' : ''}`}
                 hoverable
@@ -188,7 +208,7 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => handleAddToCart(zona)}
-                    disabled={cantidadActual <= 0 || !precio}
+                    disabled={cantidadActual <= 0 || !precio || !(precio?.precio > 0)}
                     loading={loading}
                   >
                     Agregar al Carrito
@@ -231,16 +251,18 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
                   <div className="zona-cantidad mb-4">
                     <Space direction="vertical" className="w-full">
                       <Text strong>Cantidad:</Text>
-                      <InputNumber
-                        min={0}
-                        max={zona.aforo || 999}
-                        value={cantidadActual}
-                        onChange={(value) => handleCantidadChange(zona.id, value)}
-                        className="w-full"
-                        size="large"
-                        addonBefore={<MinusOutlined />}
-                        addonAfter={<PlusOutlined />}
-                      />
+                      <div className="flex items-center gap-2">
+                        <Button icon={<MinusOutlined />} onClick={() => decreaseCantidad(zona.id)} disabled={cantidadActual <= 0} />
+                        <InputNumber
+                          min={0}
+                          max={zona.aforo || 999}
+                          value={cantidadActual}
+                          onChange={(value) => handleCantidadChange(zona.id, value)}
+                          className="w-24"
+                          size="large"
+                        />
+                        <Button icon={<PlusOutlined />} onClick={() => increaseCantidad(zona.id)} />
+                      </div>
                       {zona.aforo && (
                         <Text type="secondary" className="text-xs">
                           Disponible: {zona.aforo} entradas
