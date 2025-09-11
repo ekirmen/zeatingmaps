@@ -227,25 +227,11 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
 
           return (
             <Col xs={24} sm={24} md={24} lg={24} key={zona.id}>
-              <Card
-                className={`zona-card ${cantidadEnCarrito > 0 ? 'zona-selected' : ''}`}
-                hoverable
-                actions={[
-                  <Button
-                    key="add"
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => handleAddToCart(zona)}
-                    disabled={cantidadActual <= 0 || !precio || !(precio?.precio > 0)}
-                    loading={loading}
-                  >
-                    Agregar al Carrito
-                  </Button>
-                ]}
-              >
-                <div className="zona-content">
-                  <div className="zona-header mb-4">
-                    <Title level={4} className="mb-1">
+              <Card className={`zona-card ${cantidadEnCarrito > 0 ? 'zona-selected' : ''}`} hoverable>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-[200px]">
+                    <Text strong>ZONA:</Text>
+                    <Title level={4} className="mb-0">
                       {zona.nombre}
                     </Title>
                     {zona.descripcion && (
@@ -255,62 +241,54 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
                     )}
                   </div>
 
-                  <div className="zona-precio mb-4">
+                  <div className="min-w-[160px] flex items-center justify-center gap-2">
+                    <Text strong>PRECIO:</Text>
                     {precio ? (
-                      <div className="text-center">
-                        <Text className="text-2xl font-bold text-green-600">
-                          ${precio.precio ? precio.precio.toLocaleString() : '0'}
-                        </Text>
-                        {precio.descripcion && (
-                          <div className="text-sm text-gray-500 mt-1">
-                            {precio.descripcion}
-                          </div>
-                        )}
-                      </div>
+                      <Text className="text-2xl font-bold text-green-600">
+                        ${precio.precio ? precio.precio.toLocaleString() : '0'}
+                      </Text>
                     ) : (
-                      <Alert
-                        message="Precio no configurado"
-                        type="warning"
-                        size="small"
-                      />
+                      <Tag color="red">Sin precio</Tag>
                     )}
                   </div>
 
-                  <div className="zona-cantidad mb-4">
-                    <Space direction="vertical" className="w-full">
-                      <Text strong>Cantidad:</Text>
-                      <div className="flex items-center gap-2">
-                        <Button icon={<MinusOutlined />} onClick={() => decreaseCantidad(zona.id)} disabled={cantidadActual <= 0} />
-                        <InputNumber
-                          min={0}
-                          max={zona.aforo || 999}
-                          value={cantidadActual}
-                          onChange={(value) => handleCantidadChange(zona.id, value)}
-                          className="w-24"
-                          size="large"
-                        />
-                        <Button icon={<PlusOutlined />} onClick={() => increaseCantidad(zona.id)} />
-                      </div>
-                      {zona.aforo && (
-                        <Text type="secondary" className="text-xs">
-                          Disponible: {zona.aforo} entradas
-                        </Text>
-                      )}
-                    </Space>
+                  <div className="flex items-center gap-2">
+                    <Text strong>CANTIDAD:</Text>
+                    <Button icon={<MinusOutlined />} onClick={() => decreaseCantidad(zona.id)} disabled={cantidadActual <= 0} />
+                    <InputNumber
+                      min={0}
+                      max={zona.aforo || 999}
+                      value={cantidadActual}
+                      onChange={(value) => handleCantidadChange(zona.id, value)}
+                      className="w-24"
+                      size="large"
+                    />
+                    <Button icon={<PlusOutlined />} onClick={() => increaseCantidad(zona.id)} />
+                    {zona.aforo && (
+                      <Text type="secondary" className="text-xs ml-2">
+                        Disponible: {zona.aforo} entradas
+                      </Text>
+                    )}
+                  </div>
+
+                  <div className="ml-auto">
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={() => handleAddToCart(zona)}
+                      disabled={cantidadActual <= 0 || !precio || !(precio?.precio > 0)}
+                      loading={loading}
+                    >
+                      Agregar al Carrito
+                    </Button>
                   </div>
 
                   {cantidadEnCarrito > 0 && (
-                    <div className="zona-carrito">
-                      <Badge count={cantidadEnCarrito} color="green">
-                        <Button
-                          type="link"
-                          onClick={() => handleRemoveFromCart(zona.id)}
-                          className="text-green-600"
-                        >
-                          En carrito: {cantidadEnCarrito}
-                        </Button>
-                      </Badge>
-                    </div>
+                    <Badge count={cantidadEnCarrito} color="green">
+                      <Button type="link" onClick={() => handleRemoveFromCart(zona.id)} className="text-green-600">
+                        En carrito: {cantidadEnCarrito}
+                      </Button>
+                    </Badge>
                   )}
                 </div>
               </Card>
