@@ -81,39 +81,47 @@ const BoleteriaMainCustomDesign = () => {
   const [funcionesForCountdown, setFuncionesForCountdown] = useState([]);
   const [showSeatLegend, setShowSeatLegend] = useState(false);
 
+  const boleteriaData = useBoleteria();
+  
+  // Verificar que el hook se inicializó correctamente
+  if (!boleteriaData || typeof boleteriaData !== 'object') {
+    console.error('Error: useBoleteria no se inicializó correctamente');
+    return <div className="flex items-center justify-center min-h-screen">Error de inicialización</div>;
+  }
+
   const {
-    eventos,
-    funciones,
-    selectedPlantilla,
-    mapa,
-    carrito,
-    setCarrito,
-    handleEventSelect,
-    handleFunctionSelect,
-    setSelectedPlantilla,
-    zonas,
-    loading,
-    error,
-    debugInfo,
+    eventos = [],
+    funciones = [],
+    selectedPlantilla = null,
+    mapa = null,
+    carrito = [],
+    setCarrito = () => {},
+    handleEventSelect = () => {},
+    handleFunctionSelect = () => {},
+    setSelectedPlantilla = () => {},
+    zonas = [],
+    loading = false,
+    error = null,
+    debugInfo = {},
     // Variables del store unificado
-    selectedFuncion,
-    selectedEvent,
-    setSelectedEvent,
-    setSelectedFuncion,
-    selectedClient,
-    setSelectedClient,
-    selectedAffiliate,
-    setSelectedAffiliate,
-    selectedSeats,
-    setSelectedSeats,
-    addSeat,
-    removeSeat,
-    clearSeats,
-    getSeatCount,
-    getTotalPrice,
-    isSeatSelected,
-    syncWithSeatLocks
-  } = useBoleteria();
+    selectedFuncion = null,
+    selectedEvent = null,
+    setSelectedEvent = () => {},
+    setSelectedFuncion = () => {},
+    selectedClient = null,
+    setSelectedClient = () => {},
+    selectedAffiliate = null,
+    setSelectedAffiliate = () => {},
+    selectedSeats = [],
+    setSelectedSeats = () => {},
+    addSeat = () => {},
+    removeSeat = () => {},
+    clearSeats = () => {},
+    getSeatCount = () => 0,
+    getTotalPrice = () => 0,
+    isSeatSelected = () => false,
+    syncWithSeatLocks = () => {}
+  } = boleteriaData;
 
   // Normalizar detalles de la plantilla para evitar ReferenceError
   const detallesPlantilla = React.useMemo(() => {

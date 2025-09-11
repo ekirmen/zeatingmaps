@@ -481,7 +481,9 @@ export const useBoleteria = () => {
   }, []);
 
   // Memoizar el valor de retorno para evitar re-renderizados
-  const returnValue = useMemo(() => ({
+  const returnValue = useMemo(() => {
+    try {
+      return {
     eventos,
     funciones,
     selectedFuncion,
@@ -517,7 +519,47 @@ export const useBoleteria = () => {
     getTotalPrice,
     isSeatSelected,
     syncWithSeatLocks
-  }), [
+      };
+    } catch (error) {
+      console.error('Error en useMemo de useBoleteria:', error);
+      return {
+        eventos: [],
+        funciones: [],
+        selectedFuncion: null,
+        selectedEvent: null,
+        selectedPlantilla: null,
+        setSelectedPlantilla: () => {},
+        mapa: null,
+        zonas: [],
+        carrito: [],
+        loading: false,
+        error: 'Error de inicialización',
+        debugInfo: {},
+        setDebugInfo: () => {},
+        setCarrito: () => {},
+        addToCarrito: () => {},
+        removeFromCarrito: () => {},
+        clearCarrito: () => {},
+        handleEventSelect: () => {},
+        handleFunctionSelect: () => {},
+        setSelectedEvent: () => {},
+        setSelectedFuncion: () => {},
+        selectedClient: null,
+        setSelectedClient: () => {},
+        selectedAffiliate: null,
+        setSelectedAffiliate: () => {},
+        selectedSeats: [],
+        setSelectedSeats: () => {},
+        addSeat: () => {},
+        removeSeat: () => {},
+        clearSeats: () => {},
+        getSeatCount: () => 0,
+        getTotalPrice: () => 0,
+        isSeatSelected: () => false,
+        syncWithSeatLocks: () => {}
+      };
+    }
+  }, [
     eventos,
     funciones,
     selectedFuncion,
