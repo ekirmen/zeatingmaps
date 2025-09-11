@@ -839,82 +839,76 @@ const BoleteriaMainCustomDesign = () => {
 
             {/* Área del mapa o modo grid */}
             <div className="flex-1 relative bg-white">
-              {!getEstadoVentaInfo(selectedEvent?.estadoVenta)?.boleteria?.canAccessBoleteria ? (
-                <div className="flex items-center justify-center h-96 w-full">
-                  <div className="text-center text-gray-600">
-                    <div className="text-lg font-medium mb-2">No disponible</div>
-                    <div className="text-sm">Este evento no está habilitado para boletería ({getEstadoVentaInfo(selectedEvent?.estadoVenta)?.label}).</div>
-                  </div>
-                </div>
-              ) : selectedEvent?.modoVenta === 'grid' ? (
-                // Modo Grid - Venta sin mapa
-                <div className="p-4">
-                  <GridSaleMode
-                    evento={selectedEvent}
-                    funcion={selectedFuncion}
-                    onAddToCart={(item) => {
-                      // Convertir item del modo grid al formato del carrito
-                      const cartItem = {
-                        sillaId: item.id,
-                        nombre: item.descripcion,
-                        precio: item.precio,
-                        nombreZona: item.zona_nombre,
-                        functionId: item.funcion_id,
-                        cantidad: item.cantidad,
-                        tipo: 'grid'
-                      };
-                      addSeat(cartItem);
-                    }}
-                    onRemoveFromCart={(itemId) => {
-                      removeSeat(itemId);
-                    }}
-                    cartItems={selectedSeats}
-                    loading={loading}
-                    selectedClient={selectedClient}
-                    onClientSelect={() => setShowClientModal(true)}
-                  />
-                </div>
-              ) : mapa ? (
-                <div
-                  style={{ 
-                    transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`, 
-                    transformOrigin: '0 0'
-                  }}
-                >
-                  <LazySimpleSeatingMap
-                    selectedFuncion={selectedFuncion}
-                    selectedEvent={selectedEvent}
-                    onSeatClick={handleSeatClick}
-                    selectedSeats={selectedSeats}
-                    blockedSeats={blockedSeats}
-                    blockMode={blockMode}
-                    zonas={zonas}
-                    selectedPlantilla={selectedPlantilla}
-                    selectedPriceOption={selectedPriceOption}
-                    selectedZonaId={activeZoneId}
-                    mapa={mapa}
-                    lockedSeats={lockedSeats}
-                    onLockChange={handleLockChange}
-                  />
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-96">
-                  <div className="text-center">
-                    <div className="text-gray-500 mb-2">
-                      {selectedEvent?.modoVenta === 'grid' 
-                        ? 'Modo Grid activado - No se requiere mapa'
-                        : 'No hay mapa disponible'
-                      }
-                    </div>
-                    <div className="text-sm text-gray-400">
-                      {selectedEvent?.modoVenta === 'grid'
-                        ? 'Las entradas se venden por zona sin selección específica de asientos'
-                        : 'Este evento no tiene un mapa de asientos configurado'
-                      }
+              {(() => {
+                const ev = getEstadoVentaInfo(selectedEvent?.estadoVenta);
+                const canBoleteriaAccess = !!(ev && ev.boleteria && ev.boleteria.icon === '✔') && selectedEvent?.visible_en_boleteria !== false;
+                return !canBoleteriaAccess ? (
+                  <div className="flex items-center justify-center h-96 w-full">
+                    <div className="text-center text-gray-600">
+                      <div className="text-lg font-medium mb-2">No disponible</div>
+                      <div className="text-sm">Este evento no está habilitado para boletería ({ev?.label}).</div>
                     </div>
                   </div>
-                </div>
-              )}
+                ) : selectedEvent?.modoVenta === 'grid' ? (
+                  // Modo Grid - Venta sin mapa
+                  <div className="p-4">
+                    <GridSaleMode
+                      evento={selectedEvent}
+                      funcion={selectedFuncion}
+                      onAddToCart={(item) => {
+                        // Convertir item del modo grid al formato del carrito
+                        const cartItem = {
+                          sillaId: item.id,
+                          nombre: item.descripcion,
+                          precio: item.precio,
+                          nombreZona: item.zona_nombre,
+                          functionId: item.funcion_id,
+                          cantidad: item.cantidad,
+                          tipo: 'grid'
+                        };
+                        addSeat(cartItem);
+                      }}
+                      onRemoveFromCart={(itemId) => {
+                        removeSeat(itemId);
+                      }}
+                      cartItems={selectedSeats}
+                      loading={loading}
+                      selectedClient={selectedClient}
+                      onClientSelect={() => setShowClientModal(true)}
+                    />
+                  </div>
+                ) : mapa ? (
+                  <div
+                    style={{ 
+                      transform: `scale(${zoomLevel}) translate(${panOffset.x}px, ${panOffset.y}px)`, 
+                      transformOrigin: '0 0'
+                    }}
+                  >
+                    <LazySimpleSeatingMap
+                      selectedFuncion={selectedFuncion}
+                      selectedEvent={selectedEvent}
+                      onSeatClick={handleSeatClick}
+                      selectedSeats={selectedSeats}
+                      blockedSeats={blockedSeats}
+                      blockMode={blockMode}
+                      zonas={zonas}
+                      selectedPlantilla={selectedPlantilla}
+                      selectedPriceOption={selectedPriceOption}
+                      selectedZonaId={activeZoneId}
+                      mapa={mapa}
+                      lockedSeats={lockedSeats}
+                      onLockChange={handleLockChange}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center h-96 w-full">
+                    <div className="text-center text-gray-600">
+                      <div className="text-lg font-medium mb-2">Mapa no disponible</div>
+                      <div className="text-sm">No se encontró un mapa para este evento/función.</div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Controles de zoom */}
               <div className="absolute top-md right-md z-20">
