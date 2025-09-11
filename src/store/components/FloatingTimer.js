@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Badge, Button, Tooltip, Modal, message } from 'antd';
-import { ClockCircleOutlined, ShoppingCartOutlined, CloseOutlined } from '@ant-design/icons';
+import { Badge, Button, Tooltip, Modal, message, Form, Input, Tabs } from 'antd';
+import { ClockCircleOutlined, ShoppingCartOutlined, CloseOutlined, UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '../../supabaseClient';
 
 const FloatingTimer = () => {
   const [showTimer, setShowTimer] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [loginForm] = Form.useForm();
+  const [registerForm] = Form.useForm();
+  const [loading, setLoading] = useState(false);
   const { timeLeft, getItemCount, calculateTotal, items, products } = useCartStore();
-  const { user } = useAuth();
+  const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
 
   const itemCount = getItemCount();
@@ -39,13 +44,46 @@ const FloatingTimer = () => {
   // Manejar el login
   const handleLogin = () => {
     setShowLoginModal(false);
-    navigate('/store/login');
+    setShowRegisterModal(true);
   };
 
   // Manejar el registro
   const handleRegister = () => {
     setShowLoginModal(false);
-    navigate('/store/register');
+    setShowRegisterModal(true);
+  };
+
+  // Manejar login desde formulario
+  const handleLoginSubmit = async (values) => {
+    setLoading(true);
+    try {
+      await signIn(values.email, values.password);
+      setShowLoginModal(false);
+      loginForm.resetFields();
+      message.success('¡Bienvenido!');
+    } catch (error) {
+      message.error('Error al iniciar sesión: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Manejar registro desde formulario
+  const handleRegisterSubmit = async (values) => {
+    setLoading(true);
+    try {
+      await signUp(values.email, values.password, {
+        nombre: values.nombre,
+        telefono: values.telefono
+      });
+      setShowRegisterModal(false);
+      registerForm.resetFields();
+      message.success('¡Cuenta creada exitosamente!');
+    } catch (error) {
+      message.error('Error al crear cuenta: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Si no hay items, no mostrar nada
@@ -63,7 +101,7 @@ const FloatingTimer = () => {
   return (
     <>
       {/* Temporizador flotante */}
-      <div className="fixed bottom-4 right-4 z-50">
+      <div className="fixed top-1/2 right-4 transform -translate-y-1/2 z-50">
         <Tooltip 
           title={
             <div className="text-center">
@@ -111,22 +149,12 @@ const FloatingTimer = () => {
         </div>
       </div>
 
-      {/* Modal de login/registro */}
+      {/* Modal de login */}
       <Modal
         title="Inicia sesión para continuar"
         open={showLoginModal}
         onCancel={() => setShowLoginModal(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setShowLoginModal(false)}>
-            Cancelar
-          </Button>,
-          <Button key="register" onClick={handleRegister}>
-            Registrarse
-          </Button>,
-          <Button key="login" type="primary" onClick={handleLogin}>
-            Iniciar Sesión
-          </Button>
-        ]}
+        footer={null}
         width={400}
       >
         <div className="text-center py-4">
@@ -134,7 +162,7 @@ const FloatingTimer = () => {
           <h3 className="text-lg font-semibold mb-2">Tu carrito está esperando</h3>
           <p className="text-gray-600 mb-4">
             Tienes {formatTime(timeLeft)} para completar tu compra. 
-            Inicia sesión o regístrate para continuar.
+            Inicia sesión para continuar.
           </p>
           
           <div className="bg-blue-50 p-3 rounded mb-4">
@@ -150,9 +178,191 @@ const FloatingTimer = () => {
             </div>
           </div>
 
-          <div className="text-xs text-gray-500">
+          <Form
+            form={loginForm}
+            onFinish={handleLoginSubmit}
+            layout="vertical"
+            className="text-left"
+          >
+            <Form.Item
+              name="email"
+              rules={[
+                { required: true, message: 'Por favor ingresa tu email' },
+                { type: 'email', message: 'Email inválido' }
+              ]}
+            >
+              <Input
+                prefix={<MailOutlined />}
+                placeholder="Email"
+                size="large"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="password"
+              rules={[
+                { required: true, message: 'Por favor ingresa tu contraseña' }
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Contraseña"
+                size="large"
+              />
+            </Form.Item>
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setShowLoginModal(false)}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleRegister}
+                className="flex-1"
+              >
+                Crear Cuenta
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit"
+                loading={loading}
+                className="flex-1"
+              >
+                Iniciar Sesión
+              </Button>
+            </div>
+          </Form>
+
+          <div className="text-xs text-gray-500 mt-4">
             ⏰ Tu reserva expira en {formatTime(timeLeft)}
           </div>
+        </div>
+      </Modal>
+
+      {/* Modal de registro */}
+      <Modal
+        title="Crear cuenta nueva"
+        open={showRegisterModal}
+        onCancel={() => setShowRegisterModal(false)}
+        footer={null}
+        width={400}
+      >
+        <div className="text-center py-4">
+          <UserOutlined className="text-4xl text-green-500 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Crea tu cuenta</h3>
+          <p className="text-gray-600 mb-4">
+            Regístrate para completar tu compra y gestionar tus entradas.
+          </p>
+
+          <Form
+            form={registerForm}
+            onFinish={handleRegisterSubmit}
+            layout="vertical"
+            className="text-left"
+          >
+            <Form.Item
+              name="nombre"
+              rules={[
+                { required: true, message: 'Por favor ingresa tu nombre' }
+              ]}
+            >
+              <Input
+                prefix={<UserOutlined />}
+                placeholder="Nombre completo"
+                size="large"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="email"
+              rules={[
+                { required: true, message: 'Por favor ingresa tu email' },
+                { type: 'email', message: 'Email inválido' }
+              ]}
+            >
+              <Input
+                prefix={<MailOutlined />}
+                placeholder="Email"
+                size="large"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="telefono"
+              rules={[
+                { required: true, message: 'Por favor ingresa tu teléfono' }
+              ]}
+            >
+              <Input
+                placeholder="Teléfono"
+                size="large"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="password"
+              rules={[
+                { required: true, message: 'Por favor ingresa una contraseña' },
+                { min: 6, message: 'La contraseña debe tener al menos 6 caracteres' }
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Contraseña"
+                size="large"
+              />
+            </Form.Item>
+
+            <Form.Item
+              name="confirmPassword"
+              dependencies={['password']}
+              rules={[
+                { required: true, message: 'Por favor confirma tu contraseña' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('password') === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('Las contraseñas no coinciden'));
+                  },
+                }),
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Confirmar contraseña"
+                size="large"
+              />
+            </Form.Item>
+
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setShowRegisterModal(false)}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={() => {
+                  setShowRegisterModal(false);
+                  setShowLoginModal(true);
+                }}
+                className="flex-1"
+              >
+                Ya tengo cuenta
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit"
+                loading={loading}
+                className="flex-1"
+              >
+                Crear Cuenta
+              </Button>
+            </div>
+          </Form>
         </div>
       </Modal>
     </>
