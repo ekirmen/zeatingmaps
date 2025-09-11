@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, InputNumber, Select, Space, Typography, Divider, Alert, Spin, Row, Col, Badge, Table, Tag } from 'antd';
 import { ShoppingCartOutlined, PlusOutlined, MinusOutlined, InfoCircleOutlined, UserOutlined, DeleteOutlined } from '@ant-design/icons';
 import { supabase } from '../../../../supabaseClient';
+import { fetchZonasPorSala } from '../../../services/apibackoffice';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -34,14 +35,12 @@ const GridSaleMode = ({
       setLoadingZonas(true);
       setError(null);
 
-      // Cargar zonas del evento (usando sala_id del evento)
-      const { data: zonasData, error: zonasError } = await supabase
-        .from('zonas')
-        .select('*')
-        .eq('sala_id', evento.sala)
-        .order('nombre');
+      console.log('🔍 [GridSaleMode] Cargando zonas para evento:', evento);
+      console.log('🔍 [GridSaleMode] Sala del evento:', evento.sala);
 
-      if (zonasError) throw zonasError;
+      // Cargar zonas del evento usando la función estándar
+      const zonasData = await fetchZonasPorSala(evento.sala);
+      console.log('🏷️ [GridSaleMode] Zonas cargadas:', zonasData);
 
       setZonas(zonasData || []);
 
