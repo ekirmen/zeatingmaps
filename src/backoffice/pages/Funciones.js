@@ -907,8 +907,8 @@ const Funciones = () => {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="min-w-[220px]">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Recinto</label>
                 <select
                   value={recintoSeleccionado ? recintoSeleccionado.id : ''}
@@ -921,15 +921,13 @@ const Funciones = () => {
                 >
                   <option value="">Seleccionar Recinto</option>
                   {recintos.map(recinto => (
-                    <option key={recinto.id} value={recinto.id}>
-                      {recinto.nombre}
-                    </option>
+                    <option key={recinto.id} value={recinto.id}>{recinto.nombre}</option>
                   ))}
                 </select>
               </div>
 
               {recintoSeleccionado && (
-                <div>
+                <div className="min-w-[220px]">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Sala</label>
                   <select
                     value={salaSeleccionada ? salaSeleccionada.id : ''}
@@ -941,16 +939,14 @@ const Funciones = () => {
                   >
                     <option value="">Seleccionar Sala</option>
                     {recintoSeleccionado.salas.map(sala => (
-                      <option key={sala.id} value={sala.id}>
-                        {sala.nombre}
-                      </option>
+                      <option key={sala.id} value={sala.id}>{sala.nombre}</option>
                     ))}
                   </select>
                 </div>
               )}
 
               {salaSeleccionada && (
-                <div>
+                <div className="min-w-[240px] flex-1">
                   <label className="block text-sm font-medium text-gray-700 mb-1">Evento</label>
                   <select
                     value={eventoSeleccionado ? eventoSeleccionado.id : ''}
@@ -962,39 +958,27 @@ const Funciones = () => {
                   >
                     <option value="">Seleccionar Evento</option>
                     {eventos.map(evento => (
-                      <option key={evento.id} value={evento.id}>
-                        {evento.nombre}
-                      </option>
+                      <option key={evento.id} value={evento.id}>{evento.nombre}</option>
                     ))}
                   </select>
-                  {eventos.length === 0 && (
-                    <p className="text-sm text-gray-500 mt-1">
-                      No hay eventos disponibles para esta sala. 
-                      <a href="/dashboard/eventos" className="text-blue-600 hover:underline ml-1">
-                        Crear evento
-                      </a>
-                    </p>
-                  )}
                 </div>
               )}
 
-              <div className="flex items-end">
-                <button 
-                  onClick={() => {
-                    setEditingFuncion(null);
-                    loadLastNuevaFuncion();
-                    setModalIsOpen(true);
-                  }}
-                  disabled={!recintoSeleccionado || !salaSeleccionada || !eventoSeleccionado}
-                  className={`w-full px-4 py-2 rounded-md font-medium transition-colors ${
-                    recintoSeleccionado && salaSeleccionada && eventoSeleccionado
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  Nueva Función
-                </button>
-              </div>
+              <button 
+                onClick={() => {
+                  setEditingFuncion(null);
+                  loadLastNuevaFuncion();
+                  setModalIsOpen(true);
+                }}
+                disabled={!recintoSeleccionado || !salaSeleccionada || !eventoSeleccionado}
+                className={`px-4 py-2 rounded-md font-medium transition-colors ${
+                  recintoSeleccionado && salaSeleccionada && eventoSeleccionado
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white cursor-pointer'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Nueva Función
+              </button>
             </div>
 
             {/* Línea compacta con selección actual: Recinto | Sala | Evento */}

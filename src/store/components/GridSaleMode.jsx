@@ -26,27 +26,53 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
       setLoadingZonas(true);
       setError(null);
 
-      // Usar endpoint de Vercel para cargar zonas y precios
-      const response = await fetch('/api/grid-sale/load-zonas', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ evento })
-      });
+      // 1) Cargar zonas reales desde la tabla public.zonas por sala_id
+      const { data: zonasData, error: zonasError } = await supabase
+        .from('zonas')
+        .select('id, nombre, aforo, color, numerada, sala_id')
+        .eq('sala_id', evento.sala)
+        .order('nombre');
 
-      const result = await response.json();
+      if (zonasError) throw zonasError;
+      const zonasReal = zonasData || [];
+      setZonas(zonasReal);
 
-      if (!result.success) {
-        throw new Error(result.message || 'Error cargando zonas');
+      // 2) Cargar precios desde plantillas y mapear por zona
+      const { data: plantillasData, error: plantillasError } = await supabase
+        .from('plantillas')
+        .select('*')
+        .eq('recinto', evento.recinto)
+        .eq('sala', evento.sala)
+        .limit(1);
+
+      if (plantillasError) throw plantillasError;
+
+      const preciosMap = {};
+      if (plantillasData && plantillasData.length > 0) {
+        const plantilla = plantillasData[0];
+        let detalles = [];
+        try {
+          detalles = typeof plantilla.detalles === 'string' ? JSON.parse(plantilla.detalles) : (plantilla.detalles || []);
+        } catch (_) {
+          detalles = [];
+        }
+        detalles.forEach(d => {
+          const zonaId = d.zonaId || d.zona_id || d.zona;
+          if (zonaId != null) {
+            preciosMap[zonaId] = {
+              precio: Number(d.precio) || 0,
+              descripcion: d.descripcion || '',
+              orden: typeof d.orden === 'number' ? d.orden : undefined,
+            };
+          }
+        });
       }
 
-      setZonas(result.data.zonas || []);
-      setPrecios(result.data.precios || {});
+      setPrecios(preciosMap);
 
-      // Inicializar cantidades
+      // 3) Inicializar cantidades
       const cantidadesIniciales = {};
-      result.data.zonas?.forEach(zona => {
+      zonasReal.forEach(zona => {
         cantidadesIniciales[zona.id] = 0;
       });
       setCantidades(cantidadesIniciales);
@@ -80,13 +106,15 @@ const GridSaleMode = ({ evento, funcion, onAddToCart, onRemoveFromCart, cartItem
       id: `grid_${zona.id}_${funcion.id}`,
       zona_id: zona.id,
       zona_nombre: zona.nombre,
+      nombreZona: zona.nombre,
+      nombre: zona.nombre,
       funcion_id: funcion.id,
-      precio: precio.precio,
+      precio: Number(precio.precio) || 0,
       cantidad: cantidad,
       tipo: 'grid',
-      descripcion: `${zona.nombre} - ${funcion.nombre || 'Función'}`,
-      fecha: funcion.fecha,
-      hora: funcion.hora
+      descripcion: `${zona.nombre} - ${funcion?.nombre || 'Función'}`,
+      fecha: funcion?.fechaCelebracion || funcion?.fecha || null,
+      hora: funcion?.hora || null
     };
 
     onAddToCart(item);

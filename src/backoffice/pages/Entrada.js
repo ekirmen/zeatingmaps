@@ -262,28 +262,30 @@ const Entrada = () => {
         {formData.recinto && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="px-4 py-3 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-semibold text-gray-900">Entradas del Recinto</h2>
-                  <p className="text-xs text-gray-600 mt-1">
-                    {tickets.length} entrada{tickets.length !== 1 ? 's' : ''} configurada{tickets.length !== 1 ? 's' : ''}
-                  </p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-base font-semibold text-gray-900">Entradas del Recinto</h2>
+                <div className="text-xs text-gray-600">
+                  {tickets.length} entrada{tickets.length !== 1 ? 's' : ''} configurada{tickets.length !== 1 ? 's' : ''}
                 </div>
-                {tickets.length === 0 && (
-                  <div className="text-xs text-gray-500">
-                    No hay entradas configuradas
-                  </div>
-                )}
               </div>
             </div>
             
             {tickets.length > 0 && (
               <div className="p-3">
-                <TicketsList
-                  tickets={tickets}
-                  onEdit={handleEditTicket}
-                  onDelete={handleDeleteTicket}
-                />
+                <div className="space-y-2">
+                  {tickets.map((t) => (
+                    <div key={t._id} className="flex flex-wrap items-center justify-between gap-3 border rounded px-3 py-2 bg-white">
+                      <div className="font-medium">{t.nombreEntrada || t.nombre || t.producto || 'Entrada'}</div>
+                      <div className="text-sm text-gray-600">Tipo: {t.tipo || t.tipo_producto || 'General'}</div>
+                      <div className="text-sm text-gray-600">Cantidad: {t.min || 1} - {t.max || 10}</div>
+                      <div className="text-sm text-gray-600">IVA: {t.iva_info?.porcentaje ?? t.iva ?? 0}</div>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => handleEditTicket(t)} className="px-2 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs">Editar</button>
+                        <button onClick={() => handleDeleteTicket(t._id)} className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Eliminar</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

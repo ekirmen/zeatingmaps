@@ -16,6 +16,7 @@ const Plano = () => {
   
   const { recinto, setRecinto, sala, setSala, recintos, setRecintos } = useRecintoSala();
   const [zonas, setZonas] = useState([]);
+  const [zonaSearch, setZonaSearch] = useState('');
   const [zoneSeatCounts, setZoneSeatCounts] = useState({});
   const [nuevaZona, setNuevaZona] = useState({ nombre: '', color: '#000000', aforo: 0, numerada: false });
   const [prevAforo, setPrevAforo] = useState(0);
@@ -288,15 +289,29 @@ const Plano = () => {
           </div>
         ) : (
           <div>
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-700">Zonas de la sala: {sala.nombre}</h2>
-              <div className="flex gap-3">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+              <h2 className="text-xl font-semibold text-gray-700">Zonas de la sala: {sala.nombre} <span className="text-sm text-gray-500">({(zonas || []).length})</span></h2>
+              <div className="flex items-center gap-3">
+                <input
+                  type="text"
+                  value={zonaSearch}
+                  onChange={(e) => setZonaSearch(e.target.value)}
+                  placeholder="Buscar zona por nombre..."
+                  className="px-3 py-2 border border-gray-300 rounded w-60"
+                />
                 <button
                   onClick={refreshZonas}
                   disabled={loadingZonas}
                   className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   {loadingZonas ? 'Cargando...' : '🔄 Refrescar'}
+                </button>
+                <button
+                  onClick={() => { setEditingZona(null); setNuevaZona({ nombre: '', color: '#000000', aforo: 0, numerada: false }); setModalIsOpen(true); }}
+                  disabled={!canCreateZona()}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed font-medium shadow-sm text-sm"
+                >
+                  ➕ Nueva Zona
                 </button>
                 <button
                   onClick={handleCrearMapa}
@@ -333,7 +348,9 @@ const Plano = () => {
               </div>
             ) : Array.isArray(zonas) ? (
               <div className="space-y-4">
-                {zonas.map((zona, index) => (
+                {zonas
+                  .filter(z => !zonaSearch || String(z.nombre || '').toLowerCase().includes(zonaSearch.toLowerCase()))
+                  .map((zona, index) => (
                   <div key={zona.id || index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-3">
@@ -372,6 +389,9 @@ const Plano = () => {
                     </div>
                   </div>
                 ))}
+                {Array.isArray(zonas) && zonas.filter(z => !zonaSearch || String(z.nombre || '').toLowerCase().includes(zonaSearch.toLowerCase())).length === 0 && (
+                  <div className="text-center p-6 border border-dashed border-gray-300 rounded text-gray-600">No hay zonas que coincidan con la búsqueda.</div>
+                )}
               </div>
             ) : (
               <div className="text-center p-6 border border-dashed border-gray-300 rounded">

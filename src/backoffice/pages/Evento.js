@@ -405,7 +405,7 @@ const Evento = () => {
           salaSeleccionada={salaSeleccionada}
           setSalaSeleccionada={setSalaSeleccionada}
           rightContent={recintoSeleccionado && (
-            <>
+            <div className="flex flex-wrap items-center gap-3">
               <div className="hidden lg:block min-w-[320px]">
                 <SearchBar
                   searchTerm={searchTerm}
@@ -447,7 +447,7 @@ const Evento = () => {
                 </svg>
                 Crear Evento
               </button>
-            </>
+            </div>
           )}
         />
 

@@ -101,14 +101,7 @@ const CreateIva = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Gestión de IVA</h1>
         <p className="text-gray-600 mb-4">Administra los tipos de IVA para tus productos y servicios</p>
-        {currentTenant && (
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span className="text-sm font-medium">
-              Tenant: {currentTenant.company_name || currentTenant.id}
-            </span>
-          </div>
-        )}
+        {/* Removed tenant badge to reduce noise */}
         {!currentTenant?.id && (
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full">
             <div className="w-2 h-2 bg-red-500 rounded-full"></div>
@@ -119,50 +112,52 @@ const CreateIva = () => {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-4 mb-8 space-y-4">
-        <div>
-          <label className="block mb-1">Nombre del IVA:</label>
-          <input
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            required
-            className="w-full border rounded p-2"
-            placeholder="Nombre del IVA"
-          />
-        </div>
-        <div>
-          <label className="block mb-1">Porcentaje:</label>
-          <input
-            type="number"
-            value={porcentaje}
-            onChange={(e) => setPorcentaje(e.target.value)}
-            required
-            step="0.01"
-            className="w-full border rounded p-2"
-            placeholder="0.00"
-          />
-        </div>
-        <div className="flex gap-2">
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            {editingId ? 'Actualizar IVA' : 'Crear IVA'}
-          </button>
-          {editingId && (
+      <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-4 mb-8">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="flex-1 min-w-[220px]">
+            <label className="block mb-1">Nombre del IVA:</label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              required
+              className="w-full border rounded p-2"
+              placeholder="Nombre del IVA"
+            />
+          </div>
+          <div className="w-40">
+            <label className="block mb-1">Porcentaje:</label>
+            <input
+              type="number"
+              value={porcentaje}
+              onChange={(e) => setPorcentaje(e.target.value)}
+              required
+              step="0.01"
+              className="w-full border rounded p-2"
+              placeholder="0.00"
+            />
+          </div>
+          <div className="flex items-center gap-2">
             <button
-              type="button"
-              onClick={() => {
-                setEditingId(null);
-                setNombre('');
-                setPorcentaje('');
-              }}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              Cancelar Edición
+              {editingId ? 'Actualizar IVA' : 'Crear IVA'}
             </button>
-          )}
+            {editingId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingId(null);
+                  setNombre('');
+                  setPorcentaje('');
+                }}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
         </div>
       </form>
 

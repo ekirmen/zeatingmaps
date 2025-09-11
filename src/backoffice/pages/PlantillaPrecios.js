@@ -774,8 +774,8 @@ const PlantillaPrecios = () => {
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-2xl font-bold mb-6">Plantilla de Precios</h2>
       <div className="bg-white p-6 rounded shadow">
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <select className="border p-2 flex-1" value={recinto?.id || ''} onChange={e => {
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          <select className="border p-2 flex-1 min-w-[220px]" value={recinto?.id || ''} onChange={e => {
             const r = recintos.find(r => String(r.id) === e.target.value);
             setRecinto(r);
             setSala(null);
@@ -784,7 +784,7 @@ const PlantillaPrecios = () => {
             {recintos.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
           </select>
           {salas.length > 0 && (
-            <select className="border p-2 flex-1" value={sala?.id || ''} onChange={e => setSala(salas.find(s => String(s.id) === e.target.value))}>
+            <select className="border p-2 flex-1 min-w-[220px]" value={sala?.id || ''} onChange={e => setSala(salas.find(s => String(s.id) === e.target.value))}>
               <option value="">Seleccionar Sala</option>
               {salas.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
             </select>
