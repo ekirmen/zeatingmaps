@@ -100,12 +100,7 @@ const Funciones = () => {
   const { currentTenant } = useTenant();
   const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
   
-  // Debug: Verificar que currentTenant se cargue correctamente
-  useEffect(() => {
-    console.log('🔍 Debug - Componente Funciones cargado:');
-    console.log('currentTenant:', currentTenant);
-    console.log('currentTenant?.id:', currentTenant?.id);
-  }, [currentTenant]);
+  // Debug eliminado
   const [eventos, setEventos] = useState([]);
   const [eventoSeleccionado, setEventoSeleccionado] = useState(null);
   const [plantillas, setPlantillas] = useState([]);
@@ -178,7 +173,7 @@ const Funciones = () => {
         }));
       }
     } catch (e) {
-      console.warn('No se pudo cargar el formulario de función previo:', e);
+      /* omitido */
     }
   }, [salaSeleccionada]);
 
@@ -187,7 +182,7 @@ const Funciones = () => {
     try {
       localStorage.setItem(LAST_FUNC_KEY, JSON.stringify(nuevaFuncion));
     } catch (e) {
-      console.warn('No se pudo guardar el formulario de función:', e);
+      /* omitido */
     }
   }, [nuevaFuncion]);
 
@@ -253,7 +248,7 @@ const Funciones = () => {
     }
     
     // If it's not a valid UUID, return null
-    console.warn(`Invalid UUID format: ${value}`);
+    /* omitido */
     return null;
   };
 
@@ -278,7 +273,7 @@ const Funciones = () => {
     }
     
     // If it's neither a number nor a UUID, return null
-    console.warn(`Invalid ID format: ${value}`);
+    /* omitido */
     return null;
   };
 
@@ -394,7 +389,7 @@ const Funciones = () => {
         resetNuevaFuncion();
       }
     } catch (e) {
-      console.warn('No se pudo cargar el formulario de función previo:', e);
+      /* omitido */
       resetNuevaFuncion();
     }
   };
@@ -410,7 +405,7 @@ const Funciones = () => {
           .eq('sala', salaSeleccionada.id);
         
         if (error) {
-          console.error('Error fetching eventos:', error);
+          /* omitido */
         } else {
           setEventos(data || []);
         }
@@ -455,7 +450,7 @@ const Funciones = () => {
       if (error) throw error;
       setFunciones(data || []);
     } catch (error) {
-      console.error('Error loading funciones:', error);
+      /* omitido */
     }
   }, [salaSeleccionada]);
 
@@ -492,7 +487,7 @@ const Funciones = () => {
           `);
 
         if (error) {
-          console.error('Error al obtener todas las funciones:', error);
+          /* omitido */
         } else {
           setFunciones(data || []);
         }
@@ -510,7 +505,7 @@ const Funciones = () => {
         .order('nombre');
 
       if (error) {
-        console.error('Error al obtener plantillas:', error);
+        /* omitido */
       } else {
         setPlantillas(data || []);
       }
@@ -527,7 +522,7 @@ const Funciones = () => {
         .order('nombre');
 
       if (error) {
-        console.error('Error al obtener plantillas de comisiones:', error);
+        /* omitido */
       } else {
         setPlantillasComisiones(data || []);
       }
@@ -546,10 +541,8 @@ const Funciones = () => {
         .order('nombre');
 
       if (error) {
-        console.error('Error al obtener plantillas de productos:', error);
         // Si la tabla no existe, establecer un array vacío
         if (error.code === '42P01') { // undefined_table
-          console.warn('La tabla plantillas_productos_template no existe. Se establecerá un array vacío.');
           setPlantillasProductos([]);
         } else {
           setPlantillasProductos([]);
@@ -558,7 +551,7 @@ const Funciones = () => {
         setPlantillasProductos(data || []);
       }
     } catch (error) {
-      console.error('Error inesperado al obtener plantillas de productos:', error);
+      /* omitido */
       setPlantillasProductos([]);
     } finally {
       setLoadingPlantillasProductos(false);
@@ -653,21 +646,7 @@ const Funciones = () => {
         return;
       }
 
-      // Debug: Verificar tenant_id
-      console.log('🔍 Debug - Verificando tenant_id:');
-      console.log('currentTenant:', currentTenant);
-      console.log('currentTenant?.id:', currentTenant?.id);
-      console.log('Tenant actual del contexto:', currentTenant);
-
-      // Debug: Verificar valores antes de formatear
-      console.log('🔍 Debug - Valores antes de formatear:');
-      console.log('eventoSeleccionado?.id:', eventoSeleccionado?.id);
-      console.log('nuevaFuncion.idSala:', nuevaFuncion.idSala);
-      console.log('recintoSeleccionado?.id:', recintoSeleccionado?.id);
-      console.log('currentTenant?.id:', currentTenant?.id);
-      console.log('nuevaFuncion.idPlantillaEntradas:', nuevaFuncion.idPlantillaEntradas);
-      console.log('nuevaFuncion.idPlantillaProductos:', nuevaFuncion.idPlantillaProductos);
-      console.log('nuevaFuncion.idSpecialProductsTemplate:', nuevaFuncion.idSpecialProductsTemplate);
+      // logs omitidos
 
       const funcionData = {
         evento_id: formatUUIDField(eventoSeleccionado?.id),
@@ -719,23 +698,7 @@ const Funciones = () => {
         recinto_id: formatIDField(recintoSeleccionado?.id)
       };
 
-      // Debug: Verificar campos formateados
-      console.log('🔍 Debug - Campos formateados:');
-      console.log('evento_id formateado:', funcionData.evento_id);
-      console.log('sala_id formateado:', funcionData.sala_id);
-      console.log('recinto_id formateado:', funcionData.recinto_id);
-      console.log('tenant_id formateado:', funcionData.tenant_id);
-      console.log('plantilla_entradas formateado:', funcionData.plantilla_entradas);
-      console.log('plantilla_producto formateado:', funcionData.plantilla_producto);
-      console.log('plantilla_comisiones formateado:', funcionData.plantilla_comisiones);
-
-      // Debug: Verificar funcionData completo
-      console.log('🔍 Debug - funcionData completo:');
-      console.log('funcionData.tenant_id:', funcionData.tenant_id);
-      console.log('funcionData.evento_id:', funcionData.evento_id);
-      console.log('funcionData.sala_id:', funcionData.sala_id);
-      console.log('funcionData.recinto_id:', funcionData.recinto_id);
-      console.log('funcionData completo:', funcionData);
+      // logs omitidos
 
       // Validación final antes de enviar
       if (!funcionData.sala_id) {
@@ -750,7 +713,7 @@ const Funciones = () => {
       }
 
       if (editingFuncion) {
-        console.log('🔍 Debug - Actualizando función con tenant_id:', funcionData.tenant_id);
+        /* omitido */
         const { error } = await supabase
           .from('funciones')
           .update(funcionData)
@@ -759,7 +722,7 @@ const Funciones = () => {
         if (error) throw error;
         alert('Función actualizada exitosamente');
       } else {
-        console.log('🔍 Debug - Creando función con tenant_id:', funcionData.tenant_id);
+        /* omitido */
         const { error } = await supabase
           .from('funciones')
           .insert([funcionData]);
@@ -774,7 +737,6 @@ const Funciones = () => {
       
       loadFunciones();
     } catch (error) {
-      console.error('Error saving funcion:', error);
       alert('Error al guardar la función: ' + error.message);
     }
   };
@@ -852,7 +814,7 @@ const Funciones = () => {
       const eventoSel = eventos.find(ev => String(ev.id) === String(funcion.evento_id));
       if (eventoSel) setEventoSeleccionado(eventoSel);
     } catch (e) {
-      console.warn('No se pudo sincronizar los filtros con la función seleccionada:', e);
+      /* omitido */
     }
     setModalIsOpen(true);
   };
@@ -1464,7 +1426,7 @@ const Funciones = () => {
                   </p>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de tickets</label>
                     <select
@@ -1492,9 +1454,6 @@ const Funciones = () => {
                       ))}
                     </select>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de precios especiales</label>
                     <select
@@ -1508,19 +1467,8 @@ const Funciones = () => {
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de cupos</label>
-                    <select
-                      className="border p-2 w-full rounded"
-                      value={nuevaFuncion.idPlantillaCupos}
-                      onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, idPlantillaCupos: e.target.value })}
-                    >
-                      <option value="">No existen plantillas de cupos activas</option>
-                    </select>
-                  </div>
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">Plantilla de cupos</label>
                     <select
@@ -1541,6 +1489,7 @@ const Funciones = () => {
                       <option value="">Selecciona pool de códigos</option>
                     </select>
                   </div>
+                  <div className="hidden md:block" />
                 </div>
               </div>
 

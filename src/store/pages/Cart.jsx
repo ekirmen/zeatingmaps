@@ -55,7 +55,7 @@ const TicketDownloadButton = ({ seat, locator, isPaid }) => {
                 message.error('Error al descargar ticket');
             }
         } catch (error) {
-            console.error('Download error:', error);
+            
             message.error('Error al descargar ticket');
         } finally {
             setDownloading(false);
@@ -111,7 +111,7 @@ const BulkTicketsDownloadButton = ({ locator, paidSeats, totalSeats }) => {
                 VisualNotifications.show('error', 'Error al descargar tickets');
             }
         } catch (error) {
-            console.error('Bulk download error:', error);
+            
             message.error('Error al descargar tickets');
             VisualNotifications.show('error', 'Error al descargar tickets');
         } finally {
@@ -240,7 +240,7 @@ const Cart = () => {
                         <div className="store-space-y-4 mb-6">
                             <button
                                 onClick={clearCart}
-                                className="store-button store-button-error store-button-sm"
+                                className="store-button store-button-secondary store-button-sm"
                             >
                                 <DeleteOutlined />
                                 Limpiar Carrito
@@ -300,7 +300,7 @@ const Cart = () => {
                                                 />
                                                 <button 
                                                     disabled={seat.isPaid}
-                                                    className={`store-button store-button-sm ${seat.isPaid ? 'store-button-ghost' : 'store-button-error'}`}
+                                                    className={`store-button store-button-sm ${seat.isPaid ? 'store-button-ghost' : 'store-button-secondary'}`}
                                                 >
                                                     <DeleteOutlined />
                                                     {seat.isPaid ? 'Pagado' : 'Quitar'}
@@ -342,11 +342,11 @@ const Cart = () => {
                                         className="mb-2"
                                         actions={[
                                             <Button 
-                                                type="text" 
-                                                danger
+                                                type="text"
                                                 icon={<DeleteOutlined />}
                                                 onClick={() => toggleSeat(item)}
                                                 size="small"
+                                                className="text-gray-600 hover:text-gray-900"
                                             >
                                                 Eliminar
                                             </Button>
@@ -386,11 +386,11 @@ const Cart = () => {
                                         className="mb-2"
                                         actions={[
                                             <Button 
-                                                type="text" 
-                                                danger
+                                                type="text"
                                                 icon={<DeleteOutlined />}
                                                 onClick={() => removeProduct(product.id)}
                                                 size="small"
+                                                className="text-gray-600 hover:text-gray-900"
                                             >
                                                 Eliminar
                                             </Button>

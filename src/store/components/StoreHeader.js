@@ -55,8 +55,7 @@ const Header = ({ onLogin, onLogout }) => {
     };
     checkSession();
     
-    // Debug: Log initial state
-    if (DEBUG) console.log('Header component mounted, initial modal state:', isAccountModalVisible);
+    // Debug eliminado
   }, [isAccountModalVisible]);
 
   const handleRegister = async () => {
@@ -78,7 +77,6 @@ const Header = ({ onLogin, onLogout }) => {
       setAccountMode('login');
       setRegisterData({ email: '', password: '', phone: '', phoneCode: '+58' });
     } catch (error) {
-      console.error('Registration error:', error);
       message.error(error.message);
     }
   };
@@ -108,7 +106,6 @@ const Header = ({ onLogin, onLogout }) => {
           message.success(t('login.email_sent'));
         }
       } catch (error) {
-        console.error('Login error:', error);
         setError(error.message || t('errors.login', 'Error al iniciar sesión'));
         message.error(error.message || t('errors.login', 'Error al iniciar sesión'));
         localStorage.removeItem('token');
@@ -126,7 +123,6 @@ const Header = ({ onLogin, onLogout }) => {
       setIsAccountModalVisible(false);
       setAccountMode('login');
     } catch (error) {
-      console.error('Forgot password error:', error);
       message.error(error.message || t('errors.request', 'Error al procesar la solicitud'));
     }
   };
@@ -169,7 +165,6 @@ const Header = ({ onLogin, onLogout }) => {
     message.success(t('password.updated'));
     navigate(refParam ? `/store?ref=${refParam}` : '/store');
     } catch (error) {
-      console.error('Set password error:', error);
       message.error(error.message || 'Error al guardar contraseña');
     }
   };
@@ -192,7 +187,7 @@ const Header = ({ onLogin, onLogout }) => {
       setError('');
       setIsAccountModalVisible(true);
     } catch (error) {
-      console.error('Error opening modal:', error);
+      // Silencioso
     }
   };
 
@@ -204,15 +199,9 @@ const Header = ({ onLogin, onLogout }) => {
     setError('');
   };
 
-  console.log('Modal state in render:', isAccountModalVisible, 'Account mode:', accountMode);
-  console.log('Component re-rendering, modal should be:', isAccountModalVisible ? 'visible' : 'hidden');
-  console.log('Current form data:', formData);
-  console.log('Current register data:', registerData);
-  console.log('Modal visibility state:', isAccountModalVisible);
-  console.log('Modal mode state:', accountMode);
-  console.log('Modal will render with these props:', { isAccountModalVisible, accountMode, formData, registerData });
+  
   const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
-  if (DEBUG) console.log('Modal will render with className: account-modal and wrapClassName: account-modal-wrapper');
+  
   
   return (
     <header className="store-header">
@@ -421,13 +410,7 @@ const Header = ({ onLogin, onLogout }) => {
       </Drawer>
 
       {/* Modal Cuenta */}
-      {console.log('Rendering modal with state:', isAccountModalVisible)}
-      {isAccountModalVisible && console.log('Modal should be visible now')}
-      {isAccountModalVisible && console.log('Modal DOM element should be created')}
-      {isAccountModalVisible && console.log('Modal props:', { accountMode, formData: Object.keys(formData) })}
-      {isAccountModalVisible && console.log('Modal will render with title:', accountMode === 'login' ? t('header.login') : accountMode === 'register' ? t('header.signup') : t('header.forgot'))}
-      {isAccountModalVisible && console.log('Modal will render with footer button text:', accountMode === 'login' ? t('header.login') : accountMode === 'register' ? t('header.register') : t('button.continue'))}
-      {isAccountModalVisible && console.log('Modal will render with wrapClassName: account-modal-wrapper')}
+      
       <Modal
         title={
           accountMode === 'login'
@@ -446,7 +429,6 @@ const Header = ({ onLogin, onLogout }) => {
         getContainer={() => document.body}
         forceRender={true}
         afterClose={() => {
-          console.log('Modal closed, cleaning up state');
           setAccountMode('login');
           setFormData({ email: '', password: '' });
           setRegisterData({ email: '', password: '', phone: '', phoneCode: '+58' });
@@ -564,7 +546,6 @@ const Header = ({ onLogin, onLogout }) => {
         getContainer={() => document.body}
         forceRender={true}
         afterClose={() => {
-          console.log('Password modal closed, cleaning up state');
           setPasswordData({ newPassword: '', confirmPassword: '' });
         }}
         keyboard={true}

@@ -27,7 +27,6 @@ const Tags = () => {
       setLoading(true);
       
       if (!currentTenant?.id) {
-        console.warn('No hay tenant disponible');
         message.warning('No hay tenant configurado');
         return;
       }
@@ -40,9 +39,8 @@ const Tags = () => {
         .order('name', { ascending: true });
 
       if (eventError) {
-        console.warn('Error loading event tags:', eventError);
+        
       } else {
-        console.log('🔍 [Tags] Tags de eventos cargados:', eventData);
         setEventTags(eventData || []);
       }
 
@@ -54,9 +52,8 @@ const Tags = () => {
         .order('name', { ascending: true });
 
       if (userError) {
-        console.warn('Error loading user tags:', userError);
+        
       } else {
-        console.log('🔍 [Tags] Tags de usuarios cargados:', userData);
         
         // Cargar relaciones por separado para evitar errores de relación
         const processedUserTags = await Promise.all((userData || []).map(async (tag) => {
@@ -76,7 +73,6 @@ const Tags = () => {
               users: relations?.map(r => r.profiles).filter(Boolean) || []
             };
           } catch (error) {
-            console.warn('Error loading relations for tag:', tag.id, error);
             return {
               ...tag,
               usage_count: 0,
@@ -86,10 +82,8 @@ const Tags = () => {
         }));
         
         setUserTags(processedUserTags);
-        console.log('✅ Tags de usuarios procesados con estadísticas:', processedUserTags.length);
       }
     } catch (error) {
-      console.error('Error loading tags:', error);
       message.error('Error al cargar los tags');
     } finally {
       setLoading(false);
@@ -170,7 +164,6 @@ const Tags = () => {
       form.resetFields();
       loadTags();
     } catch (error) {
-      console.error('Error saving tag:', error);
       message.error('Error al guardar el tag: ' + (error.message || 'Error desconocido'));
     } finally {
       setLoading(false);
@@ -208,7 +201,6 @@ const Tags = () => {
       message.success('Tag eliminado correctamente');
       loadTags();
     } catch (error) {
-      console.error('Error deleting tag:', error);
       message.error('Error al eliminar el tag');
     }
   };
@@ -260,22 +252,6 @@ const Tags = () => {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Gestión de Tags</h1>
         <p className="text-gray-600 mb-4">Administra tags para eventos y usuarios</p>
-        {currentTenant && (
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-50 text-blue-700 rounded-full">
-            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-            <span className="text-sm font-medium">
-              Tenant: {currentTenant.company_name || currentTenant.id}
-            </span>
-          </div>
-        )}
-        {!currentTenant?.id && (
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-50 text-red-700 rounded-full">
-            <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-            <span className="text-sm font-medium">
-              ⚠️ No hay tenant configurado
-            </span>
-          </div>
-        )}
       </div>
       
       <Tabs activeKey={activeTab} onChange={setActiveTab}>

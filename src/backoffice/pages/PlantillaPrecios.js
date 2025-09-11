@@ -45,7 +45,7 @@ const PlantillaPrecios = () => {
           .order('created_at', { ascending: false });
 
         if (plantillasError) {
-          console.warn('Error loading plantillas:', plantillasError.message);
+          
         }
 
         // Cargar plantillas de precios específicas
@@ -60,7 +60,7 @@ const PlantillaPrecios = () => {
           .order('created_at', { ascending: false });
 
         if (preciosError) {
-          console.warn('Error loading plantillas_precios:', preciosError.message);
+          
         }
 
         // Combinar datos
@@ -70,7 +70,7 @@ const PlantillaPrecios = () => {
           precios_detalle: (preciosData || []).filter(p => p.plantilla_id === plantilla.id)
         }));
 
-        console.log('📋 Plantillas cargadas:', {
+        
           principales: plantillasData?.length || 0,
           precios: preciosData?.length || 0,
           combinadas: combinedPlantillas.length
@@ -79,7 +79,7 @@ const PlantillaPrecios = () => {
         setPlantillas(combinedPlantillas);
 
       } catch (error) {
-        console.error('Error loading plantillas:', error);
+        
       }
     };
 
@@ -113,14 +113,14 @@ const PlantillaPrecios = () => {
           .eq('recinto', recinto.id);
         
         if (error) {
-          console.error('Error cargando entradas:', error);
+          
           setEntradas([]);
           return;
         }
         
-        console.log('🔍 [PlantillaPrecios] Entradas cargadas para recinto:', recinto.id, 'Total:', data?.length || 0);
+        
         if (data && data.length > 0) {
-          console.log('🔍 [PlantillaPrecios] Detalles de entradas:', data.map(e => ({
+          
             id: e.id,
             nombre: e.nombre_entrada,
             tipo: e.tipo_producto,
@@ -129,7 +129,7 @@ const PlantillaPrecios = () => {
         }
         setEntradas(data || []);
       } catch (error) {
-        console.error('Error inesperado cargando entradas:', error);
+        
         setEntradas([]);
       }
     };
@@ -142,9 +142,9 @@ const PlantillaPrecios = () => {
       try {
         const canales = await fetchCanalesVenta();
         setCanalesVenta(canales);
-        console.log('🔍 [PlantillaPrecios] Canales de venta cargados:', canales);
+        
       } catch (error) {
-        console.error('Error cargando canales de venta:', error);
+        
         setCanalesVenta([]);
       }
     };
@@ -181,7 +181,7 @@ const PlantillaPrecios = () => {
   // Recargar entradas cuando se abre el modal de edición
   useEffect(() => {
     if (modalIsOpen && editingPlantilla && (!entradas.length || !zonas.length)) {
-      console.log('[PlantillaPrecios] Recargando datos para edición...');
+      
       // Recargar entradas si no están disponibles
       if (!entradas.length && recinto) {
         const fetchEntradas = async () => {
@@ -203,7 +203,7 @@ const PlantillaPrecios = () => {
 
   /* -------------------- HANDLERS INPUTS DETALLE --------------------- */
   const handleInputChange = (zonaId, entradaId, field, value) => {
-    console.log('Input change:', { zonaId, entradaId, field, value });
+    
     
     const updated = [...detallesPrecios];
     const idx = updated.findIndex(d => d.zonaId === zonaId && d.entradaId === entradaId);
@@ -240,12 +240,12 @@ const PlantillaPrecios = () => {
       });
     }
 
-    console.log('Detalles actualizados:', updated);
+    
     setDetallesPrecios(updated);
   };
 
   const handleCanalChange = (zonaId, entradaId, canalId, checked) => {
-    console.log('Canal change:', { zonaId, entradaId, canalId, checked });
+    
     
     setDetallesPrecios(prev => {
       const existing = prev.find(d => d.zonaId === zonaId && d.entradaId === entradaId);
@@ -347,7 +347,7 @@ const PlantillaPrecios = () => {
       return;
     }
 
-    console.log('Guardando plantilla con datos:', {
+    
       nombre: nombrePlantilla,
       recinto: recinto.id,
       sala: sala.id,
@@ -364,7 +364,7 @@ const PlantillaPrecios = () => {
     try {
       let res;
       if (editingPlantilla) {
-        console.log('Actualizando plantilla:', editingPlantilla.id);
+        
         res = await supabase
           .from('plantillas')
           .update(payload)
@@ -372,7 +372,7 @@ const PlantillaPrecios = () => {
           .select()
           .single();
       } else {
-        console.log('Creando nueva plantilla');
+        
         res = await supabase
           .from('plantillas')
           .insert(payload)
@@ -381,17 +381,17 @@ const PlantillaPrecios = () => {
       }
 
       if (res.error) {
-        console.error('Error al guardar plantilla:', res.error);
+        
         alert(`Error al guardar: ${res.error.message}`);
         return;
       }
 
-      console.log('Plantilla guardada exitosamente:', res.data);
+      
       alert(`${editingPlantilla ? 'Plantilla actualizada' : 'Plantilla creada'} exitosamente con ${detallesValidos.length} configuraciones de precio`);
       closeModal();
       cargarPlantillas();
     } catch (error) {
-      console.error('Error inesperado al guardar plantilla:', error);
+      
       alert(`Error inesperado: ${error.message}`);
     }
   };
@@ -401,7 +401,7 @@ const PlantillaPrecios = () => {
     try {
       // Asegurar que tenemos las entradas cargadas antes de editar
       if (!entradas.length) {
-        console.log('[handleEditPlantilla] Cargando entradas antes de editar...');
+        
         const { data: entradasData, error: entradasError } = await supabase
           .from('entradas')
           .select('*')
@@ -409,7 +409,7 @@ const PlantillaPrecios = () => {
         
         if (!entradasError && entradasData) {
           setEntradas(entradasData);
-          console.log('[handleEditPlantilla] Entradas cargadas:', entradasData);
+          
         }
       }
 
@@ -424,7 +424,7 @@ const PlantillaPrecios = () => {
       if (error) throw error;
 
       const plantilla = data || p;
-      console.log('[handleEditPlantilla] Plantilla cargada:', plantilla);
+      
 
       setEditingPlantilla(plantilla);
       setNombrePlantilla(plantilla.nombre);
@@ -435,7 +435,7 @@ const PlantillaPrecios = () => {
         ? JSON.parse(plantilla.detalles)
         : plantilla.detalles;
       
-      console.log('[handleEditPlantilla] Detalles parseados:', parsedDetalles);
+      
       
       // Asegurar que tenemos los detalles como array
       const detallesArray = Array.isArray(parsedDetalles) ? parsedDetalles : [];
@@ -465,7 +465,7 @@ const PlantillaPrecios = () => {
           });
         });
         
-        console.log('[handleEditPlantilla] Detalles finales:', existingDetalles);
+        
         setDetallesPrecios(existingDetalles);
       } else {
         // Si no hay detalles, inicializar con todas las combinaciones
@@ -480,13 +480,13 @@ const PlantillaPrecios = () => {
             orden: 0
           }))
         );
-        console.log('[handleEditPlantilla] Detalles iniciales:', initialDetalles);
+        
         setDetallesPrecios(initialDetalles);
       }
       
       setModalIsOpen(true);
     } catch (err) {
-      console.error('Error cargando plantilla para editar:', err);
+      
     }
   };
 
@@ -540,10 +540,7 @@ const PlantillaPrecios = () => {
     );
 
     // Debug: mostrar información de los datos
-    console.log('[PlantillaPrecios] Debug - Zonas:', zonas);
-    console.log('[PlantillaPrecios] Debug - Entradas:', entradas);
-    console.log('[PlantillaPrecios] Debug - DetallesPrecios:', detallesPrecios);
-    console.log('[PlantillaPrecios] Debug - CurrentItems:', currentItems);
+    
 
     // Si no hay currentItems, mostrar un mensaje
     if (!currentItems.length) {
@@ -563,7 +560,7 @@ const PlantillaPrecios = () => {
       const entrada = entradas.find(e => e.id === item.entradaId);
       const zona = zonas.find(z => z.id === item.zonaId);
       
-      console.log(`[PlantillaPrecios] Renderizando fila ${idx}:`, {
+      
         item,
         entrada,
         zona,
@@ -615,7 +612,7 @@ const PlantillaPrecios = () => {
                 
                 // Debug: Log de la jerarquía de prioridades
                 if (detalle.zonaId && detalle.entradaId) {
-                  console.log(`🔍 [Jerarquía] Zona:${detalle.zonaId}, Entrada:${detalle.entradaId}, Canal:${canal.nombre}:`, {
+                  
                     activoEnSistema: isActivoEnSistema,
                     seleccionadoEnPlantilla: isSeleccionadoEnPlantilla,
                     resultadoFinal: isActivo,

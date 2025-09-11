@@ -40,12 +40,11 @@ const Evento = () => {
 
   const fetchEventos = useCallback(async () => {
     if (!recintoSeleccionado || !salaSeleccionada) {
-      console.log('No recinto or sala selected');
       return;
     }
   
     try {
-      console.log('Fetching eventos for recinto:', recintoSeleccionado.id, 'sala:', salaSeleccionada.id);
+      
       
       let query = supabase
         .from('eventos')
@@ -56,27 +55,18 @@ const Evento = () => {
       // Filtrar por tenant_id si está disponible
       if (currentTenant?.id) {
         query = query.eq('tenant_id', currentTenant.id);
-        console.log('🔍 Filtrando por tenant_id:', currentTenant.id);
-      } else {
-        console.warn('⚠️ No hay tenant disponible para filtrar eventos');
       }
       
       const { data, error } = await query.order('created_at', { ascending: false });
   
-      if (error) {
-        console.error('Error fetching eventos:', error);
-        throw error;
-      }
+      if (error) { throw error; }
       
-      console.log('✅ Eventos cargados:', data?.length || 0, 'eventos');
+      
       
       // Limpiar campos JSON corruptos en todos los eventos cargados
       const eventosLimpios = cleanEventosArray(data || []);
       setEventos(eventosLimpios);
-    } catch (error) {
-      console.error('❌ Error cargando eventos:', error);
-      setEventos([]);
-    }
+    } catch (error) { setEventos([]); }
   }, [recintoSeleccionado, salaSeleccionada, currentTenant]);
   
 
@@ -199,10 +189,7 @@ const Evento = () => {
 
         alert('Evento eliminado correctamente');
         fetchEventos();
-      } catch (error) {
-        console.error('Error al eliminar evento:', error);
-        alert('Error al eliminar el evento: ' + error.message);
-      }
+      } catch (error) { alert('Error al eliminar el evento: ' + error.message); }
     }
   }, [fetchEventos]);
 
@@ -235,10 +222,7 @@ const Evento = () => {
         alert('Evento duplicado correctamente');
         fetchEventos();
       }
-    } catch (error) {
-      console.error('Error al duplicar evento:', error);
-      alert('Error al duplicar el evento: ' + error.message);
-    }
+    } catch (error) { alert('Error al duplicar el evento: ' + error.message); }
   }, [fetchEventos, currentTenant]);
 
   const handleToggleEventStatus = useCallback(async (eventoId, evento) => {
@@ -285,10 +269,7 @@ const Evento = () => {
 
       const statusText = newActivo ? 'activado' : 'desactivado';
       alert(`Evento ${statusText} correctamente`);
-    } catch (error) {
-      console.error('Error al cambiar estado del evento:', error);
-      alert('Error al cambiar el estado del evento: ' + error.message);
-    }
+    } catch (error) { alert('Error al cambiar el estado del evento: ' + error.message); }
   }, [eventoData]);
 
 
@@ -319,15 +300,10 @@ const Evento = () => {
       // Validar y limpiar campos JSON ANTES de guardar para prevenir corrupción
       const cleanDataValidated = cleanEventoJsonFields(cleanData);
       Object.assign(cleanData, cleanDataValidated);
-      console.log('✅ Todos los campos JSON validados y limpiados antes del guardado');
+      
 
       // Asegurar tenant_id
-      if (currentTenant?.id) {
-        cleanData.tenant_id = currentTenant.id;
-        console.log('✅ Tenant ID asignado:', currentTenant.id);
-      } else {
-        console.warn('⚠️ No hay tenant disponible');
-      }
+      if (currentTenant?.id) { cleanData.tenant_id = currentTenant.id; }
 
       let response;
       if (isExisting) {
@@ -342,16 +318,11 @@ const Evento = () => {
       }
 
       if (response.error) throw response.error;
-
-      console.log('✅ Evento guardado exitosamente con tenant_id:', cleanData.tenant_id);
       setIsSaved(true);
       setMenuVisible(false);
       fetchEventos();
       setTimeout(() => setIsSaved(false), 3000);
-    } catch (error) {
-      console.error('❌ Error al guardar evento:', error);
-      alert(error.message || 'Error al guardar el evento');
-    } finally {
+    } catch (error) { alert(error.message || 'Error al guardar el evento'); } finally {
       setIsUploading(false);
     }
   }, [eventoData, fetchEventos, currentTenant]);

@@ -57,16 +57,7 @@ const ModernEventPage = () => {
   const [funciones, setFunciones] = useState([]);
   const [selectedFunctionId, setSelectedFunctionId] = useState(null);
   
-  // Debug logs (controlados por flag)
-  if (DEBUG) {
-    console.log('🔍 [ModernEventPage] Debug info:', {
-      isMapView,
-      selectedFunctionId,
-      eventSlug,
-      pathname: location.pathname,
-      searchParams: searchParams.toString()
-    });
-  }
+  // Debug logs eliminados
   const [mapa, setMapa] = useState(null);
   const [mapLoading, setMapLoading] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -107,19 +98,19 @@ const ModernEventPage = () => {
   
   // Debug: Log de seat_locks cargados
   useEffect(() => {
-    console.log('🎫 [STORE] Debug - realLockedSeats:', realLockedSeats);
-    console.log('🎫 [STORE] Debug - selectedFunctionId:', selectedFunctionId);
+    
+    
     if (realLockedSeats && realLockedSeats.length > 0) {
-      console.log('🎫 [STORE] Seat locks cargados:', realLockedSeats);
+      
     } else {
-      console.log('🎫 [STORE] No hay seat locks cargados para función:', selectedFunctionId);
+      
     }
   }, [realLockedSeats, selectedFunctionId]);
 
   // Sincronización automática con seat_locks
   useEffect(() => {
     if (realLockedSeats && realLockedSeats.length > 0) {
-      console.log('🔄 [STORE] Sincronizando con seat_locks:', realLockedSeats);
+      
       syncWithSeatLocks(realLockedSeats);
     }
   }, [realLockedSeats, syncWithSeatLocks]);
@@ -172,7 +163,7 @@ const ModernEventPage = () => {
           setSelectedFunctionId(fid);
         }
       } catch (err) {
-        console.error('Error fetching evento:', err);
+        
         setError(err);
         message.error('Error al cargar el evento');
       } finally {
@@ -212,24 +203,24 @@ const ModernEventPage = () => {
 
   // Cargar mapa cuando estemos en la vista del mapa
   useEffect(() => {
-    if (DEBUG) console.log('🔍 [ModernEventPage] useEffect mapa - isMapView:', isMapView, 'selectedFunctionId:', selectedFunctionId);
+    
     
     if (!isMapView || !selectedFunctionId) {
-      if (DEBUG) console.log('⚠️ [ModernEventPage] No cargando mapa - condiciones no cumplidas');
+      
       return;
     }
     
     const fetchMapa = async () => {
       try {
         setMapLoading(true);
-        if (DEBUG) console.log('🗺️ [ModernEventPage] Cargando mapa para función:', selectedFunctionId);
+        
 
         // Obtener sala_id de la función seleccionada (soporta esquemas nuevo y antiguo)
         const selectedFuncion = funciones.find(f => (f.id || f._id) === selectedFunctionId);
         const salaId = selectedFuncion?.sala_id ?? selectedFuncion?.sala;
 
         if (!salaId) {
-          console.warn('⚠️ [ModernEventPage] No se pudo determinar sala_id para la función:', selectedFunctionId);
+          
           setMapa(null);
           setMapLoading(false);
           return;
@@ -241,18 +232,18 @@ const ModernEventPage = () => {
           .eq('sala_id', salaId)
           .maybeSingle();
 
-        if (DEBUG) console.log('🔍 [ModernEventPage] Respuesta de mapas:', { mapaData, mapaError });
+        
 
         if (mapaError) throw mapaError;
         
         if (mapaData) {
           setMapa(mapaData);
-          if (DEBUG) console.log('✅ [ModernEventPage] Mapa cargado:', mapaData.id);
+          
         } else {
-          if (DEBUG) console.log('⚠️ [ModernEventPage] No se encontró mapa para la función:', selectedFunctionId);
+          
         }
       } catch (err) {
-        console.error('❌ [ModernEventPage] Error cargando mapa:', err);
+        
         message.error('Error al cargar el mapa de asientos');
       } finally {
         setMapLoading(false);
@@ -271,7 +262,7 @@ const ModernEventPage = () => {
 
     const seatId = typeof seatOrId === 'string' ? seatOrId : (seatOrId?._id || seatOrId?.id);
     if (!seatId) {
-      console.warn('⚠️ [ModernEventPage] seatId inválido en handleSeatToggle:', seatOrId);
+      
       return;
     }
 
@@ -308,7 +299,7 @@ const ModernEventPage = () => {
   };
 
   const handleTableToggle = (table) => {
-    console.log('Mesa seleccionada:', table);
+    
     // Por ahora solo mostrar información de la mesa
     // En el futuro se puede implementar lógica para seleccionar toda la mesa
   };
@@ -320,7 +311,7 @@ const ModernEventPage = () => {
     try {
       return typeof field === 'string' ? JSON.parse(field) : field;
     } catch (e) {
-      console.error('Error parsing JSON field:', e);
+      
       return null;
     }
   };
@@ -840,7 +831,22 @@ const ModernEventPage = () => {
                             )}
                           </div>
                         </div>
-                        {/* Botón retirado: navegación automática al seleccionar */}
+                        {/* Botón Continuar adicional */}
+                        <div className="flex-shrink-0">
+                          <Button
+                            type="primary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const fid = funcion.id || funcion._id;
+                              const url = fid
+                                ? `/store/eventos/${eventSlug}/map?funcion=${fid}`
+                                : `/store/eventos/${eventSlug}/map`;
+                              navigate(url);
+                            }}
+                          >
+                            Continuar
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
