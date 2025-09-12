@@ -1,6 +1,15 @@
 import React from 'react';
+import { useBoleteria } from '../hooks/useBoleteria';
 
 const BoleteriaMinimal = () => {
+  // Hook para obtener datos básicos de boletería
+  const {
+    eventos,
+    funciones,
+    selectedEvent,
+    selectedFuncion,
+    loading
+  } = useBoleteria();
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -19,11 +28,15 @@ const BoleteriaMinimal = () => {
           
           {/* Información básica */}
           <div className="bg-white p-4 rounded-lg shadow-sm border">
-            <h4 className="font-medium text-gray-700 mb-2">Estado:</h4>
+            <h4 className="font-medium text-gray-700 mb-2">Estado Actual:</h4>
             <div className="text-sm text-gray-600 space-y-1">
-              <p>• Versión minimal funcionando</p>
-              <p>• Sin dependencias circulares</p>
-              <p>• Listo para agregar funcionalidades paso a paso</p>
+              <p>• Versión minimal funcionando ✅</p>
+              <p>• Sin dependencias circulares ✅</p>
+              <p>• Eventos disponibles: {eventos?.length || 0}</p>
+              <p>• Funciones disponibles: {funciones?.length || 0}</p>
+              <p>• Evento seleccionado: {selectedEvent ? selectedEvent.nombre || selectedEvent.name : 'Ninguno'}</p>
+              <p>• Función seleccionada: {selectedFuncion ? selectedFuncion.nombre || selectedFuncion.name : 'Ninguna'}</p>
+              <p>• Estado de carga: {loading ? 'Cargando...' : 'Completado'}</p>
             </div>
           </div>
 
