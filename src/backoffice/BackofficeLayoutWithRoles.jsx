@@ -8,7 +8,7 @@ import {
   SettingOutlined,
   BellOutlined
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Outlet } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import SidebarMenuWithRoles from './components/SidebarMenuWithRoles';
 import { useRole } from './components/RoleBasedAccess';
@@ -167,7 +167,7 @@ const BackofficeLayoutWithRoles = ({ children }) => {
             overflow: 'auto'
           }}
         >
-          {children}
+          <Outlet />
         </Content>
       </Layout>
     </Layout>
