@@ -8,14 +8,22 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
 
   const extractSeatsFromMapa = useCallback((mapa) => {
     if (!mapa?.contenido) {
+      console.log('🔍 [useMapaSeatsSync] No hay contenido en el mapa');
       return [];
     }
 
     let allSeats = [];
+    console.log('🔍 [useMapaSeatsSync] Procesando mapa con', mapa.contenido.length, 'elementos');
 
     // Si el contenido es un array, procesar cada elemento
     if (Array.isArray(mapa.contenido)) {
       mapa.contenido.forEach((elemento, index) => {
+        console.log(`🔍 [useMapaSeatsSync] Elemento ${index}:`, {
+          _id: elemento._id,
+          type: elemento.type,
+          hasSillas: !!elemento.sillas,
+          sillasLength: elemento.sillas?.length
+        });
         // ESTRUCTURA EXACTA DEL JSON DEL USUARIO
         // Caso 1: Mesa con un arreglo de sillas
         if (elemento._id && elemento.sillas && Array.isArray(elemento.sillas)) {
@@ -45,6 +53,16 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
           });
         // Caso 2: Asiento individual suelto (no dentro de una mesa)
         } else if (elemento._id && elemento.type === 'silla') {
+          console.log(`✅ [useMapaSeatsSync] Procesando asiento individual:`, elemento._id);
+          
+          // Determinar el estado del asiento basado en la información disponible
+          let estado = elemento.estado || 'disponible';
+          
+          // Si el asiento tiene información de zona, usar esa información
+          if (elemento.zona) {
+            console.log(`🎯 [useMapaSeatsSync] Asiento ${elemento._id} en zona:`, elemento.zona.nombre);
+          }
+          
           const seatData = {
             ...elemento,
             mesa_id: null,
@@ -52,18 +70,34 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
             zona: elemento.zona || null,
             x: elemento.posicion?.x || elemento.x || 0,
             y: elemento.posicion?.y || elemento.y || 0,
-            estado: elemento.estado || 'disponible',
-            status: elemento.estado === 'disponible' ? 'available' : 'occupied',
+            estado: estado,
+            status: estado === 'disponible' ? 'available' : 'occupied',
             _id: elemento._id,
             nombre: elemento.nombre || elemento.numero || elemento._id,
             width: elemento.width || 20,
-            height: elemento.height || 20
+            height: elemento.height || 20,
+            // Agregar propiedades adicionales para el sistema de colores
+            fill: elemento.fill || null, // Color original del asiento
+            empty: elemento.empty !== undefined ? elemento.empty : false
           };
           allSeats.push(seatData);
+          console.log(`✅ [useMapaSeatsSync] Asiento agregado:`, {
+            _id: seatData._id,
+            estado: seatData.estado,
+            zona: seatData.zona?.nombre,
+            fill: seatData.fill
+          });
+        } else {
+          console.log(`❌ [useMapaSeatsSync] Elemento no reconocido:`, {
+            _id: elemento._id,
+            type: elemento.type,
+            hasSillas: !!elemento.sillas
+          });
         }
       });
     }
 
+    console.log(`🎫 [useMapaSeatsSync] Total asientos procesados:`, allSeats.length);
     return allSeats;
   }, []);
 
