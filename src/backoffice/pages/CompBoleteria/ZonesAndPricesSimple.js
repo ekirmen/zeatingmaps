@@ -3,7 +3,7 @@ import { message, Select } from 'antd';
 
 // Importar componentes paso a paso
 import EventSelector from './components/EventSelector';
-import FunctionSelector from './components/FunctionSelector';
+// import FunctionSelector from './components/FunctionSelector';
 
 const ZonesAndPricesSimple = ({
   eventos = [],
@@ -57,15 +57,15 @@ const ZonesAndPricesSimple = ({
             />
           </div>
           
-          {/* Selector de Funciones */}
-          <div className="mb-4">
+          {/* Selector de Funciones - temporalmente comentado */}
+          {/* <div className="mb-4">
             <FunctionSelector
               funciones={funciones}
               selectedFuncion={selectedFuncion}
               onFunctionSelect={onFunctionSelect}
               selectedEvent={selectedEvent}
             />
-          </div>
+          </div> */}
           
           {/* Información básica */}
           <div className="bg-white p-4 rounded-lg shadow-sm border">
