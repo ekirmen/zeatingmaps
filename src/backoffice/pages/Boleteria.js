@@ -4,7 +4,7 @@ import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
 
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
-import ZonesAndPrices from './CompBoleteria/ZonesAndPrices';
+import ZonesAndPrices from './CompBoleteria/ZonesAndPricesSimple';
 import CompactBoleteria from './CompBoleteria/CompactBoleteria';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import PaymentModal from './CompBoleteria/PaymentModal';
