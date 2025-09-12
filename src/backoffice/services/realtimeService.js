@@ -214,7 +214,7 @@ class RealtimeService {
       console.warn('[RealtimeService] API no está funcionando correctamente');
       return false;
     } catch (error) {
-      console.error('[RealtimeService] Error al verificar salud de la API:', error);
+      console.error('[RealtimeService] Error al verificar estado de la API:', error);
       this.isApiAvailable = false;
       return false;
     }

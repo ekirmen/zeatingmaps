@@ -22,7 +22,6 @@ async function checkProduction() {
     { name: '🛒 Store', url: `${API_BASE_URL}/store` },
     { name: '🎫 Boletería', url: `${API_BASE_URL}/boleteria` },
     { name: '🏢 SaaS', url: `${API_BASE_URL}/saas` },
-    { name: '🔧 API Health', url: `${API_BASE_URL}/api/health` },
     { name: '🎭 API Events', url: `${API_BASE_URL}/api/events/list` },
     { name: '🎫 API Grid Sale', url: `${API_BASE_URL}/api/grid-sale/load-zonas` },
     { name: '🏢 API SaaS', url: `${API_BASE_URL}/api/saas/dashboard-stats` }

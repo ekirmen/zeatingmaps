@@ -5,7 +5,7 @@ import { useTenant } from './contexts/TenantContext';
 import TenantErrorBoundary from './components/TenantErrorBoundary';
 import StoreApp from './store/StoreApp';
 import MapShortRoute from './store/pages/MapShortRoute';
-import BackofficeApp from './backoffice/BackofficeApp';
+import BackofficeAppWithRoles from './backoffice/BackofficeAppWithRoles';
 import { getCurrentDomainConfig, shouldShowSaaS, shouldShowBackoffice, shouldShowStore } from './config/domainConfig';
 import { ThemeProvider } from './contexts/ThemeContext';
 import VercelAnalytics from './components/VercelAnalytics';
@@ -74,10 +74,10 @@ const App = () => {
           {/* Rutas del Backoffice - Solo si está habilitado */}
           {finalShowBackoffice && (
             <>
-              <Route path="/dashboard/*" element={<BackofficeApp />} />
-              <Route path="/backoffice/*" element={<BackofficeApp />} />
-              <Route path="/admin/*" element={<BackofficeApp />} />
-              <Route path="/saas/*" element={<BackofficeApp />} />
+              <Route path="/dashboard/*" element={<BackofficeAppWithRoles />} />
+              <Route path="/backoffice/*" element={<BackofficeAppWithRoles />} />
+              <Route path="/admin/*" element={<BackofficeAppWithRoles />} />
+              <Route path="/saas/*" element={<BackofficeAppWithRoles />} />
             </>
           )}
 

@@ -16,11 +16,6 @@ async function quickTest() {
 
   const tests = [
     {
-      name: '🏥 Health Check',
-      url: `${API_BASE_URL}/api/health`,
-      method: 'GET'
-    },
-    {
       name: '🎭 List Events',
       url: `${API_BASE_URL}/api/events/list?tenant_id=test&limit=5`,
       method: 'GET'

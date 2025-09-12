@@ -152,14 +152,6 @@ const ApiExplorer = () => {
         test: true
       }
     },
-    {
-      category: 'Health',
-      name: 'Health Check',
-      method: 'GET',
-      url: '/api/health',
-      description: 'Verificar estado de la API',
-      sampleData: {}
-    }
   ];
 
   // Función para ejecutar un endpoint

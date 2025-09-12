@@ -21,7 +21,7 @@ import PlantillaPrecios from './pages/PlantillaPrecios';
 import Funciones from './pages/Funciones';
 import Abonos from './pages/Abonos';
 import CreateIva from './pages/CreateIva';
-import BoleteriaMainCustomDesign from './pages/CompBoleteria/BoleteriaMainCustomDesign';
+import BoleteriaMainCustomDesign from './pages/CompBoleteria/BoleteriaMainCustomDesignTemp';
 import Reports from './pages/Reports';
 import CRM from './pages/CRM';
 import Tags from './pages/Tags';
@@ -31,12 +31,13 @@ import PrinterSettings from './pages/PrinterSettings';
 import TenantEmailConfigPanel from './components/TenantEmailConfigPanel';
 import AuditLogs from './pages/AuditLogs';
 import RefundManagement from './pages/RefundManagement';
-import SaasDashboard from '../saas/pages/SaasDashboard';
-import SaasSettings from '../saas/pages/SaasSettings';
+import SaasDashboard from './pages/SaasDashboard';
+import SaasSettings from './pages/SaasSettings';
 import BillingDashboard from '../saas/components/BillingDashboard';
 import PaymentGatewayConfig from '../saas/components/PaymentGatewayConfig';
 import RoleManagement from '../saas/components/RoleManagement';
 import ApiExplorer from '../saas/pages/ApiExplorer';
+import SaasUserManagement from './pages/SaasUserManagementSimple';
 import TenantDetail from './pages/TenantDetail';
 
 const BackofficeAppWithRoles = () => {
@@ -334,12 +335,20 @@ const BackofficeAppWithRoles = () => {
             } 
           />
           
-          {/* Panel SaaS - Solo para administradores */}
+          {/* Panel SaaS - Solo para usuarios del sistema */}
           <Route 
             path="saas" 
             element={
               <ProtectedRoute permission="saas">
                 <SaasDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="saas/users" 
+            element={
+              <ProtectedRoute permission="saas_roles">
+                <SaasUserManagement />
               </ProtectedRoute>
             } 
           />

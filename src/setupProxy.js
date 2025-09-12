@@ -121,14 +121,6 @@ module.exports = function(app) {
     }
   });
   
-  // Endpoint de health check
-  apiRouter.get('/health', (req, res) => {
-    res.json({
-      status: 'OK',
-      timestamp: new Date().toISOString(),
-      message: 'API local funcionando correctamente'
-    });
-  });
   
   // Usar el router de API en la ruta /api
   app.use('/api', apiRouter);
