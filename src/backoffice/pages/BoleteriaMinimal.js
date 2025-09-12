@@ -1,4 +1,5 @@
 import React from 'react';
+import { Select, Button } from 'antd';
 import { useBoleteria } from '../hooks/useBoleteria';
 
 const BoleteriaMinimal = () => {
@@ -8,7 +9,9 @@ const BoleteriaMinimal = () => {
     funciones,
     selectedEvent,
     selectedFuncion,
-    loading
+    loading,
+    handleEventSelect,
+    handleFunctionSelect
   } = useBoleteria();
   return (
     <div className="h-full flex flex-col">
@@ -27,7 +30,7 @@ const BoleteriaMinimal = () => {
           </p>
           
           {/* Información básica */}
-          <div className="bg-white p-4 rounded-lg shadow-sm border">
+          <div className="bg-white p-4 rounded-lg shadow-sm border mb-4">
             <h4 className="font-medium text-gray-700 mb-2">Estado Actual:</h4>
             <div className="text-sm text-gray-600 space-y-1">
               <p>• Versión minimal funcionando ✅</p>
@@ -37,6 +40,48 @@ const BoleteriaMinimal = () => {
               <p>• Evento seleccionado: {selectedEvent ? selectedEvent.nombre || selectedEvent.name : 'Ninguno'}</p>
               <p>• Función seleccionada: {selectedFuncion ? selectedFuncion.nombre || selectedFuncion.name : 'Ninguna'}</p>
               <p>• Estado de carga: {loading ? 'Cargando...' : 'Completado'}</p>
+            </div>
+          </div>
+
+          {/* Selectores */}
+          <div className="bg-white p-4 rounded-lg shadow-sm border mb-4">
+            <h4 className="font-medium text-gray-700 mb-3">Selección:</h4>
+            
+            {/* Selector de Eventos */}
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Evento:
+              </label>
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Selecciona un evento"
+                value={selectedEvent?.id}
+                onChange={handleEventSelect}
+                loading={loading}
+                options={eventos?.map(evento => ({
+                  value: evento.id,
+                  label: evento.nombre || evento.name || `Evento ${evento.id}`
+                })) || []}
+              />
+            </div>
+
+            {/* Selector de Funciones */}
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Función:
+              </label>
+              <Select
+                style={{ width: '100%' }}
+                placeholder="Selecciona una función"
+                value={selectedFuncion?.id}
+                onChange={handleFunctionSelect}
+                loading={loading}
+                disabled={!selectedEvent}
+                options={funciones?.map(funcion => ({
+                  value: funcion.id,
+                  label: funcion.nombre || funcion.name || `Función ${funcion.id}`
+                })) || []}
+              />
             </div>
           </div>
 
