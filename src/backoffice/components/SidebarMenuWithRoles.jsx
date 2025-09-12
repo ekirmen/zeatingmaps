@@ -471,13 +471,15 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
       width={250}
       className="bg-white shadow-lg"
       style={{
-        overflow: 'auto',
+        overflow: 'hidden',
         height: '100vh',
         position: 'fixed',
         left: 0,
         top: 0,
         bottom: 0,
-        zIndex: 1000
+        zIndex: 1000,
+        display: 'flex',
+        flexDirection: 'column'
       }}
     >
       {/* Header del Sidebar */}
@@ -513,19 +515,21 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
       )}
 
       {/* Menú */}
-      <Menu
-        mode="inline"
-        selectedKeys={[location.pathname]}
-        items={menuItems}
-        className="border-0"
-        style={{ border: 'none' }}
-        onMouseEnter={handleTemporaryExpansion}
-        onMouseLeave={keepExpanded}
-      />
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <Menu
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          items={menuItems}
+          className="border-0"
+          style={{ border: 'none' }}
+          onMouseEnter={handleTemporaryExpansion}
+          onMouseLeave={keepExpanded}
+        />
+      </div>
 
       {/* Footer del Sidebar */}
       {isExpanded && (
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-gray-50">
+        <div className="p-4 border-t bg-gray-50 flex-shrink-0">
           <div className="text-xs text-gray-500 text-center">
             <div>VeeEventos v1.0</div>
             <div>Sistema de Boletería</div>

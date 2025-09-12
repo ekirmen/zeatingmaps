@@ -236,6 +236,7 @@ export const RoleProvider = ({ children }) => {
         break;
         
       // ROLES DE TENANT (mantener compatibilidad)
+      case 'tenant_admin':
       case 'admin':
       case 'gerente':
         // Acceso completo a todo del tenant
