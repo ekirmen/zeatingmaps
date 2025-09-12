@@ -1,26 +1,26 @@
 import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef, useMemo, useEffect } from 'react';
 import { message } from 'antd';
-import SeatingMapUnified from '../../../components/SeatingMapUnified';
-import SeatAnimation from '../../components/SeatAnimation';
+// import SeatingMapUnified from '../../../components/SeatingMapUnified';
+// import SeatAnimation from '../../components/SeatAnimation';
 
-// Importar hooks personalizados
-import {
-  useMapData,
-  useDiscountCode,
-  useSeatManagement,
-  useZoneManagement,
-  useBoleteriaMemory
-} from './hooks';
+// Importar hooks personalizados - temporalmente comentados
+// import {
+//   useMapData,
+//   useDiscountCode,
+//   useSeatManagement,
+//   useZoneManagement,
+//   useBoleteriaMemory
+// } from './hooks';
 
-// Importar componentes separados
-import EventSelector from './components/EventSelector';
-import FunctionSelector from './components/FunctionSelector';
-import DiscountCodeInput from './components/DiscountCodeInput';
-import ModeControls from './components/ModeControls';
-import ZoneSelector from './components/ZoneSelector';
+// Importar componentes separados - temporalmente comentados
+// import EventSelector from './components/EventSelector';
+// import FunctionSelector from './components/FunctionSelector';
+// import DiscountCodeInput from './components/DiscountCodeInput';
+// import ModeControls from './components/ModeControls';
+// import ZoneSelector from './components/ZoneSelector';
 
-// Importar handlers
-import { createSeatHandlers } from './components/SeatHandlers';
+// Importar handlers - temporalmente comentado
+// import { createSeatHandlers } from './components/SeatHandlers';
 
 const ZonesAndPrices = ({
   eventos = [],
@@ -49,39 +49,70 @@ const ZonesAndPrices = ({
   const [abonoMode, setAbonoMode] = useState(false);
   const mapContainerRef = useRef(null);
 
-  // Hooks personalizados
-  const { mapa, setMapa, zonas, setZonas } = useMapData(selectedFuncion);
-  const { 
-    discountCode, 
-    setDiscountCode, 
-    appliedDiscount, 
-    handleApplyDiscount, 
-    getPrecioConDescuento 
-  } = useDiscountCode();
-  const {
-    blockMode,
-    setBlockMode,
-    tempBlocks,
-    setTempBlocks,
-    abonoSeats,
-    animatingSeats,
-    lockSeat,
-    unlockSeat,
-    isSeatLocked,
-    isSeatLockedByMe,
-    handleSeatAnimation,
-    handleAnimationComplete
-  } = useSeatManagement(selectedEvent, abonoMode);
-  const {
-    selectedZonaId,
-    setSelectedZonaId,
-    detallesPlantilla,
-    zonePriceRanges,
-    handleClearZoneSelection
-  } = useZoneManagement(selectedPlantilla, getPrecioConDescuento);
+  // Hooks personalizados - temporalmente comentados
+  // const { mapa, setMapa, zonas, setZonas } = useMapData(selectedFuncion);
+  // const { 
+  //   discountCode, 
+  //   setDiscountCode, 
+  //   appliedDiscount, 
+  //   handleApplyDiscount, 
+  //   getPrecioConDescuento 
+  // } = useDiscountCode();
+  // const {
+  //   blockMode,
+  //   setBlockMode,
+  //   tempBlocks,
+  //   setTempBlocks,
+  //   abonoSeats,
+  //   animatingSeats,
+  //   lockSeat,
+  //   unlockSeat,
+  //   isSeatLocked,
+  //   isSeatLockedByMe,
+  //   handleSeatAnimation,
+  //   handleAnimationComplete
+  // } = useSeatManagement(selectedEvent, abonoMode);
+  // const {
+  //   selectedZonaId,
+  //   setSelectedZonaId,
+  //   detallesPlantilla,
+  //   zonePriceRanges,
+  //   handleClearZoneSelection
+  // } = useZoneManagement(selectedPlantilla, getPrecioConDescuento);
   
   // Hook para recordar el último estado
-  const { saveState, restoreState, clearState } = useBoleteriaMemory();
+  // const { saveState, restoreState, clearState } = useBoleteriaMemory();
+
+  // Valores temporales para debug
+  const mapa = null;
+  const setMapa = () => {};
+  const zonas = [];
+  const setZonas = () => {};
+  const discountCode = '';
+  const setDiscountCode = () => {};
+  const appliedDiscount = null;
+  const handleApplyDiscount = () => {};
+  const getPrecioConDescuento = (precio) => precio;
+  const blockMode = false;
+  const setBlockMode = () => {};
+  const tempBlocks = [];
+  const setTempBlocks = () => {};
+  const abonoSeats = [];
+  const animatingSeats = [];
+  const lockSeat = () => {};
+  const unlockSeat = () => {};
+  const isSeatLocked = () => false;
+  const isSeatLockedByMe = () => false;
+  const handleSeatAnimation = () => {};
+  const handleAnimationComplete = () => {};
+  const selectedZonaId = null;
+  const setSelectedZonaId = () => {};
+  const detallesPlantilla = null;
+  const zonePriceRanges = [];
+  const handleClearZoneSelection = () => {};
+  const saveState = () => {};
+  const restoreState = () => null;
+  const clearState = () => {};
   
   // Restaurar estado guardado cuando se carguen los datos
   useEffect(() => {
@@ -105,51 +136,51 @@ const ZonesAndPrices = ({
   }, []);
 
   // Restaurar estado guardado al cargar
-  useEffect(() => {
-    if (eventos.length > 0 && funciones.length > 0 && plantillas.length > 0) {
-      const savedState = useBoleteriaMemory.restoreState(eventos, funciones, plantillas);
-      if (savedState) {
-        console.log('🔄 [MEMORIA] Restaurando estado guardado:', savedState);
+  // useEffect(() => {
+  //   if (eventos.length > 0 && funciones.length > 0 && plantillas.length > 0) {
+  //     const savedState = useBoleteriaMemory.restoreState(eventos, funciones, plantillas);
+  //     if (savedState) {
+  //       console.log('🔄 [MEMORIA] Restaurando estado guardado:', savedState);
         
-        // Restaurar evento
-        if (savedState.selectedEvent) {
-          setSelectedEvent(savedState.selectedEvent);
-          console.log('✅ [MEMORIA] Evento restaurado:', savedState.selectedEvent.nombre);
-        }
+  //       // Restaurar evento
+  //       if (savedState.selectedEvent) {
+  //         setSelectedEvent(savedState.selectedEvent);
+  //         console.log('✅ [MEMORIA] Evento restaurado:', savedState.selectedEvent.nombre);
+  //       }
         
-        // Restaurar función
-        if (savedState.selectedFuncion) {
-          setSelectedFuncion(savedState.selectedFuncion);
-          console.log('✅ [MEMORIA] Función restaurada:', savedState.selectedFuncion.nombre);
+  //       // Restaurar función
+  //       if (savedState.selectedFuncion) {
+  //         setSelectedFuncion(savedState.selectedFuncion);
+  //         console.log('✅ [MEMORIA] Función restaurada:', savedState.selectedFuncion.nombre);
           
-          // Cargar automáticamente el mapa para la función restaurada
-          if (savedState.selectedFuncion.sala?.id) {
-            console.log('🗺️ [MEMORIA] Cargando mapa automáticamente para sala:', savedState.selectedFuncion.sala.id);
-            // El useEffect de fetchMapa se ejecutará automáticamente
-          }
-        }
+  //         // Cargar automáticamente el mapa para la función restaurada
+  //         if (savedState.selectedFuncion.sala?.id) {
+  //           console.log('🗺️ [MEMORIA] Cargando mapa automáticamente para sala:', savedState.selectedFuncion.sala.id);
+  //           // El useEffect de fetchMapa se ejecutará automáticamente
+  //         }
+  //       }
         
-        // Restaurar plantilla
-        if (savedState.selectedPlantilla) {
-          setSelectedPlantilla(savedState.selectedPlantilla);
-          console.log('✅ [MEMORIA] Plantilla restaurada:', savedState.selectedPlantilla.nombre);
-        }
+  //       // Restaurar plantilla
+  //       if (savedState.selectedPlantilla) {
+  //         setSelectedPlantilla(savedState.selectedPlantilla);
+  //         console.log('✅ [MEMORIA] Plantilla restaurada:', savedState.selectedPlantilla.nombre);
+  //       }
         
-        message.success('Estado anterior restaurado automáticamente');
-      }
-    }
-  }, [eventos, funciones, plantillas]);
+  //       message.success('Estado anterior restaurado automáticamente');
+  //     }
+  //   }
+  // }, [eventos, funciones, plantillas]);
   
-  // Guardar estado cuando cambie
-  useEffect(() => {
-    if (selectedEvent && selectedFuncion) {
-      saveState({
-        selectedEvent,
-        selectedFuncion,
-        selectedPlantilla
-      });
-    }
-  }, [selectedEvent, selectedFuncion, selectedPlantilla, saveState]);
+  // Guardar estado cuando cambie - temporalmente comentado
+  // useEffect(() => {
+  //   if (selectedEvent && selectedFuncion) {
+  //     saveState({
+  //       selectedEvent,
+  //       selectedFuncion,
+  //       selectedPlantilla
+  //     });
+  //   }
+  // }, [selectedEvent, selectedFuncion, selectedPlantilla, saveState]);
 
   // Debug logs
   console.log('ZonesAndPrices - selectedPlantilla:', selectedPlantilla);
@@ -171,42 +202,48 @@ const ZonesAndPrices = ({
     }
   });
 
-  // Handlers - Memoizar para evitar re-creación
-  const seatHandlers = useMemo(() => createSeatHandlers({
-    selectedFuncion,
-    carrito,
-    setCarrito,
-    selectedClient,
-    blockMode,
-    abonoMode,
-    zonas,
-    detallesPlantilla,
-    appliedDiscount,
-    funciones,
-    lockSeat,
-    unlockSeat,
-    isSeatLocked,
-    isSeatLockedByMe,
-    handleSeatAnimation,
-    abonoSeats
-  }), [
-    selectedFuncion,
-    carrito,
-    setCarrito,
-    selectedClient,
-    blockMode,
-    abonoMode,
-    zonas,
-    detallesPlantilla,
-    appliedDiscount,
-    funciones,
-    lockSeat,
-    unlockSeat,
-    isSeatLocked,
-    isSeatLockedByMe,
-    handleSeatAnimation,
-    abonoSeats
-  ]);
+  // Handlers - Memoizar para evitar re-creación - temporalmente comentado
+  // const seatHandlers = useMemo(() => createSeatHandlers({
+  //   selectedFuncion,
+  //   carrito,
+  //   setCarrito,
+  //   selectedClient,
+  //   blockMode,
+  //   abonoMode,
+  //   zonas,
+  //   detallesPlantilla,
+  //   appliedDiscount,
+  //   funciones,
+  //   lockSeat,
+  //   unlockSeat,
+  //   isSeatLocked,
+  //   isSeatLockedByMe,
+  //   handleSeatAnimation,
+  //   abonoSeats
+  // }), [
+  //   selectedFuncion,
+  //   carrito,
+  //   setCarrito,
+  //   selectedClient,
+  //   blockMode,
+  //   abonoMode,
+  //   zonas,
+  //   detallesPlantilla,
+  //   appliedDiscount,
+  //   funciones,
+  //   lockSeat,
+  //   unlockSeat,
+  //   isSeatLocked,
+  //   isSeatLockedByMe,
+  //   handleSeatAnimation,
+  //   abonoSeats
+  // ]);
+
+  // Valores temporales para seatHandlers
+  const seatHandlers = {
+    handleSeatClick: () => {},
+    handleSelectCompleteTable: () => {}
+  };
 
   // Callbacks
   const onSeatsUpdated = useCallback((ids, estado) => {
@@ -361,19 +398,19 @@ const ZonesAndPrices = ({
         )}
 
         {/* Event Selector */}
-        <EventSelector {...eventSelectorProps} />
+        {/* <EventSelector {...eventSelectorProps} /> */}
 
         {/* Function Selector */}
-        <FunctionSelector {...functionSelectorProps} />
+        {/* <FunctionSelector {...functionSelectorProps} /> */}
 
         {/* Discount Code Input */}
-        <DiscountCodeInput {...discountCodeInputProps} />
+        {/* <DiscountCodeInput {...discountCodeInputProps} /> */}
 
         {/* Mode Controls */}
-        <ModeControls {...modeControlsProps} />
+        {/* <ModeControls {...modeControlsProps} /> */}
 
         {/* Zone Selector */}
-        <ZoneSelector {...zoneSelectorProps} />
+        {/* <ZoneSelector {...zoneSelectorProps} /> */}
         
         {/* Botón para limpiar estado guardado */}
         <div className="flex justify-end">
@@ -391,7 +428,10 @@ const ZonesAndPrices = ({
       <div className="flex-1 overflow-auto">
         {mapa ? (
           <div className="h-full">
-            <SeatingMapUnified {...seatingMapProps} />
+            {/* <SeatingMapUnified {...seatingMapProps} /> */}
+            <div className="flex items-center justify-center h-full">
+              <p className="text-gray-500">Mapa temporalmente deshabilitado para debug</p>
+            </div>
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
@@ -404,13 +444,13 @@ const ZonesAndPrices = ({
       </div>
 
       {/* Animaciones de asientos */}
-      {animatingSeats.map((seat) => (
+      {/* {animatingSeats.map((seat) => (
         <SeatAnimation
           key={`${seat._id}-${Date.now()}`}
           seat={seat}
           onAnimationComplete={handleAnimationComplete}
         />
-      ))}
+      ))} */}
     </div>
   );
 };
