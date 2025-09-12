@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { RefProvider } from '../contexts/RefContext'; // 👈 IMPORTANTE
 import { TenantProvider } from '../contexts/TenantContext'; // 👈 IMPORTANTE
+import SecurityHandler from './components/SecurityHandler'; // 👈 SEGURIDAD
 import Header from './components/StoreHeader';
 import BasicFooter from '../components/BasicFooter';
 import GlobalCartTimer from './components/GlobalCartTimer';
@@ -60,6 +61,7 @@ const StoreApp = () => {
   return (
     <TenantProvider> {/* 👈 ENVOLVER CON TENANT PROVIDER */}
       <RefProvider> {/* 👈 ENVOLVER AQUÍ */}
+        <SecurityHandler> {/* 👈 SEGURIDAD - MANEJO DE PARÁMETROS SENSIBLES */}
           <div className="min-h-screen flex flex-col">
             {showHeader && <Header />}
             <div className="flex-grow">
@@ -98,6 +100,7 @@ const StoreApp = () => {
             {showFooter && <BasicFooter />}
             <GlobalCartTimer />
           </div>
+        </SecurityHandler> {/* 👈 CIERRE SEGURIDAD */}
       </RefProvider>
     </TenantProvider>
   );
