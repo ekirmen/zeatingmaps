@@ -1,6 +1,7 @@
 import React from 'react';
 import { Select, Button, Card, Row, Col, Statistic } from 'antd';
 import { useBoleteria } from '../hooks/useBoleteria';
+import SeatingMapUnified from '../../components/SeatingMapUnified';
 
 const BoleteriaMinimal = () => {
   // Hook para obtener datos básicos de boletería
@@ -14,7 +15,13 @@ const BoleteriaMinimal = () => {
     handleFunctionSelect,
     mapa,
     zonas,
-    estadisticas
+    estadisticas,
+    carrito,
+    totalCarrito,
+    handleSeatClick,
+    handleSeatDoubleClick,
+    removeFromCart,
+    clearCart
   } = useBoleteria();
   return (
     <div className="h-full flex flex-col">
@@ -24,133 +31,187 @@ const BoleteriaMinimal = () => {
         <p className="text-sm text-gray-600">Sistema de venta de entradas</p>
       </div>
 
-      {/* Contenido principal */}
-      <div className="flex-1 overflow-auto p-4">
-        <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-700 mb-4">Boletería Minimal</h3>
-          <p className="text-gray-500 mb-4">
-            Esta es una versión completamente simplificada para identificar problemas de dependencias circulares.
-          </p>
+      {/* Layout principal con 3 paneles */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Panel Izquierdo - Selectores e Información */}
+        <div className="w-80 bg-white border-r border-gray-200 overflow-auto">
+          <div className="p-4">
+            <h3 className="text-lg font-medium text-gray-700 mb-4">Configuración</h3>
           
-          {/* Información básica */}
-          <div className="bg-white p-4 rounded-lg shadow-sm border mb-4">
-            <h4 className="font-medium text-gray-700 mb-2">Estado Actual:</h4>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p>• Versión minimal funcionando ✅</p>
-              <p>• Sin dependencias circulares ✅</p>
-              <p>• Eventos disponibles: {eventos?.length || 0}</p>
-              <p>• Funciones disponibles: {funciones?.length || 0}</p>
-              <p>• Evento seleccionado: {selectedEvent ? selectedEvent.nombre || selectedEvent.name : 'Ninguno'}</p>
-              <p>• Función seleccionada: {selectedFuncion ? selectedFuncion.nombre || selectedFuncion.name : 'Ninguna'}</p>
-              <p>• Estado de carga: {loading ? 'Cargando...' : 'Completado'}</p>
-            </div>
-          </div>
+            {/* Selectores */}
+            <div className="mb-4">
+              <h4 className="font-medium text-gray-700 mb-3">Selección:</h4>
+              
+              {/* Selector de Eventos */}
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Evento:
+                </label>
+                <Select
+                  style={{ width: '100%' }}
+                  placeholder="Selecciona un evento"
+                  value={selectedEvent?.id}
+                  onChange={handleEventSelect}
+                  loading={loading}
+                  options={eventos?.map(evento => ({
+                    value: evento.id,
+                    label: evento.nombre || evento.name || `Evento ${evento.id}`
+                  })) || []}
+                />
+              </div>
 
-          {/* Selectores */}
-          <div className="bg-white p-4 rounded-lg shadow-sm border mb-4">
-            <h4 className="font-medium text-gray-700 mb-3">Selección:</h4>
-            
-            {/* Selector de Eventos */}
-            <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Evento:
-              </label>
-              <Select
-                style={{ width: '100%' }}
-                placeholder="Selecciona un evento"
-                value={selectedEvent?.id}
-                onChange={handleEventSelect}
-                loading={loading}
-                options={eventos?.map(evento => ({
-                  value: evento.id,
-                  label: evento.nombre || evento.name || `Evento ${evento.id}`
-                })) || []}
-              />
-            </div>
-
-            {/* Selector de Funciones */}
-            <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Función:
-              </label>
-              <Select
-                style={{ width: '100%' }}
-                placeholder="Selecciona una función"
-                value={selectedFuncion?.id}
-                onChange={handleFunctionSelect}
-                loading={loading}
-                disabled={!selectedEvent}
-                options={funciones?.map(funcion => ({
-                  value: funcion.id,
-                  label: funcion.nombre || funcion.name || `Función ${funcion.id}`
-                })) || []}
-              />
-            </div>
-          </div>
-
-          {/* Estadísticas */}
-          {estadisticas && (
-            <div className="bg-white p-4 rounded-lg shadow-sm border mb-4">
-              <h4 className="font-medium text-gray-700 mb-3">Estadísticas del Mapa:</h4>
-              <Row gutter={16}>
-                <Col span={6}>
-                  <Statistic title="Total Asientos" value={estadisticas.totalSeats} />
-                </Col>
-                <Col span={6}>
-                  <Statistic title="Disponibles" value={estadisticas.availableSeats} valueStyle={{ color: '#3f8600' }} />
-                </Col>
-                <Col span={6}>
-                  <Statistic title="Vendidos" value={estadisticas.soldSeats} valueStyle={{ color: '#cf1322' }} />
-                </Col>
-                <Col span={6}>
-                  <Statistic title="Reservados" value={estadisticas.reservedSeats} valueStyle={{ color: '#faad14' }} />
-                </Col>
-              </Row>
-            </div>
-          )}
-
-          {/* Información del Mapa */}
-          {mapa && (
-            <div className="bg-white p-4 rounded-lg shadow-sm border mb-4">
-              <h4 className="font-medium text-gray-700 mb-3">Información del Mapa:</h4>
-              <div className="text-sm text-gray-600 space-y-1">
-                <p>• <strong>ID del Mapa:</strong> {mapa.id}</p>
-                <p>• <strong>Sala ID:</strong> {mapa.sala_id}</p>
-                <p>• <strong>Elementos en el mapa:</strong> {mapa.contenido?.length || 0}</p>
-                <p>• <strong>Última actualización:</strong> {new Date(mapa.updated_at).toLocaleString()}</p>
+              {/* Selector de Funciones */}
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Función:
+                </label>
+                <Select
+                  style={{ width: '100%' }}
+                  placeholder="Selecciona una función"
+                  value={selectedFuncion?.id}
+                  onChange={handleFunctionSelect}
+                  loading={loading}
+                  disabled={!selectedEvent}
+                  options={funciones?.map(funcion => ({
+                    value: funcion.id,
+                    label: funcion.nombre || funcion.name || `Función ${funcion.id}`
+                  })) || []}
+                />
               </div>
             </div>
-          )}
 
-          {/* Información de Zonas */}
-          {zonas && zonas.length > 0 && (
-            <div className="bg-white p-4 rounded-lg shadow-sm border mb-4">
-              <h4 className="font-medium text-gray-700 mb-3">Zonas Disponibles:</h4>
-              <div className="space-y-2">
-                {zonas.map((zona, index) => (
-                  <div key={zona.id || index} className="p-2 bg-gray-50 rounded border">
-                    <p className="font-medium text-gray-700">Zona {index + 1}</p>
-                    <div className="text-sm text-gray-600 space-y-1">
-                      <p>• <strong>ID:</strong> {zona.id}</p>
-                      <p>• <strong>Nombre:</strong> {zona.nombre || 'Sin nombre'}</p>
-                      <p>• <strong>Sala:</strong> {zona.sala_id}</p>
+            {/* Estadísticas */}
+            {estadisticas && (
+              <div className="mb-4">
+                <h4 className="font-medium text-gray-700 mb-3">Estadísticas:</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Total:</span>
+                    <span className="font-medium">{estadisticas.totalSeats}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Disponibles:</span>
+                    <span className="font-medium text-green-600">{estadisticas.availableSeats}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Vendidos:</span>
+                    <span className="font-medium text-red-600">{estadisticas.soldSeats}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">Reservados:</span>
+                    <span className="font-medium text-yellow-600">{estadisticas.reservedSeats}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Información de Zonas */}
+            {zonas && zonas.length > 0 && (
+              <div className="mb-4">
+                <h4 className="font-medium text-gray-700 mb-3">Zonas:</h4>
+                <div className="space-y-2">
+                  {zonas.map((zona, index) => (
+                    <div key={zona.id || index} className="p-2 bg-gray-50 rounded border">
+                      <p className="font-medium text-gray-700">{zona.nombre || `Zona ${index + 1}`}</p>
+                      <p className="text-xs text-gray-500">ID: {zona.id}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Panel Central - Mapa de Asientos */}
+        <div className="flex-1 bg-gray-50 overflow-auto">
+          <div className="p-4">
+            <h3 className="text-lg font-medium text-gray-700 mb-4">Mapa de Asientos</h3>
+            {mapa && selectedFuncion ? (
+              <div className="bg-white rounded-lg border overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
+                <SeatingMapUnified
+                  mapa={mapa}
+                  zonas={zonas}
+                  selectedFuncion={selectedFuncion}
+                  selectedEvent={selectedEvent}
+                  onSeatClick={handleSeatClick}
+                  onSeatDoubleClick={handleSeatDoubleClick}
+                  carrito={carrito}
+                  modoVenta={true}
+                  showPrices={true}
+                  showZones={true}
+                />
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg border p-4 min-h-96 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <p className="text-lg mb-2">🎫 Selecciona un evento y función</p>
+                  <p className="text-sm">para ver el mapa de asientos</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Panel Derecho - Carrito y Resumen */}
+        <div className="w-80 bg-white border-l border-gray-200 overflow-auto">
+          <div className="p-4">
+            <h3 className="text-lg font-medium text-gray-700 mb-4">Carrito</h3>
+            <div className="bg-gray-50 rounded-lg border p-4 min-h-96">
+              {carrito && carrito.length > 0 ? (
+                <div>
+                  <div className="space-y-2 mb-4">
+                    {carrito.map((item, index) => (
+                      <div key={index} className="bg-white p-2 rounded border flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-sm">{item.seatId}</p>
+                          <p className="text-xs text-gray-500">{item.zona}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-medium text-sm">${item.precio}</p>
+                          <button 
+                            onClick={() => removeFromCart(item.seatId)}
+                            className="text-red-500 text-xs hover:text-red-700"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t pt-3 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Asientos:</span>
+                      <span className="font-medium">{carrito.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Total:</span>
+                      <span className="font-medium text-lg">${totalCarrito?.toFixed(2) || '0.00'}</span>
+                    </div>
+                    <button 
+                      onClick={clearCart}
+                      className="w-full mt-3 px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                    >
+                      Limpiar Carrito
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center text-gray-500">
+                  <p className="text-lg mb-2">🛒 Carrito Vacío</p>
+                  <p className="text-sm">Selecciona asientos para agregarlos al carrito</p>
+                  <div className="mt-4 space-y-2">
+                    <div className="text-sm">
+                      <span className="text-gray-600">Total:</span>
+                      <span className="font-medium ml-2">$0.00</span>
+                    </div>
+                    <div className="text-sm">
+                      <span className="text-gray-600">Asientos:</span>
+                      <span className="font-medium ml-2">0</span>
                     </div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
-          )}
-
-          {/* Botones de prueba */}
-          <div className="mt-4 space-x-2">
-            <button 
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              onClick={() => {
-                console.log('Botón de prueba funcionando');
-              }}
-            >
-              Probar Funcionalidad
-            </button>
           </div>
         </div>
       </div>
