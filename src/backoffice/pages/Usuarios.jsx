@@ -117,7 +117,7 @@ const Usuarios = () => {
         .eq('user_id', userId);
 
       if (error) throw error;
-      return (data || []).map(item => item.recinto_id);
+      return (data || []).map(item => String(item.recinto_id));
     } catch (error) {
       console.error('Error loading user recintos:', error);
       return [];
@@ -136,7 +136,7 @@ const Usuarios = () => {
       if (recintoIds.length > 0) {
         const assignments = recintoIds.map(recintoId => ({
           user_id: userId,
-          recinto_id: recintoId
+          recinto_id: parseInt(recintoId) // Convertir string a integer
         }));
 
         const { error } = await supabase
@@ -551,18 +551,26 @@ const Usuarios = () => {
               style={{ width: '100%' }}
             >
               <Row gutter={[16, 8]}>
-                {recintos.map(recinto => (
-                  <Col span={24} key={recinto.id}>
-                    <Checkbox value={recinto.id}>
-                      <div>
-                        <div style={{ fontWeight: 'bold' }}>{recinto.nombre}</div>
-                        <div style={{ fontSize: '12px', color: '#666' }}>
-                          {recinto.direccion} - {recinto.ciudad}
+                {recintos && recintos.length > 0 ? (
+                  recintos.map(recinto => (
+                    <Col span={24} key={recinto.id}>
+                      <Checkbox value={String(recinto.id)}>
+                        <div>
+                          <div style={{ fontWeight: 'bold' }}>{recinto.nombre || 'Sin nombre'}</div>
+                          <div style={{ fontSize: '12px', color: '#666' }}>
+                            {recinto.direccion || 'Sin dirección'} - {recinto.ciudad || 'Sin ciudad'}
+                          </div>
                         </div>
-                      </div>
-                    </Checkbox>
+                      </Checkbox>
+                    </Col>
+                  ))
+                ) : (
+                  <Col span={24}>
+                    <div style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
+                      No hay recintos disponibles
+                    </div>
                   </Col>
-                ))}
+                )}
               </Row>
             </Checkbox.Group>
           </Form.Item>
