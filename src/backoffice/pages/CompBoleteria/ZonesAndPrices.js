@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef, useMemo, useEffect } from 'react';
 import { message } from 'antd';
 import SeatingMapUnified from '../../../components/SeatingMapUnified';
-import SeatAnimation from '../../components/SeatAnimation';
+// import SeatAnimation from '../../components/SeatAnimation';
 
 // Importar hooks personalizados
 import {
@@ -13,13 +13,11 @@ import {
 } from './hooks';
 
 // Importar componentes separados
-import {
-  EventSelector,
-  FunctionSelector,
-  DiscountCodeInput,
-  ModeControls,
-  ZoneSelector
-} from './components';
+import EventSelector from './components/EventSelector';
+import FunctionSelector from './components/FunctionSelector';
+import DiscountCodeInput from './components/DiscountCodeInput';
+import ModeControls from './components/ModeControls';
+import ZoneSelector from './components/ZoneSelector';
 
 // Importar handlers
 import { createSeatHandlers } from './components/SeatHandlers';
@@ -406,13 +404,13 @@ const ZonesAndPrices = ({
       </div>
 
       {/* Animaciones de asientos */}
-      {animatingSeats.map((seat) => (
+      {/* {animatingSeats.map((seat) => (
         <SeatAnimation
           key={`${seat._id}-${Date.now()}`}
           seat={seat}
           onAnimationComplete={handleAnimationComplete}
         />
-      ))}
+      ))} */}
     </div>
   );
 };
