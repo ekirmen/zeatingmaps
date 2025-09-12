@@ -15,7 +15,7 @@ import { useRole } from './components/RoleBasedAccess';
 import { RecintoProvider } from './contexts/RecintoContext';
 import { RecintoSalaProvider } from './contexts/RecintoSalaContext';
 import { IvaProvider } from './contexts/IvaContext';
-import { TagProvider } from './contexts/TagContext';
+// import { TagProvider } from './contexts/TagContext';
 import { TenantProvider } from '../contexts/TenantContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 
@@ -95,9 +95,9 @@ const BackofficeLayoutWithRoles = ({ children }) => {
     <TenantProvider>
       <ThemeProvider>
         <RecintoProvider>
-          <RecintoSalaProvider>
-            <IvaProvider>
-              <TagProvider>
+                 <RecintoSalaProvider>
+                   <IvaProvider>
+                     {/* <TagProvider> */}
                 <Layout style={{ minHeight: '100vh' }}>
               {/* Sidebar con control de roles */}
               <SidebarMenuWithRoles collapsed={collapsed} />
@@ -189,9 +189,9 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                 </Content>
               </Layout>
             </Layout>
-              </TagProvider>
-            </IvaProvider>
-          </RecintoSalaProvider>
+                     {/* </TagProvider> */}
+                   </IvaProvider>
+                 </RecintoSalaProvider>
         </RecintoProvider>
       </ThemeProvider>
     </TenantProvider>

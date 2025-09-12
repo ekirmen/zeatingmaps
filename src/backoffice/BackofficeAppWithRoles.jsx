@@ -22,7 +22,7 @@ import PlantillaPrecios from './pages/PlantillaPrecios';
 import Funciones from './pages/Funciones';
 import Abonos from './pages/Abonos';
 import CreateIva from './pages/CreateIva';
-import Boleteria from './pages/Boleteria';
+import Boleteria from './pages/BoleteriaSimple';
 import Reports from './pages/Reports';
 import CRM from './pages/CRM';
 import Tags from './pages/Tags';

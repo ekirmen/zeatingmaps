@@ -4,7 +4,7 @@ import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
 
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
-import ZonesAndPrices from './CompBoleteria/ZonesAndPrices';
+// import ZonesAndPrices from './CompBoleteria/ZonesAndPrices';
 import CompactBoleteria from './CompBoleteria/CompactBoleteria';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import PaymentModal from './CompBoleteria/PaymentModal';
@@ -332,7 +332,10 @@ const Boleteria = () => {
               {console.log('🎫 [Boleteria] Renderizando vista mapa interactivo')}
               {/* Panel izquierdo - Zonas y precios */}
               <div className="flex-1 bg-white border-r border-gray-200 overflow-auto">
-                <ZonesAndPrices {...zonesAndPricesProps} />
+                {/* <ZonesAndPrices {...zonesAndPricesProps} /> */}
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-gray-500">ZonesAndPrices temporalmente deshabilitado para debug</p>
+                </div>
               </div>
 
               {/* Panel derecho - Carrito */}

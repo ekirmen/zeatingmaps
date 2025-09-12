@@ -281,6 +281,14 @@ export const RoleProvider = ({ children }) => {
         permissions.crear_reportes = true;
         permissions.exportar_datos = true;
         permissions.configurar_sistema = true;
+        
+        // Permisos SaaS para tenant_admin
+        permissions.saas = true;
+        permissions.saas_settings = true;
+        permissions.saas_billing = true;
+        permissions.saas_payment_gateways = true;
+        permissions.saas_roles = true;
+        permissions.saas_api_explorer = true;
         break;
         
       case 'taquilla':

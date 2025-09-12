@@ -199,30 +199,30 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
           icon: faGift,
           permission: 'plantillas_productos'
         },
-        { 
-          title: 'Donaciones', 
-          path: '/dashboard/donaciones', 
-          icon: faGift,
-          permission: 'entradas'
-        },
+        // { 
+        //   title: 'Donaciones', 
+        //   path: '/dashboard/donaciones', 
+        //   icon: faGift,
+        //   permission: 'entradas'
+        // },
         { 
           title: 'Comisiones', 
           path: '/dashboard/comisiones', 
           icon: faPercent,
           permission: 'comisiones'
         },
-        { 
-          title: 'Seguros', 
-          path: '/dashboard/seguros', 
-          icon: faShieldAlt,
-          permission: 'seguros'
-        },
-        { 
-          title: 'Envío', 
-          path: '/dashboard/envio', 
-          icon: faTruck,
-          permission: 'envio'
-        },
+        // { 
+        //   title: 'Seguros', 
+        //   path: '/dashboard/seguros', 
+        //   icon: faShieldAlt,
+        //   permission: 'seguros'
+        // },
+        // { 
+        //   title: 'Envío', 
+        //   path: '/dashboard/envio', 
+        //   icon: faTruck,
+        //   permission: 'envio'
+        // },
         { 
           title: 'Eventos', 
           path: '/dashboard/eventos', 
@@ -253,24 +253,24 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
           icon: faChartLine,
           permission: 'plantillas_precios'
         },
+        // { 
+        //   title: 'Filas Virtuales', 
+        //   path: '/dashboard/filas-virtuales', 
+        //   icon: faLayerGroup,
+        //   permission: 'funciones'
+        // },
         { 
-          title: 'Filas Virtuales', 
-          path: '/dashboard/filas-virtuales', 
-          icon: faLayerGroup,
-          permission: 'funciones'
-        },
-        { 
-          title: 'Paquetes', 
+          title: 'Abonos', 
           path: '/dashboard/paquetes', 
           icon: faBox,
           permission: 'paquetes'
         },
-        { 
-          title: 'Multipase', 
-          path: '/dashboard/multipase', 
-          icon: faTicketAlt,
-          permission: 'multipase'
-        },
+        // { 
+        //   title: 'Multipase', 
+        //   path: '/dashboard/multipase', 
+        //   icon: faTicketAlt,
+        //   permission: 'multipase'
+        // },
         { 
           title: 'Abonos', 
           path: '/dashboard/abonos', 
@@ -471,7 +471,7 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
       width={250}
       className="bg-white shadow-lg"
       style={{
-        overflow: 'hidden',
+        overflow: 'auto',
         height: '100vh',
         position: 'fixed',
         left: 0,
