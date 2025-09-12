@@ -1,5 +1,5 @@
 import React from 'react';
-import { Select, Button } from 'antd';
+import { Select, Button, Card, Row, Col, Statistic } from 'antd';
 import { useBoleteria } from '../hooks/useBoleteria';
 
 const BoleteriaMinimal = () => {
@@ -11,7 +11,10 @@ const BoleteriaMinimal = () => {
     selectedFuncion,
     loading,
     handleEventSelect,
-    handleFunctionSelect
+    handleFunctionSelect,
+    mapa,
+    zonas,
+    estadisticas
   } = useBoleteria();
   return (
     <div className="h-full flex flex-col">
@@ -84,6 +87,59 @@ const BoleteriaMinimal = () => {
               />
             </div>
           </div>
+
+          {/* Estadísticas */}
+          {estadisticas && (
+            <div className="bg-white p-4 rounded-lg shadow-sm border mb-4">
+              <h4 className="font-medium text-gray-700 mb-3">Estadísticas del Mapa:</h4>
+              <Row gutter={16}>
+                <Col span={6}>
+                  <Statistic title="Total Asientos" value={estadisticas.totalSeats} />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="Disponibles" value={estadisticas.availableSeats} valueStyle={{ color: '#3f8600' }} />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="Vendidos" value={estadisticas.soldSeats} valueStyle={{ color: '#cf1322' }} />
+                </Col>
+                <Col span={6}>
+                  <Statistic title="Reservados" value={estadisticas.reservedSeats} valueStyle={{ color: '#faad14' }} />
+                </Col>
+              </Row>
+            </div>
+          )}
+
+          {/* Información del Mapa */}
+          {mapa && (
+            <div className="bg-white p-4 rounded-lg shadow-sm border mb-4">
+              <h4 className="font-medium text-gray-700 mb-3">Información del Mapa:</h4>
+              <div className="text-sm text-gray-600 space-y-1">
+                <p>• <strong>ID del Mapa:</strong> {mapa.id}</p>
+                <p>• <strong>Sala ID:</strong> {mapa.sala_id}</p>
+                <p>• <strong>Elementos en el mapa:</strong> {mapa.contenido?.length || 0}</p>
+                <p>• <strong>Última actualización:</strong> {new Date(mapa.updated_at).toLocaleString()}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Información de Zonas */}
+          {zonas && zonas.length > 0 && (
+            <div className="bg-white p-4 rounded-lg shadow-sm border mb-4">
+              <h4 className="font-medium text-gray-700 mb-3">Zonas Disponibles:</h4>
+              <div className="space-y-2">
+                {zonas.map((zona, index) => (
+                  <div key={zona.id || index} className="p-2 bg-gray-50 rounded border">
+                    <p className="font-medium text-gray-700">Zona {index + 1}</p>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p>• <strong>ID:</strong> {zona.id}</p>
+                      <p>• <strong>Nombre:</strong> {zona.nombre || 'Sin nombre'}</p>
+                      <p>• <strong>Sala:</strong> {zona.sala_id}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Botones de prueba */}
           <div className="mt-4 space-x-2">
