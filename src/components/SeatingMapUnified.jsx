@@ -219,7 +219,11 @@ const SeatingMapUnified = ({
      // Usar asientos sincronizados del hook
   const allSeats = memoizedSeats;
   
-  // Log removido para evitar spam en consola
+  // Debug: mostrar información de los asientos
+  console.log('🔍 [SEATING_MAP] Asientos del hook:', allSeats.length);
+  console.log('🔍 [SEATING_MAP] Primeros 3 asientos:', allSeats.slice(0, 3));
+  console.log('🔍 [SEATING_MAP] Mapa contenido:', mapa?.contenido?.length);
+  console.log('🔍 [SEATING_MAP] Primeros 3 elementos del mapa:', mapa?.contenido?.slice(0, 3));
   
   // Crear zonas basadas en los asientos sincronizados
   const zonas = [];

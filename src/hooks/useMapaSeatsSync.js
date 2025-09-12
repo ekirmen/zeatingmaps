@@ -14,6 +14,8 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
 
     let allSeats = [];
     console.log('🔍 [useMapaSeatsSync] Procesando mapa con', mapa.contenido.length, 'elementos');
+    console.log('🔍 [useMapaSeatsSync] Tipo de contenido:', typeof mapa.contenido);
+    console.log('🔍 [useMapaSeatsSync] Es array?', Array.isArray(mapa.contenido));
 
     // Si el contenido es un array, procesar cada elemento
     if (Array.isArray(mapa.contenido)) {
@@ -22,7 +24,9 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
           _id: elemento._id,
           type: elemento.type,
           hasSillas: !!elemento.sillas,
-          sillasLength: elemento.sillas?.length
+          sillasLength: elemento.sillas?.length,
+          nombre: elemento.nombre,
+          shape: elemento.shape
         });
         // ESTRUCTURA EXACTA DEL JSON DEL USUARIO
         // Caso 1: Mesa con un arreglo de sillas
@@ -52,7 +56,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
             }
           });
         // Caso 2: Asiento individual suelto (no dentro de una mesa)
-        } else if (elemento._id && elemento.type === 'silla') {
+        } else if (elemento._id && (elemento.type === 'silla' || elemento.type === 'circle' || elemento.type === 'rect')) {
           console.log(`✅ [useMapaSeatsSync] Procesando asiento individual:`, elemento._id);
           
           // Determinar el estado del asiento basado en la información disponible
@@ -87,11 +91,41 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
             zona: seatData.zona?.nombre,
             fill: seatData.fill
           });
+        // Caso 3: Elemento que puede ser un asiento pero no tiene el tipo correcto
+        } else if (elemento._id && elemento.nombre && (elemento.x !== undefined || elemento.posicion)) {
+          console.log(`🎯 [useMapaSeatsSync] Procesando elemento como asiento potencial:`, elemento._id);
+          
+          const seatData = {
+            ...elemento,
+            mesa_id: null,
+            mesa_nombre: null,
+            zona: elemento.zona || null,
+            x: elemento.posicion?.x || elemento.x || 0,
+            y: elemento.posicion?.y || elemento.y || 0,
+            estado: elemento.estado || 'disponible',
+            status: elemento.estado === 'disponible' ? 'available' : 'occupied',
+            _id: elemento._id,
+            nombre: elemento.nombre || elemento.numero || elemento._id,
+            width: elemento.width || 20,
+            height: elemento.height || 20,
+            fill: elemento.fill || null,
+            empty: elemento.empty !== undefined ? elemento.empty : false
+          };
+          allSeats.push(seatData);
+          console.log(`🎯 [useMapaSeatsSync] Asiento potencial agregado:`, {
+            _id: seatData._id,
+            estado: seatData.estado,
+            zona: seatData.zona?.nombre,
+            fill: seatData.fill
+          });
         } else {
           console.log(`❌ [useMapaSeatsSync] Elemento no reconocido:`, {
             _id: elemento._id,
             type: elemento.type,
-            hasSillas: !!elemento.sillas
+            hasSillas: !!elemento.sillas,
+            nombre: elemento.nombre,
+            x: elemento.x,
+            posicion: elemento.posicion
           });
         }
       });
