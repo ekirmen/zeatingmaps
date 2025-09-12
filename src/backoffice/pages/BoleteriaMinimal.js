@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Select, Button, Card, Row, Col, Statistic, Modal, Input, Form, Tabs, Table, Tag, message } from 'antd';
-import { SearchOutlined, UserOutlined, ShoppingCartOutlined, DownloadOutlined, PlusOutlined, FileTextOutlined } from '@ant-design/icons';
+import { Select, Button, message } from 'antd';
+import { SearchOutlined, UserOutlined, DownloadOutlined, PlusOutlined } from '@ant-design/icons';
 import { useBoleteria } from '../hooks/useBoleteria';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import LocatorSearchModal from './CompBoleteria/components/LocatorSearchModal';
 import ClientModals from './CompBoleteria/ClientModals';
 import downloadTicket from '../../utils/downloadTicket';
-import { supabase } from '../../../supabaseClient';
+import { supabase } from '../../supabaseClient';
 
 const BoleteriaMinimal = () => {
   // Estados para las funcionalidades adicionales
@@ -78,30 +78,6 @@ const BoleteriaMinimal = () => {
     }
   };
 
-  const handleClientSearch = async (query) => {
-    setSearchLoading(true);
-    try {
-      console.log('[BoleteriaMinimal] Searching clients:', query);
-      const { data: clients, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .or(`nombre.ilike.%${query}%,email.ilike.%${query}%,telefono.ilike.%${query}%`)
-        .limit(10);
-
-      if (error) {
-        console.error('[BoleteriaMinimal] Error searching clients:', error);
-        throw new Error('Error buscando clientes');
-      }
-
-      setSearchResults(clients || []);
-      message.success(`${clients?.length || 0} clientes encontrados`);
-    } catch (err) {
-      console.error('[BoleteriaMinimal] Client search error:', err);
-      message.error(err.message);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
 
   const handleAddClient = async (clientData) => {
     try {
