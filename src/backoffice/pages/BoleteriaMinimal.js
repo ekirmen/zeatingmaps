@@ -119,6 +119,32 @@ const BoleteriaMinimal = () => {
                 </div>
               </div>
             )}
+
+            {/* Debug del Mapa */}
+            {mapa && (
+              <div className="mb-4">
+                <h4 className="font-medium text-gray-700 mb-3">Debug Mapa:</h4>
+                <div className="text-xs text-gray-600 space-y-1">
+                  <p>• <strong>Elementos:</strong> {mapa.contenido?.length || 0}</p>
+                  <p>• <strong>Tipo contenido:</strong> {typeof mapa.contenido}</p>
+                  <p>• <strong>Primeros 3 elementos:</strong></p>
+                  <div className="bg-gray-100 p-2 rounded text-xs max-h-32 overflow-auto">
+                    <pre>{JSON.stringify(mapa.contenido?.slice(0, 3), null, 2)}</pre>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      console.log('🔍 Mapa completo:', mapa);
+                      console.log('🔍 Contenido completo:', mapa.contenido);
+                      console.log('🔍 Zonas:', zonas);
+                      console.log('🔍 Estadísticas:', estadisticas);
+                    }}
+                    className="w-full mt-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
+                  >
+                    Debug en Console
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -139,6 +165,9 @@ const BoleteriaMinimal = () => {
                   modoVenta={true}
                   showPrices={true}
                   showZones={true}
+                  showLegend={true}
+                  allowSeatSelection={true}
+                  debug={true}
                 />
               </div>
             ) : (
