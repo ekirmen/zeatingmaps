@@ -1,8 +1,8 @@
 import React, { useState, forwardRef } from 'react';
 import { message, Select } from 'antd';
 
-// Importar componentes paso a paso
-import EventSelector from './components/EventSelector';
+// Importar componentes paso a paso - temporalmente comentados
+// import EventSelector from './components/EventSelector';
 // import FunctionSelector from './components/FunctionSelector';
 
 const ZonesAndPricesSimple = ({
@@ -45,8 +45,8 @@ const ZonesAndPricesSimple = ({
             Esta vista está temporalmente simplificada para resolver problemas de dependencias circulares.
           </p>
           
-          {/* Selector de Eventos */}
-          <div className="mb-4">
+          {/* Selector de Eventos - temporalmente comentado */}
+          {/* <div className="mb-4">
             <EventSelector
               eventos={eventos}
               selectedEvent={selectedEvent}
@@ -55,7 +55,7 @@ const ZonesAndPricesSimple = ({
               onShowFunctions={onShowFunctions}
               selectedFuncion={selectedFuncion}
             />
-          </div>
+          </div> */}
           
           {/* Selector de Funciones - temporalmente comentado */}
           {/* <div className="mb-4">

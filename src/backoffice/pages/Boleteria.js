@@ -6,7 +6,7 @@ import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
 import ZonesAndPrices from './CompBoleteria/ZonesAndPricesSimple';
 import CompactBoleteria from './CompBoleteria/CompactBoleteria';
-import SeatingMapUnified from '../../components/SeatingMapUnified';
+// import SeatingMapUnified from '../../components/SeatingMapUnified';
 import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
 import FunctionModal from './CompBoleteria/FunctionModal';
@@ -14,10 +14,10 @@ import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
 
 import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
-import { supabase } from '../../supabaseClient';
-import { useSeatLockStore } from '../../components/seatLockStore';
-import { fetchPaymentBySeat } from '../services/apibackoffice';
-import downloadTicket from '../../utils/downloadTicket';
+// import { supabase } from '../../supabaseClient';
+// import { useSeatLockStore } from '../../components/seatLockStore';
+// import { fetchPaymentBySeat } from '../services/apibackoffice';
+// import downloadTicket from '../../utils/downloadTicket';
 
 const { TabPane } = Tabs;
 
