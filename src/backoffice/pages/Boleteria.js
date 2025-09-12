@@ -6,7 +6,6 @@ import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
 import ZonesAndPrices from './CompBoleteria/ZonesAndPrices';
 import CompactBoleteria from './CompBoleteria/CompactBoleteria';
-import TestCompactBoleteria from './CompBoleteria/TestCompactBoleteria';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
@@ -29,6 +28,7 @@ const Boleteria = () => {
     selectedFuncion,
     selectedEvent,
     selectedPlantilla,
+    setSelectedPlantilla,
     mapa,
     carrito,
     setCarrito,
@@ -191,18 +191,24 @@ const Boleteria = () => {
     eventos,
     selectedEvent,
     onEventSelect: handleEventSelect,
+    setSelectedEvent,
     funciones,
     onShowFunctions: () => setIsFunctionsModalVisible(true),
     selectedFuncion,
+    onFunctionSelect: handleFunctionSelect,
+    setSelectedFuncion: handleFunctionSelect,
     carrito,
     setCarrito,
     selectedPlantilla,
+    setSelectedPlantilla,
     selectedClient,
+    setSelectedClient,
     abonos: clientAbonos,
     selectedAffiliate,
     setSelectedAffiliate,
-    showSeatingMap: activeTab === 'map'
-  }), [selectedEvent, handleEventSelect, funciones, selectedFuncion, carrito, setCarrito, selectedPlantilla, selectedClient, clientAbonos, selectedAffiliate, setSelectedAffiliate, activeTab]);
+    showSeatingMap: activeTab === 'map',
+    plantillas: [] // Agregar plantillas vacías por ahora
+  }), [selectedEvent, handleEventSelect, setSelectedEvent, funciones, selectedFuncion, handleFunctionSelect, carrito, setCarrito, selectedPlantilla, setSelectedPlantilla, selectedClient, setSelectedClient, clientAbonos, selectedAffiliate, setSelectedAffiliate, activeTab]);
 
   const cartProps = useMemo(() => ({
     carrito,
@@ -315,7 +321,7 @@ const Boleteria = () => {
             // Vista compacta - todo en una pantalla
             <div className="flex-1 overflow-auto">
               {console.log('🎫 [Boleteria] Renderizando vista compacta')}
-              <TestCompactBoleteria
+              <CompactBoleteria
                 selectedFuncion={selectedFuncion}
                 mapa={mapa}
               />

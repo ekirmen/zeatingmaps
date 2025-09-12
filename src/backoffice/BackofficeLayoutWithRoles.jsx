@@ -83,6 +83,8 @@ const BackofficeLayoutWithRoles = ({ children }) => {
     }
   ];
 
+  const siderWidth = collapsed ? 80 : 250;
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       {/* Sidebar con control de roles */}
@@ -101,7 +103,7 @@ const BackofficeLayoutWithRoles = ({ children }) => {
             position: 'fixed',
             top: 0,
             right: 0,
-            left: collapsed ? 80 : 250,
+            left: siderWidth,
             zIndex: 999,
             transition: 'left 0.2s'
           }}
@@ -159,12 +161,16 @@ const BackofficeLayoutWithRoles = ({ children }) => {
         {/* Contenido principal */}
         <Content
           style={{
-            margin: '88px 24px 24px 24px',
+            marginTop: 88,
+            marginRight: 24,
+            marginBottom: 24,
+            marginLeft: siderWidth + 24,
             padding: 0,
             minHeight: 'calc(100vh - 112px)',
             background: '#f5f5f5',
             borderRadius: '8px',
-            overflow: 'auto'
+            overflow: 'auto',
+            transition: 'margin-left 0.2s'
           }}
         >
           <Outlet />

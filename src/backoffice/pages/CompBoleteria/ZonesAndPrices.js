@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef, useMemo, useEffect } from 'react';
 import { message } from 'antd';
-import SeatingMap from './SeatingMap';
+import SeatingMapUnified from '../../../components/SeatingMapUnified';
 import SeatAnimation from '../../components/SeatAnimation';
 
 // Importar hooks personalizados
@@ -28,17 +28,23 @@ const ZonesAndPrices = ({
   eventos = [],
   selectedEvent,
   onEventSelect,
+  setSelectedEvent,
   funciones = [],
   onShowFunctions,
   selectedFuncion,
+  onFunctionSelect,
+  setSelectedFuncion,
   carrito,
   setCarrito,
   selectedPlantilla,
+  setSelectedPlantilla,
   selectedClient,
+  setSelectedClient,
   abonos = [],
   selectedAffiliate,
   setSelectedAffiliate,
   showSeatingMap = true,
+  plantillas = [],
 }, ref) => {
   // Estados locales
   const [viewMode, setViewMode] = useState('map'); // Siempre mostrar el mapa por defecto
@@ -387,7 +393,7 @@ const ZonesAndPrices = ({
       <div className="flex-1 overflow-auto">
         {mapa ? (
           <div className="h-full">
-            <SeatingMap {...seatingMapProps} />
+            <SeatingMapUnified {...seatingMapProps} />
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
