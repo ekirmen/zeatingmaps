@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Button, Dropdown, Menu, Avatar, Space, Typography, Badge } from 'antd';
+import { Layout, Button, Dropdown, Menu, Avatar, Space, Typography, Badge, Result } from 'antd';
 import { 
   MenuFoldOutlined, 
   MenuUnfoldOutlined, 
@@ -19,12 +19,35 @@ const { Text } = Typography;
 const BackofficeLayoutWithRoles = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
-  const { getRole, isStoreUser, hasPermission } = useRole();
+  const { getRole, isStoreUser, hasPermission, loading } = useRole();
+
+  // Cargando permisos/rol
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div>Cargando permisos...</div>
+      </div>
+    );
+  }
 
   // Si es usuario de store, redirigir a la tienda
   if (isStoreUser()) {
     navigate('/store');
     return null;
+  }
+
+  // Si es invitado (no autenticado), bloquear acceso al dashboard
+  if (getRole() === 'guest') {
+    return (
+      <Result
+        status="403"
+        title="Acceso Denegado"
+        subTitle="No puedes acceder al dashboard sin iniciar sesión."
+        extra={
+          <Button type="primary" href="/store">Ir a la Tienda</Button>
+        }
+      />
+    );
   }
 
   const handleLogout = async () => {
@@ -96,7 +119,7 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                 Dashboard Administrativo
               </Text>
               <div style={{ fontSize: '12px', color: '#666' }}>
-                Rol: {getRole()?.toUpperCase() || 'USUARIO'}
+                Rol: {String(getRole() || 'USUARIO').toUpperCase()}
               </div>
             </div>
           </div>

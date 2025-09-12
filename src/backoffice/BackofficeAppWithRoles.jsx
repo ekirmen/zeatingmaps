@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { RoleProvider } from './components/RoleBasedAccess';
 import ProtectedRoute from './components/ProtectedRoute';
 import BackofficeLayoutWithRoles from './BackofficeLayoutWithRoles';
+import AuthGuard from './components/AuthGuard';
 
 // Importar todas las páginas
 import Dashboard from './pages/Dashboard';
@@ -42,9 +43,10 @@ import TenantDetail from './pages/TenantDetail';
 
 const BackofficeAppWithRoles = () => {
   return (
-    <RoleProvider>
-      <Routes>
-        <Route path="/" element={<BackofficeLayoutWithRoles />}>
+    <AuthGuard>
+      <RoleProvider>
+        <Routes>
+          <Route path="/" element={<BackofficeLayoutWithRoles />}>
           {/* Dashboard Principal */}
           <Route 
             index 
@@ -407,6 +409,7 @@ const BackofficeAppWithRoles = () => {
         </Route>
       </Routes>
     </RoleProvider>
+    </AuthGuard>
   );
 };
 
