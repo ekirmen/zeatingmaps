@@ -29,7 +29,12 @@ class StripeProcessor extends PaymentProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.gateway.id,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenantId,
+        userId: paymentData.userId,
+        eventoId: paymentData.eventoId,
+        funcionId: paymentData.funcionId
       });
 
       // Aquí iría la integración real con Stripe
@@ -86,7 +91,12 @@ class PayPalProcessor extends PaymentProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.gateway.id,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenantId,
+        userId: paymentData.userId,
+        eventoId: paymentData.eventoId,
+        funcionId: paymentData.funcionId
       });
 
       // Simulación de PayPal
@@ -132,7 +142,12 @@ class TransferProcessor extends PaymentProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.gateway.id,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenantId,
+        userId: paymentData.userId,
+        eventoId: paymentData.eventoId,
+        funcionId: paymentData.funcionId
       });
 
       // Generar información de transferencia
@@ -174,7 +189,12 @@ class MobilePaymentProcessor extends PaymentProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.gateway.id,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenantId,
+        userId: paymentData.userId,
+        eventoId: paymentData.eventoId,
+        funcionId: paymentData.funcionId
       });
 
       const mobileInfo = {
@@ -214,7 +234,12 @@ class ZelleProcessor extends PaymentProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.gateway.id,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenantId,
+        userId: paymentData.userId,
+        eventoId: paymentData.eventoId,
+        funcionId: paymentData.funcionId
       });
 
       const zelleInfo = {
@@ -253,7 +278,12 @@ class ReservationProcessor extends PaymentProcessor {
         orderId: paymentData.orderId,
         gatewayId: this.gateway.id,
         amount: paymentData.amount,
-        currency: paymentData.currency || 'USD'
+        currency: paymentData.currency || 'USD',
+        locator: paymentData.locator,
+        tenantId: paymentData.tenantId,
+        userId: paymentData.userId,
+        eventoId: paymentData.eventoId,
+        funcionId: paymentData.funcionId
       });
 
       const reservationInfo = {
