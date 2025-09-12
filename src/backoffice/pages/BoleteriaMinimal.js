@@ -131,17 +131,36 @@ const BoleteriaMinimal = () => {
                   <div className="bg-gray-100 p-2 rounded text-xs max-h-32 overflow-auto">
                     <pre>{JSON.stringify(mapa.contenido?.slice(0, 3), null, 2)}</pre>
                   </div>
-                  <button 
-                    onClick={() => {
-                      console.log('🔍 Mapa completo:', mapa);
-                      console.log('🔍 Contenido completo:', mapa.contenido);
-                      console.log('🔍 Zonas:', zonas);
-                      console.log('🔍 Estadísticas:', estadisticas);
-                    }}
-                    className="w-full mt-2 px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
-                  >
-                    Debug en Console
-                  </button>
+                  <div className="space-y-2 mt-2">
+                    <button 
+                      onClick={() => {
+                        console.log('🔍 Mapa completo:', mapa);
+                        console.log('🔍 Contenido completo:', mapa.contenido);
+                        console.log('🔍 Primeros 5 elementos:', mapa.contenido?.slice(0, 5));
+                        console.log('🔍 Elementos con tipo "silla":', mapa.contenido?.filter(el => el.type === 'silla'));
+                        console.log('🔍 Elementos con tipo "circle":', mapa.contenido?.filter(el => el.type === 'circle'));
+                        console.log('🔍 Elementos con tipo "rect":', mapa.contenido?.filter(el => el.type === 'rect'));
+                        console.log('🔍 Zonas:', zonas);
+                        console.log('🔍 Estadísticas:', estadisticas);
+                      }}
+                      className="w-full px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
+                    >
+                      Debug en Console
+                    </button>
+                    <button 
+                      onClick={() => {
+                        // Forzar recálculo de estadísticas
+                        const asientos = mapa.contenido?.filter(el => 
+                          el.type === 'silla' || el.type === 'circle' || el.type === 'rect'
+                        ) || [];
+                        console.log('🔍 Asientos encontrados:', asientos.length);
+                        console.log('🔍 Tipos de elementos:', mapa.contenido?.map(el => el.type));
+                      }}
+                      className="w-full px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs"
+                    >
+                      Analizar Asientos
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
