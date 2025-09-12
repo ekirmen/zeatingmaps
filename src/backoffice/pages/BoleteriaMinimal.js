@@ -163,6 +163,10 @@ const BoleteriaMinimal = () => {
                         ) || [];
                         console.log('🔍 Asientos encontrados:', asientos.length);
                         console.log('🔍 Tipos de elementos:', mapa.contenido?.map(el => el.type));
+                        console.log('🔍 Primer asiento completo:', asientos[0]);
+                        console.log('🔍 Asientos con zona:', asientos.filter(a => a.zona));
+                        console.log('🔍 Asientos con precio:', asientos.filter(a => a.precio));
+                        console.log('🔍 Asientos con _id:', asientos.filter(a => a._id));
                       }}
                       className="w-full px-2 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-xs"
                     >
@@ -183,24 +187,59 @@ const BoleteriaMinimal = () => {
               <div className="bg-white rounded-lg border overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
                 <div className="p-2 bg-blue-50 border-b text-center">
                   <p className="text-sm text-blue-700">
-                    🎫 <strong>43 asientos disponibles</strong> - Haz clic en los asientos para seleccionarlos
+                    🎫 <strong>43 asientos detectados</strong> - Problema en SeatingMapUnified
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Los asientos están en el mapa pero el componente no los reconoce
                   </p>
                 </div>
-                <SeatingMapUnified
-                  mapa={mapa}
-                  zonas={zonas}
-                  selectedFuncion={selectedFuncion}
-                  selectedEvent={selectedEvent}
-                  onSeatClick={handleSeatClick}
-                  onSeatDoubleClick={handleSeatDoubleClick}
-                  carrito={carrito}
-                  modoVenta={true}
-                  showPrices={true}
-                  showZones={true}
-                  showLegend={true}
-                  allowSeatSelection={true}
-                  debug={true}
-                />
+                {/* Mapa Simple Temporal */}
+                <div className="p-4">
+                  <div className="mb-4">
+                    <h4 className="font-medium text-gray-700 mb-2">Asientos Detectados:</h4>
+                    <div className="grid grid-cols-4 gap-2 max-h-64 overflow-auto">
+                      {mapa.contenido?.filter(el => el.type === 'silla').map((asiento, index) => (
+                        <div 
+                          key={asiento._id || index}
+                          className="p-2 border rounded cursor-pointer hover:bg-blue-50"
+                          onClick={() => {
+                            console.log('🎫 Asiento clickeado:', asiento);
+                            // Simular agregar al carrito
+                            const item = {
+                              seatId: asiento._id,
+                              zona: asiento.zona?.nombre || 'Sin zona',
+                              precio: 10 // Precio fijo por ahora
+                            };
+                            console.log('🛒 Agregando al carrito:', item);
+                          }}
+                        >
+                          <div className="text-xs">
+                            <p className="font-medium">{asiento._id}</p>
+                            <p className="text-gray-500">{asiento.zona?.nombre}</p>
+                            <p className="text-green-600">$10</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {/* Componente Original Comentado */}
+                  {/* <SeatingMapUnified
+                    mapa={mapa}
+                    zonas={zonas}
+                    selectedFuncion={selectedFuncion}
+                    selectedEvent={selectedEvent}
+                    onSeatClick={handleSeatClick}
+                    onSeatDoubleClick={handleSeatDoubleClick}
+                    carrito={carrito}
+                    modoVenta={true}
+                    showPrices={true}
+                    showZones={true}
+                    showLegend={true}
+                    allowSeatSelection={true}
+                    debug={true}
+                  /> */}
+                </div>
               </div>
             ) : (
               <div className="bg-white rounded-lg border p-4 min-h-96 flex items-center justify-center">
