@@ -259,12 +259,12 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
         //   icon: faLayerGroup,
         //   permission: 'funciones'
         // },
-        { 
-          title: 'Abonos', 
-          path: '/dashboard/paquetes', 
-          icon: faBox,
-          permission: 'paquetes'
-        },
+        // { 
+        //   title: 'Paquetes', 
+        //   path: '/dashboard/paquetes', 
+        //   icon: faBox,
+        //   permission: 'paquetes'
+        // },
         // { 
         //   title: 'Multipase', 
         //   path: '/dashboard/multipase', 

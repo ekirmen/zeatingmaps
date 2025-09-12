@@ -1,16 +1,16 @@
 import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef, useMemo, useEffect } from 'react';
 import { message } from 'antd';
-// import SeatingMapUnified from '../../../components/SeatingMapUnified';
-// import SeatAnimation from '../../components/SeatAnimation';
+import SeatingMapUnified from '../../../components/SeatingMapUnified';
+import SeatAnimation from '../../components/SeatAnimation';
 
-// Importar hooks personalizados - temporalmente comentados para debug
-// import {
-//   useMapData,
-//   useDiscountCode,
-//   useSeatManagement,
-//   useZoneManagement,
-//   useBoleteriaMemory
-// } from './hooks';
+// Importar hooks personalizados
+import {
+  useMapData,
+  useDiscountCode,
+  useSeatManagement,
+  useZoneManagement,
+  useBoleteriaMemory
+} from './hooks';
 
 // Importar componentes separados
 import EventSelector from './components/EventSelector';
@@ -49,70 +49,39 @@ const ZonesAndPrices = ({
   const [abonoMode, setAbonoMode] = useState(false);
   const mapContainerRef = useRef(null);
 
-  // Hooks personalizados - temporalmente comentados para debug
-  // const { mapa, setMapa, zonas, setZonas } = useMapData(selectedFuncion);
-  // const { 
-  //   discountCode, 
-  //   setDiscountCode, 
-  //   appliedDiscount, 
-  //   handleApplyDiscount, 
-  //   getPrecioConDescuento 
-  // } = useDiscountCode();
-  // const {
-  //   blockMode,
-  //   setBlockMode,
-  //   tempBlocks,
-  //   setTempBlocks,
-  //   abonoSeats,
-  //   animatingSeats,
-  //   lockSeat,
-  //   unlockSeat,
-  //   isSeatLocked,
-  //   isSeatLockedByMe,
-  //   handleSeatAnimation,
-  //   handleAnimationComplete
-  // } = useSeatManagement(selectedEvent, abonoMode);
-  // const {
-  //   selectedZonaId,
-  //   setSelectedZonaId,
-  //   detallesPlantilla,
-  //   zonePriceRanges,
-  //   handleClearZoneSelection
-  // } = useZoneManagement(selectedPlantilla, getPrecioConDescuento);
+  // Hooks personalizados
+  const { mapa, setMapa, zonas, setZonas } = useMapData(selectedFuncion);
+  const { 
+    discountCode, 
+    setDiscountCode, 
+    appliedDiscount, 
+    handleApplyDiscount, 
+    getPrecioConDescuento 
+  } = useDiscountCode();
+  const {
+    blockMode,
+    setBlockMode,
+    tempBlocks,
+    setTempBlocks,
+    abonoSeats,
+    animatingSeats,
+    lockSeat,
+    unlockSeat,
+    isSeatLocked,
+    isSeatLockedByMe,
+    handleSeatAnimation,
+    handleAnimationComplete
+  } = useSeatManagement(selectedEvent, abonoMode);
+  const {
+    selectedZonaId,
+    setSelectedZonaId,
+    detallesPlantilla,
+    zonePriceRanges,
+    handleClearZoneSelection
+  } = useZoneManagement(selectedPlantilla, getPrecioConDescuento);
   
   // Hook para recordar el último estado
-  // const { saveState, restoreState, clearState } = useBoleteriaMemory();
-
-  // Valores temporales para debug
-  const mapa = null;
-  const setMapa = () => {};
-  const zonas = [];
-  const setZonas = () => {};
-  const discountCode = '';
-  const setDiscountCode = () => {};
-  const appliedDiscount = null;
-  const handleApplyDiscount = () => {};
-  const getPrecioConDescuento = (precio) => precio;
-  const blockMode = false;
-  const setBlockMode = () => {};
-  const tempBlocks = [];
-  const setTempBlocks = () => {};
-  const abonoSeats = [];
-  const animatingSeats = [];
-  const lockSeat = () => {};
-  const unlockSeat = () => {};
-  const isSeatLocked = () => false;
-  const isSeatLockedByMe = () => false;
-  const handleSeatAnimation = () => {};
-  const handleAnimationComplete = () => {};
-  const selectedZonaId = null;
-  const setSelectedZonaId = () => {};
-  const detallesPlantilla = null;
-  const zonePriceRanges = [];
-  const handleClearZoneSelection = () => {};
-  const saveState = () => {};
-  const restoreState = () => null;
-  const clearState = () => {};
+  const { saveState, restoreState, clearState } = useBoleteriaMemory();
   
   // Restaurar estado guardado cuando se carguen los datos
   useEffect(() => {
@@ -422,10 +391,7 @@ const ZonesAndPrices = ({
       <div className="flex-1 overflow-auto">
         {mapa ? (
           <div className="h-full">
-            {/* <SeatingMapUnified {...seatingMapProps} /> */}
-            <div className="flex items-center justify-center h-full">
-              <p className="text-gray-500">Mapa temporalmente deshabilitado para debug</p>
-            </div>
+            <SeatingMapUnified {...seatingMapProps} />
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">
@@ -438,13 +404,13 @@ const ZonesAndPrices = ({
       </div>
 
       {/* Animaciones de asientos */}
-      {/* {animatingSeats.map((seat) => (
+      {animatingSeats.map((seat) => (
         <SeatAnimation
           key={`${seat._id}-${Date.now()}`}
           seat={seat}
           onAnimationComplete={handleAnimationComplete}
         />
-      ))} */}
+      ))}
     </div>
   );
 };
