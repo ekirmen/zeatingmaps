@@ -254,11 +254,11 @@ const CrearMapaPage = () => {
     try {
       console.log('[DEBUG] Verificando estructura de tabla mapas...');
       
-      // Validar columnas mediante un SELECT explícito de todas las esperadas
-      const expectedProjection = 'id,sala_id,contenido,tenant_id,updated_at,created_at,nombre,descripcion,estado';
+      // Validar columnas mediante un SELECT completo
+      const fullProjection = 'id,sala_id,contenido,tenant_id,updated_at,created_at,nombre,descripcion,estado,imagen_fondo';
       const { data, error } = await supabase
         .from('mapas')
-        .select(expectedProjection)
+        .select(fullProjection)
         .limit(1);
       
       // Si no hay error, las columnas existen (aunque no haya filas)
@@ -277,7 +277,7 @@ const CrearMapaPage = () => {
         const added = await addMissingFieldsToMapas(fieldsToTry);
         if (added) {
           // Reintentar la validación
-          const retry = await supabase.from('mapas').select(expectedProjection).limit(1);
+          const retry = await supabase.from('mapas').select(fullProjection).limit(1);
           if (!retry.error) {
             message.success('Campos faltantes agregados exitosamente');
             return true;
@@ -435,7 +435,7 @@ const CrearMapaPage = () => {
         // Si la tabla es accesible, buscar el mapa específico
         const { data: mapaData, error: mapaError } = await supabase
           .from('mapas')
-          .select('*')
+          .select('id,sala_id,contenido,tenant_id,updated_at,created_at,nombre,descripcion,estado,imagen_fondo')
           .eq('sala_id', salaId)
           .order('id', { ascending: false }) // Usar 'id' en lugar de 'created_at'
           .limit(1)
@@ -462,7 +462,7 @@ const CrearMapaPage = () => {
               try {
                 const { data: retryData, error: retryError } = await supabase
                   .from('mapas')
-                  .select('*')
+                  .select('id,sala_id,contenido,tenant_id,updated_at,created_at,nombre,descripcion,estado,imagen_fondo')
                   .eq('sala_id', salaId)
                   .order('id', { ascending: false })
                   .limit(1)
