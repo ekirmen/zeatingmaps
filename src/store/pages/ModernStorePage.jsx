@@ -62,7 +62,7 @@ const ModernStorePage = () => {
 
         // Aplicar ordenamiento
         if (sortBy === 'fecha') {
-          query = query.order('fecha_evento', { ascending: true });
+          query = query.order('created_at', { ascending: true });
         } else if (sortBy === 'nombre') {
           query = query.order('nombre', { ascending: true });
         } else if (sortBy === 'creado') {
@@ -307,10 +307,10 @@ const ModernStorePage = () => {
 
                       {/* Información del evento */}
                       <div className="space-y-2">
-                        {event.fecha_evento && (
+                        {event.created_at && (
                           <div className="flex items-center text-gray-600 text-sm">
                             <CalendarOutlined className="mr-2 text-blue-500" />
-                            <span>{formatDateString(event.fecha_evento)}</span>
+                            <span>{formatDateString(event.created_at)}</span>
                           </div>
                         )}
                         
@@ -347,7 +347,7 @@ const ModernStorePage = () => {
 
                       {/* Información adicional */}
                       <div className="flex justify-between items-center text-xs text-gray-500 pt-2 border-t">
-                        <span>Fecha de celebración: {formatDateString(event.fecha_evento || event.fechaCelebracion || event.fecha || event.created_at)}</span>
+                        <span>Fecha de celebración: {formatDateString(event.fechaCelebracion || event.fecha || event.created_at)}</span>
                         {isTenantAdmin() && (
                           <span>ID: {String(event.id).slice(0, 8)}...</span>
                         )}

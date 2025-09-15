@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Select, Button, message } from 'antd';
-import { SearchOutlined, UserOutlined, DownloadOutlined, PlusOutlined } from '@ant-design/icons';
+import { SearchOutlined, UserOutlined, DownloadOutlined, PlusOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import { useBoleteria } from '../hooks/useBoleteria';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import LocatorSearchModal from './CompBoleteria/components/LocatorSearchModal';
@@ -9,6 +10,8 @@ import downloadTicket from '../../utils/downloadTicket';
 import { supabase } from '../../supabaseClient';
 
 const BoleteriaMinimal = () => {
+  const navigate = useNavigate();
+  
   // Estados para las funcionalidades adicionales
   const [isLocatorModalVisible, setIsLocatorModalVisible] = useState(false);
   const [isClientModalVisible, setIsClientModalVisible] = useState(false);
@@ -31,11 +34,16 @@ const BoleteriaMinimal = () => {
     estadisticas,
     carrito,
     totalCarrito,
-    handleSeatClick,
-    handleSeatDoubleClick,
     removeFromCart,
     clearCart
   } = useBoleteria();
+
+  // Create seat toggle handler
+  const handleSeatToggle = useCallback((seat) => {
+    console.log('🪑 [BoleteriaMinimal] Seat toggle:', seat);
+    // Add seat selection logic here if needed
+    // For now, just log the seat selection
+  }, []);
 
   // Funciones para manejar las funcionalidades adicionales
   const handleLocatorSearch = async (locator) => {
@@ -124,9 +132,18 @@ const BoleteriaMinimal = () => {
       {/* Header */}
       <div className="p-4 border-b bg-gray-50">
         <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800">🎫 Boletería</h2>
-            <p className="text-sm text-gray-600">Sistema de venta de entradas</p>
+          <div className="flex items-center space-x-4">
+            <Button 
+              icon={<ArrowLeftOutlined />}
+              onClick={() => navigate('/actividad')}
+              className="flex items-center gap-2 text-gray-700 hover:text-gray-900 border-gray-300"
+            >
+              Volver al Dashboard
+            </Button>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800">🎫 Boletería</h2>
+              <p className="text-sm text-gray-600">Sistema de venta de entradas</p>
+            </div>
           </div>
           <div className="flex space-x-2">
             <Button 
@@ -408,8 +425,7 @@ const BoleteriaMinimal = () => {
                   zonas={zonas}
                   selectedFuncion={selectedFuncion}
                   selectedEvent={selectedEvent}
-                  onSeatClick={handleSeatClick}
-                  onSeatDoubleClick={handleSeatDoubleClick}
+                  onSeatToggle={handleSeatToggle}
                   carrito={carrito}
                   modoVenta={true}
                   showPrices={true}

@@ -69,7 +69,6 @@ export const useEventsList = () => {
         .select(`
           id,
           nombre,
-          fecha_evento,
           recinto,
           recinto_id,
           activo,
