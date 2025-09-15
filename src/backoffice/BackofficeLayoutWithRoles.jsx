@@ -8,7 +8,7 @@ import {
   SettingOutlined,
   BellOutlined
 } from '@ant-design/icons';
-import { useNavigate, Outlet } from 'react-router-dom';
+import { useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import SidebarMenuWithRoles from './components/SidebarMenuWithRoles';
 import { useRole } from './components/RoleBasedAccess';
@@ -25,7 +25,11 @@ const { Text } = Typography;
 const BackofficeLayoutWithRoles = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { getRole, isStoreUser, hasPermission, loading } = useRole();
+  
+  // Ocultar sidebar en boletería
+  const isBoleteriaRoute = location.pathname.includes('/boleteria');
 
   // Cargando permisos/rol
   if (loading) {
@@ -99,8 +103,8 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                    <IvaProvider>
                      <TagProvider>
                 <Layout style={{ minHeight: '100vh' }}>
-              {/* Sidebar con control de roles */}
-              <SidebarMenuWithRoles collapsed={collapsed} />
+              {/* Sidebar con control de roles - oculto en boletería */}
+              {!isBoleteriaRoute && <SidebarMenuWithRoles collapsed={collapsed} />}
               
               <Layout>
                 {/* Header */}
@@ -115,18 +119,20 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                     position: 'fixed',
                     top: 0,
                     right: 0,
-                    left: siderWidth,
+                    left: isBoleteriaRoute ? 0 : siderWidth,
                     zIndex: 999,
                     transition: 'left 0.2s'
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <Button
-                      type="text"
-                      icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                      onClick={() => setCollapsed(!collapsed)}
-                      style={{ fontSize: '16px', width: 64, height: 64 }}
-                    />
+                    {!isBoleteriaRoute && (
+                      <Button
+                        type="text"
+                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                        onClick={() => setCollapsed(!collapsed)}
+                        style={{ fontSize: '16px', width: 64, height: 64 }}
+                      />
+                    )}
                     
                     <div style={{ marginLeft: '16px' }}>
                       <Text strong style={{ fontSize: '18px' }}>
@@ -176,7 +182,7 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                     marginTop: 88,
                     marginRight: 24,
                     marginBottom: 24,
-                    marginLeft: siderWidth + 24,
+                    marginLeft: isBoleteriaRoute ? 24 : siderWidth + 24,
                     padding: 24,
                     minHeight: 'calc(100vh - 112px)',
                     background: '#f5f5f5',

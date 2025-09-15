@@ -1,5 +1,7 @@
-import React, { useRef, useCallback, useMemo } from 'react';
+import React, { useRef, useCallback, useMemo, useState } from 'react';
 import { Stage, Layer, Circle, Rect, Text, Line, Image } from 'react-konva';
+import { Button, Space } from 'antd';
+import { ZoomInOutlined, ZoomOutOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useSeatLockStore } from './seatLockStore';
 import { useSeatColors } from '../hooks/useSeatColors';
 import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
@@ -11,6 +13,7 @@ import resolveImageUrl from '../utils/resolveImageUrl';
 const SeatingMapUnified = ({
   funcionId,
   mapa,
+  zonas = [],
   lockSeat,
   unlockSeat,
   lockTable,
@@ -28,6 +31,24 @@ const SeatingMapUnified = ({
   selectedSeats = [],
   lockedSeats = []
 }) => {
+  // Estado para controles de zoom
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  
+  // Funciones para controles de zoom
+  const handleZoomIn = useCallback(() => {
+    setScale(prevScale => Math.min(prevScale * 1.2, 3));
+  }, []);
+
+  const handleZoomOut = useCallback(() => {
+    setScale(prevScale => Math.max(prevScale / 1.2, 0.3));
+  }, []);
+
+  const handleResetZoom = useCallback(() => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  }, []);
+
   const channel = useSeatLockStore(state => state.channel);
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const { getSeatColor, getBorderColor } = useSeatColors(funcionId);
@@ -225,32 +246,36 @@ const SeatingMapUnified = ({
   console.log('🔍 [SEATING_MAP] Mapa contenido:', mapa?.contenido?.length);
   console.log('🔍 [SEATING_MAP] Primeros 3 elementos del mapa:', mapa?.contenido?.slice(0, 3));
   
-  // Crear zonas basadas en los asientos sincronizados
-  const zonas = [];
-  if (allSeats.length > 0) {
-    // Agrupar asientos por zona
-    const zonasMap = new Map();
+  // Usar zonas reales de la base de datos o crear zonas automáticamente si no hay
+  const validatedZonas = useMemo(() => {
+    if (zonas && zonas.length > 0) {
+      console.log('🏷️ [SeatingMapUnified] Usando zonas reales:', zonas);
+      return zonas;
+    }
     
-    allSeats.forEach(seat => {
-      const zonaId = seat.zonaId || 'zona_principal';
-      if (!zonasMap.has(zonaId)) {
-        zonasMap.set(zonaId, {
-          id: zonaId,
-          nombre: `Zona ${zonaId}`,
-          color: '#4CAF50',
-          asientos: []
-        });
-      }
-      zonasMap.get(zonaId).asientos.push(seat);
-    });
+    // Fallback: crear zonas basadas en los asientos sincronizados
+    if (allSeats.length > 0) {
+      console.log('🏷️ [SeatingMapUnified] Creando zonas automáticamente desde asientos');
+      const zonasMap = new Map();
+      
+      allSeats.forEach(seat => {
+        const zonaId = seat.zonaId || seat.zona?.id || 'zona_principal';
+        if (!zonasMap.has(zonaId)) {
+          zonasMap.set(zonaId, {
+            id: zonaId,
+            nombre: seat.zona?.nombre || `Zona ${zonaId}`,
+            color: seat.zona?.color || '#4CAF50',
+            asientos: []
+          });
+        }
+        zonasMap.get(zonaId).asientos.push(seat);
+      });
+      
+      return Array.from(zonasMap.values());
+    }
     
-    zonas.push(...zonasMap.values());
-    
-    // Log removido para evitar spam en consola
-  }
-
-           // Usar zonas creadas directamente
-    const validatedZonas = zonas;
+    return [];
+  }, [zonas, allSeats]);
   
   // Obtener mesas del mapa - CORREGIR ESTA LÓGICA
 let mesas = [];
@@ -335,9 +360,13 @@ if (Array.isArray(mapa?.contenido)) {
         || config.image?.data
         || '';
 
+      console.log('🖼️ [BackgroundImage] Config original:', config);
+      console.log('🖼️ [BackgroundImage] URL original:', url);
+
       // Si es una ruta relativa de Storage, construir la URL pública (bucket 'productos')
       if (url && !/^https?:\/\//i.test(url) && !/^data:/i.test(url)) {
         url = resolveImageUrl(url, 'productos') || url;
+        console.log('🖼️ [BackgroundImage] URL resuelta:', url);
       }
       
       return url;
@@ -347,14 +376,23 @@ if (Array.isArray(mapa?.contenido)) {
 
     React.useEffect(() => {
       if (!rawUrl) {
+        console.log('🖼️ [BackgroundImage] No hay URL, estableciendo imagen como null');
         setBgImg(null);
         return;
       }
+      
+      console.log('🖼️ [BackgroundImage] Cargando imagen desde:', rawUrl);
       const image = new window.Image();
       image.crossOrigin = 'anonymous';
       image.loading = 'lazy';
-      const onLoad = () => setBgImg(image);
-      const onError = () => setBgImg(null);
+      const onLoad = () => {
+        console.log('🖼️ [BackgroundImage] Imagen cargada exitosamente');
+        setBgImg(image);
+      };
+      const onError = (error) => {
+        console.error('🖼️ [BackgroundImage] Error cargando imagen:', error);
+        setBgImg(null);
+      };
       image.addEventListener('load', onLoad);
       image.addEventListener('error', onError);
       image.src = rawUrl;
@@ -384,6 +422,40 @@ if (Array.isArray(mapa?.contenido)) {
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <SeatStatusLegend />
       {shouldShowSeatLockDebug && <SeatLockDebug funcionId={funcionId} />}
+      
+      {/* Controles de zoom */}
+      <div style={{ 
+        position: 'absolute', 
+        top: 10, 
+        right: 10, 
+        zIndex: 1000,
+        background: 'rgba(255, 255, 255, 0.9)',
+        padding: '8px',
+        borderRadius: '6px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+      }}>
+        <Space direction="vertical" size="small">
+          <Button 
+            icon={<ZoomInOutlined />} 
+            onClick={handleZoomIn}
+            size="small"
+            title="Zoom In"
+          />
+          <Button 
+            icon={<ZoomOutOutlined />} 
+            onClick={handleZoomOut}
+            size="small"
+            title="Zoom Out"
+          />
+          <Button 
+            icon={<ReloadOutlined />} 
+            onClick={handleResetZoom}
+            size="small"
+            title="Reset Zoom"
+          />
+        </Space>
+      </div>
+
       <Stage
         width={maxX + 50}
         height={maxY + 50}
@@ -391,6 +463,10 @@ if (Array.isArray(mapa?.contenido)) {
         onWheel={handleWheel}
         draggable
         ref={stageRef}
+        scaleX={scale}
+        scaleY={scale}
+        x={position.x}
+        y={position.y}
       >
         <Layer>
           {/* Background images */}
@@ -510,7 +586,7 @@ if (Array.isArray(mapa?.contenido)) {
             const seatData = { ...seat, estado: seatEstado };
             
             // Buscar la zona del asiento
-            const seatZona = zonas.find(z => z.asientos.some(a => a._id === seat._id)) || zonas[0];
+            const seatZona = validatedZonas.find(z => z.asientos.some(a => a._id === seat._id)) || validatedZonas[0];
             
             const seatColor = getSeatColor(seatData, seatZona, isSelected, selectedSeats, allLockedSeats);
             const borderColor = getBorderColor(isSelected, seatZona);

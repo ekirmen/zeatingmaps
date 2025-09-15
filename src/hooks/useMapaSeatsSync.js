@@ -79,11 +79,26 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
             console.log(`🎯 [useMapaSeatsSync] Asiento ${elemento._id} en zona:`, elemento.zona.nombre);
           }
           
+          // Asignar zona automáticamente basándose en la posición
+          let zonaAsignada = elemento.zona;
+          if (!zonaAsignada) {
+            // Lógica simple: asignar zona basándose en la posición Y
+            const y = elemento.posicion?.y || elemento.y || 0;
+            if (y < 200) {
+              zonaAsignada = { id: 'zona_vip', nombre: 'Zona VIP', color: '#FFD700' };
+            } else if (y < 400) {
+              zonaAsignada = { id: 'zona_premium', nombre: 'Zona Premium', color: '#FF6B6B' };
+            } else {
+              zonaAsignada = { id: 'zona_general', nombre: 'Zona General', color: '#4CAF50' };
+            }
+          }
+
           const seatData = {
             ...elemento,
             mesa_id: null,
             mesa_nombre: null,
-            zona: elemento.zona || null,
+            zona: zonaAsignada,
+            zonaId: zonaAsignada.id,
             x: elemento.posicion?.x || elemento.x || 0,
             y: elemento.posicion?.y || elemento.y || 0,
             estado: estado,
@@ -143,11 +158,26 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
           // ÚLTIMO RECURSO: Si tiene _id y coordenadas, tratarlo como asiento
           if (elemento._id && (elemento.x !== undefined || elemento.y !== undefined || elemento.posicion)) {
             console.log(`🚨 [useMapaSeatsSync] FORZANDO elemento como asiento:`, elemento._id);
+            // Asignar zona automáticamente basándose en la posición
+            let zonaAsignada = elemento.zona;
+            if (!zonaAsignada) {
+              // Lógica simple: asignar zona basándose en la posición Y
+              const y = elemento.posicion?.y || elemento.y || 0;
+              if (y < 200) {
+                zonaAsignada = { id: 'zona_vip', nombre: 'Zona VIP', color: '#FFD700' };
+              } else if (y < 400) {
+                zonaAsignada = { id: 'zona_premium', nombre: 'Zona Premium', color: '#FF6B6B' };
+              } else {
+                zonaAsignada = { id: 'zona_general', nombre: 'Zona General', color: '#4CAF50' };
+              }
+            }
+
             const seatData = {
               ...elemento,
               mesa_id: null,
               mesa_nombre: null,
-              zona: elemento.zona || null,
+              zona: zonaAsignada,
+              zonaId: zonaAsignada.id,
               x: elemento.posicion?.x || elemento.x || 0,
               y: elemento.posicion?.y || elemento.y || 0,
               estado: elemento.estado || 'disponible',

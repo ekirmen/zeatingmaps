@@ -40,7 +40,7 @@ const ClientModals = ({
         // Fallback to direct search if handleUnifiedSearch is not provided
         const { data, error } = await supabase
           .from('profiles')
-          .select('id, login, nombre, apellido, telefono, empresa, email')
+          .select('id, login, nombre, apellido, telefono, email')
           .or(
             `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
           );
