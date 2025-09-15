@@ -44,7 +44,7 @@ const ModernStorePage = () => {
           .from('eventos')
           .select(`
             *,
-            recintos!eventos_recinto_fkey (
+            recintos!recinto_id (
               id,
               nombre,
               direccion,
