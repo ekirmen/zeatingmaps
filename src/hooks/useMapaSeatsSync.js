@@ -2,6 +2,13 @@
 import { useState, useEffect, useCallback } from 'react';
 
 export const useMapaSeatsSync = (mapa, funcionId) => {
+  console.log('🚀 [useMapaSeatsSync] Hook ejecutándose con:', { 
+    mapa: !!mapa, 
+    mapaId: mapa?.id, 
+    contenidoLength: mapa?.contenido?.length,
+    funcionId 
+  });
+  
   const [seatsData, setSeatsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -193,7 +200,18 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
 
   // Sincronizar cuando cambie el mapa o funcionId
   useEffect(() => {
-    syncMapaWithSeats();
+    console.log('🔄 [useMapaSeatsSync] useEffect ejecutándose con:', { 
+      mapa: !!mapa, 
+      funcionId,
+      contenidoLength: mapa?.contenido?.length 
+    });
+    
+    if (mapa && funcionId) {
+      console.log('✅ [useMapaSeatsSync] Ejecutando syncMapaWithSeats');
+      syncMapaWithSeats();
+    } else {
+      console.log('❌ [useMapaSeatsSync] No ejecutando sync - falta mapa o funcionId');
+    }
   }, [mapa, funcionId, syncMapaWithSeats]);
 
   return {
