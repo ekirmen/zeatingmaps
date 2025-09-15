@@ -220,6 +220,62 @@ const BoleteriaMinimal = () => {
   };
 
 
+  const handleUnifiedSearch = async (searchTerm) => {
+    console.log('🔍 [BoleteriaMinimal] Unified search for:', searchTerm);
+    setSearchLoading(true);
+    setSearchResults([]);
+    setPaymentResults([]);
+
+    try {
+      // Buscar en profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, login, nombre, apellido, telefono, email')
+        .or(
+          `login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
+        );
+
+      if (profilesError) {
+        console.error('[BoleteriaMinimal] Profiles search error:', profilesError);
+        throw profilesError;
+      }
+
+      const mappedProfiles = profiles?.map((p) => ({
+        _id: p.id,
+        id: p.id,
+        nombre: p.login || p.nombre,
+        email: p.email || '',
+        telefono: p.telefono,
+      })) || [];
+
+      console.log('🔍 [BoleteriaMinimal] Profiles found:', mappedProfiles.length);
+      setSearchResults(mappedProfiles);
+
+      // Buscar en payments por localizador
+      const { data: payments, error: paymentsError } = await supabase
+        .from('payments')
+        .select('*')
+        .ilike('locator', `%${searchTerm}%`);
+
+      if (paymentsError) {
+        console.error('[BoleteriaMinimal] Payments search error:', paymentsError);
+      } else {
+        console.log('🔍 [BoleteriaMinimal] Payments found:', payments?.length || 0);
+        setPaymentResults(payments || []);
+      }
+
+      if (mappedProfiles.length === 0 && (!payments || payments.length === 0)) {
+        message.info('No se encontraron resultados');
+      }
+
+    } catch (err) {
+      console.error('[BoleteriaMinimal] Unified search error:', err);
+      message.error(err.message || 'Error en la búsqueda');
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
   const handleAddClient = async (clientData) => {
     try {
       console.log('[BoleteriaMinimal] Creating client:', clientData);
@@ -785,7 +841,11 @@ const BoleteriaMinimal = () => {
           setSelectedClient(client);
           setIsClientModalVisible(false);
         }}
-        onLocatorSearch={handleLocatorSearch}
+        handleUnifiedSearch={handleUnifiedSearch}
+        clearSearchResults={() => {
+          setSearchResults([]);
+          setPaymentResults([]);
+        }}
       />
     </div>
   );

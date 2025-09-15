@@ -390,6 +390,7 @@ const loadReservedSeats = async (funcionId) => {
     }
     
     console.log('🔍 [loadReservedSeats] Transacciones encontradas:', transactions?.length || 0);
+    console.log('🔍 [loadReservedSeats] Detalles de transacciones:', transactions);
     
     // También buscar en la tabla payments para compatibilidad
     const { data: payments, error: paymentsError } = await supabase
@@ -404,6 +405,7 @@ const loadReservedSeats = async (funcionId) => {
     }
     
     console.log('🔍 [loadReservedSeats] Payments encontrados:', payments?.length || 0);
+    console.log('🔍 [loadReservedSeats] Detalles de payments:', payments);
     
     // Crear mapa de asientos reservados
     const reservedSeats = {};
