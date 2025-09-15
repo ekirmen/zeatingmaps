@@ -23,6 +23,8 @@ const BoleteriaMinimal = () => {
   // Estados para el flujo de venta
   const [selectedZona, setSelectedZona] = useState(null);
   const [showMapa, setShowMapa] = useState(false);
+  const [blockedSeats, setBlockedSeats] = useState(new Set());
+  const [isBlockingMode, setIsBlockingMode] = useState(false);
 
   // Hook para obtener datos básicos de boletería
   const {
@@ -45,9 +47,27 @@ const BoleteriaMinimal = () => {
   // Create seat toggle handler
   const handleSeatToggle = useCallback((seat) => {
     console.log('🪑 [BoleteriaMinimal] Seat toggle:', seat);
-    // Add seat selection logic here if needed
-    // For now, just log the seat selection
-  }, []);
+    
+    if (isBlockingMode) {
+      // Modo bloqueo: alternar estado de bloqueo
+      const seatId = seat._id || seat.id;
+      setBlockedSeats(prev => {
+        const newBlocked = new Set(prev);
+        if (newBlocked.has(seatId)) {
+          newBlocked.delete(seatId);
+          console.log('🔓 [BoleteriaMinimal] Asiento desbloqueado:', seatId);
+        } else {
+          newBlocked.add(seatId);
+          console.log('🔒 [BoleteriaMinimal] Asiento bloqueado:', seatId);
+        }
+        return newBlocked;
+      });
+    } else {
+      // Modo normal: selección de asientos para venta
+      console.log('🛒 [BoleteriaMinimal] Asiento seleccionado para venta:', seat);
+      // Aquí puedes agregar la lógica de selección normal
+    }
+  }, [isBlockingMode]);
 
   // Handle zona selection
   const handleZonaSelect = useCallback((zona) => {
@@ -66,6 +86,22 @@ const BoleteriaMinimal = () => {
     console.log('🛒 [BoleteriaMinimal] Yendo al carrito con cliente:', selectedClient);
     // Aquí puedes navegar al carrito o mostrar el modal del carrito
   }, [selectedClient]);
+
+  // Toggle blocking mode
+  const toggleBlockingMode = useCallback(() => {
+    setIsBlockingMode(prev => !prev);
+    if (isBlockingMode) {
+      message.success('Modo de venta activado');
+    } else {
+      message.info('Modo de bloqueo activado - Haz clic en asientos para bloquear/desbloquear');
+    }
+  }, [isBlockingMode]);
+
+  // Clear all blocked seats
+  const clearAllBlockedSeats = useCallback(() => {
+    setBlockedSeats(new Set());
+    message.success('Todos los asientos han sido desbloqueados');
+  }, []);
 
   // Funciones para manejar las funcionalidades adicionales
   const handleLocatorSearch = async (locator) => {
@@ -352,18 +388,50 @@ const BoleteriaMinimal = () => {
               </div>
             )}
 
-            {/* Botón para volver a seleccionar zona */}
+            {/* Controles de Bloqueo de Asientos */}
             {showMapa && (
               <div className="mb-4">
-                <Button
-                  onClick={() => {
-                    setShowMapa(false);
-                    setSelectedZona(null);
-                  }}
-                  className="w-full"
-                >
-                  ← Volver a Seleccionar Zona
-                </Button>
+                <h4 className="font-medium text-gray-700 mb-3">Control de Asientos:</h4>
+                <div className="space-y-2">
+                  <Button
+                    onClick={toggleBlockingMode}
+                    className={`w-full ${isBlockingMode ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-500 hover:bg-blue-600'}`}
+                    type="primary"
+                  >
+                    {isBlockingMode ? '🔒 Modo Bloqueo (Activo)' : '🔓 Modo Venta'}
+                  </Button>
+                  
+                  {isBlockingMode && (
+                    <Button
+                      onClick={clearAllBlockedSeats}
+                      className="w-full bg-orange-500 hover:bg-orange-600"
+                      type="primary"
+                    >
+                      🗑️ Desbloquear Todos
+                    </Button>
+                  )}
+                  
+                  <Button
+                    onClick={() => {
+                      setShowMapa(false);
+                      setSelectedZona(null);
+                      setIsBlockingMode(false);
+                      setBlockedSeats(new Set());
+                    }}
+                    className="w-full"
+                  >
+                    ← Volver a Seleccionar Zona
+                  </Button>
+                </div>
+                
+                {/* Información de asientos bloqueados */}
+                {blockedSeats.size > 0 && (
+                  <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded">
+                    <p className="text-sm text-red-700">
+                      🔒 <strong>{blockedSeats.size}</strong> asiento(s) bloqueado(s)
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -385,7 +453,11 @@ const BoleteriaMinimal = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-red-500 rounded"></div>
-                  <span>Bloqueado/Vendido</span>
+                  <span>Vendido</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-gray-600 rounded"></div>
+                  <span>Bloqueado</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-purple-500 rounded"></div>
@@ -467,12 +539,12 @@ const BoleteriaMinimal = () => {
             <h3 className="text-lg font-medium text-gray-700 mb-4">Mapa de Asientos</h3>
             {showMapa && mapa && selectedFuncion && selectedZona ? (
               <div className="bg-white rounded-lg border overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
-                <div className="p-2 bg-blue-50 border-b text-center">
-                  <p className="text-sm text-blue-700">
-                    🎫 <strong>Zona: {selectedZona.nombre}</strong> - Sistema de colores activo
+                <div className={`p-2 border-b text-center ${isBlockingMode ? 'bg-red-50' : 'bg-blue-50'}`}>
+                  <p className={`text-sm ${isBlockingMode ? 'text-red-700' : 'text-blue-700'}`}>
+                    🎫 <strong>Zona: {selectedZona.nombre}</strong> - {isBlockingMode ? 'Modo Bloqueo Activo' : 'Sistema de colores activo'}
                   </p>
-                  <p className="text-xs text-blue-600 mt-1">
-                    Verde: Disponible | Azul: Seleccionado | Rojo: Vendido | Púrpura: Reservado
+                  <p className={`text-xs mt-1 ${isBlockingMode ? 'text-red-600' : 'text-blue-600'}`}>
+                    {isBlockingMode ? 'Haz clic en asientos para bloquear/desbloquear' : 'Verde: Disponible | Azul: Seleccionado | Rojo: Vendido | Púrpura: Reservado'}
                   </p>
                 </div>
                 <SeatingMapUnified
