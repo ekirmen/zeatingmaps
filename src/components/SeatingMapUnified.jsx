@@ -368,13 +368,9 @@ if (Array.isArray(mapa?.contenido)) {
         || config.image?.data
         || '';
 
-      console.log('🖼️ [BackgroundImage] Config original:', config);
-      console.log('🖼️ [BackgroundImage] URL original:', url);
-
       // Si es una ruta relativa de Storage, construir la URL pública (bucket 'productos')
       if (url && !/^https?:\/\//i.test(url) && !/^data:/i.test(url)) {
         url = resolveImageUrl(url, 'productos') || url;
-        console.log('🖼️ [BackgroundImage] URL resuelta:', url);
       }
       
       return url;
@@ -384,26 +380,30 @@ if (Array.isArray(mapa?.contenido)) {
 
     React.useEffect(() => {
       if (!rawUrl) {
-        console.log('🖼️ [BackgroundImage] No hay URL, estableciendo imagen como null');
         setBgImg(null);
         return;
       }
       
-      console.log('🖼️ [BackgroundImage] Cargando imagen desde:', rawUrl);
       const image = new window.Image();
-      image.crossOrigin = 'anonymous';
-      image.loading = 'lazy';
+      
+      // Para data URLs, no necesitamos crossOrigin
+      if (!rawUrl.startsWith('data:')) {
+        image.crossOrigin = 'anonymous';
+      }
+      
       const onLoad = () => {
-        console.log('🖼️ [BackgroundImage] Imagen cargada exitosamente');
         setBgImg(image);
       };
+      
       const onError = (error) => {
-        console.error('🖼️ [BackgroundImage] Error cargando imagen:', error);
+        console.error('Error cargando imagen de fondo:', error);
         setBgImg(null);
       };
+      
       image.addEventListener('load', onLoad);
       image.addEventListener('error', onError);
       image.src = rawUrl;
+      
       return () => {
         image.removeEventListener('load', onLoad);
         image.removeEventListener('error', onError);
