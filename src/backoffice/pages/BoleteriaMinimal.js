@@ -177,11 +177,35 @@ const BoleteriaMinimal = () => {
     }
 
     try {
-      console.log('🚀 [BoleteriaMinimal] Descargando ticket:', locator);
+      console.log('🎫 [BoleteriaMinimal] Downloading ticket:', locator);
+      console.log('🎫 [BoleteriaMinimal] Locator type:', typeof locator);
+      console.log('🎫 [BoleteriaMinimal] Locator length:', locator.length);
+      
+      // Verificar si el pago existe en la base de datos
+      const { data: payment, error: paymentError } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('locator', locator)
+        .single();
+      
+      if (paymentError) {
+        console.error('❌ [BoleteriaMinimal] Error buscando pago:', paymentError);
+        message.error('No se encontró el pago en la base de datos');
+        return;
+      }
+      
+      if (!payment) {
+        console.error('❌ [BoleteriaMinimal] Pago no encontrado para localizador:', locator);
+        message.error('No se encontró el pago para este localizador');
+        return;
+      }
+      
+      console.log('✅ [BoleteriaMinimal] Pago encontrado:', payment);
+      
       await downloadTicket(locator);
       message.success('Ticket descargado exitosamente');
     } catch (error) {
-      console.error('❌ [BoleteriaMinimal] Error descargando ticket:', error);
+      console.error('❌ [BoleteriaMinimal] Download error:', error);
       message.error('Error al descargar el ticket: ' + error.message);
     }
   }, []);

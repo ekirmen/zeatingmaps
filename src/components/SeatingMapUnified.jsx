@@ -150,6 +150,7 @@ const SeatingMapUnified = ({
 
   const handleSeatClick = useCallback(
     (seat) => {
+      console.log('🪑 [SEATING_MAP] ===== ASIENTO CLICKEADO =====');
       console.log('🪑 [SEATING_MAP] Asiento clickeado:', {
         id: seat._id,
         nombre: seat.nombre,
