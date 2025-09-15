@@ -26,7 +26,12 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
           hasSillas: !!elemento.sillas,
           sillasLength: elemento.sillas?.length,
           nombre: elemento.nombre,
-          shape: elemento.shape
+          shape: elemento.shape,
+          x: elemento.x,
+          y: elemento.y,
+          posicion: elemento.posicion,
+          fill: elemento.fill,
+          estado: elemento.estado
         });
         // ESTRUCTURA EXACTA DEL JSON DEL USUARIO
         // Caso 1: Mesa con un arreglo de sillas
@@ -127,6 +132,34 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
             x: elemento.x,
             posicion: elemento.posicion
           });
+          
+          // ÚLTIMO RECURSO: Si tiene _id y coordenadas, tratarlo como asiento
+          if (elemento._id && (elemento.x !== undefined || elemento.y !== undefined || elemento.posicion)) {
+            console.log(`🚨 [useMapaSeatsSync] FORZANDO elemento como asiento:`, elemento._id);
+            const seatData = {
+              ...elemento,
+              mesa_id: null,
+              mesa_nombre: null,
+              zona: elemento.zona || null,
+              x: elemento.posicion?.x || elemento.x || 0,
+              y: elemento.posicion?.y || elemento.y || 0,
+              estado: elemento.estado || 'disponible',
+              status: elemento.estado === 'disponible' ? 'available' : 'occupied',
+              _id: elemento._id,
+              nombre: elemento.nombre || elemento.numero || elemento._id,
+              width: elemento.width || 20,
+              height: elemento.height || 20,
+              fill: elemento.fill || null,
+              empty: elemento.empty !== undefined ? elemento.empty : false
+            };
+            allSeats.push(seatData);
+            console.log(`🚨 [useMapaSeatsSync] Asiento forzado agregado:`, {
+              _id: seatData._id,
+              estado: seatData.estado,
+              zona: seatData.zona?.nombre,
+              fill: seatData.fill
+            });
+          }
         }
       });
     }
