@@ -25,6 +25,8 @@ const BoleteriaMinimal = () => {
   const [showMapa, setShowMapa] = useState(false);
   const [blockedSeats, setBlockedSeats] = useState(new Set());
   const [isBlockingMode, setIsBlockingMode] = useState(false);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [ticketLocator, setTicketLocator] = useState(null);
 
   // Hook para obtener datos básicos de boletería
   const {
@@ -39,9 +41,12 @@ const BoleteriaMinimal = () => {
     zonas,
     estadisticas,
     carrito,
+    setCarrito,
     totalCarrito,
     removeFromCart,
-    clearCart
+    clearCart,
+    selectedClient,
+    setSelectedClient
   } = useBoleteria();
 
   // Create seat toggle handler
@@ -64,10 +69,42 @@ const BoleteriaMinimal = () => {
       });
     } else {
       // Modo normal: selección de asientos para venta
-      console.log('🛒 [BoleteriaMinimal] Asiento seleccionado para venta:', seat);
-      // Aquí puedes agregar la lógica de selección normal
+      if (!selectedClient) {
+        message.warning('Debes seleccionar un cliente antes de seleccionar asientos');
+        setIsClientModalVisible(true);
+        return;
+      }
+
+      const seatId = seat._id || seat.id;
+      const seatData = {
+        _id: seatId,
+        nombre: seat.nombre || seat.numero || `Asiento ${seatId}`,
+        zona: selectedZona?.nombre || seat.zona?.nombre || 'General',
+        precio: 50, // Precio por defecto, debería venir de la plantilla
+        funcionId: selectedFuncion?.id,
+        funcionFecha: selectedFuncion?.fecha_celebracion,
+        clienteId: selectedClient.id,
+        clienteNombre: selectedClient.nombre
+      };
+
+      // Verificar si el asiento ya está en el carrito
+      const existingIndex = carrito.findIndex(item => item._id === seatId);
+      
+      if (existingIndex >= 0) {
+        // Remover del carrito
+        const newCarrito = carrito.filter((_, index) => index !== existingIndex);
+        setCarrito(newCarrito);
+        console.log('🗑️ [BoleteriaMinimal] Asiento removido del carrito:', seatId);
+        message.success('Asiento removido del carrito');
+      } else {
+        // Agregar al carrito
+        const newCarrito = [...carrito, seatData];
+        setCarrito(newCarrito);
+        console.log('✅ [BoleteriaMinimal] Asiento agregado al carrito:', seatId);
+        message.success('Asiento agregado al carrito');
+      }
     }
-  }, [isBlockingMode]);
+  }, [isBlockingMode, selectedClient, selectedZona, selectedFuncion, carrito, setCarrito]);
 
   // Handle zona selection
   const handleZonaSelect = useCallback((zona) => {
@@ -101,6 +138,23 @@ const BoleteriaMinimal = () => {
   const clearAllBlockedSeats = useCallback(() => {
     setBlockedSeats(new Set());
     message.success('Todos los asientos han sido desbloqueados');
+  }, []);
+
+  // Handle ticket download
+  const handleDownloadTicket = useCallback(async (locator) => {
+    if (!locator) {
+      message.error('No hay localizador disponible para descargar');
+      return;
+    }
+
+    try {
+      console.log('🚀 [BoleteriaMinimal] Descargando ticket:', locator);
+      await downloadTicket(locator);
+      message.success('Ticket descargado exitosamente');
+    } catch (error) {
+      console.error('❌ [BoleteriaMinimal] Error descargando ticket:', error);
+      message.error('Error al descargar el ticket: ' + error.message);
+    }
   }, []);
 
   // Funciones para manejar las funcionalidades adicionales
@@ -354,20 +408,27 @@ const BoleteriaMinimal = () => {
               )}
             </div>
 
-            {/* Selección de Zonas */}
-            {zonas && zonas.length > 0 && !showMapa && (
+            {/* Información de Zonas */}
+            {zonas && zonas.length > 0 && (
               <div className="mb-4">
-                <h4 className="font-medium text-gray-700 mb-3">Selecciona una Zona:</h4>
+                <h4 className="font-medium text-gray-700 mb-3">Zonas Disponibles:</h4>
                 <div className="space-y-2">
                   {zonas.map((zona, index) => (
-                    <button
-                      key={zona.id || index}
+                    <div 
+                      key={zona.id || index} 
+                      className={`p-3 rounded-lg border-2 transition-colors cursor-pointer ${
+                        selectedZona?.id === zona.id 
+                          ? 'border-blue-500 bg-blue-50' 
+                          : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-25'
+                      }`}
                       onClick={() => handleZonaSelect(zona)}
-                      className="w-full p-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
                     >
                       <p className="font-medium text-gray-700">{zona.nombre || `Zona ${index + 1}`}</p>
                       <p className="text-xs text-gray-500">ID: {zona.id}</p>
-                    </button>
+                      {selectedZona?.id === zona.id && (
+                        <p className="text-xs text-blue-600 mt-1">✓ Seleccionada</p>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -592,13 +653,19 @@ const BoleteriaMinimal = () => {
                     {carrito.map((item, index) => (
                       <div key={index} className="bg-white p-2 rounded border flex justify-between items-center">
                         <div>
-                          <p className="font-medium text-sm">{item.seatId}</p>
+                          <p className="font-medium text-sm">{item.nombre || item._id}</p>
                           <p className="text-xs text-gray-500">{item.zona}</p>
+                          {item.clienteNombre && (
+                            <p className="text-xs text-blue-600">Cliente: {item.clienteNombre}</p>
+                          )}
                         </div>
                         <div className="text-right">
-                          <p className="font-medium text-sm">${item.precio}</p>
+                          <p className="font-medium text-sm">${item.precio || 0}</p>
                           <button 
-                            onClick={() => removeFromCart(item.seatId)}
+                            onClick={() => {
+                              const newCarrito = carrito.filter((_, i) => i !== index);
+                              setCarrito(newCarrito);
+                            }}
                             className="text-red-500 text-xs hover:text-red-700"
                           >
                             ✕
@@ -616,12 +683,56 @@ const BoleteriaMinimal = () => {
                       <span className="text-sm text-gray-600">Total:</span>
                       <span className="font-medium text-lg">${totalCarrito?.toFixed(2) || '0.00'}</span>
                     </div>
-                    <button 
-                      onClick={clearCart}
-                      className="w-full mt-3 px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
-                    >
-                      Limpiar Carrito
-                    </button>
+                    {paymentCompleted && ticketLocator && (
+                      <div className="bg-green-50 border border-green-200 rounded p-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-green-600">✅</span>
+                          <div>
+                            <p className="text-sm font-medium text-green-800">Pago Completado</p>
+                            <p className="text-xs text-green-600">Localizador: {ticketLocator}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div className="space-y-2 mt-3">
+                      {ticketLocator ? (
+                        <button 
+                          onClick={() => handleDownloadTicket(ticketLocator)}
+                          className="w-full px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                        >
+                          📥 Descargar Ticket
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => {
+                            if (!selectedClient) {
+                              message.warning('Debes seleccionar un cliente antes de proceder al pago');
+                              setIsClientModalVisible(true);
+                              return;
+                            }
+                            // Simular pago exitoso y generar locator
+                            const mockLocator = `TKT-${Date.now()}`;
+                            setTicketLocator(mockLocator);
+                            setPaymentCompleted(true);
+                            message.success('Pago procesado exitosamente. Ticket generado.');
+                          }}
+                          className="w-full px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+                          disabled={!selectedClient}
+                        >
+                          💳 Proceder al Pago
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => {
+                          clearCart();
+                          setPaymentCompleted(false);
+                          setTicketLocator(null);
+                        }}
+                        className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                      >
+                        🗑️ Limpiar Carrito
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
