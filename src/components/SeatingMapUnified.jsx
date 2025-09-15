@@ -585,8 +585,12 @@ if (Array.isArray(mapa?.contenido)) {
 
             const seatData = { ...seat, estado: seatEstado };
             
-            // Buscar la zona del asiento
-            const seatZona = validatedZonas.find(z => z.asientos.some(a => a._id === seat._id)) || validatedZonas[0];
+            // Buscar la zona del asiento con guardas para evitar errores cuando falten zonas/asientos
+            const seatZona = (
+              Array.isArray(validatedZonas)
+                ? validatedZonas.find(z => Array.isArray(z?.asientos) && z.asientos.some(a => a._id === seat._id))
+                : null
+            ) || (Array.isArray(validatedZonas) ? validatedZonas[0] : null);
             
             const seatColor = getSeatColor(seatData, seatZona, isSelected, selectedSeats, allLockedSeats);
             const borderColor = getBorderColor(isSelected, seatZona);

@@ -437,12 +437,14 @@ const loadReservedSeats = async (funcionId) => {
           
           try {
             // Buscar en payments por locator
-            const { data: paymentByLocator, error: locatorError } = await supabase
+            // Nota: algunos entornos rechazan .single(); usar .limit(1) y tomar el primero para evitar 406
+            const { data: paymentsByLocator, error: locatorError } = await supabase
               .from('payments')
               .select('seats, status')
               .eq('locator', transaction.locator)
-              .single();
+              .limit(1);
             
+            const paymentByLocator = Array.isArray(paymentsByLocator) ? paymentsByLocator[0] : null;
             if (!locatorError && paymentByLocator && paymentByLocator.seats) {
               console.log('✅ [loadReservedSeats] Encontrado payment por locator con asientos:', paymentByLocator.seats.length);
               
