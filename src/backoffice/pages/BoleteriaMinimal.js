@@ -249,17 +249,6 @@ const BoleteriaMinimal = () => {
     }
   };
 
-  const handleDownloadTicket = async (locator) => {
-    try {
-      console.log('[BoleteriaMinimal] Downloading ticket:', locator);
-      await downloadTicket(locator);
-      message.success('Ticket descargado exitosamente');
-    } catch (err) {
-      console.error('[BoleteriaMinimal] Download error:', err);
-      message.error('Error al descargar el ticket');
-    }
-  };
-
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
