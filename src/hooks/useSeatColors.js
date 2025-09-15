@@ -101,8 +101,8 @@ export const useSeatColors = (eventId = null) => {
       return eventTheme.seatSelectedMe || '#1890ff';
     }
     
-    // 8. DISPONIBLE (por defecto)
-    const defaultColor = zona?.color || eventTheme.seatAvailable || '#4CAF50';
+    // 8. DISPONIBLE (por defecto) - SIEMPRE VERDE
+    const defaultColor = '#4CAF50'; // Forzar verde para asientos disponibles
     console.log(`🪑 [SEAT_COLOR] ${seatId} - DISPONIBLE: ${defaultColor}`);
     return defaultColor;
   };
