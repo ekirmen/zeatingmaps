@@ -52,6 +52,9 @@ const BoleteriaMinimal = () => {
   // Create seat toggle handler
   const handleSeatToggle = useCallback((seat) => {
     console.log('🪑 [BoleteriaMinimal] Seat toggle:', seat);
+    console.log('🪑 [BoleteriaMinimal] Modo bloqueo:', isBlockingMode);
+    console.log('🪑 [BoleteriaMinimal] Cliente seleccionado:', selectedClient);
+    console.log('🪑 [BoleteriaMinimal] Zona seleccionada:', selectedZona);
     
     if (isBlockingMode) {
       // Modo bloqueo: alternar estado de bloqueo
@@ -61,9 +64,11 @@ const BoleteriaMinimal = () => {
         if (newBlocked.has(seatId)) {
           newBlocked.delete(seatId);
           console.log('🔓 [BoleteriaMinimal] Asiento desbloqueado:', seatId);
+          message.success('Asiento desbloqueado');
         } else {
           newBlocked.add(seatId);
           console.log('🔒 [BoleteriaMinimal] Asiento bloqueado:', seatId);
+          message.success('Asiento bloqueado');
         }
         return newBlocked;
       });
@@ -89,6 +94,12 @@ const BoleteriaMinimal = () => {
 
       // Verificar si el asiento ya está en el carrito
       const existingIndex = carrito.findIndex(item => item._id === seatId);
+      console.log('🛒 [BoleteriaMinimal] Verificando carrito:', {
+        seatId,
+        existingIndex,
+        carritoLength: carrito.length,
+        carritoItems: carrito.map(item => ({ id: item._id, nombre: item.nombre }))
+      });
       
       if (existingIndex >= 0) {
         // Remover del carrito
@@ -518,7 +529,7 @@ const BoleteriaMinimal = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-gray-600 rounded"></div>
-                  <span>Bloqueado</span>
+                  <span>Bloqueado (Gris)</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-4 h-4 bg-purple-500 rounded"></div>
@@ -605,7 +616,7 @@ const BoleteriaMinimal = () => {
                     🎫 <strong>Zona: {selectedZona.nombre}</strong> - {isBlockingMode ? 'Modo Bloqueo Activo' : 'Sistema de colores activo'}
                   </p>
                   <p className={`text-xs mt-1 ${isBlockingMode ? 'text-red-600' : 'text-blue-600'}`}>
-                    {isBlockingMode ? 'Haz clic en asientos para bloquear/desbloquear' : 'Verde: Disponible | Azul: Seleccionado | Rojo: Vendido | Púrpura: Reservado'}
+                    {isBlockingMode ? 'Haz clic en asientos para bloquear/desbloquear' : 'Verde: Disponible | Azul: Seleccionado | Rojo: Vendido | Púrpura: Reservado | Gris: Bloqueado'}
                   </p>
                 </div>
                 <SeatingMapUnified
@@ -616,12 +627,13 @@ const BoleteriaMinimal = () => {
                   selectedEvent={selectedEvent}
                   onSeatToggle={handleSeatToggle}
                   carrito={carrito}
-                  modoVenta={true}
+                  modoVenta={!isBlockingMode}
                   showPrices={true}
                   showZones={true}
                   showLegend={true}
                   allowSeatSelection={true}
                   debug={true}
+                  blockedSeats={blockedSeats}
                 />
               </div>
             ) : !showMapa ? (

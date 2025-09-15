@@ -29,7 +29,8 @@ const SeatingMapUnified = ({
   onSeatInfo,
   foundSeats = [],
   selectedSeats = [],
-  lockedSeats = []
+  lockedSeats = [],
+  blockedSeats = null
 }) => {
   // Estado para controles de zoom
   const [scale, setScale] = useState(1);
@@ -172,9 +173,16 @@ const SeatingMapUnified = ({
         return;
       }
 
-      // Verificar si está vendido o reservado
-      if (seat.estado === 'vendido' || seat.estado === 'reservado') {
-        console.warn('❌ [SEATING_MAP] Asiento vendido o reservado:', seat.estado);
+      // Verificar si está bloqueado localmente (desde props)
+      const isLocallyBlocked = blockedSeats && blockedSeats.has && blockedSeats.has(seat._id);
+      if (isLocallyBlocked) {
+        console.warn('❌ [SEATING_MAP] Asiento bloqueado localmente, no se puede seleccionar');
+        return;
+      }
+
+      // Verificar si está vendido, reservado o bloqueado permanentemente
+      if (seat.estado === 'vendido' || seat.estado === 'reservado' || seat.estado === 'locked') {
+        console.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
         return;
       }
 
@@ -185,8 +193,8 @@ const SeatingMapUnified = ({
       if (isSelectedByMe) {
         console.log('🔄 [SEATING_MAP] Deseleccionando asiento:', seat._id);
       } else {
-        // Solo permitir seleccionar si está disponible
-        if (seat.estado !== 'disponible') {
+        // Solo permitir seleccionar si está disponible o seleccionado por otro
+        if (seat.estado !== 'disponible' && seat.estado !== 'seleccionado_por_otro') {
           console.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
           return;
         }
@@ -204,7 +212,7 @@ const SeatingMapUnified = ({
       // Llamar a la función de información del asiento si existe
       if (onSeatInfo) onSeatInfo(seat);
     },
-    [onSeatToggle, onSeatInfo, selectedSeats, funcionId]
+    [onSeatToggle, onSeatInfo, selectedSeats, funcionId, blockedSeats]
   );
 
 
@@ -545,7 +553,13 @@ if (Array.isArray(mapa?.contenido)) {
 
                          // Determinar estado visual según lock.status (consistente con boleteria)
              let seatEstado = seat.estado;
-             if (locked) {
+             
+             // Verificar si está bloqueado localmente (desde props)
+             const isLocallyBlocked = blockedSeats && blockedSeats.has && blockedSeats.has(seat._id);
+             
+             if (isLocallyBlocked) {
+               seatEstado = 'locked'; // Bloqueo local
+             } else if (locked) {
                const lock = Array.isArray(allLockedSeats)
                  ? allLockedSeats.find(l => l.seat_id === seat._id)
                  : null;

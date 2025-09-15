@@ -495,10 +495,46 @@ const loadReservedSeats = async (funcionId) => {
   }
 };
 
+// Función para asegurar que todos los asientos estén disponibles
+const ensureAllSeatsAvailable = (mapa) => {
+  if (!mapa || !mapa.contenido) {
+    return mapa;
+  }
+  
+  try {
+    const contenido = Array.isArray(mapa.contenido) ? mapa.contenido : JSON.parse(mapa.contenido);
+    
+    const contenidoConEstados = contenido.map(elemento => {
+      if (elemento.sillas && Array.isArray(elemento.sillas)) {
+        const sillasConEstado = elemento.sillas.map(silla => ({
+          ...silla,
+          estado: 'disponible' // Forzar estado disponible
+        }));
+        
+        return {
+          ...elemento,
+          sillas: sillasConEstado
+        };
+      }
+      return elemento;
+    });
+    
+    return {
+      ...mapa,
+      contenido: contenidoConEstados
+    };
+    
+  } catch (error) {
+    console.error('❌ [ensureAllSeatsAvailable] Error:', error);
+    return mapa;
+  }
+};
+
 // Función para aplicar estados de asientos al mapa
 const applySeatStates = (mapa, reservedSeats) => {
   if (!mapa || !mapa.contenido || Object.keys(reservedSeats).length === 0) {
-    return mapa;
+    // Si no hay asientos reservados, asegurar que todos estén disponibles
+    return ensureAllSeatsAvailable(mapa);
   }
   
   console.log('🔍 [applySeatStates] Aplicando estados a mapa con', Object.keys(reservedSeats).length, 'asientos reservados');
@@ -519,7 +555,11 @@ const applySeatStates = (mapa, reservedSeats) => {
               locator: reservedSeats[seatId].locator
             };
           }
-          return silla;
+          // Si no hay datos de reserva, asegurar que esté disponible
+          return {
+            ...silla,
+            estado: 'disponible'
+          };
         });
         
         return {

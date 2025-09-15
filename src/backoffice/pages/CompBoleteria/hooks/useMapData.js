@@ -74,8 +74,11 @@ export const useMapData = (selectedFuncion) => {
             ...el,
             sillas: el.sillas.map(s => {
               const st = seatMap[s._id || s.id];
-              if (!st) return s;
-              const estado = st.bloqueado ? 'bloqueado' : st.estado || s.estado;
+              if (!st) {
+                // Si no hay datos en seatMap, asumir que está disponible
+                return { ...s, estado: 'disponible' };
+              }
+              const estado = st.bloqueado ? 'bloqueado' : st.estado || 'disponible';
               return { ...s, estado };
             })
           }))

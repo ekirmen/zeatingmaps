@@ -78,9 +78,9 @@ export const useSeatColors = (eventId = null) => {
     }
     
     // 4. BLOQUEADO PERMANENTEMENTE (desde boleteria)
-    if (isPermanentlyLocked || seat.estado === 'locked') {
-      console.log(`🪑 [SEAT_COLOR] ${seatId} - BLOQUEADO: #ff4d4f`);
-      return eventTheme.seatBlocked || '#ff4d4f';
+    if (isPermanentlyLocked || seat.estado === 'locked' || lockInfo?.status === 'locked') {
+      console.log(`🪑 [SEAT_COLOR] ${seatId} - BLOQUEADO: #6b7280`);
+      return '#6b7280'; // Gris para asientos bloqueados permanentemente
     }
     
     // 5. SELECCIONADO POR OTRO USUARIO (temporal) - PRIORIDAD ALTA
