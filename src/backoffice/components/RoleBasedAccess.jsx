@@ -390,6 +390,7 @@ export const RoleProvider = ({ children }) => {
       '/dashboard/usuarios': 'usuarios',
       '/dashboard/recintos': 'recintos',
       '/dashboard/plano': 'plano',
+      '/dashboard/crear-mapa': 'recintos',
       '/dashboard/liquidaciones': 'liquidaciones',
       '/dashboard/entradas': 'entradas',
       '/dashboard/productos': 'productos',
@@ -428,7 +429,20 @@ export const RoleProvider = ({ children }) => {
       '/dashboard/saas/api-explorer': 'saas_api_explorer'
     };
 
-    const permission = routePermissions[path];
+    // Verificar ruta exacta primero
+    let permission = routePermissions[path];
+    
+    // Si no se encuentra, verificar rutas con parámetros
+    if (!permission) {
+      // Verificar rutas con parámetros dinámicos
+      for (const [route, perm] of Object.entries(routePermissions)) {
+        if (path.startsWith(route + '/')) {
+          permission = perm;
+          break;
+        }
+      }
+    }
+    
     return permission ? hasPermission(permission) : false;
   };
 
