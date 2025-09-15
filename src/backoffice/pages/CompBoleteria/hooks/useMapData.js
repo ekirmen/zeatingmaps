@@ -78,7 +78,17 @@ export const useMapData = (selectedFuncion) => {
                 // Si no hay datos en seatMap, asumir que está disponible
                 return { ...s, estado: 'disponible' };
               }
-              const estado = st.bloqueado ? 'bloqueado' : st.estado || 'disponible';
+              
+              // Mapear estados correctamente
+              let estado = 'disponible';
+              if (st.estado === 'vendido') {
+                estado = 'vendido';
+              } else if (st.estado === 'reservado') {
+                estado = 'reservado';
+              } else if (st.estado === 'bloqueado' || st.status === 'locked') {
+                estado = 'bloqueado';
+              }
+              
               return { ...s, estado };
             })
           }))

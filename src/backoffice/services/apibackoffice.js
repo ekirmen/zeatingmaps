@@ -376,119 +376,87 @@ const loadReservedSeats = async (funcionId) => {
   try {
     console.log('🔍 [loadReservedSeats] Cargando asientos reservados para función:', funcionId);
     
-    // Buscar transacciones pendientes (reservadas) para esta función
-    const { data: transactions, error } = await supabase
-      .from('payment_transactions')
-      .select('*')
-      .eq('funcion_id', funcionId)
-      .in('status', ['pending', 'reserved'])
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error('❌ [loadReservedSeats] Error cargando transacciones:', error);
-      return {};
-    }
-    
-    console.log('🔍 [loadReservedSeats] Transacciones encontradas:', transactions?.length || 0);
-    console.log('🔍 [loadReservedSeats] Detalles de transacciones:', transactions);
-    
-    // También buscar en la tabla payments para compatibilidad
+    // Buscar en la tabla payments (tabla principal)
     const { data: payments, error: paymentsError } = await supabase
       .from('payments')
-      .select('seats, status, funcion')
+      .select('seats, status, funcion, locator, created_at, id')
       .eq('funcion', funcionId)
-      .in('status', ['reservado', 'pagado'])
+      .in('status', ['reservado', 'pagado', 'pending'])
       .order('created_at', { ascending: false });
     
     if (paymentsError) {
-      console.warn('⚠️ [loadReservedSeats] Error cargando payments:', paymentsError);
+      console.error('❌ [loadReservedSeats] Error cargando payments:', paymentsError);
+      return {};
     }
     
     console.log('🔍 [loadReservedSeats] Payments encontrados:', payments?.length || 0);
     console.log('🔍 [loadReservedSeats] Detalles de payments:', payments);
     
+    // Buscar en seat_locks para asientos bloqueados
+    const { data: locks, error: locksError } = await supabase
+      .from('seat_locks')
+      .select('seat_id, status, expires_at, created_at, locator')
+      .eq('funcion_id', funcionId)
+      .eq('status', 'locked')
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false });
+    
+    if (locksError) {
+      console.warn('⚠️ [loadReservedSeats] Error cargando locks:', locksError);
+    }
+    
+    console.log('🔍 [loadReservedSeats] Locks encontrados:', locks?.length || 0);
+    console.log('🔍 [loadReservedSeats] Detalles de locks:', locks);
+    
     // Crear mapa de asientos reservados
     const reservedSeats = {};
     
-    // Procesar transacciones de payment_transactions
-    if (transactions) {
-      for (const transaction of transactions) {
-        console.log('🔍 [loadReservedSeats] Procesando transacción:', transaction.id, 'Status:', transaction.status);
-        
-        // Para payment_transactions, necesitamos extraer los asientos del gateway_response
-        if (transaction.gateway_response && typeof transaction.gateway_response === 'object') {
-          const seats = transaction.gateway_response.seats || [];
-          console.log('🔍 [loadReservedSeats] Asientos en gateway_response:', seats.length);
-          
-          seats.forEach(seat => {
-            if (seat.id) {
-              reservedSeats[seat.id] = {
-                estado: transaction.status === 'pending' ? 'reservado' : 'pagado',
-                transactionId: transaction.id,
-                locator: transaction.locator,
-                createdAt: transaction.created_at
-              };
-              console.log('✅ [loadReservedSeats] Asiento reservado:', seat.id, 'Estado:', reservedSeats[seat.id].estado);
-            }
-          });
-        }
-        
-        // Si no hay asientos en gateway_response, intentar buscar por locator en payments
-        if (!transaction.gateway_response?.seats && transaction.locator) {
-          console.log('🔍 [loadReservedSeats] Buscando asientos por locator:', transaction.locator);
-          
-          try {
-            // Buscar en payments por locator
-            // Nota: algunos entornos rechazan .single(); usar .limit(1) y tomar el primero para evitar 406
-            const { data: paymentsByLocator, error: locatorError } = await supabase
-              .from('payments')
-              .select('seats, status')
-              .eq('locator', transaction.locator)
-              .limit(1);
-            
-            const paymentByLocator = Array.isArray(paymentsByLocator) ? paymentsByLocator[0] : null;
-            if (!locatorError && paymentByLocator && paymentByLocator.seats) {
-              console.log('✅ [loadReservedSeats] Encontrado payment por locator con asientos:', paymentByLocator.seats.length);
-              
-              paymentByLocator.seats.forEach(seat => {
-                if (seat.id) {
-                  reservedSeats[seat.id] = {
-                    estado: transaction.status === 'pending' ? 'reservado' : 'pagado',
-                    transactionId: transaction.id,
-                    locator: transaction.locator,
-                    createdAt: transaction.created_at
-                  };
-                  console.log('✅ [loadReservedSeats] Asiento reservado por locator:', seat.id);
-                }
-              });
-            }
-          } catch (locatorError) {
-            console.warn('⚠️ [loadReservedSeats] Error buscando por locator:', locatorError);
-          }
-        }
-      }
-    }
-    
-    // Procesar payments directamente
+    // Procesar payments
     if (payments) {
       payments.forEach(payment => {
         if (payment.seats && Array.isArray(payment.seats)) {
           payment.seats.forEach(seat => {
             if (seat.id) {
+              let estado = 'disponible';
+              if (payment.status === 'pagado') {
+                estado = 'vendido';
+              } else if (payment.status === 'reservado' || payment.status === 'pending') {
+                estado = 'reservado';
+              }
+              
               reservedSeats[seat.id] = {
-                estado: payment.status === 'reservado' ? 'reservado' : 'pagado',
+                estado: estado,
                 paymentId: payment.id,
-                createdAt: payment.created_at
+                locator: payment.locator,
+                createdAt: payment.created_at,
+                status: payment.status
               };
-              console.log('✅ [loadReservedSeats] Asiento desde payments:', seat.id, 'Estado:', reservedSeats[seat.id].estado);
+              console.log('✅ [loadReservedSeats] Asiento desde payments:', seat.id, 'Estado:', estado, 'Status:', payment.status);
             }
           });
         }
       });
     }
     
-    console.log('✅ [loadReservedSeats] Total asientos reservados cargados:', Object.keys(reservedSeats).length);
-    console.log('🔍 [loadReservedSeats] Asientos reservados:', Object.keys(reservedSeats));
+    // Procesar locks
+    if (locks) {
+      locks.forEach(lock => {
+        if (lock.seat_id) {
+          reservedSeats[lock.seat_id] = {
+            estado: 'bloqueado',
+            lockId: lock.id,
+            locator: lock.locator,
+            createdAt: lock.created_at,
+            expiresAt: lock.expires_at,
+            status: 'locked'
+          };
+          console.log('🔒 [loadReservedSeats] Asiento bloqueado:', lock.seat_id, 'Expira:', lock.expires_at);
+        }
+      });
+    }
+    
+    console.log('✅ [loadReservedSeats] Total asientos con estado cargados:', Object.keys(reservedSeats).length);
+    console.log('🔍 [loadReservedSeats] Asientos con estado:', Object.keys(reservedSeats));
     return reservedSeats;
     
   } catch (error) {
@@ -1273,6 +1241,103 @@ export const fetchPayments = async () => {
   const { data, error } = await client.from('payments').select('*');
   handleError(error);
   return data;
+};
+
+// Función para limpiar locks expirados
+export const cleanupExpiredLocks = async () => {
+  const client = supabaseAdmin || supabase;
+  
+  try {
+    console.log('🧹 [cleanupExpiredLocks] Limpiando locks expirados...');
+    
+    const { data, error } = await client
+      .from('seat_locks')
+      .delete()
+      .lt('expires_at', new Date().toISOString())
+      .eq('status', 'locked')
+      .select();
+    
+    if (error) {
+      console.error('❌ [cleanupExpiredLocks] Error limpiando locks:', error);
+      return { data: null, error };
+    }
+    
+    console.log('✅ [cleanupExpiredLocks] Locks expirados eliminados:', data?.length || 0);
+    return { data, error: null };
+    
+  } catch (error) {
+    console.error('❌ [cleanupExpiredLocks] Error general:', error);
+    return { data: null, error };
+  }
+};
+
+// Función para crear un lock de asiento
+export const createSeatLock = async (seatId, funcionId, userId = null, expiresInMinutes = 15) => {
+  const client = supabaseAdmin || supabase;
+  
+  try {
+    console.log('🔒 [createSeatLock] Creando lock para asiento:', seatId, 'Función:', funcionId);
+    
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + expiresInMinutes);
+    
+    const lockData = {
+      seat_id: seatId,
+      funcion_id: funcionId,
+      user_id: userId,
+      expires_at: expiresAt.toISOString(),
+      status: 'locked',
+      lock_type: 'seat',
+      tenant_id: '9dbdb86f-8424-484c-bb76-0d9fa27573c8' // Tenant por defecto
+    };
+    
+    const { data, error } = await client
+      .from('seat_locks')
+      .insert(lockData)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('❌ [createSeatLock] Error creando lock:', error);
+      return { data: null, error };
+    }
+    
+    console.log('✅ [createSeatLock] Lock creado:', data.id);
+    return { data, error: null };
+    
+  } catch (error) {
+    console.error('❌ [createSeatLock] Error general:', error);
+    return { data: null, error };
+  }
+};
+
+// Función para liberar un lock de asiento
+export const releaseSeatLock = async (seatId, funcionId) => {
+  const client = supabaseAdmin || supabase;
+  
+  try {
+    console.log('🔓 [releaseSeatLock] Liberando lock para asiento:', seatId, 'Función:', funcionId);
+    
+    const { data, error } = await client
+      .from('seat_locks')
+      .delete()
+      .eq('seat_id', seatId)
+      .eq('funcion_id', funcionId)
+      .eq('status', 'locked')
+      .select();
+    
+    if (error) {
+      console.error('❌ [releaseSeatLock] Error liberando lock:', error);
+      return { data: null, error };
+    }
+    
+    console.log('✅ [releaseSeatLock] Lock liberado:', data?.length || 0);
+    return { data, error: null };
+    
+  } catch (error) {
+    console.error('❌ [releaseSeatLock] Error general:', error);
+    return { data: null, error };
+  }
 };
 
 export const fetchPaymentByLocator = async (locator) => {
