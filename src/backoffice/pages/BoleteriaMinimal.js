@@ -403,6 +403,7 @@ const BoleteriaMinimal = () => {
                   </p>
                 </div>
                 <SeatingMapUnified
+                  funcionId={selectedFuncion?.id}
                   mapa={mapa}
                   zonas={zonas}
                   selectedFuncion={selectedFuncion}
