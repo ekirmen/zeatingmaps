@@ -1,6 +1,43 @@
 -- Funciones de trigger para el sistema de boletería
 -- Ejecutar estas funciones en Supabase SQL Editor
 
+-- 1. Crear tabla seat_locks si no existe
+CREATE TABLE IF NOT EXISTS public.seat_locks (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  seat_id text NULL,
+  table_id text NULL,
+  funcion_id integer NOT NULL,
+  session_id text NULL,
+  locked_at timestamp with time zone NULL DEFAULT now(),
+  expires_at timestamp with time zone NULL,
+  status text NULL DEFAULT 'locked'::text,
+  lock_type text NULL DEFAULT 'seat'::text,
+  created_at timestamp with time zone NULL DEFAULT now(),
+  tenant_id uuid NULL,
+  locator character varying(255) NULL,
+  user_id uuid NULL,
+  updated_at timestamp with time zone NULL DEFAULT CURRENT_TIMESTAMP,
+  zona_id character varying(255) NULL,
+  zona_nombre character varying(255) NULL,
+  precio numeric(10, 2) NULL,
+  CONSTRAINT seat_locks_pkey PRIMARY KEY (id),
+  CONSTRAINT seat_locks_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES tenants (id) ON DELETE CASCADE,
+  CONSTRAINT seat_locks_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users (id) ON DELETE SET NULL
+) TABLESPACE pg_default;
+
+-- Crear índices para seat_locks
+CREATE INDEX IF NOT EXISTS idx_seat_locks_funcion_id ON public.seat_locks USING btree (funcion_id) TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS idx_seat_locks_session_id ON public.seat_locks USING btree (session_id) TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS idx_seat_locks_seat_id ON public.seat_locks USING btree (seat_id) TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS idx_seat_locks_table_id ON public.seat_locks USING btree (table_id) TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS idx_seat_locks_expires_at ON public.seat_locks USING btree (expires_at) TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS idx_seat_locks_lock_type ON public.seat_locks USING btree (lock_type) TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS idx_seat_locks_tenant_id ON public.seat_locks USING btree (tenant_id) TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS idx_seat_locks_locator ON public.seat_locks USING btree (locator) TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS idx_seat_locks_user_id ON public.seat_locks USING btree (user_id) TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS idx_seat_locks_zona_id ON public.seat_locks USING btree (zona_id) TABLESPACE pg_default;
+CREATE INDEX IF NOT EXISTS idx_seat_locks_zona_nombre ON public.seat_locks USING btree (zona_nombre) TABLESPACE pg_default;
+
 -- 1. Función para validar disponibilidad de asientos
 CREATE OR REPLACE FUNCTION validate_seat_availability()
 RETURNS TRIGGER AS $$
@@ -58,22 +95,11 @@ BEGIN
     -- Si hay seat_id, buscar información de la zona
     IF NEW.seat_id IS NOT NULL THEN
         -- Buscar información de la zona desde el mapa
-        SELECT 
-            z.nombre as zona_nombre,
-            z.id as zona_id
-        INTO zona_info
-        FROM mapas m
-        JOIN contenido c ON m.id = c.mapa_id
-        JOIN sillas s ON c.id = s.contenido_id
-        JOIN zonas z ON s.zona_id = z.id
-        WHERE s.id = NEW.seat_id
-        LIMIT 1;
-        
-        -- Actualizar información de zona si se encuentra
-        IF zona_info IS NOT NULL THEN
-            NEW.zona_nombre := zona_info.zona_nombre;
-            NEW.zona_id := zona_info.zona_id;
-        END IF;
+        -- Nota: Esta función se simplifica ya que la tabla contenido no existe
+        -- La información de zona se puede obtener de otras formas o se puede omitir
+        -- Por ahora, establecer valores por defecto
+        NEW.zona_nombre := 'General';
+        NEW.zona_id := 'general';
     END IF;
     
     RETURN NEW;
@@ -126,3 +152,31 @@ BEGIN
     RETURN seat_status;
 END;
 $$ LANGUAGE plpgsql;
+
+-- 6. Crear triggers
+-- Trigger para validar disponibilidad de asientos
+DROP TRIGGER IF EXISTS check_seat_availability ON payments;
+CREATE TRIGGER check_seat_availability 
+    BEFORE INSERT OR UPDATE ON payments 
+    FOR EACH ROW 
+    EXECUTE FUNCTION validate_seat_availability();
+
+-- Trigger para establecer usuario del pago
+DROP TRIGGER IF EXISTS set_payment_user_trigger ON payments;
+CREATE TRIGGER set_payment_user_trigger 
+    BEFORE INSERT ON payments 
+    FOR EACH ROW 
+    EXECUTE FUNCTION set_payment_user();
+
+-- Trigger para actualizar información de zona en seat_locks
+DROP TRIGGER IF EXISTS trigger_update_seat_lock_zone_info ON seat_locks;
+CREATE TRIGGER trigger_update_seat_lock_zone_info 
+    BEFORE INSERT OR UPDATE ON seat_locks 
+    FOR EACH ROW 
+    EXECUTE FUNCTION update_seat_lock_zone_info();
+
+-- 7. Otorgar permisos
+GRANT SELECT, INSERT, UPDATE, DELETE ON seat_locks TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON seat_locks TO anon;
+GRANT USAGE ON SCHEMA public TO authenticated;
+GRANT USAGE ON SCHEMA public TO anon;

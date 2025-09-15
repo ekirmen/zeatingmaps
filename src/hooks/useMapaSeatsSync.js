@@ -155,7 +155,26 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
             posicion: elemento.posicion
           });
           
-          // ÚLTIMO RECURSO: Si tiene _id y coordenadas, tratarlo como asiento
+          // Filtrar elementos que NO son asientos
+          const isNonSeatElement = elemento._id && (
+            elemento._id.startsWith('bg_') || 
+            elemento._id.startsWith('txt_') || 
+            elemento._id.startsWith('shape_') ||
+            elemento._id.startsWith('line_') ||
+            elemento._id.startsWith('rect_') ||
+            elemento._id.startsWith('circle_') ||
+            elemento.type === 'background' ||
+            elemento.type === 'text' ||
+            elemento.type === 'line' ||
+            elemento.type === 'shape'
+          );
+          
+          if (isNonSeatElement) {
+            console.log(`🚫 [useMapaSeatsSync] Elemento ignorado (no es asiento):`, elemento._id);
+            return; // Saltar este elemento
+          }
+          
+          // ÚLTIMO RECURSO: Solo si tiene _id, coordenadas y NO es un elemento de fondo/texto
           if (elemento._id && (elemento.x !== undefined || elemento.y !== undefined || elemento.posicion)) {
             console.log(`🚨 [useMapaSeatsSync] FORZANDO elemento como asiento:`, elemento._id);
             // Asignar zona automáticamente basándose en la posición
