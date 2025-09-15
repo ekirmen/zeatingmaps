@@ -74,13 +74,23 @@ const BoleteriaMinimal = () => {
       });
     } else {
       // Modo normal: selección de asientos para venta
+      console.log('🔍 [BoleteriaMinimal] Verificando cliente:', selectedClient);
       if (!selectedClient) {
+        console.log('❌ [BoleteriaMinimal] No hay cliente seleccionado');
         message.warning('Debes seleccionar un cliente antes de seleccionar asientos');
         setIsClientModalVisible(true);
         return;
       }
+      console.log('✅ [BoleteriaMinimal] Cliente válido, procesando asiento');
 
       const seatId = seat._id || seat.id;
+      console.log('🪑 [BoleteriaMinimal] Procesando asiento:', {
+        seatId,
+        seatNombre: seat.nombre || seat.numero,
+        selectedZona: selectedZona?.nombre,
+        selectedFuncion: selectedFuncion?.id
+      });
+      
       const seatData = {
         _id: seatId,
         nombre: seat.nombre || seat.numero || `Asiento ${seatId}`,
@@ -91,6 +101,8 @@ const BoleteriaMinimal = () => {
         clienteId: selectedClient.id,
         clienteNombre: selectedClient.nombre
       };
+      
+      console.log('🛒 [BoleteriaMinimal] Datos del asiento preparados:', seatData);
 
       // Verificar si el asiento ya está en el carrito
       const existingIndex = carrito.findIndex(item => item._id === seatId);
