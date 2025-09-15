@@ -44,9 +44,7 @@ const BoleteriaMinimal = () => {
     setCarrito,
     totalCarrito,
     removeFromCart,
-    clearCart,
-    selectedClient,
-    setSelectedClient
+    clearCart
   } = useBoleteria();
 
   // Create seat toggle handler
