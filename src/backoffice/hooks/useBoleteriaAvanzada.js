@@ -9,7 +9,7 @@ const FUNC_KEY = 'boleteriaFunctionId';
 const CART_KEY = 'boleteriaCart';
 const SELECTED_SEATS_KEY = 'boleteriaSelectedSeats';
 
-export const useBoleteriaAvanzada = () => {
+const useBoleteriaAvanzada = () => {
   console.log('🚀 [useBoleteriaAvanzada] Hook initialized');
   
   // Usar el store unificado para selectedFuncion y selectedEvent
@@ -348,4 +348,5 @@ export const useBoleteriaAvanzada = () => {
   };
 };
 
+export { useBoleteriaAvanzada };
 export default useBoleteriaAvanzada;

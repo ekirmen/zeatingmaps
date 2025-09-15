@@ -33,12 +33,13 @@ import {
   SettingOutlined
 } from '@ant-design/icons';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
-import { useBoleteria } from '../hooks/useBoleteria';
+import { useBoleteriaAvanzada } from '../hooks/useBoleteriaAvanzada';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import ClientModals from './CompBoleteria/components/ClientModals';
 import PaymentModal from './CompBoleteria/PaymentModal';
 import { downloadTicket } from '../../utils/downloadTicket';
 import { createPayment } from '../services/apibackoffice';
+import { supabase } from '../../supabaseClient';
 
 const { TabPane } = Tabs;
 const { Title, Text } = Typography;
@@ -83,7 +84,7 @@ const BoleteriaAvanzada = () => {
     handleFunctionSelect,
     loading,
     error
-  } = useBoleteria();
+  } = useBoleteriaAvanzada();
 
   // Hook de locks de asientos
   const {

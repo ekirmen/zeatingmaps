@@ -299,6 +299,12 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
           permission: 'boleteria'
         },
         { 
+          title: 'Boletería Avanzada', 
+          path: '/dashboard/boleteria-avanzada', 
+          icon: faTicketAlt,
+          permission: 'boleteria'
+        },
+        { 
           title: 'Reportes', 
           path: '/dashboard/reportes', 
           icon: faChartPie,
