@@ -53,6 +53,7 @@ const BoleteriaMinimal = () => {
     console.log('🪑 [BoleteriaMinimal] Modo bloqueo:', isBlockingMode);
     console.log('🪑 [BoleteriaMinimal] Cliente seleccionado:', selectedClient);
     console.log('🪑 [BoleteriaMinimal] Zona seleccionada:', selectedZona);
+    console.log('🛒 [BoleteriaMinimal] Estado actual del carrito:', carrito);
     
     if (isBlockingMode) {
       // Modo bloqueo: alternar estado de bloqueo
@@ -120,9 +121,16 @@ const BoleteriaMinimal = () => {
       } else {
         // Agregar al carrito
         const newCarrito = [...carrito, seatData];
+        console.log('🛒 [BoleteriaMinimal] Carrito antes:', carrito);
+        console.log('🛒 [BoleteriaMinimal] Nuevo carrito:', newCarrito);
         setCarrito(newCarrito);
         console.log('✅ [BoleteriaMinimal] Asiento agregado al carrito:', seatId);
         message.success('Asiento agregado al carrito');
+        
+        // Verificar que se actualizó
+        setTimeout(() => {
+          console.log('🛒 [BoleteriaMinimal] Carrito después de setCarrito:', carrito);
+        }, 100);
       }
     }
   }, [isBlockingMode, selectedClient, selectedZona, selectedFuncion, carrito, setCarrito]);
