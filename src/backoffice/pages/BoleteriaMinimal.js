@@ -19,6 +19,10 @@ const BoleteriaMinimal = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [paymentResults, setPaymentResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  
+  // Estados para el flujo de venta
+  const [selectedZona, setSelectedZona] = useState(null);
+  const [showMapa, setShowMapa] = useState(false);
 
   // Hook para obtener datos básicos de boletería
   const {
@@ -44,6 +48,24 @@ const BoleteriaMinimal = () => {
     // Add seat selection logic here if needed
     // For now, just log the seat selection
   }, []);
+
+  // Handle zona selection
+  const handleZonaSelect = useCallback((zona) => {
+    console.log('🏷️ [BoleteriaMinimal] Zona seleccionada:', zona);
+    setSelectedZona(zona);
+    setShowMapa(true);
+  }, []);
+
+  // Handle go to cart
+  const handleGoToCart = useCallback(() => {
+    if (!selectedClient) {
+      message.warning('Debes seleccionar un cliente antes de proceder al carrito');
+      setIsClientModalVisible(true);
+      return;
+    }
+    console.log('🛒 [BoleteriaMinimal] Yendo al carrito con cliente:', selectedClient);
+    // Aquí puedes navegar al carrito o mostrar el modal del carrito
+  }, [selectedClient]);
 
   // Funciones para manejar las funcionalidades adicionales
   const handleLocatorSearch = async (locator) => {
@@ -135,7 +157,7 @@ const BoleteriaMinimal = () => {
           <div className="flex items-center space-x-4">
             <Button 
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate('/actividad')}
+              onClick={() => navigate('/backoffice')}
               className="flex items-center gap-2 text-gray-700 hover:text-gray-900 border-gray-300"
             >
               Volver al Dashboard
@@ -296,18 +318,52 @@ const BoleteriaMinimal = () => {
               )}
             </div>
 
-            {/* Información de Zonas */}
-            {zonas && zonas.length > 0 && (
+            {/* Selección de Zonas */}
+            {zonas && zonas.length > 0 && !showMapa && (
               <div className="mb-4">
-                <h4 className="font-medium text-gray-700 mb-3">Zonas:</h4>
+                <h4 className="font-medium text-gray-700 mb-3">Selecciona una Zona:</h4>
                 <div className="space-y-2">
                   {zonas.map((zona, index) => (
-                    <div key={zona.id || index} className="p-2 bg-gray-50 rounded border">
+                    <button
+                      key={zona.id || index}
+                      onClick={() => handleZonaSelect(zona)}
+                      className="w-full p-3 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors text-left"
+                    >
                       <p className="font-medium text-gray-700">{zona.nombre || `Zona ${index + 1}`}</p>
                       <p className="text-xs text-gray-500">ID: {zona.id}</p>
-                    </div>
+                    </button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Botón para ir al carrito */}
+            {showMapa && carrito && carrito.length > 0 && (
+              <div className="mb-4">
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={handleGoToCart}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                  disabled={!selectedClient}
+                >
+                  {selectedClient ? '🛒 Ir al Carrito' : '👤 Seleccionar Cliente Primero'}
+                </Button>
+              </div>
+            )}
+
+            {/* Botón para volver a seleccionar zona */}
+            {showMapa && (
+              <div className="mb-4">
+                <Button
+                  onClick={() => {
+                    setShowMapa(false);
+                    setSelectedZona(null);
+                  }}
+                  className="w-full"
+                >
+                  ← Volver a Seleccionar Zona
+                </Button>
               </div>
             )}
 
@@ -409,11 +465,11 @@ const BoleteriaMinimal = () => {
         <div className="flex-1 bg-gray-50 overflow-auto">
           <div className="p-4">
             <h3 className="text-lg font-medium text-gray-700 mb-4">Mapa de Asientos</h3>
-            {mapa && selectedFuncion ? (
+            {showMapa && mapa && selectedFuncion && selectedZona ? (
               <div className="bg-white rounded-lg border overflow-hidden" style={{ height: 'calc(100vh - 200px)' }}>
                 <div className="p-2 bg-blue-50 border-b text-center">
                   <p className="text-sm text-blue-700">
-                    🎫 <strong>43 asientos detectados</strong> - Sistema de colores activo
+                    🎫 <strong>Zona: {selectedZona.nombre}</strong> - Sistema de colores activo
                   </p>
                   <p className="text-xs text-blue-600 mt-1">
                     Verde: Disponible | Azul: Seleccionado | Rojo: Vendido | Púrpura: Reservado
@@ -434,6 +490,13 @@ const BoleteriaMinimal = () => {
                   allowSeatSelection={true}
                   debug={true}
                 />
+              </div>
+            ) : !showMapa ? (
+              <div className="bg-white rounded-lg border p-4 min-h-96 flex items-center justify-center">
+                <div className="text-center text-gray-500">
+                  <p className="text-lg mb-2">🏷️ Selecciona una zona</p>
+                  <p className="text-sm">para ver el mapa de asientos</p>
+                </div>
               </div>
             ) : (
               <div className="bg-white rounded-lg border p-4 min-h-96 flex items-center justify-center">
