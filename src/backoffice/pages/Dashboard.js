@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Card, 
   Row, 
@@ -31,6 +32,7 @@ import PaymentMethodsConfig from '../components/PaymentMethodsConfig';
 const { Title, Text } = Typography;
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalRevenue: 0,
@@ -434,6 +436,61 @@ const Dashboard = () => {
               prefix={<ShoppingCartOutlined />}
             />
             <Text type="secondary">Requieren atención</Text>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Acciones Rápidas */}
+      <Row gutter={[16, 16]} className="mb-8">
+        <Col xs={24}>
+          <Card title="Acciones Rápidas">
+            <Row gutter={[16, 16]}>
+              <Col xs={24} sm={12} md={6}>
+                <Button 
+                  type="primary" 
+                  size="large" 
+                  block
+                  icon={<ShoppingCartOutlined />}
+                  onClick={() => navigate('/backoffice/boleteria')}
+                >
+                  Boletería
+                </Button>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Button 
+                  type="default" 
+                  size="large" 
+                  block
+                  icon={<ShoppingCartOutlined />}
+                  onClick={() => navigate('/backoffice/boleteria-avanzada')}
+                  style={{ borderColor: '#1890ff', color: '#1890ff' }}
+                >
+                  Boletería Avanzada
+                </Button>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Button 
+                  type="default" 
+                  size="large" 
+                  block
+                  icon={<CalendarOutlined />}
+                  onClick={() => navigate('/backoffice/eventos')}
+                >
+                  Eventos
+                </Button>
+              </Col>
+              <Col xs={24} sm={12} md={6}>
+                <Button 
+                  type="default" 
+                  size="large" 
+                  block
+                  icon={<FileTextOutlined />}
+                  onClick={() => navigate('/backoffice/reportes')}
+                >
+                  Reportes
+                </Button>
+              </Col>
+            </Row>
           </Card>
         </Col>
       </Row>

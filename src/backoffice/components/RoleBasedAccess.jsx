@@ -410,6 +410,7 @@ export const RoleProvider = ({ children }) => {
       '/dashboard/abonos': 'abonos',
       '/dashboard/iva': 'iva',
       '/dashboard/boleteria': 'boleteria',
+      '/dashboard/boleteria-avanzada': 'boleteria',
       '/dashboard/reportes': 'reportes',
       '/dashboard/crm': 'crm',
       '/dashboard/tags': 'tags',

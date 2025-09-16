@@ -23,6 +23,8 @@ import Funciones from './pages/Funciones';
 import Abonos from './pages/Abonos';
 import CreateIva from './pages/CreateIva';
 import Boleteria from './pages/BoleteriaMinimal';
+import BoleteriaAvanzada from './pages/BoleteriaAvanzada';
+import BoleteriaAvanzadaTest from './pages/BoleteriaAvanzadaTest';
 import Reports from './pages/Reports';
 import CRM from './pages/CRM';
 import Tags from './pages/Tags';
@@ -243,6 +245,14 @@ const BackofficeAppWithRoles = () => {
             element={
               <ProtectedRoute permission="boleteria">
                 <Boleteria />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="boleteria-avanzada" 
+            element={
+              <ProtectedRoute permission="boleteria">
+                <BoleteriaAvanzadaTest />
               </ProtectedRoute>
             } 
           />
