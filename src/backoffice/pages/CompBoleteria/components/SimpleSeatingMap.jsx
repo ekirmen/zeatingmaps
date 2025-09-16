@@ -266,7 +266,8 @@ const SimpleSeatingMap = ({
         } else {
           onSeatClick(seat, mesa);
         }
-        message.success('Asiento deseleccionado');
+        const seatInfo = mesa ? `Mesa ${mesa.nombre} - ${seat.nombre || seat.numero || seat._id}` : (seat.nombre || seat.numero || seat._id);
+        message.success(`✅ Asiento ${seatInfo} deseleccionado`);
         return;
       } else {
         console.log('⚠️ [SimpleSeatingMap] Asiento NO está seleccionado, procediendo con selección:', seat._id);
@@ -403,7 +404,7 @@ const SimpleSeatingMap = ({
       const zonaInfo = selectedPriceOption.zona?.nombre || 'Zona';
       const entradaInfo = selectedPriceOption.entrada?.nombre_entrada || 'Entrada';
       
-      message.success(`${seatInfo} - ${entradaInfo} - ${zonaInfo} - $${selectedPriceOption.precio.toFixed(2)}`);
+      message.success(`🎫 ${seatInfo} seleccionado - ${entradaInfo} - ${zonaInfo} - $${selectedPriceOption.precio.toFixed(2)}`);
       
     } catch (error) {
       console.error('Error al manejar selección de asiento:', error);
@@ -503,7 +504,9 @@ const SimpleSeatingMap = ({
                       backgroundColor: elemento.fill || 'lightblue',
                       border: mesaTieneZonaActiva ? `2px solid ${zonaColorMesa || '#5C1473'}` : '2px solid #d1d5db',
                       boxShadow: mesaTieneZonaActiva ? `0 0 8px ${(zonaColorMesa || '#5C1473')}55` : 'none',
-                      zIndex: 1
+                      zIndex: 1,
+                      cursor: 'default',
+                      pointerEvents: 'none'
                     }}
                   >
                     {elemento.nombre && (
@@ -612,14 +615,16 @@ const SimpleSeatingMap = ({
                 const isOtherZone = selectedZonaId && String(selectedZonaId) !== String(silla?.zona?.id || silla?.zonaId || silla?.zona || '');
                 const muted = isOtherZone && (silla.estado === 'disponible');
                 const borderStyle = isSelected
-                  ? '3px solid #000'
+                  ? '4px solid #ffd700'
                   : isLockedByMe
-                  ? '2px solid #f59e0b'
+                  ? '3px solid #f59e0b'
                   : (!isOtherZone && zoneInfo.color)
                   ? `2px solid ${zoneInfo.color}`
                   : '1px solid #666';
                 const glowShadow = isSelected
-                  ? '0 0 10px rgba(0,0,0,0.5)'
+                  ? '0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 215, 0, 0.4)'
+                  : isLockedByMe
+                  ? '0 0 12px rgba(245, 158, 11, 0.6)'
                   : (!isOtherZone && zoneInfo.color)
                   ? `0 0 8px ${zoneInfo.color}55`
                   : 'none';
@@ -630,9 +635,11 @@ const SimpleSeatingMap = ({
                     placement="top"
                   >
                     <div
-                      className={`absolute transition-transform ${
+                      className={`absolute transition-all duration-300 ease-in-out ${
                         silla.estado === 'pagado' || silla.estado === 'reservado'
                           ? 'cursor-not-allowed opacity-60'
+                          : isSelected
+                          ? 'cursor-pointer hover:scale-110 transform scale-105'
                           : 'cursor-pointer hover:scale-110'
                       }`}
                       style={{
@@ -651,7 +658,8 @@ const SimpleSeatingMap = ({
                         fontWeight: 'bold',
                         boxShadow: glowShadow,
                         opacity: muted ? 0.35 : 1,
-                        zIndex: 2
+                        zIndex: 2,
+                        transition: 'all 0.3s ease-in-out'
                       }}
                       onClick={() => {
                         // Solo permitir click si NO está vendido o reservado
@@ -679,14 +687,16 @@ const SimpleSeatingMap = ({
                 const isOtherZoneTop = selectedZonaId && String(selectedZonaId) !== String(silla?.zona?.id || silla?.zonaId || silla?.zona || '');
                 const mutedTop = isOtherZoneTop && (silla.estado === 'disponible');
                 const borderStyleTop = isSelected
-                  ? '3px solid #000'
+                  ? '4px solid #ffd700'
                   : isLockedByMe
-                  ? '2px solid #f59e0b'
+                  ? '3px solid #f59e0b'
                   : (!isOtherZoneTop && zoneInfo.color)
                   ? `2px solid ${zoneInfo.color}`
                   : '1px solid #666';
                 const glowShadowTop = isSelected
-                  ? '0 0 10px rgba(0,0,0,0.5)'
+                  ? '0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 215, 0, 0.4)'
+                  : isLockedByMe
+                  ? '0 0 12px rgba(245, 158, 11, 0.6)'
                   : (!isOtherZoneTop && zoneInfo.color)
                   ? `0 0 8px ${zoneInfo.color}55`
                   : 'none';
@@ -697,9 +707,11 @@ const SimpleSeatingMap = ({
                     placement="top"
                   >
                     <div
-                      className={`absolute transition-transform ${
+                      className={`absolute transition-all duration-300 ease-in-out ${
                         silla.estado === 'pagado' || silla.estado === 'reservado'
                           ? 'cursor-not-allowed opacity-60'
+                          : isSelected
+                          ? 'cursor-pointer hover:scale-110 transform scale-105'
                           : 'cursor-pointer hover:scale-110'
                       }`}
                       style={{
@@ -718,7 +730,8 @@ const SimpleSeatingMap = ({
                         fontWeight: 'bold',
                         boxShadow: glowShadowTop,
                         opacity: mutedTop ? 0.35 : 1,
-                        zIndex: 2
+                        zIndex: 2,
+                        transition: 'all 0.3s ease-in-out'
                       }}
                       onClick={() => {
                         // Solo permitir click si NO está vendido o reservado

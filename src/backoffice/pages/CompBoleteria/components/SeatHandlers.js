@@ -23,10 +23,11 @@ export const createSeatHandlers = ({
     const zonaId = seat.zona;
     const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
 
-    if (!selectedClient) {
-      message.info('Seleccione un cliente antes de agregar asientos');
-      return;
-    }
+    // Cliente opcional - se puede seleccionar después
+    // if (!selectedClient) {
+    //   message.info('Seleccione un cliente antes de agregar asientos');
+    //   return;
+    // }
 
     // Modo bloqueo - permite seleccionar asientos para bloquearlos
     if (blockMode) {
@@ -173,10 +174,11 @@ export const createSeatHandlers = ({
   };
 
   const handleSelectCompleteTable = (table) => {
-    if (!selectedClient) {
-      message.info('Seleccione un cliente antes de agregar asientos');
-      return;
-    }
+    // Cliente opcional - se puede seleccionar después
+    // if (!selectedClient) {
+    //   message.info('Seleccione un cliente antes de agregar asientos');
+    //   return;
+    // }
 
     const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
     const availableZonas = zonas.map(z => z.id || z._id);

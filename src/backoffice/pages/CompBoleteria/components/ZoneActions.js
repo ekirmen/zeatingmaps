@@ -16,9 +16,10 @@ export const createZoneActions = ({
     const qty = parseInt(zoneQuantities[zonaId], 10);
     if (!qty || qty <= 0) return;
 
-    if (!selectedClient) {
-      message.info('Seleccione un cliente antes de agregar asientos');
-    }
+    // Cliente opcional - se puede seleccionar después
+    // if (!selectedClient) {
+    //   message.info('Seleccione un cliente antes de agregar asientos');
+    // }
 
     const zonaNombre = detalle.zona?.nombre || detalle.zonaId || detalle.zona;
     const precio = getPrecioConDescuento(detalle);
@@ -65,9 +66,10 @@ export const createZoneActions = ({
       return;
     }
 
-    if (!selectedClient) {
-      message.info('Seleccione un cliente antes de agregar asientos');
-    }
+    // Cliente opcional - se puede seleccionar después
+    // if (!selectedClient) {
+    //   message.info('Seleccione un cliente antes de agregar asientos');
+    // }
 
     const precio = getPrecioConDescuento(detalle);
     let tipoPrecio = 'normal';

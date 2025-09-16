@@ -619,8 +619,12 @@ if (Array.isArray(mapa?.contenido)) {
                   y={seat.y || seat.posicion?.y || 0}
                   radius={seat.width ? seat.width / 2 : 10}
                   fill={seatColor}
-                  stroke={borderColor}
-                  strokeWidth={2}
+                  stroke={isSelected ? '#ffd700' : borderColor}
+                  strokeWidth={isSelected ? 4 : 2}
+                  shadowColor={isSelected ? 'rgba(255, 215, 0, 0.8)' : 'rgba(0,0,0,0.3)'}
+                  shadowBlur={isSelected ? 15 : 5}
+                  shadowOffset={{ x: 2, y: 2 }}
+                  shadowOpacity={isSelected ? 0.8 : 0.3}
                   onClick={() => handleSeatClick(seatData)}
                   onTap={() => handleSeatClick(seatData)}
                   style={{ cursor: 'pointer' }}
