@@ -37,7 +37,7 @@ import { useBoleteriaAvanzada } from '../hooks/useBoleteriaAvanzada';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import ClientModals from './CompBoleteria/ClientModals';
 import PaymentModal from './CompBoleteria/PaymentModal';
-import { downloadTicket } from '../../utils/downloadTicket';
+import downloadTicket from '../../utils/downloadTicket';
 import { createPayment } from '../services/apibackoffice';
 import { supabase } from '../../supabaseClient';
 
