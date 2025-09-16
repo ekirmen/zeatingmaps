@@ -21,7 +21,7 @@ import PlantillaPrecios from './pages/PlantillaPrecios';
 import Funciones from './pages/Funciones';
 import Abonos from './pages/Abonos';
 import CreateIva from './pages/CreateIva';
-import BoleteriaMainCustomDesign from './pages/CompBoleteria/BoleteriaMainCustomDesign';
+import Boleteria from './pages/Boleteria';
 import BoleteriaAvanzada from './pages/BoleteriaAvanzada';
 import BoleteriaAvanzadaTest from './pages/BoleteriaAvanzadaTest';
 import Reports from './pages/Reports';
@@ -241,15 +241,7 @@ const BackofficeAppWithRoles = () => {
             path="boleteria" 
             element={
               <ProtectedRoute permission="boleteria">
-                <BoleteriaMainCustomDesign />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="boleteria-avanzada" 
-            element={
-              <ProtectedRoute permission="boleteria">
-                <BoleteriaAvanzadaTest />
+                <Boleteria />
               </ProtectedRoute>
             } 
           />
