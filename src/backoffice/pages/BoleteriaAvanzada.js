@@ -35,7 +35,7 @@ import {
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import { useBoleteriaAvanzada } from '../hooks/useBoleteriaAvanzada';
 import { useSeatLockStore } from '../../components/seatLockStore';
-import ClientModals from './CompBoleteria/components/ClientModals';
+import ClientModals from './CompBoleteria/ClientModals';
 import PaymentModal from './CompBoleteria/PaymentModal';
 import { downloadTicket } from '../../utils/downloadTicket';
 import { createPayment } from '../services/apibackoffice';
@@ -621,26 +621,26 @@ const BoleteriaAvanzada = () => {
 
         {/* Modales */}
         <ClientModals
-          visible={isClientModalVisible}
-          onClose={() => setIsClientModalVisible(false)}
-          onSelectClient={setSelectedClient}
+          isSearchModalVisible={isClientModalVisible}
+          onSearchCancel={() => setIsClientModalVisible(false)}
+          onClientSelect={setSelectedClient}
           searchResults={searchResults}
           paymentResults={paymentResults}
           searchLoading={searchLoading}
-          onSearch={handleUnifiedSearch}
-          onClearSearch={() => {
+          handleUnifiedSearch={handleUnifiedSearch}
+          clearSearchResults={() => {
             setSearchResults([]);
             setPaymentResults([]);
           }}
         />
 
         <PaymentModal
-          visible={isPaymentModalVisible}
-          onClose={() => setIsPaymentModalVisible(false)}
-          onPayment={handlePayment}
+          open={isPaymentModalVisible}
+          onCancel={() => setIsPaymentModalVisible(false)}
           carrito={carrito}
           selectedClient={selectedClient}
           selectedFuncion={selectedFuncion}
+          selectedEvent={selectedEvent}
         />
 
         {/* Modal de descarga de ticket */}

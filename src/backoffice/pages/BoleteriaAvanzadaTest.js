@@ -8,17 +8,17 @@ const BoleteriaAvanzadaTest = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <Card className="max-w-2xl mx-auto">
-        <div className="text-center space-y-4">
+    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5', padding: '32px' }}>
+      <Card style={{ maxWidth: '800px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center' }}>
           <Title level={2}>🎫 Boletería Avanzada</Title>
           <Text type="secondary">
             Nueva versión de la boletería con funcionalidades avanzadas
           </Text>
           
-          <div className="space-y-2">
+          <div style={{ marginTop: '16px', textAlign: 'left' }}>
             <Text strong>Funcionalidades incluidas:</Text>
-            <ul className="text-left space-y-1">
+            <ul style={{ marginTop: '8px' }}>
               <li>✅ Reserva automática de asientos</li>
               <li>✅ Precios por zona</li>
               <li>✅ Estadísticas en tiempo real</li>
@@ -28,7 +28,7 @@ const BoleteriaAvanzadaTest = () => {
             </ul>
           </div>
 
-          <Space>
+          <Space style={{ marginTop: '24px' }}>
             <Button 
               type="primary" 
               size="large"
