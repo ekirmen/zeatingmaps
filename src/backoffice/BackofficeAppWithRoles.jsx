@@ -253,7 +253,7 @@ const BackofficeAppWithRoles = () => {
             path="boleteria-avanzada" 
             element={
               <ProtectedRoute permission="boleteria">
-                <BoleteriaAvanzadaSimple />
+                <BoleteriaAvanzada />
               </ProtectedRoute>
             } 
           />
