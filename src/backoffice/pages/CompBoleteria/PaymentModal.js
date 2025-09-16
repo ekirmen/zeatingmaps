@@ -3,6 +3,7 @@ import { Modal, Tabs, Input, Button, Radio, DatePicker, Select, Table, message }
 import { AiOutlineDelete } from 'react-icons/ai';
 import { Typography } from 'antd';
 import { createPayment, updatePayment } from '../../services/apibackoffice';
+import { createPaymentTransaction } from '../../../store/services/paymentGatewaysService';
 import { generateSimpleLocator } from '../../../utils/generateLocator';
 import { useAuth } from '../../../contexts/AuthContext';
 import { isUuid } from '../../../utils/isUuid';
@@ -361,6 +362,36 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         const results = await Promise.all(paymentPromises);
         if (results && results.length > 0 && results[0]) {
           setLocator(results[0].locator);
+          
+          // Crear payment_transaction para cada método de pago usado
+          try {
+            const paymentTransactionPromises = paymentEntries.map(async (entry) => {
+              const transactionData = {
+                orderId: results[0].locator,
+                gatewayId: null, // Para pagos manuales no hay gateway
+                amount: entry.importe,
+                currency: 'USD',
+                status: 'completed', // Pago completado manualmente
+                gatewayTransactionId: null,
+                gatewayResponse: null,
+                locator: results[0].locator,
+                tenantId: user?.tenant_id || null,
+                userId: selectedClient?.id || selectedClient?._id,
+                eventoId: selectedEvent?.id,
+                funcionId: selectedFuncion?.id || selectedFuncion?._id,
+                paymentMethod: entry.formaPago,
+                gatewayName: 'manual'
+              };
+              
+              return await createPaymentTransaction(transactionData);
+            });
+            
+            await Promise.all(paymentTransactionPromises);
+            console.log('✅ Payment transactions created successfully');
+          } catch (transactionError) {
+            console.error('❌ Error creating payment transactions:', transactionError);
+            // No fallar el pago por esto, solo loggear el error
+          }
         }
 
         // Asignar tags del evento al comprador si el pago fue exitoso
@@ -511,8 +542,16 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                       onChange={setSelectedPaymentMethod}
                       style={{ width: '150px' }}
                     >
+                      <Option value="Efectivo">Efectivo</Option>
                       <Option value="Zelle">Zelle</Option>
                       <Option value="Pago movil">Pago móvil</Option>
+                      <Option value="Transferencia">Transferencia bancaria</Option>
+                      <Option value="Tarjeta">Tarjeta de crédito/débito</Option>
+                      <Option value="PayPal">PayPal</Option>
+                      <Option value="Stripe">Stripe</Option>
+                      <Option value="Criptomoneda">Criptomoneda</Option>
+                      <Option value="Cheque">Cheque</Option>
+                      <Option value="Otro">Otro</Option>
                     </Select>
                   </div>
                   <div>

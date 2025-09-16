@@ -6,7 +6,7 @@ import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
 import ZonesAndPrices from './CompBoleteria/ZonesAndPricesSimple';
 import CompactBoleteria from './CompBoleteria/CompactBoleteria';
-// import SeatingMapUnified from '../../components/SeatingMapUnified';
+import SeatingMapUnified from '../../components/SeatingMapUnified';
 import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
 import FunctionModal from './CompBoleteria/FunctionModal';
@@ -14,10 +14,10 @@ import DownloadTicketButton from './CompBoleteria/DownloadTicketButton';
 
 import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
-// import { supabase } from '../../supabaseClient';
-// import { useSeatLockStore } from '../../components/seatLockStore';
-// import { fetchPaymentBySeat } from '../services/apibackoffice';
-// import downloadTicket from '../../utils/downloadTicket';
+import { supabase } from '../../supabaseClient';
+import { useSeatLockStore } from '../../components/seatLockStore';
+import { fetchPaymentBySeat } from '../services/apibackoffice';
+import downloadTicket from '../../utils/downloadTicket';
 
 const { TabPane } = Tabs;
 
@@ -331,8 +331,41 @@ const Boleteria = () => {
             <>
               {console.log('🎫 [Boleteria] Renderizando vista mapa interactivo')}
               {/* Panel izquierdo - Zonas y precios */}
-              <div className="flex-1 bg-white border-r border-gray-200 overflow-auto">
+              <div className="w-80 bg-white border-r border-gray-200 overflow-auto">
                 <ZonesAndPrices {...zonesAndPricesProps} />
+              </div>
+
+              {/* Panel central - Mapa de asientos */}
+              <div className="flex-1 bg-white overflow-auto">
+                {selectedFuncion && mapa && (
+                  <div className="h-full">
+                    <div className="p-4 border-b border-gray-200">
+                      <h3 className="text-lg font-semibold">Mapa de Asientos - {selectedFuncion.nombre || 'Función'}</h3>
+                      <p className="text-sm text-gray-600">
+                        🟢 Disponible | 🟡 Seleccionado | 🔴 Vendido | 🟣 Reservado | ⚫ Bloqueado
+                      </p>
+                    </div>
+                    <div className="h-full p-4">
+                      <SeatingMapUnified
+                        funcionId={selectedFuncion?.id}
+                        mapa={mapa}
+                        zonas={mapa?.zonas || []}
+                        selectedFuncion={selectedFuncion}
+                        selectedEvent={selectedEvent}
+                        onSeatToggle={handleSeatToggle}
+                        carrito={carrito}
+                        modoVenta={true}
+                        showPrices={true}
+                        showZones={true}
+                        showLegend={true}
+                        allowSeatSelection={true}
+                        debug={true}
+                        isSeatLocked={isSeatLocked}
+                        isSeatLockedByMe={isSeatLockedByMe}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Panel derecho - Carrito */}

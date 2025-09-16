@@ -59,7 +59,7 @@ const WebColors = () => {
     thumb: '#9dc51e',
     // Seat status colors
     seatAvailable: theme.seatAvailable || '#4CAF50',
-    seatSelectedMe: theme.seatSelectedMe || '#1890ff',
+    seatSelectedMe: theme.seatSelectedMe || '#ffd700',
     seatSelectedOther: theme.seatSelectedOther || '#faad14',
     seatBlocked: theme.seatBlocked || '#ff4d4f',
     seatSold: theme.seatSold || '#8c8c8c',

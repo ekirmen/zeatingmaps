@@ -97,8 +97,8 @@ export const useSeatColors = (eventId = null) => {
     
     // 7. SELECCIONADO POR MÍ (temporal)
     if (isSelectedByMe && !isPermanentlyLocked) {
-      console.log(`🪑 [SEAT_COLOR] ${seatId} - SELECCIONADO POR MÍ: #1890ff`);
-      return eventTheme.seatSelectedMe || '#1890ff';
+      console.log(`🪑 [SEAT_COLOR] ${seatId} - SELECCIONADO POR MÍ: #ffd700`);
+      return eventTheme.seatSelectedMe || '#ffd700';
     }
     
     // 8. DISPONIBLE (por defecto) - SIEMPRE VERDE
@@ -130,13 +130,13 @@ export const useSeatColors = (eventId = null) => {
 
   // Función para obtener el color de selección
   const getSelectionColor = (isSelected) => {
-    return isSelected ? (theme.seatSelectedMe || '#3b82f6') : 'transparent';
+    return isSelected ? (theme.seatSelectedMe || '#ffd700') : 'transparent';
   };
 
   // Función para obtener el color de borde
   const getBorderColor = (isSelected, zona) => {
     if (isSelected) {
-      return theme.seatSelectedMe || '#3b82f6';
+      return theme.seatSelectedMe || '#ffd700';
     }
     return zona?.color || '#2d3748';
   };
