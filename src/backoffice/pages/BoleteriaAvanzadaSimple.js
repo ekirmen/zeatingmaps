@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Button, Typography, Space, Result } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import { TicketOutlined, ArrowLeftOutlined } from '@ant-design/icons';
+import { FileTextOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -13,14 +13,14 @@ const BoleteriaAvanzadaSimple = () => {
       <Card style={{ maxWidth: '800px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center' }}>
           <Result
-            icon={<TicketOutlined style={{ color: '#1890ff', fontSize: '64px' }} />}
+            icon={<FileTextOutlined style={{ color: '#1890ff', fontSize: '64px' }} />}
             title="🎫 Boletería Avanzada"
             subTitle="Nueva versión de la boletería con funcionalidades avanzadas"
             extra={[
               <Button 
                 type="primary" 
                 size="large"
-                icon={<TicketOutlined />}
+                icon={<FileTextOutlined />}
                 onClick={() => navigate('/backoffice/boleteria')}
                 style={{ marginRight: '8px' }}
               >
