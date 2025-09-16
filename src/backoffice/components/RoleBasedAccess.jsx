@@ -411,6 +411,8 @@ export const RoleProvider = ({ children }) => {
       '/dashboard/iva': 'iva',
       '/dashboard/boleteria': 'boleteria',
       '/dashboard/boleteria-avanzada': 'boleteria',
+      '/backoffice/boleteria': 'boleteria',
+      '/backoffice/boleteria-avanzada': 'boleteria',
       '/dashboard/reportes': 'reportes',
       '/dashboard/crm': 'crm',
       '/dashboard/tags': 'tags',

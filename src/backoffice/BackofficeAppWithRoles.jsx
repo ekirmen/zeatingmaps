@@ -25,6 +25,7 @@ import CreateIva from './pages/CreateIva';
 import Boleteria from './pages/BoleteriaMinimal';
 import BoleteriaAvanzada from './pages/BoleteriaAvanzada';
 import BoleteriaAvanzadaTest from './pages/BoleteriaAvanzadaTest';
+import BoleteriaAvanzadaSimple from './pages/BoleteriaAvanzadaSimple';
 import Reports from './pages/Reports';
 import CRM from './pages/CRM';
 import Tags from './pages/Tags';
@@ -252,7 +253,7 @@ const BackofficeAppWithRoles = () => {
             path="boleteria-avanzada" 
             element={
               <ProtectedRoute permission="boleteria">
-                <BoleteriaAvanzadaTest />
+                <BoleteriaAvanzadaSimple />
               </ProtectedRoute>
             } 
           />
