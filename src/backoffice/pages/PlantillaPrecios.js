@@ -558,7 +558,7 @@ const PlantillaPrecios = () => {
           <td className="px-6 py-3 font-medium">{zona?.nombre || item.zona || 'Zona no encontrada'}</td>
           <td className="px-6 py-3">
             <div>
-              <div className="font-medium">{entrada?.producto || item.entrada || 'Entrada no encontrada'}</div>
+              <div className="font-medium">{entrada?.nombre_entrada || entrada?.producto || item.entrada || 'Entrada no encontrada'}</div>
             </div>
           </td>
           {['precio', 'comision', 'precioGeneral'].map(f => (

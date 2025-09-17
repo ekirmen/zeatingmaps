@@ -1351,18 +1351,46 @@ export const fetchPaymentByLocator = async (locator) => {
   }
   
   try {
-    const { data, error } = await client
+    const baseSelect = `
+      *,
+      seats,
+      funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
+      event:eventos(id, nombre),
+      user:profiles!usuario_id(id, login, empresa, telefono)
+    `;
+
+    const fallbackSelect = `
+      *,
+      seats,
+      funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
+      event:eventos(id, nombre),
+      user:profiles!usuario_id(id, login, telefono)
+    `;
+
+    let { data, error } = await client
       .from('payments')
-      .select(`
-        *,
-        seats,
-        funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
-        event:eventos(id, nombre),
-        user:profiles!usuario_id(id, login, empresa, telefono)
-      `)
+      .select(baseSelect)
       .eq('locator', locator)
-      .single();
-    
+      .maybeSingle();
+
+    if (error && error.code === '42703') {
+      const fallbackResult = await client
+        .from('payments')
+        .select(fallbackSelect)
+        .eq('locator', locator)
+        .maybeSingle();
+
+      data = fallbackResult.data
+        ? {
+            ...fallbackResult.data,
+            user: fallbackResult.data.user
+              ? { ...fallbackResult.data.user, empresa: null }
+              : null
+          }
+        : null;
+      error = fallbackResult.error;
+    }
+
     if (error) {
       console.error('🔍 [fetchPaymentByLocator] Error:', error);
       return { data: null, error };
@@ -1468,42 +1496,90 @@ export const fetchPaymentsByUserEmail = async (email) => {
   
   try {
     // Primero buscar el usuario por email
-    const { data: user, error: userError } = await client
+    const userResult = await client
       .from('profiles')
       .select('id, login, empresa, telefono')
       .eq('login', email)
-      .single();
-    
+      .maybeSingle();
+
+    let user = userResult.data;
+    let userError = userResult.error;
+
+    if (userError && userError.code === '42703') {
+      console.warn('🔍 [fetchPaymentsByUserEmail] Columna empresa ausente en profiles, aplicando fallback');
+      const fallbackUser = await client
+        .from('profiles')
+        .select('id, login, telefono')
+        .eq('login', email)
+        .maybeSingle();
+
+      user = fallbackUser.data
+        ? { ...fallbackUser.data, empresa: null }
+        : null;
+      userError = fallbackUser.error;
+    }
+
     if (userError) {
       console.error('🔍 [fetchPaymentsByUserEmail] Error buscando usuario:', userError);
       return { data: [], error: userError };
     }
-    
+
     if (!user) {
       console.log('🔍 [fetchPaymentsByUserEmail] Usuario no encontrado');
       return { data: [], error: null };
     }
-    
+
     // Buscar todos los pagos del usuario
-    const { data: payments, error: paymentsError } = await client
+    const paymentsBaseSelect = `
+      *,
+      seats,
+      funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
+      event:eventos(id, nombre),
+      user:profiles!usuario_id(id, login, empresa, telefono)
+    `;
+
+    const paymentsFallbackSelect = `
+      *,
+      seats,
+      funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
+      event:eventos(id, nombre),
+      user:profiles!usuario_id(id, login, telefono)
+    `;
+
+    let { data: payments, error: paymentsError } = await client
       .from('payments')
-      .select(`
-        *,
-        seats,
-        funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
-        event:eventos(id, nombre),
-        user:profiles!usuario_id(id, login, empresa, telefono)
-      `)
+      .select(paymentsBaseSelect)
       .eq('usuario_id', user.id)
       .order('created_at', { ascending: false });
-    
+
+    if (paymentsError && paymentsError.code === '42703') {
+      console.warn('🔍 [fetchPaymentsByUserEmail] Columna empresa ausente en payments.user, aplicando fallback');
+      const fallbackPayments = await client
+        .from('payments')
+        .select(paymentsFallbackSelect)
+        .eq('usuario_id', user.id)
+        .order('created_at', { ascending: false });
+
+      payments = (fallbackPayments.data || []).map(payment => ({
+        ...payment,
+        user: payment.user
+          ? { ...payment.user, empresa: payment.user.empresa ?? null }
+          : null
+      }));
+      paymentsError = fallbackPayments.error;
+    }
+
     if (paymentsError) {
       console.error('🔍 [fetchPaymentsByUserEmail] Error buscando pagos:', paymentsError);
       return { data: [], error: paymentsError };
     }
-    
+
+    const normalizedPayments = Array.isArray(payments)
+      ? payments
+      : [];
+
     // Procesar los pagos para incluir información adicional
-    const processedPayments = (payments || []).map(payment => {
+    const processedPayments = normalizedPayments.map(payment => {
       const seats = parseSeatsArray(payment.seats);
       return {
         ...payment,
