@@ -1,5 +1,37 @@
 import { supabase } from '../../supabaseClient';
 
+const isNotificationsTableMissing = (error) => {
+  if (!error) return false;
+
+  const status = error.status ?? error?.response?.status;
+  const code = error.code;
+  const messageParts = [error.message, error.details, error.hint]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return (
+    status === 404 ||
+    code === 'PGRST116' ||
+    code === '42P01' ||
+    messageParts.includes('not found') ||
+    messageParts.includes('does not exist')
+  );
+};
+
+const handleNotificationError = (context, error) => {
+  if (!error) return;
+
+  if (isNotificationsTableMissing(error)) {
+    console.warn(
+      `[Notifications] ${context}: tabla "notifications" no disponible en Supabase. Se omite el guardado de la notificación.`,
+      error
+    );
+  } else {
+    console.error(`[Notifications] ${context}:`, error);
+  }
+};
+
 /**
  * Suscribirse a cambios de transacciones en tiempo real
  */
@@ -43,8 +75,8 @@ export const sendPushNotification = async (userId, notification) => {
     if (error) throw error;
     return data;
   } catch (error) {
-    console.error('Error sending push notification:', error);
-    throw error;
+    handleNotificationError('Error enviando notificación push', error);
+    return null;
   }
 };
 
@@ -94,79 +126,75 @@ export const sendPaymentConfirmationSMS = async (phoneNumber, transaction) => {
  * Crear notificación de pago exitoso
  */
 export const createPaymentSuccessNotification = async (transaction) => {
-  try {
-    const notification = {
-      title: 'Pago Confirmado',
-      message: `Tu pago de $${transaction.amount} ha sido procesado exitosamente.`,
-      data: {
-        transactionId: transaction.id,
-        amount: transaction.amount,
-        gateway: transaction.gateway_id
-      }
-    };
+  const notification = {
+    title: 'Pago Confirmado',
+    message: `Tu pago de $${transaction.amount} ha sido procesado exitosamente.`,
+    data: {
+      transactionId: transaction.id,
+      amount: transaction.amount,
+      gateway: transaction.gateway_id
+    }
+  };
 
-    // Enviar notificación push
+  try {
     await sendPushNotification(transaction.user_id, notification);
 
-    // Enviar email
     await sendPaymentConfirmationEmail(transaction);
 
-    // Enviar SMS si está configurado
     if (transaction.user?.phone) {
       await sendPaymentConfirmationSMS(transaction.user.phone, transaction);
     }
-
-    return notification;
   } catch (error) {
-    console.error('Error creating payment success notification:', error);
-    throw error;
+    handleNotificationError('Error creando notificación de pago exitoso', error);
   }
+
+  return notification;
 };
 
 /**
  * Crear notificación de pago fallido
  */
 export const createPaymentFailureNotification = async (transaction) => {
-  try {
-    const notification = {
-      title: 'Pago Fallido',
-      message: 'Hubo un problema procesando tu pago. Por favor, intenta nuevamente.',
-      data: {
-        transactionId: transaction.id,
-        amount: transaction.amount,
-        gateway: transaction.gateway_id
-      }
-    };
+  const notification = {
+    title: 'Pago Fallido',
+    message: 'Hubo un problema procesando tu pago. Por favor, intenta nuevamente.',
+    data: {
+      transactionId: transaction.id,
+      amount: transaction.amount,
+      gateway: transaction.gateway_id
+    }
+  };
 
+  try {
     await sendPushNotification(transaction.user_id, notification);
-    return notification;
   } catch (error) {
-    console.error('Error creating payment failure notification:', error);
-    throw error;
+    handleNotificationError('Error creando notificación de pago fallido', error);
   }
+
+  return notification;
 };
 
 /**
  * Crear notificación de reembolso
  */
 export const createRefundNotification = async (refund) => {
-  try {
-    const notification = {
-      title: 'Reembolso Procesado',
-      message: `Tu reembolso de $${refund.amount} ha sido procesado.`,
-      data: {
-        refundId: refund.id,
-        amount: refund.amount,
-        reason: refund.reason
-      }
-    };
+  const notification = {
+    title: 'Reembolso Procesado',
+    message: `Tu reembolso de $${refund.amount} ha sido procesado.`,
+    data: {
+      refundId: refund.id,
+      amount: refund.amount,
+      reason: refund.reason
+    }
+  };
 
+  try {
     await sendPushNotification(refund.requested_by, notification);
-    return notification;
   } catch (error) {
-    console.error('Error creating refund notification:', error);
-    throw error;
+    handleNotificationError('Error creando notificación de reembolso', error);
   }
+
+  return notification;
 };
 
 /**
@@ -198,42 +226,42 @@ export const sendAdminAlert = async (alert) => {
  * Notificación de pago pendiente
  */
 export const createPendingPaymentNotification = async (transaction) => {
-  try {
-    const notification = {
-      title: 'Pago Pendiente',
-      message: 'Tu pago está siendo procesado. Te notificaremos cuando se complete.',
-      data: {
-        transactionId: transaction.id,
-        amount: transaction.amount
-      }
-    };
+  const notification = {
+    title: 'Pago Pendiente',
+    message: 'Tu pago está siendo procesado. Te notificaremos cuando se complete.',
+    data: {
+      transactionId: transaction.id,
+      amount: transaction.amount
+    }
+  };
 
+  try {
     await sendPushNotification(transaction.user_id, notification);
-    return notification;
   } catch (error) {
-    console.error('Error creating pending payment notification:', error);
-    throw error;
+    handleNotificationError('Error creando notificación de pago pendiente', error);
   }
+
+  return notification;
 };
 
 /**
  * Notificación de reserva expirada
  */
 export const createReservationExpiredNotification = async (reservation) => {
-  try {
-    const notification = {
-      title: 'Reserva Expirada',
-      message: 'Tu reserva ha expirado. Los asientos han sido liberados.',
-      data: {
-        reservationId: reservation.id,
-        event: reservation.event
-      }
-    };
+  const notification = {
+    title: 'Reserva Expirada',
+    message: 'Tu reserva ha expirado. Los asientos han sido liberados.',
+    data: {
+      reservationId: reservation.id,
+      event: reservation.event
+    }
+  };
 
+  try {
     await sendPushNotification(reservation.user_id, notification);
-    return notification;
   } catch (error) {
-    console.error('Error creating reservation expired notification:', error);
-    throw error;
+    handleNotificationError('Error creando notificación de reserva expirada', error);
   }
-}; 
+
+  return notification;
+};
