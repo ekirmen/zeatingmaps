@@ -84,6 +84,26 @@ const Boleteria = () => {
     };
   }, [selectedFuncion, subscribeToFunction, unsubscribe]);
 
+  const toggleSeat = useCallback(
+    (seatData) => {
+      setCarrito(prev => {
+        const existingIndex = prev.findIndex(item => item.sillaId === seatData.sillaId);
+        if (existingIndex >= 0) {
+          // Remover del carrito
+          const newCart = prev.filter((_, index) => index !== existingIndex);
+          localStorage.setItem('boleteriaCart', JSON.stringify(newCart));
+          return newCart;
+        } else {
+          // Añadir al carrito
+          const newCart = [...prev, seatData];
+          localStorage.setItem('boleteriaCart', JSON.stringify(newCart));
+          return newCart;
+        }
+      });
+    },
+    [setCarrito]
+  );
+
   const handleSeatToggle = useCallback(
     async (silla) => {
       const sillaId = silla._id || silla.id;
@@ -127,26 +147,6 @@ const Boleteria = () => {
       }
     },
     [selectedFuncion, mapa, selectedPlantilla, toggleSeat, isSeatLocked, isSeatLockedByMe, lockSeat, unlockSeat]
-  );
-
-  const toggleSeat = useCallback(
-    (seatData) => {
-      setCarrito(prev => {
-        const existingIndex = prev.findIndex(item => item.sillaId === seatData.sillaId);
-        if (existingIndex >= 0) {
-          // Remover del carrito
-          const newCart = prev.filter((_, index) => index !== existingIndex);
-          localStorage.setItem('boleteriaCart', JSON.stringify(newCart));
-          return newCart;
-        } else {
-          // Añadir al carrito
-          const newCart = [...prev, seatData];
-          localStorage.setItem('boleteriaCart', JSON.stringify(newCart));
-          return newCart;
-        }
-      });
-    },
-    [setCarrito]
   );
 
   const allTicketsPaid = carrito.length > 0 && carrito.every(ticket => ticket.pagado);
