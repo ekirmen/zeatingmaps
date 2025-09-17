@@ -110,19 +110,29 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
       // Conectar asientos con el localizador
       if (paymentData.user?.id && paymentData.funcion?.id) {
         try {
-          const { updateSeatsWithLocator } = await import('./seatLocatorService');
-          const seatIds = paymentData.items?.map(item => item.seatId).filter(Boolean) || [];
-          if (seatIds.length > 0) {
-            // Extraer información de zona del primer asiento
-            const firstSeat = paymentData.items?.[0];
-            const zoneInfo = firstSeat ? {
-              zona_id: firstSeat.zonaId || 'ORO',
-              zona_nombre: firstSeat.zona || 'ORO',
-              precio: firstSeat.precio || firstSeat.price || 10.00
-            } : null;
-            
-            await updateSeatsWithLocator(seatIds, paymentData.locator, paymentData.user.id, zoneInfo);
-            console.log('🔗 Connected seats with locator and zone info:', seatIds, zoneInfo);
+          const seatLocatorModule = await import('./seatLocatorService');
+          const seatLocatorService = seatLocatorModule?.default;
+          if (!seatLocatorService?.updateSeatsWithLocator) {
+            console.warn('seatLocatorService.updateSeatsWithLocator no está disponible');
+          } else {
+            const seatIds = paymentData.items?.map(item => item.seatId).filter(Boolean) || [];
+            if (seatIds.length > 0) {
+              // Extraer información de zona del primer asiento
+              const firstSeat = paymentData.items?.[0];
+              const zoneInfo = firstSeat ? {
+                zona_id: firstSeat.zonaId || 'ORO',
+                zona_nombre: firstSeat.zona || 'ORO',
+                precio: firstSeat.precio || firstSeat.price || 10.00
+              } : null;
+
+              await seatLocatorService.updateSeatsWithLocator(
+                seatIds,
+                paymentData.locator,
+                paymentData.user.id,
+                zoneInfo
+              );
+              console.log('🔗 Connected seats with locator and zone info:', seatIds, zoneInfo);
+            }
           }
         } catch (error) {
           console.warn('Could not connect seats with locator:', error);
