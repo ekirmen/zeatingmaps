@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { message, Modal, Button, Tabs } from 'antd';
-import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
+import { AiOutlineLeft } from 'react-icons/ai';
 
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
@@ -73,6 +73,7 @@ const Boleteria = () => {
   const [clientAbonos, setClientAbonos] = useState([]);
   const [seatPayment, setSeatPayment] = useState(null);
   const [isSeatModalVisible, setIsSeatModalVisible] = useState(false);
+  const [permanentLocks, setPermanentLocks] = useState([]);
 
   useEffect(() => {
     if (!selectedFuncion) return;
@@ -84,6 +85,149 @@ const Boleteria = () => {
       unsubscribe();
     };
   }, [selectedFuncion, subscribeToFunction, unsubscribe]);
+
+  const selectedSeatIds = useMemo(() => {
+    if (!Array.isArray(carrito)) return [];
+
+    const ids = carrito
+      .map(item => item?._id || item?.sillaId || item?.id)
+      .filter(Boolean)
+      .map(id => id.toString());
+
+    return Array.from(new Set(ids));
+  }, [carrito]);
+
+  useEffect(() => {
+    const funcionId = selectedFuncion?.id || selectedFuncion?._id;
+
+    if (!funcionId) {
+      setPermanentLocks([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const parseSeatsCollection = (value) => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) return parsed;
+          if (Array.isArray(parsed?.seats)) return parsed.seats;
+        } catch (error) {
+          try {
+            const nested = JSON.parse(JSON.parse(value));
+            if (Array.isArray(nested)) return nested;
+            if (Array.isArray(nested?.seats)) return nested.seats;
+          } catch (err) {
+            return [];
+          }
+        }
+      }
+
+      if (typeof value === 'object' && Array.isArray(value?.seats)) {
+        return value.seats;
+      }
+
+      return [];
+    };
+
+    const buildLocksFromPayments = (payments = []) => {
+      const lockMap = new Map();
+
+      payments.forEach(payment => {
+        const seats = parseSeatsCollection(payment.seats);
+        const normalizedStatus = (() => {
+          const status = (payment.status || '').toLowerCase();
+          if (status === 'pagado' || status === 'vendido') return 'vendido';
+          if (status === 'reservado') return 'reservado';
+          if (status === 'anulado') return 'anulado';
+          if (status === 'bloqueado') return 'locked';
+          return status || 'locked';
+        })();
+
+        seats.forEach(seat => {
+          const seatIdRaw = seat?.id || seat?._id || seat?.sillaId || seat?.seat_id;
+          if (!seatIdRaw) return;
+
+          const seatId = seatIdRaw.toString();
+          const zonaId = seat?.zonaId || seat?.zona?.id || seat?.zona_id || null;
+          const zonaNombre = seat?.zona?.nombre || seat?.zonaNombre || null;
+          const precio = Number(seat?.precio ?? seat?.price);
+
+          lockMap.set(seatId, {
+            seat_id: seatId,
+            funcion_id: funcionId,
+            status: normalizedStatus,
+            lock_type: 'seat',
+            locator: payment.locator || null,
+            session_id: payment.usuario_id || payment.user_id || null,
+            precio: Number.isFinite(precio) ? precio : null,
+            zona_id: zonaId,
+            zona_nombre: zonaNombre,
+            source: 'payment'
+          });
+        });
+      });
+
+      return Array.from(lockMap.values());
+    };
+
+    const fetchPaymentLocks = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('payments')
+          .select('id, seats, status, locator, usuario_id, user_id')
+          .eq('funcion', funcionId)
+          .in('status', ['pagado', 'reservado', 'anulado', 'vendido', 'bloqueado']);
+
+        if (error) {
+          throw error;
+        }
+
+        if (!isMounted) return;
+
+        const locks = buildLocksFromPayments(data || []);
+        setPermanentLocks(locks);
+      } catch (error) {
+        console.error('❌ [Boleteria] Error cargando asientos vendidos/reservados:', error);
+        if (isMounted) {
+          setPermanentLocks([]);
+        }
+      }
+    };
+
+    fetchPaymentLocks();
+
+    const channel = supabase
+      .channel(`payments-funcion-${funcionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'payments',
+          filter: `funcion=eq.${funcionId}`,
+        },
+        () => {
+          fetchPaymentLocks();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      if (channel) {
+        if (typeof supabase.removeChannel === 'function') {
+          supabase.removeChannel(channel);
+        } else if (typeof channel.unsubscribe === 'function') {
+          channel.unsubscribe();
+        }
+      }
+    };
+  }, [selectedFuncion]);
 
   const toggleSeat = useCallback(
     (seatData) => {
@@ -272,7 +416,7 @@ const Boleteria = () => {
     carrito,
     setCarrito,
     selectedClient,
-    setSelectedClient,
+    onPaymentClick: () => setIsPaymentModalVisible(true),
     onShowPaymentModal: () => setIsPaymentModalVisible(true),
     selectedAffiliate,
     setSelectedAffiliate,
@@ -282,7 +426,7 @@ const Boleteria = () => {
     onShowSeatModal: () => setIsSeatModalVisible(true),
     seatPayment,
     setSeatPayment
-  }), [carrito, setCarrito, selectedClient, setSelectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment]);
+  }), [carrito, setCarrito, selectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment]);
 
   const clientModalsProps = useMemo(() => ({
     isSearchModalVisible,
@@ -335,18 +479,18 @@ const Boleteria = () => {
   }), [isPaymentModalVisible, setIsPaymentModalVisible, carrito, setCarrito, selectedClient, setSelectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment]);
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Debug info */}
       {console.log('🎫 [Boleteria] Renderizando componente...')}
       {console.log('🎫 [Boleteria] Active tab:', activeTab)}
       {console.log('🎫 [Boleteria] Selected function:', selectedFuncion)}
       {console.log('🎫 [Boleteria] Mapa:', mapa)}
-      
+
       {/* Sidebar izquierdo */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+      <div className="flex flex-col w-full max-w-xs md:max-w-sm lg:w-80 min-w-[16rem] bg-white border-r border-gray-200">
         <div className="p-4 border-b border-gray-200">
-          <button 
-            onClick={() => window.history.back()} 
+          <button
+            onClick={() => window.history.back()}
             className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
           >
             <AiOutlineLeft className="text-lg" />
@@ -360,13 +504,13 @@ const Boleteria = () => {
       </div>
 
       {/* Contenido principal */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Tabs para cambiar entre vistas */}
         <div className="bg-white border-b border-gray-200">
-          <Tabs 
-            activeKey={activeTab} 
+          <Tabs
+            activeKey={activeTab}
             onChange={setActiveTab}
-            className="px-4"
+            className="px-4 overflow-x-auto"
           >
             <TabPane tab="🎫 Vista Compacta" key="compact" />
             <TabPane tab="🗺️ Mapa Interactivo" key="map" />
@@ -374,10 +518,10 @@ const Boleteria = () => {
         </div>
 
         {/* Área de trabajo principal */}
-        <div className="flex-1 flex">
+        <div className="flex-1 overflow-hidden">
           {activeTab === 'compact' ? (
             // Vista compacta - todo en una pantalla
-            <div className="flex-1 overflow-auto">
+            <div className="h-full overflow-auto min-w-0">
               {console.log('🎫 [Boleteria] Renderizando vista compacta')}
               <CompactBoleteria
                 selectedFuncion={selectedFuncion}
@@ -386,24 +530,26 @@ const Boleteria = () => {
             </div>
           ) : (
             // Vista con mapa interactivo
-            <>
+            <div className="flex h-full flex-col xl:flex-row overflow-hidden">
               {console.log('🎫 [Boleteria] Renderizando vista mapa interactivo')}
               {/* Panel izquierdo - Zonas y precios */}
-              <div className="w-80 bg-white border-r border-gray-200 overflow-auto">
-                <ZonesAndPrices {...zonesAndPricesProps} />
+              <div className="w-full xl:w-80 bg-white border-b xl:border-b-0 xl:border-r border-gray-200 overflow-auto">
+                <div className="p-4">
+                  <ZonesAndPrices {...zonesAndPricesProps} />
+                </div>
               </div>
 
               {/* Panel central - Mapa de asientos */}
-              <div className="flex-1 bg-white overflow-auto">
-                {selectedFuncion && mapa && (
-                  <div className="h-full">
+              <div className="flex-1 bg-white overflow-hidden min-w-0">
+                {selectedFuncion && mapa ? (
+                  <div className="h-full flex flex-col">
                     <div className="p-4 border-b border-gray-200">
                       <h3 className="text-lg font-semibold">Mapa de Asientos - {selectedFuncion.nombre || 'Función'}</h3>
                       <p className="text-sm text-gray-600">
                         🟢 Disponible | 🟡 Seleccionado | 🔴 Vendido | 🟣 Reservado | ⚫ Bloqueado
                       </p>
                     </div>
-                    <div className="h-full p-4">
+                    <div className="flex-1 p-4 overflow-auto">
                       <SeatingMapUnified
                         funcionId={selectedFuncion?.id}
                         mapa={mapa}
@@ -411,7 +557,9 @@ const Boleteria = () => {
                         selectedFuncion={selectedFuncion}
                         selectedEvent={selectedEvent}
                         onSeatToggle={handleSeatToggle}
-                        carrito={carrito}
+                        foundSeats={foundSeats}
+                        selectedSeats={selectedSeatIds}
+                        lockedSeats={permanentLocks}
                         modoVenta={true}
                         showPrices={true}
                         showZones={true}
@@ -423,16 +571,22 @@ const Boleteria = () => {
                       />
                     </div>
                   </div>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-gray-500">
+                    Selecciona una función para ver el mapa de asientos
+                  </div>
                 )}
               </div>
 
               {/* Panel derecho - Carrito */}
-              <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
-                <Cart {...cartProps}>
-                  {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
-                </Cart>
+              <div className="w-full xl:w-96 bg-white border-t xl:border-t-0 xl:border-l border-gray-200 flex flex-col">
+                <div className="flex-1 min-h-0">
+                  <Cart {...cartProps}>
+                    {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
+                  </Cart>
+                </div>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
