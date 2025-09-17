@@ -6,9 +6,10 @@ import { supabase } from '../../supabaseClient';
 export const getActivePaymentGateways = async () => {
   try {
     const { data, error } = await supabase
-      .from('payment_gateways')
+      .from('payment_methods')
       .select('*')
-      .eq('is_active', true)
+      .eq('enabled', true)
+      .order('is_recommended', { ascending: false })
       .order('name');
 
     if (error) throw error;
@@ -25,8 +26,9 @@ export const getActivePaymentGateways = async () => {
 export const getAllPaymentGateways = async () => {
   try {
     const { data, error } = await supabase
-      .from('payment_gateways')
+      .from('payment_methods')
       .select('*')
+      .order('is_recommended', { ascending: false })
       .order('name');
 
     if (error) throw error;
@@ -43,19 +45,14 @@ export const getAllPaymentGateways = async () => {
 export const getGatewayConfig = async (gatewayId) => {
   try {
     const { data, error } = await supabase
-      .from('payment_gateway_configs')
-      .select('*')
-      .eq('gateway_id', gatewayId);
+      .from('payment_methods')
+      .select('config')
+      .eq('id', gatewayId)
+      .single();
 
     if (error) throw error;
     
-    // Convertir array de configuraciones a objeto
-    const config = {};
-    data.forEach(item => {
-      config[item.key_name] = item.key_value;
-    });
-    
-    return config;
+    return data?.config || {};
   } catch (error) {
     console.error('Error fetching gateway config:', error);
     throw error;
@@ -67,10 +64,18 @@ export const getGatewayConfig = async (gatewayId) => {
  */
 export const getGatewayFees = async (gatewayId) => {
   try {
-    const config = await getGatewayConfig(gatewayId);
+    const { data, error } = await supabase
+      .from('payment_methods')
+      .select('fee_structure')
+      .eq('id', gatewayId)
+      .single();
+
+    if (error) throw error;
+    
+    const feeStructure = data?.fee_structure || { percentage: 0, fixed: 0 };
     return {
-      tasa_fija: parseFloat(config.tasa_fija) || 0,
-      porcentaje: parseFloat(config.porcentaje) || 0
+      tasa_fija: parseFloat(feeStructure.fixed) || 0,
+      porcentaje: parseFloat(feeStructure.percentage) || 0
     };
   } catch (error) {
     console.error('Error fetching gateway fees:', error);
@@ -224,25 +229,18 @@ export const deletePaymentGateway = async (gatewayId) => {
 export const getPaymentGatewayByType = async (type) => {
   try {
     const { data, error } = await supabase
-      .from('payment_gateways')
-      .select(`
-        *,
-        payment_gateway_configs (*)
-      `)
+      .from('payment_methods')
+      .select('*')
       .eq('type', type)
-      .eq('is_active', true)
+      .eq('enabled', true)
       .single();
 
     if (error) throw error;
 
     if (data) {
-      const configs = {};
-      data.payment_gateway_configs.forEach(config => {
-        configs[config.key_name] = config.key_value;
-      });
       return {
         ...data,
-        config: configs
+        config: data.config || {}
       };
     }
 
@@ -263,7 +261,7 @@ export const createPaymentTransaction = async (transactionData) => {
     if (transactionData.gatewayId && !transactionData.gatewayName) {
       try {
         const { data: gateway } = await supabase
-          .from('payment_gateways')
+          .from('payment_methods')
           .select('name')
           .eq('id', transactionData.gatewayId)
           .single();
@@ -279,7 +277,7 @@ export const createPaymentTransaction = async (transactionData) => {
       .from('payment_transactions')
       .insert({
         order_id: transactionData.orderId,
-        gateway_id: transactionData.gatewayId,
+        payment_gateway_id: transactionData.gatewayId,
         amount: transactionData.amount,
         currency: transactionData.currency || 'USD',
         status: 'pending',

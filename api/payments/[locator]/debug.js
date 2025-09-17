@@ -53,14 +53,14 @@ export default async function handler(req, res) {
     console.log('✅ [DEBUG] Configuración validada correctamente');
     
     // 1. Verificar conectividad básica y estructura de la tabla
-    console.log('🔍 [DEBUG] Verificando estructura de la tabla payments...');
+    console.log('🔍 [DEBUG] Verificando estructura de la tabla payment_transactions...');
     const { data: tableInfo, error: tableError } = await supabaseAdmin
-      .from('payments')
+      .from('payment_transactions')
       .select('*')
       .limit(1);
     
     if (tableError) {
-      console.error('❌ [DEBUG] Error accediendo a tabla payments:', tableError);
+      console.error('❌ [DEBUG] Error accediendo a tabla payment_transactions:', tableError);
       return res.status(500).json({
         error: 'Database table access error',
         details: tableError.message,
@@ -68,12 +68,12 @@ export default async function handler(req, res) {
       });
     }
     
-    console.log('✅ [DEBUG] Tabla payments accesible');
+    console.log('✅ [DEBUG] Tabla payment_transactions accesible');
     
     // 2. Buscar el pago específico por locator
     console.log('🔍 [DEBUG] Buscando pago por locator:', locator);
     const { data: payment, error: paymentError } = await supabaseAdmin
-      .from('payments')
+      .from('payment_transactions')
       .select('*')
       .eq('locator', locator)
       .maybeSingle();
@@ -93,8 +93,8 @@ export default async function handler(req, res) {
       // 3. Buscar pagos similares para debug
       console.log('🔍 [DEBUG] Buscando pagos similares...');
       const { data: similarPayments, error: similarError } = await supabaseAdmin
-        .from('payments')
-        .select('id, locator, created_at, status, funcion, event')
+        .from('payment_transactions')
+        .select('id, locator, created_at, status, funcion_id, evento_id')
         .limit(10)
         .order('created_at', { ascending: false });
       
@@ -105,7 +105,7 @@ export default async function handler(req, res) {
       // 4. Buscar por locator parcial (LIKE)
       console.log('🔍 [DEBUG] Buscando por locator parcial...');
       const { data: partialMatches, error: partialError } = await supabaseAdmin
-        .from('payments')
+        .from('payment_transactions')
         .select('id, locator, created_at, status')
         .ilike('locator', `%${locator}%`)
         .limit(5);
@@ -117,7 +117,7 @@ export default async function handler(req, res) {
       // 5. Verificar si hay pagos sin locator
       console.log('🔍 [DEBUG] Verificando pagos sin locator...');
       const { data: noLocatorPayments, error: noLocatorError } = await supabaseAdmin
-        .from('payments')
+        .from('payment_transactions')
         .select('id, locator, created_at, status')
         .is('locator', null)
         .limit(5);
@@ -152,16 +152,16 @@ export default async function handler(req, res) {
     const { data: funcion, error: funcionError } = await supabaseAdmin
       .from('funciones')
       .select('*')
-      .eq('id', payment.funcion)
+      .eq('id', payment.funcion_id)
       .maybeSingle();
     
     let seats = [];
     let seatsError = null;
-    if (payment.funcion) {
+    if (payment.funcion_id) {
       const { data: seatsData, error: seatsErr } = await supabaseAdmin
         .from('seats')
         .select('*')
-        .eq('funcion_id', payment.funcion);
+        .eq('funcion_id', payment.funcion_id);
       
       seats = seatsData || [];
       seatsError = seatsErr;
@@ -174,9 +174,9 @@ export default async function handler(req, res) {
         locator: payment.locator,
         status: payment.status,
         created_at: payment.created_at,
-        funcion: payment.funcion,
-        event: payment.event,
-        monto: payment.monto,
+        funcion_id: payment.funcion_id,
+        evento_id: payment.evento_id,
+        amount: payment.amount,
         tenant_id: payment.tenant_id
       },
       relationships: {

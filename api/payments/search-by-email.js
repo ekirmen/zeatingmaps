@@ -38,15 +38,16 @@ export default async function handler(req, res) {
 
     // Buscar todos los pagos del usuario
     const { data: payments, error: paymentsError } = await supabase
-      .from('payments')
+      .from('payment_transactions')
       .select(`
         *,
         seats,
         funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
+        evento_id as event,
         event:eventos(id, nombre),
-        user:profiles!usuario_id(id, login, empresa, telefono)
+        user:profiles!user_id(id, login, empresa, telefono)
       `)
-      .eq('usuario_id', user.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (paymentsError) {

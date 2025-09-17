@@ -90,7 +90,7 @@ export default async function handler(req, res) {
     // Get payment data - SIMPLIFIED QUERY to avoid join issues
     console.log('🔍 [DOWNLOAD] Buscando pago con localizador:', locator);
     const { data: payment, error } = await supabaseAdmin
-      .from('payments')
+      .from('payment_transactions')
       .select('*')
       .eq('locator', locator)
       .single();
@@ -105,12 +105,12 @@ export default async function handler(req, res) {
 
     // Get seats for this function if available
     let seats = [];
-    if (payment.funcion) {
-      console.log('🔍 [DOWNLOAD] Buscando asientos para función:', payment.funcion);
+    if (payment.funcion_id) {
+      console.log('🔍 [DOWNLOAD] Buscando asientos para función:', payment.funcion_id);
       const { data: seatsData, error: seatsError } = await supabaseAdmin
         .from('seats')
         .select('*')
-        .eq('funcion_id', payment.funcion);
+        .eq('funcion_id', payment.funcion_id);
       
       if (seatsError) {
         console.warn('⚠️ [DOWNLOAD] Error obteniendo asientos:', seatsError);
@@ -498,7 +498,7 @@ async function generateBulkPDF(req, res, locator) {
     
     // Buscar el pago por localizador
     const { data: payment, error } = await supabaseAdmin
-      .from('payments')
+      .from('payment_transactions')
       .select('*')
       .eq('locator', locator)
       .single();

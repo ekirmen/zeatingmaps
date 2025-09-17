@@ -38,9 +38,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     try {
         console.log('[Boleteria] Searching ticket for locator:', locator);
         const { data: payment, error } = await supabase
-          .from('payments')
+          .from('payment_transactions')
           .select(`*,
-            user:profiles!usuario_id(*),
+            user:profiles!user_id(*),
             seats,
             event:eventos(*),
             funcion:funciones(
@@ -147,12 +147,12 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       }
 
       const { data, error } = await supabase
-        .from('payments')
+        .from('payment_transactions')
         .select(
-          `id, locator, status, created_at, event, eventData:eventos(nombre),
-           funcion:funciones(id, fecha_celebracion, evento)`
+          `id, locator, status, created_at, evento_id as event, eventData:eventos(nombre),
+           funcion_id as funcion, funcion:funciones(id, fecha_celebracion, evento)`
         )
-        .eq('usuario_id', userResp.user.id);
+        .eq('user_id', userResp.user.id);
 
       if (error) throw error;
 
@@ -162,8 +162,8 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       for (const payment of payments) {
         if (!payment.event && payment.funcion?.evento) {
           await supabase
-            .from('payments')
-            .update({ event: payment.funcion.evento })
+            .from('payment_transactions')
+            .update({ evento_id: payment.funcion.evento })
             .eq('id', payment.id);
           payment.event = payment.funcion.evento;
         }

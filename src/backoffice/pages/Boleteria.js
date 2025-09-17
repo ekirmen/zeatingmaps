@@ -178,9 +178,9 @@ const Boleteria = () => {
     const fetchPaymentLocks = async () => {
       try {
         const { data, error } = await supabase
-          .from('payments')
-          .select('id, seats, status, locator, usuario_id, user_id')
-          .eq('funcion', funcionId)
+          .from('payment_transactions')
+          .select('id, seats, status, locator, user_id, usuario_id')
+          .eq('funcion_id', funcionId)
           .in('status', ['pagado', 'reservado', 'anulado', 'vendido', 'bloqueado']);
 
         if (error) {
@@ -202,14 +202,14 @@ const Boleteria = () => {
     fetchPaymentLocks();
 
     const channel = supabase
-      .channel(`payments-funcion-${funcionId}`)
+      .channel(`payment_transactions-funcion-${funcionId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'payments',
-          filter: `funcion=eq.${funcionId}`,
+          table: 'payment_transactions',
+          filter: `funcion_id=eq.${funcionId}`,
         },
         () => {
           fetchPaymentLocks();

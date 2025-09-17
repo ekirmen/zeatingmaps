@@ -310,8 +310,10 @@ const PaymentMethodsConfig = () => {
       
       // Cargar métodos de pago desde la base de datos
       const { data: methods, error } = await supabase
-        .from('payment_methods_global')
-        .select('*');
+        .from('payment_methods')
+        .select('*')
+        .order('is_recommended', { ascending: false })
+        .order('name');
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = tabla no existe
         console.warn('Error loading payment methods:', error);
@@ -327,7 +329,10 @@ const PaymentMethodsConfig = () => {
           return {
             ...method,
             enabled: savedMethod ? savedMethod.enabled : method.enabled,
-            config: savedMethod ? (savedMethod.config ? decryptSensitiveData(savedMethod.config) : {}) : {}
+            config: savedMethod ? (savedMethod.config ? decryptSensitiveData(savedMethod.config) : {}) : {},
+            is_recommended: savedMethod ? savedMethod.is_recommended : method.recommended,
+            processing_time: savedMethod ? savedMethod.processing_time : method.processingTime,
+            fee_structure: savedMethod ? savedMethod.fee_structure : { percentage: 2.9, fixed: 0.30 }
           };
         });
         setPaymentMethods(combinedMethods);
@@ -386,7 +391,7 @@ const PaymentMethodsConfig = () => {
 
       // Guardar en la base de datos
       const { error } = await supabase
-        .from('payment_methods_global')
+        .from('payment_methods')
         .upsert({
           method_id: methodId,
           enabled,
@@ -424,7 +429,7 @@ const PaymentMethodsConfig = () => {
     
     // Cargar configuración existente
     const { data: config, error } = await supabase
-      .from('payment_methods_global')
+      .from('payment_methods')
       .select('config')
       .eq('method_id', method.id)
       .single();
@@ -456,7 +461,7 @@ const PaymentMethodsConfig = () => {
       const encryptedConfig = encryptSensitiveData(values);
 
       const { error } = await supabase
-        .from('payment_methods_global')
+        .from('payment_methods')
         .upsert({
           method_id: selectedMethod.id,
           enabled: selectedMethod.enabled,
@@ -513,7 +518,7 @@ const PaymentMethodsConfig = () => {
       }));
 
       const { error } = await supabase
-        .from('payment_methods_global')
+        .from('payment_methods')
         .upsert(updates);
 
       if (error) throw error;
@@ -581,7 +586,7 @@ const PaymentMethodsConfig = () => {
         // Aplicar configuración
         for (const methodConfig of config) {
           await supabase
-            .from('payment_methods_global')
+            .from('payment_methods')
             .upsert({
               method_id: methodConfig.id,
               enabled: methodConfig.enabled,
