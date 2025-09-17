@@ -81,6 +81,12 @@ export const useBoleteria = () => {
   // Función para guardar carrito en localStorage
   const saveCarritoToStorage = useCallback((newCarrito) => {
     try {
+      if (!Array.isArray(newCarrito)) {
+        console.warn('⚠️ [useBoleteria] Intento de guardar carrito inválido:', newCarrito);
+        localStorage.setItem(CART_KEY, JSON.stringify([]));
+        return;
+      }
+
       localStorage.setItem(CART_KEY, JSON.stringify(newCarrito));
       console.log('💾 [useBoleteria] Carrito guardado en localStorage:', newCarrito.length, 'items');
     } catch (error) {
@@ -89,9 +95,13 @@ export const useBoleteria = () => {
   }, []);
 
   // Memoizar el setCarrito para evitar re-renderizados y guardar en localStorage
-  const setCarritoMemo = useCallback((newCarrito) => {
-    setCarrito(newCarrito);
-    saveCarritoToStorage(newCarrito);
+  const setCarritoMemo = useCallback((updater) => {
+    setCarrito((prevCarrito) => {
+      const resolvedValue = typeof updater === 'function' ? updater(prevCarrito) : updater;
+      const normalizedCarrito = Array.isArray(resolvedValue) ? resolvedValue : [];
+      saveCarritoToStorage(normalizedCarrito);
+      return normalizedCarrito;
+    });
   }, [saveCarritoToStorage]);
 
   // Memoizar el setSelectedEvent para evitar re-renderizados
@@ -101,10 +111,9 @@ export const useBoleteria = () => {
 
   // Función para limpiar carrito
   const clearCarrito = useCallback(() => {
-    setCarrito([]);
-    saveCarritoToStorage([]);
+    setCarritoMemo([]);
     console.log('🗑️ [useBoleteria] Carrito limpiado');
-  }, [saveCarritoToStorage]);
+  }, [setCarritoMemo]);
 
   // Función para agregar asiento al carrito
   const addToCarrito = useCallback((asiento, precio, zona) => {
@@ -116,26 +125,24 @@ export const useBoleteria = () => {
       funcionId: selectedFuncion?.id,
       timestamp: Date.now()
     };
-    
-    setCarrito(prev => {
-      const newCarrito = [...prev, newItem];
-      saveCarritoToStorage(newCarrito);
-      return newCarrito;
+
+    setCarritoMemo(prev => {
+      const safePrev = Array.isArray(prev) ? prev : [];
+      return [...safePrev, newItem];
     });
-    
+
     console.log('➕ [useBoleteria] Asiento agregado al carrito:', newItem);
-  }, [selectedFuncion?.id, saveCarritoToStorage]);
+  }, [selectedFuncion?.id, setCarritoMemo]);
 
   // Función para quitar asiento del carrito
   const removeFromCarrito = useCallback((asientoId) => {
-    setCarrito(prev => {
-      const newCarrito = prev.filter(item => item.id !== asientoId);
-      saveCarritoToStorage(newCarrito);
-      return newCarrito;
+    setCarritoMemo(prev => {
+      const safePrev = Array.isArray(prev) ? prev : [];
+      return safePrev.filter(item => item.id !== asientoId && item._id !== asientoId && item.sillaId !== asientoId);
     });
-    
+
     console.log('➖ [useBoleteria] Asiento removido del carrito:', asientoId);
-  }, [saveCarritoToStorage]);
+  }, [setCarritoMemo]);
 
   // Manejar la selección de una función
   const handleFunctionSelect = useCallback(async (functionId) => {
@@ -150,8 +157,7 @@ export const useBoleteria = () => {
     setZonas([]);
     // Limpiar carrito solo si es una función diferente
     if (selectedFuncion?.id !== functionId) {
-      setCarrito([]);
-      saveCarritoToStorage([]);
+      setCarritoMemo([]);
     }
 
     // Ensure functionId is a primitive value
@@ -416,7 +422,7 @@ export const useBoleteria = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedFuncion?.id, setCarritoMemo]);
 
   // Manejar la selección de un evento
   const handleEventSelect = useCallback(async (eventoId) => {
@@ -430,7 +436,7 @@ export const useBoleteria = () => {
     setSelectedPlantilla(null);
     setMapa(null);
     setZonas([]);
-    setCarrito([]);
+    setCarritoMemo([]);
 
     try {
       const { data: eventoData, error: eventoError } = await supabase
@@ -479,7 +485,7 @@ export const useBoleteria = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setCarritoMemo]);
 
   // Memoizar el valor de retorno para evitar re-renderizados
   const returnValue = useMemo(() => {
