@@ -46,6 +46,24 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [locator, setLocator] = useState('');
   const [emailToSend, setEmailToSend] = useState('');
+  const [seatLockSessionId, setSeatLockSessionId] = useState(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const storedSessionId = localStorage.getItem('anonSessionId');
+
+    if (user?.id) {
+      if (storedSessionId !== user.id) {
+        localStorage.setItem('anonSessionId', user.id);
+      }
+      setSeatLockSessionId(user.id);
+    } else if (storedSessionId) {
+      setSeatLockSessionId(storedSessionId);
+    }
+  }, [user?.id]);
 
   const existingPaymentId = safeCarrito?.[0]?.paymentId;
   const existingLocator = safeCarrito?.[0]?.locator;
@@ -319,22 +337,53 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
               if (reservationType === '2' || reservationType === '3') {
                 finalStatus = 'reservado'; // Si es reserva temporal o con fecha
               }
-              
-              const { error: updateLocksError } = await supabase
-                .from('seat_locks')
-                .update({ 
+
+              const seatIdsForLock = seats
+                .map(item => item.id || item._id || item.sillaId)
+                .filter(Boolean);
+
+              if (seatIdsForLock.length === 0) {
+                console.log('⚠️ No hay seat_locks que actualizar para este pago');
+              } else {
+                const lockUpdatePayload = {
                   locator: paymentData.locator,
                   status: finalStatus,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('funcion_id', paymentData.funcion)
-                .eq('session_id', paymentData.usuario_id)
-                .like('locator', 'TEMP-%');
-              
-              if (updateLocksError) {
-                console.error('Error actualizando seat_locks con locator final:', updateLocksError);
-              } else {
-                console.log(`✅ Seat_locks actualizados con locator final: ${paymentData.locator}, estado: ${finalStatus}`);
+                  updated_at: new Date().toISOString(),
+                  user_id: paymentData.usuario_id || null
+                };
+
+                const activeSessionId = seatLockSessionId || (typeof window !== 'undefined' ? localStorage.getItem('anonSessionId') : null);
+                const sessionConditions = [];
+
+                if (activeSessionId) {
+                  sessionConditions.push(`session_id.eq.${activeSessionId}`);
+                }
+                if (paymentData.usuario_id) {
+                  sessionConditions.push(`session_id.eq.${paymentData.usuario_id}`);
+                }
+                sessionConditions.push('session_id.is.null');
+                sessionConditions.push('session_id.eq.');
+
+                let updateQuery = supabase
+                  .from('seat_locks')
+                  .update(lockUpdatePayload)
+                  .eq('funcion_id', paymentData.funcion)
+                  .in('seat_id', seatIdsForLock)
+                  .in('status', ['seleccionado', 'locked', 'expirando']);
+
+                if (sessionConditions.length > 0) {
+                  updateQuery = updateQuery.or(sessionConditions.join(','));
+                }
+
+                const { data: updatedLocks, error: updateLocksError } = await updateQuery.select('id');
+
+                if (updateLocksError) {
+                  console.error('Error actualizando seat_locks con locator final:', updateLocksError);
+                } else if (!updatedLocks || updatedLocks.length === 0) {
+                  console.warn('⚠️ No se encontraron seat_locks para actualizar con el locator actual');
+                } else {
+                  console.log(`✅ Seat_locks actualizados con locator final: ${paymentData.locator}, estado: ${finalStatus}, filas: ${updatedLocks.length}`);
+                }
               }
             } catch (e) {
               console.error('Error actualizando seat_locks:', e);

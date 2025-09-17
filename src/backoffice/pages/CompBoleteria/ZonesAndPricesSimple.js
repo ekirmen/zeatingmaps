@@ -106,7 +106,7 @@ const ZonesAndPricesSimple = ({
 
       current.precios.push({
         id: detalle?.id || detalle?.priceId || `detalle-${zonaId}-${current.precios.length}`,
-        nombre: detalle?.nombre || detalle?.titulo || detalle?.tipoEntrada || 'Entrada general',
+        nombre: detalle?.nombre || detalle?.entrada?.nombre_entrada || detalle?.titulo || detalle?.tipoEntrada || 'Entrada general',
         tipo: detalle?.tipoEntrada || detalle?.tipo || 'general',
         precio: Number(detalle?.precio) || 0,
         comision: Number(detalle?.comision) || 0,

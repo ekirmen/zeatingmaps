@@ -215,22 +215,40 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       }
 
       // Fetch the related profile data using the user id
-      const { data, error } = await supabase
+      const profileResult = await supabase
         .from('profiles')
         .select('id, login, telefono, empresa')
         .eq('id', userResp.user.id)
         .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      let profileData = profileResult.data;
+      let profileError = profileResult.error;
 
-      if (!data) {
+      if (profileError && profileError.code === '42703') {
+        const fallbackResult = await supabase
+          .from('profiles')
+          .select('id, login, telefono')
+          .eq('id', userResp.user.id)
+          .maybeSingle();
+
+        profileData = fallbackResult.data
+          ? { ...fallbackResult.data, empresa: null }
+          : null;
+        profileError = fallbackResult.error;
+      }
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
+      }
+
+      if (!profileData) {
         setAccountSearchResults([]);
         message.info('Usuario no encontrado y/o campo vacío');
         return;
       }
 
       setAccountSearchResults([
-        { ...data, email: userResp.user.email }
+        { ...profileData, email: userResp.user.email }
       ]);
     } catch (err) {
       message.error(err.message);

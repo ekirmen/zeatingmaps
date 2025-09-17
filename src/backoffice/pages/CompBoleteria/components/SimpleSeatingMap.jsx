@@ -304,9 +304,13 @@ const SimpleSeatingMap = ({
       }
 
       // Verificar si está bloqueado por otro usuario
-      const isLockedByOther = lockedSeats.some(ls => 
-        ls.seat_id === seat._id && ls.status === 'locked' && ls.session_id !== sessionId
-      );
+      const blockingStatuses = ['locked', 'seleccionado', 'seleccionado_por_otro', 'reservado', 'vendido'];
+      const isLockedByOther = lockedSeats.some(ls => {
+        if (ls.seat_id !== seat._id) {
+          return false;
+        }
+        return blockingStatuses.includes(ls.status) && ls.session_id !== sessionId;
+      });
       
       if (isLockedByOther) {
         message.warning('Este asiento está bloqueado por otro usuario');
