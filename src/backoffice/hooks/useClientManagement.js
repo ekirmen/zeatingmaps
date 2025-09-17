@@ -199,6 +199,8 @@ export const useClientManagement = (setCarrito) => {
   };
 
   return {
+    selectedClient,
+    setSelectedClient,
     searchResults,
     paymentResults,
     searchLoading,

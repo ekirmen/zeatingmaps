@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Modal, Input, Card, Table, Tag, Form, Button, message, Select, Checkbox } from 'antd';
-import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit, AiOutlineSetting, AiOutlineMenu, AiOutlineDown, AiOutlineUp } from 'react-icons/ai';
+import React, { useState, useEffect } from 'react';
+import { Modal, Input, Card, Table, Form, Button, message, Select, Checkbox } from 'antd';
+import { AiOutlineSearch, AiOutlineUserAdd, AiOutlineClose, AiOutlineEdit, AiOutlineSetting, AiOutlineDown, AiOutlineUp } from 'react-icons/ai';
 import { supabase } from '../../../supabaseClient';
 import { supabaseAdmin } from '../../../supabaseClient';
 import { getUserByEmail } from '../../services/adminUsers';
@@ -14,7 +14,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const [searchLoading, setSearchLoading] = useState(false);
   const [isMenuCollapsed, setIsMenuCollapsed] = useState(false);
 
-  const [userData, setUserData] = useState(null);
+  const [userData, setUserData] = useState(selectedClient || null);
   const [ticketData, setTicketData] = useState(null);
   const [eventData, setEventData] = useState(null);
 
@@ -24,6 +24,14 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   const [isConfigModalVisible, setIsConfigModalVisible] = useState(false);
   const [configForm] = Form.useForm();
   const [form] = Form.useForm();
+
+  useEffect(() => {
+    if (selectedClient) {
+      setUserData(selectedClient);
+    } else {
+      setUserData(null);
+    }
+  }, [selectedClient]);
 
   const handleTicketSearch = async (locator) => {
     setSearchLoading(true);
@@ -288,7 +296,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   };
 
   return (
-    <div className="relative">
+    <div className="relative h-full">
       {/* Botón para mostrar/ocultar menú */}
       <div className="absolute top-0 right-0 z-10">
         <Button
@@ -329,8 +337,10 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             <Card size="small" className="border border-gray-200">
               <div className="flex justify-between items-center">
                 <div>
-                  <div className="font-semibold">{userData.login}</div>
-                  <div className="text-sm text-gray-500">{userData.empresa || 'Sin empresa'}</div>
+                  <div className="font-semibold">
+                    {userData.login || userData.nombre || userData.email || 'Cliente sin nombre'}
+                  </div>
+                  <div className="text-sm text-gray-500">{userData.empresa || userData.email || userData.telefono || 'Sin datos de contacto'}</div>
                 </div>
                 <div className="flex gap-2">
                   <Button size="small" icon={<AiOutlineEdit />} onClick={() => setIsAccountModalVisible(true)} />

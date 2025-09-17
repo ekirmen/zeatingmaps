@@ -1,28 +1,21 @@
 import React, { useMemo, useCallback, useState } from 'react';
-import { Button, message, Dropdown, Menu, Modal, Card, Avatar } from 'antd';
+import { Button, message, Dropdown, Menu, Card } from 'antd';
 import { AiOutlineClose, AiOutlineMore } from 'react-icons/ai';
-import { createOrUpdateSeat, unlockSeat as updateSeatStatusInDB } from '../../services/supabaseSeats';
-import { useSeatLockStore } from '../../../components/seatLockStore';
-import { supabase } from '../../../supabaseClient';
+import { createOrUpdateSeat } from '../../services/supabaseSeats';
 import downloadTicket from '../../../utils/downloadTicket';
 
 const Cart = ({
   carrito = [],
   setCarrito,
   onPaymentClick,
-  setSelectedClient,
+  onShowPaymentModal,
   selectedClient,
   selectedAffiliate,
-  onSeatsUpdated,
   children,
 }) => {
   // Ensure carrito is always an array to avoid runtime errors
   const safeCarrito = Array.isArray(carrito) ? carrito : [];
-  const addRealtimeLock = useSeatLockStore(state => state.lockSeat);
-  const removeRealtimeLock = useSeatLockStore(state => state.unlockSeat);
   const [menuVisible, setMenuVisible] = useState(false);
-  const [selectedSeat, setSelectedSeat] = useState(null);
-  const [downloadingAll, setDownloadingAll] = useState(false);
 
   const subtotal = useMemo(
     () => safeCarrito.reduce((sum, item) => sum + (item.precio || 0), 0),
@@ -121,10 +114,9 @@ const Cart = ({
   const handleDownloadAllTickets = useCallback(async () => {
     if (!safeCarrito.length) return;
     
-    setDownloadingAll(true);
     try {
       const locators = [...new Set(safeCarrito.map(item => item.locator).filter(Boolean))];
-      
+
       for (const locator of locators) {
         await downloadTicket(locator);
       }
@@ -133,10 +125,10 @@ const Cart = ({
     } catch (error) {
       console.error('Error downloading tickets:', error);
       message.error('Error al descargar tickets');
-    } finally {
-      setDownloadingAll(false);
     }
   }, [safeCarrito]);
+
+  const handlePaymentClick = onPaymentClick || onShowPaymentModal;
 
   const menu = (
     <Menu>
@@ -180,7 +172,7 @@ const Cart = ({
         </div>
       </div>
 
-      <div className="max-h-[430px] overflow-y-auto space-y-2 pr-1">
+      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
         {Object.entries(groupedByFunction).map(([fid, group], idx) => (
           <div key={fid} className="space-y-1">
             <div className="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded">
@@ -287,8 +279,8 @@ const Cart = ({
             type="primary"
             block
             className="mt-4 h-12 text-base font-semibold"
-            onClick={onPaymentClick}
-            disabled={!selectedClient}
+            onClick={handlePaymentClick}
+            disabled={!selectedClient || !handlePaymentClick}
             icon={selectedClient ? <span>💳</span> : <span>👤</span>}
           >
             {selectedClient ? 'Procesar Pago' : 'Seleccionar Cliente'}

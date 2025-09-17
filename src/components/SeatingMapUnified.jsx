@@ -54,6 +54,31 @@ const SeatingMapUnified = ({
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const { getSeatColor, getBorderColor } = useSeatColors(funcionId);
 
+  const selectedSeatIds = useMemo(() => {
+    if (!selectedSeats) return new Set();
+
+    if (selectedSeats instanceof Set) {
+      return new Set(Array.from(selectedSeats).map(id => id?.toString()).filter(Boolean));
+    }
+
+    if (Array.isArray(selectedSeats)) {
+      if (selectedSeats.length > 0 && typeof selectedSeats[0] === 'object') {
+        return new Set(
+          selectedSeats
+            .map(seat => seat?._id || seat?.sillaId || seat?.id)
+            .filter(Boolean)
+            .map(id => id.toString())
+        );
+      }
+
+      return new Set(selectedSeats.map(id => id?.toString()).filter(Boolean));
+    }
+
+    return new Set();
+  }, [selectedSeats]);
+
+  const selectedSeatList = useMemo(() => Array.from(selectedSeatIds), [selectedSeatIds]);
+
   // Combinar locks temporales del store con locks permanentes de la BD
   const allLockedSeats = useMemo(() => {
     const tempLocks = lockedSeatsState || [];
@@ -188,7 +213,7 @@ const SeatingMapUnified = ({
       }
 
       // Verificar si está seleccionado por el usuario actual
-      const isSelectedByMe = selectedSeats.includes(seat._id);
+      const isSelectedByMe = selectedSeatIds.has((seat._id || '').toString());
       
       // Permitir deseleccionar si está seleccionado por mí
       if (isSelectedByMe) {
@@ -213,7 +238,7 @@ const SeatingMapUnified = ({
       // Llamar a la función de información del asiento si existe
       if (onSeatInfo) onSeatInfo(seat);
     },
-    [onSeatToggle, onSeatInfo, selectedSeats, funcionId, blockedSeats]
+    [onSeatToggle, onSeatInfo, selectedSeatIds, funcionId, blockedSeats]
   );
 
 
@@ -355,8 +380,6 @@ if (Array.isArray(mapa?.contenido)) {
   }
 
   // Create a set of found seat IDs for quick lookup
-  const foundSeatIds = new Set(foundSeats.map(seat => seat._id));
-
   const BackgroundImage = React.memo(({ config }) => {
     // Resolver la URL desde múltiples posibles campos
     const rawUrl = useMemo(() => {
@@ -548,7 +571,7 @@ if (Array.isArray(mapa?.contenido)) {
 
           {/* Renderizar asientos */}
           {validatedSeats.map((seat) => {
-            const isSelected = selectedSeats.includes(seat._id);
+            const isSelected = selectedSeatIds.has((seat._id || '').toString());
             const locked = isSeatLocked ? isSeatLocked(seat._id) : false;
             const lockedByMe = isSeatLockedByMe ? isSeatLockedByMe(seat._id) : false;
 
@@ -607,7 +630,13 @@ if (Array.isArray(mapa?.contenido)) {
                 : null
             ) || (Array.isArray(validatedZonas) ? validatedZonas[0] : null);
             
-            const seatColor = getSeatColor(seatData, seatZona, isSelected, selectedSeats, allLockedSeats);
+            const seatColor = getSeatColor(
+              seatData,
+              seatZona,
+              isSelected,
+              selectedSeatList,
+              allLockedSeats
+            );
             const borderColor = getBorderColor(isSelected, seatZona);
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
 
