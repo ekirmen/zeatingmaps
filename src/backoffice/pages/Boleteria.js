@@ -30,6 +30,7 @@ const Boleteria = () => {
     selectedPlantilla,
     setSelectedPlantilla,
     mapa,
+    zonas,
     carrito,
     setCarrito,
     handleEventSelect,
@@ -87,18 +88,30 @@ const Boleteria = () => {
   const toggleSeat = useCallback(
     (seatData) => {
       setCarrito(prev => {
-        const existingIndex = prev.findIndex(item => item.sillaId === seatData.sillaId);
-        if (existingIndex >= 0) {
-          // Remover del carrito
-          const newCart = prev.filter((_, index) => index !== existingIndex);
-          localStorage.setItem('boleteriaCart', JSON.stringify(newCart));
-          return newCart;
-        } else {
-          // Añadir al carrito
-          const newCart = [...prev, seatData];
-          localStorage.setItem('boleteriaCart', JSON.stringify(newCart));
-          return newCart;
+        const safePrev = Array.isArray(prev) ? prev : [];
+        const seatId = seatData?._id || seatData?.sillaId || seatData?.id;
+
+        if (!seatId) {
+          console.warn('⚠️ [Boleteria] toggleSeat llamado sin identificador válido:', seatData);
+          return safePrev;
         }
+
+        const normalizedSeat = {
+          ...seatData,
+          _id: seatId,
+          sillaId: seatData?.sillaId || seatId,
+        };
+
+        const existingIndex = safePrev.findIndex(item => {
+          const currentId = item?._id || item?.sillaId || item?.id;
+          return currentId === seatId;
+        });
+
+        if (existingIndex >= 0) {
+          return safePrev.filter((_, index) => index !== existingIndex);
+        }
+
+        return [...safePrev, normalizedSeat];
       });
     },
     [setCarrito]
@@ -117,33 +130,56 @@ const Boleteria = () => {
         mapa?.zonas?.find(z => z.asientos?.some(a => a._id === sillaId)) ||
         mapa?.contenido?.find(el => el.sillas?.some(a => a._id === sillaId) && el.zona) ||
         silla.zona || {};
-      const zonaId = zona?.id || silla.zonaId;
-      const nombreZona = zona?.nombre || 'Zona';
-      const detalle = selectedPlantilla?.detalles?.find(d => d.zonaId === zonaId);
-      const precio = detalle?.precio || 0;
+      const zonaId = zona?.id || silla.zonaId || zona?._id;
+      const nombreZona = zona?.nombre || silla?.zona?.nombre || 'Zona';
+
+      let detalle = selectedPlantilla?.detalles;
+      if (typeof detalle === 'string') {
+        try {
+          detalle = JSON.parse(detalle);
+        } catch (error) {
+          console.warn('⚠️ [Boleteria] No se pudo parsear la plantilla de precios:', error);
+          detalle = [];
+        }
+      }
+      const detalleZona = Array.isArray(detalle)
+        ? detalle.find(d => (d.zonaId || d.zona?.id || d.zona) === zonaId)
+        : null;
+      const precio = Number(detalleZona?.precio) || 0;
+
+      const tipoPrecio = detalleZona?.tipoEntrada || detalleZona?.tipo || 'general';
+      const descuentoNombre = detalleZona?.descuentoNombre || detalleZona?.descuento || '';
+      const seatName = silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
+      const nombreMesa = silla.nombreMesa || silla.mesa_nombre || silla.mesaNombre || silla.tableName || '';
+      const funcionId = selectedFuncion?.id || selectedFuncion?._id || null;
+      const funcionFecha = selectedFuncion?.fechaCelebracion || selectedFuncion?.fecha_celebracion || null;
+
+      const cartItem = {
+        _id: sillaId,
+        sillaId,
+        nombre: seatName,
+        nombreZona,
+        zona: nombreZona,
+        zonaId,
+        precio,
+        tipoPrecio,
+        descuentoNombre,
+        funcionId,
+        funcionFecha,
+        nombreMesa,
+        precioInfo: detalleZona || null,
+        timestamp: Date.now(),
+        modoVenta: 'boleteria'
+      };
 
       // Alternar bloqueo en DB + carrito
       if (isSeatLockedByMe(sillaId)) {
         await unlockSeat(sillaId, selectedFuncion.id || selectedFuncion._id);
-        await toggleSeat({
-          sillaId,
-          zonaId,
-          precio,
-          nombre: silla.nombre || silla.numero || silla._id,
-          nombreZona,
-          functionId: selectedFuncion.id || selectedFuncion._id,
-        });
+        await toggleSeat(cartItem);
       } else {
         const ok = await lockSeat(sillaId, 'seleccionado', selectedFuncion.id || selectedFuncion._id);
         if (!ok) return;
-        await toggleSeat({
-          sillaId,
-          zonaId,
-          precio,
-          nombre: silla.nombre || silla.numero || silla._id,
-          nombreZona,
-          functionId: selectedFuncion.id || selectedFuncion._id,
-        });
+        await toggleSeat(cartItem);
       }
     },
     [selectedFuncion, mapa, selectedPlantilla, toggleSeat, isSeatLocked, isSeatLockedByMe, lockSeat, unlockSeat]
@@ -207,8 +243,30 @@ const Boleteria = () => {
     selectedAffiliate,
     setSelectedAffiliate,
     showSeatingMap: activeTab === 'map',
-    plantillas: [] // Agregar plantillas vacías por ahora
-  }), [selectedEvent, handleEventSelect, setSelectedEvent, funciones, selectedFuncion, handleFunctionSelect, carrito, setCarrito, selectedPlantilla, setSelectedPlantilla, selectedClient, setSelectedClient, clientAbonos, selectedAffiliate, setSelectedAffiliate, activeTab]);
+    plantillas: [], // Plantillas adicionales (placeholder por ahora)
+    zonas,
+    mapa
+  }), [
+    eventos,
+    selectedEvent,
+    handleEventSelect,
+    setSelectedEvent,
+    funciones,
+    selectedFuncion,
+    handleFunctionSelect,
+    carrito,
+    setCarrito,
+    selectedPlantilla,
+    setSelectedPlantilla,
+    selectedClient,
+    setSelectedClient,
+    clientAbonos,
+    selectedAffiliate,
+    setSelectedAffiliate,
+    activeTab,
+    zonas,
+    mapa
+  ]);
 
   const cartProps = useMemo(() => ({
     carrito,
