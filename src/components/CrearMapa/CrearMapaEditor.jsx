@@ -52,17 +52,18 @@ import {
   DownloadOutlined,
   UploadOutlined,
   InfoCircleOutlined,
-  QuestionCircleOutlined
+  QuestionCircleOutlined,
+  AimOutlined
 } from '@ant-design/icons';
-import { useMapaElements } from '../../hooks/useMapaElements';
-import { useMapaState } from '../../hooks/useMapaState';
-import { useMapaSelection } from '../../hooks/useMapaSelection';
-import { useMapaZoomStage } from '../../hooks/useMapaZoomStage';
-import { useMapaGraphicalElements } from '../../hooks/useMapaGraphicalElements';
-import { useMapaLoadingSaving } from '../../hooks/usemapaloadingsaving';
-import { useMapaZones } from '../../hooks/usemapazones';
-import { supabase } from '../../../supabaseClient';
-import { fetchZonasPorSala } from '../../services/apibackoffice';
+import { useMapaElements } from '../../backoffice/hooks/useMapaElements';
+import { useMapaState } from '../../backoffice/hooks/useMapaState';
+import { useMapaSelection } from '../../backoffice/hooks/useMapaSelection';
+import { useMapaZoomStage } from '../../backoffice/hooks/useMapaZoomStage';
+import { useMapaGraphicalElements } from '../../backoffice/hooks/useMapaGraphicalElements';
+import { useMapaLoadingSaving } from '../../backoffice/hooks/usemapaloadingsaving';
+import { useMapaZones } from '../../backoffice/hooks/usemapazones';
+import { supabase } from '../../supabaseClient';
+import { fetchZonasPorSala } from '../../backoffice/services/apibackoffice';
 import Grid from '../compMapa/Grid';
 import MenuMapa from '../compMapa/MenuMapa';
 import AdvancedEditPopup from '../compMapa/AdvancedEditPopup';
