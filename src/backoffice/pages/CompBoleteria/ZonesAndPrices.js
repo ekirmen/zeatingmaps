@@ -1,10 +1,6 @@
 import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef, useMemo, useEffect } from 'react';
 import { message } from 'antd';
-// import SeatingMapUnified from '../../../components/SeatingMapUnified';
-// import SeatAnimation from '../../components/SeatAnimation';
 
-// Importar hooks personalizados - temporalmente comentados
-// import {
 //   useMapData,
 //   useDiscountCode,
 //   useSeatManagement,
@@ -12,15 +8,7 @@ import { message } from 'antd';
 //   useBoleteriaMemory
 // } from './hooks';
 
-// Importar componentes separados - temporalmente comentados
-// import EventSelector from './components/EventSelector';
-// import FunctionSelector from './components/FunctionSelector';
-// import DiscountCodeInput from './components/DiscountCodeInput';
-// import ModeControls from './components/ModeControls';
-// import ZoneSelector from './components/ZoneSelector';
 
-// Importar handlers - temporalmente comentado
-// import { createSeatHandlers } from './components/SeatHandlers';
 
 const ZonesAndPrices = ({
   eventos = [],

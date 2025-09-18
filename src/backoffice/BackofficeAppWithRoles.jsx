@@ -40,6 +40,7 @@ import RoleManagement from '../saas/components/RoleManagement';
 import ApiExplorer from '../saas/pages/ApiExplorer';
 import SaasUserManagement from './pages/SaasUserManagementSimple';
 import TenantDetail from './pages/TenantDetail';
+import WebStudio from './pages/WebStudio';
 
 const BackofficeAppWithRoles = () => {
   return (
@@ -333,6 +334,14 @@ const BackofficeAppWithRoles = () => {
             element={
               <ProtectedRoute permission="payment_gateways">
                 <PaymentGateways />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="webstudio" 
+            element={
+              <ProtectedRoute permission="personalizacion">
+                <WebStudio />
               </ProtectedRoute>
             } 
           />

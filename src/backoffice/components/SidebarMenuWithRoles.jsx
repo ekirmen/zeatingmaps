@@ -380,6 +380,64 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
           permission: 'payment_gateways'
         }
       ]
+    },
+    {
+      title: 'Personalización',
+      icon: faCog,
+      type: 'submenu',
+      submenuId: 'personalization',
+      permission: 'personalizacion',
+      items: [
+        { 
+          title: 'Formatos de entrada', 
+          path: '/dashboard/formato-entrada', 
+          icon: faTicketAlt,
+          permission: 'formato_entrada'
+        },
+        { 
+          title: 'Textos legales', 
+          path: '/dashboard/legal-texts', 
+          icon: faFileAlt,
+          permission: 'legal_texts'
+        },
+        { 
+          title: 'Web Studio', 
+          path: '/dashboard/webstudio', 
+          icon: faCog,
+          permission: 'webstudio'
+        },
+        { 
+          title: 'Configuración de Asientos', 
+          path: '/dashboard/seat-settings', 
+          icon: faCog,
+          permission: 'seat_settings'
+        },
+        { 
+          title: 'Configuración de Correo', 
+          path: '/dashboard/email-config', 
+          icon: faEnvelope,
+          permission: 'email_config'
+        },
+        { 
+          title: 'Páginas', 
+          path: '/dashboard/pages', 
+          icon: faFileAlt,
+          permission: 'pages'
+        },
+        { 
+          title: 'Colores Web', 
+          path: '/dashboard/webcolors', 
+          icon: faCog,
+          permission: 'webcolors'
+        }
+      ]
+    },
+    {
+      title: 'Boletería',
+      path: '/dashboard/boleteria',
+      icon: faTicketAlt,
+      type: 'link',
+      permission: 'boleteria'
     }
   ];
 
