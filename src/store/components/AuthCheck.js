@@ -3,6 +3,7 @@ import { Modal, Button, Form, Input, message, Alert } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../supabaseClient';
+import { getAuthMessage } from '../../utils/authErrorMessages';
 
 const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -18,7 +19,9 @@ const AuthCheck = ({ visible, onClose, onSuccess, cartData }) => {
       onSuccess();
       onClose();
     } catch (error) {
-      message.error(error.message || 'Error al iniciar sesión');
+      const feedbackMessage = getAuthMessage(error);
+      const messageType = error?.type && typeof message[error.type] === 'function' ? error.type : 'error';
+      message[messageType](feedbackMessage);
     } finally {
       setLoading(false);
     }

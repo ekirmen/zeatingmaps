@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Modal, Input, Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../supabaseClient';
+import { createAuthError, getAuthMessage } from '../../utils/authErrorMessages';
 
 import { SITE_URL } from "../../utils/siteUrl";
 const Login = ({ onLogin }) => {
@@ -54,7 +55,7 @@ const Login = ({ onLogin }) => {
       }
 
       if (error) {
-        throw new Error(error.message);
+        throw await createAuthError({ error, email: login, supabaseClient: supabase });
       }
 
       if (data?.session) {
@@ -71,7 +72,9 @@ const Login = ({ onLogin }) => {
       }
     } catch (err) {
       console.error(err);
-      message.error(err.message || t('errors.login', 'Error al iniciar sesión'));
+      const feedbackMessage = getAuthMessage(err, t, 'errors.login');
+      const messageType = err?.type && message[err.type] ? err.type : 'error';
+      message[messageType](feedbackMessage);
     }
   };
 
@@ -96,7 +99,7 @@ const Login = ({ onLogin }) => {
         data: { password_set: true }
       });
 
-      if (error) throw error;
+      if (error) throw await createAuthError({ error, email: login, supabaseClient: supabase });
 
       setIsPasswordModalVisible(false);
       setPasswordData({ newPassword: '', confirmPassword: '' });

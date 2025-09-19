@@ -5,6 +5,7 @@ import { useCartStore } from '../cartStore';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
+import { getAuthMessage } from '../../utils/authErrorMessages';
 
 const FloatingTimer = () => {
   const [showTimer, setShowTimer] = useState(false);
@@ -62,7 +63,9 @@ const FloatingTimer = () => {
       loginForm.resetFields();
       message.success('¡Bienvenido!');
     } catch (error) {
-      message.error('Error al iniciar sesión: ' + error.message);
+      const feedbackMessage = getAuthMessage(error);
+      const messageType = error?.type && typeof message[error.type] === 'function' ? error.type : 'error';
+      message[messageType](feedbackMessage);
     } finally {
       setLoading(false);
     }

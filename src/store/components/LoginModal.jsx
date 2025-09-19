@@ -1,22 +1,25 @@
 import React, { useState } from 'react';
 import { Modal, Form, Input, Button, message, Divider, Typography } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../../supabaseClient';
 import { useAuth } from '../../contexts/AuthContext';
+import { createAuthError, getAuthMessage } from '../../utils/authErrorMessages';
 
 const { Text, Link } = Typography;
 
-const LoginModal = ({ 
-  visible, 
-  onClose, 
+const LoginModal = ({
+  visible,
+  onClose,
   onLoginSuccess,
   title = "Iniciar Sesión",
-  showRegisterLink = true 
+  showRegisterLink = true
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [loginMethod, setLoginMethod] = useState('password'); // 'password' or 'otp'
   const { setUser } = useAuth();
+  const { t } = useTranslation();
 
   const handleLogin = async (values) => {
     try {
@@ -28,7 +31,7 @@ const LoginModal = ({
           password: values.password,
         });
 
-        if (error) throw error;
+        if (error) throw await createAuthError({ error, email: values.email, supabaseClient: supabase });
 
         if (data?.session) {
           setUser(data.user);
@@ -39,22 +42,24 @@ const LoginModal = ({
         }
       } else {
         // OTP login
-        const { error } = await supabase.auth.signInWithOtp({ 
-          email: values.email, 
-          options: { 
-            emailRedirectTo: `${window.location.origin}/store` 
-          } 
+        const { error } = await supabase.auth.signInWithOtp({
+          email: values.email,
+          options: {
+            emailRedirectTo: `${window.location.origin}/store`
+          }
         });
 
-        if (error) throw error;
-        
+        if (error) throw await createAuthError({ error, email: values.email, supabaseClient: supabase });
+
         message.success('Se ha enviado un enlace de acceso a tu correo electrónico');
         setLoginMethod('password'); // Switch back to password form
         form.resetFields();
       }
     } catch (error) {
       console.error('Login error:', error);
-      message.error(error.message || 'Error al iniciar sesión');
+      const feedbackMessage = getAuthMessage(error, t, 'errors.login');
+      const messageType = error?.type && message[error.type] ? error.type : 'error';
+      message[messageType](feedbackMessage);
     } finally {
       setLoading(false);
     }

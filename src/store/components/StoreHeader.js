@@ -5,6 +5,7 @@ import { Modal, Input, Button, message, Drawer } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { registerUser, loginUser } from '../services/authService';
+import { getAuthMessage } from '../../utils/authErrorMessages';
 import LinkWithRef from './LinkWithRef';
 import { SITE_URL } from '../../utils/siteUrl';
 import { useRefParam } from '../../contexts/RefContext';
@@ -81,36 +82,39 @@ const Header = ({ onLogin, onLogout }) => {
     }
   };
 
-    const handleLogin = async () => {
-      try {
-        if (!formData.email)
-          throw new Error(t('errors.enter_credentials', 'Por favor ingrese correo'));
+  const handleLogin = async () => {
+    try {
+      setError('');
+      if (!formData.email)
+        throw new Error(t('errors.enter_credentials', 'Por favor ingrese correo'));
 
-        const { user, session } = await loginUser({
-          email: formData.email.trim(),
-          password: formData.password.trim()
-        });
+      const { user, session } = await loginUser({
+        email: formData.email.trim(),
+        password: formData.password.trim()
+      });
 
-        if (session && session.access_token) {
-          const token = session.access_token;
-          localStorage.setItem('token', token);
-          onLogin?.({ token, user });
-          setIsAccountModalVisible(false);
-          setFormData({ email: '', password: '' });
-          message.success(t('login.success'));
-          if (user?.user_metadata?.password_set !== true) {
-            setIsPasswordModalVisible(true);
-          }
-          navigate(refParam ? `/store?ref=${refParam}` : '/store');
-        } else {
-          message.success(t('login.email_sent'));
+      if (session && session.access_token) {
+        const token = session.access_token;
+        localStorage.setItem('token', token);
+        onLogin?.({ token, user });
+        setIsAccountModalVisible(false);
+        setFormData({ email: '', password: '' });
+        message.success(t('login.success'));
+        if (user?.user_metadata?.password_set !== true) {
+          setIsPasswordModalVisible(true);
         }
-      } catch (error) {
-        setError(error.message || t('errors.login', 'Error al iniciar sesión'));
-        message.error(error.message || t('errors.login', 'Error al iniciar sesión'));
-        localStorage.removeItem('token');
+        navigate(refParam ? `/store?ref=${refParam}` : '/store');
+      } else {
+        message.success(t('login.email_sent'));
       }
-    };
+    } catch (error) {
+      const feedbackMessage = getAuthMessage(error, t, 'errors.login');
+      const messageType = error?.type && message[error.type] ? error.type : 'error';
+      setError(feedbackMessage);
+      message[messageType](feedbackMessage);
+      localStorage.removeItem('token');
+    }
+  };
 
   const handleForgotPassword = async () => {
     try {
