@@ -88,6 +88,12 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
 
       const tenantId = getCurrentTenantId();
       
+      // Generar locator temporal
+      const generateTempLocator = () => {
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        return Array.from({ length: 8 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+      };
+
       const lockData = {
         seat_id: seatId,
         funcion_id: funcionId,
@@ -95,7 +101,8 @@ const useSeatLocksArray = (funcionId, userId, enabled = false) => {
         status: 'seleccionado', // Usar estado temporal para selección
         locked_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutes
-        lock_type: 'seat'
+        lock_type: 'seat',
+        locator: generateTempLocator() // Agregar locator temporal
       };
 
       // Agregar tenant_id si está disponible

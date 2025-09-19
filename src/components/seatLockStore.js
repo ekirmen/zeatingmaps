@@ -503,6 +503,12 @@ export const useSeatLockStore = create((set, get) => ({
     });
 
     try {
+      // Generar locator temporal
+      const generateTempLocator = () => {
+        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        return Array.from({ length: 8 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+      };
+
       const lockData = {
         seat_id: seatId,
         funcion_id: funcionIdVal,
@@ -511,6 +517,7 @@ export const useSeatLockStore = create((set, get) => ({
         expires_at: expiresAt,
         status,
         lock_type: 'seat',
+        locator: generateTempLocator() // Agregar locator temporal
       };
 
       // Agregar tenant_id si está disponible
@@ -544,6 +551,7 @@ export const useSeatLockStore = create((set, get) => ({
             expires_at: expiresAt,
             status,
             lock_type: 'seat',
+            locator: lockData.locator, // Incluir locator en el estado local
           },
         ];
         console.log('🔒 [SEAT_LOCK] Estado local DESPUÉS del cambio:', newLockedSeats);

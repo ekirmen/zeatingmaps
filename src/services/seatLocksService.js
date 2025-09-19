@@ -5,6 +5,12 @@ import { supabase } from '../supabaseClient';
  */
 export const lockSeat = async (seatData) => {
   try {
+    // Generar locator si no se proporciona
+    const generateLocator = () => {
+      const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+      return Array.from({ length: 8 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+    };
+
     const { data, error } = await supabase
       .from('seat_locks')
       .insert({
@@ -15,7 +21,7 @@ export const lockSeat = async (seatData) => {
         status: seatData.status || 'locked',
         lock_type: seatData.lockType || 'seat',
         tenant_id: seatData.tenantId,
-        locator: seatData.locator,
+        locator: seatData.locator || generateLocator(), // Generar locator si no se proporciona
         user_id: seatData.userId,
         zona_id: seatData.zonaId,
         table_id: seatData.tableId || null
