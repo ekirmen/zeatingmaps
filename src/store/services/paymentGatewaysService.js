@@ -1,4 +1,6 @@
-import { supabase } from '../../supabaseClient';
+import { getSupabaseClient } from '../../config/supabase';
+
+const supabase = getSupabaseClient();
 
 /**
  * Obtiene todas las pasarelas de pago activas
@@ -303,7 +305,7 @@ export const createPaymentTransaction = async (transactionData) => {
         payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
         gateway_name: gatewayName,
         seats: transactionData.seats || transactionData.items || null,
-        user: transactionData.user || null,
+        "user": transactionData.user || null,
         usuario_id: userId,
         event: transactionData.eventoId
       })
