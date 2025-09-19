@@ -4,9 +4,19 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Variables de entorno
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY
-const serviceRoleKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_SUPABASE_SERVICE_ROLE_KEY
+const supabaseUrl =
+  process.env.REACT_APP_SUPABASE_URL ||
+  process.env.SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey =
+  process.env.REACT_APP_SUPABASE_ANON_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const serviceRoleKey =
+  process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.REACT_SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY
 
 // Verificar variables de entorno
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -23,20 +33,34 @@ const createOptimizedClient = (url, key, options = {}) => {
     return null;
   }
 
+  const {
+    auth: authOptions = {},
+    global: globalOptions = {},
+    storageKey: storageKeyOption,
+    ...restOptions
+  } = options
+
+  const storageKey = storageKeyOption || authOptions.storageKey || 'supabase-auth-token'
+  const customHeaders = globalOptions.headers || {}
+
   return createClient(url, key, {
+    ...restOptions,
     auth: {
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,
-      storageKey: options.storageKey || 'supabase-auth-token',
-      ...options.auth
+      storageKey,
+      ...authOptions
     },
     global: {
+      ...globalOptions,
       headers: {
-        'X-Client-Info': 'zeatingmaps-web'
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'X-Client-Info': 'zeatingmaps-web',
+        ...customHeaders
       }
-    },
-    ...options
+    }
   })
 }
 
