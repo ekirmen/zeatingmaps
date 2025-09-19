@@ -289,7 +289,7 @@ export const createPaymentTransaction = async (transactionData) => {
       .from('payment_transactions')
       .insert({
         order_id: transactionData.orderId,
-        payment_gateway_id: transactionData.gatewayId,
+        gateway_id: transactionData.gatewayId,
         amount: transactionData.amount,
         currency: transactionData.currency || 'USD',
         status: 'pending',
