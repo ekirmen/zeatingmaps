@@ -177,12 +177,15 @@ export const useCartStore = create(
             // Expirado: liberar asientos y limpiar
             const { useSeatLockStore } = await import('../components/seatLockStore');
             for (const s of items) {
-              await useSeatLockStore
-                .getState()
-                .unlockSeat(
-                  s._id || s.id || s.sillaId,
-                  s.functionId || s.funcionId || get().functionId
-                );
+              const seatId = s._id || s.id || s.sillaId;
+              const functionId = s.functionId || s.funcionId || get().functionId;
+              
+              // Solo desbloquear si tenemos un seatId válido
+              if (seatId && functionId) {
+                await useSeatLockStore
+                  .getState()
+                  .unlockSeat(seatId, functionId);
+              }
             }
             set({
               items: [],
@@ -219,12 +222,15 @@ export const useCartStore = create(
           const { items } = get();
           const { useSeatLockStore } = await import('../components/seatLockStore');
           for (const s of items) {
-            await useSeatLockStore
-              .getState()
-              .unlockSeat(
-                s._id || s.id,
-                s.functionId || s.funcionId || get().functionId
-              );
+            const seatId = s._id || s.id || s.sillaId;
+            const functionId = s.functionId || s.funcionId || get().functionId;
+            
+            // Solo desbloquear si tenemos un seatId válido
+            if (seatId && functionId) {
+              await useSeatLockStore
+                .getState()
+                .unlockSeat(seatId, functionId);
+            }
           }
           set({ 
             items: [], 

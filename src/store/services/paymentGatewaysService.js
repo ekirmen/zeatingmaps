@@ -273,6 +273,12 @@ export const createPaymentTransaction = async (transactionData) => {
       }
     }
 
+    // Extraer user_id del objeto user si viene como objeto
+    let userId = transactionData.userId;
+    if (transactionData.user && typeof transactionData.user === 'object' && transactionData.user.id) {
+      userId = transactionData.user.id;
+    }
+
     const { data, error } = await supabase
       .from('payment_transactions')
       .insert({
@@ -285,14 +291,14 @@ export const createPaymentTransaction = async (transactionData) => {
         gateway_response: transactionData.gatewayResponse || null,
         locator: transactionData.locator,
         tenant_id: transactionData.tenantId,
-        user_id: transactionData.userId,
+        user_id: userId,
         evento_id: transactionData.eventoId,
         funcion_id: transactionData.funcionId,
         payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
         gateway_name: gatewayName,
         seats: transactionData.seats || transactionData.items || null,
         user: transactionData.user || null,
-        usuario_id: transactionData.userId,
+        usuario_id: userId,
         event: transactionData.eventoId
       })
       .select()
