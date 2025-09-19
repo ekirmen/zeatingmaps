@@ -287,6 +287,14 @@ export const createPaymentTransaction = async (transactionData) => {
       userId = null;
     }
 
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (userId && !uuidRegex.test(userId)) {
+      console.warn('Invalid userId format, expected UUID. Received:', userId);
+      userId = null;
+    }
+
+    const originalUserData = transactionData.user || null;
+
     const { data, error } = await supabase
       .from('payment_transactions')
       .insert({
@@ -305,7 +313,7 @@ export const createPaymentTransaction = async (transactionData) => {
         payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
         gateway_name: gatewayName,
         seats: transactionData.seats || transactionData.items || null,
-        "user": transactionData.user || null,
+        "user": userId,
         usuario_id: userId,
         event: transactionData.eventoId
       })
@@ -313,7 +321,10 @@ export const createPaymentTransaction = async (transactionData) => {
       .single();
 
     if (error) throw error;
-    return data;
+    return {
+      ...data,
+      user: originalUserData ?? data.user
+    };
   } catch (error) {
     console.error('Error creating payment transaction:', error);
     throw error;
