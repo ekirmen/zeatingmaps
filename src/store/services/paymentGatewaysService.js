@@ -279,6 +279,12 @@ export const createPaymentTransaction = async (transactionData) => {
       userId = transactionData.user.id;
     }
 
+    // Asegurar que userId sea un UUID válido o null
+    if (userId && typeof userId !== 'string') {
+      console.warn('Invalid userId type:', typeof userId, userId);
+      userId = null;
+    }
+
     const { data, error } = await supabase
       .from('payment_transactions')
       .insert({
