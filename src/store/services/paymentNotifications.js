@@ -59,16 +59,43 @@ export const subscribeToPaymentUpdates = (callback) => {
  */
 export const sendPushNotification = async (userId, notification) => {
   try {
+    let targetUserId = userId;
+
+    if (!targetUserId) {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+
+      if (authError) {
+        console.warn('[Notifications] Error obteniendo usuario autenticado:', authError);
+      }
+
+      targetUserId = authData?.user?.id ?? null;
+    }
+
+    if (!targetUserId) {
+      console.warn('[Notifications] Error enviando notificación push: userId no disponible.');
+      return null;
+    }
+
+    const payload = {
+      user_id: targetUserId,
+      type: notification.type || 'payment',
+      title: notification.title,
+      message: notification.message,
+      data: notification.data,
+      read: false
+    };
+
+    if (notification.tenant_id) {
+      payload.tenant_id = notification.tenant_id;
+    }
+
+    if (notification.status) {
+      payload.status = notification.status;
+    }
+
     const { data, error } = await supabase
       .from('notifications')
-      .insert({
-        user_id: userId,
-        type: 'payment',
-        title: notification.title,
-        message: notification.message,
-        data: notification.data,
-        read: false
-      })
+      .insert(payload)
       .select()
       .single();
 
@@ -137,12 +164,22 @@ export const createPaymentSuccessNotification = async (transaction) => {
   };
 
   try {
-    await sendPushNotification(transaction.user_id, notification);
+    const targetUserId = transaction.user_id ?? transaction.user?.id ?? null;
+    const tenantId = transaction.tenant_id ?? transaction.tenant?.id ?? null;
+
+    await sendPushNotification(targetUserId, { ...notification, tenant_id: tenantId });
 
     await sendPaymentConfirmationEmail(transaction);
 
-    if (transaction.user?.phone) {
-      await sendPaymentConfirmationSMS(transaction.user.phone, transaction);
+    const userPhone =
+      transaction.user?.phone ??
+      transaction.user?.user_metadata?.phone ??
+      transaction.user?.user_metadata?.telefono ??
+      transaction.phone ??
+      null;
+
+    if (userPhone) {
+      await sendPaymentConfirmationSMS(userPhone, transaction);
     }
   } catch (error) {
     handleNotificationError('Error creando notificación de pago exitoso', error);
