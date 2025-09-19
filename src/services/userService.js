@@ -9,7 +9,7 @@ import { supabase } from '../supabaseClient';
 export const fetchUsers = async () => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('login, email, telefono, empresa, perfil, permisos');
+    .select('login, email, telefono, empresa, role, permisos');
 
   if (error) throw error;
   return data;

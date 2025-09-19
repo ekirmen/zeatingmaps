@@ -1,0 +1,20 @@
+{
+    "$schema": "https://pgtools.dev/latest/schema.json",
+    "db": {
+      "host": "db.szmyqodwwdwjdodzebcp.supabase.co",
+      "port": 5432,
+      "username": "postgres",
+      "password": "9MqBIroZAuSoxB7q",
+      "database": "postgres",
+      "connTimeoutSecs": 10,
+  
+      // Opcional pero útil: permite que el LSP ejecute statements para type-checking
+      // (añade tu host remoto para que no lo bloquee).
+      "allowStatementExecutionsAgainst": ["db.szmyqodwwdwjdodzebcp.supabase.co/*"]
+    },
+  
+    // Habilita lint y type-check con reglas recomendadas.
+    "linter": { "enabled": true, "rules": { "recommended": true } },
+    "typecheck": { "enabled": true }
+  }
+  

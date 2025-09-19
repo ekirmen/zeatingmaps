@@ -181,11 +181,11 @@ const ModernEventPage = () => {
         if (!user?.id) return;
         const { data, error } = await supabase
           .from('profiles')
-          .select('perfil')
+          .select('role')
           .eq('id', user.id)
           .maybeSingle();
-        if (!error && data?.perfil) {
-          setIsTenantAdmin(String(data.perfil).toLowerCase() === 'tenant_admin');
+        if (!error && data?.role) {
+          setIsTenantAdmin(String(data.role).toLowerCase() === 'tenant_admin');
         }
       } catch (e) {
         // ignore silently

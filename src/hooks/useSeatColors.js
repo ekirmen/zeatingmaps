@@ -44,66 +44,46 @@ export const useSeatColors = (eventId = null) => {
     const isSelectedByOther = lockInfo && lockInfo.session_id !== currentSessionId && 
                              (lockInfo.status === 'seleccionado' || lockInfo.status === 'selected');
     
-    // Debug: Log del asiento y su estado
-    if (lockedSeats.length > 0) {
-      console.log(`🪑 [SEAT_COLOR] Asiento ${seatId}:`, {
-        lockInfo,
-        isSelectedByMe,
-        isLockedByOther,
-        isPermanentlyLocked,
-        isTemporarilySelected,
-        isSelectedByOther,
-        seatEstado: seat.estado,
-        lockedSeatsCount: lockedSeats.length
-      });
-    }
+    // Debug logs removed for performance
     
     // SISTEMA DE COLORES UNIFICADO - PRIORIDAD CORRECTA
     // 1. VENDIDO (máxima prioridad) - desde seat_locks o estado del asiento
     if (lockInfo?.status === 'vendido' || seat.estado === 'vendido' || seat.estado === 'pagado') {
-      console.log(`🪑 [SEAT_COLOR] ${seatId} - VENDIDO: #8c8c8c`);
       return eventTheme.seatSold || '#8c8c8c';
     }
     
     // 2. RESERVADO - desde seat_locks o estado del asiento
     if (lockInfo?.status === 'reservado' || seat.estado === 'reservado') {
-      console.log(`🪑 [SEAT_COLOR] ${seatId} - RESERVADO: #722ed1`);
       return eventTheme.seatReserved || '#722ed1';
     }
     
     // 3. ANULADO - desde seat_locks o estado del asiento
     if (lockInfo?.status === 'anulado' || seat.estado === 'anulado') {
-      console.log(`🪑 [SEAT_COLOR] ${seatId} - ANULADO: #ff6b6b`);
       return eventTheme.seatCancelled || '#ff6b6b';
     }
     
     // 4. BLOQUEADO PERMANENTEMENTE (desde boleteria)
     if (isPermanentlyLocked || seat.estado === 'locked' || lockInfo?.status === 'locked') {
-      console.log(`🪑 [SEAT_COLOR] ${seatId} - BLOQUEADO: #6b7280`);
       return '#6b7280'; // Gris para asientos bloqueados permanentemente
     }
     
     // 5. SELECCIONADO POR OTRO USUARIO (temporal) - PRIORIDAD ALTA
     if (isSelectedByOther && !isPermanentlyLocked) {
-      console.log(`🪑 [SEAT_COLOR] ${seatId} - SELECCIONADO POR OTRO: #faad14`);
       return eventTheme.seatSelectedOther || '#faad14';
     }
     
     // 6. BLOQUEADO POR OTRO USUARIO (temporal) - PRIORIDAD BAJA
     if (isLockedByOther && !isPermanentlyLocked && !isSelectedByOther) {
-      console.log(`🪑 [SEAT_COLOR] ${seatId} - BLOQUEADO POR OTRO: #ff4d4f`);
       return eventTheme.seatBlocked || '#ff4d4f';
     }
     
     // 7. SELECCIONADO POR MÍ (temporal)
     if (isSelectedByMe && !isPermanentlyLocked) {
-      console.log(`🪑 [SEAT_COLOR] ${seatId} - SELECCIONADO POR MÍ: #ffd700`);
       return eventTheme.seatSelectedMe || '#ffd700';
     }
     
     // 8. DISPONIBLE (por defecto) - SIEMPRE VERDE
     const defaultColor = '#4CAF50'; // Forzar verde para asientos disponibles
-    console.log(`🪑 [SEAT_COLOR] ${seatId} - DISPONIBLE: ${defaultColor}`);
     return defaultColor;
   };
 

@@ -104,7 +104,9 @@ class StripeMethodProcessor extends PaymentMethodProcessor {
         funcionId: paymentData.funcion?.id,
         paymentMethod: this.method.method_name || this.method.name || 'stripe',
         gatewayName: this.method.name || this.method.method_name || 'Stripe',
-        gatewayResponse: gatewayResponse // Incluir los asientos en gateway_response
+        gatewayResponse: gatewayResponse, // Incluir los asientos en gateway_response
+        seats: paymentData.items || [],
+        user: paymentData.user || null
       });
 
       // Conectar asientos con el localizador
@@ -198,7 +200,9 @@ class PayPalMethodProcessor extends PaymentMethodProcessor {
         tenantId: paymentData.tenant?.id,
         userId: paymentData.user?.id,
         eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id
+        funcionId: paymentData.funcion?.id,
+        seats: paymentData.items || [],
+        user: paymentData.user || null
       });
 
       // Simulación de respuesta de PayPal
@@ -245,7 +249,9 @@ class ApplePayMethodProcessor extends PaymentMethodProcessor {
         tenantId: paymentData.tenant?.id,
         userId: paymentData.user?.id,
         eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id
+        funcionId: paymentData.funcion?.id,
+        seats: paymentData.items || [],
+        user: paymentData.user || null
       });
 
       return {
@@ -279,7 +285,9 @@ class GooglePayMethodProcessor extends PaymentMethodProcessor {
         tenantId: paymentData.tenant?.id,
         userId: paymentData.user?.id,
         eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id
+        funcionId: paymentData.funcion?.id,
+        seats: paymentData.items || [],
+        user: paymentData.user || null
       });
 
       return {
@@ -313,7 +321,9 @@ class TransferenciaMethodProcessor extends PaymentMethodProcessor {
         tenantId: paymentData.tenant?.id,
         userId: paymentData.user?.id,
         eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id
+        funcionId: paymentData.funcion?.id,
+        seats: paymentData.items || [],
+        user: paymentData.user || null
       });
 
       return {
@@ -350,7 +360,9 @@ class PagoMovilMethodProcessor extends PaymentMethodProcessor {
         tenantId: paymentData.tenant?.id,
         userId: paymentData.user?.id,
         eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id
+        funcionId: paymentData.funcion?.id,
+        seats: paymentData.items || [],
+        user: paymentData.user || null
       });
 
       return {
@@ -384,7 +396,9 @@ class EfectivoTiendaMethodProcessor extends PaymentMethodProcessor {
         tenantId: paymentData.tenant?.id,
         userId: paymentData.user?.id,
         eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id
+        funcionId: paymentData.funcion?.id,
+        seats: paymentData.items || [],
+        user: paymentData.user || null
       });
 
       return {
@@ -424,7 +438,9 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
         tenantId: paymentData.tenant?.id,
         userId: paymentData.user?.id,
         eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id
+        funcionId: paymentData.funcion?.id,
+        seats: paymentData.items || [],
+        user: paymentData.user || null
       });
 
       return {

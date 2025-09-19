@@ -115,7 +115,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
         email: user.email || '',
         telefono: user.telefono || '',
         empresa: user.empresa || '',
-        perfil: user.perfil || '',
+        perfil: user.role || '',
         activo: user.activo !== false,
         canales: user.canales || {
           boxOffice: false,
@@ -276,7 +276,7 @@ const EnhancedEditUserForm = ({ user, onUpdateUser, onCancel }) => {
           email: formData.email,
           telefono: formData.telefono,
           empresa: formData.empresa,
-          perfil: formData.perfil,
+          role: formData.perfil,
           activo: formData.activo,
           canales: formData.canales,
           permisos: formData.permisos,

@@ -274,22 +274,16 @@ const SeatingMapUnified = ({
      // Usar asientos sincronizados del hook
   const allSeats = memoizedSeats;
   
-  // Debug: mostrar información de los asientos
-  console.log('🔍 [SEATING_MAP] Asientos del hook:', allSeats.length);
-  console.log('🔍 [SEATING_MAP] Primeros 3 asientos:', allSeats.slice(0, 3));
-  console.log('🔍 [SEATING_MAP] Mapa contenido:', mapa?.contenido?.length);
-  console.log('🔍 [SEATING_MAP] Primeros 3 elementos del mapa:', mapa?.contenido?.slice(0, 3));
+  // Debug logs removed for performance
   
   // Usar zonas reales de la base de datos o crear zonas automáticamente si no hay
   const validatedZonas = useMemo(() => {
     if (zonas && zonas.length > 0) {
-      console.log('🏷️ [SeatingMapUnified] Usando zonas reales:', zonas);
       return zonas;
     }
     
     // Fallback: crear zonas basadas en los asientos sincronizados
     if (allSeats.length > 0) {
-      console.log('🏷️ [SeatingMapUnified] Creando zonas automáticamente desde asientos');
       const zonasMap = new Map();
       
       allSeats.forEach(seat => {
@@ -605,21 +599,7 @@ if (Array.isArray(mapa?.contenido)) {
                }
              }
 
-             // Debug: mostrar el estado del asiento (actualizado con nuevos estados)
-             const lockData = locked ? allLockedSeats.find(l => l.seat_id === seat._id) : null;
-             console.log(`🪑 [SEAT_COLOR] Asiento ${seat._id}:`, {
-               estadoOriginal: seat.estado,
-               seatEstado: seatEstado,
-               locked,
-               lockedByMe,
-               lockStatus: lockData?.status || null,
-               lockType: lockData?.lock_type || null,
-               locator: lockData?.locator || null,
-               expiresAt: lockData?.expires_at || null,
-               isPermanent: lockData?.status === 'locked' || lockData?.status === 'vendido' || lockData?.status === 'reservado' || lockData?.status === 'anulado',
-               isTemporary: lockData?.status === 'seleccionado',
-               lockData: lockData
-             });
+             // Debug logs removed for performance
 
             const seatData = { ...seat, estado: seatEstado };
             

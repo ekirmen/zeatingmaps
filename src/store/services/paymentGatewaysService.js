@@ -289,7 +289,11 @@ export const createPaymentTransaction = async (transactionData) => {
         evento_id: transactionData.eventoId,
         funcion_id: transactionData.funcionId,
         payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
-        gateway_name: gatewayName
+        gateway_name: gatewayName,
+        seats: transactionData.seats || transactionData.items || null,
+        user: transactionData.user || null,
+        usuario_id: transactionData.userId,
+        event: transactionData.eventoId
       })
       .select()
       .single();
