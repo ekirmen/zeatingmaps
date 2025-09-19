@@ -45,6 +45,7 @@ const createPaymentTransaction = async (data) => {
     return {
       id: generateUUID(),
       ...data,
+      user_id: data.userId ?? data.user?.id ?? null,
       status: 'pending',
       created_at: new Date().toISOString()
     };
