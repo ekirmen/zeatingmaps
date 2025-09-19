@@ -140,7 +140,20 @@ const Pay = () => {
         await createPaymentSuccessNotification({
           id: result.transactionId,
           amount: total,
-          gateway_id: selectedGateway.method_id
+          gateway_id: selectedGateway.method_id,
+          user_id: user?.id || null,
+          tenant_id: currentTenant?.id || null,
+          user: user
+            ? {
+                ...user,
+                phone:
+                  user.phone ||
+                  user.user_metadata?.phone ||
+                  user.user_metadata?.telefono ||
+                  null
+              }
+            : null,
+          tenant: currentTenant ? { ...currentTenant } : null
         });
 
         // Limpiar carrito
