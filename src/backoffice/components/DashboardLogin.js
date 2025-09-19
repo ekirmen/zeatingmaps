@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Modal, Input, Button, message } from 'antd';
 import { loginUser } from '../services/authService';
+import { getAuthMessage } from '../../utils/authErrorMessages';
 
 const DashboardLogin = ({ onLogin }) => {
   const { theme } = useTheme();
@@ -35,8 +36,10 @@ const DashboardLogin = ({ onLogin }) => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.message || 'Error al iniciar sesión');
-      message.error(error.message || 'Error al iniciar sesión');
+      const feedbackMessage = getAuthMessage(error);
+      const messageType = error?.type && typeof message[error.type] === 'function' ? error.type : 'error';
+      setError(feedbackMessage);
+      message[messageType](feedbackMessage);
       localStorage.removeItem('token');
     } finally {
       setLoading(false);

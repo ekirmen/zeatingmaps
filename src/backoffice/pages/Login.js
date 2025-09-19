@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { message } from 'antd';
 import { supabase } from '../../supabaseClient';
+import { createAuthError, getAuthMessage } from '../../utils/authErrorMessages';
 
 const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({ login: '', password: '' });
@@ -27,7 +29,11 @@ const Login = ({ onLogin }) => {
       });
 
       if (error || !data.session) {
-        throw new Error(error?.message || 'Credenciales incorrectas');
+        throw await createAuthError({
+          error: error || new Error('Respuesta de inicio de sesión inválida'),
+          email: formData.login,
+          supabaseClient: supabase,
+        });
       }
 
       const token = data.session.access_token;
@@ -38,7 +44,10 @@ const Login = ({ onLogin }) => {
       navigate('/dashboard');
     } catch (error) {
       console.error('Login error:', error);
-      setError('Error de inicio de sesión: ' + error.message);
+      const feedbackMessage = getAuthMessage(error);
+      const messageType = error?.type && typeof message[error.type] === 'function' ? error.type : 'error';
+      setError(feedbackMessage);
+      message[messageType](feedbackMessage);
       localStorage.removeItem('token');
     }
   };

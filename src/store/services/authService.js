@@ -2,6 +2,7 @@
 import { supabase } from '../../supabaseClient';
 import { supabaseAdmin } from '../../supabaseClient';
 import { SITE_URL } from '../../utils/siteUrl';
+import { createAuthError } from '../../utils/authErrorMessages';
 
 // Función helper para obtener el tenant actual del contexto
 const getCurrentTenantId = () => {
@@ -197,7 +198,9 @@ export const registerUser = async ({ email, password, phone }) => {
 export const loginUser = async ({ email, password }) => {
   if (!password) {
     const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${SITE_URL}/store` } });
-    if (error) throw new Error(error.message);
+    if (error) {
+      throw await createAuthError({ error, email, supabaseClient: supabase });
+    }
     return { user: null, session: null };
   }
 
@@ -207,7 +210,12 @@ export const loginUser = async ({ email, password }) => {
   });
 
   if (error || !data.session) {
-    throw new Error(error?.message || 'Credenciales incorrectas');
+    const authError = await createAuthError({
+      error: error || new Error('Respuesta de inicio de sesión inválida'),
+      email,
+      supabaseClient: supabase,
+    });
+    throw authError;
   }
 
   // Verificar que el usuario tenga acceso al tenant actual

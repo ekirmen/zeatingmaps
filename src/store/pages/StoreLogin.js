@@ -5,6 +5,7 @@ import { Modal, Input, Button, message } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { registerUser, loginUser } from '../services/authService';
+import { getAuthMessage } from '../../utils/authErrorMessages';
 import { SITE_URL } from '../../utils/siteUrl';
 
 const StoreLogin = () => {
@@ -57,6 +58,7 @@ const StoreLogin = () => {
   const handleLogin = async () => {
     try {
       setLoading(true);
+      setError('');
       if (!formData.email)
         throw new Error(t('errors.enter_credentials', 'Por favor ingrese correo'));
 
@@ -77,8 +79,10 @@ const StoreLogin = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError(error.message || t('errors.login', 'Error al iniciar sesión'));
-      message.error(error.message || t('errors.login', 'Error al iniciar sesión'));
+      const feedbackMessage = getAuthMessage(error, t, 'errors.login');
+      const messageType = error?.type && message[error.type] ? error.type : 'error';
+      setError(feedbackMessage);
+      message[messageType](feedbackMessage);
       localStorage.removeItem('token');
     } finally {
       setLoading(false);

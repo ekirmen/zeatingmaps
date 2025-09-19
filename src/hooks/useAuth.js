@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getSupabaseClient } from '../config/supabase';
+import { createAuthError } from '../utils/authErrorMessages';
 
 export const useAuth = () => {
   const [user, setUser] = useState(null);
@@ -81,11 +82,12 @@ export const useAuth = () => {
 
   // Iniciar sesión
   const signIn = async ({ email, password }) => {
-    try {
-      setLoading(true);
-      setError(null);
+    setLoading(true);
+    setError(null);
 
-      const supabase = getSupabaseClient();
+    const supabase = getSupabaseClient();
+
+    try {
       if (!supabase) {
         throw new Error('Cliente de Supabase no disponible');
       }
@@ -95,31 +97,41 @@ export const useAuth = () => {
         password
       });
 
-      if (error) {
-        throw error;
+      if (error || !data?.session) {
+        throw await createAuthError({
+          error: error || new Error('Respuesta de inicio de sesión inválida'),
+          email,
+          supabaseClient: supabase,
+        });
       }
 
       if (data?.user) {
         setUser(data.user);
-        
-        // Obtener perfil del usuario
+
         const profile = await fetchUserProfile(data.user.id);
         setUserProfile(profile);
-        
+
         console.log('[useAuth] Login exitoso:', {
           id: data.user.id,
           email: data.user.email,
           profile: profile
         });
-        
+
         return { success: true, user: data.user, profile };
-      } else {
-        throw new Error('Respuesta de login inválida');
       }
+
+      throw await createAuthError({
+        error: new Error('Respuesta de login inválida'),
+        email,
+        supabaseClient: supabase,
+      });
     } catch (err) {
       console.error('[useAuth] Error en login:', err);
-      setError(err.message);
-      throw err;
+      const authError = err?.code && err?.i18nKey
+        ? err
+        : await createAuthError({ error: err, email, supabaseClient: supabase });
+      setError(authError.message);
+      throw authError;
     } finally {
       setLoading(false);
     }

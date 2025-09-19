@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
+import { createAuthError } from '../utils/authErrorMessages';
 
 const AuthContext = createContext();
 
@@ -49,7 +50,12 @@ export const AuthProvider = ({ children }) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error || !data.session) {
-        throw new Error(error?.message || 'Error en el inicio de sesión');
+        const authError = await createAuthError({
+          error: error || new Error('Respuesta de inicio de sesión inválida'),
+          email,
+          supabaseClient: supabase,
+        });
+        throw authError;
       }
       const token = data.session.access_token;
       localStorage.setItem('token', token);
@@ -57,7 +63,11 @@ export const AuthProvider = ({ children }) => {
       fetchUserRole(data.user.id);
       return data;
     } catch (error) {
-      throw error;
+      if (error?.code && error?.i18nKey) {
+        throw error;
+      }
+      const fallbackError = await createAuthError({ error, email, supabaseClient: supabase });
+      throw fallbackError;
     }
   };
 
