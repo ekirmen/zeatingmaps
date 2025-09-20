@@ -13,8 +13,14 @@ const SecurityHandler = ({ children }) => {
   useEffect(() => {
     // Verificar si hay parámetros sensibles en la URL
     const urlParams = new URLSearchParams(location.search);
-    const sensitiveParams = ['email', 'password', 'token', 'key', 'secret'];
     
+    // Parámetros realmente sensibles (credenciales directas)
+    const sensitiveParams = ['email', 'password', 'key', 'secret'];
+    
+    // Parámetros de autenticación que pueden estar en la URL (no remover)
+    const authParams = ['token', 'access_token', 'refresh_token', 'code'];
+    
+    // Verificar solo parámetros realmente sensibles
     const hasSensitiveData = sensitiveParams.some(param => urlParams.has(param));
     
     if (hasSensitiveData) {
@@ -24,7 +30,7 @@ const SecurityHandler = ({ children }) => {
         duration: 5,
       });
 
-      // Crear nueva URL sin parámetros sensibles
+      // Crear nueva URL sin parámetros sensibles (pero mantener auth params)
       const cleanParams = new URLSearchParams();
       urlParams.forEach((value, key) => {
         if (!sensitiveParams.includes(key)) {
