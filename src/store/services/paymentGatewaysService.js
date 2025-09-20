@@ -254,10 +254,82 @@ export const getPaymentGatewayByType = async (type) => {
 };
 
 /**
+ * Valida los datos de pago antes de crear la transacción
+ */
+export const validatePaymentData = (paymentData) => {
+  const errors = [];
+  
+  if (!paymentData.orderId) {
+    errors.push('orderId es requerido');
+  }
+  
+  if (!paymentData.amount || paymentData.amount <= 0) {
+    errors.push('amount debe ser mayor a 0');
+  }
+  
+  if (!paymentData.tenantId) {
+    errors.push('tenantId es requerido');
+  }
+  
+  if (!paymentData.locator) {
+    errors.push('locator es requerido');
+  }
+  
+  // Validar que seats sea un array válido si se proporciona
+  if (paymentData.seats && !Array.isArray(paymentData.seats)) {
+    errors.push('seats debe ser un array');
+  }
+  
+  // Validar que user sea un objeto válido si se proporciona
+  if (paymentData.user && typeof paymentData.user !== 'object') {
+    errors.push('user debe ser un objeto');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};
+
+/**
+ * Crea una transacción de pago con validación
+ */
+export const createPaymentWithValidation = async (paymentData) => {
+  // Validar datos
+  const validation = validatePaymentData(paymentData);
+  if (!validation.isValid) {
+    throw new Error(`Datos de pago inválidos: ${validation.errors.join(', ')}`);
+  }
+  
+  // Crear transacción
+  return await createPaymentTransaction(paymentData);
+};
+
+/**
  * Crea una transacción de pago
  */
 export const createPaymentTransaction = async (transactionData) => {
   try {
+    console.log('[PaymentTransaction] Iniciando creación:', {
+      orderId: transactionData.orderId,
+      amount: transactionData.amount,
+      userId: transactionData.userId,
+      user: transactionData.user,
+      eventoId: transactionData.eventoId,
+      funcionId: transactionData.funcionId
+    });
+
+    // Validar datos requeridos
+    if (!transactionData.orderId) {
+      throw new Error('orderId es requerido');
+    }
+    if (!transactionData.amount || transactionData.amount <= 0) {
+      throw new Error('amount debe ser mayor a 0');
+    }
+    if (!transactionData.tenantId) {
+      throw new Error('tenantId es requerido');
+    }
+
     // Get gateway name if gateway_id is provided
     let gatewayName = transactionData.gatewayName || 'unknown';
     if (transactionData.gatewayId && !transactionData.gatewayName) {
@@ -293,40 +365,49 @@ export const createPaymentTransaction = async (transactionData) => {
       userId = null;
     }
 
-    const originalUserData = transactionData.user || null;
+    // Preparar datos para inserción
+    const insertData = {
+      order_id: transactionData.orderId,
+      gateway_id: transactionData.gatewayId,
+      amount: transactionData.amount,
+      currency: transactionData.currency || 'USD',
+      status: 'pending',
+      gateway_transaction_id: transactionData.gatewayTransactionId,
+      gateway_response: transactionData.gatewayResponse || null,
+      locator: transactionData.locator,
+      tenant_id: transactionData.tenantId,
+      user_id: userId,
+      evento_id: transactionData.eventoId,
+      funcion_id: transactionData.funcionId,
+      payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
+      gateway_name: gatewayName,
+      seats: transactionData.seats || transactionData.items || null,
+      "user": transactionData.user || null, // Corregido: usar el objeto user completo
+      usuario_id: userId,
+      event: transactionData.eventoId
+    };
+
+    console.log('[PaymentTransaction] Datos a insertar:', insertData);
 
     const { data, error } = await supabase
       .from('payment_transactions')
-      .insert({
-        order_id: transactionData.orderId,
-        gateway_id: transactionData.gatewayId,
-        amount: transactionData.amount,
-        currency: transactionData.currency || 'USD',
-        status: 'pending',
-        gateway_transaction_id: transactionData.gatewayTransactionId,
-        gateway_response: transactionData.gatewayResponse || null,
-        locator: transactionData.locator,
-        tenant_id: transactionData.tenantId,
-        user_id: userId,
-        evento_id: transactionData.eventoId,
-        funcion_id: transactionData.funcionId,
-        payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
-        gateway_name: gatewayName,
-        seats: transactionData.seats || transactionData.items || null,
-        "user": userId,
-        usuario_id: userId,
-        event: transactionData.eventoId
-      })
+      .insert(insertData)
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[PaymentTransaction] Error en inserción:', error);
+      throw error;
+    }
+
+    console.log('[PaymentTransaction] Transacción creada exitosamente:', data);
+
     return {
       ...data,
-      user: originalUserData ?? data.user
+      user: transactionData.user || null
     };
   } catch (error) {
-    console.error('Error creating payment transaction:', error);
+    console.error('[PaymentTransaction] Error creando transacción:', error);
     throw error;
   }
 };
