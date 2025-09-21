@@ -97,13 +97,10 @@ class SeatLocatorService {
       return null;
     }
 
-    const rpcPayload = {
-      locator_param: locator,
-      transaction_locator: locator,
-    };
-
     try {
-      const { data, error } = await supabase.rpc('get_transaction_with_seats', rpcPayload);
+      const { data, error } = await supabase.rpc('get_transaction_with_seats', {
+        transaction_locator: locator,
+      });
 
       if (!error && data) {
         if (typeof data === 'string') {
