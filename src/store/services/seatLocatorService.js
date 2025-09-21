@@ -76,7 +76,8 @@ class SeatLocatorService {
   async getSeatsByLocator(locator) {
     try {
       const { data, error } = await supabase.rpc('get_seats_by_locator', {
-        locator_param: locator
+        locator_param: locator,
+        transaction_locator: locator,
       });
 
       if (error) throw error;
@@ -92,18 +93,99 @@ class SeatLocatorService {
    * Obtiene transacción con sus asientos
    */
   async getTransactionWithSeats(locator) {
-    try {
-      const { data, error } = await supabase.rpc('get_transaction_with_seats', {
-        locator_param: locator
-      });
-
-      if (error) throw error;
-
-      return data;
-    } catch (error) {
-      console.error('Error getting transaction with seats:', error);
+    if (!locator) {
       return null;
     }
+
+    const rpcPayload = {
+      locator_param: locator,
+      transaction_locator: locator,
+    };
+
+    try {
+      const { data, error } = await supabase.rpc('get_transaction_with_seats', rpcPayload);
+
+      if (!error && data) {
+        if (typeof data === 'string') {
+          try {
+            const parsed = JSON.parse(data);
+            return {
+              transaction: parsed?.transaction ?? null,
+              seats: Array.isArray(parsed?.seats) ? parsed.seats : [],
+            };
+          } catch (parseError) {
+            console.warn('Could not parse RPC response as JSON, falling back to manual fetch:', parseError);
+          }
+        } else if (typeof data === 'object' && data !== null) {
+          return {
+            transaction: data.transaction ?? data,
+            seats: Array.isArray(data.seats) ? data.seats : [],
+          };
+        }
+      }
+
+      if (error) {
+        console.warn('RPC get_transaction_with_seats failed, falling back to manual queries:', error);
+      }
+    } catch (rpcError) {
+      console.warn('RPC get_transaction_with_seats threw an exception, falling back to manual queries:', rpcError);
+    }
+
+    try {
+      const transaction = await this.fetchTransactionRecord(locator);
+
+      if (!transaction) {
+        return null;
+      }
+
+      const { data: seats, error: seatsError } = await supabase
+        .from('seat_locks')
+        .select(
+          'id, seat_id, table_id, funcion_id, locked_at, expires_at, status, lock_type, created_at, tenant_id, locator, user_id, updated_at, zona_id, zona_nombre, session_id, precio, metadata'
+        )
+        .eq('locator', locator);
+
+      if (seatsError) {
+        console.warn('Error fetching seats by locator during fallback:', seatsError);
+      }
+
+      return {
+        transaction,
+        seats: Array.isArray(seats) ? seats : [],
+      };
+    } catch (fallbackError) {
+      console.error('Error getting transaction with seats using fallback logic:', fallbackError);
+      return null;
+    }
+  }
+
+  /**
+   * Busca una transacción por locator y, si no existe, por order_id
+   */
+  async fetchTransactionRecord(locator) {
+    const tryFetch = async (column) => {
+      const { data, error } = await supabase
+        .from('payment_transactions')
+        .select('*')
+        .eq(column, locator)
+        .maybeSingle();
+
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
+        }
+        throw error;
+      }
+
+      return data ?? null;
+    };
+
+    const byLocator = await tryFetch('locator');
+    if (byLocator) {
+      return byLocator;
+    }
+
+    return tryFetch('order_id');
   }
 
   /**
