@@ -347,11 +347,38 @@ export const createPaymentTransaction = async (transactionData) => {
       }
     }
 
-    // Extraer user_id del objeto user si viene como objeto
-    let userId = transactionData.userId;
-    if (transactionData.user && typeof transactionData.user === 'object' && transactionData.user.id) {
-      userId = transactionData.user.id;
-    }
+    const extractUserId = (value) => {
+      if (!value) return null;
+
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            return extractUserId(parsed);
+          } catch (parseError) {
+            console.warn('[PaymentTransaction] No se pudo parsear userId JSON:', parseError);
+            return null;
+          }
+        }
+
+        return trimmed;
+      }
+
+      if (typeof value === 'object') {
+        if (typeof value.id === 'string') return value.id;
+        if (typeof value.user_id === 'string') return value.user_id;
+        if (typeof value.userId === 'string') return value.userId;
+        if (value.user) return extractUserId(value.user);
+      }
+
+      console.warn('[PaymentTransaction] Formato de userId no reconocido:', value);
+      return null;
+    };
+
+    // Extraer user_id del objeto user o de diferentes estructuras
+    let userId = extractUserId(transactionData.userId) || extractUserId(transactionData.user);
 
     // Asegurar que userId sea un UUID válido o null
     if (userId && typeof userId !== 'string') {
