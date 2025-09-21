@@ -4,21 +4,31 @@
 import { useTheme } from '../contexts/ThemeContext';
 import { useState, useEffect } from 'react';
 
+const isValidUuid = (value) =>
+  typeof value === 'string' &&
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
 export const useSeatColors = (eventId = null) => {
   const { theme, getEventTheme } = useTheme();
   const [eventTheme, setEventTheme] = useState(theme);
 
   useEffect(() => {
     const loadEventTheme = async () => {
-      if (eventId) {
-        try {
-          const eventSpecificTheme = await getEventTheme(eventId);
-          setEventTheme(eventSpecificTheme);
-        } catch (error) {
-          console.error('[useSeatColors] Error loading event theme:', error);
-          setEventTheme(theme);
-        }
-      } else {
+      if (!eventId) {
+        setEventTheme(theme);
+        return;
+      }
+
+      if (!isValidUuid(eventId)) {
+        setEventTheme(theme);
+        return;
+      }
+
+      try {
+        const eventSpecificTheme = await getEventTheme(eventId);
+        setEventTheme(eventSpecificTheme);
+      } catch (error) {
+        console.error('[useSeatColors] Error loading event theme:', error);
         setEventTheme(theme);
       }
     };
