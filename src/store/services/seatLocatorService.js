@@ -10,21 +10,39 @@ const normalizeSeats = (seats = []) => {
     .map((seat) => {
       if (!seat) return null;
 
-      const id = seat.id || seat._id || seat.sillaId || seat.seatId || seat.asientoId;
+      const id =
+        seat.id ||
+        seat._id ||
+        seat.sillaId ||
+        seat.seatId ||
+        seat.asientoId;
+
       if (!id) return null;
 
       return {
-        id: id,
+        id,
         raw: seat,
-        zonaId: seat.zonaId || seat.zona_id || seat.zona?.id || seat.zona || seat.zoneId || null,
-        zonaNombre: seat.zona_nombre || seat.zonaNombre || seat.zona || seat.zonaLabel || null,
-        precio: typeof seat.precio === 'number'
-          ? seat.precio
-          : typeof seat.price === 'number'
-            ? seat.price
-            : typeof seat.monto === 'number'
-              ? seat.monto
-              : null
+        zonaId:
+          seat.zonaId ||
+          seat.zona_id ||
+          seat.zona?.id ||
+          seat.zona ||
+          seat.zoneId ||
+          null,
+        zonaNombre:
+          seat.zona_nombre ||
+          seat.zonaNombre ||
+          seat.zona ||
+          seat.zonaLabel ||
+          null,
+        precio:
+          typeof seat.precio === 'number'
+            ? seat.precio
+            : typeof seat.price === 'number'
+              ? seat.price
+              : typeof seat.monto === 'number'
+                ? seat.monto
+                : null,
       };
     })
     .filter(Boolean);
@@ -52,16 +70,13 @@ const resolveBrowserSessionId = () => {
  * Servicio para conectar asientos con localizadores de pago
  */
 class SeatLocatorService {
-
   /**
    * Conecta asientos bloqueados con transacciones de pago
    */
   async connectSeatsWithLocator() {
     try {
       const { data, error } = await supabase.rpc('connect_seats_with_locator');
-
       if (error) throw error;
-
       console.log('🔗 Connected seats with locator:', data);
       return data;
     } catch (error) {
@@ -79,9 +94,7 @@ class SeatLocatorService {
         locator_param: locator,
         transaction_locator: locator,
       });
-
       if (error) throw error;
-
       return data || [];
     } catch (error) {
       console.error('Error getting seats by locator:', error);
@@ -91,16 +104,24 @@ class SeatLocatorService {
 
   /**
    * Obtiene transacción con sus asientos
+   * - Intenta RPC con ambos parámetros (compatibilidad hacia atrás)
+   * - Si falla, intenta RPC con uno solo
+   * - Si aún falla, consulta manualmente payment_transactions y seat_locks
    */
   async getTransactionWithSeats(locator) {
-    if (!locator) {
-      return null;
-    }
+    if (!locator) return null;
 
+    // 1) RPC intento amplio (ambos args)
     try {
-      const { data, error } = await supabase.rpc('get_transaction_with_seats', {
+      const rpcPayload = {
+        locator_param: locator,
         transaction_locator: locator,
-      });
+      };
+
+      const { data, error } = await supabase.rpc(
+        'get_transaction_with_seats',
+        rpcPayload
+      );
 
       if (!error && data) {
         if (typeof data === 'string') {
@@ -110,8 +131,11 @@ class SeatLocatorService {
               transaction: parsed?.transaction ?? null,
               seats: Array.isArray(parsed?.seats) ? parsed.seats : [],
             };
-          } catch (parseError) {
-            console.warn('Could not parse RPC response as JSON, falling back to manual fetch:', parseError);
+          } catch (parseErr) {
+            console.warn(
+              'Could not parse RPC response as JSON (dual args), falling back:',
+              parseErr
+            );
           }
         } else if (typeof data === 'object' && data !== null) {
           return {
@@ -122,18 +146,64 @@ class SeatLocatorService {
       }
 
       if (error) {
-        console.warn('RPC get_transaction_with_seats failed, falling back to manual queries:', error);
+        console.warn(
+          'RPC (dual args) get_transaction_with_seats failed, trying single-arg:',
+          error
+        );
       }
-    } catch (rpcError) {
-      console.warn('RPC get_transaction_with_seats threw an exception, falling back to manual queries:', rpcError);
+    } catch (rpcErr) {
+      console.warn(
+        'RPC (dual args) get_transaction_with_seats threw, trying single-arg:',
+        rpcErr
+      );
     }
 
+    // 2) RPC intento mínimo (solo transaction_locator)
+    try {
+      const { data, error } = await supabase.rpc(
+        'get_transaction_with_seats',
+        { transaction_locator: locator }
+      );
+
+      if (!error && data) {
+        if (typeof data === 'string') {
+          try {
+            const parsed = JSON.parse(data);
+            return {
+              transaction: parsed?.transaction ?? null,
+              seats: Array.isArray(parsed?.seats) ? parsed.seats : [],
+            };
+          } catch (parseErr) {
+            console.warn(
+              'Could not parse RPC response as JSON (single arg), falling back:',
+              parseErr
+            );
+          }
+        } else if (typeof data === 'object' && data !== null) {
+          return {
+            transaction: data.transaction ?? data,
+            seats: Array.isArray(data.seats) ? data.seats : [],
+          };
+        }
+      }
+
+      if (error) {
+        console.warn(
+          'RPC (single arg) get_transaction_with_seats failed, falling back to manual queries:',
+          error
+        );
+      }
+    } catch (rpcErr) {
+      console.warn(
+        'RPC (single arg) get_transaction_with_seats threw, falling back to manual queries:',
+        rpcErr
+      );
+    }
+
+    // 3) Fallback manual: buscar transacción y luego asientos por locator
     try {
       const transaction = await this.fetchTransactionRecord(locator);
-
-      if (!transaction) {
-        return null;
-      }
+      if (!transaction) return null;
 
       const { data: seats, error: seatsError } = await supabase
         .from('seat_locks')
@@ -168,9 +238,8 @@ class SeatLocatorService {
         .maybeSingle();
 
       if (error) {
-        if (error.code === 'PGRST116') {
-          return null;
-        }
+        // PGRST116 = no rows returned for single result
+        if (error.code === 'PGRST116') return null;
         throw error;
       }
 
@@ -178,9 +247,7 @@ class SeatLocatorService {
     };
 
     const byLocator = await tryFetch('locator');
-    if (byLocator) {
-      return byLocator;
-    }
+    if (byLocator) return byLocator;
 
     return tryFetch('order_id');
   }
@@ -202,7 +269,7 @@ class SeatLocatorService {
         sessionId = null,
         statusFilters = ['locked', 'seleccionado', 'seleccionado_por_otro', 'expirando', 'reservado'],
         metadata = null,
-        updateTimestamp = true
+        updateTimestamp = true,
       } = options || {};
 
       const now = new Date().toISOString();
@@ -211,17 +278,9 @@ class SeatLocatorService {
         user_id: userId || null,
       };
 
-      if (status) {
-        updateData.status = status;
-      }
-
-      if (tenantId) {
-        updateData.tenant_id = tenantId;
-      }
-
-      if (updateTimestamp) {
-        updateData.updated_at = now;
-      }
+      if (status) updateData.status = status;
+      if (tenantId) updateData.tenant_id = tenantId;
+      if (updateTimestamp) updateData.updated_at = now;
 
       if (zoneInfo) {
         if (zoneInfo.zona_id || zoneInfo.zonaId || zoneInfo.id) {
@@ -240,46 +299,50 @@ class SeatLocatorService {
       }
 
       const applyUpdate = async (predicateCallback) => {
-        const baseQuery = supabase
+        let query = supabase
           .from('seat_locks')
           .update(updateData)
           .in('seat_id', seatIds);
 
         if (Array.isArray(statusFilters) && statusFilters.length > 0) {
-          baseQuery.in('status', statusFilters);
+          query = query.in('status', statusFilters);
         }
 
         if (funcionId) {
-          baseQuery.eq('funcion_id', funcionId);
+          query = query.eq('funcion_id', funcionId);
         }
 
-        predicateCallback(baseQuery);
+        if (typeof predicateCallback === 'function') {
+          query = predicateCallback(query) || query;
+        }
 
-        return baseQuery.select('id, seat_id, status');
+        return query.select('id, seat_id, status');
       };
 
       let response = { data: [], error: null };
 
+      // 1) Primero por user_id (si existe)
       if (userId) {
-        response = await applyUpdate((query) => query.eq('user_id', userId));
+        response = await applyUpdate((q) => q.eq('user_id', userId));
       }
 
+      // 2) Si no hubo filas y tenemos sessionId o userId, intentar por session_id
       if ((!response.data || response.data.length === 0) && (sessionId || userId)) {
-        const browserSession = sessionId || userId?.toString() || resolveBrowserSessionId();
+        const browserSession =
+          sessionId || userId?.toString() || resolveBrowserSessionId();
         if (browserSession) {
-          response = await applyUpdate((query) => query.eq('session_id', browserSession.toString()));
+          response = await applyUpdate((q) =>
+            q.eq('session_id', browserSession.toString())
+          );
         }
       }
 
+      // 3) Último intento: filas sin user_id (carritos anónimos antiguos)
       if (!response.data || response.data.length === 0) {
-        response = await applyUpdate((query) => {
-          query.is('user_id', null);
-        });
+        response = await applyUpdate((q) => q.is('user_id', null));
       }
 
-      if (response.error) {
-        throw response.error;
-      }
+      if (response.error) throw response.error;
 
       const updatedRows = response.data || [];
       console.log('✅ Updated seats with locator/state:', {
@@ -351,9 +414,9 @@ class SeatLocatorService {
         .eq('user_id', userId)
         .eq('status', 'seleccionado')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
-      
+
       return data || [];
     } catch (error) {
       console.error('Error getting seats by user:', error);
@@ -368,16 +431,16 @@ class SeatLocatorService {
     try {
       const { data, error } = await supabase
         .from('seat_locks')
-        .update({ 
+        .update({
           status: 'liberado',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId)
         .eq('status', 'seleccionado')
         .select();
-      
+
       if (error) throw error;
-      
+
       console.log('🔓 Released user seats:', data);
       return data;
     } catch (error) {
@@ -395,17 +458,15 @@ class SeatLocatorService {
         .from('seat_locks')
         .select('status')
         .eq('locator', locator);
-      
+
       if (error) throw error;
-      
-      const stats = {
-        total: data.length,
-        seleccionado: data.filter(s => s.status === 'seleccionado').length,
-        vendido: data.filter(s => s.status === 'vendido').length,
-        liberado: data.filter(s => s.status === 'liberado').length
-      };
-      
-      return stats;
+
+      const total = Array.isArray(data) ? data.length : 0;
+      const seleccionado = data?.filter((s) => s.status === 'seleccionado').length ?? 0;
+      const vendido = data?.filter((s) => s.status === 'vendido').length ?? 0;
+      const liberado = data?.filter((s) => s.status === 'liberado').length ?? 0;
+
+      return { total, seleccionado, vendido, liberado };
     } catch (error) {
       console.error('Error getting seat stats by locator:', error);
       return { total: 0, seleccionado: 0, vendido: 0, liberado: 0 };
