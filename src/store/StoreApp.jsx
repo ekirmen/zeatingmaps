@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { RefProvider } from '../contexts/RefContext'; // 👈 IMPORTANTE
 import { TenantProvider } from '../contexts/TenantContext'; // 👈 IMPORTANTE
 import SecurityHandler from './components/SecurityHandler'; // 👈 SEGURIDAD
@@ -33,6 +33,7 @@ import CmsPage from './pages/CmsPage';
 import EventsVenue from './pages/EventsVenue';
 import { useAuth } from '../contexts/AuthContext'; // para perfil
 import { useCartStore } from './cartStore';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const StoreApp = () => {
   const location = useLocation();
@@ -79,7 +80,14 @@ const StoreApp = () => {
                 <Route path="select-seats/:salaId/:funcionId" element={<SelectSeats />} />
                 <Route path="seat-selection/:funcionId" element={<SeatSelectionPage />} />
                 <Route path="cart" element={<CartPage />} />
-                <Route path="payment" element={<Pay />} />
+                <Route
+                  path="payment"
+                  element={(
+                    <ProtectedRoute requireTenantAccess={false}>
+                      <Pay />
+                    </ProtectedRoute>
+                  )}
+                />
                 <Route path="login" element={<StoreLogin />} />
                 <Route path="register" element={<Register />} />
                 <Route path="forgot-password" element={<ForgotPassword />} />
@@ -91,7 +99,14 @@ const StoreApp = () => {
                 <Route path="cookies-policy" element={<CookiesPolicy />} />
                 <Route path="legal-terms" element={<LegalTerms />} />
                 <Route path=":pageSlug" element={<CmsPage />} />
-                <Route path="payment-success/:locator?" element={<PaymentSuccess />} />
+                <Route
+                  path="payment-success/:locator?"
+                  element={(
+                    <ProtectedRoute requireTenantAccess={false}>
+                      <PaymentSuccess />
+                    </ProtectedRoute>
+                  )}
+                />
                 <Route path="thank-you" element={<ThankYouPage />} />
                 <Route path="404" element={<NotFound />} />
                 <Route path="*" element={<NotFound />} />
