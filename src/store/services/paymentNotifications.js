@@ -55,26 +55,34 @@ export const subscribeToPaymentUpdates = (callback) => {
 };
 
 /**
- * Enviar notificación push al usuario
+ * Enviar notificación push al usuario autenticado.
+ *
+ * Si se proporciona un `userId`, debe coincidir con el usuario autenticado; de lo contrario,
+ * se rechazará la inserción para evitar que un cliente notifique a terceros.
  */
 export const sendPushNotification = async (userId, notification) => {
   try {
-    let targetUserId = userId;
+    const { data: authData, error: authError } = await supabase.auth.getUser();
 
-    if (!targetUserId) {
-      const { data: authData, error: authError } = await supabase.auth.getUser();
-
-      if (authError) {
-        console.warn('[Notifications] Error obteniendo usuario autenticado:', authError);
-      }
-
-      targetUserId = authData?.user?.id ?? null;
-    }
-
-    if (!targetUserId) {
-      console.warn('[Notifications] Error enviando notificación push: userId no disponible.');
+    if (authError) {
+      console.warn('[Notifications] Error obteniendo usuario autenticado:', authError);
       return null;
     }
+
+    const authenticatedUserId = authData?.user?.id ?? null;
+
+    if (!authenticatedUserId) {
+      console.warn('[Notifications] Error enviando notificación push: usuario autenticado no disponible.');
+      return null;
+    }
+
+    if (userId && userId !== authenticatedUserId) {
+      throw new Error(
+        '[Notifications] Intento de enviar una notificación en nombre de un usuario distinto al autenticado.'
+      );
+    }
+
+    const targetUserId = authenticatedUserId;
 
     const payload = {
       user_id: targetUserId,
