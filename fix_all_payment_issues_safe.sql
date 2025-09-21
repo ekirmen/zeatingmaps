@@ -106,19 +106,34 @@ CREATE POLICY notifications_tenant_admin_all ON notifications
     FOR ALL TO authenticated USING (is_tenant_admin() AND tenant_id = get_user_tenant_id()) WITH CHECK (is_tenant_admin() AND tenant_id = get_user_tenant_id());
 
 -- 7. CORREGIR FUNCIÓN get_transaction_with_seats
-CREATE OR REPLACE FUNCTION get_transaction_with_seats(transaction_locator text)
+DROP FUNCTION IF EXISTS public.get_transaction_with_seats(text);
+DROP FUNCTION IF EXISTS public.get_transaction_with_seats(text, text);
+
+CREATE OR REPLACE FUNCTION public.get_transaction_with_seats(
+    locator_param text DEFAULT NULL,
+    transaction_locator text DEFAULT NULL
+)
 RETURNS jsonb
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
+    v_locator text := COALESCE(NULLIF(transaction_locator, ''), NULLIF(locator_param, ''));
     result jsonb;
     transaction_record record;
     seats_data jsonb;
 BEGIN
-    SELECT * INTO transaction_record
-    FROM payment_transactions
-    WHERE locator = transaction_locator
+    IF v_locator IS NULL THEN
+        RETURN NULL;
+    END IF;
+
+    SELECT pt.*, u.email AS user_email, u.created_at AS user_created_at
+    INTO transaction_record
+    FROM payment_transactions pt
+    LEFT JOIN auth.users u ON u.id = pt.user_id
+    WHERE pt.locator = v_locator OR pt.order_id = v_locator
+    ORDER BY pt.created_at DESC
     LIMIT 1;
 
     IF NOT FOUND THEN
@@ -142,13 +157,17 @@ BEGIN
                 'user_id', sl.user_id,
                 'updated_at', sl.updated_at,
                 'zona_id', sl.zona_id,
-                'session_id', sl.session_id
+                'zona_nombre', sl.zona_nombre,
+                'precio', sl.precio,
+                'session_id', sl.session_id,
+                'metadata', sl.metadata
             )
+            ORDER BY sl.created_at
         ),
         '[]'::jsonb
     ) INTO seats_data
     FROM seat_locks sl
-    WHERE sl.locator = transaction_locator;
+    WHERE sl.locator = v_locator;
 
     result := jsonb_build_object(
         'transaction', jsonb_build_object(
@@ -170,22 +189,27 @@ BEGIN
             'payment_method', transaction_record.payment_method,
             'gateway_name', transaction_record.gateway_name,
             'seats', transaction_record.seats,
-            'monto', transaction_record.monto,
+            'monto', COALESCE(transaction_record.monto, transaction_record.amount),
             'usuario_id', transaction_record.usuario_id,
             'event', transaction_record.event,
             'funcion', transaction_record.funcion,
             'processed_by', transaction_record.processed_by,
             'payment_gateway_id', transaction_record.payment_gateway_id,
-            'fecha', transaction_record.fecha,
+            'fecha', COALESCE(transaction_record.fecha, transaction_record.created_at),
             'payments', transaction_record.payments,
             'referrer', transaction_record.referrer,
             'discountCode', transaction_record."discountCode",
             'reservationDeadline', transaction_record."reservationDeadline",
-            'user_data', jsonb_build_object(
-                'id', transaction_record.user_id,
-                'email', (SELECT email FROM auth.users WHERE id = transaction_record.user_id),
-                'created_at', (SELECT created_at FROM auth.users WHERE id = transaction_record.user_id)
-            )
+            'user', transaction_record."user",
+            'user_data', CASE
+                WHEN transaction_record.user_id IS NOT NULL THEN
+                    jsonb_build_object(
+                        'id', transaction_record.user_id,
+                        'email', transaction_record.user_email,
+                        'created_at', transaction_record.user_created_at
+                    )
+                ELSE NULL
+            END
         ),
         'seats', seats_data
     );
@@ -193,6 +217,8 @@ BEGIN
     RETURN result;
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION public.get_transaction_with_seats(text, text) TO anon, authenticated, service_role;
 
 -- 8. CONFIGURAR RLS PARA PAYMENT_TRANSACTIONS
 ALTER TABLE payment_transactions ENABLE ROW LEVEL SECURITY;
