@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Input, Button, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import API_BASE_URL from '../utils/apiBase';
@@ -17,6 +17,31 @@ const Header = ({ onLogin, onLogout }) => {
     password: '',
     confirmPassword: ''
   });
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return !!localStorage.getItem('token');
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const syncAuthState = () => {
+      setIsAuthenticated(!!localStorage.getItem('token'));
+    };
+
+    const handleStorageChange = (event) => {
+      if (event.key === 'token') {
+        setIsAuthenticated(!!event.newValue);
+      }
+    };
+
+    syncAuthState();
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
 
   const handleRegister = async () => {
     try {
@@ -60,6 +85,7 @@ const Header = ({ onLogin, onLogout }) => {
       localStorage.setItem('token', formattedToken);
       localStorage.setItem('userId', data.user._id);
       onLogin?.({ token: cleanToken, user: data.user });
+      setIsAuthenticated(true);
 
       message.success('Usuario registrado exitosamente');
       setIsRegisterModalVisible(false);
@@ -119,6 +145,8 @@ const Header = ({ onLogin, onLogout }) => {
         user: data.user || data.userData
       });
 
+      setIsAuthenticated(true);
+
       setIsModalVisible(false);
       setFormData({ email: '', password: '' });
       message.success('Inicio de sesión exitoso');
@@ -137,6 +165,7 @@ const Header = ({ onLogin, onLogout }) => {
     localStorage.removeItem('userId');
     if (typeof onLogout === 'function') onLogout();
     message.success('Sesión cerrada correctamente');
+    setIsAuthenticated(false);
     if (window.location.pathname === '/store/perfil') {
       navigate('/store');
     }
@@ -149,7 +178,7 @@ const Header = ({ onLogin, onLogout }) => {
       </div>
 
       <div className="space-x-4">
-        {localStorage.getItem('token') ? (
+        {isAuthenticated ? (
           <>
             <button
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition"

@@ -33,6 +33,10 @@ const Header = ({ onLogin, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return !!localStorage.getItem('token');
+  });
   
   // Close mobile drawer automatically on desktop viewport
   useEffect(() => {
@@ -55,9 +59,65 @@ const Header = ({ onLogin, onLogout }) => {
       }
     };
     checkSession();
-    
+
     // Debug eliminado
   }, [isAccountModalVisible]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncSessionState = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        const hasSession = !!data?.session?.access_token;
+        if (hasSession && typeof window !== 'undefined') {
+          localStorage.setItem('token', data.session.access_token);
+        }
+        setIsAuthenticated(prev => hasSession || (typeof window !== 'undefined' ? !!localStorage.getItem('token') : prev));
+      } catch (error) {
+        if (!isMounted) return;
+        if (typeof window !== 'undefined') {
+          setIsAuthenticated(!!localStorage.getItem('token'));
+        } else {
+          setIsAuthenticated(false);
+        }
+      }
+    };
+
+    syncSessionState();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (typeof window !== 'undefined') {
+        if (session?.access_token) {
+          localStorage.setItem('token', session.access_token);
+        } else {
+          localStorage.removeItem('token');
+        }
+      }
+      if (isMounted) {
+        setIsAuthenticated(!!session?.access_token);
+      }
+    });
+
+    const handleStorageChange = (event) => {
+      if (event.key === 'token') {
+        setIsAuthenticated(!!event.newValue);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange);
+    }
+
+    return () => {
+      isMounted = false;
+      authListener?.subscription?.unsubscribe();
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('storage', handleStorageChange);
+      }
+    };
+  }, []);
 
   const handleRegister = async () => {
     try {
@@ -97,6 +157,7 @@ const Header = ({ onLogin, onLogout }) => {
         const token = session.access_token;
         localStorage.setItem('token', token);
         onLogin?.({ token, user });
+        setIsAuthenticated(true);
         setIsAccountModalVisible(false);
         setFormData({ email: '', password: '' });
         message.success(t('login.success'));
@@ -136,6 +197,7 @@ const Header = ({ onLogin, onLogout }) => {
     localStorage.removeItem('token');
     if (typeof onLogout === 'function') onLogout();
     message.success(t('logout.success'));
+    setIsAuthenticated(false);
     if (window.location.pathname === '/store/perfil') {
       navigate(refParam ? `/store?ref=${refParam}` : '/store');
     }
@@ -166,6 +228,7 @@ const Header = ({ onLogin, onLogout }) => {
     setIsPasswordModalVisible(false);
     setPasswordData({ newPassword: '', confirmPassword: '' });
     onLogin?.({ token, user: data.user });
+    setIsAuthenticated(!!token);
     message.success(t('password.updated'));
     navigate(refParam ? `/store?ref=${refParam}` : '/store');
     } catch (error) {
@@ -223,7 +286,7 @@ const Header = ({ onLogin, onLogout }) => {
           <nav className="hidden lg:flex store-header nav">
             <LinkWithRef to="/store">{t('header.home')}</LinkWithRef>
             <LinkWithRef to="/store/cart">{t('header.cart')}</LinkWithRef>
-            {localStorage.getItem('token') && (
+            {isAuthenticated && (
               <LinkWithRef to="/store/perfil">
                 {t('header.profile')}
               </LinkWithRef>
@@ -257,7 +320,7 @@ const Header = ({ onLogin, onLogout }) => {
             <LinkWithRef to="/store/cart" className="store-button store-button-outline">
               {t('header.cart')}
             </LinkWithRef>
-            {localStorage.getItem('token') ? (
+            {isAuthenticated ? (
               <button onClick={handleLogout} className="store-button store-button-outline">
                 {t('header.logout')}
               </button>
@@ -279,12 +342,12 @@ const Header = ({ onLogin, onLogout }) => {
             </button>
             
             {/* Mobile Account */}
-            {localStorage.getItem('token') ? (
+            {isAuthenticated ? (
               <LinkWithRef to="/store/perfil" className="store-header mobile-action-btn">
                 <UserOutlined />
               </LinkWithRef>
             ) : (
-              <button 
+              <button
                 onClick={openAccountModal}
                 className="store-header mobile-action-btn"
                 aria-label="Cuenta"
@@ -364,9 +427,9 @@ const Header = ({ onLogin, onLogout }) => {
               {t('header.cart')}
             </LinkWithRef>
             
-            {localStorage.getItem('token') && (
-              <LinkWithRef 
-                to="/store/perfil" 
+            {isAuthenticated && (
+              <LinkWithRef
+                to="/store/perfil"
                 className="mobile-menu-link"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -391,12 +454,12 @@ const Header = ({ onLogin, onLogout }) => {
 
           {/* Auth Section */}
           <div className="pt-4 border-t">
-            {localStorage.getItem('token') ? (
-              <button 
+            {isAuthenticated ? (
+              <button
                 onClick={() => {
                   handleLogout();
                   setIsMobileMenuOpen(false);
-                }} 
+                }}
                 className="w-full store-button store-button-outline"
               >
                 {t('header.logout')}
