@@ -5,10 +5,10 @@ import { toast } from 'react-hot-toast';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheckCircle, faTicketAlt } from '@fortawesome/free-solid-svg-icons';
 import { loadMetaPixel } from '../utils/analytics';
-import { supabase } from '../../supabaseClient';
 import { useCartStore } from '../../store/cartStore';
 import downloadTicket from '../../utils/downloadTicket';
 import { useAuth } from '../../contexts/AuthContext';
+import seatLocatorService from '../services/seatLocatorService';
 
 const PaymentSuccess = () => {
   const clearCart = useCartStore(state => state.clearCart);
@@ -45,26 +45,7 @@ const PaymentSuccess = () => {
 
     const fetchPaymentDetails = async () => {
       try {
-        // Usar la función RPC para obtener transacción con asientos
-        const { data: transactionWithSeats, error: rpcError } = await supabase
-          .rpc('get_transaction_with_seats', { locator_param: locator });
-
-        if (rpcError) {
-          console.error('Error fetching transaction with seats:', rpcError);
-          // Fallback a búsqueda normal
-          const { data: transaction, error: transactionError } = await supabase
-            .from('payment_transactions')
-            .select('*')
-            .eq('order_id', locator)
-            .single();
-
-          if (transactionError || !transaction) {
-            console.error('Error fetching payment transaction:', transactionError);
-            return;
-          }
-          setPaymentDetails(transaction);
-          return;
-        }
+        const transactionWithSeats = await seatLocatorService.getTransactionWithSeats(locator);
 
         if (transactionWithSeats?.transaction) {
           setPaymentDetails({
@@ -75,7 +56,7 @@ const PaymentSuccess = () => {
           console.error('No transaction found for locator:', locator);
         }
       } catch (error) {
-        console.error('Error in fetchPaymentDetails:', error);
+        console.error('Error fetching payment details:', error);
       }
     };
 
@@ -100,20 +81,14 @@ const PaymentSuccess = () => {
         return;
       }
 
-      // Buscar en payment_transactions usando el locator como order_id
-      const { data: transaction, error: transactionError } = await supabase
-        .from('payment_transactions')
-        .select('*')
-        .eq('order_id', locator)
-        .single();
+      const transaction =
+        paymentDetails ?? (await seatLocatorService.getTransactionWithSeats(locator))?.transaction;
 
-      if (transactionError || !transaction) {
-        console.error('Load reservation error:', transactionError);
+      if (!transaction) {
         toast.error('No se pudo cargar la reserva');
         return;
       }
 
-      // Si es una reserva, redirigir al carrito para completar el pago
       if (transaction.status === 'pending' || transaction.status === 'reservado') {
         navigate('/store/cart');
       } else {
