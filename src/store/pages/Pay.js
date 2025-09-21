@@ -106,6 +106,18 @@ const Pay = () => {
       const { generateSimpleLocator } = await import('../../utils/generateLocator');
       const locator = generateSimpleLocator();
       
+      let seatSessionId = null;
+      if (typeof window !== 'undefined') {
+        try {
+          seatSessionId =
+            window.localStorage?.getItem('anonSessionId') ||
+            window.sessionStorage?.getItem('anonSessionId') ||
+            null;
+        } catch (sessionError) {
+          console.warn('No se pudo obtener la sesión de asientos:', sessionError);
+        }
+      }
+
       const paymentData = {
         orderId: locator,
         amount: total,
@@ -116,6 +128,7 @@ const Pay = () => {
           id: user?.id || null,
           email: user?.email || null
         },
+        sessionId: seatSessionId,
         tenant: {
           id: currentTenant?.id || null
         },

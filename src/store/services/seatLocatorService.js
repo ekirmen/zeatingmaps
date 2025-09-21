@@ -1,19 +1,67 @@
 import { supabase } from '../../supabaseClient';
 
 /**
+ * Normaliza un arreglo de asientos asegurando una estructura consistente
+ */
+const normalizeSeats = (seats = []) => {
+  if (!Array.isArray(seats)) return [];
+
+  return seats
+    .map((seat) => {
+      if (!seat) return null;
+
+      const id = seat.id || seat._id || seat.sillaId || seat.seatId || seat.asientoId;
+      if (!id) return null;
+
+      return {
+        id: id,
+        raw: seat,
+        zonaId: seat.zonaId || seat.zona_id || seat.zona?.id || seat.zona || seat.zoneId || null,
+        zonaNombre: seat.zona_nombre || seat.zonaNombre || seat.zona || seat.zonaLabel || null,
+        precio: typeof seat.precio === 'number'
+          ? seat.precio
+          : typeof seat.price === 'number'
+            ? seat.price
+            : typeof seat.monto === 'number'
+              ? seat.monto
+              : null
+      };
+    })
+    .filter(Boolean);
+};
+
+/**
+ * Obtiene un Session ID seguro desde el entorno del navegador
+ */
+const resolveBrowserSessionId = () => {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    return (
+      window.localStorage?.getItem('anonSessionId') ||
+      window.sessionStorage?.getItem('anonSessionId') ||
+      null
+    );
+  } catch (err) {
+    console.warn('Could not resolve browser session id:', err);
+    return null;
+  }
+};
+
+/**
  * Servicio para conectar asientos con localizadores de pago
  */
 class SeatLocatorService {
-  
+
   /**
    * Conecta asientos bloqueados con transacciones de pago
    */
   async connectSeatsWithLocator() {
     try {
       const { data, error } = await supabase.rpc('connect_seats_with_locator');
-      
+
       if (error) throw error;
-      
+
       console.log('🔗 Connected seats with locator:', data);
       return data;
     } catch (error) {
@@ -30,9 +78,9 @@ class SeatLocatorService {
       const { data, error } = await supabase.rpc('get_seats_by_locator', {
         locator_param: locator
       });
-      
+
       if (error) throw error;
-      
+
       return data || [];
     } catch (error) {
       console.error('Error getting seats by locator:', error);
@@ -48,9 +96,9 @@ class SeatLocatorService {
       const { data, error } = await supabase.rpc('get_transaction_with_seats', {
         locator_param: locator
       });
-      
+
       if (error) throw error;
-      
+
       return data;
     } catch (error) {
       console.error('Error getting transaction with seats:', error);
@@ -59,53 +107,158 @@ class SeatLocatorService {
   }
 
   /**
-   * Actualiza asientos con localizador
+   * Actualiza asientos con localizador y estado final
    */
-  async updateSeatsWithLocator(seatIds, locator, userId, zoneInfo = null) {
+  async updateSeatsWithLocator(seatIds, locator, userId, options = {}) {
     try {
-      // Preparar datos de actualización
-      const updateData = { 
-        locator: locator,
-        user_id: userId
-      };
-      
-      // Agregar información de zona si se proporciona
-      if (zoneInfo) {
-        updateData.zona_id = zoneInfo.zona_id || 'ORO';
-        updateData.zona_nombre = zoneInfo.zona_nombre || 'ORO';
-        updateData.precio = zoneInfo.precio || 10.00;
+      if (!Array.isArray(seatIds) || seatIds.length === 0) {
+        return { data: [], updated: 0 };
       }
-      
-      // Primero intentar con user_id
-      let { data, error } = await supabase
-        .from('seat_locks')
-        .update(updateData)
-        .in('seat_id', seatIds)
-        .eq('user_id', userId)
-        .select();
-      
-      // Si no hay resultados, intentar con session_id
-      if (!data || data.length === 0) {
-        console.log('🔍 Trying with session_id instead of user_id');
-        const result = await supabase
+
+      const {
+        zoneInfo = null,
+        status = null,
+        tenantId = null,
+        funcionId = null,
+        sessionId = null,
+        statusFilters = ['locked', 'seleccionado', 'seleccionado_por_otro', 'expirando', 'reservado'],
+        metadata = null,
+        updateTimestamp = true
+      } = options || {};
+
+      const now = new Date().toISOString();
+      const updateData = {
+        locator: locator || null,
+        user_id: userId || null,
+      };
+
+      if (status) {
+        updateData.status = status;
+      }
+
+      if (tenantId) {
+        updateData.tenant_id = tenantId;
+      }
+
+      if (updateTimestamp) {
+        updateData.updated_at = now;
+      }
+
+      if (zoneInfo) {
+        if (zoneInfo.zona_id || zoneInfo.zonaId || zoneInfo.id) {
+          updateData.zona_id = zoneInfo.zona_id || zoneInfo.zonaId || zoneInfo.id;
+        }
+        if (zoneInfo.zona_nombre || zoneInfo.zonaNombre || zoneInfo.nombre) {
+          updateData.zona_nombre = zoneInfo.zona_nombre || zoneInfo.zonaNombre || zoneInfo.nombre;
+        }
+        if (typeof zoneInfo.precio === 'number') {
+          updateData.precio = zoneInfo.precio;
+        }
+      }
+
+      if (metadata && typeof metadata === 'object') {
+        updateData.metadata = metadata;
+      }
+
+      const applyUpdate = async (predicateCallback) => {
+        const baseQuery = supabase
           .from('seat_locks')
           .update(updateData)
-          .in('seat_id', seatIds)
-          .eq('session_id', userId.toString())
-          .select();
-        
-        data = result.data;
-        error = result.error;
+          .in('seat_id', seatIds);
+
+        if (Array.isArray(statusFilters) && statusFilters.length > 0) {
+          baseQuery.in('status', statusFilters);
+        }
+
+        if (funcionId) {
+          baseQuery.eq('funcion_id', funcionId);
+        }
+
+        predicateCallback(baseQuery);
+
+        return baseQuery.select('id, seat_id, status');
+      };
+
+      let response = { data: [], error: null };
+
+      if (userId) {
+        response = await applyUpdate((query) => query.eq('user_id', userId));
       }
-      
-      if (error) throw error;
-      
-      console.log('✅ Updated seats with locator and zone info:', data);
-      return data;
+
+      if ((!response.data || response.data.length === 0) && (sessionId || userId)) {
+        const browserSession = sessionId || userId?.toString() || resolveBrowserSessionId();
+        if (browserSession) {
+          response = await applyUpdate((query) => query.eq('session_id', browserSession.toString()));
+        }
+      }
+
+      if (!response.data || response.data.length === 0) {
+        response = await applyUpdate((query) => {
+          query.is('user_id', null);
+        });
+      }
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      const updatedRows = response.data || [];
+      console.log('✅ Updated seats with locator/state:', {
+        locator,
+        updated: updatedRows.length,
+        status,
+        tenantId,
+        funcionId,
+      });
+
+      return {
+        data: updatedRows,
+        updated: updatedRows.length,
+      };
     } catch (error) {
       console.error('Error updating seats with locator:', error);
       throw error;
     }
+  }
+
+  /**
+   * Finaliza los asientos asociados a una transacción actualizando locator y estado
+   */
+  async finalizeSeatsAfterPayment({
+    seats = [],
+    locator,
+    userId = null,
+    tenantId = null,
+    funcionId = null,
+    status = null,
+    sessionId = null,
+    metadata = null,
+  }) {
+    const normalizedSeats = normalizeSeats(seats);
+    const seatIds = normalizedSeats.map((seat) => seat.id);
+
+    if (seatIds.length === 0 || !locator) {
+      return { updated: 0 };
+    }
+
+    const primarySeat = normalizedSeats[0];
+    const zoneInfo = primarySeat
+      ? {
+          zona_id: primarySeat.zonaId,
+          zona_nombre: primarySeat.zonaNombre,
+          precio: primarySeat.precio,
+        }
+      : null;
+
+    return this.updateSeatsWithLocator(seatIds, locator, userId, {
+      zoneInfo,
+      status,
+      tenantId,
+      funcionId,
+      sessionId,
+      metadata,
+      statusFilters: ['locked', 'seleccionado', 'seleccionado_por_otro', 'expirando', 'reservado'],
+    });
   }
 
   /**
