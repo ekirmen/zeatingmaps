@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserRole = async (id) => {
+  const fetchUserRole = useCallback(async (id) => {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -22,29 +22,41 @@ export const AuthProvider = ({ children }) => {
       console.error('Error fetching role:', err.message);
       setRole(null);
     }
-  };
+  }, []);
 
   const validateSession = useCallback(async () => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error) throw error;
       if (session) {
-        localStorage.setItem('token', session.access_token);
+        try {
+          localStorage.setItem('token', session.access_token);
+        } catch (storageError) {
+          console.error('Error setting token in localStorage:', storageError);
+        }
         setUser(session.user);
         fetchUserRole(session.user.id);
       } else {
-        localStorage.removeItem('token');
+        try {
+          localStorage.removeItem('token');
+        } catch (storageError) {
+          console.error('Error removing token from localStorage:', storageError);
+        }
         setUser(null);
         setRole(null);
       }
     } catch (error) {
       console.error('❌ Error al validar sesión:', error.message);
-      localStorage.removeItem('token');
+      try {
+        localStorage.removeItem('token');
+      } catch (storageError) {
+        console.error('Error removing token from localStorage:', storageError);
+      }
       setUser(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [fetchUserRole]);
 
   const login = async ({ email, password }) => {
     try {
@@ -79,8 +91,37 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!isMounted) return;
+
+      if (session?.user) {
+        try {
+          localStorage.setItem('token', session.access_token);
+        } catch (storageError) {
+          console.error('Error setting token in localStorage:', storageError);
+        }
+        setUser(session.user);
+        fetchUserRole(session.user.id);
+      } else {
+        try {
+          localStorage.removeItem('token');
+        } catch (storageError) {
+          console.error('Error removing token from localStorage:', storageError);
+        }
+        setUser(null);
+        setRole(null);
+      }
+    });
+
     validateSession();
-  }, [validateSession]);
+
+    return () => {
+      isMounted = false;
+      authListener?.subscription?.unsubscribe();
+    };
+  }, [fetchUserRole, validateSession]);
 
   const value = {
     user,
