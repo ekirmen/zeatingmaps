@@ -4,6 +4,8 @@ import { AiOutlineDelete } from 'react-icons/ai';
 import { Typography } from 'antd';
 import { createPayment, updatePayment } from '../../services/apibackoffice';
 import { createPaymentTransaction } from '../../../store/services/paymentGatewaysService';
+import seatLocatorService from '../../../store/services/seatLocatorService';
+import determineSeatLockStatus from '../../../services/ticketing/seatStatus';
 import { generateSimpleLocator } from '../../../utils/generateLocator';
 import { useAuth } from '../../../contexts/AuthContext';
 import { isUuid } from '../../../utils/isUuid';
@@ -332,59 +334,29 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           // Actualizar seat_locks con el locator final y estado correcto antes de crear el pago
           if (paymentData.locator) {
             try {
-              // Determinar el estado final basado en el tipo de pago
-              let finalStatus = 'vendido'; // Por defecto vendido
-              if (reservationType === '2' || reservationType === '3') {
-                finalStatus = 'reservado'; // Si es reserva temporal o con fecha
-              }
+              const normalizedMethodId = (selectedPaymentMethod || '')
+                .toString()
+                .trim()
+                .toLowerCase()
+                .replace(/\s+/g, '_');
 
-              const seatIdsForLock = seats
-                .map(item => item.id || item._id || item.sillaId)
-                .filter(Boolean);
+              const isReservationFlow = reservationType === '2' || reservationType === '3' || diferencia > 0;
+              const seatStatus = determineSeatLockStatus({
+                methodId: normalizedMethodId || 'boleteria_manual',
+                transactionStatus: paymentData.status,
+                isReservation: isReservationFlow,
+                manualStatus: isReservationFlow ? 'reservado' : 'pagado',
+              });
 
-              if (seatIdsForLock.length === 0) {
-                console.log('⚠️ No hay seat_locks que actualizar para este pago');
-              } else {
-                const lockUpdatePayload = {
-                  locator: paymentData.locator,
-                  status: finalStatus,
-                  updated_at: new Date().toISOString(),
-                  user_id: paymentData.usuario_id || null
-                };
-
-                const activeSessionId = seatLockSessionId || (typeof window !== 'undefined' ? localStorage.getItem('anonSessionId') : null);
-                const sessionConditions = [];
-
-                if (activeSessionId) {
-                  sessionConditions.push(`session_id.eq.${activeSessionId}`);
-                }
-                if (paymentData.usuario_id) {
-                  sessionConditions.push(`session_id.eq.${paymentData.usuario_id}`);
-                }
-                sessionConditions.push('session_id.is.null');
-                sessionConditions.push('session_id.eq.');
-
-                let updateQuery = supabase
-                  .from('seat_locks')
-                  .update(lockUpdatePayload)
-                  .eq('funcion_id', paymentData.funcion)
-                  .in('seat_id', seatIdsForLock)
-                  .in('status', ['seleccionado', 'locked', 'expirando']);
-
-                if (sessionConditions.length > 0) {
-                  updateQuery = updateQuery.or(sessionConditions.join(','));
-                }
-
-                const { data: updatedLocks, error: updateLocksError } = await updateQuery.select('id');
-
-                if (updateLocksError) {
-                  console.error('Error actualizando seat_locks con locator final:', updateLocksError);
-                } else if (!updatedLocks || updatedLocks.length === 0) {
-                  console.warn('⚠️ No se encontraron seat_locks para actualizar con el locator actual');
-                } else {
-                  console.log(`✅ Seat_locks actualizados con locator final: ${paymentData.locator}, estado: ${finalStatus}, filas: ${updatedLocks.length}`);
-                }
-              }
+              await seatLocatorService.finalizeSeatsAfterPayment({
+                seats,
+                locator: paymentData.locator,
+                userId: paymentData.usuario_id || null,
+                tenantId: user?.tenant_id || null,
+                funcionId: paymentData.funcion,
+                status: seatStatus,
+                sessionId: seatLockSessionId,
+              });
             } catch (e) {
               console.error('Error actualizando seat_locks:', e);
             }
