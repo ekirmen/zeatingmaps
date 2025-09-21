@@ -377,8 +377,63 @@ export const createPaymentTransaction = async (transactionData) => {
       return null;
     };
 
+    const tryParseUserJson = (rawValue) => {
+      if (typeof rawValue !== 'string') return null;
+      try {
+        return JSON.parse(rawValue);
+      } catch (parseError) {
+        return null;
+      }
+    };
+
+    const normalizeUserIdString = (value) => {
+      if (typeof value !== 'string') return value;
+
+      const parsedDirect = tryParseUserJson(value);
+      if (parsedDirect) {
+        return extractUserId(parsedDirect);
+      }
+
+      let trimmed = value.trim();
+
+      const quotePairs = [
+        ['"', '"'],
+        ["'", "'"],
+      ];
+
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const [start, end] of quotePairs) {
+          if (trimmed.startsWith(start) && trimmed.endsWith(end) && trimmed.length > 1) {
+            trimmed = trimmed.slice(1, -1).trim();
+            changed = true;
+
+            const parsedAfterTrim = tryParseUserJson(trimmed);
+            if (parsedAfterTrim) {
+              return extractUserId(parsedAfterTrim);
+            }
+          }
+        }
+      }
+
+      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        const parsedAfterBraces = tryParseUserJson(trimmed);
+        if (parsedAfterBraces) {
+          return extractUserId(parsedAfterBraces);
+        }
+      }
+
+      return trimmed;
+    };
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
     // Extraer user_id del objeto user o de diferentes estructuras
     let userId = extractUserId(transactionData.userId) || extractUserId(transactionData.user);
+    if (userId) {
+      userId = normalizeUserIdString(userId);
+    }
 
     // Asegurar que userId sea un UUID válido o null
     if (userId && typeof userId !== 'string') {
@@ -386,10 +441,14 @@ export const createPaymentTransaction = async (transactionData) => {
       userId = null;
     }
 
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (userId && !uuidRegex.test(userId)) {
-      console.warn('Invalid userId format, expected UUID. Received:', userId);
-      userId = null;
+    if (userId && typeof userId === 'string' && !uuidRegex.test(userId)) {
+      const parsedFromJson = normalizeUserIdString(userId);
+      if (parsedFromJson && typeof parsedFromJson === 'string' && uuidRegex.test(parsedFromJson)) {
+        userId = parsedFromJson;
+      } else {
+        console.warn('Invalid userId format, expected UUID. Received:', userId);
+        userId = null;
+      }
     }
 
     // Preparar datos para inserción

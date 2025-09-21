@@ -298,10 +298,10 @@ class SeatLocatorService {
         updateData.metadata = metadata;
       }
 
-      const applyUpdate = async (predicateCallback) => {
+      const applyUpdate = async (payload, predicateCallback) => {
         let query = supabase
           .from('seat_locks')
-          .update(updateData)
+          .update(payload)
           .in('seat_id', seatIds);
 
         if (Array.isArray(statusFilters) && statusFilters.length > 0) {
@@ -319,32 +319,74 @@ class SeatLocatorService {
         return query.select('id, seat_id, status');
       };
 
-      let response = { data: [], error: null };
+      const shouldReturnResult = (result) =>
+        result?.error || (Array.isArray(result?.data) && result.data.length > 0);
 
-      // 1) Primero por user_id (si existe)
-      if (userId) {
-        response = await applyUpdate((q) => q.eq('user_id', userId));
-      }
+      const runUpdateSequence = async (payload) => {
+        let result = { data: [], error: null };
 
-      // 2) Si no hubo filas y tenemos sessionId o userId, intentar por session_id
-      if ((!response.data || response.data.length === 0) && (sessionId || userId)) {
-        const browserSession =
-          sessionId || userId?.toString() || resolveBrowserSessionId();
-        if (browserSession) {
-          response = await applyUpdate((q) =>
-            q.eq('session_id', browserSession.toString())
-          );
+        if (userId) {
+          result = await applyUpdate(payload, (q) => q.eq('user_id', userId));
+          if (shouldReturnResult(result)) {
+            return result;
+          }
         }
-      }
 
-      // 3) Último intento: filas sin user_id (carritos anónimos antiguos)
-      if (!response.data || response.data.length === 0) {
-        response = await applyUpdate((q) => q.is('user_id', null));
+        if (sessionId || userId) {
+          const browserSession =
+            sessionId || userId?.toString() || resolveBrowserSessionId();
+          if (browserSession) {
+            result = await applyUpdate(payload, (q) =>
+              q.eq('session_id', browserSession.toString())
+            );
+            if (shouldReturnResult(result)) {
+              return result;
+            }
+          }
+        }
+
+        result = await applyUpdate(payload, (q) => q.is('user_id', null));
+        return result;
+      };
+
+      const isMissingColumnError = (errorObject, column) =>
+        errorObject?.code === 'PGRST204' &&
+        typeof errorObject?.message === 'string' &&
+        errorObject.message.includes(`'${column}'`);
+
+      let response = await runUpdateSequence(updateData);
+
+      if (response.error && isMissingColumnError(response.error, 'precio') && updateData.precio !== undefined) {
+        console.warn(
+          '[SeatLocatorService] "precio" column unavailable, retrying without it and storing value in metadata.'
+        );
+
+        const fallbackUpdate = { ...updateData };
+        delete fallbackUpdate.precio;
+
+        if (fallbackUpdate.metadata && typeof fallbackUpdate.metadata === 'object') {
+          fallbackUpdate.metadata = { ...fallbackUpdate.metadata };
+        }
+
+        if (typeof updateData.precio === 'number') {
+          const metadataPayload =
+            fallbackUpdate.metadata && typeof fallbackUpdate.metadata === 'object'
+              ? fallbackUpdate.metadata
+              : {};
+
+          if (!('precio' in metadataPayload)) {
+            metadataPayload.precio = updateData.precio;
+          }
+
+          fallbackUpdate.metadata = metadataPayload;
+        }
+
+        response = await runUpdateSequence(fallbackUpdate);
       }
 
       if (response.error) throw response.error;
 
-      const updatedRows = response.data || [];
+      const updatedRows = Array.isArray(response.data) ? response.data : [];
       console.log('✅ Updated seats with locator/state:', {
         locator,
         updated: updatedRows.length,
