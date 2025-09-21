@@ -268,7 +268,6 @@ class SeatLocatorService {
         funcionId = null,
         sessionId = null,
         statusFilters = ['locked', 'seleccionado', 'seleccionado_por_otro', 'expirando', 'reservado'],
-        metadata = null,
         updateTimestamp = true,
       } = options || {};
 
@@ -292,10 +291,6 @@ class SeatLocatorService {
         if (typeof zoneInfo.precio === 'number') {
           updateData.precio = zoneInfo.precio;
         }
-      }
-
-      if (metadata && typeof metadata === 'object') {
-        updateData.metadata = metadata;
       }
 
       const applyUpdate = async (payload, predicateCallback) => {
@@ -358,29 +353,11 @@ class SeatLocatorService {
 
       if (response.error && isMissingColumnError(response.error, 'precio') && updateData.precio !== undefined) {
         console.warn(
-          '[SeatLocatorService] "precio" column unavailable, retrying without it and storing value in metadata.'
+          '[SeatLocatorService] "precio" column unavailable, retrying without it.'
         );
 
         const fallbackUpdate = { ...updateData };
         delete fallbackUpdate.precio;
-
-        if (fallbackUpdate.metadata && typeof fallbackUpdate.metadata === 'object') {
-          fallbackUpdate.metadata = { ...fallbackUpdate.metadata };
-        }
-
-        if (typeof updateData.precio === 'number') {
-          const metadataPayload =
-            fallbackUpdate.metadata && typeof fallbackUpdate.metadata === 'object'
-              ? fallbackUpdate.metadata
-              : {};
-
-          if (!('precio' in metadataPayload)) {
-            metadataPayload.precio = updateData.precio;
-          }
-
-          fallbackUpdate.metadata = metadataPayload;
-        }
-
         response = await runUpdateSequence(fallbackUpdate);
       }
 
@@ -416,7 +393,6 @@ class SeatLocatorService {
     funcionId = null,
     status = null,
     sessionId = null,
-    metadata = null,
   }) {
     const normalizedSeats = normalizeSeats(seats);
     const seatIds = normalizedSeats.map((seat) => seat.id);
@@ -440,7 +416,6 @@ class SeatLocatorService {
       tenantId,
       funcionId,
       sessionId,
-      metadata,
       statusFilters: ['locked', 'seleccionado', 'seleccionado_por_otro', 'expirando', 'reservado'],
     });
   }
