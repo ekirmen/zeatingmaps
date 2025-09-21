@@ -266,6 +266,18 @@ const Header = ({ onLogin, onLogout }) => {
     setError('');
   };
 
+  const handleFormSubmit = async (event) => {
+    event.preventDefault();
+
+    if (accountMode === 'login') {
+      await handleLogin();
+    } else if (accountMode === 'register') {
+      await handleRegister();
+    } else if (accountMode === 'forgot') {
+      await handleForgotPassword();
+    }
+  };
+
   
   const DEBUG = typeof window !== 'undefined' && window.__DEBUG === true;
   
@@ -556,7 +568,11 @@ const Header = ({ onLogin, onLogout }) => {
         </div>
 
         {/* Contenido del formulario */}
-        <form id={accountMode} className="ant-form ant-form-vertical ant-form-large">
+        <form
+          id={accountMode}
+          className="ant-form ant-form-vertical ant-form-large"
+          onSubmit={handleFormSubmit}
+        >
           {accountMode === 'login' && (
             <>
               {error && <div className="text-red-500 mb-4 text-center">{error}</div>}
@@ -642,10 +658,9 @@ const Header = ({ onLogin, onLogout }) => {
                   <div className="ant-col ant-form-item-control">
                     <div className="ant-form-item-control-input">
                       <div className="ant-form-item-control-input-content">
-                        <button 
-                          type="submit" 
+                        <button
+                          type="submit"
                           className="store-button store-button-primary store-button-lg store-button-block"
-                          onClick={handleLogin}
                         >
                           Iniciar Sesión
                         </button>
@@ -807,10 +822,9 @@ const Header = ({ onLogin, onLogout }) => {
                   <div className="ant-col ant-form-item-control">
                     <div className="ant-form-item-control-input">
                       <div className="ant-form-item-control-input-content">
-                        <button 
-                          type="submit" 
+                        <button
+                          type="submit"
                           className="store-button store-button-primary store-button-lg store-button-block"
-                          onClick={handleRegister}
                         >
                           Crear Cuenta
                         </button>
@@ -880,10 +894,9 @@ const Header = ({ onLogin, onLogout }) => {
                   <div className="ant-col ant-form-item-control">
                     <div className="ant-form-item-control-input">
                       <div className="ant-form-item-control-input-content">
-                        <button 
-                          type="submit" 
+                        <button
+                          type="submit"
                           className="store-button store-button-primary store-button-lg store-button-block"
-                          onClick={handleForgotPassword}
                         >
                           Enviar Enlace
                         </button>
