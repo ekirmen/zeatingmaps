@@ -107,10 +107,13 @@ const createTransactionAndSyncSeats = async (method, paymentData, options = {}) 
     return transaction;
   } catch (error) {
     console.error('Error creating payment transaction:', error);
+    const { user: _rawUser, ...payloadWithoutUser } = payload;
     const fallbackTransaction = {
       id: generateUUID(),
-      ...payload,
-      user_id: payload.userId ?? payload.user?.id ?? null,
+      ...payloadWithoutUser,
+      user: payload.userId ?? null,
+      user_id: payload.userId ?? null,
+      usuario_id: payload.userId ?? null,
       status: options.transactionStatus || 'pending',
       created_at: new Date().toISOString(),
     };

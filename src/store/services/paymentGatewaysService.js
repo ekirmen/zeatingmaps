@@ -468,7 +468,7 @@ export const createPaymentTransaction = async (transactionData) => {
       payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
       gateway_name: gatewayName,
       seats: transactionData.seats || transactionData.items || null,
-      "user": transactionData.user || null, // Corregido: usar el objeto user completo
+      user: userId || null,
       usuario_id: userId,
       event: transactionData.eventoId
     };
@@ -494,7 +494,7 @@ export const createPaymentTransaction = async (transactionData) => {
 
     return {
       ...data,
-      user: transactionData.user || null
+      user: userId || null
     };
   } catch (error) {
     console.error('[PaymentTransaction] Error creando transacción:', error);
