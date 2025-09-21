@@ -1,472 +1,342 @@
 import { createPaymentTransaction as createSupabaseTransaction } from './paymentGatewaysService';
+import seatLocatorService from './seatLocatorService';
+import determineSeatLockStatus from '../../services/ticketing/seatStatus';
 
-// Funciones temporales para transacciones - se pueden implementar más tarde
-const createPaymentTransaction = async (data) => {
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const generateUUID = () =>
+  'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+
+const isUuid = (value) => typeof value === 'string' && UUID_REGEX.test(value);
+
+const resolveSessionId = (explicitSessionId = null) => {
+  if (explicitSessionId) return explicitSessionId;
+  if (typeof window === 'undefined') return null;
   try {
-    // Generar UUID válido para gateway_id si no existe
-    const generateUUID = () => {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : ((r & 0x3) | 0x8);
-        return v.toString(16);
-      });
-    };
-
-    // Si gatewayId no es un UUID válido, generar uno
-    let gatewayId = data.gatewayId;
-    if (!gatewayId || (typeof gatewayId === 'string' && !gatewayId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))) {
-      gatewayId = generateUUID();
-    }
-
-    // Preparar datos completos para la transacción
-    const transactionData = {
-      ...data,
-      gatewayId: gatewayId,
-      locator: data.locator,
-      tenantId: data.tenantId,
-      userId: data.userId,
-      eventoId: data.eventoId,
-      funcionId: data.funcionId
-    };
-
-    // Usar la función real de Supabase
-    return await createSupabaseTransaction(transactionData);
-  } catch (error) {
-    console.error('Error creating payment transaction:', error);
-    // Fallback a función temporal si falla
-    const generateUUID = () => {
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : ((r & 0x3) | 0x8);
-        return v.toString(16);
-      });
-    };
-
-    return {
-      id: generateUUID(),
-      ...data,
-      user_id: data.userId ?? data.user?.id ?? null,
-      status: 'pending',
-      created_at: new Date().toISOString()
-    };
+    return (
+      window.localStorage?.getItem('anonSessionId') ||
+      window.sessionStorage?.getItem('anonSessionId') ||
+      null
+    );
+  } catch (err) {
+    console.warn('Could not resolve seat session id:', err);
+    return null;
   }
 };
 
-// const updatePaymentTransactionStatus = async (id, status, response = null) => {
-//   try {
-//     return await updateSupabaseTransactionStatus(id, status, response);
-//   } catch (error) {
-//     console.error('Error updating payment transaction:', error);
-//     return { id, status, response, updated_at: new Date().toISOString() };
-//   }
-// };
+const ensureGatewayId = (method, providedGatewayId) => {
+  if (isUuid(providedGatewayId)) return providedGatewayId;
+  if (isUuid(method?.id)) return method.id;
+  return generateUUID();
+};
 
-/**
- * Procesador base para todos los métodos de pago
- */
+const buildTransactionPayload = (method, paymentData, options = {}) => {
+  const paymentMethodName = method.method_name || method.name || method.method_id || 'manual';
+
+  const payload = {
+    orderId: paymentData.orderId,
+    gatewayId: ensureGatewayId(method, options.gatewayId || paymentData.gatewayId),
+    amount: paymentData.amount,
+    currency: paymentData.currency || 'USD',
+    locator: paymentData.locator,
+    tenantId: paymentData.tenant?.id,
+    userId: paymentData.user?.id,
+    eventoId: paymentData.evento?.id,
+    funcionId: paymentData.funcion?.id,
+    paymentMethod: paymentMethodName,
+    gatewayName: method.name || method.method_name || method.method_id || 'Manual',
+    seats: paymentData.items || [],
+    user: paymentData.user || null,
+  };
+
+  if (options.gatewayResponse) {
+    payload.gatewayResponse = options.gatewayResponse;
+  }
+
+  if (options.transactionStatus) {
+    payload.status = options.transactionStatus;
+  }
+
+  if (options.payments) {
+    payload.payments = options.payments;
+  }
+
+  return payload;
+};
+
+const finalizeSeatLocks = async (method, paymentData, transactionStatus, options = {}) => {
+  if (!paymentData?.items || paymentData.items.length === 0) {
+    return { updated: 0 };
+  }
+
+  const seatStatus = determineSeatLockStatus({
+    methodId: method.method_id,
+    transactionStatus,
+    isReservation: options.isReservation || paymentData.isReservation,
+    requiresManualConfirmation: options.requiresManualConfirmation,
+    seatStatusHint: options.seatStatusHint,
+    manualStatus: options.manualStatus,
+  });
+
+  try {
+    return await seatLocatorService.finalizeSeatsAfterPayment({
+      seats: paymentData.items,
+      locator: paymentData.locator,
+      userId: paymentData.user?.id || null,
+      tenantId: paymentData.tenant?.id || null,
+      funcionId: paymentData.funcion?.id || null,
+      status: seatStatus,
+      sessionId: resolveSessionId(options.sessionId || paymentData.sessionId),
+    });
+  } catch (error) {
+    console.warn('Could not finalize seat locks:', error);
+    return { updated: 0 };
+  }
+};
+
+const createTransactionAndSyncSeats = async (method, paymentData, options = {}) => {
+  const payload = buildTransactionPayload(method, paymentData, options);
+
+  try {
+    const transaction = await createSupabaseTransaction(payload);
+    await finalizeSeatLocks(method, paymentData, options.transactionStatus || transaction.status, options);
+    return transaction;
+  } catch (error) {
+    console.error('Error creating payment transaction:', error);
+    const fallbackTransaction = {
+      id: generateUUID(),
+      ...payload,
+      user_id: payload.userId ?? payload.user?.id ?? null,
+      status: options.transactionStatus || 'pending',
+      created_at: new Date().toISOString(),
+    };
+    await finalizeSeatLocks(method, paymentData, fallbackTransaction.status, options);
+    return fallbackTransaction;
+  }
+};
+
 class PaymentMethodProcessor {
   constructor(method) {
     this.method = method;
     this.config = method.config || {};
   }
 
-  async processPayment(paymentData) {
+  async processPayment() {
     throw new Error('Método processPayment debe ser implementado');
   }
 
   async validatePayment(paymentData) {
-    return { valid: true, errors: [] };
+    const errors = [];
+    if (!paymentData?.amount || paymentData.amount <= 0) {
+      errors.push('El monto debe ser mayor a 0');
+    }
+    if (!paymentData?.orderId) {
+      errors.push('Se requiere un ID de orden');
+    }
+    return { valid: errors.length === 0, errors };
   }
 }
 
-/**
- * Procesador para Stripe
- */
 class StripeMethodProcessor extends PaymentMethodProcessor {
   async processPayment(paymentData) {
-    try {
-      // Preparar respuesta de gateway con asientos
-      const gatewayResponse = {
-        seats: paymentData.items || [], // Guardar los asientos en gateway_response
-        payment_method: this.method.method_name || this.method.name || 'stripe',
-        timestamp: new Date().toISOString()
-      };
+    const gatewayResponse = {
+      seats: paymentData.items || [],
+      payment_method: this.method.method_name || this.method.name || 'stripe',
+      timestamp: new Date().toISOString(),
+    };
 
-      // Crear transacción en nuestra base de datos
-      const transaction = await createPaymentTransaction({
-        orderId: paymentData.orderId,
-        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
-        amount: paymentData.amount,
-        currency: paymentData.currency || 'USD',
-        locator: paymentData.locator,
-        tenantId: paymentData.tenant?.id,
-        userId: paymentData.user?.id,
-        eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id,
-        paymentMethod: this.method.method_name || this.method.name || 'stripe',
-        gatewayName: this.method.name || this.method.method_name || 'Stripe',
-        gatewayResponse: gatewayResponse, // Incluir los asientos en gateway_response
-        seats: paymentData.items || [],
-        user: paymentData.user || null
-      });
+    const transaction = await createTransactionAndSyncSeats(this.method, paymentData, {
+      gatewayResponse,
+      transactionStatus: paymentData.isReservation ? 'reservado' : 'pending',
+      isReservation: this.method.method_id === 'reserva' || paymentData.isReservation,
+    });
 
-      // Conectar asientos con el localizador
-      if (paymentData.user?.id && paymentData.funcion?.id) {
-        try {
-          const seatLocatorModule = await import('./seatLocatorService');
-          const seatLocatorService = seatLocatorModule?.default;
-          if (!seatLocatorService?.updateSeatsWithLocator) {
-            console.warn('seatLocatorService.updateSeatsWithLocator no está disponible');
-          } else {
-            const seatIds = paymentData.items?.map(item => item.seatId).filter(Boolean) || [];
-            if (seatIds.length > 0) {
-              // Extraer información de zona del primer asiento
-              const firstSeat = paymentData.items?.[0];
-              const zoneInfo = firstSeat ? {
-                zona_id: firstSeat.zonaId || 'ORO',
-                zona_nombre: firstSeat.zona || 'ORO',
-                precio: firstSeat.precio || firstSeat.price || 10.00
-              } : null;
+    const mockStripeResponse = {
+      id: `pi_${Math.random().toString(36).substr(2, 9)}`,
+      status: 'requires_payment_method',
+      client_secret: `pi_${Math.random().toString(36).substr(2, 9)}_secret_${Math.random()
+        .toString(36)
+        .substr(2, 9)}`,
+    };
 
-              await seatLocatorService.updateSeatsWithLocator(
-                seatIds,
-                paymentData.locator,
-                paymentData.user.id,
-                zoneInfo
-              );
-              console.log('🔗 Connected seats with locator and zone info:', seatIds, zoneInfo);
-            }
-          }
-        } catch (error) {
-          console.warn('Could not connect seats with locator:', error);
-        }
-      }
-
-      // Simulación de respuesta de Stripe
-      const mockStripeResponse = {
-        id: `pi_${Math.random().toString(36).substr(2, 9)}`,
-        status: 'requires_payment_method',
-        client_secret: `pi_${Math.random().toString(36).substr(2, 9)}_secret_${Math.random().toString(36).substr(2, 9)}`
-      };
-
-      // Determinar si es una reserva basado en el método de pago o configuración
-      const isReservation = this.method.method_id === 'reserva' || paymentData.isReservation;
-      
-      return {
-        success: true,
-        transactionId: transaction.id,
-        gatewayTransactionId: mockStripeResponse.id,
-        status: isReservation ? 'reservado' : 'pending',
-        message: isReservation ? 'Reserva creada correctamente' : 'Pago procesado correctamente',
-        gatewayResponse: mockStripeResponse,
-        isReservation: isReservation,
-        locator: paymentData.locator
-      };
-    } catch (error) {
-      console.error('Error procesando pago con Stripe:', error);
-      throw error;
-    }
-  }
-
-  async validatePayment(paymentData) {
-    const errors = [];
-    
-    if (!paymentData.amount || paymentData.amount <= 0) {
-      errors.push('El monto debe ser mayor a 0');
-    }
-    
-    if (!paymentData.orderId) {
-      errors.push('Se requiere un ID de orden');
-    }
+    const isReservation = this.method.method_id === 'reserva' || paymentData.isReservation;
 
     return {
-      valid: errors.length === 0,
-      errors
+      success: true,
+      transactionId: transaction.id,
+      gatewayTransactionId: mockStripeResponse.id,
+      status: isReservation ? 'reservado' : 'pending',
+      message: isReservation ? 'Reserva creada correctamente' : 'Pago procesado correctamente',
+      gatewayResponse: mockStripeResponse,
+      isReservation,
+      locator: paymentData.locator,
     };
   }
 }
 
-/**
- * Procesador para PayPal
- */
 class PayPalMethodProcessor extends PaymentMethodProcessor {
   async processPayment(paymentData) {
-    try {
-      const transaction = await createPaymentTransaction({
-        orderId: paymentData.orderId,
-        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
-        amount: paymentData.amount,
-        currency: paymentData.currency || 'USD',
-        locator: paymentData.locator,
-        tenantId: paymentData.tenant?.id,
-        userId: paymentData.user?.id,
-        eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id,
-        seats: paymentData.items || [],
-        user: paymentData.user || null
-      });
+    const transaction = await createTransactionAndSyncSeats(this.method, paymentData, {
+      transactionStatus: 'pending',
+      requiresManualConfirmation: true,
+    });
 
-      // Simulación de respuesta de PayPal
-      const mockPayPalResponse = {
-        id: `PAY-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-        state: 'created',
-        links: [
-          {
-            href: `https://www.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=${Math.random().toString(36).substr(2, 9)}`,
-            rel: 'approval_url',
-            method: 'REDIRECT'
-          }
-        ]
-      };
+    const mockPayPalResponse = {
+      id: `PAY-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+      state: 'created',
+      links: [
+        {
+          href: `https://www.paypal.com/cgi-bin/webscr?cmd=_express-checkout&token=${Math.random()
+            .toString(36)
+            .substr(2, 9)}`,
+          rel: 'approval_url',
+          method: 'REDIRECT',
+        },
+      ],
+    };
 
-      return {
-        success: true,
-        transactionId: transaction.id,
-        gatewayTransactionId: mockPayPalResponse.id,
-        status: 'pending',
-        message: 'Redirigiendo a PayPal...',
-        gatewayResponse: mockPayPalResponse,
-        locator: paymentData.locator
-      };
-    } catch (error) {
-      console.error('Error procesando pago con PayPal:', error);
-      throw error;
-    }
+    return {
+      success: true,
+      transactionId: transaction.id,
+      gatewayTransactionId: mockPayPalResponse.id,
+      status: 'pending',
+      message: 'Redirigiendo a PayPal...',
+      gatewayResponse: mockPayPalResponse,
+      locator: paymentData.locator,
+      requiresRedirect: true,
+      approvalUrl: mockPayPalResponse.links[0]?.href,
+    };
   }
 }
 
-/**
- * Procesador para Apple Pay
- */
 class ApplePayMethodProcessor extends PaymentMethodProcessor {
   async processPayment(paymentData) {
-    try {
-      const transaction = await createPaymentTransaction({
-        orderId: paymentData.orderId,
-        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
-        amount: paymentData.amount,
-        currency: paymentData.currency || 'USD',
-        locator: paymentData.locator,
-        tenantId: paymentData.tenant?.id,
-        userId: paymentData.user?.id,
-        eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id,
-        seats: paymentData.items || [],
-        user: paymentData.user || null
-      });
+    const transaction = await createTransactionAndSyncSeats(this.method, paymentData, {
+      transactionStatus: 'completed',
+    });
 
-      return {
-        success: true,
-        transactionId: transaction.id,
-        gatewayTransactionId: `apple_${Math.random().toString(36).substr(2, 9)}`,
-        status: 'completed',
-        message: 'Pago con Apple Pay completado',
-        gatewayResponse: { status: 'success' },
-        locator: paymentData.locator
-      };
-    } catch (error) {
-      console.error('Error procesando pago con Apple Pay:', error);
-      throw error;
-    }
+    return {
+      success: true,
+      transactionId: transaction.id,
+      gatewayTransactionId: `apple_${Math.random().toString(36).substr(2, 9)}`,
+      status: 'completed',
+      message: 'Pago con Apple Pay completado',
+      gatewayResponse: { status: 'success' },
+      locator: paymentData.locator,
+    };
   }
 }
 
-/**
- * Procesador para Google Pay
- */
 class GooglePayMethodProcessor extends PaymentMethodProcessor {
   async processPayment(paymentData) {
-    try {
-      const transaction = await createPaymentTransaction({
-        orderId: paymentData.orderId,
-        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
-        amount: paymentData.amount,
-        currency: paymentData.currency || 'USD',
-        locator: paymentData.locator,
-        tenantId: paymentData.tenant?.id,
-        userId: paymentData.user?.id,
-        eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id,
-        seats: paymentData.items || [],
-        user: paymentData.user || null
-      });
+    const transaction = await createTransactionAndSyncSeats(this.method, paymentData, {
+      transactionStatus: 'completed',
+    });
 
-      return {
-        success: true,
-        transactionId: transaction.id,
-        gatewayTransactionId: `google_${Math.random().toString(36).substr(2, 9)}`,
-        status: 'completed',
-        message: 'Pago con Google Pay completado',
-        gatewayResponse: { status: 'success' },
-        locator: paymentData.locator
-      };
-    } catch (error) {
-      console.error('Error procesando pago con Google Pay:', error);
-      throw error;
-    }
+    return {
+      success: true,
+      transactionId: transaction.id,
+      gatewayTransactionId: `google_${Math.random().toString(36).substr(2, 9)}`,
+      status: 'completed',
+      message: 'Pago con Google Pay completado',
+      gatewayResponse: { status: 'success' },
+      locator: paymentData.locator,
+    };
   }
 }
 
-/**
- * Procesador para Transferencia Bancaria
- */
 class TransferenciaMethodProcessor extends PaymentMethodProcessor {
   async processPayment(paymentData) {
-    try {
-      const transaction = await createPaymentTransaction({
-        orderId: paymentData.orderId,
-        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
-        amount: paymentData.amount,
-        currency: paymentData.currency || 'USD',
-        locator: paymentData.locator,
-        tenantId: paymentData.tenant?.id,
-        userId: paymentData.user?.id,
-        eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id,
-        seats: paymentData.items || [],
-        user: paymentData.user || null
-      });
+    const transaction = await createTransactionAndSyncSeats(this.method, paymentData, {
+      transactionStatus: 'reservado',
+      requiresManualConfirmation: true,
+      seatStatusHint: 'reservado',
+    });
 
-      return {
-        success: true,
-        transactionId: transaction.id,
-        gatewayTransactionId: `transfer_${Math.random().toString(36).substr(2, 9)}`,
+    return {
+      success: true,
+      transactionId: transaction.id,
+      gatewayTransactionId: `transfer_${Math.random().toString(36).substr(2, 9)}`,
+      status: 'reservado',
+      message: 'Transferencia bancaria iniciada. Se procesará en 1-3 días hábiles.',
+      gatewayResponse: {
         status: 'pending',
-        message: 'Transferencia bancaria iniciada. Se procesará en 1-3 días hábiles.',
-        gatewayResponse: { 
-          status: 'pending',
-          instructions: 'Complete la transferencia usando los datos bancarios proporcionados'
-        },
-        locator: paymentData.locator
-      };
-    } catch (error) {
-      console.error('Error procesando transferencia bancaria:', error);
-      throw error;
-    }
+        instructions: 'Complete la transferencia usando los datos bancarios proporcionados',
+      },
+      locator: paymentData.locator,
+      requiresManualConfirmation: true,
+    };
   }
 }
 
-/**
- * Procesador para Pago Móvil
- */
 class PagoMovilMethodProcessor extends PaymentMethodProcessor {
   async processPayment(paymentData) {
-    try {
-      const transaction = await createPaymentTransaction({
-        orderId: paymentData.orderId,
-        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
-        amount: paymentData.amount,
-        currency: paymentData.currency || 'USD',
-        locator: paymentData.locator,
-        tenantId: paymentData.tenant?.id,
-        userId: paymentData.user?.id,
-        eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id,
-        seats: paymentData.items || [],
-        user: paymentData.user || null
-      });
+    const transaction = await createTransactionAndSyncSeats(this.method, paymentData, {
+      transactionStatus: 'completed',
+    });
 
-      return {
-        success: true,
-        transactionId: transaction.id,
-        gatewayTransactionId: `mobile_${Math.random().toString(36).substr(2, 9)}`,
-        status: 'completed',
-        message: 'Pago móvil procesado correctamente',
-        gatewayResponse: { status: 'success' },
-        locator: paymentData.locator
-      };
-    } catch (error) {
-      console.error('Error procesando pago móvil:', error);
-      throw error;
-    }
+    return {
+      success: true,
+      transactionId: transaction.id,
+      gatewayTransactionId: `mobile_${Math.random().toString(36).substr(2, 9)}`,
+      status: 'completed',
+      message: 'Pago móvil procesado correctamente',
+      gatewayResponse: { status: 'success' },
+      locator: paymentData.locator,
+    };
   }
 }
 
-/**
- * Procesador para Pago en Efectivo en Tienda
- */
 class EfectivoTiendaMethodProcessor extends PaymentMethodProcessor {
   async processPayment(paymentData) {
-    try {
-      const transaction = await createPaymentTransaction({
-        orderId: paymentData.orderId,
-        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
-        amount: paymentData.amount,
-        currency: paymentData.currency || 'USD',
-        locator: paymentData.locator,
-        tenantId: paymentData.tenant?.id,
-        userId: paymentData.user?.id,
-        eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id,
-        seats: paymentData.items || [],
-        user: paymentData.user || null
-      });
+    const transaction = await createTransactionAndSyncSeats(this.method, paymentData, {
+      transactionStatus: 'reservado',
+      requiresManualConfirmation: true,
+      seatStatusHint: 'reservado',
+    });
 
-      return {
-        success: true,
-        transactionId: transaction.id,
-        gatewayTransactionId: `cash_${Math.random().toString(36).substr(2, 9)}`,
+    return {
+      success: true,
+      transactionId: transaction.id,
+      gatewayTransactionId: `cash_${Math.random().toString(36).substr(2, 9)}`,
+      status: 'reservado',
+      message: 'Pago en efectivo registrado. Complete el pago en la tienda física.',
+      gatewayResponse: {
         status: 'pending',
-        message: 'Pago en efectivo registrado. Complete el pago en la tienda física.',
-        gatewayResponse: { 
-          status: 'pending',
-          instructions: 'Visite nuestra tienda física para completar el pago en efectivo'
-        },
-        requiresRedirect: false,
-        requiresAction: false,
-        requiresManualConfirmation: true,
-        locator: paymentData.locator
-      };
-    } catch (error) {
-      console.error('Error procesando pago en efectivo en tienda:', error);
-      throw error;
-    }
+        instructions: 'Visite nuestra tienda física para completar el pago en efectivo',
+      },
+      requiresManualConfirmation: true,
+      locator: paymentData.locator,
+    };
   }
 }
 
-/**
- * Procesador para Efectivo
- */
 class EfectivoMethodProcessor extends PaymentMethodProcessor {
   async processPayment(paymentData) {
-    try {
-      const transaction = await createPaymentTransaction({
-        orderId: paymentData.orderId,
-        gatewayId: this.method.id || `gateway_${this.method.method_id}`,
-        amount: paymentData.amount,
-        currency: paymentData.currency || 'USD',
-        locator: paymentData.locator,
-        tenantId: paymentData.tenant?.id,
-        userId: paymentData.user?.id,
-        eventoId: paymentData.evento?.id,
-        funcionId: paymentData.funcion?.id,
-        seats: paymentData.items || [],
-        user: paymentData.user || null
-      });
+    const transaction = await createTransactionAndSyncSeats(this.method, paymentData, {
+      transactionStatus: 'completed',
+      manualStatus: 'pagado',
+      seatStatusHint: 'pagado',
+    });
 
-      return {
-        success: true,
-        transactionId: transaction.id,
-        gatewayTransactionId: `cash_${Math.random().toString(36).substr(2, 9)}`,
-        status: 'completed',
-        message: 'Pago en efectivo completado',
-        gatewayResponse: { status: 'success' },
-        requiresRedirect: false,
-        requiresAction: false,
-        requiresManualConfirmation: false,
-        locator: paymentData.locator
-      };
-    } catch (error) {
-      console.error('Error procesando pago en efectivo:', error);
-      throw error;
-    }
+    return {
+      success: true,
+      transactionId: transaction.id,
+      gatewayTransactionId: `cash_${Math.random().toString(36).substr(2, 9)}`,
+      status: 'completed',
+      message: 'Pago en efectivo completado',
+      gatewayResponse: { status: 'success' },
+      requiresManualConfirmation: false,
+      locator: paymentData.locator,
+    };
   }
 }
 
-/**
- * Factory para crear procesadores según el method_id
- */
-export const createPaymentMethodProcessor = (method) => {
+const createPaymentMethodProcessor = (method) => {
   const processors = {
     stripe: StripeMethodProcessor,
     paypal: PayPalMethodProcessor,
@@ -475,7 +345,7 @@ export const createPaymentMethodProcessor = (method) => {
     transferencia: TransferenciaMethodProcessor,
     pago_movil: PagoMovilMethodProcessor,
     efectivo_tienda: EfectivoTiendaMethodProcessor,
-    efectivo: EfectivoMethodProcessor
+    efectivo: EfectivoMethodProcessor,
   };
 
   const ProcessorClass = processors[method.method_id];
@@ -486,26 +356,16 @@ export const createPaymentMethodProcessor = (method) => {
   return new ProcessorClass(method);
 };
 
-/**
- * Función principal para procesar pagos con métodos de pago
- */
 export const processPaymentMethod = async (method, paymentData) => {
   try {
-    console.log('🔍 Processing payment method:', method.method_id);
     const processor = createPaymentMethodProcessor(method);
-    
-    // Validar pago
     const validation = await processor.validatePayment(paymentData);
-    console.log('🔍 Validation result:', validation);
+
     if (!validation.valid) {
       throw new Error(`Validación fallida: ${validation.errors.join(', ')}`);
     }
 
-    // Procesar pago
-    console.log('🔍 Processing payment...');
-    const result = await processor.processPayment(paymentData);
-    console.log('🔍 Payment processing result:', result);
-    return result;
+    return await processor.processPayment(paymentData);
   } catch (error) {
     console.error('Error processing payment:', error);
     throw error;

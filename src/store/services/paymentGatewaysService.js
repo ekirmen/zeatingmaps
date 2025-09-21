@@ -371,7 +371,7 @@ export const createPaymentTransaction = async (transactionData) => {
       gateway_id: transactionData.gatewayId,
       amount: transactionData.amount,
       currency: transactionData.currency || 'USD',
-      status: 'pending',
+      status: transactionData.status || 'pending',
       gateway_transaction_id: transactionData.gatewayTransactionId,
       gateway_response: transactionData.gatewayResponse || null,
       locator: transactionData.locator,
@@ -386,6 +386,10 @@ export const createPaymentTransaction = async (transactionData) => {
       usuario_id: userId,
       event: transactionData.eventoId
     };
+
+    if (transactionData.payments) {
+      insertData.payments = transactionData.payments;
+    }
 
     console.log('[PaymentTransaction] Datos a insertar:', insertData);
 
