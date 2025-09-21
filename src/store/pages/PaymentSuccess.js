@@ -8,6 +8,7 @@ import { loadMetaPixel } from '../utils/analytics';
 import { supabase } from '../../supabaseClient';
 import { useCartStore } from '../../store/cartStore';
 import downloadTicket from '../../utils/downloadTicket';
+import { useAuth } from '../../contexts/AuthContext';
 
 const PaymentSuccess = () => {
   const clearCart = useCartStore(state => state.clearCart);
@@ -18,6 +19,7 @@ const PaymentSuccess = () => {
   const navigate = useNavigate();
   const { refParam } = useRefParam();
   const [paymentDetails, setPaymentDetails] = useState(null);
+  const { user, loading: authLoading } = useAuth();
 
   const isReservation = paymentDetails?.status === 'reservado' || paymentDetails?.status === 'pending';
 
@@ -33,7 +35,13 @@ const PaymentSuccess = () => {
   }, []);
 
   useEffect(() => {
-    if (!locator) return;
+    if (!authLoading && !user) {
+      navigate('/store/login', { state: { from: location }, replace: true });
+    }
+  }, [authLoading, user, navigate, location]);
+
+  useEffect(() => {
+    if (!locator || !user) return;
 
     const fetchPaymentDetails = async () => {
       try {
@@ -72,7 +80,7 @@ const PaymentSuccess = () => {
     };
 
     fetchPaymentDetails();
-  }, [locator]);
+  }, [locator, user]);
 
 
   const handleDownloadAllTickets = async () => {
@@ -86,6 +94,12 @@ const PaymentSuccess = () => {
 
   const handleContinuePayment = async () => {
     try {
+      if (!user) {
+        toast.error('Debes iniciar sesión para continuar');
+        navigate('/store/login', { state: { from: location }, replace: true });
+        return;
+      }
+
       // Buscar en payment_transactions usando el locator como order_id
       const { data: transaction, error: transactionError } = await supabase
         .from('payment_transactions')
@@ -117,6 +131,18 @@ const PaymentSuccess = () => {
         <p className="text-red-500">Localizador no proporcionado.</p>
       </div>
     );
+  }
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-gray-600">Verificando sesión...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
