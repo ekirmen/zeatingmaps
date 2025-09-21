@@ -88,7 +88,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     loading,
-    validateSession
+    validateSession,
+    setUser
   };
 
   return (
