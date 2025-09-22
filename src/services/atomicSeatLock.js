@@ -26,15 +26,15 @@ class AtomicSeatLockService {
       
       // Preparar datos para la función de base de datos
       const lockData = {
-        seat_id: seatId,
-        funcion_id: parseInt(funcionId, 10),
-        session_id: sessionId,
-        status: status,
-        lock_type: 'seat',
-        locator: locator,
-        tenant_id: tenantId,
-        locked_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutos
+        p_seat_id: seatId,
+        p_funcion_id: parseInt(funcionId, 10),
+        p_session_id: sessionId,
+        p_status: status,
+        p_lock_type: 'seat',
+        p_locator: locator,
+        p_tenant_id: tenantId,
+        p_locked_at: new Date().toISOString(),
+        p_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutos
       };
 
       // Usar función RPC para bloqueo atómico
@@ -85,9 +85,9 @@ class AtomicSeatLockService {
 
       // Usar función RPC para desbloqueo atómico
       const { data, error } = await supabase.rpc('atomic_seat_unlock', {
-        seat_id: seatId,
-        funcion_id: parseInt(funcionId, 10),
-        session_id: sessionId
+        p_seat_id: seatId,
+        p_funcion_id: parseInt(funcionId, 10),
+        p_session_id: sessionId
       });
       
       if (error) {
@@ -122,9 +122,9 @@ class AtomicSeatLockService {
    */
   async isSeatAvailable(seatId, funcionId) {
     try {
-      const { data, error } = await supabase.rpc('check_seat_availability', {
-        seat_id: seatId,
-        funcion_id: parseInt(funcionId, 10)
+      const { data, error } = await supabase.rpc('is_seat_available', {
+        p_seat_id: seatId,
+        p_funcion_id: parseInt(funcionId, 10)
       });
       
       if (error) {
@@ -132,7 +132,7 @@ class AtomicSeatLockService {
         return false;
       }
       
-      return data?.available === true;
+      return data === true;
     } catch (error) {
       console.error('❌ [AVAILABILITY_CHECK] Error inesperado:', error);
       return false;
