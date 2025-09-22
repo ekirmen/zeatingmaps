@@ -10,6 +10,132 @@ import SeatLockDebug from './SeatLockDebug';
 // import VisualNotifications from '../utils/VisualNotifications'; // Removido por no usarse
 import resolveImageUrl from '../utils/resolveImageUrl';
 
+// Cache global para imágenes de fondo para evitar recargas constantes
+const backgroundImageCache = new Map();
+
+// Función para precargar imágenes de fondo
+const preloadBackgroundImage = (url) => {
+  if (!url || backgroundImageCache.has(url)) return Promise.resolve();
+  
+  return new Promise((resolve, reject) => {
+    const image = new window.Image();
+    image.crossOrigin = url.startsWith('data:') ? undefined : 'anonymous';
+    image.loading = 'eager';
+    image.decoding = 'sync';
+    
+    image.onload = () => {
+      backgroundImageCache.set(url, image);
+      resolve(image);
+    };
+    
+    image.onerror = reject;
+    image.src = url;
+  });
+};
+
+// Componente BackgroundImage memoizado para evitar re-renders innecesarios
+const BackgroundImage = React.memo(({ config }) => {
+  // Resolver la URL desde múltiples posibles campos
+  const rawUrl = useMemo(() => {
+    let url = config.imageUrl
+      || config.url
+      || config.src
+      || config.image?.url
+      || config.image?.publicUrl
+      || config.imageData
+      || config.image?.data
+      || '';
+
+    // Si es una ruta relativa de Storage, construir la URL pública (bucket 'productos')
+    if (url && !/^https?:\/\//i.test(url) && !/^data:/i.test(url)) {
+      url = resolveImageUrl(url, 'productos') || url;
+    }
+    
+    return url;
+  }, [config.imageUrl, config.url, config.src, config.image?.url, config.image?.publicUrl, config.imageData, config.image?.data]);
+
+  const [bgImg, setBgImg] = React.useState(() => {
+    // Intentar obtener la imagen del cache primero
+    if (rawUrl && backgroundImageCache.has(rawUrl)) {
+      return backgroundImageCache.get(rawUrl);
+    }
+    return null;
+  });
+
+  React.useEffect(() => {
+    if (!rawUrl) {
+      setBgImg(null);
+      return;
+    }
+    
+    // Si ya está en cache, usar la imagen cacheada inmediatamente
+    if (backgroundImageCache.has(rawUrl)) {
+      const cachedImage = backgroundImageCache.get(rawUrl);
+      // Verificar que la imagen cacheada esté completamente cargada
+      if (cachedImage.complete && cachedImage.naturalWidth > 0) {
+        setBgImg(cachedImage);
+        return;
+      }
+    }
+    
+    const image = new window.Image();
+    
+    // Configurar la imagen para evitar problemas de cache
+    image.crossOrigin = rawUrl.startsWith('data:') ? undefined : 'anonymous';
+    image.loading = 'eager'; // Cargar inmediatamente, no lazy
+    image.decoding = 'sync'; // Decodificar sincrónicamente para evitar parpadeos
+    
+    const onLoad = () => {
+      // Verificar que la imagen se cargó correctamente
+      if (image.complete && image.naturalWidth > 0) {
+        // Guardar en cache
+        backgroundImageCache.set(rawUrl, image);
+        setBgImg(image);
+      }
+    };
+    
+    const onError = (error) => {
+      console.error('Error cargando imagen de fondo:', error);
+      setBgImg(null);
+    };
+    
+    // Agregar listeners antes de establecer src
+    image.addEventListener('load', onLoad, { once: true });
+    image.addEventListener('error', onError, { once: true });
+    
+    // Establecer src después de los listeners
+    image.src = rawUrl;
+    
+    // Si la imagen ya está en cache del navegador, puede disparar load inmediatamente
+    if (image.complete) {
+      onLoad();
+    }
+    
+    return () => {
+      image.removeEventListener('load', onLoad);
+      image.removeEventListener('error', onError);
+    };
+  }, [rawUrl]);
+  
+  const imageProps = useMemo(() => ({
+    x: config.position?.x || config.posicion?.x || 0,
+    y: config.position?.y || config.posicion?.y || 0,
+    scaleX: config.scale || 1,
+    scaleY: config.scale || 1,
+    opacity: config.opacity ?? 1,
+    listening: false
+  }), [config.position?.x, config.posicion?.x, config.position?.y, config.posicion?.y, config.scale, config.opacity]);
+
+  if (!bgImg) return null;
+  
+  return (
+    <Image image={bgImg} {...imageProps} />
+  );
+});
+
+// Agregar displayName para mejor debugging
+BackgroundImage.displayName = 'BackgroundImage';
+
 const SeatingMapUnified = ({
   funcionId,
   mapa,
@@ -147,15 +273,32 @@ const SeatingMapUnified = ({
 
   // Ya no necesitamos sincronizar con storeMapa porque usamos seatStates individuales
 
-  // Background images - memoized to prevent unnecessary re-renders (moved before any returns)
-  // Usar el mapa original para las imágenes de fondo, no el storeMapa que cambia constantemente
+  // Background images - memoized to prevent unnecessary re-renders
+  // Usar solo el ID del mapa para evitar re-renders cuando cambia el contenido
   const backgroundElements = useMemo(() => {
-    const originalMapa = mapa; // Usar el mapa original, no el currentMapa
-    if (!originalMapa) return [];
-    return Array.isArray(originalMapa?.contenido)
-      ? originalMapa.contenido.filter(el => el.type === 'background' && el.showInWeb !== false)
-      : originalMapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
+    if (!mapa) return [];
+    return Array.isArray(mapa?.contenido)
+      ? mapa.contenido.filter(el => el.type === 'background' && el.showInWeb !== false)
+      : mapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
   }, [mapa]); // Mantener dependencia completa para evitar warnings
+
+  // Precargar imágenes de fondo para evitar parpadeos
+  useEffect(() => {
+    if (backgroundElements.length > 0) {
+      backgroundElements.forEach(bg => {
+        const url = bg.imageUrl || bg.url || bg.src || bg.image?.url || bg.image?.publicUrl || bg.imageData || bg.image?.data;
+        if (url) {
+          let resolvedUrl = url;
+          if (!/^https?:\/\//i.test(url) && !/^data:/i.test(url)) {
+            resolvedUrl = resolveImageUrl(url, 'productos') || url;
+          }
+          preloadBackgroundImage(resolvedUrl).catch(err => {
+            console.warn('Error precargando imagen de fondo:', err);
+          });
+        }
+      });
+    }
+  }, [backgroundElements]);
 
   // const [mapImage, setMapImage] = React.useState(null); // Removido por no usarse
   
@@ -429,75 +572,6 @@ if (Array.isArray(mapa?.contenido)) {
   }
 
   // Create a set of found seat IDs for quick lookup
-  const BackgroundImage = React.memo(({ config }) => {
-    // Resolver la URL desde múltiples posibles campos
-    const rawUrl = useMemo(() => {
-      let url = config.imageUrl
-        || config.url
-        || config.src
-        || config.image?.url
-        || config.image?.publicUrl
-        || config.imageData
-        || config.image?.data
-        || '';
-
-      // Si es una ruta relativa de Storage, construir la URL pública (bucket 'productos')
-      if (url && !/^https?:\/\//i.test(url) && !/^data:/i.test(url)) {
-        url = resolveImageUrl(url, 'productos') || url;
-      }
-      
-      return url;
-    }, [config.imageUrl, config.url, config.src, config.image?.url, config.image?.publicUrl, config.imageData, config.image?.data]);
-
-    const [bgImg, setBgImg] = React.useState(null);
-
-    React.useEffect(() => {
-      if (!rawUrl) {
-        setBgImg(null);
-        return;
-      }
-      
-      const image = new window.Image();
-      
-      // Para data URLs, no necesitamos crossOrigin
-      if (!rawUrl.startsWith('data:')) {
-        image.crossOrigin = 'anonymous';
-      }
-      
-      const onLoad = () => {
-        setBgImg(image);
-      };
-      
-      const onError = (error) => {
-        console.error('Error cargando imagen de fondo:', error);
-        setBgImg(null);
-      };
-      
-      image.addEventListener('load', onLoad);
-      image.addEventListener('error', onError);
-      image.src = rawUrl;
-      
-      return () => {
-        image.removeEventListener('load', onLoad);
-        image.removeEventListener('error', onError);
-      };
-    }, [rawUrl]);
-    
-    const imageProps = useMemo(() => ({
-      x: config.position?.x || config.posicion?.x || 0,
-      y: config.position?.y || config.posicion?.y || 0,
-      scaleX: config.scale || 1,
-      scaleY: config.scale || 1,
-      opacity: config.opacity ?? 1,
-      listening: false
-    }), [config.position?.x, config.posicion?.x, config.position?.y, config.posicion?.y, config.scale, config.opacity]);
-
-    if (!bgImg) return null;
-    
-    return (
-      <Image image={bgImg} {...imageProps} />
-    );
-  });
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
