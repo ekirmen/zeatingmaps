@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useMemo, useState, useEffect } from 'react';
+import React, { useRef, useCallback, useMemo, useState, useEffect, memo } from 'react';
 import { Stage, Layer, Circle, Rect, Text, Line, Image } from 'react-konva';
 import { Button, Space } from 'antd';
 import { ZoomInOutlined, ZoomOutOutlined, ReloadOutlined } from '@ant-design/icons';
@@ -7,7 +7,7 @@ import { useSeatColors } from '../hooks/useSeatColors';
 import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
 import SeatStatusLegend from './SeatStatusLegend';
 import SeatLockDebug from './SeatLockDebug';
-import VisualNotifications from '../utils/VisualNotifications';
+// import VisualNotifications from '../utils/VisualNotifications'; // Removido por no usarse
 import resolveImageUrl from '../utils/resolveImageUrl';
 
 const SeatingMapUnified = ({
@@ -51,7 +51,7 @@ const SeatingMapUnified = ({
     setPosition({ x: 0, y: 0 });
   }, []);
 
-  const channel = useSeatLockStore(state => state.channel);
+  // const channel = useSeatLockStore(state => state.channel); // Removido por no usarse
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const setMapa = useSeatLockStore(state => state.setMapa);
   const storeMapa = useSeatLockStore(state => state.mapa);
@@ -137,60 +137,63 @@ const SeatingMapUnified = ({
   useEffect(() => {
     if (storeMapa && storeMapa !== mapa) {
       console.log('🔄 [SEATING_MAP] Mapa actualizado desde el store (tiempo real)');
+      // No hacer nada más aquí para evitar re-renders innecesarios
     }
-  }, [storeMapa, mapa]);
+  }, [storeMapa, mapa]); // Mantener dependencias completas para evitar warnings
 
   // Background images - memoized to prevent unnecessary re-renders (moved before any returns)
+  // Usar el mapa original para las imágenes de fondo, no el storeMapa que cambia constantemente
   const backgroundElements = useMemo(() => {
-    if (!mapa) return [];
-    return Array.isArray(mapa?.contenido)
-      ? mapa.contenido.filter(el => el.type === 'background' && el.showInWeb !== false)
-      : mapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
-  }, [mapa?.contenido]);
+    const originalMapa = mapa; // Usar el mapa original, no el currentMapa
+    if (!originalMapa) return [];
+    return Array.isArray(originalMapa?.contenido)
+      ? originalMapa.contenido.filter(el => el.type === 'background' && el.showInWeb !== false)
+      : originalMapa?.contenido?.elementos?.filter(el => el.type === 'background' && el.showInWeb !== false) || [];
+  }, [mapa]); // Mantener dependencia completa para evitar warnings
 
-  const [mapImage, setMapImage] = React.useState(null);
+  // const [mapImage, setMapImage] = React.useState(null); // Removido por no usarse
   
-  React.useEffect(() => {
-    if (!mapa?.imagen_fondo) {
-      setMapImage(null);
-      return;
-    }
-    
-    const url = resolveImageUrl(mapa.imagen_fondo);
-    
-    // Verificar si la imagen ya está en cache
-    const cachedImage = new window.Image();
-    cachedImage.src = url;
-    
-    if (cachedImage.complete) {
-      setMapImage(cachedImage);
-      return;
-    }
-    
-    const image = new window.Image();
-    // Habilitar cache de CDN y uso de canvas seguro
-    image.crossOrigin = 'anonymous';
-    image.loading = 'lazy'; // Lazy loading para mejor rendimiento
-    
-    const handleLoad = () => {
-      setMapImage(image);
-    };
-    
-    const handleError = () => {
-      console.warn('Error loading background image:', url);
-      setMapImage(null);
-    };
-    
-    image.addEventListener('load', handleLoad);
-    image.addEventListener('error', handleError);
-    
-    image.src = url;
-    
-    return () => {
-      image.removeEventListener('load', handleLoad);
-      image.removeEventListener('error', handleError);
-    };
-  }, [mapa?.imagen_fondo]);
+  // React.useEffect(() => {
+  //   if (!mapa?.imagen_fondo) {
+  //     setMapImage(null);
+  //     return;
+  //   }
+  //   
+  //   const url = resolveImageUrl(mapa.imagen_fondo);
+  //   
+  //   // Verificar si la imagen ya está en cache
+  //   const cachedImage = new window.Image();
+  //   cachedImage.src = url;
+  //   
+  //   if (cachedImage.complete) {
+  //     setMapImage(cachedImage);
+  //     return;
+  //   }
+  //   
+  //   const image = new window.Image();
+  //   // Habilitar cache de CDN y uso de canvas seguro
+  //   image.crossOrigin = 'anonymous';
+  //   image.loading = 'lazy'; // Lazy loading para mejor rendimiento
+  //   
+  //   const handleLoad = () => {
+  //     setMapImage(image);
+  //   };
+  //   
+  //   const handleError = () => {
+  //     console.warn('Error loading background image:', url);
+  //     setMapImage(null);
+  //   };
+  //   
+  //   image.addEventListener('load', handleLoad);
+  //   image.addEventListener('error', handleError);
+  //   
+  //   image.src = url;
+  //   
+  //   return () => {
+  //     image.removeEventListener('load', handleLoad);
+  //     image.removeEventListener('error', handleError);
+  //   };
+  // }, [mapa?.imagen_fondo]); // Removido por no usarse
 
   const handleSeatClick = useCallback(
     (seat) => {
@@ -284,7 +287,7 @@ const SeatingMapUnified = ({
       // Llamar a la función de información del asiento si existe
       if (onSeatInfo) onSeatInfo(seat);
     },
-    [onSeatToggle, onSeatInfo, selectedSeatIds, funcionId, blockedSeats]
+    [onSeatToggle, onSeatInfo, onSeatError, selectedSeatIds, funcionId, blockedSeats]
   );
 
 
@@ -849,4 +852,4 @@ if (Array.isArray(mapa?.contenido)) {
   );
 };
 
-export default SeatingMapUnified;
+export default memo(SeatingMapUnified);
