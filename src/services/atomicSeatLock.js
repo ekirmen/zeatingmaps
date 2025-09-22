@@ -1,0 +1,248 @@
+import { supabase } from '../supabaseClient';
+
+/**
+ * Servicio para bloqueo atómico de asientos que previene condiciones de carrera
+ */
+class AtomicSeatLockService {
+  
+  /**
+   * Bloquea un asiento de forma atómica usando una función de base de datos
+   * Esto previene condiciones de carrera entre múltiples usuarios
+   */
+  async lockSeatAtomically(seatId, funcionId, sessionId, status = 'seleccionado', options = {}) {
+    try {
+      console.log('🔒 [ATOMIC_LOCK] Intentando bloqueo atómico:', { seatId, funcionId, sessionId, status });
+      
+      // Validar parámetros requeridos
+      if (!seatId || !funcionId || !sessionId) {
+        throw new Error('Parámetros requeridos: seatId, funcionId, sessionId');
+      }
+
+      // Obtener tenant_id si está disponible
+      const tenantId = this.getCurrentTenantId();
+      
+      // Generar locator temporal
+      const locator = this.generateTempLocator();
+      
+      // Preparar datos para la función de base de datos
+      const lockData = {
+        seat_id: seatId,
+        funcion_id: parseInt(funcionId, 10),
+        session_id: sessionId,
+        status: status,
+        lock_type: 'seat',
+        locator: locator,
+        tenant_id: tenantId,
+        locked_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutos
+      };
+
+      // Usar función RPC para bloqueo atómico
+      const { data, error } = await supabase.rpc('atomic_seat_lock', lockData);
+      
+      if (error) {
+        console.error('❌ [ATOMIC_LOCK] Error en bloqueo atómico:', error);
+        
+        // Manejar errores específicos
+        if (error.message?.includes('already_locked')) {
+          throw new Error('Asiento ya está seleccionado por otro usuario');
+        } else if (error.message?.includes('not_available')) {
+          throw new Error('Asiento no está disponible');
+        } else if (error.message?.includes('invalid_seat')) {
+          throw new Error('Asiento no válido');
+        } else {
+          throw new Error(`Error al seleccionar asiento: ${error.message}`);
+        }
+      }
+
+      console.log('✅ [ATOMIC_LOCK] Asiento bloqueado exitosamente:', data);
+      return {
+        success: true,
+        lockData: data,
+        locator: locator
+      };
+
+    } catch (error) {
+      console.error('❌ [ATOMIC_LOCK] Error inesperado:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Desbloquea un asiento de forma atómica
+   */
+  async unlockSeatAtomically(seatId, funcionId, sessionId) {
+    try {
+      console.log('🔓 [ATOMIC_UNLOCK] Intentando desbloqueo atómico:', { seatId, funcionId, sessionId });
+      
+      // Validar parámetros requeridos
+      if (!seatId || !funcionId || !sessionId) {
+        throw new Error('Parámetros requeridos: seatId, funcionId, sessionId');
+      }
+
+      // Usar función RPC para desbloqueo atómico
+      const { data, error } = await supabase.rpc('atomic_seat_unlock', {
+        seat_id: seatId,
+        funcion_id: parseInt(funcionId, 10),
+        session_id: sessionId
+      });
+      
+      if (error) {
+        console.error('❌ [ATOMIC_UNLOCK] Error en desbloqueo atómico:', error);
+        
+        if (error.message?.includes('not_locked_by_user')) {
+          throw new Error('No puedes desbloquear un asiento que no seleccionaste');
+        } else if (error.message?.includes('already_paid')) {
+          throw new Error('No se puede desbloquear un asiento ya pagado');
+        } else {
+          throw new Error(`Error al desbloquear asiento: ${error.message}`);
+        }
+      }
+
+      console.log('✅ [ATOMIC_UNLOCK] Asiento desbloqueado exitosamente:', data);
+      return {
+        success: true,
+        data: data
+      };
+
+    } catch (error) {
+      console.error('❌ [ATOMIC_UNLOCK] Error inesperado:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Verifica si un asiento está disponible para selección
+   */
+  async isSeatAvailable(seatId, funcionId) {
+    try {
+      const { data, error } = await supabase.rpc('check_seat_availability', {
+        seat_id: seatId,
+        funcion_id: parseInt(funcionId, 10)
+      });
+      
+      if (error) {
+        console.error('❌ [AVAILABILITY_CHECK] Error:', error);
+        return false;
+      }
+      
+      return data?.available === true;
+    } catch (error) {
+      console.error('❌ [AVAILABILITY_CHECK] Error inesperado:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Obtiene el estado actual de un asiento
+   */
+  async getSeatStatus(seatId, funcionId) {
+    try {
+      const { data, error } = await supabase
+        .from('seat_locks')
+        .select('status, session_id, locked_at, expires_at, user_id')
+        .eq('seat_id', seatId)
+        .eq('funcion_id', funcionId)
+        .eq('lock_type', 'seat')
+        .maybeSingle();
+      
+      if (error) {
+        console.error('❌ [SEAT_STATUS] Error:', error);
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('❌ [SEAT_STATUS] Error inesperado:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Limpia bloqueos expirados de forma atómica
+   */
+  async cleanupExpiredLocks() {
+    try {
+      console.log('🧹 [CLEANUP] Limpiando bloqueos expirados...');
+      
+      const { data, error } = await supabase.rpc('cleanup_expired_seat_locks');
+      
+      if (error) {
+        console.error('❌ [CLEANUP] Error:', error);
+        return { success: false, error: error.message };
+      }
+      
+      console.log('✅ [CLEANUP] Bloqueos expirados limpiados:', data);
+      return { success: true, cleaned: data?.count || 0 };
+      
+    } catch (error) {
+      console.error('❌ [CLEANUP] Error inesperado:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Obtiene el tenant_id actual
+   */
+  getCurrentTenantId() {
+    try {
+      const tenantId = localStorage.getItem('currentTenantId');
+      if (tenantId) return tenantId;
+      
+      if (typeof window !== 'undefined' && window.__TENANT_CONTEXT__) {
+        const globalTenantId = window.__TENANT_CONTEXT__.getTenantId?.();
+        if (globalTenantId) return globalTenantId;
+      }
+      
+      console.warn('⚠️ No se pudo obtener el tenant_id');
+      return null;
+    } catch (error) {
+      console.warn('No se pudo obtener el tenant ID:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Genera un locator temporal
+   */
+  generateTempLocator() {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    return Array.from({ length: 8 }, () => 
+      alphabet[Math.floor(Math.random() * alphabet.length)]
+    ).join('');
+  }
+
+  /**
+   * Valida la integridad de los datos antes del bloqueo
+   */
+  validateLockData(seatId, funcionId, sessionId) {
+    const errors = [];
+    
+    if (!seatId || typeof seatId !== 'string' || seatId.trim() === '') {
+      errors.push('seatId debe ser un string válido');
+    }
+    
+    if (!funcionId || isNaN(parseInt(funcionId, 10)) || parseInt(funcionId, 10) <= 0) {
+      errors.push('funcionId debe ser un número válido mayor a 0');
+    }
+    
+    if (!sessionId || typeof sessionId !== 'string' || sessionId.trim() === '') {
+      errors.push('sessionId debe ser un string válido');
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors: errors
+    };
+  }
+}
+
+// Crear instancia singleton
+const atomicSeatLockService = new AtomicSeatLockService();
+export default atomicSeatLockService;

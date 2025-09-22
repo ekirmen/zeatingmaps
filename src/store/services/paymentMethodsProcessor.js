@@ -1,5 +1,6 @@
 import { createPaymentTransaction as createSupabaseTransaction } from './paymentGatewaysService';
 import seatLocatorService from './seatLocatorService';
+import transactionRollbackService from '../services/transactionRollbackService';
 import determineSeatLockStatus from '../../services/ticketing/seatStatus';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -100,13 +101,45 @@ const finalizeSeatLocks = async (method, paymentData, transactionStatus, options
 
 const createTransactionAndSyncSeats = async (method, paymentData, options = {}) => {
   const payload = buildTransactionPayload(method, paymentData, options);
+  
+  // Crear contexto de rollback
+  const rollbackContext = transactionRollbackService.createRollbackContext(
+    paymentData, 
+    resolveSessionId(options.sessionId || paymentData.sessionId)
+  );
 
-  try {
+  // Función de transacción principal
+  const executeTransaction = async () => {
     const transaction = await createSupabaseTransaction(payload);
     await finalizeSeatLocks(method, paymentData, options.transactionStatus || transaction.status, options);
     return transaction;
-  } catch (error) {
-    console.error('Error creating payment transaction:', error);
+  };
+
+  // Función de rollback
+  const executeRollback = async (transactionResult, context) => {
+    console.log('🔄 [PAYMENT_PROCESSOR] Ejecutando rollback de transacción');
+    
+    // Liberar asientos si la transacción falló
+    if (paymentData.items && Array.isArray(paymentData.items)) {
+      await transactionRollbackService.rollbackSeatLocks(paymentData.items, context);
+    }
+    
+    // Revertir transacción de pago si existe
+    if (transactionResult?.id) {
+      await transactionRollbackService.rollbackPaymentTransaction(transactionResult.id, context);
+    }
+  };
+
+  // Ejecutar con rollback automático
+  const result = await transactionRollbackService.executeWithRollback(
+    executeTransaction,
+    executeRollback,
+    rollbackContext
+  );
+
+  if (!result.success) {
+    // Si el rollback también falló, crear transacción de fallback
+    console.warn('⚠️ [PAYMENT_PROCESSOR] Usando transacción de fallback');
     const { user: _rawUser, ...payloadWithoutUser } = payload;
     const fallbackTransaction = {
       id: generateUUID(),
@@ -117,9 +150,17 @@ const createTransactionAndSyncSeats = async (method, paymentData, options = {}) 
       status: options.transactionStatus || 'pending',
       created_at: new Date().toISOString(),
     };
-    await finalizeSeatLocks(method, paymentData, fallbackTransaction.status, options);
+    
+    try {
+      await finalizeSeatLocks(method, paymentData, fallbackTransaction.status, options);
+    } catch (fallbackError) {
+      console.error('❌ [PAYMENT_PROCESSOR] Error en fallback:', fallbackError);
+    }
+    
     return fallbackTransaction;
   }
+
+  return result.data;
 };
 
 class PaymentMethodProcessor {

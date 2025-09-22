@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
+import atomicSeatLockService from '../services/atomicSeatLock';
 
 // Función helper para obtener el tenant_id actual
 const getCurrentTenantId = () => {
@@ -243,18 +244,34 @@ export const useSeatLockStore = create((set, get) => ({
     set({ lockedTables: validTables });
   },
 
-  // Función para iniciar limpieza automática
+  // Función para iniciar limpieza automática mejorada
   startAutoCleanup: (intervalMinutes = 5) => {
-    console.log(`🔄 [CLEANUP] Iniciando limpieza automática cada ${intervalMinutes} minutos...`);
+    console.log(`🔄 [CLEANUP] Iniciando limpieza automática mejorada cada ${intervalMinutes} minutos...`);
     
     // Limpiar bloqueos abandonados con intervalo configurable
-    const interval = setInterval(cleanupAbandonedLocks, intervalMinutes * 60 * 1000);
+    const interval = setInterval(async () => {
+      try {
+        // Usar servicio atómico para limpieza
+        const result = await atomicSeatLockService.cleanupExpiredLocks();
+        if (result.success) {
+          console.log(`✅ [CLEANUP] Limpieza automática completada: ${result.cleaned} bloqueos limpiados`);
+        } else {
+          console.error('❌ [CLEANUP] Error en limpieza automática:', result.error);
+        }
+      } catch (error) {
+        console.error('❌ [CLEANUP] Error inesperado en limpieza automática:', error);
+      }
+    }, intervalMinutes * 60 * 1000);
     
     // Limpiar bloqueos de la sesión actual al salir
-    const handleBeforeUnload = async () => {
+    const handleBeforeUnload = async (event) => {
       const sessionId = await getSessionId();
       if (sessionId) {
-        await cleanupSessionLocks(sessionId);
+        try {
+          await cleanupSessionLocks(sessionId);
+        } catch (error) {
+          console.error('❌ [CLEANUP] Error limpiando al salir:', error);
+        }
       }
     };
 
@@ -262,12 +279,31 @@ export const useSeatLockStore = create((set, get) => ({
     const handlePageHide = async () => {
       const sessionId = await getSessionId();
       if (sessionId) {
-        await cleanupSessionLocks(sessionId);
+        try {
+          await cleanupSessionLocks(sessionId);
+        } catch (error) {
+          console.error('❌ [CLEANUP] Error limpiando al cambiar página:', error);
+        }
+      }
+    };
+
+    // Limpiar bloqueos cuando la página pierde el foco
+    const handleVisibilityChange = async () => {
+      if (document.hidden) {
+        const sessionId = await getSessionId();
+        if (sessionId) {
+          try {
+            await cleanupSessionLocks(sessionId);
+          } catch (error) {
+            console.error('❌ [CLEANUP] Error limpiando al perder foco:', error);
+          }
+        }
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     set({ cleanupInterval: interval });
 
@@ -276,6 +312,7 @@ export const useSeatLockStore = create((set, get) => ({
       clearInterval(interval);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   },
 
@@ -451,90 +488,47 @@ export const useSeatLockStore = create((set, get) => ({
     }
   },
 
-  // Bloquear asiento individual
+  // Bloquear asiento individual usando servicio atómico
   lockSeat: async (seatId, status = 'seleccionado', overrideFuncionId = null) => {
-    console.log('🚀 [SEAT_LOCK] Iniciando proceso de bloqueo para asiento:', seatId);
+    console.log('🚀 [SEAT_LOCK] Iniciando proceso de bloqueo atómico para asiento:', seatId);
     
-    // Verificar que supabase esté disponible
-    if (!supabase) {
-      console.error('[SEAT_LOCK] Cliente Supabase no disponible');
-      return false;
-    }
-
-    const topic = get().channel?.topic;
-    const sessionId = normalizeSessionId(await getSessionId());
-
-    const funcionIdRaw = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
-    if (!funcionIdRaw) {
-      console.warn('[SEAT_LOCK] funcion_id inválido');
-      return false;
-    }
-    // Normalizar como número (schema: integer)
-    const funcionIdVal = parseInt(funcionIdRaw, 10);
-    if (!Number.isFinite(funcionIdVal) || funcionIdVal <= 0) {
-      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionIdRaw);
-      return false;
-    }
-
-    if (!isValidUuid(sessionId)) {
-      console.warn('[SEAT_LOCK] session_id inválido', sessionId);
-      return false;
-    }
-
-    // Validar que seatId sea un string válido (no necesariamente UUID)
-    if (!seatId || typeof seatId !== 'string' || seatId.trim() === '') {
-      console.warn('[SEAT_LOCK] seat_id inválido', seatId);
-      return false;
-    }
-
-    const lockedAt = new Date().toISOString();
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-
-    // Obtener el tenant_id actual
-    const tenantId = getCurrentTenantId();
-    
-    console.log('[SEAT_LOCK] Intentando bloquear asiento:', {
-      seat_id: seatId,
-      funcion_id: funcionIdVal,
-      session_id: sessionId,
-      status,
-      lock_type: 'seat',
-      tenant_id: tenantId
-    });
-
     try {
-      // Generar locator temporal
-      const generateTempLocator = () => {
-        const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        return Array.from({ length: 8 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
-      };
+      const topic = get().channel?.topic;
+      const sessionId = normalizeSessionId(await getSessionId());
 
-      const lockData = {
-        seat_id: seatId,
-        funcion_id: funcionIdVal,
-        session_id: sessionId,
-        locked_at: lockedAt,
-        expires_at: expiresAt,
-        status,
-        lock_type: 'seat',
-        locator: generateTempLocator() // Agregar locator temporal
-      };
-
-      // Agregar tenant_id si está disponible
-      if (tenantId) {
-        lockData.tenant_id = tenantId;
-      }
-
-      const { error } = await supabase
-        .from('seat_locks')
-        .upsert(lockData);
-
-      if (error) {
-        console.error('[SEAT_LOCK] Error al bloquear asiento:', error);
+      const funcionIdRaw = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
+      if (!funcionIdRaw) {
+        console.warn('[SEAT_LOCK] funcion_id inválido');
         return false;
       }
 
-      console.log('💾 [SEAT_LOCK] Asiento guardado exitosamente en la base de datos');
+      const funcionIdVal = parseInt(funcionIdRaw, 10);
+      if (!Number.isFinite(funcionIdVal) || funcionIdVal <= 0) {
+        console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionIdRaw);
+        return false;
+      }
+
+      // Validar datos antes del bloqueo
+      const validation = atomicSeatLockService.validateLockData(seatId, funcionIdVal, sessionId);
+      if (!validation.isValid) {
+        console.error('[SEAT_LOCK] Datos inválidos:', validation.errors);
+        return false;
+      }
+
+      // Usar servicio atómico para el bloqueo
+      const result = await atomicSeatLockService.lockSeatAtomically(
+        seatId,
+        funcionIdVal,
+        sessionId,
+        status
+      );
+
+      if (!result.success) {
+        console.error('[SEAT_LOCK] Error en bloqueo atómico:', result.error);
+        return false;
+      }
+
+      console.log('💾 [SEAT_LOCK] Asiento bloqueado exitosamente con servicio atómico');
 
       // Actualización local inmediata
       set((state) => {
@@ -547,11 +541,11 @@ export const useSeatLockStore = create((set, get) => ({
             seat_id: seatId,
             funcion_id: funcionIdVal,
             session_id: sessionId,
-            locked_at: lockedAt,
-            expires_at: expiresAt,
-            status,
+            locked_at: result.lockData.locked_at,
+            expires_at: result.lockData.expires_at,
+            status: result.lockData.status,
             lock_type: 'seat',
-            locator: lockData.locator, // Incluir locator en el estado local
+            locator: result.lockData.locator,
           },
         ];
         console.log('🔒 [SEAT_LOCK] Estado local DESPUÉS del cambio:', newLockedSeats);
@@ -667,72 +661,62 @@ export const useSeatLockStore = create((set, get) => ({
     }
   },
 
-  // Desbloquear asiento individual
+  // Desbloquear asiento individual usando servicio atómico
   unlockSeat: async (seatId, overrideFuncionId = null) => {
-    console.log('🚀 [SEAT_LOCK] Iniciando proceso de desbloqueo para asiento:', seatId);
+    console.log('🚀 [SEAT_LOCK] Iniciando proceso de desbloqueo atómico para asiento:', seatId);
     
-    // Verificar que supabase esté disponible
-    if (!supabase) {
-      console.error('[SEAT_LOCK] Cliente Supabase no disponible');
-      return false;
-    }
-
-    const topic = get().channel?.topic;
-    const sessionId = normalizeSessionId(await getSessionId());
-
-    const funcionIdRaw = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
-    if (!funcionIdRaw) {
-      console.warn('[SEAT_LOCK] funcion_id inválido');
-      return false;
-    }
-    // Validar que funcionId sea un número válido
-    const funcionIdVal = parseInt(funcionIdRaw, 10);
-    if (!Number.isFinite(funcionIdVal) || funcionIdVal <= 0) {
-      console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionIdRaw);
-      return false;
-    }
-
-    if (!isValidUuid(sessionId)) {
-      console.warn('[SEAT_LOCK] session_id inválido', sessionId);
-      return false;
-    }
-
-    // Validar que seatId sea un string válido (no necesariamente UUID)
-    if (!seatId || typeof seatId !== 'string' || seatId.trim() === '') {
-      console.warn('[SEAT_LOCK] seat_id inválido', seatId);
-      return false;
-    }
-  
-    const currentSeats = Array.isArray(get().lockedSeats) ? get().lockedSeats : [];
-    const currentLock = currentSeats.find(
-      s => s.seat_id === seatId && s.session_id === sessionId
-    );
-    if (currentLock?.status === 'pagado' || currentLock?.status === 'reservado') {
-      console.warn('[SEAT_LOCK] No se puede desbloquear un asiento pagado o reservado');
-      return false;
-    }
-
-    console.log('[SEAT_LOCK] Intentando desbloquear asiento:', {
-      seat_id: seatId,
-      funcion_id: funcionIdVal,
-      session_id: sessionId
-    });
-
     try {
-      const { error } = await supabase
-        .from('seat_locks')
-        .delete()
-        .eq('seat_id', seatId)
-        .eq('funcion_id', funcionIdVal)
-        .eq('session_id', sessionId)
-        .eq('lock_type', 'seat');
-    
-      if (error) {
-        console.error('[SEAT_LOCK] Error al desbloquear asiento:', error);
+      const topic = get().channel?.topic;
+      const sessionId = normalizeSessionId(await getSessionId());
+
+      const funcionIdRaw = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
+      if (!funcionIdRaw) {
+        console.warn('[SEAT_LOCK] funcion_id inválido');
         return false;
       }
 
-      console.log('💾 [SEAT_LOCK] Asiento eliminado exitosamente de la base de datos');
+      const funcionIdVal = parseInt(funcionIdRaw, 10);
+      if (!Number.isFinite(funcionIdVal) || funcionIdVal <= 0) {
+        console.warn('[SEAT_LOCK] funcion_id no es un número válido:', funcionIdRaw);
+        return false;
+      }
+
+      // Validar datos antes del desbloqueo
+      const validation = atomicSeatLockService.validateLockData(seatId, funcionIdVal, sessionId);
+      if (!validation.isValid) {
+        console.error('[SEAT_LOCK] Datos inválidos:', validation.errors);
+        return false;
+      }
+
+      // Verificar estado local antes del desbloqueo
+      const currentSeats = Array.isArray(get().lockedSeats) ? get().lockedSeats : [];
+      const currentLock = currentSeats.find(
+        s => s.seat_id === seatId && s.session_id === sessionId
+      );
+      if (currentLock?.status === 'pagado' || currentLock?.status === 'reservado') {
+        console.warn('[SEAT_LOCK] No se puede desbloquear un asiento pagado o reservado');
+        return false;
+      }
+
+      console.log('[SEAT_LOCK] Intentando desbloquear asiento:', {
+        seat_id: seatId,
+        funcion_id: funcionIdVal,
+        session_id: sessionId
+      });
+
+      // Usar servicio atómico para el desbloqueo
+      const result = await atomicSeatLockService.unlockSeatAtomically(
+        seatId,
+        funcionIdVal,
+        sessionId
+      );
+
+      if (!result.success) {
+        console.error('[SEAT_LOCK] Error en desbloqueo atómico:', result.error);
+        return false;
+      }
+
+      console.log('💾 [SEAT_LOCK] Asiento desbloqueado exitosamente con servicio atómico');
     
       // Actualización local inmediata
       set((state) => {

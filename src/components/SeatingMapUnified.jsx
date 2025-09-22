@@ -195,7 +195,10 @@ const SeatingMapUnified = ({
       const isSelectedByOther = seat.estado === 'seleccionado_por_otro';
       if (isSelectedByOther) {
         console.warn('❌ [SEATING_MAP] Asiento seleccionado por otro usuario, no se puede interactuar');
-        // Aquí podrías mostrar un mensaje al usuario
+        // Mostrar mensaje al usuario
+        if (onSeatError) {
+          onSeatError('Este asiento está siendo seleccionado por otro usuario. Por favor, elige otro asiento.');
+        }
         return;
       }
 
@@ -209,6 +212,14 @@ const SeatingMapUnified = ({
       // Verificar si está vendido, reservado o bloqueado permanentemente
       if (seat.estado === 'vendido' || seat.estado === 'reservado' || seat.estado === 'locked') {
         console.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
+        if (onSeatError) {
+          const errorMessage = seat.estado === 'vendido' 
+            ? 'Este asiento ya está vendido.' 
+            : seat.estado === 'reservado' 
+            ? 'Este asiento está reservado.' 
+            : 'Este asiento no está disponible.';
+          onSeatError(errorMessage);
+        }
         return;
       }
 

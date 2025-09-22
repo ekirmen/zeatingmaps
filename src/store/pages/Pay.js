@@ -6,6 +6,8 @@ import { useCartStore } from '../cartStore';
 import { getActivePaymentMethods, validatePaymentMethodConfig } from '../services/paymentMethodsService';
 import { processPaymentMethod } from '../services/paymentMethodsProcessor';
 import { createPaymentSuccessNotification } from '../services/paymentNotifications';
+import atomicSeatLockService from '../services/atomicSeatLock';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent } from '../services/facebookPixelService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -22,6 +24,7 @@ const Pay = () => {
   // En algunos contextos `cart` no existe y producía `undefined`, generando
   // errores al intentar usar `reduce`. Se usa `items` y se asegura un arreglo.
   const { items: cartItems, clearCart, functionId } = useCartStore();
+  const { handleError, showSuccess } = useErrorHandler();
   const total = (cartItems || []).reduce(
     (sum, item) => sum + (item.precio || 0),
     0
@@ -94,8 +97,40 @@ const Pay = () => {
   };
 
   const handleProcessPayment = async () => {
+    // Validaciones robustas antes de procesar el pago
     if (!selectedGateway) {
       message.error('Por favor selecciona un método de pago');
+      return;
+    }
+
+    if (!cartItems || cartItems.length === 0) {
+      message.error('No hay asientos seleccionados para procesar');
+      return;
+    }
+
+    // Validar que todos los asientos sigan disponibles
+    try {
+      const unavailableSeats = [];
+      for (const item of cartItems) {
+        const seatId = item.sillaId || item.id || item._id;
+        const funcionId = functionId || item.functionId;
+        
+        if (seatId && funcionId) {
+          // Verificar disponibilidad usando el servicio atómico
+          const isAvailable = await atomicSeatLockService.isSeatAvailable(seatId, funcionId);
+          if (!isAvailable) {
+            unavailableSeats.push(item.nombre || seatId);
+          }
+        }
+      }
+
+      if (unavailableSeats.length > 0) {
+        message.error(`Los siguientes asientos ya no están disponibles: ${unavailableSeats.join(', ')}. Por favor, actualiza tu selección.`);
+        return;
+      }
+    } catch (error) {
+      console.error('Error validando disponibilidad de asientos:', error);
+      message.error('Error validando disponibilidad de asientos. Por favor, inténtalo de nuevo.');
       return;
     }
 
@@ -187,10 +222,18 @@ const Pay = () => {
         }
       } else {
         console.log('❌ Payment failed or success is false:', result);
+        message.error(result.error || 'Error al procesar el pago. Por favor, inténtalo de nuevo.');
       }
     } catch (error) {
       console.error('Error processing payment:', error);
-      message.error('Error al procesar el pago');
+      
+      // Usar el hook de manejo de errores
+      const errorResult = handleError(error, 'payment', { clearCart });
+      
+      // Limpiar carrito si es necesario
+      if (errorResult.shouldClearCart) {
+        clearCart();
+      }
     } finally {
       setProcessingPayment(false);
     }
