@@ -54,6 +54,7 @@ const SeatingMapUnified = ({
   const channel = useSeatLockStore(state => state.channel);
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const setMapa = useSeatLockStore(state => state.setMapa);
+  const storeMapa = useSeatLockStore(state => state.mapa);
   const { getSeatColor, getBorderColor } = useSeatColors(funcionId);
 
   const selectedSeatIds = useMemo(() => {
@@ -118,7 +119,9 @@ const SeatingMapUnified = ({
   const stageRef = useRef(null);
   
   // Usar hook de sincronización para obtener asientos con estado real
-  const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(mapa, funcionId);
+  // Usar el mapa del store si está disponible (tiene actualizaciones en tiempo real), sino usar el mapa original
+  const currentMapa = storeMapa || mapa;
+  const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(currentMapa, funcionId);
   
   // Memoizar los asientos sincronizados para evitar re-renders innecesarios
   const memoizedSeats = useMemo(() => syncedSeats, [syncedSeats]);
@@ -129,6 +132,13 @@ const SeatingMapUnified = ({
       setMapa(mapa);
     }
   }, [mapa, setMapa]);
+
+  // Sincronizar el mapa del store con el componente cuando se actualiza
+  useEffect(() => {
+    if (storeMapa && storeMapa !== mapa) {
+      console.log('🔄 [SEATING_MAP] Mapa actualizado desde el store (tiempo real)');
+    }
+  }, [storeMapa, mapa]);
 
   // Background images - memoized to prevent unnecessary re-renders (moved before any returns)
   const backgroundElements = useMemo(() => {

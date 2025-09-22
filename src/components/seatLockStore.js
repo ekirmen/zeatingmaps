@@ -444,6 +444,15 @@ export const useSeatLockStore = create((set, get) => ({
                     ...currentSeats.filter(lock => lock.seat_id !== newLock.seat_id),
                     newLock,
                   ];
+                  
+                  // Actualizar el estado del asiento en el mapa para que otros usuarios vean que está bloqueado
+                  const currentMapa = state.mapa;
+                  if (currentMapa) {
+                    const { updateSeatStateInMapa } = require('../utils/updateSeatStateInMapa');
+                    const updatedMapa = updateSeatStateInMapa(currentMapa, newLock.seat_id, 'seleccionado_por_otro');
+                    return { lockedSeats: updatedSeats, mapa: updatedMapa };
+                  }
+                  
                   return { lockedSeats: updatedSeats };
                 }
               });
@@ -460,6 +469,15 @@ export const useSeatLockStore = create((set, get) => ({
                 } else {
                   // Es un desbloqueo de asiento
                   const updatedSeats = currentSeats.filter(lock => lock.seat_id !== payload.old.seat_id);
+                  
+                  // Restaurar el estado del asiento en el mapa para que otros usuarios vean que está disponible
+                  const currentMapa = state.mapa;
+                  if (currentMapa) {
+                    const { updateSeatStateInMapa } = require('../utils/updateSeatStateInMapa');
+                    const updatedMapa = updateSeatStateInMapa(currentMapa, payload.old.seat_id, 'disponible');
+                    return { lockedSeats: updatedSeats, mapa: updatedMapa };
+                  }
+                  
                   return { lockedSeats: updatedSeats };
                 }
               });

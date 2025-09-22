@@ -1,5 +1,5 @@
 // Hook para sincronizar datos del mapa (JSONB) con la tabla seats (relacional)
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 export const useMapaSeatsSync = (mapa, funcionId) => {
   console.log('🚀 [useMapaSeatsSync] Hook ejecutándose con:', { 
@@ -9,7 +9,6 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
     funcionId 
   });
   
-  const [seatsData, setSeatsData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -222,52 +221,37 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
 
     console.log(`🎫 [useMapaSeatsSync] Total asientos procesados:`, allSeats.length);
     return allSeats;
-  }, []);
+  }, [mapa?.id, mapa?.contenido?.length]);
 
-  // Sincronizar datos del mapa con el estado real
-  const syncMapaWithSeats = useCallback(async () => {
-    if (!mapa || !funcionId) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      // 1. Extraer asientos del mapa
-      const seatsFromMapa = extractSeatsFromMapa(mapa);
-      
-      // TEMPORAL: Solo usar asientos del mapa, sin sincronización
-      setSeatsData(seatsFromMapa);
-
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [mapa, funcionId, extractSeatsFromMapa]);
-
-  // Sincronizar cuando cambie el mapa o funcionId
-  useEffect(() => {
-    console.log('🔄 [useMapaSeatsSync] useEffect ejecutándose con:', { 
+  // Procesar asientos del mapa usando useMemo para evitar re-renders innecesarios
+  const seatsData = useMemo(() => {
+    console.log('🔄 [useMapaSeatsSync] useMemo ejecutándose con:', { 
       mapa: !!mapa, 
       funcionId,
       contenidoLength: mapa?.contenido?.length 
     });
     
-    if (mapa && funcionId) {
-      console.log('✅ [useMapaSeatsSync] Ejecutando syncMapaWithSeats');
-      syncMapaWithSeats();
-    } else {
-      console.log('❌ [useMapaSeatsSync] No ejecutando sync - falta mapa o funcionId');
+    if (!mapa || !funcionId) {
+      console.log('❌ [useMapaSeatsSync] No procesando - falta mapa o funcionId');
+      return [];
     }
-  }, [mapa, funcionId, syncMapaWithSeats]);
+
+    try {
+      // Extraer asientos del mapa
+      const seatsFromMapa = extractSeatsFromMapa(mapa);
+      console.log('✅ [useMapaSeatsSync] Asientos procesados:', seatsFromMapa.length);
+      return seatsFromMapa;
+    } catch (err) {
+      console.error('❌ [useMapaSeatsSync] Error procesando asientos:', err);
+      setError(err);
+      return [];
+    }
+  }, [mapa, funcionId, extractSeatsFromMapa]);
 
   return {
     seatsData,
     loading,
     error,
-    syncMapaWithSeats,
     extractSeatsFromMapa
   };
 };
