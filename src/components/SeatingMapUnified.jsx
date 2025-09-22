@@ -698,25 +698,31 @@ if (Array.isArray(mapa?.contenido)) {
             const locked = isSeatLocked ? isSeatLocked(seat._id) : false;
             const lockedByMe = isSeatLockedByMe ? isSeatLockedByMe(seat._id) : false;
 
-                         // Determinar estado visual según lock.status (consistente con boleteria)
-             let seatEstado = seat.estado;
-             
-             // Verificar si está bloqueado localmente (desde props)
-             const isLocallyBlocked = blockedSeats && blockedSeats.has && blockedSeats.has(seat._id);
-             
-             if (isLocallyBlocked) {
-               seatEstado = 'locked'; // Bloqueo local
-             } else if (locked) {
-               const lock = Array.isArray(allLockedSeats)
-                 ? allLockedSeats.find(l => l.seat_id === seat._id)
-                 : null;
-               const lockStatus = lock?.status || 'locked';
-               
-               // Usar estados estándar consistentes con boleteria
-               if (lockStatus === 'seleccionado') {
-                 seatEstado = lockedByMe ? 'seleccionado' : 'seleccionado_por_otro';
-               } else if (lockStatus === 'locked') {
-                 seatEstado = 'locked'; // Bloqueo permanente
+            // Determinar estado visual - priorizar seatStates del store para sincronización en tiempo real
+            let seatEstado = seat.estado;
+            
+            // Verificar si hay un estado actualizado en el store (tiempo real)
+            const storeState = seatStates.get(seat._id);
+            if (storeState) {
+              seatEstado = storeState;
+            } else {
+              // Fallback a la lógica original si no hay estado en el store
+              // Verificar si está bloqueado localmente (desde props)
+              const isLocallyBlocked = blockedSeats && blockedSeats.has && blockedSeats.has(seat._id);
+              
+              if (isLocallyBlocked) {
+                seatEstado = 'locked'; // Bloqueo local
+              } else if (locked) {
+                const lock = Array.isArray(allLockedSeats)
+                  ? allLockedSeats.find(l => l.seat_id === seat._id)
+                  : null;
+                const lockStatus = lock?.status || 'locked';
+                
+                // Usar estados estándar consistentes con boleteria
+                if (lockStatus === 'seleccionado') {
+                  seatEstado = lockedByMe ? 'seleccionado' : 'seleccionado_por_otro';
+                } else if (lockStatus === 'locked') {
+                  seatEstado = 'locked'; // Bloqueo permanente
                } else if (lockStatus === 'vendido') {
                  seatEstado = 'vendido';
                } else if (lockStatus === 'reservado') {
@@ -727,6 +733,7 @@ if (Array.isArray(mapa?.contenido)) {
                  seatEstado = lockedByMe ? 'seleccionado' : 'seleccionado_por_otro';
                }
              }
+            }
 
              // Debug logs removed for performance
 

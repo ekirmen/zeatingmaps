@@ -8,6 +8,7 @@ import { processPaymentMethod } from '../services/paymentMethodsProcessor';
 import { createPaymentSuccessNotification } from '../services/paymentNotifications';
 import atomicSeatLockService from '../../services/atomicSeatLock';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
+import { useSeatLockStore } from '../../components/seatLockStore';
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent } from '../services/facebookPixelService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -25,6 +26,9 @@ const Pay = () => {
   // errores al intentar usar `reduce`. Se usa `items` y se asegura un arreglo.
   const { items: cartItems, clearCart, functionId } = useCartStore();
   const { handleError, showSuccess } = useErrorHandler();
+  
+  // Usar seatLockStore para sincronización en tiempo real
+  const { lockedSeats, subscribeToFunction, unsubscribe } = useSeatLockStore();
   const total = (cartItems || []).reduce(
     (sum, item) => sum + (item.precio || 0),
     0
@@ -86,6 +90,17 @@ const Pay = () => {
     }
   }, [cartItems, total, user]);
 
+  // Suscribirse a cambios de bloqueo de asientos en tiempo real
+  useEffect(() => {
+    if (functionId) {
+      subscribeToFunction(functionId);
+    }
+
+    return () => {
+      unsubscribe();
+    };
+  }, [functionId, subscribeToFunction, unsubscribe]);
+
   const handlePaymentMethodSelect = (method) => {
     setSelectedGateway(method);
   };
@@ -116,7 +131,19 @@ const Pay = () => {
         const funcionId = functionId || item.functionId;
         
         if (seatId && funcionId) {
-          // Verificar disponibilidad usando el servicio atómico
+          // Verificar si el asiento está bloqueado por otro usuario
+          const isLockedByOther = lockedSeats.some(lock => 
+            lock.seat_id === seatId && 
+            lock.funcion_id === funcionId && 
+            lock.session_id !== localStorage.getItem('anonSessionId')
+          );
+          
+          if (isLockedByOther) {
+            unavailableSeats.push(item.nombre || seatId);
+            continue;
+          }
+          
+          // Verificar disponibilidad usando el servicio atómico como respaldo
           const isAvailable = await atomicSeatLockService.isSeatAvailable(seatId, funcionId);
           if (!isAvailable) {
             unavailableSeats.push(item.nombre || seatId);
