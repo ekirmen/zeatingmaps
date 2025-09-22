@@ -27,6 +27,7 @@ const SeatingMapUnified = ({
   onSeatToggle,
   onTableToggle,
   onSeatInfo,
+  onSeatError,
   foundSeats = [],
   selectedSeats = [],
   lockedSeats = [],
