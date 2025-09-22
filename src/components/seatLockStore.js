@@ -232,7 +232,8 @@ export const useSeatLockStore = create((set, get) => ({
   lockedTables: [], // Nuevo: para bloquear mesas completas
   channel: null,
   cleanupInterval: null, // Intervalo para limpieza automática
-  mapa: null, // Mapa actual para actualizar estados de asientos
+  mapa: null, // Mapa original (no se actualiza)
+  seatStates: new Map(), // Estados actualizados de asientos individuales
 
   setLockedSeats: (seats) => {
     // Validar que seats sea un array
@@ -242,6 +243,21 @@ export const useSeatLockStore = create((set, get) => ({
 
   setMapa: (mapa) => {
     set({ mapa });
+  },
+
+  // Actualizar estado de un asiento individual sin tocar el mapa completo
+  updateSeatState: (seatId, newState) => {
+    set((state) => {
+      const newSeatStates = new Map(state.seatStates);
+      newSeatStates.set(seatId, newState);
+      return { seatStates: newSeatStates };
+    });
+  },
+
+  // Obtener estado de un asiento
+  getSeatState: (seatId) => {
+    const state = get();
+    return state.seatStates.get(seatId);
   },
 
   setLockedTables: (tables) => {
@@ -580,14 +596,9 @@ export const useSeatLockStore = create((set, get) => ({
 
       console.log('✅ Asiento bloqueado exitosamente en DB y estado local');
       
-      // Actualizar el estado del asiento en el mapa para que otros usuarios vean que está seleccionado
-      const { updateSeatStateInMapa } = await import('../utils/updateSeatStateInMapa');
-      const currentMapa = get().mapa;
-      if (currentMapa) {
-        const updatedMapa = updateSeatStateInMapa(currentMapa, seatId, 'seleccionado_por_otro');
-        set({ mapa: updatedMapa });
-        console.log('🔄 [SEAT_LOCK] Estado del asiento actualizado en el mapa para otros usuarios');
-      }
+      // Actualizar el estado del asiento individual sin tocar el mapa completo
+      get().updateSeatState(seatId, 'seleccionado_por_otro');
+      console.log('🔄 [SEAT_LOCK] Estado del asiento actualizado para otros usuarios');
       
       return true;
     } catch (error) {
@@ -766,14 +777,9 @@ export const useSeatLockStore = create((set, get) => ({
     
       console.log('✅ Asiento desbloqueado exitosamente en DB y estado local');
       
-      // Restaurar el estado del asiento en el mapa para que otros usuarios vean que está disponible
-      const { updateSeatStateInMapa } = await import('../utils/updateSeatStateInMapa');
-      const currentMapa = get().mapa;
-      if (currentMapa) {
-        const updatedMapa = updateSeatStateInMapa(currentMapa, seatId, 'disponible');
-        set({ mapa: updatedMapa });
-        console.log('🔄 [SEAT_LOCK] Estado del asiento restaurado en el mapa para otros usuarios');
-      }
+      // Restaurar el estado del asiento individual sin tocar el mapa completo
+      get().updateSeatState(seatId, 'disponible');
+      console.log('🔄 [SEAT_LOCK] Estado del asiento restaurado para otros usuarios');
       
       return true;
     } catch (error) {

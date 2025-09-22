@@ -54,7 +54,7 @@ const SeatingMapUnified = ({
   // const channel = useSeatLockStore(state => state.channel); // Removido por no usarse
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const setMapa = useSeatLockStore(state => state.setMapa);
-  const storeMapa = useSeatLockStore(state => state.mapa);
+  const seatStates = useSeatLockStore(state => state.seatStates);
   const { getSeatColor, getBorderColor } = useSeatColors(funcionId);
 
   const selectedSeatIds = useMemo(() => {
@@ -119,12 +119,23 @@ const SeatingMapUnified = ({
   const stageRef = useRef(null);
   
   // Usar hook de sincronización para obtener asientos con estado real
-  // Usar el mapa del store si está disponible (tiene actualizaciones en tiempo real), sino usar el mapa original
-  const currentMapa = storeMapa || mapa;
-  const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(currentMapa, funcionId);
+  // SOLO usar el mapa original para evitar re-renders innecesarios
+  // El storeMapa se usa solo para actualizaciones de estado de asientos individuales
+  const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(mapa, funcionId);
   
-  // Memoizar los asientos sincronizados para evitar re-renders innecesarios
-  const memoizedSeats = useMemo(() => syncedSeats, [syncedSeats]);
+  // Combinar asientos del mapa original con estados actualizados del store
+  const memoizedSeats = useMemo(() => {
+    if (!syncedSeats || !seatStates) return syncedSeats;
+    
+    // Actualizar estados de asientos con la información del store
+    return syncedSeats.map(seat => {
+      const updatedState = seatStates.get(seat._id);
+      if (updatedState && updatedState !== seat.estado) {
+        return { ...seat, estado: updatedState };
+      }
+      return seat;
+    });
+  }, [syncedSeats, seatStates]);
 
   // Establecer el mapa en el store para que pueda ser actualizado cuando se bloquean asientos
   useEffect(() => {
@@ -133,13 +144,7 @@ const SeatingMapUnified = ({
     }
   }, [mapa, setMapa]);
 
-  // Sincronizar el mapa del store con el componente cuando se actualiza
-  useEffect(() => {
-    if (storeMapa && storeMapa !== mapa) {
-      console.log('🔄 [SEATING_MAP] Mapa actualizado desde el store (tiempo real)');
-      // No hacer nada más aquí para evitar re-renders innecesarios
-    }
-  }, [storeMapa, mapa]); // Mantener dependencias completas para evitar warnings
+  // Ya no necesitamos sincronizar con storeMapa porque usamos seatStates individuales
 
   // Background images - memoized to prevent unnecessary re-renders (moved before any returns)
   // Usar el mapa original para las imágenes de fondo, no el storeMapa que cambia constantemente
