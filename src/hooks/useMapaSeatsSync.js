@@ -1,5 +1,5 @@
 // Hook para sincronizar datos del mapa (JSONB) con la tabla seats (relacional)
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef } from 'react';
 
 export const useMapaSeatsSync = (mapa, funcionId) => {
   console.log('🚀 [useMapaSeatsSync] Hook ejecutándose con:', { 
@@ -9,9 +9,34 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
     funcionId 
   });
   
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const lastProcessedRef = useRef({ mapaId: null, funcionId: null, contenidoLength: null });
+  const lastProcessedRef = useRef({ 
+    mapaId: null, 
+    funcionId: null, 
+    contenidoLength: null,
+    seatsData: null,
+    mapaHash: null // Hash del contenido del mapa para detectar cambios estructurales
+  });
+
+  // Función para crear un hash del contenido del mapa ignorando estados de asientos
+  const createMapaHash = (mapa) => {
+    if (!mapa?.contenido) return null;
+    
+    // Crear una copia del contenido sin los estados de los asientos
+    const contentWithoutStates = JSON.stringify(mapa.contenido, (key, value) => {
+      if (key === 'estado') return undefined; // Ignorar estados
+      return value;
+    });
+    
+    // Crear hash simple basado en el contenido
+    let hash = 0;
+    for (let i = 0; i < contentWithoutStates.length; i++) {
+      const char = contentWithoutStates.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convertir a 32bit integer
+    }
+    return hash.toString();
+  };
 
   // Función para extraer asientos del mapa (sin useCallback para evitar dependencias circulares)
   const extractSeatsFromMapa = (mapa) => {
@@ -229,20 +254,27 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
   const seatsData = useMemo(() => {
     const currentMapaId = mapa?.id;
     const currentContenidoLength = mapa?.contenido?.length;
+    const currentMapaHash = createMapaHash(mapa);
     
-    // Verificar si ya procesamos estos datos
+    // Verificar si ya procesamos estos datos (usando hash para detectar cambios estructurales)
     const lastProcessed = lastProcessedRef.current;
     if (lastProcessed.mapaId === currentMapaId && 
         lastProcessed.funcionId === funcionId && 
-        lastProcessed.contenidoLength === currentContenidoLength) {
-      console.log('⏭️ [useMapaSeatsSync] Saltando procesamiento - datos ya procesados');
-      return lastProcessed.seatsData || [];
+        lastProcessed.mapaHash === currentMapaHash &&
+        lastProcessed.seatsData) {
+      console.log('⏭️ [useMapaSeatsSync] Saltando procesamiento - estructura del mapa no cambió');
+      return lastProcessed.seatsData;
     }
     
     console.log('🔄 [useMapaSeatsSync] useMemo ejecutándose con:', { 
       mapa: !!mapa, 
       funcionId,
-      contenidoLength: currentContenidoLength 
+      contenidoLength: currentContenidoLength,
+      mapaHash: currentMapaHash,
+      lastMapaId: lastProcessed.mapaId,
+      lastFuncionId: lastProcessed.funcionId,
+      lastMapaHash: lastProcessed.mapaHash,
+      hashChanged: lastProcessed.mapaHash !== currentMapaHash
     });
     
     if (!mapa || !funcionId) {
@@ -260,6 +292,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
         mapaId: currentMapaId,
         funcionId,
         contenidoLength: currentContenidoLength,
+        mapaHash: currentMapaHash,
         seatsData: seatsFromMapa
       };
       
@@ -269,11 +302,11 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
       setError(err);
       return [];
     }
-  }, [mapa?.id, mapa?.contenido?.length, funcionId]);
+  }, [mapa, funcionId]);
 
   return {
     seatsData,
-    loading,
+    loading: false, // Siempre false ya que no usamos loading state
     error,
     extractSeatsFromMapa
   };
