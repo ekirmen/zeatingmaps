@@ -16,26 +16,26 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
     }
 
     let allSeats = [];
-    console.log('🔍 [useMapaSeatsSync] Procesando mapa con', mapa.contenido.length, 'elementos');
-    console.log('🔍 [useMapaSeatsSync] Tipo de contenido:', typeof mapa.contenido);
-    console.log('🔍 [useMapaSeatsSync] Es array?', Array.isArray(mapa.contenido));
+    // console.log('🔍 [useMapaSeatsSync] Procesando mapa con', mapa.contenido.length, 'elementos');
+    // console.log('🔍 [useMapaSeatsSync] Tipo de contenido:', typeof mapa.contenido);
+    // console.log('🔍 [useMapaSeatsSync] Es array?', Array.isArray(mapa.contenido));
 
     // Si el contenido es un array, procesar cada elemento
     if (Array.isArray(mapa.contenido)) {
       mapa.contenido.forEach((elemento, index) => {
-        console.log(`🔍 [useMapaSeatsSync] Elemento ${index}:`, {
-          _id: elemento._id,
-          type: elemento.type,
-          hasSillas: !!elemento.sillas,
-          sillasLength: elemento.sillas?.length,
-          nombre: elemento.nombre,
-          shape: elemento.shape,
-          x: elemento.x,
-          y: elemento.y,
-          posicion: elemento.posicion,
-          fill: elemento.fill,
-          estado: elemento.estado
-        });
+        // console.log(`🔍 [useMapaSeatsSync] Elemento ${index}:`, {
+        //   _id: elemento._id,
+        //   type: elemento.type,
+        //   hasSillas: !!elemento.sillas,
+        //   sillasLength: elemento.sillas?.length,
+        //   nombre: elemento.nombre,
+        //   shape: elemento.shape,
+        //   x: elemento.x,
+        //   y: elemento.y,
+        //   posicion: elemento.posicion,
+        //   fill: elemento.fill,
+        //   estado: elemento.estado
+        // });
         // ESTRUCTURA EXACTA DEL JSON DEL USUARIO
         // Caso 1: Mesa con un arreglo de sillas
         if (elemento._id && elemento.sillas && Array.isArray(elemento.sillas)) {
@@ -216,7 +216,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
       });
     }
 
-    console.log(`🎫 [useMapaSeatsSync] Total asientos procesados:`, allSeats.length);
+    // console.log(`🎫 [useMapaSeatsSync] Total asientos procesados:`, allSeats.length);
     return allSeats;
   };
 
@@ -233,13 +233,13 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
     }
     
     // Solo loggear cuando realmente procesamos
-    console.log('🔄 [useMapaSeatsSync] Procesando asientos - primera vez o datos cambiaron:', { 
-      mapa: !!mapa, 
-      funcionId,
-      mapaId: currentMapaId,
-      lastMapaId: lastProcessed.mapaId,
-      lastFuncionId: lastProcessed.funcionId
-    });
+    // console.log('🔄 [useMapaSeatsSync] Procesando asientos - primera vez o datos cambiaron:', { 
+    //   mapa: !!mapa, 
+    //   funcionId,
+    //   mapaId: currentMapaId,
+    //   lastMapaId: lastProcessed.mapaId,
+    //   lastFuncionId: lastProcessed.funcionId
+    // });
     
     if (!mapa || !funcionId) {
       return [];
@@ -248,7 +248,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
     try {
       // Extraer asientos del mapa
       const seatsFromMapa = extractSeatsFromMapa(mapa);
-      console.log('✅ [useMapaSeatsSync] Asientos procesados:', seatsFromMapa.length);
+      // console.log('✅ [useMapaSeatsSync] Asientos procesados:', seatsFromMapa.length);
       
       // Guardar en cache
       seatsDataRef.current = seatsFromMapa;

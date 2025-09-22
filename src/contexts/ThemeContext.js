@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import { useTenant } from './TenantContext';
 import { getTenantThemeSettings } from '../backoffice/services/themeSettingsService';
@@ -63,7 +63,7 @@ export const ThemeProvider = ({ children }) => {
     setTheme(prev => ({ ...prev, ...updates }));
   };
 
-  const getEventTheme = async (eventId) => {
+  const getEventTheme = useCallback(async (eventId) => {
     if (!currentTenant?.id || !eventId) return theme;
     
     try {
@@ -73,7 +73,7 @@ export const ThemeProvider = ({ children }) => {
       console.warn('[ThemeContext] Error getting event theme:', error);
       return theme;
     }
-  };
+  }, [currentTenant?.id, theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, updateTheme, getEventTheme }}>

@@ -87,9 +87,9 @@ const SeatingMapUnified = ({
     const tempLocks = lockedSeatsState || [];
     const permanentLocks = lockedSeats || [];
     
-    console.log('🎫 [SEATING_MAP] Temp locks:', tempLocks.length);
-    console.log('🎫 [SEATING_MAP] Permanent locks:', permanentLocks.length);
-    console.log('🎫 [SEATING_MAP] Permanent locks data:', permanentLocks);
+    // console.log('🎫 [SEATING_MAP] Temp locks:', tempLocks.length);
+    // console.log('🎫 [SEATING_MAP] Permanent locks:', permanentLocks.length);
+    // console.log('🎫 [SEATING_MAP] Permanent locks data:', permanentLocks);
     
     // Crear un mapa para evitar duplicados
     const lockMap = new Map();
@@ -107,7 +107,7 @@ const SeatingMapUnified = ({
     });
     
     const result = Array.from(lockMap.values());
-    console.log('🎫 [SEATING_MAP] Combined locks:', result.length);
+    // console.log('🎫 [SEATING_MAP] Combined locks:', result.length);
     return result;
   }, [lockedSeatsState, lockedSeats]);
 
@@ -138,11 +138,12 @@ const SeatingMapUnified = ({
   }, [syncedSeats, seatStates]);
 
   // Establecer el mapa en el store para que pueda ser actualizado cuando se bloquean asientos
+  // Solo establecer si el mapa realmente cambió (por ID)
   useEffect(() => {
-    if (mapa) {
+    if (mapa && mapa.id) {
       setMapa(mapa);
     }
-  }, [mapa, setMapa]);
+  }, [mapa, setMapa]); // Mantener dependencias completas para evitar warnings
 
   // Ya no necesitamos sincronizar con storeMapa porque usamos seatStates individuales
 
