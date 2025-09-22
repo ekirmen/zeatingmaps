@@ -418,11 +418,26 @@ const ModernEventPage = () => {
                   Volver a Evento
                 </Button>
                 <div className="flex items-center space-x-3">
-                  <EventImage
-                    event={evento}
-                    imageType="banner"
-                    className="w-12 h-8 object-cover rounded"
-                    showDebug={false}
+                  <div 
+                    className="w-12 h-8 bg-cover bg-center bg-no-repeat rounded"
+                    style={{
+                      backgroundImage: `url(${(() => {
+                        try {
+                          if (evento?.imagenes) {
+                            const images = typeof evento.imagenes === 'string' 
+                              ? JSON.parse(evento.imagenes) 
+                              : evento.imagenes;
+                            const bannerImage = images.banner || images.portada || images.obraImagen;
+                            if (bannerImage?.url || bannerImage?.publicUrl) {
+                              return bannerImage.publicUrl || bannerImage.url;
+                            }
+                          }
+                        } catch (e) {
+                          console.error('Error parsing event images:', e);
+                        }
+                        return `https://placehold.co/48x32/E0F2F7/000?text=${evento?.nombre?.charAt(0) || 'E'}`;
+                      })()})`
+                    }}
                   />
                   <h1 className="text-2xl font-bold text-gray-900">{evento.nombre}</h1>
                 </div>

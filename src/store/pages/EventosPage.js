@@ -696,14 +696,27 @@ const EventosPage = ({ forceShowMap = false }) => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Banner del evento */}
-      <div className="relative h-64 md:h-96">
-        <EventImage
-          event={evento}
-          imageType="banner"
-          className="w-full h-full"
-          showDebug={false}
-        />
-        
+      <div 
+        className="relative h-64 md:h-96 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url(${(() => {
+            try {
+              if (evento?.imagenes) {
+                const images = typeof evento.imagenes === 'string' 
+                  ? JSON.parse(evento.imagenes) 
+                  : evento.imagenes;
+                const bannerImage = images.banner || images.portada || images.obraImagen;
+                if (bannerImage?.url || bannerImage?.publicUrl) {
+                  return bannerImage.publicUrl || bannerImage.url;
+                }
+              }
+            } catch (e) {
+              console.error('Error parsing event images:', e);
+            }
+            return `https://placehold.co/1200x400/E0F2F7/000?text=${evento?.nombre || 'Evento'}`;
+          })()})`
+        }}
+      >
         {/* Overlay con contenido */}
         <div className="absolute inset-0 bg-black bg-opacity-40"></div>
         <div className="absolute inset-0 flex items-center justify-center">

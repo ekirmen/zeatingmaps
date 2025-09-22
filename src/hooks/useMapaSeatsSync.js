@@ -2,41 +2,11 @@
 import { useState, useMemo, useRef } from 'react';
 
 export const useMapaSeatsSync = (mapa, funcionId) => {
-  console.log('🚀 [useMapaSeatsSync] Hook ejecutándose con:', { 
-    mapa: !!mapa, 
-    mapaId: mapa?.id, 
-    contenidoLength: mapa?.contenido?.length,
-    funcionId 
-  });
-  
   const [error, setError] = useState(null);
-  const lastProcessedRef = useRef({ 
-    mapaId: null, 
-    funcionId: null, 
-    contenidoLength: null,
-    seatsData: null,
-    mapaHash: null // Hash del contenido del mapa para detectar cambios estructurales
-  });
+  const seatsDataRef = useRef(null);
+  const processedRef = useRef({ mapaId: null, funcionId: null });
 
-  // Función para crear un hash del contenido del mapa ignorando estados de asientos
-  const createMapaHash = (mapa) => {
-    if (!mapa?.contenido) return null;
-    
-    // Crear una copia del contenido sin los estados de los asientos
-    const contentWithoutStates = JSON.stringify(mapa.contenido, (key, value) => {
-      if (key === 'estado') return undefined; // Ignorar estados
-      return value;
-    });
-    
-    // Crear hash simple basado en el contenido
-    let hash = 0;
-    for (let i = 0; i < contentWithoutStates.length; i++) {
-      const char = contentWithoutStates.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convertir a 32bit integer
-    }
-    return hash.toString();
-  };
+  // Función para crear un hash del contenido del mapa ignorando estados de asientos (removida por no usarse)
 
   // Función para extraer asientos del mapa (sin useCallback para evitar dependencias circulares)
   const extractSeatsFromMapa = (mapa) => {
@@ -250,50 +220,41 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
     return allSeats;
   };
 
-  // Procesar asientos del mapa usando useMemo para evitar re-renders innecesarios
+  // Procesar asientos del mapa solo cuando realmente cambien los datos
   const seatsData = useMemo(() => {
     const currentMapaId = mapa?.id;
-    const currentContenidoLength = mapa?.contenido?.length;
-    const currentMapaHash = createMapaHash(mapa);
+    const lastProcessed = processedRef.current;
     
-    // Verificar si ya procesamos estos datos (usando hash para detectar cambios estructurales)
-    const lastProcessed = lastProcessedRef.current;
+    // Si ya procesamos estos datos exactos, devolver el cache
     if (lastProcessed.mapaId === currentMapaId && 
         lastProcessed.funcionId === funcionId && 
-        lastProcessed.mapaHash === currentMapaHash &&
-        lastProcessed.seatsData) {
-      console.log('⏭️ [useMapaSeatsSync] Saltando procesamiento - estructura del mapa no cambió');
-      return lastProcessed.seatsData;
+        seatsDataRef.current) {
+      return seatsDataRef.current;
     }
     
-    console.log('🔄 [useMapaSeatsSync] useMemo ejecutándose con:', { 
+    // Solo loggear cuando realmente procesamos
+    console.log('🔄 [useMapaSeatsSync] Procesando asientos - primera vez o datos cambiaron:', { 
       mapa: !!mapa, 
       funcionId,
-      contenidoLength: currentContenidoLength,
-      mapaHash: currentMapaHash,
+      mapaId: currentMapaId,
       lastMapaId: lastProcessed.mapaId,
-      lastFuncionId: lastProcessed.funcionId,
-      lastMapaHash: lastProcessed.mapaHash,
-      hashChanged: lastProcessed.mapaHash !== currentMapaHash
+      lastFuncionId: lastProcessed.funcionId
     });
     
     if (!mapa || !funcionId) {
-      console.log('❌ [useMapaSeatsSync] No procesando - falta mapa o funcionId');
       return [];
     }
 
     try {
-      // Extraer asientos del mapa directamente (sin usar el callback para evitar dependencias circulares)
+      // Extraer asientos del mapa
       const seatsFromMapa = extractSeatsFromMapa(mapa);
       console.log('✅ [useMapaSeatsSync] Asientos procesados:', seatsFromMapa.length);
       
-      // Guardar en ref para evitar reprocesamiento
-      lastProcessedRef.current = {
+      // Guardar en cache
+      seatsDataRef.current = seatsFromMapa;
+      processedRef.current = {
         mapaId: currentMapaId,
-        funcionId,
-        contenidoLength: currentContenidoLength,
-        mapaHash: currentMapaHash,
-        seatsData: seatsFromMapa
+        funcionId
       };
       
       return seatsFromMapa;
