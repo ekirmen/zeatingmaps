@@ -701,7 +701,7 @@ const EventosPage = ({ forceShowMap = false }) => {
           event={evento}
           imageType="banner"
           className="w-full h-full"
-          showDebug={true}
+          showDebug={false}
         />
         
         {/* Overlay con contenido */}

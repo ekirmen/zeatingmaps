@@ -95,7 +95,7 @@ function EventListWidget({ events }) {
                   event={event}
                   imageType="portada"
                   className="store-event-card-image"
-                  showDebug={true}
+                  showDebug={false}
                 />
                 
                 {/* Event Status Badge */}
