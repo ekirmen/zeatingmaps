@@ -1,5 +1,5 @@
 // Hook para sincronizar datos del mapa (JSONB) con la tabla seats (relacional)
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 export const useMapaSeatsSync = (mapa, funcionId) => {
   console.log('🚀 [useMapaSeatsSync] Hook ejecutándose con:', { 
@@ -11,8 +11,10 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const lastProcessedRef = useRef({ mapaId: null, funcionId: null, contenidoLength: null });
 
-  const extractSeatsFromMapa = useCallback((mapa) => {
+  // Función para extraer asientos del mapa (sin useCallback para evitar dependencias circulares)
+  const extractSeatsFromMapa = (mapa) => {
     if (!mapa?.contenido) {
       console.log('🔍 [useMapaSeatsSync] No hay contenido en el mapa');
       return [];
@@ -221,14 +223,26 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
 
     console.log(`🎫 [useMapaSeatsSync] Total asientos procesados:`, allSeats.length);
     return allSeats;
-  }, [mapa?.id, mapa?.contenido?.length]);
+  };
 
   // Procesar asientos del mapa usando useMemo para evitar re-renders innecesarios
   const seatsData = useMemo(() => {
+    const currentMapaId = mapa?.id;
+    const currentContenidoLength = mapa?.contenido?.length;
+    
+    // Verificar si ya procesamos estos datos
+    const lastProcessed = lastProcessedRef.current;
+    if (lastProcessed.mapaId === currentMapaId && 
+        lastProcessed.funcionId === funcionId && 
+        lastProcessed.contenidoLength === currentContenidoLength) {
+      console.log('⏭️ [useMapaSeatsSync] Saltando procesamiento - datos ya procesados');
+      return lastProcessed.seatsData || [];
+    }
+    
     console.log('🔄 [useMapaSeatsSync] useMemo ejecutándose con:', { 
       mapa: !!mapa, 
       funcionId,
-      contenidoLength: mapa?.contenido?.length 
+      contenidoLength: currentContenidoLength 
     });
     
     if (!mapa || !funcionId) {
@@ -237,16 +251,25 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
     }
 
     try {
-      // Extraer asientos del mapa
+      // Extraer asientos del mapa directamente (sin usar el callback para evitar dependencias circulares)
       const seatsFromMapa = extractSeatsFromMapa(mapa);
       console.log('✅ [useMapaSeatsSync] Asientos procesados:', seatsFromMapa.length);
+      
+      // Guardar en ref para evitar reprocesamiento
+      lastProcessedRef.current = {
+        mapaId: currentMapaId,
+        funcionId,
+        contenidoLength: currentContenidoLength,
+        seatsData: seatsFromMapa
+      };
+      
       return seatsFromMapa;
     } catch (err) {
       console.error('❌ [useMapaSeatsSync] Error procesando asientos:', err);
       setError(err);
       return [];
     }
-  }, [mapa, funcionId, extractSeatsFromMapa]);
+  }, [mapa?.id, mapa?.contenido?.length, funcionId]);
 
   return {
     seatsData,
