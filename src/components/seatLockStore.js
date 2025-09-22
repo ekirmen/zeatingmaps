@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
 import atomicSeatLockService from '../services/atomicSeatLock';
+import { updateSeatStateInMapa } from '../utils/updateSeatStateInMapa';
 
 // Función helper para obtener el tenant_id actual
 const getCurrentTenantId = () => {
@@ -231,11 +232,16 @@ export const useSeatLockStore = create((set, get) => ({
   lockedTables: [], // Nuevo: para bloquear mesas completas
   channel: null,
   cleanupInterval: null, // Intervalo para limpieza automática
+  mapa: null, // Mapa actual para actualizar estados de asientos
 
   setLockedSeats: (seats) => {
     // Validar que seats sea un array
     const validSeats = Array.isArray(seats) ? seats : [];
     set({ lockedSeats: validSeats });
+  },
+
+  setMapa: (mapa) => {
+    set({ mapa });
   },
 
   setLockedTables: (tables) => {
@@ -555,6 +561,16 @@ export const useSeatLockStore = create((set, get) => ({
       });
 
       console.log('✅ Asiento bloqueado exitosamente en DB y estado local');
+      
+      // Actualizar el estado del asiento en el mapa para que otros usuarios vean que está seleccionado
+      const { updateSeatStateInMapa } = await import('../utils/updateSeatStateInMapa');
+      const currentMapa = get().mapa;
+      if (currentMapa) {
+        const updatedMapa = updateSeatStateInMapa(currentMapa, seatId, 'seleccionado_por_otro');
+        set({ mapa: updatedMapa });
+        console.log('🔄 [SEAT_LOCK] Estado del asiento actualizado en el mapa para otros usuarios');
+      }
+      
       return true;
     } catch (error) {
       console.error('[SEAT_LOCK] Error inesperado al bloquear asiento:', error);
@@ -731,6 +747,16 @@ export const useSeatLockStore = create((set, get) => ({
       });
     
       console.log('✅ Asiento desbloqueado exitosamente en DB y estado local');
+      
+      // Restaurar el estado del asiento en el mapa para que otros usuarios vean que está disponible
+      const { updateSeatStateInMapa } = await import('../utils/updateSeatStateInMapa');
+      const currentMapa = get().mapa;
+      if (currentMapa) {
+        const updatedMapa = updateSeatStateInMapa(currentMapa, seatId, 'disponible');
+        set({ mapa: updatedMapa });
+        console.log('🔄 [SEAT_LOCK] Estado del asiento restaurado en el mapa para otros usuarios');
+      }
+      
       return true;
     } catch (error) {
       console.error('[SEAT_LOCK] Error inesperado al desbloquear asiento:', error);

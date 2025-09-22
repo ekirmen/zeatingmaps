@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useMemo, useState } from 'react';
+import React, { useRef, useCallback, useMemo, useState, useEffect } from 'react';
 import { Stage, Layer, Circle, Rect, Text, Line, Image } from 'react-konva';
 import { Button, Space } from 'antd';
 import { ZoomInOutlined, ZoomOutOutlined, ReloadOutlined } from '@ant-design/icons';
@@ -53,6 +53,7 @@ const SeatingMapUnified = ({
 
   const channel = useSeatLockStore(state => state.channel);
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
+  const setMapa = useSeatLockStore(state => state.setMapa);
   const { getSeatColor, getBorderColor } = useSeatColors(funcionId);
 
   const selectedSeatIds = useMemo(() => {
@@ -121,6 +122,13 @@ const SeatingMapUnified = ({
   
   // Memoizar los asientos sincronizados para evitar re-renders innecesarios
   const memoizedSeats = useMemo(() => syncedSeats, [syncedSeats]);
+
+  // Establecer el mapa en el store para que pueda ser actualizado cuando se bloquean asientos
+  useEffect(() => {
+    if (mapa) {
+      setMapa(mapa);
+    }
+  }, [mapa, setMapa]);
 
   // Background images - memoized to prevent unnecessary re-renders (moved before any returns)
   const backgroundElements = useMemo(() => {
@@ -230,21 +238,37 @@ const SeatingMapUnified = ({
       // Permitir deseleccionar si está seleccionado por mí
       if (isSelectedByMe) {
         console.log('🔄 [SEATING_MAP] Deseleccionando asiento:', seat._id);
+        // Llamar a la función de toggle del asiento para deseleccionar
+        if (onSeatToggle) {
+          console.log('✅ [SEATING_MAP] Llamando a onSeatToggle para deseleccionar:', seat);
+          onSeatToggle({ ...seat, funcionId });
+        }
       } else {
-        // Solo permitir seleccionar si está disponible o seleccionado por otro
-        if (seat.estado !== 'disponible' && seat.estado !== 'seleccionado_por_otro') {
+        // Solo permitir seleccionar si está disponible
+        if (seat.estado !== 'disponible') {
           console.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
+          if (onSeatError) {
+            const errorMessage = seat.estado === 'vendido' 
+              ? 'Este asiento ya está vendido.' 
+              : seat.estado === 'reservado' 
+              ? 'Este asiento está reservado.' 
+              : seat.estado === 'seleccionado_por_otro'
+              ? 'Este asiento está siendo seleccionado por otro usuario.'
+              : 'Este asiento no está disponible.';
+            onSeatError(errorMessage);
+          }
           return;
         }
+        
         console.log('✅ [SEATING_MAP] Seleccionando asiento:', seat._id);
-      }
-
-      // Llamar a la función de toggle del asiento
-      if (onSeatToggle) {
-        console.log('✅ [SEATING_MAP] Llamando a onSeatToggle con asiento:', seat);
-        onSeatToggle({ ...seat, funcionId });
-      } else {
-        console.warn('⚠️ [SEATING_MAP] onSeatToggle no está definido');
+        
+        // Llamar a la función de toggle del asiento para seleccionar
+        if (onSeatToggle) {
+          console.log('✅ [SEATING_MAP] Llamando a onSeatToggle con asiento:', seat);
+          onSeatToggle({ ...seat, funcionId });
+        } else {
+          console.warn('⚠️ [SEATING_MAP] onSeatToggle no está definido');
+        }
       }
 
       // Llamar a la función de información del asiento si existe
