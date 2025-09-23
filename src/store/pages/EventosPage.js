@@ -11,6 +11,7 @@ import formatDateString from '../../utils/formatDateString';
 import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
+import seatPaymentChecker from '../../services/seatPaymentChecker';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import Cart from './Cart';
 import ProductosWidget from '../components/ProductosWidget';
@@ -395,6 +396,15 @@ const EventosPage = ({ forceShowMap = false }) => {
 
       // Si está bloqueado por otro usuario, no permitir acción
       if (isSeatLocked(sillaId) && !isSeatLockedByMe(sillaId)) return;
+      
+      // Verificar si el asiento ya fue pagado por el mismo cliente
+      const currentSessionId = localStorage.getItem('anonSessionId');
+      const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(sillaId, selectedFunctionId, currentSessionId);
+      if (paymentCheck.isPaid) {
+        console.log('🚫 [EVENTOS_PAGE] Asiento ya pagado por el mismo cliente:', sillaId, 'Status:', paymentCheck.status, 'Source:', paymentCheck.source);
+        message.warning('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
+        return;
+      }
 
       // Verificar si el asiento ya está en el carrito
       const cartItemsState = useCartStore.getState().items;
@@ -402,11 +412,12 @@ const EventosPage = ({ forceShowMap = false }) => {
 
       if (exists) {
         // Verificar el estado del asiento antes de permitir deselección
-        const seatLock = lockedSeats.find(lock => lock.seat_id === sillaId);
+        const currentSessionId = localStorage.getItem('anonSessionId');
+        const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(sillaId, selectedFunctionId, currentSessionId);
         
-        // No permitir deseleccionar asientos que ya han sido comprados o están en proceso de pago
-        if (seatLock && (seatLock.status === 'pagado' || seatLock.status === 'vendido' || seatLock.status === 'reservado')) {
-          console.log('🚫 [EVENTOS_PAGE] No se puede deseleccionar asiento comprado:', sillaId, 'Estado:', seatLock.status);
+        // No permitir deseleccionar asientos que ya han sido comprados
+        if (paymentCheck.isPaid) {
+          console.log('🚫 [EVENTOS_PAGE] No se puede deseleccionar asiento comprado:', sillaId, 'Status:', paymentCheck.status, 'Source:', paymentCheck.source);
           message.warning('Este asiento ya ha sido comprado y no puede ser deseleccionado');
           return;
         }

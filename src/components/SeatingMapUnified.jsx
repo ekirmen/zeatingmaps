@@ -5,6 +5,7 @@ import { ZoomInOutlined, ZoomOutOutlined, ReloadOutlined } from '@ant-design/ico
 import { useSeatLockStore } from './seatLockStore';
 import { useSeatColors } from '../hooks/useSeatColors';
 import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
+import seatPaymentChecker from '../services/seatPaymentChecker';
 import SeatStatusLegend from './SeatStatusLegend';
 import SeatLockDebug from './SeatLockDebug';
 // import VisualNotifications from '../utils/VisualNotifications'; // Removido por no usarse
@@ -400,11 +401,12 @@ const SeatingMapUnified = ({
       // Permitir deseleccionar si está seleccionado por mí
       if (isSelectedByMe) {
         // Verificar el estado del asiento antes de permitir deselección
-        const seatLock = lockedSeats.find(lock => lock.seat_id === seat._id);
+        const currentSessionId = localStorage.getItem('anonSessionId');
+        const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, funcionId, currentSessionId);
         
         // No permitir deseleccionar asientos que ya han sido comprados
-        if (seatLock && (seatLock.status === 'pagado' || seatLock.status === 'vendido' || seatLock.status === 'reservado')) {
-          console.log('🚫 [SEATING_MAP] No se puede deseleccionar asiento comprado:', seat._id, 'Estado:', seatLock.status);
+        if (paymentCheck.isPaid) {
+          console.log('🚫 [SEATING_MAP] No se puede deseleccionar asiento comprado:', seat._id, 'Status:', paymentCheck.status, 'Source:', paymentCheck.source);
           if (onSeatError) {
             onSeatError('Este asiento ya ha sido comprado y no puede ser deseleccionado');
           }
@@ -418,6 +420,17 @@ const SeatingMapUnified = ({
           onSeatToggle({ ...seat, funcionId });
         }
       } else {
+        // Verificar si el asiento ya fue pagado por el mismo cliente
+        const currentSessionId = localStorage.getItem('anonSessionId');
+        const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, funcionId, currentSessionId);
+        if (paymentCheck.isPaid) {
+          console.log('🚫 [SEATING_MAP] Asiento ya pagado por el mismo cliente:', seat._id, 'Status:', paymentCheck.status, 'Source:', paymentCheck.source);
+          if (onSeatError) {
+            onSeatError('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
+          }
+          return;
+        }
+        
         // Solo permitir seleccionar si está disponible
         if (seat.estado !== 'disponible') {
           console.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);

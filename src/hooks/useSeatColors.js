@@ -51,7 +51,13 @@ export const useSeatColors = (eventId = null) => {
       switch (storeState) {
         case 'vendido':
         case 'pagado':
-          return eventTheme.seatSold || '#2d3748'; // Negro para vendido
+        case 'completed':
+          // Verificar si fue pagado por el mismo cliente
+          const lockInfo = lockedSeats.find(lock => lock.seat_id === seatId);
+          if (lockInfo && lockInfo.session_id === currentSessionId) {
+            return '#6b7280'; // Gris para asientos pagados por el mismo cliente
+          }
+          return eventTheme.seatSold || '#2d3748'; // Negro para vendido por otros
         case 'reservado':
           return eventTheme.seatReserved || '#805ad5'; // Púrpura para reservado
         case 'anulado':
@@ -80,8 +86,12 @@ export const useSeatColors = (eventId = null) => {
     
     // SISTEMA DE COLORES UNIFICADO - PRIORIDAD CORRECTA
     // 1. VENDIDO (máxima prioridad) - desde seat_locks o estado del asiento
-    if (lockInfo?.status === 'vendido' || seat.estado === 'vendido' || seat.estado === 'pagado') {
-      return eventTheme.seatSold || '#2d3748'; // Negro para vendido
+    if (lockInfo?.status === 'vendido' || seat.estado === 'vendido' || seat.estado === 'pagado' || lockInfo?.status === 'completed') {
+      // Verificar si fue pagado por el mismo cliente
+      if (lockInfo && lockInfo.session_id === currentSessionId) {
+        return '#6b7280'; // Gris para asientos pagados por el mismo cliente
+      }
+      return eventTheme.seatSold || '#2d3748'; // Negro para vendido por otros
     }
     
     // 2. RESERVADO - desde seat_locks o estado del asiento
