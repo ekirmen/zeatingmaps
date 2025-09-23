@@ -29,12 +29,7 @@ class AtomicSeatLockService {
         p_seat_id: seatId,
         p_funcion_id: parseInt(funcionId, 10),
         p_session_id: sessionId,
-        p_status: status,
-        p_lock_type: 'seat',
-        p_locator: locator,
-        p_tenant_id: tenantId,
-        p_locked_at: new Date().toISOString(),
-        p_expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutos
+        p_status: status
       };
 
       // Usar función RPC para bloqueo atómico
