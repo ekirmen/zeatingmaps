@@ -37,13 +37,37 @@ export const useSeatColors = (eventId = null) => {
   }, [eventId, theme, getEventTheme]);
 
   // Función para obtener el color automático de un asiento
-  const getSeatColor = (seat, zona, isSelected, selectedSeats = [], lockedSeats = []) => {
+  const getSeatColor = (seat, zona, isSelected, selectedSeats = [], lockedSeats = [], seatStates = null) => {
     const seatId = seat._id || seat.id;
     const isSelectedByMe = selectedSeats.includes(seatId);
     
     // Obtener el session_id actual
     const currentSessionId = localStorage.getItem('anonSessionId') || 'unknown';
     
+    // Verificar si hay un estado actualizado en el store (tiempo real)
+    const storeState = seatStates?.get(seatId);
+    if (storeState) {
+      // Usar el estado del store para determinar el color
+      switch (storeState) {
+        case 'vendido':
+        case 'pagado':
+          return eventTheme.seatSold || '#2d3748'; // Negro para vendido
+        case 'reservado':
+          return eventTheme.seatReserved || '#805ad5'; // Púrpura para reservado
+        case 'anulado':
+          return eventTheme.seatCancelled || '#e53e3e'; // Rojo para anulado
+        case 'seleccionado':
+          return eventTheme.seatSelectedMe || '#ffd700'; // Amarillo para seleccionado por mí
+        case 'seleccionado_por_otro':
+          return eventTheme.seatSelectedOther || '#ed8936'; // Naranja para seleccionado por otro
+        case 'locked':
+          return '#6b7280'; // Gris para bloqueado permanentemente
+        default:
+          return '#4CAF50'; // Verde para disponible
+      }
+    }
+    
+    // Fallback a la lógica original si no hay estado en el store
     // Verificar si está bloqueado/seleccionado por otro usuario
     const lockInfo = lockedSeats.find(lock => lock.seat_id === seatId);
     const isLockedByOther = lockInfo && lockInfo.session_id !== currentSessionId;
@@ -54,22 +78,20 @@ export const useSeatColors = (eventId = null) => {
     const isSelectedByOther = lockInfo && lockInfo.session_id !== currentSessionId && 
                              (lockInfo.status === 'seleccionado' || lockInfo.status === 'selected');
     
-    // Debug logs removed for performance
-    
     // SISTEMA DE COLORES UNIFICADO - PRIORIDAD CORRECTA
     // 1. VENDIDO (máxima prioridad) - desde seat_locks o estado del asiento
     if (lockInfo?.status === 'vendido' || seat.estado === 'vendido' || seat.estado === 'pagado') {
-      return eventTheme.seatSold || '#8c8c8c';
+      return eventTheme.seatSold || '#2d3748'; // Negro para vendido
     }
     
     // 2. RESERVADO - desde seat_locks o estado del asiento
     if (lockInfo?.status === 'reservado' || seat.estado === 'reservado') {
-      return eventTheme.seatReserved || '#722ed1';
+      return eventTheme.seatReserved || '#805ad5'; // Púrpura para reservado
     }
     
     // 3. ANULADO - desde seat_locks o estado del asiento
     if (lockInfo?.status === 'anulado' || seat.estado === 'anulado') {
-      return eventTheme.seatCancelled || '#ff6b6b';
+      return eventTheme.seatCancelled || '#e53e3e'; // Rojo para anulado
     }
     
     // 4. BLOQUEADO PERMANENTEMENTE (desde boleteria)
@@ -79,21 +101,21 @@ export const useSeatColors = (eventId = null) => {
     
     // 5. SELECCIONADO POR OTRO USUARIO (temporal) - PRIORIDAD ALTA
     if (isSelectedByOther && !isPermanentlyLocked) {
-      return eventTheme.seatSelectedOther || '#faad14';
+      return eventTheme.seatSelectedOther || '#ed8936'; // Naranja para seleccionado por otro
     }
     
     // 6. BLOQUEADO POR OTRO USUARIO (temporal) - PRIORIDAD BAJA
     if (isLockedByOther && !isPermanentlyLocked && !isSelectedByOther) {
-      return eventTheme.seatBlocked || '#ff4d4f';
+      return eventTheme.seatBlocked || '#f56565'; // Rojo claro para bloqueado
     }
     
     // 7. SELECCIONADO POR MÍ (temporal)
     if (isSelectedByMe && !isPermanentlyLocked) {
-      return eventTheme.seatSelectedMe || '#ffd700';
+      return eventTheme.seatSelectedMe || '#ffd700'; // Amarillo para seleccionado por mí
     }
     
     // 8. DISPONIBLE (por defecto) - SIEMPRE VERDE
-    const defaultColor = '#4CAF50'; // Forzar verde para asientos disponibles
+    const defaultColor = '#4CAF50'; // Verde para asientos disponibles
     return defaultColor;
   };
 

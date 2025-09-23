@@ -751,7 +751,8 @@ if (Array.isArray(mapa?.contenido)) {
               seatZona,
               isSelected,
               selectedSeatList,
-              allLockedSeats
+              allLockedSeats,
+              seatStates
             );
             const borderColor = getBorderColor(isSelected, seatZona);
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
