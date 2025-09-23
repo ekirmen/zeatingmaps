@@ -554,6 +554,7 @@ export const useSeatLockStore = create((set, get) => ({
             }
             if (payload.eventType === 'DELETE') {
               console.log('🗑️ [SEAT_LOCK_STORE] Procesando evento DELETE:', payload.old);
+              console.log('🗑️ [SEAT_LOCK_STORE] Payload completo:', payload);
               set((state) => {
                 const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
                 const currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
@@ -562,6 +563,8 @@ export const useSeatLockStore = create((set, get) => ({
                 const isTable = payload.old.lock_type === 'table';
                 const seatId = payload.old.seat_id;
                 const tableId = payload.old.table_id;
+                
+                console.log('🗑️ [SEAT_LOCK_STORE] Datos extraídos:', { isTable, seatId, tableId });
                 
                 if (isTable) {
                   // Es un desbloqueo de mesa
