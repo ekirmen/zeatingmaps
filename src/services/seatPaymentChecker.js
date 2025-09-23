@@ -81,6 +81,38 @@ class SeatPaymentChecker {
         }
       }
 
+      // 3. Verificar si el asiento fue pagado por CUALQUIER usuario (no solo el actual)
+      console.log('🔍 [SEAT_PAYMENT_CHECKER] Verificando si el asiento fue pagado por cualquier usuario...');
+      
+      const { data: allTransactions, error: allTransactionsError } = await supabase
+        .from('payment_transactions')
+        .select('id, status, seats, user_id, usuario_id, locator')
+        .eq('funcion_id', funcionId)
+        .eq('status', 'completed');
+
+      if (allTransactionsError) {
+        console.error('❌ [SEAT_PAYMENT_CHECKER] Error checking all payment_transactions:', allTransactionsError);
+      } else {
+        console.log('📊 [SEAT_PAYMENT_CHECKER] Todas las transacciones encontradas:', allTransactions?.length || 0);
+        
+        if (allTransactions && allTransactions.length > 0) {
+          for (const transaction of allTransactions) {
+            const seats = this.parseSeatsFromPayment(transaction.seats);
+            const seatExists = seats.some(seat => 
+              (seat.id || seat._id || seat.sillaId || seat.seat_id) === seatId
+            );
+            
+            if (seatExists) {
+              console.log('✅ [SEAT_PAYMENT_CHECKER] Asiento pagado detectado por cualquier usuario en payment_transactions');
+              return {
+                isPaid: true,
+                status: 'completed',
+                source: 'payment_transactions_by_anyone'
+              };
+            }
+          }
+        }
+      }
 
       return {
         isPaid: false,

@@ -953,3 +953,10 @@ export const useSeatLockStore = create((set, get) => ({
     );
   },
 }));
+
+// Exponer el store globalmente para debugging
+if (typeof window !== 'undefined') {
+  window.seatLockStore = useSeatLockStore;
+  window.supabase = supabase;
+  console.log('🔧 [SEAT_LOCK_STORE] Store y Supabase expuestos globalmente para debugging');
+}

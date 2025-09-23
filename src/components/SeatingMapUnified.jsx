@@ -182,7 +182,24 @@ const SeatingMapUnified = ({
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const setMapa = useSeatLockStore(state => state.setMapa);
   const seatStates = useSeatLockStore(state => state.seatStates);
+  const subscribeToFunction = useSeatLockStore(state => state.subscribeToFunction);
+  const unsubscribe = useSeatLockStore(state => state.unsubscribe);
   const { getSeatColor, getBorderColor } = useSeatColors(funcionId);
+
+  // Suscribirse a cambios en tiempo real cuando el componente se monta
+  useEffect(() => {
+    if (funcionId && subscribeToFunction) {
+      console.log('🔔 [SEATING_MAP] Suscribiéndose a función:', funcionId);
+      subscribeToFunction(funcionId);
+    }
+
+    return () => {
+      if (unsubscribe) {
+        console.log('🔔 [SEATING_MAP] Desuscribiéndose de función:', funcionId);
+        unsubscribe();
+      }
+    };
+  }, [funcionId, subscribeToFunction, unsubscribe]);
 
   const selectedSeatIds = useMemo(() => {
     if (!selectedSeats) return new Set();

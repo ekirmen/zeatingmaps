@@ -1,46 +1,47 @@
--- Script para verificar los status en seat_locks
+-- Script para verificar el estado del asiento en seat_locks
 -- Ejecutar en Supabase SQL Editor
 
--- 1. Ver todos los status únicos en seat_locks
-SELECT DISTINCT status, COUNT(*) as count
-FROM seat_locks 
-WHERE funcion_id = 43
-GROUP BY status
-ORDER BY count DESC;
-
--- 2. Ver ejemplos de locks con diferentes status
+-- 1. Verificar si el asiento está en seat_locks con status vendido
 SELECT 
+    id,
     seat_id,
     status,
-    lock_type,
     session_id,
+    user_id,
     locked_at,
     expires_at,
-    locator,
-    user_id
+    created_at,
+    metadata
 FROM seat_locks 
 WHERE funcion_id = 43
-ORDER BY locked_at DESC
-LIMIT 10;
+AND seat_id = 'silla_1755825682843_4';
 
--- 3. Verificar si hay locks con status 'completed'
+-- 2. Ver todos los asientos vendidos de la función 43
 SELECT 
     seat_id,
     status,
-    locator,
+    session_id,
     user_id,
-    locked_at
+    locked_at,
+    created_at
 FROM seat_locks 
-WHERE funcion_id = 43 
-AND status = 'completed';
+WHERE funcion_id = 43
+AND status = 'vendido'
+ORDER BY created_at DESC;
 
--- 4. Verificar si hay locks con status 'pagado'
+-- 3. Ver el estado actual del asiento específico
 SELECT 
     seat_id,
     status,
-    locator,
-    user_id,
-    locked_at
+    CASE 
+        WHEN status = 'vendido' THEN 'VENDIDO - No se puede seleccionar'
+        WHEN status = 'seleccionado' THEN 'SELECCIONADO - Temporalmente bloqueado'
+        WHEN status = 'pagado' THEN 'PAGADO - No se puede seleccionar'
+        WHEN status = 'reservado' THEN 'RESERVADO - No se puede seleccionar'
+        ELSE 'DISPONIBLE - Se puede seleccionar'
+    END as estado_descripcion,
+    locked_at,
+    created_at
 FROM seat_locks 
-WHERE funcion_id = 43 
-AND status = 'pagado';
+WHERE funcion_id = 43
+AND seat_id = 'silla_1755825682843_4';
