@@ -440,12 +440,14 @@ export const useSeatLockStore = create((set, get) => ({
             filter: `funcion_id=eq.${funcionId}`,
           },
           (payload) => {
+            console.log('🔔 [SEAT_LOCK_STORE] Evento recibido:', payload);
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
               set((state) => {
                 const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
                 const currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
                 
                 const newLock = payload.new;
+                console.log('🔔 [SEAT_LOCK_STORE] Procesando lock:', newLock);
                 
                 if (newLock.lock_type === 'table') {
                   // Es un bloqueo de mesa
@@ -482,6 +484,13 @@ export const useSeatLockStore = create((set, get) => ({
                   }
                   
                   newSeatStates.set(newLock.seat_id, visualState);
+                  
+                  console.log('🔔 [SEAT_LOCK_STORE] Actualizando estado del asiento:', {
+                    seatId: newLock.seat_id,
+                    visualState,
+                    sessionId: newLock.session_id,
+                    currentSessionId: localStorage.getItem('anonSessionId')
+                  });
                   
                   return { 
                     lockedSeats: updatedSeats, 

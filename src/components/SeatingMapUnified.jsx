@@ -704,6 +704,11 @@ if (Array.isArray(mapa?.contenido)) {
             // Verificar si hay un estado actualizado en el store (tiempo real)
             const storeState = seatStates.get(seat._id);
             if (storeState) {
+              console.log('🎨 [SEATING_MAP] Usando estado del store para asiento:', {
+                seatId: seat._id,
+                storeState,
+                originalState: seat.estado
+              });
               seatEstado = storeState;
             } else {
               // Fallback a la lógica original si no hay estado en el store
