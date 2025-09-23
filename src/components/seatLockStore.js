@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
 import atomicSeatLockService from '../services/atomicSeatLock';
-import { updateSeatStateInMapa } from '../utils/updateSeatStateInMapa';
 
 // Función helper para obtener el tenant_id actual
 const getCurrentTenantId = () => {
@@ -107,52 +106,6 @@ function getSeatSettings() {
   };
 }
 
-// Función para limpiar bloqueos abandonados de forma inteligente
-async function cleanupAbandonedLocks() {
-  try {
-    console.log('🧹 [CLEANUP] Iniciando limpieza inteligente de bloqueos...');
-    
-    const settings = getSeatSettings();
-    if (!settings.enableAutoCleanup) {
-      console.log('⏸️ [CLEANUP] Limpieza automática deshabilitada');
-      return;
-    }
-    
-    const now = new Date();
-    const preserveTimeAgo = new Date(now.getTime() - settings.preserveTimeMinutes * 60 * 1000);
-    const lockExpirationAgo = new Date(now.getTime() - settings.lockExpirationMinutes * 60 * 1000);
-    
-    // 1. Limpiar bloqueos de más del tiempo de expiración (limpieza completa)
-    const { data: oldLocks, error: oldError } = await supabase
-      .from('seat_locks')
-      .delete()
-      .lt('locked_at', lockExpirationAgo.toISOString())
-      .neq('status', 'pagado');
-
-    if (oldError) {
-      console.error('❌ [CLEANUP] Error limpiando bloqueos antiguos:', oldError);
-    } else {
-      console.log('✅ [CLEANUP] Bloqueos antiguos eliminados:', oldLocks?.length || 0);
-    }
-
-    // 2. Marcar como "expirando" bloqueos entre tiempo de preservación y expiración
-    const { data: expiringLocks, error: expiringError } = await supabase
-      .from('seat_locks')
-      .update({ status: 'expirando' })
-      .lt('locked_at', preserveTimeAgo.toISOString())
-      .gte('locked_at', lockExpirationAgo.toISOString())
-      .eq('status', 'seleccionado');
-
-    if (expiringError) {
-      console.error('❌ [CLEANUP] Error marcando bloqueos expirando:', expiringError);
-    } else {
-      console.log('⚠️ [CLEANUP] Bloqueos marcados como expirando:', expiringLocks?.length || 0);
-    }
-
-  } catch (error) {
-    console.error('❌ [CLEANUP] Error inesperado en limpieza inteligente:', error);
-  }
-}
 
 // Función para limpiar bloqueos de una sesión específica (solo si han pasado más del tiempo de preservación)
 async function cleanupSessionLocks(sessionId) {
@@ -396,58 +349,108 @@ export const useSeatLockStore = create((set, get) => ({
     const fetchInitialLocks = async () => {
       try {
         console.log('🔄 [SEAT_LOCK_STORE] Cargando datos iniciales para función:', funcionId);
-        const { data, error } = await supabase
+        
+        // 1. Cargar datos de seat_locks
+        const { data: seatLocksData, error: seatLocksError } = await supabase
           .from('seat_locks')
           .select('seat_id, table_id, session_id, locked_at, status, lock_type, user_id, metadata')
           .eq('funcion_id', funcionId);
 
-        if (error) {
-          console.error('❌ [SEAT_LOCK_STORE] Error cargando datos iniciales:', error);
-          set({ lockedSeats: [], lockedTables: [] });
-        } else {
-          console.log('📊 [SEAT_LOCK_STORE] Datos iniciales cargados:', data?.length || 0, 'locks');
-          // Validar que data sea un array
-          const validData = Array.isArray(data) ? data : [];
-          
-          // Separar bloqueos de asientos y mesas
-          const seatLocks = validData.filter(lock => lock.lock_type === 'seat' || !lock.lock_type);
-          const tableLocks = validData.filter(lock => lock.lock_type === 'table');
-          
-          // Crear el mapa de estados de asientos
-          const newSeatStates = new Map();
-          const currentSessionId = localStorage.getItem('anonSessionId') || 'unknown';
-          
-          seatLocks.forEach(lock => {
-            let visualState = 'seleccionado_por_otro'; // Estado por defecto
-            
-            if (lock.status === 'pagado' || lock.status === 'vendido') {
-              visualState = 'vendido';
-            } else if (lock.status === 'reservado') {
-              visualState = 'reservado';
-            } else if (lock.status === 'seleccionado') {
-              // Verificar si es del usuario actual
-              if (lock.session_id === currentSessionId) {
-                visualState = 'seleccionado';
-              } else {
-                visualState = 'seleccionado_por_otro';
+        if (seatLocksError) {
+          console.error('❌ [SEAT_LOCK_STORE] Error cargando seat_locks:', seatLocksError);
+        }
+
+        // 2. Cargar datos de payment_transactions (asientos vendidos)
+        const { data: paymentData, error: paymentError } = await supabase
+          .from('payment_transactions')
+          .select('seats, user_id, usuario_id, status')
+          .eq('funcion_id', funcionId)
+          .eq('status', 'completed');
+
+        if (paymentError) {
+          console.error('❌ [SEAT_LOCK_STORE] Error cargando payment_transactions:', paymentError);
+        }
+
+        console.log('📊 [SEAT_LOCK_STORE] Datos cargados:', {
+          seatLocks: seatLocksData?.length || 0,
+          payments: paymentData?.length || 0
+        });
+
+        // 3. Procesar seat_locks
+        const validSeatLocksData = Array.isArray(seatLocksData) ? seatLocksData : [];
+        const seatLocks = validSeatLocksData.filter(lock => lock.lock_type === 'seat' || !lock.lock_type);
+        const tableLocks = validSeatLocksData.filter(lock => lock.lock_type === 'table');
+
+        // 4. Procesar payment_transactions
+        const soldSeats = new Map();
+        if (Array.isArray(paymentData)) {
+          paymentData.forEach(payment => {
+            try {
+              const seats = typeof payment.seats === 'string' ? JSON.parse(payment.seats) : payment.seats;
+              if (Array.isArray(seats)) {
+                seats.forEach(seat => {
+                  const seatId = seat.sillaId || seat.id || seat._id;
+                  if (seatId) {
+                    soldSeats.set(seatId, {
+                      status: 'vendido',
+                      user_id: payment.user_id || payment.usuario_id,
+                      payment_status: payment.status
+                    });
+                  }
+                });
               }
+            } catch (error) {
+              console.error('❌ [SEAT_LOCK_STORE] Error parseando seats:', error);
             }
-            
-            newSeatStates.set(lock.seat_id, visualState);
-            console.log('🎨 [SEAT_LOCK_STORE] Estado inicial del asiento:', { 
-              seatId: lock.seat_id, 
-              status: lock.status, 
-              visualState 
-            });
-          });
-          
-          set({ 
-            lockedSeats: seatLocks,
-            lockedTables: tableLocks,
-            seatStates: newSeatStates
           });
         }
+
+        // 5. Crear el mapa de estados de asientos
+        const newSeatStates = new Map();
+        const currentSessionId = localStorage.getItem('anonSessionId') || 'unknown';
+        
+        // Procesar asientos de seat_locks
+        seatLocks.forEach(lock => {
+          let visualState = 'seleccionado_por_otro'; // Estado por defecto
+          
+          if (lock.status === 'pagado' || lock.status === 'vendido') {
+            visualState = 'vendido';
+          } else if (lock.status === 'reservado') {
+            visualState = 'reservado';
+          } else if (lock.status === 'seleccionado') {
+            // Verificar si es del usuario actual
+            if (lock.session_id === currentSessionId) {
+              visualState = 'seleccionado';
+            } else {
+              visualState = 'seleccionado_por_otro';
+            }
+          }
+          
+          newSeatStates.set(lock.seat_id, visualState);
+          console.log('🎨 [SEAT_LOCK_STORE] Estado inicial del asiento (seat_locks):', { 
+            seatId: lock.seat_id, 
+            status: lock.status, 
+            visualState 
+          });
+        });
+
+        // Procesar asientos vendidos de payment_transactions
+        soldSeats.forEach((seatInfo, seatId) => {
+          newSeatStates.set(seatId, 'vendido');
+          console.log('🎨 [SEAT_LOCK_STORE] Estado inicial del asiento (payment_transactions):', { 
+            seatId, 
+            status: seatInfo.status, 
+            visualState: 'vendido' 
+          });
+        });
+        
+        set({ 
+          lockedSeats: seatLocks,
+          lockedTables: tableLocks,
+          seatStates: newSeatStates
+        });
       } catch (error) {
+        console.error('❌ [SEAT_LOCK_STORE] Error en fetchInitialLocks:', error);
         set({ lockedSeats: [], lockedTables: [] });
       }
     };
@@ -554,6 +557,51 @@ export const useSeatLockStore = create((set, get) => ({
                   };
                 }
               });
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'payment_transactions',
+            filter: `funcion_id=eq.${funcionId}`,
+          },
+          (payload) => {
+            console.log('🔔 [SEAT_LOCK_STORE] Cambio detectado en payment_transactions:', payload);
+            
+            const { eventType, new: newRecord } = payload;
+            
+            if (eventType === 'INSERT' || eventType === 'UPDATE') {
+              // Nueva transacción o actualización
+              const payment = newRecord;
+              if (payment.status === 'completed') {
+                try {
+                  const seats = typeof payment.seats === 'string' ? JSON.parse(payment.seats) : payment.seats;
+                  if (Array.isArray(seats)) {
+                    set((state) => {
+                      const newSeatStates = new Map(state.seatStates);
+                      
+                      seats.forEach(seat => {
+                        const seatId = seat.sillaId || seat.id || seat._id;
+                        if (seatId) {
+                          newSeatStates.set(seatId, 'vendido');
+                          console.log('🎨 [SEAT_LOCK_STORE] Asiento marcado como vendido (payment_transactions):', { 
+                            seatId, 
+                            paymentId: payment.id,
+                            status: payment.status 
+                          });
+                        }
+                      });
+                      
+                      return { seatStates: newSeatStates };
+                    });
+                  }
+                } catch (error) {
+                  console.error('❌ [SEAT_LOCK_STORE] Error parseando seats en payment_transactions:', error);
+                }
+              }
             }
           }
         )
