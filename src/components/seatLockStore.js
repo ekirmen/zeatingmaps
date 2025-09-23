@@ -435,13 +435,23 @@ export const useSeatLockStore = create((set, get) => ({
         });
 
         // Procesar asientos vendidos de payment_transactions
+        // Solo establecer como 'vendido' si NO está ya en seat_locks (prioridad a seat_locks)
         soldSeats.forEach((seatInfo, seatId) => {
-          newSeatStates.set(seatId, 'vendido');
-          console.log('🎨 [SEAT_LOCK_STORE] Estado inicial del asiento (payment_transactions):', { 
-            seatId, 
-            status: seatInfo.status, 
-            visualState: 'vendido' 
-          });
+          // Verificar si el asiento ya está en seatStates (de seat_locks)
+          if (!newSeatStates.has(seatId)) {
+            newSeatStates.set(seatId, 'vendido');
+            console.log('🎨 [SEAT_LOCK_STORE] Estado inicial del asiento (payment_transactions):', { 
+              seatId, 
+              status: seatInfo.status, 
+              visualState: 'vendido' 
+            });
+          } else {
+            console.log('🎨 [SEAT_LOCK_STORE] Asiento ya tiene estado de seat_locks, ignorando payment_transactions:', { 
+              seatId, 
+              existingState: newSeatStates.get(seatId),
+              paymentStatus: seatInfo.status
+            });
+          }
         });
         
         set({ 
@@ -475,7 +485,13 @@ export const useSeatLockStore = create((set, get) => ({
             filter: `funcion_id=eq.${funcionId}`,
           },
           (payload) => {
-            console.log('🔔 [SEAT_LOCK_STORE] Evento recibido:', payload);
+            console.log('🔔 [SEAT_LOCK_STORE] Evento recibido:', {
+              eventType: payload.eventType,
+              table: payload.table,
+              schema: payload.schema,
+              seatId: payload.new?.seat_id || payload.old?.seat_id,
+              status: payload.new?.status || payload.old?.status
+            });
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
               set((state) => {
                 const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
@@ -535,6 +551,7 @@ export const useSeatLockStore = create((set, get) => ({
               });
             }
             if (payload.eventType === 'DELETE') {
+              console.log('🗑️ [SEAT_LOCK_STORE] Procesando evento DELETE:', payload.old);
               set((state) => {
                 const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
                 const currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
@@ -542,6 +559,7 @@ export const useSeatLockStore = create((set, get) => ({
                 if (payload.old.lock_type === 'table') {
                   // Es un desbloqueo de mesa
                   const updatedTables = currentTables.filter(lock => lock.table_id !== payload.old.table_id);
+                  console.log('🗑️ [SEAT_LOCK_STORE] Mesa desbloqueada:', payload.old.table_id);
                   return { lockedTables: updatedTables };
                 } else {
                   // Es un desbloqueo de asiento
@@ -549,9 +567,13 @@ export const useSeatLockStore = create((set, get) => ({
                   
                   // Eliminar completamente el asiento del seatStates para que vuelva a su estado original
                   const newSeatStates = new Map(state.seatStates);
+                  const hadState = newSeatStates.has(payload.old.seat_id);
                   newSeatStates.delete(payload.old.seat_id);
-                  console.log('🎨 [SEAT_LOCK_STORE] Asiento eliminado del seatStates (DELETE):', { 
-                    seatId: payload.old.seat_id 
+                  
+                  console.log('🗑️ [SEAT_LOCK_STORE] Asiento eliminado del seatStates (DELETE):', { 
+                    seatId: payload.old.seat_id,
+                    hadState: hadState,
+                    previousState: hadState ? state.seatStates.get(payload.old.seat_id) : 'none'
                   });
                   
                   return { 
@@ -589,12 +611,21 @@ export const useSeatLockStore = create((set, get) => ({
                       seats.forEach(seat => {
                         const seatId = seat.sillaId || seat.id || seat._id;
                         if (seatId) {
-                          newSeatStates.set(seatId, 'vendido');
-                          console.log('🎨 [SEAT_LOCK_STORE] Asiento marcado como vendido (payment_transactions):', { 
-                            seatId, 
-                            paymentId: payment.id,
-                            status: payment.status 
-                          });
+                          // Solo establecer como 'vendido' si NO está ya en seat_locks (prioridad a seat_locks)
+                          if (!newSeatStates.has(seatId)) {
+                            newSeatStates.set(seatId, 'vendido');
+                            console.log('🎨 [SEAT_LOCK_STORE] Asiento marcado como vendido (payment_transactions):', { 
+                              seatId, 
+                              paymentId: payment.id,
+                              status: payment.status 
+                            });
+                          } else {
+                            console.log('🎨 [SEAT_LOCK_STORE] Asiento ya tiene estado de seat_locks, ignorando payment_transactions:', { 
+                              seatId, 
+                              existingState: newSeatStates.get(seatId),
+                              paymentId: payment.id
+                            });
+                          }
                         }
                       });
                       
