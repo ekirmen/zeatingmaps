@@ -33,7 +33,7 @@ class AtomicSeatLockService {
       };
 
       // Usar función RPC para bloqueo atómico
-      const { data, error } = await supabase.rpc('seat_lock_atomic', lockData);
+      const { data, error } = await supabase.rpc('lock_seat_atomically', lockData);
       
       if (error) {
         console.error('❌ [ATOMIC_LOCK] Error en bloqueo atómico:', error);
@@ -79,7 +79,7 @@ class AtomicSeatLockService {
       }
 
       // Usar función RPC para desbloqueo atómico
-      const { data, error } = await supabase.rpc('seat_unlock_atomic', {
+      const { data, error } = await supabase.rpc('unlock_seat_atomically', {
         p_seat_id: seatId,
         p_funcion_id: parseInt(funcionId, 10),
         p_session_id: sessionId
@@ -115,15 +115,39 @@ class AtomicSeatLockService {
   /**
    * Verifica si un asiento está disponible para selección
    */
-  async isSeatAvailable(seatId, funcionId) {
+  async isSeatAvailable(seatId, funcionId, sessionId = null) {
     try {
-      const { data, error } = await supabase.rpc('seat_check_available', {
+      const params = {
         p_seat_id: seatId,
         p_funcion_id: parseInt(funcionId, 10)
-      });
+      };
+      
+      // Si se proporciona sessionId, incluirlo para verificar solo locks de otros usuarios
+      if (sessionId) {
+        params.p_session_id = sessionId;
+      }
+      
+      const { data, error } = await supabase.rpc('check_seat_availability', params);
       
       if (error) {
         console.error('❌ [AVAILABILITY_CHECK] Error:', error);
+        
+        // Si el error es porque la función no existe, intentar sin session_id
+        if (error.code === '42883' && sessionId) {
+          console.log('🔄 [AVAILABILITY_CHECK] Intentando sin session_id...');
+          const { data: fallbackData, error: fallbackError } = await supabase.rpc('check_seat_availability', {
+            p_seat_id: seatId,
+            p_funcion_id: parseInt(funcionId, 10)
+          });
+          
+          if (fallbackError) {
+            console.error('❌ [AVAILABILITY_CHECK] Error en fallback:', fallbackError);
+            return false;
+          }
+          
+          return fallbackData === true;
+        }
+        
         return false;
       }
       

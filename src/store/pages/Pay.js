@@ -144,7 +144,9 @@ const Pay = () => {
           }
           
           // Verificar disponibilidad usando el servicio atómico como respaldo
-          const isAvailable = await atomicSeatLockService.isSeatAvailable(seatId, funcionId);
+          // Pasar el session_id para que solo verifique locks de otros usuarios
+          const currentSessionId = localStorage.getItem('anonSessionId');
+          const isAvailable = await atomicSeatLockService.isSeatAvailable(seatId, funcionId, currentSessionId);
           if (!isAvailable) {
             unavailableSeats.push(item.nombre || seatId);
           }
