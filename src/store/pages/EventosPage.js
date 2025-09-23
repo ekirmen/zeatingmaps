@@ -401,6 +401,16 @@ const EventosPage = ({ forceShowMap = false }) => {
       const exists = cartItemsState.some(item => item.sillaId === sillaId);
 
       if (exists) {
+        // Verificar el estado del asiento antes de permitir deselección
+        const seatLock = lockedSeats.find(lock => lock.seat_id === sillaId);
+        
+        // No permitir deseleccionar asientos que ya han sido comprados o están en proceso de pago
+        if (seatLock && (seatLock.status === 'pagado' || seatLock.status === 'vendido' || seatLock.status === 'reservado')) {
+          console.log('🚫 [EVENTOS_PAGE] No se puede deseleccionar asiento comprado:', sillaId, 'Estado:', seatLock.status);
+          message.warning('Este asiento ya ha sido comprado y no puede ser deseleccionado');
+          return;
+        }
+        
         // Deselección: desbloquear en DB y quitar del carrito
         await unlockSeat(sillaId, selectedFunctionId);
         removeFromCart(sillaId);

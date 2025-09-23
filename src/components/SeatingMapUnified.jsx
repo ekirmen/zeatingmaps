@@ -399,6 +399,18 @@ const SeatingMapUnified = ({
       
       // Permitir deseleccionar si está seleccionado por mí
       if (isSelectedByMe) {
+        // Verificar el estado del asiento antes de permitir deselección
+        const seatLock = lockedSeats.find(lock => lock.seat_id === seat._id);
+        
+        // No permitir deseleccionar asientos que ya han sido comprados
+        if (seatLock && (seatLock.status === 'pagado' || seatLock.status === 'vendido' || seatLock.status === 'reservado')) {
+          console.log('🚫 [SEATING_MAP] No se puede deseleccionar asiento comprado:', seat._id, 'Estado:', seatLock.status);
+          if (onSeatError) {
+            onSeatError('Este asiento ya ha sido comprado y no puede ser deseleccionado');
+          }
+          return;
+        }
+        
         console.log('🔄 [SEATING_MAP] Deseleccionando asiento:', seat._id);
         // Llamar a la función de toggle del asiento para deseleccionar
         if (onSeatToggle) {
