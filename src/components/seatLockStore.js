@@ -395,14 +395,17 @@ export const useSeatLockStore = create((set, get) => ({
 
     const fetchInitialLocks = async () => {
       try {
+        console.log('🔄 [SEAT_LOCK_STORE] Cargando datos iniciales para función:', funcionId);
         const { data, error } = await supabase
           .from('seat_locks')
-          .select('seat_id, table_id, session_id, locked_at, status, lock_type')
+          .select('seat_id, table_id, session_id, locked_at, status, lock_type, user_id, metadata')
           .eq('funcion_id', funcionId);
 
         if (error) {
+          console.error('❌ [SEAT_LOCK_STORE] Error cargando datos iniciales:', error);
           set({ lockedSeats: [], lockedTables: [] });
         } else {
+          console.log('📊 [SEAT_LOCK_STORE] Datos iniciales cargados:', data?.length || 0, 'locks');
           // Validar que data sea un array
           const validData = Array.isArray(data) ? data : [];
           
@@ -410,9 +413,38 @@ export const useSeatLockStore = create((set, get) => ({
           const seatLocks = validData.filter(lock => lock.lock_type === 'seat' || !lock.lock_type);
           const tableLocks = validData.filter(lock => lock.lock_type === 'table');
           
+          // Crear el mapa de estados de asientos
+          const newSeatStates = new Map();
+          const currentSessionId = localStorage.getItem('anonSessionId') || 'unknown';
+          
+          seatLocks.forEach(lock => {
+            let visualState = 'seleccionado_por_otro'; // Estado por defecto
+            
+            if (lock.status === 'pagado' || lock.status === 'vendido') {
+              visualState = 'vendido';
+            } else if (lock.status === 'reservado') {
+              visualState = 'reservado';
+            } else if (lock.status === 'seleccionado') {
+              // Verificar si es del usuario actual
+              if (lock.session_id === currentSessionId) {
+                visualState = 'seleccionado';
+              } else {
+                visualState = 'seleccionado_por_otro';
+              }
+            }
+            
+            newSeatStates.set(lock.seat_id, visualState);
+            console.log('🎨 [SEAT_LOCK_STORE] Estado inicial del asiento:', { 
+              seatId: lock.seat_id, 
+              status: lock.status, 
+              visualState 
+            });
+          });
+          
           set({ 
             lockedSeats: seatLocks,
-            lockedTables: tableLocks
+            lockedTables: tableLocks,
+            seatStates: newSeatStates
           });
         }
       } catch (error) {
