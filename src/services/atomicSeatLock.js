@@ -33,7 +33,7 @@ class AtomicSeatLockService {
       };
 
       // Usar función RPC para bloqueo atómico
-      const { data, error } = await supabase.rpc('atomic_seat_lock', lockData);
+      const { data, error } = await supabase.rpc('seat_lock_atomic', lockData);
       
       if (error) {
         console.error('❌ [ATOMIC_LOCK] Error en bloqueo atómico:', error);
@@ -79,7 +79,7 @@ class AtomicSeatLockService {
       }
 
       // Usar función RPC para desbloqueo atómico
-      const { data, error } = await supabase.rpc('atomic_seat_unlock', {
+      const { data, error } = await supabase.rpc('seat_unlock_atomic', {
         p_seat_id: seatId,
         p_funcion_id: parseInt(funcionId, 10),
         p_session_id: sessionId
@@ -117,7 +117,7 @@ class AtomicSeatLockService {
    */
   async isSeatAvailable(seatId, funcionId) {
     try {
-      const { data, error } = await supabase.rpc('is_seat_available', {
+      const { data, error } = await supabase.rpc('seat_check_available', {
         p_seat_id: seatId,
         p_funcion_id: parseInt(funcionId, 10)
       });
