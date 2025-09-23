@@ -490,7 +490,9 @@ export const useSeatLockStore = create((set, get) => ({
               table: payload.table,
               schema: payload.schema,
               seatId: payload.new?.seat_id || payload.old?.seat_id,
-              status: payload.new?.status || payload.old?.status
+              status: payload.new?.status || payload.old?.status,
+              oldRecord: payload.old,
+              newRecord: payload.new
             });
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
               set((state) => {
@@ -556,24 +558,29 @@ export const useSeatLockStore = create((set, get) => ({
                 const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
                 const currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
                 
-                if (payload.old.lock_type === 'table') {
+                // Verificar si es mesa o asiento
+                const isTable = payload.old.lock_type === 'table';
+                const seatId = payload.old.seat_id;
+                const tableId = payload.old.table_id;
+                
+                if (isTable) {
                   // Es un desbloqueo de mesa
-                  const updatedTables = currentTables.filter(lock => lock.table_id !== payload.old.table_id);
-                  console.log('🗑️ [SEAT_LOCK_STORE] Mesa desbloqueada:', payload.old.table_id);
+                  const updatedTables = currentTables.filter(lock => lock.table_id !== tableId);
+                  console.log('🗑️ [SEAT_LOCK_STORE] Mesa desbloqueada:', tableId);
                   return { lockedTables: updatedTables };
                 } else {
                   // Es un desbloqueo de asiento
-                  const updatedSeats = currentSeats.filter(lock => lock.seat_id !== payload.old.seat_id);
+                  const updatedSeats = currentSeats.filter(lock => lock.seat_id !== seatId);
                   
                   // Eliminar completamente el asiento del seatStates para que vuelva a su estado original
                   const newSeatStates = new Map(state.seatStates);
-                  const hadState = newSeatStates.has(payload.old.seat_id);
-                  newSeatStates.delete(payload.old.seat_id);
+                  const hadState = newSeatStates.has(seatId);
+                  newSeatStates.delete(seatId);
                   
                   console.log('🗑️ [SEAT_LOCK_STORE] Asiento eliminado del seatStates (DELETE):', { 
-                    seatId: payload.old.seat_id,
+                    seatId: seatId,
                     hadState: hadState,
-                    previousState: hadState ? state.seatStates.get(payload.old.seat_id) : 'none'
+                    previousState: hadState ? state.seatStates.get(seatId) : 'none'
                   });
                   
                   return { 
