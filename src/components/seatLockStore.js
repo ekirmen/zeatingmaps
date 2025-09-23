@@ -547,9 +547,12 @@ export const useSeatLockStore = create((set, get) => ({
                   // Es un desbloqueo de asiento
                   const updatedSeats = currentSeats.filter(lock => lock.seat_id !== payload.old.seat_id);
                   
-                  // Restaurar el estado del asiento individual en seatStates
+                  // Eliminar completamente el asiento del seatStates para que vuelva a su estado original
                   const newSeatStates = new Map(state.seatStates);
-                  newSeatStates.set(payload.old.seat_id, 'disponible');
+                  newSeatStates.delete(payload.old.seat_id);
+                  console.log('🎨 [SEAT_LOCK_STORE] Asiento eliminado del seatStates (DELETE):', { 
+                    seatId: payload.old.seat_id 
+                  });
                   
                   return { 
                     lockedSeats: updatedSeats, 
