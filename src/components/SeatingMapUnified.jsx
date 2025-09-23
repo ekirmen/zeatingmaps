@@ -346,7 +346,7 @@ const SeatingMapUnified = ({
   // }, [mapa?.imagen_fondo]); // Removido por no usarse
 
   const handleSeatClick = useCallback(
-    (seat) => {
+    async (seat) => {
       console.log('🪑 [SEATING_MAP] ===== ASIENTO CLICKEADO =====');
       console.log('🪑 [SEATING_MAP] Asiento clickeado:', {
         id: seat._id,
