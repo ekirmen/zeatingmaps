@@ -3,6 +3,7 @@ import { Stage, Layer, Circle, Rect, Text, Line, Image } from 'react-konva';
 import { Button, Space } from 'antd';
 import { ZoomInOutlined, ZoomOutOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useSeatLockStore } from './seatLockStore';
+import { useCartStore } from '../store/cartStore';
 import { useSeatColors } from '../hooks/useSeatColors';
 import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
 import seatPaymentChecker from '../services/seatPaymentChecker';
@@ -202,26 +203,35 @@ const SeatingMapUnified = ({
   }, [funcionId, subscribeToFunction, unsubscribe]);
 
   const selectedSeatIds = useMemo(() => {
-    if (!selectedSeats) return new Set();
-
-    if (selectedSeats instanceof Set) {
-      return new Set(Array.from(selectedSeats).map(id => id?.toString()).filter(Boolean));
-    }
-
-    if (Array.isArray(selectedSeats)) {
-      if (selectedSeats.length > 0 && typeof selectedSeats[0] === 'object') {
-        return new Set(
-          selectedSeats
+    // Usar el carrito directamente para determinar asientos seleccionados
+    const cartItems = useCartStore.getState().items || [];
+    const cartSeatIds = cartItems.map(item => (item.sillaId || item.id || item._id)?.toString()).filter(Boolean);
+    
+    // También incluir selectedSeats de las props como fallback
+    let propSeatIds = [];
+    if (selectedSeats) {
+      if (selectedSeats instanceof Set) {
+        propSeatIds = Array.from(selectedSeats).map(id => id?.toString()).filter(Boolean);
+      } else if (Array.isArray(selectedSeats)) {
+        if (selectedSeats.length > 0 && typeof selectedSeats[0] === 'object') {
+          propSeatIds = selectedSeats
             .map(seat => seat?._id || seat?.sillaId || seat?.id)
             .filter(Boolean)
-            .map(id => id.toString())
-        );
+            .map(id => id.toString());
+        } else {
+          propSeatIds = selectedSeats.map(id => id?.toString()).filter(Boolean);
+        }
       }
-
-      return new Set(selectedSeats.map(id => id?.toString()).filter(Boolean));
     }
-
-    return new Set();
+    
+    // Combinar ambos (carrito tiene prioridad)
+    const allSeatIds = [...new Set([...cartSeatIds, ...propSeatIds])];
+    console.log('🎯 [SEATING_MAP] selectedSeatIds calculado:', {
+      cartSeatIds,
+      propSeatIds,
+      allSeatIds
+    });
+    return new Set(allSeatIds);
   }, [selectedSeats]);
 
   const selectedSeatList = useMemo(() => Array.from(selectedSeatIds), [selectedSeatIds]);
