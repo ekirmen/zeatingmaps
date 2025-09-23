@@ -1014,9 +1014,14 @@ export const useSeatLockStore = create((set, get) => ({
   },
 
   // Verificar si un asiento está bloqueado
-  isSeatLocked: (seatId) => {
+  isSeatLocked: (seatId, functionId = null) => {
     const { lockedSeats } = get();
     const seats = Array.isArray(lockedSeats) ? lockedSeats : [];
+    
+    if (functionId) {
+      return seats.some((s) => s.seat_id === seatId && s.funcion_id === functionId);
+    }
+    
     return seats.some((s) => s.seat_id === seatId);
   },
 

@@ -78,11 +78,32 @@ export const useCartStore = create(
               newState.functionId = null;
             }
             set(newState);
-            // Importación lazy para evitar dependencias circulares
+            
+            // Verificar que el asiento no existe en la base de datos antes de desbloquear
             const { useSeatLockStore } = await import('../components/seatLockStore');
-            await useSeatLockStore
-              .getState()
-              .unlockSeat(seatId, seat.functionId || seat.funcionId || get().functionId);
+            const seatStore = useSeatLockStore.getState();
+            const functionId = seat.functionId || seat.funcionId || get().functionId;
+            
+            // Verificar si el asiento está realmente bloqueado en la BD
+            const isLocked = await seatStore.isSeatLocked(seatId, functionId);
+            
+            if (isLocked) {
+              // Solo desbloquear si está realmente bloqueado en la BD
+              await seatStore.unlockSeat(seatId, functionId);
+              console.log('🔓 [CART_TOGGLE] Asiento desbloqueado de la BD:', seatId);
+            } else {
+              // Si no está bloqueado en la BD, eliminar del seatStates para que vuelva a su estado original del mapa
+              console.log('🎨 [CART_TOGGLE] Asiento no estaba bloqueado en BD, eliminando del seatStates:', seatId);
+              
+              // Eliminar completamente el asiento del seatStates para que vuelva a su estado original del mapa
+              const currentSeatStates = seatStore.seatStates;
+              const newSeatStates = new Map(currentSeatStates);
+              newSeatStates.delete(seatId);
+              seatStore.set({ seatStates: newSeatStates });
+              
+              console.log('🌐 [CART_TOGGLE] Asiento eliminado del seatStates - volverá a estado original del mapa:', seatId);
+            }
+            
             toast.success('Asiento eliminado del carrito');
           } else {
             const updated = [...items, seat];
@@ -208,13 +229,31 @@ export const useCartStore = create(
             newState.functionId = null;
           }
           set(newState);
+          
+          // Verificar que el asiento no existe en la base de datos antes de desbloquear
           const { useSeatLockStore } = await import('../components/seatLockStore');
-          await useSeatLockStore
-            .getState()
-            .unlockSeat(
-              seatId,
-              get().functionId
-            );
+          const seatStore = useSeatLockStore.getState();
+          
+          // Verificar si el asiento está realmente bloqueado en la BD
+          const isLocked = await seatStore.isSeatLocked(seatId, get().functionId);
+          
+          if (isLocked) {
+            // Solo desbloquear si está realmente bloqueado en la BD
+            await seatStore.unlockSeat(seatId, get().functionId);
+            console.log('🔓 [CART] Asiento desbloqueado de la BD:', seatId);
+          } else {
+            // Si no está bloqueado en la BD, eliminar del seatStates para que vuelva a su estado original del mapa
+            console.log('🎨 [CART] Asiento no estaba bloqueado en BD, eliminando del seatStates:', seatId);
+            
+            // Eliminar completamente el asiento del seatStates para que vuelva a su estado original del mapa
+            const currentSeatStates = seatStore.seatStates;
+            const newSeatStates = new Map(currentSeatStates);
+            newSeatStates.delete(seatId);
+            seatStore.set({ seatStates: newSeatStates });
+            
+            console.log('🌐 [CART] Asiento eliminado del seatStates - volverá a estado original del mapa:', seatId);
+          }
+          
           toast.success('Asiento eliminado del carrito');
         },
 
