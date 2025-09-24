@@ -75,20 +75,15 @@ export const useGridSale = () => {
   // Validar y procesar venta en un solo paso
   const validateAndProcessSale = useCallback(async (items, evento, funcion, cliente, paymentData) => {
     try {
-      // Primero validar
       const validation = await validateSale(items, evento, funcion);
       
       if (!validation.summary.valid_items) {
         throw new Error('Algunos items no son válidos');
       }
 
-      // Luego procesar
       const result = await processSale(items, evento, funcion, cliente, paymentData);
       
-      return {
-        validation,
-        result
-      };
+      return { validation, result };
 
     } catch (err) {
       console.error('Error en validación y procesamiento:', err);
