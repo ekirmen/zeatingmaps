@@ -411,25 +411,40 @@ const EventosPage = ({ forceShowMap = false }) => {
       const exists = cartItemsState.some(item => item.sillaId === sillaId);
 
       if (exists) {
-        // Verificar el estado del asiento antes de permitir deselección
+        // DESELECCIÓN: Verificar que no esté comprado y luego deseleccionar
         const currentSessionId = localStorage.getItem('anonSessionId');
         const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(sillaId, selectedFunctionId, currentSessionId);
         
-        // No permitir deseleccionar asientos que ya han sido comprados
         if (paymentCheck.isPaid) {
-          console.log('🚫 [EVENTOS_PAGE] No se puede deseleccionar asiento comprado:', sillaId, 'Status:', paymentCheck.status, 'Source:', paymentCheck.source);
+          console.log('🚫 [EVENTOS_PAGE] No se puede deseleccionar asiento comprado:', sillaId);
           message.warning('Este asiento ya ha sido comprado y no puede ser deseleccionado');
           return;
         }
         
-        // Deselección: desbloquear en DB y quitar del carrito
-        await unlockSeat(sillaId, selectedFunctionId);
-        removeFromCart(sillaId);
+        console.log('🔄 [EVENTOS_PAGE] Deseleccionando asiento:', sillaId);
+        // Usar toggleSeat para deseleccionar (maneja tanto DB como carrito)
+        await toggleSeat({
+          sillaId,
+          zonaId,
+          precio,
+          nombre: silla.nombre || silla.numero || silla._id,
+          nombreZona,
+          functionId: selectedFunctionId,
+        });
       } else {
-        // Selección: bloquear en DB con status 'seleccionado' y añadir al carrito
-        const ok = await lockSeat(sillaId, 'seleccionado', selectedFunctionId);
-        if (!ok) return;
-        toggleSeat({
+        // SELECCIÓN: Verificar que no esté comprado y luego seleccionar
+        const currentSessionId = localStorage.getItem('anonSessionId');
+        const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(sillaId, selectedFunctionId, currentSessionId);
+        
+        if (paymentCheck.isPaid) {
+          console.log('🚫 [EVENTOS_PAGE] Asiento ya pagado:', sillaId);
+          message.warning('Este asiento ya ha sido comprado');
+          return;
+        }
+        
+        console.log('✅ [EVENTOS_PAGE] Seleccionando asiento:', sillaId);
+        // Usar toggleSeat para seleccionar (maneja tanto DB como carrito)
+        await toggleSeat({
           sillaId,
           zonaId,
           precio,

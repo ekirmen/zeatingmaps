@@ -207,6 +207,11 @@ export const useSeatLockStore = create((set, get) => ({
     });
   },
 
+  // Función específica para actualizar seatStates desde el exterior
+  setSeatStates: (newSeatStates) => {
+    set({ seatStates: newSeatStates });
+  },
+
   // Obtener estado de un asiento
   getSeatState: (seatId) => {
     const state = get();

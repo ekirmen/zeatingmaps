@@ -67,6 +67,9 @@ export const useCartStore = create(
           );
 
           if (exists) {
+            // DESELECCIÓN: Quitar del carrito y desbloquear en BD
+            console.log('🔄 [CART_TOGGLE] Deseleccionando asiento:', seatId);
+            
             const filtered = items.filter(
               (item) => (item.sillaId || item.id || item._id) !== seatId
             );
@@ -79,7 +82,7 @@ export const useCartStore = create(
             }
             set(newState);
             
-            // Verificar que el asiento no existe en la base de datos antes de desbloquear
+            // Desbloquear en la base de datos
             const { useSeatLockStore } = await import('../components/seatLockStore');
             const seatStore = useSeatLockStore.getState();
             const functionId = seat.functionId || seat.funcionId || get().functionId;
@@ -88,29 +91,44 @@ export const useCartStore = create(
             const isLocked = await seatStore.isSeatLocked(seatId, functionId);
             
             if (isLocked) {
-              // Solo desbloquear si está realmente bloqueado en la BD
+              // Desbloquear si está bloqueado en la BD
               await seatStore.unlockSeat(seatId, functionId);
               console.log('🔓 [CART_TOGGLE] Asiento desbloqueado de la BD:', seatId);
             } else {
-              // Si no está bloqueado en la BD, eliminar del seatStates para que vuelva a su estado original del mapa
+              // Si no está bloqueado en la BD, eliminar del seatStates
               console.log('🎨 [CART_TOGGLE] Asiento no estaba bloqueado en BD, eliminando del seatStates:', seatId);
               
-              // Eliminar completamente el asiento del seatStates para que vuelva a su estado original del mapa
               const currentSeatStates = seatStore.seatStates;
               const newSeatStates = new Map(currentSeatStates);
               newSeatStates.delete(seatId);
-              // Usar la función correcta del store de Zustand
-              seatStore.set({ seatStates: newSeatStates });
+              seatStore.setSeatStates(newSeatStates);
               
-              console.log('🌐 [CART_TOGGLE] Asiento eliminado del seatStates - volverá a estado original del mapa:', seatId);
+              console.log('🌐 [CART_TOGGLE] Asiento eliminado del seatStates:', seatId);
             }
             
             toast.success('Asiento eliminado del carrito');
           } else {
+            // SELECCIÓN: Bloquear en BD y añadir al carrito
+            console.log('✅ [CART_TOGGLE] Seleccionando asiento:', seatId);
+            
+            const { useSeatLockStore } = await import('../components/seatLockStore');
+            const seatStore = useSeatLockStore.getState();
+            const functionId = seat.functionId || seat.funcionId || get().functionId;
+            
+            // Bloquear en la base de datos primero
+            const lockResult = await seatStore.lockSeat(seatId, 'seleccionado', functionId);
+            
+            if (!lockResult) {
+              console.error('❌ [CART_TOGGLE] Error bloqueando asiento en BD:', seatId);
+              toast.error('Error al seleccionar el asiento');
+              return;
+            }
+            
+            // Si el bloqueo fue exitoso, añadir al carrito
             const updated = [...items, seat];
             const newState = {
               items: updated,
-              functionId: seat.functionId || seat.funcionId || get().functionId,
+              functionId: functionId,
             };
             
             // Solo iniciar el temporizador si es el primer item
@@ -122,6 +140,7 @@ export const useCartStore = create(
             }
             
             set(newState);
+            console.log('✅ [CART_TOGGLE] Asiento añadido al carrito:', seatId);
             toast.success('Asiento añadido al carrito');
           }
         },
@@ -250,8 +269,8 @@ export const useCartStore = create(
             const currentSeatStates = seatStore.seatStates;
             const newSeatStates = new Map(currentSeatStates);
             newSeatStates.delete(seatId);
-            // Usar la función correcta del store de Zustand
-            seatStore.set({ seatStates: newSeatStates });
+            // Usar la función específica para actualizar seatStates
+            seatStore.setSeatStates(newSeatStates);
             
             console.log('🌐 [CART] Asiento eliminado del seatStates - volverá a estado original del mapa:', seatId);
           }

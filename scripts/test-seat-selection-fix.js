@@ -33,21 +33,39 @@ async function testSeatSelection() {
     
     console.log('🎯 [TEST] Simulando selección de asiento:', testSeatId);
     
-    // 4. Probar bloqueo
-    const lockResult = await seatStore.lockSeat(testSeatId, 'seleccionado', testFuncionId);
-    console.log('🔒 [TEST] Resultado del bloqueo:', lockResult);
+    // 4. Probar toggleSeat (selección)
+    const testSeat = {
+      sillaId: testSeatId,
+      functionId: testFuncionId,
+      nombre: 'Test Seat',
+      precio: 100,
+      nombreZona: 'Test Zone'
+    };
     
-    // 5. Verificar estado después del bloqueo
+    console.log('✅ [TEST] Probando toggleSeat (selección)...');
+    await cartStore.toggleSeat(testSeat);
+    
+    // 5. Verificar estado después de la selección
     const seatState = seatStore.getSeatState(testSeatId);
-    console.log('🎨 [TEST] Estado del asiento después del bloqueo:', seatState);
+    const cartItems = useCartStore.getState().items;
+    console.log('🎨 [TEST] Estado después de selección:', {
+      seatState,
+      cartItems: cartItems.length,
+      isInCart: cartItems.some(item => item.sillaId === testSeatId)
+    });
     
-    // 6. Probar desbloqueo
-    const unlockResult = await seatStore.unlockSeat(testSeatId, testFuncionId);
-    console.log('🔓 [TEST] Resultado del desbloqueo:', unlockResult);
+    // 6. Probar toggleSeat (deselección)
+    console.log('🔄 [TEST] Probando toggleSeat (deselección)...');
+    await cartStore.toggleSeat(testSeat);
     
-    // 7. Verificar estado después del desbloqueo
+    // 7. Verificar estado después de la deselección
     const seatStateAfter = seatStore.getSeatState(testSeatId);
-    console.log('🎨 [TEST] Estado del asiento después del desbloqueo:', seatStateAfter);
+    const cartItemsAfter = useCartStore.getState().items;
+    console.log('🎨 [TEST] Estado después de deselección:', {
+      seatState: seatStateAfter,
+      cartItems: cartItemsAfter.length,
+      isInCart: cartItemsAfter.some(item => item.sillaId === testSeatId)
+    });
     
     console.log('✅ [TEST] Prueba completada exitosamente');
     
