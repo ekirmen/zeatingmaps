@@ -95,12 +95,26 @@ export const useCartStore = create(
             // SELECCIÓN: Verificar estado antes de bloquear
             console.log('✅ [CART_TOGGLE] Seleccionando asiento:', seatId);
             
-            // Verificar si el asiento ya está bloqueado por otro usuario
+            // Verificar si el asiento ya está bloqueado
             const isLockedByOther = await seatStore.isSeatLocked(seatId, functionId);
             if (isLockedByOther) {
-              console.error('❌ [CART_TOGGLE] Asiento bloqueado por otro usuario:', seatId);
-              toast.error('Este asiento está siendo seleccionado por otro usuario');
-              return;
+              // Verificar si está bloqueado por el mismo usuario (para deselección)
+              const currentSessionId = localStorage.getItem('anonSessionId');
+              const isLockedByMe = await seatStore.isSeatLockedByMe(seatId, functionId, currentSessionId);
+              
+              if (isLockedByMe) {
+                console.log('✅ [CART_TOGGLE] Asiento bloqueado por el mismo usuario, procediendo a deseleccionar:', seatId);
+                // Proceder con la deselección
+                await seatStore.unlockSeat(seatId, functionId);
+                const updated = items.filter(item => (item._id || item.id || item.sillaId) !== seatId);
+                set({ items: updated });
+                toast.success('Asiento eliminado del carrito');
+                return;
+              } else {
+                console.error('❌ [CART_TOGGLE] Asiento bloqueado por otro usuario:', seatId);
+                toast.error('Este asiento está siendo seleccionado por otro usuario');
+                return;
+              }
             }
             
             // Verificación adicional: verificar si ya está en el carrito local

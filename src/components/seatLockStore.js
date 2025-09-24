@@ -496,8 +496,10 @@ export const useSeatLockStore = create((set, get) => ({
               schema: payload.schema,
               seatId: payload.new?.seat_id || payload.old?.seat_id,
               status: payload.new?.status || payload.old?.status,
+              sessionId: payload.new?.session_id || payload.old?.session_id,
               oldRecord: payload.old,
-              newRecord: payload.new
+              newRecord: payload.new,
+              timestamp: new Date().toISOString()
             });
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
               set((state) => {
@@ -550,6 +552,9 @@ export const useSeatLockStore = create((set, get) => ({
                     currentSessionId: localStorage.getItem('anonSessionId')
                   });
                   
+                  // Forzar actualización del estado para sincronización en tiempo real
+                  console.log('🔄 [SEAT_LOCK_STORE] Forzando actualización de estado para sincronización en tiempo real');
+                  
                   return { 
                     lockedSeats: updatedSeats, 
                     seatStates: newSeatStates 
@@ -597,6 +602,9 @@ export const useSeatLockStore = create((set, get) => ({
                     previousState: previousState,
                     newState: 'disponible'
                   });
+                  
+                  // Forzar actualización del estado para sincronización en tiempo real
+                  console.log('🔄 [SEAT_LOCK_STORE] Forzando actualización de estado DELETE para sincronización en tiempo real');
                   
                   return { 
                     lockedSeats: updatedSeats, 
@@ -1054,8 +1062,48 @@ export const useSeatLockStore = create((set, get) => ({
     console.log('🧹 [SEAT_LOCK] Cache limpiado, entradas restantes:', seatStatusCache.size);
   },
   
-  // Verificar si un asiento está bloqueado (con cache inteligente)
-  isSeatLocked: async (seatId, functionId = null) => {
+      // Verificar si un asiento está bloqueado por el usuario actual
+      isSeatLockedByMe: async (seatId, functionId = null, sessionId = null) => {
+        const { lockedSeats } = get();
+        const seats = Array.isArray(lockedSeats) ? lockedSeats : [];
+        
+        // Verificar en estado local primero
+        const currentSessionId = sessionId || localStorage.getItem('anonSessionId');
+        const isLockedByMe = seats.some((s) => 
+          s.seat_id === seatId && 
+          s.funcion_id === functionId && 
+          s.session_id === currentSessionId
+        );
+        
+        if (isLockedByMe) {
+          console.log('🔍 [SEAT_LOCK] Asiento bloqueado por el usuario actual:', seatId);
+          return true;
+        }
+        
+        // Verificar en BD si no está en estado local
+        try {
+          const { data, error } = await supabase
+            .from('seat_locks')
+            .select('*')
+            .eq('seat_id', seatId)
+            .eq('funcion_id', functionId)
+            .eq('session_id', currentSessionId)
+            .single();
+          
+          if (error && error.code !== 'PGRST116') {
+            console.warn('⚠️ [SEAT_LOCK] Error verificando asiento en BD:', error);
+            return false;
+          }
+          
+          return !!data;
+        } catch (error) {
+          console.warn('⚠️ [SEAT_LOCK] Error verificando asiento en BD:', error);
+          return false;
+        }
+      },
+
+      // Verificar si un asiento está bloqueado (con cache inteligente)
+      isSeatLocked: async (seatId, functionId = null) => {
     const { lockedSeats } = get();
     const seats = Array.isArray(lockedSeats) ? lockedSeats : [];
     
@@ -1151,15 +1199,6 @@ export const useSeatLockStore = create((set, get) => ({
     }
   },
 
-  // Verificar si un asiento está bloqueado por el usuario actual
-  isSeatLockedByMe: (seatId) => {
-    const sessionId = normalizeSessionId(getStoredSessionId());
-    const { lockedSeats } = get();
-    const seats = Array.isArray(lockedSeats) ? lockedSeats : [];
-    return seats.some(
-      (s) => s.seat_id === seatId && s.session_id === sessionId
-    );
-  },
 
   // Verificar si una mesa está bloqueada
   isTableLocked: (tableId) => {
