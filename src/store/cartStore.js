@@ -103,6 +103,15 @@ export const useCartStore = create(
               return;
             }
             
+            // Verificación adicional: verificar si ya está en el carrito local
+            const alreadyInCart = items.some(item => (item._id || item.id || item.sillaId) === seatId);
+            if (alreadyInCart) {
+              console.log('✅ [CART_TOGGLE] Asiento ya está en el carrito local, procediendo a deseleccionar');
+              // Continuar con la lógica de deselección
+            } else {
+              console.log('✅ [CART_TOGGLE] Asiento no está en carrito local, procediendo a seleccionar');
+            }
+            
             // Bloquear en BD
             const lockResult = await seatStore.lockSeat(seatId, 'seleccionado', functionId);
             
