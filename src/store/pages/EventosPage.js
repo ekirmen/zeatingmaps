@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Button, Card, Select, message, Spin, Alert, Tabs, Row, Col } from 'antd';
-import { CalendarOutlined, EnvironmentOutlined, ClockCircleOutlined, ArrowLeftOutlined, ShoppingCartOutlined, BugOutlined } from '@ant-design/icons';
+import { CalendarOutlined, EnvironmentOutlined, ClockCircleOutlined, ArrowLeftOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 import { supabase } from '../../supabaseClient';
 
-import { getFunciones, getFuncion, fetchMapa } from '../services/apistore';
+import { getFunciones, fetchMapa } from '../services/apistore';
 import formatDateString from '../../utils/formatDateString';
 import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
@@ -15,10 +15,7 @@ import seatPaymentChecker from '../../services/seatPaymentChecker';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import Cart from './Cart';
 import ProductosWidget from '../components/ProductosWidget';
-import { diagnoseMapaAccess, testMapaQuery, generateDiagnosticReport } from '../../utils/databaseDiagnostics';
 import { getZonaColor } from '../../utils/getZonaColor';
-import DiagnosticReport from '../../components/DiagnosticReport';
-import EventImage from '../components/EventImage';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -38,9 +35,6 @@ const EventosPage = ({ forceShowMap = false }) => {
   const [plantillaPrecios, setPlantillaPrecios] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [diagnosticReport, setDiagnosticReport] = useState(null);
-  const [showDiagnostic, setShowDiagnostic] = useState(false);
-  const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [showMap, setShowMap] = useState(forceShowMap);
   const [activeTab, setActiveTab] = useState('seats');
 
@@ -55,7 +49,6 @@ const EventosPage = ({ forceShowMap = false }) => {
   });
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
-  const removeFromCart = useCartStore((state) => state.removeFromCart);
   const cartItems = useCartStore((state) => state.items);
   const getItemCount = useCartStore((state) => state.getItemCount);
   const {
@@ -401,19 +394,10 @@ const EventosPage = ({ forceShowMap = false }) => {
       // Verificar si el asiento ya fue pagado por el mismo cliente
       const currentSessionId = localStorage.getItem('anonSessionId');
       const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(sillaId, selectedFunctionId, currentSessionId);
-      if (paymentCheck.isPaid) {
-        console.log('🚫 [EVENTOS_PAGE] Asiento ya pagado por el mismo cliente:', sillaId, 'Status:', paymentCheck.status, 'Source:', paymentCheck.source);
-        message.warning('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
-        return;
-      }
-
-      // Verificar si el asiento ya fue pagado
-      const currentSessionId = localStorage.getItem('anonSessionId');
-      const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(sillaId, selectedFunctionId, currentSessionId);
       
       if (paymentCheck.isPaid) {
-        console.log('🚫 [EVENTOS_PAGE] Asiento ya pagado:', sillaId);
-        message.warning('Este asiento ya ha sido comprado');
+        console.log('🚫 [EVENTOS_PAGE] Asiento ya pagado:', sillaId, 'Status:', paymentCheck.status, 'Source:', paymentCheck.source);
+        message.warning('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
         return;
       }
 
@@ -427,7 +411,7 @@ const EventosPage = ({ forceShowMap = false }) => {
         functionId: selectedFunctionId,
       });
     },
-    [selectedFunctionId, mapa, toggleSeat, removeFromCart, plantillaPrecios, isSeatLocked, isSeatLockedByMe, lockSeat, unlockSeat]
+    [selectedFunctionId, mapa, toggleSeat, plantillaPrecios, isSeatLocked, isSeatLockedByMe]
   );
 
   const handleFunctionSelect = (functionId) => {
@@ -439,33 +423,9 @@ const EventosPage = ({ forceShowMap = false }) => {
     setSelectedFunctionId(null);
     setMapa(null);
     setError(null);
-    setDiagnosticReport(null);
     setShowMap(false);
   };
 
-  const runManualDiagnostic = async () => {
-    if (!selectedFunctionId) {
-      message.warning('Selecciona una función primero');
-      return;
-    }
-
-    const funcion = funciones.find(f => f.id === selectedFunctionId);
-    if (!funcion) {
-      message.error('No se encontró la función seleccionada');
-      return;
-    }
-
-    const salaId = (funcion?.sala && typeof funcion.sala === 'object')
-      ? (funcion.sala.id || funcion.sala._id)
-      : funcion?.sala;
-
-    if (!salaId) {
-      message.error('No se pudo obtener el ID de la sala');
-      return;
-    }
-
-
-  };
 
   const handleProceedToCart = () => {
     if (getItemCount() === 0) {
@@ -490,22 +450,7 @@ const EventosPage = ({ forceShowMap = false }) => {
   };
 
   const images = getEventImages();
-  const bannerImage = images.banner || images.portada || images.obraImagen;
   const thumbnailImage = images.portada || images.obraImagen || images.banner;
-  
-  // Función para obtener URL de imagen con fallback
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null;
-    
-    try {
-      const resolvedUrl = resolveImageUrl(imagePath, 'eventos');
-      console.log('🖼️ [EVENT_IMAGE] Resolved URL:', resolvedUrl);
-      return resolvedUrl;
-    } catch (error) {
-      console.error('Error resolving image URL:', error);
-      return null;
-    }
-  };
 
   if (loading) {
     return (
