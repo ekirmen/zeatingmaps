@@ -69,6 +69,13 @@ export const useCartStore = create(
           const { useSeatLockStore } = await import('../components/seatLockStore');
           const seatStore = useSeatLockStore.getState();
           const functionId = seat.functionId || seat.funcionId || get().functionId;
+          
+          // Validar que functionId no sea null
+          if (!functionId) {
+            console.error('❌ [CART_TOGGLE] functionId es null, no se puede proceder:', { seatId, seat });
+            toast.error('Error: No se pudo determinar la función del evento');
+            return;
+          }
 
           if (exists) {
             // DESELECCIÓN: Quitar del carrito y desbloquear

@@ -1067,6 +1067,18 @@ export const useSeatLockStore = create((set, get) => ({
         const { lockedSeats } = get();
         const seats = Array.isArray(lockedSeats) ? lockedSeats : [];
         
+        // Validar que functionId no sea null
+        if (!functionId) {
+          console.warn('⚠️ [SEAT_LOCK] functionId es null, no se puede verificar en BD:', seatId);
+          // Solo verificar en estado local
+          const currentSessionId = sessionId || localStorage.getItem('anonSessionId');
+          const isLockedByMe = seats.some((s) => 
+            s.seat_id === seatId && 
+            s.session_id === currentSessionId
+          );
+          return isLockedByMe;
+        }
+        
         // Verificar en estado local primero
         const currentSessionId = sessionId || localStorage.getItem('anonSessionId');
         const isLockedByMe = seats.some((s) => 
@@ -1107,13 +1119,17 @@ export const useSeatLockStore = create((set, get) => ({
     const { lockedSeats } = get();
     const seats = Array.isArray(lockedSeats) ? lockedSeats : [];
     
+    // Validar que functionId no sea null para consultas a BD
+    if (!functionId) {
+      console.warn('⚠️ [SEAT_LOCK] functionId es null, solo verificando estado local:', seatId);
+      // Solo verificar en estado local
+      const isLockedLocally = seats.some((s) => s.seat_id === seatId);
+      return isLockedLocally;
+    }
+    
     // Verificar en estado local primero (más rápido)
     let isLockedLocally = false;
-    if (functionId) {
-      isLockedLocally = seats.some((s) => s.seat_id === seatId && s.funcion_id === functionId);
-    } else {
-      isLockedLocally = seats.some((s) => s.seat_id === seatId);
-    }
+    isLockedLocally = seats.some((s) => s.seat_id === seatId && s.funcion_id === functionId);
     
     // Si NO está bloqueado localmente, verificar en BD para estar seguros
     if (!isLockedLocally) {
