@@ -116,7 +116,7 @@ function EventPage() {
 
       // Si está bloqueado por otro usuario, no permitir acción
       const isLocked = await isSeatLocked(sillaId, selectedFunctionId);
-      if (isLocked && !isSeatLockedByMe(sillaId)) return;
+      if (isLocked && !(await isSeatLockedByMe(sillaId, selectedFunctionId))) return;
 
       // Resolver zona y precio
       const zona =
@@ -129,7 +129,7 @@ function EventPage() {
       const precio = detalle?.precio || 0;
 
       // Alternar bloqueo en DB + carrito
-      if (isSeatLockedByMe(sillaId)) {
+      if (await isSeatLockedByMe(sillaId, selectedFunctionId)) {
         await unlockSeat(sillaId, selectedFunctionId);
         await toggleSeat({
           sillaId,
@@ -216,10 +216,15 @@ function EventPage() {
                 );
                 return results.some(isLocked => isLocked);
               }}
-              areAllSeatsInTableLockedByMe={(tableId, allSeats) => {
+              areAllSeatsInTableLockedByMe={async (tableId, allSeats) => {
                 // Verificar si todos los asientos de la mesa están bloqueados por mí
                 const tableSeats = allSeats.filter(seat => seat.mesaId === tableId);
-                return tableSeats.length > 0 && tableSeats.every(seat => isSeatLockedByMe(seat._id));
+                if (tableSeats.length === 0) return false;
+                
+                const results = await Promise.all(
+                  tableSeats.map(async seat => await isSeatLockedByMe(seat._id, selectedFunctionId))
+                );
+                return results.every(isLockedByMe => isLockedByMe);
               }}
               onSeatToggle={handleSeatToggle}
               onTableToggle={(table) => {

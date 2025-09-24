@@ -389,7 +389,7 @@ const EventosPage = ({ forceShowMap = false }) => {
 
       // Si está bloqueado por otro usuario, no permitir acción
       const isLocked = await isSeatLocked(sillaId, selectedFunctionId);
-      if (isLocked && !isSeatLockedByMe(sillaId)) return;
+      if (isLocked && !(await isSeatLockedByMe(sillaId, selectedFunctionId))) return;
       
       // Verificar si el asiento ya fue pagado por el mismo cliente
       const currentSessionId = localStorage.getItem('anonSessionId');

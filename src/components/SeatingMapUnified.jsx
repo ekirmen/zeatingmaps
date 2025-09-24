@@ -743,7 +743,7 @@ if (Array.isArray(mapa?.contenido)) {
           {validatedSeats.map((seat) => {
             const isSelected = selectedSeatIds.has((seat._id || '').toString());
             const locked = false; // Se maneja a través de seatStates
-            const lockedByMe = isSeatLockedByMe ? isSeatLockedByMe(seat._id) : false;
+            const lockedByMe = isSeatLockedByMe ? isSeatLockedByMe(seat._id, funcionId) : false;
 
             // Determinar estado visual - priorizar seatStates del store para sincronización en tiempo real
             let seatEstado = seat.estado;
