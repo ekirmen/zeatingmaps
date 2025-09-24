@@ -76,6 +76,13 @@ export const useSeatColors = (eventId = null) => {
       }
     }
     
+    // Si el asiento NO está en seatStates pero seatStates existe, significa que fue deseleccionado
+    // y debe volver a su estado original (disponible)
+    if (seatStates && !seatStates.has(seatId)) {
+      console.log('🎨 [SEAT_COLORS] Asiento no está en seatStates, volviendo a disponible:', { seatId, originalState: seat.estado });
+      return '#4CAF50'; // Verde para disponible
+    }
+    
     // Fallback a la lógica original si no hay estado en el store
     // Verificar si está bloqueado/seleccionado por otro usuario
     const lockInfo = lockedSeats.find(lock => lock.seat_id === seatId);

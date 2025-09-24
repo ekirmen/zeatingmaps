@@ -279,13 +279,17 @@ const SeatingMapUnified = ({
   
   // Combinar asientos del mapa original con estados actualizados del store
   const memoizedSeats = useMemo(() => {
-    if (!syncedSeats || !seatStates) return syncedSeats;
+    if (!syncedSeats) return syncedSeats;
     
     // Actualizar estados de asientos con la información del store
     return syncedSeats.map(seat => {
-      const updatedState = seatStates.get(seat._id);
+      const updatedState = seatStates?.get(seat._id);
       if (updatedState && updatedState !== seat.estado) {
         return { ...seat, estado: updatedState };
+      }
+      // Si el asiento fue eliminado del seatStates, restaurar su estado original
+      if (seatStates && !seatStates.has(seat._id) && seat.estado !== 'disponible') {
+        return { ...seat, estado: 'disponible' };
       }
       return seat;
     });
