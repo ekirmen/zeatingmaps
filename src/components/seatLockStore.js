@@ -585,15 +585,17 @@ export const useSeatLockStore = create((set, get) => ({
                   // Es un desbloqueo de asiento
                   const updatedSeats = currentSeats.filter(lock => lock.seat_id !== seatId);
                   
-                  // Eliminar completamente el asiento del seatStates para que vuelva a su estado original
+                  // Cambiar a 'disponible' en lugar de eliminar para sincronización en tiempo real
                   const newSeatStates = new Map(state.seatStates);
                   const hadState = newSeatStates.has(seatId);
-                  newSeatStates.delete(seatId);
+                  const previousState = hadState ? state.seatStates.get(seatId) : 'none';
+                  newSeatStates.set(seatId, 'disponible'); // Cambiar a disponible en lugar de eliminar
                   
-                  console.log('🗑️ [SEAT_LOCK_STORE] Asiento eliminado del seatStates (DELETE):', { 
+                  console.log('🗑️ [SEAT_LOCK_STORE] Asiento cambiado a disponible (DELETE):', { 
                     seatId: seatId,
                     hadState: hadState,
-                    previousState: hadState ? state.seatStates.get(seatId) : 'none'
+                    previousState: previousState,
+                    newState: 'disponible'
                   });
                   
                   return { 
@@ -934,14 +936,19 @@ export const useSeatLockStore = create((set, get) => ({
         };
       });
     
-      console.log('✅ Asiento desbloqueado exitosamente en DB y estado local');
-      
-      // Eliminar completamente el asiento del seatStates para que vuelva a su estado original
-      const currentSeatStates = get().seatStates;
-      const newSeatStates = new Map(currentSeatStates);
-      newSeatStates.delete(seatId);
-      set({ seatStates: newSeatStates });
-      console.log('🔄 [SEAT_LOCK] Asiento eliminado del seatStates - volverá a estado original');
+        console.log('✅ Asiento desbloqueado exitosamente en DB y estado local');
+        
+        // En lugar de eliminar del seatStates, lo cambio a 'disponible' para sincronización en tiempo real
+        set((state) => {
+          const newSeatStates = new Map(state.seatStates);
+          newSeatStates.set(seatId, 'disponible'); // Cambiar a disponible en lugar de eliminar
+          
+          return {
+            ...state,
+            seatStates: newSeatStates
+          };
+        });
+        console.log('✅ [SEAT_LOCK] Asiento cambiado a disponible en seatStates - se verá en verde para todos los clientes');
       
       return true;
     } catch (error) {

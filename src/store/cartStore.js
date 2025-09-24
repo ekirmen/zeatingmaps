@@ -248,17 +248,17 @@ export const useCartStore = create(
             await seatStore.unlockSeat(seatId, get().functionId);
             console.log('🔓 [CART] Asiento desbloqueado de la BD:', seatId);
           } else {
-            // Si no está bloqueado en la BD, eliminar del seatStates para que vuelva a su estado original del mapa
-            console.log('🎨 [CART] Asiento no estaba bloqueado en BD, eliminando del seatStates:', seatId);
+            // Si no está bloqueado en la BD, cambiar a 'disponible' para sincronización en tiempo real
+            console.log('🎨 [CART] Asiento no estaba bloqueado en BD, cambiando a disponible:', seatId);
             
-            // Eliminar completamente el asiento del seatStates para que vuelva a su estado original del mapa
+            // Cambiar a 'disponible' en lugar de eliminar para sincronización en tiempo real
             const currentSeatStates = seatStore.seatStates;
             const newSeatStates = new Map(currentSeatStates);
-            newSeatStates.delete(seatId);
+            newSeatStates.set(seatId, 'disponible'); // Cambiar a disponible en lugar de eliminar
             // Usar la función específica para actualizar seatStates
             seatStore.setSeatStates(newSeatStates);
             
-            console.log('🌐 [CART] Asiento eliminado del seatStates - volverá a estado original del mapa:', seatId);
+            console.log('🌐 [CART] Asiento cambiado a disponible - se verá en verde para todos los clientes:', seatId);
           }
           
           toast.success('Asiento eliminado del carrito');
