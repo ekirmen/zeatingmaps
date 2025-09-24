@@ -8,7 +8,7 @@ const getLockExpirationMs = () => {
   const minutes = Number.isFinite(saved) ? Math.max(1, Math.min(120, saved)) : 15;
   return minutes * 60 * 1000;
 };
-const LOCK_EXPIRATION_TIME_MS = getLockExpirationMs();
+// const LOCK_EXPIRATION_TIME_MS = getLockExpirationMs(); // No se usa actualmente
 let timer = null;
 
 export const useCartStore = create(

@@ -7,9 +7,7 @@ import {
   ClockCircleOutlined, 
   ShoppingCartOutlined,
   ShareAltOutlined,
-  HeartOutlined,
   InfoCircleOutlined,
-  UserOutlined,
   SettingOutlined,
   EyeInvisibleOutlined,
   CheckCircleOutlined,
@@ -30,7 +28,7 @@ import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import useSelectedSeatsStore from '../../stores/useSelectedSeatsStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
-import useSeatLocksArray from '../hooks/useSeatLocksArray';
+// useSeatLocksArray eliminado - usar useSeatLockStore en su lugar
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import Cart from './Cart';
 import EventImage from '../components/EventImage';
@@ -93,27 +91,25 @@ const ModernEventPage = () => {
     areAllSeatsInTableLockedByMe
   } = useSeatLockStore();
 
-  // Cargar datos reales de seat_locks desde la base de datos
-  const { lockedSeats: realLockedSeats } = useSeatLocksArray(selectedFunctionId, null, !!selectedFunctionId);
+  // useSeatLocksArray eliminado - usar useSeatLockStore en su lugar
+  // const { lockedSeats: realLockedSeats } = useSeatLockStore();
   
-  // Debug: Log de seat_locks cargados
+  // Debug: Log de seat_locks cargados (usando useSeatLockStore)
   useEffect(() => {
-    
-    
-    if (realLockedSeats && realLockedSeats.length > 0) {
-      
-    } else {
-      
+    const { lockedSeats } = useSeatLockStore.getState();
+    if (lockedSeats && lockedSeats.length > 0) {
+      console.log('🔒 [MODERN_EVENT] Seat locks cargados:', lockedSeats);
     }
-  }, [realLockedSeats, selectedFunctionId]);
+  }, [selectedFunctionId]);
 
-  // Sincronización automática con seat_locks
+  // Sincronización automática con seat_locks (usando useSeatLockStore)
   useEffect(() => {
-    if (realLockedSeats && realLockedSeats.length > 0) {
-      
-      syncWithSeatLocks(realLockedSeats);
+    const { lockedSeats } = useSeatLockStore.getState();
+    if (lockedSeats && lockedSeats.length > 0) {
+      console.log('🔒 [MODERN_EVENT] Sincronizando con seat locks:', lockedSeats);
+      syncWithSeatLocks(lockedSeats);
     }
-  }, [realLockedSeats, syncWithSeatLocks]);
+  }, [syncWithSeatLocks]);
 
   // Cargar evento y funciones
   useEffect(() => {
@@ -192,7 +188,7 @@ const ModernEventPage = () => {
       }
     };
     loadProfile();
-  }, [user, supabase]);
+  }, [user]);
 
   // Suscribirse a función
   useEffect(() => {
@@ -251,7 +247,7 @@ const ModernEventPage = () => {
     };
 
     fetchMapa();
-  }, [isMapView, selectedFunctionId]);
+  }, [isMapView, selectedFunctionId, funciones]);
 
   const handleFunctionSelect = (functionId) => {
     setSelectedFunctionId(functionId);
@@ -325,13 +321,13 @@ const ModernEventPage = () => {
     return parseJsonField(evento.analytics) || {};
   };
 
-  const getDatosBoleto = () => {
-    return parseJsonField(evento.datosBoleto) || {};
-  };
+  // const getDatosBoleto = () => {
+  //   return parseJsonField(evento.datosBoleto) || {};
+  // };
 
-  const getDatosComprador = () => {
-    return parseJsonField(evento.datosComprador) || {};
-  };
+  // const getDatosComprador = () => {
+  //   return parseJsonField(evento.datosComprador) || {};
+  // };
 
   const getOtrasOpciones = () => {
     return parseJsonField(evento.otrasOpciones) || {};
@@ -551,7 +547,7 @@ const ModernEventPage = () => {
                     isAnySeatInTableLocked={isAnySeatInTableLocked}
                     areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
                     onTableToggle={handleTableToggle}
-                    lockedSeats={realLockedSeats}
+                    // lockedSeats se obtiene automáticamente del useSeatLockStore
                   />
                 ) : (
                   <div className="flex items-center justify-center h-96">
@@ -582,9 +578,9 @@ const ModernEventPage = () => {
       </div>
     );
   }
-  const datosBoleto = getDatosBoleto();
-  const datosComprador = getDatosComprador();
-  const otrasOpciones = getOtrasOpciones();
+  // const datosBoleto = getDatosBoleto();
+  // const datosComprador = getDatosComprador();
+  // const otrasOpciones = getOtrasOpciones();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -873,7 +869,7 @@ const ModernEventPage = () => {
             {/* Configuración del Comprador eliminada */}
 
             {/* Otras opciones - solo admin */}
-            {isTenantAdmin && Object.keys(otrasOpciones).length > 0 && (
+            {isTenantAdmin && Object.keys(getOtrasOpciones()).length > 0 && (
               <Card 
                 title={
                   <div className="flex items-center">
@@ -884,7 +880,7 @@ const ModernEventPage = () => {
                 className="mb-6 shadow-sm border border-gray-200 rounded-xl"
               >
                 <Descriptions column={2} bordered size="small">
-                  {Object.entries(otrasOpciones).map(([key, value]) => (
+                  {Object.entries(getOtrasOpciones()).map(([key, value]) => (
                     <Descriptions.Item key={key} label={key}>
                       {typeof value === 'boolean' ? (
                         <Badge status={value ? 'success' : 'error'} text={value ? 'Sí' : 'No'} />
