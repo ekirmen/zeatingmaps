@@ -932,9 +932,12 @@ export const useSeatLockStore = create((set, get) => ({
     
       console.log('✅ Asiento desbloqueado exitosamente en DB y estado local');
       
-      // Restaurar el estado del asiento individual sin tocar el mapa completo
-      get().updateSeatState(seatId, 'disponible');
-      console.log('🔄 [SEAT_LOCK] Estado del asiento restaurado para otros usuarios');
+      // Eliminar completamente el asiento del seatStates para que vuelva a su estado original
+      const currentSeatStates = get().seatStates;
+      const newSeatStates = new Map(currentSeatStates);
+      newSeatStates.delete(seatId);
+      set({ seatStates: newSeatStates });
+      console.log('🔄 [SEAT_LOCK] Asiento eliminado del seatStates - volverá a estado original');
       
       return true;
     } catch (error) {
@@ -1022,12 +1025,30 @@ export const useSeatLockStore = create((set, get) => ({
     }
   },
 
-  // Verificar si un asiento está bloqueado (local + BD)
+  // Cache para verificaciones de BD (evita consultas innecesarias)
+  seatStatusCache: new Map(),
+  
+  // Limpiar cache expirado
+  clearExpiredCache: () => {
+    const now = Date.now();
+    const CACHE_DURATION = 1000; // 1 segundo para pruebas
+    const { seatStatusCache } = get();
+    
+    for (const [key, value] of seatStatusCache.entries()) {
+      if (now - value.timestamp > CACHE_DURATION) {
+        seatStatusCache.delete(key);
+      }
+    }
+    
+    console.log('🧹 [SEAT_LOCK] Cache limpiado, entradas restantes:', seatStatusCache.size);
+  },
+  
+  // Verificar si un asiento está bloqueado (con cache inteligente)
   isSeatLocked: async (seatId, functionId = null) => {
     const { lockedSeats } = get();
     const seats = Array.isArray(lockedSeats) ? lockedSeats : [];
     
-    // Verificar en estado local primero
+    // Verificar en estado local primero (más rápido)
     let isLockedLocally = false;
     if (functionId) {
       isLockedLocally = seats.some((s) => s.seat_id === seatId && s.funcion_id === functionId);
@@ -1035,29 +1056,50 @@ export const useSeatLockStore = create((set, get) => ({
       isLockedLocally = seats.some((s) => s.seat_id === seatId);
     }
     
-    // Si está bloqueado localmente, verificar en la base de datos
-    if (isLockedLocally) {
-      try {
-        const { data, error } = await supabase
-          .from('seat_locks')
-          .select('*')
-          .eq('seat_id', seatId)
-          .eq('funcion_id', functionId)
-          .single();
-        
-        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-          console.warn('⚠️ [SEAT_LOCK] Error verificando asiento en BD:', error);
-        }
-        
-        // Si existe en BD, está realmente bloqueado
-        return !!data;
-      } catch (error) {
+    // Si NO está bloqueado localmente, no consultar BD
+    if (!isLockedLocally) {
+      return false;
+    }
+    
+    // Verificar cache antes de consultar BD
+    const cacheKey = `${seatId}_${functionId}`;
+    const cached = get().seatStatusCache.get(cacheKey);
+    const now = Date.now();
+    const CACHE_DURATION = 1000; // 1 segundo para pruebas
+    
+    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+      console.log('📋 [SEAT_LOCK] Usando cache para asiento:', seatId);
+      return cached.isLocked;
+    }
+    
+    // Solo consultar BD si no hay cache válido
+    try {
+      console.log('🔍 [SEAT_LOCK] Consultando BD para asiento:', seatId);
+      const { data, error } = await supabase
+        .from('seat_locks')
+        .select('*')
+        .eq('seat_id', seatId)
+        .eq('funcion_id', functionId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
         console.warn('⚠️ [SEAT_LOCK] Error verificando asiento en BD:', error);
         return isLockedLocally; // Fallback al estado local
       }
+      
+      const isLocked = !!data;
+      
+      // Actualizar cache
+      get().seatStatusCache.set(cacheKey, {
+        isLocked,
+        timestamp: now
+      });
+      
+      return isLocked;
+    } catch (error) {
+      console.warn('⚠️ [SEAT_LOCK] Error verificando asiento en BD:', error);
+      return isLockedLocally; // Fallback al estado local
     }
-    
-    return false;
   },
 
   // Verificar si un asiento está bloqueado por el usuario actual

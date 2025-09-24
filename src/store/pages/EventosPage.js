@@ -407,53 +407,25 @@ const EventosPage = ({ forceShowMap = false }) => {
         return;
       }
 
-      // Verificar si el asiento ya está en el carrito
-      const cartItemsState = useCartStore.getState().items;
-      const exists = cartItemsState.some(item => item.sillaId === sillaId);
-
-      if (exists) {
-        // DESELECCIÓN: Verificar que no esté comprado y luego deseleccionar
-        const currentSessionId = localStorage.getItem('anonSessionId');
-        const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(sillaId, selectedFunctionId, currentSessionId);
-        
-        if (paymentCheck.isPaid) {
-          console.log('🚫 [EVENTOS_PAGE] No se puede deseleccionar asiento comprado:', sillaId);
-          message.warning('Este asiento ya ha sido comprado y no puede ser deseleccionado');
-          return;
-        }
-        
-        console.log('🔄 [EVENTOS_PAGE] Deseleccionando asiento:', sillaId);
-        // Usar toggleSeat para deseleccionar (maneja tanto DB como carrito)
-        await toggleSeat({
-          sillaId,
-          zonaId,
-          precio,
-          nombre: silla.nombre || silla.numero || silla._id,
-          nombreZona,
-          functionId: selectedFunctionId,
-        });
-      } else {
-        // SELECCIÓN: Verificar que no esté comprado y luego seleccionar
-        const currentSessionId = localStorage.getItem('anonSessionId');
-        const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(sillaId, selectedFunctionId, currentSessionId);
-        
-        if (paymentCheck.isPaid) {
-          console.log('🚫 [EVENTOS_PAGE] Asiento ya pagado:', sillaId);
-          message.warning('Este asiento ya ha sido comprado');
-          return;
-        }
-        
-        console.log('✅ [EVENTOS_PAGE] Seleccionando asiento:', sillaId);
-        // Usar toggleSeat para seleccionar (maneja tanto DB como carrito)
-        await toggleSeat({
-          sillaId,
-          zonaId,
-          precio,
-          nombre: silla.nombre || silla.numero || silla._id,
-          nombreZona,
-          functionId: selectedFunctionId,
-        });
+      // Verificar si el asiento ya fue pagado
+      const currentSessionId = localStorage.getItem('anonSessionId');
+      const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(sillaId, selectedFunctionId, currentSessionId);
+      
+      if (paymentCheck.isPaid) {
+        console.log('🚫 [EVENTOS_PAGE] Asiento ya pagado:', sillaId);
+        message.warning('Este asiento ya ha sido comprado');
+        return;
       }
+
+      // Usar toggleSeat para manejar selección/deselección
+      await toggleSeat({
+        sillaId,
+        zonaId,
+        precio,
+        nombre: silla.nombre || silla.numero || silla._id,
+        nombreZona,
+        functionId: selectedFunctionId,
+      });
     },
     [selectedFunctionId, mapa, toggleSeat, removeFromCart, plantillaPrecios, isSeatLocked, isSeatLockedByMe, lockSeat, unlockSeat]
   );
