@@ -267,7 +267,7 @@ const Boleteria = () => {
       if (!sillaId || !selectedFuncion) return;
 
       // Si está bloqueado por otro usuario, no permitir acción
-      if (isSeatLocked(sillaId) && !isSeatLockedByMe(sillaId)) return;
+      if (isSeatLocked(sillaId, selectedFuncion) && !isSeatLockedByMe(sillaId, selectedFuncion)) return;
 
       // Resolver zona y precio
       const zona =
@@ -317,7 +317,7 @@ const Boleteria = () => {
       };
 
       // Alternar bloqueo en DB + carrito
-      if (isSeatLockedByMe(sillaId)) {
+      if (await isSeatLockedByMe(sillaId, selectedFuncion.id || selectedFuncion._id)) {
         await unlockSeat(sillaId, selectedFuncion.id || selectedFuncion._id);
         await toggleSeat(cartItem);
       } else {

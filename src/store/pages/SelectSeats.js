@@ -68,9 +68,9 @@ const SelectSeats = () => {
 
     // si está bloqueado por otro usuario no permitir selección
     const isLocked = await isSeatLocked(seat._id, funcionId);
-    if (isLocked && !isSeatLockedByMe(seat._id)) return;
+    if (isLocked && !(await isSeatLockedByMe(seat._id, funcionId))) return;
 
-    if (isSeatLockedByMe(seat._id)) {
+    if (await isSeatLockedByMe(seat._id, funcionId)) {
       await unlockSeat(seat._id, funcionId);
       // Quitar del carrito global
       await toggleSeat({ ...seat, funcionId });
@@ -153,7 +153,17 @@ const SelectSeats = () => {
                           y={y}
                           radius={10}
                           fill={
-                            isSeatLockedByMe(silla._id)
+                            (() => {
+                              // Verificar si está bloqueado por mí (sincrónico para renderizado)
+                              const currentSessionId = localStorage.getItem('anonSessionId');
+                              const lockedSeats = useSeatLockStore.getState().lockedSeats;
+                              const isLockedByMe = lockedSeats.some(lock => 
+                                lock.seat_id === silla._id && 
+                                lock.funcion_id === funcionId && 
+                                lock.session_id === currentSessionId
+                              );
+                              return isLockedByMe;
+                            })()
                               ? 'blue'
                               : (() => {
                                   // Verificar si está bloqueado (sincrónico para renderizado)
