@@ -564,12 +564,17 @@ export const useSeatLockStore = create((set, get) => ({
                 const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
                 const currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
                 
-                // Verificar si es mesa o asiento
-                const isTable = payload.old.lock_type === 'table';
-                const seatId = payload.old.seat_id;
-                const tableId = payload.old.table_id;
+                // Extraer datos del payload - usar tanto old como new para mayor compatibilidad
+                const oldData = payload.old || {};
+                const newData = payload.new || {};
+                const data = { ...oldData, ...newData };
                 
-                console.log('🗑️ [SEAT_LOCK_STORE] Datos extraídos:', { isTable, seatId, tableId });
+                // Verificar si es mesa o asiento
+                const isTable = data.lock_type === 'table';
+                const seatId = data.seat_id;
+                const tableId = data.table_id;
+                
+                console.log('🗑️ [SEAT_LOCK_STORE] Datos extraídos:', { isTable, seatId, tableId, data });
                 
                 if (isTable) {
                   // Es un desbloqueo de mesa
