@@ -745,9 +745,10 @@ export const useSeatLockStore = create((set, get) => ({
 
       console.log('✅ Asiento bloqueado exitosamente en DB y estado local');
       
-      // Actualizar el estado del asiento individual sin tocar el mapa completo
-      get().updateSeatState(seatId, 'seleccionado_por_otro');
-      console.log('🔄 [SEAT_LOCK] Estado del asiento actualizado para otros usuarios');
+      // Actualizar el estado del asiento individual para el usuario actual
+      const currentSessionId = localStorage.getItem('anonSessionId') || 'unknown';
+      get().updateSeatState(seatId, 'seleccionado');
+      console.log('🔄 [SEAT_LOCK] Estado del asiento actualizado para el usuario actual');
       
       return true;
     } catch (error) {

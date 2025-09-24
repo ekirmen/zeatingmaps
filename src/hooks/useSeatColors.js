@@ -44,9 +44,11 @@ export const useSeatColors = (eventId = null) => {
     // Obtener el session_id actual
     const currentSessionId = localStorage.getItem('anonSessionId') || 'unknown';
     
-    // Verificar si hay un estado actualizado en el store (tiempo real)
+    // Verificar si hay un estado actualizado en el store (tiempo real) - PRIORIDAD MÁXIMA
     const storeState = seatStates?.get(seatId);
     if (storeState) {
+      console.log('🎨 [SEAT_COLORS] Usando estado del store para asiento:', { seatId, storeState, originalState: seat.estado });
+      
       // Usar el estado del store para determinar el color
       switch (storeState) {
         case 'vendido':
@@ -69,6 +71,7 @@ export const useSeatColors = (eventId = null) => {
         case 'locked':
           return '#6b7280'; // Gris para bloqueado permanentemente
         default:
+          // Si no hay estado específico, usar el color por defecto
           return '#4CAF50'; // Verde para disponible
       }
     }

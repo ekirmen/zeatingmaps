@@ -425,15 +425,14 @@ const SeatingMapUnified = ({
       // Verificar si está seleccionado por el usuario actual
       const isSelectedByMe = selectedSeatIds.has((seat._id || '').toString());
       
-      // Permitir deseleccionar si está seleccionado por mí
+      // LÓGICA SIMPLIFICADA: Solo 2 estados - seleccionado o no seleccionado
       if (isSelectedByMe) {
-        // Verificar el estado del asiento antes de permitir deselección
+        // DESELECCIONAR: Solo verificar que no esté comprado
         const currentSessionId = localStorage.getItem('anonSessionId');
         const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, funcionId, currentSessionId);
         
-        // No permitir deseleccionar asientos que ya han sido comprados
         if (paymentCheck.isPaid) {
-          console.log('🚫 [SEATING_MAP] No se puede deseleccionar asiento comprado:', seat._id, 'Status:', paymentCheck.status, 'Source:', paymentCheck.source);
+          console.log('🚫 [SEATING_MAP] No se puede deseleccionar asiento comprado:', seat._id);
           if (onSeatError) {
             onSeatError('Este asiento ya ha sido comprado y no puede ser deseleccionado');
           }
@@ -441,47 +440,39 @@ const SeatingMapUnified = ({
         }
         
         console.log('🔄 [SEATING_MAP] Deseleccionando asiento:', seat._id);
-        // Llamar a la función de toggle del asiento para deseleccionar
         if (onSeatToggle) {
-          console.log('✅ [SEATING_MAP] Llamando a onSeatToggle para deseleccionar:', seat);
           onSeatToggle({ ...seat, funcionId });
         }
       } else {
-        // Verificar si el asiento ya fue pagado por el mismo cliente
+        // SELECCIONAR: Solo verificar que no esté comprado o bloqueado por otro
         const currentSessionId = localStorage.getItem('anonSessionId');
         const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, funcionId, currentSessionId);
+        
         if (paymentCheck.isPaid) {
-          console.log('🚫 [SEATING_MAP] Asiento ya pagado por el mismo cliente:', seat._id, 'Status:', paymentCheck.status, 'Source:', paymentCheck.source);
+          console.log('🚫 [SEATING_MAP] Asiento ya pagado:', seat._id);
           if (onSeatError) {
-            onSeatError('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
+            onSeatError('Este asiento ya ha sido comprado');
           }
           return;
         }
         
-        // Solo permitir seleccionar si está disponible
-        if (seat.estado !== 'disponible') {
-          console.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
+        // Verificar si está bloqueado por otro usuario
+        if (seat.estado === 'seleccionado_por_otro' || seat.estado === 'vendido' || seat.estado === 'reservado') {
+          console.log('🚫 [SEATING_MAP] Asiento no disponible:', seat.estado);
           if (onSeatError) {
             const errorMessage = seat.estado === 'vendido' 
               ? 'Este asiento ya está vendido.' 
               : seat.estado === 'reservado' 
               ? 'Este asiento está reservado.' 
-              : seat.estado === 'seleccionado_por_otro'
-              ? 'Este asiento está siendo seleccionado por otro usuario.'
-              : 'Este asiento no está disponible.';
+              : 'Este asiento está siendo seleccionado por otro usuario.';
             onSeatError(errorMessage);
           }
           return;
         }
         
         console.log('✅ [SEATING_MAP] Seleccionando asiento:', seat._id);
-        
-        // Llamar a la función de toggle del asiento para seleccionar
         if (onSeatToggle) {
-          console.log('✅ [SEATING_MAP] Llamando a onSeatToggle con asiento:', seat);
           onSeatToggle({ ...seat, funcionId });
-        } else {
-          console.warn('⚠️ [SEATING_MAP] onSeatToggle no está definido');
         }
       }
 

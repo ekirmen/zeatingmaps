@@ -99,8 +99,8 @@ export const useCartStore = create(
               const currentSeatStates = seatStore.seatStates;
               const newSeatStates = new Map(currentSeatStates);
               newSeatStates.delete(seatId);
-              // Usar la función correcta del store
-              seatStore.setState({ seatStates: newSeatStates });
+              // Usar la función correcta del store de Zustand
+              seatStore.set({ seatStates: newSeatStates });
               
               console.log('🌐 [CART_TOGGLE] Asiento eliminado del seatStates - volverá a estado original del mapa:', seatId);
             }
@@ -250,8 +250,8 @@ export const useCartStore = create(
             const currentSeatStates = seatStore.seatStates;
             const newSeatStates = new Map(currentSeatStates);
             newSeatStates.delete(seatId);
-            // Usar la función correcta del store
-            seatStore.setState({ seatStates: newSeatStates });
+            // Usar la función correcta del store de Zustand
+            seatStore.set({ seatStates: newSeatStates });
             
             console.log('🌐 [CART] Asiento eliminado del seatStates - volverá a estado original del mapa:', seatId);
           }
