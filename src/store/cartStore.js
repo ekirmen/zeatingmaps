@@ -108,14 +108,56 @@ export const useCartStore = create(
             
             toast.success('Asiento eliminado del carrito');
           } else {
-            // SELECCIÓN: Bloquear en BD y añadir al carrito
+            // SELECCIÓN: Verificar estado y bloquear en BD, luego añadir al carrito
             console.log('✅ [CART_TOGGLE] Seleccionando asiento:', seatId);
             
             const { useSeatLockStore } = await import('../components/seatLockStore');
             const seatStore = useSeatLockStore.getState();
             const functionId = seat.functionId || seat.funcionId || get().functionId;
             
-            // Bloquear en la base de datos primero
+            // Verificar si el asiento ya está bloqueado
+            const isAlreadyLocked = await seatStore.isSeatLocked(seatId, functionId);
+            
+            if (isAlreadyLocked) {
+              console.log('⚠️ [CART_TOGGLE] Asiento ya está bloqueado, verificando si es por el mismo usuario...');
+              
+              // Verificar si está bloqueado por el mismo usuario
+              const currentSessionId = localStorage.getItem('anonSessionId');
+              const lockedSeats = seatStore.lockedSeats;
+              const myLock = lockedSeats.find(lock => 
+                lock.seat_id === seatId && 
+                lock.funcion_id === functionId && 
+                lock.session_id === currentSessionId
+              );
+              
+              if (myLock) {
+                console.log('✅ [CART_TOGGLE] Asiento ya bloqueado por el mismo usuario, añadiendo al carrito');
+                // El asiento ya está bloqueado por el mismo usuario, solo añadir al carrito
+                const updated = [...items, seat];
+                const newState = {
+                  items: updated,
+                  functionId: functionId,
+                };
+                
+                if (items.length === 0 && get().products.length === 0) {
+                  const newExpiration = Date.now() + getLockExpirationMs();
+                  newState.cartExpiration = newExpiration;
+                  newState.timeLeft = Math.floor(getLockExpirationMs() / 1000);
+                  startExpirationTimer();
+                }
+                
+                set(newState);
+                console.log('✅ [CART_TOGGLE] Asiento añadido al carrito (ya estaba bloqueado):', seatId);
+                toast.success('Asiento añadido al carrito');
+                return;
+              } else {
+                console.error('❌ [CART_TOGGLE] Asiento bloqueado por otro usuario:', seatId);
+                toast.error('Este asiento está siendo seleccionado por otro usuario');
+                return;
+              }
+            }
+            
+            // Bloquear en la base de datos
             const lockResult = await seatStore.lockSeat(seatId, 'seleccionado', functionId);
             
             if (!lockResult) {

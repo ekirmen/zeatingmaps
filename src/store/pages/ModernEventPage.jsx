@@ -262,7 +262,8 @@ const ModernEventPage = () => {
       return;
     }
 
-    if (isSeatLocked(seatId) && !isSeatLockedByMe(seatId)) return;
+    const isLocked = await isSeatLocked(seatId, selectedFunctionId);
+    if (isLocked && !isSeatLockedByMe(seatId)) return;
 
     const exists = selectedSeats.some(seat => seat._id === seatId);
 

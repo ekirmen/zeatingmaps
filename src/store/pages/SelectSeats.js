@@ -67,7 +67,8 @@ const SelectSeats = () => {
     if (['reservado', 'pagado'].includes(seat.estado)) return;
 
     // si está bloqueado por otro usuario no permitir selección
-    if (isSeatLocked(seat._id) && !isSeatLockedByMe(seat._id)) return;
+    const isLocked = await isSeatLocked(seat._id, funcionId);
+    if (isLocked && !isSeatLockedByMe(seat._id)) return;
 
     if (isSeatLockedByMe(seat._id)) {
       await unlockSeat(seat._id, funcionId);
@@ -154,7 +155,11 @@ const SelectSeats = () => {
                           fill={
                             isSeatLockedByMe(silla._id)
                               ? 'blue'
-                              : isSeatLocked(silla._id)
+                              : (() => {
+                                  // Verificar si está bloqueado (sincrónico para renderizado)
+                                  const { lockedSeats } = useSeatLockStore.getState();
+                                  return lockedSeats.some(lock => lock.seat_id === silla._id);
+                                })()
                               ? 'orange'
                               : silla.estado === 'reservado'
                               ? '#555'

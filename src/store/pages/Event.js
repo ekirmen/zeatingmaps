@@ -115,7 +115,8 @@ function EventPage() {
       if (!sillaId || !selectedFunctionId) return;
 
       // Si está bloqueado por otro usuario, no permitir acción
-      if (isSeatLocked(sillaId) && !isSeatLockedByMe(sillaId)) return;
+      const isLocked = await isSeatLocked(sillaId, selectedFunctionId);
+      if (isLocked && !isSeatLockedByMe(sillaId)) return;
 
       // Resolver zona y precio
       const zona =
@@ -206,11 +207,14 @@ function EventPage() {
               isSeatLockedByMe={isSeatLockedByMe}
               isTableLocked={isSeatLocked} // Usar isSeatLocked para mesas
               isTableLockedByMe={isSeatLockedByMe} // Usar isSeatLockedByMe para mesas
-              isAnySeatInTableLocked={(tableId, allSeats) => {
+              isAnySeatInTableLocked={async (tableId, allSeats) => {
                 // Verificar si algún asiento de la mesa está bloqueado
-                return allSeats.some(seat => 
-                  seat.mesaId === tableId && isSeatLocked(seat._id)
+                const results = await Promise.all(
+                  allSeats
+                    .filter(seat => seat.mesaId === tableId)
+                    .map(async seat => await isSeatLocked(seat._id, selectedFunctionId))
                 );
+                return results.some(isLocked => isLocked);
               }}
               areAllSeatsInTableLockedByMe={(tableId, allSeats) => {
                 // Verificar si todos los asientos de la mesa están bloqueados por mí

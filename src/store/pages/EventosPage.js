@@ -395,7 +395,8 @@ const EventosPage = ({ forceShowMap = false }) => {
       console.log('[PRECIOS] Precio final para asiento:', precio);
 
       // Si está bloqueado por otro usuario, no permitir acción
-      if (isSeatLocked(sillaId) && !isSeatLockedByMe(sillaId)) return;
+      const isLocked = await isSeatLocked(sillaId, selectedFunctionId);
+      if (isLocked && !isSeatLockedByMe(sillaId)) return;
       
       // Verificar si el asiento ya fue pagado por el mismo cliente
       const currentSessionId = localStorage.getItem('anonSessionId');
