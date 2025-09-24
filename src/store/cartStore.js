@@ -92,8 +92,16 @@ export const useCartStore = create(
             
             toast.success('Asiento eliminado del carrito');
           } else {
-            // SELECCIÓN: Bloquear y añadir al carrito
+            // SELECCIÓN: Verificar estado antes de bloquear
             console.log('✅ [CART_TOGGLE] Seleccionando asiento:', seatId);
+            
+            // Verificar si el asiento ya está bloqueado por otro usuario
+            const isLockedByOther = await seatStore.isSeatLocked(seatId, functionId);
+            if (isLockedByOther) {
+              console.error('❌ [CART_TOGGLE] Asiento bloqueado por otro usuario:', seatId);
+              toast.error('Este asiento está siendo seleccionado por otro usuario');
+              return;
+            }
             
             // Bloquear en BD
             const lockResult = await seatStore.lockSeat(seatId, 'seleccionado', functionId);

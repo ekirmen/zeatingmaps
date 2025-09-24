@@ -1056,25 +1056,63 @@ export const useSeatLockStore = create((set, get) => ({
       isLockedLocally = seats.some((s) => s.seat_id === seatId);
     }
     
-    // Si NO está bloqueado localmente, no consultar BD
+    // Si NO está bloqueado localmente, verificar en BD para estar seguros
     if (!isLockedLocally) {
-      return false;
+      // Verificar cache antes de consultar BD
+      const cacheKey = `${seatId}_${functionId}`;
+      const cached = get().seatStatusCache.get(cacheKey);
+      const now = Date.now();
+      const CACHE_DURATION = 1000; // 1 segundo para pruebas
+      
+      if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+        console.log('📋 [SEAT_LOCK] Usando cache para asiento (no bloqueado localmente):', seatId);
+        return cached.isLocked;
+      }
+      
+      // Consultar BD para verificar si está bloqueado por otro usuario
+      try {
+        console.log('🔍 [SEAT_LOCK] Verificando BD para asiento (no bloqueado localmente):', seatId);
+        const { data, error } = await supabase
+          .from('seat_locks')
+          .select('*')
+          .eq('seat_id', seatId)
+          .eq('funcion_id', functionId)
+          .single();
+        
+        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+          console.warn('⚠️ [SEAT_LOCK] Error verificando asiento en BD:', error);
+          return false; // Si hay error, asumir que no está bloqueado
+        }
+        
+        const isLocked = !!data;
+        
+        // Actualizar cache
+        get().seatStatusCache.set(cacheKey, {
+          isLocked,
+          timestamp: now
+        });
+        
+        return isLocked;
+      } catch (error) {
+        console.warn('⚠️ [SEAT_LOCK] Error verificando asiento en BD:', error);
+        return false; // Si hay error, asumir que no está bloqueado
+      }
     }
     
-    // Verificar cache antes de consultar BD
+    // Si está bloqueado localmente, confirmar en BD
     const cacheKey = `${seatId}_${functionId}`;
     const cached = get().seatStatusCache.get(cacheKey);
     const now = Date.now();
     const CACHE_DURATION = 1000; // 1 segundo para pruebas
     
     if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-      console.log('📋 [SEAT_LOCK] Usando cache para asiento:', seatId);
+      console.log('📋 [SEAT_LOCK] Usando cache para asiento (bloqueado localmente):', seatId);
       return cached.isLocked;
     }
     
     // Solo consultar BD si no hay cache válido
     try {
-      console.log('🔍 [SEAT_LOCK] Consultando BD para asiento:', seatId);
+      console.log('🔍 [SEAT_LOCK] Confirmando en BD para asiento (bloqueado localmente):', seatId);
       const { data, error } = await supabase
         .from('seat_locks')
         .select('*')
