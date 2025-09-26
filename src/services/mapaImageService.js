@@ -1,5 +1,5 @@
 // Servicio para manejar imágenes de mapas optimizadas
-import { supabase } from '../lib/supabase';
+import { supabase } from '../supabaseClient';
 
 class MapaImageService {
   /**
