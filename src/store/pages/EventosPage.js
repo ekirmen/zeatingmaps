@@ -387,21 +387,8 @@ const EventosPage = ({ forceShowMap = false }) => {
 
       console.log('[PRECIOS] Precio final para asiento:', precio);
 
-      // Si está bloqueado por otro usuario, no permitir acción
-      const isLocked = await isSeatLocked(sillaId, selectedFunctionId);
-      if (isLocked && !(await isSeatLockedByMe(sillaId, selectedFunctionId))) return;
-      
-      // Verificar si el asiento ya fue pagado por el mismo cliente
-      const currentSessionId = localStorage.getItem('anonSessionId');
-      const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(sillaId, selectedFunctionId, currentSessionId);
-      
-      if (paymentCheck.isPaid) {
-        console.log('🚫 [EVENTOS_PAGE] Asiento ya pagado:', sillaId, 'Status:', paymentCheck.status, 'Source:', paymentCheck.source);
-        message.warning('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
-        return;
-      }
-
-      // Usar toggleSeat para manejar selección/deselección
+      // Usar toggleSeat para manejar toda la lógica de selección/deselección
+      // toggleSeat se encarga de verificar bloqueos, pagos, etc.
       await toggleSeat({
         sillaId,
         zonaId,

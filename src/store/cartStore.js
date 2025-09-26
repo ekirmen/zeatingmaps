@@ -107,10 +107,18 @@ export const useCartStore = create(
             // SELECCIÓN: Verificar estado antes de bloquear
             console.log('✅ [CART_TOGGLE] Seleccionando asiento:', seatId);
             
-            // Primero verificar si está bloqueado por el mismo usuario
+            // Verificar si está bloqueado por otro usuario (no por mí)
             const currentSessionId = localStorage.getItem('anonSessionId');
+            const isLockedByOther = await seatStore.isSeatLocked(seatId, functionId);
             const isLockedByMe = await seatStore.isSeatLockedByMe(seatId, functionId, currentSessionId);
             
+            if (isLockedByOther && !isLockedByMe) {
+              console.error('❌ [CART_TOGGLE] Asiento bloqueado por otro usuario:', seatId);
+              toast.error('Este asiento está siendo seleccionado por otro usuario');
+              return;
+            }
+            
+            // Si ya está bloqueado por mí, significa que ya está en el carrito, proceder a deseleccionar
             if (isLockedByMe) {
               console.log('✅ [CART_TOGGLE] Asiento ya bloqueado por el mismo usuario, procediendo a deseleccionar:', seatId);
               // Proceder con la deselección
@@ -121,21 +129,16 @@ export const useCartStore = create(
               return;
             }
             
-            // Verificar si está bloqueado por otro usuario
-            const isLockedByOther = await seatStore.isSeatLocked(seatId, functionId);
-            if (isLockedByOther) {
-              console.error('❌ [CART_TOGGLE] Asiento bloqueado por otro usuario:', seatId);
-              toast.error('Este asiento está siendo seleccionado por otro usuario');
-              return;
-            }
+            console.log('✅ [CART_TOGGLE] Asiento disponible, procediendo a seleccionar');
             
-            // Verificación adicional: verificar si ya está en el carrito local
-            const alreadyInCart = items.some(item => (item._id || item.id || item.sillaId) === seatId);
-            if (alreadyInCart) {
-              console.log('✅ [CART_TOGGLE] Asiento ya está en el carrito local, procediendo a deseleccionar');
-              // Continuar con la lógica de deselección
-            } else {
-              console.log('✅ [CART_TOGGLE] Asiento no está en carrito local, procediendo a seleccionar');
+            // Verificar si el asiento ya fue pagado
+            const seatPaymentChecker = await import('../services/seatPaymentChecker');
+            const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
+            
+            if (paymentCheck.isPaid) {
+              console.log('🚫 [CART_TOGGLE] Asiento ya pagado:', seatId);
+              toast.error('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
+              return;
             }
             
             // Bloquear en BD
