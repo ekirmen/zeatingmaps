@@ -279,51 +279,88 @@ const CrearMapaEditor = ({
   useEffect(() => {
     console.log('🖼️ [CREAR_MAPA_EDITOR] useEffect ejecutándose, mapa:', mapa);
     console.log('🖼️ [CREAR_MAPA_EDITOR] mapa.contenido:', mapa?.contenido);
-    console.log('🖼️ [CREAR_MAPA_EDITOR] mapa.contenido.elementos:', mapa?.contenido?.elementos);
+    console.log('🖼️ [CREAR_MAPA_EDITOR] tipo de contenido:', typeof mapa?.contenido);
     
-    if (mapa?.contenido?.elementos) {
-      console.log('🖼️ [CREAR_MAPA_EDITOR] Elementos encontrados:', mapa.contenido.elementos.length);
+    if (mapa?.contenido) {
+      let contenidoParseado;
       
-      // Verificar si el mapa tiene imágenes optimizadas
-      const tieneImagenesOptimizadas = mapaImageService.hasOptimizedImages(mapa.contenido.elementos);
-      console.log('🖼️ [CREAR_MAPA_EDITOR] ¿Tiene imágenes optimizadas?', tieneImagenesOptimizadas);
-      
-      if (tieneImagenesOptimizadas) {
-        console.log('🖼️ [CREAR_MAPA_EDITOR] Mapa tiene imágenes optimizadas, restaurando...');
-        
-        // Restaurar imágenes para edición
-        mapaImageService.restoreImagesForEditing(mapa.id, mapa.contenido.elementos)
-          .then((elementosRestaurados) => {
-            console.log('✅ [CREAR_MAPA_EDITOR] Imágenes restauradas exitosamente');
-            setElements(elementosRestaurados);
-            addToHistory(elementosRestaurados, 'Carga inicial con imágenes restauradas');
-          })
-          .catch((error) => {
-            console.error('❌ [CREAR_MAPA_EDITOR] Error restaurando imágenes:', error);
-            // Fallback: cargar elementos sin restaurar imágenes
-            setElements(mapa.contenido.elementos);
-            addToHistory(mapa.contenido.elementos, 'Carga inicial (fallback)');
-          });
+      // Verificar si el contenido es un string que necesita parsing
+      if (typeof mapa.contenido === 'string') {
+        console.log('🖼️ [CREAR_MAPA_EDITOR] Contenido es string, parseando...');
+        try {
+          contenidoParseado = JSON.parse(mapa.contenido);
+          console.log('✅ [CREAR_MAPA_EDITOR] Contenido parseado exitosamente');
+        } catch (error) {
+          console.error('❌ [CREAR_MAPA_EDITOR] Error parseando contenido:', error);
+          return;
+        }
       } else {
-        // Mapa sin imágenes optimizadas, cargar normalmente
-        console.log('🖼️ [CREAR_MAPA_EDITOR] Mapa sin imágenes optimizadas, cargando normalmente');
-        setElements(mapa.contenido.elementos);
-        addToHistory(mapa.contenido.elementos, 'Carga inicial');
+        contenidoParseado = mapa.contenido;
+      }
+      
+      console.log('🖼️ [CREAR_MAPA_EDITOR] contenidoParseado.elementos:', contenidoParseado?.elementos);
+      
+      if (contenidoParseado?.elementos) {
+        console.log('🖼️ [CREAR_MAPA_EDITOR] Elementos encontrados:', contenidoParseado.elementos.length);
+        
+        // Verificar si el mapa tiene imágenes optimizadas
+        const tieneImagenesOptimizadas = mapaImageService.hasOptimizedImages(contenidoParseado.elementos);
+        console.log('🖼️ [CREAR_MAPA_EDITOR] ¿Tiene imágenes optimizadas?', tieneImagenesOptimizadas);
+        
+        if (tieneImagenesOptimizadas) {
+          console.log('🖼️ [CREAR_MAPA_EDITOR] Mapa tiene imágenes optimizadas, restaurando...');
+          
+          // Restaurar imágenes para edición
+          mapaImageService.restoreImagesForEditing(mapa.id, contenidoParseado.elementos)
+            .then((elementosRestaurados) => {
+              console.log('✅ [CREAR_MAPA_EDITOR] Imágenes restauradas exitosamente');
+              setElements(elementosRestaurados);
+              addToHistory(elementosRestaurados, 'Carga inicial con imágenes restauradas');
+            })
+            .catch((error) => {
+              console.error('❌ [CREAR_MAPA_EDITOR] Error restaurando imágenes:', error);
+              // Fallback: cargar elementos sin restaurar imágenes
+              setElements(contenidoParseado.elementos);
+              addToHistory(contenidoParseado.elementos, 'Carga inicial (fallback)');
+            });
+        } else {
+          // Mapa sin imágenes optimizadas, cargar normalmente
+          console.log('🖼️ [CREAR_MAPA_EDITOR] Mapa sin imágenes optimizadas, cargando normalmente');
+          setElements(contenidoParseado.elementos);
+          addToHistory(contenidoParseado.elementos, 'Carga inicial');
+        }
+      } else {
+        console.log('🖼️ [CREAR_MAPA_EDITOR] No hay elementos para cargar');
       }
     } else {
-      console.log('🖼️ [CREAR_MAPA_EDITOR] No hay elementos para cargar');
+      console.log('🖼️ [CREAR_MAPA_EDITOR] No hay contenido en el mapa');
     }
   }, [mapa]);
 
      useEffect(() => {
-     if (mapa.contenido?.configuracion) {
-       setShowGrid(mapa.contenido.configuracion.showGrid);
-       setSnapToGrid(mapa.contenido.configuracion.snapToGrid);
-       setGridSize(mapa.contenido.configuracion.gridSize);
+     if (mapa?.contenido) {
+       let contenidoParseado;
+       
+       // Verificar si el contenido es un string que necesita parsing
+       if (typeof mapa.contenido === 'string') {
+         try {
+           contenidoParseado = JSON.parse(mapa.contenido);
+         } catch (error) {
+           console.error('❌ [CREAR_MAPA_EDITOR] Error parseando contenido en config:', error);
+           return;
+         }
+       } else {
+         contenidoParseado = mapa.contenido;
+       }
+       
+       if (contenidoParseado?.configuracion) {
+         setShowGrid(contenidoParseado.configuracion.showGrid);
+         setSnapToGrid(contenidoParseado.configuracion.snapToGrid);
+         setGridSize(contenidoParseado.configuracion.gridSize);
        
        // Restaurar configuración de imagen de fondo
-       if (mapa.contenido.configuracion.background) {
-         const bg = mapa.contenido.configuracion.background;
+         if (contenidoParseado.configuracion.background) {
+           const bg = contenidoParseado.configuracion.background;
          if (bg.position) {
            setBackgroundPosition(bg.position);
          }
