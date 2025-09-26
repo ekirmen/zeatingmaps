@@ -60,8 +60,6 @@ import { useMapaState } from '../../backoffice/hooks/useMapaState';
 import { useMapaSelection } from '../../backoffice/hooks/useMapaSelection';
 import { useMapaZoomStage } from '../../backoffice/hooks/useMapaZoomStage';
 import { useMapaGraphicalElements } from '../../backoffice/hooks/useMapaGraphicalElements';
-import { useMapaLoadingSaving } from '../../backoffice/hooks/usemapaloadingsaving';
-import { useMapaZones } from '../../backoffice/hooks/usemapazones';
 import { supabase } from '../../supabaseClient';
 import { fetchZonasPorSala } from '../../backoffice/services/apibackoffice';
 import mapaImageService from '../../services/mapaImageService';
