@@ -14,6 +14,20 @@ const SimpleCart = () => {
   const total = calculateTotal();
   const seatsCount = items.length;
   const productsCount = products.length;
+  
+  // Debug logging
+  console.log('🛒 [SIMPLE_CART] Renderizando con:', { 
+    items, 
+    products, 
+    itemCount, 
+    total, 
+    seatsCount, 
+    productsCount 
+  });
+  
+  // Verificar si el store está funcionando correctamente
+  const storeState = useCartStore.getState();
+  console.log('🛒 [SIMPLE_CART] Estado completo del store:', storeState);
 
   const handleCheckout = () => {
     if (itemCount === 0) return;

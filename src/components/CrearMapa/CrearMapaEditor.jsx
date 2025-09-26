@@ -64,6 +64,7 @@ import { useMapaLoadingSaving } from '../../backoffice/hooks/usemapaloadingsavin
 import { useMapaZones } from '../../backoffice/hooks/usemapazones';
 import { supabase } from '../../supabaseClient';
 import { fetchZonasPorSala } from '../../backoffice/services/apibackoffice';
+import mapaImageService from '../../services/mapaImageService';
 import Grid from '../compMapa/Grid';
 import MenuMapa from '../compMapa/MenuMapa';
 import AdvancedEditPopup from '../compMapa/AdvancedEditPopup';
@@ -277,8 +278,28 @@ const CrearMapaEditor = ({
   // ===== EFECTOS =====
   useEffect(() => {
     if (initialMapa?.contenido?.elementos) {
-      setElements(initialMapa.contenido.elementos);
-      addToHistory(initialMapa.contenido.elementos, 'Carga inicial');
+      // Verificar si el mapa tiene imágenes optimizadas
+      if (mapaImageService.hasOptimizedImages(initialMapa.contenido.elementos)) {
+        console.log('🖼️ [CREAR_MAPA_EDITOR] Mapa tiene imágenes optimizadas, restaurando...');
+        
+        // Restaurar imágenes para edición
+        mapaImageService.restoreImagesForEditing(initialMapa.id, initialMapa.contenido.elementos)
+          .then((elementosRestaurados) => {
+            console.log('✅ [CREAR_MAPA_EDITOR] Imágenes restauradas exitosamente');
+            setElements(elementosRestaurados);
+            addToHistory(elementosRestaurados, 'Carga inicial con imágenes restauradas');
+          })
+          .catch((error) => {
+            console.error('❌ [CREAR_MAPA_EDITOR] Error restaurando imágenes:', error);
+            // Fallback: cargar elementos sin restaurar imágenes
+            setElements(initialMapa.contenido.elementos);
+            addToHistory(initialMapa.contenido.elementos, 'Carga inicial (fallback)');
+          });
+      } else {
+        // Mapa sin imágenes optimizadas, cargar normalmente
+        setElements(initialMapa.contenido.elementos);
+        addToHistory(initialMapa.contenido.elementos, 'Carga inicial');
+      }
     }
   }, [initialMapa]);
 
@@ -801,6 +822,21 @@ const CrearMapaEditor = ({
       
       if (onSave) {
         await onSave(mapaToSave);
+      }
+      
+      // Optimizar el mapa después de guardarlo si tiene imágenes
+      if (mapaImageService.hasOptimizedImages(elements) || elements.some(el => el.type === 'background' && el.imageData)) {
+        console.log('🖼️ [CREAR_MAPA_EDITOR] Optimizando mapa después de guardar...');
+        
+        try {
+          const optimizado = await mapaImageService.optimizeMapAfterEditing(mapa.id, elements);
+          if (optimizado) {
+            console.log('✅ [CREAR_MAPA_EDITOR] Mapa optimizado exitosamente');
+          }
+        } catch (error) {
+          console.error('❌ [CREAR_MAPA_EDITOR] Error optimizando mapa:', error);
+          // No mostrar error al usuario, solo log
+        }
       }
       
       message.success('Mapa guardado exitosamente');

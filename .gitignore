@@ -115,3 +115,18 @@ dev_*
 debug_*
 test_*
 .vercel
+
+# ===== SCRIPTS SQL - NO SUBIR A GITHUB =====
+
+# Todos los archivos SQL de la carpeta scripts/
+scripts/*.sql
+
+# Scripts SQL específicos de optimización y migración
+scripts/complete-mapas-optimization*.sql
+scripts/optimize-mapas-*.sql
+scripts/migrate-mapas-*.sql
+scripts/apply-mapas-*.sql
+scripts/analyze-mapas-*.sql
+scripts/cleanup-*.sql
+scripts/fix-*.sql
+scripts/test-*.sql

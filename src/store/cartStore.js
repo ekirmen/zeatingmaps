@@ -67,13 +67,25 @@ export const useCartStore = create(
           console.log('🛒 [CART_TOGGLE] Procesando asiento:', { seatId, seat });
 
           const { items } = get();
+          console.log('🛒 [CART_TOGGLE] Items actuales en carrito:', items);
+          console.log('🛒 [CART_TOGGLE] Buscando seatId:', seatId);
+          
           const exists = items.some(
             (item) => (item.sillaId || item.id || item._id) === seatId
           );
+          
+          console.log('🛒 [CART_TOGGLE] ¿Asiento ya existe en carrito?', exists);
 
           const { useSeatLockStore } = await import('../components/seatLockStore');
           const seatStore = useSeatLockStore.getState();
           const functionId = seat.functionId || seat.funcionId || get().functionId;
+          
+          console.log('🛒 [CART_TOGGLE] functionId extraído:', { 
+            fromSeat: seat.functionId, 
+            fromSeatFuncionId: seat.funcionId, 
+            fromStore: get().functionId, 
+            final: functionId 
+          });
           
           // Validar que functionId no sea null
           if (!functionId) {
@@ -142,7 +154,9 @@ export const useCartStore = create(
             }
             
             // Bloquear en BD
+            console.log('🛒 [CART_TOGGLE] Intentando bloquear asiento en BD:', { seatId, functionId });
             const lockResult = await seatStore.lockSeat(seatId, 'seleccionado', functionId);
+            console.log('🛒 [CART_TOGGLE] Resultado del bloqueo:', lockResult);
             
             if (!lockResult) {
               console.error('❌ [CART_TOGGLE] Error bloqueando asiento:', seatId);
@@ -179,7 +193,9 @@ export const useCartStore = create(
               startExpirationTimer();
             }
             
+            console.log('🛒 [CART_TOGGLE] Actualizando estado del carrito con:', newState);
             set(newState);
+            console.log('🛒 [CART_TOGGLE] Estado actualizado, items ahora:', get().items);
             toast.success('Asiento añadido al carrito');
           }
         },
