@@ -13,7 +13,7 @@ import { useSeatLockStore } from '../../components/seatLockStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
 import seatPaymentChecker from '../../services/seatPaymentChecker';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
-import Cart from './Cart';
+import SimpleCart from '../components/SimpleCart';
 import ProductosWidget from '../components/ProductosWidget';
 import { getZonaColor } from '../../utils/getZonaColor';
 
@@ -617,7 +617,7 @@ const EventosPage = ({ forceShowMap = false }) => {
             {/* Panel lateral - Carrito */}
             <div className="lg:col-span-1">
               <div className="sticky top-4">
-                <Cart />
+                <SimpleCart />
               </div>
             </div>
           </div>

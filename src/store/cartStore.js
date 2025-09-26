@@ -59,7 +59,12 @@ export const useCartStore = create(
         // Enhanced seat management
         toggleSeat: async (seat) => {
           const seatId = seat.sillaId || seat.id || seat._id;
-          if (!seatId) return;
+          if (!seatId) {
+            console.error('❌ [CART_TOGGLE] No se pudo obtener seatId del objeto:', seat);
+            return;
+          }
+          
+          console.log('🛒 [CART_TOGGLE] Procesando asiento:', { seatId, seat });
 
           const { items } = get();
           const exists = items.some(
@@ -142,12 +147,27 @@ export const useCartStore = create(
               return;
             }
             
-            // Añadir al carrito
-            const updated = [...items, seat];
+            // Añadir al carrito - asegurar que el objeto tenga la estructura correcta
+            const seatForCart = {
+              _id: seatId,
+              sillaId: seatId,
+              id: seatId,
+              nombre: seat.nombre || seat.numero || seatId,
+              precio: seat.precio || 0,
+              zonaId: seat.zonaId || null,
+              nombreZona: seat.nombreZona || 'Zona',
+              functionId: functionId,
+              funcionId: functionId,
+              ...seat // Incluir cualquier otra propiedad del asiento
+            };
+            
+            const updated = [...items, seatForCart];
             const newState = {
               items: updated,
               functionId: functionId,
             };
+            
+            console.log('🛒 [CART_TOGGLE] Asiento añadido al carrito:', seatForCart);
             
             if (items.length === 0 && get().products.length === 0) {
               const newExpiration = Date.now() + getLockExpirationMs();
