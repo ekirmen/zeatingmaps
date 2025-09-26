@@ -4,6 +4,64 @@ import { Button, Space, message, InputNumber, Input, Select, Checkbox, Divider, 
 import { fetchZonasPorSala } from '../../services/apibackoffice';
 import { ArrowLeftOutlined, SaveOutlined, ZoomInOutlined, ZoomOutOutlined, AimOutlined, PictureOutlined, EyeOutlined, EyeInvisibleOutlined, DownOutlined, UndoOutlined } from '@ant-design/icons';
 
+const pickStringValue = (value) => (typeof value === 'string' && value.trim().length > 0 ? value : null);
+
+const resolveBackgroundSource = (background) => {
+  if (!background) {
+    return null;
+  }
+
+  if (typeof background === 'string') {
+    return pickStringValue(background);
+  }
+
+  if (typeof background === 'object') {
+    const directCandidates = [
+      background.imageData,
+      background.imageUrl,
+      background.url,
+      background.src,
+      background.image
+    ];
+
+    for (const candidate of directCandidates) {
+      const resolved = pickStringValue(candidate);
+      if (resolved) {
+        return resolved;
+      }
+    }
+
+    if (background.image && typeof background.image === 'object') {
+      const nestedCandidates = [
+        background.image.imageData,
+        background.image.imageUrl,
+        background.image.url,
+        background.image.src
+      ];
+
+      for (const candidate of nestedCandidates) {
+        const resolved = pickStringValue(candidate);
+        if (resolved) {
+          return resolved;
+        }
+      }
+    }
+  }
+
+  return null;
+};
+
+const getDefaultBackgroundSize = () => {
+  if (typeof window === 'undefined') {
+    return { width: 800, height: 600 };
+  }
+
+  return {
+    width: Math.min(800, window.innerWidth - 320 - 80),
+    height: Math.min(600, window.innerHeight - 80)
+  };
+};
+
 const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
   const [elements, setElements] = useState(Array.isArray(initialMapa?.contenido) ? initialMapa.contenido : []);
   const [selectedIds, setSelectedIds] = useState([]);
@@ -254,10 +312,34 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
     selectedIdsRef.current = selectedIds;
   }, [selectedIds]);
 
+  const loadImageFromSource = useCallback((source) => {
+    if (!source || typeof window === 'undefined') {
+      return Promise.resolve(null);
+    }
+
+    return new Promise((resolve, reject) => {
+      try {
+        const img = new window.Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = (error) => reject(error);
+        img.src = source;
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }, []);
+
   useEffect(() => {
     // Cargar meta config si viene embebida en elementos
     const meta = (elements || []).find(el => el.type === 'meta' && el.key === 'config');
-    if (meta && meta.config) {
+    let isMounted = true;
+
+    const applyMetaConfig = async () => {
+      if (!meta || !meta.config) {
+        return;
+      }
+
       if (meta.config.scale) setScale(meta.config.scale);
       if (meta.config.stagePos) setStagePos(meta.config.stagePos);
       if (typeof meta.config.gridSize === 'number') setGridSize(meta.config.gridSize);
@@ -266,41 +348,107 @@ const SeatingLite = ({ salaId, onSave, onCancel, initialMapa = null }) => {
       if (typeof meta.config.seatSpacing === 'number') setSeatSpacing(meta.config.seatSpacing);
       if (typeof meta.config.backgroundScale === 'number') setBackgroundScale(meta.config.backgroundScale);
       if (typeof meta.config.backgroundOpacity === 'number') setBackgroundOpacity(meta.config.backgroundOpacity);
+
       if (meta.config.backgroundImage) {
-        setBackgroundImage(meta.config.backgroundImage.image);
-        setBackgroundImageElement({
-          _id: meta.config.backgroundImage._id,
-          type: 'background',
-          image: meta.config.backgroundImage.image,
-          width: meta.config.backgroundImage.width,
-          height: meta.config.backgroundImage.height,
-          x: meta.config.backgroundImage.x,
-          y: meta.config.backgroundImage.y
+        const source = resolveBackgroundSource(meta.config.backgroundImage);
+        if (source) {
+          try {
+            const img = await loadImageFromSource(source);
+            if (img && isMounted) {
+              setBackgroundImage(img);
+            }
+          } catch (error) {
+            console.error('[SeatingLite] Error al cargar imagen de fondo desde configuración:', error);
+          }
+        }
+
+        const defaultSize = getDefaultBackgroundSize();
+        setBackgroundImageElement(prev => {
+          const imageDataValue = meta.config.backgroundImage.imageData
+            || (source && source.startsWith('data:')
+              ? source
+              : (prev?.imageData ?? null));
+          const imageUrlValue = meta.config.backgroundImage.imageUrl
+            || (source && !source.startsWith('data:')
+              ? source
+              : (prev?.imageUrl ?? null));
+
+          return {
+            _id: meta.config.backgroundImage._id || prev?._id || `bg_${Date.now()}`,
+            type: 'background',
+            image: meta.config.backgroundImage.image ?? prev?.image ?? null,
+            width: meta.config.backgroundImage.width ?? prev?.width ?? defaultSize.width,
+            height: meta.config.backgroundImage.height ?? prev?.height ?? defaultSize.height,
+            x: meta.config.backgroundImage.x ?? prev?.x ?? 0,
+            y: meta.config.backgroundImage.y ?? prev?.y ?? 0,
+            imageData: imageDataValue,
+            imageUrl: imageUrlValue
+          };
         });
       }
+
       // Opcional: eliminar meta del render
       setElements(prev => prev.filter(el => !(el.type === 'meta' && el.key === 'config')));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    };
+
+    applyMetaConfig();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [elements, loadImageFromSource]);
 
   // Cargar fondo desde elementos iniciales
   useEffect(() => {
-    if (initialMapa?.contenido) {
+    let isMounted = true;
+
+    const applyInitialBackground = async () => {
+      if (!initialMapa?.contenido) {
+        return;
+      }
+
       const bgElement = initialMapa.contenido.find(el => el.type === 'background');
-      if (bgElement) {
-        setBackgroundImageElement(bgElement);
-        // Crear imagen desde data URL si existe
-        if (bgElement.imageData) {
-          const img = new window.Image();
-          img.onload = () => {
+      if (!bgElement) {
+        return;
+      }
+
+      const source = resolveBackgroundSource(bgElement);
+      if (source) {
+        try {
+          const img = await loadImageFromSource(source);
+          if (img && isMounted) {
             setBackgroundImage(img);
-          };
-          img.src = bgElement.imageData;
+          }
+        } catch (error) {
+          console.error('[SeatingLite] Error al cargar imagen de fondo del mapa inicial:', error);
         }
       }
-    }
-  }, [initialMapa]);
+
+      setBackgroundImageElement(prev => {
+        const imageDataValue = bgElement.imageData
+          || (source && source.startsWith('data:')
+            ? source
+            : (prev?.imageData ?? null));
+        const imageUrlValue = bgElement.imageUrl
+          || (source && !source.startsWith('data:')
+            ? source
+            : (prev?.imageUrl ?? null));
+
+        return {
+          ...prev,
+          ...bgElement,
+          imageData: imageDataValue,
+          imageUrl: imageUrlValue
+        };
+      });
+    };
+
+    applyInitialBackground();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialMapa, loadImageFromSource]);
 
   // Manejar redimensionamiento de ventana
   useEffect(() => {
