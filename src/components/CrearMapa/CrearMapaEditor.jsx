@@ -861,22 +861,21 @@ const CrearMapaEditor = ({
         throw new Error('Error interno: los elementos del mapa no son válidos');
       }
       
-             const mapaToSave = {
-         ...mapa,
-         contenido: {
-           ...mapa.contenido,
-           elementos: elements,
-           configuracion: {
-             gridSize,
-             showGrid,
-             snapToGrid,
-             background: backgroundImage ? {
-               image: backgroundImage,
-               scale: backgroundScale,
-               opacity: backgroundOpacity,
-               position: backgroundPosition,
-               showInWeb: showBackgroundInWeb
-             } : null,
+      const mapaToSave = {
+        ...mapa,
+        contenido: {
+          elementos: elements,
+          configuracion: {
+            gridSize,
+            showGrid,
+            snapToGrid,
+            background: backgroundImage ? {
+              image: backgroundImage,
+              scale: backgroundScale,
+              opacity: backgroundOpacity,
+              position: backgroundPosition,
+              showInWeb: showBackgroundInWeb
+            } : null,
              dimensions: { width: 1200, height: 800 }
            }
          },
