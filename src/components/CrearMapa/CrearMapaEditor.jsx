@@ -892,6 +892,8 @@ const CrearMapaEditor = ({
       // Optimizar el mapa después de guardarlo si tiene imágenes
       if (mapaImageService.hasOptimizedImages(elements) || elements.some(el => el.type === 'background' && el.imageData)) {
         console.log('🖼️ [CREAR_MAPA_EDITOR] Optimizando mapa después de guardar...');
+        console.log('🖼️ [CREAR_MAPA_EDITOR] Elementos a optimizar:', elements.length);
+        console.log('🖼️ [CREAR_MAPA_EDITOR] Elementos con imageData:', elements.filter(el => el.type === 'background' && el.imageData).length);
         
         try {
           const optimizado = await mapaImageService.optimizeMapAfterEditing(mapa.id, elements);
