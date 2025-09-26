@@ -14,33 +14,34 @@ class MapaImageService {
       
       const elementosRestaurados = await Promise.all(
         elementos.map(async (elemento) => {
-          // Si el elemento tiene imageDataRef, restaurar la imagen original
+          // Si el elemento tiene imageDataRef, restaurar la imagen comprimida para vista previa
           if (elemento.imageDataRef && elemento.type === 'background') {
             console.log('🖼️ [MAPA_IMAGE_SERVICE] Restaurando imagen para elemento:', elemento._id);
             
             try {
-              const { data: imagenOriginal, error } = await supabase
-                .rpc('get_mapa_imagen_original', {
+              // Obtener imagen comprimida para vista previa
+              const { data: imagenComprimida, error } = await supabase
+                .rpc('get_mapa_imagen_compressed', {
                   mapa_id_param: mapaId,
                   elemento_id_param: elemento.imageDataRef
                 });
 
               if (error) {
-                console.error('❌ [MAPA_IMAGE_SERVICE] Error obteniendo imagen original:', error);
+                console.error('❌ [MAPA_IMAGE_SERVICE] Error obteniendo imagen comprimida:', error);
                 return elemento; // Retornar elemento sin cambios si hay error
               }
 
-              if (imagenOriginal) {
+              if (imagenComprimida) {
                 console.log('✅ [MAPA_IMAGE_SERVICE] Imagen restaurada para elemento:', elemento._id);
                 
                 // Crear objeto de imagen para Konva
                 const img = new window.Image();
-                img.src = imagenOriginal;
+                img.src = imagenComprimida;
                 
                 // Retornar elemento con imageData restaurado
                 return {
                   ...elemento,
-                  imageData: imagenOriginal,
+                  imageData: imagenComprimida,
                   image: img,
                   imageDataRef: undefined // Remover la referencia
                 };

@@ -898,6 +898,21 @@ const CrearMapaEditor = ({
           const optimizado = await mapaImageService.optimizeMapAfterEditing(mapa.id, elements);
           if (optimizado) {
             console.log('✅ [CREAR_MAPA_EDITOR] Mapa optimizado exitosamente');
+            
+            // Recargar el mapa para obtener el contenido actualizado con referencias
+            console.log('🔄 [CREAR_MAPA_EDITOR] Recargando mapa con contenido optimizado...');
+            const { data: mapaActualizado, error: reloadError } = await supabase
+              .from('mapas')
+              .select('*')
+              .eq('id', mapa.id)
+              .single();
+            
+            if (!reloadError && mapaActualizado) {
+              console.log('✅ [CREAR_MAPA_EDITOR] Mapa recargado exitosamente');
+              setMapa(mapaActualizado);
+            } else {
+              console.error('❌ [CREAR_MAPA_EDITOR] Error recargando mapa:', reloadError);
+            }
           }
         } catch (error) {
           console.error('❌ [CREAR_MAPA_EDITOR] Error optimizando mapa:', error);
