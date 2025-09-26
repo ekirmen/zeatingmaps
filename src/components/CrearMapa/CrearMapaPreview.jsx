@@ -51,6 +51,7 @@ const CrearMapaPreview = ({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState('visual');
   const [showFullscreen, setShowFullscreen] = useState(false);
+  const [backgroundImageElement, setBackgroundImageElement] = useState(null);
   
   // ===== REFERENCIAS =====
   const stageRef = useRef(null);
@@ -77,6 +78,29 @@ const CrearMapaPreview = ({
       setPosition({ x: newX, y: newY });
     }
   }, [mapa, containerRef.current]);
+
+  useEffect(() => {
+    const imageUrl = mapa?.contenido?.configuracion?.background?.image;
+
+    if (!imageUrl) {
+      setBackgroundImageElement(null);
+      return;
+    }
+
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => setBackgroundImageElement(img);
+    img.onerror = (error) => {
+      console.error('Error loading preview background image:', error);
+      setBackgroundImageElement(null);
+    };
+    img.src = imageUrl;
+
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [mapa?.contenido?.configuracion?.background?.image]);
 
   // Verificar que el mapa tenga dimensiones válidas
   const getMapDimensions = () => {
@@ -271,21 +295,33 @@ const CrearMapaPreview = ({
           />
         );
 
-      case 'background':
-        if (!element.imageUrl) return null;
+      case 'background': {
+        if (backgroundImageElement) {
+          return null;
+        }
+
+        const imageSource = element.image;
+        if (!imageSource) {
+          return null;
+        }
+
+        const position = element.position || mapa.contenido?.configuracion?.background?.position || { x: 0, y: 0 };
+        const scaleValue = element.scale || mapa.contenido?.configuracion?.background?.scale || 1;
+        const opacityValue = element.opacity ?? mapa.contenido?.configuracion?.background?.opacity ?? 0.3;
+
         return (
           <Image
             key={element._id}
-            image={element.imageUrl}
-            x={element.position.x}
-            y={element.position.y}
-            scaleX={element.scale}
-            scaleY={element.scale}
-            opacity={element.opacity}
+            image={imageSource}
+            x={position?.x || 0}
+            y={position?.y || 0}
+            scaleX={scaleValue}
+            scaleY={scaleValue}
+            opacity={opacityValue}
             listening={false}
           />
         );
-
+      }
       default:
         return null;
     }
@@ -634,14 +670,14 @@ const CrearMapaPreview = ({
                   />
                   
                   {/* Imagen de fondo */}
-                  {mapa.contenido.configuracion?.background && (
+                  {backgroundImageElement && (
                     <Image
-                      image={mapa.contenido.configuracion.background.image}
-                      x={0}
-                      y={0}
-                      scaleX={mapa.contenido.configuracion.background.scale}
-                      scaleY={mapa.contenido.configuracion.background.scale}
-                      opacity={mapa.contenido.configuracion.background.opacity}
+                      image={backgroundImageElement}
+                      x={mapa.contenido.configuracion?.background?.position?.x || 0}
+                      y={mapa.contenido.configuracion?.background?.position?.y || 0}
+                      scaleX={mapa.contenido.configuracion?.background?.scale || 1}
+                      scaleY={mapa.contenido.configuracion?.background?.scale || 1}
+                      opacity={mapa.contenido.configuracion?.background?.opacity ?? 0.3}
                       listening={false}
                     />
                   )}
