@@ -1094,15 +1094,22 @@ export const useSeatLockStore = create((set, get) => ({
         
         // Verificar en BD si no está en estado local
         try {
+          // Validar que currentSessionId no sea null o vacío
+          if (!currentSessionId || currentSessionId.trim() === '') {
+            console.warn('⚠️ [SEAT_LOCK] sessionId inválido para consulta BD:', currentSessionId);
+            return false;
+          }
+          
+          // Usar maybeSingle() en lugar de single() para evitar errores 406
           const { data, error } = await supabase
             .from('seat_locks')
             .select('*')
             .eq('seat_id', seatId)
             .eq('funcion_id', functionId)
             .eq('session_id', currentSessionId)
-            .single();
+            .maybeSingle();
           
-          if (error && error.code !== 'PGRST116') {
+          if (error) {
             console.warn('⚠️ [SEAT_LOCK] Error verificando asiento en BD:', error);
             return false;
           }
@@ -1152,9 +1159,9 @@ export const useSeatLockStore = create((set, get) => ({
           .select('*')
           .eq('seat_id', seatId)
           .eq('funcion_id', functionId)
-          .single();
+          .maybeSingle();
         
-        if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        if (error) {
           console.warn('⚠️ [SEAT_LOCK] Error verificando asiento en BD:', error);
           return false; // Si hay error, asumir que no está bloqueado
         }
@@ -1193,9 +1200,9 @@ export const useSeatLockStore = create((set, get) => ({
         .select('*')
         .eq('seat_id', seatId)
         .eq('funcion_id', functionId)
-        .single();
+        .maybeSingle();
       
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      if (error) {
         console.warn('⚠️ [SEAT_LOCK] Error verificando asiento en BD:', error);
         return isLockedLocally; // Fallback al estado local
       }
