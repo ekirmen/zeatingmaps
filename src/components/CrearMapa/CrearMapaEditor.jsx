@@ -437,7 +437,7 @@ const CrearMapaEditor = ({
     }
   }, [clipboard, elements, addToHistory]);
   
-  // ===== FUNCIONES DE HISTORIAL =====
+  // ===== FUNCIONES DE HISTORIAL =====csdcsdc
   const addToHistory = useCallback((newElements, action) => {
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push({
