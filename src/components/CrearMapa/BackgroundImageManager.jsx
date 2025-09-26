@@ -104,7 +104,7 @@ const BackgroundImageManager = ({
       }
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `mapas/${Date.now()}.${fileExt}`;
+      const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `mapas/${fileName}`;
 
       const { error: uploadError } = await supabase.storage

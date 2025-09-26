@@ -143,6 +143,7 @@ const CrearMapaEditor = ({
   
   // ===== ESTADOS DE FONDO =====
   const [backgroundImage, setBackgroundImage] = useState(null);
+  const [backgroundImageElement, setBackgroundImageElement] = useState(null);
   const [backgroundScale, setBackgroundScale] = useState(1);
   const [backgroundOpacity, setBackgroundOpacity] = useState(0.3);
   const [showBackgroundInWeb, setShowBackgroundInWeb] = useState(true);
@@ -338,29 +339,14 @@ const CrearMapaEditor = ({
   }, [mapa]);
 
      useEffect(() => {
-     if (mapa?.contenido) {
-       let contenidoParseado;
-       
-       // Verificar si el contenido es un string que necesita parsing
-       if (typeof mapa.contenido === 'string') {
-         try {
-           contenidoParseado = JSON.parse(mapa.contenido);
-         } catch (error) {
-           console.error('❌ [CREAR_MAPA_EDITOR] Error parseando contenido en config:', error);
-           return;
-         }
-       } else {
-         contenidoParseado = mapa.contenido;
-       }
-       
-       if (contenidoParseado?.configuracion) {
-         setShowGrid(contenidoParseado.configuracion.showGrid);
-         setSnapToGrid(contenidoParseado.configuracion.snapToGrid);
-         setGridSize(contenidoParseado.configuracion.gridSize);
+     if (mapa.contenido?.configuracion) {
+       setShowGrid(mapa.contenido.configuracion.showGrid);
+       setSnapToGrid(mapa.contenido.configuracion.snapToGrid);
+       setGridSize(mapa.contenido.configuracion.gridSize);
        
        // Restaurar configuración de imagen de fondo
-         if (contenidoParseado.configuracion.background) {
-           const bg = contenidoParseado.configuracion.background;
+       if (mapa.contenido.configuracion.background) {
+         const bg = mapa.contenido.configuracion.background;
          if (bg.position) {
            setBackgroundPosition(bg.position);
          }
@@ -376,6 +362,28 @@ const CrearMapaEditor = ({
        }
      }
    }, [mapa]);
+
+  useEffect(() => {
+    if (!backgroundImage) {
+      setBackgroundImageElement(null);
+      return;
+    }
+
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => setBackgroundImageElement(img);
+    img.onerror = (error) => {
+      console.error('Error loading background image:', error);
+      message.error('No se pudo cargar la imagen de fondo');
+      setBackgroundImageElement(null);
+    };
+    img.src = backgroundImage;
+
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
+  }, [backgroundImage]);
 
   // Cargar zonas de la sala
   useEffect(() => {
@@ -805,7 +813,7 @@ const CrearMapaEditor = ({
       }
 
       const fileExt = file.name.split('.').pop();
-      const fileName = `mapas/${Date.now()}.${fileExt}`;
+      const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `mapas/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -825,6 +833,7 @@ const CrearMapaEditor = ({
       setBackgroundImageFunction(publicUrl, {
         scale: backgroundScale,
         opacity: backgroundOpacity,
+        position: backgroundPosition,
         showInWeb: showBackgroundInWeb
       });
       message.success('Imagen de fondo subida y cargada correctamente');
@@ -834,7 +843,17 @@ const CrearMapaEditor = ({
       message.error('Error al subir la imagen de fondo');
       return false;
     }
-  }, [backgroundScale, backgroundOpacity, showBackgroundInWeb, setBackgroundImageFunction]);
+  }, [backgroundScale, backgroundOpacity, showBackgroundInWeb, setBackgroundImageFunction, backgroundPosition]);
+
+  const handleRemoveBackground = useCallback(() => {
+    setBackgroundImage(null);
+    setBackgroundImageElement(null);
+    setBackgroundPosition({ x: 0, y: 0 });
+    setBackgroundScale(1);
+    setBackgroundOpacity(0.3);
+    setShowBackgroundInWeb(true);
+    removeBackground();
+  }, [removeBackground]);
 
   const handleSave = useCallback(async () => {
     try {
@@ -1338,25 +1357,37 @@ const CrearMapaEditor = ({
           />
         );
 
-      case 'background':
-        if (!element.imageUrl) return null;
+      case 'background': {
+        if (backgroundImageElement) {
+          return null;
+        }
+
+        const imageSource = element.image;
+        if (!imageSource) {
+          return null;
+        }
+
+        const position = element.position || backgroundPosition;
+        const scaleValue = element.scale || backgroundScale;
+        const opacityValue = element.opacity ?? backgroundOpacity;
+
         return (
           <Image
             key={element._id}
-            image={element.imageUrl}
-            x={element.position.x}
-            y={element.position.y}
-            scaleX={element.scale}
-            scaleY={element.scale}
-            opacity={element.opacity}
+            image={imageSource}
+            x={position?.x || 0}
+            y={position?.y || 0}
+            scaleX={scaleValue}
+            scaleY={scaleValue}
+            opacity={opacityValue}
             listening={false}
           />
         );
-
+      }
       default:
         return null;
     }
-  }, [selectedIds, activeMode, handleElementClick, handleElementDrag, handleElementResize, seatStates, elements]);
+  }, [selectedIds, activeMode, handleElementClick, handleElementDrag, handleElementResize, seatStates, elements, backgroundImageElement, backgroundPosition, backgroundScale, backgroundOpacity]);
 
   // ===== RENDERIZADO PRINCIPAL =====
   return (
@@ -1594,7 +1625,7 @@ const CrearMapaEditor = ({
               snapToCustomGrid={handleSnapToGrid}
               setBackgroundImage={setBackgroundImageFunction}
               updateBackground={updateBackground}
-              removeBackground={removeBackground}
+              removeBackground={handleRemoveBackground}
               addMesa={handleAddMesa}
               addSillasToMesa={handleAddSillasToMesa}
               snapToGrid={handleSnapToGrid}
@@ -1764,27 +1795,27 @@ const CrearMapaEditor = ({
                    fill="#ffffff"
                  />
                  
-                 {/* Cuadrícula */}
-                 {showGrid && (
-                   <Grid 
-                     width={2000} 
-                     height={1400} 
-                     gridSize={gridSize}
-                   />
-                 )}
-                 
-                                   {/* Imagen de fondo */}
-                  {backgroundImage && (
-                    <Image
-                      image={backgroundImage}
-                      x={backgroundPosition.x}
-                      y={backgroundPosition.y}
-                      scaleX={backgroundScale}
-                      scaleY={backgroundScale}
-                      opacity={backgroundOpacity}
-                      listening={false}
-                    />
-                  )}
+                {/* Cuadrícula */}
+                {showGrid && (
+                  <Grid
+                    width={2000}
+                    height={1400}
+                    gridSize={gridSize}
+                  />
+                )}
+
+                {/* Imagen de fondo */}
+                {backgroundImageElement && (
+                  <Image
+                    image={backgroundImageElement}
+                    x={backgroundPosition.x}
+                    y={backgroundPosition.y}
+                    scaleX={backgroundScale}
+                    scaleY={backgroundScale}
+                    opacity={backgroundOpacity}
+                    listening={false}
+                  />
+                )}
                  
                  {/* Elementos del mapa */}
                  {elements.map(renderElement)}
@@ -1853,21 +1884,21 @@ const CrearMapaEditor = ({
          footer={null}
          width={800}
        >
-         <AdvancedConfiguration
-           gridSize={gridSize}
-           setGridSize={setGridSize}
-           showGrid={showGrid}
-           setShowGrid={setShowGrid}
-           snapToGrid={snapToGrid}
-           setSnapToGrid={setSnapToGrid}
-           backgroundImage={backgroundImage}
-           backgroundScale={backgroundScale}
-           backgroundOpacity={backgroundOpacity}
-           showBackgroundInWeb={showBackgroundInWeb}
-           onBackgroundUpload={handleBackgroundUpload}
-           onBackgroundUpdate={(updates) => updateBackground(updates)}
-           onBackgroundRemove={removeBackground}
-         />
+          <AdvancedConfiguration
+            gridSize={gridSize}
+            setGridSize={setGridSize}
+            showGrid={showGrid}
+            setShowGrid={setShowGrid}
+            snapToGrid={snapToGrid}
+            setSnapToGrid={setSnapToGrid}
+            backgroundImage={backgroundImage}
+            backgroundScale={backgroundScale}
+            backgroundOpacity={backgroundOpacity}
+            showBackgroundInWeb={showBackgroundInWeb}
+            onBackgroundUpload={handleBackgroundUpload}
+            onBackgroundUpdate={(updates) => updateBackground(updates)}
+            onBackgroundRemove={handleRemoveBackground}
+          />
        </Modal>
 
                {/* ===== GESTOR DE ZONAS ===== */}
