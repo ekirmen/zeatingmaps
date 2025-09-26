@@ -72,8 +72,9 @@ const SeatSelectionPage = () => {
     loadMapa();
   }, [funcionId]);
 
-  const handleSeatToggle = (seat) => {
-    toggleSeat(seat, funcionId);
+  const handleSeatToggle = async (seat) => {
+    // Asegurarnos de que toggleSeat reciba la función asociada
+    await toggleSeat({ ...seat, funcionId });
   };
 
   if (loading) {
