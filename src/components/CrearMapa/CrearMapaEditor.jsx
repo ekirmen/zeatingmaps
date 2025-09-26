@@ -277,13 +277,22 @@ const CrearMapaEditor = ({
 
   // ===== EFECTOS =====
   useEffect(() => {
-    if (initialMapa?.contenido?.elementos) {
+    console.log('🖼️ [CREAR_MAPA_EDITOR] useEffect ejecutándose, mapa:', mapa);
+    console.log('🖼️ [CREAR_MAPA_EDITOR] mapa.contenido:', mapa?.contenido);
+    console.log('🖼️ [CREAR_MAPA_EDITOR] mapa.contenido.elementos:', mapa?.contenido?.elementos);
+    
+    if (mapa?.contenido?.elementos) {
+      console.log('🖼️ [CREAR_MAPA_EDITOR] Elementos encontrados:', mapa.contenido.elementos.length);
+      
       // Verificar si el mapa tiene imágenes optimizadas
-      if (mapaImageService.hasOptimizedImages(initialMapa.contenido.elementos)) {
+      const tieneImagenesOptimizadas = mapaImageService.hasOptimizedImages(mapa.contenido.elementos);
+      console.log('🖼️ [CREAR_MAPA_EDITOR] ¿Tiene imágenes optimizadas?', tieneImagenesOptimizadas);
+      
+      if (tieneImagenesOptimizadas) {
         console.log('🖼️ [CREAR_MAPA_EDITOR] Mapa tiene imágenes optimizadas, restaurando...');
         
         // Restaurar imágenes para edición
-        mapaImageService.restoreImagesForEditing(initialMapa.id, initialMapa.contenido.elementos)
+        mapaImageService.restoreImagesForEditing(mapa.id, mapa.contenido.elementos)
           .then((elementosRestaurados) => {
             console.log('✅ [CREAR_MAPA_EDITOR] Imágenes restauradas exitosamente');
             setElements(elementosRestaurados);
@@ -292,16 +301,19 @@ const CrearMapaEditor = ({
           .catch((error) => {
             console.error('❌ [CREAR_MAPA_EDITOR] Error restaurando imágenes:', error);
             // Fallback: cargar elementos sin restaurar imágenes
-            setElements(initialMapa.contenido.elementos);
-            addToHistory(initialMapa.contenido.elementos, 'Carga inicial (fallback)');
+            setElements(mapa.contenido.elementos);
+            addToHistory(mapa.contenido.elementos, 'Carga inicial (fallback)');
           });
       } else {
         // Mapa sin imágenes optimizadas, cargar normalmente
-        setElements(initialMapa.contenido.elementos);
-        addToHistory(initialMapa.contenido.elementos, 'Carga inicial');
+        console.log('🖼️ [CREAR_MAPA_EDITOR] Mapa sin imágenes optimizadas, cargando normalmente');
+        setElements(mapa.contenido.elementos);
+        addToHistory(mapa.contenido.elementos, 'Carga inicial');
       }
+    } else {
+      console.log('🖼️ [CREAR_MAPA_EDITOR] No hay elementos para cargar');
     }
-  }, [initialMapa]);
+  }, [mapa]);
 
      useEffect(() => {
      if (mapa.contenido?.configuracion) {
