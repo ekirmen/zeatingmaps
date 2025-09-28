@@ -417,6 +417,16 @@ const SeatingMapUnified = ({
         return;
       }
 
+      // En modo store, delegar completamente al onSeatToggle
+      if (!modoVenta) {
+        console.log('🛒 [SEATING_MAP] Modo store - delegando a onSeatToggle');
+        if (onSeatToggle) {
+          onSeatToggle({ ...seat, funcionId });
+        }
+        if (onSeatInfo) onSeatInfo(seat);
+        return;
+      }
+
       // Verificar si está seleccionado por otro usuario
       const isSelectedByOther = seat.estado === 'seleccionado_por_otro';
       if (isSelectedByOther) {
@@ -506,7 +516,7 @@ const SeatingMapUnified = ({
       // Llamar a la función de información del asiento si existe
       if (onSeatInfo) onSeatInfo(seat);
     },
-    [onSeatToggle, onSeatInfo, onSeatError, selectedSeatIds, funcionId, blockedSeats]
+    [onSeatToggle, onSeatInfo, onSeatError, selectedSeatIds, funcionId, blockedSeats, modoVenta]
   );
 
 
