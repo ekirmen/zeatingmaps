@@ -853,7 +853,7 @@ if (Array.isArray(mapa?.contenido)) {
           })}
 
           {/* Renderizar otros elementos del mapa */}
-          {mapa?.contenido?.map((elemento, index) => {
+          {(Array.isArray(mapa?.contenido) ? mapa.contenido : mapa?.contenido?.elementos || []).map((elemento, index) => {
             // Filtrar elementos que ya se renderizaron como mesas o asientos
             if (elemento.type === 'mesa' || elemento.shape === 'circle' || elemento.shape === 'rect') {
               return null;
