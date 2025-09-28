@@ -149,10 +149,33 @@ const Funciones = () => {
     window.testLoadFunciones = async () => {
       console.log('🧪 Probando carga de funciones...');
       try {
-        // Probar sin filtros
+        // Probar diferentes nombres de tabla
+        const tableNames = ['funciones', 'function', 'sessions', 'eventos_sessions'];
+        
+        for (const tableName of tableNames) {
+          console.log(`🔍 Probando tabla: ${tableName}`);
+          
+          const { data, error } = await supabase
+            .from(tableName)
+            .select('*')
+            .limit(1);
+            
+          if (error) {
+            if (error.code === 'PGRST116') {
+              console.log(`❌ Tabla '${tableName}' no existe (404)`);
+            } else {
+              console.log(`⚠️ Tabla '${tableName}' existe pero hay error:`, error.message);
+            }
+          } else {
+            console.log(`✅ Tabla '${tableName}' existe y es accesible:`, data);
+            break; // Si encontramos una tabla que funciona, usarla
+          }
+        }
+
+        // Probar sin filtros en la tabla funciones
         const { data: allFunciones, error: allError } = await supabase
           .from('funciones')
-          .select('id, fecha_celebracion, sala_id, evento_id')
+          .select('id, fecha_celebracion, sala_id, evento_id, tenant_id, creadopor')
           .limit(10);
           
         if (allError) {
@@ -165,7 +188,7 @@ const Funciones = () => {
         if (salaSeleccionada?.id) {
           const { data: salaFunciones, error: salaError } = await supabase
             .from('funciones')
-            .select('id, fecha_celebracion, sala_id, evento_id')
+            .select('id, fecha_celebracion, sala_id, evento_id, tenant_id, creadopor')
             .eq('sala_id', salaSeleccionada.id);
             
           if (salaError) {
@@ -517,15 +540,16 @@ const Funciones = () => {
     console.log('🔍 [loadFunciones] Cargando funciones para sala:', salaSeleccionada.id);
     
     try {
-      const { data, error } = await supabase
+      // Intentar con la tabla 'funciones' primero
+      let { data, error } = await supabase
         .from('funciones')
         .select(`
           id,
-          fechaCelebracion:fecha_celebracion,
-          inicioVenta:inicio_venta,
-          finVenta:fin_venta,
-          pagoAPlazos:permite_pago_plazos,
-          permitirReservasWeb:permite_reserva,
+          fecha_celebracion,
+          inicio_venta,
+          fin_venta,
+          permite_pago_plazos,
+          permite_reserva,
           tiempo_caducidad_reservas,
           fecha_liberacion_reservas,
           evento_id,
@@ -537,12 +561,70 @@ const Funciones = () => {
           activo,
           visible_en_boleteria,
           visible_en_store,
+          plantilla,
+          zona_horaria,
+          lit_sesion,
+          utiliza_lit_sesion,
+          apertura_puertas,
+          promotional_session_label,
+          session_belongs_season_pass,
+          streaming_mode,
+          streaming_type,
+          streaming_url,
+          streaming_id,
+          streaming_password,
+          streaming_only_one_session_by_ticket,
+          streaming_show_url,
+          streaming_transmission_start,
+          streaming_transmission_stop,
+          plantilla_cupos,
+          id_barcode_pool,
+          num_plazos_pago,
+          misma_fecha_canales,
+          cancellation_date_selected,
+          end_date_cancellation,
+          ticket_printing_release_date_selected,
+          ticket_printing_release_date,
+          custom_printing_ticket_date,
+          custom_ses1,
+          custom_ses2,
+          recinto_id,
+          tenant_id,
+          creadopor,
+          created_at,
+          updated_at,
           eventos!evento_id(*),
           salas!sala_id(*),
           plantillas!plantilla_entradas(*)
         `)
         .eq('sala_id', salaSeleccionada.id)
         .order('fecha_celebracion', { ascending: true });
+      
+      // Si la tabla 'funciones' no existe (404), intentar con nombres alternativos
+      if (error && error.code === 'PGRST116') {
+        console.log('⚠️ [loadFunciones] Tabla "funciones" no existe, probando alternativas...');
+        
+        const alternativeTables = ['sessions', 'eventos_sessions', 'function'];
+        
+        for (const tableName of alternativeTables) {
+          console.log(`🔍 [loadFunciones] Probando tabla: ${tableName}`);
+          
+          const result = await supabase
+            .from(tableName)
+            .select('*')
+            .eq('sala_id', salaSeleccionada.id)
+            .limit(10);
+            
+          if (!result.error) {
+            console.log(`✅ [loadFunciones] Tabla encontrada: ${tableName}`);
+            data = result.data;
+            error = null;
+            break;
+          } else if (result.error.code !== 'PGRST116') {
+            console.log(`⚠️ [loadFunciones] Tabla ${tableName} existe pero hay error:`, result.error.message);
+          }
+        }
+      }
       
       if (error) {
         console.error('❌ [loadFunciones] Error cargando funciones:', error);
@@ -552,6 +634,13 @@ const Funciones = () => {
           details: error.details,
           hint: error.hint
         });
+        
+        // Si es un error 404, mostrar mensaje específico
+        if (error.code === 'PGRST116') {
+          console.error('💡 [loadFunciones] La tabla "funciones" no existe en la base de datos');
+          console.error('💡 [loadFunciones] Necesitas crear la tabla o verificar el nombre correcto');
+        }
+        
         setFunciones([]);
         return;
       }
