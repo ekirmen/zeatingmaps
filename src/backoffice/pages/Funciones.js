@@ -6,6 +6,7 @@ import { syncSeatsForSala } from '../services/apibackoffice';
 import { useTenant } from '../../contexts/TenantContext';
 import formatDateString from '../../utils/formatDateString';
 import funcionesService from '../../services/funcionesService';
+import { checkAndRefreshAuth } from '../../utils/authUtils';
 
 // Zonas horarias disponibles
 const ZONAS_HORARIAS = [
@@ -584,6 +585,16 @@ const Funciones = () => {
     e.preventDefault();
     
     try {
+      // Verificar autenticación antes de proceder
+      const { session, error: authError } = await checkAndRefreshAuth();
+      if (authError || !session?.user) {
+        console.error('Error de autenticación:', authError);
+        alert('Error de autenticación. Por favor, inicie sesión nuevamente.');
+        return;
+      }
+
+      console.log('🔐 Usuario autenticado:', session.user.email);
+
       // Validar que la fecha de inicio de venta sea anterior a la fecha de celebración
       if (new Date(nuevaFuncion.fechaInicioVenta) >= new Date(nuevaFuncion.fechaCelebracion)) {
         alert('La fecha de inicio de venta debe ser anterior a la fecha de celebración');
@@ -696,10 +707,11 @@ const Funciones = () => {
         visible_en_boleteria: nuevaFuncion.visibleEnBoleteria,
         visible_en_store: nuevaFuncion.visibleEnStore,
         tenant_id: formatUUIDField(currentTenant?.id),
-        recinto_id: formatIDField(recintoSeleccionado?.id)
+        recinto_id: formatIDField(recintoSeleccionado?.id),
+        creadopor: session.user.id // Usar el ID del usuario de la sesión
       };
 
-      // logs omitidos
+      console.log('📝 Datos de función a guardar:', funcionData);
 
       // Validación final antes de enviar
       if (!funcionData.sala_id) {
@@ -714,21 +726,27 @@ const Funciones = () => {
       }
 
       if (editingFuncion) {
-        /* omitido */
+        console.log('🔄 Actualizando función existente:', editingFuncion.id);
         const { error } = await supabase
           .from('funciones')
           .update(funcionData)
           .eq('id', editingFuncion.id);
         
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Error actualizando función:', error);
+          throw error;
+        }
         alert('Función actualizada exitosamente');
       } else {
-        /* omitido */
+        console.log('➕ Creando nueva función');
         const { error } = await supabase
           .from('funciones')
           .insert([funcionData]);
         
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Error creando función:', error);
+          throw error;
+        }
         alert('Función creada exitosamente');
       }
 
@@ -738,6 +756,7 @@ const Funciones = () => {
       
       loadFunciones();
     } catch (error) {
+      console.error('❌ Error al guardar la función:', error);
       alert('Error al guardar la función: ' + error.message);
     }
   };
