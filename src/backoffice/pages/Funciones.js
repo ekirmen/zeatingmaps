@@ -116,6 +116,34 @@ const Funciones = () => {
     };
     
     checkInitialAuth();
+    
+    // Exponer función de prueba globalmente para debugging
+    window.testFuncionesAuth = async () => {
+      console.log('🧪 Probando autenticación de funciones...');
+      try {
+        const { session, error } = await checkAndRefreshAuth();
+        if (error || !session?.user) {
+          console.error('❌ No hay sesión activa');
+          return;
+        }
+        
+        console.log('✅ Usuario autenticado:', session.user.email);
+        
+        // Probar lectura
+        const { data, error: readError } = await supabase
+          .from('funciones')
+          .select('id, fecha_celebracion')
+          .limit(1);
+          
+        if (readError) {
+          console.error('❌ Error leyendo funciones:', readError);
+        } else {
+          console.log('✅ Lectura exitosa:', data);
+        }
+      } catch (err) {
+        console.error('❌ Error en prueba:', err);
+      }
+    };
   }, []);
   const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
   
@@ -753,26 +781,46 @@ const Funciones = () => {
 
       if (editingFuncion) {
         console.log('🔄 Actualizando función existente:', editingFuncion.id);
-        const { error } = await supabase
+        console.log('📝 Datos a actualizar:', funcionData);
+        
+        const { data: updatedData, error } = await supabase
           .from('funciones')
           .update(funcionData)
-          .eq('id', editingFuncion.id);
+          .eq('id', editingFuncion.id)
+          .select();
         
         if (error) {
           console.error('❌ Error actualizando función:', error);
+          console.error('🔍 Detalles del error:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
           throw error;
         }
+        console.log('✅ Función actualizada exitosamente:', updatedData);
         alert('Función actualizada exitosamente');
       } else {
         console.log('➕ Creando nueva función');
-        const { error } = await supabase
+        console.log('📝 Datos a insertar:', funcionData);
+        
+        const { data: insertedData, error } = await supabase
           .from('funciones')
-          .insert([funcionData]);
+          .insert([funcionData])
+          .select();
         
         if (error) {
           console.error('❌ Error creando función:', error);
+          console.error('🔍 Detalles del error:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
           throw error;
         }
+        console.log('✅ Función creada exitosamente:', insertedData);
         alert('Función creada exitosamente');
       }
 

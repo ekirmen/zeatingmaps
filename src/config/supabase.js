@@ -56,7 +56,6 @@ const createOptimizedClient = (url, key, options = {}) => {
       ...globalOptions,
       headers: {
         apikey: key,
-        Authorization: `Bearer ${key}`,
         'X-Client-Info': 'zeatingmaps-web',
         ...customHeaders
       }
