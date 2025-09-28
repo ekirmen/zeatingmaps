@@ -204,6 +204,7 @@ const SeatingMapUnified = ({
   }, [funcionId, subscribeToFunction, unsubscribe]);
 
   const selectedSeatIds = useMemo(() => {
+    console.log('🔍 [SEATING_MAP] Debug modoVenta:', { modoVenta, tipo: typeof modoVenta });
     // Si estamos en modo boletería (modoVenta=true), usar selectedSeats de las props
     if (modoVenta) {
       let propSeatIds = [];
