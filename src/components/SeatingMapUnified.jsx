@@ -159,7 +159,8 @@ const SeatingMapUnified = ({
   foundSeats = [],
   selectedSeats = [],
   lockedSeats = [],
-  blockedSeats = null
+  blockedSeats = null,
+  modoVenta = false
 }) => {
   // Estado para controles de zoom
   const [scale, setScale] = useState(1);
