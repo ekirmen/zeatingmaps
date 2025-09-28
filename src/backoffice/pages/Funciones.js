@@ -144,8 +144,50 @@ const Funciones = () => {
         console.error('❌ Error en prueba:', err);
       }
     };
+
+    // Función para probar carga de funciones
+    window.testLoadFunciones = async () => {
+      console.log('🧪 Probando carga de funciones...');
+      try {
+        // Probar sin filtros
+        const { data: allFunciones, error: allError } = await supabase
+          .from('funciones')
+          .select('id, fecha_celebracion, sala_id, evento_id')
+          .limit(10);
+          
+        if (allError) {
+          console.error('❌ Error leyendo todas las funciones:', allError);
+        } else {
+          console.log('✅ Todas las funciones:', allFunciones);
+        }
+
+        // Probar con filtro de sala
+        if (salaSeleccionada?.id) {
+          const { data: salaFunciones, error: salaError } = await supabase
+            .from('funciones')
+            .select('id, fecha_celebracion, sala_id, evento_id')
+            .eq('sala_id', salaSeleccionada.id);
+            
+          if (salaError) {
+            console.error('❌ Error leyendo funciones de sala:', salaError);
+          } else {
+            console.log('✅ Funciones de sala', salaSeleccionada.id, ':', salaFunciones);
+          }
+        }
+      } catch (err) {
+        console.error('❌ Error en prueba:', err);
+      }
+    };
   }, []);
   const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
+  
+  // Debug: Mostrar estado de recinto y sala
+  useEffect(() => {
+    console.log('🔍 [Funciones] Estado actual:');
+    console.log('  - Recinto seleccionado:', recintoSeleccionado);
+    console.log('  - Sala seleccionada:', salaSeleccionada);
+    console.log('  - Recintos disponibles:', recintos?.length || 0);
+  }, [recintoSeleccionado, salaSeleccionada, recintos]);
   
   // Debug eliminado
   const [eventos, setEventos] = useState([]);
@@ -445,6 +487,8 @@ const Funciones = () => {
   useEffect(() => {
     const fetchEventos = async () => {
       if (salaSeleccionada && recintoSeleccionado) {
+        console.log('🔍 [fetchEventos] Cargando eventos para recinto:', recintoSeleccionado.id, 'sala:', salaSeleccionada.id);
+        
         const { data, error } = await supabase
           .from('eventos')
           .select('*')
@@ -452,8 +496,9 @@ const Funciones = () => {
           .eq('sala', salaSeleccionada.id);
         
         if (error) {
-          /* omitido */
+          console.error('❌ [fetchEventos] Error cargando eventos:', error);
         } else {
+          console.log('✅ [fetchEventos] Eventos cargados:', data?.length || 0);
           setEventos(data || []);
         }
       }
@@ -464,7 +509,12 @@ const Funciones = () => {
 
   // Fetch funciones
   const loadFunciones = useCallback(async () => {
-    if (!salaSeleccionada?.id) return;
+    if (!salaSeleccionada?.id) {
+      console.log('⚠️ [loadFunciones] No hay sala seleccionada');
+      return;
+    }
+    
+    console.log('🔍 [loadFunciones] Cargando funciones para sala:', salaSeleccionada.id);
     
     try {
       const { data, error } = await supabase
@@ -494,10 +544,23 @@ const Funciones = () => {
         .eq('sala_id', salaSeleccionada.id)
         .order('fecha_celebracion', { ascending: true });
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [loadFunciones] Error cargando funciones:', error);
+        console.error('🔍 [loadFunciones] Detalles del error:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        setFunciones([]);
+        return;
+      }
+      
+      console.log('✅ [loadFunciones] Funciones cargadas:', data?.length || 0);
       setFunciones(data || []);
     } catch (error) {
-      /* omitido */
+      console.error('❌ [loadFunciones] Error inesperado:', error);
+      setFunciones([]);
     }
   }, [salaSeleccionada]);
 
