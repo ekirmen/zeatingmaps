@@ -7,7 +7,6 @@ import { useTenant } from '../../contexts/TenantContext';
 import formatDateString from '../../utils/formatDateString';
 import funcionesService from '../../services/funcionesService';
 import { checkAndRefreshAuth } from '../../utils/authUtils';
-import AuthStatus from '../../components/AuthStatus';
 
 // Zonas horarias disponibles
 const ZONAS_HORARIAS = [
@@ -1144,9 +1143,6 @@ const Funciones = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Debug: Estado de autenticación */}
-        <AuthStatus showDetails={true} />
-        
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200">
