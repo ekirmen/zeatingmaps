@@ -742,82 +742,109 @@ const Funciones = () => {
     }
   };
 
-  const handleEdit = (funcion) => {
+  const handleEdit = async (funcion) => {
     setEditingFuncion(funcion);
-    
-    // Asegurar que todos los campos estén inicializados correctamente
-    const funcionEditada = {
-      fechaCelebracion: funcion.fecha_celebracion || '',
-      zonaHoraria: funcion.zona_horaria || 'America/Mexico_City',
-      litSesion: funcion.lit_sesion || '',
-      utilizaLitSesion: funcion.utiliza_lit_sesion || false,
-      tiempoCaducidadReservas: funcion.tiempo_caducidad_reservas || -120,
-      aperturaPuertas: funcion.apertura_puertas || '',
-      promotionalSessionLabel: funcion.promotional_session_label || '',
-      sessionBelongsSeasonPass: funcion.session_belongs_season_pass || false,
-      idAbonoSala: funcion.id_abono_sala || [],
-      streamingMode: funcion.streaming_mode || false,
-      overwriteStreamingSetup: funcion.overwrite_streaming_setup || false,
-      streamingType: funcion.streaming_type || 'ENETRES',
-      streamingUrl: funcion.streaming_url || '',
-      streamingId: funcion.streaming_id || '',
-      streamingPassword: funcion.streaming_password || '',
-      streamingOnlyOneSessionByTicket: funcion.streaming_only_one_session_by_ticket || false,
-      streamingShowUrl: funcion.streaming_show_url || false,
-      streamingTransmissionStart: funcion.streaming_transmission_start || '',
-      streamingTransmissionStop: funcion.streaming_transmission_stop || '',
-      idSala: funcion.sala_id || funcion.salas?.id || funcion.sala || null,
-      idPlantillaEntradas: funcion.plantilla_entradas || funcion.plantillas?.id || funcion.plantilla || null,
-      idPlantillaProductos: funcion.plantilla_producto || null,
-      idSpecialProductsTemplate: funcion.plantilla_comisiones || null,
-      idPlantillaCupos: funcion.plantilla_cupos || null,
-      permitePagoPlazos: funcion.permite_pago_plazos || false,
-      numPlazosPago: funcion.num_plazos_pago || 0,
-      permiteReserva: funcion.permite_reserva || funcion.permitir_reservas_web || false,
-      mismaFechaCanales: funcion.misma_fecha_canales !== false,
-      fechaInicioVenta: funcion.inicio_venta || '',
-      fechaFinVenta: funcion.fin_venta || '',
-      canales: funcion.canales || {
-        boxOffice: { activo: true, inicio: '', fin: '' },
-        internet: { activo: true, inicio: '', fin: '' }
-      },
-      cancellationDateSelected: funcion.cancellation_date_selected || false,
-      endDateCancellation: funcion.end_date_cancellation || '',
-      ticketPrintingReleaseDateSelected: funcion.ticket_printing_release_date_selected || false,
-      ticketPrintingReleaseDate: funcion.ticket_printing_release_date || 120,
-      customPrintingTicketDate: funcion.custom_printing_ticket_date || '',
-      customSes1: funcion.custom_ses1 || '',
-      customSes2: funcion.custom_ses2 || '',
-      idBarcodePool: funcion.id_barcode_pool || null,
-      activo: funcion.activo !== false,
-      visibleEnBoleteria: funcion.visible_en_boleteria !== false,
-      visibleEnStore: funcion.visible_en_store !== false
-    };
-    
-    setNuevaFuncion(funcionEditada);
 
-    // Sincronizar filtros superiores (recinto, sala, evento) según la función seleccionada
     try {
-      // Encontrar sala en el contexto de recintos
-      let encontradoRecinto = null;
-      let encontradaSala = null;
-      for (const recinto of recintos) {
-        const sala = (recinto.salas || []).find(s => String(s.id) === String(funcion.sala_id || funcion.salas?.id || funcion.sala));
-        if (sala) {
-          encontradoRecinto = recinto;
-          encontradaSala = sala;
-          break;
-        }
+      // Traer el registro completo por id (por si el listado no incluyó todos los campos)
+      const { data: full, error } = await supabase
+        .from('funciones')
+        .select('*')
+        .eq('id', funcion.id)
+        .single();
+      const f = error ? funcion : (full || funcion);
+
+      // Parsear canales si viene en string
+      let canalesParsed = f.canales;
+      if (typeof canalesParsed === 'string') {
+        try { canalesParsed = JSON.parse(canalesParsed); } catch (_) { canalesParsed = null; }
       }
-      if (encontradoRecinto) setRecintoSeleccionado(encontradoRecinto);
-      if (encontradaSala) setSalaSeleccionada(encontradaSala);
-      // Seleccionar evento (si está en la lista cargada)
-      const eventoSel = eventos.find(ev => String(ev.id) === String(funcion.evento_id));
-      if (eventoSel) setEventoSeleccionado(eventoSel);
+
+      const funcionEditada = {
+        // Campos base y equivalencias
+        fechaCelebracion: f.fecha_celebracion || '',
+        zonaHoraria: f.zona_horaria || 'America/Mexico_City',
+        litSesion: f.lit_sesion || '',
+        utilizaLitSesion: f.utiliza_lit_sesion || false,
+        tiempoCaducidadReservas: f.tiempo_caducidad_reservas ?? -120,
+        aperturaPuertas: f.apertura_puertas || '',
+        promotionalSessionLabel: f.promotional_session_label || '',
+        sessionBelongsSeasonPass: f.session_belongs_season_pass || false,
+        idAbonoSala: Array.isArray(f.id_abono_sala) ? f.id_abono_sala : [],
+
+        // Streaming
+        streamingMode: !!f.streaming_mode,
+        overwriteStreamingSetup: !!f.overwrite_streaming_setup,
+        streamingType: f.streaming_type || 'ENETRES',
+        streamingUrl: f.streaming_url || '',
+        streamingId: f.streaming_id || '',
+        streamingPassword: f.streaming_password || '',
+        streamingOnlyOneSessionByTicket: !!f.streaming_only_one_session_by_ticket,
+        streamingShowUrl: !!f.streaming_show_url,
+        streamingTransmissionStart: f.streaming_transmission_start || '',
+        streamingTransmissionStop: f.streaming_transmission_stop || '',
+
+        // Relaciones/plantillas
+        idSala: f.sala_id || null,
+        idPlantillaEntradas: f.plantilla_entradas ?? f.plantilla ?? null,
+        idPlantillaProductos: f.plantilla_producto || null,
+        idSpecialProductsTemplate: f.plantilla_comisiones || null,
+        idPlantillaCupos: f.plantilla_cupos || null,
+
+        // Opciones
+        permitePagoPlazos: f.permite_pago_plazos ?? f.pago_a_plazos ?? false,
+        numPlazosPago: typeof f.num_plazos_pago === 'number' ? f.num_plazos_pago : 0,
+        permiteReserva: f.permite_reserva ?? f.permitir_reservas_web ?? false,
+        mismaFechaCanales: f.misma_fecha_canales !== false,
+
+        // Ventas y canales
+        fechaInicioVenta: f.inicio_venta || '',
+        fechaFinVenta: f.fin_venta || '',
+        canales: canalesParsed || { boxOffice: { activo: true, inicio: '', fin: '' }, internet: { activo: true, inicio: '', fin: '' } },
+
+        // Cancelación e impresión
+        cancellationDateSelected: !!f.cancellation_date_selected,
+        endDateCancellation: f.end_date_cancellation || '',
+        ticketPrintingReleaseDateSelected: !!f.ticket_printing_release_date_selected,
+        ticketPrintingReleaseDate: typeof f.ticket_printing_release_date === 'number' ? f.ticket_printing_release_date : 120,
+        customPrintingTicketDate: f.custom_printing_ticket_date || '',
+
+        // Custom fields
+        customSes1: f.custom_ses1 || '',
+        customSes2: f.custom_ses2 || '',
+
+        // Otros
+        idBarcodePool: f.id_barcode_pool || null,
+        visibleEnBoleteria: f.visible_en_boleteria !== false,
+        visibleEnStore: f.visible_en_store !== false,
+        activo: f.activo !== false
+      };
+
+      setNuevaFuncion(funcionEditada);
+
+      // Sincronizar filtros superiores (recinto, sala, evento)
+      try {
+        let encontradoRecinto = null;
+        let encontradaSala = null;
+        for (const recinto of recintos) {
+          const sala = (recinto.salas || []).find(s => String(s.id) === String(f.sala_id));
+          if (sala) {
+            encontradoRecinto = recinto;
+            encontradaSala = sala;
+            break;
+          }
+        }
+        if (encontradoRecinto) setRecintoSeleccionado(encontradoRecinto);
+        if (encontradaSala) setSalaSeleccionada(encontradaSala);
+        const eventoSel = eventos.find(ev => String(ev.id) === String(f.evento_id));
+        if (eventoSel) setEventoSeleccionado(eventoSel);
+      } catch (_) {}
+
+      setModalIsOpen(true);
     } catch (e) {
-      /* omitido */
+      // Si falla el fetch, abrir con lo que teníamos
+      setModalIsOpen(true);
     }
-    setModalIsOpen(true);
   };
 
   const handleDelete = async (id) => {
