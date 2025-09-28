@@ -203,7 +203,28 @@ const SeatingMapUnified = ({
   }, [funcionId, subscribeToFunction, unsubscribe]);
 
   const selectedSeatIds = useMemo(() => {
-    // Usar el carrito directamente para determinar asientos seleccionados
+    // Si estamos en modo boletería (modoVenta=true), usar selectedSeats de las props
+    if (modoVenta) {
+      let propSeatIds = [];
+      if (selectedSeats) {
+        if (selectedSeats instanceof Set) {
+          propSeatIds = Array.from(selectedSeats).map(id => id?.toString()).filter(Boolean);
+        } else if (Array.isArray(selectedSeats)) {
+          if (selectedSeats.length > 0 && typeof selectedSeats[0] === 'object') {
+            propSeatIds = selectedSeats
+              .map(seat => seat?._id || seat?.sillaId || seat?.id)
+              .filter(Boolean)
+              .map(id => id.toString());
+          } else {
+            propSeatIds = selectedSeats.map(id => id?.toString()).filter(Boolean);
+          }
+        }
+      }
+      console.log('🎯 [SEATING_MAP] Modo boletería - selectedSeatIds:', propSeatIds);
+      return new Set(propSeatIds);
+    }
+    
+    // Modo store: usar el carrito directamente para determinar asientos seleccionados
     const cartItems = useCartStore.getState().items || [];
     const cartSeatIds = cartItems.map(item => (item.sillaId || item.id || item._id)?.toString()).filter(Boolean);
     
@@ -226,13 +247,13 @@ const SeatingMapUnified = ({
     
     // Combinar ambos (carrito tiene prioridad)
     const allSeatIds = [...new Set([...cartSeatIds, ...propSeatIds])];
-    console.log('🎯 [SEATING_MAP] selectedSeatIds calculado:', {
+    console.log('🎯 [SEATING_MAP] Modo store - selectedSeatIds calculado:', {
       cartSeatIds,
       propSeatIds,
       allSeatIds
     });
     return new Set(allSeatIds);
-  }, [selectedSeats]);
+  }, [selectedSeats, modoVenta]);
 
   const selectedSeatList = useMemo(() => Array.from(selectedSeatIds), [selectedSeatIds]);
 
