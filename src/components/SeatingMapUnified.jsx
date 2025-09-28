@@ -560,7 +560,13 @@ if (Array.isArray(mapa?.contenido)) {
   
   // Log removido para evitar spam en consola
 } else {
-  mesas = mapa?.contenido?.mesas || mapa?.contenido?.tables || [];
+  // Si es un objeto, buscar la propiedad 'elementos'
+  const elementos = Array.isArray(mapa?.contenido) 
+    ? mapa.contenido 
+    : mapa?.contenido?.elementos || [];
+  
+  // Filtrar solo las mesas de los elementos
+  mesas = elementos.filter(el => el && el.type === 'mesa');
 }
 
   // Validar y normalizar las mesas
