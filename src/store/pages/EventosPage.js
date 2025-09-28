@@ -276,7 +276,12 @@ const EventosPage = ({ forceShowMap = false }) => {
           const zonas = [];
 
           // Procesar contenido del mapa
-          (Array.isArray(contenido) ? contenido : [contenido]).forEach(item => {
+          // Si es un objeto, buscar la propiedad 'elementos'
+          const elementos = Array.isArray(contenido) 
+            ? contenido 
+            : contenido.elementos || [];
+          
+          elementos.forEach(item => {
             if (item.type === 'mesa' && Array.isArray(item.sillas) && item.sillas.length > 0) {
               mesas.push(item);
               item.sillas.forEach(silla => {

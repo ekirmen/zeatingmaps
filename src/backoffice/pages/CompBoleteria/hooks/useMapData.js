@@ -66,11 +66,16 @@ export const useMapData = (selectedFuncion) => {
         }
       }
       
-      if (contenidoData && Array.isArray(contenidoData)) {
+      // Si es un objeto, buscar la propiedad 'elementos'
+      const elementos = Array.isArray(contenidoData) 
+        ? contenidoData 
+        : contenidoData.elementos || [];
+      
+      if (elementos && Array.isArray(elementos)) {
         // Formato esperado por SeatingMap (array de contenido)
         mapped = {
           ...m,
-          contenido: contenidoData.map(el => ({
+          contenido: elementos.map(el => ({
             ...el,
             sillas: el.sillas.map(s => {
               const st = seatMap[s._id || s.id];

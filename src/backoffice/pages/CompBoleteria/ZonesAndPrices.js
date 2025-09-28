@@ -239,10 +239,10 @@ const ZonesAndPrices = ({
       if (!prev) return prev;
       const blocked = estado === 'bloqueado';
       
-      // Handle new structure where contenido is an object with zonas property
+      // Handle new structure where contenido is an object with elementos property
       const elementos = Array.isArray(prev.contenido) 
         ? prev.contenido 
-        : prev.contenido.zonas || [];
+        : prev.contenido.elementos || [];
       
       return {
         ...prev,

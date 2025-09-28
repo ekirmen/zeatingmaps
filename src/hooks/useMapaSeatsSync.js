@@ -21,8 +21,13 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
     // console.log('🔍 [useMapaSeatsSync] Es array?', Array.isArray(mapa.contenido));
 
     // Si el contenido es un array, procesar cada elemento
-    if (Array.isArray(mapa.contenido)) {
-      mapa.contenido.forEach((elemento, index) => {
+    // Si es un objeto, buscar la propiedad 'elementos'
+    const elementos = Array.isArray(mapa.contenido) 
+      ? mapa.contenido 
+      : mapa.contenido.elementos || [];
+    
+    if (Array.isArray(elementos)) {
+      elementos.forEach((elemento, index) => {
         // console.log(`🔍 [useMapaSeatsSync] Elemento ${index}:`, {
         //   _id: elemento._id,
         //   type: elemento.type,
