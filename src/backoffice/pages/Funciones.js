@@ -5,6 +5,7 @@ import { supabase } from '../../supabaseClient';
 import { syncSeatsForSala } from '../services/apibackoffice';
 import { useTenant } from '../../contexts/TenantContext';
 import formatDateString from '../../utils/formatDateString';
+import funcionesService from '../../services/funcionesService';
 
 // Zonas horarias disponibles
 const ZONAS_HORARIAS = [
@@ -822,11 +823,12 @@ const Funciones = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar esta función?')) return;
 
-    const { error } = await supabase.from('funciones').delete().eq('id', id);
-    if (error) {
-      alert('Error al eliminar');
-    } else {
-      loadFunciones();
+    try {
+      await funcionesService.eliminarFuncion(id);
+      await loadFunciones();
+    } catch (error) {
+      console.error('Error al eliminar función:', error);
+      alert('Error al eliminar: ' + (error.message || 'Error desconocido'));
     }
   };
 
@@ -1045,14 +1047,14 @@ const Funciones = () => {
                           : 'No configurado'
                         }
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="flex flex-col space-y-1">
-                          {funcion.permite_pago_plazos && (
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {funcion.pagoAPlazos && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               Pago a plazos
                             </span>
                           )}
-                          {funcion.permite_reserva && (
+                          {funcion.permitirReservasWeb && (
                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               Reservas web
                             </span>
@@ -1100,6 +1102,7 @@ const Funciones = () => {
         className="bg-white rounded-lg shadow-xl max-w-7xl mx-auto w-full focus:outline-none"
         overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
         style={{
+          overlay: { zIndex: 2001 },
           content: {
             maxHeight: '90vh',
             overflow: 'hidden'
