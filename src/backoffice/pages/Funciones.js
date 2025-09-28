@@ -145,6 +145,23 @@ const Funciones = () => {
       }
     };
 
+    // Función para verificar el estado actual del componente
+    window.checkFuncionesState = () => {
+      console.log('🔍 Estado actual del componente Funciones:');
+      console.log('  - Funciones en estado:', funciones?.length || 0);
+      console.log('  - Sala seleccionada:', salaSeleccionada);
+      console.log('  - Recinto seleccionado:', recintoSeleccionado);
+      console.log('  - Eventos:', eventos?.length || 0);
+      console.log('  - Funciones array:', funciones);
+    };
+
+    // Función para forzar la recarga de funciones
+    window.reloadFunciones = async () => {
+      console.log('🔄 Forzando recarga de funciones...');
+      await loadFunciones();
+      console.log('✅ Recarga completada');
+    };
+
     // Función para probar carga de funciones
     window.testLoadFunciones = async () => {
       console.log('🧪 Probando carga de funciones...');
@@ -646,6 +663,7 @@ const Funciones = () => {
       }
       
       console.log('✅ [loadFunciones] Funciones cargadas:', data?.length || 0);
+      console.log('📋 [loadFunciones] Datos de funciones:', data);
       setFunciones(data || []);
     } catch (error) {
       console.error('❌ [loadFunciones] Error inesperado:', error);
