@@ -7,6 +7,7 @@ import { useTenant } from '../../contexts/TenantContext';
 import formatDateString from '../../utils/formatDateString';
 import funcionesService from '../../services/funcionesService';
 import { checkAndRefreshAuth } from '../../utils/authUtils';
+import AuthStatus from '../../components/AuthStatus';
 
 // Zonas horarias disponibles
 const ZONAS_HORARIAS = [
@@ -100,6 +101,22 @@ const NUM_PLAZOS = [2, 3, 4, 5, 6, 7, 8, 10, 12];
 
 const Funciones = () => {
   const { currentTenant } = useTenant();
+  
+  // Verificar autenticación al cargar el componente
+  useEffect(() => {
+    const checkInitialAuth = async () => {
+      console.log('🔍 [Funciones] Verificando autenticación inicial...');
+      const { session, error } = await checkAndRefreshAuth();
+      if (error || !session?.user) {
+        console.warn('⚠️ [Funciones] Usuario no autenticado al cargar componente');
+        console.log('🔍 [Funciones] Estado:', { session: !!session, user: !!session?.user, error });
+      } else {
+        console.log('✅ [Funciones] Usuario autenticado:', session.user.email);
+      }
+    };
+    
+    checkInitialAuth();
+  }, []);
   const { recintoSeleccionado, salaSeleccionada, setRecintoSeleccionado, setSalaSeleccionada, recintos } = useRecinto();
   
   // Debug eliminado
@@ -586,14 +603,23 @@ const Funciones = () => {
     
     try {
       // Verificar autenticación antes de proceder
+      console.log('🔍 Verificando autenticación antes de crear función...');
+      
       const { session, error: authError } = await checkAndRefreshAuth();
       if (authError || !session?.user) {
-        console.error('Error de autenticación:', authError);
+        console.error('❌ Error de autenticación:', authError);
+        console.log('🔍 Estado de autenticación:', { session: !!session, user: !!session?.user, error: authError });
+        
+        // Intentar obtener más información sobre el estado de autenticación
+        const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+        console.log('🔍 Sesión actual:', { session: !!currentSession, user: !!currentSession?.user, error: sessionError });
+        
         alert('Error de autenticación. Por favor, inicie sesión nuevamente.');
         return;
       }
 
-      console.log('🔐 Usuario autenticado:', session.user.email);
+      console.log('✅ Usuario autenticado:', session.user.email);
+      console.log('🆔 User ID:', session.user.id);
 
       // Validar que la fecha de inicio de venta sea anterior a la fecha de celebración
       if (new Date(nuevaFuncion.fechaInicioVenta) >= new Date(nuevaFuncion.fechaCelebracion)) {
@@ -900,6 +926,9 @@ const Funciones = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Debug: Estado de autenticación */}
+        <AuthStatus showDetails={true} />
+        
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           {/* Header */}
           <div className="px-6 py-4 border-b border-gray-200">
