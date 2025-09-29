@@ -473,7 +473,8 @@ export const useSeatLockStore = create((set, get) => ({
 
     try {
       // Verificar si ya existe un canal con el mismo topic antes de crear uno nuevo
-      const existingChannel = supabase.getChannels().find(ch => ch.topic === expectedTopic);
+      const channels = supabase.getChannels();
+      const existingChannel = Array.isArray(channels) ? channels.find(ch => ch.topic === expectedTopic) : null;
       if (existingChannel) {
         set({ channel: existingChannel });
         return;

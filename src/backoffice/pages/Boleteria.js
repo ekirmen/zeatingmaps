@@ -551,7 +551,7 @@ const Boleteria = () => {
                     </div>
                     <div className="flex-1 p-4 overflow-auto">
                       <SeatingMapUnified
-                        funcionId={selectedFuncion?.id}
+                        funcionId={selectedFuncion?.id || selectedFuncion?._id}
                         mapa={mapa}
                         zonas={mapa?.zonas || []}
                         selectedFuncion={selectedFuncion}

@@ -162,6 +162,30 @@ const SeatingMapUnified = ({
   blockedSeats = null,
   modoVenta = false
 }) => {
+  // Validar y normalizar funcionId
+  const normalizedFuncionId = useMemo(() => {
+    if (typeof funcionId === 'number') {
+      return funcionId;
+    }
+    if (typeof funcionId === 'string') {
+      const parsed = parseInt(funcionId, 10);
+      return isNaN(parsed) ? null : parsed;
+    }
+    if (funcionId && typeof funcionId === 'object') {
+      // Si es un objeto, intentar extraer el ID
+      const id = funcionId.id || funcionId._id || funcionId.funcion_id;
+      if (typeof id === 'number') {
+        return id;
+      }
+      if (typeof id === 'string') {
+        const parsed = parseInt(id, 10);
+        return isNaN(parsed) ? null : parsed;
+      }
+    }
+    console.warn('⚠️ [SEATING_MAP] funcionId inválido:', funcionId);
+    return null;
+  }, [funcionId]);
+
   // Estado para controles de zoom
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -186,22 +210,22 @@ const SeatingMapUnified = ({
   const seatStates = useSeatLockStore(state => state.seatStates);
   const subscribeToFunction = useSeatLockStore(state => state.subscribeToFunction);
   const unsubscribe = useSeatLockStore(state => state.unsubscribe);
-  const { getSeatColor, getBorderColor } = useSeatColors(funcionId);
+  const { getSeatColor, getBorderColor } = useSeatColors(normalizedFuncionId);
 
   // Suscribirse a cambios en tiempo real cuando el componente se monta
   useEffect(() => {
-    if (funcionId && subscribeToFunction) {
-      console.log('🔔 [SEATING_MAP] Suscribiéndose a función:', funcionId);
-      subscribeToFunction(funcionId);
+    if (normalizedFuncionId && subscribeToFunction) {
+      console.log('🔔 [SEATING_MAP] Suscribiéndose a función:', normalizedFuncionId);
+      subscribeToFunction(normalizedFuncionId);
     }
 
     return () => {
       if (unsubscribe) {
-        console.log('🔔 [SEATING_MAP] Desuscribiéndose de función:', funcionId);
+        console.log('🔔 [SEATING_MAP] Desuscribiéndose de función:', normalizedFuncionId);
         unsubscribe();
       }
     };
-  }, [funcionId, subscribeToFunction, unsubscribe]);
+  }, [normalizedFuncionId, subscribeToFunction, unsubscribe]);
 
   const selectedSeatIds = useMemo(() => {
     console.log('🔍 [SEATING_MAP] Debug modoVenta:', { modoVenta, tipo: typeof modoVenta });
@@ -298,7 +322,7 @@ const SeatingMapUnified = ({
   // Usar hook de sincronización para obtener asientos con estado real
   // SOLO usar el mapa original para evitar re-renders innecesarios
   // El storeMapa se usa solo para actualizaciones de estado de asientos individuales
-  const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(mapa, funcionId);
+  const { seatsData: syncedSeats, loading: seatsLoading, error: seatsError } = useMapaSeatsSync(mapa, normalizedFuncionId);
   
   // Combinar asientos del mapa original con estados actualizados del store
   const memoizedSeats = useMemo(() => {
@@ -421,7 +445,7 @@ const SeatingMapUnified = ({
       if (!modoVenta) {
         console.log('🛒 [SEATING_MAP] Modo store - delegando a onSeatToggle');
         if (onSeatToggle) {
-          onSeatToggle({ ...seat, funcionId });
+          onSeatToggle({ ...seat, funcionId: normalizedFuncionId });
         }
         if (onSeatInfo) onSeatInfo(seat);
         return;
@@ -466,7 +490,7 @@ const SeatingMapUnified = ({
       if (isSelectedByMe) {
         // DESELECCIONAR: Solo verificar que no esté comprado
         const currentSessionId = localStorage.getItem('anonSessionId');
-        const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, funcionId, currentSessionId);
+        const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, normalizedFuncionId, currentSessionId);
         
         if (paymentCheck.isPaid) {
           console.log('🚫 [SEATING_MAP] No se puede deseleccionar asiento comprado:', seat._id);
@@ -478,12 +502,12 @@ const SeatingMapUnified = ({
         
         console.log('🔄 [SEATING_MAP] Deseleccionando asiento:', seat._id);
         if (onSeatToggle) {
-          onSeatToggle({ ...seat, funcionId });
+          onSeatToggle({ ...seat, funcionId: normalizedFuncionId });
         }
       } else {
         // SELECCIONAR: Solo verificar que no esté comprado o bloqueado por otro
         const currentSessionId = localStorage.getItem('anonSessionId');
-        const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, funcionId, currentSessionId);
+        const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, normalizedFuncionId, currentSessionId);
         
         if (paymentCheck.isPaid) {
           console.log('🚫 [SEATING_MAP] Asiento ya pagado:', seat._id);
@@ -509,14 +533,14 @@ const SeatingMapUnified = ({
         
         console.log('✅ [SEATING_MAP] Seleccionando asiento:', seat._id);
         if (onSeatToggle) {
-          onSeatToggle({ ...seat, funcionId });
+          onSeatToggle({ ...seat, funcionId: normalizedFuncionId });
         }
       }
 
       // Llamar a la función de información del asiento si existe
       if (onSeatInfo) onSeatInfo(seat);
     },
-    [onSeatToggle, onSeatInfo, onSeatError, selectedSeatIds, funcionId, blockedSeats, modoVenta]
+    [onSeatToggle, onSeatInfo, onSeatError, selectedSeatIds, normalizedFuncionId, blockedSeats, modoVenta]
   );
 
 
@@ -662,7 +686,7 @@ if (Array.isArray(mapa?.contenido)) {
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <SeatStatusLegend />
-      {shouldShowSeatLockDebug && <SeatLockDebug funcionId={funcionId} />}
+      {shouldShowSeatLockDebug && <SeatLockDebug funcionId={normalizedFuncionId} />}
       
       {/* Controles de zoom */}
       <div style={{ 
@@ -782,7 +806,7 @@ if (Array.isArray(mapa?.contenido)) {
           {validatedSeats.map((seat) => {
             const isSelected = selectedSeatIds.has((seat._id || '').toString());
             const locked = false; // Se maneja a través de seatStates
-            const lockedByMe = isSeatLockedByMe ? isSeatLockedByMe(seat._id, funcionId) : false;
+            const lockedByMe = isSeatLockedByMe ? isSeatLockedByMe(seat._id, normalizedFuncionId) : false;
 
             // Determinar estado visual - priorizar seatStates del store para sincronización en tiempo real
             let seatEstado = seat.estado;

@@ -43,23 +43,18 @@ export class EventThemeService {
    * @param {string} eventId - ID del evento
    * @param {string} tenantId - ID del tenant
    * @param {Object} themeSettings - Configuración del tema
-   * @param {string} eventName - Nombre del evento
+   * @param {string} eventName - Nombre del evento (opcional)
    * @returns {Promise<Object>} Configuración creada/actualizada
    */
-  static async upsertEventThemeSettings(eventId, tenantId, themeSettings, eventName) {
+  static async upsertEventThemeSettings(eventId, tenantId, themeSettings, eventName = null) {
     try {
       const { data, error } = await supabase
         .from('event_theme_settings')
         .upsert({
           event_id: eventId,
           tenant_id: tenantId,
-          event_name: eventName,
-          seat_available: themeSettings.seat_available,
-          seat_selected_me: themeSettings.seat_selected_me,
-          seat_selected_other: themeSettings.seat_selected_other,
-          seat_blocked: themeSettings.seat_blocked,
-          seat_sold: themeSettings.seat_sold,
-          seat_reserved: themeSettings.seat_reserved
+          theme_config: themeSettings,
+          updated_at: new Date().toISOString()
         }, {
           onConflict: 'event_id,tenant_id'
         })
@@ -89,7 +84,7 @@ export class EventThemeService {
         .from('event_theme_settings')
         .select('*')
         .eq('tenant_id', tenantId)
-        .order('event_name', { ascending: true });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('[EventThemeService] Error getting all event themes:', error);
@@ -176,15 +171,9 @@ export class EventThemeService {
     try {
       const eventTheme = await this.getEventThemeSettings(eventId, tenantId);
       
-      if (eventTheme) {
-        return {
-          seatAvailable: eventTheme.seat_available,
-          seatSelectedMe: eventTheme.seat_selected_me,
-          seatSelectedOther: eventTheme.seat_selected_other,
-          seatBlocked: eventTheme.seat_blocked,
-          seatSold: eventTheme.seat_sold,
-          seatReserved: eventTheme.seat_reserved
-        };
+      if (eventTheme && eventTheme.theme_config) {
+        // Retornar la configuración del tema desde el campo JSONB
+        return eventTheme.theme_config;
       }
 
       // Retornar tema global si no hay tema específico del evento
