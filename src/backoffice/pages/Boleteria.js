@@ -66,6 +66,21 @@ const Boleteria = () => {
   const unsubscribe = seatLockStore.unsubscribe;
   const zonesRef = useRef(null);
 
+  // Suscribirse a eventos en tiempo real para la función seleccionada
+  useEffect(() => {
+    if (selectedFuncion?.id && subscribeToFunction) {
+      console.log('🔔 [Boleteria] Suscribiéndose a función:', selectedFuncion.id);
+      subscribeToFunction(selectedFuncion.id);
+    }
+
+    return () => {
+      if (unsubscribe) {
+        console.log('🔔 [Boleteria] Desuscribiéndose de función:', selectedFuncion?.id);
+        unsubscribe();
+      }
+    };
+  }, [selectedFuncion?.id, subscribeToFunction, unsubscribe]);
+
   const [isFunctionsModalVisible, setIsFunctionsModalVisible] = useState(false);
   const [isSearchModalVisible, setIsSearchModalVisible] = useState(false);
   const [isPaymentModalVisible, setIsPaymentModalVisible] = useState(false);

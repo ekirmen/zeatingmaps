@@ -10,7 +10,14 @@ export const useSeatManagement = (selectedEvent, abonoMode) => {
   const [animatingSeats, setAnimatingSeats] = useState([]);
   const unlockSeatRef = useRef(useSeatLockStore.getState().unlockSeat);
   
-  const { lockSeat, unlockSeat, isSeatLocked, isSeatLockedByMe } = useSeatLockStore();
+  const { 
+    lockSeat, 
+    unlockSeat, 
+    isSeatLocked, 
+    isSeatLockedByMe, 
+    subscribeToFunction, 
+    unsubscribe 
+  } = useSeatLockStore();
 
   useEffect(() => {
     const loadAbonoSeats = async () => {
@@ -29,6 +36,21 @@ export const useSeatManagement = (selectedEvent, abonoMode) => {
     };
     loadAbonoSeats();
   }, [abonoMode, selectedEvent]);
+
+  // Suscribirse a eventos en tiempo real para la función seleccionada
+  useEffect(() => {
+    if (selectedEvent?.id && subscribeToFunction) {
+      console.log('🔔 [useSeatManagement] Suscribiéndose a función:', selectedEvent.id);
+      subscribeToFunction(selectedEvent.id);
+    }
+
+    return () => {
+      if (unsubscribe) {
+        console.log('🔔 [useSeatManagement] Desuscribiéndose de función:', selectedEvent?.id);
+        unsubscribe();
+      }
+    };
+  }, [selectedEvent?.id, subscribeToFunction, unsubscribe]);
 
   // Liberar asientos bloqueados temporalmente al desmontar o recargar la página
   useEffect(() => {
