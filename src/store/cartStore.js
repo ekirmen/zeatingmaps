@@ -130,14 +130,11 @@ export const useCartStore = create(
               return;
             }
             
-            // Si ya está bloqueado por mí, significa que ya está en el carrito, proceder a deseleccionar
+            // Si ya está bloqueado por mí, significa que ya está en el carrito
             if (isLockedByMe) {
-              console.log('✅ [CART_TOGGLE] Asiento ya bloqueado por el mismo usuario, procediendo a deseleccionar:', seatId);
-              // Proceder con la deselección
-              await seatStore.unlockSeat(seatId, functionId);
-              const updated = items.filter(item => (item._id || item.id || item.sillaId) !== seatId);
-              set({ items: updated });
-              toast.success('Asiento eliminado del carrito');
+              console.log('✅ [CART_TOGGLE] Asiento ya bloqueado por el mismo usuario, ya está en el carrito:', seatId);
+              // No hacer nada, el asiento ya está en el carrito
+              toast.info('Este asiento ya está en tu carrito');
               return;
             }
             
