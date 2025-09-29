@@ -86,10 +86,10 @@ function fixCartSeatSync() {
   console.log('🚀 Iniciando fix completo...');
   
   // Paso 1: Verificar estado actual
-  const currentState = checkCurrentState();
+  checkCurrentState();
   
   // Paso 2: Limpiar estado desincronizado
-  const sessionId = clearDesynchronizedState();
+  clearDesynchronizedState();
   
   // Paso 3: Sincronizar estado
   const syncResult = synchronizeState();
@@ -100,7 +100,7 @@ function fixCartSeatSync() {
     
     // Recargar página después de 2 segundos
     setTimeout(() => {
-      location.reload();
+      window.location.reload();
     }, 2000);
   } else {
     console.error('❌ Error en el fix');
