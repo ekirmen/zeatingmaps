@@ -130,35 +130,50 @@ export const useCartStore = create(
               return;
             }
             
-            // Si ya está bloqueado por mí, significa que ya está en el carrito
+            // Si ya está bloqueado por mí, verificar si ya está en el carrito
             if (isLockedByMe) {
-              console.log('✅ [CART_TOGGLE] Asiento ya bloqueado por el mismo usuario, ya está en el carrito:', seatId);
-              // No hacer nada, el asiento ya está en el carrito
-              toast.info('Este asiento ya está en tu carrito');
-              return;
+              console.log('✅ [CART_TOGGLE] Asiento ya bloqueado por el mismo usuario:', seatId);
+              
+              // Verificar si ya está en el carrito
+              const alreadyInCart = items.some(item => 
+                (item._id || item.id || item.sillaId) === seatId
+              );
+              
+              if (alreadyInCart) {
+                console.log('ℹ️ [CART_TOGGLE] Este asiento ya está en tu carrito');
+                return;
+              } else {
+                console.log('🛒 [CART_TOGGLE] Asiento bloqueado pero no en carrito, agregando...');
+                // Continuar con la lógica de agregar al carrito
+              }
             }
             
-            console.log('✅ [CART_TOGGLE] Asiento disponible, procediendo a seleccionar');
-            
-            // Verificar si el asiento ya fue pagado
-            const seatPaymentChecker = await import('../services/seatPaymentChecker');
-            const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
-            
-            if (paymentCheck.isPaid) {
-              console.log('🚫 [CART_TOGGLE] Asiento ya pagado:', seatId);
-              toast.error('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
-              return;
-            }
-            
-            // Bloquear en BD
-            console.log('🛒 [CART_TOGGLE] Intentando bloquear asiento en BD:', { seatId, functionId });
-            const lockResult = await seatStore.lockSeat(seatId, 'seleccionado', functionId);
-            console.log('🛒 [CART_TOGGLE] Resultado del bloqueo:', lockResult);
-            
-            if (!lockResult) {
-              console.error('❌ [CART_TOGGLE] Error bloqueando asiento:', seatId);
-              toast.error('Error al seleccionar el asiento');
-              return;
+            // Solo bloquear si no está ya bloqueado
+            if (!isLockedByMe) {
+              console.log('✅ [CART_TOGGLE] Asiento disponible, procediendo a seleccionar');
+              
+              // Verificar si el asiento ya fue pagado
+              const seatPaymentChecker = await import('../services/seatPaymentChecker');
+              const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
+              
+              if (paymentCheck.isPaid) {
+                console.log('🚫 [CART_TOGGLE] Asiento ya pagado:', seatId);
+                toast.error('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
+                return;
+              }
+              
+              // Bloquear en BD
+              console.log('🛒 [CART_TOGGLE] Intentando bloquear asiento en BD:', { seatId, functionId });
+              const lockResult = await seatStore.lockSeat(seatId, 'seleccionado', functionId);
+              console.log('🛒 [CART_TOGGLE] Resultado del bloqueo:', lockResult);
+              
+              if (!lockResult) {
+                console.error('❌ [CART_TOGGLE] Error bloqueando asiento:', seatId);
+                toast.error('Error al seleccionar el asiento');
+                return;
+              }
+            } else {
+              console.log('✅ [CART_TOGGLE] Asiento ya bloqueado, procediendo a agregar al carrito');
             }
             
             // Añadir al carrito - asegurar que el objeto tenga la estructura correcta
