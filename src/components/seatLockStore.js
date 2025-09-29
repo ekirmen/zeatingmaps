@@ -218,6 +218,24 @@ export const useSeatLockStore = create((set, get) => ({
     return state.seatStates.get(seatId);
   },
 
+  // Función para limpiar manualmente el estado de un asiento (útil para debugging)
+  clearSeatState: (seatId) => {
+    set((state) => {
+      const newSeatStates = new Map(state.seatStates);
+      newSeatStates.delete(seatId);
+      console.log('🧹 [SEAT_LOCK_STORE] Estado limpiado manualmente para asiento:', seatId);
+      return { seatStates: newSeatStates };
+    });
+  },
+
+  // Función para limpiar todos los estados de asientos (útil para debugging)
+  clearAllSeatStates: () => {
+    set((state) => {
+      console.log('🧹 [SEAT_LOCK_STORE] Limpiando todos los estados de asientos');
+      return { seatStates: new Map() };
+    });
+  },
+
   setLockedTables: (tables) => {
     // Validar que tables sea un array
     const validTables = Array.isArray(tables) ? tables : [];
@@ -591,17 +609,19 @@ export const useSeatLockStore = create((set, get) => ({
                   // Es un desbloqueo de asiento
                   const updatedSeats = currentSeats.filter(lock => lock.seat_id !== seatId);
                   
-                  // Cambiar a 'disponible' en lugar de eliminar para sincronización en tiempo real
+                  // ELIMINAR completamente el asiento del seatStates para forzar que vuelva a verde
                   const newSeatStates = new Map(state.seatStates);
                   const hadState = newSeatStates.has(seatId);
                   const previousState = hadState ? state.seatStates.get(seatId) : 'none';
-                  newSeatStates.set(seatId, 'disponible'); // Cambiar a disponible en lugar de eliminar
                   
-                  console.log('🗑️ [SEAT_LOCK_STORE] Asiento cambiado a disponible (DELETE):', { 
+                  // ELIMINAR el asiento del seatStates para que vuelva a su estado original
+                  newSeatStates.delete(seatId);
+                  
+                  console.log('🗑️ [SEAT_LOCK_STORE] Asiento ELIMINADO del seatStates (DELETE):', { 
                     seatId: seatId,
                     hadState: hadState,
                     previousState: previousState,
-                    newState: 'disponible'
+                    action: 'deleted_from_seatStates'
                   });
                   
                   // Forzar actualización del estado para sincronización en tiempo real
@@ -1273,5 +1293,18 @@ export const useSeatLockStore = create((set, get) => ({
 if (typeof window !== 'undefined') {
   window.seatLockStore = useSeatLockStore;
   window.supabase = supabase;
-  console.log('🔧 [SEAT_LOCK_STORE] Store y Supabase expuestos globalmente para debugging');
+  
+  // Exponer funciones de limpieza para debugging
+  window.clearSeatState = (seatId) => {
+    const store = useSeatLockStore.getState();
+    store.clearSeatState(seatId);
+  };
+  
+  window.clearAllSeatStates = () => {
+    const store = useSeatLockStore.getState();
+    store.clearAllSeatStates();
+  };
+  
+  console.log('🔧 [SEAT_LOCK_STORE] Store, Supabase y funciones de limpieza expuestas globalmente para debugging');
+  console.log('🔧 [SEAT_LOCK_STORE] Funciones disponibles: clearSeatState(seatId), clearAllSeatStates()');
 }
