@@ -584,46 +584,30 @@ export const useSeatLockStore = create((set, get) => ({
             if (payload.eventType === 'DELETE') {
               console.log('🗑️ [SEAT_LOCK_STORE] Procesando evento DELETE:', payload.old);
               console.log('🗑️ [SEAT_LOCK_STORE] Payload completo:', payload);
-              set((state) => {
-                const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
-                const currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
+              
+              // Para eventos DELETE, Supabase solo envía el ID, necesitamos buscar el seat_id
+              const deletedId = payload.old?.id;
+              if (!deletedId) {
+                console.error('❌ [SEAT_LOCK_STORE] No se pudo obtener ID del evento DELETE:', payload);
+                return;
+              }
+              
+              // Buscar el asiento en el estado actual para obtener el seat_id
+              const currentState = get();
+              const currentSeats = Array.isArray(currentState.lockedSeats) ? currentState.lockedSeats : [];
+              const currentTables = Array.isArray(currentState.lockedTables) ? currentState.lockedTables : [];
+              
+              // Buscar en asientos bloqueados
+              const deletedSeat = currentSeats.find(lock => lock.id === deletedId);
+              const deletedTable = currentTables.find(lock => lock.id === deletedId);
+              
+              if (deletedSeat) {
+                // Es un desbloqueo de asiento
+                const seatId = deletedSeat.seat_id;
+                console.log('🗑️ [SEAT_LOCK_STORE] Asiento encontrado para DELETE:', { seatId, deletedId });
                 
-                // Extraer datos del payload - usar tanto old como new para mayor compatibilidad
-                const oldData = payload.old || {};
-                const newData = payload.new || {};
-                const data = { ...oldData, ...newData };
-                
-                // Para eventos DELETE, el seat_id puede estar en old o en el payload directo
-                const seatId = data.seat_id || payload.old?.seat_id || payload.new?.seat_id;
-                const tableId = data.table_id || payload.old?.table_id || payload.new?.table_id;
-                const lockType = data.lock_type || payload.old?.lock_type || payload.new?.lock_type;
-                
-                // Verificar si es mesa o asiento
-                const isTable = lockType === 'table';
-                
-                console.log('🗑️ [SEAT_LOCK_STORE] Datos extraídos:', { 
-                  isTable, 
-                  seatId, 
-                  tableId, 
-                  lockType,
-                  oldData: payload.old,
-                  newData: payload.new,
-                  combinedData: data
-                });
-                
-                if (isTable) {
-                  // Es un desbloqueo de mesa
-                  const updatedTables = currentTables.filter(lock => lock.table_id !== tableId);
-                  console.log('🗑️ [SEAT_LOCK_STORE] Mesa desbloqueada:', tableId);
-                  return { lockedTables: updatedTables };
-                } else {
-                  // Es un desbloqueo de asiento
-                  if (!seatId) {
-                    console.error('❌ [SEAT_LOCK_STORE] No se pudo extraer seatId del evento DELETE:', payload);
-                    return state; // No hacer cambios si no tenemos seatId
-                  }
-                  
-                  const updatedSeats = currentSeats.filter(lock => lock.seat_id !== seatId);
+                set((state) => {
+                  const updatedSeats = state.lockedSeats.filter(lock => lock.id !== deletedId);
                   
                   // ELIMINAR completamente el asiento del seatStates para forzar que vuelva a verde
                   const newSeatStates = new Map(state.seatStates);
@@ -635,6 +619,7 @@ export const useSeatLockStore = create((set, get) => ({
                   
                   console.log('🗑️ [SEAT_LOCK_STORE] Asiento ELIMINADO del seatStates (DELETE):', { 
                     seatId: seatId,
+                    deletedId: deletedId,
                     hadState: hadState,
                     previousState: previousState,
                     action: 'deleted_from_seatStates'
@@ -647,8 +632,27 @@ export const useSeatLockStore = create((set, get) => ({
                     lockedSeats: updatedSeats, 
                     seatStates: newSeatStates 
                   };
-                }
-              });
+                });
+              } else if (deletedTable) {
+                // Es un desbloqueo de mesa
+                const tableId = deletedTable.table_id;
+                console.log('🗑️ [SEAT_LOCK_STORE] Mesa encontrada para DELETE:', { tableId, deletedId });
+                
+                set((state) => {
+                  const updatedTables = state.lockedTables.filter(lock => lock.id !== deletedId);
+                  console.log('🗑️ [SEAT_LOCK_STORE] Mesa desbloqueada:', tableId);
+                  return { lockedTables: updatedTables };
+                });
+              } else {
+                console.warn('⚠️ [SEAT_LOCK_STORE] No se encontró el registro eliminado en el estado local:', { deletedId, currentSeats: currentSeats.length, currentTables: currentTables.length });
+                
+                // Como fallback, limpiar todos los estados de asientos que puedan estar desincronizados
+                set((state) => {
+                  const newSeatStates = new Map(state.seatStates);
+                  console.log('🧹 [SEAT_LOCK_STORE] Limpiando todos los estados como fallback');
+                  return { seatStates: new Map() };
+                });
+              }
             }
           }
         )
