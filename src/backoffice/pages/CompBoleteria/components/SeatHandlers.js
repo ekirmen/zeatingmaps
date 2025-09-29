@@ -38,7 +38,8 @@ export const createSeatHandlers = ({
       }
 
       // Verificar si ya está bloqueado por otro usuario
-      if (isSeatLocked(seat._id, funcionId) && !isSeatLockedByMe(seat._id, funcionId)) {
+      const funcionIdNum = typeof funcionId === 'object' ? (funcionId?.id || funcionId?._id) : funcionId;
+      if (isSeatLocked(seat._id, funcionIdNum) && !isSeatLockedByMe(seat._id, funcionIdNum)) {
         message.warning('Este asiento ya está siendo seleccionado por otro usuario');
         return;
       }
@@ -49,7 +50,8 @@ export const createSeatHandlers = ({
         // Desbloquear asiento
         console.log('🔓 Intentando desbloquear asiento:', seat._id, 'para función:', currentFuncId);
         setCarrito(carrito.filter(i => !(i._id === seat._id && i.isBlocked)));
-        unlockSeat(seat._id, currentFuncId).then((result) => {
+        const currentFuncIdNum = typeof currentFuncId === 'object' ? (currentFuncId?.id || currentFuncId?._id) : currentFuncId;
+        unlockSeat(seat._id, currentFuncIdNum).then((result) => {
           console.log('✅ Asiento desbloqueado exitosamente:', result);
           message.success('Asiento desbloqueado');
         }).catch(err => {
