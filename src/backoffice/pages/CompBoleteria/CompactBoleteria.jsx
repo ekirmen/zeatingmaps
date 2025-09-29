@@ -70,7 +70,17 @@ const CompactBoleteria = ({
     const zoneData = {};
 
     // Procesar todos los elementos del mapa
-    mapa.contenido.forEach(elemento => {
+    // Si el contenido es un array, procesarlo directamente
+    // Si es un objeto, buscar la propiedad 'elementos'
+    const elementos = Array.isArray(mapa.contenido) 
+      ? mapa.contenido 
+      : mapa.contenido.elementos || [];
+    
+    if (!Array.isArray(elementos)) {
+      return stats;
+    }
+    
+    elementos.forEach(elemento => {
       if (elemento.type === 'silla') {
         stats.total++;
         

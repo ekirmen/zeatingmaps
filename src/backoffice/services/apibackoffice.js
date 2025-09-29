@@ -607,13 +607,22 @@ export const syncSeatsForSala = async (salaId, options = {}) => {
   if (!funciones || funciones.length === 0) return;
 
   const seatDefs = [];
-  mapa.contenido.forEach(el => {
-    if (el.type === 'mesa') {
-      (el.sillas || []).forEach(s => { if (s && s._id) seatDefs.push({ id: s._id, zona: s.zona || 'general' }); });
-    } else if (el.type === 'silla') {
-      if (el && el._id) seatDefs.push({ id: el._id, zona: el.zona || 'general' });
-    }
-  });
+  
+  // Si el contenido es un array, procesarlo directamente
+  // Si es un objeto, buscar la propiedad 'elementos'
+  const elementos = Array.isArray(mapa.contenido) 
+    ? mapa.contenido 
+    : mapa.contenido.elementos || [];
+  
+  if (Array.isArray(elementos)) {
+    elementos.forEach(el => {
+      if (el.type === 'mesa') {
+        (el.sillas || []).forEach(s => { if (s && s._id) seatDefs.push({ id: s._id, zona: s.zona || 'general' }); });
+      } else if (el.type === 'silla') {
+        if (el && el._id) seatDefs.push({ id: el._id, zona: el.zona || 'general' });
+      }
+    });
+  }
 
   for (const func of funciones) {
     const { data: existing, error: exErr } = await client

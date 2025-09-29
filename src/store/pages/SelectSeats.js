@@ -34,7 +34,16 @@ const SelectSeats = () => {
           throw new Error('Datos no válidos o vacíos');
         }
         setMapa(data);
-        setMesas(data.contenido);
+        
+        // Si el contenido es un array, procesarlo directamente
+        // Si es un objeto, buscar la propiedad 'elementos'
+        const elementos = Array.isArray(data.contenido) 
+          ? data.contenido 
+          : data.contenido.elementos || [];
+        
+        // Filtrar solo las mesas de los elementos
+        const mesasData = elementos.filter(el => el && el.type === 'mesa');
+        setMesas(mesasData);
       } catch (err) {
         setError(err.message);
       } finally {

@@ -287,14 +287,21 @@ export const useBoleteria = () => {
           setZonas(zonasData);
           
           // Calcular estadísticas del evento basadas en el mapa cargado
-          if (mapData && mapData.contenido && Array.isArray(mapData.contenido)) {
+          if (mapData && mapData.contenido) {
             console.log('📊 [useBoleteria] Calculando estadísticas desde el mapa cargado');
             let totalSeats = 0;
             let availableSeats = 0;
             let soldSeats = 0;
             let reservedSeats = 0;
             
-            mapData.contenido.forEach(elemento => {
+            // Si el contenido es un array, procesarlo directamente
+            // Si es un objeto, buscar la propiedad 'elementos'
+            const elementos = Array.isArray(mapData.contenido) 
+              ? mapData.contenido 
+              : mapData.contenido.elementos || [];
+            
+            if (Array.isArray(elementos)) {
+              elementos.forEach(elemento => {
               // Validar que elemento no sea null/undefined
               if (!elemento || typeof elemento !== 'object') {
                 console.warn('⚠️ [useBoleteria] Elemento inválido en mapa:', elemento);
@@ -345,6 +352,15 @@ export const useBoleteria = () => {
                 }
               }
             });
+            } else {
+              console.warn('⚠️ [useBoleteria] Mapa cargado pero sin contenido válido o no es array', {
+                mapData: mapData,
+                contenido: mapData.contenido,
+                esArray: Array.isArray(mapData.contenido),
+                elementos: elementos,
+                esElementosArray: Array.isArray(elementos)
+              });
+            }
             
             // Si no hay asientos en el formato esperado, intentar con el formato de zonas
             if (totalSeats === 0 && mapData.contenido.zonas && Array.isArray(mapData.contenido.zonas)) {

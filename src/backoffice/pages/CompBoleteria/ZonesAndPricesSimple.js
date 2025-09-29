@@ -53,12 +53,22 @@ const ZonesAndPricesSimple = ({
   );
 
   const mapaStats = useMemo(() => {
-    if (!mapa || !Array.isArray(mapa?.contenido)) {
+    if (!mapa || !mapa.contenido) {
+      return null;
+    }
+
+    // Si el contenido es un array, procesarlo directamente
+    // Si es un objeto, buscar la propiedad 'elementos'
+    const elementos = Array.isArray(mapa.contenido) 
+      ? mapa.contenido 
+      : mapa.contenido.elementos || [];
+
+    if (!Array.isArray(elementos)) {
       return null;
     }
 
     let totalAsientos = 0;
-    mapa.contenido.forEach((elemento) => {
+    elementos.forEach((elemento) => {
       if (Array.isArray(elemento?.sillas)) {
         totalAsientos += elemento.sillas.length;
       } else if (elemento?.type === 'silla') {
