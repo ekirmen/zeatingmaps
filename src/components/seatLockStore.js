@@ -593,12 +593,23 @@ export const useSeatLockStore = create((set, get) => ({
                 const newData = payload.new || {};
                 const data = { ...oldData, ...newData };
                 
-                // Verificar si es mesa o asiento
-                const isTable = data.lock_type === 'table';
-                const seatId = data.seat_id;
-                const tableId = data.table_id;
+                // Para eventos DELETE, el seat_id puede estar en old o en el payload directo
+                const seatId = data.seat_id || payload.old?.seat_id || payload.new?.seat_id;
+                const tableId = data.table_id || payload.old?.table_id || payload.new?.table_id;
+                const lockType = data.lock_type || payload.old?.lock_type || payload.new?.lock_type;
                 
-                console.log('🗑️ [SEAT_LOCK_STORE] Datos extraídos:', { isTable, seatId, tableId, data });
+                // Verificar si es mesa o asiento
+                const isTable = lockType === 'table';
+                
+                console.log('🗑️ [SEAT_LOCK_STORE] Datos extraídos:', { 
+                  isTable, 
+                  seatId, 
+                  tableId, 
+                  lockType,
+                  oldData: payload.old,
+                  newData: payload.new,
+                  combinedData: data
+                });
                 
                 if (isTable) {
                   // Es un desbloqueo de mesa
@@ -607,6 +618,11 @@ export const useSeatLockStore = create((set, get) => ({
                   return { lockedTables: updatedTables };
                 } else {
                   // Es un desbloqueo de asiento
+                  if (!seatId) {
+                    console.error('❌ [SEAT_LOCK_STORE] No se pudo extraer seatId del evento DELETE:', payload);
+                    return state; // No hacer cambios si no tenemos seatId
+                  }
+                  
                   const updatedSeats = currentSeats.filter(lock => lock.seat_id !== seatId);
                   
                   // ELIMINAR completamente el asiento del seatStates para forzar que vuelva a verde
