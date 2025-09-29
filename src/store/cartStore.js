@@ -489,3 +489,9 @@ export const useCartStore = create(
     }
   )
 );
+
+// Exponer el store globalmente para debugging
+if (typeof window !== 'undefined') {
+  window.useCartStore = useCartStore;
+  console.log('🔧 [CART_STORE] Store expuesto globalmente para debugging');
+}
