@@ -281,11 +281,8 @@ const Boleteria = () => {
       const sillaId = silla._id || silla.id;
       if (!sillaId || !selectedFuncion) return;
 
-      // Si está bloqueado por otro usuario, no permitir acción
-      const funcionIdNum = selectedFuncion?.id || selectedFuncion?._id;
-      const isLocked = await isSeatLocked(sillaId, funcionIdNum);
-      const isLockedByMe = await isSeatLockedByMe(sillaId, funcionIdNum);
-      if (isLocked && !isLockedByMe) return;
+      // En modo boletería simplificado, no verificamos bloqueos aquí
+      // Los bloqueos se manejan por separado con botones específicos
 
       // Resolver zona y precio
       const zona =
@@ -334,17 +331,11 @@ const Boleteria = () => {
         modoVenta: 'boleteria'
       };
 
-      // Alternar bloqueo en DB + carrito
-      if (await isSeatLockedByMe(sillaId, selectedFuncion.id || selectedFuncion._id)) {
-        await unlockSeat(sillaId, selectedFuncion.id || selectedFuncion._id);
-        await toggleSeat(cartItem);
-      } else {
-        const ok = await lockSeat(sillaId, 'seleccionado', selectedFuncion.id || selectedFuncion._id);
-        if (!ok) return;
-        await toggleSeat(cartItem);
-      }
+      // En modo boletería simplificado, solo agregar/quitar del carrito
+      // El bloqueo se maneja por separado con botones específicos
+      await toggleSeat(cartItem);
     },
-    [selectedFuncion, mapa, selectedPlantilla, toggleSeat, isSeatLocked, isSeatLockedByMe, lockSeat, unlockSeat]
+    [selectedFuncion, mapa, selectedPlantilla, toggleSeat]
   );
 
   const allTicketsPaid = carrito.length > 0 && carrito.every(ticket => ticket.pagado);
