@@ -44,7 +44,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             event:eventos(*),
             funcion:funciones(
               id,
-              fechaCelebracion:fecha_celebracion,
+              fecha_celebracion,
               evento_id,
               sala_id,
               plantilla
@@ -98,16 +98,16 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
     if (ticketData.seats && setCarrito) {
       setCarrito(
         ticketData.seats.map((seat) => ({
-          _id: seat._id || seat.id,
-          nombre: seat.name,
-          precio: seat.price || 0,
+          _id: seat._id || seat.id || seat.sillaId,
+          nombre: seat.nombre || seat.name || `Asiento ${seat._id || seat.id}`,
+          precio: seat.precio || seat.price || 0,
           nombreMesa: seat.mesa?.nombre || '',
-          zona: seat.zona?.nombre || 'General',
+          zona: seat.nombreZona || seat.zona?.nombre || 'General',
           status: ticketData.status,
           paymentId: ticketData.id,
           locator: ticketData.locator,
           funcionId: ticketData.funcion?.id || ticketData.funcion,
-          funcionFecha: ticketData.funcion?.fechaCelebracion
+          funcionFecha: ticketData.funcion?.fecha_celebracion
         }))
       );
     }
@@ -405,7 +405,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             {ticketData.funcion && (
               <div>
                 <strong>Función:</strong>{' '}
-                {new Date(ticketData.funcion.fecha).toLocaleString()}
+                {ticketData.funcion.fecha_celebracion ? new Date(ticketData.funcion.fecha_celebracion).toLocaleString() : 'Fecha no disponible'}
               </div>
             )}
             {ticketData.seats && (
@@ -415,9 +415,9 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                 size="small"
                 pagination={false}
                 columns={[
-                  { title: 'Asiento', dataIndex: 'name' },
-                  { title: 'Zona', dataIndex: ['zona', 'nombre'] },
-                  { title: 'Precio', dataIndex: 'price' }
+                  { title: 'Asiento', dataIndex: 'nombre' },
+                  { title: 'Zona', dataIndex: 'nombreZona' },
+                  { title: 'Precio', dataIndex: 'precio' }
                 ]}
               />
             )}
