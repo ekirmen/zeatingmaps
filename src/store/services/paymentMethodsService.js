@@ -36,6 +36,8 @@ export const getActivePaymentMethods = async (tenantId = null) => {
       tenant_id_type: typeof currentTenantId
     });
 
+    // Usar consulta directa (las políticas RLS ya están arregladas)
+    console.log('🔍 [PAYMENT_METHODS] Usando consulta directa...');
     const { data, error } = await supabase
       .from('payment_methods')
       .select('*')
