@@ -285,8 +285,8 @@ const SeatingMapUnified = ({
 
   // Combinar locks temporales del store con locks permanentes de la BD
   const allLockedSeats = useMemo(() => {
-    const tempLocks = lockedSeatsState || [];
-    const permanentLocks = lockedSeats || [];
+    const tempLocks = Array.isArray(lockedSeatsState) ? lockedSeatsState : [];
+    const permanentLocks = Array.isArray(lockedSeats) ? lockedSeats : [];
     
     // console.log('🎫 [SEATING_MAP] Temp locks:', tempLocks.length);
     // console.log('🎫 [SEATING_MAP] Permanent locks:', permanentLocks.length);
@@ -297,12 +297,14 @@ const SeatingMapUnified = ({
     
     // Agregar locks temporales primero (tienen prioridad)
     tempLocks.forEach(lock => {
-      lockMap.set(lock.seat_id, lock);
+      if (lock && lock.seat_id) {
+        lockMap.set(lock.seat_id, lock);
+      }
     });
     
     // Agregar locks permanentes si no existen temporales
     permanentLocks.forEach(lock => {
-      if (!lockMap.has(lock.seat_id)) {
+      if (lock && lock.seat_id && !lockMap.has(lock.seat_id)) {
         lockMap.set(lock.seat_id, lock);
       }
     });
