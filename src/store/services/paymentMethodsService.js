@@ -20,8 +20,11 @@ export const getActivePaymentMethods = async (tenantId = null) => {
   try {
     const currentTenantId = tenantId || getCurrentTenantId();
     
+    console.log('🔍 [PAYMENT_METHODS] Obteniendo métodos de pago activos...');
+    console.log('🏢 [PAYMENT_METHODS] Tenant ID:', currentTenantId);
+    
     if (!currentTenantId) {
-      console.warn('No se pudo determinar el tenant_id actual');
+      console.warn('⚠️ [PAYMENT_METHODS] No se pudo determinar el tenant_id actual');
       return [];
     }
 
@@ -33,10 +36,17 @@ export const getActivePaymentMethods = async (tenantId = null) => {
       .order('is_recommended', { ascending: false })
       .order('name');
 
-    if (error) throw error;
+    if (error) {
+      console.error('❌ [PAYMENT_METHODS] Error en la consulta:', error);
+      throw error;
+    }
+
+    console.log('📊 [PAYMENT_METHODS] Métodos encontrados:', data?.length || 0);
+    console.log('📋 [PAYMENT_METHODS] Datos:', data);
+    
     return data || [];
   } catch (error) {
-    console.error('Error fetching active payment methods:', error);
+    console.error('❌ [PAYMENT_METHODS] Error fetching active payment methods:', error);
     return [];
   }
 };
@@ -99,6 +109,8 @@ export const getPaymentMethodConfig = async (methodId, tenantId = null) => {
  * Valida la configuración de un método de pago
  */
 export const validatePaymentMethodConfig = (method) => {
+  console.log('🔍 [VALIDATION] Validando método:', method.method_id, method.config);
+  
   const validations = {
     stripe: ['publishable_key', 'secret_key'],
     paypal: ['client_id', 'client_secret'],
@@ -120,13 +132,16 @@ export const validatePaymentMethodConfig = (method) => {
     }
   }
 
-  return {
+  const result = {
     valid: missingFields.length === 0,
     missingFields,
     message: missingFields.length > 0 
       ? `Campos faltantes: ${missingFields.join(', ')}`
       : 'Configuración válida'
   };
+
+  console.log('✅ [VALIDATION] Resultado:', result);
+  return result;
 };
 
 /**

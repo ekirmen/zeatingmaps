@@ -52,17 +52,24 @@ const Pay = () => {
     const loadGateways = async () => {
       try {
         setLoadingMethods(true);
+        console.log('🛒 [PAY] Cargando métodos de pago...');
+        
         const methods = await getActivePaymentMethods();
+        console.log('📋 [PAY] Métodos obtenidos de la BD:', methods);
+        
         const validMethods = methods.filter(method => {
           const validation = validatePaymentMethodConfig(method);
+          console.log(`🔍 [PAY] Validando ${method.method_id}:`, validation);
           return validation.valid;
         });
+        
+        console.log('✅ [PAY] Métodos válidos después del filtro:', validMethods);
         setAvailableMethods(validMethods);
         
         // Por ahora, no calculamos comisiones específicas
         // Esto se puede implementar más tarde usando la tabla comisiones_tasas
       } catch (error) {
-        console.error('Error loading payment gateways:', error);
+        console.error('❌ [PAY] Error loading payment gateways:', error);
         message.error('Error al cargar métodos de pago');
       } finally {
         setLoadingMethods(false);
