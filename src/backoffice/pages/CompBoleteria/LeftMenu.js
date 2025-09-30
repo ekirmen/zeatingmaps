@@ -91,6 +91,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   };
 
   const loadTicketIntoPOS = async () => {
+    console.log('🚨🚨🚨 [loadTicketIntoPOS] FUNCIÓN EJECUTÁNDOSE - LeftMenu.js 🚨🚨🚨');
     console.log('🎫 [loadTicketIntoPOS] Iniciando carga de ticket en POS');
     console.log('🎫 [loadTicketIntoPOS] ticketData:', ticketData);
     
