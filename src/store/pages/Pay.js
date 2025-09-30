@@ -17,6 +17,8 @@ import LoginModal from '../components/LoginModal';
 
 
 const Pay = () => {
+  console.log('🚀 [PAY] Componente Pay renderizándose...');
+  
   const navigate = useNavigate();
   const { user } = useAuth();
   const { currentTenant } = useTenant();
@@ -49,6 +51,8 @@ const Pay = () => {
   }, [user]);
 
   useEffect(() => {
+    console.log('🔄 [PAY] useEffect ejecutándose...', { user: !!user, cartItems: cartItems?.length, total });
+    
     const loadGateways = async () => {
       try {
         setLoadingMethods(true);
@@ -92,8 +96,11 @@ const Pay = () => {
 
     // Only load data if user is authenticated
     if (user) {
+      console.log('✅ [PAY] Usuario autenticado, cargando métodos de pago...');
       loadGateways();
       loadFacebookPixel();
+    } else {
+      console.log('❌ [PAY] Usuario NO autenticado, no se cargan métodos de pago');
     }
   }, [cartItems, total, user]);
 
