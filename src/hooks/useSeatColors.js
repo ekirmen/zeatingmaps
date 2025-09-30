@@ -55,7 +55,7 @@ export const useSeatColors = (eventId = null) => {
         case 'pagado':
         case 'completed':
           // Verificar si fue pagado por el mismo cliente
-          const lockInfo = lockedSeats.find(lock => lock.seat_id === seatId);
+          const lockInfo = Array.isArray(lockedSeats) ? lockedSeats.find(lock => lock.seat_id === seatId) : null;
           if (lockInfo && lockInfo.session_id === currentSessionId) {
             return '#6b7280'; // Gris para asientos pagados por el mismo cliente
           }
@@ -85,7 +85,7 @@ export const useSeatColors = (eventId = null) => {
     
     // Fallback a la lógica original si no hay estado en el store
     // Verificar si está bloqueado/seleccionado por otro usuario
-    const lockInfo = lockedSeats.find(lock => lock.seat_id === seatId);
+    const lockInfo = Array.isArray(lockedSeats) ? lockedSeats.find(lock => lock.seat_id === seatId) : null;
     const isLockedByOther = lockInfo && lockInfo.session_id !== currentSessionId;
     
     // Distinguir entre locked permanente y seleccionado temporal
