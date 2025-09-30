@@ -283,7 +283,9 @@ const Boleteria = () => {
 
       // Si está bloqueado por otro usuario, no permitir acción
       const funcionIdNum = selectedFuncion?.id || selectedFuncion?._id;
-      if (isSeatLocked(sillaId, funcionIdNum) && !isSeatLockedByMe(sillaId, funcionIdNum)) return;
+      const isLocked = await isSeatLocked(sillaId, funcionIdNum);
+      const isLockedByMe = await isSeatLockedByMe(sillaId, funcionIdNum);
+      if (isLocked && !isLockedByMe) return;
 
       // Resolver zona y precio
       const zona =
