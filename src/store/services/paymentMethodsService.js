@@ -28,6 +28,14 @@ export const getActivePaymentMethods = async (tenantId = null) => {
       return [];
     }
 
+    console.log('🔍 [PAYMENT_METHODS] Ejecutando consulta Supabase...');
+    console.log('🔍 [PAYMENT_METHODS] Query params:', {
+      table: 'payment_methods',
+      enabled: true,
+      tenant_id: currentTenantId,
+      tenant_id_type: typeof currentTenantId
+    });
+
     const { data, error } = await supabase
       .from('payment_methods')
       .select('*')
@@ -35,6 +43,8 @@ export const getActivePaymentMethods = async (tenantId = null) => {
       .eq('tenant_id', currentTenantId)
       .order('is_recommended', { ascending: false })
       .order('name');
+
+    console.log('🔍 [PAYMENT_METHODS] Respuesta de Supabase:', { data, error });
 
     if (error) {
       console.error('❌ [PAYMENT_METHODS] Error en la consulta:', error);
