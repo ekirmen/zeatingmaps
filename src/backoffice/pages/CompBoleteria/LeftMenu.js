@@ -99,11 +99,16 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       return;
     }
     
+    console.log('🔍 [loadTicketIntoPOS] Verificando ticketData.user:', ticketData.user);
     if (ticketData.user) {
       console.log('👤 [loadTicketIntoPOS] Cargando cliente:', ticketData.user);
       setSelectedClient(ticketData.user);
+    } else {
+      console.log('❌ [loadTicketIntoPOS] No hay ticketData.user');
     }
     
+    console.log('🔍 [loadTicketIntoPOS] Verificando ticketData.seats:', ticketData.seats);
+    console.log('🔍 [loadTicketIntoPOS] Verificando setCarrito:', setCarrito);
     if (ticketData.seats && setCarrito) {
       console.log('🪑 [loadTicketIntoPOS] Procesando asientos:', ticketData.seats);
       const seatsToCart = ticketData.seats.map((seat) => ({
