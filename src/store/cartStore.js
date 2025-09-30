@@ -345,20 +345,30 @@ export const useCartStore = create(
           toast.success('Asiento eliminado del carrito');
         },
 
-        clearCart: async () => {
+        clearCart: async (skipUnlock = false) => {
           const { items } = get();
-          const { useSeatLockStore } = await import('../components/seatLockStore');
-          for (const s of items) {
-            const seatId = s._id || s.id || s.sillaId;
-            const functionId = s.functionId || s.funcionId || get().functionId;
-            
-            // Solo desbloquear si tenemos un seatId válido
-            if (seatId && functionId) {
-              await useSeatLockStore
-                .getState()
-                .unlockSeat(seatId, functionId);
+          
+          // Solo intentar desbloquear si no se especifica skipUnlock
+          if (!skipUnlock) {
+            const { useSeatLockStore } = await import('../components/seatLockStore');
+            for (const s of items) {
+              const seatId = s._id || s.id || s.sillaId;
+              const functionId = s.functionId || s.funcionId || get().functionId;
+              
+              // Solo desbloquear si tenemos un seatId válido
+              if (seatId && functionId) {
+                try {
+                  await useSeatLockStore
+                    .getState()
+                    .unlockSeat(seatId, functionId);
+                } catch (error) {
+                  // Ignorar errores de desbloqueo (asiento ya vendido, etc.)
+                  console.log('⚠️ [CART] No se pudo desbloquear asiento (probablemente ya vendido):', seatId);
+                }
+              }
             }
           }
+          
           set({ 
             items: [], 
             products: [],

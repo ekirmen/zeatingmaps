@@ -247,8 +247,8 @@ const Pay = () => {
           tenant: currentTenant ? { ...currentTenant } : null
         });
 
-        // Limpiar carrito
-        clearCart();
+        // Limpiar carrito (sin intentar desbloquear asientos ya vendidos)
+        clearCart(true);
         
         // Redirigir según el tipo de pago
         if (result.requiresRedirect) {

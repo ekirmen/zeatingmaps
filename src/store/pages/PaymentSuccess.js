@@ -24,7 +24,8 @@ const PaymentSuccess = () => {
   const isReservation = paymentDetails?.status === 'reservado' || paymentDetails?.status === 'pending';
 
   useEffect(() => {
-    clearCart();
+    // Limpiar carrito (sin intentar desbloquear asientos ya vendidos)
+    clearCart(true);
   }, [clearCart]);
 
   useEffect(() => {
