@@ -112,7 +112,7 @@ export const useCartStore = create(
             set(newState);
             
             // Desbloquear en BD
-            await seatStore.unlockSeat(seatId, functionId);
+            await useSeatLockStore.getState().unlockSeat(seatId, functionId);
             
             toast.success('Asiento eliminado del carrito');
           } else {
@@ -121,8 +121,8 @@ export const useCartStore = create(
             
             // Verificar si está bloqueado por otro usuario (no por mí)
             const currentSessionId = localStorage.getItem('anonSessionId');
-            const isLockedByOther = await seatStore.isSeatLocked(seatId, functionId);
-            const isLockedByMe = await seatStore.isSeatLockedByMe(seatId, functionId, currentSessionId);
+            const isLockedByOther = await useSeatLockStore.getState().isSeatLocked(seatId, functionId);
+            const isLockedByMe = await useSeatLockStore.getState().isSeatLockedByMe(seatId, functionId, currentSessionId);
             
             if (isLockedByOther && !isLockedByMe) {
               console.error('❌ [CART_TOGGLE] Asiento bloqueado por otro usuario:', seatId);
@@ -164,7 +164,7 @@ export const useCartStore = create(
               
               // Bloquear en BD
               console.log('🛒 [CART_TOGGLE] Intentando bloquear asiento en BD:', { seatId, functionId });
-              const lockResult = await seatStore.lockSeat(seatId, 'seleccionado', functionId);
+              const lockResult = await useSeatLockStore.getState().lockSeat(seatId, 'seleccionado', functionId);
               console.log('🛒 [CART_TOGGLE] Resultado del bloqueo:', lockResult);
               
               if (!lockResult) {
@@ -322,22 +322,22 @@ export const useCartStore = create(
           const seatStore = useSeatLockStore.getState();
           
           // Verificar si el asiento está realmente bloqueado en la BD
-          const isLocked = await seatStore.isSeatLocked(seatId, get().functionId);
+          const isLocked = await useSeatLockStore.getState().isSeatLocked(seatId, get().functionId);
           
           if (isLocked) {
             // Solo desbloquear si está realmente bloqueado en la BD
-            await seatStore.unlockSeat(seatId, get().functionId);
+            await useSeatLockStore.getState().unlockSeat(seatId, get().functionId);
             console.log('🔓 [CART] Asiento desbloqueado de la BD:', seatId);
           } else {
             // Si no está bloqueado en la BD, cambiar a 'disponible' para sincronización en tiempo real
             console.log('🎨 [CART] Asiento no estaba bloqueado en BD, cambiando a disponible:', seatId);
             
             // Cambiar a 'disponible' en lugar de eliminar para sincronización en tiempo real
-            const currentSeatStates = seatStore.seatStates;
+            const currentSeatStates = useSeatLockStore.getState().seatStates;
             const newSeatStates = new Map(currentSeatStates);
             newSeatStates.set(seatId, 'disponible'); // Cambiar a disponible en lugar de eliminar
             // Usar la función específica para actualizar seatStates
-            seatStore.setSeatStates(newSeatStates);
+            useSeatLockStore.getState().setSeatStates(newSeatStates);
             
             console.log('🌐 [CART] Asiento cambiado a disponible - se verá en verde para todos los clientes:', seatId);
           }

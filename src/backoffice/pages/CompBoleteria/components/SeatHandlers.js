@@ -21,7 +21,7 @@ export const createSeatHandlers = ({
   const handleSeatClick = (seat, table) => {
     const currentFuncId = selectedFuncion?.id || selectedFuncion?._id;
     const zonaId = seat.zona;
-    const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
+    const zonaObj = Array.isArray(zonas) ? zonas.find(z => (z.id || z._id) === zonaId) : null;
 
     // Cliente opcional - se puede seleccionar después
     // if (!selectedClient) {
@@ -44,7 +44,7 @@ export const createSeatHandlers = ({
         return;
       }
 
-      const blockedExists = carrito.find(i => i._id === seat._id && i.isBlocked);
+      const blockedExists = Array.isArray(carrito) ? carrito.find(i => i._id === seat._id && i.isBlocked) : null;
       
       if (blockedExists) {
         // Desbloquear asiento
@@ -86,17 +86,17 @@ export const createSeatHandlers = ({
     }
 
     // Verificar si el asiento ya existe en el carrito (modo normal)
-    const exists = carrito.find(
+    const exists = Array.isArray(carrito) ? carrito.find(
       (i) =>
         i._id === seat._id &&
         (abonoMode ? i.abonoGroup : i.funcionId === currentFuncId)
-    );
+    ) : null;
 
     // Determine pricing from the selected plantilla
-    const detalle = detallesPlantilla.find(d => {
+    const detalle = Array.isArray(detallesPlantilla) ? detallesPlantilla.find(d => {
       const id = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
       return id === zonaId;
-    });
+    }) : null;
     
     if (!detalle) {
       message.error('Zona sin precio configurado');
@@ -109,10 +109,10 @@ export const createSeatHandlers = ({
     let descuentoNombre = '';
 
     if (appliedDiscount?.detalles) {
-      const d = appliedDiscount.detalles.find(dt => {
+      const d = Array.isArray(appliedDiscount.detalles) ? appliedDiscount.detalles.find(dt => {
         const id = typeof dt.zona === 'object' ? dt.zona._id : dt.zona;
         return id === zonaId;
-      });
+      }) : null;
       if (d) {
         if (d.tipo === 'porcentaje') {
           finalPrice = Math.max(0, basePrice - (basePrice * d.valor) / 100);
@@ -200,13 +200,13 @@ export const createSeatHandlers = ({
     const seatsToAdd = [];
     availableSeats.forEach(seat => {
       const zonaId = seat.zona;
-      const zonaObj = zonas.find(z => (z.id || z._id) === zonaId);
+      const zonaObj = Array.isArray(zonas) ? zonas.find(z => (z.id || z._id) === zonaId) : null;
       
       // Determine pricing from the selected plantilla
-      const detalle = detallesPlantilla.find(d => {
+      const detalle = Array.isArray(detallesPlantilla) ? detallesPlantilla.find(d => {
         const id = d.zonaId || (typeof d.zona === 'object' ? d.zona._id : d.zona);
         return id === zonaId;
-      });
+      }) : null;
       
       if (!detalle) {
         message.error(`Zona ${zonaObj?.nombre || zonaId} sin precio configurado`);
@@ -219,10 +219,10 @@ export const createSeatHandlers = ({
       let descuentoNombre = '';
 
       if (appliedDiscount?.detalles) {
-        const d = appliedDiscount.detalles.find(dt => {
+        const d = Array.isArray(appliedDiscount.detalles) ? appliedDiscount.detalles.find(dt => {
           const id = typeof dt.zona === 'object' ? dt.zona._id : dt.zona;
           return id === zonaId;
-        });
+        }) : null;
         if (d) {
           if (d.tipo === 'porcentaje') {
             finalPrice = Math.max(0, basePrice - (basePrice * d.valor) / 100);
