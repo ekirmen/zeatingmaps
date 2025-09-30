@@ -91,27 +91,13 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
   };
 
   const loadTicketIntoPOS = async () => {
-    console.log('🚨🚨🚨 [loadTicketIntoPOS] FUNCIÓN EJECUTÁNDOSE - LeftMenu.js 🚨🚨🚨');
-    console.log('🎫 [loadTicketIntoPOS] Iniciando carga de ticket en POS');
-    console.log('🎫 [loadTicketIntoPOS] ticketData:', ticketData);
+    if (!ticketData) return;
     
-    if (!ticketData) {
-      console.log('❌ [loadTicketIntoPOS] No hay ticketData');
-      return;
-    }
-    
-    console.log('🔍 [loadTicketIntoPOS] Verificando ticketData.user:', ticketData.user);
     if (ticketData.user) {
-      console.log('👤 [loadTicketIntoPOS] Cargando cliente:', ticketData.user);
       setSelectedClient(ticketData.user);
-    } else {
-      console.log('❌ [loadTicketIntoPOS] No hay ticketData.user');
     }
     
-    console.log('🔍 [loadTicketIntoPOS] Verificando ticketData.seats:', ticketData.seats);
-    console.log('🔍 [loadTicketIntoPOS] Verificando setCarrito:', setCarrito);
     if (ticketData.seats && setCarrito) {
-      console.log('🪑 [loadTicketIntoPOS] Procesando asientos:', ticketData.seats);
       const seatsToCart = ticketData.seats.map((seat) => ({
         _id: seat._id || seat.id || seat.sillaId,
         nombre: seat.nombre || seat.name || `Asiento ${seat._id || seat.id}`,
@@ -125,26 +111,18 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
         funcionFecha: ticketData.funcion?.fecha_celebracion
       }));
       
-      console.log('🛒 [loadTicketIntoPOS] Asientos mapeados para carrito:', seatsToCart);
       setCarrito(seatsToCart);
-      console.log('✅ [loadTicketIntoPOS] setCarrito ejecutado');
-    } else {
-      console.log('❌ [loadTicketIntoPOS] No hay asientos o setCarrito no está disponible');
-      console.log('❌ [loadTicketIntoPOS] ticketData.seats:', ticketData.seats);
-      console.log('❌ [loadTicketIntoPOS] setCarrito:', setCarrito);
     }
 
     if (ticketData.event && setSelectedEvent) {
-      console.log('🎭 [loadTicketIntoPOS] Cargando evento:', ticketData.event);
       setSelectedEvent(ticketData.event);
     }
 
     if (ticketData.funcion && typeof onFunctionSelect === 'function') {
-      console.log('🎪 [loadTicketIntoPOS] Cargando función:', ticketData.funcion);
-      await onFunctionSelect(ticketData.funcion);
+      // Pasar un parámetro para indicar que no se debe limpiar el carrito
+      await onFunctionSelect(ticketData.funcion, { preserveCart: true });
     }
 
-    console.log('🔚 [loadTicketIntoPOS] Cerrando modal y mostrando mensaje de éxito');
     setIsSearchModalVisible(false);
     message.success('Ticket cargado correctamente');
   };

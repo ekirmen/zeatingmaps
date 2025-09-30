@@ -145,8 +145,8 @@ export const useBoleteria = () => {
   }, [setCarritoMemo]);
 
   // Manejar la selección de una función
-  const handleFunctionSelect = useCallback(async (functionId) => {
-    console.log('🔄 [useBoleteria] handleFunctionSelect called with function ID:', functionId);
+  const handleFunctionSelect = useCallback(async (functionId, options = {}) => {
+    console.log('🔄 [useBoleteria] handleFunctionSelect called with function ID:', functionId, 'options:', options);
     setLoading(true);
     setError(null);
     setDebugInfo({ step: 'handleFunctionSelect', functionId });
@@ -155,9 +155,12 @@ export const useBoleteria = () => {
     setSelectedPlantilla(null);
     setMapa(null);
     setZonas([]);
-    // Limpiar carrito solo si es una función diferente
-    if (selectedFuncion?.id !== functionId) {
+    // Limpiar carrito solo si es una función diferente Y no se debe preservar el carrito
+    if (selectedFuncion?.id !== functionId && !options.preserveCart) {
+      console.log('🧹 [useBoleteria] Limpiando carrito porque es función diferente');
       setCarritoMemo([]);
+    } else if (options.preserveCart) {
+      console.log('🛒 [useBoleteria] Preservando carrito por opción preserveCart');
     }
 
     // Ensure functionId is a primitive value
