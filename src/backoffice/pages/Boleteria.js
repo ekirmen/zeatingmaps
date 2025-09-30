@@ -331,11 +331,26 @@ const Boleteria = () => {
         modoVenta: 'boleteria'
       };
 
-      // En modo boletería simplificado, solo agregar/quitar del carrito
-      // El bloqueo se maneja por separado con botones específicos
-      await toggleSeat(cartItem);
+      // Verificar si el asiento ya está en el carrito
+      const exists = carrito.some(item => item.sillaId === sillaId);
+      
+      if (exists) {
+        // Deseleccionar: quitar del carrito y desbloquear en BD
+        await toggleSeat(cartItem);
+        await unlockSeat(sillaId, funcionId);
+        console.log('🔄 [Boleteria] Asiento deseleccionado y desbloqueado:', sillaId);
+      } else {
+        // Seleccionar: bloquear en BD primero, luego agregar al carrito
+        const lockResult = await lockSeat(sillaId, 'seleccionado', funcionId);
+        if (lockResult) {
+          await toggleSeat(cartItem);
+          console.log('✅ [Boleteria] Asiento seleccionado y bloqueado:', sillaId);
+        } else {
+          console.log('❌ [Boleteria] No se pudo bloquear el asiento:', sillaId);
+        }
+      }
     },
-    [selectedFuncion, mapa, selectedPlantilla, toggleSeat]
+    [selectedFuncion, mapa, selectedPlantilla, toggleSeat, carrito, lockSeat, unlockSeat]
   );
 
   const allTicketsPaid = carrito.length > 0 && carrito.every(ticket => ticket.pagado);

@@ -229,33 +229,13 @@ const SeatingMapUnified = ({
 
   const selectedSeatIds = useMemo(() => {
     console.log('🔍 [SEATING_MAP] Debug modoVenta:', { modoVenta, tipo: typeof modoVenta });
-    // Si estamos en modo boletería (modoVenta=true), usar selectedSeats de las props
-    if (modoVenta) {
-      let propSeatIds = [];
-      if (selectedSeats) {
-        if (selectedSeats instanceof Set) {
-          propSeatIds = Array.from(selectedSeats).map(id => id?.toString()).filter(Boolean);
-        } else if (Array.isArray(selectedSeats)) {
-          if (selectedSeats.length > 0 && typeof selectedSeats[0] === 'object') {
-            propSeatIds = selectedSeats
-              .map(seat => seat?._id || seat?.sillaId || seat?.id)
-              .filter(Boolean)
-              .map(id => id.toString());
-          } else {
-            propSeatIds = selectedSeats.map(id => id?.toString()).filter(Boolean);
-          }
-        }
-      }
-      console.log('🎯 [SEATING_MAP] Modo boletería - selectedSeatIds:', propSeatIds);
-      return new Set(propSeatIds);
-    }
     
-    // Modo store: usar el carrito directamente para determinar asientos seleccionados
-    const cartItems = useCartStore.getState().items || [];
-    const cartSeatIds = cartItems.map(item => (item.sillaId || item.id || item._id)?.toString()).filter(Boolean);
-    
-    // También incluir selectedSeats de las props como fallback
+    // Obtener asientos seleccionados desde diferentes fuentes
     let propSeatIds = [];
+    let cartSeatIds = [];
+    let lockSeatIds = [];
+    
+    // 1. Asientos de las props (común para ambos modos)
     if (selectedSeats) {
       if (selectedSeats instanceof Set) {
         propSeatIds = Array.from(selectedSeats).map(id => id?.toString()).filter(Boolean);
@@ -271,15 +251,36 @@ const SeatingMapUnified = ({
       }
     }
     
-    // Combinar ambos (carrito tiene prioridad)
-    const allSeatIds = [...new Set([...cartSeatIds, ...propSeatIds])];
-    console.log('🎯 [SEATING_MAP] Modo store - selectedSeatIds calculado:', {
-      cartSeatIds,
+    // 2. Asientos del carrito (solo modo store)
+    if (!modoVenta) {
+      const cartItems = useCartStore.getState().items || [];
+      cartSeatIds = cartItems.map(item => (item.sillaId || item.id || item._id)?.toString()).filter(Boolean);
+    }
+    
+    // 3. Asientos bloqueados/seleccionados en la base de datos (común para ambos modos)
+    const tempLocks = Array.isArray(lockedSeatsState) ? lockedSeatsState : [];
+    const permanentLocks = Array.isArray(lockedSeats) ? lockedSeats : [];
+    const allLocks = [...tempLocks, ...permanentLocks];
+    
+    // Filtrar solo los locks que están en estado 'seleccionado' (no 'locked', 'vendido', etc.)
+    lockSeatIds = allLocks
+      .filter(lock => lock && lock.status === 'seleccionado' && lock.seat_id)
+      .map(lock => lock.seat_id.toString())
+      .filter(Boolean);
+    
+    // Combinar todas las fuentes
+    const allSeatIds = [...new Set([...propSeatIds, ...cartSeatIds, ...lockSeatIds])];
+    
+    console.log('🎯 [SEATING_MAP] selectedSeatIds calculado:', {
+      modo: modoVenta ? 'boletería' : 'store',
       propSeatIds,
+      cartSeatIds,
+      lockSeatIds,
       allSeatIds
     });
+    
     return new Set(allSeatIds);
-  }, [selectedSeats, modoVenta]);
+  }, [selectedSeats, modoVenta, lockedSeatsState, lockedSeats]);
 
   const selectedSeatList = useMemo(() => Array.from(selectedSeatIds), [selectedSeatIds]);
 
