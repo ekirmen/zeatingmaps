@@ -202,12 +202,12 @@ const SimpleSeatingMap = ({
       }
 
       // Usar lockedSeats para determinar si el asiento ya está seleccionado por el usuario actual
-      const isAlreadySelected = lockedSeats.some(ls => 
+      const isAlreadySelected = Array.isArray(lockedSeats) ? lockedSeats.some(ls => 
         ls.seat_id === seat._id && ls.session_id === sessionId
-      );
+      ) : false;
 
       // Debug mejorado con información de estados
-      const currentLock = lockedSeats.find(ls => ls.seat_id === seat._id);
+      const currentLock = Array.isArray(lockedSeats) ? lockedSeats.find(ls => ls.seat_id === seat._id) : null;
       console.log('🔍 [SimpleSeatingMap] Estado del asiento:', {
         seatId: seat._id,
         seatEstado: seat.estado,
@@ -219,10 +219,10 @@ const SimpleSeatingMap = ({
           expires_at: currentLock.expires_at,
           session_id: currentLock.session_id
         } : null,
-        selectedSeatsCount: selectedSeats.length,
-        selectedSeatsIds: selectedSeats.map(s => s._id),
-        lockedSeatsCount: lockedSeats.length,
-        lockedSeatsIds: lockedSeats.map(ls => ls.seat_id),
+        selectedSeatsCount: Array.isArray(selectedSeats) ? selectedSeats.length : 0,
+        selectedSeatsIds: Array.isArray(selectedSeats) ? selectedSeats.map(s => s._id) : [],
+        lockedSeatsCount: Array.isArray(lockedSeats) ? lockedSeats.length : 0,
+        lockedSeatsIds: Array.isArray(lockedSeats) ? lockedSeats.map(ls => ls.seat_id) : [],
         sessionId,
         isPermanent: currentLock?.status === 'locked' || currentLock?.status === 'vendido' || currentLock?.status === 'reservado' || currentLock?.status === 'anulado',
         isTemporary: currentLock?.status === 'seleccionado'
@@ -260,7 +260,7 @@ const SimpleSeatingMap = ({
         // Llamar al callback del padre para deseleccionar
         console.log('📞 Llamando onSeatClick para deseleccionar:', seat._id);
         // Buscar el asiento en selectedSeats para obtener la información de precio
-        const selectedSeatWithPrice = selectedSeats.find(s => s._id === seat._id);
+        const selectedSeatWithPrice = Array.isArray(selectedSeats) ? selectedSeats.find(s => s._id === seat._id) : null;
         if (selectedSeatWithPrice) {
           onSeatClick(selectedSeatWithPrice, mesa);
         } else {

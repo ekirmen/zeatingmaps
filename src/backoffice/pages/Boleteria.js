@@ -286,8 +286,8 @@ const Boleteria = () => {
 
       // Resolver zona y precio
       const zona =
-        mapa?.zonas?.find(z => z.asientos?.some(a => a._id === sillaId)) ||
-        mapa?.contenido?.find(el => el.sillas?.some(a => a._id === sillaId) && el.zona) ||
+        (Array.isArray(mapa?.zonas) ? mapa.zonas.find(z => Array.isArray(z.asientos) && z.asientos.some(a => a._id === sillaId)) : null) ||
+        (Array.isArray(mapa?.contenido) ? mapa.contenido.find(el => Array.isArray(el.sillas) && el.sillas.some(a => a._id === sillaId) && el.zona) : null) ||
         silla.zona || {};
       const zonaId = zona?.id || silla.zonaId || zona?._id;
       const nombreZona = zona?.nombre || silla?.zona?.nombre || 'Zona';

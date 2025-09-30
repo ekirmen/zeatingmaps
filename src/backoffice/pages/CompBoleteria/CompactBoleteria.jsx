@@ -88,9 +88,9 @@ const CompactBoleteria = ({
         let seatStatus = elemento.estado || 'disponible';
         
         // Verificar si está bloqueado
-        const isLocked = lockedSeats.some(lock => lock.seat_id === elemento._id);
+        const isLocked = Array.isArray(lockedSeats) ? lockedSeats.some(lock => lock.seat_id === elemento._id) : false;
         if (isLocked) {
-          const lock = lockedSeats.find(lock => lock.seat_id === elemento._id);
+          const lock = Array.isArray(lockedSeats) ? lockedSeats.find(lock => lock.seat_id === elemento._id) : null;
           if (lock.status === 'seleccionado') {
             seatStatus = 'seleccionado';
           } else {
@@ -161,7 +161,7 @@ const CompactBoleteria = ({
 
     // Añadir precios a las zonas
     Object.keys(zoneData).forEach(zonaId => {
-      const detalle = plantillaPrecios?.detalles?.find(d => d.zonaId === zonaId);
+      const detalle = Array.isArray(plantillaPrecios?.detalles) ? plantillaPrecios.detalles.find(d => d.zonaId === zonaId) : null;
       zoneData[zonaId].precio = detalle?.precio || 0;
     });
 

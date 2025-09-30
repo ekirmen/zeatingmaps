@@ -36,7 +36,7 @@ export const useMapaSeats = (elements, setElements, selectedZone, numSillas) => 
     if (!mesaId || typeof mesaId !== 'string' || cantidad <= 0) return;
 
     setElements(prev => {
-      const mesa = prev.find(el => el._id === mesaId);
+      const mesa = Array.isArray(prev) ? prev.find(el => el._id === mesaId) : null;
       if (!mesa || mesa.type !== 'mesa') {
         return prev;
       }
