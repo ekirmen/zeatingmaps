@@ -45,8 +45,8 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
             funcion:funciones(
               id,
               fechaCelebracion:fecha_celebracion,
-              evento,
-              sala,
+              evento_id,
+              sala_id,
               plantilla
             )`)
           .eq('locator', locator)
