@@ -18,7 +18,10 @@ const ClientModals = ({
     isSearchModalVisible,
     searchResults: searchResults?.length || 0,
     paymentResults: paymentResults?.length || 0,
-    searchLoading
+    searchLoading,
+    onSearchCancel: typeof onSearchCancel,
+    onClientSelect: typeof onClientSelect,
+    handleUnifiedSearch: typeof handleUnifiedSearch
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddingAccount, setIsAddingAccount] = useState(false);
@@ -30,15 +33,17 @@ const ClientModals = ({
 
   const handleSearch = async () => {
     console.log('🔍 [ClientModals] Iniciando búsqueda con término:', searchTerm);
+    console.log('🔍 [ClientModals] handleUnifiedSearch type:', typeof handleUnifiedSearch);
     if (!searchTerm.trim()) {
       message.warning('Por favor ingresa un término de búsqueda');
       return;
     }
 
     try {
-      if (handleUnifiedSearch) {
+      if (handleUnifiedSearch && typeof handleUnifiedSearch === 'function') {
         console.log('🔍 [ClientModals] Usando handleUnifiedSearch');
-        await handleUnifiedSearch(searchTerm);
+        const result = await handleUnifiedSearch(searchTerm);
+        console.log('🔍 [ClientModals] Resultado de búsqueda:', result);
       } else {
         // Fallback to direct search if handleUnifiedSearch is not provided
         const { data, error } = await supabase
@@ -161,8 +166,14 @@ const ClientModals = ({
       title="Buscar Cuenta"
       open={isSearchModalVisible}
       onCancel={() => {
+        console.log('🔍 [ClientModals] onCancel llamado');
+        console.log('🔍 [ClientModals] onSearchCancel type:', typeof onSearchCancel);
         resetSearch();
-        onSearchCancel();
+        if (typeof onSearchCancel === 'function') {
+          onSearchCancel();
+        } else {
+          console.error('❌ [ClientModals] onSearchCancel no es una función:', onSearchCancel);
+        }
       }}
       footer={null}
       width={600}

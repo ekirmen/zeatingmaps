@@ -547,14 +547,17 @@ const Boleteria = () => {
 
   const clientModalsProps = useMemo(() => ({
     isSearchModalVisible,
-    setIsSearchModalVisible,
+    onSearchCancel: () => setIsSearchModalVisible(false),
     searchResults,
     paymentResults,
     searchLoading,
-    handleAddClient,
+    onAddClient: handleAddClient,
     handleUnifiedSearch,
     clearSearchResults,
-    handleLocatorSearch,
+    onClientSelect: (client) => {
+      setSelectedClient(client);
+      setIsSearchModalVisible(false);
+    },
     selectedClient,
     setSelectedClient,
     showCreateUser: false,
