@@ -565,25 +565,25 @@ const Boleteria = () => {
   }), [isPaymentModalVisible, setIsPaymentModalVisible, carrito, setCarrito, selectedClient, setSelectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment]);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden" style={{ margin: '0', padding: '0' }}>
+    <div className="flex h-screen bg-gray-50 overflow-hidden" style={{ margin: '0', padding: '0', height: '100vh', position: 'absolute', top: '0', left: '0', right: '0', bottom: '0' }}>
       {/* Debug info */}
       {console.log('🎫 [Boleteria] Renderizando componente...')}
       {console.log('🎫 [Boleteria] Selected function:', selectedFuncion)}
       {console.log('🎫 [Boleteria] Mapa:', mapa)}
 
-      {/* Sidebar izquierdo compacto */}
-      <div className="flex flex-col w-full max-w-xs md:max-w-sm lg:w-72 min-w-[14rem] bg-white border-r border-gray-200">
-        <div className="p-2 border-b border-gray-200">
+      {/* Sidebar izquierdo ultra compacto */}
+      <div className="flex flex-col w-full max-w-xs md:max-w-sm lg:w-64 min-w-[12rem] bg-white border-r border-gray-200">
+        <div className="p-1 border-b border-gray-200">
           <button
             onClick={() => window.history.back()}
-            className="flex items-center gap-1 text-gray-700 hover:text-gray-900 text-sm"
+            className="flex items-center gap-1 text-gray-700 hover:text-gray-900 text-xs"
           >
-            <AiOutlineLeft className="text-sm" />
+            <AiOutlineLeft className="text-xs" />
             <span>Volver</span>
           </button>
         </div>
         
-        <div className="flex-1 overflow-auto p-2">
+        <div className="flex-1 overflow-auto p-1">
           <LeftMenu {...leftMenuProps} />
         </div>
       </div>
@@ -592,8 +592,8 @@ const Boleteria = () => {
       <div className="flex-1 flex overflow-hidden min-w-0">
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header compacto con búsqueda de evento y función */}
-          <div className="bg-white border-b border-gray-200 px-2 py-1">
+          {/* Header ultra compacto con búsqueda de evento y función */}
+          <div className="bg-white border-b border-gray-200 px-1 py-0.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-1">
                 <div className="flex items-center gap-1">
@@ -644,9 +644,9 @@ const Boleteria = () => {
             </div>
           </div>
 
-          {/* Navegación compacta con botones estilo tabs */}
+          {/* Navegación ultra compacta con botones estilo tabs */}
           <div className="bg-white border-b border-gray-200">
-            <div className="flex items-center justify-between px-3 py-1">
+            <div className="flex items-center justify-between px-1 py-0.5">
               {/* Botón para abrir panel lateral */}
               <div className="flex items-center">
                 <button 
@@ -688,8 +688,8 @@ const Boleteria = () => {
             </div>
           </div>
 
-          {/* Sección compacta de precios dinámicos con selección de entrada */}
-          <div className="bg-gray-50 border-b border-gray-200 px-2 py-1">
+          {/* Sección ultra compacta de precios dinámicos con selección de entrada */}
+          <div className="bg-gray-50 border-b border-gray-200 px-1 py-0.5">
             <div className="flex space-x-2 overflow-x-auto">
               {priceOptions && priceOptions.length > 0 ? (
                 priceOptions.map((option, index) => {
@@ -739,11 +739,11 @@ const Boleteria = () => {
             </div>
           </div>
 
-          {/* Mapa de asientos compacto */}
+          {/* Mapa de asientos ultra compacto */}
           <div className="flex-1 bg-white overflow-hidden">
             {console.log('🎫 [Boleteria] Renderizando vista mapa interactivo')}
             {selectedFuncion && mapa ? (
-              <div className="h-full p-2 overflow-auto">
+              <div className="h-full p-1 overflow-auto">
                 <SeatingMapUnified
                   funcionId={selectedFuncion?.id || selectedFuncion?._id}
                   mapa={mapa}
@@ -772,8 +772,8 @@ const Boleteria = () => {
           </div>
         </div>
 
-        {/* Panel derecho - Carrito de compras compacto */}
-        <div className="w-72 bg-white border-l border-gray-200 flex flex-col">
+        {/* Panel derecho - Carrito de compras ultra compacto */}
+        <div className="w-64 bg-white border-l border-gray-200 flex flex-col">
           <div className="flex-1 min-h-0">
             <Cart {...cartProps}>
               {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
