@@ -565,7 +565,7 @@ const Boleteria = () => {
   }), [isPaymentModalVisible, setIsPaymentModalVisible, carrito, setCarrito, selectedClient, setSelectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment]);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden" style={{ margin: '0', padding: '0', height: '100vh', position: 'absolute', top: '0', left: '0', right: '0', bottom: '0' }}>
+    <div className="flex bg-gray-50 overflow-hidden" style={{ margin: '0', padding: '0', height: 'calc(100vh - 88px)', position: 'absolute', top: '88px', left: '0', right: '0', bottom: '0' }}>
       {/* Debug info */}
       {console.log('🎫 [Boleteria] Renderizando componente...')}
       {console.log('🎫 [Boleteria] Selected function:', selectedFuncion)}
@@ -645,7 +645,7 @@ const Boleteria = () => {
           </div>
 
           {/* Navegación ultra compacta con botones estilo tabs */}
-          <div className="bg-white border-b border-gray-200">
+        <div className="bg-white border-b border-gray-200">
             <div className="flex items-center justify-between px-1 py-0.5">
               {/* Botón para abrir panel lateral */}
               <div className="flex items-center">
@@ -671,7 +671,7 @@ const Boleteria = () => {
                 <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
                   ⚙️ Otros
                 </button>
-              </div>
+        </div>
 
               {/* Botones secundarios */}
               <div className="flex items-center space-x-1">
@@ -736,49 +736,49 @@ const Boleteria = () => {
                   {selectedFuncion ? 'Cargando precios...' : 'Selecciona una función para ver precios'}
                 </div>
               )}
-            </div>
-          </div>
+                </div>
+              </div>
 
           {/* Mapa de asientos ultra compacto */}
           <div className="flex-1 bg-white overflow-hidden">
             {console.log('🎫 [Boleteria] Renderizando vista mapa interactivo')}
-            {selectedFuncion && mapa ? (
+                {selectedFuncion && mapa ? (
               <div className="h-full p-1 overflow-auto">
-                <SeatingMapUnified
-                  funcionId={selectedFuncion?.id || selectedFuncion?._id}
-                  mapa={mapa}
-                  zonas={mapa?.zonas || []}
-                  selectedFuncion={selectedFuncion}
-                  selectedEvent={selectedEvent}
-                  onSeatToggle={handleSeatToggle}
-                  foundSeats={foundSeats}
-                  selectedSeats={selectedSeatIds}
-                  lockedSeats={permanentLocks}
-                  modoVenta={true}
-                  showPrices={true}
-                  showZones={true}
+                      <SeatingMapUnified
+                        funcionId={selectedFuncion?.id || selectedFuncion?._id}
+                        mapa={mapa}
+                        zonas={mapa?.zonas || []}
+                        selectedFuncion={selectedFuncion}
+                        selectedEvent={selectedEvent}
+                        onSeatToggle={handleSeatToggle}
+                        foundSeats={foundSeats}
+                        selectedSeats={selectedSeatIds}
+                        lockedSeats={permanentLocks}
+                        modoVenta={true}
+                        showPrices={true}
+                        showZones={true}
                   showLegend={false}
-                  allowSeatSelection={true}
-                  debug={true}
-                  isSeatLocked={isSeatLocked}
-                  isSeatLockedByMe={isSeatLockedByMe}
-                />
-              </div>
-            ) : (
+                        allowSeatSelection={true}
+                        debug={true}
+                        isSeatLocked={isSeatLocked}
+                        isSeatLockedByMe={isSeatLockedByMe}
+                      />
+                  </div>
+                ) : (
               <div className="h-full flex items-center justify-center text-gray-500 text-sm">
-                Selecciona una función para ver el mapa de asientos
-              </div>
-            )}
+                    Selecciona una función para ver el mapa de asientos
+                  </div>
+                )}
           </div>
-        </div>
+              </div>
 
         {/* Panel derecho - Carrito de compras ultra compacto */}
         <div className="w-64 bg-white border-l border-gray-200 flex flex-col">
-          <div className="flex-1 min-h-0">
-            <Cart {...cartProps}>
-              {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
-            </Cart>
-          </div>
+                <div className="flex-1 min-h-0">
+                  <Cart {...cartProps}>
+                    {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
+                  </Cart>
+                </div>
         </div>
       </div>
 
