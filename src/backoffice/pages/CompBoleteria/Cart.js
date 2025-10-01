@@ -11,6 +11,7 @@ const Cart = ({
   onShowPaymentModal,
   selectedClient,
   selectedAffiliate,
+  onShowUserSearch,
   children,
 }) => {
   // Ensure carrito is always an array to avoid runtime errors
@@ -302,8 +303,8 @@ const Cart = ({
             type="primary"
             block
             className="mt-4 h-12 text-base font-semibold"
-            onClick={handlePaymentClick}
-            disabled={!selectedClient || !handlePaymentClick}
+            onClick={selectedClient ? handlePaymentClick : onShowUserSearch}
+            disabled={selectedClient ? !handlePaymentClick : false}
             icon={selectedClient ? <span>💳</span> : <span>👤</span>}
           >
             {selectedClient ? 'Procesar Pago' : 'Seleccionar Cliente'}
