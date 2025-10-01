@@ -81,6 +81,11 @@ const Boleteria = () => {
   const [seatPayment, setSeatPayment] = useState(null);
   const [isSeatModalVisible, setIsSeatModalVisible] = useState(false);
   const [permanentLocks, setPermanentLocks] = useState([]);
+  
+  // Estados para gestión de precios y entradas
+  const [entradas, setEntradas] = useState([]);
+  const [selectedEntradaId, setSelectedEntradaId] = useState(null);
+  const [priceOptions, setPriceOptions] = useState([]);
 
   useEffect(() => {
     if (!selectedFuncion) return;
@@ -92,6 +97,87 @@ const Boleteria = () => {
       unsubscribe();
     };
   }, [selectedFuncion, subscribeToFunction, unsubscribe]);
+
+  // useEffect para cargar entradas y opciones de precio
+  useEffect(() => {
+    const loadEntradasAndPrices = async () => {
+      if (!selectedFuncion || !selectedEvent) return;
+
+      try {
+        console.log('🎫 [Boleteria] Cargando entradas y precios...');
+        
+        // Cargar entradas del recinto
+        const recintoId = selectedEvent.recinto || selectedEvent.recinto_id;
+        if (!recintoId) {
+          console.warn('No se encontró recinto_id');
+          return;
+        }
+
+        const { data: entradasData, error: entradasError } = await supabase
+          .from('entradas')
+          .select('*')
+          .eq('recinto', recintoId);
+
+        if (entradasError) {
+          console.error('Error cargando entradas:', entradasError);
+          return;
+        }
+
+        console.log('✅ Entradas cargadas:', entradasData);
+        setEntradas(entradasData || []);
+
+        // Procesar plantilla de precios
+        if (selectedFuncion.plantilla?.detalles) {
+          const detalles = typeof selectedFuncion.plantilla.detalles === 'string'
+            ? JSON.parse(selectedFuncion.plantilla.detalles)
+            : selectedFuncion.plantilla.detalles;
+
+          // Agrupar precios por entradaId
+          const pricesGrouped = {};
+          detalles.forEach(detalle => {
+            const entradaId = detalle.entradaId || detalle.productoId;
+            if (!entradaId) return;
+
+            if (!pricesGrouped[entradaId]) {
+              pricesGrouped[entradaId] = {
+                entradaId,
+                precios: [],
+                minPrecio: Infinity,
+                maxPrecio: -Infinity
+              };
+            }
+
+            pricesGrouped[entradaId].precios.push(detalle);
+            pricesGrouped[entradaId].minPrecio = Math.min(pricesGrouped[entradaId].minPrecio, detalle.precio || 0);
+            pricesGrouped[entradaId].maxPrecio = Math.max(pricesGrouped[entradaId].maxPrecio, detalle.precio || 0);
+          });
+
+          // Combinar con información de entradas
+          const priceOptionsArray = Object.values(pricesGrouped).map(group => {
+            const entrada = entradasData?.find(e => e.id === group.entradaId);
+            return {
+              ...group,
+              nombre: entrada?.nombre_entrada || 'Sin nombre',
+              tipo: entrada?.tipo_producto || 'General',
+              entrada: entrada
+            };
+          });
+
+          console.log('✅ Opciones de precio procesadas:', priceOptionsArray);
+          setPriceOptions(priceOptionsArray);
+
+          // Seleccionar la primera entrada por defecto
+          if (priceOptionsArray.length > 0 && !selectedEntradaId) {
+            setSelectedEntradaId(priceOptionsArray[0].entradaId);
+          }
+        }
+      } catch (error) {
+        console.error('Error en loadEntradasAndPrices:', error);
+      }
+    };
+
+    loadEntradasAndPrices();
+  }, [selectedFuncion, selectedEvent, selectedEntradaId]);
 
   const selectedSeatIds = useMemo(() => {
     if (!Array.isArray(carrito)) return [];
@@ -602,52 +688,53 @@ const Boleteria = () => {
             </div>
           </div>
 
-          {/* Sección compacta de precios dinámicos */}
+          {/* Sección compacta de precios dinámicos con selección de entrada */}
           <div className="bg-gray-50 border-b border-gray-200 px-2 py-1">
             <div className="flex space-x-2 overflow-x-auto">
-              {selectedFuncion?.plantilla?.detalles ? (
-                JSON.parse(selectedFuncion.plantilla.detalles).map((precio, index) => {
-                  const precioMin = Math.min(...JSON.parse(selectedFuncion.plantilla.detalles).map(p => p.precio));
-                  const precioMax = Math.max(...JSON.parse(selectedFuncion.plantilla.detalles).map(p => p.precio));
-                  const isActive = index === 0;
+              {priceOptions && priceOptions.length > 0 ? (
+                priceOptions.map((option, index) => {
+                  const isActive = selectedEntradaId === option.entradaId;
+                  const precioDisplay = option.minPrecio === option.maxPrecio
+                    ? `$${option.minPrecio.toFixed(2)}`
+                    : `$${option.minPrecio.toFixed(2)}-$${option.maxPrecio.toFixed(2)}`;
+                  
+                  // Determinar color según tipo de producto
+                  let bgColor = 'bg-gray-200 text-gray-700';
+                  if (isActive) {
+                    bgColor = 'bg-purple-600 text-white';
+                  } else if (option.tipo === 'Invitaciones' || option.minPrecio === 0) {
+                    bgColor = 'bg-orange-200 text-orange-800';
+                  } else if (option.tipo === 'Reducido') {
+                    bgColor = 'bg-blue-200 text-blue-800';
+                  }
                   
                   return (
                     <button 
-                      key={index}
+                      key={option.entradaId}
+                      onClick={() => {
+                        console.log('🎫 Entrada seleccionada:', option);
+                        setSelectedEntradaId(option.entradaId);
+                      }}
                       className={`flex-shrink-0 px-2 py-1 rounded font-medium text-xs ${
                         isActive 
                           ? 'bg-purple-600 text-white' 
-                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                          : bgColor + ' hover:opacity-80'
                       } transition-colors`}
+                      title={`${option.nombre} - ${option.tipo}`}
                     >
-                      <div className="text-xs">
-                        {precio.entradaId === '4d80ae04-a6a3-4c47-b0fb-fe36dd1e0f92' ? 'PRECIO GENERAL' :
-                         precio.entradaId === '3c787cd9-c7dd-480f-be30-6ef42a13342d' ? 'SOCIOS 10%' :
-                         'CORTESIAS'}
+                      <div className="text-xs font-medium">
+                        {option.nombre.toUpperCase()}
                       </div>
                       <div className="text-xs opacity-90">
-                        {precio.precio === 0 ? '$0.00' : 
-                         precioMin === precioMax ? `$${precio.precio.toFixed(2)}` :
-                         `$${precioMin.toFixed(2)}-$${precioMax.toFixed(2)}`}
+                        {precioDisplay}
                       </div>
                     </button>
                   );
                 })
               ) : (
-                <>
-                  <button className="flex-shrink-0 px-2 py-1 bg-purple-600 text-white rounded font-medium">
-                    <div className="text-xs">PRECIO GENERAL</div>
-                    <div className="text-xs opacity-90">$0.00</div>
-                  </button>
-                  <button className="flex-shrink-0 px-2 py-1 bg-gray-200 text-gray-700 rounded font-medium">
-                    <div className="text-xs">SOCIOS 10%</div>
-                    <div className="text-xs opacity-70">$0.00</div>
-                  </button>
-                  <button className="flex-shrink-0 px-2 py-1 bg-orange-200 text-orange-800 rounded font-medium">
-                    <div className="text-xs">CORTESIAS</div>
-                    <div className="text-xs opacity-70">$0.00</div>
-                  </button>
-                </>
+                <div className="text-xs text-gray-500 py-1">
+                  {selectedFuncion ? 'Cargando precios...' : 'Selecciona una función para ver precios'}
+                </div>
               )}
             </div>
           </div>
