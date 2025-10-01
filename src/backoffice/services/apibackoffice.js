@@ -376,11 +376,11 @@ const loadReservedSeats = async (funcionId) => {
   try {
     console.log('🔍 [loadReservedSeats] Cargando asientos reservados para función:', funcionId);
     
-    // Buscar en la tabla payments (tabla principal)
+    // Buscar en la tabla payment_transactions (tabla principal)
     const { data: payments, error: paymentsError } = await supabase
-      .from('payments')
-      .select('seats, status, funcion, locator, created_at, id')
-      .eq('funcion', funcionId)
+      .from('payment_transactions')
+      .select('seats, status, funcion_id, locator, created_at, id')
+      .eq('funcion_id', funcionId)
       .in('status', ['reservado', 'pagado', 'pending'])
       .order('created_at', { ascending: false });
     
@@ -1213,7 +1213,7 @@ export const createPayment = async (data) => {
   console.log('🔍 Seats contenido:', JSON.stringify(enrichedData.seats, null, 2));
 
   const { data: result, error } = await client
-    .from('payments')
+    .from('payment_transactions')
     .insert(enrichedData)
     .select()
     .single();
@@ -1236,7 +1236,7 @@ const calculateTotalAmount = (seatsData) => {
 export const updatePayment = async (id, data) => {
   const client = supabaseAdmin || supabase;
   const { data: result, error } = await client
-    .from('payments')
+    .from('payment_transactions')
     .update(data)
     .eq('id', id)
     .select()
@@ -1247,7 +1247,7 @@ export const updatePayment = async (id, data) => {
 
 export const fetchPayments = async () => {
   const client = supabaseAdmin || supabase;
-  const { data, error } = await client.from('payments').select('*');
+  const { data, error } = await client.from('payment_transactions').select('*');
   handleError(error);
   return data;
 };
@@ -1365,7 +1365,7 @@ export const fetchPaymentByLocator = async (locator) => {
       seats,
       funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
       event:eventos(id, nombre),
-      user:profiles!usuario_id(id, login, empresa, telefono)
+      user:profiles!user_id(id, login, empresa, telefono)
     `;
 
     const fallbackSelect = `
@@ -1373,18 +1373,18 @@ export const fetchPaymentByLocator = async (locator) => {
       seats,
       funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
       event:eventos(id, nombre),
-      user:profiles!usuario_id(id, login, telefono)
+      user:profiles!user_id(id, login, telefono)
     `;
 
     let { data, error } = await client
-      .from('payments')
+      .from('payment_transactions')
       .select(baseSelect)
       .eq('locator', locator)
       .maybeSingle();
 
     if (error && error.code === '42703') {
       const fallbackResult = await client
-        .from('payments')
+        .from('payment_transactions')
         .select(fallbackSelect)
         .eq('locator', locator)
         .maybeSingle();
@@ -1439,9 +1439,9 @@ export const fetchPaymentBySeat = async (funcionId, seatId) => {
   try {
     // Buscar pagos que contengan el asiento específico usando múltiples estrategias
     let query = client
-      .from('payments')
-      .select('*, seats, funcion, event:eventos(*), user:profiles!usuario_id(*)')
-      .eq('funcion', funcionId);
+      .from('payment_transactions')
+      .select('*, seats, funcion_id, event:eventos(*), user:profiles!user_id(*)')
+      .eq('funcion_id', funcionId);
     
     // Usar contains para buscar en el array de seats - corregir el formato
     const { data, error } = await query
@@ -1461,9 +1461,9 @@ export const fetchPaymentBySeat = async (funcionId, seatId) => {
       
       // Obtener todos los pagos para esta función y buscar manualmente
       const { data: allPayments, error: allError } = await client
-        .from('payments')
-        .select('*, seats, funcion, event:eventos(*), user:profiles!usuario_id(*)')
-        .eq('funcion', funcionId);
+        .from('payment_transactions')
+        .select('*, seats, funcion_id, event:eventos(*), user:profiles!user_id(*)')
+        .eq('funcion_id', funcionId);
       
       if (allError) {
         console.error('🔍 [fetchPaymentBySeat] Error obteniendo todos los pagos:', allError);
@@ -1544,7 +1544,7 @@ export const fetchPaymentsByUserEmail = async (email) => {
       seats,
       funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
       event:eventos(id, nombre),
-      user:profiles!usuario_id(id, login, empresa, telefono)
+      user:profiles!user_id(id, login, empresa, telefono)
     `;
 
     const paymentsFallbackSelect = `
@@ -1552,21 +1552,21 @@ export const fetchPaymentsByUserEmail = async (email) => {
       seats,
       funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
       event:eventos(id, nombre),
-      user:profiles!usuario_id(id, login, telefono)
+      user:profiles!user_id(id, login, telefono)
     `;
 
     let { data: payments, error: paymentsError } = await client
-      .from('payments')
+      .from('payment_transactions')
       .select(paymentsBaseSelect)
-      .eq('usuario_id', user.id)
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
     if (paymentsError && paymentsError.code === '42703') {
       console.warn('🔍 [fetchPaymentsByUserEmail] Columna empresa ausente en payments.user, aplicando fallback');
       const fallbackPayments = await client
-        .from('payments')
+        .from('payment_transactions')
         .select(paymentsFallbackSelect)
-        .eq('usuario_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       payments = (fallbackPayments.data || []).map(payment => ({

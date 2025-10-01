@@ -40,10 +40,10 @@ class SeatPaymentChecker {
       
       const { data: transactions, error: transactionsError } = await supabase
         .from('payment_transactions')
-        .select('id, status, seats, user_id, usuario_id, locator')
+        .select('id, status, seats, user_id, locator')
         .eq('funcion_id', funcionId)
         .eq('status', 'completed')
-        .or(`user_id.eq.${sessionId},usuario_id.eq.${sessionId}`);
+        .eq('user_id', sessionId);
 
       if (transactionsError) {
         console.error('❌ [SEAT_PAYMENT_CHECKER] Error checking payment_transactions:', transactionsError);
@@ -55,8 +55,7 @@ class SeatPaymentChecker {
           for (const transaction of transactions) {
             console.log('🔍 [SEAT_PAYMENT_CHECKER] Verificando transacción:', { 
               id: transaction.id, 
-              user_id: transaction.user_id, 
-              usuario_id: transaction.usuario_id,
+              user_id: transaction.user_id,
               seats: transaction.seats 
             });
             
@@ -86,7 +85,7 @@ class SeatPaymentChecker {
       
       const { data: allTransactions, error: allTransactionsError } = await supabase
         .from('payment_transactions')
-        .select('id, status, seats, user_id, usuario_id, locator')
+        .select('id, status, seats, user_id, locator')
         .eq('funcion_id', funcionId)
         .eq('status', 'completed');
 
@@ -161,7 +160,7 @@ class SeatPaymentChecker {
       // 2. Verificar en payment_transactions
       const { data: transactions, error: transactionsError } = await supabase
         .from('payment_transactions')
-        .select('id, status, seats, user_id, usuario_id, locator')
+        .select('id, status, seats, user_id, locator')
         .eq('funcion_id', funcionId)
         .eq('status', 'completed');
 

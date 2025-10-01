@@ -89,8 +89,8 @@ export const useClientManagement = (setCarrito) => {
     setSearchLoading(true);
     try {
       const { data, error } = await supabase
-        .from('payments')
-        .select(`*, user:profiles!usuario_id(*), event:eventos(*), funcion:funciones(*)`)
+        .from('payment_transactions')
+        .select(`*, user:profiles!user_id(*), event:eventos(*), funcion:funciones(*)`)
         .eq('locator', locator)
         .single();
 
@@ -147,7 +147,7 @@ export const useClientManagement = (setCarrito) => {
     setSearchLoading(true);
     try {
       const { data, error } = await supabase
-        .from('payments')
+        .from('payment_transactions')
         .select('*')
         .or(`locator.ilike.%${searchTerm}%,discountCode.ilike.%${searchTerm}%`);
 

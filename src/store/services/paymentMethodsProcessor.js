@@ -146,7 +146,6 @@ const createTransactionAndSyncSeats = async (method, paymentData, options = {}) 
       ...payloadWithoutUser,
       user: payload.userId ?? null,
       user_id: payload.userId ?? null,
-      usuario_id: payload.userId ?? null,
       status: options.transactionStatus || 'pending',
       created_at: new Date().toISOString(),
     };

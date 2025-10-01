@@ -197,10 +197,10 @@ class ScheduledReportsService {
       switch (reportType) {
         case 'sales':
           query = supabase
-            .from('payments')
+            .from('payment_transactions')
             .select(`
               *,
-              user:profiles!usuario_id(*),
+              user:profiles!user_id(*),
               event:eventos(*)
             `)
             .eq('status', 'pagado');
@@ -224,10 +224,10 @@ class ScheduledReportsService {
           
         case 'payments':
           query = supabase
-            .from('payments')
+            .from('payment_transactions')
             .select(`
               *,
-              user:profiles!usuario_id(*),
+              user:profiles!user_id(*),
               event:eventos(*)
             `);
           break;

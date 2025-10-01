@@ -307,9 +307,9 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         const existingPayment = seats.find(seat => seat.paymentId && seat.locator);
         
         const paymentData = {
-          usuario_id: selectedClient.id || selectedClient._id, // Cambiar user_id por usuario_id
-          event: eventId,
-          funcion: selectedFuncion.id || selectedFuncion._id,
+          user_id: selectedClient.id || selectedClient._id, // Usar user_id según el esquema
+          evento_id: eventId,
+          funcion_id: selectedFuncion.id || selectedFuncion._id,
           processed_by: isUuid(user?.id) ? user.id : null,
           seats: seats.map(item => ({
               id: item.id || item._id || item.sillaId,
@@ -351,9 +351,9 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
               await seatLocatorService.finalizeSeatsAfterPayment({
                 seats,
                 locator: paymentData.locator,
-                userId: paymentData.usuario_id || null,
+                userId: paymentData.user_id || null,
                 tenantId: user?.tenant_id || null,
-                funcionId: paymentData.funcion,
+                funcionId: paymentData.funcion_id,
                 status: seatStatus,
                 sessionId: seatLockSessionId,
               });

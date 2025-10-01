@@ -386,7 +386,7 @@ export const useSeatLockStore = create((set, get) => ({
         // 2. Cargar datos de payment_transactions (asientos vendidos)
         const { data: paymentData, error: paymentError } = await supabase
           .from('payment_transactions')
-          .select('seats, user_id, usuario_id, status')
+          .select('seats, user_id, status')
           .eq('funcion_id', funcionId)
           .eq('status', 'completed');
 
@@ -416,7 +416,7 @@ export const useSeatLockStore = create((set, get) => ({
                   if (seatId) {
                     soldSeats.set(seatId, {
                       status: 'vendido',
-                      user_id: payment.user_id || payment.usuario_id,
+                      user_id: payment.user_id,
                       payment_status: payment.status
                     });
                   }

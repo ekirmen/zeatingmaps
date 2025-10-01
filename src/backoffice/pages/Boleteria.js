@@ -256,7 +256,7 @@ const Boleteria = () => {
             status: normalizedStatus,
             lock_type: 'seat',
             locator: payment.locator || null,
-            session_id: payment.usuario_id || payment.user_id || null,
+            session_id: payment.user_id || null,
             precio: Number.isFinite(precio) ? precio : null,
             zona_id: zonaId,
             zona_nombre: zonaNombre,
@@ -272,7 +272,7 @@ const Boleteria = () => {
       try {
         const { data, error } = await supabase
           .from('payment_transactions')
-          .select('id, seats, status, locator, user_id, usuario_id')
+          .select('id, seats, status, locator, user_id')
           .eq('funcion_id', funcionId)
           .in('status', ['pagado', 'reservado', 'anulado', 'vendido', 'bloqueado']);
 

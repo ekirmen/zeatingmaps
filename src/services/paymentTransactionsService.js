@@ -24,9 +24,9 @@ export const createPaymentTransaction = async (transactionData) => {
         gateway_name: transactionData.gatewayName,
         seats: transactionData.seats || null,
         monto: transactionData.amount,
-        usuario_id: transactionData.userId,
-        event: transactionData.eventoId,
-        funcion: transactionData.funcionId,
+        user_id: transactionData.userId,
+        evento_id: transactionData.eventoId,
+        funcion_id: transactionData.funcionId,
         processed_by: transactionData.processedBy,
         payment_gateway_id: transactionData.gatewayId
       })

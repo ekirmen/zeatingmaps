@@ -468,9 +468,7 @@ export const createPaymentTransaction = async (transactionData) => {
       payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
       gateway_name: gatewayName,
       seats: transactionData.seats || transactionData.items || null,
-      user: userId || null,
-      usuario_id: userId,
-      event: transactionData.eventoId
+      user: userId || null
     };
 
     if (transactionData.payments) {

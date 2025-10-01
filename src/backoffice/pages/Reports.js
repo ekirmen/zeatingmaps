@@ -113,10 +113,10 @@ const Reports = () => {
   const loadSalesReport = async () => {
     try {
       let query = supabase
-        .from('payments')
+        .from('payment_transactions')
         .select(`
           *,
-          user:profiles!usuario_id(*),
+          user:profiles!user_id(*),
           event:eventos(*)
         `)
         .eq('status', 'pagado');
@@ -190,10 +190,10 @@ const Reports = () => {
   const loadPaymentsReport = async () => {
     try {
       let query = supabase
-        .from('payments')
+        .from('payment_transactions')
         .select(`
           *,
-          user:profiles!usuario_id(*),
+          user:profiles!user_id(*),
           event:eventos(*)
         `);
 

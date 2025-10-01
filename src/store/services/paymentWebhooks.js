@@ -197,8 +197,8 @@ const updateSeatsStatus = async (orderId, status) => {
   try {
     // Obtener detalles del pedido
     const { data: order, error: orderError } = await supabase
-      .from('payments')
-      .select('seats, funcion')
+      .from('payment_transactions')
+      .select('seats, funcion_id')
       .eq('id', orderId)
       .single();
 
