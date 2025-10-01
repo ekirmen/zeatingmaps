@@ -37,6 +37,13 @@ export const useBoleteria = () => {
   const [funciones, setFunciones] = useState([]);
   const [selectedPlantilla, setSelectedPlantilla] = useState(null);
   const [mapa, setMapa] = useState(null);
+
+  // Cargar estado inicial desde el store persistente
+  useEffect(() => {
+    console.log('🔄 [useBoleteria] Cargando estado inicial desde store...');
+    console.log('🔍 [useBoleteria] selectedEvent desde store:', selectedEvent);
+    console.log('🔍 [useBoleteria] selectedFuncion desde store:', selectedFuncion);
+  }, [selectedEvent, selectedFuncion]);
   const [zonas, setZonas] = useState([]);
   const [carrito, setCarrito] = useState(() => {
     // Cargar carrito desde localStorage al inicializar
@@ -672,9 +679,12 @@ export const useBoleteria = () => {
         
         // Si hay un evento guardado en localStorage, también verificar si hay función guardada
         const storedFunctionId = localStorage.getItem(FUNC_KEY);
-        if (storedFunctionId && !selectedFuncion) {
+        if (storedFunctionId) {
           console.log('🔄 [useBoleteria] Función guardada encontrada, cargando mapa...');
-          await handleFunctionSelect(storedFunctionId);
+          // Esperar un poco para que el evento se haya cargado completamente
+          setTimeout(async () => {
+            await handleFunctionSelect(storedFunctionId);
+          }, 100);
         }
 
       } catch (err) {

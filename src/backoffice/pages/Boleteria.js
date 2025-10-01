@@ -32,6 +32,14 @@ const Boleteria = () => {
     setSelectedEvent
   } = useBoleteria();
 
+  // Debug: Log del estado actual
+  console.log('🎫 [Boleteria] Estado actual:', {
+    selectedEvent: selectedEvent?.id,
+    selectedFuncion: selectedFuncion?.id,
+    eventosCount: eventos?.length,
+    funcionesCount: funciones?.length
+  });
+
   const [foundSeats, setFoundSeats] = useState([]);
 
   const {
