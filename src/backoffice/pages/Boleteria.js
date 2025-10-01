@@ -4,7 +4,6 @@ import { AiOutlineLeft } from 'react-icons/ai';
 
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
-import ZonesAndPrices from './CompBoleteria/ZonesAndPricesSimple';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
@@ -412,49 +411,6 @@ const Boleteria = () => {
     setClientAbonos
   ]);
 
-  const zonesAndPricesProps = useMemo(() => ({
-    eventos,
-    selectedEvent,
-    onEventSelect: handleEventSelect,
-    setSelectedEvent,
-    funciones,
-    onShowFunctions: () => setIsFunctionsModalVisible(true),
-    selectedFuncion,
-    onFunctionSelect: handleFunctionSelect,
-    setSelectedFuncion: handleFunctionSelect,
-    carrito,
-    setCarrito,
-    selectedPlantilla,
-    setSelectedPlantilla,
-    selectedClient,
-    setSelectedClient,
-    abonos: clientAbonos,
-    selectedAffiliate,
-    setSelectedAffiliate,
-    showSeatingMap: true,
-    plantillas: [], // Plantillas adicionales (placeholder por ahora)
-    zonas,
-    mapa
-  }), [
-    eventos,
-    selectedEvent,
-    handleEventSelect,
-    setSelectedEvent,
-    funciones,
-    selectedFuncion,
-    handleFunctionSelect,
-    carrito,
-    setCarrito,
-    selectedPlantilla,
-    setSelectedPlantilla,
-    selectedClient,
-    setSelectedClient,
-    clientAbonos,
-    selectedAffiliate,
-    setSelectedAffiliate,
-    zonas,
-    mapa
-  ]);
 
   const cartProps = useMemo(() => ({
     carrito,
@@ -550,7 +506,7 @@ const Boleteria = () => {
       <div className="flex-1 flex overflow-hidden min-w-0">
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header minimalista - Búsqueda de evento y función */}
+          {/* Header con información del evento */}
           <div className="bg-white border-b border-gray-200 px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -571,9 +527,70 @@ const Boleteria = () => {
             </div>
           </div>
 
-          {/* Zonas y precios - Minimalista */}
-          <div className="bg-gray-50 border-b border-gray-200 px-4 py-2">
-            <ZonesAndPrices {...zonesAndPricesProps} />
+          {/* Navegación con botones estilo tabs */}
+          <div className="bg-white border-b border-gray-200">
+            <div className="flex items-center justify-between px-4 py-2">
+              {/* Botón para abrir panel lateral */}
+              <div className="flex items-center">
+                <button 
+                  className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                  title="Abrir panel"
+                >
+                  <span className="w-4 h-4 bg-gray-400 rounded"></span>
+                </button>
+              </div>
+
+              {/* Botones de navegación principales */}
+              <div className="flex space-x-1">
+                <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
+                  <i className="mr-2">🏷️</i>
+                  Zonas
+                </button>
+                <button className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md">
+                  <i className="mr-2">🗺️</i>
+                  Mapa
+                </button>
+                <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
+                  <i className="mr-2">🍔</i>
+                  Productos
+                </button>
+                <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
+                  <i className="mr-2">⚙️</i>
+                  Otros
+                </button>
+              </div>
+
+              {/* Botones secundarios */}
+              <div className="flex items-center space-x-2">
+                <button className="p-2 hover:bg-gray-100 rounded-md transition-colors" title="Cliente">
+                  <i className="text-lg">👤</i>
+                </button>
+                <button className="p-2 hover:bg-gray-100 rounded-md transition-colors" title="Fidelización">
+                  <i className="text-lg">💳</i>
+                </button>
+                <button className="p-2 hover:bg-gray-100 rounded-md transition-colors" title="Información">
+                  <i className="text-lg">ℹ️</i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Sección de precios con botones deslizables */}
+          <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
+            <div className="flex space-x-3 overflow-x-auto">
+              <button className="flex-shrink-0 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium">
+                <div className="text-sm">PRECIO GENERAL</div>
+                <div className="text-xs opacity-90">$27.50 - $132.00</div>
+              </button>
+              <button className="flex-shrink-0 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors">
+                <div className="text-sm">SOCIOS 10%</div>
+                <div className="text-xs opacity-70">$27.50 - $89.10</div>
+              </button>
+              <button className="flex-shrink-0 px-4 py-2 bg-orange-200 text-orange-800 rounded-lg font-medium">
+                <div className="text-sm">CORTESIAS</div>
+                <div className="text-xs opacity-70">$0.00</div>
+              </button>
+            </div>
           </div>
 
           {/* Mapa de asientos */}
