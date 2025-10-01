@@ -18,6 +18,7 @@ import { supabase } from '../../supabaseClient';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import { fetchPaymentBySeat } from '../services/apibackoffice';
 import downloadTicket from '../../utils/downloadTicket';
+import { Tabs } from 'antd';
 
 const { TabPane } = Tabs;
 
