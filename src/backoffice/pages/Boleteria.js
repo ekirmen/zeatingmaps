@@ -359,6 +359,13 @@ const Boleteria = () => {
       const sillaId = silla._id || silla.id;
       if (!sillaId || !selectedFuncion) return;
 
+      // Verificar que se haya seleccionado un tipo de entrada
+      if (!selectedEntradaId) {
+        console.warn('⚠️ [Boleteria] No se ha seleccionado un tipo de entrada');
+        // Aquí podrías mostrar un mensaje al usuario
+        return;
+      }
+
       // En modo boletería simplificado, no verificamos bloqueos aquí
       // Los bloqueos se manejan por separado con botones específicos
 
@@ -379,13 +386,27 @@ const Boleteria = () => {
           detalle = [];
         }
       }
+      
+      // Buscar el precio basado en la zona Y el tipo de entrada seleccionado
       const detalleZona = Array.isArray(detalle)
+        ? detalle.find(d => 
+            (d.zonaId || d.zona?.id || d.zona) === zonaId && 
+            (d.entradaId || d.productoId) === selectedEntradaId
+          )
+        : null;
+      
+      // Si no se encuentra con el tipo de entrada seleccionado, usar el primer precio de la zona
+      const detalleZonaFallback = Array.isArray(detalle)
         ? detalle.find(d => (d.zonaId || d.zona?.id || d.zona) === zonaId)
         : null;
-      const precio = Number(detalleZona?.precio) || 0;
+      
+      const detalleFinal = detalleZona || detalleZonaFallback;
+      const precio = Number(detalleFinal?.precio) || 0;
 
-      const tipoPrecio = detalleZona?.tipoEntrada || detalleZona?.tipo || 'general';
-      const descuentoNombre = detalleZona?.descuentoNombre || detalleZona?.descuento || '';
+      // Obtener información del tipo de entrada seleccionado
+      const entradaSeleccionada = priceOptions?.find(option => option.entradaId === selectedEntradaId);
+      const tipoPrecio = entradaSeleccionada?.nombre || detalleFinal?.tipoEntrada || detalleFinal?.tipo || 'general';
+      const descuentoNombre = detalleFinal?.descuentoNombre || detalleFinal?.descuento || '';
       const seatName = silla.nombre || silla.numero || silla.label || silla._id || `Asiento ${sillaId}`;
       const nombreMesa = silla.nombreMesa || silla.mesa_nombre || silla.mesaNombre || silla.tableName || '';
       const funcionId = selectedFuncion?.id || selectedFuncion?._id || null;
@@ -404,7 +425,9 @@ const Boleteria = () => {
         funcionId,
         funcionFecha,
         nombreMesa,
-        precioInfo: detalleZona || null,
+        precioInfo: detalleFinal || null,
+        entradaId: selectedEntradaId,
+        entradaNombre: entradaSeleccionada?.nombre || 'General',
         timestamp: Date.now(),
         modoVenta: 'boleteria'
       };
@@ -428,7 +451,7 @@ const Boleteria = () => {
         }
       }
     },
-    [selectedFuncion, mapa, selectedPlantilla, toggleSeat, carrito, lockSeat, unlockSeat]
+    [selectedFuncion, mapa, selectedPlantilla, selectedEntradaId, priceOptions, toggleSeat, carrito, lockSeat, unlockSeat]
   );
 
   const allTicketsPaid = carrito.length > 0 && carrito.every(ticket => ticket.pagado);
@@ -575,7 +598,7 @@ const Boleteria = () => {
       <div className="flex flex-col w-full max-w-xs md:max-w-sm lg:w-64 min-w-[12rem] bg-white border-r border-gray-200">
         <div className="p-1 border-b border-gray-200">
           <button
-            onClick={() => window.history.back()}
+            onClick={() => window.location.href = '/dashboard'}
             className="flex items-center gap-1 text-gray-700 hover:text-gray-900 text-xs"
           >
             <AiOutlineLeft className="text-xs" />
