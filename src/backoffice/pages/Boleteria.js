@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { message, Modal, Button, Tabs } from 'antd';
+import { message, Modal, Button } from 'antd';
 import { AiOutlineLeft } from 'react-icons/ai';
 
 import LeftMenu from './CompBoleteria/LeftMenu';
@@ -39,7 +39,7 @@ const Boleteria = () => {
   } = useBoleteria();
 
   const [foundSeats, setFoundSeats] = useState([]);
-  const [activeTab, setActiveTab] = useState('compact'); // Cambiar a 'compact' por defecto
+  const [activeTab, setActiveTab] = useState('map'); // Solo mapa interactivo
 
   const {
     selectedClient,
@@ -529,89 +529,62 @@ const Boleteria = () => {
 
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Tabs para cambiar entre vistas */}
+        {/* Menú superior - Gestión de zonas y precios */}
         <div className="bg-white border-b border-gray-200">
-          <Tabs
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            className="px-4 overflow-x-auto"
-          >
-            <TabPane tab="🎫 Vista Compacta" key="compact" />
-            <TabPane tab="🗺️ Mapa Interactivo" key="map" />
-          </Tabs>
+          <div className="p-4">
+            <ZonesAndPrices {...zonesAndPricesProps} />
+          </div>
         </div>
 
-        {/* Área de trabajo principal */}
+        {/* Carrito de compras */}
+        <div className="bg-white border-b border-gray-200">
+          <div className="p-4">
+            <Cart {...cartProps}>
+              {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
+            </Cart>
+          </div>
+        </div>
+
+        {/* Área de trabajo principal - Solo mapa interactivo */}
         <div className="flex-1 overflow-hidden">
-          {activeTab === 'compact' ? (
-            // Vista compacta - todo en una pantalla
-            <div className="h-full overflow-auto min-w-0">
-              {console.log('🎫 [Boleteria] Renderizando vista compacta')}
-              <CompactBoleteria
-                selectedFuncion={selectedFuncion}
-                mapa={mapa}
-              />
-            </div>
-          ) : (
-            // Vista con mapa interactivo
-            <div className="flex h-full flex-col xl:flex-row overflow-hidden">
-              {console.log('🎫 [Boleteria] Renderizando vista mapa interactivo')}
-              {/* Panel izquierdo - Zonas y precios */}
-              <div className="w-full xl:w-80 bg-white border-b xl:border-b-0 xl:border-r border-gray-200 overflow-auto">
-                <div className="p-4">
-                  <ZonesAndPrices {...zonesAndPricesProps} />
+          <div className="h-full bg-white overflow-hidden">
+            {console.log('🎫 [Boleteria] Renderizando vista mapa interactivo')}
+            {selectedFuncion && mapa ? (
+              <div className="h-full flex flex-col">
+                <div className="p-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold">Mapa de Asientos - {selectedFuncion.nombre || 'Función'}</h3>
+                  <p className="text-sm text-gray-600">
+                    🟢 Disponible | 🟡 Seleccionado | 🔴 Vendido | 🟣 Reservado | ⚫ Bloqueado
+                  </p>
+                </div>
+                <div className="flex-1 p-4 overflow-auto">
+                  <SeatingMapUnified
+                    funcionId={selectedFuncion?.id || selectedFuncion?._id}
+                    mapa={mapa}
+                    zonas={mapa?.zonas || []}
+                    selectedFuncion={selectedFuncion}
+                    selectedEvent={selectedEvent}
+                    onSeatToggle={handleSeatToggle}
+                    foundSeats={foundSeats}
+                    selectedSeats={selectedSeatIds}
+                    lockedSeats={permanentLocks}
+                    modoVenta={true}
+                    showPrices={true}
+                    showZones={true}
+                    showLegend={true}
+                    allowSeatSelection={true}
+                    debug={true}
+                    isSeatLocked={isSeatLocked}
+                    isSeatLockedByMe={isSeatLockedByMe}
+                  />
                 </div>
               </div>
-
-              {/* Panel central - Mapa de asientos */}
-              <div className="flex-1 bg-white overflow-hidden min-w-0">
-                {selectedFuncion && mapa ? (
-                  <div className="h-full flex flex-col">
-                    <div className="p-4 border-b border-gray-200">
-                      <h3 className="text-lg font-semibold">Mapa de Asientos - {selectedFuncion.nombre || 'Función'}</h3>
-                      <p className="text-sm text-gray-600">
-                        🟢 Disponible | 🟡 Seleccionado | 🔴 Vendido | 🟣 Reservado | ⚫ Bloqueado
-                      </p>
-                    </div>
-                    <div className="flex-1 p-4 overflow-auto">
-                      <SeatingMapUnified
-                        funcionId={selectedFuncion?.id || selectedFuncion?._id}
-                        mapa={mapa}
-                        zonas={mapa?.zonas || []}
-                        selectedFuncion={selectedFuncion}
-                        selectedEvent={selectedEvent}
-                        onSeatToggle={handleSeatToggle}
-                        foundSeats={foundSeats}
-                        selectedSeats={selectedSeatIds}
-                        lockedSeats={permanentLocks}
-                        modoVenta={true}
-                        showPrices={true}
-                        showZones={true}
-                        showLegend={true}
-                        allowSeatSelection={true}
-                        debug={true}
-                        isSeatLocked={isSeatLocked}
-                        isSeatLockedByMe={isSeatLockedByMe}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-gray-500">
-                    Selecciona una función para ver el mapa de asientos
-                  </div>
-                )}
+            ) : (
+              <div className="h-full flex items-center justify-center text-gray-500">
+                Selecciona una función para ver el mapa de asientos
               </div>
-
-              {/* Panel derecho - Carrito */}
-              <div className="w-full xl:w-96 bg-white border-t xl:border-t-0 xl:border-l border-gray-200 flex flex-col">
-                <div className="flex-1 min-h-0">
-                  <Cart {...cartProps}>
-                    {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
-                  </Cart>
-                </div>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

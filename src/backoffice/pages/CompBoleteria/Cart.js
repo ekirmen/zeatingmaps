@@ -93,18 +93,19 @@ const Cart = ({
   }, [setCarrito]);
 
   const handleBlockAction = useCallback(async () => {
-    const seatsToBlock = safeCarrito.filter(i => i.isBlocked);
+    if (!safeCarrito.length) {
+      message.warning('No hay asientos en el carrito para bloquear');
+      return;
+    }
 
     try {
-      if (seatsToBlock.length) {
-        // Los asientos ya están bloqueados en tiempo real, solo actualizar en BD
-        await Promise.all(
-          seatsToBlock.map(seat => 
-            createOrUpdateSeat(seat._id, { estado: 'bloqueado' })
-          )
-        );
-        message.success('Asientos bloqueados correctamente');
-      }
+      // Bloquear todos los asientos del carrito
+      await Promise.all(
+        safeCarrito.map(seat => 
+          createOrUpdateSeat(seat._id || seat.id || seat.sillaId, { estado: 'bloqueado' })
+        )
+      );
+      message.success(`${safeCarrito.length} asiento(s) bloqueado(s) correctamente`);
     } catch (error) {
       console.error('Error blocking seats:', error);
       message.error('Error al bloquear asientos');
