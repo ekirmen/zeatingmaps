@@ -20,7 +20,7 @@ export const useClientManagement = (setCarrito) => {
       // Usar directamente la tabla profiles
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, login, nombre, apellido, telefono, empresa, email')
+        .select('id, login, nombre, apellido, telefono, email')
         .or(`login.ilike.%${searchTerm}%,nombre.ilike.%${searchTerm}%,apellido.ilike.%${searchTerm}%,telefono.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
 
       if (error) {
@@ -36,7 +36,6 @@ export const useClientManagement = (setCarrito) => {
         nombre: p.nombre,
         apellido: p.apellido,
         telefono: p.telefono,
-        empresa: p.empresa,
         email: p.email || '',
       }));
     } catch (error) {

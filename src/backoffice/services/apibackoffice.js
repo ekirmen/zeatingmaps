@@ -1365,7 +1365,7 @@ export const fetchPaymentByLocator = async (locator) => {
       seats,
       funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
       event:eventos(id, nombre),
-      user:profiles!user_id(id, login, empresa, telefono)
+      user:profiles!user_id(id, login, telefono)
     `;
 
     const fallbackSelect = `
@@ -1393,7 +1393,7 @@ export const fetchPaymentByLocator = async (locator) => {
         ? {
             ...fallbackResult.data,
             user: fallbackResult.data.user
-              ? { ...fallbackResult.data.user, empresa: null }
+              ? { ...fallbackResult.data.user }
               : null
           }
         : null;
@@ -1507,7 +1507,7 @@ export const fetchPaymentsByUserEmail = async (email) => {
     // Primero buscar el usuario por email
     const userResult = await client
       .from('profiles')
-      .select('id, login, empresa, telefono')
+      .select('id, login, telefono')
       .eq('login', email)
       .maybeSingle();
 
@@ -1515,7 +1515,7 @@ export const fetchPaymentsByUserEmail = async (email) => {
     let userError = userResult.error;
 
     if (userError && userError.code === '42703') {
-      console.warn('🔍 [fetchPaymentsByUserEmail] Columna empresa ausente en profiles, aplicando fallback');
+      console.warn('🔍 [fetchPaymentsByUserEmail] Error en profiles, aplicando fallback');
       const fallbackUser = await client
         .from('profiles')
         .select('id, login, telefono')
@@ -1523,7 +1523,7 @@ export const fetchPaymentsByUserEmail = async (email) => {
         .maybeSingle();
 
       user = fallbackUser.data
-        ? { ...fallbackUser.data, empresa: null }
+        ? { ...fallbackUser.data }
         : null;
       userError = fallbackUser.error;
     }
@@ -1544,7 +1544,7 @@ export const fetchPaymentsByUserEmail = async (email) => {
       seats,
       funcion:funciones(id, fecha_celebracion, evento:eventos(id, nombre)),
       event:eventos(id, nombre),
-      user:profiles!user_id(id, login, empresa, telefono)
+      user:profiles!user_id(id, login, telefono)
     `;
 
     const paymentsFallbackSelect = `
@@ -1562,7 +1562,7 @@ export const fetchPaymentsByUserEmail = async (email) => {
       .order('created_at', { ascending: false });
 
     if (paymentsError && paymentsError.code === '42703') {
-      console.warn('🔍 [fetchPaymentsByUserEmail] Columna empresa ausente en payments.user, aplicando fallback');
+      console.warn('🔍 [fetchPaymentsByUserEmail] Error en payments.user, aplicando fallback');
       const fallbackPayments = await client
         .from('payment_transactions')
         .select(paymentsFallbackSelect)
@@ -1572,7 +1572,7 @@ export const fetchPaymentsByUserEmail = async (email) => {
       payments = (fallbackPayments.data || []).map(payment => ({
         ...payment,
         user: payment.user
-          ? { ...payment.user, empresa: payment.user.empresa ?? null }
+          ? { ...payment.user }
           : null
       }));
       paymentsError = fallbackPayments.error;

@@ -219,7 +219,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
       // Fetch the related profile data using the user id
       const profileResult = await supabase
         .from('profiles')
-        .select('id, login, telefono, empresa')
+        .select('id, login, telefono')
         .eq('id', userResp.user.id)
         .maybeSingle();
 
@@ -234,7 +234,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
           .maybeSingle();
 
         profileData = fallbackResult.data
-          ? { ...fallbackResult.data, empresa: null }
+          ? { ...fallbackResult.data }
           : null;
         profileError = fallbackResult.error;
       }
@@ -360,7 +360,7 @@ const LeftMenu = ({ onAddClientClick, selectedClient, onClientRemove, setCarrito
                   <div className="font-semibold">
                     {userData.login || userData.nombre || userData.email || 'Cliente sin nombre'}
                   </div>
-                  <div className="text-sm text-gray-500">{userData.empresa || userData.email || userData.telefono || 'Sin datos de contacto'}</div>
+                  <div className="text-sm text-gray-500">{userData.email || userData.telefono || 'Sin datos de contacto'}</div>
                 </div>
                 <div className="flex gap-2">
                   <Button size="small" icon={<AiOutlineEdit />} onClick={() => setIsAccountModalVisible(true)} />

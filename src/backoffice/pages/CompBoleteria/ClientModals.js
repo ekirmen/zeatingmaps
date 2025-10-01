@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, Input, Table, Tag, Tabs, Form, Button, Divider, message } from 'antd';
-import { AiOutlineSearch, AiOutlineUserAdd } from 'react-icons/ai';
+import { Modal, Input, Table, Button, message } from 'antd';
+import { AiOutlineUserAdd } from 'react-icons/ai';
 import { supabase, supabaseAdmin } from '../../../supabaseClient';
 
 const ClientModals = ({
@@ -21,13 +21,17 @@ const ClientModals = ({
     searchLoading
   });
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('search');
-  const [form] = Form.useForm();
+  const [isAddingAccount, setIsAddingAccount] = useState(false);
+  const [newClientForm, setNewClientForm] = useState({
+    nombre: '',
+    email: '',
+    telefono: ''
+  });
 
   const handleSearch = async () => {
     console.log('🔍 [ClientModals] Iniciando búsqueda con término:', searchTerm);
     if (!searchTerm.trim()) {
-      message.warning('Please enter a search term');
+      message.warning('Por favor ingresa un término de búsqueda');
       return;
     }
 
@@ -54,116 +58,75 @@ const ClientModals = ({
         }));
 
         if (mappedResults.length === 0) {
-          message.info('No clients found with that criteria');
+          message.info('No se encontraron clientes con ese criterio');
         }
       }
     } catch (error) {
       console.error('Search error:', error);
-      message.error(error.message || 'Search error');
+      message.error(error.message || 'Error en la búsqueda');
     }
   };
 
   const resetSearch = () => {
     setSearchTerm('');
+    setIsAddingAccount(false);
+    setNewClientForm({ nombre: '', email: '', telefono: '' });
     if (typeof clearSearchResults === 'function') clearSearchResults();
   };
 
-  const handleAddClient = async (values) => {
-    if (onAddClient) {
-      try {
-        await onAddClient(values);
-        form.resetFields();
-        setActiveTab('search');
-      } catch (error) {
-        console.error('Error creating client:', error);
-        message.error(`Error al crear el usuario: ${error.message}`);
-      }
-    } else {
-      // Fallback to direct creation if onAddClient is not provided
-      if (!supabaseAdmin) {
-        message.error('Admin client not available. Cannot create user.');
-        console.error('Admin client (supabaseAdmin) is not initialized. Ensure Service Role Key is configured.');
-        return;
-      }
+  const handleAddClient = async () => {
+    if (!newClientForm.nombre || !newClientForm.email) {
+      message.warning('Por favor completa todos los campos obligatorios');
+      return;
+    }
 
-      try {
-        const { data: userResp, error } = await supabaseAdmin.auth.admin.createUser({
-          email: values.email,
-          password: values.password || 'defaultPassword',
-          email_confirm: true,
-          user_metadata: { password_set: !!values.password },
-        });
+    if (!supabaseAdmin) {
+      message.error('Cliente admin no disponible. No se puede crear usuario.');
+      console.error('Admin client (supabaseAdmin) is not initialized. Ensure Service Role Key is configured.');
+      return;
+    }
 
-        if (error) throw error;
+    try {
+      const { data: userResp, error } = await supabaseAdmin.auth.admin.createUser({
+        email: newClientForm.email,
+        password: 'defaultPassword',
+        email_confirm: true,
+        user_metadata: { password_set: false },
+      });
 
-        await new Promise((res) => setTimeout(res, 1500));
+      if (error) throw error;
 
-        const { data: profileData, error: profileError } = await supabaseAdmin
-          .from('profiles')
-          .update({
-            login: values.email,
-            nombre: values.nombre,
-            telefono: values.telefono,
-            permisos: { role: 'usuario' },
-          })
-          .eq('id', userResp.user.id)
-          .select()
-          .single();
+      await new Promise((res) => setTimeout(res, 1500));
 
-        if (profileError) throw profileError;
+      const { data: profileData, error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .update({
+          login: newClientForm.email,
+          nombre: newClientForm.nombre,
+          telefono: newClientForm.telefono,
+          permisos: { role: 'usuario' },
+        })
+        .eq('id', userResp.user.id)
+        .select()
+        .single();
 
-        message.success('Usuario creado con éxito');
-        form.resetFields();
-        setActiveTab('search');
-      } catch (error) {
-        console.error('Error creating client:', error);
-        message.error(`Error al crear el usuario: ${error.message}`);
-      }
+      if (profileError) throw profileError;
+
+      message.success('Usuario creado con éxito');
+      setNewClientForm({ nombre: '', email: '', telefono: '' });
+      setIsAddingAccount(false);
+    } catch (error) {
+      console.error('Error creating client:', error);
+      message.error(`Error al crear el usuario: ${error.message}`);
     }
   };
 
-  const paymentColumns = [
-    {
-      title: 'Locator',
-      dataIndex: 'locator',
-      key: 'locator',
-      className: 'whitespace-nowrap',
-      ellipsis: true,
-    },
-    {
-      title: 'Amount',
-      dataIndex: 'amount',
-      key: 'amount',
-      render: (amount) => `$${amount.toFixed(2)}`,
-      className: 'text-right',
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => (
-        <Tag color={status === 'paid' ? 'green' : 'orange'}>
-          {status.toUpperCase()}
-        </Tag>
-      ),
-      className: 'whitespace-nowrap',
-    },
-    {
-      title: 'Date',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date) => new Date(date).toLocaleDateString(),
-      className: 'whitespace-nowrap',
-    },
-  ];
-
   const clientColumns = [
     {
-      title: 'Login',
+      title: 'Nombre',
       dataIndex: 'nombre',
       key: 'nombre',
       ellipsis: true,
-      className: 'whitespace-nowrap',
     },
     {
       title: 'Email',
@@ -172,13 +135,12 @@ const ClientModals = ({
       ellipsis: true,
     },
     {
-      title: 'Phone',
+      title: 'Teléfono',
       dataIndex: 'telefono',
       key: 'telefono',
-      className: 'whitespace-nowrap',
     },
     {
-      title: 'Actions',
+      title: 'Acción',
       key: 'actions',
       render: (_, record) => (
         <Button
@@ -186,7 +148,7 @@ const ClientModals = ({
           onClick={() => onClientSelect(record)}
           className="text-blue-600 hover:text-blue-800"
         >
-          Select
+          Seleccionar
         </Button>
       ),
       className: 'text-center',
@@ -194,120 +156,87 @@ const ClientModals = ({
     },
   ];
 
-  const items = [
-    {
-      key: 'search',
-      label: 'Search Clients',
-      children: (
-        <>
-          <Input.Search
-            placeholder="Search by name, email or phone"
-            enterButton={
-              <>
-                <AiOutlineSearch className="mr-1" /> Search
-              </>
-            }
-            size="large"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onSearch={handleSearch}
-            loading={searchLoading}
-            allowClear
-            className="mb-6"
-          />
-
-          {paymentResults?.length > 0 && (
-            <>
-              <Divider orientation="left">Payment Results</Divider>
-              <Table
-                columns={paymentColumns}
-                dataSource={paymentResults}
-                rowKey="_id"
-                pagination={{ pageSize: 5 }}
-                className="mb-6"
-                scroll={{ x: true }}
-                size="small"
-              />
-            </>
-          )}
-
-          {searchResults?.length > 0 && (
-            <>
-              <Divider orientation="left">Client Results</Divider>
-              <Table
-                columns={clientColumns}
-                dataSource={searchResults}
-                rowKey="_id"
-                pagination={{ pageSize: 5 }}
-                scroll={{ x: true }}
-                size="small"
-              />
-            </>
-          )}
-        </>
-      ),
-    },
-    {
-      key: 'add',
-      label: 'Add Client',
-      children: (
-        <Form form={form} layout="vertical" onFinish={handleAddClient} className="space-y-6">
-          <Form.Item
-            name="nombre"
-            label="Name"
-            rules={[{ required: true, message: 'Please input client name!' }]}
-          >
-            <Input className="rounded-md" />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: 'Please input client email!' },
-              { type: 'email', message: 'Please enter a valid email!' },
-            ]}
-          >
-            <Input className="rounded-md" />
-          </Form.Item>
-          <Form.Item
-            name="telefono"
-            label="Phone"
-            rules={[{ required: true, message: 'Please input client phone!' }]}
-          >
-            <Input className="rounded-md" />
-          </Form.Item>
-          <Form.Item>
-            <Button
-              type="default"
-              block
-              htmlType="submit"
-              icon={<AiOutlineUserAdd />}
-              className="bg-blue-500 text-white hover:bg-blue-600"
-            >
-              Add Client
-            </Button>
-          </Form.Item>
-        </Form>
-      ),
-    },
-  ];
-
   return (
     <Modal
-      title="Client Management"
+      title="Buscar Cuenta"
       open={isSearchModalVisible}
       onCancel={() => {
         resetSearch();
         onSearchCancel();
       }}
       footer={null}
-      width="90vw"
+      width={600}
       centered
-      styles={{ body: { padding: '1rem 1.5rem' } }}
-      destroyOnHidden // <-- Replaced destroyOnClose with destroyOnHidden
-      className="max-w-3xl mx-auto"
     >
-      <Tabs activeKey={activeTab} onChange={setActiveTab} items={items} />
+      <div className="space-y-4">
+        {/* Barra de búsqueda */}
+        <Input.Search
+          placeholder="Buscar por email"
+          enterButton="Buscar"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onSearch={handleSearch}
+          loading={searchLoading}
+          allowClear
+        />
+
+        {/* Botón para crear nueva cuenta */}
+        <Button 
+          type="default" 
+          block 
+          icon={<AiOutlineUserAdd />}
+          onClick={() => setIsAddingAccount(true)}
+        >
+          Crear nueva cuenta
+        </Button>
+
+        {/* Formulario para crear nueva cuenta */}
+        {isAddingAccount && (
+          <div className="border p-4 rounded-lg bg-gray-50 space-y-3">
+            <h4 className="font-medium">Crear Nueva Cuenta</h4>
+            <Input
+              placeholder="Nombre completo"
+              value={newClientForm.nombre}
+              onChange={(e) => setNewClientForm({...newClientForm, nombre: e.target.value})}
+            />
+            <Input
+              placeholder="Email"
+              type="email"
+              value={newClientForm.email}
+              onChange={(e) => setNewClientForm({...newClientForm, email: e.target.value})}
+            />
+            <Input
+              placeholder="Teléfono (opcional)"
+              value={newClientForm.telefono}
+              onChange={(e) => setNewClientForm({...newClientForm, telefono: e.target.value})}
+            />
+            <div className="flex gap-2">
+              <Button 
+                type="primary" 
+                onClick={handleAddClient}
+                disabled={!newClientForm.nombre || !newClientForm.email}
+              >
+                Crear
+              </Button>
+              <Button onClick={() => setIsAddingAccount(false)}>
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Tabla de resultados */}
+        {searchResults?.length > 0 && (
+          <Table
+            columns={clientColumns}
+            dataSource={searchResults}
+            rowKey="_id"
+            pagination={{ pageSize: 5 }}
+            scroll={{ x: true }}
+            size="small"
+          />
+        )}
+      </div>
     </Modal>
   );
 };
