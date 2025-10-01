@@ -485,19 +485,19 @@ const Boleteria = () => {
       {console.log('🎫 [Boleteria] Selected function:', selectedFuncion)}
       {console.log('🎫 [Boleteria] Mapa:', mapa)}
 
-      {/* Sidebar izquierdo */}
-      <div className="flex flex-col w-full max-w-xs md:max-w-sm lg:w-80 min-w-[16rem] bg-white border-r border-gray-200">
-        <div className="p-4 border-b border-gray-200">
+      {/* Sidebar izquierdo compacto */}
+      <div className="flex flex-col w-full max-w-xs md:max-w-sm lg:w-72 min-w-[14rem] bg-white border-r border-gray-200">
+        <div className="p-2 border-b border-gray-200">
           <button
             onClick={() => window.history.back()}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+            className="flex items-center gap-1 text-gray-700 hover:text-gray-900 text-sm"
           >
-            <AiOutlineLeft className="text-lg" />
+            <AiOutlineLeft className="text-sm" />
             <span>Volver</span>
           </button>
         </div>
         
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-auto p-2">
           <LeftMenu {...leftMenuProps} />
         </div>
       </div>
@@ -506,98 +506,94 @@ const Boleteria = () => {
       <div className="flex-1 flex overflow-hidden min-w-0">
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header con información del evento */}
-          <div className="bg-white border-b border-gray-200 px-4 py-3">
+          {/* Header compacto con información del evento */}
+          <div className="bg-white border-b border-gray-200 px-3 py-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="text-sm">
+              <div className="flex items-center space-x-3">
+                <div className="text-xs">
                   <span className="text-gray-500">Evento:</span>
-                  <span className="ml-2 font-medium">{selectedEvent?.nombre || 'Selecciona un evento'}</span>
+                  <span className="ml-1 font-medium">{selectedEvent?.nombre || 'Selecciona un evento'}</span>
                 </div>
-                <div className="text-sm">
+                <div className="text-xs">
                   <span className="text-gray-500">Función:</span>
-                  <span className="ml-2 font-medium">
+                  <span className="ml-1 font-medium">
                     {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleDateString() : 'Selecciona una función'}
                   </span>
                 </div>
               </div>
               <div className="text-xs text-gray-400">
-                🟢 Disponible | 🟡 Seleccionado | 🔴 Vendido | 🟣 Reservado | ⚫ Bloqueado
+                🟢🟡🔴🟣⚫
               </div>
             </div>
           </div>
 
-          {/* Navegación con botones estilo tabs */}
+          {/* Navegación compacta con botones estilo tabs */}
           <div className="bg-white border-b border-gray-200">
-            <div className="flex items-center justify-between px-4 py-2">
+            <div className="flex items-center justify-between px-3 py-1">
               {/* Botón para abrir panel lateral */}
               <div className="flex items-center">
                 <button 
-                  className="p-2 hover:bg-gray-100 rounded-md transition-colors"
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
                   title="Abrir panel"
                 >
-                  <span className="w-4 h-4 bg-gray-400 rounded"></span>
+                  <span className="w-3 h-3 bg-gray-400 rounded"></span>
                 </button>
               </div>
 
               {/* Botones de navegación principales */}
               <div className="flex space-x-1">
-                <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
-                  <i className="mr-2">🏷️</i>
-                  Zonas
+                <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
+                  🏷️ Zonas
                 </button>
-                <button className="px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md">
-                  <i className="mr-2">🗺️</i>
-                  Mapa
+                <button className="px-3 py-1 text-xs font-medium text-white bg-purple-600 rounded">
+                  🗺️ Mapa
                 </button>
-                <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
-                  <i className="mr-2">🍔</i>
-                  Productos
+                <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
+                  🍔 Productos
                 </button>
-                <button className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors">
-                  <i className="mr-2">⚙️</i>
-                  Otros
+                <button className="px-3 py-1 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors">
+                  ⚙️ Otros
                 </button>
               </div>
 
               {/* Botones secundarios */}
-              <div className="flex items-center space-x-2">
-                <button className="p-2 hover:bg-gray-100 rounded-md transition-colors" title="Cliente">
-                  <i className="text-lg">👤</i>
+              <div className="flex items-center space-x-1">
+                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="Cliente">
+                  <i className="text-sm">👤</i>
                 </button>
-                <button className="p-2 hover:bg-gray-100 rounded-md transition-colors" title="Fidelización">
-                  <i className="text-lg">💳</i>
+                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="Fidelización">
+                  <i className="text-sm">💳</i>
                 </button>
-                <button className="p-2 hover:bg-gray-100 rounded-md transition-colors" title="Información">
-                  <i className="text-lg">ℹ️</i>
+                <button className="p-1 hover:bg-gray-100 rounded transition-colors" title="Información">
+                  <i className="text-sm">ℹ️</i>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Sección de precios con botones deslizables */}
-          <div className="bg-gray-50 border-b border-gray-200 px-4 py-3">
-            <div className="flex space-x-3 overflow-x-auto">
-              <button className="flex-shrink-0 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium">
-                <div className="text-sm">PRECIO GENERAL</div>
-                <div className="text-xs opacity-90">$27.50 - $132.00</div>
+          {/* Sección compacta de precios */}
+          <div className="bg-gray-50 border-b border-gray-200 px-3 py-1">
+            <div className="flex space-x-2 overflow-x-auto">
+              <button className="flex-shrink-0 px-3 py-1 bg-purple-600 text-white rounded font-medium">
+                <div className="text-xs">PRECIO GENERAL</div>
+                <div className="text-xs opacity-90">$27.50-$132.00</div>
               </button>
-              <button className="flex-shrink-0 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors">
-                <div className="text-sm">SOCIOS 10%</div>
-                <div className="text-xs opacity-70">$27.50 - $89.10</div>
+              <button className="flex-shrink-0 px-3 py-1 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors">
+                <div className="text-xs">SOCIOS 10%</div>
+                <div className="text-xs opacity-70">$27.50-$89.10</div>
               </button>
-              <button className="flex-shrink-0 px-4 py-2 bg-orange-200 text-orange-800 rounded-lg font-medium">
-                <div className="text-sm">CORTESIAS</div>
+              <button className="flex-shrink-0 px-3 py-1 bg-orange-200 text-orange-800 rounded font-medium">
+                <div className="text-xs">CORTESIAS</div>
                 <div className="text-xs opacity-70">$0.00</div>
               </button>
             </div>
           </div>
 
-          {/* Mapa de asientos */}
+          {/* Mapa de asientos compacto */}
           <div className="flex-1 bg-white overflow-hidden">
             {console.log('🎫 [Boleteria] Renderizando vista mapa interactivo')}
             {selectedFuncion && mapa ? (
-              <div className="h-full p-4 overflow-auto">
+              <div className="h-full p-2 overflow-auto">
                 <SeatingMapUnified
                   funcionId={selectedFuncion?.id || selectedFuncion?._id}
                   mapa={mapa}
@@ -619,15 +615,15 @@ const Boleteria = () => {
                 />
               </div>
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-500">
+              <div className="h-full flex items-center justify-center text-gray-500 text-sm">
                 Selecciona una función para ver el mapa de asientos
               </div>
             )}
           </div>
         </div>
 
-        {/* Panel derecho - Carrito de compras */}
-        <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+        {/* Panel derecho - Carrito de compras compacto */}
+        <div className="w-72 bg-white border-l border-gray-200 flex flex-col">
           <div className="flex-1 min-h-0">
             <Cart {...cartProps}>
               {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
