@@ -134,13 +134,10 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                       />
                     )}
                     
-                    <div style={{ marginLeft: '16px' }}>
-                      <Text strong style={{ fontSize: '18px' }}>
+                    <div style={{ marginLeft: '16px', display: 'flex', alignItems: 'center' }}>
+                      <Text strong style={{ fontSize: '18px', margin: 0 }}>
                         Dashboard Administrativo
                       </Text>
-                      <div style={{ fontSize: '12px', color: '#666' }}>
-                        Rol: {String(getRole() || 'USUARIO').toUpperCase()}
-                      </div>
                     </div>
                   </div>
 

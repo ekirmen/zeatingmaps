@@ -173,7 +173,13 @@ const Cart = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+      <div className="flex-1 overflow-y-auto space-y-2 pr-1 relative">
+        {/* Indicador de scroll cuando hay muchos elementos */}
+        {safeCarrito.length > 10 && (
+          <div className="absolute top-0 right-2 z-10 bg-blue-100 text-blue-600 text-xs px-2 py-1 rounded-full">
+            {safeCarrito.length} asientos
+          </div>
+        )}
         {Object.entries(groupedByFunction).map(([fid, group], idx) => (
           <div key={fid} className="space-y-1">
             <div className="text-xs font-medium text-gray-600 bg-gray-50 px-2 py-1 rounded">
@@ -211,27 +217,43 @@ const Cart = ({
                         <span>Cantidad: {item.cantidad}</span>
                       </div>
                       <div className="text-xs text-gray-400 mt-1">
-                        {item.asientos.map(seat => {
-                          const seatName = seat.nombre || 'Asiento';
-                          const mesaName = seat.nombreMesa || seat.mesa_nombre || '';
-                          
-                          // Mostrar información más clara
-                          if (mesaName) {
-                            return (
-                              <div key={seat._id} className="text-xs flex items-center gap-1">
-                                <span className="text-blue-600">🪑</span>
-                                <span>{mesaName} - {seatName}</span>
-                              </div>
-                            );
-                          } else {
-                            return (
-                              <div key={seat._id} className="text-xs flex items-center gap-1">
-                                <span className="text-green-600">💺</span>
-                                <span>{seatName}</span>
-                              </div>
-                            );
-                          }
-                        })}
+                        {item.asientos.length <= 5 ? (
+                          // Mostrar todos los asientos si son 5 o menos
+                          item.asientos.map(seat => {
+                            const seatName = seat.nombre || seat.sillaId || 'Asiento';
+                            const mesaName = seat.nombreMesa || seat.mesa_nombre || seat.nombreMesa || '';
+                            
+                            // Mostrar información más clara del boleto
+                            if (mesaName) {
+                              return (
+                                <div key={seat._id} className="text-xs flex items-center gap-1">
+                                  <span className="text-blue-600">🎫</span>
+                                  <span className="font-medium">{mesaName} - {seatName}</span>
+                                </div>
+                              );
+                            } else {
+                              return (
+                                <div key={seat._id} className="text-xs flex items-center gap-1">
+                                  <span className="text-green-600">🎫</span>
+                                  <span className="font-medium">{seatName}</span>
+                                </div>
+                              );
+                            }
+                          })
+                        ) : (
+                          // Mostrar resumen si hay más de 5 asientos
+                          <div className="text-xs flex items-center gap-1">
+                            <span className="text-green-600">🎫</span>
+                            <span className="font-medium">
+                              {item.asientos.slice(0, 3).map(seat => {
+                                const seatName = seat.nombre || seat.sillaId || 'Asiento';
+                                const mesaName = seat.nombreMesa || seat.mesa_nombre || seat.nombreMesa || '';
+                                return mesaName ? `${mesaName}-${seatName}` : seatName;
+                              }).join(', ')}
+                              {item.asientos.length > 3 && ` y ${item.asientos.length - 3} más...`}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <button

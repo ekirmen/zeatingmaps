@@ -571,8 +571,8 @@ const Boleteria = () => {
   }), [isFunctionsModalVisible, setIsFunctionsModalVisible, funciones, selectedFuncion, handleFunctionSelect, selectedEvent]);
 
   const paymentModalProps = useMemo(() => ({
-    isVisible: isPaymentModalVisible,
-    onClose: () => setIsPaymentModalVisible(false),
+    open: isPaymentModalVisible,
+    onCancel: () => setIsPaymentModalVisible(false),
     carrito,
     setCarrito,
     selectedClient,
@@ -584,8 +584,10 @@ const Boleteria = () => {
     onShowUserSearch: () => setIsSearchModalVisible(true),
     onShowSeatModal: () => setIsSeatModalVisible(true),
     seatPayment,
-    setSeatPayment
-  }), [isPaymentModalVisible, setIsPaymentModalVisible, carrito, setCarrito, selectedClient, setSelectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment]);
+    setSeatPayment,
+    selectedFuncion,
+    selectedEvent
+  }), [isPaymentModalVisible, setIsPaymentModalVisible, carrito, setCarrito, selectedClient, setSelectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment, selectedFuncion, selectedEvent]);
 
   return (
     <div className="flex bg-gray-50 overflow-hidden" style={{ margin: '0', padding: '0', height: 'calc(100vh - 88px)', position: 'absolute', top: '88px', left: '0', right: '0', bottom: '0' }}>

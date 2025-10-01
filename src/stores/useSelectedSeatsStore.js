@@ -142,7 +142,7 @@ const useSelectedSeatsStore = create(
       name: 'selected-seats-storage',
       partialize: (state) => ({
         selectedSeats: state.selectedSeats,
-        selectedClient: state.selectedClient,
+        // selectedClient: NO se persiste para evitar errores de atención al cliente
         selectedEvent: state.selectedEvent,
         selectedFuncion: state.selectedFuncion,
         selectedAffiliate: state.selectedAffiliate
