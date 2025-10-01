@@ -479,7 +479,7 @@ const Boleteria = () => {
   }), [isPaymentModalVisible, setIsPaymentModalVisible, carrito, setCarrito, selectedClient, setSelectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment]);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 overflow-hidden" style={{ margin: '0', padding: '0' }}>
       {/* Debug info */}
       {console.log('🎫 [Boleteria] Renderizando componente...')}
       {console.log('🎫 [Boleteria] Selected function:', selectedFuncion)}
@@ -506,22 +506,53 @@ const Boleteria = () => {
       <div className="flex-1 flex overflow-hidden min-w-0">
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header compacto con información del evento */}
-          <div className="bg-white border-b border-gray-200 px-3 py-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="text-xs">
-                  <span className="text-gray-500">Evento:</span>
-                  <span className="ml-1 font-medium">{selectedEvent?.nombre || 'Selecciona un evento'}</span>
+          {/* Header compacto con búsqueda de evento y función */}
+          <div className="bg-white border-b border-gray-200 px-2 py-1">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 flex-1">
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-500">Evento:</span>
+                  <select 
+                    className="text-xs border border-gray-300 rounded px-1 py-0.5 min-w-0 flex-1"
+                    value={selectedEvent?.id || ''}
+                    onChange={(e) => {
+                      const eventId = e.target.value;
+                      if (eventId && handleEventSelect) {
+                        handleEventSelect(eventId);
+                      }
+                    }}
+                  >
+                    <option value="">Selecciona evento</option>
+                    {eventos?.map(evento => (
+                      <option key={evento.id} value={evento.id}>
+                        {evento.nombre}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                <div className="text-xs">
-                  <span className="text-gray-500">Función:</span>
-                  <span className="ml-1 font-medium">
-                    {selectedFuncion ? new Date(selectedFuncion.fecha_celebracion).toLocaleDateString() : 'Selecciona una función'}
-                  </span>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-gray-500">Función:</span>
+                  <select 
+                    className="text-xs border border-gray-300 rounded px-1 py-0.5 min-w-0 flex-1"
+                    value={selectedFuncion?.id || ''}
+                    onChange={(e) => {
+                      const functionId = e.target.value;
+                      if (functionId && handleFunctionSelect) {
+                        handleFunctionSelect(functionId);
+                      }
+                    }}
+                    disabled={!selectedEvent}
+                  >
+                    <option value="">Selecciona función</option>
+                    {funciones?.filter(func => func.evento_id === selectedEvent?.id).map(funcion => (
+                      <option key={funcion.id} value={funcion.id}>
+                        {new Date(funcion.fecha_celebracion).toLocaleDateString()} {new Date(funcion.fecha_celebracion).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-gray-400 flex-shrink-0">
                 🟢🟡🔴🟣⚫
               </div>
             </div>
@@ -571,21 +602,53 @@ const Boleteria = () => {
             </div>
           </div>
 
-          {/* Sección compacta de precios */}
-          <div className="bg-gray-50 border-b border-gray-200 px-3 py-1">
+          {/* Sección compacta de precios dinámicos */}
+          <div className="bg-gray-50 border-b border-gray-200 px-2 py-1">
             <div className="flex space-x-2 overflow-x-auto">
-              <button className="flex-shrink-0 px-3 py-1 bg-purple-600 text-white rounded font-medium">
-                <div className="text-xs">PRECIO GENERAL</div>
-                <div className="text-xs opacity-90">$27.50-$132.00</div>
-              </button>
-              <button className="flex-shrink-0 px-3 py-1 bg-gray-200 text-gray-700 rounded font-medium hover:bg-gray-300 transition-colors">
-                <div className="text-xs">SOCIOS 10%</div>
-                <div className="text-xs opacity-70">$27.50-$89.10</div>
-              </button>
-              <button className="flex-shrink-0 px-3 py-1 bg-orange-200 text-orange-800 rounded font-medium">
-                <div className="text-xs">CORTESIAS</div>
-                <div className="text-xs opacity-70">$0.00</div>
-              </button>
+              {selectedFuncion?.plantilla?.detalles ? (
+                JSON.parse(selectedFuncion.plantilla.detalles).map((precio, index) => {
+                  const precioMin = Math.min(...JSON.parse(selectedFuncion.plantilla.detalles).map(p => p.precio));
+                  const precioMax = Math.max(...JSON.parse(selectedFuncion.plantilla.detalles).map(p => p.precio));
+                  const isActive = index === 0;
+                  
+                  return (
+                    <button 
+                      key={index}
+                      className={`flex-shrink-0 px-2 py-1 rounded font-medium text-xs ${
+                        isActive 
+                          ? 'bg-purple-600 text-white' 
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      } transition-colors`}
+                    >
+                      <div className="text-xs">
+                        {precio.entradaId === '4d80ae04-a6a3-4c47-b0fb-fe36dd1e0f92' ? 'PRECIO GENERAL' :
+                         precio.entradaId === '3c787cd9-c7dd-480f-be30-6ef42a13342d' ? 'SOCIOS 10%' :
+                         'CORTESIAS'}
+                      </div>
+                      <div className="text-xs opacity-90">
+                        {precio.precio === 0 ? '$0.00' : 
+                         precioMin === precioMax ? `$${precio.precio.toFixed(2)}` :
+                         `$${precioMin.toFixed(2)}-$${precioMax.toFixed(2)}`}
+                      </div>
+                    </button>
+                  );
+                })
+              ) : (
+                <>
+                  <button className="flex-shrink-0 px-2 py-1 bg-purple-600 text-white rounded font-medium">
+                    <div className="text-xs">PRECIO GENERAL</div>
+                    <div className="text-xs opacity-90">$0.00</div>
+                  </button>
+                  <button className="flex-shrink-0 px-2 py-1 bg-gray-200 text-gray-700 rounded font-medium">
+                    <div className="text-xs">SOCIOS 10%</div>
+                    <div className="text-xs opacity-70">$0.00</div>
+                  </button>
+                  <button className="flex-shrink-0 px-2 py-1 bg-orange-200 text-orange-800 rounded font-medium">
+                    <div className="text-xs">CORTESIAS</div>
+                    <div className="text-xs opacity-70">$0.00</div>
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
