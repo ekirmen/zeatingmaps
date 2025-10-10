@@ -95,8 +95,19 @@ export const useCartStore = create(
           }
 
           if (exists) {
-            // DESELECCIÓN: Quitar del carrito y desbloquear
+            // DESELECCIÓN: Verificar si ya está pagado antes de permitir deselección
             console.log('🔄 [CART_TOGGLE] Deseleccionando asiento:', seatId);
+            
+            // Verificar si el asiento ya fue pagado antes de permitir deselección
+            const currentSessionId = localStorage.getItem('anonSessionId');
+            const seatPaymentChecker = await import('../services/seatPaymentChecker');
+            const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
+            
+            if (paymentCheck.isPaid) {
+              console.log('🚫 [CART_TOGGLE] No se puede deseleccionar asiento ya pagado:', seatId);
+              toast.error('Este asiento ya ha sido comprado y no puede ser deseleccionado');
+              return;
+            }
             
             // Quitar del carrito
             const filtered = items.filter(
@@ -306,7 +317,19 @@ export const useCartStore = create(
         },
 
         removeFromCart: async (seatId) => {
-          const { items } = get();
+          const { items, functionId } = get();
+          
+          // Verificar si el asiento ya fue pagado antes de permitir eliminación
+          const currentSessionId = localStorage.getItem('anonSessionId');
+          const seatPaymentChecker = await import('../services/seatPaymentChecker');
+          const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
+          
+          if (paymentCheck.isPaid) {
+            console.log('🚫 [CART] No se puede eliminar asiento ya pagado:', seatId);
+            toast.error('Este asiento ya ha sido comprado y no puede ser eliminado del carrito');
+            return;
+          }
+          
           const filtered = items.filter(item => (item._id || item.id) !== seatId);
           const newState = { items: filtered };
           if (filtered.length === 0 && get().products.length === 0) {
@@ -322,11 +345,11 @@ export const useCartStore = create(
           const seatStore = useSeatLockStore.getState();
           
           // Verificar si el asiento está realmente bloqueado en la BD
-          const isLocked = await useSeatLockStore.getState().isSeatLocked(seatId, get().functionId);
+          const isLocked = await useSeatLockStore.getState().isSeatLocked(seatId, functionId);
           
           if (isLocked) {
             // Solo desbloquear si está realmente bloqueado en la BD
-            await useSeatLockStore.getState().unlockSeat(seatId, get().functionId);
+            await useSeatLockStore.getState().unlockSeat(seatId, functionId);
             console.log('🔓 [CART] Asiento desbloqueado de la BD:', seatId);
           } else {
             // Si no está bloqueado en la BD, cambiar a 'disponible' para sincronización en tiempo real
