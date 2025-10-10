@@ -458,23 +458,16 @@ export const useSeatLockStore = create((set, get) => ({
         });
 
         // Procesar asientos vendidos de payment_transactions
-        // Solo establecer como 'vendido' si NO está ya en seat_locks (prioridad a seat_locks)
+        // PRIORIDAD: payment_transactions tiene precedencia sobre seat_locks
         soldSeats.forEach((seatInfo, seatId) => {
-          // Verificar si el asiento ya está en seatStates (de seat_locks)
-          if (!newSeatStates.has(seatId)) {
-            newSeatStates.set(seatId, 'vendido');
-            console.log('🎨 [SEAT_LOCK_STORE] Estado inicial del asiento (payment_transactions):', { 
-              seatId, 
-              status: seatInfo.status, 
-              visualState: 'vendido' 
-            });
-          } else {
-            console.log('🎨 [SEAT_LOCK_STORE] Asiento ya tiene estado de seat_locks, ignorando payment_transactions:', { 
-              seatId, 
-              existingState: newSeatStates.get(seatId),
-              paymentStatus: seatInfo.status
-            });
-          }
+          // SIEMPRE establecer como 'vendido' si está en payment_transactions, sin importar seat_locks
+          newSeatStates.set(seatId, 'vendido');
+          console.log('🎨 [SEAT_LOCK_STORE] Estado inicial del asiento (payment_transactions - PRIORIDAD):', { 
+            seatId, 
+            status: seatInfo.status, 
+            visualState: 'vendido',
+            overridesSeatLock: newSeatStates.has(seatId) ? 'SÍ' : 'NO'
+          });
         });
         
         set({ 

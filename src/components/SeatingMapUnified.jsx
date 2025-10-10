@@ -441,8 +441,36 @@ const SeatingMapUnified = ({
         return;
       }
 
-      // En modo store, delegar completamente al onSeatToggle
+      // En modo store, verificar estado antes de delegar al onSeatToggle
       if (!modoVenta) {
+        console.log('🛒 [SEATING_MAP] Modo store - verificando estado del asiento');
+        
+        // Verificar si el asiento ya está pagado antes de permitir cualquier interacción
+        const currentSessionId = localStorage.getItem('anonSessionId');
+        const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, normalizedFuncionId, currentSessionId);
+        
+        if (paymentCheck.isPaid) {
+          console.log('🚫 [SEATING_MAP] Asiento ya pagado, no se puede interactuar:', seat._id);
+          if (onSeatError) {
+            onSeatError('Este asiento ya ha sido comprado y no puede ser seleccionado');
+          }
+          return;
+        }
+        
+        // Verificar si está vendido, reservado o bloqueado permanentemente
+        if (seat.estado === 'vendido' || seat.estado === 'reservado' || seat.estado === 'locked') {
+          console.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
+          if (onSeatError) {
+            const errorMessage = seat.estado === 'vendido' 
+              ? 'Este asiento ya está vendido.' 
+              : seat.estado === 'reservado' 
+              ? 'Este asiento está reservado.' 
+              : 'Este asiento no está disponible.';
+            onSeatError(errorMessage);
+          }
+          return;
+        }
+        
         console.log('🛒 [SEATING_MAP] Modo store - delegando a onSeatToggle');
         if (onSeatToggle) {
           onSeatToggle({ ...seat, funcionId: normalizedFuncionId });
