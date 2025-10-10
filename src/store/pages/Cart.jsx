@@ -145,8 +145,12 @@ const Cart = () => {
         products,
         clearCart,
         toggleSeat,
+        removeFromCart,
         removeProduct
     } = useCartStore();
+    
+    // State to track paid seats
+    const [paidSeats, setPaidSeats] = useState(new Set());
 
     // Smart cart state
     const [currentLocator] = useState(null);
@@ -208,6 +212,41 @@ const Cart = () => {
         // After successful login, proceed to payment
         navigate('/store/payment');
     };
+
+    // Check which seats are paid when items change
+    useEffect(() => {
+        const checkPaidSeats = async () => {
+            if (!items || items.length === 0) {
+                setPaidSeats(new Set());
+                return;
+            }
+            
+            const currentSessionId = localStorage.getItem('anonSessionId');
+            const paidSeatsSet = new Set();
+            
+            for (const item of items) {
+                const seatId = item.sillaId || item._id || item.id;
+                const functionId = item.functionId || item.funcionId;
+                
+                if (seatId && functionId) {
+                    try {
+                        const seatPaymentChecker = await import('../services/seatPaymentChecker');
+                        const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
+                        
+                        if (paymentCheck.isPaid) {
+                            paidSeatsSet.add(seatId);
+                        }
+                    } catch (error) {
+                        console.error('Error checking payment status for seat:', seatId, error);
+                    }
+                }
+            }
+            
+            setPaidSeats(paidSeatsSet);
+        };
+        
+        checkPaidSeats();
+    }, [items]);
 
     // Facebook Pixel tracking
     useEffect(() => {
@@ -335,23 +374,28 @@ const Cart = () => {
                                     <UserOutlined className="mr-2" />
                                     Asientos Seleccionados ({(items && Array.isArray(items) ? items.length : 0)})
                                 </Title>
-                                {(items && Array.isArray(items) ? items.map((item) => (
-                                    <Card 
-                                        key={item.sillaId} 
-                                        size="small" 
-                                        className="mb-2"
-                                        actions={[
-                                            <Button 
-                                                type="text"
-                                                icon={<DeleteOutlined />}
-                                                onClick={() => toggleSeat(item)}
-                                                size="small"
-                                                className="text-gray-600 hover:text-gray-900"
-                                            >
-                                                Eliminar
-                                            </Button>
-                                        ]}
-                                    >
+                                {(items && Array.isArray(items) ? items.map((item) => {
+                                    const seatId = item.sillaId || item._id || item.id;
+                                    const isPaid = paidSeats.has(seatId);
+                                    
+                                    return (
+                                        <Card 
+                                            key={item.sillaId} 
+                                            size="small" 
+                                            className="mb-2"
+                                            actions={[
+                                                <Button 
+                                                    type="text"
+                                                    icon={<DeleteOutlined />}
+                                                    onClick={() => removeFromCart(seatId)}
+                                                    size="small"
+                                                    disabled={isPaid}
+                                                    className={isPaid ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"}
+                                                >
+                                                    {isPaid ? 'Pagado' : 'Eliminar'}
+                                                </Button>
+                                            ]}
+                                        >
                                         <div className="flex justify-between items-center">
                                             <div className="flex-1">
                                                 <div className="font-medium text-sm">
@@ -368,7 +412,8 @@ const Cart = () => {
                                             </div>
                                         </div>
                                     </Card>
-                                )) : null)}
+                                    );
+                                }) : null)}
                             </div>
                         )}
 
