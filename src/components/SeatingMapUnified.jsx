@@ -337,10 +337,7 @@ const SeatingMapUnified = ({
       if (updatedState && updatedState !== seat.estado) {
         return { ...seat, estado: updatedState };
       }
-      // Si el asiento fue eliminado del seatStates, restaurar su estado original
-      if (seatStates && !seatStates.has(seat._id) && seat.estado !== 'disponible') {
-        return { ...seat, estado: 'disponible' };
-      }
+      // No forzar a 'disponible' cuando no hay entrada en seatStates; conservar estado original
       return seat;
     });
   }, [syncedSeats, seatStates]);

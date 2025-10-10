@@ -76,11 +76,24 @@ export const useSeatColors = (eventId = null) => {
       }
     }
     
-    // Si el asiento NO está en seatStates pero seatStates existe, significa que fue deseleccionado
-    // y debe volver a su estado original (disponible)
+    // Si no hay estado en el store, conservar el estado original del asiento en lugar de forzar disponible
+    // Esto evita que asientos 'reservado' o 'vendido' se muestren como disponibles por falta de seatStates
     if (seatStates && !seatStates.has(seatId)) {
-      console.log('🎨 [SEAT_COLORS] Asiento no está en seatStates, volviendo a disponible:', { seatId, originalState: seat.estado });
-      return '#4CAF50'; // Verde para disponible
+      // Respetar estados persistentes del asiento
+      if (seat.estado === 'vendido' || seat.estado === 'pagado' || seat.estado === 'completed') {
+        return eventTheme.seatSold || '#2d3748';
+      }
+      if (seat.estado === 'reservado') {
+        return eventTheme.seatReserved || '#805ad5';
+      }
+      if (seat.estado === 'anulado') {
+        return eventTheme.seatCancelled || '#e53e3e';
+      }
+      if (seat.estado === 'locked') {
+        return '#6b7280';
+      }
+      // Si no hay estado persistente, usar disponible
+      return '#4CAF50';
     }
     
     // Fallback a la lógica original si no hay estado en el store
