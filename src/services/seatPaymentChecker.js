@@ -14,6 +14,8 @@ class SeatPaymentChecker {
    */
   async isSeatPaidByUser(seatId, funcionId, sessionId) {
     try {
+      console.log('🔍 [SEAT_PAYMENT_CHECKER] Verificando pago para:', { seatId, funcionId, sessionId, funcionIdType: typeof funcionId });
+      
       // 1. Verificar en seat_locks si tiene status pagado/vendido/completed
       const { data: seatLocks, error: locksError } = await supabase
         .from('seat_locks')

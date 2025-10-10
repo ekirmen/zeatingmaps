@@ -164,22 +164,30 @@ const SeatingMapUnified = ({
 }) => {
   // Validar y normalizar funcionId
   const normalizedFuncionId = useMemo(() => {
+    console.log('🔍 [SEATING_MAP] Normalizando funcionId:', { funcionId, type: typeof funcionId });
+    
     if (typeof funcionId === 'number') {
+      console.log('✅ [SEATING_MAP] funcionId es número:', funcionId);
       return funcionId;
     }
     if (typeof funcionId === 'string') {
       const parsed = parseInt(funcionId, 10);
-      return isNaN(parsed) ? null : parsed;
+      const result = isNaN(parsed) ? null : parsed;
+      console.log('🔍 [SEATING_MAP] funcionId string parseado:', { original: funcionId, parsed, result });
+      return result;
     }
     if (funcionId && typeof funcionId === 'object') {
       // Si es un objeto, intentar extraer el ID
       const id = funcionId.id || funcionId._id || funcionId.funcion_id;
+      console.log('🔍 [SEATING_MAP] funcionId objeto, extrayendo ID:', { funcionId, extractedId: id });
       if (typeof id === 'number') {
         return id;
       }
       if (typeof id === 'string') {
         const parsed = parseInt(id, 10);
-        return isNaN(parsed) ? null : parsed;
+        const result = isNaN(parsed) ? null : parsed;
+        console.log('🔍 [SEATING_MAP] ID extraído parseado:', { original: id, parsed, result });
+        return result;
       }
     }
     console.warn('⚠️ [SEATING_MAP] funcionId inválido:', funcionId);
