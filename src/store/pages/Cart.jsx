@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, InputNumber, Tag, Typography, Divider, message } from 'antd';
+import { Button, Card, Typography, message } from 'antd';
 import {
     DeleteOutlined,
     DownloadOutlined,
@@ -144,13 +144,12 @@ const Cart = () => {
         items,
         products,
         clearCart,
-        toggleSeat,
         removeFromCart,
         removeProduct
     } = useCartStore();
     
     // State to track paid seats
-    const [paidSeats, setPaidSeats] = useState(new Set());
+    const [paidSeatsSet, setPaidSeatsSet] = useState(new Set());
 
     // Smart cart state
     const [currentLocator] = useState(null);
@@ -167,7 +166,6 @@ const Cart = () => {
     // Calculate totals
     const subtotal = (items && Array.isArray(items) ? items.reduce((sum, item) => sum + (item.precio || 0), 0) : 0) +
                     (products && Array.isArray(products) ? products.reduce((sum, product) => sum + (product.price || 0), 0) : 0);
-    const totalPrice = subtotal;
 
 
     // Get paid seats count
@@ -217,7 +215,7 @@ const Cart = () => {
     useEffect(() => {
         const checkPaidSeats = async () => {
             if (!items || items.length === 0) {
-                setPaidSeats(new Set());
+                setPaidSeatsSet(new Set());
                 return;
             }
             
@@ -242,7 +240,7 @@ const Cart = () => {
                 }
             }
             
-            setPaidSeats(paidSeatsSet);
+            setPaidSeatsSet(paidSeatsSet);
         };
         
         checkPaidSeats();
@@ -376,7 +374,7 @@ const Cart = () => {
                                 </Title>
                                 {(items && Array.isArray(items) ? items.map((item) => {
                                     const seatId = item.sillaId || item._id || item.id;
-                                    const isPaid = paidSeats.has(seatId);
+                                    const isPaid = paidSeatsSet.has(seatId);
                                     
                                     return (
                                         <Card 
