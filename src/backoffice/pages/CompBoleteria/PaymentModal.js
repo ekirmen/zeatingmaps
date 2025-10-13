@@ -306,6 +306,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         // Verificar si ya existe un pago para estos asientos
         const existingPayment = seats.find(seat => seat.paymentId && seat.locator);
         
+          const primaryMethod = (paymentEntries[0]?.formaPago || selectedPaymentMethod || 'manual');
           const paymentData = {
           user_id: selectedClient.id || selectedClient._id, // Usar user_id según el esquema
           evento_id: eventId,
@@ -321,7 +322,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
             })),
             // Usar localizador existente si ya hay uno, sino generar uno nuevo
             locator: existingPayment ? existingPayment.locator : generateLocator(),
-            status: diferencia > 0 ? 'reservado' : 'pagado',
+            // Estandarizar estado: 'completed' cuando está totalmente pagado, 'reserved' en caso contrario
+            status: diferencia > 0 ? 'reserved' : 'completed',
             payments: paymentEntries.map(entry => ({
               method: entry.formaPago,
               amount: entry.importe
@@ -333,6 +335,15 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
             monto: paymentEntries.length > 0
               ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
               : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
+            // Campos faltantes para compatibilidad y tracking
+            order_id: existingPayment ? existingPayment.locator : undefined, // lo normalizamos en service a locator
+            payment_method: primaryMethod,
+            gateway_name: 'manual',
+            // columnas legacy de compatibilidad
+            event: eventId,
+            funcion: selectedFuncion.id || selectedFuncion._id,
+            user: (selectedClient.id || selectedClient._id) || null,
+            fecha: new Date().toISOString(),
             ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
           };
 

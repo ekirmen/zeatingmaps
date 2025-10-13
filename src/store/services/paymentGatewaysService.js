@@ -451,13 +451,29 @@ export const createPaymentTransaction = async (transactionData) => {
       }
     }
 
-    // Preparar datos para inserción
+    // Preparar datos para inserción (normalizado)
+    // Normalizar seats a un arreglo de objetos con { id, name, price, zona, mesa }
+    const rawSeats = transactionData.seats || transactionData.items || [];
+    const normalizedSeats = Array.isArray(rawSeats)
+      ? rawSeats.map((s) => ({
+          id: s.id || s._id || s.sillaId,
+          name: s.name || s.nombre || `Asiento ${s.id || s._id || s.sillaId || ''}`,
+          price: Number(s.price ?? s.precio ?? 0),
+          zona: s.zona || s.zonaId || s.nombreZona || null,
+          mesa: s.mesa || s.mesaId || null,
+        }))
+      : [];
+
+    const computedPayments = transactionData.payments && Array.isArray(transactionData.payments)
+      ? transactionData.payments
+      : [{ method: (transactionData.paymentMethod || transactionData.method || gatewayName || 'manual'), amount: Number(transactionData.amount) || 0 }];
+
     const insertData = {
       order_id: transactionData.orderId,
       gateway_id: transactionData.gatewayId,
       amount: transactionData.amount,
       currency: transactionData.currency || 'USD',
-      status: transactionData.status || 'pending',
+      status: transactionData.status || 'completed',
       gateway_transaction_id: transactionData.gatewayTransactionId,
       gateway_response: transactionData.gatewayResponse || null,
       locator: transactionData.locator,
@@ -467,8 +483,15 @@ export const createPaymentTransaction = async (transactionData) => {
       funcion_id: transactionData.funcionId,
       payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
       gateway_name: gatewayName,
-      seats: transactionData.seats || transactionData.items || null,
-      user: userId || null
+      seats: normalizedSeats,
+      user: userId || null,
+      // Campos adicionales para compatibilidad/reportes
+      fecha: new Date().toISOString(),
+      event: transactionData.eventoId || null,
+      funcion: transactionData.funcionId || null,
+      processed_by: transactionData.processedBy || null,
+      payment_gateway_id: transactionData.gatewayId || null,
+      payments: computedPayments
     };
 
     if (transactionData.payments) {

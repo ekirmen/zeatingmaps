@@ -418,9 +418,9 @@ const loadReservedSeats = async (funcionId) => {
           payment.seats.forEach(seat => {
             if (seat.id) {
               let estado = 'disponible';
-              if (payment.status === 'pagado') {
+              if (payment.status === 'pagado' || payment.status === 'completed') {
                 estado = 'vendido';
-              } else if (payment.status === 'reservado' || payment.status === 'pending') {
+              } else if (payment.status === 'reservado' || payment.status === 'pending' || payment.status === 'reserved') {
                 estado = 'reservado';
               }
               
@@ -1213,6 +1213,11 @@ export const createPayment = async (data) => {
   console.log('🔍 Tipo de seats:', typeof enrichedData.seats);
   console.log('🔍 Seats es array:', Array.isArray(enrichedData.seats));
   console.log('🔍 Seats contenido:', JSON.stringify(enrichedData.seats, null, 2));
+
+  // Normalizar order_id como locator si no viene
+  if (!enrichedData.order_id && enrichedData.locator) {
+    enrichedData.order_id = enrichedData.locator;
+  }
 
   const { data: result, error } = await client
     .from('payment_transactions')

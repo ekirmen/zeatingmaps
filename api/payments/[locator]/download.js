@@ -103,28 +103,47 @@ export default async function handler(req, res) {
 
     console.log('✅ [DOWNLOAD] Pago encontrado:', payment.id);
 
-    // Get seats for this function if available
-    let seats = [];
-    if (payment.funcion_id) {
-      console.log('🔍 [DOWNLOAD] Buscando asientos para función:', payment.funcion_id);
-      const { data: seatsData, error: seatsError } = await supabaseAdmin
-        .from('seats')
-        .select('*')
-        .eq('funcion_id', payment.funcion_id);
-      
-      if (seatsError) {
-        console.warn('⚠️ [DOWNLOAD] Error obteniendo asientos:', seatsError);
-      } else {
-        seats = seatsData || [];
-        console.log('✅ [DOWNLOAD] Asientos encontrados:', seats.length);
+    // Parse seats from payment.seats JSON (preferir asientos comprados)
+    let parsedSeats = [];
+    try {
+      if (Array.isArray(payment.seats)) parsedSeats = payment.seats;
+      else if (typeof payment.seats === 'string') {
+        try { parsedSeats = JSON.parse(payment.seats); } catch { parsedSeats = JSON.parse(JSON.parse(payment.seats)); }
       }
+    } catch { parsedSeats = []; }
+    payment.seats = parsedSeats;
+
+    // Enriquecer con datos de función y evento/recinto para el PDF
+    let funcionData = null;
+    let eventData = null;
+    let venueData = null;
+    try {
+      if (payment.funcion_id) {
+        const { data: func, error: fErr } = await supabaseAdmin
+          .from('funciones')
+          .select('id, fecha_celebracion, evento:eventos(id, nombre, imagenes, recinto_id)')
+          .eq('id', payment.funcion_id)
+          .maybeSingle();
+        if (!fErr && func) {
+          funcionData = func;
+          eventData = func.event || null;
+          if (!payment.event && eventData) payment.event = eventData;
+          if (eventData?.id || eventData?.recinto_id) {
+            const { data: rec, error: rErr } = await supabaseAdmin
+              .from('recintos')
+              .select('id, nombre, direccion, ciudad, pais')
+              .eq('id', eventData.recinto_id)
+              .maybeSingle();
+            if (!rErr) venueData = rec;
+          }
+        }
+      }
+    } catch (enrichErr) {
+      console.warn('⚠️ [DOWNLOAD] Error enriqueciendo datos de función/evento/recinto:', enrichErr.message);
     }
 
-    // Add seats to payment object for PDF generation
-    payment.seats = seats;
-
     // Generate full PDF with payment data
-    return await generateFullPDF(req, res, payment, locator);
+    return await generateFullPDF(req, res, payment, locator, { funcionData, eventData, venueData });
     
   } catch (err) {
     console.error('❌ [DOWNLOAD] Error generando ticket:', err);
@@ -218,7 +237,7 @@ async function generateSimplePDF(req, res, locator) {
 }
 
 // Función para generar PDF completo con datos del pago
-async function generateFullPDF(req, res, payment, locator) {
+async function generateFullPDF(req, res, payment, locator, extra = {}) {
   try {
     console.log('📄 [DOWNLOAD] Generando PDF completo para pago:', payment.id);
     
@@ -251,11 +270,11 @@ async function generateFullPDF(req, res, payment, locator) {
     // --- CARGAR IMÁGENES DEL EVENTO ---
     console.log('🖼️ [DOWNLOAD] Cargando imágenes del evento...');
     let eventImages = {};
-    let venueData = null;
+    let venueData = extra.venueData || null;
     
     try {
       // Obtener datos del evento desde el pago
-      const eventData = payment.event || payment.funcion?.event;
+      const eventData = extra.eventData || payment.event || payment.funcion?.event;
       if (eventData && eventData.imagenes) {
         const images = typeof eventData.imagenes === 'string' 
           ? JSON.parse(eventData.imagenes) 
@@ -285,7 +304,7 @@ async function generateFullPDF(req, res, payment, locator) {
 
       // Cargar información del recinto si está disponible en el evento
       try {
-        const recintoId = eventData?.recinto_id || eventData?.recinto || payment.funcion?.recinto_id || null;
+        const recintoId = eventData?.recinto_id || eventData?.recinto || payment.funcion?.recinto_id || extra.funcionData?.event?.recinto_id || null;
         if (recintoId) {
           const { data: rec, error: recErr } = await supabaseAdmin
             .from('recintos')
@@ -332,6 +351,20 @@ async function generateFullPDF(req, res, payment, locator) {
       font: helveticaBold,
     });
 
+    // 2.1 Nombre del evento (si disponible)
+    try {
+      const title = (extra.eventData?.nombre) || (payment.event?.nombre) || null;
+      if (title) {
+        page.drawText(title, {
+          x: 200,
+          y: height - 100,
+          size: 12,
+          color: rgb(0.15, 0.15, 0.15),
+          font: helveticaFont,
+        });
+      }
+    } catch {}
+
     // 3. DATOS PRINCIPALES (lado izquierdo)
     let y = height - 120;
     page.drawText(`Localizador: ${payment.locator}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
@@ -340,10 +373,20 @@ async function generateFullPDF(req, res, payment, locator) {
     page.drawText(`Estado: ${payment.status}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
     y -= 25;
     
-    if (payment.monto) {
-      page.drawText(`Monto: $${payment.monto}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
+    const montoNum = Number(payment.monto || payment.amount || 0);
+    if (montoNum > 0) {
+      page.drawText(`Monto: $${montoNum.toFixed(2)}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
       y -= 25;
     }
+
+    // Método de pago (si disponible)
+    try {
+      const pm = payment.payment_method || (Array.isArray(payment.payments) && payment.payments[0]?.method) || null;
+      if (pm) {
+        page.drawText(`Método de pago: ${pm}`, { x: 50, y, size: 12, color: rgb(0.1,0.1,0.1), font: helveticaFont });
+        y -= 20;
+      }
+    } catch {}
 
     // 3.1 RECINTO (si disponible)
     if (venueData?.nombre) {
@@ -396,10 +439,10 @@ async function generateFullPDF(req, res, payment, locator) {
       y -= 20;
       let seatY = y;
       payment.seats.forEach((seat) => {
-        const zonaTxt = seat.zonaNombre || seat.zona || null;
+        const zonaTxt = seat.zonaNombre || seat.nombreZona || seat.zona || seat.zonaId || null;
         const mesaTxt = seat.mesaNombre || seat.mesa || null;
         const filaTxt = seat.fila || seat.row || null;
-        const asientoId = seat.name || seat.nombre || seat.numero || seat.id || seat._id || null;
+        const asientoId = seat.name || seat.nombre || seat.numero || seat.id || seat._id || seat.sillaId || null;
 
         page.drawText(`Zona: ${zonaTxt || 'no existe'}`, { x: 70, y: seatY, size: 11, color: zonaTxt ? rgb(0.2,0.2,0.2) : rgb(0.85,0.1,0.1), font: helveticaFont });
         seatY -= 16;
