@@ -476,7 +476,9 @@ export const createPaymentTransaction = async (transactionData) => {
 
             return {
               id: seatId,
+              _id: s._id || seatId,
               seat_id: seatId,
+              seatId: s.seatId || seatId,
               name: s.name || s.nombre || `Asiento ${seatId}`,
               price: Number(s.price ?? s.precio ?? 0),
               zona: s.zona || s.zonaId || s.nombreZona || null,
