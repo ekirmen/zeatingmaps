@@ -455,18 +455,35 @@ export const createPaymentTransaction = async (transactionData) => {
     // Normalizar seats a un arreglo de objetos con { id, name, price, zona, mesa }
     const rawSeats = transactionData.seats || transactionData.items || [];
     const normalizedSeats = Array.isArray(rawSeats)
-      ? rawSeats.map((s) => {
-          const seatId = s.seat_id || s.id || s._id || s.sillaId;
+      ? rawSeats
+          .map((s) => {
+            const seatIdRaw =
+              s.seat_id ||
+              s.id ||
+              s._id ||
+              s.sillaId ||
+              s.seatId ||
+              s.seat ||
+              s.tableSeatId ||
+              s.table_seat_id;
 
-          return {
-            id: seatId,
-            seat_id: seatId,
-            name: s.name || s.nombre || `Asiento ${seatId || s.id || s._id || s.sillaId || ''}`,
-            price: Number(s.price ?? s.precio ?? 0),
-            zona: s.zona || s.zonaId || s.nombreZona || null,
-            mesa: s.mesa || s.mesaId || null,
-          };
-        })
+            const seatId = typeof seatIdRaw === 'number' ? seatIdRaw.toString() : seatIdRaw?.toString().trim();
+
+            if (!seatId) {
+              console.warn('[PaymentTransaction] Ignorando asiento sin identificador válido:', s);
+              return null;
+            }
+
+            return {
+              id: seatId,
+              seat_id: seatId,
+              name: s.name || s.nombre || `Asiento ${seatId}`,
+              price: Number(s.price ?? s.precio ?? 0),
+              zona: s.zona || s.zonaId || s.nombreZona || null,
+              mesa: s.mesa || s.mesaId || null,
+            };
+          })
+          .filter(Boolean)
       : [];
 
     const computedPayments = transactionData.payments && Array.isArray(transactionData.payments)
