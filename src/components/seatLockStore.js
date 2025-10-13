@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { supabase } from '../supabaseClient';
 import atomicSeatLockService from '../services/atomicSeatLock';
 
+const buildTableSeatId = (tableId) => `table:${tableId}`;
+
 // Función helper para obtener el tenant_id actual
 const getCurrentTenantId = () => {
   try {
@@ -845,12 +847,14 @@ export const useSeatLockStore = create((set, get) => ({
 
     const lockedAt = new Date().toISOString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const tableSeatId = buildTableSeatId(tableId);
 
     // Obtener el tenant_id actual
     const tenantId = getCurrentTenantId();
     
     console.log('[SEAT_LOCK] Intentando bloquear mesa:', {
       table_id: tableId,
+      seat_id: tableSeatId,
       funcion_id: funcionIdVal,
       session_id: sessionId,
       status,
@@ -861,6 +865,7 @@ export const useSeatLockStore = create((set, get) => ({
     try {
       const lockData = {
         table_id: tableId,
+        seat_id: tableSeatId,
         funcion_id: funcionIdVal,
         session_id: sessionId,
         locked_at: lockedAt,
@@ -876,7 +881,7 @@ export const useSeatLockStore = create((set, get) => ({
 
       const { error } = await supabase
         .from('seat_locks')
-        .upsert(lockData);
+        .upsert(lockData, { onConflict: 'seat_id,funcion_id,tenant_id' });
 
       if (error) {
         console.error('[SEAT_LOCK] Error al bloquear mesa:', error);
@@ -891,6 +896,7 @@ export const useSeatLockStore = create((set, get) => ({
             ...currentTables.filter((t) => t.table_id !== tableId),
             {
               table_id: tableId,
+              seat_id: tableSeatId,
               funcion_id: funcionIdVal,
               session_id: sessionId,
               locked_at: lockedAt,
