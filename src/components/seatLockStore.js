@@ -760,11 +760,17 @@ export const useSeatLockStore = create((set, get) => ({
         return false;
       }
 
+      const {
+        normalizedSeatId,
+        normalizedFuncionId,
+        normalizedSessionId
+      } = validation;
+
       // Usar servicio atómico para el bloqueo
       const result = await atomicSeatLockService.lockSeatAtomically(
-        seatId,
-        funcionIdVal,
-        sessionId,
+        normalizedSeatId,
+        normalizedFuncionId,
+        normalizedSessionId,
         status
       );
 
@@ -781,11 +787,11 @@ export const useSeatLockStore = create((set, get) => ({
         console.log('📊 [SEAT_LOCK] Estado local ANTES del cambio:', currentSeats);
         
         const newLockedSeats = [
-          ...currentSeats.filter((s) => s.seat_id !== seatId),
+          ...currentSeats.filter((s) => s.seat_id !== normalizedSeatId),
           {
-            seat_id: seatId,
-            funcion_id: funcionIdVal,
-            session_id: sessionId,
+            seat_id: normalizedSeatId,
+            funcion_id: normalizedFuncionId,
+            session_id: normalizedSessionId,
             locked_at: result.lockData.locked_at,
             expires_at: result.lockData.expires_at,
             status: result.lockData.status,
@@ -802,7 +808,7 @@ export const useSeatLockStore = create((set, get) => ({
       console.log('✅ Asiento bloqueado exitosamente en DB y estado local');
       
       // Actualizar el estado del asiento individual para el usuario actual
-      get().updateSeatState(seatId, 'seleccionado');
+      get().updateSeatState(normalizedSeatId, 'seleccionado');
       console.log('🔄 [SEAT_LOCK] Estado del asiento actualizado para el usuario actual');
       
       return true;
@@ -942,10 +948,16 @@ export const useSeatLockStore = create((set, get) => ({
         return false;
       }
 
+      const {
+        normalizedSeatId,
+        normalizedFuncionId,
+        normalizedSessionId
+      } = validation;
+
       // Verificar estado local antes del desbloqueo
       const currentSeats = Array.isArray(get().lockedSeats) ? get().lockedSeats : [];
       const currentLock = currentSeats.find(
-        s => s.seat_id === seatId && s.session_id === sessionId
+        s => s.seat_id === normalizedSeatId && s.session_id === normalizedSessionId
       );
       if (currentLock?.status === 'pagado' || currentLock?.status === 'reservado') {
         console.warn('[SEAT_LOCK] No se puede desbloquear un asiento pagado o reservado');
@@ -953,16 +965,16 @@ export const useSeatLockStore = create((set, get) => ({
       }
 
       console.log('[SEAT_LOCK] Intentando desbloquear asiento:', {
-        seat_id: seatId,
-        funcion_id: funcionIdVal,
-        session_id: sessionId
+        seat_id: normalizedSeatId,
+        funcion_id: normalizedFuncionId,
+        session_id: normalizedSessionId
       });
 
       // Usar servicio atómico para el desbloqueo
       const result = await atomicSeatLockService.unlockSeatAtomically(
-        seatId,
-        funcionIdVal,
-        sessionId
+        normalizedSeatId,
+        normalizedFuncionId,
+        normalizedSessionId
       );
 
       if (!result.success) {
@@ -976,27 +988,30 @@ export const useSeatLockStore = create((set, get) => ({
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
         console.log('📊 [SEAT_LOCK] Estado local ANTES del desbloqueo:', currentSeats);
-        
-        const updatedSeats = currentSeats.filter((s) => s.seat_id !== seatId);
+
+        const updatedSeats = currentSeats.filter((s) => s.seat_id !== normalizedSeatId);
         console.log('🔓 [SEAT_LOCK] Estado local DESPUÉS del desbloqueo:', updatedSeats);
         return {
           lockedSeats: updatedSeats,
         };
       });
-    
-        console.log('✅ Asiento desbloqueado exitosamente en DB y estado local');
-        
-        // En lugar de eliminar del seatStates, lo cambio a 'disponible' para sincronización en tiempo real
-        set((state) => {
-          const newSeatStates = new Map(state.seatStates);
-          newSeatStates.set(seatId, 'disponible'); // Cambiar a disponible en lugar de eliminar
-          
-          return {
-            ...state,
-            seatStates: newSeatStates
-          };
-        });
-        console.log('✅ [SEAT_LOCK] Asiento cambiado a disponible en seatStates - se verá en verde para todos los clientes');
+
+      console.log('✅ Asiento desbloqueado exitosamente en DB y estado local');
+
+      // En lugar de eliminar del seatStates, lo cambio a 'disponible' para sincronización en tiempo real
+      set((state) => {
+        const newSeatStates = new Map(state.seatStates);
+        newSeatStates.set(normalizedSeatId, 'disponible'); // Cambiar a disponible en lugar de eliminar
+
+        return {
+          ...state,
+          seatStates: newSeatStates
+        };
+      });
+      console.log('✅ [SEAT_LOCK] Asiento cambiado a disponible en seatStates - se verá en verde para todos los clientes');
+
+      // Actualizar estado de asiento para el usuario actual
+      get().updateSeatState(normalizedSeatId, 'disponible');
       
       return true;
     } catch (error) {
