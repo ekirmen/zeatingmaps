@@ -1106,6 +1106,39 @@ export const fetchPlantillasPorRecintoYSala = async (recintoId, salaId) => {
 
 // === PAYMENTS ===
 // Función auxiliar para normalizar los asientos
+const normalizeSeatObject = (seat) => {
+  if (!seat || typeof seat !== 'object') return null;
+
+  const seatIdRaw =
+    seat.seat_id ||
+    seat.id ||
+    seat._id ||
+    seat.sillaId ||
+    seat.seatId ||
+    seat.seat ||
+    seat.tableSeatId ||
+    seat.table_seat_id;
+
+  const seatId =
+    seatIdRaw == null
+      ? null
+      : typeof seatIdRaw === 'number'
+        ? seatIdRaw.toString()
+        : seatIdRaw.toString().trim();
+
+  if (!seatId) {
+    return { ...seat };
+  }
+
+  return {
+    ...seat,
+    id: seat.id || seatId,
+    _id: seat._id || seatId,
+    seat_id: seat.seat_id || seatId,
+    seatId: seat.seatId || seatId
+  };
+};
+
 const parseSeatsArray = (rawSeats) => {
   try {
     let seats = rawSeats;
@@ -1115,7 +1148,9 @@ const parseSeatsArray = (rawSeats) => {
     
     // Si ya es un array, validar y retornar
     if (Array.isArray(seats)) {
-      return seats.filter(seat => seat && typeof seat === 'object');
+      return seats
+        .map(normalizeSeatObject)
+        .filter(seat => seat && typeof seat === 'object');
     }
     
     // Si es string, intentar parsear
@@ -1130,11 +1165,13 @@ const parseSeatsArray = (rawSeats) => {
         const parsed = JSON.parse(cleanString);
         // Si el resultado es un array, retornarlo
         if (Array.isArray(parsed)) {
-          return parsed.filter(seat => seat && typeof seat === 'object');
+          return parsed
+            .map(normalizeSeatObject)
+            .filter(seat => seat && typeof seat === 'object');
         }
         // Si es un objeto individual, envolverlo en array
         if (parsed && typeof parsed === 'object') {
-          return [parsed];
+          return [normalizeSeatObject(parsed)];
         }
         return [];
       } catch (parseError) {
@@ -1145,7 +1182,8 @@ const parseSeatsArray = (rawSeats) => {
     
     // Si es un objeto individual, envolverlo en array
     if (seats && typeof seats === 'object' && !Array.isArray(seats)) {
-      return [seats];
+      const normalizedSeat = normalizeSeatObject(seats);
+      return normalizedSeat ? [normalizedSeat] : [];
     }
     
     return [];
@@ -1184,11 +1222,14 @@ export const createPayment = async (data) => {
   
   // Validar que los asientos tengan la estructura correcta
   const validatedSeats = seatsForDB.map(seat => {
-    if (!seat.id && !seat._id) {
+    if (!seat.id && !seat._id && !seat.seat_id) {
       throw new Error(`Asiento sin ID válido: ${JSON.stringify(seat)}`);
     }
+
+    const seatId = seat.seat_id || seat.id || seat._id;
     return {
-      id: seat.id || seat._id,
+      id: seatId,
+      seat_id: seat.seat_id || seatId,
       name: seat.name || seat.nombre || 'Asiento',
       price: parseFloat(seat.price || seat.precio || 0),
       zona: seat.zona?.nombre || seat.zona || 'General',
