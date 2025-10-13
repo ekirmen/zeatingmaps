@@ -12,9 +12,13 @@ class AtomicSeatLockService {
   async lockSeatAtomically(seatId, funcionId, sessionId, status = 'seleccionado', options = {}) {
     try {
       console.log('🔒 [ATOMIC_LOCK] Intentando bloqueo atómico:', { seatId, funcionId, sessionId, status });
-      
+
       // Validar parámetros requeridos
-      if (!seatId || !funcionId || !sessionId) {
+      const normalizedSeatId = this.normalizeSeatIdValue(seatId);
+      const normalizedFuncionId = this.normalizeFuncionIdValue(funcionId);
+      const normalizedSessionId = this.normalizeSessionIdValue(sessionId);
+
+      if (!normalizedSeatId || !normalizedFuncionId || !normalizedSessionId) {
         throw new Error('Parámetros requeridos: seatId, funcionId, sessionId');
       }
 
@@ -26,9 +30,9 @@ class AtomicSeatLockService {
       
       // Preparar datos para la función de base de datos
       const lockData = {
-        p_seat_id: seatId,
-        p_funcion_id: parseInt(funcionId, 10),
-        p_session_id: sessionId,
+        p_seat_id: normalizedSeatId,
+        p_funcion_id: normalizedFuncionId,
+        p_session_id: normalizedSessionId,
         p_status: status
       };
 
@@ -72,17 +76,21 @@ class AtomicSeatLockService {
   async unlockSeatAtomically(seatId, funcionId, sessionId) {
     try {
       console.log('🔓 [ATOMIC_UNLOCK] Intentando desbloqueo atómico:', { seatId, funcionId, sessionId });
-      
+
       // Validar parámetros requeridos
-      if (!seatId || !funcionId || !sessionId) {
+      const normalizedSeatId = this.normalizeSeatIdValue(seatId);
+      const normalizedFuncionId = this.normalizeFuncionIdValue(funcionId);
+      const normalizedSessionId = this.normalizeSessionIdValue(sessionId);
+
+      if (!normalizedSeatId || !normalizedFuncionId || !normalizedSessionId) {
         throw new Error('Parámetros requeridos: seatId, funcionId, sessionId');
       }
 
       // Usar función RPC para desbloqueo atómico
       const { data, error } = await supabase.rpc('unlock_seat_atomically', {
-        p_seat_id: seatId,
-        p_funcion_id: parseInt(funcionId, 10),
-        p_session_id: sessionId
+        p_seat_id: normalizedSeatId,
+        p_funcion_id: normalizedFuncionId,
+        p_session_id: normalizedSessionId
       });
       
       if (error) {
@@ -163,11 +171,19 @@ class AtomicSeatLockService {
    */
   async getSeatStatus(seatId, funcionId) {
     try {
+      const normalizedSeatId = this.normalizeSeatIdValue(seatId);
+      const normalizedFuncionId = this.normalizeFuncionIdValue(funcionId);
+
+      if (!normalizedSeatId || !normalizedFuncionId) {
+        console.error('❌ [SEAT_STATUS] Parámetros inválidos:', { seatId, funcionId });
+        return null;
+      }
+
       const { data, error } = await supabase
         .from('seat_locks')
         .select('status, session_id, locked_at, expires_at, user_id')
-        .eq('seat_id', seatId)
-        .eq('funcion_id', funcionId)
+        .eq('seat_id', normalizedSeatId)
+        .eq('funcion_id', normalizedFuncionId)
         .eq('lock_type', 'seat')
         .maybeSingle();
       
@@ -242,23 +258,106 @@ class AtomicSeatLockService {
    */
   validateLockData(seatId, funcionId, sessionId) {
     const errors = [];
-    
-    if (!seatId || typeof seatId !== 'string' || seatId.trim() === '') {
+
+    const normalizedSeatId = this.normalizeSeatIdValue(seatId);
+    if (!normalizedSeatId) {
       errors.push('seatId debe ser un string válido');
     }
-    
-    if (!funcionId || isNaN(parseInt(funcionId, 10)) || parseInt(funcionId, 10) <= 0) {
+
+    const normalizedFuncionId = this.normalizeFuncionIdValue(funcionId);
+    if (!normalizedFuncionId) {
       errors.push('funcionId debe ser un número válido mayor a 0');
     }
-    
-    if (!sessionId || typeof sessionId !== 'string' || sessionId.trim() === '') {
+
+    const normalizedSessionId = this.normalizeSessionIdValue(sessionId);
+    if (!normalizedSessionId) {
       errors.push('sessionId debe ser un string válido');
     }
-    
+
     return {
       isValid: errors.length === 0,
-      errors: errors
+      errors: errors,
+      normalizedSeatId,
+      normalizedFuncionId,
+      normalizedSessionId
     };
+  }
+
+  normalizeSeatIdValue(seatId) {
+    if (seatId === undefined || seatId === null) {
+      return null;
+    }
+
+    let value = seatId;
+
+    if (typeof value === 'object') {
+      value =
+        value.seat_id ||
+        value.seatId ||
+        value._id ||
+        value.id ||
+        value.sillaId ||
+        null;
+    }
+
+    if (value === undefined || value === null) {
+      return null;
+    }
+
+    if (typeof value !== 'string') {
+      if (typeof value.toString === 'function') {
+        value = value.toString();
+      } else {
+        return null;
+      }
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    if (trimmed.startsWith('silla_')) {
+      return trimmed.slice(6);
+    }
+
+    return trimmed;
+  }
+
+  normalizeFuncionIdValue(funcionId) {
+    if (funcionId === undefined || funcionId === null) {
+      return null;
+    }
+
+    const parsed = parseInt(funcionId, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return null;
+    }
+
+    return parsed;
+  }
+
+  normalizeSessionIdValue(sessionId) {
+    if (sessionId === undefined || sessionId === null) {
+      return null;
+    }
+
+    let value = sessionId;
+
+    if (typeof value !== 'string') {
+      if (typeof value.toString === 'function') {
+        value = value.toString();
+      } else {
+        return null;
+      }
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return null;
+    }
+
+    return trimmed;
   }
 }
 
