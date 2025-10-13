@@ -1198,11 +1198,13 @@ export const createPayment = async (data) => {
   });
 
   // Agregar campos faltantes
+  const computedTotal = Number(data.amount) || Number(data.monto) || calculateTotalAmount(validatedSeats);
   const enrichedData = {
     ...data,
     seats: validatedSeats, // Usar la versión validada
     tenant_id: data.tenant_id || '9dbdb86f-8424-484c-bb76-0d9fa27573c8', // Tenant por defecto
-    monto: data.monto || calculateTotalAmount(validatedSeats), // Calcular monto si no está presente
+    amount: computedTotal, // COLUMN REQUIRED (NOT NULL)
+    monto: computedTotal,  // Mantener compatibilidad con código existente
     payment_gateway_id: data.payment_gateway_id || '7e797aa6-ebbf-4b3a-8b5d-caa8992018f4', // Gateway por defecto (Reservas)
     created_at: new Date().toISOString()
   };

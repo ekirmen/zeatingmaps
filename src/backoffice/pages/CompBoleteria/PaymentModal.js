@@ -306,7 +306,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         // Verificar si ya existe un pago para estos asientos
         const existingPayment = seats.find(seat => seat.paymentId && seat.locator);
         
-        const paymentData = {
+          const paymentData = {
           user_id: selectedClient.id || selectedClient._id, // Usar user_id según el esquema
           evento_id: eventId,
           funcion_id: selectedFuncion.id || selectedFuncion._id,
@@ -326,6 +326,13 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
               method: entry.formaPago,
               amount: entry.importe
             })),
+            // Asegurar columnas de monto/amount para la inserción
+            amount: paymentEntries.length > 0
+              ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
+              : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
+            monto: paymentEntries.length > 0
+              ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
+              : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
             ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
           };
 
