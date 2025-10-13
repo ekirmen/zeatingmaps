@@ -4,6 +4,8 @@ import { supabase } from '../config/supabase';
  * Servicio para verificar si un asiento ya fue pagado
  * Verifica tanto en seat_locks como en payment_transactions
  */
+const SEAT_IDENTIFIER_KEYS = ['id', 'seat_id', '_id', 'sillaId'];
+
 class SeatPaymentChecker {
   /**
    * Verifica si un asiento ya fue pagado por el usuario actual
@@ -40,78 +42,50 @@ class SeatPaymentChecker {
       // 2. Verificar en payment_transactions si el asiento fue pagado por este usuario
       console.log('🔍 [SEAT_PAYMENT_CHECKER] Verificando payment_transactions para:', { seatId, funcionId, sessionId });
       
-      const { data: transactions, error: transactionsError } = await supabase
-        .from('payment_transactions')
-        .select('id, status, seats, user_id, locator')
-        .eq('funcion_id', funcionId)
-        .eq('status', 'completed')
-        .eq('user_id', sessionId);
+      const {
+        data: transactions,
+        error: transactionsError
+      } = await this.fetchCompletedTransactionsBySeat({
+        funcionId,
+        seatId,
+        userId: sessionId
+      });
 
       if (transactionsError) {
         console.error('❌ [SEAT_PAYMENT_CHECKER] Error checking payment_transactions:', transactionsError);
       } else {
         console.log('📊 [SEAT_PAYMENT_CHECKER] Transacciones encontradas:', transactions?.length || 0);
-        
+
         if (transactions && transactions.length > 0) {
-          // Verificar si el asiento está en alguna de las transacciones
-          for (const transaction of transactions) {
-            console.log('🔍 [SEAT_PAYMENT_CHECKER] Verificando transacción:', { 
-              id: transaction.id, 
-              user_id: transaction.user_id,
-              seats: transaction.seats 
-            });
-            
-            const seats = this.parseSeatsFromPayment(transaction.seats);
-            console.log('📋 [SEAT_PAYMENT_CHECKER] Asientos parseados:', seats);
-            
-            const seatExists = seats.some(seat => 
-              (seat.id || seat._id || seat.sillaId || seat.seat_id) === seatId
-            );
-            
-            console.log('🔍 [SEAT_PAYMENT_CHECKER] ¿Asiento encontrado?', seatExists);
-            
-            if (seatExists) {
-              console.log('✅ [SEAT_PAYMENT_CHECKER] Asiento pagado detectado en payment_transactions');
-              return {
-                isPaid: true,
-                status: 'completed',
-                source: 'payment_transactions'
-              };
-            }
-          }
+          console.log('✅ [SEAT_PAYMENT_CHECKER] Asiento pagado detectado en payment_transactions');
+          return {
+            isPaid: true,
+            status: 'completed',
+            source: 'payment_transactions'
+          };
         }
       }
 
       // 3. Verificar si el asiento fue pagado por CUALQUIER usuario (no solo el actual)
       console.log('🔍 [SEAT_PAYMENT_CHECKER] Verificando si el asiento fue pagado por cualquier usuario...');
-      
-      const { data: allTransactions, error: allTransactionsError } = await supabase
-        .from('payment_transactions')
-        .select('id, status, seats, user_id, locator')
-        .eq('funcion_id', funcionId)
-        .eq('status', 'completed');
+
+      const {
+        data: allTransactions,
+        error: allTransactionsError
+      } = await this.fetchCompletedTransactionsBySeat({ funcionId, seatId });
 
       if (allTransactionsError) {
         console.error('❌ [SEAT_PAYMENT_CHECKER] Error checking all payment_transactions:', allTransactionsError);
       } else {
         console.log('📊 [SEAT_PAYMENT_CHECKER] Todas las transacciones encontradas:', allTransactions?.length || 0);
-        
+
         if (allTransactions && allTransactions.length > 0) {
-          for (const transaction of allTransactions) {
-            const seats = this.parseSeatsFromPayment(transaction.seats);
-            const seatExists = seats.some(seat => 
-              (seat.id || seat._id || seat.sillaId || seat.seat_id) === seatId
-            );
-            
-            if (seatExists) {
-              console.log('✅ [SEAT_PAYMENT_CHECKER] Asiento pagado detectado por cualquier usuario en payment_transactions');
-              return {
-                isPaid: true,
-                status: 'completed',
-                source: 'payment_transactions_by_anyone'
-              };
-            }
-          }
+          console.log('✅ [SEAT_PAYMENT_CHECKER] Asiento pagado detectado por cualquier usuario en payment_transactions');
+          return {
+            isPaid: true,
+            status: 'completed',
+            source: 'payment_transactions_by_anyone'
+          };
         }
       }
 
@@ -160,29 +134,19 @@ class SeatPaymentChecker {
       }
 
       // 2. Verificar en payment_transactions
-      const { data: transactions, error: transactionsError } = await supabase
-        .from('payment_transactions')
-        .select('id, status, seats, user_id, locator')
-        .eq('funcion_id', funcionId)
-        .eq('status', 'completed');
+      const {
+        data: transactions,
+        error: transactionsError
+      } = await this.fetchCompletedTransactionsBySeat({ funcionId, seatId });
 
       if (transactionsError) {
         console.error('Error checking payment_transactions:', transactionsError);
       } else if (transactions && transactions.length > 0) {
-        for (const transaction of transactions) {
-          const seats = this.parseSeatsFromPayment(transaction.seats);
-          const seatExists = seats.some(seat => 
-            (seat.id || seat._id || seat.sillaId || seat.seat_id) === seatId
-          );
-          
-          if (seatExists) {
-            return {
-              isPaid: true,
-              status: 'completed',
-              source: 'payment_transactions'
-            };
-          }
-        }
+        return {
+          isPaid: true,
+          status: 'completed',
+          source: 'payment_transactions'
+        };
       }
 
       return {
@@ -220,6 +184,82 @@ class SeatPaymentChecker {
       console.error('Error parsing seats from payment:', error);
       return [];
     }
+  }
+
+  /**
+   * Busca transacciones completadas que incluyan el asiento indicado.
+   * Utiliza filtros contains con múltiples variantes de identificadores para los asientos.
+   * @param {Object} params
+   * @param {number} params.funcionId
+   * @param {string} params.seatId
+   * @param {string} [params.userId]
+   * @returns {Promise<{data: Array, error: import('@supabase/supabase-js').PostgrestError|null}>}
+   */
+  async fetchCompletedTransactionsBySeat({ funcionId, seatId, userId }) {
+    let lastError = null;
+
+    for (const key of SEAT_IDENTIFIER_KEYS) {
+      const seatFilter = [{ [key]: seatId }];
+      let query = supabase
+        .from('payment_transactions')
+        .select('id, status, seats, user_id, locator')
+        .eq('funcion_id', funcionId)
+        .eq('status', 'completed')
+        .contains('seats', seatFilter);
+
+      if (userId) {
+        query = query.eq('user_id', userId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        lastError = error;
+        console.error('❌ [SEAT_PAYMENT_CHECKER] Error buscando asiento en payment_transactions:', {
+          key,
+          seatId,
+          error
+        });
+        continue;
+      }
+
+      if (data && data.length > 0) {
+        return { data, error: null };
+      }
+    }
+
+    if (lastError) {
+      return { data: [], error: lastError };
+    }
+
+    // Fallback: revisar transacciones sin contains para mantener compatibilidad con datos antiguos
+    let fallbackQuery = supabase
+      .from('payment_transactions')
+      .select('id, status, seats, user_id, locator')
+      .eq('funcion_id', funcionId)
+      .eq('status', 'completed');
+
+    if (userId) {
+      fallbackQuery = fallbackQuery.eq('user_id', userId);
+    }
+
+    const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+    if (fallbackError) {
+      console.error('❌ [SEAT_PAYMENT_CHECKER] Error en fallback de búsqueda de payment_transactions:', fallbackError);
+    } else if (fallbackData?.length) {
+      for (const transaction of fallbackData) {
+        const seats = this.parseSeatsFromPayment(transaction.seats);
+        const seatExists = seats.some(seat =>
+          SEAT_IDENTIFIER_KEYS.some(identifierKey => seat?.[identifierKey] === seatId)
+        );
+
+        if (seatExists) {
+          return { data: [transaction], error: null };
+        }
+      }
+    }
+
+    return { data: [], error: fallbackError || null };
   }
 }
 
