@@ -1229,7 +1229,9 @@ export const createPayment = async (data) => {
     const seatId = seat.seat_id || seat.id || seat._id;
     return {
       id: seatId,
+      _id: seat._id || seatId,
       seat_id: seat.seat_id || seatId,
+      seatId: seat.seatId || seatId,
       name: seat.name || seat.nombre || 'Asiento',
       price: parseFloat(seat.price || seat.precio || 0),
       zona: seat.zona?.nombre || seat.zona || 'General',
