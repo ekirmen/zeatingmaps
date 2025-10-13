@@ -18,6 +18,42 @@ const { Option } = Select;
 
 const { Text } = Typography;
 
+const resolveTenantId = ({ user, selectedEvent, selectedFuncion, seats = [], carrito = [] }) => {
+  const candidateValues = [
+    user?.tenant_id,
+    user?.user_metadata?.tenant_id,
+    selectedEvent?.tenant_id,
+    selectedEvent?.tenantId,
+    selectedFuncion?.tenant_id,
+    selectedFuncion?.tenantId,
+    selectedFuncion?.sala?.tenant_id,
+    selectedFuncion?.sala?.tenantId,
+    selectedFuncion?.mapa?.tenant_id,
+    selectedFuncion?.mapa?.tenantId,
+    selectedFuncion?.plantilla?.tenant_id,
+    selectedFuncion?.plantilla?.tenantId,
+    selectedFuncion?.plantilla?.mapa?.tenant_id,
+    selectedFuncion?.plantilla?.mapa?.tenantId,
+  ];
+
+  for (const value of candidateValues) {
+    if (value) {
+      return value;
+    }
+  }
+
+  const seatSources = [...seats, ...carrito];
+  for (const seat of seatSources) {
+    if (!seat) continue;
+    if (seat.tenant_id) return seat.tenant_id;
+    if (seat.tenantId) return seat.tenantId;
+    if (seat.mapa?.tenant_id) return seat.mapa.tenant_id;
+    if (seat.mapa?.tenantId) return seat.mapa.tenantId;
+  }
+
+  return null;
+};
+
 const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFuncion, selectedAffiliate, selectedEvent }) => {
   // Ensure carrito is always an array
   const safeCarrito = Array.isArray(carrito) ? carrito : [];
@@ -305,80 +341,97 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
       const paymentPromises = Object.entries(seatsByEvent).map(async ([eventId, seats]) => {
         // Verificar si ya existe un pago para estos asientos
         const existingPayment = seats.find(seat => seat.paymentId && seat.locator);
-        
-          const primaryMethod = (paymentEntries[0]?.formaPago || selectedPaymentMethod || 'manual');
-          const paymentData = {
+
+        const resolvedTenantId = resolveTenantId({
+          user,
+          selectedEvent,
+          selectedFuncion,
+          seats,
+          carrito: safeCarrito,
+        });
+
+        if (!resolvedTenantId) {
+          console.warn('⚠️ No se pudo determinar tenant_id para la transacción de pago', {
+            eventId,
+            funcionId: selectedFuncion?.id || selectedFuncion?._id || null,
+          });
+        }
+
+        const primaryMethod = (paymentEntries[0]?.formaPago || selectedPaymentMethod || 'manual');
+        const paymentData = {
           user_id: selectedClient.id || selectedClient._id, // Usar user_id según el esquema
           evento_id: eventId,
           funcion_id: selectedFuncion.id || selectedFuncion._id,
           processed_by: isUuid(user?.id) ? user.id : null,
           seats: seats.map(item => ({
-              id: item.id || item._id || item.sillaId,
-              name: item.nombre,
-              price: item.precio,
-              zona: item.zonaId || (item.zona?._id || null),
-              mesa: item.mesa?._id || null,
-              ...(item.abonoGroup ? { abonoGroup: item.abonoGroup } : {})
-            })),
-            // Usar localizador existente si ya hay uno, sino generar uno nuevo
-            locator: existingPayment ? existingPayment.locator : generateLocator(),
-            // Estandarizar estado: 'completed' cuando está totalmente pagado, 'reserved' en caso contrario
-            status: diferencia > 0 ? 'reserved' : 'completed',
-            payments: paymentEntries.map(entry => ({
-              method: entry.formaPago,
-              amount: entry.importe
-            })),
-            // Asegurar columnas de monto/amount para la inserción
-            amount: paymentEntries.length > 0
-              ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
-              : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
-            monto: paymentEntries.length > 0
-              ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
-              : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
-            // Campos faltantes para compatibilidad y tracking
-            order_id: existingPayment ? existingPayment.locator : undefined, // lo normalizamos en service a locator
-            payment_method: primaryMethod,
-            gateway_name: 'manual',
-            // columnas legacy de compatibilidad
-            event: eventId,
-            funcion: selectedFuncion.id || selectedFuncion._id,
-            user: (selectedClient.id || selectedClient._id) || null,
-            fecha: new Date().toISOString(),
-            ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
-          };
+            id: item.id || item._id || item.sillaId,
+            name: item.nombre,
+            price: item.precio,
+            zona: item.zonaId || (item.zona?._id || null),
+            mesa: item.mesa?._id || null,
+            ...(item.abonoGroup ? { abonoGroup: item.abonoGroup } : {})
+          })),
+          // Usar localizador existente si ya hay uno, sino generar uno nuevo
+          locator: existingPayment ? existingPayment.locator : generateLocator(),
+          // Estandarizar estado: 'completed' cuando está totalmente pagado, 'reserved' en caso contrario
+          status: diferencia > 0 ? 'reserved' : 'completed',
+          payments: paymentEntries.map(entry => ({
+            method: entry.formaPago,
+            amount: entry.importe
+          })),
+          // Asegurar columnas de monto/amount para la inserción
+          amount: paymentEntries.length > 0
+            ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
+            : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
+          monto: paymentEntries.length > 0
+            ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
+            : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
+          // Campos faltantes para compatibilidad y tracking
+          order_id: existingPayment ? existingPayment.locator : undefined, // lo normalizamos en service a locator
+          payment_method: primaryMethod,
+          tenant_id: resolvedTenantId || undefined,
+          tenantId: resolvedTenantId || undefined,
+          gateway_name: 'manual',
+          // columnas legacy de compatibilidad
+          event: eventId,
+          funcion: selectedFuncion.id || selectedFuncion._id,
+          user: (selectedClient.id || selectedClient._id) || null,
+          fecha: new Date().toISOString(),
+          ...(selectedAffiliate ? { referrer: selectedAffiliate.user.login } : {})
+        };
 
-          console.log('Payment data:', paymentData);
+        console.log('Payment data:', paymentData);
 
-          // Actualizar seat_locks con el locator final y estado correcto antes de crear el pago
-          if (paymentData.locator) {
-            try {
-              const normalizedMethodId = (selectedPaymentMethod || '')
-                .toString()
-                .trim()
-                .toLowerCase()
-                .replace(/\s+/g, '_');
+        // Actualizar seat_locks con el locator final y estado correcto antes de crear el pago
+        if (paymentData.locator) {
+          try {
+            const normalizedMethodId = (selectedPaymentMethod || '')
+              .toString()
+              .trim()
+              .toLowerCase()
+              .replace(/\s+/g, '_');
 
-              const isReservationFlow = reservationType === '2' || reservationType === '3' || diferencia > 0;
-              const seatStatus = determineSeatLockStatus({
-                methodId: normalizedMethodId || 'boleteria_manual',
-                transactionStatus: paymentData.status,
-                isReservation: isReservationFlow,
-                manualStatus: isReservationFlow ? 'reservado' : 'pagado',
-              });
+            const isReservationFlow = reservationType === '2' || reservationType === '3' || diferencia > 0;
+            const seatStatus = determineSeatLockStatus({
+              methodId: normalizedMethodId || 'boleteria_manual',
+              transactionStatus: paymentData.status,
+              isReservation: isReservationFlow,
+              manualStatus: isReservationFlow ? 'reservado' : 'pagado',
+            });
 
-              await seatLocatorService.finalizeSeatsAfterPayment({
-                seats,
-                locator: paymentData.locator,
-                userId: paymentData.user_id || null,
-                tenantId: user?.tenant_id || null,
-                funcionId: paymentData.funcion_id,
-                status: seatStatus,
-                sessionId: seatLockSessionId,
-              });
-            } catch (e) {
-              console.error('Error actualizando seat_locks:', e);
-            }
+            await seatLocatorService.finalizeSeatsAfterPayment({
+              seats,
+              locator: paymentData.locator,
+              userId: paymentData.user_id || null,
+              tenantId: resolvedTenantId || null,
+              funcionId: paymentData.funcion_id,
+              status: seatStatus,
+              sessionId: seatLockSessionId,
+            });
+          } catch (e) {
+            console.error('Error actualizando seat_locks:', e);
           }
+        }
 
           // Si ya existe un pago, actualizarlo en lugar de crear uno nuevo
           if (existingPayment) {
@@ -399,9 +452,23 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         });
 
         const results = await Promise.all(paymentPromises);
+        const tenantIdForTransactions = resolveTenantId({
+          user,
+          selectedEvent,
+          selectedFuncion,
+          seats: safeCarrito,
+          carrito: safeCarrito,
+        });
+
+        if (!tenantIdForTransactions) {
+          console.warn('⚠️ No se pudo determinar tenant_id para las transacciones manuales', {
+            eventId: selectedEvent?.id || null,
+            funcionId: selectedFuncion?.id || selectedFuncion?._id || null,
+          });
+        }
         if (results && results.length > 0 && results[0]) {
           setLocator(results[0].locator);
-          
+
           // Crear payment_transaction para cada método de pago usado
           try {
             const paymentTransactionPromises = paymentEntries.map(async (entry) => {
@@ -414,7 +481,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                 gatewayTransactionId: null,
                 gatewayResponse: null,
                 locator: results[0].locator,
-                tenantId: user?.tenant_id || null,
+                tenantId: tenantIdForTransactions || null,
                 userId: selectedClient?.id || selectedClient?._id,
                 eventoId: selectedEvent?.id,
                 funcionId: selectedFuncion?.id || selectedFuncion?._id,
