@@ -1200,19 +1200,31 @@ export const createPayment = async (data) => {
   // Validar que los asientos no estén ya vendidos
   const seats = parseSeatsArray(data.seats);
   if (seats.length > 0) {
-    const funcionId = data.funcion;
+    const funcionId = data.funcion ?? data.funcion_id ?? data.funcionId;
 
     console.log('🔍 Validando asientos antes de crear pago:', { seats, funcionId });
 
-    for (const seat of seats) {
-      const existingPayment = await fetchPaymentBySeat(funcionId, seat.id);
-      if (existingPayment && existingPayment.status === 'pagado') {
-        throw new Error(`El asiento ${seat.id} ya está vendido (locator: ${existingPayment.locator})`);
-      }
-      
-      // También verificar asientos reservados
-      if (existingPayment && existingPayment.status === 'reservado') {
-        throw new Error(`El asiento ${seat.id} ya está reservado (locator: ${existingPayment.locator})`);
+    if (!funcionId) {
+      console.warn('⚠️ [createPayment] Función no proporcionada, se omite validación de asientos.');
+    } else {
+      for (const seat of seats) {
+        const existingPayment = await fetchPaymentBySeat(funcionId, seat.id);
+        if (
+          existingPayment &&
+          ['pagado', 'paid', 'completed', 'vendido'].includes(
+            (existingPayment.status || '').toLowerCase()
+          )
+        ) {
+          throw new Error(`El asiento ${seat.id} ya está vendido (locator: ${existingPayment.locator})`);
+        }
+
+        // También verificar asientos reservados
+        if (
+          existingPayment &&
+          ['reservado', 'reserved'].includes((existingPayment.status || '').toLowerCase())
+        ) {
+          throw new Error(`El asiento ${seat.id} ya está reservado (locator: ${existingPayment.locator})`);
+        }
       }
     }
   }
