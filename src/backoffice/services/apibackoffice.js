@@ -1508,9 +1508,11 @@ export const fetchPaymentBySeat = async (funcionId, seatId) => {
       .select('*, seats, funcion_id, event:eventos(*), user:profiles!user_id(*)')
       .eq('funcion_id', funcionId);
     
-    // Usar contains para buscar en el array de seats - corregir el formato
+    // Aplicar filtro contains sobre el array de seats asegurando un JSON válido
+    const seatFilterValue = JSON.stringify([{ id: seatId }]);
+
     const { data, error } = await query
-      .contains('seats', [{ id: seatId }])
+      .filter('seats', 'cs', seatFilterValue)
       .or(`seats.cs.[{"_id":"${seatId}"}],seats.cs.[{"id":"${seatId}"}]`);
     
     console.log('🔍 [fetchPaymentBySeat] Resultado:', { data, error });

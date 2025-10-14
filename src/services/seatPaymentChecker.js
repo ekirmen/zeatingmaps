@@ -200,12 +200,14 @@ class SeatPaymentChecker {
 
     for (const key of SEAT_IDENTIFIER_KEYS) {
       const seatFilter = [{ [key]: seatId }];
+      const seatFilterValue = JSON.stringify(seatFilter);
+
       let query = supabase
         .from('payment_transactions')
         .select('id, status, seats, user_id, locator')
         .eq('funcion_id', funcionId)
         .eq('status', 'completed')
-        .contains('seats', seatFilter);
+        .filter('seats', 'cs', seatFilterValue);
 
       if (userId) {
         query = query.eq('user_id', userId);
