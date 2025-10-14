@@ -1240,15 +1240,18 @@ export const createPayment = async (data) => {
     };
   });
 
-  // Agregar campos faltantes
-  const computedTotal = Number(data.amount) || Number(data.monto) || calculateTotalAmount(validatedSeats);
+  // Normalizar campos y agregar valores faltantes
+  const { tenantId, ...restData } = data || {};
+  const computedTotal = Number(restData.amount) || Number(restData.monto) || calculateTotalAmount(validatedSeats);
+  const normalizedTenantId = restData.tenant_id || tenantId || '9dbdb86f-8424-484c-bb76-0d9fa27573c8';
+
   const enrichedData = {
-    ...data,
+    ...restData,
     seats: validatedSeats, // Usar la versión validada
-    tenant_id: data.tenant_id || '9dbdb86f-8424-484c-bb76-0d9fa27573c8', // Tenant por defecto
+    tenant_id: normalizedTenantId, // Asegurar snake_case para la columna
     amount: computedTotal, // COLUMN REQUIRED (NOT NULL)
     monto: computedTotal,  // Mantener compatibilidad con código existente
-    payment_gateway_id: data.payment_gateway_id || '7e797aa6-ebbf-4b3a-8b5d-caa8992018f4', // Gateway por defecto (Reservas)
+    payment_gateway_id: restData.payment_gateway_id || '7e797aa6-ebbf-4b3a-8b5d-caa8992018f4', // Gateway por defecto (Reservas)
     created_at: new Date().toISOString()
   };
 
