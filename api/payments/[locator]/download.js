@@ -87,16 +87,54 @@ export default async function handler(req, res) {
 
     console.log('✅ [DOWNLOAD] Usuario autenticado correctamente:', user.id);
 
-    // Get payment data - SIMPLIFIED QUERY to avoid join issues
+    // Get payment data - tolerante a duplicados en payment_transactions
     console.log('🔍 [DOWNLOAD] Buscando pago con localizador:', locator);
-    const { data: payment, error } = await supabaseAdmin
+    const { data: locatorMatches, error: locatorError } = await supabaseAdmin
       .from('payment_transactions')
       .select('*')
       .eq('locator', locator)
-      .single();
+      .order('created_at', { ascending: false })
+      .limit(5);
 
-    if (error || !payment) {
-      console.error('❌ [DOWNLOAD] Error buscando pago:', error);
+    if (locatorError) {
+      console.error('❌ [DOWNLOAD] Error buscando por locator:', locatorError);
+    }
+
+    let payment = Array.isArray(locatorMatches) ? locatorMatches[0] : null;
+
+    if (Array.isArray(locatorMatches) && locatorMatches.length > 1) {
+      console.warn('⚠️ [DOWNLOAD] Se encontraron múltiples registros para el mismo locator. Usando el más reciente.', {
+        totalMatches: locatorMatches.length,
+        ids: locatorMatches.map((p) => p.id),
+      });
+    }
+
+    // Fallback: intentar con order_id si no se encontró por locator (casos legacy)
+    if (!payment) {
+      console.log('🔄 [DOWNLOAD] Intentando búsqueda alternativa por order_id');
+      const { data: orderMatches, error: orderError } = await supabaseAdmin
+        .from('payment_transactions')
+        .select('*')
+        .eq('order_id', locator)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      if (orderError) {
+        console.error('❌ [DOWNLOAD] Error buscando por order_id:', orderError);
+      }
+
+      payment = Array.isArray(orderMatches) ? orderMatches[0] : null;
+
+      if (Array.isArray(orderMatches) && orderMatches.length > 1) {
+        console.warn('⚠️ [DOWNLOAD] Se encontraron múltiples registros para el mismo order_id. Usando el más reciente.', {
+          totalMatches: orderMatches.length,
+          ids: orderMatches.map((p) => p.id),
+        });
+      }
+    }
+
+    if (!payment) {
+      console.error('❌ [DOWNLOAD] No se encontró el pago con el locator u order_id proporcionado');
       res.setHeader('Content-Type', 'application/json');
       return res.status(404).json({ error: 'Payment not found' });
     }
