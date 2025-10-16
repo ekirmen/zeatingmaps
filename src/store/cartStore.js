@@ -392,6 +392,7 @@ export const useCartStore = create(
             }
           }
           
+          // Limpiar el estado del carrito inmediatamente para actualizar la UI
           set({ 
             items: [], 
             products: [],
@@ -400,6 +401,15 @@ export const useCartStore = create(
             timeLeft: 0 
           });
           clearExpirationTimer();
+          
+          // Forzar una actualización del estado de los asientos después de limpiar
+          setTimeout(() => {
+            // Disparar un evento personalizado para notificar que el carrito se limpió
+            window.dispatchEvent(new CustomEvent('cartCleared', { 
+              detail: { clearedSeats: items } 
+            }));
+          }, 100);
+          
           toast.success('Carrito limpiado');
         },
 

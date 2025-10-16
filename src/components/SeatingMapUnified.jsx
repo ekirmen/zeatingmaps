@@ -197,6 +197,7 @@ const SeatingMapUnified = ({
   // Estado para controles de zoom
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [forceRefresh, setForceRefresh] = useState(0);
   
   // Funciones para controles de zoom
   const handleZoomIn = useCallback(() => {
@@ -234,6 +235,30 @@ const SeatingMapUnified = ({
       }
     };
   }, [normalizedFuncionId, subscribeToFunction, unsubscribe]);
+
+  // Listener para el evento de carrito limpiado
+  useEffect(() => {
+    const handleCartCleared = (event) => {
+      console.log('🧹 [SEATING_MAP] Carrito limpiado, forzando actualización de estado visual');
+      
+      // Forzar una actualización del estado de los asientos después de limpiar el carrito
+      setTimeout(() => {
+        // Disparar un evento para refrescar el estado de los asientos
+        window.dispatchEvent(new CustomEvent('forceSeatStateRefresh', {
+          detail: { clearedSeats: event.detail?.clearedSeats || [] }
+        }));
+        
+        // Forzar re-render del componente
+        setForceRefresh(prev => prev + 1);
+      }, 200);
+    };
+
+    window.addEventListener('cartCleared', handleCartCleared);
+    
+    return () => {
+      window.removeEventListener('cartCleared', handleCartCleared);
+    };
+  }, []);
 
   const selectedSeatIds = useMemo(() => {
     console.log('🔍 [SEATING_MAP] Debug modoVenta:', { modoVenta, tipo: typeof modoVenta });
@@ -288,7 +313,7 @@ const SeatingMapUnified = ({
     });
     
     return new Set(allSeatIds);
-  }, [selectedSeats, modoVenta, lockedSeatsState, lockedSeats]);
+  }, [selectedSeats, modoVenta, lockedSeatsState, lockedSeats, forceRefresh]);
 
   const selectedSeatList = useMemo(() => Array.from(selectedSeatIds), [selectedSeatIds]);
 
@@ -321,7 +346,7 @@ const SeatingMapUnified = ({
     const result = Array.from(lockMap.values());
     // console.log('🎫 [SEATING_MAP] Combined locks:', result.length);
     return result;
-  }, [lockedSeatsState, lockedSeats]);
+  }, [lockedSeatsState, lockedSeats, forceRefresh]);
 
   // Controlar visibilidad del panel de depuración de locks (oculto por defecto)
   const shouldShowSeatLockDebug =
