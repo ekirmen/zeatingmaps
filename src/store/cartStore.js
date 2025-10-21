@@ -357,17 +357,13 @@ export const useCartStore = create(
             await useSeatLockStore.getState().unlockSeat(seatId, functionId);
             console.log('🔓 [CART] Asiento desbloqueado de la BD:', seatId);
           } else {
-            // Si no está bloqueado en la BD, eliminar del seatStates para volver al estado original
-            // Asiento no estaba bloqueado en BD, eliminando del seatStates
+            // Si no está bloqueado en la BD, marcar como disponible en seatStates
+            // Asiento no estaba bloqueado en BD, marcando como disponible
             
-            // Eliminar del seatStates para volver al estado original del asiento
-            const currentSeatStates = useSeatLockStore.getState().seatStates;
-            const newSeatStates = new Map(currentSeatStates);
-            newSeatStates.delete(seatId); // Eliminar para volver al estado original
-            // Usar la función específica para actualizar seatStates
-            useSeatLockStore.getState().setSeatStates(newSeatStates);
+            // Marcar explícitamente como disponible en lugar de solo eliminar
+            useSeatLockStore.getState().updateSeatState(seatId, 'disponible');
             
-            // Asiento eliminado del seatStates - volverá a su estado original
+            // Asiento marcado como disponible
           }
           
           // Disparar evento para notificar al mapa que debe actualizarse
