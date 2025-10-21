@@ -258,12 +258,19 @@ const SeatingMapUnified = ({
       setForceRefresh(prev => prev + 1);
     };
 
+    const handleSeatRemovedFromCart = (event) => {
+      console.log('🗑️ [SEATING_MAP] Asiento eliminado del carrito, forzando actualización:', event.detail);
+      setForceRefresh(prev => prev + 1);
+    };
+
     window.addEventListener('cartCleared', handleCartCleared);
     window.addEventListener('forceSeatStateRefresh', handleForceRefresh);
+    window.addEventListener('seatRemovedFromCart', handleSeatRemovedFromCart);
     
     return () => {
       window.removeEventListener('cartCleared', handleCartCleared);
       window.removeEventListener('forceSeatStateRefresh', handleForceRefresh);
+      window.removeEventListener('seatRemovedFromCart', handleSeatRemovedFromCart);
     };
   }, []);
 

@@ -370,6 +370,13 @@ export const useCartStore = create(
             // Asiento eliminado del seatStates - volverá a su estado original
           }
           
+          // Disparar evento para notificar al mapa que debe actualizarse
+          requestAnimationFrame(() => {
+            window.dispatchEvent(new CustomEvent('seatRemovedFromCart', {
+              detail: { seatId, functionId }
+            }));
+          });
+          
           toast.success('Asiento eliminado del carrito');
         },
 
