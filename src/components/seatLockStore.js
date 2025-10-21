@@ -629,11 +629,9 @@ export const useSeatLockStore = create((set, get) => ({
               } else {
                 console.warn('⚠️ [SEAT_LOCK_STORE] No se encontró el registro eliminado en el estado local:', { deletedId, currentSeats: currentSeats.length, currentTables: currentTables.length });
                 
-                // Como fallback, limpiar todos los estados de asientos que puedan estar desincronizados
-                set((state) => {
-                  console.log('🧹 [SEAT_LOCK_STORE] Limpiando todos los estados como fallback');
-                  return { seatStates: new Map() };
-                });
+                // No limpiar todos los estados como fallback - esto es demasiado destructivo
+                // En su lugar, solo registrar la advertencia y continuar
+                console.log('ℹ️ [SEAT_LOCK_STORE] Registro no encontrado en estado local, pero continuando sin limpiar estados');
               }
             }
           }
@@ -786,17 +784,17 @@ export const useSeatLockStore = create((set, get) => ({
             locator: result.lockData.locator,
           },
         ];
-        console.log('🔒 [SEAT_LOCK] Estado local DESPUÉS del cambio:', newLockedSeats);
+        // Estado local DESPUÉS del cambio
         return {
           lockedSeats: newLockedSeats,
         };
       });
 
-      console.log('✅ Asiento bloqueado exitosamente en DB y estado local');
+      // Asiento bloqueado exitosamente
       
       // Actualizar el estado del asiento individual para el usuario actual
       get().updateSeatState(normalizedSeatId, 'seleccionado');
-      console.log('🔄 [SEAT_LOCK] Estado del asiento actualizado para el usuario actual');
+      // Estado del asiento actualizado para el usuario actual
       
       return true;
     } catch (error) {
@@ -983,7 +981,7 @@ export const useSeatLockStore = create((set, get) => ({
         };
       });
 
-      console.log('✅ Asiento desbloqueado exitosamente en DB y estado local');
+      // Asiento desbloqueado exitosamente
 
       // Solo eliminar del seatStates si el asiento estaba temporalmente bloqueado/seleccionado
       // No sobrescribir el estado original del asiento (reservado, pagado, etc.)

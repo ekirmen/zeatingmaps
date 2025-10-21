@@ -358,7 +358,7 @@ export const useCartStore = create(
             console.log('🔓 [CART] Asiento desbloqueado de la BD:', seatId);
           } else {
             // Si no está bloqueado en la BD, eliminar del seatStates para volver al estado original
-            console.log('🎨 [CART] Asiento no estaba bloqueado en BD, eliminando del seatStates:', seatId);
+            // Asiento no estaba bloqueado en BD, eliminando del seatStates
             
             // Eliminar del seatStates para volver al estado original del asiento
             const currentSeatStates = useSeatLockStore.getState().seatStates;
@@ -367,7 +367,7 @@ export const useCartStore = create(
             // Usar la función específica para actualizar seatStates
             useSeatLockStore.getState().setSeatStates(newSeatStates);
             
-            console.log('🌐 [CART] Asiento eliminado del seatStates - volverá a su estado original:', seatId);
+            // Asiento eliminado del seatStates - volverá a su estado original
           }
           
           toast.success('Asiento eliminado del carrito');
