@@ -240,6 +240,7 @@ const SeatingMapUnified = ({
   useEffect(() => {
     const handleCartCleared = (event) => {
       console.log('🧹 [SEATING_MAP] Carrito limpiado, forzando actualización de estado visual');
+      console.log('🧹 [SEATING_MAP] Asientos limpiados:', event.detail?.clearedSeats);
       
       // Forzar una actualización inmediata del estado de los asientos
       setForceRefresh(prev => prev + 1);

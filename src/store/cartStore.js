@@ -375,6 +375,7 @@ export const useCartStore = create(
 
         clearCart: async (skipUnlock = false) => {
           const { items } = get();
+          console.log('🧹 [CART_STORE] Limpiando carrito, items actuales:', items.length);
           
           // Solo intentar desbloquear si no se especifica skipUnlock
           if (!skipUnlock) {
@@ -408,12 +409,13 @@ export const useCartStore = create(
           clearExpirationTimer();
           
           // Forzar una actualización del estado de los asientos después de limpiar
-          setTimeout(() => {
+          // Usar requestAnimationFrame para asegurar que el estado se haya actualizado
+          requestAnimationFrame(() => {
             // Disparar un evento personalizado para notificar que el carrito se limpió
             window.dispatchEvent(new CustomEvent('cartCleared', { 
               detail: { clearedSeats: items } 
             }));
-          }, 100);
+          });
           
           toast.success('Carrito limpiado');
         },
