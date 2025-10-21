@@ -408,14 +408,18 @@ export const useCartStore = create(
           });
           clearExpirationTimer();
           
-          // Forzar una actualización del estado de los asientos después de limpiar
-          // Usar requestAnimationFrame para asegurar que el estado se haya actualizado
-          requestAnimationFrame(() => {
-            // Disparar un evento personalizado para notificar que el carrito se limpió
-            window.dispatchEvent(new CustomEvent('cartCleared', { 
-              detail: { clearedSeats: items } 
-            }));
-          });
+          // Solo disparar el evento cartCleared si realmente se está limpiando todo el carrito
+          // (no cuando se deselecciona un asiento individual)
+          if (items.length > 0) {
+            // Forzar una actualización del estado de los asientos después de limpiar
+            // Usar requestAnimationFrame para asegurar que el estado se haya actualizado
+            requestAnimationFrame(() => {
+              // Disparar un evento personalizado para notificar que el carrito se limpió
+              window.dispatchEvent(new CustomEvent('cartCleared', { 
+                detail: { clearedSeats: items } 
+              }));
+            });
+          }
           
           toast.success('Carrito limpiado');
         },
