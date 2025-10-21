@@ -95,13 +95,17 @@ export const useCartStore = create(
             
             // Verificar si el asiento ya fue pagado antes de permitir deselección
             const currentSessionId = localStorage.getItem('anonSessionId');
-            const seatPaymentChecker = await import('../services/seatPaymentChecker');
-            const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
             
-            if (paymentCheck.isPaid) {
-              console.log('🚫 [CART_TOGGLE] No se puede deseleccionar asiento ya pagado:', seatId);
-              toast.error('Este asiento ya ha sido comprado y no puede ser deseleccionado');
-              return;
+            // Solo verificar pago si tenemos functionId válido
+            if (functionId) {
+              const seatPaymentChecker = await import('../services/seatPaymentChecker');
+              const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
+              
+              if (paymentCheck.isPaid) {
+                console.log('🚫 [CART_TOGGLE] No se puede deseleccionar asiento ya pagado:', seatId);
+                toast.error('Este asiento ya ha sido comprado y no puede ser deseleccionado');
+                return;
+              }
             }
             
             // Quitar del carrito
@@ -159,13 +163,15 @@ export const useCartStore = create(
               console.log('✅ [CART_TOGGLE] Asiento disponible, procediendo a seleccionar');
               
               // Verificar si el asiento ya fue pagado
-              const seatPaymentChecker = await import('../services/seatPaymentChecker');
-              const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
-              
-              if (paymentCheck.isPaid) {
-                console.log('🚫 [CART_TOGGLE] Asiento ya pagado:', seatId);
-                toast.error('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
-                return;
+              if (functionId) {
+                const seatPaymentChecker = await import('../services/seatPaymentChecker');
+                const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
+                
+                if (paymentCheck.isPaid) {
+                  console.log('🚫 [CART_TOGGLE] Asiento ya pagado:', seatId);
+                  toast.error('Este asiento ya ha sido comprado y no puede ser seleccionado nuevamente');
+                  return;
+                }
               }
               
               // Bloquear en BD
@@ -316,13 +322,17 @@ export const useCartStore = create(
           
           // Verificar si el asiento ya fue pagado antes de permitir eliminación
           const currentSessionId = localStorage.getItem('anonSessionId');
-          const seatPaymentChecker = await import('../services/seatPaymentChecker');
-          const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
           
-          if (paymentCheck.isPaid) {
-            console.log('🚫 [CART] No se puede eliminar asiento ya pagado:', seatId);
-            toast.error('Este asiento ya ha sido comprado y no puede ser eliminado del carrito');
-            return;
+          // Solo verificar pago si tenemos functionId válido
+          if (functionId) {
+            const seatPaymentChecker = await import('../services/seatPaymentChecker');
+            const paymentCheck = await seatPaymentChecker.default.isSeatPaidByUser(seatId, functionId, currentSessionId);
+            
+            if (paymentCheck.isPaid) {
+              console.log('🚫 [CART] No se puede eliminar asiento ya pagado:', seatId);
+              toast.error('Este asiento ya ha sido comprado y no puede ser eliminado del carrito');
+              return;
+            }
           }
           
           const filtered = items.filter(item => (item._id || item.id) !== seatId);

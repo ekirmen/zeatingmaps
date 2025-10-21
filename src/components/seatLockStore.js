@@ -396,10 +396,7 @@ export const useSeatLockStore = create((set, get) => ({
           console.error('❌ [SEAT_LOCK_STORE] Error cargando payment_transactions:', paymentError);
         }
 
-        console.log('📊 [SEAT_LOCK_STORE] Datos cargados:', {
-          seatLocks: seatLocksData?.length || 0,
-          payments: paymentData?.length || 0
-        });
+        // Datos cargados
 
         // 3. Procesar seat_locks
         const validSeatLocksData = Array.isArray(seatLocksData) ? seatLocksData : [];
@@ -634,7 +631,6 @@ export const useSeatLockStore = create((set, get) => ({
                 
                 // Como fallback, limpiar todos los estados de asientos que puedan estar desincronizados
                 set((state) => {
-                  const newSeatStates = new Map(state.seatStates);
                   console.log('🧹 [SEAT_LOCK_STORE] Limpiando todos los estados como fallback');
                   return { seatStates: new Map() };
                 });
@@ -726,7 +722,7 @@ export const useSeatLockStore = create((set, get) => ({
 
   // Bloquear asiento individual usando servicio atómico
   lockSeat: async (seatId, status = 'seleccionado', overrideFuncionId = null) => {
-    console.log('🚀 [SEAT_LOCK] Iniciando proceso de bloqueo atómico para asiento:', seatId);
+    // Iniciando proceso de bloqueo atómico
     
     try {
       const topic = get().channel?.topic;
@@ -770,12 +766,12 @@ export const useSeatLockStore = create((set, get) => ({
         return false;
       }
 
-      console.log('💾 [SEAT_LOCK] Asiento bloqueado exitosamente con servicio atómico');
+      // Asiento bloqueado exitosamente
 
       // Actualización local inmediata
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
-        console.log('📊 [SEAT_LOCK] Estado local ANTES del cambio:', currentSeats);
+        // Estado local ANTES del cambio
         
         const newLockedSeats = [
           ...currentSeats.filter((s) => s.seat_id !== normalizedSeatId),
@@ -914,7 +910,7 @@ export const useSeatLockStore = create((set, get) => ({
 
   // Desbloquear asiento individual usando servicio atómico
   unlockSeat: async (seatId, overrideFuncionId = null) => {
-    console.log('🚀 [SEAT_LOCK] Iniciando proceso de desbloqueo atómico para asiento:', seatId);
+    // Iniciando proceso de desbloqueo atómico
     
     try {
       const topic = get().channel?.topic;
@@ -973,15 +969,15 @@ export const useSeatLockStore = create((set, get) => ({
         return false;
       }
 
-      console.log('💾 [SEAT_LOCK] Asiento desbloqueado exitosamente con servicio atómico');
+      // Asiento desbloqueado exitosamente
     
       // Actualización local inmediata
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
-        console.log('📊 [SEAT_LOCK] Estado local ANTES del desbloqueo:', currentSeats);
+        // Estado local ANTES del desbloqueo
 
         const updatedSeats = currentSeats.filter((s) => s.seat_id !== normalizedSeatId);
-        console.log('🔓 [SEAT_LOCK] Estado local DESPUÉS del desbloqueo:', updatedSeats);
+        // Estado local DESPUÉS del desbloqueo
         return {
           lockedSeats: updatedSeats,
         };
@@ -1139,7 +1135,7 @@ export const useSeatLockStore = create((set, get) => ({
         );
         
         if (isLockedByMe) {
-          console.log('🔍 [SEAT_LOCK] Asiento bloqueado por el usuario actual:', seatId);
+          // Asiento bloqueado por el usuario actual
           return true;
         }
         
@@ -1204,7 +1200,7 @@ export const useSeatLockStore = create((set, get) => ({
       
       // Consultar BD para verificar si está bloqueado por otro usuario
       try {
-        console.log('🔍 [SEAT_LOCK] Verificando BD para asiento (no bloqueado localmente):', seatId);
+        // Verificando BD para asiento (no bloqueado localmente)
         const { data, error } = await supabase
           .from('seat_locks')
           .select('*')
@@ -1245,7 +1241,7 @@ export const useSeatLockStore = create((set, get) => ({
     
     // Solo consultar BD si no hay cache válido
     try {
-      console.log('🔍 [SEAT_LOCK] Confirmando en BD para asiento (bloqueado localmente):', seatId);
+        // Confirmando en BD para asiento (bloqueado localmente)
       const { data, error } = await supabase
         .from('seat_locks')
         .select('*')

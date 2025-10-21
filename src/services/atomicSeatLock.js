@@ -11,7 +11,7 @@ class AtomicSeatLockService {
    */
   async lockSeatAtomically(seatId, funcionId, sessionId, status = 'seleccionado', options = {}) {
     try {
-      console.log('🔒 [ATOMIC_LOCK] Intentando bloqueo atómico:', { seatId, funcionId, sessionId, status });
+      // Intentando bloqueo atómico
 
       // Validar parámetros requeridos
       const normalizedSeatId = this.normalizeSeatIdValue(seatId);
