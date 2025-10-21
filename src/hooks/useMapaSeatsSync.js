@@ -70,14 +70,14 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
           });
         // Caso 2: Asiento individual suelto (no dentro de una mesa)
         } else if (elemento._id && (elemento.type === 'silla' || elemento.type === 'circle' || elemento.type === 'rect')) {
-          console.log(`✅ [useMapaSeatsSync] Procesando asiento individual:`, elemento._id);
+          // Procesando asiento individual
           
           // Determinar el estado del asiento basado en la información disponible
           let estado = elemento.estado || 'disponible';
           
           // Si el asiento tiene información de zona, usar esa información
           if (elemento.zona) {
-            console.log(`🎯 [useMapaSeatsSync] Asiento ${elemento._id} en zona:`, elemento.zona.nombre);
+            // Asiento en zona
           }
           
           // Asignar zona automáticamente basándose en la posición
@@ -113,15 +113,10 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
             empty: elemento.empty !== undefined ? elemento.empty : false
           };
           allSeats.push(seatData);
-          console.log(`✅ [useMapaSeatsSync] Asiento agregado:`, {
-            _id: seatData._id,
-            estado: seatData.estado,
-            zona: seatData.zona?.nombre,
-            fill: seatData.fill
-          });
+          // Asiento agregado
         // Caso 3: Elemento que puede ser un asiento pero no tiene el tipo correcto
         } else if (elemento._id && elemento.nombre && (elemento.x !== undefined || elemento.posicion)) {
-          console.log(`🎯 [useMapaSeatsSync] Procesando elemento como asiento potencial:`, elemento._id);
+          // Procesando elemento como asiento potencial
           
           const seatData = {
             ...elemento,
@@ -140,12 +135,7 @@ export const useMapaSeatsSync = (mapa, funcionId) => {
             empty: elemento.empty !== undefined ? elemento.empty : false
           };
           allSeats.push(seatData);
-          console.log(`🎯 [useMapaSeatsSync] Asiento potencial agregado:`, {
-            _id: seatData._id,
-            estado: seatData.estado,
-            zona: seatData.zona?.nombre,
-            fill: seatData.fill
-          });
+          // Asiento potencial agregado
         } else {
           console.log(`❌ [useMapaSeatsSync] Elemento no reconocido:`, {
             _id: elemento._id,

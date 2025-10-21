@@ -452,11 +452,7 @@ export const useSeatLockStore = create((set, get) => ({
           }
           
           newSeatStates.set(lock.seat_id, visualState);
-          console.log('🎨 [SEAT_LOCK_STORE] Estado inicial del asiento (seat_locks):', { 
-            seatId: lock.seat_id, 
-            status: lock.status, 
-            visualState 
-          });
+          // Estado inicial del asiento (seat_locks)
         });
 
         // Procesar asientos vendidos de payment_transactions
@@ -464,12 +460,7 @@ export const useSeatLockStore = create((set, get) => ({
         soldSeats.forEach((seatInfo, seatId) => {
           // SIEMPRE establecer como 'vendido' si está en payment_transactions, sin importar seat_locks
           newSeatStates.set(seatId, 'vendido');
-          console.log('🎨 [SEAT_LOCK_STORE] Estado inicial del asiento (payment_transactions - PRIORIDAD):', { 
-            seatId, 
-            status: seatInfo.status, 
-            visualState: 'vendido',
-            overridesSeatLock: newSeatStates.has(seatId) ? 'SÍ' : 'NO'
-          });
+          // Estado inicial del asiento (payment_transactions - PRIORIDAD)
         });
         
         set({ 

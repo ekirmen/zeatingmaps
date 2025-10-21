@@ -64,28 +64,23 @@ export const useCartStore = create(
             return;
           }
           
-          console.log('🛒 [CART_TOGGLE] Procesando asiento:', { seatId, seat });
+          // Procesando asiento
 
           const { items } = get();
-          console.log('🛒 [CART_TOGGLE] Items actuales en carrito:', items);
-          console.log('🛒 [CART_TOGGLE] Buscando seatId:', seatId);
+          // Items actuales en carrito
+          // Buscando seatId
           
           const exists = items.some(
             (item) => (item.sillaId || item.id || item._id) === seatId
           );
           
-          console.log('🛒 [CART_TOGGLE] ¿Asiento ya existe en carrito?', exists);
+          // ¿Asiento ya existe en carrito?
 
           const { useSeatLockStore } = await import('../components/seatLockStore');
           const seatStore = useSeatLockStore.getState();
           const functionId = seat.functionId || seat.funcionId || get().functionId;
           
-          console.log('🛒 [CART_TOGGLE] functionId extraído:', { 
-            fromSeat: seat.functionId, 
-            fromSeatFuncionId: seat.funcionId, 
-            fromStore: get().functionId, 
-            final: functionId 
-          });
+          // functionId extraído
           
           // Validar que functionId no sea null
           if (!functionId) {
@@ -154,7 +149,7 @@ export const useCartStore = create(
                 console.log('ℹ️ [CART_TOGGLE] Este asiento ya está en tu carrito');
                 return;
               } else {
-                console.log('🛒 [CART_TOGGLE] Asiento bloqueado pero no en carrito, agregando...');
+                // Asiento bloqueado pero no en carrito, agregando
                 // Continuar con la lógica de agregar al carrito
               }
             }
@@ -174,9 +169,9 @@ export const useCartStore = create(
               }
               
               // Bloquear en BD
-              console.log('🛒 [CART_TOGGLE] Intentando bloquear asiento en BD:', { seatId, functionId });
+              // Intentando bloquear asiento en BD
               const lockResult = await useSeatLockStore.getState().lockSeat(seatId, 'seleccionado', functionId);
-              console.log('🛒 [CART_TOGGLE] Resultado del bloqueo:', lockResult);
+              // Resultado del bloqueo
               
               if (!lockResult) {
                 console.error('❌ [CART_TOGGLE] Error bloqueando asiento:', seatId);
@@ -207,7 +202,7 @@ export const useCartStore = create(
               functionId: functionId,
             };
             
-            console.log('🛒 [CART_TOGGLE] Asiento añadido al carrito:', seatForCart);
+            // Asiento añadido al carrito
             
             if (items.length === 0 && get().products.length === 0) {
               const newExpiration = Date.now() + getLockExpirationMs();
@@ -216,9 +211,9 @@ export const useCartStore = create(
               startExpirationTimer();
             }
             
-            console.log('🛒 [CART_TOGGLE] Actualizando estado del carrito con:', newState);
+            // Actualizando estado del carrito
             set(newState);
-            console.log('🛒 [CART_TOGGLE] Estado actualizado, items ahora:', get().items);
+            // Estado actualizado
             toast.success('Asiento añadido al carrito');
           }
         },
@@ -352,17 +347,17 @@ export const useCartStore = create(
             await useSeatLockStore.getState().unlockSeat(seatId, functionId);
             console.log('🔓 [CART] Asiento desbloqueado de la BD:', seatId);
           } else {
-            // Si no está bloqueado en la BD, cambiar a 'disponible' para sincronización en tiempo real
-            console.log('🎨 [CART] Asiento no estaba bloqueado en BD, cambiando a disponible:', seatId);
+            // Si no está bloqueado en la BD, eliminar del seatStates para volver al estado original
+            console.log('🎨 [CART] Asiento no estaba bloqueado en BD, eliminando del seatStates:', seatId);
             
-            // Cambiar a 'disponible' en lugar de eliminar para sincronización en tiempo real
+            // Eliminar del seatStates para volver al estado original del asiento
             const currentSeatStates = useSeatLockStore.getState().seatStates;
             const newSeatStates = new Map(currentSeatStates);
-            newSeatStates.set(seatId, 'disponible'); // Cambiar a disponible en lugar de eliminar
+            newSeatStates.delete(seatId); // Eliminar para volver al estado original
             // Usar la función específica para actualizar seatStates
             useSeatLockStore.getState().setSeatStates(newSeatStates);
             
-            console.log('🌐 [CART] Asiento cambiado a disponible - se verá en verde para todos los clientes:', seatId);
+            console.log('🌐 [CART] Asiento eliminado del seatStates - volverá a su estado original:', seatId);
           }
           
           toast.success('Asiento eliminado del carrito');
