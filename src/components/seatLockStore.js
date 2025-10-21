@@ -998,20 +998,25 @@ export const useSeatLockStore = create((set, get) => ({
 
       console.log('✅ Asiento desbloqueado exitosamente en DB y estado local');
 
-      // En lugar de eliminar del seatStates, lo cambio a 'disponible' para sincronización en tiempo real
+      // Solo eliminar del seatStates si el asiento estaba temporalmente bloqueado/seleccionado
+      // No sobrescribir el estado original del asiento (reservado, pagado, etc.)
       set((state) => {
         const newSeatStates = new Map(state.seatStates);
-        newSeatStates.set(normalizedSeatId, 'disponible'); // Cambiar a disponible en lugar de eliminar
+        const currentState = newSeatStates.get(normalizedSeatId);
+        
+        // Solo eliminar si el estado actual es temporal (seleccionado, bloqueado temporal)
+        if (currentState === 'seleccionado' || currentState === 'seleccionado_por_otro' || currentState === 'locked') {
+          newSeatStates.delete(normalizedSeatId); // Eliminar para volver al estado original
+          console.log('✅ [SEAT_LOCK] Estado temporal eliminado, volviendo al estado original del asiento');
+        } else {
+          console.log('✅ [SEAT_LOCK] Manteniendo estado original del asiento:', currentState);
+        }
 
         return {
           ...state,
           seatStates: newSeatStates
         };
       });
-      console.log('✅ [SEAT_LOCK] Asiento cambiado a disponible en seatStates - se verá en verde para todos los clientes');
-
-      // Actualizar estado de asiento para el usuario actual
-      get().updateSeatState(normalizedSeatId, 'disponible');
       
       return true;
     } catch (error) {

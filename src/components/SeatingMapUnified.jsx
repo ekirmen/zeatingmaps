@@ -241,28 +241,35 @@ const SeatingMapUnified = ({
     const handleCartCleared = (event) => {
       console.log('🧹 [SEATING_MAP] Carrito limpiado, forzando actualización de estado visual');
       
-      // Forzar una actualización del estado de los asientos después de limpiar el carrito
+      // Forzar una actualización inmediata del estado de los asientos
+      setForceRefresh(prev => prev + 1);
+      
+      // También disparar un evento para otros componentes que puedan necesitarlo
       setTimeout(() => {
-        // Disparar un evento para refrescar el estado de los asientos
         window.dispatchEvent(new CustomEvent('forceSeatStateRefresh', {
           detail: { clearedSeats: event.detail?.clearedSeats || [] }
         }));
-        
-        // Forzar re-render del componente
-        setForceRefresh(prev => prev + 1);
-      }, 200);
+      }, 100);
+    };
+
+    const handleForceRefresh = (event) => {
+      console.log('🔄 [SEATING_MAP] Forzando actualización de estado de asientos');
+      setForceRefresh(prev => prev + 1);
     };
 
     window.addEventListener('cartCleared', handleCartCleared);
+    window.addEventListener('forceSeatStateRefresh', handleForceRefresh);
     
     return () => {
       window.removeEventListener('cartCleared', handleCartCleared);
+      window.removeEventListener('forceSeatStateRefresh', handleForceRefresh);
     };
   }, []);
 
+  // Obtener items del carrito usando el hook para que se actualice automáticamente
+  const cartItems = useCartStore(state => state.items);
+  
   const selectedSeatIds = useMemo(() => {
-    console.log('🔍 [SEATING_MAP] Debug modoVenta:', { modoVenta, tipo: typeof modoVenta });
-    
     // Obtener asientos seleccionados desde diferentes fuentes
     let propSeatIds = [];
     let cartSeatIds = [];
@@ -286,8 +293,7 @@ const SeatingMapUnified = ({
     
     // 2. Asientos del carrito (solo modo store)
     if (!modoVenta) {
-      const cartItems = useCartStore.getState().items || [];
-      cartSeatIds = cartItems.map(item => (item.sillaId || item.id || item._id)?.toString()).filter(Boolean);
+      cartSeatIds = (cartItems || []).map(item => (item.sillaId || item.id || item._id)?.toString()).filter(Boolean);
     }
     
     // 3. Asientos bloqueados/seleccionados en la base de datos (común para ambos modos)
@@ -304,16 +310,8 @@ const SeatingMapUnified = ({
     // Combinar todas las fuentes
     const allSeatIds = [...new Set([...propSeatIds, ...cartSeatIds, ...lockSeatIds])];
     
-    console.log('🎯 [SEATING_MAP] selectedSeatIds calculado:', {
-      modo: modoVenta ? 'boletería' : 'store',
-      propSeatIds,
-      cartSeatIds,
-      lockSeatIds,
-      allSeatIds
-    });
-    
     return new Set(allSeatIds);
-  }, [selectedSeats, modoVenta, lockedSeatsState, lockedSeats, forceRefresh]);
+  }, [selectedSeats, modoVenta, lockedSeatsState, lockedSeats, forceRefresh, cartItems]);
 
   const selectedSeatList = useMemo(() => Array.from(selectedSeatIds), [selectedSeatIds]);
 
@@ -458,15 +456,7 @@ const SeatingMapUnified = ({
 
   const handleSeatClick = useCallback(
     async (seat) => {
-      console.log('🪑 [SEATING_MAP] ===== ASIENTO CLICKEADO =====');
-      console.log('🪑 [SEATING_MAP] Asiento clickeado:', {
-        id: seat._id,
-        nombre: seat.nombre,
-        numero: seat.numero,
-        zona: seat.zona,
-        estado: seat.estado,
-        posicion: seat.posicion
-      });
+      // Debug info removed for performance
 
       // Verificar que el asiento sea válido
       if (!seat || !seat._id) {
@@ -476,14 +466,14 @@ const SeatingMapUnified = ({
 
       // En modo store, verificar estado antes de delegar al onSeatToggle
       if (!modoVenta) {
-        console.log('🛒 [SEATING_MAP] Modo store - verificando estado del asiento');
+        // Verificando estado del asiento
         
         // Verificar si el asiento ya está pagado antes de permitir cualquier interacción
         const currentSessionId = localStorage.getItem('anonSessionId');
         const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, normalizedFuncionId, currentSessionId);
         
         if (paymentCheck.isPaid) {
-          console.log('🚫 [SEATING_MAP] Asiento ya pagado, no se puede interactuar:', seat._id);
+          // Asiento ya pagado
           if (onSeatError) {
             onSeatError('Este asiento ya ha sido comprado y no puede ser seleccionado');
           }
@@ -492,7 +482,7 @@ const SeatingMapUnified = ({
         
         // Verificar si está vendido, reservado o bloqueado permanentemente
         if (seat.estado === 'vendido' || seat.estado === 'reservado' || seat.estado === 'locked') {
-          console.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
+          // Asiento no disponible
           if (onSeatError) {
             const errorMessage = seat.estado === 'vendido' 
               ? 'Este asiento ya está vendido.' 
@@ -504,7 +494,7 @@ const SeatingMapUnified = ({
           return;
         }
         
-        console.log('🛒 [SEATING_MAP] Modo store - delegando a onSeatToggle');
+        // Delegando a onSeatToggle
         if (onSeatToggle) {
           onSeatToggle({ ...seat, funcionId: normalizedFuncionId });
         }
@@ -554,14 +544,14 @@ const SeatingMapUnified = ({
         const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, normalizedFuncionId, currentSessionId);
         
         if (paymentCheck.isPaid) {
-          console.log('🚫 [SEATING_MAP] No se puede deseleccionar asiento comprado:', seat._id);
+          // No se puede deseleccionar asiento comprado
           if (onSeatError) {
             onSeatError('Este asiento ya ha sido comprado y no puede ser deseleccionado');
           }
           return;
         }
         
-        console.log('🔄 [SEATING_MAP] Deseleccionando asiento:', seat._id);
+        // Deseleccionando asiento
         if (onSeatToggle) {
           onSeatToggle({ ...seat, funcionId: normalizedFuncionId });
         }
@@ -571,7 +561,7 @@ const SeatingMapUnified = ({
         const paymentCheck = await seatPaymentChecker.isSeatPaidByUser(seat._id, normalizedFuncionId, currentSessionId);
         
         if (paymentCheck.isPaid) {
-          console.log('🚫 [SEATING_MAP] Asiento ya pagado:', seat._id);
+          // Asiento ya pagado
           if (onSeatError) {
             onSeatError('Este asiento ya ha sido comprado');
           }
@@ -580,7 +570,7 @@ const SeatingMapUnified = ({
         
         // Verificar si está bloqueado por otro usuario
         if (seat.estado === 'seleccionado_por_otro' || seat.estado === 'vendido' || seat.estado === 'reservado') {
-          console.log('🚫 [SEATING_MAP] Asiento no disponible:', seat.estado);
+          // Asiento no disponible
           if (onSeatError) {
             const errorMessage = seat.estado === 'vendido' 
               ? 'Este asiento ya está vendido.' 
@@ -592,7 +582,7 @@ const SeatingMapUnified = ({
           return;
         }
         
-        console.log('✅ [SEATING_MAP] Seleccionando asiento:', seat._id);
+        // Seleccionando asiento
         if (onSeatToggle) {
           onSeatToggle({ ...seat, funcionId: normalizedFuncionId });
         }
@@ -875,11 +865,7 @@ if (Array.isArray(mapa?.contenido)) {
             // Verificar si hay un estado actualizado en el store (tiempo real)
             const storeState = seatStates.get(seat._id);
             if (storeState) {
-              console.log('🎨 [SEATING_MAP] Usando estado del store para asiento:', {
-                seatId: seat._id,
-                storeState,
-                originalState: seat.estado
-              });
+              // Usando estado del store para asiento
               seatEstado = storeState;
             } else {
               // Fallback a la lógica original si no hay estado en el store

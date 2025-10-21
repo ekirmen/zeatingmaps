@@ -7,6 +7,49 @@ import { supabase } from '../config/supabase';
 const SEAT_IDENTIFIER_KEYS = ['id', 'seat_id', '_id', 'sillaId'];
 
 class SeatPaymentChecker {
+  constructor() {
+    // Cache simple para evitar verificaciones duplicadas
+    this.cache = new Map();
+    this.cacheTimeout = 30000; // 30 segundos
+  }
+
+  /**
+   * Genera una clave de cache única
+   */
+  getCacheKey(seatId, funcionId, sessionId) {
+    return `${seatId}-${funcionId}-${sessionId}`;
+  }
+
+  /**
+   * Verifica si hay un resultado en cache válido
+   */
+  getCachedResult(seatId, funcionId, sessionId) {
+    const key = this.getCacheKey(seatId, funcionId, sessionId);
+    const cached = this.cache.get(key);
+    
+    if (cached && Date.now() - cached.timestamp < this.cacheTimeout) {
+      return cached.result;
+    }
+    
+    // Limpiar cache expirado
+    if (cached) {
+      this.cache.delete(key);
+    }
+    
+    return null;
+  }
+
+  /**
+   * Guarda un resultado en cache
+   */
+  setCachedResult(seatId, funcionId, sessionId, result) {
+    const key = this.getCacheKey(seatId, funcionId, sessionId);
+    this.cache.set(key, {
+      result,
+      timestamp: Date.now()
+    });
+  }
+
   /**
    * Verifica si un asiento ya fue pagado por el usuario actual
    * @param {string} seatId - ID del asiento
@@ -16,7 +59,13 @@ class SeatPaymentChecker {
    */
   async isSeatPaidByUser(seatId, funcionId, sessionId) {
     try {
-      console.log('🔍 [SEAT_PAYMENT_CHECKER] Verificando pago para:', { seatId, funcionId, sessionId, funcionIdType: typeof funcionId });
+      // Verificar cache primero
+      const cachedResult = this.getCachedResult(seatId, funcionId, sessionId);
+      if (cachedResult) {
+        return cachedResult;
+      }
+
+      // Verificando pago para asiento
       
       // 1. Verificar en seat_locks si tiene status pagado/vendido/completed
       const { data: seatLocks, error: locksError } = await supabase
@@ -40,7 +89,6 @@ class SeatPaymentChecker {
       }
 
       // 2. Verificar en payment_transactions si el asiento fue pagado por este usuario
-      console.log('🔍 [SEAT_PAYMENT_CHECKER] Verificando payment_transactions para:', { seatId, funcionId, sessionId });
       
       const {
         data: transactions,
@@ -52,12 +100,12 @@ class SeatPaymentChecker {
       });
 
       if (transactionsError) {
-        console.error('❌ [SEAT_PAYMENT_CHECKER] Error checking payment_transactions:', transactionsError);
+        // Error checking payment_transactions
       } else {
-        console.log('📊 [SEAT_PAYMENT_CHECKER] Transacciones encontradas:', transactions?.length || 0);
+        // Transacciones encontradas
 
         if (transactions && transactions.length > 0) {
-          console.log('✅ [SEAT_PAYMENT_CHECKER] Asiento pagado detectado en payment_transactions');
+          // Asiento pagado detectado
           return {
             isPaid: true,
             status: 'completed',
@@ -66,8 +114,7 @@ class SeatPaymentChecker {
         }
       }
 
-      // 3. Verificar si el asiento fue pagado por CUALQUIER usuario (no solo el actual)
-      console.log('🔍 [SEAT_PAYMENT_CHECKER] Verificando si el asiento fue pagado por cualquier usuario...');
+      // 3. Verificar si el asiento fue pagado por cualquier usuario
 
       const {
         data: allTransactions,
@@ -75,12 +122,12 @@ class SeatPaymentChecker {
       } = await this.fetchCompletedTransactionsBySeat({ funcionId, seatId });
 
       if (allTransactionsError) {
-        console.error('❌ [SEAT_PAYMENT_CHECKER] Error checking all payment_transactions:', allTransactionsError);
+        // Error checking all payment_transactions
       } else {
-        console.log('📊 [SEAT_PAYMENT_CHECKER] Todas las transacciones encontradas:', allTransactions?.length || 0);
+        // Todas las transacciones encontradas
 
         if (allTransactions && allTransactions.length > 0) {
-          console.log('✅ [SEAT_PAYMENT_CHECKER] Asiento pagado detectado por cualquier usuario en payment_transactions');
+          // Asiento pagado detectado por cualquier usuario
           return {
             isPaid: true,
             status: 'completed',
@@ -89,19 +136,27 @@ class SeatPaymentChecker {
         }
       }
 
-      return {
+      const result = {
         isPaid: false,
         status: null,
         source: null
       };
 
+      // Guardar en cache
+      this.setCachedResult(seatId, funcionId, sessionId, result);
+      return result;
+
     } catch (error) {
       console.error('Error in isSeatPaidByUser:', error);
-      return {
+      const errorResult = {
         isPaid: false,
         status: null,
         source: null
       };
+      
+      // Guardar resultado de error en cache también
+      this.setCachedResult(seatId, funcionId, sessionId, errorResult);
+      return errorResult;
     }
   }
 
@@ -265,4 +320,7 @@ class SeatPaymentChecker {
   }
 }
 
-export default new SeatPaymentChecker();
+// Crear instancia singleton para mantener el cache
+const seatPaymentChecker = new SeatPaymentChecker();
+
+export default seatPaymentChecker;

@@ -47,7 +47,7 @@ export const useSeatColors = (eventId = null) => {
     // Verificar si hay un estado actualizado en el store (tiempo real) - PRIORIDAD MÁXIMA
     const storeState = seatStates?.get(seatId);
     if (storeState) {
-      console.log('🎨 [SEAT_COLORS] Usando estado del store para asiento:', { seatId, storeState, originalState: seat.estado });
+      // Usando estado del store para asiento
       
       // Usar el estado del store para determinar el color
       switch (storeState) {
