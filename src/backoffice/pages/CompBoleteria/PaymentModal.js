@@ -655,6 +655,7 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                       <Option value="Tarjeta">Tarjeta de crédito/débito</Option>
                       <Option value="PayPal">PayPal</Option>
                       <Option value="Stripe">Stripe</Option>
+                      <Option value="Cashea">Cashea</Option>
                       <Option value="Criptomoneda">Criptomoneda</Option>
                       <Option value="Cheque">Cheque</Option>
                       <Option value="Otro">Otro</Option>
