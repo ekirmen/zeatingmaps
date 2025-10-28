@@ -287,6 +287,7 @@ const Pay = () => {
     const icons = {
       stripe: <CreditCardOutlined style={{ color: '#6772e5' }} />,
       paypal: <DollarOutlined style={{ color: '#0070ba' }} />,
+      cashea: <CreditCardOutlined style={{ color: '#111827' }} />,
       apple_pay: <CreditCardOutlined style={{ color: '#000000' }} />,
       google_pay: <CreditCardOutlined style={{ color: '#4285f4' }} />,
       transferencia: <BankOutlined style={{ color: '#52c41a' }} />,
@@ -301,6 +302,7 @@ const Pay = () => {
     const names = {
       stripe: 'Stripe',
       paypal: 'PayPal',
+      cashea: 'Cashea',
       apple_pay: 'Apple Pay',
       google_pay: 'Google Pay',
       transferencia: 'Transferencia Bancaria',
@@ -315,6 +317,7 @@ const Pay = () => {
     const descriptions = {
       stripe: 'Tarjetas de crédito y débito',
       paypal: 'Pagos a través de PayPal',
+      cashea: 'Compra ahora y paga después con Cashea',
       apple_pay: 'Pagos para usuarios iOS',
       google_pay: 'Pagos para usuarios Android',
       transferencia: 'Transferencias bancarias directas',

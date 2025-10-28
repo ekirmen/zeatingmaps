@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Tabs, Input, Button, Radio, DatePicker, Select, Table, message } from 'antd';
+import { Modal, Tabs, Input, Button, Radio, DatePicker, Select, Table, message, Alert } from 'antd';
 import { AiOutlineDelete } from 'react-icons/ai';
 import { Typography } from 'antd';
 import { createPayment, updatePayment } from '../../services/apibackoffice';
@@ -12,6 +12,7 @@ import { isUuid } from '../../../utils/isUuid';
 import API_BASE_URL from '../../../utils/apiBase';
 import downloadTicket from '../../../utils/downloadTicket';
 import { supabase } from '../../../supabaseClient';
+import { createCasheaOrder } from '../../../services/casheaService';
 
 const { TabPane } = Tabs;
 const { Option } = Select;
@@ -100,8 +101,9 @@ const CasheaOrderPanel = ({
   onCreateOrder,
   disabled,
   isProcessing,
-  seats = [],
-  total
+  total,
+  order,
+  error
 }) => {
   const sanitizedAmount = amount ?? '';
   const eventName = selectedEvent?.nombre || 'Boletería';
@@ -199,6 +201,66 @@ const CasheaOrderPanel = ({
               </div>
             </div>
           </div>
+          {(order || error) && (
+            <div className="mt-4 space-y-3">
+              {error && (
+                <Alert
+                  type="error"
+                  showIcon
+                  message="No se pudo crear la orden Cashea"
+                  description={error}
+                />
+              )}
+              {order && (
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Orden Cashea generada</h3>
+                  <div className="space-y-1 text-sm text-gray-700">
+                    {order.invoiceId && (
+                      <div>
+                        <span className="font-semibold">ID Factura:</span> {order.invoiceId}
+                      </div>
+                    )}
+                    {order.orderId && (
+                      <div>
+                        <span className="font-semibold">Orden:</span> {order.orderId}
+                      </div>
+                    )}
+                    {order.securityCode && (
+                      <div>
+                        <span className="font-semibold">Código de seguridad:</span> {order.securityCode}
+                      </div>
+                    )}
+                    {order.status && (
+                      <div>
+                        <span className="font-semibold">Estado:</span> {order.status}
+                      </div>
+                    )}
+                  </div>
+                  {order.checkoutUrl && (
+                    <div className="mt-3">
+                      <a
+                        href={order.checkoutUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center rounded-md bg-black px-4 py-2 text-sm font-semibold text-white hover:bg-black/80"
+                      >
+                        Abrir flujo Cashea
+                      </a>
+                    </div>
+                  )}
+                  {order.qrImage && (
+                    <div className="mt-3 flex justify-center">
+                      <img
+                        src={order.qrImage}
+                        alt="QR de Cashea"
+                        className="h-32 w-32 rounded-md border border-gray-200"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -272,6 +334,15 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   const [locator, setLocator] = useState('');
   const [emailToSend, setEmailToSend] = useState('');
   const [seatLockSessionId, setSeatLockSessionId] = useState(null);
+  const [casheaOrder, setCasheaOrder] = useState(null);
+  const [casheaError, setCasheaError] = useState(null);
+
+  useEffect(() => {
+    if (selectedPaymentMethod !== 'Cashea') {
+      setCasheaOrder(null);
+      setCasheaError(null);
+    }
+  }, [selectedPaymentMethod]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -421,6 +492,104 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
     handleCashInput(total.toString());
   };
 
+  const handleCreateCasheaOrder = async () => {
+    if (!selectedClient) {
+      message.error('Debe seleccionar un cliente antes de crear la orden Cashea');
+      return;
+    }
+
+    const resolvedTenantId = resolveTenantId({
+      user,
+      selectedEvent,
+      selectedFuncion,
+      seats: safeCarrito,
+      carrito: safeCarrito,
+    });
+
+    if (!resolvedTenantId) {
+      message.error('No se pudo determinar el tenant para Cashea');
+      return;
+    }
+
+    const sanitizedAmountString = typeof paymentAmount === 'string'
+      ? paymentAmount.replace(/,/g, '.').trim()
+      : String(paymentAmount || '');
+    const parsedAmount = Number(sanitizedAmountString || total || 0);
+
+    if (!parsedAmount || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
+      message.error('Monto inválido para crear la orden Cashea');
+      return;
+    }
+
+    setIsProcessing(true);
+    setCasheaError(null);
+
+    try {
+      const invoiceId = existingLocator ? `INV-${existingLocator}` : `INV-${generateSimpleLocator()}`;
+      const orderReference = generateSimpleLocator();
+      const currency = selectedFuncion?.moneda || selectedFuncion?.currency || 'USD';
+
+      const response = await createCasheaOrder({
+        tenantId: resolvedTenantId,
+        amount: parsedAmount,
+        currency,
+        description: selectedEvent?.nombre
+          ? `Pago boletería - ${selectedEvent.nombre}`
+          : 'Pago boletería',
+        customer: {
+          name:
+            `${selectedClient?.nombre || selectedClient?.name || ''} ${selectedClient?.apellido || selectedClient?.lastName || ''}`.trim() ||
+            selectedClient?.fullName ||
+            undefined,
+          email: selectedClient?.email || selectedClient?.correo || selectedClient?.mail || undefined,
+          document: selectedClient?.documento || selectedClient?.document || selectedClient?.dni || undefined,
+          phone: selectedClient?.telefono || selectedClient?.phone || selectedClient?.celular || undefined,
+        },
+        items: safeCarrito,
+        metadata: {
+          invoiceId,
+          orderId: orderReference,
+          locator: existingLocator || null,
+        },
+      });
+
+      const metadata = {
+        gateway: 'cashea',
+        orderId: response.orderId,
+        invoiceId: response.invoiceId,
+        securityCode: response.securityCode,
+        checkoutUrl: response.checkoutUrl,
+        qrImage: response.qrImage,
+        status: response.status || 'pending',
+        raw: response.raw || response,
+      };
+
+      setCasheaOrder({ ...response, metadata });
+      setPaymentAmount(parsedAmount.toFixed(2));
+
+      setPaymentEntries((prev) => {
+        const withoutCashea = prev.filter((entry) => entry.formaPago !== 'Cashea');
+        const newEntry = {
+          sc: scCounter,
+          formaPago: 'Cashea',
+          importe: parsedAmount,
+          metadata,
+        };
+        return [...withoutCashea, newEntry];
+      });
+
+      setScCounter((prev) => prev + 1);
+      message.success('Orden Cashea creada correctamente');
+    } catch (error) {
+      console.error('Error creando orden Cashea:', error);
+      const errorMessage = error?.message || 'No se pudo crear la orden Cashea';
+      setCasheaError(errorMessage);
+      message.error(errorMessage);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleConfirmPayment = () => {
     if (paymentAmount && paymentAmount !== '0.00') {
       const newEntry = {
@@ -428,16 +597,22 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         formaPago: selectedPaymentMethod,
         importe: parseFloat(paymentAmount)
       };
-      setPaymentEntries([...paymentEntries, newEntry]);
-      setScCounter(scCounter + 1);
+      setPaymentEntries((prev) => [...prev, newEntry]);
+      setScCounter((prev) => prev + 1);
       setPaymentAmount('0.00');
     }
   };
 
   const handleDeleteEntry = (sc) => {
     // Remove the entry
+    const removedEntry = paymentEntries.find(entry => entry.sc === sc);
     const updatedEntries = paymentEntries.filter(entry => entry.sc !== sc);
-    
+
+    if (removedEntry?.formaPago === 'Cashea') {
+      setCasheaOrder(null);
+      setCasheaError(null);
+    }
+
     // Reorder SC numbers
     const reorderedEntries = updatedEntries.map((entry, index) => ({
       ...entry,
@@ -469,6 +644,12 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   ];
 
   const getPaymentStatus = () => {
+    if (paymentEntries.some(entry => entry.metadata?.gateway === 'cashea')) {
+      return {
+        text: 'Pago pendiente de aprobación Cashea',
+        color: '#faad14'
+      };
+    }
     if (diferencia > 0) {
       return {
         text: `Pendiente: $${diferencia.toFixed(2)}`,
@@ -537,6 +718,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         return acc;
       }, {});
 
+      const hasCasheaPaymentOverall = paymentEntries.some(entry => entry.metadata?.gateway === 'cashea');
+
       // Create a payment for each event
       const paymentPromises = Object.entries(seatsByEvent).map(async ([eventId, seats]) => {
         // Verificar si ya existe un pago para estos asientos
@@ -558,6 +741,19 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         }
 
         const primaryMethod = (paymentEntries[0]?.formaPago || selectedPaymentMethod || 'manual');
+        const hasCasheaPayment = hasCasheaPaymentOverall;
+        const paymentStatus = hasCasheaPayment
+          ? 'pending'
+          : diferencia > 0
+            ? 'reserved'
+            : 'completed';
+        const normalizedPayments = paymentEntries.map(entry => ({
+          method: entry.formaPago,
+          amount: Number(entry.importe) || 0,
+          metadata: entry.metadata || null,
+          reference: entry.metadata?.orderId || entry.metadata?.invoiceId || null,
+          status: entry.metadata?.status || (hasCasheaPayment ? 'pending' : 'completed'),
+        }));
         const paymentData = {
           user_id: selectedClient.id || selectedClient._id, // Usar user_id según el esquema
           evento_id: eventId,
@@ -574,11 +770,8 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           // Usar localizador existente si ya hay uno, sino generar uno nuevo
           locator: existingPayment ? existingPayment.locator : generateLocator(),
           // Estandarizar estado: 'completed' cuando está totalmente pagado, 'reserved' en caso contrario
-          status: diferencia > 0 ? 'reserved' : 'completed',
-          payments: paymentEntries.map(entry => ({
-            method: entry.formaPago,
-            amount: entry.importe
-          })),
+          status: paymentStatus,
+          payments: normalizedPayments,
           // Asegurar columnas de monto/amount para la inserción
           amount: paymentEntries.length > 0
             ? paymentEntries.reduce((s, e) => s + (Number(e.importe) || 0), 0)
@@ -588,10 +781,10 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
             : seats.reduce((s, i) => s + (Number(i.precio) || 0), 0),
           // Campos faltantes para compatibilidad y tracking
           order_id: existingPayment ? existingPayment.locator : undefined, // lo normalizamos en service a locator
-          payment_method: primaryMethod,
+          payment_method: hasCasheaPayment ? 'Cashea' : primaryMethod,
           tenant_id: resolvedTenantId || undefined,
           tenantId: resolvedTenantId || undefined,
-          gateway_name: 'manual',
+          gateway_name: hasCasheaPayment ? 'Cashea' : 'manual',
           // columnas legacy de compatibilidad
           event: eventId,
           funcion: selectedFuncion.id || selectedFuncion._id,
@@ -605,18 +798,20 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
         // Actualizar seat_locks con el locator final y estado correcto antes de crear el pago
         if (paymentData.locator) {
           try {
-            const normalizedMethodId = (selectedPaymentMethod || '')
-              .toString()
-              .trim()
-              .toLowerCase()
-              .replace(/\s+/g, '_');
+            const normalizedMethodId = hasCasheaPayment
+              ? 'cashea'
+              : (selectedPaymentMethod || '')
+                  .toString()
+                  .trim()
+                  .toLowerCase()
+                  .replace(/\s+/g, '_');
 
-            const isReservationFlow = reservationType === '2' || reservationType === '3' || diferencia > 0;
+            const isReservationFlow = hasCasheaPayment || reservationType === '2' || reservationType === '3' || diferencia > 0;
             const seatStatus = determineSeatLockStatus({
               methodId: normalizedMethodId || 'boleteria_manual',
               transactionStatus: paymentData.status,
               isReservation: isReservationFlow,
-              manualStatus: isReservationFlow ? 'reservado' : 'pagado',
+              manualStatus: hasCasheaPayment || isReservationFlow ? 'reservado' : 'pagado',
             });
 
             await seatLocatorService.finalizeSeatsAfterPayment({
@@ -672,23 +867,35 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           // Crear payment_transaction para cada método de pago usado
           try {
             const paymentTransactionPromises = paymentEntries.map(async (entry) => {
+              const entryIsCashea = entry.metadata?.gateway === 'cashea' || entry.formaPago === 'Cashea';
+              const entryStatus = entry.metadata?.status || (entryIsCashea ? 'pending' : 'completed');
               const transactionData = {
                 orderId: results[0].locator,
                 gatewayId: null, // Para pagos manuales no hay gateway
-                amount: entry.importe,
-                currency: 'USD',
-                status: 'completed', // Pago completado manualmente
-                gatewayTransactionId: null,
-                gatewayResponse: null,
+                amount: Number(entry.importe) || 0,
+                currency: entry.metadata?.currency || selectedFuncion?.moneda || selectedFuncion?.currency || 'USD',
+                status: entryStatus,
+                gatewayTransactionId: entry.metadata?.orderId || entry.metadata?.transactionId || null,
+                gatewayResponse: entry.metadata?.raw || entry.metadata || null,
                 locator: results[0].locator,
                 tenantId: tenantIdForTransactions || null,
                 userId: selectedClient?.id || selectedClient?._id,
                 eventoId: selectedEvent?.id,
                 funcionId: selectedFuncion?.id || selectedFuncion?._id,
                 paymentMethod: entry.formaPago,
-                gatewayName: 'manual'
+                gatewayName: entryIsCashea ? 'Cashea' : 'manual',
+                metadata: entry.metadata || null,
+                payments: [
+                  {
+                    method: entry.formaPago,
+                    amount: Number(entry.importe) || 0,
+                    metadata: entry.metadata || null,
+                    reference: entry.metadata?.orderId || entry.metadata?.invoiceId || null,
+                    status: entryStatus,
+                  },
+                ],
               };
-              
+
               return await createPaymentTransaction(transactionData);
             });
             
@@ -705,8 +912,13 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           await assignEventTagsToUser(selectedClient.id, selectedEvent.tags);
         }
 
-        setShowConfirmation(true);
-        message.success('Pago procesado exitosamente');
+        if (!hasCasheaPaymentOverall) {
+          setShowConfirmation(true);
+        }
+        const successMessage = hasCasheaPaymentOverall
+          ? 'Orden registrada con Cashea. Pendiente de confirmación.'
+          : 'Pago procesado exitosamente';
+        message.success(successMessage);
         onCancel();
     } catch (error) {
       console.error('Payment error:', error);
@@ -884,13 +1096,14 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                       selectedFuncion={selectedFuncion}
                       amount={paymentAmount}
                       onAmountChange={setPaymentAmount}
-                      onCreateOrder={handleConfirmPayment}
-                      disabled={!isCasheaAmountValid}
-                      isProcessing={isProcessing}
-                      seats={safeCarrito}
-                      total={total}
-                    />
-                  )}
+                      onCreateOrder={handleCreateCasheaOrder}
+                  disabled={!isCasheaAmountValid}
+                  isProcessing={isProcessing}
+                  total={total}
+                  order={casheaOrder}
+                  error={casheaError}
+                />
+              )}
                 </div>
               </TabPane>
             </Tabs>

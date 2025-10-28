@@ -69,6 +69,13 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
       recommended: true
     },
     {
+      id: 'cashea',
+      name: 'Cashea',
+      icon: <CreditCardOutlined style={{ color: '#111827' }} />,
+      description: 'Compra ahora y paga después con Cashea',
+      recommended: false
+    },
+    {
       id: 'apple_pay',
       name: 'Apple Pay',
       icon: <AppleOutlined style={{ color: '#000000' }} />,

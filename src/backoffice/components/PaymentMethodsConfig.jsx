@@ -104,6 +104,27 @@ const PaymentMethodsConfig = () => {
       ]
     },
     {
+      id: 'cashea',
+      name: 'Cashea',
+      icon: <CreditCardOutlined style={{ color: '#111827', fontSize: '24px' }} />,
+      description: 'Compra ahora y paga después con Cashea',
+      enabled: true,
+      recommended: false,
+      processingTime: 'Aprobación instantánea',
+      fee: 'Configurable',
+      configs: [
+        { key: 'api_base_url', label: 'API Base URL', required: true, placeholder: 'https://api.cashea.example.com' },
+        { key: 'create_order_endpoint', label: 'Endpoint para crear orden', required: false, placeholder: '/orders' },
+        { key: 'api_key', label: 'API Key', required: true, secret: true },
+        { key: 'api_secret', label: 'API Secret', required: false, secret: true },
+        { key: 'access_token', label: 'Access Token', required: false, secret: true },
+        { key: 'merchant_id', label: 'Merchant ID', required: true },
+        { key: 'store_id', label: 'Store/Branch ID', required: false },
+        { key: 'default_currency', label: 'Moneda por defecto', required: false, placeholder: 'USD' },
+        { key: 'allow_sandbox_fallback', label: 'Permitir modo sandbox (true/false)', required: false, placeholder: 'true' }
+      ]
+    },
+    {
       id: 'apple_pay',
       name: 'Apple Pay',
       icon: <AppleOutlined style={{ color: '#000000', fontSize: '24px' }} />,
