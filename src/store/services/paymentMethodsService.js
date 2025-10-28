@@ -131,8 +131,7 @@ export const validatePaymentMethodConfig = (method) => {
     transferencia: ['bank_name', 'account_number'],
     pago_movil: ['provider', 'api_key'],
     efectivo_tienda: ['store_address'],
-    efectivo: [], // No requiere configuración adicional
-    cashea: ['public_api_key']
+    efectivo: [] // No requiere configuración adicional
   };
 
   const requiredFields = validations[method.method_id] || [];

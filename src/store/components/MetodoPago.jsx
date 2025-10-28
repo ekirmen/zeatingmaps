@@ -12,8 +12,7 @@ import {
   StarOutlined,
   StarFilled,
   CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  WalletOutlined
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import { Badge, Tooltip, Tag } from 'antd';
 
@@ -32,17 +31,6 @@ const MetodoPago = ({ metodosDisponibles, onSelect, selected }) => {
       processingTime: 'Instantáneo',
       fee: '2.9% + $0.30',
       recommended: true,
-      available: true
-    },
-    {
-      id: 'cashea',
-      name: 'Cashea',
-      icon: <WalletOutlined />,
-      color: '#4c6ef5',
-      description: 'Compra ahora y paga en cuotas con Cashea',
-      processingTime: 'Redirección inmediata',
-      fee: 'Según condiciones de Cashea',
-      recommended: false,
       available: true
     },
     {
