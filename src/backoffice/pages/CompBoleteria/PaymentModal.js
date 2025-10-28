@@ -18,6 +18,193 @@ const { Option } = Select;
 
 const { Text } = Typography;
 
+const CASHEA_STEPS = [
+  { label: 'Importe', status: 'active' },
+  { label: 'Scan QR', status: 'upcoming' },
+  { label: 'Seguridad', status: 'upcoming' },
+  { label: 'ID Factura', status: 'upcoming' },
+  { label: 'Confirmar', status: 'upcoming' }
+];
+
+const CheckIcon = ({ className }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+
+const CasheaStepIndicator = ({ label, status }) => {
+  const isActive = status === 'active';
+
+  const circleClasses = [
+    'flex items-center justify-center w-5 h-5 rounded-full border-2 transition-colors duration-200',
+    isActive ? 'bg-black border-black text-white' : 'bg-[#9E9E9E] border-[#9E9E9E] text-gray-400'
+  ].join(' ');
+
+  const labelClasses = [
+    'text-sm font-bold transition-colors duration-200',
+    isActive ? 'text-black' : 'text-gray-400'
+  ].join(' ');
+
+  return (
+    <div className="flex items-center">
+      <div className="flex flex-col items-center">
+        <div className={circleClasses}>
+          <CheckIcon className="w-4 h-4" />
+        </div>
+        <div className="text-center">
+          <span className={labelClasses}>{label}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CasheaStepper = () => (
+  <div className="flex items-center justify-center">
+    {CASHEA_STEPS.map((step, index) => (
+      <React.Fragment key={step.label}>
+        <CasheaStepIndicator {...step} />
+        {index < CASHEA_STEPS.length - 1 && (
+          <div className="h-0.5 w-14 mx-1 transition-colors duration-200 bg-[#BCB8BC]" />
+        )}
+      </React.Fragment>
+    ))}
+  </div>
+);
+
+const formatCurrency = (value) => {
+  const numericValue = Number(value || 0);
+  if (Number.isNaN(numericValue)) {
+    return '$0.00';
+  }
+  return `$${numericValue.toFixed(2)}`;
+};
+
+const CasheaOrderPanel = ({
+  selectedEvent,
+  selectedFuncion,
+  amount,
+  onAmountChange,
+  onCreateOrder,
+  disabled,
+  isProcessing,
+  seats = [],
+  total
+}) => {
+  const sanitizedAmount = amount ?? '';
+  const eventName = selectedEvent?.nombre || 'Boletería';
+  const salaName =
+    selectedFuncion?.sala?.nombre ||
+    selectedFuncion?.sala?.name ||
+    selectedFuncion?.sala?.displayName ||
+    'Caja 1';
+  const functionName = selectedFuncion?.nombre || selectedFuncion?.titulo;
+  const seatCount = seats.length;
+
+  const handleAmountChange = (value) => {
+    const rawValue = typeof value === 'string' ? value : '';
+    const normalized = rawValue.replace(/[^0-9.,]/g, '').replace(/,/g, '.');
+    onAmountChange(normalized);
+  };
+
+  const orderDetails = [
+    { label: 'Evento', value: eventName },
+    functionName ? { label: 'Función', value: functionName } : null,
+    { label: 'Asientos seleccionados', value: seatCount.toString() },
+    { label: 'Total estimado', value: formatCurrency(total) }
+  ].filter(Boolean);
+
+  return (
+    <div className="w-full">
+      <div className="mx-auto w-full max-w-3xl rounded-2xl bg-white">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h1 className="text-lg font-semibold text-gray-900">
+              {eventName} | {salaName}
+            </h1>
+            <div className="flex gap-4">
+              <button
+                type="button"
+                className="text-gray-700 text-sm font-semibold cursor-pointer underline hover:text-gray-900"
+              >
+                Crear orden sin conexión
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-4 flex justify-start">
+            <CasheaStepper />
+          </div>
+
+          <div className="flex flex-col gap-4 lg:flex-row">
+            <div className="flex-1 rounded-2xl border border-gray-300 bg-[#FAFAFA] p-8 shadow">
+              <div className="mb-8 text-center">
+                <h2 className="mb-2 text-base font-bold text-gray-900">Monto total de orden</h2>
+                <p className="text-xs font-bold text-gray-600">Es el total a facturar</p>
+              </div>
+              <div className="space-y-6">
+                <div className="relative h-12 w-full rounded-lg border-2 border-gray-300 transition-all duration-200 focus-within:border-gray-400 focus-within:bg-white hover:border-gray-400 hover:bg-white">
+                  <input
+                    className="h-full w-full rounded-lg bg-transparent px-4 text-lg font-semibold text-gray-900 outline-none placeholder:text-gray-400"
+                    maxLength={100}
+                    placeholder="USD 0.00"
+                    type="text"
+                    inputMode="decimal"
+                    value={sanitizedAmount}
+                    onChange={(event) => handleAmountChange(event.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex w-full flex-col gap-4 lg:w-72">
+              <div className="flex-1 rounded-2xl bg-[#F2F2F2] p-4">
+                <h3 className="text-base font-bold text-gray-900">Detalle</h3>
+                <div className="mt-4 space-y-3 text-sm text-gray-600">
+                  {orderDetails.map((detail) => (
+                    <div key={detail.label} className="flex flex-col">
+                      <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        {detail.label}
+                      </span>
+                      <span className="font-semibold text-gray-800">{detail.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <button
+                  className={`cashea-order-button inline-flex h-12 w-full items-center justify-center rounded-md px-12 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 ${
+                    disabled || isProcessing
+                      ? 'cursor-not-allowed bg-[#DCDCDC] text-gray-500'
+                      : 'bg-black text-white hover:bg-black/80'
+                  }`}
+                  type="button"
+                  onClick={onCreateOrder}
+                  disabled={disabled || isProcessing}
+                >
+                  {isProcessing ? 'Procesando…' : 'Crear orden'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const resolveTenantId = ({ user, selectedEvent, selectedFuncion, seats = [], carrito = [] }) => {
   const candidateValues = [
     user?.tenant_id,
@@ -198,6 +385,19 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
   const commission = selectedAffiliate ? (selectedAffiliate.base || 0) + subtotal * ((selectedAffiliate.percentage || 0) / 100) : 0;
   const total = subtotal - commission;
   const totalPagado = paymentEntries.reduce((sum, entry) => sum + entry.importe, 0);
+
+  useEffect(() => {
+    if (selectedPaymentMethod === 'Cashea') {
+      const formattedTotal = Number(total || 0).toFixed(2);
+      const numericAmount = Number(paymentAmount);
+      if (!paymentAmount || Number.isNaN(numericAmount) || numericAmount === 0) {
+        setPaymentAmount(formattedTotal);
+      }
+    }
+  }, [selectedPaymentMethod, total, paymentAmount]);
+
+  const isCasheaAmountValid = selectedPaymentMethod !== 'Cashea'
+    || (!!paymentAmount && !Number.isNaN(Number(paymentAmount)) && Number(paymentAmount) > 0);
   const diferencia = total - totalPagado;
   const isFullyPaid = diferencia <= 0;
 
@@ -640,37 +840,57 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
               </TabPane>
 
               <TabPane tab="Otros" key="2">
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
-                  <div>
-                    <label>Forma de pago</label>
-                    <Select 
-                      value={selectedPaymentMethod}
-                      onChange={setSelectedPaymentMethod}
-                      style={{ width: '150px' }}
-                    >
-                      <Option value="Efectivo">Efectivo</Option>
-                      <Option value="Zelle">Zelle</Option>
-                      <Option value="Pago movil">Pago móvil</Option>
-                      <Option value="Transferencia">Transferencia bancaria</Option>
-                      <Option value="Tarjeta">Tarjeta de crédito/débito</Option>
-                      <Option value="PayPal">PayPal</Option>
-                      <Option value="Stripe">Stripe</Option>
-                      <Option value="Cashea">Cashea</Option>
-                      <Option value="Criptomoneda">Criptomoneda</Option>
-                      <Option value="Cheque">Cheque</Option>
-                      <Option value="Otro">Otro</Option>
-                    </Select>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', alignItems: 'center' }}>
+                    <div>
+                      <label>Forma de pago</label>
+                      <Select
+                        value={selectedPaymentMethod}
+                        onChange={setSelectedPaymentMethod}
+                        style={{ width: '180px' }}
+                      >
+                        <Option value="Efectivo">Efectivo</Option>
+                        <Option value="Zelle">Zelle</Option>
+                        <Option value="Pago movil">Pago móvil</Option>
+                        <Option value="Transferencia">Transferencia bancaria</Option>
+                        <Option value="Tarjeta">Tarjeta de crédito/débito</Option>
+                        <Option value="PayPal">PayPal</Option>
+                        <Option value="Stripe">Stripe</Option>
+                        <Option value="Cashea">Cashea</Option>
+                        <Option value="Criptomoneda">Criptomoneda</Option>
+                        <Option value="Cheque">Cheque</Option>
+                        <Option value="Otro">Otro</Option>
+                      </Select>
+                    </div>
+                    {selectedPaymentMethod !== 'Cashea' && (
+                      <>
+                        <div>
+                          <label>Importe</label>
+                          <Input
+                            type="number"
+                            value={paymentAmount}
+                            onChange={(e) => setPaymentAmount(e.target.value)}
+                            style={{ width: '150px' }}
+                          />
+                        </div>
+                        <Button onClick={handleConfirmPayment}>Confirmar</Button>
+                      </>
+                    )}
                   </div>
-                  <div>
-                    <label>Importe</label>
-                    <Input 
-                      type="number"
-                      value={paymentAmount}
-                      onChange={(e) => setPaymentAmount(e.target.value)}
-                      style={{ width: '150px' }}
+
+                  {selectedPaymentMethod === 'Cashea' && (
+                    <CasheaOrderPanel
+                      selectedEvent={selectedEvent}
+                      selectedFuncion={selectedFuncion}
+                      amount={paymentAmount}
+                      onAmountChange={setPaymentAmount}
+                      onCreateOrder={handleConfirmPayment}
+                      disabled={!isCasheaAmountValid}
+                      isProcessing={isProcessing}
+                      seats={safeCarrito}
+                      total={total}
                     />
-                  </div>
-                  <Button onClick={handleConfirmPayment}>Confirmar</Button>
+                  )}
                 </div>
               </TabPane>
             </Tabs>
