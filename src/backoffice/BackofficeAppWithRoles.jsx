@@ -41,6 +41,7 @@ import ApiExplorer from '../saas/pages/ApiExplorer';
 import SaasUserManagement from './pages/SaasUserManagementSimple';
 import TenantDetail from './pages/TenantDetail';
 import WebStudio from './pages/WebStudio';
+import CasheaConfig from './pages/CasheaConfig';
 
 const BackofficeAppWithRoles = () => {
   return (
@@ -329,13 +330,21 @@ const BackofficeAppWithRoles = () => {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="payment-gateways" 
+          <Route
+            path="payment-gateways"
             element={
               <ProtectedRoute permission="payment_gateways">
                 <PaymentGateways />
               </ProtectedRoute>
-            } 
+            }
+          />
+          <Route
+            path="cashea/configuracion"
+            element={
+              <ProtectedRoute permission="eventos">
+                <CasheaConfig />
+              </ProtectedRoute>
+            }
           />
           <Route 
             path="webstudio" 

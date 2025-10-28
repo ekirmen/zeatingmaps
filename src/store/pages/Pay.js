@@ -1,7 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { message } from 'antd';
-import { CreditCardOutlined, BankOutlined, MobileOutlined, DollarOutlined } from '@ant-design/icons';
+import {
+  CreditCardOutlined,
+  BankOutlined,
+  MobileOutlined,
+  DollarOutlined,
+  WalletOutlined
+} from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { getActivePaymentMethods, validatePaymentMethodConfig } from '../services/paymentMethodsService';
 import { processPaymentMethod } from '../services/paymentMethodsProcessor';
@@ -14,7 +20,70 @@ import { getFacebookPixelByEvent } from '../services/facebookPixelService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import LoginModal from '../components/LoginModal';
+import { supabase } from '../../supabaseClient';
+import { loadCasheaSdk, DEFAULT_CASHEA_SDK_URL } from '../utils/casheaSdkLoader';
 
+const DEFAULT_CASHEA_EVENT_SETTINGS = {
+  enabled: false,
+  merchantName: '',
+  redirectUrl: '',
+  deliveryMethod: 'IN_STORE',
+  deliveryPrice: 0,
+  storeId: '',
+  storeName: '',
+  logoUrl: ''
+};
+
+const parseJsonField = (value) => {
+  if (!value) return {};
+
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      console.warn('No se pudo parsear JSON de evento:', error);
+      return {};
+    }
+  }
+
+  if (typeof value === 'object') {
+    return { ...value };
+  }
+
+  return {};
+};
+
+const buildEventCasheaConfig = (eventRow) => {
+  const otrasOpciones = parseJsonField(eventRow?.otrasOpciones);
+  const casheaRaw = otrasOpciones.cashea || {};
+
+  const normalized = {
+    ...DEFAULT_CASHEA_EVENT_SETTINGS,
+    ...casheaRaw,
+  };
+
+  if (!normalized.storeId && eventRow?.id) {
+    normalized.storeId = String(eventRow.id);
+  }
+  if (!normalized.storeName && eventRow?.nombre) {
+    normalized.storeName = eventRow.nombre;
+  }
+  if (!normalized.merchantName && eventRow?.nombre) {
+    normalized.merchantName = eventRow.nombre;
+  }
+  if (!normalized.redirectUrl && typeof window !== 'undefined') {
+    normalized.redirectUrl = `${window.location.origin}/store/payment-success`;
+  }
+  if (!normalized.logoUrl && eventRow?.imagenPrincipal) {
+    normalized.logoUrl = eventRow.imagenPrincipal;
+  }
+
+  normalized.deliveryPrice = Number.isFinite(Number(normalized.deliveryPrice))
+    ? Number(normalized.deliveryPrice)
+    : 0;
+
+  return normalized;
+};
 
 const Pay = () => {
   console.log('🚀 [PAY] Componente Pay renderizándose...');
@@ -27,7 +96,7 @@ const Pay = () => {
   // En algunos contextos `cart` no existe y producía `undefined`, generando
   // errores al intentar usar `reduce`. Se usa `items` y se asegura un arreglo.
   const { items: cartItems, clearCart, functionId } = useCartStore();
-  const { handleError, showSuccess } = useErrorHandler();
+  const { handleError } = useErrorHandler();
   
   // Usar seatLockStore para sincronización en tiempo real
   const { lockedSeats, subscribeToFunction, unsubscribe } = useSeatLockStore();
@@ -42,6 +111,9 @@ const Pay = () => {
   const [facebookPixel, setFacebookPixel] = useState(null);
   const [pricesWithFees] = useState({});
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [eventCasheaConfig, setEventCasheaConfig] = useState(undefined);
+  const [eventInfo, setEventInfo] = useState(null);
+  const casheaButtonContainerRef = useRef(null);
 
   // Check authentication on component mount
   useEffect(() => {
@@ -50,43 +122,124 @@ const Pay = () => {
     }
   }, [user]);
 
+  const primaryEventId = cartItems && cartItems.length > 0 ? cartItems[0]?.eventId : null;
+
   useEffect(() => {
-    console.log('🔄 [PAY] useEffect ejecutándose...', { user: !!user, cartItems: cartItems?.length, total });
-    
+    let isMounted = true;
+
+    const loadEventCasheaConfig = async () => {
+      if (!primaryEventId) {
+        if (isMounted) {
+          setEventCasheaConfig(null);
+          setEventInfo(null);
+        }
+        return;
+      }
+
+      try {
+        if (isMounted) {
+          setEventCasheaConfig(undefined);
+        }
+
+        let query = supabase
+          .from('eventos')
+          .select('id, nombre, otrasOpciones, imagenPrincipal')
+          .eq('id', primaryEventId);
+
+        if (currentTenant?.id) {
+          query = query.eq('tenant_id', currentTenant.id);
+        }
+
+        const { data, error } = await query.single();
+
+        if (error) {
+          throw error;
+        }
+
+        const casheaConfig = buildEventCasheaConfig(data);
+
+        if (isMounted) {
+          setEventCasheaConfig(casheaConfig);
+          setEventInfo({
+            id: data.id,
+            nombre: data.nombre,
+            cashea: casheaConfig,
+            logoUrl: casheaConfig.logoUrl || data.imagenPrincipal || null,
+          });
+        }
+      } catch (error) {
+        console.error('Error cargando configuración de Cashea del evento:', error);
+        if (isMounted) {
+          setEventCasheaConfig(null);
+          setEventInfo(null);
+        }
+      }
+    };
+
+    loadEventCasheaConfig();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [primaryEventId, currentTenant?.id]);
+
+  useEffect(() => {
+    if (!user) {
+      console.log('❌ [PAY] Usuario NO autenticado, no se cargan métodos de pago');
+      setLoadingMethods(false);
+      return;
+    }
+
+    if (primaryEventId && eventCasheaConfig === undefined) {
+      setLoadingMethods(true);
+      return;
+    }
+
+    let cancelled = false;
+
     const loadGateways = async () => {
       try {
         setLoadingMethods(true);
-        console.log('🛒 [PAY] Cargando métodos de pago...');
-        
         const methods = await getActivePaymentMethods();
-        console.log('📋 [PAY] Métodos obtenidos de la BD:', methods);
-        
-        const validMethods = methods.filter(method => {
+
+        if (cancelled) {
+          return;
+        }
+
+        const validMethods = methods.filter((method) => {
           const validation = validatePaymentMethodConfig(method);
-          console.log(`🔍 [PAY] Validando ${method.method_id}:`, validation);
           return validation.valid;
         });
-        
-        console.log('✅ [PAY] Métodos válidos después del filtro:', validMethods);
-        setAvailableMethods(validMethods);
-        
-        // Por ahora, no calculamos comisiones específicas
-        // Esto se puede implementar más tarde usando la tabla comisiones_tasas
+
+        const filteredMethods = validMethods.filter((method) => {
+          if (method.method_id === 'cashea') {
+            return !!eventCasheaConfig?.enabled;
+          }
+          return true;
+        });
+
+        setAvailableMethods(filteredMethods);
       } catch (error) {
-        console.error('❌ [PAY] Error loading payment gateways:', error);
-        message.error('Error al cargar métodos de pago');
+        if (!cancelled) {
+          console.error('❌ [PAY] Error loading payment gateways:', error);
+          message.error('Error al cargar métodos de pago');
+        }
       } finally {
-        setLoadingMethods(false);
+        if (!cancelled) {
+          setLoadingMethods(false);
+        }
       }
     };
+
     const loadFacebookPixel = async () => {
       try {
         if (cartItems && cartItems.length > 0) {
-          // Obtener el píxel del primer evento en el carrito
           const firstEventId = cartItems[0]?.eventId;
           if (firstEventId) {
             const pixel = await getFacebookPixelByEvent(firstEventId);
-            setFacebookPixel(pixel);
+            if (!cancelled) {
+              setFacebookPixel(pixel);
+            }
           }
         }
       } catch (error) {
@@ -94,15 +247,19 @@ const Pay = () => {
       }
     };
 
-    // Only load data if user is authenticated
-    if (user) {
-      console.log('✅ [PAY] Usuario autenticado, cargando métodos de pago...');
-      loadGateways();
-      loadFacebookPixel();
-    } else {
-      console.log('❌ [PAY] Usuario NO autenticado, no se cargan métodos de pago');
+    loadGateways();
+    loadFacebookPixel();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, cartItems, eventCasheaConfig, primaryEventId]);
+
+  useEffect(() => {
+    if (selectedGateway?.method_id === 'cashea' && !eventCasheaConfig?.enabled) {
+      setSelectedGateway(null);
     }
-  }, [cartItems, total, user]);
+  }, [selectedGateway, eventCasheaConfig]);
 
   // Suscribirse a cambios de bloqueo de asientos en tiempo real
   useEffect(() => {
@@ -125,6 +282,60 @@ const Pay = () => {
     // The component will automatically reload payment methods after user state changes
   };
 
+  const launchCasheaCheckout = useCallback(
+    async (payload, publicApiKey, sdkUrl) => {
+      if (!payload) {
+        throw new Error('No se pudo generar la orden de Cashea');
+      }
+
+      if (!publicApiKey) {
+        throw new Error('Falta la clave pública de Cashea');
+      }
+
+      try {
+        const WebCheckoutSDK = await loadCasheaSdk(sdkUrl || DEFAULT_CASHEA_SDK_URL);
+
+        if (!WebCheckoutSDK) {
+          throw new Error('SDK de Cashea no disponible');
+        }
+
+        if (casheaButtonContainerRef.current) {
+          casheaButtonContainerRef.current.innerHTML = '';
+          casheaButtonContainerRef.current.style.display = 'none';
+        }
+
+        const container = casheaButtonContainerRef.current || document.createElement('div');
+
+        if (!casheaButtonContainerRef.current) {
+          container.style.display = 'none';
+          casheaButtonContainerRef.current = container;
+          document.body.appendChild(container);
+        }
+
+        const sdkInstance = new WebCheckoutSDK({ apiKey: publicApiKey });
+        sdkInstance.createCheckoutButton({
+          payload,
+          container,
+        });
+
+        const button = container.querySelector('button, .cashea-button');
+
+        if (button) {
+          button.click();
+          message.success('Redirigiendo a Cashea...');
+        } else {
+          container.style.display = 'block';
+          message.info('Haz clic en el botón de Cashea para continuar con el pago.');
+        }
+      } catch (error) {
+        console.error('Error iniciando Cashea Checkout:', error);
+        message.error(error.message || 'No se pudo iniciar el pago con Cashea');
+        throw error;
+      }
+    },
+    []
+  );
+
   const handleProcessPayment = async () => {
     // Validaciones robustas antes de procesar el pago
     if (!selectedGateway) {
@@ -135,6 +346,28 @@ const Pay = () => {
     if (!cartItems || cartItems.length === 0) {
       message.error('No hay asientos seleccionados para procesar');
       return;
+    }
+
+    if (selectedGateway.method_id === 'cashea') {
+      if (eventCasheaConfig === undefined) {
+        message.warning('Estamos cargando la configuración de Cashea. Inténtalo nuevamente en unos segundos.');
+        return;
+      }
+
+      if (!eventCasheaConfig?.enabled) {
+        message.error('Cashea no está habilitado para este evento.');
+        return;
+      }
+
+      if (!selectedGateway.config?.public_api_key) {
+        message.error('Configura la clave pública de Cashea antes de utilizar este método.');
+        return;
+      }
+
+      if (!eventCasheaConfig.redirectUrl) {
+        message.error('Falta configurar la URL de redirección de Cashea para este evento.');
+        return;
+      }
     }
 
     // Validar que todos los asientos sigan disponibles
@@ -214,7 +447,9 @@ const Pay = () => {
           id: functionId || null
         },
         evento: {
-          id: cartItems[0]?.eventId || null
+          id: cartItems[0]?.eventId || null,
+          nombre: eventInfo?.nombre || cartItems[0]?.nombreEvento || 'Evento',
+          cashea: eventCasheaConfig
         }
       };
 
@@ -247,20 +482,31 @@ const Pay = () => {
           tenant: currentTenant ? { ...currentTenant } : null
         });
 
-        // Limpiar carrito (sin intentar desbloquear asientos ya vendidos)
-        clearCart(true);
-        
         // Redirigir según el tipo de pago
+        if (result.requiresCasheaRedirect) {
+          await launchCasheaCheckout(
+            result.casheaPayload,
+            result.casheaPublicApiKey,
+            result.casheaSdkUrl || selectedGateway.config?.sdk_url
+          );
+          clearCart(true);
+          return;
+        }
+
         if (result.requiresRedirect) {
+          clearCart(true);
           window.location.href = result.approvalUrl;
         } else if (result.requiresAction) {
           // Para Stripe, mostrar formulario de tarjeta
+          clearCart(true);
           navigate('/store/payment-confirm', { state: { result } });
         } else if (result.requiresManualConfirmation) {
           // Para transferencias, mostrar información
+          clearCart(true);
           navigate('/store/payment-manual', { state: { result } });
         } else {
           console.log('🔄 Redirecting to payment success page...');
+          clearCart(true);
           navigate('/store/payment-success', { state: { result, locator: result.locator } });
         }
       } else {
@@ -292,7 +538,8 @@ const Pay = () => {
       transferencia: <BankOutlined style={{ color: '#52c41a' }} />,
       pago_movil: <MobileOutlined style={{ color: '#1890ff' }} />,
       efectivo_tienda: <DollarOutlined style={{ color: '#fa8c16' }} />,
-      efectivo: <DollarOutlined style={{ color: '#fa8c16' }} />
+      efectivo: <DollarOutlined style={{ color: '#fa8c16' }} />,
+      cashea: <WalletOutlined style={{ color: '#4c6ef5' }} />
     };
     return icons[methodId] || <DollarOutlined />;
   };
@@ -306,7 +553,8 @@ const Pay = () => {
       transferencia: 'Transferencia Bancaria',
       pago_movil: 'Pago Móvil',
       efectivo_tienda: 'Pago en Efectivo en Tienda',
-      efectivo: 'Efectivo'
+      efectivo: 'Efectivo',
+      cashea: 'Cashea'
     };
     return names[methodId] || methodId;
   };
@@ -320,7 +568,8 @@ const Pay = () => {
       transferencia: 'Transferencias bancarias directas',
       pago_movil: 'Pagos móviles (MercadoPago, etc.)',
       efectivo_tienda: 'Pagos en efectivo en tienda física',
-      efectivo: 'Pagos en efectivo'
+      efectivo: 'Pagos en efectivo',
+      cashea: 'Compra ahora y paga en cuotas con Cashea'
     };
     return descriptions[methodId] || 'Método de pago';
   };
@@ -487,6 +736,18 @@ const Pay = () => {
                           Guardar en Carrito para Pagar Después
                         </button>
                       </div>
+
+                      {selectedGateway?.method_id === 'cashea' && (
+                        <div className="store-text-center mt-4 space-y-2">
+                          <div
+                            ref={casheaButtonContainerRef}
+                            style={{ display: 'none' }}
+                          />
+                          <p className="store-text-xs store-text-gray-500">
+                            Te redirigiremos al checkout de Cashea para finalizar tu pago. Si no ocurre automáticamente, utiliza el botón generado.
+                          </p>
+                        </div>
+                      )}
 
                       {selectedGateway && (
                         <div className="store-text-xs store-text-gray-500 store-text-center mt-2">
