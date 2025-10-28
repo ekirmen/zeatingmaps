@@ -37,3 +37,22 @@ button,
   background-color: var(--headerBg);
   color: var(--headerText);
 }
+
+.cashea-order-button {
+  background-color: #000000 !important;
+  border-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+.cashea-order-button:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  border-color: rgba(0, 0, 0, 0.8) !important;
+  color: #ffffff !important;
+}
+
+.cashea-order-button:disabled {
+  background-color: #dcdcdc !important;
+  border-color: #dcdcdc !important;
+  color: #6b7280 !important;
+  cursor: not-allowed !important;
+}
