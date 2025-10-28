@@ -379,6 +379,109 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
   }
 }
 
+class CasheaMethodProcessor extends PaymentMethodProcessor {
+  buildCasheaPayload(paymentData, casheaSettings) {
+    const seats = Array.isArray(paymentData.items) ? paymentData.items : [];
+    const user = paymentData.user || {};
+    const eventInfo = paymentData.evento || {};
+
+    const products = seats.map((seat, index) => {
+      const baseId = seat.sillaId || seat._id || seat.id || `seat-${index}`;
+      const unitPrice = Number(seat.precio || seat.price || paymentData.amount || 0);
+
+      return {
+        id: String(seat.productId || baseId),
+        name: seat.nombre || seat.nombreAsiento || `Asiento ${index + 1}`,
+        sku: String(seat.sku || baseId),
+        description: seat.nombreEvento || eventInfo.nombre || 'Entrada de evento',
+        imageUrl: seat.imagen || casheaSettings.logoUrl || '',
+        quantity: Number(seat.quantity || 1) || 1,
+        price: unitPrice,
+        tax: Number(seat.tax || 0),
+        discount: Number(seat.discount || 0)
+      };
+    });
+
+    const storeId = casheaSettings.storeId || eventInfo.id || 'event-store';
+    const storeName = casheaSettings.storeName || eventInfo.nombre || 'Evento';
+
+    const identificationNumber =
+      user.identificationNumber ||
+      user.cedula ||
+      user.rif ||
+      user.dni ||
+      user.taxId ||
+      user.document ||
+      '00000000';
+
+    return {
+      identificationNumber: String(identificationNumber),
+      externalClientId: user.id || paymentData.orderId,
+      deliveryMethod: casheaSettings.deliveryMethod || 'IN_STORE',
+      merchantName: casheaSettings.merchantName || storeName,
+      redirectUrl: casheaSettings.redirectUrl,
+      deliveryPrice: Number(casheaSettings.deliveryPrice || 0),
+      invoiceId: paymentData.orderId,
+      orders: [
+        {
+          store: {
+            id: Number.isFinite(Number(storeId)) ? Number(storeId) : storeId,
+            name: storeName,
+            enabled: true
+          },
+          products
+        }
+      ]
+    };
+  }
+
+  async processPayment(paymentData) {
+    const casheaSettings = paymentData.evento?.cashea || {};
+
+    if (!casheaSettings.enabled) {
+      return {
+        success: false,
+        error: 'Cashea no está habilitado para este evento'
+      };
+    }
+
+    if (!this.config?.public_api_key) {
+      return {
+        success: false,
+        error: 'Cashea no está configurado correctamente (clave pública faltante)'
+      };
+    }
+
+    if (!casheaSettings.redirectUrl) {
+      return {
+        success: false,
+        error: 'Falta configurar la URL de redirección de Cashea'
+      };
+    }
+
+    const transaction = await createTransactionAndSyncSeats(this.method, paymentData, {
+      transactionStatus: 'pending',
+      requiresManualConfirmation: true,
+      seatStatusHint: 'reservado'
+    });
+
+    const payload = this.buildCasheaPayload(paymentData, casheaSettings);
+
+    return {
+      success: true,
+      transactionId: transaction.id,
+      status: 'pending',
+      message: 'Redirigiendo a Cashea...',
+      gatewayResponse: { status: 'pending' },
+      locator: paymentData.locator,
+      requiresCasheaRedirect: true,
+      casheaPayload: payload,
+      casheaPublicApiKey: this.config.public_api_key,
+      casheaSdkUrl: this.config?.sdk_url || null
+    };
+  }
+}
+
 const createPaymentMethodProcessor = (method) => {
   const processors = {
     stripe: StripeMethodProcessor,
@@ -389,6 +492,7 @@ const createPaymentMethodProcessor = (method) => {
     pago_movil: PagoMovilMethodProcessor,
     efectivo_tienda: EfectivoTiendaMethodProcessor,
     efectivo: EfectivoMethodProcessor,
+    cashea: CasheaMethodProcessor,
   };
 
   const ProcessorClass = processors[method.method_id];

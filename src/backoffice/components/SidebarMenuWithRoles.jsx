@@ -142,6 +142,21 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
       permission: 'dashboard'
     },
     {
+      title: 'Cashea',
+      icon: faCoins,
+      type: 'submenu',
+      submenuId: 'cashea',
+      permission: 'eventos',
+      items: [
+        {
+          title: 'Configuración Cashea',
+          path: '/dashboard/cashea/configuracion',
+          icon: faCog,
+          permission: 'eventos'
+        }
+      ]
+    },
+    {
       title: 'Administración',
       icon: faCogs,
       type: 'submenu',
