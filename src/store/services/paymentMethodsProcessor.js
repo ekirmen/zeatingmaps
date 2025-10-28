@@ -2,6 +2,7 @@ import { createPaymentTransaction as createSupabaseTransaction } from './payment
 import seatLocatorService from './seatLocatorService';
 import transactionRollbackService from '../../services/transactionRollbackService';
 import determineSeatLockStatus from '../../services/ticketing/seatStatus';
+import { createCasheaOrder } from '../../services/casheaService';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -256,6 +257,70 @@ class PayPalMethodProcessor extends PaymentMethodProcessor {
   }
 }
 
+class CasheaMethodProcessor extends PaymentMethodProcessor {
+  async processPayment(paymentData) {
+    const tenantId = paymentData?.tenant?.id || this.method.tenant_id || this.method.tenantId;
+
+    if (!tenantId) {
+      throw new Error('No se pudo determinar el tenant para Cashea');
+    }
+
+    const invoiceId = paymentData.locator
+      ? `INV-${paymentData.locator}`
+      : `INV-${paymentData.orderId || Date.now()}`;
+
+    const casheaOrder = await createCasheaOrder({
+      tenantId,
+      amount: paymentData.amount,
+      currency: paymentData.currency || 'USD',
+      description:
+        paymentData?.evento?.id
+          ? `Compra evento ${paymentData.evento.id}`
+          : 'Orden Cashea - Tienda',
+      customer: paymentData.user,
+      items: paymentData.items,
+      metadata: {
+        locator: paymentData.locator,
+        orderId: paymentData.orderId,
+        invoiceId,
+      },
+      config: this.config,
+    });
+
+    const transaction = await createTransactionAndSyncSeats(this.method, paymentData, {
+      transactionStatus: 'pending',
+      requiresManualConfirmation: true,
+      isReservation: true,
+      seatStatusHint: 'reservado',
+      manualStatus: 'reservado',
+      gatewayResponse: casheaOrder,
+      payments: [
+        {
+          method: 'cashea',
+          amount: paymentData.amount,
+          reference: casheaOrder.orderId || casheaOrder.invoiceId || null,
+          metadata: casheaOrder,
+          status: casheaOrder.status || 'pending',
+        },
+      ],
+    });
+
+    return {
+      success: true,
+      transactionId: transaction.id,
+      gatewayTransactionId: casheaOrder.orderId || transaction.id,
+      status: 'pending',
+      message: 'Orden Cashea creada. Completa el pago en Cashea.',
+      gatewayResponse: casheaOrder,
+      requiresManualConfirmation: true,
+      requiresRedirect: Boolean(casheaOrder.checkoutUrl),
+      approvalUrl: casheaOrder.checkoutUrl || null,
+      locator: paymentData.locator,
+      metadata: casheaOrder,
+    };
+  }
+}
+
 class ApplePayMethodProcessor extends PaymentMethodProcessor {
   async processPayment(paymentData) {
     const transaction = await createTransactionAndSyncSeats(this.method, paymentData, {
@@ -389,6 +454,7 @@ const createPaymentMethodProcessor = (method) => {
     pago_movil: PagoMovilMethodProcessor,
     efectivo_tienda: EfectivoTiendaMethodProcessor,
     efectivo: EfectivoMethodProcessor,
+    cashea: CasheaMethodProcessor,
   };
 
   const ProcessorClass = processors[method.method_id];

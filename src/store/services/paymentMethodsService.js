@@ -131,7 +131,8 @@ export const validatePaymentMethodConfig = (method) => {
     transferencia: ['bank_name', 'account_number'],
     pago_movil: ['provider', 'api_key'],
     efectivo_tienda: ['store_address'],
-    efectivo: [] // No requiere configuración adicional
+    efectivo: [], // No requiere configuración adicional
+    cashea: ['api_base_url', 'merchant_id']
   };
 
   const requiredFields = validations[method.method_id] || [];
@@ -141,6 +142,16 @@ export const validatePaymentMethodConfig = (method) => {
   for (const field of requiredFields) {
     if (!method.config || !method.config[field]) {
       missingFields.push(field);
+    }
+  }
+
+  if (method.method_id === 'cashea') {
+    const hasAuthCredential = Boolean(
+      method.config?.api_key || method.config?.access_token || method.config?.api_secret
+    );
+
+    if (!hasAuthCredential) {
+      missingFields.push('api_key');
     }
   }
 

@@ -489,8 +489,22 @@ export const createPaymentTransaction = async (transactionData) => {
       : [];
 
     const computedPayments = transactionData.payments && Array.isArray(transactionData.payments)
-      ? transactionData.payments
-      : [{ method: (transactionData.paymentMethod || transactionData.method || gatewayName || 'manual'), amount: Number(transactionData.amount) || 0 }];
+      ? transactionData.payments.map((payment) => ({
+          method: payment.method || transactionData.paymentMethod || transactionData.method || gatewayName || 'manual',
+          amount: Number(payment.amount) || 0,
+          metadata: payment.metadata || null,
+          reference: payment.reference || null,
+          status: payment.status || transactionData.status || 'completed',
+        }))
+      : [
+          {
+            method: transactionData.paymentMethod || transactionData.method || gatewayName || 'manual',
+            amount: Number(transactionData.amount) || 0,
+            metadata: transactionData.metadata || null,
+            reference: transactionData.orderId || null,
+            status: transactionData.status || 'completed',
+          },
+        ];
 
     const insertData = {
       order_id: transactionData.orderId,
@@ -509,6 +523,7 @@ export const createPaymentTransaction = async (transactionData) => {
       gateway_name: gatewayName,
       seats: normalizedSeats,
       user: userId || null,
+      metadata: transactionData.metadata || null,
       // Campos adicionales para compatibilidad/reportes
       fecha: new Date().toISOString(),
       event: transactionData.eventoId || null,
@@ -518,9 +533,7 @@ export const createPaymentTransaction = async (transactionData) => {
       payments: computedPayments
     };
 
-    if (transactionData.payments) {
-      insertData.payments = transactionData.payments;
-    }
+    insertData.payments = computedPayments;
 
     console.log('[PaymentTransaction] Datos a insertar:', insertData);
 
