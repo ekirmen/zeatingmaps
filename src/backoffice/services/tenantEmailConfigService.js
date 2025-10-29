@@ -67,7 +67,7 @@ export class TenantEmailConfigService {
       const { data, error } = await supabase
         .from('global_email_config')
         .select('*')
-        .single();
+        .maybeSingle();
 
       if (error) {
         if (this.isMissingTenantEmailTable(error)) {

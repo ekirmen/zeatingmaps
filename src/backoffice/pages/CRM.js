@@ -57,36 +57,97 @@ const CRM = () => {
       ]);
 
       // 🎯 CARGAR DATOS CRM ESPECIALIZADOS
-      const [crmClientsData, crmInteractionsData, crmNotesData, crmOpportunitiesData, crmTagsData] = await Promise.all([
-        // Clientes CRM
-        supabase
+      const fetchProfilesMap = async (userIds, selectFields = 'id, nombre, email') => {
+        const uniqueIds = Array.from(new Set((userIds || []).filter(Boolean)));
+        if (!uniqueIds.length) {
+          return new Map();
+        }
+
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select(selectFields)
+          .in('id', uniqueIds);
+
+        if (profilesError || !profilesData) {
+          if (profilesError) {
+            console.error('Error al cargar perfiles relacionados para CRM:', profilesError);
+          }
+          return new Map();
+        }
+
+        return new Map(profilesData.map((profile) => [profile.id, profile]));
+      };
+
+      const fetchCrmClients = async () => {
+        const { data, error } = await supabase
           .from('crm_clients')
-          .select(`
-            *,
-            profiles:user_id(id, nombre, email, telefono)
-          `)
-          .order('created_at', { ascending: false }),
-        
-        // Interacciones CRM
-        supabase
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error al cargar clientes CRM:', error);
+          return { data: [], error };
+        }
+
+        const profilesMap = await fetchProfilesMap(data?.map((client) => client.user_id), 'id, nombre, email, telefono');
+        const enrichedData = (data || []).map((client) => ({
+          ...client,
+          profile: client.user_id ? profilesMap.get(client.user_id) || null : null
+        }));
+
+        return { data: enrichedData, error: null };
+      };
+
+      const fetchCrmInteractions = async () => {
+        const { data, error } = await supabase
           .from('crm_interactions')
           .select(`
             *,
-            crm_clients:client_id(nombre, email),
-            profiles:user_id(nombre, email)
+            crm_clients:client_id(nombre, email)
           `)
-          .order('created_at', { ascending: false }),
-        
-        // Notas CRM
-        supabase
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error al cargar interacciones CRM:', error);
+          return { data: [], error };
+        }
+
+        const profilesMap = await fetchProfilesMap(data?.map((interaction) => interaction.user_id));
+        const enrichedData = (data || []).map((interaction) => ({
+          ...interaction,
+          user_profile: interaction.user_id ? profilesMap.get(interaction.user_id) || null : null
+        }));
+
+        return { data: enrichedData, error: null };
+      };
+
+      const fetchCrmNotes = async () => {
+        const { data, error } = await supabase
           .from('crm_notes')
           .select(`
             *,
-            crm_clients:client_id(nombre, email),
-            profiles:user_id(nombre, email)
+            crm_clients:client_id(nombre, email)
           `)
-          .order('created_at', { ascending: false }),
-        
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error al cargar notas CRM:', error);
+          return { data: [], error };
+        }
+
+        const profilesMap = await fetchProfilesMap(data?.map((note) => note.user_id));
+        const enrichedData = (data || []).map((note) => ({
+          ...note,
+          user_profile: note.user_id ? profilesMap.get(note.user_id) || null : null
+        }));
+
+        return { data: enrichedData, error: null };
+      };
+
+      const [crmClientsData, crmInteractionsData, crmNotesData, crmOpportunitiesData, crmTagsData] = await Promise.all([
+        fetchCrmClients(),
+        fetchCrmInteractions(),
+        fetchCrmNotes(),
         // Oportunidades CRM
         supabase
           .from('crm_opportunities')
@@ -96,7 +157,7 @@ const CRM = () => {
             eventos:evento_id(nombre)
           `)
           .order('created_at', { ascending: false }),
-        
+
         // Tags CRM
         supabase
           .from('crm_tags')
