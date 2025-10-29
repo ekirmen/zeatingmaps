@@ -286,14 +286,17 @@ export class TenantEmailConfigService {
     }
   }
 
-  // Probar configuración de correo
-  static async testEmailConfig(config, testEmail = null) {
+  static async executeEmailTest(config, { to, subject, html } = {}) {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Usuario no autenticado');
 
-      const emailToTest = testEmail || user.email;
-      
+      const emailToTest = to || user.email;
+
+      if (!emailToTest) {
+        throw new Error('No se proporcionó un correo de destino para la prueba');
+      }
+
       const response = await fetch('/api/test-email-config', {
         method: 'POST',
         headers: {
@@ -309,10 +312,10 @@ export class TenantEmailConfigService {
               pass: config.smtp_pass
             }
           },
-          from: config.from_email,
+          from: config.from_email || config.smtp_user,
           to: emailToTest,
-          subject: 'Prueba de Configuración de Correo',
-          html: `
+          subject: subject || 'Prueba de Configuración de Correo',
+          html: html || `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h2 style="color: #1890ff;">✅ Configuración de Correo Exitosa</h2>
               <p>Este es un correo de prueba para verificar que la configuración SMTP está funcionando correctamente.</p>
@@ -323,7 +326,7 @@ export class TenantEmailConfigService {
                   <li><strong>Puerto:</strong> ${config.smtp_port}</li>
                   <li><strong>Seguro:</strong> ${config.smtp_secure ? 'Sí' : 'No'}</li>
                   <li><strong>Usuario:</strong> ${config.smtp_user}</li>
-                  <li><strong>Desde:</strong> ${config.from_email}</li>
+                  <li><strong>Desde:</strong> ${config.from_email || config.smtp_user}</li>
                 </ul>
               </div>
               <p style="color: #666; font-size: 12px;">
@@ -383,6 +386,45 @@ export class TenantEmailConfigService {
       console.error('Error probando configuración de correo:', error);
       throw error;
     }
+  }
+
+  // Probar configuración de correo
+  static async testEmailConfig(config, testEmail = null) {
+    return this.executeEmailTest(config, { to: testEmail });
+  }
+
+  static async sendInboundTestEmail(config) {
+    return this.executeEmailTest(config, {
+      to: 'email@omegaboletos.com',
+      subject: 'Prueba de entrada - Omega Boletos',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #722ed1;">📥 Prueba de correo entrante</h2>
+          <p>Este mensaje confirma que el servidor SMTP puede enviar correos hacia <strong>email@omegaboletos.com</strong>.</p>
+          <p>Si estás viendo este mensaje en la bandeja de entrada, la prueba fue exitosa.</p>
+          <div style="margin-top: 20px; font-size: 12px; color: #666;">
+            Enviado automáticamente el ${new Date().toLocaleString()} desde la consola de configuración de Omega Boletos.
+          </div>
+        </div>
+      `
+    });
+  }
+
+  static async sendWelcomeEmail(config, targetEmail) {
+    return this.executeEmailTest(config, {
+      to: targetEmail,
+      subject: 'Bienvenido a Omega Boletos',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #52c41a;">🎉 ¡Bienvenido!</h2>
+          <p>Te damos la bienvenida a <strong>Omega Boletos</strong>. Este correo confirma que la configuración de envío está funcionando correctamente.</p>
+          <p>Muy pronto recibirás toda la información necesaria para comenzar a operar tus eventos con nosotros.</p>
+          <div style="margin-top: 20px; font-size: 12px; color: #666;">
+            Enviado el ${new Date().toLocaleString()} desde ${config.from_name || 'Omega Boletos'} (${config.from_email || config.smtp_user}).
+          </div>
+        </div>
+      `
+    });
   }
 
   // Obtener proveedores de correo comunes
