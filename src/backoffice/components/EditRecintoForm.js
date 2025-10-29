@@ -21,7 +21,6 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
 
   const [showAddress, setShowAddress] = useState(false);
   const [mapUrl, setMapUrl] = useState('');
-  const [showMapModal, setShowMapModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -275,30 +274,6 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
                 </svg>
                 Buscar Coordenadas
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const hasAddress = Boolean(buildAddress(formData));
-                  if (hasAddress) {
-                    if (!mapUrl) {
-                      const fallbackUrl = formData.latitud && formData.longitud
-                        ? `https://www.google.com/maps?q=${formData.latitud},${formData.longitud}&output=embed`
-                        : `https://www.google.com/maps?q=${encodeURIComponent(buildAddress(formData))}&output=embed`;
-                      setMapUrl(fallbackUrl);
-                    }
-                    setShowMapModal(true);
-                  }
-                }}
-                disabled={!buildAddress(formData)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${buildAddress(formData)
-                  ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                  : 'bg-emerald-200 text-white cursor-not-allowed'}`}
-              >
-                <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Validar Dirección
-              </button>
             </div>
 
             {/* Coordenadas */}
@@ -374,50 +349,6 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
         </div>
       </form>
 
-      {showMapModal && (mapUrl || buildAddress(formData)) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-3 border-b">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">Validar dirección</h3>
-                <p className="text-sm text-gray-500">Confirma que la ubicación corresponda al recinto</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowMapModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <span className="sr-only">Cerrar</span>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="aspect-video w-full bg-gray-100">
-              <iframe
-                title="Validación de dirección"
-                src={mapUrl || (formData.latitud && formData.longitud
-                  ? `https://www.google.com/maps?q=${formData.latitud},${formData.longitud}&output=embed`
-                  : `https://www.google.com/maps?q=${encodeURIComponent(buildAddress(formData))}&output=embed`)}
-                width="100%"
-                height="100%"
-                loading="lazy"
-                allowFullScreen
-                style={{ border: 0 }}
-              />
-            </div>
-            <div className="flex justify-end gap-2 px-4 py-3 border-t bg-gray-50">
-              <button
-                type="button"
-                onClick={() => setShowMapModal(false)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
