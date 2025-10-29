@@ -621,7 +621,8 @@ const ModernEventPage = () => {
   // const otrasOpciones = getOtrasOpciones();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
       <div className="relative h-64 md:h-80 overflow-hidden">
         <EventImage
@@ -649,7 +650,7 @@ const ModernEventPage = () => {
                       <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
                         <CalendarOutlined className="text-white mr-2" />
                         <span className="font-medium text-sm">{formatDateString(evento.fecha_evento)}</span>
-                      </div>
+      </div>
                       {selectedFunctionId && funciones.find(f => f.id === selectedFunctionId) && (
                         <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
                           <ClockCircleOutlined className="text-white mr-2" />
@@ -906,52 +907,9 @@ const ModernEventPage = () => {
 
             {/* Configuración del Comprador eliminada */}
 
-            {venueMapUrl && (
-              <section
-                className="location-map-widget mb-6"
-                style={{ display: 'block', float: 'left', width: '100%' }}
-              >
-                <div
-                  id="map-wrapper-widget_event"
-                  className="rounded-xl overflow-hidden border border-gray-200 shadow-sm"
-                  style={{ height: '320px' }}
-                >
-                  <iframe
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    scrolling="no"
-                    marginHeight="0"
-                    marginWidth="0"
-                    title="Ubicación del recinto"
-                    src={venueMapUrl}
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                  />
-                </div>
-                {(venueAddress || venueDirections) && (
-                  <div className="mt-4 space-y-2">
-                    {venueAddress && (
-                      <p className="text-sm text-gray-700">
-                        <strong className="block text-gray-900">Dirección:</strong>
-                        {venueAddress}
-                      </p>
-                    )}
-                    {venueDirections && (
-                      <p className="text-sm text-gray-700">
-                        <strong className="block text-gray-900">Cómo llegar:</strong>
-                        {venueDirections}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </section>
-            )}
-
             {/* Otras opciones - solo admin */}
             {isTenantAdmin && Object.keys(getOtrasOpciones()).length > 0 && (
-              <Card 
+              <Card
                 title={
                   <div className="flex items-center">
                     <SettingOutlined className="text-gray-500 mr-2" />
@@ -1098,7 +1056,47 @@ const ModernEventPage = () => {
           </div>
         </div>
       </div>
-    </div>
+      {venueMapUrl && (
+        <section className="bg-gray-50 border-t border-gray-200">
+          <div className="max-w-6xl mx-auto px-4 py-10">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4 text-center">
+              ¿Dónde será el evento?
+            </h2>
+            <div className="rounded-2xl overflow-hidden shadow-lg border border-gray-200">
+              <iframe
+                width="100%"
+                height="360"
+                frameBorder="0"
+                scrolling="no"
+                marginHeight="0"
+                marginWidth="0"
+                title="Ubicación del recinto"
+                src={venueMapUrl}
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+              />
+            </div>
+            {(venueAddress || venueDirections) && (
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-700">
+                {venueAddress && (
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                    <h3 className="text-base font-semibold text-gray-900 mb-2">Dirección</h3>
+                    <p className="leading-relaxed">{venueAddress}</p>
+                  </div>
+                )}
+                {venueDirections && (
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                    <h3 className="text-base font-semibold text-gray-900 mb-2">Cómo llegar</h3>
+                    <p className="leading-relaxed">{venueDirections}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+    </>
   );
 };
 
