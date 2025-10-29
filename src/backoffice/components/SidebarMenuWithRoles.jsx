@@ -292,21 +292,15 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
       submenuId: 'sales',
       permission: 'boleteria', // Mostrar si tiene al menos uno de los permisos de ventas
       items: [
-        { 
-          title: 'Boletería', 
-          path: '/dashboard/boleteria', 
+        {
+          title: 'Boletería',
+          path: '/dashboard/boleteria',
           icon: faTicketAlt,
           permission: 'boleteria'
         },
-        { 
-          title: 'Boletería Avanzada', 
-          path: '/dashboard/boleteria-avanzada', 
-          icon: faTicketAlt,
-          permission: 'boleteria'
-        },
-        { 
-          title: 'Reportes', 
-          path: '/dashboard/reportes', 
+        {
+          title: 'Reportes',
+          path: '/dashboard/reportes',
           icon: faChartPie,
           permission: 'reportes'
         },
