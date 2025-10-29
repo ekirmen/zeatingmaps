@@ -1264,6 +1264,316 @@
   color: var(--store-primary-hover);
 }
 
+/* Improved account modal */
+.improved-account-modal .ant-modal-content {
+  border-radius: 24px;
+  padding: 0;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.2);
+}
+
+.account-modal-panel {
+  position: relative;
+  padding: 32px 28px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.account-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.account-modal-close:hover {
+  background: #e2e8f0;
+  color: var(--store-primary);
+}
+
+.account-modal-header {
+  text-align: center;
+  padding-top: 8px;
+}
+
+.account-modal-avatar {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--store-primary);
+  font-size: 24px;
+}
+
+.account-modal-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.account-modal-subtitle {
+  font-size: 0.95rem;
+  color: #475569;
+  margin: 0;
+}
+
+.account-modal-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 14px;
+}
+
+.account-modal-tab {
+  border: none;
+  background: transparent;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.account-modal-tab.is-active {
+  background: #ffffff;
+  color: var(--store-primary);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.15);
+}
+
+.account-modal-tab:not(.is-active):hover {
+  color: #1e293b;
+}
+
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.account-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.account-form-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.account-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.account-input-wrapper:focus-within {
+  border-color: rgba(37, 99, 235, 0.5);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.account-input-icon {
+  position: absolute;
+  left: 16px;
+  font-size: 18px;
+  color: #64748b;
+}
+
+.account-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 14px 16px 14px 48px;
+  font-size: 1rem;
+  color: #0f172a;
+}
+
+.account-input:focus {
+  outline: none;
+}
+
+.account-password-toggle {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 6px;
+  transition: color 0.2s ease;
+}
+
+.account-password-toggle:hover {
+  color: var(--store-primary);
+}
+
+.account-submit {
+  margin-top: 8px;
+}
+
+.account-link {
+  display: block;
+  text-align: center;
+  font-weight: 600;
+  color: var(--store-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 0;
+  transition: color 0.2s ease;
+}
+
+.account-link:hover {
+  color: var(--store-primary-hover);
+}
+
+.account-link-muted {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.account-link-muted:hover {
+  color: var(--store-primary);
+}
+
+.account-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.account-divider::before,
+.account-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+.account-alt-text {
+  text-align: center;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.account-inline-link {
+  border: none;
+  background: none;
+  color: var(--store-primary);
+  font-weight: 600;
+  margin-left: 6px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.account-inline-link:hover {
+  color: var(--store-primary-hover);
+}
+
+.account-form-error {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.account-phone-group {
+  display: flex;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #f8fafc;
+}
+
+.account-phone-group:focus-within {
+  border-color: rgba(37, 99, 235, 0.5);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.account-phone-prefix {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--store-primary);
+  font-weight: 600;
+}
+
+.account-phone-prefix select {
+  border: none;
+  background: transparent;
+  font-weight: 600;
+  color: var(--store-primary);
+  padding: 12px 0;
+}
+
+.account-phone-prefix select:focus {
+  outline: none;
+}
+
+.account-phone-group .account-input {
+  padding-left: 16px;
+}
+
+@media (max-width: 600px) {
+  .improved-account-modal .ant-modal {
+    width: 100% !important;
+    max-width: none;
+    margin: 0 16px;
+  }
+
+  .account-modal-panel {
+    padding: 28px 20px 24px;
+  }
+
+  .account-modal-tabs {
+    border-radius: 12px;
+  }
+
+  .account-modal-tab {
+    font-size: 0.9rem;
+  }
+}
+
 /* Phone input styles */
 .store-modal .flex select {
   border-right: none;

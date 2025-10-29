@@ -13,7 +13,6 @@ import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent } from '../services/facebookPixelService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
-import LoginModal from '../components/LoginModal';
 
 
 const Pay = () => {
@@ -41,12 +40,15 @@ const Pay = () => {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [facebookPixel, setFacebookPixel] = useState(null);
   const [pricesWithFees] = useState({});
-  const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Check authentication on component mount
   useEffect(() => {
     if (!user) {
-      setShowLoginModal(true);
+      window.dispatchEvent(
+        new CustomEvent('store:open-account-modal', {
+          detail: { mode: 'login', source: 'pay' }
+        })
+      );
     }
   }, [user]);
 
@@ -117,12 +119,6 @@ const Pay = () => {
 
   const handlePaymentMethodSelect = (method) => {
     setSelectedGateway(method);
-  };
-
-  // Handle successful login
-  const handleLoginSuccess = (user) => {
-    setShowLoginModal(false);
-    // The component will automatically reload payment methods after user state changes
   };
 
   const handleProcessPayment = async () => {
@@ -505,17 +501,6 @@ const Pay = () => {
         </div>
       </div>
 
-      {/* Login Modal */}
-      <LoginModal
-        visible={showLoginModal}
-        onClose={() => {
-          setShowLoginModal(false);
-          // If user closes modal without logging in, redirect to cart
-          navigate('/store/cart');
-        }}
-        onLoginSuccess={handleLoginSuccess}
-        title="Iniciar Sesión para Pagar"
-      />
     </div>
   );
 };
