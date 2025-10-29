@@ -52,27 +52,46 @@ const Tags = () => {
         .order('name', { ascending: true });
 
       if (userError) {
-        
+        console.error('Error al cargar los tags de usuario:', userError);
+        setUserTags([]);
       } else {
-        
-        // Cargar relaciones por separado para evitar errores de relación
         const processedUserTags = await Promise.all((userData || []).map(async (tag) => {
           try {
-            const { data: relations } = await supabase
+            const { data: relations, error: relationsError } = await supabase
               .from('user_tag_relations')
-              .select(`
-                id,
-                user_id,
-                profiles:user_id(id, nombre, email)
-              `)
+              .select('id, user_id')
               .eq('tag_id', tag.id);
-            
+
+            if (relationsError) {
+              throw relationsError;
+            }
+
+            const userIds = (relations || [])
+              .map(relation => relation.user_id)
+              .filter(Boolean);
+
+            let users = [];
+            if (userIds.length > 0) {
+              const { data: profilesData, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, nombre, email')
+                .in('id', userIds);
+
+              if (!profilesError && profilesData) {
+                const profilesMap = new Map(profilesData.map(profile => [profile.id, profile]));
+                users = userIds
+                  .map(id => profilesMap.get(id))
+                  .filter(Boolean);
+              }
+            }
+
             return {
               ...tag,
               usage_count: relations?.length || 0,
-              users: relations?.map(r => r.profiles).filter(Boolean) || []
+              users
             };
           } catch (error) {
+            console.error('Error al cargar relaciones de tags de usuario:', error);
             return {
               ...tag,
               usage_count: 0,
@@ -80,7 +99,7 @@ const Tags = () => {
             };
           }
         }));
-        
+
         setUserTags(processedUserTags);
       }
     } catch (error) {
