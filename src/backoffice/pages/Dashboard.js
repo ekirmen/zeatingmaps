@@ -457,21 +457,9 @@ const Dashboard = () => {
                 </Button>
               </Col>
               <Col xs={24} sm={12} md={6}>
-                <Button 
-                  type="default" 
-                  size="large" 
-                  block
-                  icon={<ShoppingCartOutlined />}
-                  onClick={() => navigate('/backoffice/boleteria-avanzada')}
-                  style={{ borderColor: '#1890ff', color: '#1890ff' }}
-                >
-                  Boletería Avanzada
-                </Button>
-              </Col>
-              <Col xs={24} sm={12} md={6}>
-                <Button 
-                  type="default" 
-                  size="large" 
+                <Button
+                  type="default"
+                  size="large"
                   block
                   icon={<CalendarOutlined />}
                   onClick={() => navigate('/backoffice/eventos')}
