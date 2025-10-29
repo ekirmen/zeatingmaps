@@ -335,11 +335,49 @@ export class TenantEmailConfigService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error probando configuración de correo');
+        let errorData = null;
+        let rawBody = null;
+
+        try {
+          errorData = await response.clone().json();
+        } catch (jsonError) {
+          try {
+            rawBody = await response.text();
+          } catch (textError) {
+            rawBody = null;
+          }
+        }
+
+        if (!errorData && rawBody) {
+          errorData = { message: rawBody };
+        }
+
+        const errorMessage =
+          errorData?.error ||
+          errorData?.message ||
+          `Error probando configuración de correo (HTTP ${response.status})`;
+
+        const error = new Error(errorMessage);
+        error.status = response.status;
+        error.details = errorData;
+        error.raw = rawBody;
+
+        if (errorData?.diagnostics) {
+          error.diagnostics = errorData.diagnostics;
+        } else if (errorData?.debug) {
+          error.diagnostics = { steps: errorData.debug };
+        }
+
+        throw error;
       }
 
-      const result = await response.json();
+      const result = await response.json().catch(async (parseError) => {
+        const fallbackText = await response.text().catch(() => null);
+        const error = new Error('Respuesta inválida del servidor de pruebas SMTP');
+        error.details = { parseError: parseError?.message, raw: fallbackText };
+        throw error;
+      });
+
       return result;
     } catch (error) {
       console.error('Error probando configuración de correo:', error);
