@@ -11,7 +11,6 @@ import { useCartStore } from '../cartStore';
 // Nota: El carrito debe ser visible incluso en modo incógnito (sin login)
 import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent, FACEBOOK_EVENTS, shouldTrackOnPage } from '../services/facebookPixelService';
-import LoginModal from '../components/LoginModal';
 // import ValidationWidget from '../../components/ValidationWidget';
 import VisualNotifications from '../../utils/VisualNotifications';
 import { useAuth } from '../../contexts/AuthContext';
@@ -154,7 +153,7 @@ const Cart = () => {
     // Smart cart state
     const [currentLocator] = useState(null);
     const [locatorSeats] = useState([]);
-    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [pendingCheckout, setPendingCheckout] = useState(false);
 
     const itemCount = (items && Array.isArray(items) ? items.length : 0) + (products && Array.isArray(products) ? products.length : 0);
 
@@ -196,7 +195,12 @@ const Cart = () => {
         
         // Check if user is authenticated
         if (!user) {
-            setShowLoginModal(true);
+            setPendingCheckout(true);
+            window.dispatchEvent(
+                new CustomEvent('store:open-account-modal', {
+                    detail: { mode: 'login', source: 'cart' }
+                })
+            );
             return;
         }
         
@@ -205,11 +209,12 @@ const Cart = () => {
     };
 
     // Handle successful login
-    const handleLoginSuccess = (user) => {
-        setShowLoginModal(false);
-        // After successful login, proceed to payment
-        navigate('/store/payment');
-    };
+    useEffect(() => {
+        if (pendingCheckout && user) {
+            setPendingCheckout(false);
+            navigate('/store/payment');
+        }
+    }, [pendingCheckout, user, navigate]);
 
     // Check which seats are paid when items change
     useEffect(() => {
@@ -506,15 +511,6 @@ const Cart = () => {
                     )}
                 </div>
             </div>
-
-            {/* Login Modal */}
-            <LoginModal
-                visible={showLoginModal}
-                onClose={() => setShowLoginModal(false)}
-                onLoginSuccess={handleLoginSuccess}
-                title="Iniciar Sesión para Continuar"
-            />
-
             {/* Widget de Validación en Tiempo Real (deshabilitado por solicitud) */}
         </div>
     );
