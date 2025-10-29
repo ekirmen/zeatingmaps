@@ -103,7 +103,8 @@ const CasheaOrderPanel = ({
   isProcessing,
   total,
   order,
-  error
+  error,
+  seats = []
 }) => {
   const sanitizedAmount = amount ?? '';
   const eventName = selectedEvent?.nombre || 'Boletería';
@@ -113,7 +114,8 @@ const CasheaOrderPanel = ({
     selectedFuncion?.sala?.displayName ||
     'Caja 1';
   const functionName = selectedFuncion?.nombre || selectedFuncion?.titulo;
-  const seatCount = seats.length;
+  const normalizedSeats = Array.isArray(seats) ? seats : [];
+  const seatCount = normalizedSeats.length;
 
   const handleAmountChange = (value) => {
     const rawValue = typeof value === 'string' ? value : '';
@@ -1097,12 +1099,13 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
                       amount={paymentAmount}
                       onAmountChange={setPaymentAmount}
                       onCreateOrder={handleCreateCasheaOrder}
-                  disabled={!isCasheaAmountValid}
-                  isProcessing={isProcessing}
-                  total={total}
-                  order={casheaOrder}
-                  error={casheaError}
-                />
+                      disabled={!isCasheaAmountValid}
+                      isProcessing={isProcessing}
+                      total={total}
+                      order={casheaOrder}
+                      error={casheaError}
+                      seats={safeCarrito}
+                    />
               )}
                 </div>
               </TabPane>
