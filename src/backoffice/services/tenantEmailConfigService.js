@@ -1,6 +1,17 @@
 import { supabase } from '../../supabaseClient';
 
 export class TenantEmailConfigService {
+  static isMissingTenantEmailTable(error) {
+    if (!error) return false;
+
+    const normalizedMessage = (error.message || '').toLowerCase();
+    return (
+      ['pgrst116', 'pgrst301', '42p01'].includes((error.code || '').toLowerCase()) ||
+      normalizedMessage.includes('does not exist') ||
+      normalizedMessage.includes('not found')
+    );
+  }
+
   // Obtener configuración de correo del tenant actual
   static async getTenantEmailConfig(tenantId = null) {
     try {
@@ -26,14 +37,21 @@ export class TenantEmailConfigService {
         .from('tenant_email_config')
         .select('*')
         .eq('tenant_id', currentTenantId)
-        .single();
+        .maybeSingle();
 
       if (error) {
+        if (this.isMissingTenantEmailTable(error)) {
+          console.warn('Tabla tenant_email_config no disponible. Usando configuración global como fallback.');
+          return await this.getGlobalEmailConfig();
+        }
         if (error.code === 'PGRST116') {
-          // No hay configuración específica del tenant, retornar configuración global
           return await this.getGlobalEmailConfig();
         }
         throw error;
+      }
+
+      if (!data) {
+        return await this.getGlobalEmailConfig();
       }
 
       return data;
@@ -52,6 +70,10 @@ export class TenantEmailConfigService {
         .single();
 
       if (error) {
+        if (this.isMissingTenantEmailTable(error)) {
+          console.warn('Tabla global_email_config no disponible. Usando configuración por defecto.');
+          return this.getDefaultEmailConfig();
+        }
         if (error.code === 'PGRST116') {
           // No hay configuración global, retornar configuración por defecto
           return this.getDefaultEmailConfig();
@@ -125,15 +147,21 @@ export class TenantEmailConfigService {
       };
 
       // Verificar si ya existe configuración
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from('tenant_email_config')
         .select('id')
         .eq('tenant_id', currentTenantId)
-        .single();
+        .maybeSingle();
+
+      if (existingError) {
+        if (this.isMissingTenantEmailTable(existingError)) {
+          throw new Error('La tabla tenant_email_config no existe en la base de datos. Ejecuta la migración correspondiente para habilitar la configuración de correo por tenant.');
+        }
+        throw existingError;
+      }
 
       let result;
       if (existing) {
-        // Actualizar configuración existente
         const { data, error } = await supabase
           .from('tenant_email_config')
           .update(configData)
@@ -141,10 +169,14 @@ export class TenantEmailConfigService {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          if (this.isMissingTenantEmailTable(error)) {
+            throw new Error('No fue posible actualizar la configuración porque la tabla tenant_email_config no existe.');
+          }
+          throw error;
+        }
         result = data;
       } else {
-        // Crear nueva configuración
         configData.created_at = new Date().toISOString();
         const { data, error } = await supabase
           .from('tenant_email_config')
@@ -152,7 +184,12 @@ export class TenantEmailConfigService {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          if (this.isMissingTenantEmailTable(error)) {
+            throw new Error('No fue posible guardar la configuración porque la tabla tenant_email_config no existe.');
+          }
+          throw error;
+        }
         result = data;
       }
 
@@ -196,10 +233,17 @@ export class TenantEmailConfigService {
       };
 
       // Verificar si ya existe configuración global
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from('global_email_config')
         .select('id')
-        .single();
+        .maybeSingle();
+
+      if (existingError) {
+        if (this.isMissingTenantEmailTable(existingError)) {
+          throw new Error('La tabla global_email_config no existe en la base de datos.');
+        }
+        throw existingError;
+      }
 
       let result;
       if (existing) {
@@ -210,7 +254,12 @@ export class TenantEmailConfigService {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          if (this.isMissingTenantEmailTable(error)) {
+            throw new Error('La tabla global_email_config no existe en la base de datos.');
+          }
+          throw error;
+        }
         result = data;
       } else {
         // Crear nueva configuración
@@ -221,7 +270,12 @@ export class TenantEmailConfigService {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          if (this.isMissingTenantEmailTable(error)) {
+            throw new Error('La tabla global_email_config no existe en la base de datos.');
+          }
+          throw error;
+        }
         result = data;
       }
 
