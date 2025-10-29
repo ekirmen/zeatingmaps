@@ -116,94 +116,302 @@ const connectSmtp = ({ host, port, secure }) => {
   });
 };
 
+const createSmtpError = (step, response) => {
+  const baseMessage = response?.message || 'Respuesta desconocida del servidor SMTP';
+  const code = response?.code;
+  const error = new Error(
+    code ? `Error en ${step} (${code}): ${baseMessage}` : `Error en ${step}: ${baseMessage}`
+  );
+
+  error.step = step;
+  error.smtpCode = code;
+  error.smtpResponse = response;
+  error.statusCode = code >= 500 ? 502 : 400;
+  error.handled = true;
+  return error;
+};
+
+const categorizeError = (error = {}) => {
+  const message = error?.message || '';
+  const code = error?.code || error?.smtpCode;
+  const step = error?.step || null;
+
+  if (error?.code === 'ENOTFOUND' || /getaddrinfo ENOTFOUND/i.test(message)) {
+    return {
+      category: 'host',
+      title: 'No se pudo resolver el servidor SMTP',
+      hint: 'Verifica el dominio del servidor SMTP. Asegúrate de que el hosting y los registros DNS estén configurados correctamente.',
+      step: step || 'connect',
+      code
+    };
+  }
+
+  if (error?.code === 'ECONNREFUSED' || /ECONNREFUSED|connection refused/i.test(message)) {
+    return {
+      category: 'puerto',
+      title: 'El servidor rechazó la conexión',
+      hint: 'Verifica el puerto configurado, el firewall del hosting y que el servicio SMTP esté escuchando en ese puerto.',
+      step: step || 'connect',
+      code
+    };
+  }
+
+  if (error?.code === 'ETIMEDOUT' || /tiempo de espera|timed out|timeout/i.test(message)) {
+    return {
+      category: 'timeout',
+      title: 'La conexión con el servidor tardó demasiado',
+      hint: 'El servidor no respondió a tiempo. Revisa la conectividad, los puertos abiertos y si tu hosting permite conexiones SMTP externas.',
+      step: step || 'connect',
+      code
+    };
+  }
+
+  if (step && step.startsWith('auth')) {
+    return {
+      category: 'credenciales',
+      title: 'Error de autenticación SMTP',
+      hint: 'El usuario o la contraseña SMTP no son válidos. Revisa las credenciales proporcionadas y si se requieren contraseñas de aplicación.',
+      step,
+      code
+    };
+  }
+
+  if (step === 'mail-from' || step === 'rcpt-to') {
+    return {
+      category: 'correo',
+      title: 'Error con las direcciones de correo',
+      hint: 'Verifica que los correos del remitente y destinatario sean válidos y estén autorizados por tu proveedor SMTP.',
+      step,
+      code
+    };
+  }
+
+  if (step === 'data-start' || step === 'data-end') {
+    return {
+      category: 'contenido',
+      title: 'Error al enviar el contenido del correo',
+      hint: 'El servidor SMTP rechazó el contenido. Revisa el tamaño del mensaje y el formato del correo de prueba.',
+      step,
+      code
+    };
+  }
+
+  if (step === 'connect') {
+    return {
+      category: 'conexion',
+      title: 'No fue posible establecer la conexión SMTP',
+      hint: 'Revisa el host, puerto y opciones de seguridad configuradas. Asegúrate de que tu proveedor permita conexiones SMTP.',
+      step,
+      code
+    };
+  }
+
+  return {
+    category: 'desconocido',
+    title: 'Error desconocido en la prueba SMTP',
+    hint: 'Revisa el detalle técnico del error y los pasos registrados para identificar el problema.',
+    step,
+    code
+  };
+};
+
 export default async function handler(req, res) {
+  const diagnostics = [];
+  const addDiagnosticStep = (step, status, extra = {}) => {
+    diagnostics.push({
+      step,
+      status,
+      timestamp: new Date().toISOString(),
+      ...extra
+    });
+  };
+
   if (req.method !== 'POST') {
+    addDiagnosticStep('request', 'error', {
+      method: req.method,
+      error: 'Método no permitido'
+    });
     return res.status(405).json({
       success: false,
-      message: 'Method not allowed'
+      message: 'Method not allowed',
+      diagnostics: {
+        summary: {
+          category: 'api',
+          title: 'Método HTTP inválido',
+          hint: 'Este endpoint solo acepta peticiones POST.'
+        },
+        steps: diagnostics
+      }
     });
   }
 
   try {
+    addDiagnosticStep('request', 'success', {
+      method: req.method
+    });
+
     const { config, from, to, subject, html } = req.body || {};
 
     if (!config) {
+      addDiagnosticStep('validate-config', 'error', {
+        error: 'Falta la configuración SMTP'
+      });
       return res.status(400).json({
         success: false,
-        message: 'La configuración SMTP es requerida'
+        message: 'La configuración SMTP es requerida',
+        diagnostics: {
+          summary: {
+            category: 'config',
+            title: 'Configuración SMTP incompleta',
+            hint: 'Proporciona el host, puerto y credenciales del servidor SMTP antes de ejecutar la prueba.'
+          },
+          steps: diagnostics
+        }
       });
     }
 
     if (!config.host || !config.auth?.user || !config.auth?.pass) {
+      addDiagnosticStep('validate-config', 'error', {
+        error: 'Host, usuario o contraseña SMTP faltantes'
+      });
       return res.status(400).json({
         success: false,
-        message: 'Los datos del servidor SMTP están incompletos'
+        message: 'Los datos del servidor SMTP están incompletos',
+        diagnostics: {
+          summary: {
+            category: 'config',
+            title: 'Datos del servidor SMTP incompletos',
+            hint: 'Asegúrate de ingresar el servidor, usuario y contraseña SMTP.'
+          },
+          steps: diagnostics
+        }
       });
     }
 
     if (!from || !to) {
+      addDiagnosticStep('validate-config', 'error', {
+        error: 'Correos de origen/destino faltantes'
+      });
       return res.status(400).json({
         success: false,
-        message: 'Los correos de origen y destino son requeridos'
+        message: 'Los correos de origen y destino son requeridos',
+        diagnostics: {
+          summary: {
+            category: 'correo',
+            title: 'Correos requeridos',
+            hint: 'Indica los correos del remitente y destinatario para enviar la prueba.'
+          },
+          steps: diagnostics
+        }
       });
     }
+
+    addDiagnosticStep('validate-config', 'success', {
+      host: config.host,
+      port: config.port,
+      secure: sanitizeBoolean(config.secure)
+    });
 
     const port = sanitizePort(config.port);
     const secure = sanitizeBoolean(config.secure) || port === 465;
 
+    addDiagnosticStep('prepare-connection', 'success', {
+      host: config.host,
+      port,
+      secure
+    });
+
     let socket;
     try {
-      socket = await connectSmtp({ host: config.host, port, secure });
+      try {
+        socket = await connectSmtp({ host: config.host, port, secure });
+        addDiagnosticStep('connect', 'success', {
+          host: config.host,
+          port,
+          secure
+        });
+      } catch (connectionError) {
+        addDiagnosticStep('connect', 'error', {
+          host: config.host,
+          port,
+          secure,
+          error: connectionError.message,
+          code: connectionError.code
+        });
+        connectionError.step = 'connect';
+        throw connectionError;
+      }
 
-      const responses = [];
+      const recordResponse = (step, response) => {
+        const status = response.code < 400 ? 'success' : 'error';
+        addDiagnosticStep(step, status, {
+          code: response.code,
+          message: response.message
+        });
+
+        if (status === 'error') {
+          throw createSmtpError(step, response);
+        }
+
+        return response;
+      };
+
+      const runCommand = async (step, command, { allowedCodes = [] } = {}) => {
+        try {
+          const response = await sendCommand(socket, command);
+          if (allowedCodes.includes(response.code)) {
+            addDiagnosticStep(step, 'success', {
+              code: response.code,
+              message: response.message,
+              note: 'Respuesta aceptada como válida'
+            });
+            return response;
+          }
+          return recordResponse(step, response);
+        } catch (commandError) {
+          if (!commandError.handled) {
+            addDiagnosticStep(step, 'error', {
+              error: commandError.message,
+              code: commandError.code || commandError.smtpCode
+            });
+            commandError.handled = true;
+          }
+          if (!commandError.step) {
+            commandError.step = step;
+          }
+          throw commandError;
+        }
+      };
+
+      const runDataStep = async (step, payload) => {
+        try {
+          const response = await sendMessageData(socket, payload);
+          return recordResponse(step, response);
+        } catch (dataError) {
+          if (!dataError.handled) {
+            addDiagnosticStep(step, 'error', {
+              error: dataError.message,
+              code: dataError.code || dataError.smtpCode
+            });
+            dataError.handled = true;
+          }
+          if (!dataError.step) {
+            dataError.step = step;
+          }
+          throw dataError;
+        }
+      };
 
       let response = await waitForResponse(socket);
-      responses.push({ step: 'banner', ...response });
-      if (response.code >= 400) {
-        throw new Error(`Error inicial SMTP (${response.code}): ${response.message}`);
-      }
+      recordResponse('banner', response);
 
-      response = await sendCommand(socket, `EHLO zeatingmaps.local`);
-      responses.push({ step: 'ehlo', ...response });
-      if (response.code >= 400) {
-        throw new Error(`Error en EHLO (${response.code}): ${response.message}`);
-      }
-
-      response = await sendCommand(socket, 'AUTH LOGIN');
-      responses.push({ step: 'auth-login', ...response });
-      if (response.code >= 400 && response.code !== 334) {
-        throw new Error(`Error al iniciar autenticación (${response.code}): ${response.message}`);
-      }
-
-      response = await sendCommand(socket, encodeBase64(config.auth.user));
-      responses.push({ step: 'auth-user', ...response });
-      if (response.code >= 400 && response.code !== 334) {
-        throw new Error(`Error al enviar usuario SMTP (${response.code}): ${response.message}`);
-      }
-
-      response = await sendCommand(socket, encodeBase64(config.auth.pass));
-      responses.push({ step: 'auth-pass', ...response });
-      if (response.code >= 400) {
-        throw new Error(`Error al enviar contraseña SMTP (${response.code}): ${response.message}`);
-      }
-
-      response = await sendCommand(socket, `MAIL FROM:<${from}>`);
-      responses.push({ step: 'mail-from', ...response });
-      if (response.code >= 400) {
-        throw new Error(`Error en MAIL FROM (${response.code}): ${response.message}`);
-      }
-
-      response = await sendCommand(socket, `RCPT TO:<${to}>`);
-      responses.push({ step: 'rcpt-to', ...response });
-      if (response.code >= 400) {
-        throw new Error(`Error en RCPT TO (${response.code}): ${response.message}`);
-      }
-
-      response = await sendCommand(socket, 'DATA');
-      responses.push({ step: 'data-start', ...response });
-      if (response.code >= 400 && response.code !== 354) {
-        throw new Error(`Error al iniciar DATA (${response.code}): ${response.message}`);
-      }
+      await runCommand('ehlo', 'EHLO zeatingmaps.local');
+      await runCommand('auth-login', 'AUTH LOGIN', { allowedCodes: [334] });
+      await runCommand('auth-user', encodeBase64(config.auth.user), { allowedCodes: [334] });
+      await runCommand('auth-pass', encodeBase64(config.auth.pass));
+      await runCommand('mail-from', `MAIL FROM:<${from}>`);
+      await runCommand('rcpt-to', `RCPT TO:<${to}>`);
+      await runCommand('data-start', 'DATA', { allowedCodes: [354] });
 
       const message = [
         `Subject: ${subject || 'Prueba de configuración SMTP'}`,
@@ -214,18 +422,20 @@ export default async function handler(req, res) {
         html || '<p>Este es un correo de prueba para verificar la configuración SMTP.</p>'
       ].join('\r\n');
 
-      response = await sendMessageData(socket, message);
-      responses.push({ step: 'data-end', ...response });
-      if (response.code >= 400) {
-        throw new Error(`Error al enviar mensaje (${response.code}): ${response.message}`);
-      }
-
-      await sendCommand(socket, 'QUIT');
+      await runDataStep('data-end', message);
+      await runCommand('quit', 'QUIT');
 
       res.status(200).json({
         success: true,
         message: 'Correo de prueba enviado correctamente',
-        debug: responses
+        diagnostics: {
+          summary: {
+            category: 'ok',
+            title: 'Conexión SMTP verificada',
+            hint: 'La configuración proporcionada funcionó correctamente.'
+          },
+          steps: diagnostics
+        }
       });
     } finally {
       if (socket && !socket.destroyed) {
@@ -235,6 +445,9 @@ export default async function handler(req, res) {
           }
         } catch (endError) {
           console.error('Error cerrando conexión SMTP:', endError);
+          addDiagnosticStep('cleanup', 'error', {
+            error: endError.message
+          });
         } finally {
           if (!socket.destroyed) {
             socket.destroy();
@@ -244,10 +457,23 @@ export default async function handler(req, res) {
     }
   } catch (error) {
     console.error('Error enviando correo de prueba:', error);
-    res.status(500).json({
+    const summary = categorizeError(error);
+
+    if (summary && !diagnostics.some((step) => step.step === summary.step && step.status === 'error')) {
+      addDiagnosticStep(summary.step || 'error', 'error', {
+        error: error?.message,
+        code: error?.code || error?.smtpCode
+      });
+    }
+
+    res.status(error?.statusCode || 500).json({
       success: false,
       message: 'Error al enviar el correo de prueba',
-      error: error?.message || 'Error desconocido'
+      error: error?.message || 'Error desconocido',
+      diagnostics: {
+        summary,
+        steps: diagnostics
+      }
     });
   }
 }
