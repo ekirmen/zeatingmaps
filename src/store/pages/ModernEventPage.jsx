@@ -1096,6 +1096,7 @@ const ModernEventPage = () => {
           </div>
         </section>
       )}
+      </div>
     </>
   );
 };
