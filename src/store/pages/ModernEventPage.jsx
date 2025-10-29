@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button, Card, message, Spin, Alert, Badge, Tag, Descriptions, Statistic } from 'antd';
 import { 
@@ -34,6 +34,7 @@ import Cart from './Cart';
 import EventImage from '../components/EventImage';
 import GridSaleMode from '../components/GridSaleMode';
 import { getEstadoVentaInfo } from '../../utils/estadoVenta';
+import buildAddress from '../../utils/address';
 import { useCountdown, formatCountdown, findNextStart } from '../../utils/countdown';
 import NotFound from './NotFound';
 
@@ -111,6 +112,42 @@ const ModernEventPage = () => {
     }
   }, [syncWithSeatLocks]);
 
+  const venueAddress = useMemo(() => {
+    if (!venueInfo) return '';
+    if (venueInfo.direccion) return venueInfo.direccion;
+    return buildAddress({
+      direccionLinea1: venueInfo.direccionLinea1 || venueInfo.direccionlinea1 || '',
+      ciudad: venueInfo.ciudad || '',
+      codigoPostal: venueInfo.codigoPostal || venueInfo.codigopostal || '',
+      estado: venueInfo.estado || '',
+      pais: venueInfo.pais || '',
+    });
+  }, [venueInfo]);
+
+  const venueLatitude = useMemo(() => {
+    if (!venueInfo) return null;
+    const lat = parseFloat(venueInfo.latitud ?? venueInfo.latitude);
+    return Number.isFinite(lat) ? lat : null;
+  }, [venueInfo]);
+
+  const venueLongitude = useMemo(() => {
+    if (!venueInfo) return null;
+    const lon = parseFloat(venueInfo.longitud ?? venueInfo.longitude);
+    return Number.isFinite(lon) ? lon : null;
+  }, [venueInfo]);
+
+  const venueMapUrl = useMemo(() => {
+    if (venueLatitude !== null && venueLongitude !== null) {
+      return `https://maps.google.com/maps?q=${venueLatitude},${venueLongitude}&ie=UTF8&output=embed`;
+    }
+    if (venueAddress) {
+      return `https://maps.google.com/maps?q=${encodeURIComponent(venueAddress)}&ie=UTF8&output=embed`;
+    }
+    return '';
+  }, [venueLatitude, venueLongitude, venueAddress]);
+
+  const venueDirections = venueInfo?.comollegar || '';
+
   // Cargar evento y funciones
   useEffect(() => {
     const fetchData = async () => {
@@ -133,7 +170,7 @@ const ModernEventPage = () => {
         if (recintoId) {
           const { data: recData, error: recErr } = await supabase
             .from('recintos')
-            .select('id, nombre, direccion, capacidad')
+            .select('id, nombre, direccion, capacidad, comollegar, latitud, longitud, pais, estado, ciudad, codigopostal, direccionlinea1')
             .eq('id', recintoId)
             .maybeSingle();
           if (!recErr) setVenueInfo(recData || null);
@@ -625,10 +662,10 @@ const ModernEventPage = () => {
                           <span className="font-medium text-sm">{venueInfo.nombre}</span>
                         </div>
                       )}
-                      {venueInfo && venueInfo.direccion && (
+                      {venueInfo && (venueInfo.direccion || venueAddress) && (
                         <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
                           <EnvironmentOutlined className="text-white mr-2" />
-                          <span className="font-medium text-sm">{venueInfo.direccion}</span>
+                          <span className="font-medium text-sm">{venueInfo.direccion || venueAddress}</span>
                         </div>
                       )}
                       {evento.sector && (
@@ -868,6 +905,49 @@ const ModernEventPage = () => {
 
 
             {/* Configuración del Comprador eliminada */}
+
+            {venueMapUrl && (
+              <section
+                className="location-map-widget mb-6"
+                style={{ display: 'block', float: 'left', width: '100%' }}
+              >
+                <div
+                  id="map-wrapper-widget_event"
+                  className="rounded-xl overflow-hidden border border-gray-200 shadow-sm"
+                  style={{ height: '320px' }}
+                >
+                  <iframe
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    scrolling="no"
+                    marginHeight="0"
+                    marginWidth="0"
+                    title="Ubicación del recinto"
+                    src={venueMapUrl}
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                  />
+                </div>
+                {(venueAddress || venueDirections) && (
+                  <div className="mt-4 space-y-2">
+                    {venueAddress && (
+                      <p className="text-sm text-gray-700">
+                        <strong className="block text-gray-900">Dirección:</strong>
+                        {venueAddress}
+                      </p>
+                    )}
+                    {venueDirections && (
+                      <p className="text-sm text-gray-700">
+                        <strong className="block text-gray-900">Cómo llegar:</strong>
+                        {venueDirections}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
 
             {/* Otras opciones - solo admin */}
             {isTenantAdmin && Object.keys(getOtrasOpciones()).length > 0 && (

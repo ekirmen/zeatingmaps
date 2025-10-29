@@ -21,6 +21,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
 
   const [showAddress, setShowAddress] = useState(false);
   const [mapUrl, setMapUrl] = useState('');
+  const [showMapModal, setShowMapModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -32,12 +33,18 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
         pais: recinto.pais || '',
         estado: recinto.estado || '',
         ciudad: recinto.ciudad || '',
-        codigoPostal: recinto.codigoPostal || '',
-        direccionLinea1: recinto.direccionLinea1 || '',
+        codigoPostal: recinto.codigoPostal || recinto.codigopostal || '',
+        direccionLinea1: recinto.direccionLinea1 || recinto.direccionlinea1 || '',
         latitud: recinto.latitud || '',
         longitud: recinto.longitud || '',
         comollegar: recinto.comollegar || ''
       });
+
+      if (recinto.latitud && recinto.longitud) {
+        setMapUrl(`https://www.google.com/maps?q=${recinto.latitud},${recinto.longitud}&output=embed`);
+      } else if (recinto.direccion) {
+        setMapUrl(`https://www.google.com/maps?q=${encodeURIComponent(recinto.direccion)}&output=embed`);
+      }
     }
   }, [recinto]);
 
@@ -46,15 +53,16 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
       const full = buildAddress(formData);
       const geo = await geocodeAddress(full);
       if (geo) {
-        setFormData(prev => ({ 
-          ...prev, 
-          latitud: geo.lat, 
-          longitud: geo.lon, 
-          direccion: full 
+        setFormData(prev => ({
+          ...prev,
+          latitud: geo.lat,
+          longitud: geo.lon,
+          direccion: full
         }));
         setMapUrl(`https://www.google.com/maps?q=${geo.lat},${geo.lon}&output=embed`);
       } else {
         setFormData(prev => ({ ...prev, direccion: full }));
+        setMapUrl(`https://www.google.com/maps?q=${encodeURIComponent(full)}&output=embed`);
       }
     } catch (error) {
       console.error('Error al geocodificar:', error);
@@ -256,7 +264,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
             </div>
 
             {/* Botón de búsqueda de coordenadas */}
-            <div className="flex justify-center">
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
               <button
                 type="button"
                 onClick={handleSearchAddress}
@@ -266,6 +274,30 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
                 Buscar Coordenadas
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const hasAddress = Boolean(buildAddress(formData));
+                  if (hasAddress) {
+                    if (!mapUrl) {
+                      const fallbackUrl = formData.latitud && formData.longitud
+                        ? `https://www.google.com/maps?q=${formData.latitud},${formData.longitud}&output=embed`
+                        : `https://www.google.com/maps?q=${encodeURIComponent(buildAddress(formData))}&output=embed`;
+                      setMapUrl(fallbackUrl);
+                    }
+                    setShowMapModal(true);
+                  }
+                }}
+                disabled={!buildAddress(formData)}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${buildAddress(formData)
+                  ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  : 'bg-emerald-200 text-white cursor-not-allowed'}`}
+              >
+                <svg className="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Validar Dirección
               </button>
             </div>
 
@@ -341,6 +373,51 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
           </button>
         </div>
       </form>
+
+      {showMapModal && (mapUrl || buildAddress(formData)) && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Validar dirección</h3>
+                <p className="text-sm text-gray-500">Confirma que la ubicación corresponda al recinto</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMapModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="sr-only">Cerrar</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="aspect-video w-full bg-gray-100">
+              <iframe
+                title="Validación de dirección"
+                src={mapUrl || (formData.latitud && formData.longitud
+                  ? `https://www.google.com/maps?q=${formData.latitud},${formData.longitud}&output=embed`
+                  : `https://www.google.com/maps?q=${encodeURIComponent(buildAddress(formData))}&output=embed`)}
+                width="100%"
+                height="100%"
+                loading="lazy"
+                allowFullScreen
+                style={{ border: 0 }}
+              />
+            </div>
+            <div className="flex justify-end gap-2 px-4 py-3 border-t bg-gray-50">
+              <button
+                type="button"
+                onClick={() => setShowMapModal(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

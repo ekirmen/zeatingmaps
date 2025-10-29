@@ -24,6 +24,7 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
   });
 
   const [mapUrl, setMapUrl] = useState('');
+  const [showMapModal, setShowMapModal] = useState(false);
 
   /* ----------------- helpers ----------------- */
   const handleSearchAddress = async () => {
@@ -38,6 +39,10 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
       }));
       setMapUrl(
         `https://www.google.com/maps?q=${geo.lat},${geo.lon}&output=embed`
+      );
+    } else if (fullAddress) {
+      setMapUrl(
+        `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`
       );
     }
   };
@@ -70,6 +75,15 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
   };
 
   const fullAddress = buildAddress(details);
+
+  const modalMapUrl = mapUrl
+    || (details.latitud && details.longitud
+      ? `https://www.google.com/maps?q=${details.latitud},${details.longitud}&output=embed`
+      : fullAddress
+        ? `https://www.google.com/maps?q=${encodeURIComponent(fullAddress)}&output=embed`
+        : '');
+
+  const hasAddressDetails = Boolean(fullAddress);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -168,8 +182,9 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
           <div className="flex gap-2 justify-end">
             <button
               type="button"
-              onClick={() => setShowAddress(false)}
-              className="bg-green-600 text-white px-3 py-1 rounded"
+              onClick={() => hasAddressDetails && setShowMapModal(true)}
+              disabled={!hasAddressDetails}
+              className={`px-3 py-1 rounded text-white ${hasAddressDetails ? 'bg-green-600 hover:bg-green-700' : 'bg-green-300 cursor-not-allowed'}`}
             >
               Validar
             </button>
@@ -212,6 +227,49 @@ const CreateRecintoForm = ({ onCreateRecinto, onCancel }) => {
           Cancelar
         </button>
       </div>
+
+      {showMapModal && modalMapUrl && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Validar dirección</h3>
+                <p className="text-sm text-gray-500">Revisa que la ubicación coincida con el recinto</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMapModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <span className="sr-only">Cerrar</span>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="aspect-video w-full bg-gray-100">
+              <iframe
+                title="Vista previa de la dirección"
+                src={modalMapUrl}
+                width="100%"
+                height="100%"
+                loading="lazy"
+                allowFullScreen
+                style={{ border: 0 }}
+              />
+            </div>
+            <div className="flex justify-end gap-2 px-4 py-3 border-t bg-gray-50">
+              <button
+                type="button"
+                onClick={() => setShowMapModal(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </form>
   );
 };
