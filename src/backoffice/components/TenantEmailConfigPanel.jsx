@@ -25,7 +25,9 @@ import {
   SaveOutlined,
   SecurityScanOutlined,
   GlobalOutlined,
-  TeamOutlined
+  TeamOutlined,
+  SendOutlined,
+  InboxOutlined
 } from '@ant-design/icons';
 import { TenantEmailConfigService } from '../services/tenantEmailConfigService';
 import { supabase } from '../../supabaseClient';
@@ -39,6 +41,8 @@ const TenantEmailConfigPanel = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [sendingInbound, setSendingInbound] = useState(false);
+  const [sendingWelcome, setSendingWelcome] = useState(false);
   const [tenantConfig, setTenantConfig] = useState(null);
   const [globalConfig, setGlobalConfig] = useState(null);
   const [selectedProvider, setSelectedProvider] = useState('custom');
@@ -281,6 +285,80 @@ const TenantEmailConfigPanel = () => {
     }
   };
 
+  const handleInboundTest = async () => {
+    try {
+      setSendingInbound(true);
+      const values = await form.validateFields();
+
+      const result = await TenantEmailConfigService.sendInboundTestEmail(values);
+
+      message.success('Correo de prueba enviado a email@omegaboletos.com');
+      if (result?.diagnostics) {
+        showDiagnosticsModal(result.diagnostics, {
+          success: true,
+          title: 'Prueba de entrada enviada',
+          message: 'Se envió un correo de prueba a email@omegaboletos.com.'
+        });
+      }
+
+    } catch (error) {
+      if (error?.message) {
+        message.error(`Error enviando la prueba: ${error.message}`);
+      }
+      console.error(error);
+      if (error?.diagnostics) {
+        showDiagnosticsModal(error.diagnostics, {
+          success: false,
+          title: 'Error en la prueba de entrada',
+          message: error.message
+        });
+      }
+    } finally {
+      setSendingInbound(false);
+    }
+  };
+
+  const handleSendWelcome = async () => {
+    try {
+      setSendingWelcome(true);
+      const values = await form.validateFields();
+      const welcomeEmail = form.getFieldValue('welcome_target_email');
+
+      if (!welcomeEmail) {
+        message.warning('Ingresa el correo al que deseas enviar la bienvenida.');
+        return;
+      }
+
+      await form.validateFields(['welcome_target_email']);
+
+      const result = await TenantEmailConfigService.sendWelcomeEmail(values, welcomeEmail);
+
+      message.success(`Correo de bienvenida enviado a ${welcomeEmail}`);
+      if (result?.diagnostics) {
+        showDiagnosticsModal(result.diagnostics, {
+          success: true,
+          title: 'Bienvenida enviada',
+          message: `Se envió un correo de bienvenida a ${welcomeEmail}.`
+        });
+      }
+
+    } catch (error) {
+      if (error?.message) {
+        message.error(`Error enviando la bienvenida: ${error.message}`);
+      }
+      console.error(error);
+      if (error?.diagnostics) {
+        showDiagnosticsModal(error.diagnostics, {
+          success: false,
+          title: 'Error enviando bienvenida',
+          message: error.message
+        });
+      }
+    } finally {
+      setSendingWelcome(false);
+    }
+  };
+
   const providers = TenantEmailConfigService.getCommonEmailProviders();
 
   return (
@@ -502,30 +580,72 @@ const TenantEmailConfigPanel = () => {
           </Form.Item>
 
           {/* Botones de acción */}
-          <div className="flex justify-between items-center">
-            <Space>
-              <Button
-                type="primary"
-                icon={<SaveOutlined />}
-                htmlType="submit"
-                loading={loading}
-              >
-                Guardar Configuración
-              </Button>
-              
-              <Button
-                icon={<ExperimentOutlined />}
-                onClick={handleTest}
-                loading={testing}
-              >
-                Probar Configuración
-              </Button>
-            </Space>
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <Space>
+                <Button
+                  type="primary"
+                  icon={<SaveOutlined />}
+                  htmlType="submit"
+                  loading={loading}
+                >
+                  Guardar Configuración
+                </Button>
 
-            <div className="text-right">
-              <Text type="secondary" style={{ fontSize: '12px' }}>
-                {activeTab === 'tenant' ? 'Configuración específica del tenant' : 'Configuración global del sistema'}
+                <Button
+                  icon={<ExperimentOutlined />}
+                  onClick={handleTest}
+                  loading={testing}
+                >
+                  Probar Configuración
+                </Button>
+              </Space>
+
+              <div className="text-right">
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  {activeTab === 'tenant' ? 'Configuración específica del tenant' : 'Configuración global del sistema'}
+                </Text>
+              </div>
+            </div>
+
+            <Divider className="my-0" />
+
+            <div>
+              <Title level={4}>
+                <ExperimentOutlined className="mr-2" />
+                Pruebas rápidas de correo
+              </Title>
+              <Text type="secondary" className="block mb-4">
+                Envía correos de prueba específicos para validar la recepción interna y los mensajes de bienvenida.
               </Text>
+
+              <Space direction="vertical" size="middle" style={{ width: '100%' }}>
+                <Button
+                  icon={<InboxOutlined />}
+                  onClick={handleInboundTest}
+                  loading={sendingInbound}
+                >
+                  Enviar prueba a email@omegaboletos.com
+                </Button>
+
+                <Space.Compact style={{ width: '100%' }}>
+                  <Form.Item
+                    name="welcome_target_email"
+                    style={{ flex: 1, marginBottom: 0 }}
+                    rules={[{ type: 'email', message: 'Ingresa un email válido' }]}
+                  >
+                    <Input placeholder="correo@ejemplo.com" />
+                  </Form.Item>
+                  <Button
+                    type="primary"
+                    icon={<SendOutlined />}
+                    onClick={handleSendWelcome}
+                    loading={sendingWelcome}
+                  >
+                    Enviar correo de bienvenida
+                  </Button>
+                </Space.Compact>
+              </Space>
             </div>
           </div>
         </Form>
