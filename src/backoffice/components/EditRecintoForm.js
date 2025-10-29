@@ -92,7 +92,7 @@ const EditRecintoForm = ({ recinto, onEditRecinto, onCancel }) => {
         estado: formData.estado.trim() || null,
         ciudad: formData.ciudad.trim() || null,
         codigopostal: formData.codigoPostal.trim() || null,
-        direccionLinea1: formData.direccionLinea1.trim() || null,
+        direccionlinea1: formData.direccionLinea1.trim() || null,
         latitud: formData.latitud ? parseFloat(formData.latitud) : null,
         longitud: formData.longitud ? parseFloat(formData.longitud) : null,
         comollegar: formData.comollegar.trim() || null,
