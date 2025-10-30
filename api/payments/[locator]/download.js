@@ -275,26 +275,26 @@ async function generateSimplePDF(req, res, locator) {
 }
 
 // Función para generar PDF completo con datos del pago
-async function generateFullPDF(req, res, payment, locator, extra = {}) {
+export async function createTicketPdfBuffer(payment, locator, extra = {}) {
   try {
-    console.log('📄 [DOWNLOAD] Generando PDF completo para pago:', payment.id);
-    
+    console.log('📄 [PDF] Generando PDF en memoria para el pago:', payment.id);
+
     // Crear documento PDF
     const pdfDoc = await PDFDocument.create();
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
     const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    
+
     const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
     const { width, height } = page.getSize();
 
     // Generar QR code
-    console.log('🖼️ [DOWNLOAD] Generando código QR...');
+    console.log('🖼️ [PDF] Generando código QR...');
     const qrData = JSON.stringify({
       locator: payment.locator,
       paymentId: payment.id,
       timestamp: new Date().toISOString()
     });
-    
+
     const qrImageBytes = await QRCode.toBuffer(qrData, {
       type: 'image/png',
       width: 200,
@@ -306,18 +306,18 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
     });
 
     // --- CARGAR IMÁGENES DEL EVENTO ---
-    console.log('🖼️ [DOWNLOAD] Cargando imágenes del evento...');
+    console.log('🖼️ [PDF] Cargando imágenes del evento...');
     let eventImages = {};
     let venueData = extra.venueData || null;
-    
+
     try {
       // Obtener datos del evento desde el pago
       const eventData = extra.eventData || payment.event || payment.funcion?.event;
       if (eventData && eventData.imagenes) {
-        const images = typeof eventData.imagenes === 'string' 
-          ? JSON.parse(eventData.imagenes) 
+        const images = typeof eventData.imagenes === 'string'
+          ? JSON.parse(eventData.imagenes)
           : eventData.imagenes;
-        
+
         // Cargar las 3 imágenes principales
         const imageTypes = ['logoHorizontal', 'portada', 'banner'];
         for (const imageType of imageTypes) {
@@ -325,16 +325,16 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
             try {
               const imageUrl = images[imageType].publicUrl || images[imageType].url;
               if (imageUrl) {
-                console.log(`🖼️ [DOWNLOAD] Cargando ${imageType}:`, imageUrl);
+                console.log(`🖼️ [PDF] Cargando ${imageType}:`, imageUrl);
                 const response = await fetch(imageUrl);
                 if (response.ok) {
                   const imageBuffer = await response.arrayBuffer();
                   eventImages[imageType] = await pdfDoc.embedPng(imageBuffer);
-                  console.log(`✅ [DOWNLOAD] ${imageType} cargado exitosamente`);
+                  console.log(`✅ [PDF] ${imageType} cargado exitosamente`);
                 }
               }
             } catch (imgError) {
-              console.warn(`⚠️ [DOWNLOAD] Error cargando ${imageType}:`, imgError.message);
+              console.warn(`⚠️ [PDF] Error cargando ${imageType}:`, imgError.message);
             }
           }
         }
@@ -352,14 +352,14 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
           if (!recErr) venueData = rec;
         }
       } catch (recError) {
-        console.warn('⚠️ [DOWNLOAD] Error cargando recinto:', recError.message);
+        console.warn('⚠️ [PDF] Error cargando recinto:', recError.message);
       }
     } catch (imgError) {
-      console.warn('⚠️ [DOWNLOAD] Error procesando imágenes del evento:', imgError.message);
+      console.warn('⚠️ [PDF] Error procesando imágenes del evento:', imgError.message);
     }
 
     // --- LAYOUT DEL TICKET ---
-    
+
     // 1. IMAGEN SUPERIOR (logoHorizontal) o placeholder [1]
     {
       const topImageWidth = 140;
@@ -390,9 +390,11 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
     });
 
     // 2.1 Nombre del evento (si disponible)
+    let eventTitle = null;
     try {
       const title = (extra.eventData?.nombre) || (payment.event?.nombre) || null;
       if (title) {
+        eventTitle = title;
         page.drawText(title, {
           x: 200,
           y: height - 100,
@@ -407,10 +409,10 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
     let y = height - 120;
     page.drawText(`Localizador: ${payment.locator}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
     y -= 25;
-    
+
     page.drawText(`Estado: ${payment.status}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
     y -= 25;
-    
+
     const montoNum = Number(payment.monto || payment.amount || 0);
     if (montoNum > 0) {
       page.drawText(`Monto: $${montoNum.toFixed(2)}`, { x: 50, y, size: 13, color: rgb(0,0,0), font: helveticaFont });
@@ -441,19 +443,19 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
     }
 
     // 4. QR CODE Y INFORMACIÓN IMPORTANTE (centro-derecho)
-    console.log('🖼️ [DOWNLOAD] Insertando código QR en centro-derecho...');
+    console.log('🖼️ [PDF] Insertando código QR en centro-derecho...');
     const qrImage = await pdfDoc.embedPng(qrImageBytes);
     const qrSize = 120;
     const qrX = width - qrSize - 50;
     const qrY = height - 200;
-    
+
     page.drawImage(qrImage, {
       x: qrX,
       y: qrY,
       width: qrSize,
       height: qrSize,
     });
-    
+
     // Información importante junto al QR
     page.drawText('CÓDIGO DE VALIDACIÓN', {
       x: qrX,
@@ -462,7 +464,7 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
       color: rgb(0.1, 0.1, 0.1),
       font: helveticaBold
     });
-    
+
     page.drawText('Escanea para validar entrada', {
       x: qrX,
       y: qrY - 35,
@@ -478,45 +480,68 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
       let seatY = y;
       payment.seats.forEach((seat) => {
         const zonaTxt = seat.zonaNombre || seat.nombreZona || seat.zona || seat.zonaId || null;
-        const mesaTxt = seat.mesaNombre || seat.mesa || null;
-        const filaTxt = seat.fila || seat.row || null;
-        const asientoId = seat.name || seat.nombre || seat.numero || seat.id || seat._id || seat.sillaId || null;
+        const mesaTxt = seat.mesa || seat.table || seat.mesaNombre || null;
+        const filaTxt = seat.fila || seat.row || seat.filaNombre || null;
+        const asientoTxt = seat.asiento || seat.seat || seat.asientoNombre || seat.nombre || seat.name || null;
 
-        page.drawText(`Zona: ${zonaTxt || 'no existe'}`, { x: 70, y: seatY, size: 11, color: zonaTxt ? rgb(0.2,0.2,0.2) : rgb(0.85,0.1,0.1), font: helveticaFont });
-        seatY -= 16;
-        page.drawText(`Mesa: ${mesaTxt || 'no existe'}`, { x: 70, y: seatY, size: 11, color: mesaTxt ? rgb(0.2,0.2,0.2) : rgb(0.85,0.1,0.1), font: helveticaFont });
-        seatY -= 16;
-        page.drawText(`Fila: ${filaTxt || 'no existe'}`, { x: 70, y: seatY, size: 11, color: filaTxt ? rgb(0.2,0.2,0.2) : rgb(0.85,0.1,0.1), font: helveticaFont });
-        seatY -= 16;
-        page.drawText(`Asiento: ${asientoId || 'no existe'}`, { x: 70, y: seatY, size: 11, color: asientoId ? rgb(0.2,0.2,0.2) : rgb(0.85,0.1,0.1), font: helveticaFont });
-        seatY -= 22; // espacio entre asientos
+        let seatLine = '';
+        if (zonaTxt) seatLine += `Zona: ${zonaTxt}`;
+        if (mesaTxt) seatLine += (seatLine ? ' | ' : '') + `Mesa: ${mesaTxt}`;
+        if (filaTxt) seatLine += (seatLine ? ' | ' : '') + `Fila: ${filaTxt}`;
+        if (asientoTxt) seatLine += (seatLine ? ' | ' : '') + `Asiento: ${asientoTxt}`;
+
+        if (!seatLine) seatLine = `Asiento: ${seat.id || seat._id || seat.nombre || seat.name || 'Sin datos'}`;
+
+        page.drawText(seatLine, { x: 60, y: seatY, size: 11, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+        seatY -= 18;
       });
+
       y = seatY - 10;
+    } else {
+      page.drawText('Asientos: No registrados', { x: 50, y, size: 12, color: rgb(0.85,0.1,0.1), font: helveticaBold });
+      y -= 20;
     }
 
-    // 6. IMAGEN MEDIA (portada) en centro del lado izquierdo o placeholder [2]
-    {
-      const midSize = 110;
-      const midX = 60; // lado izquierdo
-      const midY = y - midSize - 20;
-      if (eventImages.portada) {
-        page.drawImage(eventImages.portada, { x: midX, y: midY, width: midSize, height: midSize });
-      } else {
-        page.drawRectangle({ x: midX, y: midY, width: midSize, height: midSize, color: rgb(0.95,0.95,0.95), borderColor: rgb(0.8,0.8,0.8), borderWidth: 1 });
-        page.drawText('2', { x: midX + midSize/2 - 8, y: midY + midSize/2 - 10, size: 20, color: rgb(0.6,0.6,0.6), font: helveticaBold });
+    // 6. DETALLES DE LA FUNCIÓN (si existen)
+    try {
+      const funcion = extra.funcionData || payment.funcion || null;
+      if (funcion?.fecha_celebracion) {
+        const fechaCelebracion = new Date(funcion.fecha_celebracion);
+        const fecha = fechaCelebracion.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const hora = fechaCelebracion.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+
+        page.drawText('Detalles del evento:', { x: 50, y, size: 14, color: rgb(0,0,0), font: helveticaBold });
+        y -= 20;
+        page.drawText(`Fecha: ${fecha}`, { x: 60, y, size: 11, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+        y -= 18;
+        page.drawText(`Hora: ${hora}`, { x: 60, y, size: 11, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+        y -= 18;
       }
-      y -= midSize + 30;
-    }
+    } catch {}
 
-    // 7. FECHA DE COMPRA
-    const fechaCreacion = new Date(payment.created_at).toLocaleString('es-ES');
-    page.drawText(`Fecha de compra: ${fechaCreacion}`, { x: 50, y, size: 11, color: rgb(0.4,0.4,0.4), font: helveticaFont });
+    // 7. INFORMACIÓN DEL CLIENTE (si disponible)
+    try {
+      const customerName = payment.customer_name || payment.nombre_cliente || payment.user_name || null;
+      const customerEmail = payment.customer_email || payment.email_cliente || payment.user_email || null;
+      if (customerName || customerEmail) {
+        page.drawText('Información del comprador:', { x: 50, y, size: 14, color: rgb(0,0,0), font: helveticaBold });
+        y -= 20;
+        if (customerName) {
+          page.drawText(`Nombre: ${customerName}`, { x: 60, y, size: 11, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+          y -= 18;
+        }
+        if (customerEmail) {
+          page.drawText(`Email: ${customerEmail}`, { x: 60, y, size: 11, color: rgb(0.2,0.2,0.2), font: helveticaFont });
+          y -= 18;
+        }
+      }
+    } catch {}
 
-    // 8. IMAGEN INFERIOR (banner) - abajo del ticket o placeholder [3]
+    // 8. IMAGEN INFERIOR (banner) o placeholder [3]
     {
-      const bottomImageWidth = 260;
-      const bottomImageHeight = 90;
-      const bx = width / 2 - bottomImageWidth / 2;
+      const bottomImageWidth = width - 100;
+      const bottomImageHeight = 100;
+      const bx = 50;
       const by = 150;
       if (eventImages.banner) {
         page.drawImage(eventImages.banner, { x: bx, y: by, width: bottomImageWidth, height: bottomImageHeight });
@@ -544,34 +569,51 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
     page.drawText('• El QR es único y será validado electrónicamente.', { x: 60, y: 73, size: 9, color: rgb(0.2,0.2,0.2), font: helveticaFont });
     page.drawText('• No compartas tu ticket. Solo el primer escaneo será válido.', { x: 60, y: 61, size: 9, color: rgb(0.2,0.2,0.2), font: helveticaFont });
 
-    console.log('💾 [DOWNLOAD] Guardando PDF...');
+    console.log('💾 [PDF] Guardando PDF en memoria...');
     const pdfBytes = await pdfDoc.save();
-    console.log('✅ [DOWNLOAD] PDF generado exitosamente, tamaño:', pdfBytes.length, 'bytes');
+    console.log('✅ [PDF] PDF generado exitosamente, tamaño:', pdfBytes.length, 'bytes');
 
-    // Asegurar que se envíen los headers correctos
+    const buffer = Buffer.from(pdfBytes);
+    const filename = `ticket-${locator}.pdf`;
+
+    return {
+      buffer,
+      filename,
+      eventTitle
+    };
+  } catch (err) {
+    console.error('❌ [PDF] Error generando PDF en memoria:', err);
+    console.error('❌ [PDF] Stack trace:', err.stack);
+    throw err;
+  }
+}
+
+// Función para generar PDF completo con datos del pago
+async function generateFullPDF(req, res, payment, locator, extra = {}) {
+  try {
+    const { buffer, filename } = await createTicketPdfBuffer(payment, locator, extra);
+
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="ticket-${locator}.pdf"`);
-    res.setHeader('Content-Length', pdfBytes.length);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length);
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    
+
     console.log('📤 [DOWNLOAD] Enviando PDF al cliente...');
-    return res.status(200).send(Buffer.from(pdfBytes));
-    
+    return res.status(200).send(buffer);
   } catch (err) {
     console.error('❌ [DOWNLOAD] Error generando PDF completo:', err);
     console.error('❌ [DOWNLOAD] Stack trace:', err.stack);
-    
+
     res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({ 
-      error: 'Error generando PDF completo', 
+    return res.status(500).json({
+      error: 'Error generando PDF completo',
       details: err.message,
       stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
     });
   }
 }
-
 // Función para generar PDF con todos los tickets (modo bulk)
 async function generateBulkPDF(req, res, locator) {
   try {
