@@ -47,10 +47,13 @@ import {
   InfoCircleOutlined,
   SaveOutlined,
   FolderOpenOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  SendOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { supabase } from '../../supabaseClient';
+import { TenantEmailConfigService } from '../services/tenantEmailConfigService';
+import { showEmailDiagnosticsModal } from '../utils/emailDiagnostics';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -81,6 +84,8 @@ const Reports = () => {
   const [savedReports, setSavedReports] = useState([]);
   const [saveModalVisible, setSaveModalVisible] = useState(false);
   const [saveReportForm] = Form.useForm();
+  const [sendingReportEmail, setSendingReportEmail] = useState(false);
+  const [reportEmailPreview, setReportEmailPreview] = useState({ visible: false, subject: '', html: '' });
 
   const serializeDateRange = (range) => {
     if (!range || range.length !== 2) return null;
@@ -996,6 +1001,234 @@ const Reports = () => {
 
   const stats = getReportStats();
 
+  const statsLabels = {
+    total: 'Total de registros',
+    amount: 'Monto total',
+    average: 'Promedio',
+    active: 'Activos',
+    inactive: 'Inactivos',
+    newThisWeek: 'Nuevos esta semana',
+    completed: 'Pagos completados',
+    totalValue: 'Valor total',
+    totalValueCarritos: 'Valor total',
+    totalValuePromos: 'Valor total',
+    totalValueProducts: 'Valor total',
+    totalValueSales: 'Valor total'
+  };
+
+  const escapeHtml = (value) => {
+    if (value === null || value === undefined) return '';
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
+  const extractValueByDataIndex = (row, dataIndex) => {
+    if (!row || dataIndex === undefined) return undefined;
+    if (Array.isArray(dataIndex)) {
+      return dataIndex.reduce((acc, key) => (acc ? acc[key] : undefined), row);
+    }
+    if (typeof dataIndex === 'string' && dataIndex.includes('.')) {
+      return dataIndex.split('.').reduce((acc, key) => (acc ? acc[key] : undefined), row);
+    }
+    return row[dataIndex];
+  };
+
+  const extractTextFromReactNode = (node) => {
+    if (node === null || node === undefined || typeof node === 'boolean') return '';
+    if (typeof node === 'string' || typeof node === 'number') return String(node);
+    if (Array.isArray(node)) {
+      return node.map(child => extractTextFromReactNode(child)).join('');
+    }
+    if (React.isValidElement(node)) {
+      return extractTextFromReactNode(node.props.children);
+    }
+    return '';
+  };
+
+  const formatStatValue = (key, value) => {
+    if (value === null || value === undefined) return '0';
+    const lowerKey = (key || '').toString().toLowerCase();
+
+    if (typeof value === 'number') {
+      if (lowerKey.includes('amount') || lowerKey.includes('value')) {
+        return `$${value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      if (lowerKey.includes('average')) {
+        return `$${value.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+      }
+      return value.toLocaleString('es-MX');
+    }
+
+    return String(value);
+  };
+
+  const formatCellValueForEmail = (column, row) => {
+    const rawValue = extractValueByDataIndex(row, column.dataIndex);
+
+    if (column.render) {
+      try {
+        const rendered = column.render(rawValue, row);
+        if (typeof rendered === 'string' || typeof rendered === 'number') {
+          return String(rendered);
+        }
+        const textValue = extractTextFromReactNode(rendered);
+        if (textValue) {
+          return textValue;
+        }
+      } catch (renderError) {
+        console.error('Error formateando columna para email:', renderError);
+      }
+    }
+
+    if (rawValue === null || rawValue === undefined) return '';
+    if (rawValue instanceof Date) return rawValue.toLocaleString('es-MX');
+    if (typeof rawValue === 'number') return rawValue.toString();
+    if (typeof rawValue === 'object') return JSON.stringify(rawValue);
+    return String(rawValue);
+  };
+
+  const generateReportEmailContent = () => {
+    const data = getReportData();
+    const columns = getReportColumns();
+    const statsData = getReportStats();
+    const option = reportOptions.find(opt => opt.value === selectedReport);
+    const reportTitle = option?.label || selectedReport;
+    const previewLimit = 10;
+    const previewRows = data.slice(0, previewLimit);
+    const generatedAt = new Date();
+
+    const statsEntries = statsData
+      ? Object.entries(statsData).map(([key, value]) => ({
+          key,
+          label: statsLabels[key] || key,
+          value: formatStatValue(key, value)
+        }))
+      : [];
+
+    const tableHeader = columns
+      .map(col => `<th style="padding: 8px; border: 1px solid #e5e7eb; background: #f9fafb; text-align: left;">${escapeHtml(col.title)}</th>`)
+      .join('');
+
+    const tableBody = previewRows
+      .map(row => {
+        const cells = columns
+          .map(col => {
+            const value = formatCellValueForEmail(col, row);
+            return `<td style="padding: 8px; border: 1px solid #e5e7eb;">${escapeHtml(value)}</td>`;
+          })
+          .join('');
+        return `<tr>${cells}</tr>`;
+      })
+      .join('');
+
+    const subject = `Resumen de ${reportTitle} - ${dayjs(generatedAt).format('DD/MM/YYYY')}`;
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #333; max-width: 720px; margin: 0 auto;">
+        <h2 style="color: #722ed1;">${escapeHtml(subject)}</h2>
+        <p>Te compartimos un resumen del reporte <strong>${escapeHtml(reportTitle)}</strong> generado el ${escapeHtml(generatedAt.toLocaleString('es-MX'))}.</p>
+        ${statsEntries.length ? `
+          <div style="margin: 16px 0;">
+            <h3 style="color: #1890ff; margin-bottom: 8px;">Indicadores principales</h3>
+            <ul style="padding-left: 18px; margin: 0;">
+              ${statsEntries
+                .map(entry => `<li><strong>${escapeHtml(entry.label)}:</strong> ${escapeHtml(entry.value)}</li>`)
+                .join('')}
+            </ul>
+          </div>
+        ` : ''}
+        <div style="margin-top: 20px;">
+          <h3 style="color: #1890ff; margin-bottom: 8px;">Datos del reporte</h3>
+          ${previewRows.length ? `
+            <table style="border-collapse: collapse; width: 100%; font-size: 14px;">
+              <thead>
+                <tr>${tableHeader}</tr>
+              </thead>
+              <tbody>
+                ${tableBody}
+              </tbody>
+            </table>
+            ${previewRows.length < data.length ? `<p style="font-size: 12px; color: #6b7280; margin-top: 8px;">Mostrando ${previewRows.length} de ${data.length} registros. Exporta el reporte desde el panel para ver el detalle completo.</p>` : ''}
+          ` : '<p>No hay datos disponibles para el reporte con los filtros seleccionados.</p>'}
+        </div>
+        <p style="margin-top: 24px; font-size: 13px; color: #6b7280;">Este correo se generó automáticamente desde el panel de reportes de Omega Boletos.</p>
+      </div>
+    `;
+
+    const textLines = [
+      `Resumen de ${reportTitle}`,
+      `Generado el ${generatedAt.toLocaleString('es-MX')}`,
+      '',
+      'Indicadores principales:',
+      ...statsEntries.map(entry => `- ${entry.label}: ${entry.value}`),
+      '',
+      previewRows.length
+        ? `Incluye ${previewRows.length} de ${data.length} registros disponibles.`
+        : 'No hay datos disponibles para los filtros seleccionados.'
+    ];
+
+    return { subject, html, text: textLines.join('\n') };
+  };
+
+  const openReportEmailPreview = () => {
+    const content = generateReportEmailContent();
+    setReportEmailPreview({
+      visible: true,
+      subject: content.subject,
+      html: content.html
+    });
+  };
+
+  const closeReportEmailPreview = () => {
+    setReportEmailPreview(prev => ({ ...prev, visible: false }));
+  };
+
+  const handleSendReportEmail = async () => {
+    try {
+      setSendingReportEmail(true);
+      const emailConfig = await TenantEmailConfigService.getActiveEmailConfig();
+
+      if (!emailConfig || !emailConfig.smtp_host || !emailConfig.smtp_user || !emailConfig.smtp_pass) {
+        message.error('No hay una configuración de correo activa con credenciales completas.');
+        return;
+      }
+
+      const content = generateReportEmailContent();
+      const result = await TenantEmailConfigService.executeEmailTest(emailConfig, {
+        subject: content.subject,
+        html: content.html
+      });
+
+      message.success('Enviamos el resumen del reporte a tu bandeja de entrada.');
+
+      if (result?.diagnostics) {
+        showEmailDiagnosticsModal(result.diagnostics, {
+          success: true,
+          title: 'Reporte enviado por correo',
+          message: 'El servidor SMTP aceptó el resumen del reporte correctamente.'
+        });
+      }
+    } catch (error) {
+      console.error('Error enviando resumen del reporte:', error);
+      const errorMessage = error?.message || 'Error enviando el correo de resumen';
+      message.error(errorMessage);
+
+      if (error?.diagnostics) {
+        showEmailDiagnosticsModal(error.diagnostics, {
+          success: false,
+          title: 'Error enviando resumen',
+          message: errorMessage
+        });
+      }
+    } finally {
+      setSendingReportEmail(false);
+    }
+  };
+
   const reportOptions = [
     { value: 'sales', label: 'Ventas', icon: <DollarOutlined /> },
     { value: 'events', label: 'Eventos', icon: <CalendarOutlined /> },
@@ -1161,6 +1394,33 @@ const Reports = () => {
                 </Space>
               </Col>
             </Row>
+          </Card>
+
+          <Card className="mb-6" title="Envío de resumen por correo">
+            <Space direction="vertical" style={{ width: '100%' }}>
+              <Text>
+                Envía un resumen del reporte seleccionado a tu correo usando la configuración SMTP activa para validar el contenido que recibirán tus equipos.
+              </Text>
+              <Space wrap>
+                <Button
+                  type="primary"
+                  icon={<SendOutlined />}
+                  loading={sendingReportEmail}
+                  onClick={handleSendReportEmail}
+                >
+                  Enviar a mi correo
+                </Button>
+                <Button
+                  icon={<EyeOutlined />}
+                  onClick={openReportEmailPreview}
+                >
+                  Vista previa
+                </Button>
+              </Space>
+              <Text type="secondary">
+                Usa esta opción para confirmar que la configuración de correo y los filtros del reporte son correctos antes de programar envíos automáticos.
+              </Text>
+            </Space>
           </Card>
 
           {/* Estadísticas */}
@@ -1425,6 +1685,23 @@ const Reports = () => {
           </Card>
         </TabPane>
       </Tabs>
+
+      <Modal
+        title={reportEmailPreview.subject || 'Vista previa del correo'}
+        open={reportEmailPreview.visible}
+        onCancel={closeReportEmailPreview}
+        footer={[
+          <Button key="close" onClick={closeReportEmailPreview}>
+            Cerrar
+          </Button>
+        ]}
+        width={720}
+      >
+        <div
+          className="prose prose-sm"
+          dangerouslySetInnerHTML={{ __html: reportEmailPreview.html }}
+        />
+      </Modal>
 
       {/* Modal de Exportación */}
       <Modal
