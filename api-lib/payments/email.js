@@ -1,16 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
-import { getConfig, validateConfig } from './config';
-import { createTicketPdfBuffer } from './download';
-
-const config = getConfig();
-const supabaseUrl = config.supabaseUrl;
-const supabaseServiceKey = config.supabaseServiceKey;
-
-let supabaseAdmin = null;
-if (supabaseUrl && supabaseServiceKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-}
+import { getConfig, validateConfig, getSupabaseAdmin } from './config.js';
+import { createTicketPdfBuffer } from './download.js';
 
 const TABLE_MISSING_CODES = new Set(['42P01', 'PGRST116', 'PGRST301']);
 
@@ -35,7 +25,7 @@ function mapEmailConfig(row) {
   };
 }
 
-async function getTenantEmailConfig(tenantId) {
+async function getTenantEmailConfig(supabaseAdmin, tenantId) {
   if (!tenantId || !supabaseAdmin) return null;
   try {
     const { data, error } = await supabaseAdmin
@@ -58,7 +48,7 @@ async function getTenantEmailConfig(tenantId) {
   }
 }
 
-async function getGlobalEmailConfig() {
+async function getGlobalEmailConfig(supabaseAdmin) {
   if (!supabaseAdmin) return null;
   try {
     const { data, error } = await supabaseAdmin
@@ -105,11 +95,11 @@ function getEnvEmailConfig() {
   };
 }
 
-async function resolveEmailConfig(tenantId) {
-  const tenantConfig = await getTenantEmailConfig(tenantId);
+async function resolveEmailConfig(supabaseAdmin, tenantId) {
+  const tenantConfig = await getTenantEmailConfig(supabaseAdmin, tenantId);
   if (tenantConfig) return tenantConfig;
 
-  const globalConfig = await getGlobalEmailConfig();
+  const globalConfig = await getGlobalEmailConfig(supabaseAdmin);
   if (globalConfig) return globalConfig;
 
   return getEnvEmailConfig();
@@ -156,7 +146,7 @@ function buildEmailContent({ locator, eventTitle, recipient }) {
   return { subject, html, text };
 }
 
-export default async function handler(req, res) {
+export async function handleEmail(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     res.setHeader('Content-Type', 'application/json');
@@ -176,17 +166,22 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing email' });
   }
 
-  if (!validateConfig()) {
+  const config = getConfig();
+  const isValidConfig = validateConfig(config);
+  const supabaseAdmin = getSupabaseAdmin(config);
+
+  if (!isValidConfig || !supabaseAdmin) {
     res.setHeader('Content-Type', 'application/json');
     return res.status(500).json({
       error: 'Server configuration error',
       details: 'Missing Supabase environment variables',
+      config: {
+        supabaseUrl: !!config.supabaseUrl,
+        supabaseServiceKey: !!config.supabaseServiceKey,
+        nodeEnv: config.nodeEnv,
+        vercelEnv: config.vercelEnv
+      }
     });
-  }
-
-  if (!supabaseAdmin) {
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({ error: 'Supabase client not initialized' });
   }
 
   try {
@@ -285,9 +280,10 @@ export default async function handler(req, res) {
       funcionData,
       eventData,
       venueData,
+      supabaseAdmin,
     });
 
-    const emailConfig = await resolveEmailConfig(payment.tenant_id);
+    const emailConfig = await resolveEmailConfig(supabaseAdmin, payment.tenant_id);
     if (!emailConfig || !emailConfig.host || !emailConfig.fromEmail) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(500).json({

@@ -1,23 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import QRCode from 'qrcode';
-import { getConfig, validateConfig } from './config';
+import { getConfig, validateConfig, getSupabaseAdmin } from './config.js';
 
-// Obtener configuración
-const config = getConfig();
-const supabaseUrl = config.supabaseUrl;
-const supabaseServiceKey = config.supabaseServiceKey;
-
-// Crear cliente Supabase solo si las variables están disponibles
-let supabaseAdmin = null;
-if (supabaseUrl && supabaseServiceKey) {
-  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-  console.log('✅ [DOWNLOAD] Cliente Supabase creado correctamente');
-} else {
-  console.error('❌ [DOWNLOAD] No se puede crear cliente Supabase - variables faltantes');
-}
-
-export default async function handler(req, res) {
+export async function handleDownload(req, res) {
   console.log('🚀 [DOWNLOAD] Endpoint llamado con método:', req.method);
   console.log('🔍 [DOWNLOAD] Query params:', req.query);
   console.log('🔍 [DOWNLOAD] Headers:', req.headers);
@@ -41,10 +26,15 @@ export default async function handler(req, res) {
   }
 
   // Para modo completo, validar configuración y autenticación
-  if (!validateConfig()) {
+  const config = getConfig();
+  const { supabaseUrl, supabaseServiceKey } = config;
+  const isValidConfig = validateConfig(config);
+  const supabaseAdmin = getSupabaseAdmin(config);
+
+  if (!isValidConfig || !supabaseAdmin) {
     console.error('❌ [DOWNLOAD] Configuración inválida, redirigiendo a error 500');
     res.setHeader('Content-Type', 'application/json');
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Server configuration error',
       details: 'Missing Supabase environment variables',
       config: {
@@ -68,7 +58,7 @@ export default async function handler(req, res) {
 
   try {
     console.log('🔐 [DOWNLOAD] Verificando token de autenticación...');
-    
+
     // Verify the user token using the access token (tolerante a mocks)
     const userResp = await supabaseAdmin?.auth?.getUser?.(token);
     const user = userResp?.data?.user || null;
@@ -181,8 +171,8 @@ export default async function handler(req, res) {
     }
 
     // Generate full PDF with payment data
-    return await generateFullPDF(req, res, payment, locator, { funcionData, eventData, venueData });
-    
+    return await generateFullPDF(req, res, payment, locator, { funcionData, eventData, venueData, supabaseAdmin });
+
   } catch (err) {
     console.error('❌ [DOWNLOAD] Error generando ticket:', err);
     console.error('❌ [DOWNLOAD] Stack trace:', err.stack);
@@ -279,6 +269,9 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
   try {
     console.log('📄 [PDF] Generando PDF en memoria para el pago:', payment.id);
 
+    const { supabaseAdmin: providedSupabaseAdmin, ...pdfExtras } = extra || {};
+    const supabaseAdmin = providedSupabaseAdmin || getSupabaseAdmin();
+
     // Crear documento PDF
     const pdfDoc = await PDFDocument.create();
     const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -308,11 +301,11 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
     // --- CARGAR IMÁGENES DEL EVENTO ---
     console.log('🖼️ [PDF] Cargando imágenes del evento...');
     let eventImages = {};
-    let venueData = extra.venueData || null;
+    let venueData = pdfExtras.venueData || null;
 
     try {
       // Obtener datos del evento desde el pago
-      const eventData = extra.eventData || payment.event || payment.funcion?.event;
+      const eventData = pdfExtras.eventData || payment.event || payment.funcion?.event;
       if (eventData && eventData.imagenes) {
         const images = typeof eventData.imagenes === 'string'
           ? JSON.parse(eventData.imagenes)
@@ -342,8 +335,13 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
 
       // Cargar información del recinto si está disponible en el evento
       try {
-        const recintoId = eventData?.recinto_id || eventData?.recinto || payment.funcion?.recinto_id || extra.funcionData?.event?.recinto_id || null;
-        if (recintoId) {
+        const recintoId =
+          eventData?.recinto_id ||
+          eventData?.recinto ||
+          payment.funcion?.recinto_id ||
+          pdfExtras.funcionData?.event?.recinto_id ||
+          null;
+        if (recintoId && supabaseAdmin) {
           const { data: rec, error: recErr } = await supabaseAdmin
             .from('recintos')
             .select('id, nombre, direccion, ciudad, pais')
@@ -392,7 +390,7 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
     // 2.1 Nombre del evento (si disponible)
     let eventTitle = null;
     try {
-      const title = (extra.eventData?.nombre) || (payment.event?.nombre) || null;
+      const title = pdfExtras.eventData?.nombre || payment.event?.nombre || null;
       if (title) {
         eventTitle = title;
         page.drawText(title, {
@@ -504,7 +502,7 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
 
     // 6. DETALLES DE LA FUNCIÓN (si existen)
     try {
-      const funcion = extra.funcionData || payment.funcion || null;
+      const funcion = pdfExtras.funcionData || payment.funcion || null;
       if (funcion?.fecha_celebracion) {
         const fechaCelebracion = new Date(funcion.fecha_celebracion);
         const fecha = fechaCelebracion.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -615,10 +613,20 @@ async function generateFullPDF(req, res, payment, locator, extra = {}) {
   }
 }
 // Función para generar PDF con todos los tickets (modo bulk)
-async function generateBulkPDF(req, res, locator) {
+async function generateBulkPDF(req, res, locator, supabaseAdminParam) {
   try {
     console.log('📄 [DOWNLOAD-BULK] Generando PDF con todos los tickets para localizador:', locator);
-    
+
+    const supabaseAdmin = supabaseAdminParam || getSupabaseAdmin();
+
+    if (!supabaseAdmin) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({
+        error: 'Server configuration error',
+        details: 'Missing Supabase environment variables'
+      });
+    }
+
     // Buscar el pago por localizador
     const { data: payment, error } = await supabaseAdmin
       .from('payment_transactions')
