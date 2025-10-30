@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Statistic, 
-  Table, 
-  Button, 
-  DatePicker, 
-  Select, 
+import {
+  Card,
+  Row,
+  Col,
+  Statistic,
+  Table,
+  Button,
+  DatePicker,
+  Select,
   Space,
   Typography,
   Divider,
@@ -21,10 +21,16 @@ import {
   Tabs,
   Badge,
   Tooltip,
-  Alert
+  Alert,
+  Switch,
+  Radio,
+  Checkbox,
+  InputNumber,
+  TimePicker,
+  Dropdown
 } from 'antd';
-import { 
-  DownloadOutlined, 
+import {
+  DownloadOutlined,
   EyeOutlined,
   BarChartOutlined,
   DollarOutlined,
@@ -38,8 +44,12 @@ import {
   GiftOutlined,
   ShoppingCartOutlined,
   StarOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
+  SaveOutlined,
+  FolderOpenOutlined,
+  DeleteOutlined
 } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import { supabase } from '../../supabaseClient';
 
 const { Title, Text } = Typography;
@@ -68,6 +78,57 @@ const Reports = () => {
   const [exportModalVisible, setExportModalVisible] = useState(false);
   const [exportForm] = Form.useForm();
   const [activeTab, setActiveTab] = useState('overview');
+  const [savedReports, setSavedReports] = useState([]);
+  const [saveModalVisible, setSaveModalVisible] = useState(false);
+  const [saveReportForm] = Form.useForm();
+
+  const serializeDateRange = (range) => {
+    if (!range || range.length !== 2) return null;
+    const [start, end] = range;
+    if (!start || !end) return null;
+    return [start.toISOString(), end.toISOString()];
+  };
+
+  const deserializeDateRange = (range) => {
+    if (!Array.isArray(range) || range.length !== 2) return null;
+    const [start, end] = range;
+    if (!start || !end) return null;
+    return [dayjs(start), dayjs(end)];
+  };
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const storedReports = localStorage.getItem('dashboard.savedReports');
+      if (storedReports) {
+        const parsed = JSON.parse(storedReports);
+        if (Array.isArray(parsed)) {
+          setSavedReports(parsed);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading saved reports', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem('dashboard.savedReports', JSON.stringify(savedReports));
+    } catch (error) {
+      console.error('Error storing saved reports', error);
+    }
+  }, [savedReports]);
+
+  const weekDayOptions = [
+    { label: 'L', value: 1 },
+    { label: 'M', value: 2 },
+    { label: 'X', value: 3 },
+    { label: 'J', value: 4 },
+    { label: 'V', value: 5 },
+    { label: 'S', value: 6 },
+    { label: 'D', value: 7 }
+  ];
 
   useEffect(() => {
     loadReportData();
@@ -76,7 +137,7 @@ const Reports = () => {
   const loadReportData = async () => {
     try {
       setLoading(true);
-      
+
       switch (selectedReport) {
         case 'sales':
           await loadSalesReport();
@@ -109,6 +170,151 @@ const Reports = () => {
       setLoading(false);
     }
   };
+
+  const handleDeleteSavedReport = (reportId) => {
+    setSavedReports(prev => prev.filter(report => report.id !== reportId));
+    message.info('Reporte eliminado de tus favoritos');
+  };
+
+  const handleLoadSavedReport = (reportId) => {
+    const report = savedReports.find(item => item.id === reportId);
+    if (!report) {
+      message.error('No se pudo cargar el reporte seleccionado');
+      return;
+    }
+
+    setSelectedReport(report.selectedReport || 'sales');
+
+    setFilters(prev => {
+      const { dateRange, ...restFilters } = report.filters || {};
+      const hydratedRange = deserializeDateRange(dateRange);
+      return {
+        ...prev,
+        ...restFilters,
+        dateRange: hydratedRange
+      };
+    });
+
+    message.success(`Reporte "${report.name}" cargado`);
+  };
+
+  const handleSavedReportsMenuClick = ({ key }) => {
+    if (key === 'empty') return;
+    handleLoadSavedReport(key);
+  };
+
+  const validateEmailList = (_, value) => {
+    if (!value) {
+      return Promise.reject(new Error('Indica el email destinatario.'));
+    }
+
+    const emails = value
+      .split(',')
+      .map(email => email.trim())
+      .filter(Boolean);
+
+    if (!emails.length) {
+      return Promise.reject(new Error('Indica el email destinatario.'));
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const invalidEmail = emails.find(email => !emailRegex.test(email));
+
+    if (invalidEmail) {
+      return Promise.reject(new Error(`Email inválido: ${invalidEmail}`));
+    }
+
+    return Promise.resolve();
+  };
+
+  const openSaveReportModal = () => {
+    saveReportForm.resetFields();
+    saveReportForm.setFieldsValue({
+      name: '',
+      dateMode: 'fixed',
+      language: 'es_MX',
+      scheduled: false,
+      scheduleRange: filters.dateRange || null,
+      emails: '',
+      periodicity: 'd',
+      dayOfMonth: 1,
+      time: dayjs('08:00', 'HH:mm'),
+      weekDays: []
+    });
+    setSaveModalVisible(true);
+  };
+
+  const handleSaveReport = async () => {
+    try {
+      const values = await saveReportForm.validateFields();
+
+      const serializedFilters = {
+        ...filters,
+        dateRange: serializeDateRange(filters.dateRange)
+      };
+
+      const scheduleEnabled = values.scheduled;
+      const scheduleRange = values.scheduleRange ? serializeDateRange(values.scheduleRange) : null;
+
+      const newReport = {
+        id: `report-${Date.now()}`,
+        name: values.name,
+        selectedReport,
+        dateMode: values.dateMode,
+        language: values.language,
+        filters: serializedFilters,
+        schedule: {
+          enabled: scheduleEnabled,
+          dateRange: scheduleEnabled ? scheduleRange : null,
+          emails: scheduleEnabled ? values.emails : '',
+          periodicity: scheduleEnabled ? values.periodicity : 'd',
+          weekDays: scheduleEnabled && values.periodicity === 's' ? values.weekDays || [] : [],
+          dayOfMonth: scheduleEnabled && values.periodicity === 'm' ? values.dayOfMonth || 1 : 1,
+          time: scheduleEnabled && values.time ? values.time.format('HH:mm') : null
+        }
+      };
+
+      setSavedReports(prev => [...prev, newReport]);
+      message.success('Reporte guardado correctamente');
+      setSaveModalVisible(false);
+    } catch (error) {
+      if (error?.errorFields) {
+        return;
+      }
+      console.error('Error saving report', error);
+      message.error('No se pudo guardar el reporte');
+    }
+  };
+
+  const savedReportsMenuItems = savedReports.length
+    ? savedReports.map(report => ({
+        key: report.id,
+        label: (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>{report.name}</span>
+            <Button
+              type="link"
+              danger
+              size="small"
+              icon={<DeleteOutlined />}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                handleDeleteSavedReport(report.id);
+              }}
+            >
+              Eliminar
+            </Button>
+          </div>
+        )
+      }))
+    : [
+        {
+          key: 'empty',
+          disabled: true,
+          label: <Text type="secondary">No hay reportes guardados</Text>
+        }
+      ];
 
   const loadSalesReport = async () => {
     try {
@@ -894,7 +1100,13 @@ const Reports = () => {
                 <Text strong>Rango de Fechas:</Text>
                 <RangePicker
                   style={{ width: '100%', marginTop: 8 }}
-                  onChange={(dates) => setFilters(prev => ({ ...prev, dateRange: dates }))}
+                  value={filters.dateRange || null}
+                  onChange={(dates) =>
+                    setFilters(prev => ({
+                      ...prev,
+                      dateRange: dates && dates[0] && dates[1] ? dates : null
+                    }))
+                  }
                 />
               </Col>
 
@@ -916,9 +1128,24 @@ const Reports = () => {
               )}
 
               <Col xs={24} sm={12} md={6}>
-                <Space>
-                  <Button 
-                    type="primary" 
+                <Text strong>Mis Reportes:</Text>
+                <Space wrap style={{ width: '100%', marginTop: 8 }}>
+                  <Dropdown
+                    trigger={['click']}
+                    menu={{ items: savedReportsMenuItems, onClick: handleSavedReportsMenuClick }}
+                  >
+                    <Button icon={<FolderOpenOutlined />}>Reportes Guardados</Button>
+                  </Dropdown>
+                  <Button type="dashed" icon={<SaveOutlined />} onClick={openSaveReportModal}>
+                    Guardar Actual
+                  </Button>
+                </Space>
+              </Col>
+
+              <Col xs={24} sm={12} md={6}>
+                <Space wrap>
+                  <Button
+                    type="primary"
                     icon={<EyeOutlined />}
                     onClick={loadReportData}
                     loading={loading}
@@ -1245,6 +1472,150 @@ const Reports = () => {
                 Cancelar
               </Button>
             </Space>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title="Guardar en mis reportes"
+        open={saveModalVisible}
+        onCancel={() => setSaveModalVisible(false)}
+        onOk={handleSaveReport}
+        okText="Guardar"
+        cancelText="Cancelar"
+        destroyOnClose
+      >
+        <Form layout="vertical" form={saveReportForm} name="saveReportForm">
+          <Form.Item
+            label="Nombre"
+            name="name"
+            rules={[{ required: true, message: 'Indica el nombre de tu informe.' }]}
+          >
+            <Input placeholder="Pon el nombre de tu reporte" maxLength={255} />
+          </Form.Item>
+
+          <Row gutter={16}>
+            <Col xs={24} md={12}>
+              <Form.Item label="Fechas" name="dateMode" initialValue="fixed">
+                <Radio.Group>
+                  <Radio value="fixed">Fijas</Radio>
+                  <Radio value="sliding">Deslizantes</Radio>
+                </Radio.Group>
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item label="Idioma" name="language" initialValue="es_MX">
+                <Select>
+                  <Option value="en_US">English (en_US)</Option>
+                  <Option value="es_MX">Spanish (es_MX)</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item
+            label="Programar informe"
+            name="scheduled"
+            valuePropName="checked"
+            initialValue={false}
+          >
+            <Switch />
+          </Form.Item>
+
+          <Form.Item shouldUpdate={(prev, current) => prev.scheduled !== current.scheduled} noStyle>
+            {({ getFieldValue }) =>
+              getFieldValue('scheduled') ? (
+                <div className="configuracionProgramacion">
+                  <Row gutter={16}>
+                    <Col span={24}>
+                      <Form.Item
+                        label="Fechas"
+                        name="scheduleRange"
+                        rules={[{ required: true, message: 'Seleccione la fecha' }]}
+                      >
+                        <RangePicker style={{ width: '100%' }} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Row gutter={16}>
+                    <Col span={24}>
+                      <Form.Item
+                        label="Email"
+                        name="emails"
+                        rules={[{ validator: validateEmailList }]}
+                      >
+                        <Input placeholder="email@email.com" maxLength={4000} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Row gutter={16}>
+                    <Col span={24}>
+                      <Form.Item label="Periodicidad" name="periodicity" initialValue="d">
+                        <Radio.Group>
+                          <Radio value="d">Diario</Radio>
+                          <Radio value="s">Semanal</Radio>
+                          <Radio value="m">Mensual</Radio>
+                        </Radio.Group>
+                      </Form.Item>
+                    </Col>
+                  </Row>
+
+                  <Form.Item shouldUpdate={(prev, current) => prev.periodicity !== current.periodicity} noStyle>
+                    {({ getFieldValue }) => {
+                      const periodicity = getFieldValue('periodicity');
+
+                      if (periodicity === 's') {
+                        return (
+                          <Row gutter={16}>
+                            <Col span={24}>
+                              <Form.Item
+                                label="Días"
+                                name="weekDays"
+                                rules={[{ required: true, message: 'Seleccione al menos un día' }]}
+                              >
+                                <Checkbox.Group options={weekDayOptions} />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                        );
+                      }
+
+                      if (periodicity === 'm') {
+                        return (
+                          <Row gutter={16}>
+                            <Col span={24}>
+                              <Form.Item
+                                label="Día del mes"
+                                name="dayOfMonth"
+                                rules={[{ required: true, message: 'Indica el día del mes' }]}
+                              >
+                                <InputNumber min={1} max={31} style={{ width: '100%' }} />
+                              </Form.Item>
+                            </Col>
+                          </Row>
+                        );
+                      }
+
+                      return null;
+                    }}
+                  </Form.Item>
+
+                  <Row gutter={16}>
+                    <Col span={24}>
+                      <Form.Item
+                        label="Hora"
+                        name="time"
+                        rules={[{ required: true, message: 'Indica la hora de ejecución' }]}
+                      >
+                        <TimePicker format="HH:mm" style={{ width: '100%' }} minuteStep={5} />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </div>
+              ) : null
+            }
           </Form.Item>
         </Form>
       </Modal>
