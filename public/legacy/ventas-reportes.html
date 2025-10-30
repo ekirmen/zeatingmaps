@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <title>Reportes de Ventas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js" integrity="sha512-rXcxzAU8ixkmKuuNHx7W1zvvYGA/EOqkHQ3PlnEt5z1QnhY28HZOa/cbF9JcpodQxdw/7Yfuc0RqPy3IM70z9A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.min.js" integrity="sha512-d/U1Wyd4InENcy+XUG6uHgnIY7qDpiRnwZ0wOYAV/QXpVZl8vLwTkx2UY8ailqXFz3vGN9VOGBev5nYeD1yf2g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-LwZ0SqnX+ANXoy2cwr6jciJ6TP2PzefDs2fzGEylh4G6dkprdFMn/hTyBC0bYKT1eZqUPVHtV6nRvWmvMRGsiw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f3f4f6;
+      margin: 0;
+      color: #111827;
+    }
+    a { color: inherit; }
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: linear-gradient(90deg, #1f2937 0%, #111827 100%);
+      color: white;
+      padding: 16px 24px;
+      box-shadow: 0 4px 12px rgba(17, 24, 39, 0.25);
+    }
+    header .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    header .user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header .user img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: white;
+      padding: 4px;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    main {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+    .panel {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+      padding: 24px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .panel h2 {
+      margin-top: 0;
+      margin-bottom: 4px;
+      font-size: 22px;
+    }
+    .panel p {
+      margin-top: 0;
+      margin-bottom: 24px;
+      color: #6b7280;
+    }
+    .form-grid {
+      display: grid;
+      gap: 16px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: minmax(160px, 220px) 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+    label {
+      font-weight: 500;
+      color: #374151;
+    }
+    select,
+    input[type="text"],
+    input[type="date"] {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    select:focus,
+    input[type="text"]:focus,
+    input[type="date"]:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1f2937;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 0;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .section-title span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: #2563eb;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .toggle-group {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toggle input {
+      width: 18px;
+      height: 18px;
+    }
+    .actions {
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .actions button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .actions button.primary {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: white;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+    }
+    .actions button.secondary {
+      background: white;
+      border: 1px solid #d1d5db;
+      color: #1f2937;
+    }
+    .saved-reports {
+      max-width: 320px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.12);
+      padding: 24px;
+    }
+    .saved-reports h3 {
+      margin-top: 0;
+      margin-bottom: 4px;
+      font-size: 18px;
+    }
+    .saved-reports p {
+      margin: 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+    .hidden { display: none !important; }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      background: #f3f4f6;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      color: #4b5563;
+      border: 1px solid #e5e7eb;
+    }
+    @media (max-width: 1100px) {
+      main {
+        flex-direction: column;
+      }
+      .saved-reports {
+        max-width: 100%;
+        width: 100%;
+      }
+    }
+    @media (max-width: 640px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      header .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div class="topbar">
+        <div>
+          <h1>Centro de reportes</h1>
+          <p style="margin: 0; color: rgba(255,255,255,0.7);">Genera reportes operativos y financieros para tu equipo.</p>
+        </div>
+        <div class="user">
+          <img src="/backoffice/empresa/0/profile_icon/3.svg" alt="Perfil" />
+          <div>
+            <div style="font-weight: 600;">ekirmen</div>
+            <div style="font-size: 13px; color: rgba(255,255,255,0.7);">Gerente</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel">
+        <h2>Generar nuevo reporte</h2>
+        <p>Selecciona el grupo, el reporte y el formato para descargarlo o visualizarlo en línea.</p>
+
+        <div class="section-title"><span>1</span> Selecciona el reporte</div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="grupoInformes">Grupo de reportes</label>
+            <select id="grupoInformes"></select>
+          </div>
+          <div class="form-row">
+            <label for="informe">Reporte</label>
+            <select id="informe"></select>
+          </div>
+        </div>
+
+        <div id="camposDinamicos">
+          <div class="section-title"><span>2</span> Completa la información</div>
+          <div class="form-grid">
+            <div class="form-row hidden" id="rowCanal">
+              <label for="idCanal">Canal</label>
+              <select id="idCanal">
+                <option value="">Selecciona un canal</option>
+                <option value="1">Canal en línea</option>
+                <option value="2">Taquilla física</option>
+                <option value="999">Ambos canales</option>
+              </select>
+            </div>
+            <div class="form-row hidden" id="rowRecinto">
+              <label for="idRecinto">Recinto</label>
+              <select id="idRecinto">
+                <option value="">Selecciona un recinto</option>
+                <option value="1">Auditorio Central</option>
+                <option value="2">Arena Norte</option>
+                <option value="3">Teatro Sur</option>
+              </select>
+            </div>
+            <div class="form-row hidden" id="rowEvento">
+              <label for="idEvento">Evento</label>
+              <select id="idEvento">
+                <option value="">Selecciona un evento</option>
+                <option value="ROCK2025">Rock Fest 2025</option>
+                <option value="CLASICA">Noche clásica</option>
+                <option value="TEATRO">Gran obra teatral</option>
+              </select>
+            </div>
+            <div class="form-row hidden" id="rowSesion">
+              <label for="idSesion">Función</label>
+              <select id="idSesion">
+                <option value="">Selecciona una función</option>
+                <option value="MATINE">Matiné</option>
+                <option value="VESPERTINA">Vespertina</option>
+                <option value="NOCTURNA">Nocturna</option>
+              </select>
+            </div>
+            <div class="form-row hidden" id="rowFecha">
+              <label>Rango de fechas</label>
+              <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <input type="date" id="fecDesde" />
+                <input type="date" id="fecHasta" />
+              </div>
+            </div>
+            <div class="form-row hidden" id="rowTipo">
+              <label for="tipo">Tipo</label>
+              <select id="tipo">
+                <option value="todos">Todos</option>
+                <option value="E">Boletos</option>
+                <option value="P">Productos</option>
+              </select>
+            </div>
+            <div class="form-row hidden" id="rowAfiliado">
+              <label for="afiliado">Afiliado</label>
+              <input type="text" id="afiliado" placeholder="ID de afiliado" maxlength="20" />
+            </div>
+            <div class="form-row hidden" id="rowTipoFecha">
+              <label>Tipo de fecha</label>
+              <div class="chips" id="tipoFechaChips"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title"><span>3</span> Formato y opciones</div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="zonaHoraria">Zona horaria</label>
+            <select id="zonaHoraria">
+              <option value="America/Mexico_City">America/Mexico_City</option>
+              <option value="America/Cancun">America/Cancun</option>
+              <option value="America/Merida">America/Merida</option>
+              <option value="America/Monterrey">America/Monterrey</option>
+              <option value="America/Bogota">America/Bogota</option>
+              <option value="America/Santiago">America/Santiago</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label for="formato">Formato</label>
+            <select id="formato">
+              <option value="html">Ver en navegador</option>
+              <option value="pdf">PDF</option>
+              <option value="xlsx">Excel</option>
+            </select>
+          </div>
+        </div>
+        <div class="toggle-group">
+          <label class="toggle"><input type="checkbox" id="ocultarCabecera" /> Ocultar cabecera y pie</label>
+          <label class="toggle"><input type="checkbox" id="ocultarTotales" /> Ocultar totales</label>
+          <label class="toggle"><input type="checkbox" id="backgroundExecution" /> Ejecutar en segundo plano</label>
+        </div>
+
+        <div class="actions">
+          <button class="primary" onclick="buttonTriggered('verInforme'); return false;">Ver / Descargar reporte</button>
+          <button class="secondary" onclick="buttonTriggered('guardarMisInformes'); return false;">Guardar en mis reportes</button>
+          <button class="secondary" onclick="buttonTriggered('guardar'); return false;">Actualizar guardado</button>
+          <button class="secondary" onclick="buttonTriggered('guardarComo'); return false;">Guardar como…</button>
+        </div>
+      </section>
+
+      <aside class="saved-reports">
+        <h3>Mis reportes</h3>
+        <p id="savedReportsEmpty">Aún no has guardado ningún informe.</p>
+        <ul id="savedReportsList" style="list-style: none; padding: 0; margin: 16px 0 0 0;"></ul>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const informes = [
+      {"idInforme":1,"idGrupoInformes":1,"grupo":"Caja","nombre":"Cuadre de caja","fichero":"cuadre_caja","perfiles":[2,3,4,9],"campos":["empresa","fechas"],"fechaSesion":false,"fechaOperacion":true,"companyTypes":[0,1,2,3],"active":true},
+      {"idInforme":2,"idGrupoInformes":1,"grupo":"Caja","nombre":"Cuadre de caja agrupado","fichero":"cuadre_caja_agrupado","perfiles":[2,3,4,9],"campos":["empresa","fechas"],"fechaSesion":false,"fechaOperacion":true,"companyTypes":[0,1,2],"active":true},
+      {"idInforme":6,"idGrupoInformes":1,"grupo":"Caja","nombre":"Detalle de pagos agrupado por fecha","fichero":"detalle_pagos_fecha","perfiles":[3,9],"campos":["empresa","fechas"],"fechaSesion":false,"fechaOperacion":true,"companyTypes":[0,1,2],"active":true},
+      {"idInforme":4,"idGrupoInformes":1,"grupo":"Caja","nombre":"Detalle de pagos agrupado por forma de pago","fichero":"detalle_pagos_forma_pago","perfiles":[2,3,9],"campos":["empresa","fechas"],"fechaSesion":false,"fechaOperacion":true,"companyTypes":[0,1,2],"active":true},
+      {"idInforme":5,"idGrupoInformes":1,"grupo":"Caja","nombre":"Detalle de pagos agrupado por forma de pago con ventas externas","fichero":"detalle_pagos_forma_pago_ventas_ext","perfiles":[3,9],"campos":["empresa","fechas"],"fechaSesion":false,"fechaOperacion":true,"companyTypes":[0,1,2],"active":true},
+      {"idInforme":104,"idGrupoInformes":1,"grupo":"Caja","nombre":"Taquillero por medio de pago","fichero":"medios_pago_por_taquillero","perfiles":[2,3,4,9],"campos":["empresa","recinto","evento","fechas","esPromotor"],"ficherosSubreport":["medios_pago_por_taquillero_sr"],"fechaSesion":true,"fechaOperacion":false,"companyTypes":[0,1,2],"active":true},
+      {"idInforme":208,"idGrupoInformes":1,"grupo":"Caja","nombre":"Resumen de pagos por taquillero, medios de pago con ventas y reembolsos","fichero":"summary_payments_ticket_agent_means_of_payment_with_sales_and_refunds","perfiles":[2,3,4,9],"campos":["empresa+","fechas"],"fechaSesion":false,"fechaOperacion":true,"companyTypes":[0,1,2],"active":true},
+      {"idInforme":7,"idGrupoInformes":2,"grupo":"Comisión promotor","nombre":"Comisión promotor","fichero":"comision_promotor","perfiles":[3,6,9,10],"campos":["empresa+","canal+","grupos_canales+","recinto+","evento+","fechas","esPromotor"],"fechaSesion":false,"fechaOperacion":true,"companyTypes":[0,1,2,3],"active":true},
+      {"idInforme":61,"idGrupoInformes":3,"grupo":"Compradores","nombre":"Abandonos del carro de compra","fichero":"buyers_abandoning_shopping_cart","perfiles":[3,6,9,10],"campos":["empresa+","recinto+","evento+","fechas","esPromotor"],"fechaSesion":true,"fechaOperacion":false,"companyTypes":[0,1,2,3],"active":true}
+    ];
+
+    const grupos = Array.from(new Set(informes.map((informe) => `${informe.idGrupoInformes}|${informe.grupo}`)))
+      .map((item) => {
+        const [id, nombre] = item.split('|');
+        return { id: parseInt(id, 10), nombre };
+      })
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+    const grupoSelect = document.getElementById('grupoInformes');
+    const informeSelect = document.getElementById('informe');
+
+    function initForm() {
+      grupoSelect.innerHTML = '<option value="">Selecciona el grupo de reportes</option>' +
+        grupos.map((grupo) => `<option value="${grupo.id}">${grupo.nombre}</option>`).join('');
+      informeSelect.innerHTML = '<option value="">Selecciona el grupo de reportes</option>';
+      document.getElementById('tipoFechaChips').innerHTML = '';
+    }
+
+    function cargaComboInformes() {
+      const idGrupo = parseInt(grupoSelect.value, 10);
+      const informesFiltrados = informes.filter((informe) => informe.idGrupoInformes === idGrupo && informe.active);
+      if (informesFiltrados.length === 0) {
+        informeSelect.innerHTML = '<option value="">No hay reportes disponibles</option>';
+        resetDynamicFields();
+        return;
+      }
+      informeSelect.innerHTML = '<option value="">Selecciona el reporte</option>' +
+        informesFiltrados.map((informe) => `<option value="${informe.idInforme}">${informe.nombre}</option>`).join('');
+      resetDynamicFields();
+    }
+
+    function resetDynamicFields() {
+      ['rowCanal', 'rowRecinto', 'rowEvento', 'rowSesion', 'rowFecha', 'rowTipo', 'rowAfiliado', 'rowTipoFecha']
+        .forEach((id) => document.getElementById(id).classList.add('hidden'));
+      document.getElementById('tipoFechaChips').innerHTML = '';
+    }
+
+    function cargarInforme() {
+      resetDynamicFields();
+      const selectedId = parseInt(informeSelect.value, 10);
+      const informe = informes.find((item) => item.idInforme === selectedId);
+      if (!informe) return;
+
+      const campos = informe.campos || [];
+      const showIfIncludes = (fieldTokens, rowId) => {
+        if (campos.some((campo) => fieldTokens.some((token) => campo.includes(token)))) {
+          document.getElementById(rowId).classList.remove('hidden');
+        }
+      };
+
+      showIfIncludes(['canal'], 'rowCanal');
+      showIfIncludes(['grupos_canales'], 'rowCanal');
+      showIfIncludes(['recinto'], 'rowRecinto');
+      showIfIncludes(['evento'], 'rowEvento');
+      showIfIncludes(['sesion'], 'rowSesion');
+      showIfIncludes(['fechas'], 'rowFecha');
+      showIfIncludes(['tipo'], 'rowTipo');
+      showIfIncludes(['afiliado'], 'rowAfiliado');
+
+      if (informe.fechaSesion || informe.fechaOperacion) {
+        const chips = [];
+        if (informe.fechaSesion) chips.push({ id: 'ses', label: 'Celebración' });
+        if (informe.fechaOperacion) chips.push({ id: 'op', label: 'Venta' });
+        const chipsContainer = document.getElementById('tipoFechaChips');
+        chipsContainer.innerHTML = chips.map((chip, index) => `
+          <label class="chip">
+            <input type="radio" name="tipoFecha" value="${chip.id}" ${index === 0 ? 'checked' : ''} /> ${chip.label}
+          </label>
+        `).join('');
+        document.getElementById('rowTipoFecha').classList.remove('hidden');
+      }
+    }
+
+    grupoSelect.addEventListener('change', cargaComboInformes);
+    informeSelect.addEventListener('change', cargarInforme);
+
+    const savedReports = [];
+
+    function createSampleData(informe) {
+      const baseRows = [
+        { concepto: 'Ventas totales', valor: (Math.random() * 50000 + 5000).toFixed(2) },
+        { concepto: 'Entradas vendidas', valor: Math.floor(Math.random() * 2000 + 200) },
+        { concepto: 'Comisiones', valor: (Math.random() * 8000 + 500).toFixed(2) },
+        { concepto: 'Reembolsos', valor: (Math.random() * 2000).toFixed(2) },
+        { concepto: 'Margen operativo', valor: (Math.random() * 25 + 10).toFixed(2) + '%' }
+      ];
+      return baseRows;
+    }
+
+    function gatherFormData() {
+      const informe = informes.find((item) => item.idInforme === parseInt(informeSelect.value, 10));
+      if (!informe) {
+        alert('Selecciona un reporte para continuar.');
+        return null;
+      }
+
+      const data = {
+        informe,
+        grupo: grupos.find((g) => g.id === informe.idGrupoInformes)?.nombre || '',
+        formato: document.getElementById('formato').value,
+        zonaHoraria: document.getElementById('zonaHoraria').value,
+        opciones: {
+          ocultarCabecera: document.getElementById('ocultarCabecera').checked,
+          ocultarTotales: document.getElementById('ocultarTotales').checked,
+          backgroundExecution: document.getElementById('backgroundExecution').checked,
+        },
+        filtros: {
+          canal: document.getElementById('rowCanal').classList.contains('hidden') ? null : document.getElementById('idCanal').value,
+          recinto: document.getElementById('rowRecinto').classList.contains('hidden') ? null : document.getElementById('idRecinto').value,
+          evento: document.getElementById('rowEvento').classList.contains('hidden') ? null : document.getElementById('idEvento').value,
+          sesion: document.getElementById('rowSesion').classList.contains('hidden') ? null : document.getElementById('idSesion').value,
+          fechas: document.getElementById('rowFecha').classList.contains('hidden') ? null : {
+            desde: document.getElementById('fecDesde').value,
+            hasta: document.getElementById('fecHasta').value,
+          },
+          tipo: document.getElementById('rowTipo').classList.contains('hidden') ? null : document.getElementById('tipo').value,
+          afiliado: document.getElementById('rowAfiliado').classList.contains('hidden') ? null : document.getElementById('afiliado').value,
+          tipoFecha: document.getElementById('rowTipoFecha').classList.contains('hidden') ? null : (document.querySelector('input[name="tipoFecha"]:checked')?.value || null)
+        },
+        datos: createSampleData(informe),
+      };
+
+      return data;
+    }
+
+    function renderHtmlReport(data) {
+      const windowRef = window.open('', '_blank');
+      if (!windowRef) {
+        alert('Permite las ventanas emergentes para visualizar el reporte.');
+        return;
+      }
+      const rows = data.datos.map((row) => `<tr><td style="padding: 12px; border: 1px solid #e5e7eb;">${row.concepto}</td><td style="padding: 12px; border: 1px solid #e5e7eb; text-align: right;">${row.valor}</td></tr>`).join('');
+      windowRef.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+          <head>
+            <meta charset="utf-8" />
+            <title>${data.informe.nombre} - Reporte</title>
+            <style>
+              body { font-family: 'Inter', sans-serif; padding: 32px; background: #f9fafb; color: #111827; }
+              h1 { margin-top: 0; }
+              table { width: 100%; border-collapse: collapse; margin-top: 24px; }
+              th { text-align: left; background: #111827; color: white; padding: 12px; }
+              td { background: white; }
+            </style>
+          </head>
+          <body>
+            <h1>${data.informe.nombre}</h1>
+            <p><strong>Grupo:</strong> ${data.grupo}</p>
+            <p><strong>Zona horaria:</strong> ${data.zonaHoraria}</p>
+            <table>
+              <thead><tr><th>Concepto</th><th>Valor</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </body>
+        </html>
+      `);
+      windowRef.document.close();
+    }
+
+    function downloadPdf(data) {
+      const docDefinition = {
+        content: [
+          { text: data.informe.nombre, style: 'header' },
+          { text: `Grupo: ${data.grupo}`, margin: [0, 8, 0, 0] },
+          { text: `Zona horaria: ${data.zonaHoraria}`, margin: [0, 0, 0, 16] },
+          {
+            table: {
+              headerRows: 1,
+              widths: ['*', 'auto'],
+              body: [
+                ['Concepto', 'Valor'],
+                ...data.datos.map((row) => [row.concepto, row.valor])
+              ]
+            }
+          }
+        ],
+        styles: {
+          header: {
+            fontSize: 18,
+            bold: true
+          }
+        },
+        defaultStyle: {
+          fontSize: 12
+        }
+      };
+      pdfMake.createPdf(docDefinition).download(`${data.informe.fichero}.pdf`);
+    }
+
+    function downloadExcel(data) {
+      const worksheet = XLSX.utils.json_to_sheet(data.datos);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Reporte');
+      XLSX.writeFile(workbook, `${data.informe.fichero}.xlsx`);
+    }
+
+    function persistSavedReport(data) {
+      if (!savedReports.some((item) => item.id === data.informe.idInforme)) {
+        savedReports.push({
+          id: data.informe.idInforme,
+          nombre: data.informe.nombre,
+          grupo: data.grupo,
+          formato: data.formato,
+          ultimaEjecucion: new Date().toLocaleString()
+        });
+        renderSavedReports();
+      }
+    }
+
+    function renderSavedReports() {
+      const emptyLabel = document.getElementById('savedReportsEmpty');
+      const list = document.getElementById('savedReportsList');
+      if (savedReports.length === 0) {
+        emptyLabel.classList.remove('hidden');
+        list.innerHTML = '';
+        return;
+      }
+      emptyLabel.classList.add('hidden');
+      list.innerHTML = savedReports.map((report) => `
+        <li style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 12px;">
+          <div style="font-weight: 600;">${report.nombre}</div>
+          <div style="font-size: 12px; color: #6b7280;">${report.grupo} · ${report.formato.toUpperCase()}</div>
+          <div style="font-size: 11px; color: #9ca3af; margin-top: 6px;">Última ejecución: ${report.ultimaEjecucion}</div>
+          <button style="margin-top: 10px; border: none; background: #111827; color: white; padding: 8px 12px; border-radius: 8px; cursor: pointer;" onclick="reRunSavedReport(${report.id});">Generar de nuevo</button>
+        </li>
+      `).join('');
+    }
+
+    function reRunSavedReport(idInforme) {
+      const informe = informes.find((item) => item.idInforme === idInforme);
+      if (!informe) return;
+      grupoSelect.value = informe.idGrupoInformes;
+      cargaComboInformes();
+      informeSelect.value = informe.idInforme;
+      cargarInforme();
+      const data = gatherFormData();
+      if (!data) return;
+      switch (data.formato) {
+        case 'pdf':
+          downloadPdf(data);
+          break;
+        case 'xlsx':
+          downloadExcel(data);
+          break;
+        default:
+          renderHtmlReport(data);
+      }
+    }
+
+    function buttonTriggered(action) {
+      const data = gatherFormData();
+      if (!data) return;
+
+      switch (action) {
+        case 'verInforme':
+          if (data.formato === 'pdf') {
+            downloadPdf(data);
+          } else if (data.formato === 'xlsx') {
+            downloadExcel(data);
+          } else {
+            renderHtmlReport(data);
+          }
+          break;
+        case 'guardarMisInformes':
+          persistSavedReport(data);
+          alert('El reporte se guardó en tu lista personal.');
+          break;
+        case 'guardar':
+          persistSavedReport(data);
+          alert('Preferencias actualizadas para el reporte seleccionado.');
+          break;
+        case 'guardarComo':
+          persistSavedReport({ ...data, informe: { ...data.informe, idInforme: Date.now() } });
+          alert('Se guardó una nueva copia del reporte con tus filtros actuales.');
+          break;
+        default:
+          break;
+      }
+    }
+
+    function showModal() {
+      alert('Funcionalidad disponible próximamente.');
+    }
+
+    function exitBackoffice(force) {
+      if (force) {
+        alert('Cerrar aplicación no está disponible en esta demo.');
+      } else {
+        alert('Para salir, cierra la pestaña del navegador.');
+      }
+    }
+
+    window.buttonTriggered = buttonTriggered;
+    window.showModal = showModal;
+    window.exitBackoffice = exitBackoffice;
+    window.reRunSavedReport = reRunSavedReport;
+
+    initForm();
+  </script>
+</body>
+</html>
