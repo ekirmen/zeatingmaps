@@ -1,8 +1,15 @@
-// Archivo de configuración para verificar variables de entorno
+import { createClient } from '@supabase/supabase-js';
+
+let cachedClient = null;
+let cachedSignature = null;
+
 export function getConfig() {
   const config = {
     supabaseUrl: process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
-    supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY,
+    supabaseServiceKey:
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY,
     nodeEnv: process.env.NODE_ENV,
     vercelEnv: process.env.VERCEL_ENV,
     vercelUrl: process.env.VERCEL_URL,
@@ -17,7 +24,6 @@ export function getConfig() {
   console.log('- SUPABASE_URL:', config.supabaseUrl ? '✅ definido' : '❌ faltante');
   console.log('- SUPABASE_SERVICE_ROLE_KEY:', config.supabaseServiceKey ? '✅ definido' : '❌ faltante');
 
-  // Log de longitud de las claves para debug (sin mostrar el contenido)
   if (config.supabaseUrl) {
     console.log('- SUPABASE_URL length:', config.supabaseUrl.length);
   }
@@ -28,19 +34,19 @@ export function getConfig() {
   return config;
 }
 
-export function validateConfig() {
-  const config = getConfig();
-  
+export function validateConfig(config = getConfig()) {
   const missingVars = [];
-  
+
   if (!config.supabaseUrl) {
     missingVars.push('SUPABASE_URL o REACT_APP_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_URL');
   }
-  
+
   if (!config.supabaseServiceKey) {
-    missingVars.push('SUPABASE_SERVICE_ROLE_KEY o REACT_APP_SUPABASE_SERVICE_ROLE_KEY o NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY');
+    missingVars.push(
+      'SUPABASE_SERVICE_ROLE_KEY o REACT_APP_SUPABASE_SERVICE_ROLE_KEY o NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY'
+    );
   }
-  
+
   if (missingVars.length > 0) {
     console.error('❌ [CONFIG] Variables de entorno faltantes:');
     missingVars.forEach(varName => {
@@ -49,8 +55,7 @@ export function validateConfig() {
     console.error('❌ [CONFIG] Configuración inválida');
     return false;
   }
-  
-  // Validar que las URLs tengan formato correcto
+
   try {
     if (config.supabaseUrl) {
       new URL(config.supabaseUrl);
@@ -59,20 +64,24 @@ export function validateConfig() {
     console.error('❌ [CONFIG] SUPABASE_URL tiene formato inválido:', config.supabaseUrl);
     return false;
   }
-  
+
   console.log('✅ [CONFIG] Todas las variables de entorno están configuradas correctamente');
   return true;
 }
 
-export function getSupabaseConfig() {
-  const config = getConfig();
-  
-  if (!validateConfig()) {
-    throw new Error('Configuración de Supabase inválida');
+export function getSupabaseAdmin(config = getConfig()) {
+  if (!config.supabaseUrl || !config.supabaseServiceKey) {
+    console.error('❌ [CONFIG] No se puede crear cliente Supabase - variables faltantes');
+    return null;
   }
-  
-  return {
-    url: config.supabaseUrl,
-    serviceKey: config.supabaseServiceKey
-  };
+
+  const signature = `${config.supabaseUrl}|${config.supabaseServiceKey}`;
+
+  if (!cachedClient || cachedSignature !== signature) {
+    cachedClient = createClient(config.supabaseUrl, config.supabaseServiceKey);
+    cachedSignature = signature;
+    console.log('✅ [CONFIG] Cliente Supabase creado correctamente');
+  }
+
+  return cachedClient;
 }

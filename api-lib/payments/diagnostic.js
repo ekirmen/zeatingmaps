@@ -1,8 +1,8 @@
-import { getConfig, validateConfig } from './config';
+import { getConfig, validateConfig } from './config.js';
 
-export default async function handler(req, res) {
+export async function handleDiagnostic(req, res) {
   console.log('🔍 [DIAGNOSTIC] Endpoint de diagnóstico llamado');
-  
+
   if (req.method !== 'GET') {
     res.setHeader('Allow', 'GET');
     res.setHeader('Content-Type', 'application/json');
@@ -10,19 +10,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Obtener configuración actual
     const config = getConfig();
-    const isValid = validateConfig();
-    
-    // Información del entorno
+    const isValid = validateConfig(config);
+
     const environmentInfo = {
       nodeEnv: config.nodeEnv,
       vercelEnv: config.vercelEnv,
       vercelUrl: config.vercelUrl,
       timestamp: new Date().toISOString()
     };
-    
-    // Estado de las variables de entorno
+
     const envStatus = {
       supabaseUrl: {
         present: !!config.supabaseUrl,
@@ -39,15 +36,13 @@ export default async function handler(req, res) {
         value: config.apiUrl || 'undefined'
       }
     };
-    
-    // Verificaciones adicionales
+
     const checks = {
       configValid: isValid,
       supabaseUrlFormat: false,
       hasRequiredVars: false
     };
-    
-    // Verificar formato de URL de Supabase
+
     try {
       if (config.supabaseUrl) {
         new URL(config.supabaseUrl);
@@ -56,59 +51,57 @@ export default async function handler(req, res) {
     } catch (error) {
       checks.supabaseUrlFormat = false;
     }
-    
-    // Verificar variables requeridas
+
     checks.hasRequiredVars = !!(config.supabaseUrl && config.supabaseServiceKey);
-    
-    // Recomendaciones
+
     const recommendations = [];
-    
+
     if (!config.supabaseUrl) {
       recommendations.push('Configurar SUPABASE_URL en las variables de entorno de Vercel');
     }
-    
+
     if (!config.supabaseServiceKey) {
       recommendations.push('Configurar SUPABASE_SERVICE_ROLE_KEY en las variables de entorno de Vercel');
     }
-    
+
     if (!checks.supabaseUrlFormat) {
       recommendations.push('Verificar que SUPABASE_URL tenga un formato válido de URL');
     }
-    
+
     if (!checks.hasRequiredVars) {
       recommendations.push('Todas las variables requeridas deben estar configuradas para que funcione la descarga de tickets');
     }
-    
-    // Respuesta del diagnóstico
+
     const diagnostic = {
       status: isValid ? 'healthy' : 'unhealthy',
       environment: environmentInfo,
       environmentVariables: envStatus,
       checks,
       recommendations,
-      nextSteps: isValid ? [
-        'Las variables de entorno están configuradas correctamente',
-        'Puedes probar la descarga de tickets',
-        'Si persisten problemas, verifica los logs del servidor'
-      ] : [
-        'Configura las variables de entorno faltantes en Vercel',
-        'Redespliega la aplicación después de configurar las variables',
-        'Verifica que las credenciales de Supabase sean correctas'
-      ]
+      nextSteps: isValid
+        ? [
+            'Las variables de entorno están configuradas correctamente',
+            'Puedes probar la descarga de tickets',
+            'Si persisten problemas, verifica los logs del servidor'
+          ]
+        : [
+            'Configura las variables de entorno faltantes en Vercel',
+            'Redespliega la aplicación después de configurar las variables',
+            'Verifica que las credenciales de Supabase sean correctas'
+          ]
     };
-    
+
     console.log('🔍 [DIAGNOSTIC] Diagnóstico completado:', {
       status: diagnostic.status,
       hasRequiredVars: checks.hasRequiredVars,
       recommendations: recommendations.length
     });
-    
+
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).json(diagnostic);
-    
   } catch (error) {
     console.error('❌ [DIAGNOSTIC] Error en diagnóstico:', error);
-    
+
     res.setHeader('Content-Type', 'application/json');
     return res.status(500).json({
       error: 'Error ejecutando diagnóstico',
