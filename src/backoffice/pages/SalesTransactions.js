@@ -5,6 +5,7 @@ import {
   Col,
   Input,
   message,
+  Popconfirm,
   Row,
   Select,
   Space,
@@ -12,12 +13,17 @@ import {
   Tag,
   Typography
 } from 'antd';
-import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { EyeInvisibleOutlined, EyeOutlined, ReloadOutlined, SearchOutlined, DeleteOutlined } from '@ant-design/icons';
 import moment from 'moment';
 
 import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
-import { updatePaymentTransactionStatus } from '../../services/paymentTransactionsService';
+import {
+  deletePaymentTransaction,
+  hidePaymentTransaction,
+  unhidePaymentTransaction,
+  updatePaymentTransactionStatus
+} from '../../services/paymentTransactionsService';
 
 const { Text, Title } = Typography;
 
@@ -63,6 +69,9 @@ const SalesTransactions = () => {
   const [selectedEvent, setSelectedEvent] = useState('all');
   const [selectedFunction, setSelectedFunction] = useState('all');
   const [updatingId, setUpdatingId] = useState(null);
+  const [hidingId, setHidingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [showHidden, setShowHidden] = useState(false);
 
   const isMultiTenant = useMemo(() => currentTenant?.id && currentTenant.id !== 'main-domain', [currentTenant?.id]);
 
@@ -274,6 +283,8 @@ const SalesTransactions = () => {
           }
         }
 
+        const isHidden = transaction?.is_hidden ?? Boolean(transaction?.hidden_at);
+
         return {
           ...transaction,
           event,
@@ -282,6 +293,7 @@ const SalesTransactions = () => {
           buyer,
           seller,
           sourceLabel,
+          isHidden,
           eventId: eventId ? String(eventId) : null,
           functionId: functionId ? String(functionId) : null,
           venueId: venueId ? String(venueId) : null,
@@ -305,6 +317,10 @@ const SalesTransactions = () => {
           return false;
         }
 
+        if (!showHidden && transaction.isHidden) {
+          return false;
+        }
+
         if (selectedVenue !== 'all' && transaction.venueId !== String(selectedVenue)) {
           return false;
         }
@@ -325,6 +341,7 @@ const SalesTransactions = () => {
     functionsMap,
     profilesMap,
     searchTerm,
+    showHidden,
     selectedEvent,
     selectedFunction,
     selectedVenue,
@@ -354,6 +371,75 @@ const SalesTransactions = () => {
       message.error('No se pudo actualizar el estado de la transacción');
     } finally {
       setUpdatingId(null);
+    }
+  }, []);
+
+  const handleHideTransaction = useCallback(async (transaction) => {
+    if (!transaction?.id) {
+      message.warning('No se pudo identificar la transacción seleccionada');
+      return;
+    }
+
+    try {
+      setHidingId(transaction.id);
+      const updated = await hidePaymentTransaction(transaction.id);
+      message.success('Transacción ocultada correctamente');
+      setTransactions(prev =>
+        prev.map(item =>
+          item.id === transaction.id
+            ? { ...item, ...updated }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error('Error al ocultar la transacción:', error);
+      message.error('No se pudo ocultar la transacción');
+    } finally {
+      setHidingId(null);
+    }
+  }, []);
+
+  const handleUnhideTransaction = useCallback(async (transaction) => {
+    if (!transaction?.id) {
+      message.warning('No se pudo identificar la transacción seleccionada');
+      return;
+    }
+
+    try {
+      setHidingId(transaction.id);
+      const updated = await unhidePaymentTransaction(transaction.id);
+      message.success('Transacción mostrada nuevamente');
+      setTransactions(prev =>
+        prev.map(item =>
+          item.id === transaction.id
+            ? { ...item, ...updated }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error('Error al mostrar la transacción:', error);
+      message.error('No se pudo mostrar la transacción');
+    } finally {
+      setHidingId(null);
+    }
+  }, []);
+
+  const handleDeleteTransaction = useCallback(async (transaction) => {
+    if (!transaction?.id) {
+      message.warning('No se pudo identificar la transacción seleccionada');
+      return;
+    }
+
+    try {
+      setDeletingId(transaction.id);
+      await deletePaymentTransaction(transaction.id);
+      message.success('Transacción eliminada correctamente');
+      setTransactions(prev => prev.filter(item => item.id !== transaction.id));
+    } catch (error) {
+      console.error('Error al eliminar la transacción:', error);
+      message.error('No se pudo eliminar la transacción');
+    } finally {
+      setDeletingId(null);
     }
   }, []);
 
@@ -497,8 +583,65 @@ const SalesTransactions = () => {
       dataIndex: 'sourceLabel',
       key: 'sourceLabel',
       render: (sourceLabel) => sourceLabel || 'Sin definir'
+    },
+    {
+      title: 'Acciones',
+      key: 'actions',
+      render: (_, record) => {
+        const isProcessing = [updatingId, hidingId, deletingId].includes(record?.id);
+        return (
+          <Space>
+            {record?.isHidden ? (
+              <Button
+                size="small"
+                icon={<EyeOutlined />}
+                onClick={() => handleUnhideTransaction(record)}
+                loading={hidingId === record?.id}
+                disabled={isProcessing}
+              >
+                Mostrar
+              </Button>
+            ) : (
+              <Button
+                size="small"
+                icon={<EyeInvisibleOutlined />}
+                onClick={() => handleHideTransaction(record)}
+                loading={hidingId === record?.id}
+                disabled={isProcessing}
+              >
+                Ocultar
+              </Button>
+            )}
+            <Popconfirm
+              title="¿Eliminar transacción?"
+              description="Esta acción no se puede deshacer."
+              onConfirm={() => handleDeleteTransaction(record)}
+              okText="Sí, eliminar"
+              cancelText="Cancelar"
+            >
+              <Button
+                danger
+                size="small"
+                icon={<DeleteOutlined />}
+                loading={deletingId === record?.id}
+                disabled={isProcessing}
+              >
+                Eliminar
+              </Button>
+            </Popconfirm>
+          </Space>
+        );
+      }
     }
-  ], [handleStatusChange, updatingId]);
+  ], [
+    deletingId,
+    handleDeleteTransaction,
+    handleHideTransaction,
+    handleStatusChange,
+    handleUnhideTransaction,
+    hidingId,
+    updatingId
+  ]);
 
   const handleShowAll = useCallback(() => {
     setRecordLimit(500);
@@ -623,9 +766,14 @@ const SalesTransactions = () => {
         className="shadow-sm"
         title="Transacciones Recientes"
         extra={
-          <Button type="link" onClick={handleShowAll}>
-            Ver Todas
-          </Button>
+          <Space>
+            <Button type="link" onClick={() => setShowHidden(prev => !prev)}>
+              {showHidden ? 'Ocultar transacciones ocultas' : 'Mostrar transacciones ocultas'}
+            </Button>
+            <Button type="link" onClick={handleShowAll}>
+              Ver Todas
+            </Button>
+          </Space>
         }
       >
         <Table
