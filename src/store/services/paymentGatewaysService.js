@@ -386,244 +386,150 @@ export const createPaymentTransaction = async (transactionData) => {
       }
     }
 
-    const extractUserId = (value) => {
-      if (!value) return null;
-
-      if (typeof value === 'string') {
-        const trimmed = value.trim();
-
-        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-          try {
-            const parsed = JSON.parse(trimmed);
-            return extractUserId(parsed);
-          } catch (parseError) {
-            console.warn('[PaymentTransaction] No se pudo parsear userId JSON:', parseError);
-            return null;
-          }
-        }
-
-        return trimmed;
-      }
-
-      if (typeof value === 'object') {
-        if (typeof value.id === 'string') return value.id;
-        if (typeof value.user_id === 'string') return value.user_id;
-        if (typeof value.userId === 'string') return value.userId;
-        if (value.user) return extractUserId(value.user);
-      }
-
-      console.warn('[PaymentTransaction] Formato de userId no reconocido:', value);
-      return null;
-    };
-
-    const tryParseUserJson = (rawValue) => {
+    const safeParseUserJson = (rawValue) => {
       if (typeof rawValue !== 'string') return null;
       try {
         return JSON.parse(rawValue);
       } catch (parseError) {
+        console.warn('[PaymentTransaction] No se pudo parsear JSON de usuario:', parseError);
         return null;
       }
     };
 
-    const normalizeUserIdString = (value) => {
-      if (typeof value !== 'string') return value;
-
-      const parsedDirect = tryParseUserJson(value);
-      if (parsedDirect) {
-        return extractUserId(parsedDirect);
-      }
-
-      let trimmed = value.trim();
-
-      const quotePairs = [
-        ['"', '"'],
-        ["'", "'"],
-      ];
-
-      let changed = true;
-      while (changed) {
-        changed = false;
-        for (const [start, end] of quotePairs) {
-          if (trimmed.startsWith(start) && trimmed.endsWith(end) && trimmed.length > 1) {
-            trimmed = trimmed.slice(1, -1).trim();
-            changed = true;
-
-            const parsedAfterTrim = tryParseUserJson(trimmed);
-            if (parsedAfterTrim) {
-              return extractUserId(parsedAfterTrim);
-            }
-          }
-        }
-      }
-
-      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
-        const parsedAfterBraces = tryParseUserJson(trimmed);
-        if (parsedAfterBraces) {
-          return extractUserId(parsedAfterBraces);
-        }
-      }
-
-      return trimmed;
-    };
-
-    const findUuidInValue = (value) => {
+    const extractUuidFromValue = (value) => {
       if (!value) return null;
 
       if (typeof value === 'string') {
-        const match = value.match(UUID_CANONICAL_REGEX);
-        if (match) {
-          return match[0];
+        const trimmed = stripInvisibleCharacters(value).trim();
+        const directMatch = trimmed.match(UUID_CANONICAL_REGEX);
+        if (directMatch) {
+          return directMatch[0];
         }
+
+        const parsed = safeParseUserJson(trimmed);
+        if (parsed && typeof parsed === 'object') {
+          return extractUuidFromValue(parsed);
+        }
+
+        return null;
       }
 
       if (typeof value === 'object') {
+        if (Array.isArray(value)) {
+          for (const item of value) {
+            const extracted = extractUuidFromValue(item);
+            if (extracted) {
+              return extracted;
+            }
+          }
+          return null;
+        }
+
+        for (const key of ['id', 'user_id', 'userId', 'uuid']) {
+          if (typeof value[key] === 'string') {
+            const match = stripInvisibleCharacters(value[key]).trim().match(UUID_CANONICAL_REGEX);
+            if (match) {
+              return match[0];
+            }
+          }
+        }
+
+        if (value.user) {
+          const nestedUser = extractUuidFromValue(value.user);
+          if (nestedUser) {
+            return nestedUser;
+          }
+        }
+
         for (const key of Object.keys(value)) {
-          const found = findUuidInValue(value[key]);
-          if (found) return found;
+          if (['id', 'user_id', 'userId', 'uuid', 'user'].includes(key)) {
+            continue;
+          }
+          const extracted = extractUuidFromValue(value[key]);
+          if (extracted) {
+            return extracted;
+          }
         }
       }
 
       return null;
     };
 
-    // Extraer user_id del objeto user o de diferentes estructuras
-    let userId = extractUserId(transactionData.userId) || extractUserId(transactionData.user);
-    if (userId) {
-      userId = normalizeUserIdString(userId);
-    }
-
-    // Asegurar que userId sea un UUID válido o null
-    if (userId && typeof userId !== 'string') {
-      console.warn('Invalid userId type:', typeof userId, userId);
-      userId = null;
-    }
-
-    if (userId && typeof userId === 'string' && !UUID_CANONICAL_REGEX.test(userId)) {
-      const parsedFromJson = normalizeUserIdString(userId);
-      if (parsedFromJson && typeof parsedFromJson === 'string' && UUID_CANONICAL_REGEX.test(parsedFromJson)) {
-        userId = parsedFromJson;
-      } else {
-        const uuidFromValue = findUuidInValue(parsedFromJson || userId);
-        if (uuidFromValue) {
-          userId = uuidFromValue;
-        } else {
-          console.warn('Invalid userId format, expected UUID. Received:', userId);
-          userId = null;
-        }
-      }
-    }
-
-    if (userId && typeof userId === 'string') {
-      const directMatch = userId.match(UUID_CANONICAL_REGEX);
-      if (!directMatch) {
-        console.warn('Could not normalize userId to UUID. Falling back to null:', userId);
-        userId = null;
-      } else if (directMatch[0] !== userId) {
-        userId = directMatch[0];
-      }
-    }
-
-    const normalizeUserObject = (value) => {
-      if (!value) {
+    const buildNormalizedUser = (value, fallbackId = null) => {
+      if (!value && !fallbackId) {
         return null;
       }
 
       if (typeof value === 'string') {
-        const parsedStringUser = tryParseUserJson(value);
-        if (parsedStringUser) {
-          return normalizeUserObject(parsedStringUser);
+        const parsed = safeParseUserJson(stripInvisibleCharacters(value).trim());
+        if (parsed && typeof parsed === 'object') {
+          return buildNormalizedUser(parsed, fallbackId);
         }
 
-        const normalizedId = normalizeUserIdString(value);
-        const finalId =
-          (normalizedId && typeof normalizedId === 'string' && UUID_CANONICAL_REGEX.test(normalizedId)
-            ? normalizedId
-            : findUuidInValue(normalizedId || value)) || (UUID_CANONICAL_REGEX.test(userId || '') ? userId : null);
-
-        if (finalId) {
+        const extractedId = extractUuidFromValue(value) || fallbackId;
+        if (extractedId) {
           return {
-            id: finalId,
-            user_id: finalId,
-            userId: finalId,
+            id: extractedId,
+            user_id: extractedId,
+            userId: extractedId,
+            raw: value,
           };
         }
 
-        return {
-          id: UUID_CANONICAL_REGEX.test(userId || '') ? userId : findUuidInValue(value) || null,
-          user_id: UUID_CANONICAL_REGEX.test(userId || '') ? userId : findUuidInValue(value) || null,
-          userId: UUID_CANONICAL_REGEX.test(userId || '') ? userId : findUuidInValue(value) || null,
-          raw: value,
-        };
+        return fallbackId
+          ? {
+              id: fallbackId,
+              user_id: fallbackId,
+              userId: fallbackId,
+              raw: value,
+            }
+          : { raw: value };
       }
 
-      if (typeof value === 'object') {
+      if (value && typeof value === 'object') {
         const normalized = { ...value };
+        const resolvedId =
+          extractUuidFromValue(value) ||
+          extractUuidFromValue(value?.user) ||
+          fallbackId;
 
-        const extractedId = extractUserId(value) || userId;
-        if (extractedId) {
-          normalized.id = normalized.id || extractedId;
-          normalized.user_id = normalized.user_id || extractedId;
-          normalized.userId = normalized.userId || extractedId;
+        if (resolvedId) {
+          normalized.id = normalized.id || resolvedId;
+          normalized.user_id = normalized.user_id || resolvedId;
+          normalized.userId = normalized.userId || resolvedId;
         }
 
         return normalized;
       }
 
-      return null;
-    };
-
-    let normalizedUser =
-      normalizeUserObject(transactionData.user) ||
-      (userId
-        ? {
-            id: userId,
-            user_id: userId,
-            userId,
-          }
-        : null);
-
-    const ensureFinalUserId = (value) => {
-      if (!value) {
-        return null;
-      }
-
-      if (typeof value === 'string') {
-        const trimmed = value.trim();
-        if (UUID_CANONICAL_REGEX.test(trimmed)) {
-          return trimmed;
-        }
-
-        const parsed = tryParseUserJson(trimmed);
-        if (parsed) {
-          return ensureFinalUserId(parsed);
-        }
-
-        const matched = findUuidInValue(trimmed);
-        return matched || null;
-      }
-
-      if (typeof value === 'object') {
-        const direct = extractUserId(value);
-        if (direct && typeof direct === 'string' && UUID_CANONICAL_REGEX.test(direct)) {
-          return direct;
-        }
-
-        const nested = findUuidInValue(value);
-        if (nested) {
-          return nested;
-        }
+      if (fallbackId) {
+        return {
+          id: fallbackId,
+          user_id: fallbackId,
+          userId: fallbackId,
+        };
       }
 
       return null;
     };
 
-    const finalUserId =
-      ensureFinalUserId(userId) ||
-      ensureFinalUserId(normalizedUser) ||
-      ensureFinalUserId(transactionData.userId) ||
-      ensureFinalUserId(transactionData.user);
+    const finalUserIdCandidate =
+      extractUuidFromValue(transactionData.userId) ||
+      extractUuidFromValue(transactionData.user) ||
+      extractUuidFromValue(transactionData.metadata?.user);
 
-    userId = sanitizeUuid(finalUserId, { fieldName: 'user_id' });
+    const finalUserId = finalUserIdCandidate ? stripInvisibleCharacters(finalUserIdCandidate).trim() : null;
+    const sanitizedUserId = finalUserId ? sanitizeUuid(finalUserId, { fieldName: 'user_id' }) : null;
+
+    let userId = sanitizedUserId;
+    let normalizedUser = buildNormalizedUser(transactionData.user, userId);
+    if (!normalizedUser && userId) {
+      normalizedUser = {
+        id: userId,
+        user_id: userId,
+        userId,
+      };
+    }
 
     const canonicalizeUserObject = (value, fallbackUserId = null) => {
       if (!value) {
