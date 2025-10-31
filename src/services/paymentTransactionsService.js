@@ -5,6 +5,9 @@ import { supabase } from '../supabaseClient';
  */
 export const createPaymentTransaction = async (transactionData) => {
   try {
+    const resolvedEventoId = transactionData.eventoId || transactionData.eventId || transactionData.event || null;
+    const resolvedFuncionId = transactionData.funcionId || transactionData.functionId || transactionData.funcion || null;
+
     const { data, error } = await supabase
       .from('payment_transactions')
       .insert({
@@ -18,15 +21,12 @@ export const createPaymentTransaction = async (transactionData) => {
         locator: transactionData.locator,
         tenant_id: transactionData.tenantId,
         user_id: transactionData.userId,
-        evento_id: transactionData.eventoId,
-        funcion_id: transactionData.funcionId,
+        evento_id: resolvedEventoId,
+        funcion_id: resolvedFuncionId,
         payment_method: transactionData.paymentMethod || 'unknown',
         gateway_name: transactionData.gatewayName,
         seats: transactionData.seats || null,
         monto: transactionData.amount,
-        user_id: transactionData.userId,
-        evento_id: transactionData.eventoId,
-        funcion_id: transactionData.funcionId,
         processed_by: transactionData.processedBy,
         payment_gateway_id: transactionData.gatewayId
       })
@@ -48,7 +48,7 @@ export const updatePaymentTransactionStatus = async (transactionId, status, gate
   try {
     const { data, error } = await supabase
       .from('payment_transactions')
-      .update({ 
+      .update({
         status: status,
         gateway_response: gatewayResponse,
         updated_at: new Date().toISOString()
@@ -61,6 +61,70 @@ export const updatePaymentTransactionStatus = async (transactionId, status, gate
     return data;
   } catch (error) {
     console.error('Error updating payment transaction status:', error);
+    throw error;
+  }
+};
+
+/**
+ * Oculta una transacción de pago
+ */
+export const hidePaymentTransaction = async (transactionId) => {
+  try {
+    const { data, error } = await supabase
+      .from('payment_transactions')
+      .update({
+        is_hidden: true,
+        hidden_at: new Date().toISOString()
+      })
+      .eq('id', transactionId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error hiding payment transaction:', error);
+    throw error;
+  }
+};
+
+/**
+ * Muestra una transacción previamente oculta
+ */
+export const unhidePaymentTransaction = async (transactionId) => {
+  try {
+    const { data, error } = await supabase
+      .from('payment_transactions')
+      .update({
+        is_hidden: false,
+        hidden_at: null
+      })
+      .eq('id', transactionId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error unhiding payment transaction:', error);
+    throw error;
+  }
+};
+
+/**
+ * Elimina una transacción de pago
+ */
+export const deletePaymentTransaction = async (transactionId) => {
+  try {
+    const { error } = await supabase
+      .from('payment_transactions')
+      .delete()
+      .eq('id', transactionId);
+
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Error deleting payment transaction:', error);
     throw error;
   }
 };
