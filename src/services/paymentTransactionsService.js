@@ -1,35 +1,44 @@
 import { supabase } from '../supabaseClient';
+import { normalizeTransaction } from '../utils/normalizeTransaction';
 
 /**
  * Crea una transacción de pago
  */
 export const createPaymentTransaction = async (transactionData) => {
   try {
-    const resolvedEventoId = transactionData.eventoId || transactionData.eventId || transactionData.event || null;
-    const resolvedFuncionId = transactionData.funcionId || transactionData.functionId || transactionData.funcion || null;
+    const normalized = normalizeTransaction(transactionData);
+    const payload = {
+      order_id: normalized.order_id,
+      gateway_id: normalized.gateway_id,
+      amount: normalized.amount,
+      currency: normalized.currency,
+      status: normalized.status,
+      gateway_transaction_id: normalized.gateway_transaction_id,
+      gateway_response: normalized.gateway_response,
+      locator: normalized.locator,
+      tenant_id: normalized.tenant_id,
+      user_id: normalized.user_id,
+      evento_id: normalized.evento_id,
+      funcion_id: normalized.funcion_id,
+      payment_method: normalized.payment_method,
+      gateway_name: normalized.gateway_name,
+      seats: normalized.seats,
+      monto: normalized.monto,
+      processed_by: normalized.processed_by,
+      payment_gateway_id: normalized.payment_gateway_id,
+      fecha: normalized.fecha,
+      payments: normalized.payments,
+      referrer: normalized.referrer,
+      discountCode: normalized.discountCode,
+      reservationDeadline: normalized.reservationDeadline,
+      metadata: normalized.metadata
+    };
+
+    Object.keys(payload).forEach((key) => payload[key] === undefined && delete payload[key]);
 
     const { data, error } = await supabase
       .from('payment_transactions')
-      .insert({
-        order_id: transactionData.orderId,
-        gateway_id: transactionData.gatewayId,
-        amount: transactionData.amount,
-        currency: transactionData.currency || 'USD',
-        status: 'pending',
-        gateway_transaction_id: transactionData.gatewayTransactionId,
-        gateway_response: transactionData.gatewayResponse || null,
-        locator: transactionData.locator,
-        tenant_id: transactionData.tenantId,
-        user_id: transactionData.userId,
-        evento_id: resolvedEventoId,
-        funcion_id: resolvedFuncionId,
-        payment_method: transactionData.paymentMethod || 'unknown',
-        gateway_name: transactionData.gatewayName,
-        seats: transactionData.seats || null,
-        monto: transactionData.amount,
-        processed_by: transactionData.processedBy,
-        payment_gateway_id: transactionData.gatewayId
-      })
+      .insert(payload)
       .select()
       .single();
 
