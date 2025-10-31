@@ -97,11 +97,39 @@ const SalesTransactions = () => {
         funcionesQuery = funcionesQuery.eq('tenant_id', currentTenant.id);
       }
 
-      const [recintosResponse, eventosResponse, funcionesResponse] = await Promise.all([
+      const [recintosResponse, eventosResponse] = await Promise.all([
         recintosQuery,
-        eventosQuery,
-        funcionesQuery
+        eventosQuery
       ]);
+
+      const handleFuncionesFallback = async (error) => {
+        console.warn('⚠️ [SalesTransactions] Error cargando funciones, usando fallback select("*"):', error);
+        let fallbackQuery = supabase
+          .from('funciones')
+          .select('*');
+
+        if (isMultiTenant) {
+          fallbackQuery = fallbackQuery.eq('tenant_id', currentTenant.id);
+        }
+
+        const fallbackResponse = await fallbackQuery;
+
+        if (fallbackResponse.error) {
+          console.error('❌ [SalesTransactions] Error en fallback de funciones:', fallbackResponse.error);
+          return fallbackResponse;
+        }
+
+        return {
+          data: fallbackResponse.data || [],
+          error: null
+        };
+      };
+
+      let funcionesResponse = await funcionesQuery;
+
+      if (funcionesResponse.error) {
+        funcionesResponse = await handleFuncionesFallback(funcionesResponse.error);
+      }
 
       if (recintosResponse.error) {
         console.error('Error cargando recintos:', recintosResponse.error);
@@ -121,7 +149,62 @@ const SalesTransactions = () => {
         console.error('Error cargando funciones:', funcionesResponse.error);
         message.error('No se pudieron cargar las funciones');
       } else {
-        setFunctions(funcionesResponse.data || []);
+        const normalizedFunctions = (funcionesResponse.data || []).map(funcion => {
+          const fechaCelebracion =
+            funcion.fecha_celebracion ||
+            funcion.fechaCelebracion ||
+            funcion.fecha ||
+            null;
+
+          let hora = funcion.hora;
+
+          if (!hora && fechaCelebracion) {
+            try {
+              const parsed = new Date(fechaCelebracion);
+
+              if (!Number.isNaN(parsed.getTime())) {
+                const hours = String(parsed.getHours()).padStart(2, '0');
+                const minutes = String(parsed.getMinutes()).padStart(2, '0');
+                hora = `${hours}:${minutes}`;
+              }
+            } catch (parseError) {
+              console.warn('⚠️ [SalesTransactions] No se pudo calcular la hora de la función:', parseError);
+            }
+          }
+
+          let nombre = funcion.nombre;
+
+          if (!nombre) {
+            if (fechaCelebracion) {
+              try {
+                const parsed = new Date(fechaCelebracion);
+
+                if (!Number.isNaN(parsed.getTime())) {
+                  nombre = new Intl.DateTimeFormat('es-ES', {
+                    dateStyle: 'medium',
+                    timeStyle: 'short'
+                  }).format(parsed);
+                }
+              } catch (formatError) {
+                console.warn('⚠️ [SalesTransactions] No se pudo formatear el nombre de la función:', formatError);
+              }
+            }
+
+            if (!nombre) {
+              nombre = `Función ${funcion.id}`;
+            }
+          }
+
+          return {
+            ...funcion,
+            nombre,
+            fecha: funcion.fecha || fechaCelebracion,
+            hora,
+            fecha_celebracion: fechaCelebracion
+          };
+        });
+
+        setFunctions(normalizedFunctions);
       }
     } catch (error) {
       console.error('Error al cargar filtros de transacciones:', error);
@@ -168,7 +251,7 @@ const SalesTransactions = () => {
 
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, nombre, apellido, full_name, email')
+        .select('id, nombre, apellido, email')
         .in('id', profileIds);
 
       if (profilesError) {
@@ -176,7 +259,19 @@ const SalesTransactions = () => {
         return;
       }
 
-      setProfilesMap(new Map((profilesData || []).map(profile => [profile.id, profile])));
+      const normalizedProfiles = (profilesData || []).map(profile => {
+        const computedFullName = [profile?.nombre, profile?.apellido]
+          .filter(Boolean)
+          .join(' ')
+          .trim();
+
+        return {
+          ...profile,
+          full_name: computedFullName || null
+        };
+      });
+
+      setProfilesMap(new Map(normalizedProfiles.map(profile => [profile.id, profile])));
     } catch (error) {
       console.error('Error al cargar transacciones:', error);
       message.error('No se pudieron cargar las transacciones');
