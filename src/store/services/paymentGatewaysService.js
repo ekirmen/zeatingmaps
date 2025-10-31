@@ -545,6 +545,49 @@ export const createPaymentTransaction = async (transactionData) => {
           }
         : null);
 
+    const ensureFinalUserId = (value) => {
+      if (!value) {
+        return null;
+      }
+
+      if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (uuidRegex.test(trimmed)) {
+          return trimmed;
+        }
+
+        const parsed = tryParseUserJson(trimmed);
+        if (parsed) {
+          return ensureFinalUserId(parsed);
+        }
+
+        const matched = findUuidInValue(trimmed);
+        return matched || null;
+      }
+
+      if (typeof value === 'object') {
+        const direct = extractUserId(value);
+        if (direct && typeof direct === 'string' && uuidRegex.test(direct)) {
+          return direct;
+        }
+
+        const nested = findUuidInValue(value);
+        if (nested) {
+          return nested;
+        }
+      }
+
+      return null;
+    };
+
+    const finalUserId =
+      ensureFinalUserId(userId) ||
+      ensureFinalUserId(normalizedUser) ||
+      ensureFinalUserId(transactionData.userId) ||
+      ensureFinalUserId(transactionData.user);
+
+    userId = finalUserId || null;
+
     // Preparar datos para inserción (normalizado)
     // Normalizar seats a un arreglo de objetos con { id, name, price, zona, mesa }
     const rawSeats = transactionData.seats || transactionData.items || [];
