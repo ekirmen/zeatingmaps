@@ -1,44 +1,16 @@
 import { supabase } from '../supabaseClient';
-import { normalizeTransaction } from '../utils/normalizeTransaction';
+import { buildPaymentTransactionPayload } from '../utils/normalizeTransactionPayload';
 
 /**
  * Crea una transacción de pago
  */
 export const createPaymentTransaction = async (transactionData) => {
   try {
-    const normalized = normalizeTransaction(transactionData);
-    const payload = {
-      order_id: normalized.order_id,
-      gateway_id: normalized.gateway_id,
-      amount: normalized.amount,
-      currency: normalized.currency,
-      status: normalized.status,
-      gateway_transaction_id: normalized.gateway_transaction_id,
-      gateway_response: normalized.gateway_response,
-      locator: normalized.locator,
-      tenant_id: normalized.tenant_id,
-      user_id: normalized.user_id,
-      evento_id: normalized.evento_id,
-      funcion_id: normalized.funcion_id,
-      payment_method: normalized.payment_method,
-      gateway_name: normalized.gateway_name,
-      seats: normalized.seats,
-      monto: normalized.monto,
-      processed_by: normalized.processed_by,
-      payment_gateway_id: normalized.payment_gateway_id,
-      fecha: normalized.fecha,
-      payments: normalized.payments,
-      referrer: normalized.referrer,
-      discountCode: normalized.discountCode,
-      reservationDeadline: normalized.reservationDeadline,
-      metadata: normalized.metadata
-    };
-
-    Object.keys(payload).forEach((key) => payload[key] === undefined && delete payload[key]);
+    const payload = buildPaymentTransactionPayload(transactionData);
 
     const { data, error } = await supabase
       .from('payment_transactions')
-      .insert(payload)
+      .insert([payload])
       .select()
       .single();
 
