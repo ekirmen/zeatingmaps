@@ -299,6 +299,12 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
           permission: 'boleteria'
         },
         {
+          title: 'Transacciones',
+          path: '/dashboard/transacciones',
+          icon: faCreditCard,
+          permission: 'boleteria'
+        },
+        {
           title: 'Reportes',
           path: '/dashboard/reportes',
           icon: faChartPie,
