@@ -6,7 +6,13 @@ import TenantErrorBoundary from './components/TenantErrorBoundary';
 import StoreApp from './store/StoreApp';
 import MapShortRoute from './store/pages/MapShortRoute';
 import BackofficeAppWithRoles from './backoffice/BackofficeAppWithRoles';
-import { getCurrentDomainConfig, shouldShowSaaS, shouldShowBackoffice, shouldShowStore } from './config/domainConfig';
+import {
+  getCurrentDomainConfig,
+  shouldShowSaaS,
+  shouldShowBackoffice,
+  shouldShowStore,
+  isMainDomain as isMainDomainFallback,
+} from './config/domainConfig';
 import { ThemeProvider } from './contexts/ThemeContext';
 import VercelAnalytics from './components/VercelAnalytics';
 import VercelSpeedInsights from './components/VercelSpeedInsights';
@@ -33,7 +39,7 @@ const App = () => {
   console.log('🚀 [App.jsx] Componente principal ejecutándose');
   console.log('🚀 [App.jsx] Timestamp:', new Date().toISOString());
   
-  const { loading, error, domainConfig, isMainDomain } = useTenant();
+  const { loading, error, domainConfig } = useTenant();
   
   // Usar configuración dinámica del tenant si está disponible, sino usar configuración estática del dominio
   const config = domainConfig || getCurrentDomainConfig();
@@ -62,7 +68,7 @@ const App = () => {
   const showStore = domainConfig ? domainConfig.features.showStore : shouldShowStore();
 
   // Para el dominio principal (sistema.veneventos.com), mostrar todo
-  const isMain = isMainDomain();
+  const isMain = domainConfig?.isMainDomain ?? isMainDomainFallback();
   const finalShowSaaS = isMain ? true : showSaaS;
   const finalShowBackoffice = isMain ? true : showBackoffice;
   const finalShowStore = isMain ? true : showStore;
