@@ -23,6 +23,7 @@ import Funciones from './pages/Funciones';
 import Abonos from './pages/Abonos';
 import CreateIva from './pages/CreateIva';
 import Boleteria from './pages/Boleteria';
+import SalesTransactions from './pages/SalesTransactions';
 import Reports from './pages/Reports';
 import CRM from './pages/CRM';
 import Tags from './pages/Tags';
@@ -239,13 +240,21 @@ const BackofficeAppWithRoles = () => {
           />
           
           {/* Ventas */}
-          <Route 
-            path="boleteria" 
+          <Route
+            path="boleteria"
             element={
               <ProtectedRoute permission="boleteria">
                 <Boleteria />
               </ProtectedRoute>
-            } 
+            }
+          />
+          <Route
+            path="transacciones"
+            element={
+              <ProtectedRoute permission="boleteria">
+                <SalesTransactions />
+              </ProtectedRoute>
+            }
           />
           <Route 
             path="reportes" 
