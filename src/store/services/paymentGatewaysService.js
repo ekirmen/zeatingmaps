@@ -2,6 +2,40 @@ import { getSupabaseClient } from '../../config/supabase';
 
 const supabase = getSupabaseClient();
 
+const UUID_CANONICAL_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+const stripInvisibleCharacters = (value) =>
+  typeof value === 'string' ? value.replace(/[\u200B-\u200D\uFEFF]/g, '') : value;
+
+const sanitizeUuid = (rawValue, { fieldName, required = false } = {}) => {
+  if (rawValue === undefined || rawValue === null || rawValue === '') {
+    if (required) {
+      throw new Error(`${fieldName} es requerido y debe ser un UUID válido`);
+    }
+    return null;
+  }
+
+  let candidate = rawValue;
+
+  if (typeof candidate !== 'string') {
+    candidate = String(candidate);
+  }
+
+  candidate = stripInvisibleCharacters(candidate).trim().toLowerCase();
+
+  const directMatch = candidate.match(UUID_CANONICAL_REGEX);
+  if (directMatch) {
+    return directMatch[0];
+  }
+
+  if (required) {
+    throw new Error(`${fieldName} debe ser un UUID válido. Valor recibido: ${rawValue}`);
+  }
+
+  console.warn(`[PaymentTransaction] ${fieldName} inválido, omitiendo valor:`, rawValue);
+  return null;
+};
+
 /**
  * Obtiene todas las pasarelas de pago activas
  */
@@ -330,14 +364,19 @@ export const createPaymentTransaction = async (transactionData) => {
       throw new Error('tenantId es requerido');
     }
 
+    let gatewayId = sanitizeUuid(transactionData.gatewayId, {
+      fieldName: 'gateway_id',
+      required: false,
+    });
+
     // Get gateway name if gateway_id is provided
     let gatewayName = transactionData.gatewayName || 'unknown';
-    if (transactionData.gatewayId && !transactionData.gatewayName) {
+    if (gatewayId && !transactionData.gatewayName) {
       try {
         const { data: gateway } = await supabase
           .from('payment_methods')
           .select('name')
-          .eq('id', transactionData.gatewayId)
+          .eq('id', gatewayId)
           .single();
         if (gateway) {
           gatewayName = gateway.name;
@@ -427,13 +466,11 @@ export const createPaymentTransaction = async (transactionData) => {
       return trimmed;
     };
 
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
     const findUuidInValue = (value) => {
       if (!value) return null;
 
       if (typeof value === 'string') {
-        const match = value.match(uuidRegex);
+        const match = value.match(UUID_CANONICAL_REGEX);
         if (match) {
           return match[0];
         }
@@ -461,9 +498,9 @@ export const createPaymentTransaction = async (transactionData) => {
       userId = null;
     }
 
-    if (userId && typeof userId === 'string' && !uuidRegex.test(userId)) {
+    if (userId && typeof userId === 'string' && !UUID_CANONICAL_REGEX.test(userId)) {
       const parsedFromJson = normalizeUserIdString(userId);
-      if (parsedFromJson && typeof parsedFromJson === 'string' && uuidRegex.test(parsedFromJson)) {
+      if (parsedFromJson && typeof parsedFromJson === 'string' && UUID_CANONICAL_REGEX.test(parsedFromJson)) {
         userId = parsedFromJson;
       } else {
         const uuidFromValue = findUuidInValue(parsedFromJson || userId);
@@ -477,7 +514,7 @@ export const createPaymentTransaction = async (transactionData) => {
     }
 
     if (userId && typeof userId === 'string') {
-      const directMatch = userId.match(uuidRegex);
+      const directMatch = userId.match(UUID_CANONICAL_REGEX);
       if (!directMatch) {
         console.warn('Could not normalize userId to UUID. Falling back to null:', userId);
         userId = null;
@@ -499,9 +536,9 @@ export const createPaymentTransaction = async (transactionData) => {
 
         const normalizedId = normalizeUserIdString(value);
         const finalId =
-          (normalizedId && typeof normalizedId === 'string' && uuidRegex.test(normalizedId)
+          (normalizedId && typeof normalizedId === 'string' && UUID_CANONICAL_REGEX.test(normalizedId)
             ? normalizedId
-            : findUuidInValue(normalizedId || value)) || (uuidRegex.test(userId || '') ? userId : null);
+            : findUuidInValue(normalizedId || value)) || (UUID_CANONICAL_REGEX.test(userId || '') ? userId : null);
 
         if (finalId) {
           return {
@@ -512,9 +549,9 @@ export const createPaymentTransaction = async (transactionData) => {
         }
 
         return {
-          id: uuidRegex.test(userId || '') ? userId : findUuidInValue(value) || null,
-          user_id: uuidRegex.test(userId || '') ? userId : findUuidInValue(value) || null,
-          userId: uuidRegex.test(userId || '') ? userId : findUuidInValue(value) || null,
+          id: UUID_CANONICAL_REGEX.test(userId || '') ? userId : findUuidInValue(value) || null,
+          user_id: UUID_CANONICAL_REGEX.test(userId || '') ? userId : findUuidInValue(value) || null,
+          userId: UUID_CANONICAL_REGEX.test(userId || '') ? userId : findUuidInValue(value) || null,
           raw: value,
         };
       }
@@ -535,7 +572,7 @@ export const createPaymentTransaction = async (transactionData) => {
       return null;
     };
 
-    const normalizedUser =
+    let normalizedUser =
       normalizeUserObject(transactionData.user) ||
       (userId
         ? {
@@ -552,7 +589,7 @@ export const createPaymentTransaction = async (transactionData) => {
 
       if (typeof value === 'string') {
         const trimmed = value.trim();
-        if (uuidRegex.test(trimmed)) {
+        if (UUID_CANONICAL_REGEX.test(trimmed)) {
           return trimmed;
         }
 
@@ -567,7 +604,7 @@ export const createPaymentTransaction = async (transactionData) => {
 
       if (typeof value === 'object') {
         const direct = extractUserId(value);
-        if (direct && typeof direct === 'string' && uuidRegex.test(direct)) {
+        if (direct && typeof direct === 'string' && UUID_CANONICAL_REGEX.test(direct)) {
           return direct;
         }
 
@@ -586,9 +623,78 @@ export const createPaymentTransaction = async (transactionData) => {
       ensureFinalUserId(transactionData.userId) ||
       ensureFinalUserId(transactionData.user);
 
-    userId = finalUserId || null;
+    userId = sanitizeUuid(finalUserId, { fieldName: 'user_id' });
+
+    const canonicalizeUserObject = (value, fallbackUserId = null) => {
+      if (!value) {
+        return null;
+      }
+
+      const cloned = { ...value };
+
+      ['id', 'user_id', 'userId'].forEach((key) => {
+        if (cloned[key]) {
+          const sanitized = sanitizeUuid(cloned[key], { fieldName: `user.${key}` });
+          if (sanitized) {
+            cloned[key] = sanitized;
+          } else {
+            delete cloned[key];
+          }
+        }
+      });
+
+      if (fallbackUserId) {
+        cloned.id = cloned.id || fallbackUserId;
+        cloned.user_id = cloned.user_id || fallbackUserId;
+        cloned.userId = cloned.userId || fallbackUserId;
+      }
+
+      return cloned;
+    };
+
+    normalizedUser = canonicalizeUserObject(normalizedUser, userId);
 
     // Preparar datos para inserción (normalizado)
+    const tenantId = sanitizeUuid(transactionData.tenantId, {
+      fieldName: 'tenant_id',
+      required: true,
+    });
+
+    const eventoId = sanitizeUuid(transactionData.eventoId, {
+      fieldName: 'evento_id',
+      required: false,
+    });
+
+    const paymentGatewayId = sanitizeUuid(
+      transactionData.paymentGatewayId || gatewayId,
+      {
+        fieldName: 'payment_gateway_id',
+        required: false,
+      }
+    );
+
+    const orderId = typeof transactionData.orderId === 'string'
+      ? stripInvisibleCharacters(transactionData.orderId).trim()
+      : transactionData.orderId;
+
+    const amount = Number(transactionData.amount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new Error('amount debe ser un número válido mayor a 0');
+    }
+
+    const funcionId =
+      transactionData.funcionId !== undefined && transactionData.funcionId !== null
+        ? Number(transactionData.funcionId)
+        : null;
+
+    if (funcionId !== null && Number.isNaN(funcionId)) {
+      throw new Error('funcionId debe ser un valor numérico');
+    }
+
+    const locator = typeof transactionData.locator === 'string'
+      ? stripInvisibleCharacters(transactionData.locator).trim()
+      : transactionData.locator || null;
+
     // Normalizar seats a un arreglo de objetos con { id, name, price, zona, mesa }
     const rawSeats = transactionData.seats || transactionData.items || [];
     const normalizedSeats = Array.isArray(rawSeats)
@@ -626,36 +732,45 @@ export const createPaymentTransaction = async (transactionData) => {
       : [];
 
     const computedPayments = transactionData.payments && Array.isArray(transactionData.payments)
-      ? transactionData.payments.map((payment) => ({
-          method: payment.method || transactionData.paymentMethod || transactionData.method || gatewayName || 'manual',
-          amount: Number(payment.amount) || 0,
-          metadata: payment.metadata || null,
-          reference: payment.reference || null,
-          status: payment.status || transactionData.status || 'completed',
-        }))
+      ? transactionData.payments.map((payment) => {
+          const normalizedAmount = Number(payment.amount);
+          const amountValue = Number.isFinite(normalizedAmount) ? normalizedAmount : 0;
+          const referenceValue =
+            typeof payment.reference === 'string'
+              ? stripInvisibleCharacters(payment.reference).trim()
+              : payment.reference || null;
+
+          return {
+            method: payment.method || transactionData.paymentMethod || transactionData.method || gatewayName || 'manual',
+            amount: amountValue,
+            metadata: payment.metadata || null,
+            reference: referenceValue,
+            status: payment.status || transactionData.status || 'completed',
+          };
+        })
       : [
           {
             method: transactionData.paymentMethod || transactionData.method || gatewayName || 'manual',
-            amount: Number(transactionData.amount) || 0,
+            amount,
             metadata: transactionData.metadata || null,
-            reference: transactionData.orderId || null,
+            reference: orderId || null,
             status: transactionData.status || 'completed',
           },
         ];
 
     const insertData = {
-      order_id: transactionData.orderId,
-      gateway_id: transactionData.gatewayId,
-      amount: transactionData.amount,
+      order_id: orderId,
+      gateway_id: gatewayId,
+      amount,
       currency: transactionData.currency || 'USD',
       status: transactionData.status || 'completed',
       gateway_transaction_id: transactionData.gatewayTransactionId,
       gateway_response: transactionData.gatewayResponse || null,
-      locator: transactionData.locator,
-      tenant_id: transactionData.tenantId,
+      locator,
+      tenant_id: tenantId,
       user_id: userId,
-      evento_id: transactionData.eventoId,
-      funcion_id: transactionData.funcionId,
+      evento_id: eventoId,
+      funcion_id: funcionId,
       payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
       gateway_name: gatewayName,
       seats: normalizedSeats,
@@ -663,10 +778,10 @@ export const createPaymentTransaction = async (transactionData) => {
       metadata: transactionData.metadata || null,
       // Campos adicionales para compatibilidad/reportes
       fecha: new Date().toISOString(),
-      event: transactionData.eventoId || null,
-      funcion: transactionData.funcionId || null,
+      event: eventoId || null,
+      funcion: funcionId || null,
       processed_by: transactionData.processedBy || null,
-      payment_gateway_id: transactionData.gatewayId || null,
+      payment_gateway_id: paymentGatewayId,
       payments: computedPayments,
     };
 
