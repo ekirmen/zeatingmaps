@@ -4,23 +4,50 @@ import { supabaseAdmin } from '../../supabaseClient';
 import { SITE_URL } from '../../utils/siteUrl';
 import { createAuthError } from '../../utils/authErrorMessages';
 
+const TENANT_STORAGE_KEY = 'zeatingmaps::tenant-context:v1';
+
 // Función helper para obtener el tenant actual del contexto
 const getCurrentTenantId = () => {
   try {
-    // Intentar obtener el tenant del localStorage (si se guardó previamente)
-    const tenantId = localStorage.getItem('currentTenantId');
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    // 1. Intentar obtener el tenant del localStorage (clave directa)
+    const tenantId = window.localStorage.getItem('currentTenantId');
     if (tenantId) {
       return tenantId;
     }
-    
-    // Si no hay tenant en localStorage, intentar obtenerlo del contexto global
-    if (typeof window !== 'undefined' && window.__TENANT_CONTEXT__) {
-      const globalTenantId = window.__TENANT_CONTEXT__.getTenantId?.();
+
+    // 2. Intentar obtenerlo del nuevo contexto persistido
+    const cachedContextRaw = window.localStorage.getItem(TENANT_STORAGE_KEY);
+    if (cachedContextRaw) {
+      try {
+        const cachedContext = JSON.parse(cachedContextRaw);
+        const cachedTenantId = cachedContext?.tenant?.id || null;
+        if (cachedTenantId) {
+          window.localStorage.setItem('currentTenantId', cachedTenantId);
+          return cachedTenantId;
+        }
+      } catch (parseError) {
+        console.warn('⚠️ No se pudo parsear el contexto de tenant cacheado:', parseError);
+      }
+    }
+
+    // 3. Intentar obtenerlo del contexto global inyectado en window
+    const globalContext = window.__TENANT_CONTEXT__;
+    if (globalContext) {
+      const globalTenantId =
+        typeof globalContext.getTenantId === 'function'
+          ? globalContext.getTenantId()
+          : globalContext.tenant?.id;
+
       if (globalTenantId) {
+        window.localStorage.setItem('currentTenantId', globalTenantId);
         return globalTenantId;
       }
     }
-    
+
     // Si no se puede obtener el tenant, mostrar advertencia
     console.warn('⚠️ No se pudo obtener el tenant_id. El usuario se registrará sin empresa asignada.');
     return null;
