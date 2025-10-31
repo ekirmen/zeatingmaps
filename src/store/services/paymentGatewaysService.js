@@ -476,6 +476,16 @@ export const createPaymentTransaction = async (transactionData) => {
       }
     }
 
+    if (userId && typeof userId === 'string') {
+      const directMatch = userId.match(uuidRegex);
+      if (!directMatch) {
+        console.warn('Could not normalize userId to UUID. Falling back to null:', userId);
+        userId = null;
+      } else if (directMatch[0] !== userId) {
+        userId = directMatch[0];
+      }
+    }
+
     const normalizeUserObject = (value) => {
       if (!value) {
         return null;
