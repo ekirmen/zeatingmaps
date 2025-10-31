@@ -451,6 +451,60 @@ export const createPaymentTransaction = async (transactionData) => {
       }
     }
 
+    const normalizeUserObject = (value) => {
+      if (!value) {
+        return null;
+      }
+
+      if (typeof value === 'string') {
+        const parsedStringUser = tryParseUserJson(value);
+        if (parsedStringUser) {
+          return normalizeUserObject(parsedStringUser);
+        }
+
+        const normalizedId = normalizeUserIdString(value);
+        if (normalizedId && typeof normalizedId === 'string') {
+          return {
+            id: normalizedId,
+            user_id: normalizedId,
+            userId: normalizedId,
+          };
+        }
+
+        return {
+          id: userId || null,
+          user_id: userId || null,
+          userId: userId || null,
+          raw: value,
+        };
+      }
+
+      if (typeof value === 'object') {
+        const normalized = { ...value };
+
+        const extractedId = extractUserId(value) || userId;
+        if (extractedId) {
+          normalized.id = normalized.id || extractedId;
+          normalized.user_id = normalized.user_id || extractedId;
+          normalized.userId = normalized.userId || extractedId;
+        }
+
+        return normalized;
+      }
+
+      return null;
+    };
+
+    const normalizedUser =
+      normalizeUserObject(transactionData.user) ||
+      (userId
+        ? {
+            id: userId,
+            user_id: userId,
+            userId,
+          }
+        : null);
+
     // Preparar datos para inserción (normalizado)
     // Normalizar seats a un arreglo de objetos con { id, name, price, zona, mesa }
     const rawSeats = transactionData.seats || transactionData.items || [];
@@ -522,7 +576,7 @@ export const createPaymentTransaction = async (transactionData) => {
       payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
       gateway_name: gatewayName,
       seats: normalizedSeats,
-      user: userId || null,
+      user: normalizedUser,
       metadata: transactionData.metadata || null,
       // Campos adicionales para compatibilidad/reportes
       fecha: new Date().toISOString(),
@@ -530,10 +584,13 @@ export const createPaymentTransaction = async (transactionData) => {
       funcion: transactionData.funcionId || null,
       processed_by: transactionData.processedBy || null,
       payment_gateway_id: transactionData.gatewayId || null,
-      payments: computedPayments
+      payments: computedPayments,
     };
 
     insertData.payments = computedPayments;
+    if (userId) {
+      insertData.usuario_id = userId;
+    }
 
     console.log('[PaymentTransaction] Datos a insertar:', insertData);
 
@@ -552,7 +609,7 @@ export const createPaymentTransaction = async (transactionData) => {
 
     return {
       ...data,
-      user: userId || null
+      user: normalizedUser,
     };
   } catch (error) {
     console.error('[PaymentTransaction] Error creando transacción:', error);
