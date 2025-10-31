@@ -15,6 +15,105 @@ const generateUUID = () =>
 
 const isUuid = (value) => typeof value === 'string' && UUID_REGEX.test(value);
 
+const tryParseUserValue = (value) => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    return null;
+  }
+};
+
+const extractUserIdFromValue = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (isUuid(trimmed)) {
+      return trimmed;
+    }
+
+    const parsed = tryParseUserValue(trimmed);
+    if (parsed) {
+      return extractUserIdFromValue(parsed);
+    }
+
+    const match = trimmed.match(UUID_REGEX);
+    return match ? match[0] : null;
+  }
+
+  if (typeof value === 'object') {
+    const directId = value.id || value.user_id || value.userId;
+    if (typeof directId === 'string' && isUuid(directId.trim())) {
+      return directId.trim();
+    }
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const nested = extractUserIdFromValue(item);
+        if (nested) {
+          return nested;
+        }
+      }
+    } else {
+      for (const key of Object.keys(value)) {
+        const nested = extractUserIdFromValue(value[key]);
+        if (nested) {
+          return nested;
+        }
+      }
+    }
+  }
+
+  return null;
+};
+
+const normalizeUserPayload = (user, fallbackId = null) => {
+  const resolvedId = extractUserIdFromValue(user) || fallbackId;
+
+  if (!user && !resolvedId) {
+    return null;
+  }
+
+  if (user && typeof user === 'object') {
+    return {
+      ...user,
+      id: typeof user.id === 'string' ? user.id : resolvedId || user.id || null,
+      user_id:
+        typeof user.user_id === 'string'
+          ? user.user_id
+          : resolvedId || user.user_id || null,
+      userId:
+        typeof user.userId === 'string'
+          ? user.userId
+          : resolvedId || user.userId || null,
+    };
+  }
+
+  if (typeof user === 'string') {
+    const parsed = tryParseUserValue(user);
+    if (parsed) {
+      return normalizeUserPayload(parsed, resolvedId);
+    }
+  }
+
+  if (resolvedId) {
+    return {
+      id: resolvedId,
+      user_id: resolvedId,
+      userId: resolvedId,
+      raw: user ?? null,
+    };
+  }
+
+  return user ?? null;
+};
+
 const resolveSessionId = (explicitSessionId = null) => {
   if (explicitSessionId) return explicitSessionId;
   if (typeof window === 'undefined') return null;
@@ -39,6 +138,12 @@ const ensureGatewayId = (method, providedGatewayId) => {
 const buildTransactionPayload = (method, paymentData, options = {}) => {
   const paymentMethodName = method.method_name || method.name || method.method_id || 'manual';
 
+  const resolvedUserId =
+    extractUserIdFromValue(paymentData?.user?.id) ||
+    extractUserIdFromValue(paymentData?.user) ||
+    extractUserIdFromValue(paymentData?.userId) ||
+    null;
+
   const payload = {
     orderId: paymentData.orderId,
     gatewayId: ensureGatewayId(method, options.gatewayId || paymentData.gatewayId),
@@ -46,13 +151,13 @@ const buildTransactionPayload = (method, paymentData, options = {}) => {
     currency: paymentData.currency || 'USD',
     locator: paymentData.locator,
     tenantId: paymentData.tenant?.id,
-    userId: paymentData.user?.id,
+    userId: resolvedUserId,
     eventoId: paymentData.evento?.id,
     funcionId: paymentData.funcion?.id,
     paymentMethod: paymentMethodName,
     gatewayName: method.name || method.method_name || method.method_id || 'Manual',
     seats: paymentData.items || [],
-    user: paymentData.user || null,
+    user: normalizeUserPayload(paymentData.user, resolvedUserId),
   };
 
   if (options.gatewayResponse) {
