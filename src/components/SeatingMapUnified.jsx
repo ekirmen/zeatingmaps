@@ -666,41 +666,80 @@ const SeatingMapUnified = ({
     return [];
   }, [zonas, allSeats]);
   
-  // Obtener mesas del mapa - CORREGIR ESTA LÓGICA
-let mesas = [];
-if (Array.isArray(mapa?.contenido)) {
-  mesas = mapa.contenido.filter(item => {
-    // Un elemento es una mesa si tiene nombre, shape y _id
-    return item && item._id && item.nombre && item.shape;
-  });
-  
-  // Log removido para evitar spam en consola
-} else {
-  // Si es un objeto, buscar la propiedad 'elementos'
-  const elementos = Array.isArray(mapa?.contenido) 
-    ? mapa.contenido 
-    : mapa?.contenido?.elementos || [];
-  
-  // Filtrar solo las mesas de los elementos
-  mesas = elementos.filter(el => el && el.type === 'mesa');
-}
+  // Obtener mesas del mapa con validaciones adicionales para evitar elementos falsos positivos
+  const rawMapElements = useMemo(() => {
+    if (!mapa?.contenido) {
+      return [];
+    }
+
+    if (Array.isArray(mapa.contenido)) {
+      return mapa.contenido;
+    }
+
+    const elementos = [];
+
+    if (Array.isArray(mapa.contenido.elementos)) {
+      elementos.push(...mapa.contenido.elementos);
+    }
+
+    if (Array.isArray(mapa.contenido.mesas)) {
+      elementos.push(...mapa.contenido.mesas);
+    }
+
+    return elementos;
+  }, [mapa]);
+
+  const mesas = useMemo(() => {
+    const mesasMap = new Map();
+
+    rawMapElements.forEach(elemento => {
+      if (!elemento || !elemento._id) {
+        return;
+      }
+
+      const typeCandidates = [
+        elemento.type,
+        elemento.elementType,
+        elemento.element_type,
+        elemento.componentType,
+        elemento.category
+      ]
+        .filter(Boolean)
+        .map(value => String(value).toLowerCase());
+
+      const hasMesaType = typeCandidates.some(type => type.includes('mesa'));
+      const hasSeatCollection = Array.isArray(elemento.sillas) && elemento.sillas.length > 0;
+
+      if (!hasMesaType && !hasSeatCollection) {
+        return;
+      }
+
+      const mesaId = String(elemento._id);
+      const existingMesa = mesasMap.get(mesaId) || {};
+      mesasMap.set(mesaId, { ...existingMesa, ...elemento });
+    });
+
+    return Array.from(mesasMap.values());
+  }, [rawMapElements]);
 
   // Validar y normalizar las mesas
-  const validatedMesas = mesas
-    .filter(mesa => mesa && mesa._id) // Filtrar mesas válidas
-    .map(mesa => ({
-      ...mesa,
-      posicion: {
-        x: mesa.posicion?.x ?? mesa.x ?? 0,
-        y: mesa.posicion?.y ?? mesa.y ?? 0
-      },
-      width: mesa.width ?? mesa.ancho ?? 100,
-      height: mesa.height ?? mesa.alto ?? 80,
-      radius: mesa.radius ?? 50
-    }));
+  const validatedMesas = useMemo(() => (
+    mesas
+      .filter(mesa => mesa && mesa._id) // Filtrar mesas válidas
+      .map(mesa => ({
+        ...mesa,
+        posicion: {
+          x: mesa.posicion?.x ?? mesa.x ?? 0,
+          y: mesa.posicion?.y ?? mesa.y ?? 0
+        },
+        width: mesa.width ?? mesa.ancho ?? 100,
+        height: mesa.height ?? mesa.alto ?? 80,
+        radius: mesa.radius ?? 50
+      }))
+  ), [mesas]);
 
-     // Los asientos ya vienen validados del hook de sincronización
-   const validatedSeats = allSeats;
+  // Los asientos ya vienen validados del hook de sincronización
+  const validatedSeats = allSeats;
 
   // Calcular dimensiones máximas de manera segura
   let maxX = 800;
