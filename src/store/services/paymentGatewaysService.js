@@ -429,6 +429,26 @@ export const createPaymentTransaction = async (transactionData) => {
 
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+    const findUuidInValue = (value) => {
+      if (!value) return null;
+
+      if (typeof value === 'string') {
+        const match = value.match(uuidRegex);
+        if (match) {
+          return match[0];
+        }
+      }
+
+      if (typeof value === 'object') {
+        for (const key of Object.keys(value)) {
+          const found = findUuidInValue(value[key]);
+          if (found) return found;
+        }
+      }
+
+      return null;
+    };
+
     // Extraer user_id del objeto user o de diferentes estructuras
     let userId = extractUserId(transactionData.userId) || extractUserId(transactionData.user);
     if (userId) {
@@ -446,8 +466,13 @@ export const createPaymentTransaction = async (transactionData) => {
       if (parsedFromJson && typeof parsedFromJson === 'string' && uuidRegex.test(parsedFromJson)) {
         userId = parsedFromJson;
       } else {
-        console.warn('Invalid userId format, expected UUID. Received:', userId);
-        userId = null;
+        const uuidFromValue = findUuidInValue(parsedFromJson || userId);
+        if (uuidFromValue) {
+          userId = uuidFromValue;
+        } else {
+          console.warn('Invalid userId format, expected UUID. Received:', userId);
+          userId = null;
+        }
       }
     }
 
@@ -463,18 +488,23 @@ export const createPaymentTransaction = async (transactionData) => {
         }
 
         const normalizedId = normalizeUserIdString(value);
-        if (normalizedId && typeof normalizedId === 'string') {
+        const finalId =
+          (normalizedId && typeof normalizedId === 'string' && uuidRegex.test(normalizedId)
+            ? normalizedId
+            : findUuidInValue(normalizedId || value)) || (uuidRegex.test(userId || '') ? userId : null);
+
+        if (finalId) {
           return {
-            id: normalizedId,
-            user_id: normalizedId,
-            userId: normalizedId,
+            id: finalId,
+            user_id: finalId,
+            userId: finalId,
           };
         }
 
         return {
-          id: userId || null,
-          user_id: userId || null,
-          userId: userId || null,
+          id: uuidRegex.test(userId || '') ? userId : findUuidInValue(value) || null,
+          user_id: uuidRegex.test(userId || '') ? userId : findUuidInValue(value) || null,
+          userId: uuidRegex.test(userId || '') ? userId : findUuidInValue(value) || null,
           raw: value,
         };
       }
