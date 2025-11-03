@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Modal from 'react-modal';
 import API_BASE_URL from '../../../utils/apiBase';
 import { FaFacebookF } from 'react-icons/fa';
@@ -53,7 +53,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   });
 
   // Métodos de pago disponibles con iconos
-  const availableMethods = [
+  const availableMethods = useMemo(() => [
     {
       id: 'stripe',
       name: 'Stripe',
@@ -117,10 +117,12 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
       description: 'Pagos en efectivo',
       recommended: false
     }
-  ];
+  ], []);
 
   // Fetch available payment methods on mount
   useEffect(() => {
+    let isSubscribed = true;
+
     const fetchMetodos = async () => {
       try {
         // Cargar métodos de pago desde Supabase
@@ -131,6 +133,8 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         if (error && error.code !== 'PGRST116') { // PGRST116 = tabla no existe
           console.warn('Error loading payment methods:', error);
         }
+
+        if (!isSubscribed) return;
 
         // Si no hay datos en la BD, usar los métodos por defecto
         if (!methods || methods.length === 0) {
@@ -155,27 +159,9 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           });
           setMetodos(combinedMethods);
         }
-
-        // Activar todos los métodos por defecto si no hay configuración específica del evento
-        const activos = availableMethods.map(m => m.id);
-        if (!eventoData?.otrasOpciones?.metodosPagoPermitidos?.length) {
-          setForm(prev => ({
-            ...prev,
-            otrasOpciones: {
-              ...prev.otrasOpciones,
-              metodosPagoPermitidos: activos
-            }
-          }));
-          setEventoData(prev => ({
-            ...prev,
-            otrasOpciones: {
-              ...prev.otrasOpciones,
-              metodosPagoPermitidos: activos
-            }
-          }));
-        }
       } catch (e) {
         console.error('Error cargando métodos de pago', e);
+        if (!isSubscribed) return;
         // Fallback a métodos por defecto
         setMetodos(availableMethods.map(method => ({
           _id: method.id,
@@ -186,8 +172,58 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         })));
       }
     };
+
     fetchMetodos();
-  }, [setEventoData]);
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [availableMethods]);
+
+  useEffect(() => {
+    if (!eventoData) {
+      return;
+    }
+
+    const selection = eventoData?.otrasOpciones?.metodosPagoPermitidos;
+    const hasExplicitSelection = Array.isArray(selection) && selection.length > 0;
+    const isExistingEvent = Boolean(eventoData?.id);
+
+    // Para eventos nuevos sin configuración previa, activar todos por defecto.
+    if (hasExplicitSelection || (isExistingEvent && Array.isArray(selection))) {
+      return;
+    }
+
+    const activos = availableMethods.map(m => m.id);
+
+    setForm(prev => ({
+      ...prev,
+      otrasOpciones: {
+        ...prev.otrasOpciones,
+        metodosPagoPermitidos: activos
+      }
+    }));
+
+    setEventoData(prev => {
+      if (!prev) return prev;
+
+      const prevSelection = prev?.otrasOpciones?.metodosPagoPermitidos;
+      const prevHasExplicit = Array.isArray(prevSelection) && prevSelection.length > 0;
+      const prevIsExisting = Boolean(prev?.id);
+
+      if (prevHasExplicit || (prevIsExisting && Array.isArray(prevSelection))) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        otrasOpciones: {
+          ...prev.otrasOpciones,
+          metodosPagoPermitidos: activos
+        }
+      };
+    });
+  }, [eventoData, setEventoData, availableMethods]);
 
   // When the selected event changes, update local form state
   useEffect(() => {
