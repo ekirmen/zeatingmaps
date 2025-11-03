@@ -10,7 +10,7 @@ export const getUserByEmail = async (email) => {
   // Go directly to profiles table
   const { data, error } = await client
     .from('profiles')
-    .select('id, login, email')
+    .select('id, login')
     .eq('login', email)
     .maybeSingle();
 
@@ -22,9 +22,9 @@ export const getUserByEmail = async (email) => {
     data: { 
       user: { 
         id: data.id, 
-        email: data.login || data.email 
-      } 
-    }, 
+        email: data.login
+      }
+    },
     error: null 
   };
 };
