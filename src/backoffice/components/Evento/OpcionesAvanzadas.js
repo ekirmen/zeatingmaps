@@ -125,7 +125,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
       try {
         // Cargar métodos de pago desde Supabase
         const { data: methods, error } = await supabase
-          .from('payment_methods_global')
+          .from('payment_methods')
           .select('*');
 
         if (error && error.code !== 'PGRST116') { // PGRST116 = tabla no existe
