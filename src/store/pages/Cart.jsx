@@ -198,7 +198,7 @@ const Cart = () => {
             setPendingCheckout(true);
             window.dispatchEvent(
                 new CustomEvent('store:open-account-modal', {
-                    detail: { mode: 'login', source: 'cart' }
+                    detail: { mode: 'login', source: 'cart', redirectTo: '/store/payment' }
                 })
             );
             return;

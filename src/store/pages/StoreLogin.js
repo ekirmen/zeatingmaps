@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Modal, Input, Button, message } from 'antd';
@@ -26,8 +26,21 @@ const StoreLogin = () => {
   const [forgotEmail, setForgotEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Obtener la ruta de donde vino el usuario
-  const from = location.state?.from?.pathname || '/store';
+  const fromLocation = location.state?.from;
+  const redirectPath = useMemo(() => {
+    if (!fromLocation) {
+      return '/store';
+    }
+
+    if (typeof fromLocation === 'string') {
+      return fromLocation;
+    }
+
+    const pathname = fromLocation.pathname || '/store';
+    const search = fromLocation.search || '';
+    const hash = fromLocation.hash || '';
+    return `${pathname}${search}${hash}`;
+  }, [fromLocation]);
 
   const handleRegister = async () => {
     try {
@@ -73,7 +86,7 @@ const StoreLogin = () => {
         message.success(t('login.success'));
         setFormData({ email: '', password: '' });
         // Redirigir a la página de donde vino o al store
-        navigate(from, { replace: true });
+        navigate(redirectPath, { replace: true });
       } else {
         message.success(t('login.email_sent'));
       }

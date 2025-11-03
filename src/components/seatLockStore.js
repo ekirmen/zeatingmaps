@@ -375,25 +375,74 @@ export const useSeatLockStore = create((set, get) => ({
       try {
         console.log('🔄 [SEAT_LOCK_STORE] Cargando datos iniciales para función:', funcionId);
         
-        // 1. Cargar datos de seat_locks
-        const { data: seatLocksData, error: seatLocksError } = await supabase
-          .from('seat_locks')
-          .select('seat_id, table_id, session_id, locked_at, status, lock_type, user_id, metadata')
-          .eq('funcion_id', funcionId);
+        const tenantId = getCurrentTenantId();
+        let seatLocksData = [];
+        let seatLocksError = null;
+        let paymentData = [];
+        let paymentError = null;
 
-        if (seatLocksError) {
-          console.error('❌ [SEAT_LOCK_STORE] Error cargando seat_locks:', seatLocksError);
+        try {
+          const { data, error } = await supabase
+            .from('seat_locks')
+            .select('seat_id, table_id, session_id, locked_at, status, lock_type, user_id, metadata')
+            .eq('funcion_id', funcionId);
+
+          seatLocksData = Array.isArray(data) ? data : [];
+          seatLocksError = error || null;
+
+          if (seatLocksError) {
+            console.error('❌ [SEAT_LOCK_STORE] Error cargando seat_locks:', seatLocksError);
+          }
+        } catch (error) {
+          seatLocksError = error;
+          console.error('❌ [SEAT_LOCK_STORE] Error inesperado cargando seat_locks:', error);
         }
 
-        // 2. Cargar datos de payment_transactions (asientos vendidos)
-        const { data: paymentData, error: paymentError } = await supabase
-          .from('payment_transactions')
-          .select('seats, user_id, status')
-          .eq('funcion_id', funcionId)
-          .eq('status', 'completed');
+        try {
+          const { data, error } = await supabase
+            .from('payment_transactions')
+            .select('seats, user_id, status')
+            .eq('funcion_id', funcionId)
+            .eq('status', 'completed');
 
-        if (paymentError) {
-          console.error('❌ [SEAT_LOCK_STORE] Error cargando payment_transactions:', paymentError);
+          paymentData = Array.isArray(data) ? data : [];
+          paymentError = error || null;
+
+          if (paymentError) {
+            console.error('❌ [SEAT_LOCK_STORE] Error cargando payment_transactions:', paymentError);
+          }
+        } catch (error) {
+          paymentError = error;
+          console.error('❌ [SEAT_LOCK_STORE] Error inesperado cargando payment_transactions:', error);
+        }
+
+        const shouldUseFallback =
+          seatLocksError ||
+          paymentError ||
+          (tenantId && (!Array.isArray(seatLocksData) || seatLocksData.length === 0) && (!Array.isArray(paymentData) || paymentData.length === 0));
+
+        if (shouldUseFallback) {
+          try {
+            const params = new URLSearchParams({ funcionId: String(funcionId) });
+            if (tenantId) {
+              params.set('tenantId', tenantId);
+            }
+
+            const response = await fetch(`/api/seat-locks/status?${params.toString()}`);
+            if (response.ok) {
+              const payload = await response.json();
+              seatLocksData = Array.isArray(payload.lockedSeats) ? payload.lockedSeats : [];
+              paymentData = Array.isArray(payload.transactions) ? payload.transactions : [];
+              console.log('🌐 [SEAT_LOCK_STORE] Datos cargados vía API fallback', {
+                seatLocks: seatLocksData.length,
+                transactions: paymentData.length
+              });
+            } else {
+              console.error('❌ [SEAT_LOCK_STORE] Fallback seat-locks API error:', await response.text());
+            }
+          } catch (fallbackError) {
+            console.error('❌ [SEAT_LOCK_STORE] Error en fallback de seat-locks API:', fallbackError);
+          }
         }
 
         // Datos cargados
