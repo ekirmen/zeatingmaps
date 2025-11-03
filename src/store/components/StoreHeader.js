@@ -51,6 +51,7 @@ const Header = ({ onLogin, onLogout }) => {
   });
   const [passwordVisibility, setPasswordVisibility] = useState({ login: false, register: false });
   const [isSubmitting, setIsSubmitting] = useState({ login: false, register: false, forgot: false });
+  const [postLoginRedirect, setPostLoginRedirect] = useState(null);
   
   // Close mobile drawer automatically on desktop viewport
   useEffect(() => {
@@ -180,7 +181,9 @@ const Header = ({ onLogin, onLogout }) => {
         if (user?.user_metadata?.password_set !== true) {
           setIsPasswordModalVisible(true);
         }
-        navigate(refParam ? `/store?ref=${refParam}` : '/store');
+        const targetPath = postLoginRedirect || (refParam ? `/store?ref=${refParam}` : '/store');
+        setPostLoginRedirect(null);
+        navigate(targetPath);
       } else {
         message.success(t('login.email_sent'));
       }
@@ -271,6 +274,7 @@ const Header = ({ onLogin, onLogout }) => {
       setForgotEmail('');
       setError('');
       setPasswordVisibility({ login: false, register: false });
+      setPostLoginRedirect(null);
       setIsAccountModalVisible(true);
     } catch (error) {
       // Silencioso
@@ -293,6 +297,9 @@ const Header = ({ onLogin, onLogout }) => {
       }
       setError('');
       setPasswordVisibility({ login: false, register: false });
+      const redirectTarget =
+        detail.redirectTo || detail.redirect_to || detail.redirect || null;
+      setPostLoginRedirect(redirectTarget);
       setIsAccountModalVisible(true);
     };
 

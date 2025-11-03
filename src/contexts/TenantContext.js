@@ -7,6 +7,7 @@ import {
   normalizeHostname,
   resolveTenantContext
 } from '../config/domainConfig';
+import { persistTenantId, resolveTenantId } from '../utils/tenantUtils';
 
 const TenantContext = createContext();
 
@@ -166,6 +167,18 @@ export const TenantProvider = ({ children }) => {
 
     detectTenant({ skipLoadingState: Boolean(cached) });
   }, [detectTenant]);
+
+  useEffect(() => {
+    if (currentTenant?.id) {
+      persistTenantId(currentTenant.id);
+      return;
+    }
+
+    const fallbackTenantId = resolveTenantId();
+    if (fallbackTenantId) {
+      persistTenantId(fallbackTenantId);
+    }
+  }, [currentTenant]);
 
   const value = {
     currentTenant,

@@ -13,6 +13,7 @@ import FacebookPixel from '../components/FacebookPixel';
 import { getFacebookPixelByEvent } from '../services/facebookPixelService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
+import { resolveTenantId } from '../../utils/tenantUtils';
 
 
 const Pay = () => {
@@ -46,7 +47,7 @@ const Pay = () => {
     if (!user) {
       window.dispatchEvent(
         new CustomEvent('store:open-account-modal', {
-          detail: { mode: 'login', source: 'pay' }
+          detail: { mode: 'login', source: 'pay', redirectTo: '/store/payment' }
         })
       );
     }
@@ -192,6 +193,17 @@ const Pay = () => {
         }
       }
 
+      const tenantCandidates = [
+        currentTenant?.id,
+        selectedGateway?.tenant_id,
+        selectedGateway?.tenantId,
+        cartItems?.[0]?.tenant_id,
+        cartItems?.[0]?.tenantId,
+        cartItems?.[0]?.tenant?.id,
+      ].filter(Boolean);
+
+      const resolvedTenantId = resolveTenantId(tenantCandidates[0]);
+
       const paymentData = {
         orderId: locator,
         amount: total,
@@ -204,7 +216,7 @@ const Pay = () => {
         },
         sessionId: seatSessionId,
         tenant: {
-          id: currentTenant?.id || null
+          id: resolvedTenantId
         },
         funcion: {
           id: functionId || null
@@ -229,7 +241,7 @@ const Pay = () => {
           amount: total,
           gateway_id: selectedGateway.method_id,
           user_id: user?.id || null,
-          tenant_id: currentTenant?.id || null,
+          tenant_id: resolvedTenantId,
           user: user
             ? {
                 ...user,
@@ -240,7 +252,9 @@ const Pay = () => {
                   null
               }
             : null,
-          tenant: currentTenant ? { ...currentTenant } : null
+          tenant: resolvedTenantId
+            ? { ...(currentTenant || {}), id: resolvedTenantId }
+            : currentTenant
         });
 
         // Limpiar carrito (sin intentar desbloquear asientos ya vendidos)

@@ -1,24 +1,12 @@
 import { supabase } from '../../supabaseClient';
-
-/**
- * Obtiene el tenant_id actual basado en el hostname
- */
-const getCurrentTenantId = () => {
-  const hostname = window.location.hostname;
-  
-  if (hostname === 'sistema.veneventos.com') {
-    return '9dbdb86f-8424-484c-bb76-0d9fa27573c8';
-  }
-  
-  return null;
-};
+import { resolveTenantId } from '../../utils/tenantUtils';
 
 /**
  * Obtiene todos los métodos de pago activos para el tenant actual
  */
 export const getActivePaymentMethods = async (tenantId = null) => {
   try {
-    const currentTenantId = tenantId || getCurrentTenantId();
+    const currentTenantId = tenantId || resolveTenantId();
     
     console.log('🔍 [PAYMENT_METHODS] Obteniendo métodos de pago activos...');
     console.log('🏢 [PAYMENT_METHODS] Tenant ID:', currentTenantId);
@@ -68,7 +56,7 @@ export const getActivePaymentMethods = async (tenantId = null) => {
  */
 export const getAllPaymentMethods = async (tenantId = null) => {
   try {
-    const currentTenantId = tenantId || getCurrentTenantId();
+    const currentTenantId = tenantId || resolveTenantId();
     
     if (!currentTenantId) {
       console.warn('No se pudo determinar el tenant_id actual');
@@ -95,7 +83,7 @@ export const getAllPaymentMethods = async (tenantId = null) => {
  */
 export const getPaymentMethodConfig = async (methodId, tenantId = null) => {
   try {
-    const currentTenantId = tenantId || getCurrentTenantId();
+    const currentTenantId = tenantId || resolveTenantId();
     
     if (!currentTenantId) {
       console.warn('No se pudo determinar el tenant_id actual');
@@ -185,7 +173,7 @@ export const getAvailablePaymentMethodIds = async () => {
  */
 export const updatePaymentMethodConfig = async (methodId, config, tenantId = null) => {
   try {
-    const currentTenantId = tenantId || getCurrentTenantId();
+    const currentTenantId = tenantId || resolveTenantId();
     
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');
@@ -215,7 +203,7 @@ export const updatePaymentMethodConfig = async (methodId, config, tenantId = nul
  */
 export const togglePaymentMethod = async (methodId, enabled, tenantId = null) => {
   try {
-    const currentTenantId = tenantId || getCurrentTenantId();
+    const currentTenantId = tenantId || resolveTenantId();
     
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');
@@ -245,7 +233,7 @@ export const togglePaymentMethod = async (methodId, enabled, tenantId = null) =>
  */
 export const createPaymentMethod = async (methodData, tenantId = null) => {
   try {
-    const currentTenantId = tenantId || getCurrentTenantId();
+    const currentTenantId = tenantId || resolveTenantId();
     
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');
@@ -275,7 +263,7 @@ export const createPaymentMethod = async (methodData, tenantId = null) => {
  */
 export const deletePaymentMethod = async (methodId, tenantId = null) => {
   try {
-    const currentTenantId = tenantId || getCurrentTenantId();
+    const currentTenantId = tenantId || resolveTenantId();
     
     if (!currentTenantId) {
       throw new Error('No se pudo determinar el tenant_id actual');
