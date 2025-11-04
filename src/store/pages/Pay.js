@@ -218,15 +218,23 @@ const Pay = () => {
           const { supabase } = await import('../../supabaseClient');
           const { data: funcionData, error: funcionError } = await supabase
             .from('funciones')
-            .select('evento_id, evento')
+            .select('evento_id')
             .eq('id', functionId)
             .single();
           
           if (!funcionError && funcionData) {
-            eventoId = funcionData.evento_id || funcionData.evento || null;
+            eventoId = funcionData.evento_id || null;
             console.log('✅ [PAY] Evento_id obtenido desde función:', eventoId);
           } else {
             console.warn('⚠️ [PAY] No se pudo obtener evento_id desde función:', funcionError);
+            if (funcionError) {
+              console.warn('⚠️ [PAY] Detalles del error:', {
+                message: funcionError.message,
+                code: funcionError.code,
+                details: funcionError.details,
+                hint: funcionError.hint
+              });
+            }
           }
         } catch (error) {
           console.warn('⚠️ [PAY] Error al obtener evento_id desde función:', error);

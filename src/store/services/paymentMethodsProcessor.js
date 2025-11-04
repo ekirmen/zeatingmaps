@@ -550,21 +550,36 @@ class EfectivoMethodProcessor extends PaymentMethodProcessor {
 }
 
 const createPaymentMethodProcessor = (method) => {
+  // Normalizar method_id para manejar variaciones (espacios, guiones, etc.)
+  const normalizedMethodId = (method.method_id || '').toLowerCase()
+    .replace(/\s+/g, '_')  // Reemplazar espacios con guiones bajos
+    .replace(/-/g, '_')     // Reemplazar guiones con guiones bajos
+    .trim();
+
   const processors = {
     stripe: StripeMethodProcessor,
     paypal: PayPalMethodProcessor,
     apple_pay: ApplePayMethodProcessor,
     google_pay: GooglePayMethodProcessor,
     transferencia: TransferenciaMethodProcessor,
+    transferencia_bancaria: TransferenciaMethodProcessor,
     pago_movil: PagoMovilMethodProcessor,
+    'pago_móvil': PagoMovilMethodProcessor,
+    'pago_movil': PagoMovilMethodProcessor,
+    'pago móvil': PagoMovilMethodProcessor,
     efectivo_tienda: EfectivoTiendaMethodProcessor,
     efectivo: EfectivoMethodProcessor,
     cashea: CasheaMethodProcessor,
   };
 
-  const ProcessorClass = processors[method.method_id];
+  const ProcessorClass = processors[normalizedMethodId] || processors[method.method_id];
   if (!ProcessorClass) {
-    throw new Error(`Procesador no encontrado para el método: ${method.method_id}`);
+    console.error('❌ [PAYMENT_PROCESSOR] Método no encontrado:', {
+      original: method.method_id,
+      normalized: normalizedMethodId,
+      available: Object.keys(processors)
+    });
+    throw new Error(`Procesador no encontrado para el método: ${method.method_id} (normalizado: ${normalizedMethodId})`);
   }
 
   return new ProcessorClass(method);

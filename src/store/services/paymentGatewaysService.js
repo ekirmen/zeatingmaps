@@ -600,18 +600,26 @@ export const createPaymentTransaction = async (transactionData) => {
         console.log('[PaymentTransaction] Obteniendo evento_id desde función:', funcionId);
         const { data: funcionData, error: funcionError } = await supabase
           .from('funciones')
-          .select('evento_id, evento')
+          .select('evento_id')
           .eq('id', funcionId)
           .single();
 
         if (!funcionError && funcionData) {
-          eventoId = sanitizeUuid(funcionData.evento_id || funcionData.evento, {
+          eventoId = sanitizeUuid(funcionData.evento_id, {
             fieldName: 'evento_id',
             required: false,
           });
           console.log('[PaymentTransaction] Evento_id obtenido desde función:', eventoId);
         } else {
           console.warn('[PaymentTransaction] No se pudo obtener evento_id desde función:', funcionError);
+          if (funcionError) {
+            console.warn('[PaymentTransaction] Detalles del error:', {
+              message: funcionError.message,
+              code: funcionError.code,
+              details: funcionError.details,
+              hint: funcionError.hint
+            });
+          }
         }
       } catch (error) {
         console.warn('[PaymentTransaction] Error al obtener evento_id desde función:', error);
