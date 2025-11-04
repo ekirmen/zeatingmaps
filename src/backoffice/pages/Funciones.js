@@ -359,6 +359,27 @@ const Funciones = () => {
     return value === '' ? null : value;
   };
 
+  // Helper function to convert ISO timestamp to datetime-local format (YYYY-MM-DDTHH:mm)
+  const formatDateTimeLocal = (isoString) => {
+    if (!isoString) return '';
+    try {
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) return '';
+      
+      // Get local date components
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch (error) {
+      console.error('Error formatting datetime-local:', error);
+      return '';
+    }
+  };
+
   // Helper function to convert empty strings to null for integer fields
   const formatIntegerField = (value) => {
     if (value === '' || value === null || value === undefined) return null;
@@ -1069,8 +1090,8 @@ const Funciones = () => {
         permitePagoPlazos: f.permite_pago_plazos ?? f.pago_a_plazos ?? false,
         cantidadCuotas: f.cantidad_cuotas || 0,
         diasEntrePagos: f.dias_entre_pagos || 0,
-        fechaInicioPagosPlazos: f.fecha_inicio_pagos_plazos || '',
-        fechaFinPagosPlazos: f.fecha_fin_pagos_plazos || '',
+        fechaInicioPagosPlazos: formatDateTimeLocal(f.fecha_inicio_pagos_plazos),
+        fechaFinPagosPlazos: formatDateTimeLocal(f.fecha_fin_pagos_plazos),
         permiteReserva: f.permite_reserva ?? f.permitir_reservas_web ?? false,
         mismaFechaCanales: f.misma_fecha_canales !== false,
 
