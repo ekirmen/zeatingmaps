@@ -20,6 +20,8 @@ import PaymentGateways from './pages/PaymentGateways';
 import Evento from './pages/Evento';
 import PlantillaPrecios from './pages/PlantillaPrecios';
 import Funciones from './pages/Funciones';
+import Cupos from './pages/Cupos';
+import PlantillasCupos from './pages/PlantillasCupos';
 import Abonos from './pages/Abonos';
 import CreateIva from './pages/CreateIva';
 import Boleteria from './pages/Boleteria';
@@ -186,7 +188,7 @@ const BackofficeAppWithRoles = () => {
             path="cupos" 
             element={
               <ProtectedRoute permission="funciones">
-                <Funciones />
+                <Cupos />
               </ProtectedRoute>
             } 
           />
@@ -194,7 +196,7 @@ const BackofficeAppWithRoles = () => {
             path="plantillas-cupos" 
             element={
               <ProtectedRoute permission="plantillas_precios">
-                <PlantillaPrecios />
+                <PlantillasCupos />
               </ProtectedRoute>
             } 
           />
