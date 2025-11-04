@@ -321,21 +321,33 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
 
     // Generar QR code
     console.log('🖼️ [PDF] Generando código QR...');
-    const qrData = JSON.stringify({
-      locator: payment.locator,
-      paymentId: payment.id,
-      timestamp: new Date().toISOString()
-    });
+    let qrImageBytes = null;
+    try {
+      const qrData = JSON.stringify({
+        locator: payment.locator,
+        paymentId: payment.id,
+        timestamp: new Date().toISOString()
+      });
 
-    const qrImageBytes = await QRCode.toBuffer(qrData, {
-      type: 'image/png',
-      width: 200,
-      margin: 1,
-      color: {
-        dark: '#000000',
-        light: '#FFFFFF'
-      }
-    });
+      qrImageBytes = await QRCode.toBuffer(qrData, {
+        type: 'image/png',
+        width: 200,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      });
+      console.log('✅ [PDF] Código QR generado exitosamente');
+    } catch (qrError) {
+      console.error('❌ [PDF] Error generando código QR:', qrError);
+      console.error('❌ [PDF] QR Error details:', {
+        message: qrError.message,
+        stack: qrError.stack
+      });
+      // Continuar sin QR si falla
+      qrImageBytes = null;
+    }
 
     // --- CARGAR IMÁGENES DEL EVENTO ---
     console.log('🖼️ [PDF] Cargando imágenes del evento...');
@@ -381,12 +393,25 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
                 const response = await fetch(imageUrl);
                 if (response.ok) {
                   const imageBuffer = await response.arrayBuffer();
-                  eventImages[imageType] = await pdfDoc.embedPng(imageBuffer);
-                  console.log(`✅ [PDF] ${imageType} cargado exitosamente`);
+                  // Intentar cargar como PNG primero, luego JPEG
+                  try {
+                    eventImages[imageType] = await pdfDoc.embedPng(imageBuffer);
+                    console.log(`✅ [PDF] ${imageType} cargado como PNG exitosamente`);
+                  } catch (pngError) {
+                    try {
+                      eventImages[imageType] = await pdfDoc.embedJpg(imageBuffer);
+                      console.log(`✅ [PDF] ${imageType} cargado como JPEG exitosamente`);
+                    } catch (jpgError) {
+                      console.warn(`⚠️ [PDF] ${imageType} no es PNG ni JPEG, se omitirá:`, jpgError.message);
+                    }
+                  }
+                } else {
+                  console.warn(`⚠️ [PDF] Error HTTP al cargar ${imageType}:`, response.status, response.statusText);
                 }
               }
             } catch (imgError) {
               console.warn(`⚠️ [PDF] Error cargando ${imageType}:`, imgError.message);
+              console.warn(`⚠️ [PDF] Stack:`, imgError.stack);
             }
           }
         }
@@ -513,34 +538,103 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
 
     // 4. QR CODE Y INFORMACIÓN IMPORTANTE (centro-derecho)
     console.log('🖼️ [PDF] Insertando código QR en centro-derecho...');
-    const qrImage = await pdfDoc.embedPng(qrImageBytes);
     const qrSize = 120;
     const qrX = width - qrSize - 50;
     const qrY = height - 200;
+    
+    if (qrImageBytes) {
+      try {
+        const qrImage = await pdfDoc.embedPng(qrImageBytes);
+        page.drawImage(qrImage, {
+          x: qrX,
+          y: qrY,
+          width: qrSize,
+          height: qrSize,
+        });
 
-    page.drawImage(qrImage, {
-      x: qrX,
-      y: qrY,
-      width: qrSize,
-      height: qrSize,
-    });
+        // Información importante junto al QR
+        page.drawText('CÓDIGO DE VALIDACIÓN', {
+          x: qrX,
+          y: qrY - 20,
+          size: 12,
+          color: rgb(0.1, 0.1, 0.1),
+          font: helveticaBold
+        });
 
-    // Información importante junto al QR
-    page.drawText('CÓDIGO DE VALIDACIÓN', {
-      x: qrX,
-      y: qrY - 20,
-      size: 12,
-      color: rgb(0.1, 0.1, 0.1),
-      font: helveticaBold
-    });
-
-    page.drawText('Escanea para validar entrada', {
-      x: qrX,
-      y: qrY - 35,
-      size: 10,
-      color: rgb(0.3,0.3,0.3),
-      font: helveticaFont
-    });
+        page.drawText('Escanea para validar entrada', {
+          x: qrX,
+          y: qrY - 35,
+          size: 10,
+          color: rgb(0.3,0.3,0.3),
+          font: helveticaFont
+        });
+      } catch (qrEmbedError) {
+        console.error('❌ [PDF] Error embediendo QR en PDF:', qrEmbedError);
+        // Dibujar un placeholder si el QR falla
+        page.drawRectangle({ 
+          x: qrX, 
+          y: qrY, 
+          width: qrSize, 
+          height: qrSize, 
+          color: rgb(0.95,0.95,0.95), 
+          borderColor: rgb(0.8,0.8,0.8), 
+          borderWidth: 1 
+        });
+        page.drawText('QR', { 
+          x: qrX + qrSize/2 - 10, 
+          y: qrY + qrSize/2 - 8, 
+          size: 16, 
+          color: rgb(0.6,0.6,0.6), 
+          font: helveticaBold 
+        });
+        page.drawText('CÓDIGO DE VALIDACIÓN', {
+          x: qrX,
+          y: qrY - 20,
+          size: 12,
+          color: rgb(0.1, 0.1, 0.1),
+          font: helveticaBold
+        });
+        page.drawText(`Localizador: ${payment.locator}`, {
+          x: qrX,
+          y: qrY - 35,
+          size: 10,
+          color: rgb(0.3,0.3,0.3),
+          font: helveticaFont
+        });
+      }
+    } else {
+      // Si no se pudo generar el QR, dibujar un placeholder
+      page.drawRectangle({ 
+        x: qrX, 
+        y: qrY, 
+        width: qrSize, 
+        height: qrSize, 
+        color: rgb(0.95,0.95,0.95), 
+        borderColor: rgb(0.8,0.8,0.8), 
+        borderWidth: 1 
+      });
+      page.drawText('QR', { 
+        x: qrX + qrSize/2 - 10, 
+        y: qrY + qrSize/2 - 8, 
+        size: 16, 
+        color: rgb(0.6,0.6,0.6), 
+        font: helveticaBold 
+      });
+      page.drawText('CÓDIGO DE VALIDACIÓN', {
+        x: qrX,
+        y: qrY - 20,
+        size: 12,
+        color: rgb(0.1, 0.1, 0.1),
+        font: helveticaBold
+      });
+      page.drawText(`Localizador: ${payment.locator}`, {
+        x: qrX,
+        y: qrY - 35,
+        size: 10,
+        color: rgb(0.3,0.3,0.3),
+        font: helveticaFont
+      });
+    }
 
     // 5. ASIENTOS (lado izquierdo) con mesa/fila/asiento
     if (payment.seats && payment.seats.length > 0) {
