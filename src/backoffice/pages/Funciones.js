@@ -266,7 +266,10 @@ const Funciones = () => {
     idSpecialProductsTemplate: null,
     idPlantillaCupos: null,
     permitePagoPlazos: false,
-    numPlazosPago: 0,
+    cantidadCuotas: 0,
+    diasEntrePagos: 0,
+    fechaInicioPagosPlazos: '',
+    fechaFinPagosPlazos: '',
     permiteReserva: false,
     mismaFechaCanales: true,
     fechaInicioVenta: '',
@@ -479,7 +482,10 @@ const Funciones = () => {
       idSpecialProductsTemplate: null,
       idPlantillaCupos: null,
       permitePagoPlazos: false,
-      numPlazosPago: 0,
+      cantidadCuotas: 0,
+      diasEntrePagos: 0,
+      fechaInicioPagosPlazos: '',
+      fechaFinPagosPlazos: '',
       permiteReserva: false,
       mismaFechaCanales: true,
       fechaInicioVenta: '',
@@ -595,7 +601,10 @@ const Funciones = () => {
           streaming_transmission_stop,
           plantilla_cupos,
           id_barcode_pool,
-          num_plazos_pago,
+          cantidad_cuotas,
+          dias_entre_pagos,
+          fecha_inicio_pagos_plazos,
+          fecha_fin_pagos_plazos,
           misma_fecha_canales,
           cancellation_date_selected,
           end_date_cancellation,
@@ -912,7 +921,10 @@ const Funciones = () => {
         plantilla_comisiones: formatIntegerField(nuevaFuncion.idSpecialProductsTemplate),
         plantilla_cupos: formatIntegerField(nuevaFuncion.idPlantillaCupos),
         permite_pago_plazos: nuevaFuncion.permitePagoPlazos,
-        num_plazos_pago: formatIntegerField(nuevaFuncion.numPlazosPago),
+        cantidad_cuotas: formatIntegerField(nuevaFuncion.cantidadCuotas),
+        dias_entre_pagos: formatIntegerField(nuevaFuncion.diasEntrePagos),
+        fecha_inicio_pagos_plazos: formatTimestampField(nuevaFuncion.fechaInicioPagosPlazos),
+        fecha_fin_pagos_plazos: formatTimestampField(nuevaFuncion.fechaFinPagosPlazos),
         permite_reserva: nuevaFuncion.permiteReserva,
         misma_fecha_canales: nuevaFuncion.mismaFechaCanales,
         inicio_venta: nuevaFuncion.fechaInicioVenta,
@@ -1055,7 +1067,10 @@ const Funciones = () => {
 
         // Opciones
         permitePagoPlazos: f.permite_pago_plazos ?? f.pago_a_plazos ?? false,
-        numPlazosPago: typeof f.num_plazos_pago === 'number' ? f.num_plazos_pago : 0,
+        cantidadCuotas: f.cantidad_cuotas || 0,
+        diasEntrePagos: f.dias_entre_pagos || 0,
+        fechaInicioPagosPlazos: f.fecha_inicio_pagos_plazos || '',
+        fechaFinPagosPlazos: f.fecha_fin_pagos_plazos || '',
         permiteReserva: f.permite_reserva ?? f.permitir_reservas_web ?? false,
         mismaFechaCanales: f.misma_fecha_canales !== false,
 
@@ -1821,20 +1836,57 @@ const Funciones = () => {
                       </label>
                     </div>
                     {nuevaFuncion.permitePagoPlazos && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Número máximo de pagos
-                        </label>
-                        <select
-                          className="border p-2 w-full rounded"
-                          value={nuevaFuncion.numPlazosPago}
-                          onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, numPlazosPago: parseInt(e.target.value) })}
-                        >
-                          <option value={0}>Selecciona el máximo número de plazos</option>
-                          {NUM_PLAZOS.map(num => (
-                            <option key={num} value={num}>{num}</option>
-                          ))}
-                        </select>
+                      <div className="space-y-4 mt-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Cantidad de cuotas
+                          </label>
+                          <input
+                            type="number"
+                            min="2"
+                            max="12"
+                            className="border p-2 w-full rounded"
+                            value={nuevaFuncion.cantidadCuotas || ''}
+                            onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, cantidadCuotas: parseInt(e.target.value) || 0 })}
+                            placeholder="Ej: 3"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Días entre pagos
+                          </label>
+                          <input
+                            type="number"
+                            min="1"
+                            max="365"
+                            className="border p-2 w-full rounded"
+                            value={nuevaFuncion.diasEntrePagos || ''}
+                            onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, diasEntrePagos: parseInt(e.target.value) || 0 })}
+                            placeholder="Ej: 30"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Fecha inicio pagos a plazos
+                          </label>
+                          <input
+                            type="datetime-local"
+                            className="border p-2 w-full rounded"
+                            value={nuevaFuncion.fechaInicioPagosPlazos || ''}
+                            onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaInicioPagosPlazos: e.target.value })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Fecha fin pagos a plazos
+                          </label>
+                          <input
+                            type="datetime-local"
+                            className="border p-2 w-full rounded"
+                            value={nuevaFuncion.fechaFinPagosPlazos || ''}
+                            onChange={(e) => setNuevaFuncion({ ...nuevaFuncion, fechaFinPagosPlazos: e.target.value })}
+                          />
+                        </div>
                       </div>
                     )}
                   </div>

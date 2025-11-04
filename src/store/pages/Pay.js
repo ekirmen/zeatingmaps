@@ -14,6 +14,7 @@ import { getFacebookPixelByEvent } from '../services/facebookPixelService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { resolveTenantId } from '../../utils/tenantUtils';
+import { verificarPagosPlazosActivos, calcularCuotas } from '../../services/cuotasPagosService';
 
 
 const Pay = () => {
@@ -41,6 +42,9 @@ const Pay = () => {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [facebookPixel, setFacebookPixel] = useState(null);
   const [pricesWithFees] = useState({});
+  const [pagosPlazosActivos, setPagosPlazosActivos] = useState(null);
+  const [cuotasSeleccionadas, setCuotasSeleccionadas] = useState(0); // 0 = todas, 1, 2, 3 = número de cuotas
+  const [cuotasCalculadas, setCuotasCalculadas] = useState([]);
 
   // Check authentication on component mount
   useEffect(() => {
@@ -110,6 +114,30 @@ const Pay = () => {
       console.log('❌ [PAY] Usuario NO autenticado, no se cargan métodos de pago');
     }
   }, [cartItems, total, user]);
+
+  // Verificar pagos a plazos activos
+  useEffect(() => {
+    const verificarPlazos = async () => {
+      if (functionId) {
+        try {
+          const info = await verificarPagosPlazosActivos(functionId);
+          setPagosPlazosActivos(info);
+          if (info.activo) {
+            const cuotas = calcularCuotas(total, info.cantidadCuotas);
+            setCuotasCalculadas(cuotas);
+            setCuotasSeleccionadas(0); // Por defecto, todas las cuotas
+          }
+        } catch (error) {
+          console.error('Error verificando pagos a plazos:', error);
+          setPagosPlazosActivos({ activo: false });
+        }
+      } else {
+        setPagosPlazosActivos({ activo: false });
+      }
+    };
+
+    verificarPlazos();
+  }, [functionId, total]);
 
   // Suscribirse a cambios de bloqueo de asientos en tiempo real
   useEffect(() => {
@@ -498,6 +526,47 @@ const Pay = () => {
                         <span>Total</span>
                         <span>${total.toFixed(2)}</span>
                       </div>
+
+                      {/* Opciones de Pagos a Plazos */}
+                      {pagosPlazosActivos?.activo && cuotasCalculadas.length > 0 && (
+                        <div className="border-t border-gray-200 pt-4 mt-4">
+                          <h4 className="store-text-sm md:store-text-base store-font-semibold mb-3">Pago a Plazos Disponible</h4>
+                          <div className="space-y-3">
+                            <div className="bg-blue-50 p-3 rounded-lg">
+                              <p className="store-text-xs md:store-text-sm text-blue-800 mb-2">
+                                Puedes pagar en {pagosPlazosActivos.cantidadCuotas} cuotas de ${(total / pagosPlazosActivos.cantidadCuotas).toFixed(2)} cada una
+                              </p>
+                              <div className="space-y-2">
+                                <label className="block store-text-xs md:store-text-sm font-medium text-gray-700">
+                                  ¿Cuántas cuotas deseas pagar ahora?
+                                </label>
+                                <select
+                                  className="w-full border border-gray-300 rounded-md px-3 py-2 store-text-sm"
+                                  value={cuotasSeleccionadas}
+                                  onChange={(e) => setCuotasSeleccionadas(parseInt(e.target.value))}
+                                >
+                                  <option value={0}>Todas las cuotas ({pagosPlazosActivos.cantidadCuotas})</option>
+                                  {cuotasCalculadas.slice(0, 3).map((cuota, index) => (
+                                    <option key={index + 1} value={index + 1}>
+                                      {index + 1} cuota{index + 1 > 1 ? 's' : ''} - ${cuotasCalculadas.slice(0, index + 1).reduce((sum, c) => sum + c.monto, 0).toFixed(2)}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                              {cuotasSeleccionadas > 0 && (
+                                <div className="mt-3 p-2 bg-white rounded border border-blue-200">
+                                  <p className="store-text-xs md:store-text-sm text-gray-700">
+                                    <strong>Monto a pagar ahora:</strong> ${cuotasCalculadas.slice(0, cuotasSeleccionadas).reduce((sum, c) => sum + c.monto, 0).toFixed(2)}
+                                  </p>
+                                  <p className="store-text-xs text-gray-500 mt-1">
+                                    Quedarán {pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas} cuota{pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas !== 1 ? 's' : ''} pendiente{pagosPlazosActivos.cantidadCuotas - cuotasSeleccionadas !== 1 ? 's' : ''}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {selectedGateway && pricesWithFees[selectedGateway.id]?.hasFees && (
                         <>
