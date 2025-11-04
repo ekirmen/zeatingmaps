@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button, Card, message, Spin, Alert, Badge, Tag, Descriptions, Statistic } from 'antd';
 import { 
@@ -290,6 +290,52 @@ const ModernEventPage = () => {
     setSelectedFunctionId(functionId);
   };
 
+  // Cache para restricciones de múltiplos por función
+  const quantityStepCache = useRef(new Map());
+
+  // Cargar restricción de múltiplos en paralelo cuando cambia la función
+  useEffect(() => {
+    if (!selectedFunctionId || !evento) return;
+
+    const loadQuantityStep = async () => {
+      try {
+        const cacheKey = selectedFunctionId;
+        if (quantityStepCache.current.has(cacheKey)) {
+          return; // Ya está en cache
+        }
+
+        // Obtener recinto_id desde evento (más rápido que consultar función)
+        const recintoId = evento.recinto_id || evento.recinto;
+        
+        if (!recintoId) return;
+
+        // Consulta optimizada: solo obtener el máximo quantity_step
+        const { data: entradasData, error: entradasError } = await supabase
+          .from('entradas')
+          .select('quantity_step')
+          .eq('recinto', recintoId)
+          .eq('activo_store', true)
+          .not('quantity_step', 'is', null)
+          .limit(100); // Limitar resultados para eficiencia
+
+        if (!entradasError && entradasData && entradasData.length > 0) {
+          const quantityStep = Math.max(...entradasData.map(e => e.quantity_step || 0));
+          if (quantityStep > 0) {
+            quantityStepCache.current.set(cacheKey, quantityStep);
+          }
+        } else {
+          // Cachear null para evitar consultas repetidas
+          quantityStepCache.current.set(cacheKey, null);
+        }
+      } catch (error) {
+        console.warn('Error cargando restricción de múltiplos:', error);
+        quantityStepCache.current.set(selectedFunctionId, null);
+      }
+    };
+
+    loadQuantityStep();
+  }, [selectedFunctionId, evento]);
+
   const handleSeatToggle = async (seatOrId) => {
     if (!selectedFunctionId) return;
 
@@ -299,69 +345,46 @@ const ModernEventPage = () => {
       return;
     }
 
-    const isLocked = await isSeatLocked(seatId, selectedFunctionId);
-    if (isLocked && !(await isSeatLockedByMe(seatId, selectedFunctionId))) return;
+    // Verificación rápida de bloqueo (sin await para no bloquear)
+    const isLockedPromise = isSeatLocked(seatId, selectedFunctionId);
+    const isLockedByMePromise = isSeatLockedByMe(seatId, selectedFunctionId);
 
     const exists = selectedSeats.some(seat => seat._id === seatId);
 
     if (exists) {
-      await unlockSeat(seatId, selectedFunctionId);
+      // Optimistic update: remover inmediatamente de la UI
       removeSeatFromUnified(seatId);
-      removeFromCart(seatId); // Mantener compatibilidad con carrito existente
+      removeFromCart(seatId);
+      // Desbloquear en background
+      unlockSeat(seatId, selectedFunctionId).catch(err => {
+        console.warn('Error desbloqueando asiento:', err);
+      });
     } else {
-      // Validar restricción de múltiplos antes de agregar
-      try {
-        // Obtener función para obtener recinto_id
-        const { data: funcionData, error: funcionError } = await supabase
-          .from('funciones')
-          .select('evento_id, eventos!evento_id(recinto_id, recinto)')
-          .eq('id', selectedFunctionId)
-          .single();
+      // Validar restricción de múltiplos (sincrónico, desde cache)
+      const quantityStep = quantityStepCache.current.get(selectedFunctionId);
+      if (quantityStep && quantityStep > 0) {
+        const currentSeatCount = selectedSeats.length;
+        const newSeatCount = currentSeatCount + 1;
 
-        if (!funcionError && funcionData) {
-          const recintoId = funcionData.eventos?.recinto_id || funcionData.eventos?.recinto;
-          
-          if (recintoId) {
-            // Obtener entradas del recinto con restricción activa en store
-            const { data: entradasData, error: entradasError } = await supabase
-              .from('entradas')
-              .select('quantity_step, activo_store')
-              .eq('recinto', recintoId)
-              .eq('activo_store', true)
-              .not('quantity_step', 'is', null);
-
-            if (!entradasError && entradasData && entradasData.length > 0) {
-              // Obtener el quantity_step más restrictivo (el mayor)
-              const quantityStep = Math.max(...entradasData.map(e => e.quantity_step || 0));
-              
-              if (quantityStep > 0) {
-                // Contar asientos actuales en el carrito
-                const currentSeatCount = selectedSeats.length;
-                const newSeatCount = currentSeatCount + 1;
-
-                // Validar que el nuevo total sea múltiplo del quantity_step
-                if (newSeatCount % quantityStep !== 0) {
-                  const nextValidCount = Math.ceil(newSeatCount / quantityStep) * quantityStep;
-                  message.warning(
-                    `Solo puedes seleccionar múltiplos de ${quantityStep}. ` +
-                    `Tienes ${currentSeatCount} asiento${currentSeatCount !== 1 ? 's' : ''} seleccionado${currentSeatCount !== 1 ? 's' : ''}. ` +
-                    `Puedes seleccionar hasta ${nextValidCount} asiento${nextValidCount !== 1 ? 's' : ''}.`
-                  );
-                  return;
-                }
-              }
-            }
-          }
+        if (newSeatCount % quantityStep !== 0) {
+          const nextValidCount = Math.ceil(newSeatCount / quantityStep) * quantityStep;
+          message.warning(
+            `Solo puedes seleccionar múltiplos de ${quantityStep}. ` +
+            `Tienes ${currentSeatCount} asiento${currentSeatCount !== 1 ? 's' : ''} seleccionado${currentSeatCount !== 1 ? 's' : ''}. ` +
+            `Puedes seleccionar hasta ${nextValidCount} asiento${nextValidCount !== 1 ? 's' : ''}.`
+          );
+          return;
         }
-      } catch (error) {
-        console.warn('Error validando restricción de múltiplos:', error);
-        // Continuar con la selección si hay error en la validación
       }
 
-      const ok = await lockSeat(seatId, 'seleccionado', selectedFunctionId);
-      if (!ok) return;
-      
-      // Crear objeto de asiento para el store unificado
+      // Verificar bloqueo en paralelo
+      const [isLocked, isLockedByMe] = await Promise.all([isLockedPromise, isLockedByMePromise]);
+      if (isLocked && !isLockedByMe) {
+        message.warning('Este asiento ya está seleccionado por otro usuario');
+        return;
+      }
+
+      // Optimistic update: agregar inmediatamente a la UI
       const seatData = {
         _id: seatId,
         nombre: `Asiento ${seatId}`,
@@ -377,6 +400,21 @@ const ModernEventPage = () => {
         precio: 50, // Precio por defecto
         nombreZona: 'General',
         functionId: selectedFunctionId,
+      });
+
+      // Bloquear en background (no bloquear la UI)
+      lockSeat(seatId, 'seleccionado', selectedFunctionId).then(ok => {
+        if (!ok) {
+          // Si falla el bloqueo, revertir el cambio optimista
+          removeSeatFromUnified(seatId);
+          removeFromCart(seatId);
+          message.error('No se pudo seleccionar el asiento. Por favor, intenta nuevamente.');
+        }
+      }).catch(err => {
+        console.error('Error bloqueando asiento:', err);
+        removeSeatFromUnified(seatId);
+        removeFromCart(seatId);
+        message.error('Error al seleccionar el asiento');
       });
     }
   };
