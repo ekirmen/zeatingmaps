@@ -256,17 +256,33 @@ const Dashboard = () => {
 
   const loadUpcomingEvents = async () => {
     try {
+      // La vista eventos_con_funciones_activas puede no tener fecha_evento
+      // Intentar usar created_at o hacer una consulta alternativa
       const { data, error } = await supabase
         .from('eventos_con_funciones_activas')
         .select('*')
-        .gte('fecha_evento', new Date().toISOString())
-        .order('fecha_evento', { ascending: true })
+        .order('created_at', { ascending: false })
         .limit(5);
 
-      if (error) throw error;
+      if (error) {
+        // Si falla, intentar consulta directa a eventos
+        console.warn('Error con vista eventos_con_funciones_activas, usando eventos directamente:', error);
+        const { data: eventosData, error: eventosError } = await supabase
+          .from('eventos')
+          .select('*')
+          .eq('activo', true)
+          .order('created_at', { ascending: false })
+          .limit(5);
+        
+        if (eventosError) throw eventosError;
+        setUpcomingEvents(eventosData || []);
+        return;
+      }
+
       setUpcomingEvents(data || []);
     } catch (error) {
       console.error('Error loading upcoming events:', error);
+      setUpcomingEvents([]);
     }
   };
 

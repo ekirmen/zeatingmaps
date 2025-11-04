@@ -61,7 +61,11 @@ const Pay = () => {
         setLoadingMethods(true);
         console.log('🛒 [PAY] Cargando métodos de pago...');
         
-        const methods = await getActivePaymentMethods();
+        // Obtener el ID del evento del primer item del carrito
+        const eventId = cartItems?.[0]?.eventId || null;
+        console.log('🎫 [PAY] Event ID del carrito:', eventId);
+        
+        const methods = await getActivePaymentMethods(null, eventId);
         console.log('📋 [PAY] Métodos obtenidos de la BD:', methods);
         
         const validMethods = methods.filter(method => {

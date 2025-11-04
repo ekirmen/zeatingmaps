@@ -1256,6 +1256,14 @@ export const createPayment = async (data) => {
   const { tenantId, ...restData } = data || {};
   const computedTotal = Number(restData.amount) || Number(restData.monto) || calculateTotalAmount(validatedSeats);
   const normalizedTenantId = restData.tenant_id || tenantId || '9dbdb86f-8424-484c-bb76-0d9fa27573c8';
+  
+  // Normalizar campo user: debe ser UUID, no objeto
+  let normalizedUserId = restData.user_id || restData.userId || restData.usuario_id;
+  if (restData.user && typeof restData.user === 'object' && restData.user.id) {
+    normalizedUserId = restData.user.id;
+  } else if (restData.user && typeof restData.user === 'string') {
+    normalizedUserId = restData.user;
+  }
 
   const enrichedData = {
     ...restData,
@@ -1264,8 +1272,15 @@ export const createPayment = async (data) => {
     amount: computedTotal, // COLUMN REQUIRED (NOT NULL)
     monto: computedTotal,  // Mantener compatibilidad con código existente
     payment_gateway_id: restData.payment_gateway_id || '7e797aa6-ebbf-4b3a-8b5d-caa8992018f4', // Gateway por defecto (Reservas)
+    user: normalizedUserId, // Campo user debe ser UUID, no objeto
+    user_id: normalizedUserId, // Asegurar que user_id también esté establecido
     created_at: new Date().toISOString()
   };
+  
+  // Eliminar campos duplicados si existen
+  if (enrichedData.userId) {
+    delete enrichedData.userId;
+  }
 
   console.log('🔍 Datos enriquecidos para crear pago:', enrichedData);
   console.log('🔍 Tipo de seats:', typeof enrichedData.seats);

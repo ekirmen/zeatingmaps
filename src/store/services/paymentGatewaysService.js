@@ -680,7 +680,7 @@ export const createPaymentTransaction = async (transactionData) => {
       payment_method: transactionData.paymentMethod || transactionData.method || 'unknown',
       gateway_name: gatewayName,
       seats: normalizedSeats,
-      user: normalizedUser,
+      user: userId, // Campo user debe ser UUID, no objeto
       metadata: transactionData.metadata || null,
       // Campos adicionales para compatibilidad/reportes
       fecha: new Date().toISOString(),
@@ -690,8 +690,6 @@ export const createPaymentTransaction = async (transactionData) => {
       payment_gateway_id: paymentGatewayId,
       payments: computedPayments,
     };
-
-    insertData.payments = computedPayments;
     if (userId) {
       insertData.usuario_id = userId;
     }
@@ -706,7 +704,13 @@ export const createPaymentTransaction = async (transactionData) => {
 
     if (error) {
       console.error('[PaymentTransaction] Error en inserción:', error);
-      throw error;
+      // Mejorar el mensaje de error para debugging
+      const errorMessage = error.message || error.details || JSON.stringify(error);
+      const enhancedError = new Error(`Error al guardar la transacción de pago: ${errorMessage}`);
+      enhancedError.originalError = error;
+      enhancedError.code = error.code;
+      enhancedError.details = error.details;
+      throw enhancedError;
     }
 
     console.log('[PaymentTransaction] Transacción creada exitosamente:', data);

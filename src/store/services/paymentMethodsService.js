@@ -3,13 +3,16 @@ import { resolveTenantId } from '../../utils/tenantUtils';
 
 /**
  * Obtiene todos los métodos de pago activos para el tenant actual
+ * @param {string} tenantId - ID del tenant (opcional)
+ * @param {string} eventId - ID del evento para filtrar métodos permitidos (opcional)
  */
-export const getActivePaymentMethods = async (tenantId = null) => {
+export const getActivePaymentMethods = async (tenantId = null, eventId = null) => {
   try {
     const currentTenantId = tenantId || resolveTenantId();
     
     console.log('🔍 [PAYMENT_METHODS] Obteniendo métodos de pago activos...');
     console.log('🏢 [PAYMENT_METHODS] Tenant ID:', currentTenantId);
+    console.log('🎫 [PAYMENT_METHODS] Event ID:', eventId);
     
     if (!currentTenantId) {
       console.warn('⚠️ [PAYMENT_METHODS] No se pudo determinar el tenant_id actual');
@@ -21,7 +24,8 @@ export const getActivePaymentMethods = async (tenantId = null) => {
       table: 'payment_methods',
       enabled: true,
       tenant_id: currentTenantId,
-      tenant_id_type: typeof currentTenantId
+      tenant_id_type: typeof currentTenantId,
+      event_id: eventId
     });
 
     // Usar consulta directa (las políticas RLS ya están arregladas)
@@ -41,10 +45,39 @@ export const getActivePaymentMethods = async (tenantId = null) => {
       throw error;
     }
 
-    console.log('📊 [PAYMENT_METHODS] Métodos encontrados:', data?.length || 0);
-    console.log('📋 [PAYMENT_METHODS] Datos:', data);
+    let methods = data || [];
+
+    // Si hay un evento, filtrar por métodos permitidos
+    if (eventId) {
+      try {
+        const { data: eventoData, error: eventoError } = await supabase
+          .from('eventos')
+          .select('otrasOpciones')
+          .eq('id', eventId)
+          .single();
+
+        if (!eventoError && eventoData?.otrasOpciones) {
+          const otrasOpciones = typeof eventoData.otrasOpciones === 'string' 
+            ? JSON.parse(eventoData.otrasOpciones) 
+            : eventoData.otrasOpciones;
+
+          // Si hay métodos permitidos configurados, filtrar por ellos
+          if (otrasOpciones?.metodosPagoPermitidos && Array.isArray(otrasOpciones.metodosPagoPermitidos) && otrasOpciones.metodosPagoPermitidos.length > 0) {
+            console.log('🔍 [PAYMENT_METHODS] Filtrando por métodos permitidos del evento:', otrasOpciones.metodosPagoPermitidos);
+            methods = methods.filter(method => otrasOpciones.metodosPagoPermitidos.includes(method.method_id));
+            console.log('📊 [PAYMENT_METHODS] Métodos después del filtro del evento:', methods.length);
+          }
+        }
+      } catch (eventoError) {
+        console.warn('⚠️ [PAYMENT_METHODS] Error obteniendo configuración del evento:', eventoError);
+        // Continuar sin filtrar si hay error
+      }
+    }
+
+    console.log('📊 [PAYMENT_METHODS] Métodos encontrados:', methods.length);
+    console.log('📋 [PAYMENT_METHODS] Datos:', methods);
     
-    return data || [];
+    return methods;
   } catch (error) {
     console.error('❌ [PAYMENT_METHODS] Error fetching active payment methods:', error);
     return [];

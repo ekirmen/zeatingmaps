@@ -136,12 +136,13 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
 
         if (!isSubscribed) return;
 
-        // Si no hay datos en la BD, usar los métodos por defecto
+        // Si no hay datos en la BD, usar los métodos por defecto (desactivados)
         if (!methods || methods.length === 0) {
           setMetodos(availableMethods.map(method => ({
             _id: method.id,
             metodo: method.name,
-            activo: true,
+            activo: false, // Por defecto desactivados
+            habilitado: false, // No habilitado en payment-gateways
             icon: method.icon,
             description: method.description
           })));
@@ -149,10 +150,12 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           // Combinar con los métodos disponibles
           const combinedMethods = availableMethods.map(method => {
             const savedMethod = methods.find(m => m.method_id === method.id);
+            const estaHabilitado = savedMethod ? savedMethod.enabled : false;
             return {
               _id: method.id,
               metodo: method.name,
-              activo: savedMethod ? savedMethod.enabled : true,
+              activo: estaHabilitado, // Activo solo si está habilitado en payment-gateways
+              habilitado: estaHabilitado, // Indica si está habilitado en payment-gateways
               icon: method.icon,
               description: method.description
             };
@@ -162,11 +165,12 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
       } catch (e) {
         console.error('Error cargando métodos de pago', e);
         if (!isSubscribed) return;
-        // Fallback a métodos por defecto
+        // Fallback a métodos por defecto (desactivados)
         setMetodos(availableMethods.map(method => ({
           _id: method.id,
           metodo: method.name,
-          activo: true,
+          activo: false, // Por defecto desactivados
+          habilitado: false, // No habilitado en payment-gateways
           icon: method.icon,
           description: method.description
         })));
@@ -181,49 +185,71 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   }, [availableMethods]);
 
   useEffect(() => {
-    if (!eventoData) {
+    if (!eventoData || metodos.length === 0) {
       return;
     }
 
     const selection = eventoData?.otrasOpciones?.metodosPagoPermitidos;
-    const hasExplicitSelection = Array.isArray(selection) && selection.length > 0;
+    const hasExplicitSelection = Array.isArray(selection) && selection.length >= 0;
     const isExistingEvent = Boolean(eventoData?.id);
 
-    // Para eventos nuevos sin configuración previa, activar todos por defecto.
-    if (hasExplicitSelection || (isExistingEvent && Array.isArray(selection))) {
-      return;
-    }
+    // Para eventos nuevos sin configuración, activar solo los métodos habilitados en payment-gateways
+    if (!isExistingEvent && !hasExplicitSelection) {
+      // Obtener métodos habilitados en payment-gateways
+      const metodosHabilitados = metodos
+        .filter(m => m.habilitado === true)
+        .map(m => m._id);
 
-    const activos = availableMethods.map(m => m.id);
-
-    setForm(prev => ({
-      ...prev,
-      otrasOpciones: {
-        ...prev.otrasOpciones,
-        metodosPagoPermitidos: activos
-      }
-    }));
-
-    setEventoData(prev => {
-      if (!prev) return prev;
-
-      const prevSelection = prev?.otrasOpciones?.metodosPagoPermitidos;
-      const prevHasExplicit = Array.isArray(prevSelection) && prevSelection.length > 0;
-      const prevIsExisting = Boolean(prev?.id);
-
-      if (prevHasExplicit || (prevIsExisting && Array.isArray(prevSelection))) {
-        return prev;
-      }
-
-      return {
+      setForm(prev => ({
         ...prev,
         otrasOpciones: {
           ...prev.otrasOpciones,
-          metodosPagoPermitidos: activos
+          metodosPagoPermitidos: metodosHabilitados
         }
-      };
-    });
-  }, [eventoData, setEventoData, availableMethods]);
+      }));
+
+      setEventoData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          otrasOpciones: {
+            ...prev.otrasOpciones,
+            metodosPagoPermitidos: metodosHabilitados
+          }
+        };
+      });
+    } else if (hasExplicitSelection && isExistingEvent) {
+      // Para eventos existentes, filtrar métodos permitidos para que solo incluyan los habilitados
+      const metodosHabilitados = metodos
+        .filter(m => m.habilitado === true)
+        .map(m => m._id);
+      
+      // Filtrar métodos permitidos para excluir los que no están habilitados en payment-gateways
+      const metodosPermitidosFiltrados = selection.filter(m => metodosHabilitados.includes(m));
+      
+      // Solo actualizar si hay diferencias
+      if (metodosPermitidosFiltrados.length !== selection.length) {
+        setForm(prev => ({
+          ...prev,
+          otrasOpciones: {
+            ...prev.otrasOpciones,
+            metodosPagoPermitidos: metodosPermitidosFiltrados
+          }
+        }));
+
+        setEventoData(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            otrasOpciones: {
+              ...prev.otrasOpciones,
+              metodosPagoPermitidos: metodosPermitidosFiltrados
+            }
+          };
+        });
+      }
+    }
+  }, [eventoData, setEventoData, availableMethods, metodos]);
 
   // When the selected event changes, update local form state
   useEffect(() => {
@@ -308,6 +334,13 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   };
 
   const handleMetodoToggle = (metodo) => {
+    // Verificar si el método está habilitado en payment-gateways
+    const metodoInfo = metodos.find(m => m._id === metodo);
+    if (!metodoInfo || !metodoInfo.habilitado) {
+      // No permitir activar métodos que no están habilitados en payment-gateways
+      return;
+    }
+
     setForm(prev => {
       const seleccionado = prev.otrasOpciones.metodosPagoPermitidos.includes(metodo);
       const nuevos = seleccionado
@@ -419,21 +452,40 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         </label>
         {form.otrasOpciones.habilitarMetodosPago && (
           <div className="flex flex-col gap-2">
-            {metodos.map(m => (
-              <label key={m._id} className="inline-flex items-center gap-3 p-2 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.otrasOpciones.metodosPagoPermitidos.includes(m._id)}
-                  onChange={() => handleMetodoToggle(m._id)}
-                  className="mr-2"
-                />
-                <span className="text-lg">{m.icon}</span>
-                <div className="flex flex-col">
-                  <span className="font-medium">{m.metodo}</span>
-                  <span className="text-sm text-gray-500">{m.description}</span>
-                </div>
-              </label>
-            ))}
+            {metodos.map(m => {
+              const isEnabled = m.habilitado === true;
+              const isChecked = form.otrasOpciones.metodosPagoPermitidos.includes(m._id);
+              const isDisabled = !isEnabled;
+              
+              return (
+                <label 
+                  key={m._id} 
+                  className={`inline-flex items-center gap-3 p-2 border border-gray-200 rounded-md ${
+                    isDisabled 
+                      ? 'opacity-50 cursor-not-allowed bg-gray-100' 
+                      : 'hover:bg-gray-50 cursor-pointer'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked && isEnabled}
+                    onChange={() => handleMetodoToggle(m._id)}
+                    disabled={isDisabled}
+                    className="mr-2"
+                  />
+                  <span className="text-lg">{m.icon}</span>
+                  <div className="flex flex-col flex-1">
+                    <span className="font-medium">{m.metodo}</span>
+                    <span className="text-sm text-gray-500">{m.description}</span>
+                    {isDisabled && (
+                      <span className="text-xs text-red-500 mt-1">
+                        Debe estar activado en /dashboard/payment-gateways
+                      </span>
+                    )}
+                  </div>
+                </label>
+              );
+            })}
           </div>
         )}
       </div>
