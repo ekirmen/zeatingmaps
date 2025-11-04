@@ -524,23 +524,23 @@ const ModernEventPage = () => {
             })()}
           </div>
 
-          {/* Layout del mapa y carrito */}
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '24px', minHeight: '600px' }}>
-            {/* Mapa de asientos - 2/3 del ancho */}
-            <div style={{ flex: '2', minWidth: '0' }}>
+          {/* Layout del mapa y carrito - Responsive */}
+          <div className="flex flex-col lg:flex-row gap-4 md:gap-6 lg:gap-8 min-h-[600px]">
+            {/* Mapa de asientos - 2/3 del ancho en desktop, 100% en móvil */}
+            <div className="flex-1 lg:flex-[2] min-w-0 w-full lg:w-auto">
               <Card 
                 title={
                   <div className="flex items-center">
                     <ShoppingCartOutlined className="text-blue-500 mr-2" />
-                    <span className="font-semibold">
+                    <span className="font-semibold text-sm md:text-base">
                       {evento?.modoVenta === 'grid' ? 'Selección de Entradas' : 'Selección de Asientos'}
                     </span>
                   </div>
                 }
-                className="shadow-lg border-0"
-                style={{ height: '100%' }}
+                className="shadow-lg border-0 h-full"
+                bodyStyle={{ padding: '12px', height: 'calc(100% - 57px)', overflow: 'auto' }}
               >
-                <div style={{ width: '100%', height: '100%' }}>
+                <div className="w-full h-full min-h-[400px] md:min-h-[500px]">
                 {!canStoreAccess ? (
                   <NotFound title="404" message={`Este evento no está disponible (${eventStatus.text}).`} homePath="/store" />
                 ) : evento?.modoVenta === 'grid' ? (
@@ -568,27 +568,29 @@ const ModernEventPage = () => {
                     loading={mapLoading}
                   />
                 ) : mapLoading ? (
-                  <div className="flex items-center justify-center h-96">
+                  <div className="flex items-center justify-center h-full min-h-[400px]">
                     <Spin size="large" />
-                    <span className="ml-3">Cargando mapa de asientos...</span>
+                    <span className="ml-3 text-sm md:text-base">Cargando mapa de asientos...</span>
                   </div>
                 ) : mapa ? (
-                  <SeatingMapUnified
-                    mapa={mapa}
-                    funcionId={selectedFunctionId}
-                    selectedSeats={selectedSeats.map(seat => seat._id || seat.id)}
-                    onSeatToggle={handleSeatToggle}
-                    isSeatLocked={isSeatLocked}
-                    isSeatLockedByMe={isSeatLockedByMe}
-                    isTableLocked={isTableLocked}
-                    isTableLockedByMe={isTableLockedByMe}
-                    isAnySeatInTableLocked={isAnySeatInTableLocked}
-                    areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
-                    onTableToggle={handleTableToggle}
-                    // lockedSeats se obtiene automáticamente del useSeatLockStore
-                  />
+                  <div className="w-full h-full overflow-auto store-seating-map">
+                    <SeatingMapUnified
+                      mapa={mapa}
+                      funcionId={selectedFunctionId}
+                      selectedSeats={selectedSeats.map(seat => seat._id || seat.id)}
+                      onSeatToggle={handleSeatToggle}
+                      isSeatLocked={isSeatLocked}
+                      isSeatLockedByMe={isSeatLockedByMe}
+                      isTableLocked={isTableLocked}
+                      isTableLockedByMe={isTableLockedByMe}
+                      isAnySeatInTableLocked={isAnySeatInTableLocked}
+                      areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
+                      onTableToggle={handleTableToggle}
+                      // lockedSeats se obtiene automáticamente del useSeatLockStore
+                    />
+                  </div>
                 ) : (
-                  <div className="flex items-center justify-center h-96">
+                  <div className="flex items-center justify-center h-full min-h-[400px]">
                     <Alert
                       message="No hay mapa disponible"
                       description="Este evento no tiene un mapa de asientos configurado."
@@ -601,15 +603,17 @@ const ModernEventPage = () => {
               </Card>
             </div>
 
-            {/* Carrito - 1/3 del ancho */}
-            <div style={{ flex: '1', minWidth: '300px', maxWidth: '400px' }}>
-              <Cart
-                items={cartItems}
-                removeFromCart={removeFromCart}
-                getItemCount={getItemCount}
-                selectedFunctionId={selectedFunctionId}
-                evento={evento}
-              />
+            {/* Carrito - 1/3 del ancho en desktop, 100% en móvil */}
+            <div className="flex-1 lg:flex-[1] w-full lg:w-auto lg:max-w-[400px]">
+              <div className="sticky top-4">
+                <Cart
+                  items={cartItems}
+                  removeFromCart={removeFromCart}
+                  getItemCount={getItemCount}
+                  selectedFunctionId={selectedFunctionId}
+                  evento={evento}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -622,7 +626,7 @@ const ModernEventPage = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 store-event-page">
       {/* Hero Section */}
       <div className="relative h-64 md:h-80 overflow-hidden">
         <EventImage
@@ -712,7 +716,7 @@ const ModernEventPage = () => {
       </div>
 
       {/* Contenido principal */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-8 lg:py-12">
         {/* Estado del evento (bajado desde el hero) */}
         <div className="flex items-center gap-4 mb-6">
           <Badge status={eventStatus.status} text={eventStatus.text} />
