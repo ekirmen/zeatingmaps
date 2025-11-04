@@ -495,47 +495,50 @@ const EventosPage = ({ forceShowMap = false }) => {
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+          <div className="max-w-7xl mx-auto px-3 md:px-4 py-3 md:py-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4">
+              <div className="flex items-center space-x-2 md:space-x-4">
                 <Button 
                   type="text" 
                   icon={<ArrowLeftOutlined />}
                   onClick={handleBackToSelection}
-                  className="flex items-center"
+                  className="flex items-center p-2 md:p-4"
                 >
-                  Volver
+                  <span className="hidden sm:inline">Volver</span>
                 </Button>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">{evento.nombre}</h1>
-                  <p className="text-sm text-gray-600">
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 truncate">{evento.nombre}</h1>
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
                     {selectedFuncion?.nombre || 'Función'} - {selectedFuncion?.fecha_celebracion && formatDateString(selectedFuncion.fecha_celebracion)}
                   </p>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4">
-                <div className="text-right">
-                  <p className="text-sm text-gray-600">Items en carrito</p>
-                  <p className="text-lg font-bold text-blue-600">{getItemCount()}</p>
+              <div className="flex items-center justify-between sm:justify-end space-x-2 md:space-x-4">
+                <div className="text-left sm:text-right">
+                  <p className="text-xs sm:text-sm text-gray-600">Items en carrito</p>
+                  <p className="text-base sm:text-lg font-bold text-blue-600">{getItemCount()}</p>
                 </div>
                 <Button 
                   type="primary" 
                   icon={<ClockCircleOutlined />}
                   onClick={handleProceedToCart}
                   disabled={getItemCount() === 0}
+                  className="flex-shrink-0"
+                  size="small"
                 >
-                  Ver Carrito
+                  <span className="hidden sm:inline">Ver Carrito</span>
+                  <span className="sm:hidden">Carrito</span>
                 </Button>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="max-w-7xl mx-auto px-3 md:px-4 py-4 md:py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-8">
             {/* Contenido principal */}
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-3 order-2 lg:order-1">
               <Tabs 
                 activeKey={activeTab} 
                 onChange={setActiveTab}
@@ -676,7 +679,7 @@ const EventosPage = ({ forceShowMap = false }) => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
           {/* Información del evento */}
           <div className="lg:col-span-2">
             <Card className="mb-6">

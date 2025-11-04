@@ -334,18 +334,42 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   };
 
   const handleMetodoToggle = (metodo) => {
-    // Verificar si el método está habilitado en payment-gateways
     const metodoInfo = metodos.find(m => m._id === metodo);
-    if (!metodoInfo || !metodoInfo.habilitado) {
-      // No permitir activar métodos que no están habilitados en payment-gateways
+    if (!metodoInfo) {
       return;
     }
 
     setForm(prev => {
       const seleccionado = prev.otrasOpciones.metodosPagoPermitidos.includes(metodo);
-      const nuevos = seleccionado
-        ? prev.otrasOpciones.metodosPagoPermitidos.filter(m => m !== metodo)
-        : [...prev.otrasOpciones.metodosPagoPermitidos, metodo];
+      
+      // Si está seleccionado, permitir desactivarlo (siempre)
+      if (seleccionado) {
+        const nuevos = prev.otrasOpciones.metodosPagoPermitidos.filter(m => m !== metodo);
+        const updated = {
+          ...prev,
+          otrasOpciones: {
+            ...prev.otrasOpciones,
+            metodosPagoPermitidos: nuevos
+          }
+        };
+        setEventoData(ePrev => ({
+          ...ePrev,
+          otrasOpciones: {
+            ...ePrev.otrasOpciones,
+            metodosPagoPermitidos: nuevos
+          }
+        }));
+        return updated;
+      }
+      
+      // Si no está seleccionado, solo permitir activarlo si está habilitado en payment-gateways
+      if (!metodoInfo.habilitado) {
+        // No permitir activar métodos que no están habilitados en payment-gateways
+        return prev;
+      }
+      
+      // Activar el método
+      const nuevos = [...prev.otrasOpciones.metodosPagoPermitidos, metodo];
       const updated = {
         ...prev,
         otrasOpciones: {
@@ -455,7 +479,9 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
             {metodos.map(m => {
               const isEnabled = m.habilitado === true;
               const isChecked = form.otrasOpciones.metodosPagoPermitidos.includes(m._id);
-              const isDisabled = !isEnabled;
+              // Solo deshabilitar si NO está habilitado en payment-gateways Y NO está seleccionado
+              // Permitir desactivar métodos que ya están seleccionados aunque no estén habilitados
+              const isDisabled = !isEnabled && !isChecked;
               
               return (
                 <label 
@@ -468,7 +494,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
                 >
                   <input
                     type="checkbox"
-                    checked={isChecked && isEnabled}
+                    checked={isChecked}
                     onChange={() => handleMetodoToggle(m._id)}
                     disabled={isDisabled}
                     className="mr-2"

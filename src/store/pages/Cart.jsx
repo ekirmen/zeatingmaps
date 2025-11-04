@@ -273,7 +273,7 @@ const Cart = () => {
 
             <div className="store-card">
                 <div className="store-card-header">
-                    <h1 className="store-text-2xl store-font-bold store-text-center">Carrito de Compras</h1>
+                    <h1 className="store-text-xl md:store-text-2xl store-font-bold store-text-center">Carrito de Compras</h1>
                 </div>
                 
                 <div className="store-card-body">
@@ -309,32 +309,35 @@ const Cart = () => {
                             {/* Locator Seats Section */}
                             {currentLocator && locatorSeats.length > 0 && (
                                 <div className="store-space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="store-text-lg store-font-semibold store-text-gray-900">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 md:gap-4">
+                                        <h3 className="store-text-base md:store-text-lg store-font-semibold store-text-gray-900 break-words">
                                             <UserOutlined className="mr-2" />
-                                            Asientos del Localizador: {currentLocator}
+                                            <span className="block sm:inline">Asientos del Localizador:</span>
+                                            <span className="block sm:inline font-mono text-xs sm:text-sm">{currentLocator}</span>
                                         </h3>
-                                        <BulkTicketsDownloadButton
-                                            locator={currentLocator}
-                                            paidSeats={paidSeats}
-                                            totalSeats={locatorSeats.length}
-                                        />
+                                        <div className="flex-shrink-0">
+                                            <BulkTicketsDownloadButton
+                                                locator={currentLocator}
+                                                paidSeats={paidSeats}
+                                                totalSeats={locatorSeats.length}
+                                            />
+                                        </div>
                                     </div>
                                 
                                     {locatorSeats.map((seat) => (
                                         <div key={seat.id} className="store-cart-item">
                                             <div className="store-cart-item-header">
-                                                <div className="store-cart-item-title">
+                                                <div className="store-cart-item-title break-words">
                                                     {seat.nombre || `Asiento ${seat.id}`}
                                                 </div>
                                                 <div className="store-cart-item-price">
                                                     ${formatPrice(seat.precio)}
                                                 </div>
                                             </div>
-                                            <div className="store-text-sm store-text-gray-600 mb-3">
+                                            <div className="store-text-xs md:store-text-sm store-text-gray-600 mb-2 md:mb-3">
                                                 {seat.zona || 'General'} - {seat.isPaid ? 'PAGADO' : 'RESERVADO'}
                                             </div>
-                                            <div className="store-cart-item-actions">
+                                            <div className="store-cart-item-actions flex flex-wrap gap-2">
                                                 <TicketDownloadButton
                                                     seat={seat}
                                                     locator={currentLocator}
@@ -342,10 +345,11 @@ const Cart = () => {
                                                 />
                                                 <button 
                                                     disabled={seat.isPaid}
-                                                    className={`store-button store-button-sm ${seat.isPaid ? 'store-button-ghost' : 'store-button-secondary'}`}
+                                                    className={`store-button store-button-sm flex-1 sm:flex-none ${seat.isPaid ? 'store-button-ghost' : 'store-button-secondary'}`}
                                                 >
                                                     <DeleteOutlined />
-                                                    {seat.isPaid ? 'Pagado' : 'Quitar'}
+                                                    <span className="hidden sm:inline">{seat.isPaid ? 'Pagado' : 'Quitar'}</span>
+                                                    <span className="sm:hidden">{seat.isPaid ? 'Pagado' : 'Quitar'}</span>
                                                 </button>
                                                 {!seat.isPaid && (
                                                     <span className="store-badge store-badge-warning">Pendiente</span>

@@ -386,7 +386,7 @@ const Pay = () => {
   }
 
   return (
-    <div className="min-h-screen py-8" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
+    <div className="min-h-screen py-4 md:py-8 store-payment-page" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' }}>
       {facebookPixel && (
         <FacebookPixel
           pixelId={facebookPixel}
@@ -405,15 +405,15 @@ const Pay = () => {
           <div className="store-card">
             {/* Header */}
             <div className="store-card-header" style={{ background: 'linear-gradient(135deg, var(--store-primary) 0%, var(--store-secondary) 100%)', color: 'white' }}>
-              <h1 className="store-text-2xl store-font-bold">Finalizar Compra</h1>
-              <p className="store-text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Selecciona tu método de pago</p>
+              <h1 className="store-text-xl md:store-text-2xl store-font-bold">Finalizar Compra</h1>
+              <p className="store-text-xs md:store-text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Selecciona tu método de pago</p>
             </div>
 
             <div className="store-card-body">
               <div className="store-grid store-grid-auto">
                 {/* Métodos de Pago */}
-                <div className="store-space-y-6">
-                  <h2 className="store-text-xl store-font-semibold">Métodos de Pago</h2>
+                <div className="store-space-y-4 md:store-space-y-6">
+                  <h2 className="store-text-lg md:store-text-xl store-font-semibold">Métodos de Pago</h2>
                   
                   {loadingMethods ? (
                     <div className="store-text-center py-8">
@@ -460,16 +460,16 @@ const Pay = () => {
                 {/* Resumen de Compra */}
                 <div className="store-card">
                   <div className="store-card-header">
-                    <h3 className="store-text-lg store-font-semibold">Resumen de Compra</h3>
+                    <h3 className="store-text-base md:store-text-lg store-font-semibold">Resumen de Compra</h3>
                   </div>
                   <div className="store-card-body">
                     <div className="store-space-y-3">
                       {/* Información de zona y asientos */}
-                      <div className="bg-blue-50 p-3 rounded-lg mb-4">
-                        <h4 className="font-semibold text-blue-900 mb-2">Asientos Seleccionados</h4>
+                      <div className="bg-blue-50 p-2 md:p-3 rounded-lg mb-3 md:mb-4">
+                        <h4 className="font-semibold text-blue-900 mb-2 store-text-sm md:store-text-base">Asientos Seleccionados</h4>
                         {cartItems.map((item, index) => (
-                          <div key={index} className="flex justify-between store-text-sm mb-1">
-                            <span className="text-blue-800">
+                          <div key={index} className="flex flex-col sm:flex-row sm:justify-between store-text-xs md:store-text-sm mb-1 gap-1">
+                            <span className="text-blue-800 break-words">
                               {item.zonaNombre || 'Zona'} - {item.nombreAsiento || `Asiento ${index + 1}`}
                             </span>
                             <span className="font-medium">${item.precio.toFixed(2)}</span>
@@ -478,15 +478,15 @@ const Pay = () => {
                       </div>
                       
                       {cartItems.map((item, index) => (
-                        <div key={index} className="flex justify-between store-text-sm">
-                          <span>{item.nombreEvento}</span>
+                        <div key={index} className="flex flex-col sm:flex-row sm:justify-between store-text-xs md:store-text-sm gap-1">
+                          <span className="break-words">{item.nombreEvento}</span>
                           <span>${item.precio.toFixed(2)}</span>
                         </div>
                       ))}
 
                       <div className="border-t border-gray-200 pt-3"></div>
 
-                      <div className="flex justify-between items-center store-text-lg store-font-bold">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center store-text-base md:store-text-lg store-font-bold gap-2">
                         <span>Total</span>
                         <span>${total.toFixed(2)}</span>
                       </div>
