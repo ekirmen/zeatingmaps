@@ -269,9 +269,48 @@ const Pay = () => {
         }
       }
 
+      // Calcular el monto a pagar según las cuotas seleccionadas
+      let montoAPagar = total;
+      if (pagosPlazosActivos?.activo && cuotasSeleccionadas > 0 && cuotasCalculadas.length > 0) {
+        // Si se seleccionaron cuotas específicas (1, 2, 3), usar el monto de esas cuotas
+        montoAPagar = cuotasCalculadas.slice(0, cuotasSeleccionadas).reduce((sum, c) => sum + c.monto, 0);
+        console.log('💰 [PAY] Pagando cuotas parciales:', {
+          cuotasSeleccionadas,
+          montoAPagar,
+          totalOriginal: total,
+          cuotasCalculadas: cuotasCalculadas.slice(0, cuotasSeleccionadas)
+        });
+      } else if (pagosPlazosActivos?.activo && cuotasSeleccionadas === 0) {
+        // Si se seleccionó 0 (todas las cuotas), pagar el total completo
+        montoAPagar = total;
+        console.log('💰 [PAY] Pagando todas las cuotas:', {
+          montoAPagar,
+          totalCuotas: pagosPlazosActivos.cantidadCuotas
+        });
+      }
+
+      // Preparar metadata para pagos a plazos
+      const metadata = {};
+      if (pagosPlazosActivos?.activo && cuotasCalculadas.length > 0) {
+        // Si cuotasSeleccionadas es 0, significa que se pagaron TODAS las cuotas
+        const cuotasPagadas = cuotasSeleccionadas === 0 ? pagosPlazosActivos.cantidadCuotas : cuotasSeleccionadas;
+        
+        metadata.pagos_plazos = {
+          cantidad_cuotas_total: pagosPlazosActivos.cantidadCuotas,
+          cuotas_pagadas: cuotasPagadas,
+          cuotas_pendientes: pagosPlazosActivos.cantidadCuotas - cuotasPagadas,
+          monto_total: total,
+          monto_pagado: montoAPagar,
+          monto_pendiente: total - montoAPagar,
+          dias_entre_pagos: pagosPlazosActivos.diasEntrePagos
+        };
+        
+        console.log('💰 [PAY] Metadata de pagos a plazos:', metadata.pagos_plazos);
+      }
+
       const paymentData = {
         orderId: locator,
-        amount: total,
+        amount: montoAPagar,
         currency: 'USD',
         items: cartItems,
         locator: locator,
@@ -290,7 +329,8 @@ const Pay = () => {
           id: eventoId
         },
         eventoId: eventoId, // También pasar directamente como eventoId
-        eventId: eventoId   // Y como eventId para compatibilidad
+        eventId: eventoId,   // Y como eventId para compatibilidad
+        metadata: Object.keys(metadata).length > 0 ? metadata : undefined
       };
 
       const result = await processPaymentMethod(selectedGateway, paymentData);
@@ -305,7 +345,7 @@ const Pay = () => {
         // Enviar notificación de éxito
         await createPaymentSuccessNotification({
           id: result.transactionId,
-          amount: total,
+          amount: montoAPagar,
           gateway_id: selectedGateway.method_id,
           user_id: user?.id || null,
           tenant_id: resolvedTenantId,

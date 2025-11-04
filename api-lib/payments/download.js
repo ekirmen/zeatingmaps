@@ -124,9 +124,13 @@ export async function handleDownload(req, res) {
     }
 
     if (!payment) {
-      console.error('❌ [DOWNLOAD] No se encontró el pago con el locator u order_id proporcionado');
+      console.error('❌ [DOWNLOAD] No se encontró el pago con el locator u order_id proporcionado:', locator);
       res.setHeader('Content-Type', 'application/json');
-      return res.status(404).json({ error: 'Payment not found' });
+      return res.status(404).json({ 
+        error: 'Payment not found',
+        locator: locator,
+        message: 'No se encontró un pago con el localizador proporcionado'
+      });
     }
 
     console.log('✅ [DOWNLOAD] Pago encontrado:', payment.id);
@@ -648,8 +652,23 @@ export async function createTicketPdfBuffer(payment, locator, extra = {}) {
     };
   } catch (err) {
     console.error('❌ [PDF] Error generando PDF en memoria:', err);
+    console.error('❌ [PDF] Error name:', err.name);
+    console.error('❌ [PDF] Error message:', err.message);
     console.error('❌ [PDF] Stack trace:', err.stack);
-    throw err;
+    console.error('❌ [PDF] Error details:', {
+      code: err.code,
+      cause: err.cause,
+      originalError: err.originalError
+    });
+    
+    // Crear un error más descriptivo
+    const errorMessage = err.message || 'Error desconocido al generar el PDF';
+    const enhancedError = new Error(`Error generando PDF: ${errorMessage}`);
+    enhancedError.originalError = err;
+    enhancedError.name = err.name || 'PDFGenerationError';
+    enhancedError.code = err.code;
+    enhancedError.cause = err.cause;
+    throw enhancedError;
   }
 }
 
