@@ -46,50 +46,57 @@ const DatosCompradorObligatorios = ({
   };
 
   return (
-    <div className="datos-comprador-obligatorios">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="datos-comprador-obligatorios bg-white p-6 rounded-lg border border-gray-200 space-y-4">
+      <div className="flex items-center gap-3 mb-4">
         <input
           type="checkbox"
           checked={mostrarDatos}
           onChange={toggleMostrarDatos}
+          className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 cursor-pointer"
         />
-        <h3>Datos del Comprador Obligatorios</h3>
+        <h3 className="text-xl font-semibold text-gray-800">Datos del Comprador Obligatorios</h3>
       </div>
       {mostrarDatos && (
-        <table className="w-full">
-          <thead>
-            <tr>
-              <th className="text-left">Dato</th>
-              <th className="text-center">Solicitar</th>
-              <th className="text-center">Obligatorio</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.keys(datosComprador).map((key) => (
-              <tr key={key} className="border-t">
-                <td>{labels[key] || key.replace(/([A-Z])/g, ' $1').trim()}</td>
-                <td className="text-center">
-                  <input
-                    type="checkbox"
-                    name={key}
-                    checked={datosComprador[key].solicitado}
-                    onChange={handleSolicitarChange}
-                  />
-                </td>
-                <td className="text-center">
-                  {datosComprador[key].solicitado && (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Dato</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Solicitar</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Obligatorio</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.keys(datosComprador).map((key) => (
+                <tr key={key} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3 text-sm text-gray-700">{labels[key] || key.replace(/([A-Z])/g, ' $1').trim()}</td>
+                  <td className="px-4 py-3 text-center">
                     <input
                       type="checkbox"
                       name={key}
-                      checked={datosComprador[key].obligatorio}
-                      onChange={handleObligatorioChange}
+                      checked={datosComprador[key].solicitado}
+                      onChange={handleSolicitarChange}
+                      className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 cursor-pointer"
                     />
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {datosComprador[key].solicitado ? (
+                      <input
+                        type="checkbox"
+                        name={key}
+                        checked={datosComprador[key].obligatorio}
+                        onChange={handleObligatorioChange}
+                        className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 cursor-pointer"
+                      />
+                    ) : (
+                      <span className="text-gray-400 text-sm">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

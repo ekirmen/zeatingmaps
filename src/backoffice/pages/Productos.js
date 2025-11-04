@@ -41,10 +41,24 @@ const Productos = () => {
   useEffect(() => {
     const fetchEventos = async () => {
       try {
-        const { data, error } = await supabase
+        // Intentar cargar desde eventos_con_funciones_activas
+        let { data, error } = await supabase
           .from('eventos_con_funciones_activas')
           .select('id, nombre, fecha_evento, recinto')
           .order('fecha_evento', { ascending: false });
+
+        // Si falla, usar eventos directamente
+        if (error) {
+          console.warn('Error con eventos_con_funciones_activas, usando eventos directamente:', error);
+          const result = await supabase
+            .from('eventos')
+            .select('id, nombre, fecha_evento, recinto_id')
+            .eq('activo', true)
+            .order('created_at', { ascending: false });
+          
+          data = result.data;
+          error = result.error;
+        }
 
         if (error) throw error;
         setEventos(data || []);

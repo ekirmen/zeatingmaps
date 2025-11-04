@@ -46,7 +46,25 @@ const PaymentGatewayConfig = () => {
     try {
       const configs = await paymentGatewayService.getAllGatewayConfigs();
       setGatewayConfigs(configs);
+      
+      // Cargar valores iniciales del formulario si hay configuración existente
+      if (configs[activeTab]) {
+        const configData = configs[activeTab];
+        // El config puede venir como objeto o como string parseado
+        const config = typeof configData.config === 'object' 
+          ? configData.config 
+          : (typeof configData.config === 'string' ? JSON.parse(configData.config) : {});
+        
+        form.setFieldsValue({
+          ...config,
+          is_active: configData.is_active
+        });
+      } else {
+        // Si no hay configuración, resetear el formulario
+        form.resetFields();
+      }
     } catch (error) {
+      console.error('Error loading gateway configs:', error);
       message.error('Error al cargar configuraciones de pasarelas');
     }
   };
@@ -421,7 +439,27 @@ const PaymentGatewayConfig = () => {
       )}
 
       <Card>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
+        <Tabs 
+          activeKey={activeTab} 
+          onChange={(key) => {
+            setActiveTab(key);
+            // Cargar valores del formulario cuando cambia la pestaña
+            if (gatewayConfigs[key]) {
+              const configData = gatewayConfigs[key];
+              // El config puede venir como objeto o como string parseado
+              const config = typeof configData.config === 'object' 
+                ? configData.config 
+                : (typeof configData.config === 'string' ? JSON.parse(configData.config) : {});
+              
+              form.setFieldsValue({
+                ...config,
+                is_active: configData.is_active
+              });
+            } else {
+              form.resetFields();
+            }
+          }}
+        >
           <TabPane 
             tab={
               <Space>

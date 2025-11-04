@@ -309,6 +309,55 @@ const ModernEventPage = () => {
       removeSeatFromUnified(seatId);
       removeFromCart(seatId); // Mantener compatibilidad con carrito existente
     } else {
+      // Validar restricción de múltiplos antes de agregar
+      try {
+        // Obtener función para obtener recinto_id
+        const { data: funcionData, error: funcionError } = await supabase
+          .from('funciones')
+          .select('evento_id, eventos!evento_id(recinto_id, recinto)')
+          .eq('id', selectedFunctionId)
+          .single();
+
+        if (!funcionError && funcionData) {
+          const recintoId = funcionData.eventos?.recinto_id || funcionData.eventos?.recinto;
+          
+          if (recintoId) {
+            // Obtener entradas del recinto con restricción activa en store
+            const { data: entradasData, error: entradasError } = await supabase
+              .from('entradas')
+              .select('quantity_step, activo_store')
+              .eq('recinto', recintoId)
+              .eq('activo_store', true)
+              .not('quantity_step', 'is', null);
+
+            if (!entradasError && entradasData && entradasData.length > 0) {
+              // Obtener el quantity_step más restrictivo (el mayor)
+              const quantityStep = Math.max(...entradasData.map(e => e.quantity_step || 0));
+              
+              if (quantityStep > 0) {
+                // Contar asientos actuales en el carrito
+                const currentSeatCount = selectedSeats.length;
+                const newSeatCount = currentSeatCount + 1;
+
+                // Validar que el nuevo total sea múltiplo del quantity_step
+                if (newSeatCount % quantityStep !== 0) {
+                  const nextValidCount = Math.ceil(newSeatCount / quantityStep) * quantityStep;
+                  message.warning(
+                    `Solo puedes seleccionar múltiplos de ${quantityStep}. ` +
+                    `Tienes ${currentSeatCount} asiento${currentSeatCount !== 1 ? 's' : ''} seleccionado${currentSeatCount !== 1 ? 's' : ''}. ` +
+                    `Puedes seleccionar hasta ${nextValidCount} asiento${nextValidCount !== 1 ? 's' : ''}.`
+                  );
+                  return;
+                }
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Error validando restricción de múltiplos:', error);
+        // Continuar con la selección si hay error en la validación
+      }
+
       const ok = await lockSeat(seatId, 'seleccionado', selectedFunctionId);
       if (!ok) return;
       

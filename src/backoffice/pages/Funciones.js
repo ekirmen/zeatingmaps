@@ -1253,50 +1253,28 @@ const Funciones = () => {
             )}
           </div>
 
-          {/* Tabla */}
+          {/* Tabla Compacta con Colores */}
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fecha Celebración
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Evento
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Sala
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Plantilla Precios
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Plantilla Comisiones
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Plantilla Producto
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Inicio Venta
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fin Venta
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Liberación Reservas
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Opciones
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Acciones
-                  </th>
+            <table className="w-full border-collapse bg-white">
+              <thead>
+                <tr className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Fecha</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Evento</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Sala</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Precios</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Comisiones</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Producto</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Inicio</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Fin</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase">Liberación</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold uppercase">Opciones</th>
+                  <th className="px-3 py-2 text-center text-xs font-semibold uppercase">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {funciones.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan="11" className="px-4 py-8 text-center text-gray-500 bg-gray-50">
                       {recintoSeleccionado || salaSeleccionada || eventoSeleccionado 
                         ? 'No se encontraron funciones con los filtros seleccionados'
                         : 'No hay funciones creadas. Crea una nueva función para comenzar.'
@@ -1304,71 +1282,111 @@ const Funciones = () => {
                     </td>
                   </tr>
                 ) : (
-                  funciones.map(funcion => (
-                    <tr key={funcion.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  funciones.map((funcion, index) => (
+                    <tr 
+                      key={funcion.id} 
+                      className={`border-b transition-colors ${
+                        index % 2 === 0 
+                          ? 'bg-white hover:bg-blue-50' 
+                          : 'bg-gray-50 hover:bg-blue-100'
+                      }`}
+                    >
+                      <td className="px-3 py-2 text-xs font-medium text-gray-900 whitespace-nowrap">
                         {formatFecha(funcion.fechaCelebracion)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getEventoNombre(funcion.evento_id)}
+                      <td className="px-3 py-2 text-xs text-gray-900 max-w-[150px] truncate" title={getEventoNombre(funcion.evento_id)}>
+                        {getEventoNombre(funcion.evento_id) || '—'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {funcion.sala?.nombre || 'Sala desconocida'}
+                      <td className="px-3 py-2 text-xs text-gray-900">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          funcion.sala?.nombre 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {funcion.sala?.nombre || 'Sin sala'}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getPlantillaNombre(funcion.plantilla_entradas)}
+                      <td className="px-3 py-2 text-xs">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          getPlantillaNombre(funcion.plantilla_entradas) !== 'Sin plantilla'
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {getPlantillaNombre(funcion.plantilla_entradas)}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getPlantillaComisionesNombre(funcion.plantilla_comisiones)}
+                      <td className="px-3 py-2 text-xs">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          getPlantillaComisionesNombre(funcion.plantilla_comisiones) !== 'Sin plantilla'
+                            ? 'bg-purple-100 text-purple-800' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {getPlantillaComisionesNombre(funcion.plantilla_comisiones)}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getPlantillaProductoNombre(funcion.plantilla_producto)}
+                      <td className="px-3 py-2 text-xs">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                          getPlantillaProductoNombre(funcion.plantilla_producto) !== 'Sin plantilla'
+                            ? 'bg-orange-100 text-orange-800' 
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {getPlantillaProductoNombre(funcion.plantilla_producto)}
+                        </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatFecha(funcion.inicioVenta)}
+                      <td className="px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
+                        {formatFecha(funcion.inicioVenta) || '—'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatFecha(funcion.finVenta)}
+                      <td className="px-3 py-2 text-xs text-gray-700 whitespace-nowrap">
+                        {formatFecha(funcion.finVenta) || '—'}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {funcion.tiempo_caducidad_reservas !== null 
-                          ? getTiempoCaducidadText(funcion.tiempo_caducidad_reservas)
-                          : 'No configurado'
-                        }
+                      <td className="px-3 py-2 text-xs">
+                        {funcion.tiempo_caducidad_reservas !== null ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                            {getTiempoCaducidadText(funcion.tiempo_caducidad_reservas)}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="flex flex-wrap items-center gap-2">
+                      <td className="px-3 py-2 text-xs">
+                        <div className="flex flex-wrap items-center gap-1 justify-center">
                           {funcion.pagoAPlazos && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              Pago a plazos
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800" title="Pago a plazos">
+                              💳
                             </span>
                           )}
                           {funcion.permitirReservasWeb && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              Reservas web
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800" title="Reservas web">
+                              🌐
                             </span>
+                          )}
+                          {!funcion.pagoAPlazos && !funcion.permitirReservasWeb && (
+                            <span className="text-gray-400">—</span>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
+                      <td className="px-3 py-2 text-xs">
+                        <div className="flex items-center gap-1 justify-center">
                           <button 
                             onClick={() => handleEdit(funcion)}
-                            className="text-blue-600 hover:text-blue-900 font-medium"
+                            className="px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded text-xs font-medium transition-colors"
+                            title="Editar"
                           >
-                            Editar
+                            ✏️
                           </button>
                           <button 
                             onClick={() => handleDelete(funcion.id)}
-                            className="text-red-600 hover:text-red-900 font-medium"
+                            className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-medium transition-colors"
+                            title="Eliminar"
                           >
-                            Eliminar
+                            🗑️
                           </button>
                           <button 
                             onClick={() => handleDuplicate(funcion.id)}
-                            className="text-gray-600 hover:text-gray-900 font-medium"
+                            className="px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded text-xs font-medium transition-colors"
+                            title="Duplicar"
                           >
-                            Duplicar
+                            📋
                           </button>
                         </div>
                       </td>

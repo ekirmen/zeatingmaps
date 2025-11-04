@@ -99,6 +99,86 @@ const PopupEditarEntrada = ({ tiposDeProducto, ivas, formData, onClose, onSave, 
             </div>
           </div>
 
+          {/* Comprar en múltiplos de */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">
+              Comprar en múltiplos de:
+              <span className="ml-1 text-gray-500 text-xs" title="Permite comprar 2, 4, 6... entradas. Seleccione 'Sin restricción' para desactivar la limitación.">
+                <svg className="w-4 h-4 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </span>
+            </label>
+            <select
+              name="quantityStep"
+              value={formData.quantityStep || ''}
+              onChange={(e) => {
+                const value = e.target.value;
+                onFormChange({ 
+                  ...formData, 
+                  quantityStep: value,
+                  // Si se selecciona "Sin restricción", desactivar checkboxes
+                  ...(value === '' ? {
+                    activoBoleteria: false,
+                    activoStore: false,
+                    customQuantityStep: ''
+                  } : {})
+                });
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+            >
+              <option value="">Sin restricción</option>
+              <option value="2">2 en 2</option>
+              <option value="3">3 en 3</option>
+              <option value="custom">Personalizado</option>
+            </select>
+            {formData.quantityStep === 'custom' && (
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Introducir múltiplo
+                </label>
+                <input
+                  type="number"
+                  name="customQuantityStep"
+                  min="1"
+                  max="999"
+                  step="1"
+                  placeholder="Ej: 5"
+                  value={formData.customQuantityStep || ''}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/[^0-9]/g, '').replace(/^0+/, '');
+                    onFormChange({ ...formData, customQuantityStep: value });
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                />
+              </div>
+            )}
+            {formData.quantityStep && formData.quantityStep !== '' && (
+              <div className="mt-3 space-y-3 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="activoBoleteria"
+                    checked={formData.activoBoleteria || false}
+                    onChange={(e) => onFormChange({ ...formData, activoBoleteria: e.target.checked })}
+                    className="w-5 h-5 text-indigo-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-indigo-200 focus:ring-offset-2 cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Activar en boletería</span>
+                </label>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="activoStore"
+                    checked={formData.activoStore || false}
+                    onChange={(e) => onFormChange({ ...formData, activoStore: e.target.checked })}
+                    className="w-5 h-5 text-indigo-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-indigo-200 focus:ring-offset-2 cursor-pointer"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Activar en store</span>
+                </label>
+              </div>
+            )}
+          </div>
+
           {/* Selección de IVA */}
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">

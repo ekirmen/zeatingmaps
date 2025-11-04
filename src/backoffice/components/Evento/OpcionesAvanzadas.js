@@ -190,21 +190,23 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
     }
 
     const selection = eventoData?.otrasOpciones?.metodosPagoPermitidos;
-    const hasExplicitSelection = Array.isArray(selection) && selection.length >= 0;
+    const hasExplicitSelection = Array.isArray(selection) && selection.length > 0;
     const isExistingEvent = Boolean(eventoData?.id);
 
-    // Para eventos nuevos sin configuración, activar solo los métodos habilitados en payment-gateways
-    if (!isExistingEvent && !hasExplicitSelection) {
-      // Obtener métodos habilitados en payment-gateways
-      const metodosHabilitados = metodos
-        .filter(m => m.habilitado === true)
-        .map(m => m._id);
+    // Obtener métodos habilitados en payment-gateways
+    const metodosHabilitados = metodos
+      .filter(m => m.habilitado === true)
+      .map(m => m._id);
 
+    // Para eventos nuevos sin configuración explícita, activar TODOS los métodos habilitados en payment-gateways
+    if (!isExistingEvent && !hasExplicitSelection) {
+      console.log('🆕 [OPCIONES_AVANZADAS] Evento nuevo detectado, activando todos los métodos habilitados:', metodosHabilitados);
+      
       setForm(prev => ({
         ...prev,
         otrasOpciones: {
           ...prev.otrasOpciones,
-          metodosPagoPermitidos: metodosHabilitados
+          metodosPagoPermitidos: [...metodosHabilitados] // Copia del array para evitar mutaciones
         }
       }));
 
@@ -214,20 +216,19 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
           ...prev,
           otrasOpciones: {
             ...prev.otrasOpciones,
-            metodosPagoPermitidos: metodosHabilitados
+            metodosPagoPermitidos: [...metodosHabilitados] // Copia del array para evitar mutaciones
           }
         };
       });
     } else if (hasExplicitSelection && isExistingEvent) {
       // Para eventos existentes, filtrar métodos permitidos para que solo incluyan los habilitados
-      const metodosHabilitados = metodos
-        .filter(m => m.habilitado === true)
-        .map(m => m._id);
+      // Pero mantener los que el usuario ya había seleccionado (aunque no estén habilitados globalmente)
+      const metodosPermitidosFiltrados = selection.filter(m => {
+        // Mantener si está habilitado globalmente O si ya estaba seleccionado (para no perder la selección del usuario)
+        return metodosHabilitados.includes(m) || metodos.find(method => method._id === m);
+      });
       
-      // Filtrar métodos permitidos para excluir los que no están habilitados en payment-gateways
-      const metodosPermitidosFiltrados = selection.filter(m => metodosHabilitados.includes(m));
-      
-      // Solo actualizar si hay diferencias
+      // Solo actualizar si hay diferencias (para evitar loops infinitos)
       if (metodosPermitidosFiltrados.length !== selection.length) {
         setForm(prev => ({
           ...prev,
@@ -253,6 +254,16 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
 
   // When the selected event changes, update local form state
   useEffect(() => {
+    // Si es un evento nuevo y hay métodos habilitados, inicializar con todos los habilitados
+    const isNewEvent = !eventoData?.id;
+    const metodosHabilitados = metodos
+      .filter(m => m.habilitado === true)
+      .map(m => m._id);
+    
+    const metodosPagoPermitidos = isNewEvent && metodosHabilitados.length > 0
+      ? metodosHabilitados // Para eventos nuevos, activar todos los habilitados por defecto
+      : (eventoData?.otrasOpciones?.metodosPagoPermitidos || []); // Para eventos existentes, usar los guardados
+    
     setForm({
       otrasOpciones: {
         observacionesEmail: {
@@ -272,8 +283,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
         },
         habilitarMetodosPago:
           eventoData?.otrasOpciones?.habilitarMetodosPago || false,
-        metodosPagoPermitidos:
-          eventoData?.otrasOpciones?.metodosPagoPermitidos || []
+        metodosPagoPermitidos: metodosPagoPermitidos
       },
       analytics: {
         enabled: eventoData?.analytics?.enabled || false,
@@ -336,6 +346,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
   const handleMetodoToggle = (metodo) => {
     const metodoInfo = metodos.find(m => m._id === metodo);
     if (!metodoInfo) {
+      console.warn('⚠️ [OPCIONES_AVANZADAS] Método no encontrado:', metodo);
       return;
     }
 
@@ -344,6 +355,7 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
       
       // Si está seleccionado, permitir desactivarlo (siempre)
       if (seleccionado) {
+        console.log('🔴 [OPCIONES_AVANZADAS] Desactivando método:', metodoInfo.metodo);
         const nuevos = prev.otrasOpciones.metodosPagoPermitidos.filter(m => m !== metodo);
         const updated = {
           ...prev,
@@ -364,11 +376,13 @@ const OpcionesAvanzadas = ({ eventoData, setEventoData }) => {
       
       // Si no está seleccionado, solo permitir activarlo si está habilitado en payment-gateways
       if (!metodoInfo.habilitado) {
+        console.warn('⚠️ [OPCIONES_AVANZADAS] No se puede activar método no habilitado en payment-gateways:', metodoInfo.metodo);
         // No permitir activar métodos que no están habilitados en payment-gateways
         return prev;
       }
       
       // Activar el método
+      console.log('🟢 [OPCIONES_AVANZADAS] Activando método:', metodoInfo.metodo);
       const nuevos = [...prev.otrasOpciones.metodosPagoPermitidos, metodo];
       const updated = {
         ...prev,

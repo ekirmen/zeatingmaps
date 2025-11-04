@@ -32,12 +32,14 @@ import {
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
 import { useRole } from '../components/RoleBasedAccess';
+import { useTenantFilter } from '../../hooks/useTenantFilter';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
 
 const Usuarios = () => {
   const { hasPermission, isAdmin } = useRole();
+  const { addTenantFilter, getTenantId } = useTenantFilter();
   const [usuarios, setUsuarios] = useState([]);
   const [recintos, setRecintos] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -68,11 +70,16 @@ const Usuarios = () => {
     try {
       setLoading(true);
       
-      // Obtener usuarios desde profiles
-      const { data, error } = await supabase
+      // Obtener usuarios desde profiles con filtro de tenant
+      let query = supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // Aplicar filtro de tenant si existe
+      query = addTenantFilter(query);
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
@@ -86,6 +93,7 @@ const Usuarios = () => {
       }));
 
       setUsuarios(processedUsers);
+      console.log('✅ Usuarios cargados:', processedUsers.length, 'para tenant:', getTenantId());
     } catch (error) {
       console.error('Error loading usuarios:', error);
       message.error('Error al cargar usuarios');
@@ -245,6 +253,9 @@ const Usuarios = () => {
 
         if (authError) throw authError;
 
+        // Obtener tenant_id para asignar al nuevo usuario
+        const tenantId = getTenantId();
+        
         const { error: profileError } = await supabase
           .from('profiles')
           .insert({
@@ -254,7 +265,8 @@ const Usuarios = () => {
             email: values.email,
             telefono: values.telefono,
             permisos: { role: values.role },
-            activo: values.activo
+            activo: values.activo,
+            tenant_id: tenantId // Asignar tenant_id al nuevo usuario
           });
 
         if (profileError) throw profileError;

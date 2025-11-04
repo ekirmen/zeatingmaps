@@ -27,15 +27,39 @@ class PaymentGatewayService {
   // Obtener configuración de pasarela
   async getGatewayConfig(gatewayName, tenantId = null) {
     try {
-      const { data, error } = await supabase
-        .from('payment_gateway_configs')
+      const currentTenantId = tenantId || this.getCurrentTenantId();
+      
+      // Buscar en payment_methods usando method_id
+      let query = supabase
+        .from('payment_methods')
         .select('*')
-        .eq('gateway_name', gatewayName)
-        .eq('tenant_id', tenantId || 'global')
-        .single();
+        .eq('method_id', gatewayName);
+      
+      // Si hay tenant_id, filtrar por él, sino buscar globales (tenant_id null)
+      if (currentTenantId && currentTenantId !== 'global') {
+        query = query.eq('tenant_id', currentTenantId);
+      } else {
+        query = query.is('tenant_id', null);
+      }
+      
+      const { data, error } = await query.single();
 
       if (error && error.code !== 'PGRST116') throw error;
-      return data;
+      
+      // Mapear a formato compatible con el componente (mantener compatibilidad)
+      if (data) {
+        return {
+          id: data.id,
+          gateway_name: data.method_id,
+          tenant_id: data.tenant_id,
+          config: typeof data.config === 'string' ? data.config : JSON.stringify(data.config),
+          is_active: data.enabled,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+      }
+      
+      return null;
     } catch (error) {
       console.error(`Error getting ${gatewayName} config:`, error);
       return null;
@@ -45,23 +69,106 @@ class PaymentGatewayService {
   // Guardar configuración de pasarela
   async saveGatewayConfig(gatewayName, config, tenantId = null) {
     try {
-      const configData = {
-        gateway_name: gatewayName,
-        tenant_id: tenantId || 'global',
-        config: JSON.stringify(config),
-        is_active: config.is_active || false,
-        created_at: new Date().toISOString(),
+      const currentTenantId = tenantId || this.getCurrentTenantId();
+      
+      // Mapear nombres de métodos de pago
+      const methodNameMap = {
+        'stripe': 'Stripe',
+        'paypal': 'PayPal',
+        'mercadopago': 'MercadoPago'
+      };
+      
+      const methodTypeMap = {
+        'stripe': 'stripe',
+        'paypal': 'paypal',
+        'mercadopago': 'mercadopago'
+      };
+      
+      // Buscar si ya existe para preservar campos adicionales
+      let query = supabase
+        .from('payment_methods')
+        .select('*')
+        .eq('method_id', gatewayName);
+      
+      if (currentTenantId && currentTenantId !== 'global') {
+        query = query.eq('tenant_id', currentTenantId);
+      } else {
+        query = query.is('tenant_id', null);
+      }
+      
+      const { data: existingMethod, error: checkError } = await query.maybeSingle();
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+      
+      // Preparar datos para payment_methods
+      const methodData = {
+        method_id: gatewayName,
+        name: methodNameMap[gatewayName] || gatewayName,
+        type: methodTypeMap[gatewayName] || 'other',
+        enabled: config.is_active !== undefined ? config.is_active : false,
+        config: typeof config === 'string' ? JSON.parse(config) : config,
+        tenant_id: currentTenantId && currentTenantId !== 'global' ? currentTenantId : null,
         updated_at: new Date().toISOString()
       };
+      
+      // Preservar campos adicionales si el método ya existe
+      if (existingMethod) {
+        methodData.processing_time = existingMethod.processing_time || 'Instantáneo';
+        methodData.fee_structure = existingMethod.fee_structure || { fixed: 0, percentage: 0 };
+        methodData.supported_currencies = existingMethod.supported_currencies || ['USD'];
+        methodData.supported_countries = existingMethod.supported_countries || ['US'];
+        methodData.is_recommended = existingMethod.is_recommended !== undefined ? existingMethod.is_recommended : false;
+        methodData.icon = existingMethod.icon || null;
+        methodData.description = existingMethod.description || null;
+        methodData.created_at = existingMethod.created_at;
+      } else {
+        // Valores por defecto para métodos nuevos
+        methodData.processing_time = 'Instantáneo';
+        methodData.fee_structure = { fixed: 0.3, percentage: 2.9 };
+        methodData.supported_currencies = ['USD'];
+        methodData.supported_countries = ['US'];
+        methodData.is_recommended = false;
+        methodData.icon = null;
+        methodData.description = null;
+        methodData.created_at = new Date().toISOString();
+      }
 
-      const { data, error } = await supabase
-        .from('payment_gateway_configs')
-        .upsert([configData])
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
+      let result;
+      if (existingMethod) {
+        // Actualizar existente
+        const { data, error } = await supabase
+          .from('payment_methods')
+          .update(methodData)
+          .eq('id', existingMethod.id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        result = data;
+      } else {
+        // Crear nuevo
+        const { data, error } = await supabase
+          .from('payment_methods')
+          .insert([methodData])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        result = data;
+      }
+      
+      // Mapear respuesta a formato compatible con el componente
+      return {
+        id: result.id,
+        gateway_name: result.method_id,
+        tenant_id: result.tenant_id,
+        config: typeof result.config === 'string' ? result.config : JSON.stringify(result.config),
+        is_active: result.enabled,
+        created_at: result.created_at,
+        updated_at: result.updated_at
+      };
     } catch (error) {
       console.error(`Error saving ${gatewayName} config:`, error);
       throw error;
@@ -99,8 +206,8 @@ class PaymentGatewayService {
         client_secret: config.client_secret,
         webhook_id: config.webhook_id,
         currency: config.currency || 'USD',
-        is_active: config.is_active || false,
-        sandbox_mode: config.sandbox_mode || true
+        is_active: config.is_active !== undefined ? config.is_active : (config.enabled !== undefined ? config.enabled : false),
+        sandbox_mode: config.sandbox_mode !== undefined ? config.sandbox_mode : true
       };
 
       return await this.saveGatewayConfig('paypal', paypalConfig, currentTenantId);
@@ -113,16 +220,18 @@ class PaymentGatewayService {
   // Configurar MercadoPago
   async configureMercadoPago(config, tenantId = null) {
     try {
+      const currentTenantId = tenantId || this.getCurrentTenantId();
+      
       const mercadopagoConfig = {
         access_token: config.access_token,
         public_key: config.public_key,
         webhook_url: config.webhook_url,
         currency: config.currency || 'MXN',
-        is_active: config.is_active || false,
-        sandbox_mode: config.sandbox_mode || true
+        is_active: config.is_active !== undefined ? config.is_active : (config.enabled !== undefined ? config.enabled : false),
+        sandbox_mode: config.sandbox_mode !== undefined ? config.sandbox_mode : true
       };
 
-      return await this.saveGatewayConfig('mercadopago', mercadopagoConfig, tenantId);
+      return await this.saveGatewayConfig('mercadopago', mercadopagoConfig, currentTenantId);
     } catch (error) {
       console.error('Error configuring MercadoPago:', error);
       throw error;
@@ -137,7 +246,10 @@ class PaymentGatewayService {
         throw new Error('Stripe no está configurado o activo');
       }
 
-      const stripeConfig = JSON.parse(config.config);
+      // El config ya viene parseado desde getGatewayConfig
+      const stripeConfig = typeof config.config === 'string' 
+        ? JSON.parse(config.config) 
+        : config.config;
       
       // Simular procesamiento de pago con Stripe
       const paymentResult = {
@@ -177,7 +289,10 @@ class PaymentGatewayService {
         throw new Error('PayPal no está configurado o activo');
       }
 
-      const paypalConfig = JSON.parse(config.config);
+      // El config ya viene parseado desde getGatewayConfig
+      const paypalConfig = typeof config.config === 'string' 
+        ? JSON.parse(config.config) 
+        : config.config;
       
       // Simular procesamiento de pago con PayPal
       const paymentResult = {
@@ -218,7 +333,10 @@ class PaymentGatewayService {
         throw new Error('MercadoPago no está configurado o activo');
       }
 
-      const mercadopagoConfig = JSON.parse(config.config);
+      // El config ya viene parseado desde getGatewayConfig
+      const mercadopagoConfig = typeof config.config === 'string' 
+        ? JSON.parse(config.config) 
+        : config.config;
       
       // Simular procesamiento de pago con MercadoPago
       const paymentResult = {
@@ -286,20 +404,38 @@ class PaymentGatewayService {
       // Si no se especifica tenantId, usar el tenant actual del contexto
       const currentTenantId = tenantId || this.getCurrentTenantId();
       
-      const { data, error } = await supabase
-        .from('payment_gateway_configs')
-        .select('*')
-        .eq('tenant_id', currentTenantId);
+      let query = supabase
+        .from('payment_methods')
+        .select('*');
+      
+      // Filtrar por tenant_id si existe
+      if (currentTenantId && currentTenantId !== 'global') {
+        query = query.eq('tenant_id', currentTenantId);
+      } else {
+        // Buscar métodos globales (tenant_id null)
+        query = query.is('tenant_id', null);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
 
       const configs = {};
-      data.forEach(config => {
-        configs[config.gateway_name] = {
-          ...config,
-          config: JSON.parse(config.config)
-        };
-      });
+      if (data) {
+        data.forEach(method => {
+          configs[method.method_id] = {
+            id: method.id,
+            gateway_name: method.method_id,
+            tenant_id: method.tenant_id,
+            config: typeof method.config === 'string' 
+              ? JSON.parse(method.config) 
+              : method.config,
+            is_active: method.enabled,
+            created_at: method.created_at,
+            updated_at: method.updated_at
+          };
+        });
+      }
 
       return configs;
     } catch (error) {
@@ -331,7 +467,10 @@ class PaymentGatewayService {
       const config = await this.getGatewayConfig(gatewayName, tenantId);
       if (!config) return { valid: false, error: 'Configuración no encontrada' };
 
-      const gatewayConfig = JSON.parse(config.config);
+      // El config viene como string desde getGatewayConfig, parsearlo
+      const gatewayConfig = typeof config.config === 'string' 
+        ? JSON.parse(config.config) 
+        : config.config;
       
       // Verificar campos requeridos según la pasarela
       switch (gatewayName) {
