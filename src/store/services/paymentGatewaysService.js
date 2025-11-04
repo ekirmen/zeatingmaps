@@ -566,11 +566,6 @@ export const createPaymentTransaction = async (transactionData) => {
       required: true,
     });
 
-    const eventoId = sanitizeUuid(transactionData.eventoId, {
-      fieldName: 'evento_id',
-      required: false,
-    });
-
     const paymentGatewayId = sanitizeUuid(
       transactionData.paymentGatewayId || gatewayId,
       {
@@ -592,6 +587,36 @@ export const createPaymentTransaction = async (transactionData) => {
       transactionData.funcionId !== undefined && transactionData.funcionId !== null
         ? Number(transactionData.funcionId)
         : null;
+
+    // Obtener evento_id: primero del transactionData, si no está, obtenerlo desde la función
+    let eventoId = sanitizeUuid(transactionData.eventoId || transactionData.eventId || transactionData.evento?.id || transactionData.event?.id, {
+      fieldName: 'evento_id',
+      required: false,
+    });
+
+    // Si no hay evento_id pero sí hay funcion_id, obtenerlo desde la función
+    if (!eventoId && funcionId) {
+      try {
+        console.log('[PaymentTransaction] Obteniendo evento_id desde función:', funcionId);
+        const { data: funcionData, error: funcionError } = await supabase
+          .from('funciones')
+          .select('evento_id, evento')
+          .eq('id', funcionId)
+          .single();
+
+        if (!funcionError && funcionData) {
+          eventoId = sanitizeUuid(funcionData.evento_id || funcionData.evento, {
+            fieldName: 'evento_id',
+            required: false,
+          });
+          console.log('[PaymentTransaction] Evento_id obtenido desde función:', eventoId);
+        } else {
+          console.warn('[PaymentTransaction] No se pudo obtener evento_id desde función:', funcionError);
+        }
+      } catch (error) {
+        console.warn('[PaymentTransaction] Error al obtener evento_id desde función:', error);
+      }
+    }
 
     if (funcionId !== null && Number.isNaN(funcionId)) {
       throw new Error('funcionId debe ser un valor numérico');

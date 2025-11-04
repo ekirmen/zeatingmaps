@@ -208,6 +208,31 @@ const Pay = () => {
 
       const resolvedTenantId = resolveTenantId(tenantCandidates[0]);
 
+      // Obtener evento_id desde múltiples fuentes
+      let eventoId = cartItems?.[0]?.eventId || cartItems?.[0]?.eventoId || null;
+      
+      // Si no hay evento_id en el carrito pero sí hay funcion_id, obtenerlo desde la función
+      if (!eventoId && functionId) {
+        try {
+          console.log('🎫 [PAY] Obteniendo evento_id desde función:', functionId);
+          const { supabase } = await import('../../supabaseClient');
+          const { data: funcionData, error: funcionError } = await supabase
+            .from('funciones')
+            .select('evento_id, evento')
+            .eq('id', functionId)
+            .single();
+          
+          if (!funcionError && funcionData) {
+            eventoId = funcionData.evento_id || funcionData.evento || null;
+            console.log('✅ [PAY] Evento_id obtenido desde función:', eventoId);
+          } else {
+            console.warn('⚠️ [PAY] No se pudo obtener evento_id desde función:', funcionError);
+          }
+        } catch (error) {
+          console.warn('⚠️ [PAY] Error al obtener evento_id desde función:', error);
+        }
+      }
+
       const paymentData = {
         orderId: locator,
         amount: total,
@@ -226,8 +251,10 @@ const Pay = () => {
           id: functionId || null
         },
         evento: {
-          id: cartItems[0]?.eventId || null
-        }
+          id: eventoId
+        },
+        eventoId: eventoId, // También pasar directamente como eventoId
+        eventId: eventoId   // Y como eventId para compatibilidad
       };
 
       const result = await processPaymentMethod(selectedGateway, paymentData);
