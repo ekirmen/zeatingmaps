@@ -348,24 +348,68 @@ const PaymentMethodsConfig = () => {
     try {
       setLoading(true);
       
-      // Cargar métodos de pago desde la base de datos
-      const { data: methods, error } = await supabase
+      // Obtener tenant_id
+      const tenantId = currentTenant?.id || resolveTenantId();
+      
+      // Cargar métodos de pago desde la base de datos, filtrando por tenant_id si existe
+      let query = supabase
         .from('payment_methods')
-        .select('*')
-        .order('is_recommended', { ascending: false })
+        .select('*');
+      
+      // Si hay tenant_id, filtrar por él (priorizar métodos específicos del tenant)
+      // Si no hay tenant_id, cargar todos para ver qué hay
+      if (tenantId) {
+        query = query.eq('tenant_id', tenantId);
+      }
+      
+      query = query.order('is_recommended', { ascending: false })
         .order('name');
+
+      const { data: methods, error } = await query;
 
       if (error && error.code !== 'PGRST116') { // PGRST116 = tabla no existe
         console.warn('Error loading payment methods:', error);
       }
 
-      // Si no hay datos en la BD, usar los métodos por defecto
+      // Si no hay datos en la BD o no hay tenant_id, usar los métodos por defecto
       if (!methods || methods.length === 0) {
         setPaymentMethods(availableMethods);
       } else {
+        // Si hay tenant_id, usar solo los métodos del tenant
+        // Si no hay tenant_id, agrupar por method_id y priorizar los que tienen tenant_id
+        let filteredMethods = methods;
+        
+        if (!tenantId) {
+          // Si no hay tenant_id, agrupar por method_id y tomar el primero (que debería ser el más reciente)
+          const methodMap = new Map();
+          methods.forEach(m => {
+            const key = m.method_id;
+            if (!methodMap.has(key)) {
+              methodMap.set(key, m);
+            } else {
+              // Priorizar el que tiene tenant_id sobre el que tiene null
+              const existing = methodMap.get(key);
+              if (!existing.tenant_id && m.tenant_id) {
+                methodMap.set(key, m);
+              } else if (existing.tenant_id && !m.tenant_id) {
+                // Mantener el que tiene tenant_id
+              } else {
+                // Si ambos tienen o no tienen tenant_id, tomar el más reciente
+                const existingDate = new Date(existing.updated_at || existing.created_at || 0);
+                const currentDate = new Date(m.updated_at || m.created_at || 0);
+                if (currentDate > existingDate) {
+                  methodMap.set(key, m);
+                }
+              }
+            }
+          });
+          filteredMethods = Array.from(methodMap.values());
+        }
+        
         // Combinar con los métodos disponibles
         const combinedMethods = availableMethods.map(method => {
-          const savedMethod = methods.find(m => m.method_id === method.id);
+          // Buscar el método guardado, priorizando los que tienen tenant_id
+          const savedMethod = filteredMethods.find(m => m.method_id === method.id);
           return {
             ...method,
             enabled: savedMethod ? savedMethod.enabled : method.enabled,
@@ -633,15 +677,58 @@ const PaymentMethodsConfig = () => {
     try {
       setBulkActionLoading(true);
       
-      const updates = paymentMethods.map(method => ({
-        method_id: method.id,
-        enabled: action === 'enable',
-        updated_at: new Date().toISOString()
-      }));
+      // Obtener tenant_id
+      const tenantId = currentTenant?.id || resolveTenantId();
+      if (!tenantId) {
+        throw new Error('No se pudo determinar el tenant_id');
+      }
+
+      // Preparar updates con todos los campos requeridos
+      const updates = await Promise.all(
+        paymentMethods.map(async (method) => {
+          // Verificar si el método ya existe en la BD
+          const { data: existingMethod } = await supabase
+            .from('payment_methods')
+            .select('*')
+            .eq('method_id', method.id)
+            .eq('tenant_id', tenantId)
+            .single();
+
+          const methodData = {
+            method_id: method.id,
+            name: method.name || method.id,
+            type: existingMethod?.type || getMethodType(method.id),
+            enabled: action === 'enable',
+            tenant_id: tenantId,
+            updated_at: new Date().toISOString()
+          };
+
+          // Si existe, incluir campos adicionales para mantener la integridad
+          if (existingMethod) {
+            methodData.config = existingMethod.config || {};
+            methodData.processing_time = existingMethod.processing_time || method.processingTime || 'Instantáneo';
+            methodData.fee_structure = existingMethod.fee_structure || method.fee_structure || { percentage: 0, fixed: 0 };
+            methodData.is_recommended = existingMethod.is_recommended !== undefined ? existingMethod.is_recommended : method.recommended || false;
+            methodData.description = existingMethod.description || method.description || '';
+          } else {
+            // Si no existe, incluir valores por defecto
+            methodData.config = {};
+            methodData.processing_time = method.processingTime || 'Instantáneo';
+            methodData.fee_structure = method.fee_structure || { percentage: 0, fixed: 0 };
+            methodData.is_recommended = method.recommended || false;
+            methodData.description = method.description || '';
+            methodData.created_at = new Date().toISOString();
+          }
+
+          return methodData;
+        })
+      );
 
       const { error } = await supabase
         .from('payment_methods')
-        .upsert(updates);
+        .upsert(updates, {
+          onConflict: 'method_id,tenant_id'
+        });
 
       if (error) throw error;
 
@@ -705,15 +792,54 @@ const PaymentMethodsConfig = () => {
           throw new Error('Formato de archivo inválido');
         }
         
+        // Obtener tenant_id
+        const tenantId = currentTenant?.id || resolveTenantId();
+        if (!tenantId) {
+          throw new Error('No se pudo determinar el tenant_id');
+        }
+
         // Aplicar configuración
         for (const methodConfig of config) {
+          // Buscar el método en availableMethods para obtener datos completos
+          const availableMethod = availableMethods.find(m => m.id === methodConfig.id);
+          
+          // Verificar si el método ya existe en la BD
+          const { data: existingMethod } = await supabase
+            .from('payment_methods')
+            .select('*')
+            .eq('method_id', methodConfig.id)
+            .eq('tenant_id', tenantId)
+            .single();
+
+          const methodData = {
+            method_id: methodConfig.id,
+            name: availableMethod?.name || methodConfig.id,
+            type: existingMethod?.type || getMethodType(methodConfig.id),
+            enabled: methodConfig.enabled,
+            tenant_id: tenantId,
+            config: methodConfig.config ? encryptSensitiveData(methodConfig.config) : (existingMethod?.config || {}),
+            updated_at: new Date().toISOString()
+          };
+
+          // Si existe, incluir campos adicionales para mantener la integridad
+          if (existingMethod) {
+            methodData.processing_time = existingMethod.processing_time || availableMethod?.processingTime || 'Instantáneo';
+            methodData.fee_structure = existingMethod.fee_structure || availableMethod?.fee_structure || { percentage: 0, fixed: 0 };
+            methodData.is_recommended = existingMethod.is_recommended !== undefined ? existingMethod.is_recommended : (availableMethod?.recommended || false);
+            methodData.description = existingMethod.description || availableMethod?.description || '';
+          } else {
+            // Si no existe, incluir valores por defecto
+            methodData.processing_time = availableMethod?.processingTime || 'Instantáneo';
+            methodData.fee_structure = availableMethod?.fee_structure || { percentage: 0, fixed: 0 };
+            methodData.is_recommended = availableMethod?.recommended || false;
+            methodData.description = availableMethod?.description || '';
+            methodData.created_at = new Date().toISOString();
+          }
+
           await supabase
             .from('payment_methods')
-            .upsert({
-              method_id: methodConfig.id,
-              enabled: methodConfig.enabled,
-              config: encryptSensitiveData(methodConfig.config),
-              updated_at: new Date().toISOString()
+            .upsert(methodData, {
+              onConflict: 'method_id,tenant_id'
             });
         }
         
