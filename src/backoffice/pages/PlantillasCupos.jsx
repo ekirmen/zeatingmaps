@@ -26,7 +26,7 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   FileTextOutlined,
-  ChairOutlined,
+  AppstoreOutlined,
   EyeOutlined
 } from '@ant-design/icons';
 import { supabase } from '../../supabaseClient';
@@ -672,7 +672,7 @@ const PlantillasCupos = () => {
                   <TabPane 
                     tab={
                       <span>
-                        <ChairOutlined /> Zonas Numeradas
+                        <AppstoreOutlined /> Zonas Numeradas
                       </span>
                     } 
                     key="numeradas"
