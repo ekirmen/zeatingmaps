@@ -25,7 +25,7 @@ import {
   DeleteOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-  TicketOutlined,
+  FileTextOutlined,
   ChairOutlined,
   EyeOutlined
 } from '@ant-design/icons';
@@ -622,7 +622,7 @@ const PlantillasCupos = () => {
                   <TabPane 
                     tab={
                       <span>
-                        <TicketOutlined /> Zonas No Numeradas
+                        <FileTextOutlined /> Zonas No Numeradas
                       </span>
                     } 
                     key="no_numeradas"
