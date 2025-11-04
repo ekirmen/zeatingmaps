@@ -785,7 +785,6 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           order_id: existingPayment ? existingPayment.locator : undefined, // lo normalizamos en service a locator
           payment_method: hasCasheaPayment ? 'Cashea' : primaryMethod,
           tenant_id: resolvedTenantId || undefined,
-          tenantId: resolvedTenantId || undefined,
           gateway_name: hasCasheaPayment ? 'Cashea' : 'manual',
           // columnas legacy de compatibilidad
           event: eventId,
@@ -830,10 +829,34 @@ const PaymentModal = ({ open, onCancel, carrito = [], selectedClient, selectedFu
           }
         }
 
-          // Si ya existe un pago, actualizarlo en lugar de crear uno nuevo
+          // Si ya existe un pago, verificar que no esté completamente pagado antes de actualizar
           if (existingPayment) {
-            console.log('Updating existing payment:', existingPayment.paymentId);
-            return updatePayment(existingPayment.paymentId, paymentData);
+            // Verificar el estado del pago existente
+            try {
+              const { data: existingPaymentData, error: fetchError } = await supabase
+                .from('payment_transactions')
+                .select('id, status, amount, locator')
+                .eq('id', existingPayment.paymentId)
+                .single();
+
+              if (fetchError) {
+                console.error('Error obteniendo pago existente:', fetchError);
+                throw new Error('Error al verificar el estado del pago existente');
+              }
+
+              // Verificar si el pago ya está completado
+              if (existingPaymentData && existingPaymentData.status === 'completed') {
+                message.error(`Este ticket ya está completamente pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator}). No se puede procesar otro pago.`);
+                throw new Error(`El ticket ya está pagado (Localizador: ${existingPaymentData.locator || existingPayment.locator})`);
+              }
+
+              // Si el pago existe pero no está completado, actualizarlo
+              console.log('Updating existing payment:', existingPayment.paymentId);
+              return updatePayment(existingPayment.paymentId, paymentData);
+            } catch (error) {
+              console.error('Error validando pago existente:', error);
+              throw error;
+            }
           } else {
             console.log('Creating new payment');
             
