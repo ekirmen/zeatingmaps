@@ -1023,7 +1023,11 @@ const SeatingMapUnified = ({
             const isSelectedByOther = storeState === 'seleccionado_por_otro';
             
             // Usar el color del store para determinar el borde también
-            const borderColor = getBorderColor(isSelectedByMe || isSelected, seatZona);
+            const borderColor = getBorderColor({
+              isSelected: isSelectedByMe || isSelected,
+              zona: seatZona,
+              seatColor
+            });
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
 
             return (

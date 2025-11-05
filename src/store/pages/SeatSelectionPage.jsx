@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Alert, Spin } from 'antd';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
 import { useSeatLockStore } from '../../components/seatLockStore';
@@ -8,9 +8,12 @@ import { supabase } from '../../supabaseClient';
 
 const SeatSelectionPage = () => {
   const { funcionId } = useParams();
+  const navigate = useNavigate();
   const [mapa, setMapa] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isRedirecting, setIsRedirecting] = useState(true);
+  const [redirectFailed, setRedirectFailed] = useState(false);
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const cartItems = useCartStore((state) => state.items);
@@ -25,23 +28,101 @@ const SeatSelectionPage = () => {
     isAnySeatInTableLocked,
     areAllSeatsInTableLockedByMe
   } = useSeatLockStore();
+  const lockedSeats = useSeatLockStore((state) => state.lockedSeats);
+
+  useEffect(() => {
+    if (!funcionId) {
+      setIsRedirecting(false);
+      setRedirectFailed(true);
+      return;
+    }
+
+    const ensureSessionId = () => {
+      if (typeof window === 'undefined') return;
+      const storedSessionId = window.localStorage.getItem('anonSessionId');
+      if (!storedSessionId) {
+        try {
+          const newSessionId = window.crypto?.randomUUID?.();
+          if (newSessionId) {
+            window.localStorage.setItem('anonSessionId', newSessionId);
+          }
+        } catch (sessionError) {
+          console.warn('[SeatSelectionPage] No se pudo inicializar session_id:', sessionError);
+        }
+      }
+    };
+
+    const attemptRedirect = async () => {
+      setError(null);
+      try {
+        ensureSessionId();
+
+        const funcionNumeric = parseInt(funcionId, 10);
+        if (!Number.isFinite(funcionNumeric) || funcionNumeric <= 0) {
+          throw new Error('Función inválida');
+        }
+
+        const { data: funcionData, error: funcionError } = await supabase
+          .from('funciones')
+          .select('evento_id, evento')
+          .eq('id', funcionNumeric)
+          .maybeSingle();
+
+        if (funcionError) throw funcionError;
+
+        const eventoId = funcionData?.evento_id || funcionData?.evento;
+        if (!eventoId) {
+          throw new Error('La función no tiene un evento asociado');
+        }
+
+        const { data: eventoData, error: eventoError } = await supabase
+          .from('eventos')
+          .select('slug')
+          .eq('id', eventoId)
+          .maybeSingle();
+
+        if (eventoError) throw eventoError;
+
+        const eventSlug = eventoData?.slug;
+        if (!eventSlug) {
+          throw new Error('El evento no tiene un slug configurado');
+        }
+
+        navigate(`/store/eventos/${eventSlug}/map?funcion=${funcionNumeric}`, { replace: true });
+      } catch (redirectError) {
+        console.error('[SeatSelectionPage] Error preparando redirección:', redirectError);
+        setError(redirectError.message || 'No se pudo redirigir al mapa del evento');
+        setRedirectFailed(true);
+        setLoading(true);
+      } finally {
+        setIsRedirecting(false);
+      }
+    };
+
+    attemptRedirect();
+  }, [funcionId, navigate]);
 
   // Suscribirse a función
   useEffect(() => {
-    if (!funcionId) return;
+    if (isRedirecting || !redirectFailed || !funcionId) {
+      return undefined;
+    }
+
     subscribeToFunction(funcionId);
     return () => unsubscribe();
-  }, [funcionId, subscribeToFunction, unsubscribe]);
+  }, [funcionId, subscribeToFunction, unsubscribe, isRedirecting, redirectFailed]);
 
   // Cargar mapa
   useEffect(() => {
+    if (isRedirecting || !redirectFailed || !funcionId) {
+      return;
+    }
+
     const loadMapa = async () => {
-      if (!funcionId) return;
-      
       try {
         setLoading(true);
-        
-        // Obtener función para obtener sala_id
+        setError(null);
+
         const { data: funcion, error: funcionError } = await supabase
           .from('funciones')
           .select('sala_id')
@@ -70,14 +151,14 @@ const SeatSelectionPage = () => {
     };
 
     loadMapa();
-  }, [funcionId]);
+  }, [funcionId, redirectFailed, isRedirecting]);
 
   const handleSeatToggle = async (seat) => {
     // Asegurarnos de que toggleSeat reciba la función asociada
     await toggleSeat({ ...seat, funcionId });
   };
 
-  if (loading) {
+  if (isRedirecting || loading) {
     return (
       <div className="flex items-center justify-center h-96">
         <Spin size="large" />
@@ -113,6 +194,7 @@ const SeatSelectionPage = () => {
             isTableLockedByMe={isTableLockedByMe}
             isAnySeatInTableLocked={isAnySeatInTableLocked}
             areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
+            lockedSeats={lockedSeats}
           />
         ) : (
           <Alert
