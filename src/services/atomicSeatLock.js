@@ -397,22 +397,44 @@ class AtomicSeatLockService {
     return parsed;
   }
 
+  /**
+   * Normaliza y sanitiza un session_id a formato UUID válido
+   * Maneja strings, objetos, y extrae UUIDs de diferentes formatos
+   */
   normalizeSessionIdValue(sessionId) {
-    if (sessionId === undefined || sessionId === null) {
-      return null;
-    }
+    if (!sessionId) return null;
 
     let value = sessionId;
 
+    // Si es un objeto, intentar extraer el UUID de propiedades comunes
+    if (typeof value === 'object' && value !== null) {
+      const possibleKeys = ['id', 'session_id', 'sessionId', 'userId', 'uuid'];
+      for (const key of possibleKeys) {
+        if (typeof value[key] === 'string' && value[key].trim()) {
+          value = value[key];
+          break;
+        }
+      }
+      // Si no se encontró, intentar toString
+      if (typeof value === 'object') {
+        if (typeof value.toString === 'function') {
+          value = value.toString();
+        } else {
+          return null;
+        }
+      }
+    }
+
+    // Convertir a string si no lo es
     if (typeof value !== 'string') {
-      if (typeof value.toString === 'function') {
+      if (typeof value?.toString === 'function') {
         value = value.toString();
       } else {
         return null;
       }
     }
 
-    // Limpiar el valor: eliminar espacios, caracteres invisibles, comillas, etc.
+    // Limpiar: eliminar espacios, caracteres invisibles, comillas, etc.
     const cleaned = value
       .trim()
       .replace(/[\u200B-\u200D\uFEFF]/g, '') // Eliminar caracteres invisibles
@@ -423,17 +445,22 @@ class AtomicSeatLockService {
       return null;
     }
 
-    // Validar formato UUID (básico)
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(cleaned)) {
-      console.warn('⚠️ [ATOMIC_LOCK] session_id no tiene formato UUID válido:', cleaned);
-      // Si no es un UUID válido, generar uno nuevo
-      const newUuid = crypto?.randomUUID?.() || this.generateUuidFallback();
-      console.warn('⚠️ [ATOMIC_LOCK] Generando nuevo UUID:', newUuid);
-      return newUuid;
+    // Extraer UUID usando regex (más flexible, acepta UUIDs dentro de texto)
+    const uuidRegex = /([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
+    const match = cleaned.match(uuidRegex);
+    
+    if (match && match[1]) {
+      // Retornar UUID en formato canónico (lowercase)
+      return match[1].toLowerCase();
     }
 
-    return cleaned;
+    // Si no se encontró un UUID válido, generar uno nuevo
+    console.warn('⚠️ [ATOMIC_LOCK] session_id no tiene formato UUID válido, generando nuevo:', cleaned);
+    const newUuid = (typeof crypto !== 'undefined' && crypto?.randomUUID) 
+      ? crypto.randomUUID() 
+      : this.generateUuidFallback();
+    console.warn('⚠️ [ATOMIC_LOCK] Nuevo UUID generado:', newUuid);
+    return newUuid.toLowerCase();
   }
 
   /**

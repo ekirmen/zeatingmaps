@@ -143,16 +143,18 @@ BEGIN
   ON CONFLICT (seat_id, funcion_id, tenant_id)
   DO UPDATE SET
     -- Si es del mismo usuario, actualizar timestamp y status
+    -- En ON CONFLICT DO UPDATE, usar nombre de tabla sin esquema para valores existentes
+    -- y EXCLUDED para valores que se intentan insertar
     locked_at = CASE 
       WHEN seat_locks.session_id = v_session_id THEN NOW()
       ELSE seat_locks.locked_at
     END,
     expires_at = CASE 
-      WHEN seat_locks.session_id = v_session_id THEN v_expires_at
+      WHEN seat_locks.session_id = v_session_id THEN EXCLUDED.expires_at
       ELSE seat_locks.expires_at
     END,
     status = CASE 
-      WHEN seat_locks.session_id = v_session_id THEN p_status
+      WHEN seat_locks.session_id = v_session_id THEN EXCLUDED.status
       ELSE seat_locks.status
     END,
     updated_at = CASE 

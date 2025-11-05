@@ -598,7 +598,7 @@ export const useSeatLockStore = create((set, get) => ({
       }
       
       console.log('📡 [SEAT_LOCK_STORE] Creando canal Realtime para función:', funcionId, 'Filtro:', filter);
-      
+
       const newChannel = supabase
         .channel(`seat-locks-channel-${funcionId}`, {
           config: {
@@ -620,13 +620,13 @@ export const useSeatLockStore = create((set, get) => ({
               const newLock = payload.new;
               
               // Debug: verificar que el evento se recibe correctamente
-              console.log('🔔 [SEAT_LOCK_STORE] Evento recibido:', {
-                eventType: payload.eventType,
+            console.log('🔔 [SEAT_LOCK_STORE] Evento recibido:', {
+              eventType: payload.eventType,
                 seatId: newLock.seat_id,
                 status: newLock.status,
                 sessionId: newLock.session_id,
                 currentSessionId: localStorage.getItem('anonSessionId')
-              });
+            });
               
               set((state) => {
                 const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
@@ -709,7 +709,7 @@ export const useSeatLockStore = create((set, get) => ({
               // Buscar en asientos bloqueados
               let seatId = deletedSeatId;
               if (!seatId && deletedId) {
-                const deletedSeat = currentSeats.find(lock => lock.id === deletedId);
+              const deletedSeat = currentSeats.find(lock => lock.id === deletedId);
                 seatId = deletedSeat?.seat_id;
               }
               
@@ -733,10 +733,10 @@ export const useSeatLockStore = create((set, get) => ({
                 // Buscar en mesas
                 const deletedTable = currentTables.find(lock => lock.id === deletedId);
                 if (deletedTable) {
-                  set((state) => {
-                    const updatedTables = state.lockedTables.filter(lock => lock.id !== deletedId);
-                    return { lockedTables: updatedTables };
-                  });
+                set((state) => {
+                  const updatedTables = state.lockedTables.filter(lock => lock.id !== deletedId);
+                  return { lockedTables: updatedTables };
+                });
                 }
               }
             }
