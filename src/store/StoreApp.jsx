@@ -31,6 +31,7 @@ import CookiesPolicy from './pages/CookiesPolicy';
 import LegalTerms from './pages/LegalTerms';
 import CmsPage from './pages/CmsPage';
 import EventsVenue from './pages/EventsVenue';
+import MapShortRoute from './pages/MapShortRoute';
 import { useAuth } from '../contexts/AuthContext'; // para perfil
 import { useCartStore } from './cartStore';
 import ProtectedRoute from './components/ProtectedRoute';
