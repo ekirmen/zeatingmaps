@@ -768,10 +768,20 @@ export const useSeatLockStore = create((set, get) => ({
         normalizedSessionId
       } = validation;
 
-      // OPTIMISTIC UPDATE: Actualizar estado visual INMEDIATAMENTE antes de esperar respuesta
-      const now = new Date().toISOString();
-      const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutos
-      
+      // Usar servicio atómico para el bloqueo (esperar respuesta del servidor)
+      const result = await atomicSeatLockService.lockSeatAtomically(
+        normalizedSeatId,
+        normalizedFuncionId,
+        normalizedSessionId,
+        status
+      );
+
+      if (!result.success) {
+        console.error('[SEAT_LOCK] Error en bloqueo atómico:', result.error);
+        return false;
+      }
+
+      // Actualizar estado local DESPUÉS de recibir confirmación del servidor
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
         const newLockedSeats = [
@@ -780,81 +790,26 @@ export const useSeatLockStore = create((set, get) => ({
             seat_id: normalizedSeatId,
             funcion_id: normalizedFuncionId,
             session_id: normalizedSessionId,
-            locked_at: now,
-            expires_at: expiresAt,
-            status: status,
+            locked_at: result.lockData.locked_at,
+            expires_at: result.lockData.expires_at,
+            status: result.lockData.status,
             lock_type: 'seat',
-            id: `temp-${normalizedSeatId}-${Date.now()}`, // ID temporal
+            locator: result.lockData.locator,
+            id: result.lockData.id,
           },
         ];
         
-        // Actualizar estado visual inmediatamente
+        // Actualizar estado visual (amarillo = seleccionado por mí)
         const newSeatStates = new Map(state.seatStates);
-        newSeatStates.set(normalizedSeatId, 'seleccionado');
+        newSeatStates.set(normalizedSeatId, 'seleccionado'); // Amarillo
         
         return {
           lockedSeats: newLockedSeats,
           seatStates: newSeatStates,
         };
       });
-
-      // Usar servicio atómico para el bloqueo (sin await el visual ya cambió)
-      atomicSeatLockService.lockSeatAtomically(
-        normalizedSeatId,
-        normalizedFuncionId,
-        normalizedSessionId,
-        status
-      ).then((result) => {
-        if (result.success) {
-          // Actualizar con datos reales del servidor cuando llegue
-          set((state) => {
-            const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
-            const newLockedSeats = [
-              ...currentSeats.filter((s) => s.seat_id !== normalizedSeatId),
-              {
-                seat_id: normalizedSeatId,
-                funcion_id: normalizedFuncionId,
-                session_id: normalizedSessionId,
-                locked_at: result.lockData.locked_at,
-                expires_at: result.lockData.expires_at,
-                status: result.lockData.status,
-                lock_type: 'seat',
-                locator: result.lockData.locator,
-                id: result.lockData.id,
-              },
-            ];
-            return { lockedSeats: newLockedSeats };
-          });
-        } else {
-          // Revertir si falló
-          set((state) => {
-            const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
-            const newLockedSeats = currentSeats.filter((s) => s.seat_id !== normalizedSeatId);
-            const newSeatStates = new Map(state.seatStates);
-            newSeatStates.delete(normalizedSeatId);
-            return { 
-              lockedSeats: newLockedSeats,
-              seatStates: newSeatStates,
-            };
-          });
-          console.error('[SEAT_LOCK] Error en bloqueo atómico, revirtiendo:', result.error);
-        }
-      }).catch((error) => {
-        // Revertir si falló
-        set((state) => {
-          const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
-          const newLockedSeats = currentSeats.filter((s) => s.seat_id !== normalizedSeatId);
-          const newSeatStates = new Map(state.seatStates);
-          newSeatStates.delete(normalizedSeatId);
-          return { 
-            lockedSeats: newLockedSeats,
-            seatStates: newSeatStates,
-          };
-        });
-        console.error('[SEAT_LOCK] Error inesperado al bloquear asiento:', error);
-      });
       
-      return true; // Retornar inmediatamente
+      return true;
     } catch (error) {
       console.error('[SEAT_LOCK] Error inesperado al bloquear asiento:', error);
       return false;

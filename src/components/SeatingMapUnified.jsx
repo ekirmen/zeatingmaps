@@ -521,9 +521,18 @@ const SeatingMapUnified = ({
         return;
       }
 
-      // Verificar si está seleccionado por otro usuario
-      const isSelectedByOther = seat.estado === 'seleccionado_por_otro';
-      if (isSelectedByOther) {
+      // Verificar si está seleccionado por otro usuario (usando seatStates del store)
+      const storeState = seatStates?.get?.(seat._id);
+      const isSelectedByOtherInStore = storeState === 'seleccionado_por_otro';
+      
+      // Verificar si está bloqueado/seleccionado por otro usuario
+      const isLockedByOther = allLockedSeats && Array.isArray(allLockedSeats) && allLockedSeats.some(lock => {
+        const lockSeatId = lock.seat_id || lock.seatId;
+        const currentSessionId = localStorage.getItem('anonSessionId');
+        return lockSeatId === seat._id && lock.session_id !== currentSessionId && lock.status === 'seleccionado';
+      });
+      
+      if (isSelectedByOtherInStore || isLockedByOther || seat.estado === 'seleccionado_por_otro') {
         logger.warn('❌ [SEATING_MAP] Asiento seleccionado por otro usuario, no se puede interactuar');
         // Mostrar mensaje al usuario
         if (onSeatError) {
@@ -587,8 +596,18 @@ const SeatingMapUnified = ({
           return;
         }
         
-        // Verificar si está bloqueado por otro usuario
-        if (seat.estado === 'seleccionado_por_otro' || seat.estado === 'vendido' || seat.estado === 'reservado') {
+        // Verificar si está bloqueado por otro usuario (usando seatStates del store)
+        const storeState = seatStates?.get?.(seat._id);
+        const isSelectedByOtherInStore = storeState === 'seleccionado_por_otro';
+        
+        // Verificar si está bloqueado/seleccionado por otro usuario
+        const isLockedByOther = allLockedSeats && Array.isArray(allLockedSeats) && allLockedSeats.some(lock => {
+          const lockSeatId = lock.seat_id || lock.seatId;
+          const currentSessionId = localStorage.getItem('anonSessionId');
+          return lockSeatId === seat._id && lock.session_id !== currentSessionId && lock.status === 'seleccionado';
+        });
+        
+        if (isSelectedByOtherInStore || isLockedByOther || seat.estado === 'seleccionado_por_otro' || seat.estado === 'vendido' || seat.estado === 'reservado') {
           // Asiento no disponible
           if (onSeatError) {
             const errorMessage = seat.estado === 'vendido' 
