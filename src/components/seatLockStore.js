@@ -75,7 +75,37 @@ async function getSessionId() {
 // Función para validar y convertir session_id a string
 function normalizeSessionId(sessionId) {
   if (!sessionId) return null;
-  return String(sessionId); // Convertir a string para evitar problemas de tipos
+  
+  // Convertir a string y limpiar
+  let value = String(sessionId);
+  
+  // Limpiar caracteres invisibles y espacios
+  value = value
+    .trim()
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // Eliminar caracteres invisibles
+    .replace(/^["']|["']$/g, ''); // Eliminar comillas
+  
+  // Validar formato UUID básico
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(value)) {
+    console.warn('⚠️ [SESSION] session_id no tiene formato UUID válido:', value);
+    // Si no es válido, generar uno nuevo
+    const newUuid = crypto?.randomUUID?.() || generateUuidFallback();
+    console.warn('⚠️ [SESSION] Generando nuevo UUID:', newUuid);
+    localStorage.setItem('anonSessionId', newUuid);
+    return newUuid;
+  }
+  
+  return value;
+}
+
+// Función auxiliar para generar UUID si crypto.randomUUID no está disponible
+function generateUuidFallback() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
 }
 
 async function initializeSession() {
