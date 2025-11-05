@@ -223,6 +223,7 @@ export const useSeatLockStore = create((set, get) => ({
   cleanupInterval: null, // Intervalo para limpieza automática
   mapa: null, // Mapa original (no se actualiza)
   seatStates: new Map(), // Estados actualizados de asientos individuales
+  seatStatesVersion: 0, // Contador de versión para detectar cambios en seatStates
 
   setLockedSeats: (seats) => {
     // Validar que seats sea un array
@@ -239,13 +240,16 @@ export const useSeatLockStore = create((set, get) => ({
     set((state) => {
       const newSeatStates = new Map(state.seatStates);
       newSeatStates.set(seatId, newState);
-      return { seatStates: newSeatStates };
+      return { seatStates: newSeatStates, seatStatesVersion: state.seatStatesVersion + 1 };
     });
   },
 
   // Función específica para actualizar seatStates desde el exterior
   setSeatStates: (newSeatStates) => {
-    set({ seatStates: newSeatStates });
+    set((state) => ({ 
+      seatStates: newSeatStates,
+      seatStatesVersion: state.seatStatesVersion + 1
+    }));
   },
 
   // Obtener estado de un asiento
@@ -260,7 +264,7 @@ export const useSeatLockStore = create((set, get) => ({
       const newSeatStates = new Map(state.seatStates);
       newSeatStates.delete(seatId);
       console.log('🧹 [SEAT_LOCK_STORE] Estado limpiado manualmente para asiento:', seatId);
-      return { seatStates: newSeatStates };
+      return { seatStates: newSeatStates, seatStatesVersion: state.seatStatesVersion + 1 };
     });
   },
 
@@ -565,11 +569,12 @@ export const useSeatLockStore = create((set, get) => ({
           // Estado inicial del asiento (payment_transactions - PRIORIDAD)
         });
         
-        set({ 
+        set((state) => ({ 
           lockedSeats: seatLocks,
           lockedTables: tableLocks,
-          seatStates: newSeatStates
-        });
+          seatStates: newSeatStates,
+          seatStatesVersion: state.seatStatesVersion + 1
+        }));
       } catch (error) {
         console.error('❌ [SEAT_LOCK_STORE] Error en fetchInitialLocks:', error);
         set({ lockedSeats: [], lockedTables: [] });
@@ -696,6 +701,7 @@ export const useSeatLockStore = create((set, get) => ({
                   lockedSeats: currentSeats,
                   lockedTables: currentTables,
                   seatStates: newSeatStates,
+                  seatStatesVersion: state.seatStatesVersion + 1,
                 };
               });
             };
@@ -769,7 +775,10 @@ export const useSeatLockStore = create((set, get) => ({
                         }
                       });
                       
-                      return { seatStates: newSeatStates };
+                      return { 
+                        seatStates: newSeatStates,
+                        seatStatesVersion: state.seatStatesVersion + 1
+                      };
                     });
                   }
                 } catch (error) {
@@ -907,7 +916,8 @@ export const useSeatLockStore = create((set, get) => ({
         
         return {
           lockedSeats: newLockedSeats,
-          seatStates: newSeatStates
+          seatStates: newSeatStates,
+          seatStatesVersion: state.seatStatesVersion + 1
         };
       });
       
@@ -1096,6 +1106,7 @@ export const useSeatLockStore = create((set, get) => ({
         return {
           lockedSeats: updatedSeats,
           seatStates: newSeatStates,
+          seatStatesVersion: state.seatStatesVersion + 1
         };
       });
       

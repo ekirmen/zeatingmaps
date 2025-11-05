@@ -215,30 +215,31 @@ const SeatingMapUnified = ({
   }, []);
 
   // const channel = useSeatLockStore(state => state.channel); // Removido por no usarse
-  const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const setMapa = useSeatLockStore(state => state.setMapa);
-  // Convertir Map a objeto para forzar re-render cuando cambie
-  // Usar un selector que serialice el Map para detectar cambios
-  const seatStatesMap = useSeatLockStore(state => {
-    const map = state.seatStates;
-    if (!map || !(map instanceof Map)) return null;
-    // Serializar el Map para forzar re-render cuando cambie
-    return Array.from(map.entries());
-  });
+  // Obtener el Map directamente del store y el contador de versión
+  const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
+  const { seatStatesMapRaw, seatStatesVersion } = useSeatLockStore(state => ({
+    seatStatesMapRaw: state.seatStates,
+    seatStatesVersion: state.seatStatesVersion
+  }));
   
-  // Convertir de array de entries a Map y objeto
-  const seatStatesMapObj = useMemo(() => {
-    if (!seatStatesMap) return { map: null, obj: {} };
-    const map = new Map(seatStatesMap);
+  // Convertir Map a objeto para que React detecte cambios
+  // seatStatesVersion cambia cada vez que se actualiza seatStates, forzando re-render
+  const seatStates = useMemo(() => {
+    if (!seatStatesMapRaw || !(seatStatesMapRaw instanceof Map)) {
+      return {};
+    }
     const obj = {};
-    seatStatesMap.forEach(([key, value]) => {
+    seatStatesMapRaw.forEach((value, key) => {
       obj[key] = value;
     });
-    return { map, obj };
-  }, [seatStatesMap]);
+    return obj;
+  }, [seatStatesMapRaw, seatStatesVersion]);
   
-  const seatStates = seatStatesMapObj.obj;
-  const seatStatesMapForColor = seatStatesMapObj.map;
+  // Crear un Map desde el objeto para getSeatColor
+  const seatStatesMapForColor = useMemo(() => {
+    return new Map(Object.entries(seatStates));
+  }, [seatStates]);
   const subscribeToFunction = useSeatLockStore(state => state.subscribeToFunction);
   const unsubscribe = useSeatLockStore(state => state.unsubscribe);
   const { getSeatColor, getBorderColor } = useSeatColors(normalizedFuncionId);
