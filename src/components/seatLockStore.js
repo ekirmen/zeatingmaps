@@ -545,11 +545,14 @@ export const useSeatLockStore = create((set, get) => ({
       // Obtener tenant_id para filtrar y mejorar performance
       const tenantId = getCurrentTenantId();
       
-      // Crear filtro optimizado
+      // Crear filtro optimizado - Supabase Realtime usa comas para múltiples condiciones
+      // Formato: "campo1=eq.valor1,campo2=eq.valor2"
       let filter = `funcion_id=eq.${funcionId}`;
       if (tenantId) {
-        filter = `${filter}&tenant_id=eq.${tenantId}`;
+        filter = `${filter},tenant_id=eq.${tenantId}`;
       }
+      
+      console.log('📡 [SEAT_LOCK_STORE] Creando canal Realtime para función:', funcionId, 'Filtro:', filter);
       
       const newChannel = supabase
         .channel(`seat-locks-channel-${funcionId}`, {
@@ -570,6 +573,15 @@ export const useSeatLockStore = create((set, get) => ({
             // Procesar eventos de forma más rápida sin logs excesivos
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
               const newLock = payload.new;
+              
+              // Debug: verificar que el evento se recibe correctamente
+              console.log('🔔 [SEAT_LOCK_STORE] Evento recibido:', {
+                eventType: payload.eventType,
+                seatId: newLock.seat_id,
+                status: newLock.status,
+                sessionId: newLock.session_id,
+                currentSessionId: localStorage.getItem('anonSessionId')
+              });
               
               set((state) => {
                 const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
@@ -604,12 +616,23 @@ export const useSeatLockStore = create((set, get) => ({
                     const currentSessionId = localStorage.getItem('anonSessionId');
                     if (newLock.session_id === currentSessionId) {
                       visualState = 'seleccionado';
+                      console.log('✅ [SEAT_LOCK_STORE] Asiento seleccionado por mí:', newLock.seat_id);
                     } else {
                       visualState = 'seleccionado_por_otro';
+                      console.log('⚠️ [SEAT_LOCK_STORE] Asiento seleccionado por otro:', newLock.seat_id, {
+                        otherSessionId: newLock.session_id,
+                        currentSessionId: currentSessionId
+                      });
                     }
                   }
                   
                   newSeatStates.set(newLock.seat_id, visualState);
+                  
+                  console.log('🎨 [SEAT_LOCK_STORE] Estado visual actualizado:', {
+                    seatId: newLock.seat_id,
+                    visualState: visualState,
+                    status: newLock.status
+                  });
                   
                   return { 
                     lockedSeats: updatedSeats, 
@@ -674,7 +697,7 @@ export const useSeatLockStore = create((set, get) => ({
             event: '*',
             schema: 'public',
             table: 'payment_transactions',
-            filter: tenantId ? `funcion_id=eq.${funcionId}&tenant_id=eq.${tenantId}` : `funcion_id=eq.${funcionId}`,
+            filter: tenantId ? `funcion_id=eq.${funcionId},tenant_id=eq.${tenantId}` : `funcion_id=eq.${funcionId}`,
           },
           (payload) => {
             // Procesar eventos de payment_transactions de forma más rápida
@@ -710,12 +733,22 @@ export const useSeatLockStore = create((set, get) => ({
           }
         )
         .subscribe((status) => {
-          // Estado de suscripción manejado silenciosamente
+          // Log del estado de suscripción para debugging
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ [SEAT_LOCK_STORE] Suscrito exitosamente a Realtime para función:', funcionId);
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('❌ [SEAT_LOCK_STORE] Error en canal Realtime:', status);
+          } else if (status === 'TIMED_OUT') {
+            console.warn('⏱️ [SEAT_LOCK_STORE] Timeout en suscripción Realtime:', status);
+          } else {
+            console.log('📡 [SEAT_LOCK_STORE] Estado de suscripción:', status);
+          }
         });
 
       set({ channel: newChannel });
+      console.log('📡 [SEAT_LOCK_STORE] Canal creado, esperando suscripción...');
     } catch (error) {
-      // Error silencioso
+      console.error('❌ [SEAT_LOCK_STORE] Error creando canal Realtime:', error);
     }
   },
 

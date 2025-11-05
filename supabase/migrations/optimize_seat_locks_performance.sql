@@ -7,6 +7,10 @@
 -- Mantener solo las políticas más eficientes
 
 -- Eliminar políticas duplicadas (mantener solo las más optimizadas)
+DROP POLICY IF EXISTS "seat_locks_delete_policy" ON public.seat_locks;
+DROP POLICY IF EXISTS "seat_locks_insert_policy" ON public.seat_locks;
+DROP POLICY IF EXISTS "seat_locks_select_policy" ON public.seat_locks;
+DROP POLICY IF EXISTS "seat_locks_update_policy" ON public.seat_locks;
 DROP POLICY IF EXISTS "seat_locks_delete_any_auth" ON public.seat_locks;
 DROP POLICY IF EXISTS "seat_locks_insert_any_auth" ON public.seat_locks;
 DROP POLICY IF EXISTS "seat_locks_select_any_auth" ON public.seat_locks;
@@ -19,7 +23,7 @@ DROP POLICY IF EXISTS "seat_locks_update_any_auth" ON public.seat_locks;
 DROP POLICY IF EXISTS "seat_locks_select_policy_optimized" ON public.seat_locks;
 CREATE POLICY "seat_locks_select_policy_optimized" ON public.seat_locks
 FOR SELECT
-USING (true); -- Permitir lectura a todos (RLS está deshabilitado, pero mantener para compatibilidad)
+USING (true); -- Permitir lectura a todos (necesario para Realtime)
 
 -- Política combinada para INSERT (más rápida)
 DROP POLICY IF EXISTS "seat_locks_insert_policy_optimized" ON public.seat_locks;
@@ -86,7 +90,10 @@ CREATE INDEX IF NOT EXISTS idx_seat_locks_locator_optimized
 ON public.seat_locks (locator)
 WHERE locator IS NOT NULL;
 
--- 7. ANALIZAR TABLA PARA OPTIMIZAR PLANIFICADOR
+-- 7. HABILITAR RLS (necesario para que las políticas funcionen)
+ALTER TABLE public.seat_locks ENABLE ROW LEVEL SECURITY;
+
+-- 8. ANALIZAR TABLA PARA OPTIMIZAR PLANIFICADOR
 ANALYZE public.seat_locks;
 
 -- =====================================================
