@@ -657,16 +657,22 @@ export const useSeatLockStore = create((set, get) => ({
                   } else if (newLock.status === 'reservado') {
                     visualState = 'reservado';
                   } else if (newLock.status === 'seleccionado') {
-                    // Verificar si es del usuario actual
-                    const currentSessionId = localStorage.getItem('anonSessionId');
-                    if (newLock.session_id === currentSessionId) {
+                    // Verificar si es del usuario actual - normalizar ambos session_ids para comparar correctamente
+                    const currentSessionIdRaw = localStorage.getItem('anonSessionId');
+                    const currentSessionId = normalizeSessionId(currentSessionIdRaw);
+                    const lockSessionId = normalizeSessionId(newLock.session_id?.toString() || '');
+                    
+                    // Comparar session_ids normalizados
+                    if (currentSessionId && lockSessionId && currentSessionId === lockSessionId) {
                       visualState = 'seleccionado';
                       console.log('✅ [SEAT_LOCK_STORE] Asiento seleccionado por mí:', newLock.seat_id);
                     } else {
                       visualState = 'seleccionado_por_otro';
                       console.log('⚠️ [SEAT_LOCK_STORE] Asiento seleccionado por otro:', newLock.seat_id, {
-                        otherSessionId: newLock.session_id,
-                        currentSessionId: currentSessionId
+                        otherSessionId: lockSessionId,
+                        currentSessionId: currentSessionId,
+                        rawOtherSessionId: newLock.session_id,
+                        rawCurrentSessionId: currentSessionIdRaw
                       });
                     }
                   }

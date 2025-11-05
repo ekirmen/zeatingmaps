@@ -50,7 +50,54 @@ class AtomicSeatLockService {
         });
         
         // Manejar errores específicos
-        if (error.message?.includes('already_locked') || error.code === 'P0001') {
+        // Error 23505 = violación de restricción única (duplicate key) - asiento ya bloqueado
+        // Error 409 = Conflict (HTTP status code equivalente)
+        if (error.code === '23505' || error.code === '409' || error.message?.includes('duplicate key') || error.message?.includes('already exists')) {
+          // Si es un duplicate key, verificar consultando el lock existente
+          console.warn('⚠️ [ATOMIC_LOCK] Asiento ya bloqueado (duplicate key), verificando si es del mismo usuario...');
+          
+          try {
+            // Consultar el lock existente para verificar si es del mismo usuario
+            const { data: existingLock, error: queryError } = await supabase
+              .from('seat_locks')
+              .select('*')
+              .eq('seat_id', normalizedSeatId)
+              .eq('funcion_id', normalizedFuncionId)
+              .order('locked_at', { ascending: false })
+              .limit(1)
+              .single();
+            
+            if (queryError || !existingLock) {
+              // No se pudo consultar el lock, asumir que es de otro usuario
+              throw new Error('Asiento ya está seleccionado por otro usuario');
+            }
+            
+            const currentSessionId = this.normalizeSessionIdValue(sessionId);
+            const existingSessionId = existingLock.session_id?.toString() || '';
+            
+            // Comparar session_ids normalizados
+            if (currentSessionId === existingSessionId || 
+                (existingLock.expires_at && new Date(existingLock.expires_at) > new Date())) {
+              // Es del mismo usuario o el lock aún es válido, devolver éxito
+              console.log('✅ [ATOMIC_LOCK] Lock existente pertenece al mismo usuario, actualizando...');
+              return {
+                success: true,
+                lockData: existingLock,
+                alreadyLocked: true,
+                error: null
+              };
+            } else {
+              // Es de otro usuario
+              throw new Error('Asiento ya está seleccionado por otro usuario');
+            }
+          } catch (verifyError) {
+            // Si hay error verificando, asumir que es de otro usuario
+            if (verifyError.message?.includes('otro usuario')) {
+              throw verifyError;
+            }
+            throw new Error('Asiento ya está seleccionado por otro usuario');
+          }
+        } else if (error.message?.includes('already_locked') || error.code === 'P0001') {
           throw new Error('Asiento ya está seleccionado por otro usuario');
         } else if (error.message?.includes('not_available')) {
           throw new Error('Asiento no está disponible');

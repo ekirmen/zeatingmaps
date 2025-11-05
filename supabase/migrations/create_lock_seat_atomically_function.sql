@@ -48,10 +48,10 @@ AS $$
 DECLARE
   v_tenant_id UUID;
   v_session_id UUID;
-  v_existing_lock RECORD;
+  v_result_lock RECORD;
   v_locator TEXT;
   v_expires_at TIMESTAMPTZ;
-  v_lock_id UUID;
+  v_existing_lock RECORD;
 BEGIN
   -- Validar que session_id no sea NULL o vacío
   IF p_session_id IS NULL OR p_session_id = '' OR trim(p_session_id) = '' THEN
@@ -81,6 +81,7 @@ BEGIN
     RAISE EXCEPTION 'Error al convertir session_id a UUID: %', SQLERRM 
       USING ERRCODE = 'P0007';
   END;
+  
   -- Obtener tenant_id del contexto (si está disponible)
   -- Si no está disponible, intentar obtenerlo de la función o usar un valor por defecto
   v_tenant_id := current_setting('app.tenant_id', true)::UUID;
@@ -111,52 +112,8 @@ BEGIN
   -- Calcular expires_at (15 minutos desde ahora)
   v_expires_at := NOW() + INTERVAL '15 minutes';
   
-  -- Buscar si ya existe un lock para este asiento y función
-  SELECT sl.* INTO v_existing_lock
-  FROM public.seat_locks sl
-  WHERE sl.seat_id = p_seat_id
-    AND sl.funcion_id = p_funcion_id
-    AND sl.tenant_id = v_tenant_id
-    AND sl.expires_at > NOW()
-    AND sl.status NOT IN ('liberado', 'expirado')
-  ORDER BY sl.locked_at DESC
-  LIMIT 1;
-  
-  -- Si existe un lock activo
-  IF v_existing_lock IS NOT NULL THEN
-    -- Si es del mismo usuario/sesión, actualizar el timestamp
-    IF v_existing_lock.session_id = v_session_id THEN
-      UPDATE public.seat_locks sl
-      SET 
-        locked_at = NOW(),
-        expires_at = v_expires_at,
-        status = p_status,
-        updated_at = NOW()
-      WHERE sl.id = v_existing_lock.id
-      RETURNING sl.* INTO v_existing_lock;
-      
-      -- Retornar el lock actualizado
-      RETURN QUERY SELECT 
-        v_existing_lock.id,
-        v_existing_lock.seat_id,
-        v_existing_lock.funcion_id,
-        v_existing_lock.session_id,
-        v_existing_lock.locked_at,
-        v_existing_lock.expires_at,
-        v_existing_lock.status,
-        v_existing_lock.lock_type,
-        v_existing_lock.tenant_id,
-        v_existing_lock.created_at,
-        v_existing_lock.updated_at;
-      RETURN;
-    ELSE
-      -- Es de otro usuario, lanzar error
-      RAISE EXCEPTION 'Asiento ya está seleccionado por otro usuario' 
-        USING ERRCODE = 'P0001';
-    END IF;
-  END IF;
-  
-  -- No existe lock activo, crear uno nuevo
+  -- Usar INSERT ... ON CONFLICT DO UPDATE para manejar de forma atómica
+  -- Esto previene condiciones de carrera y errores 409
   INSERT INTO public.seat_locks (
     seat_id,
     funcion_id,
@@ -183,21 +140,93 @@ BEGIN
     NOW(),
     NOW()
   )
-  RETURNING * INTO v_existing_lock;
+  ON CONFLICT (seat_id, funcion_id, tenant_id)
+  DO UPDATE SET
+    -- Si es del mismo usuario, actualizar timestamp y status
+    locked_at = CASE 
+      WHEN seat_locks.session_id = v_session_id THEN NOW()
+      ELSE seat_locks.locked_at
+    END,
+    expires_at = CASE 
+      WHEN seat_locks.session_id = v_session_id THEN v_expires_at
+      ELSE seat_locks.expires_at
+    END,
+    status = CASE 
+      WHEN seat_locks.session_id = v_session_id THEN p_status
+      ELSE seat_locks.status
+    END,
+    updated_at = CASE 
+      WHEN seat_locks.session_id = v_session_id THEN NOW()
+      ELSE seat_locks.updated_at
+    END
+  WHERE seat_locks.expires_at > NOW()
+    AND seat_locks.status NOT IN ('liberado', 'expirado')
+  RETURNING * INTO v_result_lock;
   
-  -- Retornar el lock creado
+  -- Si no se actualizó ninguna fila (conflicto pero no se cumplió el WHERE)
+  -- significa que el asiento está bloqueado por otro usuario o está expirado
+  IF v_result_lock IS NULL THEN
+    -- Verificar si existe un lock activo de otro usuario
+    SELECT sl.* INTO v_existing_lock
+    FROM public.seat_locks sl
+    WHERE sl.seat_id = p_seat_id
+      AND sl.funcion_id = p_funcion_id
+      AND sl.tenant_id = v_tenant_id
+      AND sl.expires_at > NOW()
+      AND sl.status NOT IN ('liberado', 'expirado')
+    ORDER BY sl.locked_at DESC
+    LIMIT 1;
+    
+    IF v_existing_lock IS NOT NULL AND v_existing_lock.session_id != v_session_id THEN
+      -- Es de otro usuario, lanzar error
+      RAISE EXCEPTION 'Asiento ya está seleccionado por otro usuario' 
+        USING ERRCODE = 'P0001';
+    END IF;
+    
+    -- Si llegamos aquí, el lock expiró o no existe, intentar crear uno nuevo
+    -- (esto no debería pasar normalmente, pero por si acaso)
+    INSERT INTO public.seat_locks (
+      seat_id,
+      funcion_id,
+      session_id,
+      locked_at,
+      expires_at,
+      status,
+      lock_type,
+      tenant_id,
+      locator,
+      created_at,
+      updated_at
+    )
+    VALUES (
+      p_seat_id,
+      p_funcion_id,
+      v_session_id,
+      NOW(),
+      v_expires_at,
+      p_status,
+      'seat',
+      v_tenant_id,
+      v_locator,
+      NOW(),
+      NOW()
+    )
+    RETURNING * INTO v_result_lock;
+  END IF;
+  
+  -- Retornar el lock (creado o actualizado)
   RETURN QUERY SELECT 
-    v_existing_lock.id,
-    v_existing_lock.seat_id,
-    v_existing_lock.funcion_id,
-    v_existing_lock.session_id,
-    v_existing_lock.locked_at,
-    v_existing_lock.expires_at,
-    v_existing_lock.status,
-    v_existing_lock.lock_type,
-    v_existing_lock.tenant_id,
-    v_existing_lock.created_at,
-    v_existing_lock.updated_at;
+    v_result_lock.id,
+    v_result_lock.seat_id,
+    v_result_lock.funcion_id,
+    v_result_lock.session_id,
+    v_result_lock.locked_at,
+    v_result_lock.expires_at,
+    v_result_lock.status,
+    v_result_lock.lock_type,
+    v_result_lock.tenant_id,
+    v_result_lock.created_at,
+    v_result_lock.updated_at;
 END;
 $$;
 
@@ -212,6 +241,7 @@ GRANT EXECUTE ON FUNCTION public.lock_seat_atomically(
 -- Comentario para documentación
 COMMENT ON FUNCTION public.lock_seat_atomically IS 
   'Bloquea un asiento de forma atómica, previniendo condiciones de carrera. 
+   Usa INSERT ... ON CONFLICT para manejar conflictos de forma atómica.
    Si el asiento ya está bloqueado por otro usuario, lanza error.
    Si está bloqueado por el mismo usuario, actualiza el timestamp.
    Si no está bloqueado, crea un nuevo lock.';
