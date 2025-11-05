@@ -4,6 +4,46 @@
 import { useTheme } from '../contexts/ThemeContext';
 import { useState, useEffect } from 'react';
 
+const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+const normalizeHex = (color) => {
+  if (typeof color !== 'string') return null;
+  const trimmed = color.trim();
+  if (!trimmed.startsWith('#')) return null;
+
+  const hex = trimmed.slice(1);
+  if (hex.length === 3) {
+    return `#${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`.toLowerCase();
+  }
+
+  if (hex.length === 6) {
+    return `#${hex.toLowerCase()}`;
+  }
+
+  return null;
+};
+
+const darkenHexColor = (color, amount = 0.25) => {
+  const normalized = normalizeHex(color);
+  if (!normalized) {
+    return color || '#2d3748';
+  }
+
+  const factor = clamp(amount, 0, 1);
+  const r = parseInt(normalized.slice(1, 3), 16);
+  const g = parseInt(normalized.slice(3, 5), 16);
+  const b = parseInt(normalized.slice(5, 7), 16);
+
+  const toHex = (value) => {
+    const hex = clamp(Math.round(value), 0, 255).toString(16);
+    return hex.length === 1 ? `0${hex}` : hex;
+  };
+
+  const darkenChannel = (channel) => channel * (1 - factor);
+
+  return `#${toHex(darkenChannel(r))}${toHex(darkenChannel(g))}${toHex(darkenChannel(b))}`;
+};
+
 const isValidUuid = (value) =>
   typeof value === 'string' &&
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -185,11 +225,41 @@ export const useSeatColors = (eventId = null) => {
   };
 
   // Función para obtener el color de borde
-  const getBorderColor = (isSelected, zona) => {
+  const getBorderColor = (arg1 = false, arg2 = null, arg3 = null) => {
+    let isSelected = false;
+    let zona = null;
+    let seatColor = null;
+
+    if (typeof arg1 === 'object' && arg1 !== null && !Array.isArray(arg1)) {
+      isSelected = Boolean(arg1.isSelected);
+      zona = arg1.zona || null;
+      seatColor = arg1.seatColor || null;
+    } else {
+      if (typeof arg1 === 'boolean') {
+        isSelected = arg1;
+        zona = arg2 && typeof arg2 === 'object' ? arg2 : null;
+        seatColor = typeof arg2 === 'string' ? arg2 : arg3;
+      } else {
+        zona = arg1 && typeof arg1 === 'object' ? arg1 : null;
+        seatColor = typeof arg1 === 'string' && normalizeHex(arg1)
+          ? arg1
+          : typeof arg2 === 'string'
+            ? arg2
+            : arg3;
+        isSelected = typeof arg2 === 'boolean' ? arg2 : false;
+      }
+    }
+
     if (isSelected) {
       return theme.seatSelectedMe || '#ffd700';
     }
-    return zona?.color || '#2d3748';
+
+    const baseColor = seatColor || zona?.color;
+    if (!baseColor) {
+      return '#2d3748';
+    }
+
+    return darkenHexColor(baseColor, 0.25);
   };
 
   return {
