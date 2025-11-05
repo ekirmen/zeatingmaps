@@ -542,35 +542,38 @@ export const useSeatLockStore = create((set, get) => ({
         return;
       }
 
+      // Obtener tenant_id para filtrar y mejorar performance
+      const tenantId = getCurrentTenantId();
+      
+      // Crear filtro optimizado
+      let filter = `funcion_id=eq.${funcionId}`;
+      if (tenantId) {
+        filter = `${filter}&tenant_id=eq.${tenantId}`;
+      }
+      
       const newChannel = supabase
-        .channel(`seat-locks-channel-${funcionId}`)
+        .channel(`seat-locks-channel-${funcionId}`, {
+          config: {
+            broadcast: { self: true }, // Recibir nuestros propios eventos
+            presence: { key: 'user' },
+          },
+        })
         .on(
           'postgres_changes',
           {
             event: '*',
             schema: 'public',
             table: 'seat_locks',
-            filter: `funcion_id=eq.${funcionId}`,
+            filter: filter,
           },
           (payload) => {
-            console.log('🔔 [SEAT_LOCK_STORE] Evento recibido:', {
-              eventType: payload.eventType,
-              table: payload.table,
-              schema: payload.schema,
-              seatId: payload.new?.seat_id || payload.old?.seat_id,
-              status: payload.new?.status || payload.old?.status,
-              sessionId: payload.new?.session_id || payload.old?.session_id,
-              oldRecord: payload.old,
-              newRecord: payload.new,
-              timestamp: new Date().toISOString()
-            });
+            // Procesar eventos de forma más rápida sin logs excesivos
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              const newLock = payload.new;
+              
               set((state) => {
                 const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
                 const currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
-                
-                const newLock = payload.new;
-                console.log('🔔 [SEAT_LOCK_STORE] Procesando lock:', newLock);
                 
                 if (newLock.lock_type === 'table') {
                   // Es un bloqueo de mesa
@@ -608,16 +611,6 @@ export const useSeatLockStore = create((set, get) => ({
                   
                   newSeatStates.set(newLock.seat_id, visualState);
                   
-                  console.log('🔔 [SEAT_LOCK_STORE] Actualizando estado del asiento:', {
-                    seatId: newLock.seat_id,
-                    visualState,
-                    sessionId: newLock.session_id,
-                    currentSessionId: localStorage.getItem('anonSessionId')
-                  });
-                  
-                  // Forzar actualización del estado para sincronización en tiempo real
-                  console.log('🔄 [SEAT_LOCK_STORE] Forzando actualización de estado para sincronización en tiempo real');
-                  
                   return { 
                     lockedSeats: updatedSeats, 
                     seatStates: newSeatStates 
@@ -626,14 +619,12 @@ export const useSeatLockStore = create((set, get) => ({
               });
             }
             if (payload.eventType === 'DELETE') {
-              console.log('🗑️ [SEAT_LOCK_STORE] Procesando evento DELETE:', payload.old);
-              console.log('🗑️ [SEAT_LOCK_STORE] Payload completo:', payload);
-              
-              // Para eventos DELETE, Supabase solo envía el ID, necesitamos buscar el seat_id
+              // Para eventos DELETE, Supabase envía el ID, necesitamos buscar el seat_id
               const deletedId = payload.old?.id;
-              if (!deletedId) {
-                console.error('❌ [SEAT_LOCK_STORE] No se pudo obtener ID del evento DELETE:', payload);
-                return;
+              const deletedSeatId = payload.old?.seat_id; // Supabase puede enviar seat_id directamente
+              
+              if (!deletedId && !deletedSeatId) {
+                return; // No procesar si no hay ID
               }
               
               // Buscar el asiento en el estado actual para obtener el seat_id
@@ -642,57 +633,37 @@ export const useSeatLockStore = create((set, get) => ({
               const currentTables = Array.isArray(currentState.lockedTables) ? currentState.lockedTables : [];
               
               // Buscar en asientos bloqueados
-              const deletedSeat = currentSeats.find(lock => lock.id === deletedId);
-              const deletedTable = currentTables.find(lock => lock.id === deletedId);
+              let seatId = deletedSeatId;
+              if (!seatId && deletedId) {
+                const deletedSeat = currentSeats.find(lock => lock.id === deletedId);
+                seatId = deletedSeat?.seat_id;
+              }
               
-              if (deletedSeat) {
+              if (seatId) {
                 // Es un desbloqueo de asiento
-                const seatId = deletedSeat.seat_id;
-                console.log('🗑️ [SEAT_LOCK_STORE] Asiento encontrado para DELETE:', { seatId, deletedId });
-                
                 set((state) => {
-                  const updatedSeats = state.lockedSeats.filter(lock => lock.id !== deletedId);
+                  const updatedSeats = deletedId 
+                    ? state.lockedSeats.filter(lock => lock.id !== deletedId)
+                    : state.lockedSeats.filter(lock => lock.seat_id !== seatId);
                   
                   // ELIMINAR completamente el asiento del seatStates para forzar que vuelva a verde
                   const newSeatStates = new Map(state.seatStates);
-                  const hadState = newSeatStates.has(seatId);
-                  const previousState = hadState ? state.seatStates.get(seatId) : 'none';
-                  
-                  // ELIMINAR el asiento del seatStates para que vuelva a su estado original
                   newSeatStates.delete(seatId);
-                  
-                  console.log('🗑️ [SEAT_LOCK_STORE] Asiento ELIMINADO del seatStates (DELETE):', { 
-                    seatId: seatId,
-                    deletedId: deletedId,
-                    hadState: hadState,
-                    previousState: previousState,
-                    action: 'deleted_from_seatStates'
-                  });
-                  
-                  // Forzar actualización del estado para sincronización en tiempo real
-                  console.log('🔄 [SEAT_LOCK_STORE] Forzando actualización de estado DELETE para sincronización en tiempo real');
                   
                   return { 
                     lockedSeats: updatedSeats, 
                     seatStates: newSeatStates 
                   };
                 });
-              } else if (deletedTable) {
-                // Es un desbloqueo de mesa
-                const tableId = deletedTable.table_id;
-                console.log('🗑️ [SEAT_LOCK_STORE] Mesa encontrada para DELETE:', { tableId, deletedId });
-                
-                set((state) => {
-                  const updatedTables = state.lockedTables.filter(lock => lock.id !== deletedId);
-                  console.log('🗑️ [SEAT_LOCK_STORE] Mesa desbloqueada:', tableId);
-                  return { lockedTables: updatedTables };
-                });
-              } else {
-                console.warn('⚠️ [SEAT_LOCK_STORE] No se encontró el registro eliminado en el estado local:', { deletedId, currentSeats: currentSeats.length, currentTables: currentTables.length });
-                
-                // No limpiar todos los estados como fallback - esto es demasiado destructivo
-                // En su lugar, solo registrar la advertencia y continuar
-                console.log('ℹ️ [SEAT_LOCK_STORE] Registro no encontrado en estado local, pero continuando sin limpiar estados');
+              } else if (deletedId) {
+                // Buscar en mesas
+                const deletedTable = currentTables.find(lock => lock.id === deletedId);
+                if (deletedTable) {
+                  set((state) => {
+                    const updatedTables = state.lockedTables.filter(lock => lock.id !== deletedId);
+                    return { lockedTables: updatedTables };
+                  });
+                }
               }
             }
           }
@@ -703,15 +674,13 @@ export const useSeatLockStore = create((set, get) => ({
             event: '*',
             schema: 'public',
             table: 'payment_transactions',
-            filter: `funcion_id=eq.${funcionId}`,
+            filter: tenantId ? `funcion_id=eq.${funcionId}&tenant_id=eq.${tenantId}` : `funcion_id=eq.${funcionId}`,
           },
           (payload) => {
-            console.log('🔔 [SEAT_LOCK_STORE] Cambio detectado en payment_transactions:', payload);
-            
+            // Procesar eventos de payment_transactions de forma más rápida
             const { eventType, new: newRecord } = payload;
             
             if (eventType === 'INSERT' || eventType === 'UPDATE') {
-              // Nueva transacción o actualización
               const payment = newRecord;
               if (payment.status === 'completed') {
                 try {
@@ -726,17 +695,6 @@ export const useSeatLockStore = create((set, get) => ({
                           // Solo establecer como 'vendido' si NO está ya en seat_locks (prioridad a seat_locks)
                           if (!newSeatStates.has(seatId)) {
                             newSeatStates.set(seatId, 'vendido');
-                            console.log('🎨 [SEAT_LOCK_STORE] Asiento marcado como vendido (payment_transactions):', { 
-                              seatId, 
-                              paymentId: payment.id,
-                              status: payment.status 
-                            });
-                          } else {
-                            console.log('🎨 [SEAT_LOCK_STORE] Asiento ya tiene estado de seat_locks, ignorando payment_transactions:', { 
-                              seatId, 
-                              existingState: newSeatStates.get(seatId),
-                              paymentId: payment.id
-                            });
                           }
                         }
                       });
@@ -781,8 +739,6 @@ export const useSeatLockStore = create((set, get) => ({
 
   // Bloquear asiento individual usando servicio atómico
   lockSeat: async (seatId, status = 'seleccionado', overrideFuncionId = null) => {
-    // Iniciando proceso de bloqueo atómico
-    
     try {
       const topic = get().channel?.topic;
       const sessionId = normalizeSessionId(await getSessionId());
@@ -812,52 +768,93 @@ export const useSeatLockStore = create((set, get) => ({
         normalizedSessionId
       } = validation;
 
-      // Usar servicio atómico para el bloqueo
-      const result = await atomicSeatLockService.lockSeatAtomically(
-        normalizedSeatId,
-        normalizedFuncionId,
-        normalizedSessionId,
-        status
-      );
-
-      if (!result.success) {
-        console.error('[SEAT_LOCK] Error en bloqueo atómico:', result.error);
-        return false;
-      }
-
-      // Asiento bloqueado exitosamente
-
-      // Actualización local inmediata
+      // OPTIMISTIC UPDATE: Actualizar estado visual INMEDIATAMENTE antes de esperar respuesta
+      const now = new Date().toISOString();
+      const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString(); // 15 minutos
+      
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
-        // Estado local ANTES del cambio
-        
         const newLockedSeats = [
           ...currentSeats.filter((s) => s.seat_id !== normalizedSeatId),
           {
             seat_id: normalizedSeatId,
             funcion_id: normalizedFuncionId,
             session_id: normalizedSessionId,
-            locked_at: result.lockData.locked_at,
-            expires_at: result.lockData.expires_at,
-            status: result.lockData.status,
+            locked_at: now,
+            expires_at: expiresAt,
+            status: status,
             lock_type: 'seat',
-            locator: result.lockData.locator,
+            id: `temp-${normalizedSeatId}-${Date.now()}`, // ID temporal
           },
         ];
-        // Estado local DESPUÉS del cambio
+        
+        // Actualizar estado visual inmediatamente
+        const newSeatStates = new Map(state.seatStates);
+        newSeatStates.set(normalizedSeatId, 'seleccionado');
+        
         return {
           lockedSeats: newLockedSeats,
+          seatStates: newSeatStates,
         };
       });
 
-      // Asiento bloqueado exitosamente
+      // Usar servicio atómico para el bloqueo (sin await el visual ya cambió)
+      atomicSeatLockService.lockSeatAtomically(
+        normalizedSeatId,
+        normalizedFuncionId,
+        normalizedSessionId,
+        status
+      ).then((result) => {
+        if (result.success) {
+          // Actualizar con datos reales del servidor cuando llegue
+          set((state) => {
+            const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
+            const newLockedSeats = [
+              ...currentSeats.filter((s) => s.seat_id !== normalizedSeatId),
+              {
+                seat_id: normalizedSeatId,
+                funcion_id: normalizedFuncionId,
+                session_id: normalizedSessionId,
+                locked_at: result.lockData.locked_at,
+                expires_at: result.lockData.expires_at,
+                status: result.lockData.status,
+                lock_type: 'seat',
+                locator: result.lockData.locator,
+                id: result.lockData.id,
+              },
+            ];
+            return { lockedSeats: newLockedSeats };
+          });
+        } else {
+          // Revertir si falló
+          set((state) => {
+            const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
+            const newLockedSeats = currentSeats.filter((s) => s.seat_id !== normalizedSeatId);
+            const newSeatStates = new Map(state.seatStates);
+            newSeatStates.delete(normalizedSeatId);
+            return { 
+              lockedSeats: newLockedSeats,
+              seatStates: newSeatStates,
+            };
+          });
+          console.error('[SEAT_LOCK] Error en bloqueo atómico, revirtiendo:', result.error);
+        }
+      }).catch((error) => {
+        // Revertir si falló
+        set((state) => {
+          const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
+          const newLockedSeats = currentSeats.filter((s) => s.seat_id !== normalizedSeatId);
+          const newSeatStates = new Map(state.seatStates);
+          newSeatStates.delete(normalizedSeatId);
+          return { 
+            lockedSeats: newLockedSeats,
+            seatStates: newSeatStates,
+          };
+        });
+        console.error('[SEAT_LOCK] Error inesperado al bloquear asiento:', error);
+      });
       
-      // Actualizar el estado del asiento individual para el usuario actual
-      get().updateSeatState(normalizedSeatId, 'seleccionado');
-      // Estado del asiento actualizado para el usuario actual
-      
-      return true;
+      return true; // Retornar inmediatamente
     } catch (error) {
       console.error('[SEAT_LOCK] Error inesperado al bloquear asiento:', error);
       return false;
