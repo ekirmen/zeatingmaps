@@ -39,7 +39,7 @@ const CmsPage = ({ slug }) => {
     return <NotFoundPage />;
   }
 
-  const renderWidget = (widget, index) => {
+  const renderWidget = useCallback((widget, index) => {
     const config = widget.config || {};
 
     switch (widget.type) {
@@ -72,7 +72,7 @@ const CmsPage = ({ slug }) => {
         logger.warn(`[CmsPage] Tipo de widget desconocido: ${widget.type}`);
         return null;
     }
-  }, []); // Memoizar renderWidget para evitar recreación
+  }, [events]); // Memoizar renderWidget para evitar recreación
 
   // Memoizar widgets renderizados
   const renderedWidgets = useMemo(() => {
