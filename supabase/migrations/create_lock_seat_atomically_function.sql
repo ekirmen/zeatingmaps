@@ -192,7 +192,7 @@ BEGIN
     
     -- Si llegamos aquí, el lock expiró o no existe, intentar actualizar/crear uno nuevo
     -- Forzar actualización del lock expirado con los nuevos valores
-    UPDATE public.seat_locks
+    UPDATE public.seat_locks sl
     SET 
       session_id = v_session_id,
       locked_at = NOW(),
@@ -200,10 +200,10 @@ BEGIN
       status = p_status,
       updated_at = NOW(),
       locator = v_locator
-    WHERE seat_id = p_seat_id
-      AND funcion_id = p_funcion_id
-      AND tenant_id = v_tenant_id
-    RETURNING * INTO v_result_lock;
+    WHERE sl.seat_id = p_seat_id
+      AND sl.funcion_id = p_funcion_id
+      AND sl.tenant_id = v_tenant_id
+    RETURNING sl.* INTO v_result_lock;
     
     -- Si aún no hay resultado (no existe el registro), crear uno nuevo
     -- Esto no debería pasar normalmente porque el ON CONFLICT debería haberlo manejado

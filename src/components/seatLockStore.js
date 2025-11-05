@@ -524,10 +524,17 @@ export const useSeatLockStore = create((set, get) => ({
 
         // 5. Crear el mapa de estados de asientos
         const newSeatStates = new Map();
-        const currentSessionId = localStorage.getItem('anonSessionId') || 'unknown';
+        const currentSessionIdRaw = localStorage.getItem('anonSessionId') || 'unknown';
+        const currentSessionId = normalizeSessionId(currentSessionIdRaw);
         
         // Procesar asientos de seat_locks
         seatLocks.forEach(lock => {
+          // Normalizar seat_id para que coincida con el formato usado en el componente
+          let normalizedSeatId = lock.seat_id;
+          if (normalizedSeatId && !normalizedSeatId.startsWith('silla_')) {
+            normalizedSeatId = `silla_${normalizedSeatId}`;
+          }
+          
           let visualState = 'seleccionado_por_otro'; // Estado por defecto
           
           if (lock.status === 'pagado' || lock.status === 'vendido') {
@@ -535,16 +542,19 @@ export const useSeatLockStore = create((set, get) => ({
           } else if (lock.status === 'reservado') {
             visualState = 'reservado';
           } else if (lock.status === 'seleccionado') {
-            // Verificar si es del usuario actual
-            if (lock.session_id === currentSessionId) {
+            // Verificar si es del usuario actual - normalizar session_id para comparar
+            const lockSessionId = normalizeSessionId(lock.session_id?.toString() || '');
+            if (currentSessionId && lockSessionId && currentSessionId === lockSessionId) {
               visualState = 'seleccionado';
             } else {
               visualState = 'seleccionado_por_otro';
             }
           }
           
-          newSeatStates.set(lock.seat_id, visualState);
-          // Estado inicial del asiento (seat_locks)
+          // Usar el seat_id normalizado para el Map
+          newSeatStates.set(normalizedSeatId, visualState);
+          // Actualizar también el lock con el seat_id normalizado
+          lock.seat_id = normalizedSeatId;
         });
 
         // Procesar asientos vendidos de payment_transactions
@@ -623,10 +633,18 @@ export const useSeatLockStore = create((set, get) => ({
             if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
               const newLock = payload.new;
               
+              // Normalizar seat_id para que coincida con el formato usado en el componente
+              // El componente usa "silla_XXX" pero la BD puede tener "XXX" (sin prefijo)
+              let normalizedSeatId = newLock.seat_id;
+              if (normalizedSeatId && !normalizedSeatId.startsWith('silla_')) {
+                normalizedSeatId = `silla_${normalizedSeatId}`;
+              }
+              
               // Debug: verificar que el evento se recibe correctamente
             console.log('🔔 [SEAT_LOCK_STORE] Evento recibido:', {
               eventType: payload.eventType,
                 seatId: newLock.seat_id,
+                normalizedSeatId: normalizedSeatId,
                 status: newLock.status,
                 sessionId: newLock.session_id,
                 currentSessionId: localStorage.getItem('anonSessionId')
@@ -646,8 +664,8 @@ export const useSeatLockStore = create((set, get) => ({
                 } else {
                   // Es un bloqueo de asiento
                   const updatedSeats = [
-                    ...currentSeats.filter(lock => lock.seat_id !== newLock.seat_id),
-                    newLock,
+                    ...currentSeats.filter(lock => lock.seat_id !== newLock.seat_id && lock.seat_id !== normalizedSeatId),
+                    { ...newLock, seat_id: normalizedSeatId }, // Usar el seat_id normalizado
                   ];
                   
                   // Actualizar el estado del asiento individual en seatStates
@@ -669,10 +687,10 @@ export const useSeatLockStore = create((set, get) => ({
                     // Comparar session_ids normalizados
                     if (currentSessionId && lockSessionId && currentSessionId === lockSessionId) {
                       visualState = 'seleccionado';
-                      console.log('✅ [SEAT_LOCK_STORE] Asiento seleccionado por mí:', newLock.seat_id);
+                      console.log('✅ [SEAT_LOCK_STORE] Asiento seleccionado por mí:', normalizedSeatId);
                     } else {
                       visualState = 'seleccionado_por_otro';
-                      console.log('⚠️ [SEAT_LOCK_STORE] Asiento seleccionado por otro:', newLock.seat_id, {
+                      console.log('⚠️ [SEAT_LOCK_STORE] Asiento seleccionado por otro:', normalizedSeatId, {
                         otherSessionId: lockSessionId,
                         currentSessionId: currentSessionId,
                         rawOtherSessionId: newLock.session_id,
@@ -681,10 +699,12 @@ export const useSeatLockStore = create((set, get) => ({
                     }
                   }
                   
-                  newSeatStates.set(newLock.seat_id, visualState);
+                  // Usar el seat_id normalizado para el Map
+                  newSeatStates.set(normalizedSeatId, visualState);
                   
                   console.log('🎨 [SEAT_LOCK_STORE] Estado visual actualizado:', {
                     seatId: newLock.seat_id,
+                    normalizedSeatId: normalizedSeatId,
                     visualState: visualState,
                     status: newLock.status
                   });
