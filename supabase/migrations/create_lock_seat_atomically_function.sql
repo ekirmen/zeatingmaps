@@ -114,6 +114,7 @@ BEGIN
   
   -- Usar INSERT ... ON CONFLICT DO UPDATE para manejar de forma atómica
   -- Esto previene condiciones de carrera y errores 409
+  -- La verificación de "otro usuario" se hace dentro del ON CONFLICT para evitar condiciones de carrera
   INSERT INTO public.seat_locks (
     seat_id,
     funcion_id,
@@ -140,80 +141,130 @@ BEGIN
     NOW(),
     NOW()
   )
-  ON CONFLICT (seat_id, funcion_id, tenant_id)
+  ON CONFLICT ON CONSTRAINT seat_locks_seat_funcion_tenant_unique
   DO UPDATE SET
     -- Si es del mismo usuario, actualizar timestamp y status
-    -- En ON CONFLICT DO UPDATE, usar nombre de tabla sin esquema para valores existentes
-    -- y EXCLUDED para valores que se intentan insertar
     locked_at = CASE 
-      WHEN seat_locks.session_id = v_session_id THEN NOW()
-      ELSE seat_locks.locked_at
+      WHEN public.seat_locks.session_id = v_session_id THEN NOW()
+      ELSE public.seat_locks.locked_at
     END,
     expires_at = CASE 
-      WHEN seat_locks.session_id = v_session_id THEN EXCLUDED.expires_at
-      ELSE seat_locks.expires_at
+      WHEN public.seat_locks.session_id = v_session_id THEN EXCLUDED.expires_at
+      ELSE public.seat_locks.expires_at
     END,
     status = CASE 
-      WHEN seat_locks.session_id = v_session_id THEN EXCLUDED.status
-      ELSE seat_locks.status
+      WHEN public.seat_locks.session_id = v_session_id THEN EXCLUDED.status
+      ELSE public.seat_locks.status
     END,
     updated_at = CASE 
-      WHEN seat_locks.session_id = v_session_id THEN NOW()
-      ELSE seat_locks.updated_at
+      WHEN public.seat_locks.session_id = v_session_id THEN NOW()
+      ELSE public.seat_locks.updated_at
     END
-  WHERE seat_locks.expires_at > NOW()
-    AND seat_locks.status NOT IN ('liberado', 'expirado')
+  WHERE 
+    -- Solo actualizar si es del mismo usuario O si el lock expiró/liberado
+    -- Si es de otro usuario y está activo, el WHERE no se cumple y v_result_lock será NULL
+    (public.seat_locks.session_id = v_session_id)
+    OR 
+    (public.seat_locks.expires_at <= NOW() 
+     OR public.seat_locks.status IN ('liberado', 'expirado', 'pagado', 'vendido'))
   RETURNING * INTO v_result_lock;
   
-  -- Si no se actualizó ninguna fila (conflicto pero no se cumplió el WHERE)
-  -- significa que el asiento está bloqueado por otro usuario o está expirado
+  -- Si el UPDATE no se ejecutó (WHERE no cumplido), verificar si es de otro usuario
   IF v_result_lock IS NULL THEN
-    -- Verificar si existe un lock activo de otro usuario
+    -- Verificar si el lock existente es de otro usuario y está activo
+    -- Esto puede pasar si hay condición de carrera o si el lock es de otro usuario activo
     SELECT sl.* INTO v_existing_lock
     FROM public.seat_locks sl
     WHERE sl.seat_id = p_seat_id
       AND sl.funcion_id = p_funcion_id
       AND sl.tenant_id = v_tenant_id
-      AND sl.expires_at > NOW()
-      AND sl.status NOT IN ('liberado', 'expirado')
     ORDER BY sl.locked_at DESC
     LIMIT 1;
     
-    IF v_existing_lock IS NOT NULL AND v_existing_lock.session_id != v_session_id THEN
-      -- Es de otro usuario, lanzar error
+    -- Si existe y es de otro usuario y está activo, rechazar
+    IF v_existing_lock IS NOT NULL 
+      AND v_existing_lock.session_id != v_session_id
+      AND v_existing_lock.expires_at > NOW()
+      AND v_existing_lock.status NOT IN ('liberado', 'expirado', 'pagado', 'vendido') THEN
       RAISE EXCEPTION 'Asiento ya está seleccionado por otro usuario' 
         USING ERRCODE = 'P0001';
     END IF;
     
-    -- Si llegamos aquí, el lock expiró o no existe, intentar crear uno nuevo
-    -- (esto no debería pasar normalmente, pero por si acaso)
-    INSERT INTO public.seat_locks (
-      seat_id,
-      funcion_id,
-      session_id,
-      locked_at,
-      expires_at,
-      status,
-      lock_type,
-      tenant_id,
-      locator,
-      created_at,
-      updated_at
-    )
-    VALUES (
-      p_seat_id,
-      p_funcion_id,
-      v_session_id,
-      NOW(),
-      v_expires_at,
-      p_status,
-      'seat',
-      v_tenant_id,
-      v_locator,
-      NOW(),
-      NOW()
-    )
+    -- Si llegamos aquí, el lock expiró o no existe, intentar actualizar/crear uno nuevo
+    -- Forzar actualización del lock expirado con los nuevos valores
+    UPDATE public.seat_locks
+    SET 
+      session_id = v_session_id,
+      locked_at = NOW(),
+      expires_at = v_expires_at,
+      status = p_status,
+      updated_at = NOW(),
+      locator = v_locator
+    WHERE seat_id = p_seat_id
+      AND funcion_id = p_funcion_id
+      AND tenant_id = v_tenant_id
     RETURNING * INTO v_result_lock;
+    
+    -- Si aún no hay resultado (no existe el registro), crear uno nuevo
+    -- Esto no debería pasar normalmente porque el ON CONFLICT debería haberlo manejado
+    IF v_result_lock IS NULL THEN
+      -- Intentar insertar de nuevo (puede fallar si hay condición de carrera, pero es muy raro)
+      BEGIN
+        INSERT INTO public.seat_locks (
+          seat_id,
+          funcion_id,
+          session_id,
+          locked_at,
+          expires_at,
+          status,
+          lock_type,
+          tenant_id,
+          locator,
+          created_at,
+          updated_at
+        )
+        VALUES (
+          p_seat_id,
+          p_funcion_id,
+          v_session_id,
+          NOW(),
+          v_expires_at,
+          p_status,
+          'seat',
+          v_tenant_id,
+          v_locator,
+          NOW(),
+          NOW()
+        )
+        RETURNING * INTO v_result_lock;
+      EXCEPTION WHEN unique_violation THEN
+        -- Si aún hay conflicto único, verificar una vez más si es de otro usuario
+        SELECT sl.* INTO v_existing_lock
+        FROM public.seat_locks sl
+        WHERE sl.seat_id = p_seat_id
+          AND sl.funcion_id = p_funcion_id
+          AND sl.tenant_id = v_tenant_id
+          AND sl.expires_at > NOW()
+          AND sl.status NOT IN ('liberado', 'expirado', 'pagado', 'vendido')
+        ORDER BY sl.locked_at DESC
+        LIMIT 1;
+        
+        IF v_existing_lock IS NOT NULL 
+          AND v_existing_lock.session_id != v_session_id THEN
+          RAISE EXCEPTION 'Asiento ya está seleccionado por otro usuario' 
+            USING ERRCODE = 'P0001';
+        END IF;
+        
+        -- Si llegamos aquí, obtener el lock existente
+        SELECT sl.* INTO v_result_lock
+        FROM public.seat_locks sl
+        WHERE sl.seat_id = p_seat_id
+          AND sl.funcion_id = p_funcion_id
+          AND sl.tenant_id = v_tenant_id
+        ORDER BY sl.locked_at DESC
+        LIMIT 1;
+      END;
+    END IF;
   END IF;
   
   -- Retornar el lock (creado o actualizado)

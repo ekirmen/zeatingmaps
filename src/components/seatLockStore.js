@@ -62,13 +62,17 @@ async function getSessionId() {
   const userId = await getAuthenticatedUserId();
   if (userId) {
     localStorage.setItem('anonSessionId', userId);
+    console.log('🔐 [SESSION] Usando userId como session_id:', userId);
     return userId;
   }
   const stored = getStoredSessionId();
-  if (stored) return stored;
+  if (stored) {
+    console.log('🔐 [SESSION] Usando session_id existente de localStorage:', stored);
+    return stored;
+  }
   const anonId = crypto.randomUUID();
   localStorage.setItem('anonSessionId', anonId);
-  console.log('[SESSION] Nueva sesión anónima generada:', anonId);
+  console.log('🔐 [SESSION] Nueva sesión anónima generada:', anonId);
   return anonId;
 }
 
@@ -825,7 +829,21 @@ export const useSeatLockStore = create((set, get) => ({
   lockSeat: async (seatId, status = 'seleccionado', overrideFuncionId = null) => {
     try {
       const topic = get().channel?.topic;
-      const sessionId = normalizeSessionId(await getSessionId());
+      const rawSessionId = await getSessionId();
+      const sessionId = normalizeSessionId(rawSessionId);
+
+      // Log para debugging - verificar que cada navegador tiene su propio session_id
+      console.log('🔐 [SEAT_LOCK] Bloqueando asiento con session_id:', {
+        rawSessionId: rawSessionId,
+        normalizedSessionId: sessionId,
+        seatId: seatId,
+        localStorageSessionId: localStorage.getItem('anonSessionId')
+      });
+
+      if (!sessionId) {
+        console.error('❌ [SEAT_LOCK] No se pudo obtener session_id válido');
+        return false;
+      }
 
       const funcionIdRaw = overrideFuncionId || topic?.split('seat-locks-channel-')[1];
       if (!funcionIdRaw) {
@@ -853,6 +871,13 @@ export const useSeatLockStore = create((set, get) => ({
       } = validation;
 
       // Usar servicio atómico para el bloqueo (esperar respuesta del servidor)
+      console.log('🔒 [SEAT_LOCK] Llamando a lockSeatAtomically con:', {
+        seatId: normalizedSeatId,
+        funcionId: normalizedFuncionId,
+        sessionId: normalizedSessionId,
+        status: status
+      });
+
       const result = await atomicSeatLockService.lockSeatAtomically(
         normalizedSeatId,
         normalizedFuncionId,
