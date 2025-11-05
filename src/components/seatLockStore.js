@@ -538,8 +538,23 @@ export const useSeatLockStore = create((set, get) => ({
       const channels = supabase.getChannels();
       const existingChannel = Array.isArray(channels) ? channels.find(ch => ch.topic === expectedTopic) : null;
       if (existingChannel) {
+        console.log('✅ [SEAT_LOCK_STORE] Reutilizando canal existente:', expectedTopic);
         set({ channel: existingChannel });
         return;
+      }
+      
+      // Desuscribirse de canales anteriores si existen
+      if (channels && channels.length > 0) {
+        console.log('🧹 [SEAT_LOCK_STORE] Limpiando canales anteriores:', channels.length);
+        channels.forEach(ch => {
+          if (ch.topic !== expectedTopic) {
+            try {
+              ch.unsubscribe();
+            } catch (e) {
+              // Ignorar errores al desuscribirse
+            }
+          }
+        });
       }
 
       // Obtener tenant_id para filtrar y mejorar performance

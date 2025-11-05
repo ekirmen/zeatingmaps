@@ -37,20 +37,33 @@ class AtomicSeatLockService {
       };
 
       // Usar función RPC para bloqueo atómico
+      console.log('🔒 [ATOMIC_LOCK] Llamando a lock_seat_atomically con:', lockData);
       const { data, error } = await supabase.rpc('lock_seat_atomically', lockData);
       
       if (error) {
         console.error('❌ [ATOMIC_LOCK] Error en bloqueo atómico:', error);
+        console.error('❌ [ATOMIC_LOCK] Detalles del error:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         
         // Manejar errores específicos
-        if (error.message?.includes('already_locked')) {
+        if (error.message?.includes('already_locked') || error.code === 'P0001') {
           throw new Error('Asiento ya está seleccionado por otro usuario');
         } else if (error.message?.includes('not_available')) {
           throw new Error('Asiento no está disponible');
         } else if (error.message?.includes('invalid_seat')) {
           throw new Error('Asiento no válido');
+        } else if (error.code === 'P0004' || error.message?.includes('session_id no puede ser NULL')) {
+          throw new Error('Error de sesión: session_id inválido. Por favor, recarga la página.');
+        } else if (error.code === 'P0006' || error.code === 'P0007' || error.message?.includes('UUID válido')) {
+          throw new Error('Error de sesión: formato de session_id inválido. Por favor, recarga la página.');
+        } else if (error.code === '42804' || error.message?.includes('is of type uuid but expression is of type text')) {
+          throw new Error('Error de tipo de datos: session_id. Por favor, recarga la página.');
         } else {
-          throw new Error(`Error al seleccionar asiento: ${error.message}`);
+          throw new Error(`Error al seleccionar asiento: ${error.message || error.code || 'Error desconocido'}`);
         }
       }
 
@@ -352,12 +365,39 @@ class AtomicSeatLockService {
       }
     }
 
-    const trimmed = value.trim();
-    if (!trimmed) {
+    // Limpiar el valor: eliminar espacios, caracteres invisibles, comillas, etc.
+    const cleaned = value
+      .trim()
+      .replace(/[\u200B-\u200D\uFEFF]/g, '') // Eliminar caracteres invisibles
+      .replace(/^["']|["']$/g, '') // Eliminar comillas al inicio/fin
+      .trim();
+
+    if (!cleaned) {
       return null;
     }
 
-    return trimmed;
+    // Validar formato UUID (básico)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(cleaned)) {
+      console.warn('⚠️ [ATOMIC_LOCK] session_id no tiene formato UUID válido:', cleaned);
+      // Si no es un UUID válido, generar uno nuevo
+      const newUuid = crypto?.randomUUID?.() || this.generateUuidFallback();
+      console.warn('⚠️ [ATOMIC_LOCK] Generando nuevo UUID:', newUuid);
+      return newUuid;
+    }
+
+    return cleaned;
+  }
+
+  /**
+   * Genera un UUID si crypto.randomUUID no está disponible
+   */
+  generateUuidFallback() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 }
 
