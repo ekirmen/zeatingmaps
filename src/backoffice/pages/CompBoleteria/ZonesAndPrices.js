@@ -1,15 +1,6 @@
 import React, { useState, useCallback, useImperativeHandle, forwardRef, useRef, useMemo, useEffect } from 'react';
 import { message } from 'antd';
 
-//   useMapData,
-//   useDiscountCode,
-//   useSeatManagement,
-//   useZoneManagement,
-//   useBoleteriaMemory
-// } from './hooks';
-
-
-
 const ZonesAndPrices = ({
   eventos = [],
   selectedEvent,
@@ -37,41 +28,8 @@ const ZonesAndPrices = ({
   const [abonoMode, setAbonoMode] = useState(false);
   const mapContainerRef = useRef(null);
 
-  // Hooks personalizados - temporalmente comentados
-  // const { mapa, setMapa, zonas, setZonas } = useMapData(selectedFuncion);
-  // const { 
-  //   discountCode, 
-  //   setDiscountCode, 
-  //   appliedDiscount, 
-  //   handleApplyDiscount, 
-  //   getPrecioConDescuento 
-  // } = useDiscountCode();
-  // const {
-  //   blockMode,
-  //   setBlockMode,
-  //   tempBlocks,
-  //   setTempBlocks,
-  //   abonoSeats,
-  //   animatingSeats,
-  //   lockSeat,
-  //   unlockSeat,
-  //   isSeatLocked,
-  //   isSeatLockedByMe,
-  //   handleSeatAnimation,
-  //   handleAnimationComplete
-  // } = useSeatManagement(selectedEvent, abonoMode);
-  // const {
-  //   selectedZonaId,
-  //   setSelectedZonaId,
-  //   detallesPlantilla,
-  //   zonePriceRanges,
-  //   handleClearZoneSelection
-  // } = useZoneManagement(selectedPlantilla, getPrecioConDescuento);
-  
-  // Hook para recordar el último estado
-  // const { saveState, restoreState, clearState } = useBoleteriaMemory();
-
-  // Valores temporales para debug
+  // Hooks personalizados - TODO: Implementar cuando sea necesario
+  // Por ahora se usan valores por defecto
   const mapa = null;
   const setMapa = () => {};
   const zonas = [];
@@ -107,127 +65,20 @@ const ZonesAndPrices = ({
     if (eventos.length > 0 && !selectedEvent && !selectedFuncion) {
       const restoredState = restoreState(eventos, funciones, []);
       if (restoredState) {
-        console.log('🔄 Restaurando estado guardado:', restoredState);
         onEventSelect(restoredState.selectedEvent);
-        // La función se seleccionará automáticamente cuando se seleccione el evento
       }
     }
   }, [eventos, funciones, selectedEvent, selectedFuncion, restoreState, onEventSelect]);
   
   // Limpiar carrito al cargar la página
   useEffect(() => {
-    // Limpiar carrito al inicializar
     if (setCarrito) {
       setCarrito([]);
-      console.log('🧹 [CARRO] Carrito limpiado al cargar página');
     }
-  }, []);
+  }, [setCarrito]);
 
-  // Restaurar estado guardado al cargar
-  // useEffect(() => {
-  //   if (eventos.length > 0 && funciones.length > 0 && plantillas.length > 0) {
-  //     const savedState = useBoleteriaMemory.restoreState(eventos, funciones, plantillas);
-  //     if (savedState) {
-  //       console.log('🔄 [MEMORIA] Restaurando estado guardado:', savedState);
-        
-  //       // Restaurar evento
-  //       if (savedState.selectedEvent) {
-  //         setSelectedEvent(savedState.selectedEvent);
-  //         console.log('✅ [MEMORIA] Evento restaurado:', savedState.selectedEvent.nombre);
-  //       }
-        
-  //       // Restaurar función
-  //       if (savedState.selectedFuncion) {
-  //         setSelectedFuncion(savedState.selectedFuncion);
-  //         console.log('✅ [MEMORIA] Función restaurada:', savedState.selectedFuncion.nombre);
-          
-  //         // Cargar automáticamente el mapa para la función restaurada
-  //         if (savedState.selectedFuncion.sala?.id) {
-  //           console.log('🗺️ [MEMORIA] Cargando mapa automáticamente para sala:', savedState.selectedFuncion.sala.id);
-  //           // El useEffect de fetchMapa se ejecutará automáticamente
-  //         }
-  //       }
-        
-  //       // Restaurar plantilla
-  //       if (savedState.selectedPlantilla) {
-  //         setSelectedPlantilla(savedState.selectedPlantilla);
-  //         console.log('✅ [MEMORIA] Plantilla restaurada:', savedState.selectedPlantilla.nombre);
-  //       }
-        
-  //       message.success('Estado anterior restaurado automáticamente');
-  //     }
-  //   }
-  // }, [eventos, funciones, plantillas]);
-  
-  // Guardar estado cuando cambie - temporalmente comentado
-  // useEffect(() => {
-  //   if (selectedEvent && selectedFuncion) {
-  //     saveState({
-  //       selectedEvent,
-  //       selectedFuncion,
-  //       selectedPlantilla
-  //     });
-  //   }
-  // }, [selectedEvent, selectedFuncion, selectedPlantilla, saveState]);
 
-  // Debug logs
-  console.log('ZonesAndPrices - selectedPlantilla:', selectedPlantilla);
-  console.log('ZonesAndPrices - detallesPlantilla:', detallesPlantilla);
-  console.log('ZonesAndPrices - zonePriceRanges:', zonePriceRanges);
-  
-  // Debug adicional para zonas y mapa
-  console.log('🔍 [ZonesAndPrices] Debug completo:', {
-    zonas: {
-      total: zonas.length,
-      datos: zonas.map(z => ({ id: z.id, _id: z._id, nombre: z.nombre }))
-    },
-    selectedZonaId,
-    availableZonas,
-    mapa: {
-      existe: !!mapa,
-      contenido: mapa?.contenido?.length || 0,
-      tipo: typeof mapa?.contenido
-    }
-  });
-
-  // Handlers - Memoizar para evitar re-creación - temporalmente comentado
-  // const seatHandlers = useMemo(() => createSeatHandlers({
-  //   selectedFuncion,
-  //   carrito,
-  //   setCarrito,
-  //   selectedClient,
-  //   blockMode,
-  //   abonoMode,
-  //   zonas,
-  //   detallesPlantilla,
-  //   appliedDiscount,
-  //   funciones,
-  //   lockSeat,
-  //   unlockSeat,
-  //   isSeatLocked,
-  //   isSeatLockedByMe,
-  //   handleSeatAnimation,
-  //   abonoSeats
-  // }), [
-  //   selectedFuncion,
-  //   carrito,
-  //   setCarrito,
-  //   selectedClient,
-  //   blockMode,
-  //   abonoMode,
-  //   zonas,
-  //   detallesPlantilla,
-  //   appliedDiscount,
-  //   funciones,
-  //   lockSeat,
-  //   unlockSeat,
-  //   isSeatLocked,
-  //   isSeatLockedByMe,
-  //   handleSeatAnimation,
-  //   abonoSeats
-  // ]);
-
-  // Valores temporales para seatHandlers
+  // TODO: Implementar seatHandlers completo cuando sea necesario
   const seatHandlers = {
     handleSeatClick: () => {},
     handleSelectCompleteTable: () => {}
@@ -318,18 +169,13 @@ const ZonesAndPrices = ({
 
   // Memoizar las zonas disponibles
   const availableZonas = useMemo(() => {
-    // Si hay una zona específica seleccionada, solo mostrar esa zona
     if (selectedZonaId) {
-      console.log('🎯 [ZonesAndPrices] Zona específica seleccionada:', selectedZonaId);
       return [selectedZonaId];
     }
-    
-    // Si no hay zona seleccionada, mostrar todas las zonas disponibles
-    const allZonas = zonas.map(z => z.id || z._id).filter(Boolean);
-    console.log('🌍 [ZonesAndPrices] Mostrando todas las zonas disponibles:', allZonas);
-    return allZonas;
+    return zonas.map(z => z.id || z._id).filter(Boolean);
   }, [selectedZonaId, zonas]);
 
+  // Memoizar las props del SeatingMap
   // Memoizar las props del SeatingMap
   const seatingMapProps = useMemo(() => ({
     mapa,
