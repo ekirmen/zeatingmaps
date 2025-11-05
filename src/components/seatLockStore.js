@@ -382,10 +382,22 @@ export const useSeatLockStore = create((set, get) => ({
         let paymentError = null;
 
         try {
-          const { data, error } = await supabase
+          // Optimización: Usar tenant_id si está disponible para consulta más rápida
+          const tenantId = getCurrentTenantId();
+          let query = supabase
             .from('seat_locks')
             .select('seat_id, table_id, session_id, locked_at, status, lock_type, user_id, metadata')
             .eq('funcion_id', funcionId);
+          
+          // Si hay tenant_id, filtrar por él para consulta más rápida
+          if (tenantId) {
+            query = query.eq('tenant_id', tenantId);
+          }
+          
+          // Limitar a bloqueos activos para reducir datos transferidos
+          query = query.in('status', ['seleccionado', 'reservado', 'locked', 'expirando', 'vendido']);
+
+          const { data, error } = await query;
 
           seatLocksData = Array.isArray(data) ? data : [];
           seatLocksError = error || null;
