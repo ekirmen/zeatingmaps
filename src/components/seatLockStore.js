@@ -4,6 +4,15 @@ import atomicSeatLockService from '../services/atomicSeatLock';
 
 const buildTableSeatId = (tableId) => `table:${tableId}`;
 
+const ensureSeatIdWithPrefix = (seatId) => {
+  if (!seatId) return seatId;
+  const idString = seatId.toString();
+  if (idString.startsWith('table:')) {
+    return idString;
+  }
+  return idString.startsWith('silla_') ? idString : `silla_${idString}`;
+};
+
 // Función helper para obtener el tenant_id actual
 const getCurrentTenantId = () => {
   try {
@@ -1023,10 +1032,11 @@ export const useSeatLockStore = create((set, get) => ({
       // Esto asegura que el color se actualice inmediatamente sin esperar Realtime
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
+        const seatIdForStore = ensureSeatIdWithPrefix(normalizedSeatId);
         const newLockedSeats = [
-          ...currentSeats.filter((s) => s.seat_id !== normalizedSeatId),
+          ...currentSeats.filter((s) => ensureSeatIdWithPrefix(s.seat_id) !== seatIdForStore),
           {
-            seat_id: normalizedSeatId,
+            seat_id: seatIdForStore,
             funcion_id: normalizedFuncionId,
             session_id: normalizedSessionId,
             locked_at: result.lockData.locked_at,
@@ -1037,11 +1047,11 @@ export const useSeatLockStore = create((set, get) => ({
             id: result.lockData.id,
           },
         ];
-        
+
         // Actualizar seatStates INMEDIATAMENTE para que el color se aplique al instante
         const newSeatStates = new Map(state.seatStates);
-        newSeatStates.set(normalizedSeatId, 'seleccionado'); // Amarillo para mi selección
-        
+        newSeatStates.set(seatIdForStore, 'seleccionado'); // Amarillo para mi selección
+
         return {
           lockedSeats: newLockedSeats,
           seatStates: newSeatStates,
@@ -1194,8 +1204,9 @@ export const useSeatLockStore = create((set, get) => ({
 
       // Verificar estado local antes del desbloqueo
       const currentSeats = Array.isArray(get().lockedSeats) ? get().lockedSeats : [];
+      const seatIdForStore = ensureSeatIdWithPrefix(normalizedSeatId);
       const currentLock = currentSeats.find(
-        s => s.seat_id === normalizedSeatId && s.session_id === normalizedSessionId
+        s => ensureSeatIdWithPrefix(s.seat_id) === seatIdForStore && normalizeSessionId(s.session_id?.toString() || '') === normalizedSessionId
       );
       if (currentLock?.status === 'pagado' || currentLock?.status === 'reservado') {
         console.warn('[SEAT_LOCK] No se puede desbloquear un asiento pagado o reservado');
@@ -1225,11 +1236,12 @@ export const useSeatLockStore = create((set, get) => ({
       // Actualización local inmediata - limpiar estado visual también
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
-        const updatedSeats = currentSeats.filter((s) => s.seat_id !== normalizedSeatId);
-        
+        const seatIdForStore = ensureSeatIdWithPrefix(normalizedSeatId);
+        const updatedSeats = currentSeats.filter((s) => ensureSeatIdWithPrefix(s.seat_id) !== seatIdForStore);
+
         // Limpiar el estado visual del asiento para que vuelva a verde/disponible
         const newSeatStates = new Map(state.seatStates);
-        newSeatStates.delete(normalizedSeatId);
+        newSeatStates.delete(seatIdForStore);
         
         return {
           lockedSeats: updatedSeats,
