@@ -237,6 +237,11 @@ export const useSeatLockStore = create((set, get) => ({
   seatStates: new Map(), // Estados actualizados de asientos individuales
   seatStatesVersion: 0, // Contador de versión para detectar cambios en seatStates
   subscriptionRefCount: 0, // Contador de referencias de suscripción
+  connectivityListenersAttached: false,
+  connectivityCleanup: null,
+  connectionIssueDetected: false,
+  pendingReloadTimeout: null,
+  lastFuncionId: null,
 
   setLockedSeats: (seats) => {
     // Validar que seats sea un array
@@ -287,6 +292,110 @@ export const useSeatLockStore = create((set, get) => ({
       console.log('🧹 [SEAT_LOCK_STORE] Limpiando todos los estados de asientos');
       return { seatStates: new Map() };
     });
+  },
+
+  ensureConnectivityListeners: (funcionId = null) => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const state = get();
+    if (state.connectivityListenersAttached) {
+      // Solo actualizar el último funcionId observado
+      set({ lastFuncionId: funcionId || state.lastFuncionId });
+      return;
+    }
+
+    const handleOffline = () => {
+      console.warn('⚠️ [SEAT_LOCK_STORE] Conexión perdida. Se marcará para recarga automática.');
+      set({ connectionIssueDetected: true });
+    };
+
+    const handleOnline = () => {
+      console.log('🌐 [SEAT_LOCK_STORE] Conexión restaurada. Preparando recarga automática...');
+      if (get().connectionIssueDetected) {
+        get().schedulePageReload('online');
+      }
+    };
+
+    const handleWindowFocus = () => {
+      if (typeof document !== 'undefined' && !document.hidden && get().connectionIssueDetected) {
+        console.log('👀 [SEAT_LOCK_STORE] Ventana activa después de un problema de conexión.');
+        get().schedulePageReload('focus');
+      }
+    };
+
+    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('focus', handleWindowFocus);
+
+    const cleanup = () => {
+      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+
+    set({
+      connectivityListenersAttached: true,
+      connectivityCleanup: cleanup,
+      lastFuncionId: funcionId,
+    });
+  },
+
+  teardownConnectivityListeners: () => {
+    const state = get();
+    if (state.connectivityCleanup) {
+      try {
+        state.connectivityCleanup();
+      } catch (error) {
+        console.warn('⚠️ [SEAT_LOCK_STORE] Error limpiando listeners de conectividad:', error);
+      }
+    }
+
+    if (typeof window !== 'undefined' && state.pendingReloadTimeout) {
+      window.clearTimeout(state.pendingReloadTimeout);
+    }
+
+    set({
+      connectivityListenersAttached: false,
+      connectivityCleanup: null,
+      connectionIssueDetected: false,
+      pendingReloadTimeout: null,
+      lastFuncionId: null,
+    });
+  },
+
+  schedulePageReload: (reason = 'unknown') => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const { pendingReloadTimeout } = get();
+    if (pendingReloadTimeout) {
+      return;
+    }
+
+    console.warn(`🔄 [SEAT_LOCK_STORE] Recargando página automáticamente (motivo: ${reason})`);
+    const timeoutId = window.setTimeout(() => {
+      try {
+        window.location.reload();
+      } catch (error) {
+        console.error('❌ [SEAT_LOCK_STORE] Error al intentar recargar la página:', error);
+      }
+    }, 800);
+
+    set({ pendingReloadTimeout: timeoutId });
+  },
+
+  handleRealtimeChannelIssue: (reason, funcionId = null) => {
+    console.warn('⚠️ [SEAT_LOCK_STORE] Problema detectado con el canal Realtime:', reason);
+    set({
+      connectionIssueDetected: true,
+      lastFuncionId: funcionId || get().lastFuncionId,
+    });
+
+    // Intentar recargar inmediatamente para forzar la reconexión
+    get().schedulePageReload(reason || 'channel_issue');
   },
 
   setLockedTables: (tables) => {
@@ -617,6 +726,7 @@ export const useSeatLockStore = create((set, get) => ({
       }
     };
     fetchInitialLocks();
+    get().ensureConnectivityListeners(normalizedFuncionId);
 
     try {
       // Verificar si ya existe un canal con el mismo topic antes de crear uno nuevo
@@ -933,14 +1043,28 @@ export const useSeatLockStore = create((set, get) => ({
             channelRefCounts.set(expectedTopic, currentCount + 1);
             console.log(`📊 [SEAT_LOCK_STORE] Referencias de canal ${expectedTopic}: ${currentCount + 1}`);
             // Actualizar el estado del canal en el store
-            set({ channel: newChannel, subscriptionRefCount: currentCount + 1 });
+            const state = get();
+            if (typeof window !== 'undefined' && state.pendingReloadTimeout) {
+              window.clearTimeout(state.pendingReloadTimeout);
+            }
+            set({
+              channel: newChannel,
+              subscriptionRefCount: currentCount + 1,
+              connectionIssueDetected: false,
+              pendingReloadTimeout: null,
+            });
           } else if (status === 'CHANNEL_ERROR') {
             console.error('❌ [SEAT_LOCK_STORE] Error en canal Realtime:', status);
+            get().handleRealtimeChannelIssue('CHANNEL_ERROR', normalizedFuncionId);
           } else if (status === 'TIMED_OUT') {
             console.warn('⏱️ [SEAT_LOCK_STORE] Timeout en suscripción Realtime:', status);
+            get().handleRealtimeChannelIssue('TIMED_OUT', normalizedFuncionId);
           } else if (status === 'CLOSED') {
             console.warn('⚠️ [SEAT_LOCK_STORE] Canal cerrado. Esto puede ser normal si el componente se desmontó.');
             // No limpiar el canal del store si se cierra - puede estar siendo usado por otros componentes
+            if ((get().subscriptionRefCount || 0) > 0) {
+              get().handleRealtimeChannelIssue('CLOSED', normalizedFuncionId);
+            }
           } else {
             console.log('📡 [SEAT_LOCK_STORE] Estado de suscripción:', status);
           }
@@ -982,6 +1106,7 @@ export const useSeatLockStore = create((set, get) => ({
           // Error silencioso
         }
         set({ channel: null, lockedSeats: [], lockedTables: [], subscriptionRefCount: 0 });
+        get().teardownConnectivityListeners();
       } else {
         console.log(`✅ [SEAT_LOCK_STORE] Manteniendo canal ${topic} abierto (${newCount} referencias activas)`);
         // No limpiar el estado si aún hay referencias - otros componentes lo necesitan
