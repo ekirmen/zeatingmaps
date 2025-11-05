@@ -1,6 +1,7 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { supabase } from '../../supabaseClient';
 import { useTenant } from '../../contexts/TenantContext';
+import logger from '../../utils/logger';
 
 const RecintoSalaContext = createContext();
 
@@ -17,42 +18,53 @@ export const RecintoSalaProvider = ({ children }) => {
     return stored ? JSON.parse(stored) : null;
   });
 
+  const prevTenantId = useRef(null);
+  
   useEffect(() => {
+    const tenantId = currentTenant?.id;
+    
+    // Solo cargar si cambió el tenant o si no se ha cargado antes
+    if (tenantId === prevTenantId.current && recintos.length > 0) return;
+    if (!tenantId && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('vercel.app')) {
+      logger.log('⏳ [RecintoSalaContext] Esperando tenant...');
+      return;
+    }
+    
+    prevTenantId.current = tenantId;
+    
     const fetchRecintos = async () => {
       try {
-        console.log('🔍 [RecintoSalaContext] Obteniendo recintos para tenant:', currentTenant?.id);
+        logger.log('🔍 [RecintoSalaContext] Obteniendo recintos para tenant:', tenantId);
         
         let query = supabase.from('recintos').select('*, salas(*)');
         
         // Filtrar por tenant_id si está disponible
-        if (currentTenant?.id) {
-          query = query.eq('tenant_id', currentTenant.id);
-          console.log('✅ [RecintoSalaContext] Filtrando por tenant_id:', currentTenant.id);
+        if (tenantId) {
+          query = query.eq('tenant_id', tenantId);
+          logger.log('✅ [RecintoSalaContext] Filtrando por tenant_id:', tenantId);
         } else {
-          console.warn('⚠️ [RecintoSalaContext] No hay tenant disponible, consultando sin filtro');
+          logger.warn('⚠️ [RecintoSalaContext] No hay tenant disponible, consultando sin filtro');
         }
         
         const { data, error } = await query;
         if (error) {
-          console.error('❌ [RecintoSalaContext] Error fetching recintos:', error.message);
+          logger.error('❌ [RecintoSalaContext] Error fetching recintos:', error.message);
           setRecintos([]);
         } else {
-          console.log('✅ [RecintoSalaContext] Recintos obtenidos:', data?.length || 0);
+          logger.log('✅ [RecintoSalaContext] Recintos obtenidos:', data?.length || 0);
           setRecintos(data || []);
         }
       } catch (error) {
-        console.error('❌ [RecintoSalaContext] Error inesperado:', error.message);
+        logger.error('❌ [RecintoSalaContext] Error inesperado:', error.message);
         setRecintos([]);
       }
     };
 
     // Solo ejecutar si tenemos un tenant o si estamos en desarrollo
-    if (currentTenant?.id || window.location.hostname === 'localhost' || window.location.hostname.includes('vercel.app')) {
+    if (tenantId || window.location.hostname === 'localhost' || window.location.hostname.includes('vercel.app')) {
       fetchRecintos();
-    } else if (!currentTenant && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('vercel.app')) {
-      console.log('⏳ [RecintoSalaContext] Esperando tenant...');
     }
-  }, [currentTenant]);
+  }, [currentTenant?.id, recintos.length]);
 
   useEffect(() => {
     if (recinto) {

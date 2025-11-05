@@ -11,6 +11,7 @@ import SeatStatusLegend from './SeatStatusLegend';
 import SeatLockDebug from './SeatLockDebug';
 // import VisualNotifications from '../utils/VisualNotifications'; // Removido por no usarse
 import resolveImageUrl from '../utils/resolveImageUrl';
+import logger from '../utils/logger';
 
 // Cache global para imágenes de fondo para evitar recargas constantes
 const backgroundImageCache = new Map();
@@ -97,7 +98,7 @@ const BackgroundImage = React.memo(({ config }) => {
     };
     
     const onError = (error) => {
-      console.error('Error cargando imagen de fondo:', error);
+      logger.error('Error cargando imagen de fondo:', error);
       setBgImg(null);
     };
     
@@ -164,33 +165,33 @@ const SeatingMapUnified = ({
 }) => {
   // Validar y normalizar funcionId
   const normalizedFuncionId = useMemo(() => {
-    console.log('🔍 [SEATING_MAP] Normalizando funcionId:', { funcionId, type: typeof funcionId });
+    logger.log('🔍 [SEATING_MAP] Normalizando funcionId:', { funcionId, type: typeof funcionId });
     
     if (typeof funcionId === 'number') {
-      console.log('✅ [SEATING_MAP] funcionId es número:', funcionId);
+      logger.log('✅ [SEATING_MAP] funcionId es número:', funcionId);
       return funcionId;
     }
     if (typeof funcionId === 'string') {
       const parsed = parseInt(funcionId, 10);
       const result = isNaN(parsed) ? null : parsed;
-      console.log('🔍 [SEATING_MAP] funcionId string parseado:', { original: funcionId, parsed, result });
+      logger.log('🔍 [SEATING_MAP] funcionId string parseado:', { original: funcionId, parsed, result });
       return result;
     }
     if (funcionId && typeof funcionId === 'object') {
       // Si es un objeto, intentar extraer el ID
       const id = funcionId.id || funcionId._id || funcionId.funcion_id;
-      console.log('🔍 [SEATING_MAP] funcionId objeto, extrayendo ID:', { funcionId, extractedId: id });
+      logger.log('🔍 [SEATING_MAP] funcionId objeto, extrayendo ID:', { funcionId, extractedId: id });
       if (typeof id === 'number') {
         return id;
       }
       if (typeof id === 'string') {
         const parsed = parseInt(id, 10);
         const result = isNaN(parsed) ? null : parsed;
-        console.log('🔍 [SEATING_MAP] ID extraído parseado:', { original: id, parsed, result });
+        logger.log('🔍 [SEATING_MAP] ID extraído parseado:', { original: id, parsed, result });
         return result;
       }
     }
-    console.warn('⚠️ [SEATING_MAP] funcionId inválido:', funcionId);
+    logger.warn('⚠️ [SEATING_MAP] funcionId inválido:', funcionId);
     return null;
   }, [funcionId]);
 
@@ -221,17 +222,27 @@ const SeatingMapUnified = ({
   const unsubscribe = useSeatLockStore(state => state.unsubscribe);
   const { getSeatColor, getBorderColor } = useSeatColors(normalizedFuncionId);
 
-  // Suscribirse a cambios en tiempo real cuando el componente se monta
+  // Suscribirse a cambios en tiempo real cuando el componente se monta (optimizado)
+  const prevFuncionId = useRef(null);
   useEffect(() => {
-    if (normalizedFuncionId && subscribeToFunction) {
-      console.log('🔔 [SEATING_MAP] Suscribiéndose a función:', normalizedFuncionId);
+    // Solo suscribirse si cambió la función
+    if (normalizedFuncionId && normalizedFuncionId !== prevFuncionId.current && subscribeToFunction) {
+      // Desuscribirse de la función anterior si existe
+      if (prevFuncionId.current && unsubscribe) {
+        logger.log('🔔 [SEATING_MAP] Desuscribiéndose de función anterior:', prevFuncionId.current);
+        unsubscribe();
+      }
+      
+      logger.log('🔔 [SEATING_MAP] Suscribiéndose a función:', normalizedFuncionId);
       subscribeToFunction(normalizedFuncionId);
+      prevFuncionId.current = normalizedFuncionId;
     }
 
     return () => {
-      if (unsubscribe) {
-        console.log('🔔 [SEATING_MAP] Desuscribiéndose de función:', normalizedFuncionId);
+      if (unsubscribe && prevFuncionId.current) {
+        logger.log('🔔 [SEATING_MAP] Desuscribiéndose de función:', prevFuncionId.current);
         unsubscribe();
+        prevFuncionId.current = null;
       }
     };
   }, [normalizedFuncionId, subscribeToFunction, unsubscribe]);
@@ -239,8 +250,8 @@ const SeatingMapUnified = ({
   // Listener para el evento de carrito limpiado
   useEffect(() => {
     const handleCartCleared = (event) => {
-      console.log('🧹 [SEATING_MAP] Carrito limpiado, forzando actualización de estado visual');
-      console.log('🧹 [SEATING_MAP] Asientos limpiados:', event.detail?.clearedSeats);
+      logger.log('🧹 [SEATING_MAP] Carrito limpiado, forzando actualización de estado visual');
+      logger.log('🧹 [SEATING_MAP] Asientos limpiados:', event.detail?.clearedSeats);
       
       // Forzar una actualización inmediata del estado de los asientos
       setForceRefresh(prev => prev + 1);
@@ -254,12 +265,12 @@ const SeatingMapUnified = ({
     };
 
     const handleForceRefresh = (event) => {
-      console.log('🔄 [SEATING_MAP] Forzando actualización de estado de asientos');
+      logger.log('🔄 [SEATING_MAP] Forzando actualización de estado de asientos');
       setForceRefresh(prev => prev + 1);
     };
 
     const handleSeatRemovedFromCart = (event) => {
-      console.log('🗑️ [SEATING_MAP] Asiento eliminado del carrito, forzando actualización:', event.detail);
+      logger.log('🗑️ [SEATING_MAP] Asiento eliminado del carrito, forzando actualización:', event.detail);
       setForceRefresh(prev => prev + 1);
     };
 
@@ -411,7 +422,7 @@ const SeatingMapUnified = ({
             resolvedUrl = resolveImageUrl(url, 'productos') || url;
           }
           preloadBackgroundImage(resolvedUrl).catch(err => {
-            console.warn('Error precargando imagen de fondo:', err);
+            logger.warn('Error precargando imagen de fondo:', err);
           });
         }
       });
@@ -468,7 +479,7 @@ const SeatingMapUnified = ({
 
       // Verificar que el asiento sea válido
       if (!seat || !seat._id) {
-        console.warn('❌ [SEATING_MAP] Asiento inválido:', seat);
+        logger.warn('❌ [SEATING_MAP] Asiento inválido:', seat);
         return;
       }
 
@@ -513,7 +524,7 @@ const SeatingMapUnified = ({
       // Verificar si está seleccionado por otro usuario
       const isSelectedByOther = seat.estado === 'seleccionado_por_otro';
       if (isSelectedByOther) {
-        console.warn('❌ [SEATING_MAP] Asiento seleccionado por otro usuario, no se puede interactuar');
+        logger.warn('❌ [SEATING_MAP] Asiento seleccionado por otro usuario, no se puede interactuar');
         // Mostrar mensaje al usuario
         if (onSeatError) {
           onSeatError('Este asiento está siendo seleccionado por otro usuario. Por favor, elige otro asiento.');
@@ -524,13 +535,13 @@ const SeatingMapUnified = ({
       // Verificar si está bloqueado localmente (desde props)
       const isLocallyBlocked = blockedSeats && blockedSeats.has && blockedSeats.has(seat._id);
       if (isLocallyBlocked) {
-        console.warn('❌ [SEATING_MAP] Asiento bloqueado localmente, no se puede seleccionar');
+        logger.warn('❌ [SEATING_MAP] Asiento bloqueado localmente, no se puede seleccionar');
         return;
       }
 
       // Verificar si está vendido, reservado o bloqueado permanentemente
       if (seat.estado === 'vendido' || seat.estado === 'reservado' || seat.estado === 'locked') {
-        console.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
+        logger.warn('❌ [SEATING_MAP] Asiento no disponible para selección:', seat.estado);
         if (onSeatError) {
           const errorMessage = seat.estado === 'vendido' 
             ? 'Este asiento ya está vendido.' 
@@ -765,7 +776,7 @@ const SeatingMapUnified = ({
 
    // Mostrar error si hay problema de sincronización
    if (seatsError) {
-     console.error('[SYNC] Error en sincronización:', seatsError);
+     logger.error('[SYNC] Error en sincronización:', seatsError);
      return <div className="text-center p-4 text-red-600">Error al cargar asientos</div>;
    }
 
@@ -776,7 +787,7 @@ const SeatingMapUnified = ({
 
   // Validar que haya mesas válidas
   if (validatedMesas.length === 0) {
-    console.warn('No valid tables found in the map');
+    logger.warn('No valid tables found in the map');
   }
 
   // Create a set of found seat IDs for quick lookup

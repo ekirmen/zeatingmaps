@@ -1,189 +1,285 @@
 import { supabase } from '../../supabaseClient';
 import { supabaseAdmin } from '../../supabaseClient';
 import { v5 as uuidv5 } from 'uuid';
+import logger from '../../utils/logger';
 
+// ============================================
+// OPTIMIZACIONES: Funciones Helper Reutilizables
+// ============================================
 
+// Cache para tenant_id (evita múltiples consultas en la misma sesión)
+let tenantIdCache = null;
+let tenantIdCacheTimestamp = null;
+const TENANT_ID_CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
-const handleError = (error) => {
+/**
+ * Obtiene el tenant_id del usuario autenticado con cache
+ * @returns {Promise<string>} tenant_id del usuario
+ * @throws {Error} Si el usuario no está autenticado o no tiene tenant_id
+ */
+const getTenantId = async (useCache = true) => {
+  // Verificar cache
+  if (useCache && tenantIdCache && tenantIdCacheTimestamp) {
+    const now = Date.now();
+    if (now - tenantIdCacheTimestamp < TENANT_ID_CACHE_TTL) {
+      return tenantIdCache;
+    }
+  }
+
+  // Obtener usuario autenticado
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    throw new Error('Usuario no autenticado');
+  }
+
+  // Obtener tenant_id del perfil
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .single();
+
+  if (profileError || !profile?.tenant_id) {
+    throw new Error('Usuario sin tenant_id válido');
+  }
+
+  // Actualizar cache
+  tenantIdCache = profile.tenant_id;
+  tenantIdCacheTimestamp = Date.now();
+
+  return tenantIdCache;
+};
+
+/**
+ * Limpia el cache del tenant_id
+ */
+export const clearTenantIdCache = () => {
+  tenantIdCache = null;
+  tenantIdCacheTimestamp = null;
+};
+
+/**
+ * Manejo de errores unificado
+ */
+const handleError = (error, context = '') => {
   if (error) {
-    console.error('Supabase error:', error.message);
-    throw new Error(error.message);
+    const errorMessage = context ? `${context}: ${error.message}` : error.message;
+    logger.error('Supabase error:', errorMessage);
+    throw new Error(errorMessage);
   }
 };
 
-// Helper: verifica si una columna existe - versión simplificada sin information_schema
+/**
+ * Helper: verifica si una columna existe - versión simplificada sin information_schema
+ */
 async function hasColumn(tableName, columnName) {
-  // Para cms_pages, sabemos que created_at existe según el schema
   if (tableName === 'cms_pages') {
     if (columnName === 'created_at') return true;
-    if (columnName === 'updated_at') return false; // No existe en el schema actual
+    if (columnName === 'updated_at') return false;
     return false;
   }
   return false;
 }
 
+/**
+ * Función genérica para obtener datos de una tabla con filtro por tenant_id
+ */
+const fetchByTenant = async (tableName, filters = {}, options = {}) => {
+  try {
+    const tenantId = await getTenantId();
+    let query = supabase
+      .from(tableName)
+      .select(options.select || '*')
+      .eq('tenant_id', tenantId);
+
+    // Aplicar filtros adicionales
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        query = query.eq(key, value);
+      }
+    });
+
+    // Aplicar ordenamiento
+    if (options.orderBy) {
+      const ascending = options.ascending !== undefined ? options.ascending : true;
+      query = query.order(options.orderBy, { ascending });
+    }
+
+    const { data, error } = await query;
+    handleError(error, `Error fetching ${tableName}`);
+    return data || [];
+  } catch (error) {
+    logger.error(`Error in fetchByTenant(${tableName}):`, error);
+    throw error;
+  }
+};
+
+/**
+ * Función genérica para obtener un registro por ID con filtro por tenant_id
+ */
+const fetchById = async (tableName, id, options = {}) => {
+  try {
+    const tenantId = await getTenantId();
+    let query = supabase
+      .from(tableName)
+      .select(options.select || '*')
+      .eq('id', id)
+      .eq('tenant_id', tenantId);
+
+    const { data, error } = await query.single();
+    handleError(error, `Error fetching ${tableName} by id`);
+    return data;
+  } catch (error) {
+    logger.error(`Error in fetchById(${tableName}):`, error);
+    throw error;
+  }
+};
+
+/**
+ * Función genérica para crear un registro con tenant_id automático
+ */
+const createRecord = async (tableName, data, options = {}) => {
+  try {
+    const tenantId = await getTenantId();
+    const recordWithTenant = {
+      ...data,
+      tenant_id: tenantId
+    };
+
+    const { data: result, error } = await supabase
+      .from(tableName)
+      .insert([recordWithTenant])
+      .select(options.select || '*')
+      .single();
+
+    handleError(error, `Error creating ${tableName}`);
+    return result;
+  } catch (error) {
+    logger.error(`Error in createRecord(${tableName}):`, error);
+    throw error;
+  }
+};
+
+/**
+ * Función genérica para actualizar un registro con validación de tenant_id
+ */
+const updateRecord = async (tableName, id, data, options = {}) => {
+  try {
+    const tenantId = await getTenantId();
+    const recordWithTenant = {
+      ...data,
+      tenant_id: tenantId // Asegurar que se mantenga el tenant_id
+    };
+
+    const { data: result, error } = await supabase
+      .from(tableName)
+      .update(recordWithTenant)
+      .eq('id', id)
+      .eq('tenant_id', tenantId) // Solo actualizar registros del tenant actual
+      .select(options.select || '*')
+      .single();
+
+    handleError(error, `Error updating ${tableName}`);
+    return result;
+  } catch (error) {
+    logger.error(`Error in updateRecord(${tableName}):`, error);
+    throw error;
+  }
+};
+
+/**
+ * Función genérica para eliminar un registro con validación de tenant_id
+ */
+const deleteRecord = async (tableName, id) => {
+  try {
+    const tenantId = await getTenantId();
+    const { error } = await supabase
+      .from(tableName)
+      .delete()
+      .eq('id', id)
+      .eq('tenant_id', tenantId); // Solo eliminar registros del tenant actual
+
+    handleError(error, `Error deleting ${tableName}`);
+    return { success: true };
+  } catch (error) {
+    logger.error(`Error in deleteRecord(${tableName}):`, error);
+    throw error;
+  }
+};
+
 // === ZONAS ===
 export const fetchZonas = async () => {
-  // Obtener tenant_id del usuario autenticado
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    throw new Error('Usuario no autenticado');
-  }
-
-  // Obtener tenant_id del perfil del usuario
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('tenant_id')
-    .eq('id', user.id)
-    .single();
-  
-  if (profileError || !profile?.tenant_id) {
-    throw new Error('Usuario sin tenant_id válido');
-  }
-
-  // Filtrar zonas por tenant_id del usuario
-  const { data, error } = await supabase
-    .from('zonas')
-    .select('*')
-    .eq('tenant_id', profile.tenant_id);
-  
-  handleError(error);
-  return data;
+  return fetchByTenant('zonas', {}, { orderBy: 'nombre' });
 };
 
 export const fetchZonasPorSala = async (salaId) => {
-  console.log('🔍 [fetchZonasPorSala] Iniciando búsqueda de zonas para sala:', salaId);
-  
-  // Obtener tenant_id del usuario autenticado
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
-    console.error('❌ [fetchZonasPorSala] Usuario no autenticado');
-    throw new Error('Usuario no autenticado');
+  if (!salaId) {
+    throw new Error('salaId es requerido');
   }
-  
-  console.log('✅ [fetchZonasPorSala] Usuario autenticado:', user.id);
-
-  // Obtener tenant_id del perfil del usuario
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('tenant_id')
-    .eq('id', user.id)
-    .single();
-  
-  console.log('🔍 [fetchZonasPorSala] Perfil obtenido:', { profile, error: profileError });
-  
-  if (profileError || !profile?.tenant_id) {
-    console.error('❌ [fetchZonasPorSala] Usuario sin tenant_id válido');
-    throw new Error('Usuario sin tenant_id válido');
-  }
-  
-  console.log('✅ [fetchZonasPorSala] Tenant ID:', profile.tenant_id);
-
-  // Filtrar zonas por sala_id y tenant_id del usuario
-  console.log('🔍 [fetchZonasPorSala] Buscando zonas en tabla zonas...');
-  const { data, error } = await supabase
-    .from('zonas')
-    .select('*')
-    .eq('sala_id', salaId)
-    .eq('tenant_id', profile.tenant_id);
-  
-  console.log('🔍 [fetchZonasPorSala] Resultado búsqueda zonas:', { data, error });
-  
-  if (error) {
-    console.error('❌ [fetchZonasPorSala] Error al buscar zonas:', error);
-    console.error('❌ [fetchZonasPorSala] Error details:', {
-      code: error.code,
-      message: error.message,
-      details: error.details,
-      hint: error.hint
-    });
-  }
-  
-  handleError(error);
-  console.log('✅ [fetchZonasPorSala] Zonas retornadas:', data);
-  return data;
+  return fetchByTenant('zonas', { sala_id: salaId });
 };
 
 export const createZona = async (data) => {
   const client = supabaseAdmin || supabase;
   
-  // Si no se proporciona tenant_id, obtenerlo de la sala
-  if (!data.tenant_id && data.sala_id) {
-    try {
-      // Obtener el tenant_id de la sala
-      const { data: salaData, error: salaError } = await client
-        .from('salas')
-        .select('recintos!inner(tenant_id)')
-        .eq('id', data.sala_id)
-        .single();
-      
-      if (salaError) {
-        console.error('[createZona] Error al obtener tenant_id de la sala:', salaError);
-      } else if (salaData?.recintos?.tenant_id) {
-        data.tenant_id = salaData.recintos.tenant_id;
-        console.log('[createZona] Tenant_id asignado automáticamente:', data.tenant_id);
-      } else {
-        console.warn('[createZona] No se pudo obtener tenant_id de la sala');
+  // Si no se proporciona tenant_id, intentar obtenerlo de la sala o usar el helper
+  if (!data.tenant_id) {
+    if (data.sala_id) {
+      try {
+        const { data: salaData, error: salaError } = await client
+          .from('salas')
+          .select('recintos!inner(tenant_id)')
+          .eq('id', data.sala_id)
+          .single();
+        
+        if (!salaError && salaData?.recintos?.tenant_id) {
+          data.tenant_id = salaData.recintos.tenant_id;
+        }
+      } catch (error) {
+        logger.warn('[createZona] No se pudo obtener tenant_id de la sala');
       }
-    } catch (error) {
-      console.error('[createZona] Error al procesar tenant_id:', error);
+    }
+    
+    // Si aún no hay tenant_id, usar el helper
+    if (!data.tenant_id) {
+      data.tenant_id = await getTenantId();
     }
   }
   
-  // Crear la zona con tenant_id
   const { data: result, error } = await client.from('zonas').insert(data).single();
-  handleError(error);
+  handleError(error, 'Error creating zona');
   return result;
 };
 
 export const updateZona = async (id, data) => {
   const client = supabaseAdmin || supabase;
+  const tenantId = await getTenantId();
   
-  // Si no se proporciona tenant_id, obtenerlo de la zona existente o de la sala
+  // Asegurar tenant_id en los datos
   if (!data.tenant_id) {
-    try {
-      // Primero intentar obtener el tenant_id de la zona existente
-      const { data: zonaExistente, error: zonaError } = await client
-        .from('zonas')
-        .select('tenant_id, sala_id')
-        .eq('id', id)
-        .single();
-      
-      if (zonaError) {
-        console.error('[updateZona] Error al obtener zona existente:', zonaError);
-      } else if (zonaExistente?.tenant_id) {
-        data.tenant_id = zonaExistente.tenant_id;
-        console.log('[updateZona] Tenant_id obtenido de zona existente:', data.tenant_id);
-      } else if (zonaExistente?.sala_id) {
-        // Si la zona no tiene tenant_id, obtenerlo de la sala
-        const { data: salaData, error: salaError } = await client
-          .from('salas')
-          .select('recintos!inner(tenant_id)')
-          .eq('id', zonaExistente.sala_id)
-          .single();
-        
-        if (salaError) {
-          console.error('[updateZona] Error al obtener tenant_id de la sala:', salaError);
-        } else if (salaData?.recintos?.tenant_id) {
-          data.tenant_id = salaData.recintos.tenant_id;
-          console.log('[updateZona] Tenant_id asignado automáticamente:', data.tenant_id);
-        }
-      }
-    } catch (error) {
-      console.error('[updateZona] Error al procesar tenant_id:', error);
-    }
+    data.tenant_id = tenantId;
   }
   
-  // Actualizar la zona con tenant_id
-  const { data: result, error } = await client.from('zonas').update(data).eq('id', id).single();
-  handleError(error);
+  const { data: result, error } = await client
+    .from('zonas')
+    .update(data)
+    .eq('id', id)
+    .eq('tenant_id', tenantId)
+    .single();
+  
+  handleError(error, 'Error updating zona');
   return result;
 };
 
 export const deleteZona = async (id) => {
   const client = supabaseAdmin || supabase;
-  const { error } = await client.from('zonas').delete().eq('id', id);
-  handleError(error);
+  const tenantId = await getTenantId();
+  const { error } = await client
+    .from('zonas')
+    .delete()
+    .eq('id', id)
+    .eq('tenant_id', tenantId);
+  handleError(error, 'Error deleting zona');
 };
 
 // === SALAS Y RECINTOS ===
@@ -248,18 +344,18 @@ export const createEvento = async (data) => {
     
     // Crear automáticamente la página CMS para el evento
     if (result) {
-      console.log('🔧 [createEvento] Evento creado, creando página CMS...');
+      logger.log('🔧 [createEvento] Evento creado, creando página CMS...');
       const cmsPage = await createCmsPageForEvent(result);
       if (cmsPage) {
-        console.log('✅ [createEvento] Página CMS creada exitosamente para evento:', result.nombre);
+        logger.log('✅ [createEvento] Página CMS creada exitosamente para evento:', result.nombre);
       } else {
-        console.warn('⚠️ [createEvento] No se pudo crear la página CMS para evento:', result.nombre);
+        logger.warn('⚠️ [createEvento] No se pudo crear la página CMS para evento:', result.nombre);
       }
     }
     
     return result;
   } catch (error) {
-    console.error('❌ [createEvento] Error creando evento:', error);
+    logger.error('❌ [createEvento] Error creando evento:', error);
     throw error;
   }
 };
@@ -297,28 +393,28 @@ export const createFuncion = async (data) => {
 // === MAPAS ===
 export const fetchMapa = async (salaId, funcionId = null) => {
   if (!salaId) {
-    console.error('❌ [fetchMapa] salaId es null/undefined');
+    logger.error('❌ [fetchMapa] salaId es null/undefined');
     return null;
   }
 
-  console.log('🔍 [fetchMapa] Iniciando búsqueda de mapa para sala:', salaId);
-  console.log('🔍 [fetchMapa] Tipo de salaId:', typeof salaId);
-  console.log('🔍 [fetchMapa] FuncionId:', funcionId);
+  logger.log('🔍 [fetchMapa] Iniciando búsqueda de mapa para sala:', salaId);
+  logger.log('🔍 [fetchMapa] Tipo de salaId:', typeof salaId);
+  logger.log('🔍 [fetchMapa] FuncionId:', funcionId);
 
   try {
     // Cargar el mapa
-    console.log('🔍 [fetchMapa] Buscando mapa en tabla mapas...');
+    logger.log('🔍 [fetchMapa] Buscando mapa en tabla mapas...');
     const { data: mapa, error: mapaError } = await supabase
       .from('mapas')
       .select('*')
       .eq('sala_id', salaId)
       .maybeSingle();
     
-    console.log('🔍 [fetchMapa] Resultado búsqueda mapa:', { mapa, error: mapaError });
+    logger.log('🔍 [fetchMapa] Resultado búsqueda mapa:', { mapa: mapa ? 'encontrado' : 'no encontrado', error: mapaError });
     
     if (mapaError) {
-      console.error('❌ [fetchMapa] Error al buscar mapa:', mapaError);
-      console.error('❌ [fetchMapa] Error details:', {
+      logger.error('❌ [fetchMapa] Error al buscar mapa:', mapaError);
+      logger.error('❌ [fetchMapa] Error details:', {
         code: mapaError.code,
         message: mapaError.message,
         details: mapaError.details,
@@ -328,29 +424,29 @@ export const fetchMapa = async (salaId, funcionId = null) => {
     }
     
     if (!mapa) {
-      console.warn('⚠️ [fetchMapa] No se encontró mapa para sala:', salaId);
+      logger.warn('⚠️ [fetchMapa] No se encontró mapa para sala:', salaId);
       return null;
     }
     
-    console.log('✅ [fetchMapa] Mapa encontrado:', mapa);
+    logger.log('✅ [fetchMapa] Mapa encontrado:', { id: mapa.id, sala_id: mapa.sala_id });
     
     // Cargar las zonas de la sala
-    console.log('🔍 [fetchMapa] Buscando zonas para sala:', salaId);
+    logger.log('🔍 [fetchMapa] Buscando zonas para sala:', salaId);
     const { data: zonas, error: zonasError } = await supabase
       .from('zonas')
       .select('*')
       .eq('sala_id', salaId);
     
-    console.log('🔍 [fetchMapa] Resultado búsqueda zonas:', { zonas, error: zonasError });
+    logger.log('🔍 [fetchMapa] Resultado búsqueda zonas:', { zonas: zonas?.length || 0, error: zonasError });
     
     if (zonasError) {
-      console.warn('⚠️ [fetchMapa] Error al cargar zonas, continuando sin zonas:', zonasError);
+      logger.warn('⚠️ [fetchMapa] Error al cargar zonas, continuando sin zonas:', zonasError);
     }
     
     // Cargar asientos reservados/vendidos si se proporciona funcionId
     let reservedSeats = {};
     if (funcionId) {
-      console.log('🔍 [fetchMapa] Cargando asientos reservados para función:', funcionId);
+      logger.log('🔍 [fetchMapa] Cargando asientos reservados para función:', funcionId);
       reservedSeats = await loadReservedSeats(funcionId);
     }
     
@@ -363,10 +459,10 @@ export const fetchMapa = async (salaId, funcionId = null) => {
       zonas: zonas || []
     };
     
-    console.log('✅ [fetchMapa] Retornando resultado final:', resultado);
+    logger.log('✅ [fetchMapa] Retornando resultado final');
     return resultado;
   } catch (error) {
-    console.error('❌ [fetchMapa] Error general:', error);
+    logger.error('❌ [fetchMapa] Error general:', error);
     throw error;
   }
 };
@@ -374,7 +470,7 @@ export const fetchMapa = async (salaId, funcionId = null) => {
 // Función para cargar asientos reservados desde payment_transactions
 const loadReservedSeats = async (funcionId) => {
   try {
-    console.log('🔍 [loadReservedSeats] Cargando asientos reservados para función:', funcionId);
+    logger.log('🔍 [loadReservedSeats] Cargando asientos reservados para función:', funcionId);
     
     // Buscar en la tabla payment_transactions (tabla principal)
     const { data: payments, error: paymentsError } = await supabase
@@ -385,12 +481,11 @@ const loadReservedSeats = async (funcionId) => {
       .order('created_at', { ascending: false });
     
     if (paymentsError) {
-      console.error('❌ [loadReservedSeats] Error cargando payments:', paymentsError);
+      logger.error('❌ [loadReservedSeats] Error cargando payments:', paymentsError);
       return {};
     }
     
-    console.log('🔍 [loadReservedSeats] Payments encontrados:', payments?.length || 0);
-    console.log('🔍 [loadReservedSeats] Detalles de payments:', payments);
+    logger.log('🔍 [loadReservedSeats] Payments encontrados:', payments?.length || 0);
     
     // Buscar en seat_locks para asientos bloqueados
     const { data: locks, error: locksError } = await supabase
@@ -402,11 +497,10 @@ const loadReservedSeats = async (funcionId) => {
       .order('created_at', { ascending: false });
     
     if (locksError) {
-      console.warn('⚠️ [loadReservedSeats] Error cargando locks:', locksError);
+      logger.warn('⚠️ [loadReservedSeats] Error cargando locks:', locksError);
     }
     
-    console.log('🔍 [loadReservedSeats] Locks encontrados:', locks?.length || 0);
-    console.log('🔍 [loadReservedSeats] Detalles de locks:', locks);
+    logger.log('🔍 [loadReservedSeats] Locks encontrados:', locks?.length || 0);
     
     // Crear mapa de asientos reservados
     const reservedSeats = {};
@@ -431,7 +525,7 @@ const loadReservedSeats = async (funcionId) => {
                 createdAt: payment.created_at,
                 status: payment.status
               };
-              console.log('✅ [loadReservedSeats] Asiento desde payments:', seat.id, 'Estado:', estado, 'Status:', payment.status);
+              logger.log('✅ [loadReservedSeats] Asiento desde payments:', seat.id, 'Estado:', estado);
             }
           });
         }
@@ -450,17 +544,16 @@ const loadReservedSeats = async (funcionId) => {
             expiresAt: lock.expires_at,
             status: 'locked'
           };
-          console.log('🔒 [loadReservedSeats] Asiento bloqueado:', lock.seat_id, 'Expira:', lock.expires_at);
+          logger.log('🔒 [loadReservedSeats] Asiento bloqueado:', lock.seat_id);
         }
       });
     }
     
-    console.log('✅ [loadReservedSeats] Total asientos con estado cargados:', Object.keys(reservedSeats).length);
-    console.log('🔍 [loadReservedSeats] Asientos con estado:', Object.keys(reservedSeats));
+    logger.log('✅ [loadReservedSeats] Total asientos con estado cargados:', Object.keys(reservedSeats).length);
     return reservedSeats;
     
   } catch (error) {
-    console.error('❌ [loadReservedSeats] Error general:', error);
+    logger.error('❌ [loadReservedSeats] Error general:', error);
     return {};
   }
 };
@@ -495,7 +588,7 @@ const ensureAllSeatsAvailable = (mapa) => {
     };
     
   } catch (error) {
-    console.error('❌ [ensureAllSeatsAvailable] Error:', error);
+    logger.error('❌ [ensureAllSeatsAvailable] Error:', error);
     return mapa;
   }
 };
@@ -507,7 +600,7 @@ const applySeatStates = (mapa, reservedSeats) => {
     return ensureAllSeatsAvailable(mapa);
   }
   
-  console.log('🔍 [applySeatStates] Aplicando estados a mapa con', Object.keys(reservedSeats).length, 'asientos reservados');
+  logger.log('🔍 [applySeatStates] Aplicando estados a mapa con', Object.keys(reservedSeats).length, 'asientos reservados');
   
   try {
     const contenido = Array.isArray(mapa.contenido) ? mapa.contenido : JSON.parse(mapa.contenido);
@@ -546,7 +639,7 @@ const applySeatStates = (mapa, reservedSeats) => {
     };
     
   } catch (error) {
-    console.error('❌ [applySeatStates] Error aplicando estados:', error);
+    logger.error('❌ [applySeatStates] Error aplicando estados:', error);
     return mapa;
   }
 };
@@ -669,264 +762,43 @@ export const setSeatsBlocked = async (seatIds, bloqueado) => {
 // === ENTRADAS ===
 export const fetchEntradas = async () => {
   try {
-    // Obtener el usuario autenticado
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.warn('Usuario no autenticado, retornando entradas vacías');
-      return [];
-    }
-
-    // Obtener el tenant_id del perfil del usuario
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('tenant_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.tenant_id) {
-      console.warn('Usuario sin tenant_id válido, retornando entradas vacías');
-      return [];
-    }
-
-    console.log('🔍 [apibackoffice] Obteniendo entradas para tenant:', profile.tenant_id);
-
-    const { data, error } = await supabase
-      .from('entradas')
-      .select('*')
-      .eq('tenant_id', profile.tenant_id)
-      .order('nombre_entrada');
-
-    if (error) {
-      console.error('Error fetching entradas:', error);
-      throw new Error('Error fetching entradas: ' + error.message);
-    }
-
-    console.log('🔍 [apibackoffice] Entradas obtenidas:', data);
-    return data || [];
+    return await fetchByTenant('entradas', {}, { orderBy: 'nombre_entrada' });
   } catch (error) {
-    console.error('Error in fetchEntradas:', error);
+    logger.error('Error in fetchEntradas:', error);
     return [];
   }
 };
 
 export const fetchEntradasByRecinto = async (recintoId) => {
   try {
-    // Obtener el usuario autenticado
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.warn('Usuario no autenticado, retornando entradas vacías');
-      return [];
-    }
-
-    // Obtener el tenant_id del perfil del usuario
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('tenant_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.tenant_id) {
-      console.warn('Usuario sin tenant_id válido, retornando entradas vacías');
-      return [];
-    }
-
-    console.log('🔍 [apibackoffice] Obteniendo entradas para recinto:', recintoId, 'tenant:', profile.tenant_id);
-
-    const { data, error } = await supabase
-      .from('entradas')
-      .select('*')
-      .eq('recinto', recintoId)
-      .eq('tenant_id', profile.tenant_id)
-      .order('nombre_entrada');
-
-    if (error) {
-      console.error('Error fetching entradas by recinto:', error);
-      throw new Error('Error fetching entradas by recinto: ' + error.message);
-    }
-
-    console.log('🔍 [apibackoffice] Entradas por recinto obtenidas:', data);
-    return data || [];
+    if (!recintoId) return [];
+    return await fetchByTenant('entradas', { recinto: recintoId }, { orderBy: 'nombre_entrada' });
   } catch (error) {
-    console.error('Error in fetchEntradasByRecinto:', error);
+    logger.error('Error in fetchEntradasByRecinto:', error);
     return [];
   }
 };
 
 export const fetchEntradaById = async (id) => {
-  try {
-    // Obtener el usuario autenticado
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('Usuario no autenticado');
-    }
-
-    // Obtener el tenant_id del perfil del usuario
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('tenant_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.tenant_id) {
-      throw new Error('Usuario sin tenant_id válido');
-    }
-
-    const { data, error } = await supabase
-      .from('entradas')
-      .select('*')
-      .eq('id', id)
-      .eq('tenant_id', profile.tenant_id)
-      .single();
-
-    if (error) {
-      console.error('Error fetching entrada by id:', error);
-      throw new Error('Error fetching entrada by id: ' + error.message);
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Error in fetchEntradaById:', error);
-    throw error;
-  }
+  return fetchById('entradas', id);
 };
 
 export const createEntrada = async (data) => {
-  try {
-    // Obtener el usuario autenticado
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('Usuario no autenticado');
-    }
-
-    // Obtener el tenant_id del perfil del usuario
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('tenant_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.tenant_id) {
-      throw new Error('Usuario sin tenant_id válido');
-    }
-
-    // Asignar tenant_id a la entrada
-    const entradaWithTenant = {
-      ...data,
-      tenant_id: profile.tenant_id
-    };
-
-    console.log('🔍 [apibackoffice] Creando entrada con tenant_id:', profile.tenant_id);
-
-    const { data: result, error } = await supabase
-      .from('entradas')
-      .insert([entradaWithTenant])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating entrada:', error);
-      throw new Error('Error creating entrada: ' + error.message);
-    }
-
-    console.log('🔍 [apibackoffice] Entrada creada exitosamente:', result);
-    return result;
-  } catch (error) {
-    console.error('Error in createEntrada:', error);
-    throw error;
-  }
+  return createRecord('entradas', data);
 };
 
 export const updateEntrada = async (id, data) => {
-  try {
-    // Obtener el usuario autenticado
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('Usuario no autenticado');
-    }
-
-    // Obtener el tenant_id del perfil del usuario
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('tenant_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.tenant_id) {
-      throw new Error('Usuario sin tenant_id válido');
-    }
-
-    // Asegurar que el tenant_id se mantenga
-    const entradaWithTenant = {
-      ...data,
-      tenant_id: profile.tenant_id
-    };
-
-    console.log('🔍 [apibackoffice] Actualizando entrada con tenant_id:', profile.tenant_id);
-
-    const { data: result, error } = await supabase
-      .from('entradas')
-      .update(entradaWithTenant)
-      .eq('id', id)
-      .eq('tenant_id', profile.tenant_id) // Solo actualizar entradas del tenant actual
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating entrada:', error);
-      throw new Error('Error updating entrada: ' + error.message);
-    }
-
-    console.log('🔍 [apibackoffice] Entrada actualizada exitosamente:', result);
-    return result;
-  } catch (error) {
-    console.error('Error in updateEntrada:', error);
-    throw error;
-  }
+  return updateRecord('entradas', id, data);
 };
 
 export const deleteEntrada = async (id) => {
-  try {
-    // Obtener el usuario autenticado
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('Usuario no autenticado');
-    }
-
-    // Obtener el tenant_id del perfil del usuario
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('tenant_id')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile?.tenant_id) {
-      throw new Error('Usuario sin tenant_id válido');
-    }
-
-    console.log('🔍 [apibackoffice] Eliminando entrada con tenant_id:', profile.tenant_id);
-
-    const { error } = await supabase
-      .from('entradas')
-      .delete()
-      .eq('id', id)
-      .eq('tenant_id', profile.tenant_id); // Solo eliminar entradas del tenant actual
-
-    if (error) {
-      console.error('Error deleting entrada:', error);
-      throw new Error('Error deleting entrada: ' + error.message);
-    }
-
-    console.log('🔍 [apibackoffice] Entrada eliminada exitosamente');
-    return { success: true };
-  } catch (error) {
-    console.error('Error in deleteEntrada:', error);
-    throw error;
-  }
+  return deleteRecord('entradas', id);
 };
 
 // Obtener página CMS por ID o slug
 export const fetchCmsPage = async (identifier) => {
-  const [hasCreatedAt, hasUpdatedAt] = await Promise.all([
+  // Verificar columnas (aunque no se usen directamente, se mantiene para compatibilidad futura)
+  await Promise.all([
     hasColumn('cms_pages', 'created_at'),
     hasColumn('cms_pages', 'updated_at')
   ]);
@@ -938,7 +810,7 @@ export const fetchCmsPage = async (identifier) => {
 
     // Si el identificador es un número, buscar por ID
     if (!isNaN(identifier) && Number.isInteger(Number(identifier))) {
-      console.log(`🔍 [fetchCmsPage] Buscando página por ID: ${identifier}`);
+      logger.log(`🔍 [fetchCmsPage] Buscando página por ID: ${identifier}`);
       const result = await supabase
         .from('cms_pages')
         .select('*')
@@ -948,7 +820,7 @@ export const fetchCmsPage = async (identifier) => {
       error = result?.error || null;
     } else {
       // Si es un string, buscar por slug
-      console.log(`🔍 [fetchCmsPage] Buscando página por slug: ${identifier}`);
+      logger.log(`🔍 [fetchCmsPage] Buscando página por slug: ${identifier}`);
       const result = await supabase
         .from('cms_pages')
         .select('*')
@@ -959,7 +831,7 @@ export const fetchCmsPage = async (identifier) => {
 
       // Si no se encuentra por slug, buscar por nombre como fallback
       if (!data && !error) {
-        console.log(`🔍 [fetchCmsPage] Fallback: buscando por nombre: ${identifier}`);
+        logger.log(`🔍 [fetchCmsPage] Fallback: buscando por nombre: ${identifier}`);
         const fallback = await supabase
           .from('cms_pages')
           .select('*')
@@ -972,25 +844,25 @@ export const fetchCmsPage = async (identifier) => {
 
     // Si se encuentra la página, retornarla
     if (data) {
-      console.log(`✅ [fetchCmsPage] Página encontrada: ${data.slug} (ID: ${data.id})`);
+      logger.log(`✅ [fetchCmsPage] Página encontrada: ${data.slug} (ID: ${data.id})`);
       return data;
     }
 
     // Si no se encuentra, NO crear página automáticamente
     if (!error) {
-      console.warn(`⚠️ [fetchCmsPage] Página no encontrada: ${identifier} - NO se creará automáticamente`);
+      logger.warn(`⚠️ [fetchCmsPage] Página no encontrada: ${identifier} - NO se creará automáticamente`);
       return null;
     }
 
     // Si hay error de Supabase, logearlo
     if (error) {
-      console.error('❌ [fetchCmsPage] Error de Supabase:', error);
+      logger.error('❌ [fetchCmsPage] Error de Supabase:', error);
       return null;
     }
 
     return null;
   } catch (error) {
-    console.error('❌ [fetchCmsPage] Error general:', error);
+    logger.error('❌ [fetchCmsPage] Error general:', error);
     return null;
   }
 };
@@ -998,7 +870,7 @@ export const fetchCmsPage = async (identifier) => {
 // Guardar widgets en una página CMS por slug o ID
 export const saveCmsPage = async (identifier, widgets) => {
   try {
-    const [hasCreatedAt, hasUpdatedAt] = await Promise.all([
+    const [, hasUpdatedAt] = await Promise.all([
       hasColumn('cms_pages', 'created_at'),
       hasColumn('cms_pages', 'updated_at')
     ]);
@@ -1008,7 +880,7 @@ export const saveCmsPage = async (identifier, widgets) => {
 
     // Si el identificador es un número, buscar por ID
     if (!isNaN(identifier) && Number.isInteger(Number(identifier))) {
-      console.log(`🔍 [saveCmsPage] Buscando página por ID: ${identifier}`);
+      logger.log(`🔍 [saveCmsPage] Buscando página por ID: ${identifier}`);
       const result = await supabase
         .from('cms_pages')
         .select('id, slug')
@@ -1018,7 +890,7 @@ export const saveCmsPage = async (identifier, widgets) => {
       checkError = result?.error || null;
     } else {
       // Si es un string, buscar por slug
-      console.log(`🔍 [saveCmsPage] Buscando página por slug: ${identifier}`);
+      logger.log(`🔍 [saveCmsPage] Buscando página por slug: ${identifier}`);
       const result = await supabase
         .from('cms_pages')
         .select('id, slug')
@@ -1029,7 +901,7 @@ export const saveCmsPage = async (identifier, widgets) => {
     }
 
     if (checkError) {
-      console.error('❌ [saveCmsPage] Error checking page existence:', checkError);
+      logger.error('❌ [saveCmsPage] Error checking page existence:', checkError);
       throw new Error('Error al verificar la página');
     }
 
@@ -1038,7 +910,7 @@ export const saveCmsPage = async (identifier, widgets) => {
 
     if (existingPage) {
       // Actualizar página existente
-      console.log(`✅ [saveCmsPage] Actualizando página existente: ${existingPage.slug} (ID: ${existingPage.id})`);
+      logger.log(`✅ [saveCmsPage] Actualizando página existente: ${existingPage.slug} (ID: ${existingPage.id})`);
       const updateData = { widgets };
       if (hasUpdatedAt) updateData.updated_at = now;
       
@@ -1048,19 +920,19 @@ export const saveCmsPage = async (identifier, widgets) => {
         .eq('id', existingPage.id);
     } else {
       // NO crear nueva página automáticamente
-      console.warn(`⚠️ [saveCmsPage] Página no encontrada: ${identifier} - NO se creará automáticamente`);
+      logger.warn(`⚠️ [saveCmsPage] Página no encontrada: ${identifier} - NO se creará automáticamente`);
       throw new Error(`Página no encontrada: ${identifier}`);
     }
 
     if (result.error) {
-      console.error('❌ [saveCmsPage] Error al guardar página CMS:', result.error);
+      logger.error('❌ [saveCmsPage] Error al guardar página CMS:', result.error);
       throw new Error('Error al guardar la página');
     }
 
-    console.log(`✅ [saveCmsPage] Página guardada exitosamente: ${identifier}`);
+    logger.log(`✅ [saveCmsPage] Página guardada exitosamente: ${identifier}`);
     return result.data;
   } catch (error) {
-    console.error('❌ [saveCmsPage] Error general:', error);
+    logger.error('❌ [saveCmsPage] Error general:', error);
     throw error;
   }
 };
@@ -1097,11 +969,31 @@ export const fetchPlantillasPorRecintoYSala = async (recintoId, salaId) => {
     .eq('sala_id', salaId);
 
   if (error) {
-    console.error('Error al obtener plantillas:', error);
+    logger.error('Error al obtener plantillas:', error);
     throw new Error('No se pudieron cargar las plantillas');
   }
 
   return data;
+};
+
+export const fetchPlantillas = async () => {
+  return fetchByTenant('plantillas', {}, { orderBy: 'nombre' });
+};
+
+export const fetchPlantillaById = async (id) => {
+  return fetchById('plantillas', id);
+};
+
+export const createPlantilla = async (data) => {
+  return createRecord('plantillas', data);
+};
+
+export const updatePlantilla = async (id, data) => {
+  return updateRecord('plantillas', id, data);
+};
+
+export const deletePlantilla = async (id) => {
+  return deleteRecord('plantillas', id);
 };
 
 // === PAYMENTS ===
@@ -1175,7 +1067,7 @@ const parseSeatsArray = (rawSeats) => {
         }
         return [];
       } catch (parseError) {
-        console.error('Error parsing seats JSON string:', parseError, 'Raw string:', seats);
+        logger.error('Error parsing seats JSON string:', parseError);
         return [];
       }
     }
@@ -1188,24 +1080,24 @@ const parseSeatsArray = (rawSeats) => {
     
     return [];
   } catch (e) {
-    console.error('Error parsing seats data:', e, 'Raw data:', rawSeats);
+    logger.error('Error parsing seats data:', e);
     return [];
   }
 };
 
 export const createPayment = async (data) => {
   const client = supabaseAdmin || supabase;
-  console.log('createPayment request:', data);
+  logger.log('createPayment request');
 
   // Validar que los asientos no estén ya vendidos
   const seats = parseSeatsArray(data.seats);
   if (seats.length > 0) {
     const funcionId = data.funcion ?? data.funcion_id ?? data.funcionId;
 
-    console.log('🔍 Validando asientos antes de crear pago:', { seats, funcionId });
+    logger.log('🔍 Validando asientos antes de crear pago:', { seatsCount: seats.length, funcionId });
 
     if (!funcionId) {
-      console.warn('⚠️ [createPayment] Función no proporcionada, se omite validación de asientos.');
+      logger.warn('⚠️ [createPayment] Función no proporcionada, se omite validación de asientos.');
     } else {
       for (const seat of seats) {
         const existingPayment = await fetchPaymentBySeat(funcionId, seat.id);
@@ -1282,10 +1174,7 @@ export const createPayment = async (data) => {
     delete enrichedData.userId;
   }
 
-  console.log('🔍 Datos enriquecidos para crear pago:', enrichedData);
-  console.log('🔍 Tipo de seats:', typeof enrichedData.seats);
-  console.log('🔍 Seats es array:', Array.isArray(enrichedData.seats));
-  console.log('🔍 Seats contenido:', JSON.stringify(enrichedData.seats, null, 2));
+  logger.log('🔍 Datos enriquecidos para crear pago:', { seatsCount: enrichedData.seats?.length || 0, amount: enrichedData.amount });
 
   // Normalizar order_id como locator si no viene
   if (!enrichedData.order_id && enrichedData.locator) {
@@ -1298,7 +1187,7 @@ export const createPayment = async (data) => {
     .select()
     .single();
   handleError(error);
-  console.log('createPayment response:', { result, error });
+  logger.log('createPayment response:', { result: result ? 'success' : 'error', error: error?.message });
   return result;
 };
 
@@ -1308,7 +1197,7 @@ const calculateTotalAmount = (seatsData) => {
     const seats = parseSeatsArray(seatsData);
     return seats.reduce((total, seat) => total + (seat.price || 0), 0);
   } catch (e) {
-    console.error('Error calculando monto total:', e);
+    logger.error('Error calculando monto total:', e);
     return 0;
   }
 };
@@ -1337,7 +1226,7 @@ export const cleanupExpiredLocks = async () => {
   const client = supabaseAdmin || supabase;
   
   try {
-    console.log('🧹 [cleanupExpiredLocks] Limpiando locks expirados...');
+    logger.log('🧹 [cleanupExpiredLocks] Limpiando locks expirados...');
     
     const { data, error } = await client
       .from('seat_locks')
@@ -1821,6 +1710,66 @@ export const fetchCmsPagesByTenant = async (tenantId) => {
     console.error('❌ [fetchCmsPagesByTenant] Error inesperado:', error);
     return [];
   }
+};
+
+// === GALERÍA E IMÁGENES ===
+export const fetchGaleria = async () => {
+  return fetchByTenant('galeria', {}, { orderBy: 'created_at', ascending: false });
+};
+
+export const fetchImagenes = async () => {
+  return fetchByTenant('imagenes', {}, { orderBy: 'created_at', ascending: false });
+};
+
+export const createGaleriaItem = async (data) => {
+  return createRecord('galeria', data);
+};
+
+export const createImagen = async (data) => {
+  return createRecord('imagenes', data);
+};
+
+export const deleteGaleriaItem = async (id) => {
+  return deleteRecord('galeria', id);
+};
+
+export const deleteImagen = async (id) => {
+  return deleteRecord('imagenes', id);
+};
+
+// === NOTIFICACIONES ===
+export const fetchNotifications = async () => {
+  return fetchByTenant('notifications', {}, {
+    select: `
+      *,
+      eventos:evento_id(id, nombre),
+      funciones:funcion_id(id, fecha_celebracion)
+    `,
+    orderBy: 'created_at',
+    ascending: false
+  });
+};
+
+export const fetchNotificationById = async (id) => {
+  return fetchById('notifications', id, {
+    select: `
+      *,
+      eventos:evento_id(id, nombre),
+      funciones:funcion_id(id, fecha_celebracion)
+    `
+  });
+};
+
+export const createNotification = async (data) => {
+  return createRecord('notifications', data);
+};
+
+export const updateNotification = async (id, data) => {
+  return updateRecord('notifications', id, data);
+};
+
+export const deleteNotification = async (id) => {
+  return deleteRecord('notifications', id);
 };
 
 // Puedes seguir migrando más entidades según este mismo patrón.

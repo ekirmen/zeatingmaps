@@ -1,21 +1,27 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { fetchTags } from '../../services/tagService'; // Usa la función del servicio
+import logger from '../../utils/logger';
 
 const TagContext = createContext();
 
 export const TagProvider = ({ children }) => {
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
+  const hasLoaded = useRef(false);
 
   useEffect(() => {
+    // Solo cargar una vez
+    if (hasLoaded.current) return;
+    
     const loadTags = async () => {
+      hasLoaded.current = true;
       try {
-        console.log('🔍 [TagContext] Iniciando carga de tags...');
+        logger.log('🔍 [TagContext] Iniciando carga de tags...');
         const data = await fetchTags();
-        console.log('🔍 [TagContext] Tags cargados:', data);
+        logger.log('🔍 [TagContext] Tags cargados:', data);
         setTags(data);
       } catch (error) {
-        console.error('Error al obtener tags:', error.message);
+        logger.error('Error al obtener tags:', error.message);
         setTags([]);
       } finally {
         setLoading(false);
@@ -25,8 +31,10 @@ export const TagProvider = ({ children }) => {
     loadTags();
   }, []);
 
-  // Log para debuggear el estado de los tags
-  console.log('🔍 [TagContext] Estado actual:', { tags, loading, tagsCount: tags.length });
+  // Log para debuggear el estado de los tags (solo en desarrollo)
+  useEffect(() => {
+    logger.log('🔍 [TagContext] Estado actual:', { tags: tags.length, loading, tagsCount: tags.length });
+  }, [tags.length, loading]);
 
   return (
     <TagContext.Provider value={{ tags, setTags, loading }}>

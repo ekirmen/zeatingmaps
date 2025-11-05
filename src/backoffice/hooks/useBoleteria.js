@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { message } from 'antd';
 import { supabase, supabaseAdmin } from '../../supabaseClient';
 import { fetchMapa, fetchZonasPorSala } from '../services/apibackoffice';
 import useSelectedSeatsStore from '../../stores/useSelectedSeatsStore';
+import logger from '../../utils/logger';
 
 const EVENT_KEY = 'boleteriaEventId';
 const FUNC_KEY = 'boleteriaFunctionId';
@@ -10,7 +11,13 @@ const CART_KEY = 'boleteriaCart';
 const SELECTED_SEATS_KEY = 'boleteriaSelectedSeats';
 
 export const useBoleteria = () => {
-  console.log('🚀 [useBoleteria] Hook initialized');
+  // Usar ref para evitar renders múltiples
+  const isInitialized = useRef(false);
+  
+  if (!isInitialized.current) {
+    logger.log('🚀 [useBoleteria] Hook initialized');
+    isInitialized.current = true;
+  }
   
   // Usar el store unificado para selectedFuncion y selectedEvent
   const {
@@ -38,11 +45,13 @@ export const useBoleteria = () => {
   const [selectedPlantilla, setSelectedPlantilla] = useState(null);
   const [mapa, setMapa] = useState(null);
 
-  // Cargar estado inicial desde el store persistente
+  // Cargar estado inicial desde el store persistente (solo en desarrollo)
   useEffect(() => {
-    console.log('🔄 [useBoleteria] Cargando estado inicial desde store...');
-    console.log('🔍 [useBoleteria] selectedEvent desde store:', selectedEvent);
-    console.log('🔍 [useBoleteria] selectedFuncion desde store:', selectedFuncion);
+    if (process.env.NODE_ENV === 'development') {
+      logger.log('🔄 [useBoleteria] Cargando estado inicial desde store...');
+      logger.log('🔍 [useBoleteria] selectedEvent desde store:', selectedEvent);
+      logger.log('🔍 [useBoleteria] selectedFuncion desde store:', selectedFuncion);
+    }
   }, [selectedEvent, selectedFuncion]);
   const [zonas, setZonas] = useState([]);
   const [carrito, setCarrito] = useState(() => {
@@ -51,7 +60,7 @@ export const useBoleteria = () => {
       const savedCart = localStorage.getItem(CART_KEY);
       return savedCart ? JSON.parse(savedCart) : [];
     } catch (error) {
-      console.error('Error cargando carrito desde localStorage:', error);
+      logger.error('Error cargando carrito desde localStorage:', error);
       return [];
     }
   });
@@ -61,9 +70,7 @@ export const useBoleteria = () => {
 
   // Debug: Track mapa state changes (solo en desarrollo)
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔄 [useBoleteria] Mapa state changed:', mapa ? '✅ Cargado' : '❌ Null');
-    }
+    logger.log('🔄 [useBoleteria] Mapa state changed:', mapa ? '✅ Cargado' : '❌ Null');
   }, [mapa]);
 
   // Restaurar carrito cuando se cargue la función
@@ -76,11 +83,11 @@ export const useBoleteria = () => {
           // Solo restaurar si el carrito tiene items y es para la función actual
           if (parsedCart.length > 0 && parsedCart[0]?.funcionId === selectedFuncion.id) {
             setCarrito(parsedCart);
-            console.log('🔄 [useBoleteria] Carrito restaurado desde localStorage:', parsedCart.length, 'items');
+            logger.log('🔄 [useBoleteria] Carrito restaurado desde localStorage:', parsedCart.length, 'items');
           }
         }
       } catch (error) {
-        console.error('❌ [useBoleteria] Error restaurando carrito:', error);
+        logger.error('❌ [useBoleteria] Error restaurando carrito:', error);
       }
     }
   }, [selectedFuncion, carrito.length]);
@@ -89,15 +96,15 @@ export const useBoleteria = () => {
   const saveCarritoToStorage = useCallback((newCarrito) => {
     try {
       if (!Array.isArray(newCarrito)) {
-        console.warn('⚠️ [useBoleteria] Intento de guardar carrito inválido:', newCarrito);
+        logger.warn('⚠️ [useBoleteria] Intento de guardar carrito inválido:', newCarrito);
         localStorage.setItem(CART_KEY, JSON.stringify([]));
         return;
       }
 
       localStorage.setItem(CART_KEY, JSON.stringify(newCarrito));
-      console.log('💾 [useBoleteria] Carrito guardado en localStorage:', newCarrito.length, 'items');
+      logger.log('💾 [useBoleteria] Carrito guardado en localStorage:', newCarrito.length, 'items');
     } catch (error) {
-      console.error('❌ [useBoleteria] Error guardando carrito en localStorage:', error);
+      logger.error('❌ [useBoleteria] Error guardando carrito en localStorage:', error);
     }
   }, []);
 
@@ -119,7 +126,7 @@ export const useBoleteria = () => {
   // Función para limpiar carrito
   const clearCarrito = useCallback(() => {
     setCarritoMemo([]);
-    console.log('🗑️ [useBoleteria] Carrito limpiado');
+    logger.log('🗑️ [useBoleteria] Carrito limpiado');
   }, [setCarritoMemo]);
 
   // Función para agregar asiento al carrito
@@ -138,7 +145,7 @@ export const useBoleteria = () => {
       return [...safePrev, newItem];
     });
 
-    console.log('➕ [useBoleteria] Asiento agregado al carrito:', newItem);
+    logger.log('➕ [useBoleteria] Asiento agregado al carrito:', newItem);
   }, [selectedFuncion?.id, setCarritoMemo]);
 
   // Función para quitar asiento del carrito
@@ -148,12 +155,12 @@ export const useBoleteria = () => {
       return safePrev.filter(item => item.id !== asientoId && item._id !== asientoId && item.sillaId !== asientoId);
     });
 
-    console.log('➖ [useBoleteria] Asiento removido del carrito:', asientoId);
+    logger.log('➖ [useBoleteria] Asiento removido del carrito:', asientoId);
   }, [setCarritoMemo]);
 
   // Manejar la selección de una función
   const handleFunctionSelect = useCallback(async (functionId, options = {}) => {
-    console.log('🔄 [useBoleteria] handleFunctionSelect called with function ID:', functionId, 'options:', options);
+    logger.log('🔄 [useBoleteria] handleFunctionSelect called with function ID:', functionId, 'options:', options);
     setLoading(true);
     setError(null);
     setDebugInfo({ step: 'handleFunctionSelect', functionId });
@@ -164,10 +171,10 @@ export const useBoleteria = () => {
     setZonas([]);
     // Limpiar carrito solo si es una función diferente Y no se debe preservar el carrito
     if (selectedFuncion?.id !== functionId && !options.preserveCart) {
-      console.log('🧹 [useBoleteria] Limpiando carrito porque es función diferente');
+      logger.log('🧹 [useBoleteria] Limpiando carrito porque es función diferente');
       setCarritoMemo([]);
     } else if (options.preserveCart) {
-      console.log('🛒 [useBoleteria] Preservando carrito por opción preserveCart');
+      logger.log('🛒 [useBoleteria] Preservando carrito por opción preserveCart');
     }
 
     // Ensure functionId is a primitive value
@@ -193,7 +200,7 @@ export const useBoleteria = () => {
 
       // Validar que funcionData tenga las propiedades necesarias
       if (!funcionData || !funcionData.id) {
-        console.error('❌ [useBoleteria] funcionData no tiene ID:', funcionData);
+        logger.error('❌ [useBoleteria] funcionData no tiene ID:', funcionData);
         message.error('Datos de función inválidos');
         return false;
       }
@@ -217,9 +224,9 @@ export const useBoleteria = () => {
       setSelectedFuncion(funcionMapeada);
       localStorage.setItem(FUNC_KEY, functionId);
       
-      console.log('✅ [useBoleteria] Función seleccionada:', funcionMapeada);
-      console.log('📋 [useBoleteria] Plantilla de la función:', funcionData.plantilla);
-      console.log('🔍 [useBoleteria] Estructura completa de funcionData:', {
+      logger.log('✅ [useBoleteria] Función seleccionada:', funcionMapeada);
+      logger.log('📋 [useBoleteria] Plantilla de la función:', funcionData.plantilla);
+      logger.log('🔍 [useBoleteria] Estructura completa de funcionData:', {
         id: funcionData.id,
         sala_id: funcionData.sala_id,
         sala: funcionData.sala,
@@ -228,15 +235,15 @@ export const useBoleteria = () => {
   
       // Cargar plantilla de precios si existe
       if (funcionData.plantilla) {
-        console.log('✅ Plantilla encontrada:', funcionData.plantilla);
-        console.log('📋 Plantilla ID:', funcionData.plantilla.id);
-        console.log('📋 Plantilla nombre:', funcionData.plantilla.nombre);
-        console.log('📋 Plantilla detalles:', funcionData.plantilla.detalles);
-        console.log('📋 Tipo de detalles:', typeof funcionData.plantilla.detalles);
+        logger.log('✅ Plantilla encontrada:', funcionData.plantilla);
+        logger.log('📋 Plantilla ID:', funcionData.plantilla.id);
+        logger.log('📋 Plantilla nombre:', funcionData.plantilla.nombre);
+        logger.log('📋 Plantilla detalles:', funcionData.plantilla.detalles);
+        logger.log('📋 Tipo de detalles:', typeof funcionData.plantilla.detalles);
         setSelectedPlantilla(funcionData.plantilla);
       } else {
-        console.log('❌ No hay plantilla de precios para esta función');
-        console.log('🔍 Buscando en plantilla_entradas...');
+        logger.log('❌ No hay plantilla de precios para esta función');
+        logger.log('🔍 Buscando en plantilla_entradas...');
         
         // Intentar cargar plantilla desde plantilla_entradas
         if (funcionData.plantilla_entradas) {
@@ -248,16 +255,16 @@ export const useBoleteria = () => {
               .single();
             
             if (plantillaError) {
-              console.error('❌ Error cargando plantilla desde plantilla_entradas:', plantillaError);
+              logger.error('❌ Error cargando plantilla desde plantilla_entradas:', plantillaError);
             } else if (plantillaData) {
-              console.log('✅ Plantilla cargada desde plantilla_entradas:', plantillaData);
-              console.log('📋 Plantilla detalles:', plantillaData.detalles);
+              logger.log('✅ Plantilla cargada desde plantilla_entradas:', plantillaData);
+              logger.log('📋 Plantilla detalles:', plantillaData.detalles);
               setSelectedPlantilla(plantillaData);
             } else {
-              console.log('❌ No se encontró plantilla con ID:', funcionData.plantilla_entradas);
+              logger.log('❌ No se encontró plantilla con ID:', funcionData.plantilla_entradas);
             }
           } catch (e) {
-            console.error('❌ Error en fallback de plantilla:', e);
+            logger.error('❌ Error en fallback de plantilla:', e);
           }
         }
         
@@ -266,39 +273,39 @@ export const useBoleteria = () => {
   
       // Cargar mapa y zonas usando salaId robusto
       const salaId = mappedSala?.id || mappedSala?._id || salaField || funcionData.sala_id || null;
-      console.log('🔍 [useBoleteria] DEBUG - mappedSala:', mappedSala);
-      console.log('🔍 [useBoleteria] DEBUG - salaField:', salaField);
-      console.log('🔍 [useBoleteria] DEBUG - funcionData.sala_id:', funcionData.sala_id);
-      console.log('🔍 [useBoleteria] DEBUG - salaId calculado:', salaId);
+      logger.log('🔍 [useBoleteria] DEBUG - mappedSala:', mappedSala);
+      logger.log('🔍 [useBoleteria] DEBUG - salaField:', salaField);
+      logger.log('🔍 [useBoleteria] DEBUG - funcionData.sala_id:', funcionData.sala_id);
+      logger.log('🔍 [useBoleteria] DEBUG - salaId calculado:', salaId);
       
       if (salaId) {
-        console.log('🔍 [useBoleteria] Cargando mapa para sala:', salaId);
-        console.log('🔍 [useBoleteria] Tipo de salaId:', typeof salaId);
+        logger.log('🔍 [useBoleteria] Cargando mapa para sala:', salaId);
+        logger.log('🔍 [useBoleteria] Tipo de salaId:', typeof salaId);
         
         try {
-          console.log('🔍 [useBoleteria] Llamando a fetchMapa con salaId:', salaId, 'y funcionId:', funcionData.id);
+          logger.log('🔍 [useBoleteria] Llamando a fetchMapa con salaId:', salaId, 'y funcionId:', funcionData.id);
           const mapData = await fetchMapa(salaId, funcionData.id);
-          console.log('📊 [useBoleteria] Mapa cargado:', mapData);
-          console.log('📊 [useBoleteria] Tipo de mapData:', typeof mapData);
-          console.log('📊 [useBoleteria] mapData es null?', mapData === null);
-          console.log('📊 [useBoleteria] mapData.contenido:', mapData?.contenido);
+          logger.log('📊 [useBoleteria] Mapa cargado:', mapData);
+          logger.log('📊 [useBoleteria] Tipo de mapData:', typeof mapData);
+          logger.log('📊 [useBoleteria] mapData es null?', mapData === null);
+          logger.log('📊 [useBoleteria] mapData.contenido:', mapData?.contenido);
           
           if (!mapData) {
-            console.error('❌ [useBoleteria] fetchMapa retornó null/undefined');
-            console.error('❌ [useBoleteria] Verificar RLS policies para mapas');
+            logger.error('❌ [useBoleteria] fetchMapa retornó null/undefined');
+            logger.error('❌ [useBoleteria] Verificar RLS policies para mapas');
           }
           
           setMapa(mapData);
-          console.log('✅ [useBoleteria] Mapa estado actualizado con setMapa');
+          logger.log('✅ [useBoleteria] Mapa estado actualizado con setMapa');
 
-          console.log('🔍 [useBoleteria] Cargando zonas para sala:', salaId);
+          logger.log('🔍 [useBoleteria] Cargando zonas para sala:', salaId);
           const zonasData = await fetchZonasPorSala(salaId);
-          console.log('🏷️ [useBoleteria] Zonas cargadas:', zonasData);
+          logger.log('🏷️ [useBoleteria] Zonas cargadas:', zonasData);
           setZonas(zonasData);
           
           // Calcular estadísticas del evento basadas en el mapa cargado
           if (mapData && mapData.contenido) {
-            console.log('📊 [useBoleteria] Calculando estadísticas desde el mapa cargado');
+            logger.log('📊 [useBoleteria] Calculando estadísticas desde el mapa cargado');
             let totalSeats = 0;
             let availableSeats = 0;
             let soldSeats = 0;
@@ -314,7 +321,7 @@ export const useBoleteria = () => {
               elementos.forEach(elemento => {
               // Validar que elemento no sea null/undefined
               if (!elemento || typeof elemento !== 'object') {
-                console.warn('⚠️ [useBoleteria] Elemento inválido en mapa:', elemento);
+                logger.warn('⚠️ [useBoleteria] Elemento inválido en mapa:', elemento);
                 return;
               }
               
@@ -324,7 +331,7 @@ export const useBoleteria = () => {
                 elemento.sillas.forEach(silla => {
                   // Validar que silla no sea null/undefined
                   if (!silla || typeof silla !== 'object') {
-                    console.warn('⚠️ [useBoleteria] Silla inválida en elemento:', silla);
+                    logger.warn('⚠️ [useBoleteria] Silla inválida en elemento:', silla);
                     return;
                   }
                   
@@ -363,7 +370,7 @@ export const useBoleteria = () => {
               }
             });
             } else {
-              console.warn('⚠️ [useBoleteria] Mapa cargado pero sin contenido válido o no es array', {
+              logger.warn('⚠️ [useBoleteria] Mapa cargado pero sin contenido válido o no es array', {
                 mapData: mapData,
                 contenido: mapData.contenido,
                 esArray: Array.isArray(mapData.contenido),
@@ -374,7 +381,7 @@ export const useBoleteria = () => {
             
             // Si no hay asientos en el formato esperado, intentar con el formato de zonas
             if (totalSeats === 0 && mapData.contenido.zonas && Array.isArray(mapData.contenido.zonas)) {
-              console.log('🔍 [useBoleteria] Intentando calcular estadísticas desde zonas');
+              logger.log('🔍 [useBoleteria] Intentando calcular estadísticas desde zonas');
               mapData.contenido.zonas.forEach(zona => {
                 if (zona.asientos && Array.isArray(zona.asientos)) {
                   totalSeats += zona.asientos.length;
@@ -398,7 +405,7 @@ export const useBoleteria = () => {
               });
             }
             
-            console.log('✅ [useBoleteria] Estadísticas calculadas:', {
+            logger.log('✅ [useBoleteria] Estadísticas calculadas:', {
               totalSeats,
               availableSeats,
               soldSeats,
@@ -415,25 +422,25 @@ export const useBoleteria = () => {
                 message.info(`ℹ️ Quedan ${availableSeats} asientos disponibles`);
               }
             } else {
-              console.log('⚠️ [useBoleteria] No se encontraron asientos en el mapa');
+              logger.log('⚠️ [useBoleteria] No se encontraron asientos en el mapa');
             }
           } else {
-            console.log('⚠️ [useBoleteria] Mapa cargado pero sin contenido válido o no es array');
-            console.log('⚠️ [useBoleteria] mapData:', mapData);
-            console.log('⚠️ [useBoleteria] mapData.contenido:', mapData?.contenido);
-            console.log('⚠️ [useBoleteria] Es array:', Array.isArray(mapData?.contenido));
+            logger.log('⚠️ [useBoleteria] Mapa cargado pero sin contenido válido o no es array');
+            logger.log('⚠️ [useBoleteria] mapData:', mapData);
+            logger.log('⚠️ [useBoleteria] mapData.contenido:', mapData?.contenido);
+            logger.log('⚠️ [useBoleteria] Es array:', Array.isArray(mapData?.contenido));
           }
         } catch (error) {
-          console.error('❌ [useBoleteria] Error cargando mapa o zonas:', error);
+          logger.error('❌ [useBoleteria] Error cargando mapa o zonas:', error);
           setMapa(null);
           setZonas([]);
         }
       } else {
-        console.warn('⚠️ [useBoleteria] No hay salaId disponible para cargar mapa y zonas');
-        console.warn('⚠️ [useBoleteria] mappedSala:', mappedSala);
-        console.warn('⚠️ [useBoleteria] salaField:', salaField);
-        console.warn('⚠️ [useBoleteria] salaField tipo:', typeof salaField);
-        console.warn('⚠️ [useBoleteria] mappedSala tipo:', typeof mappedSala);
+        logger.warn('⚠️ [useBoleteria] No hay salaId disponible para cargar mapa y zonas');
+        logger.warn('⚠️ [useBoleteria] mappedSala:', mappedSala);
+        logger.warn('⚠️ [useBoleteria] salaField:', salaField);
+        logger.warn('⚠️ [useBoleteria] salaField tipo:', typeof salaField);
+        logger.warn('⚠️ [useBoleteria] mappedSala tipo:', typeof mappedSala);
         setMapa(null);
         setZonas([]);
       }
@@ -441,7 +448,7 @@ export const useBoleteria = () => {
       return true;
   
     } catch (err) {
-      console.error("Error al seleccionar función:", err);
+      logger.error("Error al seleccionar función:", err);
       message.error(`Error al seleccionar función: ${err.message}`);
       setError(err);
       return false;
@@ -452,7 +459,7 @@ export const useBoleteria = () => {
 
   // Manejar la selección de un evento
   const handleEventSelect = useCallback(async (eventoId) => {
-    console.log('🔄 [useBoleteria] handleEventSelect called with event ID:', eventoId);
+    logger.log('🔄 [useBoleteria] handleEventSelect called with event ID:', eventoId);
     setLoading(true);
     setError(null);
     setDebugInfo({ step: 'handleEventSelect', eventoId });
@@ -505,7 +512,7 @@ export const useBoleteria = () => {
       return { success: true, funciones: funcionesMapeadas };
 
     } catch (err) {
-      console.error("Error al seleccionar evento:", err);
+      logger.error("Error al seleccionar evento:", err);
       message.error(`Error al seleccionar evento: ${err.message}`);
       return { success: false };
     } finally {
@@ -554,7 +561,7 @@ export const useBoleteria = () => {
     syncWithSeatLocks
       };
     } catch (error) {
-      console.error('Error en useMemo de useBoleteria:', error);
+      logger.error('Error en useMemo de useBoleteria:', error);
       return {
         eventos: [],
         funciones: [],
@@ -630,25 +637,29 @@ export const useBoleteria = () => {
     syncWithSeatLocks
   ]);
 
-  // Cargar eventos al inicio
+  // Cargar eventos al inicio (solo una vez)
+  const hasLoadedEventos = useRef(false);
   useEffect(() => {
-    console.log('🔄 [useBoleteria] useEffect for initial data loading triggered');
+    if (hasLoadedEventos.current) return;
+    
+    logger.log('🔄 [useBoleteria] useEffect for initial data loading triggered');
     
     const fetchEventos = async () => {
-      console.log('🔄 [useBoleteria] Starting to fetch eventos');
+      hasLoadedEventos.current = true;
+      logger.log('🔄 [useBoleteria] Starting to fetch eventos');
       setLoading(true);
       setError(null);
       try {
         // Verificar autenticación primero
         const { data: { user }, error: authError } = await supabase.auth.getUser();
         if (authError || !user) {
-          console.error('❌ [useBoleteria] Error de autenticación:', authError);
+          logger.error('❌ [useBoleteria] Error de autenticación:', authError);
           setError('Usuario no autenticado');
           setLoading(false);
           return;
         }
         
-        console.log('✅ [useBoleteria] Usuario autenticado:', user.id);
+        logger.log('✅ [useBoleteria] Usuario autenticado:', user.id);
         
         const { data, error } = await supabase
           .from('eventos')
@@ -658,29 +669,29 @@ export const useBoleteria = () => {
 
         if (error) throw error;
 
-        console.log('✅ [useBoleteria] Eventos fetched:', data?.length || 0);
+        logger.log('✅ [useBoleteria] Eventos fetched:', data?.length || 0);
         setEventos(data || []);
 
         const storedEventId = localStorage.getItem(EVENT_KEY);
-        console.log('🔍 [useBoleteria] Stored event ID:', storedEventId);
+        logger.log('🔍 [useBoleteria] Stored event ID:', storedEventId);
 
         if (storedEventId && data && Array.isArray(data)) {
           const initialEvent = data.find(e => e && e.id === storedEventId);
-          console.log('🔍 [useBoleteria] Initial event found:', initialEvent);
+          logger.log('🔍 [useBoleteria] Initial event found:', initialEvent);
           if (initialEvent && initialEvent.id) {
-            console.log('🔄 [useBoleteria] Calling handleEventSelect for initial event');
+            logger.log('🔄 [useBoleteria] Calling handleEventSelect for initial event');
             await handleEventSelect(storedEventId);
           }
         } else if (data && Array.isArray(data) && data.length > 0 && data[0] && data[0].id) {
           // Si no hay evento guardado pero hay eventos disponibles, seleccionar el primero
-          console.log('🔄 [useBoleteria] No hay evento guardado, seleccionando el primero disponible');
+          logger.log('🔄 [useBoleteria] No hay evento guardado, seleccionando el primero disponible');
           await handleEventSelect(data[0].id);
         }
         
         // Si hay un evento guardado en localStorage, también verificar si hay función guardada
         const storedFunctionId = localStorage.getItem(FUNC_KEY);
         if (storedFunctionId) {
-          console.log('🔄 [useBoleteria] Función guardada encontrada, cargando mapa...');
+          logger.log('🔄 [useBoleteria] Función guardada encontrada, cargando mapa...');
           // Esperar un poco para que el evento se haya cargado completamente
           setTimeout(async () => {
             await handleFunctionSelect(storedFunctionId);
@@ -688,7 +699,8 @@ export const useBoleteria = () => {
         }
 
       } catch (err) {
-        console.error("Error al cargar eventos:", err);
+        logger.error("Error al cargar eventos:", err);
+        hasLoadedEventos.current = false; // Permitir reintento en caso de error
         setError(err.message);
         message.error(`Error al cargar eventos: ${err.message}`);
       } finally {

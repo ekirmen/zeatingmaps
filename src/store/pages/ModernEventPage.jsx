@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import logger from '../../utils/logger';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button, Card, message, Spin, Alert, Badge, Tag, Descriptions, Statistic } from 'antd';
 import { 
@@ -99,7 +100,7 @@ const ModernEventPage = () => {
   useEffect(() => {
     const { lockedSeats } = useSeatLockStore.getState();
     if (lockedSeats && lockedSeats.length > 0) {
-      console.log('🔒 [MODERN_EVENT] Seat locks cargados:', lockedSeats);
+      logger.log('🔒 [MODERN_EVENT] Seat locks cargados:', lockedSeats);
     }
   }, [selectedFunctionId]);
 
@@ -107,7 +108,7 @@ const ModernEventPage = () => {
   useEffect(() => {
     const { lockedSeats } = useSeatLockStore.getState();
     if (lockedSeats && lockedSeats.length > 0) {
-      console.log('🔒 [MODERN_EVENT] Sincronizando con seat locks:', lockedSeats);
+      logger.log('🔒 [MODERN_EVENT] Sincronizando con seat locks:', lockedSeats);
       syncWithSeatLocks(lockedSeats);
     }
   }, [syncWithSeatLocks]);
@@ -328,7 +329,7 @@ const ModernEventPage = () => {
           quantityStepCache.current.set(cacheKey, null);
         }
       } catch (error) {
-        console.warn('Error cargando restricción de múltiplos:', error);
+        logger.warn('Error cargando restricción de múltiplos:', error);
         quantityStepCache.current.set(selectedFunctionId, null);
       }
     };
@@ -357,7 +358,7 @@ const ModernEventPage = () => {
       removeFromCart(seatId);
       // Desbloquear en background
       unlockSeat(seatId, selectedFunctionId).catch(err => {
-        console.warn('Error desbloqueando asiento:', err);
+        logger.warn('Error desbloqueando asiento:', err);
       });
     } else {
       // Validar restricción de múltiplos (sincrónico, desde cache)
@@ -411,7 +412,7 @@ const ModernEventPage = () => {
           message.error('No se pudo seleccionar el asiento. Por favor, intenta nuevamente.');
         }
       }).catch(err => {
-        console.error('Error bloqueando asiento:', err);
+        logger.error('Error bloqueando asiento:', err);
         removeSeatFromUnified(seatId);
         removeFromCart(seatId);
         message.error('Error al seleccionar el asiento');
@@ -554,7 +555,7 @@ const ModernEventPage = () => {
                             }
                           }
                         } catch (e) {
-                          console.error('Error parsing event images:', e);
+                          logger.error('Error parsing event images:', e);
                         }
                         return `https://placehold.co/48x32/E0F2F7/000?text=${evento?.nombre?.charAt(0) || 'E'}`;
                       })()})`

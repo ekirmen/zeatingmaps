@@ -8,6 +8,7 @@ import EmailPageCreator from './EmailPageCreator';
 import SiteMap from '../components/SiteMap';
 import { fetchCmsPage, saveCmsPage, fetchAllCmsPages } from '../services/apibackoffice';
 import { supabase } from '../../supabaseClient';
+import { useTenant } from '../../hooks/useTenant';
 
 // Las páginas ahora se cargan dinámicamente desde la base de datos
 // No necesitamos arrays estáticos
@@ -238,39 +239,21 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     type: null
   });
 
+  // Hook optimizado para obtener tenant_id
+  const { tenantId, loading: tenantLoading } = useTenant();
+
   // Cargar páginas desde la base de datos al montar el componente
   useEffect(() => {
     const loadCmsPages = async () => {
+      if (!tenantId) return;
+      
       setLoadingPages(true);
       try {
-        // Obtener el usuario autenticado y su tenant_id
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          console.error('❌ [WebStudio] Usuario no autenticado');
-          toast.error('Usuario no autenticado');
-          return;
-        }
-
-        // Obtener el tenant_id del perfil del usuario
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('tenant_id')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError || !profile?.tenant_id) {
-          console.error('❌ [WebStudio] Usuario sin tenant_id válido');
-          toast.error('Usuario sin tenant válido');
-          return;
-        }
-
-        console.log('✅ [WebStudio] Tenant ID del usuario:', profile.tenant_id);
-
-        // Cargar páginas del tenant actual
+        // Cargar páginas del tenant actual usando el hook optimizado
         const { data: tenantPages, error: tenantError } = await supabase
           .from('cms_pages')
           .select('*')
-          .eq('tenant_id', profile.tenant_id)
+          .eq('tenant_id', tenantId)
           .order('nombre');
 
         if (tenantError) {
@@ -283,7 +266,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
         const { data: systemPages, error: systemError } = await supabase
           .from('cms_pages')
           .select('*')
-          .or(`tenant_id.is.null,tenant_id.eq.${profile.tenant_id}`)
+          .or(`tenant_id.is.null,tenant_id.eq.${tenantId}`)
           .in('slug', ['inicio', 'eventos', 'recintos', 'contacto', 'acerca-de', 'terminos', 'privacidad', 'faq'])
           .order('nombre');
 
@@ -335,7 +318,7 @@ const WebStudio = ({ setSidebarCollapsed }) => {
     };
 
     loadCmsPages();
-  }, []);
+  }, [tenantId]);
 
   useEffect(() => {
     if (setSidebarCollapsed) setSidebarCollapsed(true);

@@ -1,6 +1,7 @@
 import API_BASE_URL from '../utils/apiBase';
 import { supabase } from '../supabaseClient';
 import { useTenant } from '../contexts/TenantContext';
+import logger from '../utils/logger';
 
 const API_BASE_URL_WITH_API = API_BASE_URL + '/api';
 
@@ -20,7 +21,7 @@ export const fetchImagenesFromDB = async (tenantId = null) => {
     const { data: galeriaData, error: galeriaError } = await galeriaQuery;
 
     if (galeriaError) {
-      console.warn('Error loading galeria:', galeriaError.message);
+      logger.warn('Error loading galeria:', galeriaError.message);
     }
 
     // Cargar desde tabla imagenes
@@ -36,7 +37,7 @@ export const fetchImagenesFromDB = async (tenantId = null) => {
     const { data: imagenesData, error: imagenesError } = await imagenesQuery;
 
     if (imagenesError) {
-      console.warn('Error loading imagenes:', imagenesError.message);
+      logger.warn('Error loading imagenes:', imagenesError.message);
     }
 
     // Combinar datos de ambas tablas
@@ -45,11 +46,11 @@ export const fetchImagenesFromDB = async (tenantId = null) => {
       ...(imagenesData || []).map(img => ({ ...img, source: 'imagenes' }))
     ];
 
-    console.log('🖼️ Imágenes cargadas desde base de datos:', allImages.length);
+    logger.log('🖼️ Imágenes cargadas desde base de datos:', allImages.length);
     return allImages;
 
   } catch (error) {
-    console.error('Error fetching images from database:', error);
+    logger.error('Error fetching images from database:', error);
     return [];
   }
 };

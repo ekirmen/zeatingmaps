@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
 import { Card, Button, Typography, Space, Divider, Badge } from 'antd';
 import { ShoppingCartOutlined, DeleteOutlined, CreditCardOutlined } from '@ant-design/icons';
 import { useCartStore } from '../cartStore';
 import { useNavigate } from 'react-router-dom';
+import logger from '../../utils/logger';
 
 const { Title, Text } = Typography;
 
-const SimpleCart = () => {
+const SimpleCart = memo(() => {
   const { items, products, getItemCount, calculateTotal, toggleSeat, clearCart } = useCartStore();
   const navigate = useNavigate();
 
@@ -15,28 +16,33 @@ const SimpleCart = () => {
   const seatsCount = items.length;
   const productsCount = products.length;
   
-  // Debug logging
-  console.log('🛒 [SIMPLE_CART] Renderizando con:', { 
-    items, 
-    products, 
-    itemCount, 
-    total, 
-    seatsCount, 
-    productsCount 
-  });
-  
-  // Verificar si el store está funcionando correctamente
-  const storeState = useCartStore.getState();
-  console.log('🛒 [SIMPLE_CART] Estado completo del store:', storeState);
+  // Debug logging (solo en desarrollo)
+  useEffect(() => {
+    logger.log('🛒 [SIMPLE_CART] Renderizando con:', { 
+      itemCount, 
+      total, 
+      seatsCount, 
+      productsCount 
+    });
+  }, [itemCount, total, seatsCount, productsCount]);
 
-  const handleCheckout = () => {
+  const handleCheckout = useCallback(() => {
     if (itemCount === 0) return;
     navigate('/store/cart');
-  };
+  }, [itemCount, navigate]);
 
-  const handleClearCart = () => {
+  const handleClearCart = useCallback(() => {
     clearCart();
-  };
+  }, [clearCart]);
+  
+  // Memoizar valores calculados
+  const cartSummary = useMemo(() => ({
+    itemCount,
+    total,
+    seatsCount,
+    productsCount,
+    isEmpty: itemCount === 0
+  }), [itemCount, total, seatsCount, productsCount]);
 
   return (
     <Card 
@@ -163,6 +169,8 @@ const SimpleCart = () => {
       )}
     </Card>
   );
-};
+});
+
+SimpleCart.displayName = 'SimpleCart';
 
 export default SimpleCart;

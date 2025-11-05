@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, memo } from 'react';
+import logger from '../../utils/logger';
 import { useParams } from 'react-router-dom';
 import { getCmsPage } from '../services/apistore';
 import NotFoundPage from '../../components/NotFoundPage';
@@ -68,17 +69,23 @@ const CmsPage = ({ slug }) => {
       case 'Información de Función':
         return <FunctionInfoWidget key={index} functionId={config.functionId} {...config} />;
       default:
-        console.warn(`[CmsPage] Tipo de widget desconocido: ${widget.type}`);
+        logger.warn(`[CmsPage] Tipo de widget desconocido: ${widget.type}`);
         return null;
     }
-  };
+  }, []); // Memoizar renderWidget para evitar recreación
+
+  // Memoizar widgets renderizados
+  const renderedWidgets = useMemo(() => {
+    if (!pageData?.widgets?.content) return null;
+    return pageData.widgets.content.map((widget, idx) => renderWidget(widget, idx));
+  }, [pageData?.widgets?.content, renderWidget]);
 
   return (
     <div className="p-6">
-      {pageData.widgets?.content?.map((widget, idx) => renderWidget(widget, idx))}
+      {renderedWidgets}
     </div>
   );
 };
 
-export default CmsPage;
+export default memo(CmsPage);
 

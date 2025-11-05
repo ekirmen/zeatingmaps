@@ -15,10 +15,11 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { resolveTenantId } from '../../utils/tenantUtils';
 import { verificarPagosPlazosActivos, calcularCuotas } from '../../services/cuotasPagosService';
+import logger from '../../utils/logger';
 
 
 const Pay = () => {
-  console.log('🚀 [PAY] Componente Pay renderizándose...');
+  // Debug log removed for production performance
   
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -58,33 +59,33 @@ const Pay = () => {
   }, [user]);
 
   useEffect(() => {
-    console.log('🔄 [PAY] useEffect ejecutándose...', { user: !!user, cartItems: cartItems?.length, total });
+    // Debug log removed for production performance
     
     const loadGateways = async () => {
       try {
         setLoadingMethods(true);
-        console.log('🛒 [PAY] Cargando métodos de pago...');
+        logger.log('🛒 [PAY] Cargando métodos de pago...');
         
         // Obtener el ID del evento del primer item del carrito
         const eventId = cartItems?.[0]?.eventId || null;
-        console.log('🎫 [PAY] Event ID del carrito:', eventId);
+        logger.log('🎫 [PAY] Event ID del carrito:', eventId);
         
         const methods = await getActivePaymentMethods(null, eventId);
-        console.log('📋 [PAY] Métodos obtenidos de la BD:', methods);
+        logger.log('📋 [PAY] Métodos obtenidos de la BD:', methods);
         
         const validMethods = methods.filter(method => {
           const validation = validatePaymentMethodConfig(method);
-          console.log(`🔍 [PAY] Validando ${method.method_id}:`, validation);
+          logger.log(`🔍 [PAY] Validando ${method.method_id}:`, validation);
           return validation.valid;
         });
         
-        console.log('✅ [PAY] Métodos válidos después del filtro:', validMethods);
+        logger.log('✅ [PAY] Métodos válidos después del filtro:', validMethods);
         setAvailableMethods(validMethods);
         
         // Por ahora, no calculamos comisiones específicas
         // Esto se puede implementar más tarde usando la tabla comisiones_tasas
       } catch (error) {
-        console.error('❌ [PAY] Error loading payment gateways:', error);
+        logger.error('❌ [PAY] Error loading payment gateways:', error);
         message.error('Error al cargar métodos de pago');
       } finally {
         setLoadingMethods(false);
@@ -101,7 +102,7 @@ const Pay = () => {
           }
         }
       } catch (error) {
-        console.error('Error loading Facebook pixel:', error);
+        logger.error('Error loading Facebook pixel:', error);
       }
     };
 

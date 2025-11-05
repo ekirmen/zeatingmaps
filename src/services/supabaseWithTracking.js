@@ -164,7 +164,7 @@ class SupabaseWithTracking {
       
       return await query;
     } catch (error) {
-      console.error(`Error en select para tabla ${table}:`, error);
+      // Error logging removed for production performance
       throw error;
     }
   }

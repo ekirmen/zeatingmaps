@@ -14,44 +14,24 @@ import DataTable from '../components/DataTable';
 import EventForm from '../components/EventForm';
 import { supabase } from '../../supabaseClient';
 import { resolveImageUrl, resolveEventImageWithTenant } from '../../utils/resolveImageUrl';
-import { useTenantFilter } from '../../hooks/useTenantFilter';
-import { useTenant } from '../../contexts/TenantContext';
+import { useSupabaseQuery, useSupabaseMutation } from '../../hooks/useSupabaseQuery';
+import { PageWrapper } from '../../components/PageWrapper';
 
 const EventosPage = () => {
-  const [eventos, setEventos] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
   const [showEventForm, setShowEventForm] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [formLoading, setFormLoading] = useState(false);
-  const { addTenantFilter } = useTenantFilter();
-  const { currentTenant } = useTenant();
-
-  useEffect(() => {
-    loadEventos();
-  }, []);
-
-  const loadEventos = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await addTenantFilter(
-        supabase
-          .from('eventos')
-          .select('*')
-          .order('created_at', { ascending: false })
-      );
-
-      if (error) throw error;
-      setEventos(data || []);
-    } catch (error) {
-      console.error('Error loading eventos:', error);
-      message.error('Error al cargar los eventos');
-    } finally {
-      setLoading(false);
-    }
-  };
+  
+  // Hook optimizado para obtener eventos
+  const { data: eventos, loading, error, refetch } = useSupabaseQuery('eventos', {
+    orderBy: 'created_at',
+    ascending: false
+  });
+  
+  // Hook optimizado para operaciones CRUD
+  const { create, update, remove, loading: mutationLoading } = useSupabaseMutation('eventos');
 
   const handleDelete = async (event) => {
     setEventToDelete(event);
@@ -60,17 +40,11 @@ const EventosPage = () => {
 
   const confirmDelete = async () => {
     try {
-      const { error } = await supabase
-        .from('eventos')
-        .delete()
-        .eq('id', eventToDelete.id);
-
-      if (error) throw error;
-
+      await remove(eventToDelete.id);
       message.success('Evento eliminado correctamente');
       setDeleteModalVisible(false);
       setEventToDelete(null);
-      loadEventos();
+      refetch(); // Recargar datos
     } catch (error) {
       console.error('Error deleting evento:', error);
       message.error('Error al eliminar el evento');
@@ -89,35 +63,23 @@ const EventosPage = () => {
   };
 
   const handleSaveEvent = async (eventData) => {
-    setFormLoading(true);
     try {
       if (editingEvent) {
-        // Actualizar evento existente
-        const { error } = await supabase
-          .from('eventos')
-          .update(eventData)
-          .eq('id', editingEvent.id);
-
-        if (error) throw error;
+        // Actualizar evento existente usando hook optimizado
+        await update(editingEvent.id, eventData);
         message.success('Evento actualizado correctamente');
       } else {
-        // Crear nuevo evento
-        const { error } = await supabase
-          .from('eventos')
-          .insert([eventData]);
-
-        if (error) throw error;
+        // Crear nuevo evento usando hook optimizado
+        await create(eventData);
         message.success('Evento creado correctamente');
       }
 
       setShowEventForm(false);
       setEditingEvent(null);
-      loadEventos();
+      refetch(); // Recargar datos usando hook optimizado
     } catch (error) {
       console.error('Error saving evento:', error);
       message.error('Error al guardar el evento');
-    } finally {
-      setFormLoading(false);
     }
   };
 
@@ -249,7 +211,7 @@ const EventosPage = () => {
         dataSource={eventos}
         columns={columns}
         loading={loading}
-        onRefresh={loadEventos}
+        onRefresh={refetch}
         showSearch={true}
         searchPlaceholder="Buscar eventos..."
         addButtonText="Crear Evento"
@@ -274,8 +236,8 @@ const EventosPage = () => {
                   const images = typeof selectedEvent.imagenes === 'string' 
                     ? JSON.parse(selectedEvent.imagenes) 
                     : selectedEvent.imagenes;
-                  imageUrl = resolveEventImageWithTenant(selectedEvent, 'banner', currentTenant?.id) ||
-                            resolveEventImageWithTenant(selectedEvent, 'portada', currentTenant?.id);
+                  imageUrl = resolveEventImageWithTenant(selectedEvent, 'banner') ||
+                            resolveEventImageWithTenant(selectedEvent, 'portada');
                 } catch (error) {
                   console.error('Error parsing event images:', error);
                 }
@@ -346,7 +308,7 @@ const EventosPage = () => {
           eventData={editingEvent}
           onSave={handleSaveEvent}
           onCancel={handleCancelForm}
-          loading={formLoading}
+          loading={mutationLoading}
         />
       </Modal>
     </DashboardLayout>

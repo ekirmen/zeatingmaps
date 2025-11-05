@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import logger from '../../utils/logger';
 import { useNavigate } from 'react-router-dom';
 import { useRecintoSala } from '../contexts/RecintoSalaContext';
 import { fetchZonasPorSala, createZona, updateZona, deleteZona, fetchMapa } from '../services/apibackoffice';
@@ -12,7 +13,12 @@ if (typeof document !== 'undefined' && document.getElementById('root')) {
 }
 
 const Plano = () => {
-  console.log('🎯 [PLANO] Componente Plano iniciando...');
+  const hasInitialized = useRef(false);
+  
+  if (!hasInitialized.current) {
+    logger.log('🎯 [PLANO] Componente Plano iniciando...');
+    hasInitialized.current = true;
+  }
   
   const { recinto, setRecinto, sala, setSala, recintos, setRecintos } = useRecintoSala();
   const [zonas, setZonas] = useState([]);
@@ -28,82 +34,89 @@ const Plano = () => {
 
   const numeradaBloqueada = editingZona?.numerada && editingZona.aforo > 0;
 
-  console.log('🎯 [PLANO] Estado inicial:', { 
-    recinto: recinto ? '✅' : '❌', 
-    sala: sala ? '✅' : '❌', 
-    recintos: Array.isArray(recintos) ? recintos.length : '❌ No es array',
-    zonas: Array.isArray(zonas) ? zonas.length : '❌ No es array'
-  });
+  // Debug log removed for production performance
 
-  // Limpiar todas las suscripciones de tiempo real al montar el componente
+  // Limpiar todas las suscripciones de tiempo real al montar el componente (optimizado)
+  const hasCleanedChannels = useRef(false);
   useEffect(() => {
-    console.log('[PLANO] Limpiando suscripciones de tiempo real...');
+    if (hasCleanedChannels.current) return;
+    
+    logger.log('[PLANO] Limpiando suscripciones de tiempo real...');
     
     // Remover todos los canales activos
     const channels = supabase.getChannels();
     channels.forEach(channel => {
       try {
-        console.log('[PLANO] Desuscribiendo canal:', channel.topic);
+        logger.log('[PLANO] Desuscribiendo canal:', channel.topic);
         channel.unsubscribe();
       } catch (error) {
-        console.warn('[PLANO] Error al desuscribir canal:', error);
+        logger.warn('[PLANO] Error al desuscribir canal:', error);
       }
     });
+    
+    hasCleanedChannels.current = true;
 
     return () => {
-      console.log('[PLANO] Componente desmontado, limpiando suscripciones...');
+      logger.log('[PLANO] Componente desmontado, limpiando suscripciones...');
       const channels = supabase.getChannels();
       channels.forEach(channel => {
         try {
           channel.unsubscribe();
         } catch (error) {
-          console.warn('[PLANO] Error al desuscribir canal en cleanup:', error);
+          logger.warn('[PLANO] Error al desuscribir canal en cleanup:', error);
         }
       });
+      hasCleanedChannels.current = false;
     };
   }, []);
 
+  // Cargar recintos solo una vez (optimizado)
+  const hasLoadedRecintos = useRef(false);
   useEffect(() => {
+    if (hasLoadedRecintos.current || recintos.length > 0) return;
+    
     const loadRecintos = async () => {
+      hasLoadedRecintos.current = true;
       try {
         const recintosData = await import('../services/apibackoffice').then(mod => mod.fetchRecintos());
         setRecintos(recintosData);
-        console.log('[PLANO] Recintos cargados:', recintosData?.length || 0);
+        logger.log('[PLANO] Recintos cargados:', recintosData?.length || 0);
       } catch (error) {
-        console.error('[PLANO] Error al cargar recintos:', error);
+        logger.error('[PLANO] Error al cargar recintos:', error);
+        hasLoadedRecintos.current = false; // Permitir reintento en caso de error
       }
     };
     loadRecintos();
-  }, [setRecintos]);
+  }, [recintos.length, setRecintos]);
 
   // Función para cargar zonas con retry
   const loadZonas = async (salaId, retryCount = 0) => {
     if (!salaId) {
       setZonas([]);
-      console.log('[PLANO] No hay sala seleccionada, limpiando zonas');
+      logger.log('[PLANO] No hay sala seleccionada, limpiando zonas');
       return;
     }
 
     setLoadingZonas(true);
     try {
-      console.log('[PLANO] Cargando zonas para sala:', salaId, retryCount > 0 ? `(intento ${retryCount + 1})` : '');
+      logger.log('[PLANO] Cargando zonas para sala:', salaId, retryCount > 0 ? `(intento ${retryCount + 1})` : '');
       const zonasData = await fetchZonasPorSala(salaId);
       
       // Verificar que zonasData sea un array válido
       if (Array.isArray(zonasData)) {
         setZonas(zonasData);
-        console.log('[PLANO] Zonas cargadas correctamente:', zonasData.length);
+        logger.log('[PLANO] Zonas cargadas correctamente:', zonasData.length);
       } else {
-        console.warn('[PLANO] zonasData no es un array:', zonasData);
+        logger.warn('[PLANO] zonasData no es un array:', zonasData);
         setZonas([]);
       }
     } catch (error) {
-      console.error('[PLANO] Error al cargar zonas:', error);
+      logger.error('[PLANO] Error al cargar zonas:', error);
       setZonas([]);
       
       // Retry logic for zones loading
       if (retryCount < 2) {
-        console.log('[PLANO] Reintentando carga de zonas en 1 segundo...');
+        logger.log('[PLANO] Reintentando carga de zonas en 1 segundo...');
         setTimeout(() => loadZonas(salaId, retryCount + 1), 1000);
       }
     } finally {
@@ -112,14 +125,14 @@ const Plano = () => {
   };
 
   useEffect(() => {
-    console.log('🎯 [PLANO] useEffect sala cambiada:', sala);
+    logger.log('🎯 [PLANO] useEffect sala cambiada:', sala);
     
     if (sala?.id) {
-      console.log('🎯 [PLANO] Cargando datos para sala:', sala.id);
+      logger.log('🎯 [PLANO] Cargando datos para sala:', sala.id);
       loadZonas(sala.id);
       loadMapaPreview(sala.id);
     } else {
-      console.log('🎯 [PLANO] Limpiando datos - no hay sala seleccionada');
+      logger.log('🎯 [PLANO] Limpiando datos - no hay sala seleccionada');
       setZonas([]);
       setMapaPreview(null);
     }
@@ -135,13 +148,13 @@ const Plano = () => {
       // Verificar que mapaData sea válido
       if (mapaData && typeof mapaData === 'object') {
         setMapaPreview(mapaData);
-        console.log('[PLANO] Mapa cargado correctamente:', mapaData);
+        logger.log('[PLANO] Mapa cargado correctamente:', mapaData);
       } else {
-        console.warn('[PLANO] mapaData no es válido:', mapaData);
+        logger.warn('[PLANO] mapaData no es válido:', mapaData);
         setMapaPreview(null);
       }
     } catch (error) {
-      console.error('[PLANO] Error al cargar mapa:', error);
+      logger.error('[PLANO] Error al cargar mapa:', error);
       setMapaPreview(null);
     } finally {
       setLoadingMapa(false);
@@ -194,7 +207,7 @@ const Plano = () => {
       setNuevaZona({ nombre: '', color: '#000000', aforo: 0, numerada: false });
       setModalIsOpen(false);
     } catch (err) {
-      console.error('[PLANO] Error al crear zona:', err);
+      logger.error('[PLANO] Error al crear zona:', err);
       alert('Error al crear la zona: ' + (err.message || 'Error desconocido'));
     }
   };
@@ -215,7 +228,7 @@ const Plano = () => {
       setNuevaZona({ nombre: '', color: '#000000', aforo: 0, numerada: false });
       setModalIsOpen(false);
     } catch (err) {
-      console.error('[PLANO] Error al editar zona:', err);
+      logger.error('[PLANO] Error al editar zona:', err);
       alert('Error al editar la zona: ' + (err.message || 'Error desconocido'));
     }
   };

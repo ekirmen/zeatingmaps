@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
 import { Modal } from 'antd';
 import { AiOutlineLeft } from 'react-icons/ai';
 
@@ -14,6 +14,7 @@ import { useBoleteria } from '../hooks/useBoleteria';
 import { useClientManagement } from '../hooks/useClientManagement';
 import { supabase } from '../../supabaseClient';
 import { useSeatLockStore } from '../../components/seatLockStore';
+import logger from '../../utils/logger';
 
 const Boleteria = () => {
   const {
@@ -32,13 +33,17 @@ const Boleteria = () => {
     setSelectedEvent
   } = useBoleteria();
 
-  // Debug: Log del estado actual
-  console.log('🎫 [Boleteria] Estado actual:', {
+  // Debug: Log del estado actual (solo en desarrollo, memoizado para evitar renders)
+  const debugState = useMemo(() => ({
     selectedEvent: selectedEvent?.id,
     selectedFuncion: selectedFuncion?.id,
     eventosCount: eventos?.length,
     funcionesCount: funciones?.length
-  });
+  }), [selectedEvent?.id, selectedFuncion?.id, eventos?.length, funciones?.length]);
+  
+  useEffect(() => {
+    logger.log('🎫 [Boleteria] Estado actual:', debugState);
+  }, [debugState]);
 
   const [foundSeats, setFoundSeats] = useState([]);
 
@@ -66,17 +71,29 @@ const Boleteria = () => {
   const subscribeToFunction = seatLockStore.subscribeToFunction;
   const unsubscribe = seatLockStore.unsubscribe;
 
-  // Suscribirse a eventos en tiempo real para la función seleccionada
+  // Suscribirse a eventos en tiempo real para la función seleccionada (optimizado)
+  const subscriptionFuncionId = useRef(null);
   useEffect(() => {
-    if (selectedFuncion?.id && subscribeToFunction) {
-      console.log('🔔 [Boleteria] Suscribiéndose a función:', selectedFuncion.id);
-      subscribeToFunction(selectedFuncion.id);
+    const currentFuncionId = selectedFuncion?.id;
+    
+    // Solo suscribirse si cambió la función
+    if (currentFuncionId && currentFuncionId !== subscriptionFuncionId.current && subscribeToFunction) {
+      // Desuscribirse de la función anterior si existe
+      if (subscriptionFuncionId.current && unsubscribe) {
+        logger.log('🔔 [Boleteria] Desuscribiéndose de función anterior:', subscriptionFuncionId.current);
+        unsubscribe();
+      }
+      
+      logger.log('🔔 [Boleteria] Suscribiéndose a función:', currentFuncionId);
+      subscribeToFunction(currentFuncionId);
+      subscriptionFuncionId.current = currentFuncionId;
     }
 
     return () => {
-      if (unsubscribe) {
-        console.log('🔔 [Boleteria] Desuscribiéndose de función:', selectedFuncion?.id);
+      if (unsubscribe && subscriptionFuncionId.current) {
+        logger.log('🔔 [Boleteria] Desuscribiéndose de función:', subscriptionFuncionId.current);
         unsubscribe();
+        subscriptionFuncionId.current = null;
       }
     };
   }, [selectedFuncion?.id, subscribeToFunction, unsubscribe]);
@@ -95,29 +112,31 @@ const Boleteria = () => {
   const [selectedEntradaId, setSelectedEntradaId] = useState(null);
   const [priceOptions, setPriceOptions] = useState([]);
 
-  useEffect(() => {
-    if (!selectedFuncion) return;
-    const id = selectedFuncion.id || selectedFuncion._id;
-    if (id) {
-      subscribeToFunction(id);
-    }
-    return () => {
-      unsubscribe();
-    };
-  }, [selectedFuncion, subscribeToFunction, unsubscribe]);
+  // Eliminar useEffect duplicado - ya está manejado arriba
 
-  // useEffect para cargar entradas y opciones de precio
+  // useEffect para cargar entradas y opciones de precio (optimizado - solo cuando cambian funcion o evento)
+  const prevFuncionId = useRef(null);
+  const prevEventId = useRef(null);
+  
   useEffect(() => {
+    const currentFuncionId = selectedFuncion?.id;
+    const currentEventId = selectedEvent?.id;
+    
+    // Solo cargar si cambió la función o el evento
+    if (!selectedFuncion || !selectedEvent) return;
+    if (currentFuncionId === prevFuncionId.current && currentEventId === prevEventId.current) return;
+    
+    prevFuncionId.current = currentFuncionId;
+    prevEventId.current = currentEventId;
+    
     const loadEntradasAndPrices = async () => {
-      if (!selectedFuncion || !selectedEvent) return;
-
       try {
-        console.log('🎫 [Boleteria] Cargando entradas y precios...');
+        logger.log('🎫 [Boleteria] Cargando entradas y precios...');
         
         // Cargar entradas del recinto
         const recintoId = selectedEvent.recinto || selectedEvent.recinto_id;
         if (!recintoId) {
-          console.warn('No se encontró recinto_id');
+          logger.warn('No se encontró recinto_id');
           return;
         }
 
@@ -127,11 +146,11 @@ const Boleteria = () => {
           .eq('recinto', recintoId);
 
         if (entradasError) {
-          console.error('Error cargando entradas:', entradasError);
+          logger.error('Error cargando entradas:', entradasError);
           return;
         }
 
-        console.log('✅ Entradas cargadas:', entradasData);
+        logger.log('✅ Entradas cargadas:', entradasData);
         setEntradas(entradasData || []);
 
         // Procesar plantilla de precios
@@ -171,21 +190,21 @@ const Boleteria = () => {
             };
           });
 
-          console.log('✅ Opciones de precio procesadas:', priceOptionsArray);
+          logger.log('✅ Opciones de precio procesadas:', priceOptionsArray);
           setPriceOptions(priceOptionsArray);
 
-          // Seleccionar la primera entrada por defecto
+          // Seleccionar la primera entrada por defecto solo si no hay una seleccionada
           if (priceOptionsArray.length > 0 && !selectedEntradaId) {
             setSelectedEntradaId(priceOptionsArray[0].entradaId);
           }
         }
       } catch (error) {
-        console.error('Error en loadEntradasAndPrices:', error);
+        logger.error('Error en loadEntradasAndPrices:', error);
       }
     };
 
     loadEntradasAndPrices();
-  }, [selectedFuncion, selectedEvent, selectedEntradaId]);
+  }, [selectedFuncion?.id, selectedEvent?.id]); // Solo dependencias críticas
 
   const selectedSeatIds = useMemo(() => {
     if (!Array.isArray(carrito)) return [];
@@ -293,7 +312,7 @@ const Boleteria = () => {
         const locks = buildLocksFromPayments(data || []);
         setPermanentLocks(locks);
       } catch (error) {
-        console.error('❌ [Boleteria] Error cargando asientos vendidos/reservados:', error);
+        logger.error('❌ [Boleteria] Error cargando asientos vendidos/reservados:', error);
         if (isMounted) {
           setPermanentLocks([]);
         }
@@ -337,7 +356,7 @@ const Boleteria = () => {
         const seatId = seatData?._id || seatData?.sillaId || seatData?.id;
 
         if (!seatId) {
-          console.warn('⚠️ [Boleteria] toggleSeat llamado sin identificador válido:', seatData);
+          logger.warn('⚠️ [Boleteria] toggleSeat llamado sin identificador válido:', seatData);
           return safePrev;
         }
 
@@ -369,7 +388,7 @@ const Boleteria = () => {
 
       // Verificar que se haya seleccionado un tipo de entrada
       if (!selectedEntradaId) {
-        console.warn('⚠️ [Boleteria] No se ha seleccionado un tipo de entrada');
+        logger.warn('⚠️ [Boleteria] No se ha seleccionado un tipo de entrada');
         // Aquí podrías mostrar un mensaje al usuario
         return;
       }
@@ -390,7 +409,7 @@ const Boleteria = () => {
         try {
           detalle = JSON.parse(detalle);
         } catch (error) {
-          console.warn('⚠️ [Boleteria] No se pudo parsear la plantilla de precios:', error);
+          logger.warn('⚠️ [Boleteria] No se pudo parsear la plantilla de precios:', error);
           detalle = [];
         }
       }
@@ -447,15 +466,15 @@ const Boleteria = () => {
         // Deseleccionar: quitar del carrito y desbloquear en BD
         await toggleSeat(cartItem);
         await unlockSeat(sillaId, funcionId);
-        console.log('🔄 [Boleteria] Asiento deseleccionado y desbloqueado:', sillaId);
+        logger.log('🔄 [Boleteria] Asiento deseleccionado y desbloqueado:', sillaId);
       } else {
         // Seleccionar: bloquear en BD primero, luego agregar al carrito
         const lockResult = await lockSeat(sillaId, 'seleccionado', funcionId);
         if (lockResult) {
           await toggleSeat(cartItem);
-          console.log('✅ [Boleteria] Asiento seleccionado y bloqueado:', sillaId);
+          logger.log('✅ [Boleteria] Asiento seleccionado y bloqueado:', sillaId);
         } else {
-          console.log('❌ [Boleteria] No se pudo bloquear el asiento:', sillaId);
+          logger.log('❌ [Boleteria] No se pudo bloquear el asiento:', sillaId);
         }
       }
     },
@@ -603,9 +622,7 @@ const Boleteria = () => {
   return (
     <div className="flex bg-gray-50 overflow-hidden" style={{ margin: '0', padding: '0', height: 'calc(100vh - 88px)', position: 'absolute', top: '88px', left: '0', right: '0', bottom: '0' }}>
       {/* Debug info */}
-      {console.log('🎫 [Boleteria] Renderizando componente...')}
-      {console.log('🎫 [Boleteria] Selected function:', selectedFuncion)}
-      {console.log('🎫 [Boleteria] Mapa:', mapa)}
+      {/* Debug logs removed for production performance */}
 
       {/* Sidebar izquierdo ultra compacto */}
       <div className="flex flex-col w-full max-w-xs md:max-w-sm lg:w-64 min-w-[12rem] bg-white border-r border-gray-200">
@@ -748,7 +765,7 @@ const Boleteria = () => {
                     <button 
                       key={option.entradaId}
                       onClick={() => {
-                        console.log('🎫 Entrada seleccionada:', option);
+                        logger.log('🎫 Entrada seleccionada:', option);
                         setSelectedEntradaId(option.entradaId);
                       }}
                       className={`flex-shrink-0 px-2 py-1 rounded font-medium text-xs ${
@@ -777,7 +794,7 @@ const Boleteria = () => {
 
           {/* Mapa de asientos ultra compacto */}
           <div className="flex-1 bg-white overflow-hidden">
-            {console.log('🎫 [Boleteria] Renderizando vista mapa interactivo')}
+            {/* Debug log removed for production performance */}
                 {selectedFuncion && mapa ? (
               <div className="h-full p-1 overflow-auto">
                       <SeatingMapUnified

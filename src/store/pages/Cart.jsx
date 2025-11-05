@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
+import logger from '../../utils/logger';
 import { useNavigate } from 'react-router-dom';
 import { Button, Card, Typography, message } from 'antd';
 import {
@@ -240,7 +241,7 @@ const Cart = () => {
                             paidSeatsSet.add(seatId);
                         }
                     } catch (error) {
-                        console.error('Error checking payment status for seat:', seatId, error);
+                        logger.error('Error checking payment status for seat:', seatId, error);
                     }
                 }
             }
