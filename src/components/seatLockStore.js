@@ -392,16 +392,35 @@ export const useSeatLockStore = create((set, get) => ({
       return;
     }
 
-    const currentChannel = get().channel;
-    const expectedTopic = `seat-locks-channel-${funcionId}`;
+    const normalizedFuncionId = String(funcionId);
+    const expectedTopic = `seat-locks-channel-${normalizedFuncionId}`;
     
-    // Si ya estamos suscritos al canal correcto, no hacer nada
-    if (currentChannel && currentChannel.topic === expectedTopic) {
-      return;
+    // Verificar si ya existe un canal activo para este topic
+    const channels = supabase.getChannels();
+    const existingChannel = Array.isArray(channels) ? channels.find(ch => ch.topic === expectedTopic) : null;
+    
+    if (existingChannel) {
+      // Verificar que el canal esté activo (joined o joining)
+      const channelState = existingChannel.state;
+      if (channelState === 'joined' || channelState === 'joining') {
+        console.log('✅ [SEAT_LOCK_STORE] Ya suscrito y activo para función:', normalizedFuncionId);
+        set({ channel: existingChannel });
+        return;
+      } else {
+        console.log('⚠️ [SEAT_LOCK_STORE] Canal existe pero no está activo, limpiando. Estado:', channelState);
+        // Limpiar el canal inactivo
+        try {
+          existingChannel.unsubscribe();
+        } catch (e) {
+          // Ignorar errores
+        }
+      }
     }
 
-    // Limpiar suscripción anterior si existe
-    if (currentChannel) {
+    // Limpiar suscripción anterior si existe (canal diferente)
+    const currentChannel = get().channel;
+    if (currentChannel && currentChannel.topic !== expectedTopic) {
+      console.log('🔄 [SEAT_LOCK_STORE] Desuscribiéndose de canal anterior:', currentChannel.topic);
       try {
         currentChannel.unsubscribe();
       } catch (error) {
@@ -411,7 +430,7 @@ export const useSeatLockStore = create((set, get) => ({
 
     const fetchInitialLocks = async () => {
       try {
-        console.log('🔄 [SEAT_LOCK_STORE] Cargando datos iniciales para función:', funcionId);
+        console.log('🔄 [SEAT_LOCK_STORE] Cargando datos iniciales para función:', normalizedFuncionId);
         
         const tenantId = getCurrentTenantId();
         let seatLocksData = [];
@@ -425,7 +444,7 @@ export const useSeatLockStore = create((set, get) => ({
           let query = supabase
             .from('seat_locks')
             .select('seat_id, table_id, session_id, locked_at, status, lock_type, user_id, metadata')
-            .eq('funcion_id', funcionId);
+            .eq('funcion_id', normalizedFuncionId);
           
           // Si hay tenant_id, filtrar por él para consulta más rápida
           if (tenantId) {
@@ -452,7 +471,7 @@ export const useSeatLockStore = create((set, get) => ({
           const { data, error } = await supabase
             .from('payment_transactions')
             .select('seats, user_id, status')
-            .eq('funcion_id', funcionId)
+            .eq('funcion_id', normalizedFuncionId)
             .eq('status', 'completed');
 
           paymentData = Array.isArray(data) ? data : [];
@@ -473,7 +492,7 @@ export const useSeatLockStore = create((set, get) => ({
 
         if (shouldUseFallback) {
           try {
-            const params = new URLSearchParams({ funcionId: String(funcionId) });
+            const params = new URLSearchParams({ funcionId: String(normalizedFuncionId) });
             if (tenantId) {
               params.set('tenantId', tenantId);
             }
@@ -587,9 +606,21 @@ export const useSeatLockStore = create((set, get) => ({
       const channels = supabase.getChannels();
       const existingChannel = Array.isArray(channels) ? channels.find(ch => ch.topic === expectedTopic) : null;
       if (existingChannel) {
-        console.log('✅ [SEAT_LOCK_STORE] Reutilizando canal existente:', expectedTopic);
-        set({ channel: existingChannel });
-        return;
+        // Verificar que el canal esté activo (joined o joining)
+        const channelState = existingChannel.state;
+        if (channelState === 'joined' || channelState === 'joining') {
+          console.log('✅ [SEAT_LOCK_STORE] Reutilizando canal existente y activo:', expectedTopic);
+          set({ channel: existingChannel });
+          return;
+        } else {
+          console.log('⚠️ [SEAT_LOCK_STORE] Canal existente pero inactivo, recreando. Estado:', channelState);
+          // Limpiar el canal inactivo
+          try {
+            existingChannel.unsubscribe();
+          } catch (e) {
+            // Ignorar errores
+          }
+        }
       }
       
       // Desuscribirse de canales anteriores si existen
@@ -611,15 +642,15 @@ export const useSeatLockStore = create((set, get) => ({
       
       // Crear filtro optimizado - Supabase Realtime usa comas para múltiples condiciones
       // Formato: "campo1=eq.valor1,campo2=eq.valor2"
-      let filter = `funcion_id=eq.${funcionId}`;
+      let filter = `funcion_id=eq.${normalizedFuncionId}`;
       if (tenantId) {
         filter = `${filter},tenant_id=eq.${tenantId}`;
       }
       
-      console.log('📡 [SEAT_LOCK_STORE] Creando canal Realtime para función:', funcionId, 'Filtro:', filter);
+      console.log('📡 [SEAT_LOCK_STORE] Creando canal Realtime para función:', normalizedFuncionId, 'Filtro:', filter);
 
       const newChannel = supabase
-        .channel(`seat-locks-channel-${funcionId}`, {
+        .channel(`seat-locks-channel-${normalizedFuncionId}`, {
           config: {
             broadcast: { self: true }, // Recibir nuestros propios eventos
             presence: { key: 'user' },
@@ -846,17 +877,23 @@ export const useSeatLockStore = create((set, get) => ({
         .subscribe((status) => {
           // Log del estado de suscripción para debugging
           if (status === 'SUBSCRIBED') {
-            console.log('✅ [SEAT_LOCK_STORE] Suscrito exitosamente a Realtime para función:', funcionId);
+            console.log('✅ [SEAT_LOCK_STORE] Suscrito exitosamente a Realtime para función:', normalizedFuncionId);
+            // Actualizar el estado del canal en el store
+            set({ channel: newChannel });
           } else if (status === 'CHANNEL_ERROR') {
             console.error('❌ [SEAT_LOCK_STORE] Error en canal Realtime:', status);
           } else if (status === 'TIMED_OUT') {
             console.warn('⏱️ [SEAT_LOCK_STORE] Timeout en suscripción Realtime:', status);
+          } else if (status === 'CLOSED') {
+            console.warn('⚠️ [SEAT_LOCK_STORE] Canal cerrado. Esto puede ser normal si el componente se desmontó.');
+            // No limpiar el canal del store si se cierra - puede estar siendo usado por otros componentes
           } else {
             console.log('📡 [SEAT_LOCK_STORE] Estado de suscripción:', status);
           }
         });
 
-      set({ channel: newChannel });
+      // No establecer el canal aquí - esperar a que se suscriba exitosamente
+      // set({ channel: newChannel }); // Se establece en el callback de subscribe
       console.log('📡 [SEAT_LOCK_STORE] Canal creado, esperando suscripción...');
     } catch (error) {
       console.error('❌ [SEAT_LOCK_STORE] Error creando canal Realtime:', error);
