@@ -1,10 +1,31 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Usar múltiples nombres de variables de entorno para compatibilidad
+// Buscar en orden: estándar, REACT_APP_, NEXT_PUBLIC_, react_ (minúsculas)
+const supabaseUrl = 
+  process.env.SUPABASE_URL || 
+  process.env.REACT_APP_SUPABASE_URL || 
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  process.env.react_NEXT_PUBLIC_SUPABASE_URL;
+
+const serviceRoleKey = 
+  process.env.SUPABASE_SERVICE_ROLE_KEY || 
+  process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY || 
+  process.env.REACT_SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.react_SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !serviceRoleKey) {
-  console.warn('[seat-locks/status] Missing Supabase credentials');
+  console.warn('[seat-locks/status] Missing Supabase credentials. Available env vars:', {
+    SUPABASE_URL: !!process.env.SUPABASE_URL,
+    REACT_APP_SUPABASE_URL: !!process.env.REACT_APP_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    react_NEXT_PUBLIC_SUPABASE_URL: !!process.env.react_NEXT_PUBLIC_SUPABASE_URL,
+    SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    REACT_APP_SUPABASE_SERVICE_ROLE_KEY: !!process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY,
+    REACT_SUPABASE_SERVICE_ROLE_KEY: !!process.env.REACT_SUPABASE_SERVICE_ROLE_KEY,
+    react_SUPABASE_SERVICE_ROLE_KEY: !!process.env.react_SUPABASE_SERVICE_ROLE_KEY,
+  });
 }
 
 const supabase = supabaseUrl && serviceRoleKey
