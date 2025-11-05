@@ -628,143 +628,115 @@ export const useSeatLockStore = create((set, get) => ({
             table: 'seat_locks',
             filter: filter,
           },
-          (payload) => {
-            // Procesar eventos de forma más rápida sin logs excesivos
-            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
-              const newLock = payload.new;
+          (() => {
+            // Sistema de debounce/throttle para optimizar rendimiento con muchos usuarios
+            const pendingUpdates = new Map();
+            let debounceTimer = null;
+            const DEBOUNCE_DELAY = 150; // 150ms de debounce para optimizar sin afectar UX
+            
+            const processPendingUpdates = () => {
+              if (pendingUpdates.size === 0) return;
               
-              // Normalizar seat_id para que coincida con el formato usado en el componente
-              // El componente usa "silla_XXX" pero la BD puede tener "XXX" (sin prefijo)
-              let normalizedSeatId = newLock.seat_id;
-              if (normalizedSeatId && !normalizedSeatId.startsWith('silla_')) {
-                normalizedSeatId = `silla_${normalizedSeatId}`;
-              }
-              
-              // Debug: verificar que el evento se recibe correctamente
-            console.log('🔔 [SEAT_LOCK_STORE] Evento recibido:', {
-              eventType: payload.eventType,
-                seatId: newLock.seat_id,
-                normalizedSeatId: normalizedSeatId,
-                status: newLock.status,
-                sessionId: newLock.session_id,
-                currentSessionId: localStorage.getItem('anonSessionId')
-            });
+              // Procesar todos los updates pendientes en batch
+              const updatesToProcess = Array.from(pendingUpdates.values());
+              pendingUpdates.clear();
               
               set((state) => {
-                const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
-                const currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
+                let currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
+                let currentTables = Array.isArray(state.lockedTables) ? state.lockedTables : [];
+                const newSeatStates = new Map(state.seatStates);
                 
-                if (newLock.lock_type === 'table') {
-                  // Es un bloqueo de mesa
-                  const updatedTables = [
-                    ...currentTables.filter(lock => lock.table_id !== newLock.table_id),
-                    newLock,
-                  ];
-                  return { lockedTables: updatedTables };
-                } else {
-                  // Es un bloqueo de asiento
-                  const updatedSeats = [
-                    ...currentSeats.filter(lock => lock.seat_id !== newLock.seat_id && lock.seat_id !== normalizedSeatId),
-                    { ...newLock, seat_id: normalizedSeatId }, // Usar el seat_id normalizado
-                  ];
-                  
-                  // Actualizar el estado del asiento individual en seatStates
-                  const newSeatStates = new Map(state.seatStates);
-                  
-                  // Determinar el estado visual basado en el status del lock
-                  let visualState = 'seleccionado_por_otro'; // Estado por defecto
-                  
-                  if (newLock.status === 'pagado' || newLock.status === 'vendido') {
-                    visualState = 'vendido';
-                  } else if (newLock.status === 'reservado') {
-                    visualState = 'reservado';
-                  } else if (newLock.status === 'seleccionado') {
-                    // Verificar si es del usuario actual - normalizar ambos session_ids para comparar correctamente
-                    const currentSessionIdRaw = localStorage.getItem('anonSessionId');
-                    const currentSessionId = normalizeSessionId(currentSessionIdRaw);
-                    const lockSessionId = normalizeSessionId(newLock.session_id?.toString() || '');
-                    
-                    // Comparar session_ids normalizados
-                    if (currentSessionId && lockSessionId && currentSessionId === lockSessionId) {
-                      visualState = 'seleccionado';
-                      console.log('✅ [SEAT_LOCK_STORE] Asiento seleccionado por mí:', normalizedSeatId);
+                updatesToProcess.forEach(({ eventType, lock, normalizedSeatId }) => {
+                  if (eventType === 'DELETE') {
+                    // Remover el lock y limpiar el estado visual
+                    if (lock.lock_type === 'table') {
+                      currentTables = currentTables.filter(l => l.table_id !== lock.table_id);
                     } else {
-                      visualState = 'seleccionado_por_otro';
-                      console.log('⚠️ [SEAT_LOCK_STORE] Asiento seleccionado por otro:', normalizedSeatId, {
-                        otherSessionId: lockSessionId,
-                        currentSessionId: currentSessionId,
-                        rawOtherSessionId: newLock.session_id,
-                        rawCurrentSessionId: currentSessionIdRaw
-                      });
+                      currentSeats = currentSeats.filter(l => l.seat_id !== normalizedSeatId);
+                      newSeatStates.delete(normalizedSeatId);
+                    }
+                  } else if (eventType === 'INSERT' || eventType === 'UPDATE') {
+                    // Agregar o actualizar el lock
+                    if (lock.lock_type === 'table') {
+                      currentTables = [
+                        ...currentTables.filter(l => l.table_id !== lock.table_id),
+                        lock,
+                      ];
+                    } else {
+                      currentSeats = [
+                        ...currentSeats.filter(l => l.seat_id !== normalizedSeatId),
+                        { ...lock, seat_id: normalizedSeatId },
+                      ];
+                      
+                      // Determinar el estado visual
+                      let visualState = 'seleccionado_por_otro';
+                      
+                      if (lock.status === 'pagado' || lock.status === 'vendido') {
+                        visualState = 'vendido';
+                      } else if (lock.status === 'reservado') {
+                        visualState = 'reservado';
+                      } else if (lock.status === 'seleccionado') {
+                        const currentSessionIdRaw = localStorage.getItem('anonSessionId');
+                        const currentSessionId = normalizeSessionId(currentSessionIdRaw);
+                        const lockSessionId = normalizeSessionId(lock.session_id?.toString() || '');
+                        
+                        if (currentSessionId && lockSessionId && currentSessionId === lockSessionId) {
+                          visualState = 'seleccionado';
+                        } else {
+                          visualState = 'seleccionado_por_otro';
+                        }
+                      }
+                      
+                      newSeatStates.set(normalizedSeatId, visualState);
                     }
                   }
-                  
-                  // Usar el seat_id normalizado para el Map
-                  newSeatStates.set(normalizedSeatId, visualState);
-                  
-                  console.log('🎨 [SEAT_LOCK_STORE] Estado visual actualizado:', {
-                    seatId: newLock.seat_id,
-                    normalizedSeatId: normalizedSeatId,
-                    visualState: visualState,
-                    status: newLock.status
-                  });
-                  
-                  return { 
-                    lockedSeats: updatedSeats, 
-                    seatStates: newSeatStates 
-                  };
-                }
+                });
+                
+                return {
+                  lockedSeats: currentSeats,
+                  lockedTables: currentTables,
+                  seatStates: newSeatStates,
+                };
               });
-            }
-            if (payload.eventType === 'DELETE') {
-              // Para eventos DELETE, Supabase envía el ID, necesitamos buscar el seat_id
-              const deletedId = payload.old?.id;
-              const deletedSeatId = payload.old?.seat_id; // Supabase puede enviar seat_id directamente
+            };
+            
+            return (payload) => {
+              // Normalizar seat_id
+              let normalizedSeatId = null;
+              let lock = null;
               
-              if (!deletedId && !deletedSeatId) {
-                return; // No procesar si no hay ID
-              }
-              
-              // Buscar el asiento en el estado actual para obtener el seat_id
-              const currentState = get();
-              const currentSeats = Array.isArray(currentState.lockedSeats) ? currentState.lockedSeats : [];
-              const currentTables = Array.isArray(currentState.lockedTables) ? currentState.lockedTables : [];
-              
-              // Buscar en asientos bloqueados
-              let seatId = deletedSeatId;
-              if (!seatId && deletedId) {
-              const deletedSeat = currentSeats.find(lock => lock.id === deletedId);
-                seatId = deletedSeat?.seat_id;
-              }
-              
-              if (seatId) {
-                // Es un desbloqueo de asiento
-                set((state) => {
-                  const updatedSeats = deletedId 
-                    ? state.lockedSeats.filter(lock => lock.id !== deletedId)
-                    : state.lockedSeats.filter(lock => lock.seat_id !== seatId);
-                  
-                  // ELIMINAR completamente el asiento del seatStates para forzar que vuelva a verde
-                  const newSeatStates = new Map(state.seatStates);
-                  newSeatStates.delete(seatId);
-                  
-                  return { 
-                    lockedSeats: updatedSeats, 
-                    seatStates: newSeatStates 
-                  };
-                });
-              } else if (deletedId) {
-                // Buscar en mesas
-                const deletedTable = currentTables.find(lock => lock.id === deletedId);
-                if (deletedTable) {
-                set((state) => {
-                  const updatedTables = state.lockedTables.filter(lock => lock.id !== deletedId);
-                  return { lockedTables: updatedTables };
-                });
+              if (payload.eventType === 'DELETE') {
+                lock = payload.old;
+                normalizedSeatId = lock?.seat_id;
+                if (normalizedSeatId && !normalizedSeatId.startsWith('silla_')) {
+                  normalizedSeatId = `silla_${normalizedSeatId}`;
+                }
+              } else if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+                lock = payload.new;
+                normalizedSeatId = lock?.seat_id;
+                if (normalizedSeatId && !normalizedSeatId.startsWith('silla_')) {
+                  normalizedSeatId = `silla_${normalizedSeatId}`;
                 }
               }
-            }
-          }
+              
+              if (!lock || !normalizedSeatId) return;
+              
+              // Agregar a cola de updates pendientes (sobrescribe si ya existe)
+              const key = `${payload.eventType}_${normalizedSeatId}`;
+              pendingUpdates.set(key, { eventType: payload.eventType, lock, normalizedSeatId });
+              
+              // Limpiar timer anterior y crear uno nuevo
+              if (debounceTimer) {
+                clearTimeout(debounceTimer);
+              }
+              
+              // Procesar updates después del debounce delay
+              debounceTimer = setTimeout(() => {
+                processPendingUpdates();
+                debounceTimer = null;
+              }, DEBOUNCE_DELAY);
+            };
+          })()
         )
         .on(
           'postgres_changes',
@@ -910,7 +882,8 @@ export const useSeatLockStore = create((set, get) => ({
         return false;
       }
 
-      // Actualizar estado local DESPUÉS de recibir confirmación del servidor
+      // Actualizar estado local INMEDIATAMENTE después de recibir confirmación del servidor
+      // Esto asegura que el color se actualice inmediatamente sin esperar Realtime
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
         const newLockedSeats = [
@@ -928,13 +901,13 @@ export const useSeatLockStore = create((set, get) => ({
           },
         ];
         
-        // Actualizar estado visual (amarillo = seleccionado por mí)
+        // Actualizar seatStates INMEDIATAMENTE para que el color se aplique al instante
         const newSeatStates = new Map(state.seatStates);
-        newSeatStates.set(normalizedSeatId, 'seleccionado'); // Amarillo
+        newSeatStates.set(normalizedSeatId, 'seleccionado'); // Amarillo para mi selección
         
         return {
           lockedSeats: newLockedSeats,
-          seatStates: newSeatStates,
+          seatStates: newSeatStates
         };
       });
       
@@ -1111,37 +1084,18 @@ export const useSeatLockStore = create((set, get) => ({
 
       // Asiento desbloqueado exitosamente
     
-      // Actualización local inmediata
+      // Actualización local inmediata - limpiar estado visual también
       set((state) => {
         const currentSeats = Array.isArray(state.lockedSeats) ? state.lockedSeats : [];
-        // Estado local ANTES del desbloqueo
-
         const updatedSeats = currentSeats.filter((s) => s.seat_id !== normalizedSeatId);
-        // Estado local DESPUÉS del desbloqueo
+        
+        // Limpiar el estado visual del asiento para que vuelva a verde/disponible
+        const newSeatStates = new Map(state.seatStates);
+        newSeatStates.delete(normalizedSeatId);
+        
         return {
           lockedSeats: updatedSeats,
-        };
-      });
-
-      // Asiento desbloqueado exitosamente
-
-      // Solo eliminar del seatStates si el asiento estaba temporalmente bloqueado/seleccionado
-      // No sobrescribir el estado original del asiento (reservado, pagado, etc.)
-      set((state) => {
-        const newSeatStates = new Map(state.seatStates);
-        const currentState = newSeatStates.get(normalizedSeatId);
-        
-        // Solo eliminar si el estado actual es temporal (seleccionado, bloqueado temporal)
-        if (currentState === 'seleccionado' || currentState === 'seleccionado_por_otro' || currentState === 'locked') {
-          newSeatStates.delete(normalizedSeatId); // Eliminar para volver al estado original
-          console.log('✅ [SEAT_LOCK] Estado temporal eliminado, volviendo al estado original del asiento');
-        } else {
-          console.log('✅ [SEAT_LOCK] Manteniendo estado original del asiento:', currentState);
-        }
-
-        return {
-          ...state,
-          seatStates: newSeatStates
+          seatStates: newSeatStates,
         };
       });
       

@@ -68,9 +68,9 @@ export const useSeatColors = (eventId = null) => {
         case 'anulado':
           return eventTheme.seatCancelled || '#e53e3e'; // Rojo para anulado
         case 'seleccionado':
-          return eventTheme.seatSelectedMe || '#ffd700'; // Amarillo para seleccionado por mí
+          return eventTheme.seatSelectedMe || '#FFEB3B'; // Amarillo brillante para seleccionado por mí
         case 'seleccionado_por_otro':
-          return eventTheme.seatSelectedOther || '#ed8936'; // Naranja para seleccionado por otro
+          return eventTheme.seatSelectedOther || '#2196F3'; // Azul para seleccionado por otro
         case 'locked':
           return '#6b7280'; // Gris para bloqueado permanentemente
         default:
@@ -140,7 +140,7 @@ export const useSeatColors = (eventId = null) => {
     
     // 5. SELECCIONADO POR OTRO USUARIO (temporal) - PRIORIDAD ALTA
     if (isSelectedByOther && !isPermanentlyLocked) {
-      return eventTheme.seatSelectedOther || '#ed8936'; // Naranja para seleccionado por otro
+      return eventTheme.seatSelectedOther || '#2196F3'; // Azul para seleccionado por otro
     }
     
     // 6. BLOQUEADO POR OTRO USUARIO (temporal) - PRIORIDAD BAJA
