@@ -114,10 +114,16 @@ class AtomicSeatLockService {
         }
       }
 
-      console.log('✅ [ATOMIC_LOCK] Asiento bloqueado exitosamente:', data);
+      const lockRow = Array.isArray(data) ? data[0] : data;
+
+      if (!lockRow) {
+        throw new Error('Lock atómico no devolvió datos válidos');
+      }
+
+      console.log('✅ [ATOMIC_LOCK] Asiento bloqueado exitosamente:', lockRow);
       return {
         success: true,
-        lockData: data,
+        lockData: lockRow,
         locator: locator
       };
 
@@ -165,10 +171,12 @@ class AtomicSeatLockService {
         }
       }
 
-      console.log('✅ [ATOMIC_UNLOCK] Asiento desbloqueado exitosamente:', data);
+      const unlockedRow = Array.isArray(data) ? data[0] : data;
+
+      console.log('✅ [ATOMIC_UNLOCK] Asiento desbloqueado exitosamente:', unlockedRow);
       return {
         success: true,
-        data: data
+        data: unlockedRow
       };
 
     } catch (error) {
