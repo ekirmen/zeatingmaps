@@ -45,7 +45,10 @@ export const useSeatColors = (eventId = null) => {
     const currentSessionId = localStorage.getItem('anonSessionId') || 'unknown';
     
     // Verificar si hay un estado actualizado en el store (tiempo real) - PRIORIDAD MÁXIMA
-    const storeState = seatStates?.get(seatId);
+    // seatStates puede ser un Map o un objeto
+    const storeState = seatStates instanceof Map 
+      ? seatStates.get(seatId) 
+      : seatStates?.[seatId];
     if (storeState) {
       // Usando estado del store para asiento
       
@@ -78,7 +81,10 @@ export const useSeatColors = (eventId = null) => {
     
     // Si no hay estado en el store, conservar el estado original del asiento en lugar de forzar disponible
     // Esto evita que asientos 'reservado' o 'vendido' se muestren como disponibles por falta de seatStates
-    if (seatStates && !seatStates.has(seatId)) {
+    const hasStateInStore = seatStates instanceof Map 
+      ? seatStates.has(seatId)
+      : seatStates && seatId in seatStates;
+    if (seatStates && !hasStateInStore) {
       // Respetar estados persistentes del asiento
       if (seat.estado === 'vendido' || seat.estado === 'pagado' || seat.estado === 'completed') {
         return eventTheme.seatSold || '#2d3748';

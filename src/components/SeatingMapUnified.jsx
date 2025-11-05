@@ -217,7 +217,18 @@ const SeatingMapUnified = ({
   // const channel = useSeatLockStore(state => state.channel); // Removido por no usarse
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const setMapa = useSeatLockStore(state => state.setMapa);
-  const seatStates = useSeatLockStore(state => state.seatStates);
+  // Convertir Map a objeto para forzar re-render cuando cambie
+  const seatStatesMap = useSeatLockStore(state => state.seatStates);
+  const seatStates = useMemo(() => {
+    // Convertir Map a objeto para que React detecte cambios
+    const statesObj = {};
+    if (seatStatesMap && seatStatesMap instanceof Map) {
+      seatStatesMap.forEach((value, key) => {
+        statesObj[key] = value;
+      });
+    }
+    return statesObj;
+  }, [seatStatesMap]);
   const subscribeToFunction = useSeatLockStore(state => state.subscribeToFunction);
   const unsubscribe = useSeatLockStore(state => state.unsubscribe);
   const { getSeatColor, getBorderColor } = useSeatColors(normalizedFuncionId);
@@ -383,14 +394,16 @@ const SeatingMapUnified = ({
     
     // Actualizar estados de asientos con la información del store
     return syncedSeats.map(seat => {
-      const updatedState = seatStates?.get(seat._id);
+      const updatedState = seatStatesMap instanceof Map 
+        ? seatStatesMap.get(seat._id) 
+        : seatStates?.[seat._id];
       if (updatedState && updatedState !== seat.estado) {
         return { ...seat, estado: updatedState };
       }
       // No forzar a 'disponible' cuando no hay entrada en seatStates; conservar estado original
       return seat;
     });
-  }, [syncedSeats, seatStates]);
+  }, [syncedSeats, seatStatesMap, seatStates]);
 
   // Establecer el mapa en el store para que pueda ser actualizado cuando se bloquean asientos
   // Solo establecer si el mapa realmente cambió (por ID)
@@ -522,7 +535,7 @@ const SeatingMapUnified = ({
       }
 
       // Verificar si está seleccionado por otro usuario (usando seatStates del store)
-      const storeState = seatStates?.get?.(seat._id);
+      const storeState = seatStates?.[seat._id];
       const isSelectedByOtherInStore = storeState === 'seleccionado_por_otro';
       
       // Verificar si está bloqueado/seleccionado por otro usuario
@@ -597,7 +610,7 @@ const SeatingMapUnified = ({
         }
         
         // Verificar si está bloqueado por otro usuario (usando seatStates del store)
-        const storeState = seatStates?.get?.(seat._id);
+        const storeState = seatStates?.[seat._id];
         const isSelectedByOtherInStore = storeState === 'seleccionado_por_otro';
         
         // Verificar si está bloqueado/seleccionado por otro usuario
@@ -940,7 +953,9 @@ const SeatingMapUnified = ({
             let seatEstado = seat.estado;
             
             // Verificar si hay un estado actualizado en el store (tiempo real)
-            const storeState = seatStates.get(seat._id);
+            const storeState = seatStatesMap instanceof Map 
+              ? seatStatesMap.get(seat._id) 
+              : seatStates?.[seat._id];
             if (storeState) {
               // Usando estado del store para asiento
               seatEstado = storeState;
@@ -985,13 +1000,18 @@ const SeatingMapUnified = ({
                 : null
             ) || (Array.isArray(validatedZonas) ? validatedZonas[0] : null);
             
+            // Convertir seatStates (objeto) a Map para getSeatColor si es necesario
+            const seatStatesForColor = seatStatesMap instanceof Map 
+              ? seatStatesMap 
+              : new Map(Object.entries(seatStates || {}));
+            
             const seatColor = getSeatColor(
               seatData,
               seatZona,
               isSelected,
               selectedSeatList,
               allLockedSeats,
-              seatStates
+              seatStatesForColor
             );
             const borderColor = getBorderColor(isSelected, seatZona);
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
