@@ -216,6 +216,9 @@ async function restoreSessionLocks(sessionId) {
   }
 }
 
+// Contador de referencias para canales Realtime (fuera del store para evitar problemas de estado)
+const channelRefCounts = new Map(); // topic -> count
+
 export const useSeatLockStore = create((set, get) => ({
   lockedSeats: [],
   lockedTables: [], // Nuevo: para bloquear mesas completas
@@ -224,6 +227,7 @@ export const useSeatLockStore = create((set, get) => ({
   mapa: null, // Mapa original (no se actualiza)
   seatStates: new Map(), // Estados actualizados de asientos individuales
   seatStatesVersion: 0, // Contador de versión para detectar cambios en seatStates
+  subscriptionRefCount: 0, // Contador de referencias de suscripción
 
   setLockedSeats: (seats) => {
     // Validar que seats sea un array
@@ -403,8 +407,12 @@ export const useSeatLockStore = create((set, get) => ({
       // Verificar que el canal esté activo (joined o joining)
       const channelState = existingChannel.state;
       if (channelState === 'joined' || channelState === 'joining') {
+        // Incrementar contador de referencias
+        const currentCount = channelRefCounts.get(expectedTopic) || 0;
+        channelRefCounts.set(expectedTopic, currentCount + 1);
         console.log('✅ [SEAT_LOCK_STORE] Ya suscrito y activo para función:', normalizedFuncionId);
-        set({ channel: existingChannel });
+        console.log(`📊 [SEAT_LOCK_STORE] Incrementando referencias de canal ${expectedTopic}: ${currentCount + 1}`);
+        set({ channel: existingChannel, subscriptionRefCount: currentCount + 1 });
         return;
       } else {
         console.log('⚠️ [SEAT_LOCK_STORE] Canal existe pero no está activo, limpiando. Estado:', channelState);
@@ -753,7 +761,7 @@ export const useSeatLockStore = create((set, get) => ({
             };
             
             return (payload) => {
-              // Log para verificar que los eventos están llegando
+              // Log detallado para verificar que los eventos están llegando
               console.log('🔔 [REALTIME] Evento recibido:', {
                 eventType: payload.eventType,
                 table: payload.table,
@@ -761,8 +769,15 @@ export const useSeatLockStore = create((set, get) => ({
                 hasNew: !!payload.new,
                 hasOld: !!payload.old,
                 seatId: payload.new?.seat_id || payload.old?.seat_id,
-                sessionId: payload.new?.session_id || payload.old?.session_id
+                sessionId: payload.new?.session_id || payload.old?.session_id,
+                fullPayload: payload // Para debugging completo
               });
+              
+              // Verificar que el payload tenga la estructura correcta
+              if (!payload || !payload.eventType) {
+                console.error('❌ [REALTIME] Payload inválido:', payload);
+                return;
+              }
               
               // Normalizar seat_id
               let normalizedSeatId = null;
@@ -878,8 +893,12 @@ export const useSeatLockStore = create((set, get) => ({
           // Log del estado de suscripción para debugging
           if (status === 'SUBSCRIBED') {
             console.log('✅ [SEAT_LOCK_STORE] Suscrito exitosamente a Realtime para función:', normalizedFuncionId);
+            // Incrementar contador de referencias
+            const currentCount = channelRefCounts.get(expectedTopic) || 0;
+            channelRefCounts.set(expectedTopic, currentCount + 1);
+            console.log(`📊 [SEAT_LOCK_STORE] Referencias de canal ${expectedTopic}: ${currentCount + 1}`);
             // Actualizar el estado del canal en el store
-            set({ channel: newChannel });
+            set({ channel: newChannel, subscriptionRefCount: currentCount + 1 });
           } else if (status === 'CHANNEL_ERROR') {
             console.error('❌ [SEAT_LOCK_STORE] Error en canal Realtime:', status);
           } else if (status === 'TIMED_OUT') {
@@ -903,18 +922,35 @@ export const useSeatLockStore = create((set, get) => ({
   unsubscribe: () => {
     const { channel } = get();
     if (channel) {
-      try {
-        // Verificar si el canal aún existe antes de desuscribirse
-        const existingChannels = supabase.getChannels();
-        const channelExists = existingChannels.some(ch => ch.topic === channel.topic);
-        
-        if (channelExists) {
-          channel.unsubscribe();
+      const topic = channel.topic;
+      
+      // Decrementar contador de referencias
+      const currentCount = channelRefCounts.get(topic) || 0;
+      const newCount = Math.max(0, currentCount - 1);
+      channelRefCounts.set(topic, newCount);
+      
+      console.log(`📊 [SEAT_LOCK_STORE] Referencias de canal ${topic}: ${newCount} (era ${currentCount})`);
+      
+      // Solo cerrar el canal si no hay más referencias
+      if (newCount === 0) {
+        try {
+          // Verificar si el canal aún existe antes de desuscribirse
+          const existingChannels = supabase.getChannels();
+          const channelExists = existingChannels.some(ch => ch.topic === topic);
+          
+          if (channelExists) {
+            console.log(`🔌 [SEAT_LOCK_STORE] Cerrando canal ${topic} (última referencia)`);
+            channel.unsubscribe();
+            channelRefCounts.delete(topic);
+          }
+        } catch (error) {
+          // Error silencioso
         }
-      } catch (error) {
-        // Error silencioso
+        set({ channel: null, lockedSeats: [], lockedTables: [], subscriptionRefCount: 0 });
+      } else {
+        console.log(`✅ [SEAT_LOCK_STORE] Manteniendo canal ${topic} abierto (${newCount} referencias activas)`);
+        // No limpiar el estado si aún hay referencias - otros componentes lo necesitan
       }
-      set({ channel: null, lockedSeats: [], lockedTables: [] });
     }
   },
 
