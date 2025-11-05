@@ -70,6 +70,8 @@ const StoreApp = () => {
                   {/* Render modern store page by default */}
                   <Route index element={<ModernStorePage />} />
                 <Route path="tag/:tagSlug?" element={<EventsVenue groupByTags />} />
+                {/* Ruta especial para /eventos/r/map - redirige a /r/map */}
+                <Route path="eventos/r/map" element={<MapShortRoute />} />
                 <Route path="eventos/:eventSlug" element={<ModernEventPage />} />
                 <Route path="eventos/:eventSlug/map" element={<ModernEventPage />} />
                 <Route path="event/:eventId" element={<EventInfo />} />
