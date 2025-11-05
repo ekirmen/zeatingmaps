@@ -640,10 +640,14 @@ export const useSeatLockStore = create((set, get) => ({
             const DEBOUNCE_DELAY = 150; // 150ms de debounce para optimizar sin afectar UX
             
             const processPendingUpdates = () => {
-              if (pendingUpdates.size === 0) return;
+              if (pendingUpdates.size === 0) {
+                console.log('📋 [REALTIME] No hay updates pendientes');
+                return;
+              }
               
               // Procesar todos los updates pendientes en batch
               const updatesToProcess = Array.from(pendingUpdates.values());
+              console.log('🔄 [REALTIME] Procesando', updatesToProcess.length, 'updates en batch');
               pendingUpdates.clear();
               
               set((state) => {
@@ -693,8 +697,19 @@ export const useSeatLockStore = create((set, get) => ({
                       }
                       
                       newSeatStates.set(normalizedSeatId, visualState);
+                      console.log('🎨 [REALTIME] Estado visual actualizado:', {
+                        seatId: normalizedSeatId,
+                        visualState,
+                        status: lock.status
+                      });
                     }
                   }
+                });
+                
+                console.log('✅ [REALTIME] Batch procesado. Estados actualizados:', {
+                  totalSeats: currentSeats.length,
+                  totalStates: newSeatStates.size,
+                  version: state.seatStatesVersion + 1
                 });
                 
                 return {
@@ -707,6 +722,17 @@ export const useSeatLockStore = create((set, get) => ({
             };
             
             return (payload) => {
+              // Log para verificar que los eventos están llegando
+              console.log('🔔 [REALTIME] Evento recibido:', {
+                eventType: payload.eventType,
+                table: payload.table,
+                schema: payload.schema,
+                hasNew: !!payload.new,
+                hasOld: !!payload.old,
+                seatId: payload.new?.seat_id || payload.old?.seat_id,
+                sessionId: payload.new?.session_id || payload.old?.session_id
+              });
+              
               // Normalizar seat_id
               let normalizedSeatId = null;
               let lock = null;
@@ -725,22 +751,51 @@ export const useSeatLockStore = create((set, get) => ({
                 }
               }
               
-              if (!lock || !normalizedSeatId) return;
+              if (!lock || !normalizedSeatId) {
+                console.warn('⚠️ [REALTIME] Evento ignorado - lock o normalizedSeatId faltante:', {
+                  hasLock: !!lock,
+                  normalizedSeatId,
+                  payload
+                });
+                return;
+              }
+              
+              console.log('✅ [REALTIME] Procesando evento:', {
+                eventType: payload.eventType,
+                normalizedSeatId,
+                status: lock.status,
+                sessionId: lock.session_id
+              });
               
               // Agregar a cola de updates pendientes (sobrescribe si ya existe)
               const key = `${payload.eventType}_${normalizedSeatId}`;
               pendingUpdates.set(key, { eventType: payload.eventType, lock, normalizedSeatId });
+              
+              console.log('📋 [REALTIME] Updates pendientes:', pendingUpdates.size);
               
               // Limpiar timer anterior y crear uno nuevo
               if (debounceTimer) {
                 clearTimeout(debounceTimer);
               }
               
-              // Procesar updates después del debounce delay
-              debounceTimer = setTimeout(() => {
+              // Para eventos INSERT/UPDATE importantes, procesar inmediatamente si no hay otros eventos pendientes
+              // Para DELETE, siempre usar debounce
+              if ((payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') && pendingUpdates.size === 1) {
+                // Procesar inmediatamente si es el único evento
+                console.log('⚡ [REALTIME] Procesando evento inmediatamente (único en cola)');
                 processPendingUpdates();
-                debounceTimer = null;
-              }, DEBOUNCE_DELAY);
+                if (debounceTimer) {
+                  clearTimeout(debounceTimer);
+                  debounceTimer = null;
+                }
+              } else {
+                // Procesar updates después del debounce delay
+                debounceTimer = setTimeout(() => {
+                  console.log('⏱️ [REALTIME] Procesando batch de', pendingUpdates.size, 'updates');
+                  processPendingUpdates();
+                  debounceTimer = null;
+                }, DEBOUNCE_DELAY);
+              }
             };
           })()
         )
