@@ -83,7 +83,6 @@ const StoreApp = () => {
                 <Route path="buy-event/:id" element={<BuyEvent />} />
                 <Route path="select-seats/:salaId" element={<SelectSeats />} />
                 <Route path="select-seats/:salaId/:funcionId" element={<SelectSeats />} />
-                <Route path="seat-selection/_/:funcionId" element={<SeatSelectionPage />} />
                 <Route path="seat-selection/:funcionId" element={<SeatSelectionPage />} />
                 <Route path="cart" element={<CartPage />} />
                 <Route

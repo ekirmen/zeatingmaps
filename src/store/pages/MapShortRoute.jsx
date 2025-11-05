@@ -23,7 +23,7 @@ const MapShortRoute = () => {
     if (funcion) {
       const funcionId = parseInt(funcion, 10);
       if (Number.isFinite(funcionId) && funcionId > 0) {
-        navigate(`/store/seat-selection/_/${funcionId}`, { replace: true });
+        navigate(`/store/seat-selection/${funcionId}`, { replace: true });
       } else {
         console.warn('[MapShortRoute] funcion inválido:', funcion);
         navigate('/store', { replace: true });
