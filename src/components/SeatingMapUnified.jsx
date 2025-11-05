@@ -218,17 +218,27 @@ const SeatingMapUnified = ({
   const lockedSeatsState = useSeatLockStore(state => state.lockedSeats);
   const setMapa = useSeatLockStore(state => state.setMapa);
   // Convertir Map a objeto para forzar re-render cuando cambie
-  const seatStatesMap = useSeatLockStore(state => state.seatStates);
-  const seatStates = useMemo(() => {
-    // Convertir Map a objeto para que React detecte cambios
-    const statesObj = {};
-    if (seatStatesMap && seatStatesMap instanceof Map) {
-      seatStatesMap.forEach((value, key) => {
-        statesObj[key] = value;
-      });
-    }
-    return statesObj;
+  // Usar un selector que serialice el Map para detectar cambios
+  const seatStatesMap = useSeatLockStore(state => {
+    const map = state.seatStates;
+    if (!map || !(map instanceof Map)) return null;
+    // Serializar el Map para forzar re-render cuando cambie
+    return Array.from(map.entries());
+  });
+  
+  // Convertir de array de entries a Map y objeto
+  const seatStatesMapObj = useMemo(() => {
+    if (!seatStatesMap) return { map: null, obj: {} };
+    const map = new Map(seatStatesMap);
+    const obj = {};
+    seatStatesMap.forEach(([key, value]) => {
+      obj[key] = value;
+    });
+    return { map, obj };
   }, [seatStatesMap]);
+  
+  const seatStates = seatStatesMapObj.obj;
+  const seatStatesMapForColor = seatStatesMapObj.map;
   const subscribeToFunction = useSeatLockStore(state => state.subscribeToFunction);
   const unsubscribe = useSeatLockStore(state => state.unsubscribe);
   const { getSeatColor, getBorderColor } = useSeatColors(normalizedFuncionId);
@@ -394,8 +404,8 @@ const SeatingMapUnified = ({
     
     // Actualizar estados de asientos con la información del store
     return syncedSeats.map(seat => {
-      const updatedState = seatStatesMap instanceof Map 
-        ? seatStatesMap.get(seat._id) 
+      const updatedState = seatStatesMapForColor instanceof Map 
+        ? seatStatesMapForColor.get(seat._id) 
         : seatStates?.[seat._id];
       if (updatedState && updatedState !== seat.estado) {
         return { ...seat, estado: updatedState };
@@ -403,7 +413,7 @@ const SeatingMapUnified = ({
       // No forzar a 'disponible' cuando no hay entrada en seatStates; conservar estado original
       return seat;
     });
-  }, [syncedSeats, seatStatesMap, seatStates]);
+  }, [syncedSeats, seatStatesMapForColor, seatStates]);
 
   // Establecer el mapa en el store para que pueda ser actualizado cuando se bloquean asientos
   // Solo establecer si el mapa realmente cambió (por ID)
@@ -953,8 +963,8 @@ const SeatingMapUnified = ({
             let seatEstado = seat.estado;
             
             // Verificar si hay un estado actualizado en el store (tiempo real)
-            const storeState = seatStatesMap instanceof Map 
-              ? seatStatesMap.get(seat._id) 
+            const storeState = seatStatesMapForColor instanceof Map 
+              ? seatStatesMapForColor.get(seat._id) 
               : seatStates?.[seat._id];
             if (storeState) {
               // Usando estado del store para asiento
@@ -1001,8 +1011,8 @@ const SeatingMapUnified = ({
             ) || (Array.isArray(validatedZonas) ? validatedZonas[0] : null);
             
             // Convertir seatStates (objeto) a Map para getSeatColor si es necesario
-            const seatStatesForColor = seatStatesMap instanceof Map 
-              ? seatStatesMap 
+            const seatStatesForColor = seatStatesMapForColor instanceof Map 
+              ? seatStatesMapForColor 
               : new Map(Object.entries(seatStates || {}));
             
             const seatColor = getSeatColor(
@@ -1013,7 +1023,13 @@ const SeatingMapUnified = ({
               allLockedSeats,
               seatStatesForColor
             );
-            const borderColor = getBorderColor(isSelected, seatZona);
+            
+            // Determinar si está seleccionado por mí basado en seatStates (más confiable que isSelected del carrito)
+            const isSelectedByMe = storeState === 'seleccionado';
+            const isSelectedByOther = storeState === 'seleccionado_por_otro';
+            
+            // Usar el color del store para determinar el borde también
+            const borderColor = getBorderColor(isSelectedByMe || isSelected, seatZona);
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
 
             return (
@@ -1024,12 +1040,12 @@ const SeatingMapUnified = ({
                   y={seat.y || seat.posicion?.y || 0}
                   radius={seat.width ? seat.width / 2 : 10}
                   fill={seatColor}
-                  stroke={isSelected ? '#ffd700' : borderColor}
-                  strokeWidth={isSelected ? 4 : 2}
-                  shadowColor={isSelected ? 'rgba(255, 215, 0, 0.8)' : 'rgba(0,0,0,0.3)'}
-                  shadowBlur={isSelected ? 15 : 5}
+                  stroke={isSelectedByMe ? '#FFEB3B' : isSelectedByOther ? '#2196F3' : borderColor}
+                  strokeWidth={(isSelectedByMe || isSelectedByOther) ? 3 : 2}
+                  shadowColor={(isSelectedByMe || isSelectedByOther) ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0,0,0,0.3)'}
+                  shadowBlur={(isSelectedByMe || isSelectedByOther) ? 10 : 5}
                   shadowOffset={{ x: 2, y: 2 }}
-                  shadowOpacity={isSelected ? 0.8 : 0.3}
+                  shadowOpacity={(isSelectedByMe || isSelectedByOther) ? 0.5 : 0.3}
                   onClick={() => handleSeatClick(seatData)}
                   onTap={() => handleSeatClick(seatData)}
                   style={{ cursor: 'pointer' }}
