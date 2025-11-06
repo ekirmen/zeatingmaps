@@ -418,8 +418,6 @@ export const useBoleteria = () => {
                 message.warning(`⚠️ Solo quedan ${availableSeats} asientos disponibles`);
               } else if (availableSeats === 0) {
                 message.error('❌ No hay asientos disponibles');
-              } else if (availableSeats <= 10) {
-                message.info(`ℹ️ Quedan ${availableSeats} asientos disponibles`);
               }
             } else {
               logger.log('⚠️ [useBoleteria] No se encontraron asientos en el mapa');

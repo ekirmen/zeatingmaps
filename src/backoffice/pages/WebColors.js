@@ -60,11 +60,11 @@ const WebColors = () => {
     // Seat status colors
     seatAvailable: theme.seatAvailable || '#4CAF50',
     seatSelectedMe: theme.seatSelectedMe || '#ffd700',
-    seatSelectedOther: theme.seatSelectedOther || '#faad14',
-    seatBlocked: theme.seatBlocked || '#ff4d4f',
-    seatSold: theme.seatSold || '#8c8c8c',
-    seatReserved: theme.seatReserved || '#722ed1',
-    seatCancelled: theme.seatCancelled || '#ff6b6b'
+    seatSelectedOther: theme.seatSelectedOther || '#2196F3',
+    seatBlocked: theme.seatBlocked || '#f56565',
+    seatSold: theme.seatSold || '#2d3748',
+    seatReserved: theme.seatReserved || '#805ad5',
+    seatCancelled: theme.seatCancelled || '#e53e3e'
   });
 
   // 🎨 CARGAR COLORES DESDE webstudio_colors
@@ -280,11 +280,12 @@ const WebColors = () => {
   const handleReset = () => {
     const reset = {
       seatAvailable: '#4CAF50',
-      seatSelectedMe: '#1890ff',
-      seatSelectedOther: '#faad14',
-      seatBlocked: '#ff4d4f',
-      seatSold: '#8c8c8c',
-      seatReserved: '#722ed1',
+      seatSelectedMe: '#ffd700',
+      seatSelectedOther: '#2196F3',
+      seatBlocked: '#f56565',
+      seatSold: '#2d3748',
+      seatReserved: '#805ad5',
+      seatCancelled: '#e53e3e'
     };
     Object.keys(reset).forEach(k => updateTheme({ [k]: reset[k] }));
     setColors(prev => ({ ...prev, ...reset }));

@@ -23,13 +23,13 @@ const ZoneStatsPanel = ({
       case 'disponible':
         return '#52c41a';
       case 'seleccionado':
-        return '#1890ff';
+        return '#ffd700';
       case 'vendido':
-        return '#8c8c8c';
+        return '#2d3748';
       case 'reservado':
-        return '#722ed1';
+        return '#805ad5';
       case 'bloqueado':
-        return '#ff4d4f';
+        return '#f56565';
       default:
         return '#52c41a';
     }

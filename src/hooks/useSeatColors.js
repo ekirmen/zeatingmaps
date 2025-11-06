@@ -108,7 +108,7 @@ export const useSeatColors = (eventId = null) => {
         case 'anulado':
           return eventTheme.seatCancelled || '#e53e3e'; // Rojo para anulado
         case 'seleccionado':
-          return eventTheme.seatSelectedMe || '#FFEB3B'; // Amarillo brillante para seleccionado por mí
+          return eventTheme.seatSelectedMe || '#ffd700'; // Amarillo brillante para seleccionado por mí
         case 'seleccionado_por_otro':
           return eventTheme.seatSelectedOther || '#2196F3'; // Azul para seleccionado por otro
         case 'locked':
@@ -212,7 +212,7 @@ export const useSeatColors = (eventId = null) => {
       '#9C27B0', // Púrpura
       '#F44336', // Rojo
       '#00BCD4', // Cian
-      '#FFEB3B', // Amarillo
+      '#ffd700', // Amarillo
       '#795548', // Marrón
     ];
     

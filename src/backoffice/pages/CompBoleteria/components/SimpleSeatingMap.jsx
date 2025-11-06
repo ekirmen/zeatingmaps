@@ -618,15 +618,16 @@ const SimpleSeatingMap = ({
                 
                 const isOtherZone = selectedZonaId && String(selectedZonaId) !== String(silla?.zona?.id || silla?.zonaId || silla?.zona || '');
                 const muted = isOtherZone && (silla.estado === 'disponible');
+                const seatFill = silla.fill || getSeatColor(silla);
                 const borderStyle = isSelected
-                  ? '4px solid #ffd700'
+                  ? `4px solid ${seatFill}`
                   : isLockedByMe
                   ? '3px solid #f59e0b'
                   : (!isOtherZone && zoneInfo.color)
                   ? `2px solid ${zoneInfo.color}`
                   : '1px solid #666';
                 const glowShadow = isSelected
-                  ? '0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 215, 0, 0.4)'
+                  ? `0 0 15px ${seatFill}, 0 0 25px ${seatFill}`
                   : isLockedByMe
                   ? '0 0 12px rgba(245, 158, 11, 0.6)'
                   : (!isOtherZone && zoneInfo.color)
@@ -652,7 +653,7 @@ const SimpleSeatingMap = ({
                         width: chairDiameter,
                         height: chairDiameter,
                         borderRadius: '50%',
-                        backgroundColor: silla.fill || getSeatColor(silla),
+                        backgroundColor: seatFill,
                         border: borderStyle,
                         display: 'flex',
                         alignItems: 'center',
@@ -690,15 +691,16 @@ const SimpleSeatingMap = ({
                 const sy = silla?.posicion?.y ?? silla?.y;
                 const isOtherZoneTop = selectedZonaId && String(selectedZonaId) !== String(silla?.zona?.id || silla?.zonaId || silla?.zona || '');
                 const mutedTop = isOtherZoneTop && (silla.estado === 'disponible');
+                const seatFillTop = silla.fill || getSeatColor(silla);
                 const borderStyleTop = isSelected
-                  ? '4px solid #ffd700'
+                  ? `4px solid ${seatFillTop}`
                   : isLockedByMe
                   ? '3px solid #f59e0b'
                   : (!isOtherZoneTop && zoneInfo.color)
                   ? `2px solid ${zoneInfo.color}`
                   : '1px solid #666';
                 const glowShadowTop = isSelected
-                  ? '0 0 15px rgba(255, 215, 0, 0.8), 0 0 25px rgba(255, 215, 0, 0.4)'
+                  ? `0 0 15px ${seatFillTop}, 0 0 25px ${seatFillTop}`
                   : isLockedByMe
                   ? '0 0 12px rgba(245, 158, 11, 0.6)'
                   : (!isOtherZoneTop && zoneInfo.color)
@@ -724,7 +726,7 @@ const SimpleSeatingMap = ({
                         width: (silla.radius || 15) * 2,
                         height: (silla.radius || 15) * 2,
                         borderRadius: '50%',
-                        backgroundColor: silla.fill || getSeatColor(silla),
+                        backgroundColor: seatFillTop,
                         border: borderStyleTop,
                         display: 'flex',
                         alignItems: 'center',

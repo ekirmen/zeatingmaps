@@ -11,12 +11,12 @@ const defaultColors = {
   btnPrimaryText: '#ffffff',
   // Seat status colors (configurable in WebColors)
   seatAvailable: '#4CAF50',
-  seatSelectedMe: '#1890ff',
-  seatSelectedOther: '#faad14',
-  seatBlocked: '#ff4d4f',
-  seatSold: '#8c8c8c',
-  seatReserved: '#722ed1',
-  seatCancelled: '#ff6b6b'
+  seatSelectedMe: '#ffd700',
+  seatSelectedOther: '#2196F3',
+  seatBlocked: '#f56565',
+  seatSold: '#2d3748',
+  seatReserved: '#805ad5',
+  seatCancelled: '#e53e3e'
 };
 
 const ThemeContext = createContext({
