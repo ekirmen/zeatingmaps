@@ -66,11 +66,11 @@ const EventThemePanel = () => {
     setEditingTheme(null);
     form.setFieldsValue({
       seat_available: theme.seatAvailable || '#4CAF50',
-      seat_selected_me: theme.seatSelectedMe || '#1890ff',
-      seat_selected_other: theme.seatSelectedOther || '#faad14',
-      seat_blocked: theme.seatBlocked || '#ff4d4f',
-      seat_sold: theme.seatSold || '#8c8c8c',
-      seat_reserved: theme.seatReserved || '#722ed1'
+      seat_selected_me: theme.seatSelectedMe || '#ffd700',
+      seat_selected_other: theme.seatSelectedOther || '#2196F3',
+      seat_blocked: theme.seatBlocked || '#f56565',
+      seat_sold: theme.seatSold || '#2d3748',
+      seat_reserved: theme.seatReserved || '#805ad5'
     });
     setIsModalVisible(true);
   };

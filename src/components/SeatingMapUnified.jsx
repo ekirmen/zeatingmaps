@@ -1028,6 +1028,12 @@ const SeatingMapUnified = ({
               zona: seatZona,
               seatColor
             });
+            const highlightStroke = (isSelectedByMe || isSelectedByOther || isSelected)
+              ? seatColor
+              : borderColor;
+            const highlightShadowColor = (isSelectedByMe || isSelectedByOther || isSelected)
+              ? seatColor
+              : 'rgba(0, 0, 0, 0.3)';
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
 
             return (
@@ -1038,12 +1044,12 @@ const SeatingMapUnified = ({
                   y={seat.y || seat.posicion?.y || 0}
                   radius={seat.width ? seat.width / 2 : 10}
                   fill={seatColor}
-                  stroke={isSelectedByMe ? '#FFEB3B' : isSelectedByOther ? '#2196F3' : borderColor}
-                  strokeWidth={(isSelectedByMe || isSelectedByOther) ? 3 : 2}
-                  shadowColor={(isSelectedByMe || isSelectedByOther) ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0,0,0,0.3)'}
-                  shadowBlur={(isSelectedByMe || isSelectedByOther) ? 10 : 5}
+                  stroke={highlightStroke}
+                  strokeWidth={(isSelectedByMe || isSelectedByOther || isSelected) ? 3 : 2}
+                  shadowColor={highlightShadowColor}
+                  shadowBlur={(isSelectedByMe || isSelectedByOther || isSelected) ? 12 : 5}
                   shadowOffset={{ x: 2, y: 2 }}
-                  shadowOpacity={(isSelectedByMe || isSelectedByOther) ? 0.5 : 0.3}
+                  shadowOpacity={(isSelectedByMe || isSelectedByOther || isSelected) ? 0.45 : 0.3}
                   onClick={() => handleSeatClick(seatData)}
                   onTap={() => handleSeatClick(seatData)}
                   style={{ cursor: 'pointer' }}

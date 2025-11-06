@@ -179,14 +179,14 @@ const CompactBoleteria = ({
       case 'disponible':
         return eventTheme.seatAvailable || '#4CAF50';
       case 'seleccionado':
-        return eventTheme.seatSelectedMe || '#1890ff';
+        return eventTheme.seatSelectedMe || '#ffd700';
       case 'vendido':
       case 'pagado':
-        return eventTheme.seatSold || '#8c8c8c';
+        return eventTheme.seatSold || '#2d3748';
       case 'reservado':
-        return eventTheme.seatReserved || '#722ed1';
+        return eventTheme.seatReserved || '#805ad5';
       case 'bloqueado':
-        return eventTheme.seatBlocked || '#ff4d4f';
+        return eventTheme.seatBlocked || '#f56565';
       default:
         return '#4CAF50';
     }
