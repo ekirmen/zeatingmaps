@@ -24,6 +24,7 @@ import EventSearchMap from './pages/EventSearchMap';
 import PaymentSuccess from './pages/PaymentSuccess';
 import Profile from './pages/profile.js';
 import ModernEventPage from './pages/ModernEventPage';
+import EventMapPage from './pages/EventMapPage';
 import ModernStorePage from './pages/ModernStorePage';
 import ThankYouPage from './pages/ThankYouPage';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -76,7 +77,7 @@ const StoreApp = () => {
                 {/* Ruta especial para /eventos/r - redirige a seat-selection */}
                 <Route path="eventos/r" element={<MapShortRoute />} />
                 <Route path="eventos/:eventSlug" element={<ModernEventPage />} />
-                <Route path="eventos/:eventSlug/map" element={<ModernEventPage />} />
+                <Route path="eventos/:eventSlug/map" element={<EventMapPage />} />
                 <Route path="event/:eventId" element={<EventInfo />} />
 
                 <Route path="event/:eventId/full" element={<Event />} />

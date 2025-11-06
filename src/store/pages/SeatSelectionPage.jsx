@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Alert, Spin } from 'antd';
 import SeatingMapUnified from '../../components/SeatingMapUnified';
@@ -6,14 +6,16 @@ import { useSeatLockStore } from '../../components/seatLockStore';
 import { useCartStore } from '../../store/cartStore';
 import { supabase } from '../../supabaseClient';
 
-const SeatSelectionPage = () => {
-  const { funcionId } = useParams();
+const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) => {
+  const params = useParams();
+  const funcionIdFromParams = params?.funcionId;
+  const funcionId = initialFuncionId ?? funcionIdFromParams;
   const navigate = useNavigate();
   const [mapa, setMapa] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isRedirecting, setIsRedirecting] = useState(true);
-  const [redirectFailed, setRedirectFailed] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(autoRedirectToEventMap);
+  const [redirectFailed, setRedirectFailed] = useState(!autoRedirectToEventMap);
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const cartItems = useCartStore((state) => state.items);
@@ -30,33 +32,43 @@ const SeatSelectionPage = () => {
   } = useSeatLockStore();
   const lockedSeats = useSeatLockStore((state) => state.lockedSeats);
 
+  const ensureSessionId = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    const storedSessionId = window.localStorage.getItem('anonSessionId');
+    if (!storedSessionId) {
+      try {
+        const newSessionId = window.crypto?.randomUUID?.();
+        if (newSessionId) {
+          window.localStorage.setItem('anonSessionId', newSessionId);
+        }
+      } catch (sessionError) {
+        console.warn('[SeatSelectionPage] No se pudo inicializar session_id:', sessionError);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    ensureSessionId();
+  }, [ensureSessionId]);
+
   useEffect(() => {
     if (!funcionId) {
+      setIsRedirecting(false);
+      setRedirectFailed(true);
+      setError('Función inválida');
+      setLoading(false);
+      return;
+    }
+
+    if (!autoRedirectToEventMap) {
       setIsRedirecting(false);
       setRedirectFailed(true);
       return;
     }
 
-    const ensureSessionId = () => {
-      if (typeof window === 'undefined') return;
-      const storedSessionId = window.localStorage.getItem('anonSessionId');
-      if (!storedSessionId) {
-        try {
-          const newSessionId = window.crypto?.randomUUID?.();
-          if (newSessionId) {
-            window.localStorage.setItem('anonSessionId', newSessionId);
-          }
-        } catch (sessionError) {
-          console.warn('[SeatSelectionPage] No se pudo inicializar session_id:', sessionError);
-        }
-      }
-    };
-
     const attemptRedirect = async () => {
       setError(null);
       try {
-        ensureSessionId();
-
         const funcionNumeric = parseInt(funcionId, 10);
         if (!Number.isFinite(funcionNumeric) || funcionNumeric <= 0) {
           throw new Error('Función inválida');
@@ -100,7 +112,7 @@ const SeatSelectionPage = () => {
     };
 
     attemptRedirect();
-  }, [funcionId, navigate]);
+  }, [autoRedirectToEventMap, funcionId, navigate]);
 
   // Suscribirse a función
   useEffect(() => {
@@ -123,10 +135,11 @@ const SeatSelectionPage = () => {
         setLoading(true);
         setError(null);
 
+        const funcionNumeric = parseInt(funcionId, 10);
         const { data: funcion, error: funcionError } = await supabase
           .from('funciones')
           .select('sala_id')
-          .eq('id', funcionId)
+          .eq('id', funcionNumeric)
           .single();
 
         if (funcionError) throw funcionError;
