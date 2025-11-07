@@ -23,6 +23,7 @@ import Funciones from './pages/Funciones';
 import Cupos from './pages/Cupos';
 import PlantillasCupos from './pages/PlantillasCupos';
 import Abonos from './pages/Abonos';
+import Afiliados from './pages/Afiliados';
 import CreateIva from './pages/CreateIva';
 import Boleteria from './pages/Boleteria';
 import SalesTransactions from './pages/SalesTransactions';
@@ -35,6 +36,7 @@ import PrinterSettings from './pages/PrinterSettings';
 import TenantEmailConfigPanel from './components/TenantEmailConfigPanel';
 import AuditLogs from './pages/AuditLogs';
 import RefundManagement from './pages/RefundManagement';
+import EmailCampaigns from './pages/EmailCampaigns';
 import SaasDashboard from './pages/SaasDashboard';
 import SaasSettings from './pages/SaasSettings';
 import BillingDashboard from '../saas/components/BillingDashboard';
@@ -233,6 +235,14 @@ const BackofficeAppWithRoles = () => {
             } 
           />
           <Route 
+            path="afiliados" 
+            element={
+              <ProtectedRoute permission="afiliados">
+                <Afiliados />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="iva" 
             element={
               <ProtectedRoute permission="iva">
@@ -279,6 +289,14 @@ const BackofficeAppWithRoles = () => {
             element={
               <ProtectedRoute permission="tags">
                 <Tags />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="email-campaigns" 
+            element={
+              <ProtectedRoute permission="email_campaigns">
+                <EmailCampaigns />
               </ProtectedRoute>
             } 
           />

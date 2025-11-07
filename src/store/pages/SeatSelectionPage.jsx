@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Alert, Spin } from 'antd';
-import SeatingMapUnified from '../../components/SeatingMapUnified';
+import LazySeatingMap from '../../components/LazySeatingMap';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import { useCartStore } from '../../store/cartStore';
 import { supabase } from '../../supabaseClient';
@@ -196,7 +196,7 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     <div className="seat-selection-page p-6">
       <Card title="Selección de Asientos" className="mb-6">
         {mapa ? (
-          <SeatingMapUnified
+          <LazySeatingMap
             mapa={mapa}
             funcionId={funcionId}
             selectedSeats={cartItems.map(item => item.sillaId || item.id || item._id)}

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import resolveImageUrl, { resolveEventImageWithTenant } from '../../utils/resolveImageUrl';
 import { useTenant } from '../../contexts/TenantContext';
+import OptimizedImage from '../../components/OptimizedImage';
 
 const EventImage = ({ 
   event, 
@@ -107,17 +108,21 @@ const EventImage = ({
     setImageLoaded(true);
   }, [DEBUG, imageUrl]);
 
+  // Usar OptimizedImage para mejor performance
+  const finalImageUrl = imageError ? fallbackUrl : (imageUrl || fallbackUrl);
+  const isPriority = imageType === 'banner' || imageType === 'portada'; // Priorizar imágenes principales
+
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      {/* Imagen principal */}
-      <img
-        src={imageError ? fallbackUrl : (imageUrl || fallbackUrl)}
+      <OptimizedImage
+        src={finalImageUrl}
         alt={event?.nombre || event?.name || 'Evento'}
-        className="w-full h-full object-cover"
-        loading="lazy"
-        crossOrigin="anonymous"
-        onError={handleImageError}
+        className="w-full h-full"
+        priority={isPriority}
+        objectFit="cover"
         onLoad={handleImageLoad}
+        onError={handleImageError}
+        placeholder={fallbackUrl}
       />
       
       {/* Indicador de carga */}
@@ -129,13 +134,14 @@ const EventImage = ({
       
       {/* Debug info */}
       {showDebug && process.env.NODE_ENV === 'development' && (
-        <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white p-2 rounded text-xs">
+        <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white p-2 rounded text-xs z-10">
           <div>Evento: {event?.nombre || event?.name}</div>
           <div>Tipo: {imageType}</div>
           <div>Path: {imagePath}</div>
           <div>URL: {imageUrl}</div>
           <div>Error: {imageError ? 'Sí' : 'No'}</div>
           <div>Loaded: {imageLoaded ? 'Sí' : 'No'}</div>
+          <div>Priority: {isPriority ? 'Sí' : 'No'}</div>
         </div>
       )}
     </div>

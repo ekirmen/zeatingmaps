@@ -2,6 +2,10 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import logger from '../../utils/logger';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Button, Card, message, Spin, Alert, Badge, Tag, Descriptions, Statistic } from 'antd';
+import { SeatMapSkeleton, PageSkeleton } from '../../components/SkeletonLoaders';
+import SeatListView from '../../components/SeatListView';
+import { useResponsive } from '../../hooks/useResponsive';
+import { useMapaSeatsSync } from '../../hooks/useMapaSeatsSync';
 import { 
   CalendarOutlined, 
   EnvironmentOutlined, 
@@ -30,7 +34,7 @@ import { useSeatLockStore } from '../../components/seatLockStore';
 import useSelectedSeatsStore from '../../stores/useSelectedSeatsStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
 // useSeatLocksArray eliminado - usar useSeatLockStore en su lugar
-import SeatingMapUnified from '../../components/SeatingMapUnified';
+import LazySeatingMap from '../../components/LazySeatingMap';
 import Cart from './Cart';
 import EventImage from '../components/EventImage';
 import GridSaleMode from '../components/GridSaleMode';
@@ -38,6 +42,7 @@ import { getEstadoVentaInfo } from '../../utils/estadoVenta';
 import buildAddress from '../../utils/address';
 import { useCountdown, formatCountdown, findNextStart } from '../../utils/countdown';
 import NotFound from './NotFound';
+import indexedDBCache from '../../utils/indexedDBCache';
 
 
 const ModernEventPage = () => {
@@ -66,6 +71,25 @@ const ModernEventPage = () => {
   const { user } = useAuth();
   const [isTenantAdmin, setIsTenantAdmin] = useState(false);
   const [funcionesForCountdown, setFuncionesForCountdown] = useState([]);
+  const { isMobile } = useResponsive();
+  const [viewMode, setViewMode] = useState('map'); // 'map' o 'list'
+
+  // Extraer asientos del mapa usando el hook de sincronización
+  const { seatsData: syncedSeats } = useMapaSeatsSync(mapa, selectedFunctionId);
+  
+  // Preparar asientos para la vista de lista
+  const seatsForList = useMemo(() => {
+    if (!syncedSeats || syncedSeats.length === 0) return [];
+    
+    return syncedSeats.map(seat => ({
+      ...seat,
+      _id: seat._id || seat.id || seat.sillaId,
+      nombre: seat.nombre || seat.numero || `Asiento ${seat._id || seat.id}`,
+      precio: seat.precio || 0,
+      zonaId: seat.zonaId || seat.zona?.id,
+      nombreZona: seat.nombreZona || seat.zona?.nombre || 'General'
+    }));
+  }, [syncedSeats]);
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const removeFromCart = useCartStore((state) => state.removeFromCart);
@@ -155,14 +179,24 @@ const ModernEventPage = () => {
       try {
         setLoading(true);
         
-        const { data: eventData, error: eventError } = await supabase
-          .from('eventos')
-          .select('*')
-          .ilike('slug', eventSlug)
-          .maybeSingle();
+        // Intentar obtener del caché primero
+        let eventData = await indexedDBCache.getEvento(eventSlug);
+        
+        if (!eventData) {
+          // Si no está en caché, cargar desde la API
+          const { data, error: eventError } = await supabase
+            .from('eventos')
+            .select('*')
+            .ilike('slug', eventSlug)
+            .maybeSingle();
 
-        if (eventError) throw eventError;
-        if (!eventData) throw new Error('Evento no encontrado');
+          if (eventError) throw eventError;
+          if (!data) throw new Error('Evento no encontrado');
+          
+          eventData = data;
+          // Guardar en caché
+          await indexedDBCache.setEvento(eventData);
+        }
         
         setEvento(eventData);
 
@@ -177,8 +211,18 @@ const ModernEventPage = () => {
           if (!recErr) setVenueInfo(recData || null);
         }
 
-        // Obtener funciones
-        const funcionesData = await getFunciones(eventData.id);
+        // Intentar obtener funciones del caché
+        let funcionesData = await indexedDBCache.getFunciones(eventData.id);
+        
+        if (!funcionesData || funcionesData.length === 0) {
+          // Si no están en caché, cargar desde la API
+          funcionesData = await getFunciones(eventData.id);
+          // Guardar en caché
+          if (funcionesData && funcionesData.length > 0) {
+            await indexedDBCache.setFunciones(eventData.id, funcionesData);
+          }
+        }
+        
         setFunciones(funcionesData || []);
         setFuncionesForCountdown(funcionesData || []);
 
@@ -197,7 +241,7 @@ const ModernEventPage = () => {
           setSelectedFunctionId(fid);
         }
       } catch (err) {
-        
+        logger.error('Error cargando evento:', err);
         setError(err);
         message.error('Error al cargar el evento');
       } finally {
@@ -260,24 +304,33 @@ const ModernEventPage = () => {
           return;
         }
 
-        const { data: mapaData, error: mapaError } = await supabase
-          .from('mapas')
-          .select('*')
-          .eq('sala_id', salaId)
-          .maybeSingle();
-
+        // Intentar obtener del caché primero
+        let mapaData = await indexedDBCache.getMapa(salaId);
         
+        if (!mapaData) {
+          // Si no está en caché, cargar desde la API
+          const { data, error: mapaError } = await supabase
+            .from('mapas')
+            .select('*')
+            .eq('sala_id', salaId)
+            .maybeSingle();
 
-        if (mapaError) throw mapaError;
-        
+          if (mapaError) throw mapaError;
+          
+          if (data) {
+            mapaData = data;
+            // Guardar en caché para próximas veces
+            await indexedDBCache.setMapa(salaId, data, data.id);
+          }
+        }
+
         if (mapaData) {
           setMapa(mapaData);
-          
         } else {
-          
+          setMapa(null);
         }
       } catch (err) {
-        
+        logger.error('Error cargando mapa:', err);
         message.error('Error al cargar el mapa de asientos');
       } finally {
         setMapLoading(false);
@@ -495,11 +548,7 @@ const ModernEventPage = () => {
   const cd = useCountdown(countdownTarget);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spin size="large" />
-      </div>
-    );
+    return <PageSkeleton rows={6} />;
   }
 
   if (error || !evento) {
@@ -657,12 +706,46 @@ const ModernEventPage = () => {
                   />
                 ) : mapLoading ? (
                   <div className="flex items-center justify-center h-full min-h-[400px]">
-                    <Spin size="large" />
-                    <span className="ml-3 text-sm md:text-base">Cargando mapa de asientos...</span>
+                    <SeatMapSkeleton />
                   </div>
                 ) : mapa ? (
                   <div className="w-full h-full overflow-auto store-seating-map">
-                    <SeatingMapUnified
+                    {/* Toggle entre mapa y lista en móvil */}
+                    {isMobile && (
+                      <div className="flex gap-2 p-2 bg-white border-b">
+                        <Button
+                          type={viewMode === 'map' ? 'primary' : 'default'}
+                          onClick={() => setViewMode('map')}
+                          size="small"
+                        >
+                          Mapa
+                        </Button>
+                        <Button
+                          type={viewMode === 'list' ? 'primary' : 'default'}
+                          onClick={() => setViewMode('list')}
+                          size="small"
+                        >
+                          Lista
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {viewMode === 'list' && isMobile ? (
+                      seatsForList.length === 0 ? (
+                        <SeatMapSkeleton />
+                      ) : (
+                        <SeatListView
+                          seats={seatsForList}
+                          funcionId={selectedFunctionId}
+                          selectedSeats={selectedSeats.map(seat => seat._id || seat.id)}
+                          onSeatToggle={handleSeatToggle}
+                          isSeatLocked={isSeatLocked}
+                          isSeatLockedByMe={isSeatLockedByMe}
+                          zonas={mapa?.zonas || []}
+                        />
+                      )
+                    ) : (
+                      <LazySeatingMap
                       mapa={mapa}
                       funcionId={selectedFunctionId}
                       selectedSeats={selectedSeats.map(seat => seat._id || seat.id)}

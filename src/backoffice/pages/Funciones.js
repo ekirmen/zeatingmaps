@@ -1023,7 +1023,46 @@ const Funciones = () => {
           throw error;
         }
         console.log('✅ Función creada exitosamente:', insertedData);
-        alert('Función creada exitosamente');
+        
+        // Enviar notificación push si la función está en canal internet
+        if (insertedData && insertedData[0]) {
+          try {
+            // Asegurar que la función tenga los datos necesarios para la notificación
+            const funcionCreada = insertedData[0];
+            
+            // Si canales viene como string, parsearlo para la verificación
+            if (typeof funcionCreada.canales === 'string') {
+              try {
+                funcionCreada.canales = JSON.parse(funcionCreada.canales);
+              } catch (e) {
+                console.warn('[Funciones] Error parseando canales para notificación:', e);
+              }
+            }
+            
+            const { sendFunctionCreatedNotification } = await import('../../services/eventPushNotifications');
+            const result = await sendFunctionCreatedNotification(funcionCreada);
+            
+            if (result) {
+              if (result.skipped) {
+                console.log('[Funciones] Función no está en canal internet, notificación omitida');
+              } else if (result.sent > 0) {
+                console.log(`[Funciones] ✅ Notificaciones push enviadas: ${result.sent} de ${result.recipients} usuarios`);
+                alert(`Función creada exitosamente. Notificaciones enviadas a ${result.sent} usuarios.`);
+              } else {
+                console.log('[Funciones] No hay usuarios suscritos a notificaciones push');
+                alert('Función creada exitosamente');
+              }
+            } else {
+              alert('Función creada exitosamente');
+            }
+          } catch (error) {
+            console.error('[Funciones] Error enviando notificaciones push:', error);
+            // No fallar el guardado si falla la notificación
+            alert('Función creada exitosamente');
+          }
+        } else {
+          alert('Función creada exitosamente');
+        }
       }
 
       setModalIsOpen(false);

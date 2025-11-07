@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Importar optimizaciones móviles */
+@import './styles/mobile-optimizations.css';
+
 :root {
   --headerBg: #ffffff;
   --headerText: #000000;

@@ -15,6 +15,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTenant } from '../../contexts/TenantContext';
 import { resolveTenantId } from '../../utils/tenantUtils';
 import { verificarPagosPlazosActivos, calcularCuotas } from '../../services/cuotasPagosService';
+import InstallmentPaymentSelector from '../../components/InstallmentPaymentSelector';
 import logger from '../../utils/logger';
 
 
@@ -568,7 +569,21 @@ const Pay = () => {
                         <span>${total.toFixed(2)}</span>
                       </div>
 
-                      {/* Opciones de Pagos a Plazos */}
+                      {/* Opciones de Pagos a Plazos - Componente Mejorado */}
+                      {pagosPlazosActivos?.activo && cuotasCalculadas.length > 0 && (
+                        <InstallmentPaymentSelector
+                          total={total}
+                          cantidadCuotas={pagosPlazosActivos.cantidadCuotas}
+                          diasEntrePagos={pagosPlazosActivos.diasEntrePagos}
+                          cuotasCalculadas={cuotasCalculadas}
+                          cuotasSeleccionadas={cuotasSeleccionadas}
+                          onCuotasChange={setCuotasSeleccionadas}
+                          fechaInicio={pagosPlazosActivos.fechaInicio}
+                          fechaFin={pagosPlazosActivos.fechaFin}
+                          disabled={processingPayment}
+                        />
+                      )}
+                      {/* Código anterior comentado para referencia
                       {pagosPlazosActivos?.activo && cuotasCalculadas.length > 0 && (
                         <div className="border-t border-gray-200 pt-4 mt-4">
                           <h4 className="store-text-sm md:store-text-base store-font-semibold mb-3">Pago a Plazos Disponible</h4>

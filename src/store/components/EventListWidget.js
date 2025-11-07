@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import resolveImageUrl from '../../utils/resolveImageUrl';
 import EventImage from './EventImage';
+import VirtualizedEventList from '../../components/VirtualizedEventList';
+import { EventListSkeleton } from '../../components/SkeletonLoaders';
 
-function EventListWidget({ events }) {
+function EventListWidget({ events, loading = false }) {
   const navigate = useNavigate();
+  
+  // Usar lista virtualizada si hay muchos eventos (más de 20)
+  const shouldUseVirtualized = useMemo(() => {
+    return events && events.length > 20;
+  }, [events?.length]);
 
   const handleViewDetails = (eventSlug) => {
     if (eventSlug) {
@@ -60,10 +67,50 @@ function EventListWidget({ events }) {
     }
   };
 
+  if (loading) {
+    return <EventListSkeleton />;
+  }
+
   if (!events || events.length === 0) {
     return (
       <div className="store-card store-text-center store-text-gray-600">
         No hay eventos disponibles en este momento.
+      </div>
+    );
+  }
+
+  // Preparar eventos para la lista virtualizada (usar funciones auxiliares existentes)
+  const formattedEvents = useMemo(() => events.map(event => {
+    const images = getEventImages(event);
+    const rawImage = images.obraImagen || images.portada || images.banner;
+    const eventName = event.name || event.nombre || 'E';
+    const displayImageUrl = rawImage ? getImageUrl(rawImage) : null;
+    
+    return {
+      id: event.id || event._id,
+      nombre: event.name || event.nombre || 'Evento sin nombre',
+      descripcion: event.descripcion || event.description || '',
+      fecha_inicio: event.fechaInicio || event.fecha_inicio || event.startDate,
+      hora_inicio: event.horaInicio || event.hora_inicio || event.startTime,
+      precio_minimo: event.precioMinimo || event.precio_minimo || event.minPrice,
+      imagen: displayImageUrl,
+      slug: event.slug
+    };
+  }), [events]);
+
+  // Usar lista virtualizada para muchos eventos
+  if (shouldUseVirtualized) {
+    return (
+      <div className="event-list-container store-container">
+        <h2 className="store-text-2xl store-font-bold store-text-gray-800 mb-6 store-text-center">
+          Próximos Eventos ({events.length})
+        </h2>
+        <VirtualizedEventList
+          eventos={formattedEvents}
+          loading={loading}
+          onEventClick={(evento) => handleViewDetails(evento.slug)}
+          height={600}
+        />
       </div>
     );
   }

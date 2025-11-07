@@ -1,0 +1,118 @@
+/* Optimizaciones para móvil */
+
+/* Ocultar sidebar en móvil por defecto */
+@media (max-width: 768px) {
+  .mobile-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .mobile-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+  
+  .mobile-content {
+    margin-left: 0 !important;
+    padding: 12px !important;
+  }
+  
+  /* Optimizar headers en móvil */
+  .ant-layout-header {
+    padding: 0 12px !important;
+  }
+  
+  /* Tablas responsivas */
+  .ant-table-wrapper {
+    overflow-x: auto;
+  }
+  
+  /* Cards más compactos */
+  .ant-card {
+    margin-bottom: 12px;
+  }
+  
+  /* Menús más compactos */
+  .ant-menu {
+    font-size: 14px;
+  }
+  
+  /* Botones más grandes para touch */
+  .ant-btn {
+    min-height: 44px;
+    padding: 8px 16px;
+  }
+  
+  /* Inputs más grandes */
+  .ant-input,
+  .ant-select-selector {
+    min-height: 44px;
+  }
+  
+  /* Spacing reducido */
+  .ant-space {
+    gap: 8px !important;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .mobile-content {
+    padding: 16px !important;
+  }
+}
+
+/* Asegurar que los drawers funcionen bien */
+.ant-drawer-body {
+  padding: 16px;
+}
+
+/* Optimizar mapas para móvil */
+@media (max-width: 768px) {
+  .seat-map-container {
+    height: calc(100vh - 200px) !important;
+  }
+  
+  .seat-map-controls {
+    position: fixed;
+    bottom: 80px;
+    right: 16px;
+    z-index: 100;
+  }
+}
+
+/* Carrito flotante en móvil */
+.mobile-cart-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Mejoras de touch */
+@media (max-width: 768px) {
+  /* Áreas de touch más grandes */
+  button, a, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Evitar zoom en inputs */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Scroll suave */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Optimizar imágenes en móvil */
+@media (max-width: 768px) {
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+

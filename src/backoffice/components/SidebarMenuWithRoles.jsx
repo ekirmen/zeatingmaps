@@ -278,6 +278,12 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
           permission: 'abonos'
         },
         { 
+          title: 'Afiliados', 
+          path: '/dashboard/afiliados', 
+          icon: faUsers,
+          permission: 'afiliados'
+        },
+        { 
           title: 'IVA', 
           path: '/dashboard/iva', 
           icon: faCoins,
@@ -321,6 +327,12 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
           path: '/dashboard/tags', 
           icon: faTags,
           permission: 'tags'
+        },
+        { 
+          title: 'Comunicación Masiva', 
+          path: '/dashboard/email-campaigns', 
+          icon: faEnvelope,
+          permission: 'email_campaigns'
         }
       ]
     },
@@ -533,7 +545,8 @@ const SidebarMenuWithRoles = ({ collapsed }) => {
       collapsible
       collapsed={!isExpanded}
       width={250}
-      className="bg-white shadow-lg"
+      collapsedWidth={80}
+      className="bg-white shadow-lg mobile-sidebar"
       style={{
         overflow: 'auto',
         height: '100vh',

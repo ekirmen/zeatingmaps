@@ -12,7 +12,7 @@ import { useCartStore } from '../../store/cartStore';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import useCartRestore from '../../store/hooks/useCartRestore';
 import seatPaymentChecker from '../../services/seatPaymentChecker';
-import SeatingMapUnified from '../../components/SeatingMapUnified';
+import LazySeatingMap from '../../components/LazySeatingMap';
 import SimpleCart from '../components/SimpleCart';
 import ProductosWidget from '../components/ProductosWidget';
 import { getZonaColor } from '../../utils/getZonaColor';
@@ -563,7 +563,7 @@ const EventosPage = ({ forceShowMap = false }) => {
                       </div>
                     ) : mapa ? (
                       <div className="h-96 overflow-auto relative">
-                        <SeatingMapUnified
+                        <LazySeatingMap
                           mapa={mapa}
                           funcionId={selectedFunctionId}
                           lockSeat={lockSeat}

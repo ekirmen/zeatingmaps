@@ -10,38 +10,65 @@ module.exports = {
           webpackConfig.devtool = false;
         }
         
-        // Optimizar chunks más agresivamente
+        // Optimizar chunks más agresivamente para mejor code splitting
         webpackConfig.optimization = {
           ...webpackConfig.optimization,
           splitChunks: {
             chunks: 'all',
-            maxInitialRequests: 10,
-            maxAsyncRequests: 10,
+            maxInitialRequests: 25, // Aumentado para mejor code splitting
+            maxAsyncRequests: 30,
+            minSize: 20000, // Chunks menores de 20KB se combinan
+            maxSize: 244000, // Chunks mayores de 244KB se dividen
             cacheGroups: {
+              // React y React DOM (crítico, cargar primero)
+              react: {
+                test: /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom)[\\/]/,
+                name: 'react-vendor',
+                chunks: 'all',
+                priority: 40,
+                reuseExistingChunk: true,
+              },
+              // Ant Design (gran librería, separar)
+              antd: {
+                test: /[\\/]node_modules[\\/]antd[\\/]/,
+                name: 'antd',
+                chunks: 'all',
+                priority: 30,
+                reuseExistingChunk: true,
+              },
+              // Konva y React Konva (mapas de asientos)
+              konva: {
+                test: /[\\/]node_modules[\\/](konva|react-konva)[\\/]/,
+                name: 'konva',
+                chunks: 'async', // Solo cargar cuando se necesite
+                priority: 25,
+                reuseExistingChunk: true,
+              },
+              // Supabase
+              supabase: {
+                test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+                name: 'supabase',
+                chunks: 'all',
+                priority: 20,
+                reuseExistingChunk: true,
+              },
+              // Otros vendors
               vendor: {
                 test: /[\\/]node_modules[\\/]/,
                 name: 'vendors',
                 chunks: 'all',
                 priority: 10,
+                reuseExistingChunk: true,
+                minChunks: 2,
               },
-              antd: {
-                test: /[\\/]node_modules[\\/]antd[\\/]/,
-                name: 'antd',
-                chunks: 'all',
-                priority: 20,
-              },
-              react: {
-                test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-                name: 'react',
-                chunks: 'all',
-                priority: 30,
-              },
+              // Código común entre chunks
               common: {
                 name: 'common',
                 minChunks: 2,
                 chunks: 'all',
                 enforce: true,
                 priority: 5,
+                reuseExistingChunk: true,
               },
             },
           },
@@ -50,6 +77,13 @@ module.exports = {
           minimizer: [
             ...webpackConfig.optimization.minimizer,
           ],
+          // Runtime chunk separado para mejor caching
+          runtimeChunk: {
+            name: 'runtime',
+          },
+          // Module IDs estables para mejor caching
+          moduleIds: 'deterministic',
+          chunkIds: 'deterministic',
         };
         
         // Optimizar resolución de módulos

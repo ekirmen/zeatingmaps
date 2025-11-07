@@ -5,10 +5,11 @@ import EventListWidget from '../components/EventListWidget';
 import FaqWidget from '../components/FaqWidget';
 import { getCmsPage } from '../services/apistore';
 import { useEventsList } from '../hooks/useEventsList';
+import { PageSkeleton } from '../../components/SkeletonLoaders';
 
 const EventsVenue = ({ groupByTags = true }) => {
   const [widgets, setWidgets] = useState(null);
-  const { events } = useEventsList();
+  const { events, loading } = useEventsList();
 
   useEffect(() => {
     const load = async () => {
@@ -34,13 +35,17 @@ const EventsVenue = ({ groupByTags = true }) => {
   const renderWidget = (widget) => {
     switch (widget.type) {
       case 'Listado de eventos':
-        return <EventListWidget events={events} />;
+        return <EventListWidget events={events} loading={loading} />;
       case 'Preguntas frecuentes':
         return <FaqWidget />;
       default:
         return null;
     }
   };
+  
+  if (loading && !widgets) {
+    return <PageSkeleton rows={4} />;
+  }
 
   const content = widgets?.content?.length
     ? widgets.content.map((w, idx) => (

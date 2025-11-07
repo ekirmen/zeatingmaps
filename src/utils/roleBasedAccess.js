@@ -77,6 +77,8 @@ export const ROLE_PERMISSIONS = {
     'ivas',
     'descuentos',
     'abonos',
+    'afiliados',
+    'email_campaigns',
     'eventos',
     'funciones',
     'mailchimp',

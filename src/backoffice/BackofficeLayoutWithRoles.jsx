@@ -175,6 +175,7 @@ const BackofficeLayoutWithRoles = ({ children }) => {
 
                 {/* Contenido principal */}
                 <Content
+                  className="mobile-content"
                   style={{
                     marginTop: 88,
                     marginRight: 24,

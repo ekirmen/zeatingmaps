@@ -284,6 +284,24 @@ const Evento = () => {
       setIsUploading(true);
       const isExisting = !!eventoData.id;
       
+      // Detectar si el evento se está activando (estadoVenta cambia a 'a-la-venta')
+      let wasActivated = false;
+      if (isExisting && eventoData.estadoVenta === 'a-la-venta') {
+        // Obtener el estado anterior del evento
+        const { data: previousEvent } = await supabase
+          .from('eventos')
+          .select('estadoVenta')
+          .eq('id', eventoData.id)
+          .single();
+        
+        if (previousEvent && previousEvent.estadoVenta !== 'a-la-venta') {
+          wasActivated = true;
+        }
+      } else if (!isExisting && eventoData.estadoVenta === 'a-la-venta') {
+        // Si es un evento nuevo y ya está a la venta, también activar notificación
+        wasActivated = true;
+      }
+      
       // Limpiar datos antes de enviar
       const cleanData = { ...eventoData };
       delete cleanData.__v;
@@ -314,10 +332,17 @@ const Evento = () => {
       } else {
         response = await supabase
           .from('eventos')
-          .insert([cleanData]);
+          .insert([cleanData])
+          .select()
+          .single();
       }
 
       if (response.error) throw response.error;
+      
+      // NOTA: Las notificaciones push ahora se envían cuando se crea una función en canal internet
+      // No se envían cuando se activa un evento, solo cuando se crea la función
+      // Esto se maneja en src/backoffice/pages/Funciones.js
+      
       setIsSaved(true);
       setMenuVisible(false);
       fetchEventos();

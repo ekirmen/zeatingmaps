@@ -39,6 +39,7 @@ const Dashboard = () => {
     totalTickets: 0,
     soldTickets: 0,
     activeUsers: 0,
+    totalUsers: 0,
     newUsersThisWeek: 0,
     pendingPayments: 0,
     todaySales: 0,
@@ -194,27 +195,58 @@ const Dashboard = () => {
 
   const loadUserStats = async () => {
     try {
-      // Estadísticas de usuarios
-      const { data: users, error } = await supabase
+      // Estadísticas de usuarios - incluyendo usuarios activos (últimas 24h)
+      const { data: users, error: usersError } = await supabase
         .from('profiles')
-        .select('*');
+        .select('id, created_at, last_seen, is_active');
 
-      if (error) throw error;
+      if (usersError) throw usersError;
 
-      const activeUsers = users.length;
-      const newUsersThisWeek = users.filter(u => {
+      // Obtener usuarios activos (últimas 24 horas) desde auth.users o user_sessions si existe
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      
+      // Intentar obtener usuarios activos desde user_sessions o last_login
+      let activeUsersCount = 0;
+      try {
+        // Si existe tabla user_sessions o user_tenant_info
+        const { data: activeSessions } = await supabase
+          .from('user_tenant_info')
+          .select('user_id, last_login')
+          .gte('last_login', twentyFourHoursAgo);
+
+        activeUsersCount = activeSessions?.length || 0;
+      } catch (e) {
+        // Si no existe, usar last_seen de profiles
+        activeUsersCount = users?.filter(u => {
+          if (u.last_seen) {
+            return new Date(u.last_seen) >= twentyFourHoursAgo;
+          }
+          return false;
+        }).length || 0;
+      }
+
+      const totalUsers = users?.length || 0;
+      const newUsersThisWeek = users?.filter(u => {
         const userDate = new Date(u.created_at);
         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
         return userDate >= weekAgo;
-      }).length;
+      }).length || 0;
 
       setStats(prev => ({
         ...prev,
-        activeUsers,
+        activeUsers: activeUsersCount, // Usuarios activos en últimas 24h
+        totalUsers, // Total de usuarios registrados
         newUsersThisWeek
       }));
     } catch (error) {
       console.error('Error loading user stats:', error);
+      // Valores por defecto
+      setStats(prev => ({
+        ...prev,
+        activeUsers: 0,
+        totalUsers: 0,
+        newUsersThisWeek: 0
+      }));
     }
   };
 
@@ -434,12 +466,14 @@ const Dashboard = () => {
         <Col xs={24} sm={12} lg={6}>
           <Card>
             <Statistic
-              title="Usuarios Activos"
+              title="Usuarios Activos (24h)"
               value={stats.activeUsers}
               valueStyle={{ color: '#722ed1' }}
               prefix={<UserOutlined />}
             />
-            <Text type="secondary">+{stats.newUsersThisWeek} esta semana</Text>
+            <Text type="secondary">
+              {stats.totalUsers} total • +{stats.newUsersThisWeek} esta semana
+            </Text>
           </Card>
         </Col>
 

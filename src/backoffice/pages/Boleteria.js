@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from 'react';
-import { Modal } from 'antd';
-import { AiOutlineLeft } from 'react-icons/ai';
+import { Modal, Drawer, Button as AntButton } from 'antd';
+import { AiOutlineLeft, AiOutlineMenu } from 'react-icons/ai';
 
 import LeftMenu from './CompBoleteria/LeftMenu';
 import Cart from './CompBoleteria/Cart';
-import SeatingMapUnified from '../../components/SeatingMapUnified';
+import LazySeatingMap from '../../components/LazySeatingMap';
 import PaymentModal from './CompBoleteria/PaymentModal';
 import ClientModals from './CompBoleteria/ClientModals';
 import FunctionModal from './CompBoleteria/FunctionModal';
@@ -619,34 +619,71 @@ const Boleteria = () => {
     selectedEvent
   }), [isPaymentModalVisible, setIsPaymentModalVisible, carrito, setCarrito, selectedClient, setSelectedClient, selectedAffiliate, setSelectedAffiliate, clientAbonos, setClientAbonos, seatPayment, setSeatPayment, selectedFuncion, selectedEvent]);
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+
   return (
-    <div className="flex bg-gray-50 overflow-hidden" style={{ margin: '0', padding: '0', height: 'calc(100vh - 88px)', position: 'absolute', top: '88px', left: '0', right: '0', bottom: '0' }}>
+    <div className="flex flex-col md:flex-row bg-gray-50 overflow-hidden" style={{ margin: '0', padding: '0', height: 'calc(100vh - 88px)', position: 'absolute', top: '88px', left: '0', right: '0', bottom: '0' }}>
       {/* Debug info */}
       {/* Debug logs removed for production performance */}
 
-      {/* Sidebar izquierdo ultra compacto */}
-      <div className="flex flex-col w-full max-w-xs md:max-w-sm lg:w-64 min-w-[12rem] bg-white border-r border-gray-200">
-        <div className="p-1 border-b border-gray-200">
+      {/* Sidebar izquierdo - Mobile: Drawer, Desktop: Sidebar */}
+      <>
+        {/* Mobile: Botón para abrir sidebar */}
+        <div className="md:hidden fixed top-2 left-2 z-50">
           <button
-            onClick={() => window.location.href = '/dashboard'}
-            className="flex items-center gap-1 text-gray-700 hover:text-gray-900 text-xs"
+            onClick={() => setSidebarOpen(true)}
+            className="bg-white p-2 rounded shadow-lg"
           >
-            <AiOutlineLeft className="text-xs" />
-            <span>Volver</span>
+            <AiOutlineMenu className="text-xl" />
           </button>
         </div>
-        
-        <div className="flex-1 overflow-auto p-1">
+
+        {/* Mobile: Drawer para sidebar */}
+        <Drawer
+          title="Menú"
+          placement="left"
+          onClose={() => setSidebarOpen(false)}
+          open={sidebarOpen}
+          width={280}
+          className="md:hidden"
+        >
+          <div className="p-1 border-b border-gray-200 mb-4">
+            <button
+              onClick={() => window.location.href = '/dashboard'}
+              className="flex items-center gap-1 text-gray-700 hover:text-gray-900 text-xs"
+            >
+              <AiOutlineLeft className="text-xs" />
+              <span>Volver</span>
+            </button>
+          </div>
           <LeftMenu {...leftMenuProps} />
+        </Drawer>
+
+        {/* Desktop: Sidebar fijo */}
+        <div className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
+          <div className="p-1 border-b border-gray-200">
+            <button
+              onClick={() => window.location.href = '/dashboard'}
+              className="flex items-center gap-1 text-gray-700 hover:text-gray-900 text-xs"
+            >
+              <AiOutlineLeft className="text-xs" />
+              <span>Volver</span>
+            </button>
+          </div>
+          
+          <div className="flex-1 overflow-auto p-1">
+            <LeftMenu {...leftMenuProps} />
+          </div>
         </div>
-      </div>
+      </>
 
       {/* Contenido principal */}
-      <div className="flex-1 flex overflow-hidden min-w-0">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-w-0 mt-12 md:mt-0">
         {/* Panel central - Mapa de asientos */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header ultra compacto con búsqueda de evento y función */}
-          <div className="bg-white border-b border-gray-200 px-1 py-0.5">
+          <div className="bg-white border-b border-gray-200 px-2 py-2 md:px-1 md:py-0.5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-1">
                 <div className="flex items-center gap-1">
@@ -797,7 +834,7 @@ const Boleteria = () => {
             {/* Debug log removed for production performance */}
                 {selectedFuncion && mapa ? (
               <div className="h-full p-1 overflow-auto">
-                      <SeatingMapUnified
+                      <LazySeatingMap
                         funcionId={selectedFuncion?.id || selectedFuncion?._id}
                         mapa={mapa}
                         zonas={mapa?.zonas || []}
@@ -825,14 +862,47 @@ const Boleteria = () => {
           </div>
               </div>
 
-        {/* Panel derecho - Carrito de compras ultra compacto */}
-        <div className="w-64 bg-white border-l border-gray-200 flex flex-col">
-                <div className="flex-1 min-h-0">
-                  <Cart {...cartProps}>
-                    {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
-                  </Cart>
-                </div>
-        </div>
+        {/* Panel derecho - Carrito de compras */}
+        {/* Mobile: Botón flotante + Drawer */}
+        <>
+          {/* Mobile: Botón flotante para carrito */}
+          {carrito && carrito.length > 0 && (
+            <div className="md:hidden fixed bottom-4 right-4 z-50">
+              <AntButton
+                type="primary"
+                shape="circle"
+                size="large"
+                onClick={() => setCartOpen(true)}
+                className="shadow-lg"
+              >
+                🛒 {carrito.length}
+              </AntButton>
+            </div>
+          )}
+
+          {/* Mobile: Drawer para carrito */}
+          <Drawer
+            title="Carrito"
+            placement="right"
+            onClose={() => setCartOpen(false)}
+            open={cartOpen}
+            width={320}
+            className="md:hidden"
+          >
+            <Cart {...cartProps}>
+              {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
+            </Cart>
+          </Drawer>
+
+          {/* Desktop: Sidebar fijo para carrito */}
+          <div className="hidden md:flex w-64 bg-white border-l border-gray-200 flex flex-col">
+            <div className="flex-1 min-h-0">
+              <Cart {...cartProps}>
+                {allTicketsPaid && <DownloadTicketButton locator={carrito[0].locator} />}
+              </Cart>
+            </div>
+          </div>
+        </>
       </div>
 
       <ClientModals {...clientModalsProps} />

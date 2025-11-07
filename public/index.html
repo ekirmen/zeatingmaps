@@ -3,26 +3,66 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    
+    <!-- Resource Hints para mejor performance -->
+    <!-- Preconnect a dominios externos -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+    
+    <!-- Preconnect a Supabase (ajustar según tu proyecto) -->
+    <link rel="preconnect" href="https://szmyqodwwdwjdodzebcp.supabase.co" crossorigin />
+    <link rel="dns-prefetch" href="https://szmyqodwwdwjdodzebcp.supabase.co" />
+    
     <!-- Enhanced viewport for all browsers including iOS Safari -->
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#1890ff" />
+    
     <!-- iOS Safari specific -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="format-detection" content="telephone=no" />
+    
     <!-- IE compatibility -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    
+    <!-- Meta tags mejorados para SEO y performance -->
     <meta
       name="description"
-      content="Web site created using create-react-app"
+      content="Sistema profesional de boletería y venta de entradas para eventos - VEN Eventos"
     />
+    <meta name="keywords" content="eventos, boletería, entradas, tickets, venta online" />
+    <meta name="author" content="VEN Eventos" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="VEN Eventos - Sistema de Boletería" />
+    <meta property="og:description" content="Sistema profesional de boletería y venta de entradas para eventos" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="VEN Eventos - Sistema de Boletería" />
+    <meta name="twitter:description" content="Sistema profesional de boletería y venta de entradas para eventos" />
+    
+    <!-- Favicons y Apple Touch Icons -->
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="%PUBLIC_URL%/logo512.png" />
+    
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
     -->
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    
+    <!-- Preload de recursos críticos -->
+    <!-- Preload de CSS crítico (si tienes CSS crítico inline) -->
+    <!-- <link rel="preload" href="/path/to/critical.css" as="style" /> -->
+    
+    <!-- Font Awesome con preload -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" /></noscript>
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.

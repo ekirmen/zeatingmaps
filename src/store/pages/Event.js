@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import SeatingMapUnified from '../../components/SeatingMapUnified';
+import LazySeatingMap from '../../components/LazySeatingMap';
 import Cart from './Cart';
 import {
   getFuncion,
@@ -196,7 +196,7 @@ function EventPage() {
           </select>
 
           {mapa && selectedFunctionId ? (
-            <SeatingMapUnified
+            <LazySeatingMap
               funcionId={selectedFunctionId}
               mapa={mapa}
               lockSeat={lockSeat}

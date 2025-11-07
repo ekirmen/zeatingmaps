@@ -13,6 +13,67 @@ import { HeaderProvider } from './contexts/HeaderContext';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n';
 import { SpeedInsights } from '@vercel/speed-insights/react';
+import { registerServiceWorker } from './utils/pwaService';
+import { reportWebVitals, sendToAnalytics } from './utils/webVitals';
+import performanceMonitor from './utils/performanceMonitor';
+
+// Registrar Service Worker para PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    registerServiceWorker().catch((error) => {
+      console.error('Error registrando Service Worker:', error);
+    });
+  });
+}
+
+// Inicializar caché de IndexedDB y limpieza periódica
+if (typeof window !== 'undefined') {
+  import('./utils/indexedDBCache').then(({ default: indexedDBCache }) => {
+    // Inicializar caché
+    indexedDBCache.init().catch((error) => {
+      console.warn('Error inicializando IndexedDB cache:', error);
+    });
+
+    // Limpiar caché expirado cada 24 horas
+    setInterval(() => {
+      indexedDBCache.cleanup().catch((error) => {
+        console.warn('Error limpiando caché:', error);
+      });
+    }, 24 * 60 * 60 * 1000); // 24 horas
+
+    // Limpiar al cargar la página (solo una vez al día)
+    const lastCleanup = localStorage.getItem('lastIndexedDBCleanup');
+    const now = Date.now();
+    const oneDayAgo = now - (24 * 60 * 60 * 1000);
+
+    if (!lastCleanup || parseInt(lastCleanup, 10) < oneDayAgo) {
+      indexedDBCache.cleanup().then(() => {
+        localStorage.setItem('lastIndexedDBCleanup', now.toString());
+      }).catch((error) => {
+        console.warn('Error en limpieza inicial de caché:', error);
+      });
+    }
+  });
+}
+
+// Iniciar monitoreo de performance
+if (process.env.NODE_ENV === 'production') {
+  // Reportar Core Web Vitals
+  reportWebVitals(sendToAnalytics);
+  
+  // Iniciar monitor de performance
+  performanceMonitor.startMonitoring((metric) => {
+    // Log en desarrollo para debugging
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Performance Monitor]', metric);
+    }
+  });
+  
+  // Exponer en window para debugging
+  if (process.env.NODE_ENV === 'development') {
+    window.performanceMonitor = performanceMonitor;
+  }
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 

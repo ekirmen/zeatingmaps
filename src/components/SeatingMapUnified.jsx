@@ -9,9 +9,12 @@ import { useMapaSeatsSync } from '../hooks/useMapaSeatsSync';
 import seatPaymentChecker from '../services/seatPaymentChecker';
 import SeatStatusLegend from './SeatStatusLegend';
 import SeatLockDebug from './SeatLockDebug';
+import SeatWithTooltip from './SeatWithTooltip';
 // import VisualNotifications from '../utils/VisualNotifications'; // Removido por no usarse
 import resolveImageUrl from '../utils/resolveImageUrl';
 import logger from '../utils/logger';
+import { getWebPUrl, preloadOptimizedImage } from '../utils/imageOptimizer';
+import clickThrottle from '../utils/clickThrottle';
 
 // Cache global para imágenes de fondo para evitar recargas constantes
 const backgroundImageCache = new Map();
@@ -54,7 +57,8 @@ const BackgroundImage = React.memo(({ config }) => {
       url = resolveImageUrl(url, 'productos') || url;
     }
     
-    return url;
+    // Optimizar a WebP si está disponible
+    return getWebPUrl(url);
   }, [config.imageUrl, config.url, config.src, config.image?.url, config.image?.publicUrl, config.imageData, config.image?.data]);
 
   const [bgImg, setBgImg] = React.useState(() => {
@@ -502,6 +506,18 @@ const SeatingMapUnified = ({
         logger.warn('❌ [SEATING_MAP] Asiento inválido:', seat);
         return;
       }
+
+      // Throttling: Verificar si el click está permitido
+      const seatId = (seat._id || seat.id || seat.sillaId)?.toString();
+      if (!clickThrottle.canClick(seatId)) {
+        if (onSeatError) {
+          onSeatError('Por favor, espera un momento antes de hacer clic nuevamente en este asiento.');
+        }
+        return;
+      }
+
+      // Registrar el click para throttling
+      clickThrottle.registerClick(seatId);
 
       // En modo store, verificar estado antes de delegar al onSeatToggle
       if (!modoVenta) {
@@ -1037,39 +1053,22 @@ const SeatingMapUnified = ({
             const seatName = seat.nombre || seat.numero || seat._id || 'Asiento';
 
             return (
-              <React.Fragment key={`seat_${seat._id}`}>
-                {/* Asiento */}
-                <Circle
-                  x={seat.x || seat.posicion?.x || 0}
-                  y={seat.y || seat.posicion?.y || 0}
-                  radius={seat.width ? seat.width / 2 : 10}
-                  fill={seatColor}
-                  stroke={highlightStroke}
-                  strokeWidth={(isSelectedByMe || isSelectedByOther || isSelected) ? 3 : 2}
-                  shadowColor={highlightShadowColor}
-                  shadowBlur={(isSelectedByMe || isSelectedByOther || isSelected) ? 12 : 5}
-                  shadowOffset={{ x: 2, y: 2 }}
-                  shadowOpacity={(isSelectedByMe || isSelectedByOther || isSelected) ? 0.45 : 0.3}
-                  onClick={() => handleSeatClick(seatData)}
-                  onTap={() => handleSeatClick(seatData)}
-                  style={{ cursor: 'pointer' }}
-                />
-
-                {/* Nombre del asiento centrado en el círculo */}
-                <Text
-                  x={(seat.x || seat.posicion?.x || 0) - 10}
-                  y={(seat.y || seat.posicion?.y || 0) - 6}
-                  text={seatName}
-                  fontSize={10}
-                  fill="#333"
-                  fontFamily="Arial"
-                  align="center"
-                  width={20}
-                  onClick={() => handleSeatClick(seatData)}
-                  onTap={() => handleSeatClick(seatData)}
-                  style={{ cursor: 'pointer' }}
-                />
-              </React.Fragment>
+              <SeatWithTooltip
+                key={`seat_${seat._id}`}
+                seat={seatData}
+                seatColor={seatColor}
+                highlightStroke={highlightStroke}
+                strokeWidth={(isSelectedByMe || isSelectedByOther || isSelected) ? 3 : 2}
+                shadowColor={highlightShadowColor}
+                shadowBlur={(isSelectedByMe || isSelectedByOther || isSelected) ? 12 : 5}
+                shadowOffset={{ x: 2, y: 2 }}
+                shadowOpacity={(isSelectedByMe || isSelectedByOther || isSelected) ? 0.45 : 0.3}
+                seatName={seatName}
+                onSeatClick={() => handleSeatClick(seatData)}
+                x={seat.x || seat.posicion?.x || 0}
+                y={seat.y || seat.posicion?.y || 0}
+                radius={seat.width ? seat.width / 2 : 10}
+              />
             );
           })}
 

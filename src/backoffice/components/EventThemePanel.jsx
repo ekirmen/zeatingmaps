@@ -4,6 +4,7 @@ import { EditOutlined, DeleteOutlined, PlusOutlined, EyeOutlined } from '@ant-de
 import { EventThemeService } from '../services/eventThemeService';
 import { useTenant } from '../../contexts/TenantContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { PageSkeleton } from '../../components/SkeletonLoaders';
 
 const EventThemePanel = () => {
   const { currentTenant } = useTenant();
@@ -168,8 +169,7 @@ const EventThemePanel = () => {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '20px' }}>
-        <Spin size="large" />
-        <div style={{ marginTop: '10px' }}>Cargando eventos...</div>
+        <PageSkeleton rows={3} />
       </div>
     );
   }

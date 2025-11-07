@@ -17,6 +17,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import VercelAnalytics from './components/VercelAnalytics';
 import VercelSpeedInsights from './components/VercelSpeedInsights';
 import LegalTerms from './store/pages/LegalTerms';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import './index.css';
 
 // Componente de carga
@@ -129,6 +130,9 @@ const App = () => {
         
         {/* Vercel Speed Insights - Solo en producción */}
         <VercelSpeedInsights />
+        
+        {/* PWA Install Prompt */}
+        <PWAInstallPrompt />
       </ConfigProvider>
     </ThemeProvider>
   );

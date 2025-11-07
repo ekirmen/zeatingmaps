@@ -71,6 +71,7 @@
     "react-router-dom": "^6.29.0",
     "react-scripts": "^5.0.1",
     "react-toastify": "^11.0.5",
+    "react-window": "^2.2.3",
     "recharts": "^3.1.0",
     "roboto-font": "^0.1.0",
     "stripe": "^18.5.0",

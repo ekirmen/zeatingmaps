@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import apiRateLimiter from '../utils/apiRateLimiter';
 
 /**
  * Servicio para bloqueo atómico de asientos que previene condiciones de carrera
@@ -11,6 +12,18 @@ class AtomicSeatLockService {
    */
   async lockSeatAtomically(seatId, funcionId, sessionId, status = 'seleccionado', options = {}) {
     try {
+      // Rate limiting: Verificar si el request está permitido
+      const endpoint = 'lock_seat_atomically';
+      const requestKey = `lock_${seatId}_${funcionId}_${sessionId}`;
+      
+      if (!apiRateLimiter.canMakeRequest(endpoint, requestKey)) {
+        const waitTime = apiRateLimiter.getWaitTime(endpoint);
+        throw new Error(`Demasiadas solicitudes. Por favor, espera ${Math.ceil(waitTime / 1000)} segundos antes de intentar nuevamente.`);
+      }
+
+      // Registrar el request para rate limiting
+      apiRateLimiter.registerRequest(endpoint, requestKey);
+
       // Intentando bloqueo atómico
 
       // Validar parámetros requeridos
@@ -141,6 +154,18 @@ class AtomicSeatLockService {
    */
   async unlockSeatAtomically(seatId, funcionId, sessionId) {
     try {
+      // Rate limiting: Verificar si el request está permitido
+      const endpoint = 'unlock_seat_atomically';
+      const requestKey = `unlock_${seatId}_${funcionId}_${sessionId}`;
+      
+      if (!apiRateLimiter.canMakeRequest(endpoint, requestKey)) {
+        const waitTime = apiRateLimiter.getWaitTime(endpoint);
+        throw new Error(`Demasiadas solicitudes. Por favor, espera ${Math.ceil(waitTime / 1000)} segundos antes de intentar nuevamente.`);
+      }
+
+      // Registrar el request para rate limiting
+      apiRateLimiter.registerRequest(endpoint, requestKey);
+
       console.log('🔓 [ATOMIC_UNLOCK] Intentando desbloqueo atómico:', { seatId, funcionId, sessionId });
 
       // Validar parámetros requeridos
@@ -272,6 +297,18 @@ class AtomicSeatLockService {
    */
   async cleanupExpiredLocks() {
     try {
+      // Rate limiting: Verificar si el request está permitido
+      const endpoint = 'cleanup_expired_seat_locks';
+      
+      if (!apiRateLimiter.canMakeRequest(endpoint)) {
+        // Para cleanup, no lanzar error, solo retornar sin hacer nada
+        console.warn('🧹 [CLEANUP] Rate limit alcanzado, omitiendo limpieza temporalmente');
+        return { success: false, error: 'Rate limit alcanzado', cleaned: 0 };
+      }
+
+      // Registrar el request para rate limiting
+      apiRateLimiter.registerRequest(endpoint);
+
       console.log('🧹 [CLEANUP] Limpiando bloqueos expirados...');
       
       const { data, error } = await supabase.rpc('cleanup_expired_seat_locks');
