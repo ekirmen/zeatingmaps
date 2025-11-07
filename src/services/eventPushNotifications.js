@@ -2,7 +2,7 @@
  * Servicio para enviar notificaciones push cuando se activa un evento o función
  */
 import { supabase } from '../supabaseClient';
-import { sendPushNotification } from './paymentNotifications';
+import { sendPushNotification } from '../store/services/paymentNotifications';
 
 /**
  * Enviar notificación push cuando un evento se activa (estadoVenta = 'a-la-venta')
