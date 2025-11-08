@@ -1285,3 +1285,49 @@
     padding: 0 !important;
   }
 }
+
+/* ============================================
+   CART FLOATING MOBILE - SEAT SELECTION PAGE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .seat-selection-page {
+    padding-bottom: 0 !important;
+  }
+  
+  /* Carrito flotante en móvil */
+  .store-cart-floating {
+    animation: slideUpCart 0.3s ease-out;
+    border-top-left-radius: 16px !important;
+    border-top-right-radius: 16px !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+  
+  .store-cart-floating .store-card-body {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Espaciado inferior cuando hay carrito flotante */
+  .seat-selection-page:has(.store-cart-floating) {
+    padding-bottom: 120px !important;
+  }
+}
+
+@keyframes slideUpCart {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Fallback para navegadores que no soportan :has() */
+@media (max-width: 768px) {
+  .seat-selection-page-with-cart {
+    padding-bottom: 120px !important;
+  }
+}

@@ -849,17 +849,6 @@ const Header = ({ onLogin, onLogout }) => {
                   <span>o</span>
                 </div>
 
-                <p className="account-alt-text">
-                  ¿No tienes cuenta?
-                  <button
-                    type="button"
-                    className="account-inline-link"
-                    onClick={() => handleSwitchMode('register')}
-                  >
-                    Crear cuenta nueva
-                  </button>
-                </p>
-
                 <a className="account-link-muted" href="/store/forgot-password">
                   ¿Olvidaste tu contraseña?
                 </a>

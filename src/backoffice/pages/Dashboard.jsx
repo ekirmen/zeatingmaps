@@ -15,6 +15,8 @@ import DashboardLayout from '../components/DashboardLayout';
 import StatCard from '../components/StatCard';
 import { supabase } from '../../supabaseClient';
 import { useTenantFilter } from '../../hooks/useTenantFilter';
+import { useResponsive } from '../../hooks/useResponsive';
+import '../styles/dashboard-design.css';
 
 const { Title, Text } = Typography;
 
@@ -28,6 +30,7 @@ const Dashboard = () => {
   const [recentEvents, setRecentEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const { addTenantFilter } = useTenantFilter();
+  const { isMobile, isTablet } = useResponsive();
 
   useEffect(() => {
     loadDashboardData();
@@ -102,109 +105,147 @@ const Dashboard = () => {
       }
     >
       {/* Estadísticas */}
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Total Eventos"
-            value={stats.totalEvents}
-            icon={<CalendarOutlined />}
-            color="#1890ff"
-            trend="up"
-            trendValue="12%"
-            loading={loading}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Total Usuarios"
-            value={stats.totalUsers}
-            icon={<UserOutlined />}
-            color="#52c41a"
-            trend="up"
-            trendValue="8%"
-            loading={loading}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Ingresos Totales"
-            value={`$${stats.totalRevenue.toLocaleString()}`}
-            icon={<DollarOutlined />}
-            color="#faad14"
-            trend="up"
-            trendValue="15%"
-            loading={loading}
-          />
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
-          <StatCard
-            title="Total Productos"
-            value={stats.totalProducts}
-            icon={<ShoppingOutlined />}
-            color="#722ed1"
-            trend="up"
-            trendValue="5%"
-            loading={loading}
-          />
-        </Col>
-      </Row>
+      <div className="dashboard-grid dashboard-grid-4" style={{ marginBottom: '24px' }}>
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-card-header">
+            <h3 className="dashboard-stat-card-title">Total Eventos</h3>
+            <div className="dashboard-stat-card-icon" style={{ background: 'var(--dashboard-primary-lighter)', color: 'var(--dashboard-primary)' }}>
+              <CalendarOutlined />
+            </div>
+          </div>
+          <div className="dashboard-stat-card-value">
+            {loading ? '...' : stats.totalEvents}
+          </div>
+          <div className="dashboard-stat-card-footer">
+            <ArrowUpOutlined style={{ color: 'var(--dashboard-success)' }} />
+            <span style={{ color: 'var(--dashboard-success)' }}>12%</span>
+            <span>vs mes anterior</span>
+          </div>
+        </div>
+        
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-card-header">
+            <h3 className="dashboard-stat-card-title">Total Usuarios</h3>
+            <div className="dashboard-stat-card-icon" style={{ background: 'var(--dashboard-success-lighter)', color: 'var(--dashboard-success)' }}>
+              <UserOutlined />
+            </div>
+          </div>
+          <div className="dashboard-stat-card-value">
+            {loading ? '...' : stats.totalUsers}
+          </div>
+          <div className="dashboard-stat-card-footer">
+            <ArrowUpOutlined style={{ color: 'var(--dashboard-success)' }} />
+            <span style={{ color: 'var(--dashboard-success)' }}>8%</span>
+            <span>vs mes anterior</span>
+          </div>
+        </div>
+        
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-card-header">
+            <h3 className="dashboard-stat-card-title">Ingresos Totales</h3>
+            <div className="dashboard-stat-card-icon" style={{ background: '#fef3c7', color: '#f59e0b' }}>
+              <DollarOutlined />
+            </div>
+          </div>
+          <div className="dashboard-stat-card-value" style={{ fontSize: isMobile ? '1.5rem' : '1.875rem' }}>
+            {loading ? '...' : `$${stats.totalRevenue.toLocaleString()}`}
+          </div>
+          <div className="dashboard-stat-card-footer">
+            <ArrowUpOutlined style={{ color: 'var(--dashboard-success)' }} />
+            <span style={{ color: 'var(--dashboard-success)' }}>15%</span>
+            <span>vs mes anterior</span>
+          </div>
+        </div>
+        
+        <div className="dashboard-stat-card">
+          <div className="dashboard-stat-card-header">
+            <h3 className="dashboard-stat-card-title">Total Productos</h3>
+            <div className="dashboard-stat-card-icon" style={{ background: '#ede9fe', color: '#7c3aed' }}>
+              <ShoppingOutlined />
+            </div>
+          </div>
+          <div className="dashboard-stat-card-value">
+            {loading ? '...' : stats.totalProducts}
+          </div>
+          <div className="dashboard-stat-card-footer">
+            <ArrowUpOutlined style={{ color: 'var(--dashboard-success)' }} />
+            <span style={{ color: 'var(--dashboard-success)' }}>5%</span>
+            <span>vs mes anterior</span>
+          </div>
+        </div>
+      </div>
 
       {/* Contenido principal */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={16}>
-          <Card title="Eventos Recientes" loading={loading}>
-            <List
-              dataSource={recentEvents}
-              renderItem={(event) => (
-                <List.Item
-                  actions={[
-                    <Button type="link" icon={<EyeOutlined />} size="small">
-                      Ver
-                    </Button>,
-                    <Button type="link" icon={<EditOutlined />} size="small">
-                      Editar
-                    </Button>
-                  ]}
-                >
-                  <List.Item.Meta
-                    avatar={<Avatar icon={<CalendarOutlined />} />}
-                    title={event.nombre}
-                    description={
-                      <Space direction="vertical" size="small">
-                        <Text type="secondary">
-                          {event.fecha} • {event.ubicacion}
-                        </Text>
-                        <Tag color={getEventStatusColor(event.estado)}>
-                          {getEventStatusText(event.estado)}
-                        </Tag>
-                      </Space>
-                    }
-                  />
-                </List.Item>
-              )}
-            />
-          </Card>
-        </Col>
+      <div className="dashboard-grid" style={{ gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr' : '2fr 1fr', gap: '24px' }}>
+        <div className="dashboard-card">
+          <div className="dashboard-card-header">
+            <h3 className="dashboard-card-title">Eventos Recientes</h3>
+          </div>
+          <div className="dashboard-card-body">
+            {loading ? (
+              <div className="dashboard-loading">Cargando...</div>
+            ) : (
+              <List
+                dataSource={recentEvents}
+                renderItem={(event) => (
+                  <List.Item
+                    style={{ padding: '16px 0', borderBottom: '1px solid var(--dashboard-gray-200)' }}
+                    actions={[
+                      <Button type="link" icon={<EyeOutlined />} size="small">
+                        Ver
+                      </Button>,
+                      <Button type="link" icon={<EditOutlined />} size="small">
+                        Editar
+                      </Button>
+                    ]}
+                  >
+                    <List.Item.Meta
+                      avatar={<Avatar icon={<CalendarOutlined />} style={{ backgroundColor: 'var(--dashboard-primary)' }} />}
+                      title={<span style={{ fontWeight: 600 }}>{event.nombre}</span>}
+                      description={
+                        <Space direction="vertical" size="small" style={{ marginTop: '8px' }}>
+                          <Text type="secondary" style={{ fontSize: '12px' }}>
+                            {event.fecha} • {event.ubicacion}
+                          </Text>
+                          <Tag color={getEventStatusColor(event.estado)} style={{ margin: 0 }}>
+                            {getEventStatusText(event.estado)}
+                          </Tag>
+                        </Space>
+                      }
+                    />
+                  </List.Item>
+                )}
+              />
+            )}
+          </div>
+        </div>
         
-        <Col xs={24} lg={8}>
-          <Card title="Progreso de Metas" loading={loading}>
-            <Space direction="vertical" style={{ width: '100%' }}>
-              <div>
-                <Text>Eventos este mes</Text>
-                <Progress percent={75} status="active" />
-              </div>
-              <div>
-                <Text>Ventas objetivo</Text>
-                <Progress percent={60} status="active" />
-              </div>
-              <div>
-                <Text>Nuevos usuarios</Text>
-                <Progress percent={90} status="active" />
-              </div>
-            </Space>
-          </Card>
-        </Col>
-      </Row>
+        <div className="dashboard-card">
+          <div className="dashboard-card-header">
+            <h3 className="dashboard-card-title">Progreso de Metas</h3>
+          </div>
+          <div className="dashboard-card-body">
+            {loading ? (
+              <div className="dashboard-loading">Cargando...</div>
+            ) : (
+              <Space direction="vertical" style={{ width: '100%' }} size="large">
+                <div>
+                  <Text style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>Eventos este mes</Text>
+                  <Progress percent={75} status="active" strokeColor="var(--dashboard-primary)" />
+                </div>
+                <div>
+                  <Text style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>Ventas objetivo</Text>
+                  <Progress percent={60} status="active" strokeColor="var(--dashboard-success)" />
+                </div>
+                <div>
+                  <Text style={{ fontSize: '14px', fontWeight: 500, display: 'block', marginBottom: '8px' }}>Nuevos usuarios</Text>
+                  <Progress percent={90} status="active" strokeColor="var(--dashboard-warning)" />
+                </div>
+              </Space>
+            )}
+          </div>
+        </div>
+      </div>
     </DashboardLayout>
   );
 };

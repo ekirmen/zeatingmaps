@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Button, Dropdown, Menu, Avatar, Space, Typography, Badge, Result } from 'antd';
+import { Layout, Button, Dropdown, Menu, Avatar, Space, Typography, Badge, Result, Drawer } from 'antd';
 import { 
   MenuFoldOutlined, 
   MenuUnfoldOutlined, 
@@ -18,18 +18,29 @@ import { IvaProvider } from './contexts/IvaContext';
 import { TagProvider } from './contexts/TagContext';
 import { TenantProvider } from '../contexts/TenantContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
+import { useResponsive } from '../hooks/useResponsive';
+import './styles/dashboard-design.css';
 
 const { Header, Content } = Layout;
 const { Text } = Typography;
 
 const BackofficeLayoutWithRoles = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { getRole, isStoreUser, hasPermission, loading } = useRole();
+  const { isMobile, isTablet } = useResponsive();
   
   // Ocultar sidebar en boletería
   const isBoleteriaRoute = location.pathname.includes('/boleteria');
+  
+  // En móvil, colapsar automáticamente
+  React.useEffect(() => {
+    if (isMobile) {
+      setCollapsed(true);
+    }
+  }, [isMobile]);
 
   // Cargando permisos/rol
   if (loading) {
@@ -109,8 +120,9 @@ const BackofficeLayoutWithRoles = ({ children }) => {
               <Layout>
                 {/* Header */}
                 <Header 
+                  className="dashboard-header"
                   style={{ 
-                    padding: '0 24px', 
+                    padding: isMobile ? '0 16px' : '0 24px', 
                     background: '#fff', 
                     borderBottom: '1px solid #f0f0f0',
                     display: 'flex',
@@ -119,31 +131,43 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                     position: 'fixed',
                     top: 0,
                     right: 0,
-                    left: isBoleteriaRoute ? 0 : siderWidth,
+                    left: isBoleteriaRoute ? 0 : (isMobile ? 0 : siderWidth),
                     zIndex: 999,
-                    transition: 'left 0.2s'
+                    transition: 'left 0.2s',
+                    height: isMobile ? '56px' : '64px'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <div className="dashboard-header-left" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px' }}>
                     {!isBoleteriaRoute && (
-                      <Button
-                        type="text"
-                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-                        onClick={() => setCollapsed(!collapsed)}
-                        style={{ fontSize: '16px', width: 64, height: 64 }}
-                      />
+                      <>
+                        {isMobile ? (
+                          <Button
+                            type="text"
+                            icon={<MenuUnfoldOutlined />}
+                            onClick={() => setMobileMenuOpen(true)}
+                            style={{ fontSize: '18px', width: 40, height: 40, padding: 0 }}
+                          />
+                        ) : (
+                          <Button
+                            type="text"
+                            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                            onClick={() => setCollapsed(!collapsed)}
+                            style={{ fontSize: '16px', width: 64, height: 64 }}
+                          />
+                        )}
+                      </>
                     )}
                     
-                    <div style={{ marginLeft: '16px', display: 'flex', alignItems: 'center' }}>
-                      <Text strong style={{ fontSize: '18px', margin: 0 }}>
-                        Dashboard Administrativo
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <Text strong style={{ fontSize: isMobile ? '16px' : '18px', margin: 0 }}>
+                        {isMobile ? 'Dashboard' : 'Dashboard Administrativo'}
                       </Text>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div className="dashboard-header-right" style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '16px' }}>
                     {/* Notificaciones */}
-                    {hasPermission('dashboard') && (
+                    {hasPermission('dashboard') && !isMobile && (
                       <Badge count={0} size="small">
                         <Button 
                           type="text" 
@@ -159,34 +183,53 @@ const BackofficeLayoutWithRoles = ({ children }) => {
                       placement="bottomRight"
                       trigger={['click']}
                     >
-                      <Button type="text" style={{ padding: '4px 8px' }}>
-                        <Space>
+                      <Button type="text" style={{ padding: isMobile ? '4px' : '4px 8px' }}>
+                        <Space size={isMobile ? 4 : 8}>
                           <Avatar 
-                            size="small" 
+                            size={isMobile ? 'small' : 'default'}
                             icon={<UserOutlined />} 
                             style={{ backgroundColor: '#1890ff' }}
                           />
-                          <Text>Usuario</Text>
+                          {!isMobile && <Text>Usuario</Text>}
                         </Space>
                       </Button>
                     </Dropdown>
                   </div>
                 </Header>
+                
+                {/* Mobile Menu Drawer */}
+                {isMobile && !isBoleteriaRoute && (
+                  <Drawer
+                    title="Menú"
+                    placement="left"
+                    onClose={() => setMobileMenuOpen(false)}
+                    open={mobileMenuOpen}
+                    width={280}
+                    bodyStyle={{ padding: 0 }}
+                  >
+                    <SidebarMenuWithRoles 
+                      collapsed={false} 
+                      onMenuClick={() => setMobileMenuOpen(false)}
+                    />
+                  </Drawer>
+                )}
 
                 {/* Contenido principal */}
                 <Content
-                  className="mobile-content"
+                  className="dashboard-content mobile-content"
                   style={{
-                    marginTop: 88,
-                    marginRight: 24,
-                    marginBottom: 24,
-                    marginLeft: isBoleteriaRoute ? 24 : siderWidth + 24,
-                    padding: 24,
-                    minHeight: 'calc(100vh - 112px)',
+                    marginTop: isMobile ? 56 : 64,
+                    marginRight: isMobile ? 12 : 24,
+                    marginBottom: isMobile ? 12 : 24,
+                    marginLeft: isBoleteriaRoute 
+                      ? (isMobile ? 12 : 24) 
+                      : (isMobile ? 12 : siderWidth + 24),
+                    padding: isMobile ? 16 : 24,
+                    minHeight: `calc(100vh - ${isMobile ? 68 : 88}px)`,
                     background: '#f5f5f5',
-                    borderRadius: '8px',
+                    borderRadius: isMobile ? '8px' : '12px',
                     overflow: 'auto',
-                    transition: 'margin-left 0.2s'
+                    transition: 'margin-left 0.2s, margin-top 0.2s'
                   }}
                 >
                   <Outlet />

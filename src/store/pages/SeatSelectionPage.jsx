@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Alert, Spin } from 'antd';
+import { ShoppingCartOutlined } from '@ant-design/icons';
 import LazySeatingMap from '../../components/LazySeatingMap';
 import { useSeatLockStore } from '../../components/seatLockStore';
 import { useCartStore } from '../../store/cartStore';
 import { supabase } from '../../supabaseClient';
+import Cart from './Cart';
+import { useResponsive } from '../../hooks/useResponsive';
+import '../styles/store-design.css';
 
 const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) => {
   const params = useParams();
@@ -19,6 +23,8 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
 
   const toggleSeat = useCartStore((state) => state.toggleSeat);
   const cartItems = useCartStore((state) => state.items);
+  const removeFromCart = useCartStore((state) => state.removeFromCart);
+  const { isMobile, isTablet } = useResponsive();
   
   const {
     subscribeToFunction,
@@ -31,6 +37,11 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
     areAllSeatsInTableLockedByMe
   } = useSeatLockStore();
   const lockedSeats = useSeatLockStore((state) => state.lockedSeats);
+  
+  // Filtrar items del carrito que pertenecen a esta función
+  const funcionCartItems = cartItems.filter(item => 
+    String(item.functionId || item.funcionId) === String(funcionId)
+  );
 
   const ensureSessionId = useCallback(() => {
     if (typeof window === 'undefined') return;
@@ -193,31 +204,101 @@ const SeatSelectionPage = ({ initialFuncionId, autoRedirectToEventMap = true }) 
   }
 
   return (
-    <div className="seat-selection-page p-6">
-      <Card title="Selección de Asientos" className="mb-6">
-        {mapa ? (
-          <LazySeatingMap
-            mapa={mapa}
-            funcionId={funcionId}
-            selectedSeats={cartItems.map(item => item.sillaId || item.id || item._id)}
-            onSeatToggle={handleSeatToggle}
-            isSeatLocked={isSeatLocked}
-            isSeatLockedByMe={isSeatLockedByMe}
-            isTableLocked={isTableLocked}
-            isTableLockedByMe={isTableLockedByMe}
-            isAnySeatInTableLocked={isAnySeatInTableLocked}
-            areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
-            lockedSeats={lockedSeats}
-          />
-        ) : (
-          <Alert
-            message="No hay mapa disponible"
-            description="No se encontró un mapa de asientos para esta función."
-            type="warning"
-            showIcon
-          />
-        )}
-      </Card>
+    <div className={`seat-selection-page store-container ${funcionCartItems.length > 0 && isMobile ? 'seat-selection-page-with-cart' : ''}`} style={{ 
+      padding: isMobile ? '12px' : '24px',
+      paddingBottom: funcionCartItems.length > 0 ? (isMobile ? '120px' : '24px') : (isMobile ? '24px' : '24px')
+    }}>
+      {/* Mapa de asientos */}
+      <div className="store-card" style={{ marginBottom: funcionCartItems.length > 0 ? '24px' : '0' }}>
+        <div className="store-card-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <ShoppingCartOutlined style={{ fontSize: '20px', color: 'var(--store-primary)' }} />
+            <h2 className="store-card-title" style={{ margin: 0 }}>
+              Selección de Asientos
+            </h2>
+          </div>
+        </div>
+        <div className="store-card-body" style={{ 
+          padding: isMobile ? '12px' : '24px',
+          minHeight: isMobile ? '400px' : '500px',
+          maxHeight: isMobile ? '60vh' : '70vh',
+          overflow: 'auto'
+        }}>
+          {mapa ? (
+            <div className="store-seating-map" style={{
+              width: '100%',
+              height: '100%',
+              minHeight: isMobile ? '400px' : '500px'
+            }}>
+              <LazySeatingMap
+                mapa={mapa}
+                funcionId={funcionId}
+                selectedSeats={cartItems.map(item => item.sillaId || item.id || item._id)}
+                onSeatToggle={handleSeatToggle}
+                isSeatLocked={isSeatLocked}
+                isSeatLockedByMe={isSeatLockedByMe}
+                isTableLocked={isTableLocked}
+                isTableLockedByMe={isTableLockedByMe}
+                isAnySeatInTableLocked={isAnySeatInTableLocked}
+                areAllSeatsInTableLockedByMe={areAllSeatsInTableLockedByMe}
+                lockedSeats={lockedSeats}
+              />
+            </div>
+          ) : (
+            <Alert
+              message="No hay mapa disponible"
+              description="No se encontró un mapa de asientos para esta función."
+              type="warning"
+              showIcon
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Carrito - Se muestra cuando hay items en el carrito */}
+      {funcionCartItems.length > 0 && (
+        <div 
+          className={`store-card ${isMobile ? 'store-cart-floating' : ''}`}
+          style={{
+            position: isMobile ? 'fixed' : 'relative',
+            bottom: isMobile ? 0 : 'auto',
+            left: isMobile ? 0 : 'auto',
+            right: isMobile ? 0 : 'auto',
+            width: isMobile ? '100%' : 'auto',
+            maxWidth: isMobile ? '100%' : '600px',
+            margin: isMobile ? 0 : '0 auto',
+            borderRadius: isMobile ? '16px 16px 0 0' : 'var(--store-radius-xl)',
+            boxShadow: isMobile ? '0 -4px 20px rgba(0, 0, 0, 0.15)' : 'var(--store-shadow-lg)',
+            zIndex: isMobile ? 1000 : 'auto',
+            maxHeight: isMobile ? '50vh' : 'auto',
+            overflow: isMobile ? 'auto' : 'visible'
+          }}
+        >
+          <div className="store-card-header" style={{ 
+            position: isMobile ? 'sticky' : 'relative',
+            top: 0,
+            background: 'white',
+            zIndex: 10,
+            borderBottom: '1px solid var(--store-gray-200)',
+            padding: isMobile ? '12px 16px' : '16px 24px'
+          }}>
+            <h3 className="store-card-title" style={{ margin: 0, fontSize: isMobile ? '16px' : '18px' }}>
+              Tu Carrito ({funcionCartItems.length})
+            </h3>
+          </div>
+          <div className="store-card-body" style={{ 
+            padding: isMobile ? '12px 16px' : '16px 24px',
+            maxHeight: isMobile ? 'calc(50vh - 60px)' : 'none',
+            overflow: 'auto'
+          }}>
+            <Cart
+              items={funcionCartItems}
+              removeFromCart={removeFromCart}
+              selectedFunctionId={funcionId}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
